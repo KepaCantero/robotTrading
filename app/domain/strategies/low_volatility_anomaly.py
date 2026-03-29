@@ -15,7 +15,6 @@ from __future__ import annotations
 import logging
 from dataclasses import dataclass
 from enum import Enum
-from typing import Dict, List, Tuple
 
 import numpy as np
 
@@ -82,7 +81,7 @@ class VolatilityMetrics:
 class LowVolatilityPortfolio:
     """Portfolio constructed using low volatility strategy."""
 
-    positions: Dict[str, float]  # Symbol -> weight
+    positions: dict[str, float]  # Symbol -> weight
     portfolio_volatility: float  # Weighted average volatility
     portfolio_beta: float  # Weighted average beta
     portfolio_sharpe: float  # Expected portfolio Sharpe ratio
@@ -93,12 +92,12 @@ class LowVolatilityPortfolio:
         """Check if portfolio is low volatility."""
         try:
             config = get_config()
-            low_vol_threshold = getattr(config.trading, 'low_volatility_portfolio_threshold', 0.15)
+            low_vol_threshold = getattr(config.trading, "low_volatility_portfolio_threshold", 0.15)
         except Exception:
             low_vol_threshold = 0.15
         return self.portfolio_volatility < low_vol_threshold
 
-    def get_volatility_breakdown(self) -> Dict[str, float]:
+    def get_volatility_breakdown(self) -> dict[str, float]:
         """Get breakdown of volatility by category."""
         # This would require additional metadata
         # Simplified version returns portfolio-level metrics
@@ -174,7 +173,7 @@ class LowVolatilityAnomaly:
         if risk_free_rate is None:
             try:
                 config = get_config()
-                risk_free_rate = float(getattr(config.trading, 'risk_free_rate', 0.02))
+                risk_free_rate = float(getattr(config.trading, "risk_free_rate", 0.02))
             except Exception:
                 risk_free_rate = 0.02
 
@@ -311,8 +310,8 @@ class LowVolatilityAnomaly:
 
     def screen_low_volatility_stocks(
         self,
-        volatility_metrics: Dict[str, VolatilityMetrics],
-    ) -> List[str]:
+        volatility_metrics: dict[str, VolatilityMetrics],
+    ) -> list[str]:
         """
         Screen low volatility stocks based on criteria.
 
@@ -354,15 +353,12 @@ class LowVolatilityAnomaly:
             return False
 
         # Minimum Sharpe ratio
-        if metrics.sharpe_ratio < self._min_sharpe:
-            return False
-
-        return True
+        return not metrics.sharpe_ratio < self._min_sharpe
 
     def rank_low_volatility_stocks(
         self,
-        volatility_metrics: Dict[str, VolatilityMetrics],
-    ) -> List[Tuple[str, float]]:
+        volatility_metrics: dict[str, VolatilityMetrics],
+    ) -> list[tuple[str, float]]:
         """
         Rank low volatility stocks by risk-adjusted score.
 
@@ -388,7 +384,7 @@ class LowVolatilityAnomaly:
 
     def construct_portfolio(
         self,
-        volatility_metrics: Dict[str, VolatilityMetrics],
+        volatility_metrics: dict[str, VolatilityMetrics],
         capital: float,
         max_positions: int = 30,
         min_weight: float = 0.01,
@@ -455,9 +451,9 @@ class LowVolatilityAnomaly:
 
     def _inverse_variance_weights(
         self,
-        selected: List[Tuple[str, float]],
-        volatility_metrics: Dict[str, VolatilityMetrics],
-    ) -> Dict[str, float]:
+        selected: list[tuple[str, float]],
+        volatility_metrics: dict[str, VolatilityMetrics],
+    ) -> dict[str, float]:
         """Calculate inverse variance weights."""
         weights = {}
 
@@ -471,9 +467,9 @@ class LowVolatilityAnomaly:
 
     def _minimum_variance_weights(
         self,
-        selected: List[Tuple[str, float]],
-        volatility_metrics: Dict[str, VolatilityMetrics],
-    ) -> Dict[str, float]:
+        selected: list[tuple[str, float]],
+        volatility_metrics: dict[str, VolatilityMetrics],
+    ) -> dict[str, float]:
         """
         Calculate minimum variance weights.
 
@@ -493,10 +489,10 @@ class LowVolatilityAnomaly:
 
     def _apply_weight_constraints(
         self,
-        weights: Dict[str, float],
+        weights: dict[str, float],
         min_weight: float,
         max_weight: float,
-    ) -> Dict[str, float]:
+    ) -> dict[str, float]:
         """Apply min/max weight constraints."""
         # Cap at max_weight
         weights = {s: min(w, max_weight) for s, w in weights.items()}
@@ -508,9 +504,9 @@ class LowVolatilityAnomaly:
 
     def calculate_volatility_premium(
         self,
-        volatility_metrics: Dict[str, VolatilityMetrics],
-        returns: Dict[str, float],
-    ) -> Tuple[float, float, float]:
+        volatility_metrics: dict[str, VolatilityMetrics],
+        returns: dict[str, float],
+    ) -> tuple[float, float, float]:
         """
         Calculate low volatility premium.
 

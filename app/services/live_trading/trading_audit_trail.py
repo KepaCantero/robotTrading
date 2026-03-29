@@ -23,7 +23,7 @@ from datetime import datetime, timezone
 from decimal import Decimal
 from enum import Enum
 from pathlib import Path
-from typing import Deque, Dict, List, Optional
+from typing import Optional
 
 import numpy as np
 
@@ -63,7 +63,7 @@ class AuditEvent:
     quantity: Optional[Decimal] = None
     user: str = "system"
     ip_address: Optional[str] = None
-    details: Dict = field(default_factory=dict)
+    details: dict = field(default_factory=dict)
     is_compliant: bool = True
     risk_level: Optional[str] = None
 
@@ -147,7 +147,7 @@ class AuditPersistence:
 
     def _get_connection(self) -> sqlite3.Connection:
         """Get thread-local database connection with connection pooling."""
-        if not hasattr(self._local, 'connection') or self._local.connection is None:
+        if not hasattr(self._local, "connection") or self._local.connection is None:
             conn = sqlite3.connect(str(self.db_path), timeout=5.0)
             conn.row_factory = sqlite3.Row
             # WAL mode for concurrent access
@@ -241,7 +241,7 @@ class AuditPersistence:
         event_type: Optional[str] = None,
         start_date: Optional[datetime] = None,
         end_date: Optional[datetime] = None,
-    ) -> List[Dict]:
+    ) -> list[dict]:
         """
         Get audit events from database.
 
@@ -315,7 +315,7 @@ class AuditPersistence:
             logger.error(f"Failed to count audit events: {e}")
             return 0
 
-    def get_non_compliant_events(self, limit: int = 100) -> List[Dict]:
+    def get_non_compliant_events(self, limit: int = 100) -> list[dict]:
         """Get non-compliant events for compliance review."""
         try:
             conn = self._get_connection()
@@ -337,7 +337,7 @@ class AuditPersistence:
     def close(self) -> None:
         """Close database connection and cleanup resources."""
         try:
-            if hasattr(self._local, 'connection') and self._local.connection is not None:
+            if hasattr(self._local, "connection") and self._local.connection is not None:
                 self._local.connection.close()
                 self._local.connection = None
                 logger.debug("AuditPersistence connection closed")
@@ -396,7 +396,7 @@ class TradingAuditTrail:
         """
         self.persistence = persistence or get_audit_persistence(db_path)
         # MEMORY: Use deque with maxlen to prevent unbounded growth
-        self.events: Deque[AuditEvent] = deque(maxlen=max_events)
+        self.events: deque[AuditEvent] = deque(maxlen=max_events)
         self.max_events = max_events
         self._event_counter = 0
 
@@ -423,39 +423,39 @@ class TradingAuditTrail:
         except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.error(f"Error loading from persistence: {e}")
 
-    def _dict_to_audit_event(self, data: Dict) -> Optional[AuditEvent]:
+    def _dict_to_audit_event(self, data: dict) -> Optional[AuditEvent]:
         """Convert dictionary to AuditEvent."""
         try:
             # Parse timestamp
-            timestamp = data.get('timestamp')
+            timestamp = data.get("timestamp")
             if isinstance(timestamp, str):
                 timestamp = datetime.fromisoformat(timestamp)
             elif timestamp is None:
                 timestamp = utc_now()
 
             # Parse quantity
-            quantity = data.get('quantity')
+            quantity = data.get("quantity")
             if quantity is not None and isinstance(quantity, str):
                 quantity = Decimal(quantity)
 
             # Parse details
-            details = data.get('details', {})
+            details = data.get("details", {})
             if isinstance(details, str):
                 details = json.loads(details)
 
             return AuditEvent(
-                event_id=data['event_id'],
-                event_type=AuditEventType(data['event_type']),
+                event_id=data["event_id"],
+                event_type=AuditEventType(data["event_type"]),
                 timestamp=timestamp,
-                alert_id=data.get('alert_id'),
-                order_id=data.get('order_id'),
-                symbol=data.get('symbol'),
+                alert_id=data.get("alert_id"),
+                order_id=data.get("order_id"),
+                symbol=data.get("symbol"),
                 quantity=quantity,
-                user=data.get('user', 'system'),
-                ip_address=data.get('ip_address'),
+                user=data.get("user", "system"),
+                ip_address=data.get("ip_address"),
                 details=details,
-                is_compliant=bool(data.get('is_compliant', 1)),
-                risk_level=data.get('risk_level'),
+                is_compliant=bool(data.get("is_compliant", 1)),
+                risk_level=data.get("risk_level"),
             )
         except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.warning(f"Failed to convert audit event data: {e}")
@@ -468,7 +468,7 @@ class TradingAuditTrail:
         order_id: Optional[str] = None,
         symbol: Optional[str] = None,
         quantity: Optional[Decimal] = None,
-        details: Optional[Dict] = None,
+        details: Optional[dict] = None,
         is_compliant: bool = True,
         risk_level: Optional[str] = None,
         user: str = "system",
@@ -531,7 +531,7 @@ class TradingAuditTrail:
                 return event
         return None
 
-    def get_events_for_alert(self, alert_id: str) -> List[AuditEvent]:
+    def get_events_for_alert(self, alert_id: str) -> list[AuditEvent]:
         """
         Get all audit events for an alert.
 
@@ -543,7 +543,7 @@ class TradingAuditTrail:
         """
         return [e for e in self.events if e.alert_id == alert_id]
 
-    def get_events_for_order(self, order_id: str) -> List[AuditEvent]:
+    def get_events_for_order(self, order_id: str) -> list[AuditEvent]:
         """
         Get all audit events for an order.
 
@@ -555,7 +555,7 @@ class TradingAuditTrail:
         """
         return [e for e in self.events if e.order_id == order_id]
 
-    def get_events_by_type(self, event_type: AuditEventType) -> List[AuditEvent]:
+    def get_events_by_type(self, event_type: AuditEventType) -> list[AuditEvent]:
         """
         Get all audit events of a specific type.
 
@@ -567,7 +567,7 @@ class TradingAuditTrail:
         """
         return [e for e in self.events if e.event_type == event_type]
 
-    def get_non_compliant_events(self) -> List[AuditEvent]:
+    def get_non_compliant_events(self) -> list[AuditEvent]:
         """
         Get all non-compliant audit events.
 
@@ -576,7 +576,7 @@ class TradingAuditTrail:
         """
         return [e for e in self.events if not e.is_compliant]
 
-    def get_recent_events(self, limit: int = 50) -> List[AuditEvent]:
+    def get_recent_events(self, limit: int = 50) -> list[AuditEvent]:
         """
         Get recent audit events.
 

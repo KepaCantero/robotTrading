@@ -17,7 +17,10 @@ from __future__ import annotations
 
 import logging
 from abc import ABC, abstractmethod
-from typing import Callable, Dict, Generic, Iterable, Iterator, List, Optional, TypeVar
+from typing import TYPE_CHECKING, Callable, Generic, TypeVar
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable, Iterator
 
 logger = logging.getLogger(__name__)
 
@@ -75,7 +78,7 @@ class AbstractRepository(ABC, Generic[T, K]):
         """
 
     @abstractmethod
-    async def get(self, entity_id: K) -> Optional[T]:
+    async def get(self, entity_id: K) -> T | None:
         """
         Retrieve an entity by its identifier.
 
@@ -116,7 +119,7 @@ class AbstractRepository(ABC, Generic[T, K]):
         """
 
     @abstractmethod
-    async def list_all(self) -> List[T]:
+    async def list_all(self) -> list[T]:
         """
         List all entities in the repository.
 
@@ -194,7 +197,7 @@ class AbstractRepository(ABC, Generic[T, K]):
         for entity in entities:
             await self.add(entity)
 
-    async def get_many(self, entity_ids: Iterable[K]) -> List[T]:
+    async def get_many(self, entity_ids: Iterable[K]) -> list[T]:
         """
         Retrieve multiple entities by IDs.
 
@@ -239,7 +242,7 @@ class QueryableRepository(AbstractRepository[T, K]):
     """
 
     @abstractmethod
-    async def find_by_criteria(self, **criteria: object) -> List[T]:
+    async def find_by_criteria(self, **criteria: object) -> list[T]:
         """
         Find entities matching the given criteria.
 
@@ -259,7 +262,7 @@ class QueryableRepository(AbstractRepository[T, K]):
         """
 
     @abstractmethod
-    async def find_first(self, **criteria: object) -> Optional[T]:
+    async def find_first(self, **criteria: object) -> T | None:
         """
         Find the first entity matching the criteria.
 
@@ -271,7 +274,7 @@ class QueryableRepository(AbstractRepository[T, K]):
         """
 
     @abstractmethod
-    async def find_by_specification(self, specification: Callable[[T], bool]) -> List[T]:
+    async def find_by_specification(self, specification: Callable[[T], bool]) -> list[T]:
         """
         Find entities using a specification predicate.
 
@@ -365,7 +368,7 @@ class CachedRepository(AbstractRepository[T, K]):
     def __init__(
         self,
         repository: AbstractRepository[T, K],
-        cache: Optional[Dict[str, T]] = None,
+        cache: dict[str, T] | None = None,
         ttl_seconds: int = 300,
     ):
         """
@@ -379,7 +382,7 @@ class CachedRepository(AbstractRepository[T, K]):
         self._repository = repository
         self._cache = cache or {}
         self._ttl = ttl_seconds
-        self._timestamps: Dict[str, float] = {}
+        self._timestamps: dict[str, float] = {}
 
     async def add(self, entity: T) -> None:
         await self._repository.add(entity)
@@ -387,7 +390,7 @@ class CachedRepository(AbstractRepository[T, K]):
         entity_id = self._get_entity_id(entity)
         self._cache[str(entity_id)] = entity
 
-    async def get(self, entity_id: K) -> Optional[T]:
+    async def get(self, entity_id: K) -> T | None:
         # Check cache first
         cache_key = str(entity_id)
         if cache_key in self._cache:
@@ -417,7 +420,7 @@ class CachedRepository(AbstractRepository[T, K]):
         cache_key = str(entity_id)
         self._cache.pop(cache_key, None)
 
-    async def list_all(self) -> List[T]:
+    async def list_all(self) -> list[T]:
         return await self._repository.list_all()
 
     def _get_entity_id(self, entity: T) -> K:
@@ -435,7 +438,7 @@ class CachedRepository(AbstractRepository[T, K]):
 class RepositoryError(Exception):
     """Base exception for repository errors."""
 
-    def __init__(self, message: str, repository: Optional[str] = None):
+    def __init__(self, message: str, repository: str | None = None):
         self.repository = repository
         super().__init__(message)
 
@@ -443,7 +446,7 @@ class RepositoryError(Exception):
 class NotFoundError(RepositoryError):
     """Exception raised when entity is not found."""
 
-    def __init__(self, entity_id: object, repository: Optional[str] = None):
+    def __init__(self, entity_id: object, repository: str | None = None):
         super().__init__(f"Entity not found: {entity_id}", repository)
         self.entity_id = entity_id
 
@@ -451,6 +454,6 @@ class NotFoundError(RepositoryError):
 class DuplicateError(RepositoryError):
     """Exception raised when trying to add duplicate entity."""
 
-    def __init__(self, entity_id: object, repository: Optional[str] = None):
+    def __init__(self, entity_id: object, repository: str | None = None):
         super().__init__(f"Duplicate entity: {entity_id}", repository)
         self.entity_id = entity_id

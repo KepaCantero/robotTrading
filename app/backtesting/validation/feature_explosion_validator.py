@@ -22,7 +22,7 @@ import logging
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any
 
 import numpy as np
 import pandas as pd
@@ -52,9 +52,9 @@ class FeatureExplosionResult:
     excess_features: int
     vif_max: float  # Max Variance Inflation Factor
     correlation_max: float  # Max pairwise correlation
-    details: Dict[str, Any] = field(default_factory=dict)
+    details: dict[str, Any] = field(default_factory=dict)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
         return {
             "timestamp": self.timestamp.isoformat(),
@@ -78,12 +78,12 @@ class MulticollinearityResult:
     has_multicollinearity: bool
     n_highly_correlated_pairs: int
     n_high_vif_features: int
-    high_correlation_pairs: List[Tuple[str, str, float]]
-    high_vif_features: Dict[str, float]
+    high_correlation_pairs: list[tuple[str, str, float]]
+    high_vif_features: dict[str, float]
     condition_number: float
-    details: Dict[str, Any] = field(default_factory=dict)
+    details: dict[str, Any] = field(default_factory=dict)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
         return {
             "timestamp": self.timestamp.isoformat(),
@@ -115,7 +115,7 @@ class FeatureExplosionValidator:
     5. Feature importance stability
     """
 
-    def __init__(self, config: Optional[Dict[str, Any]] = None):
+    def __init__(self, config: dict[str, Any] | None = None):
         """
         Initialize feature explosion validator.
 
@@ -131,9 +131,9 @@ class FeatureExplosionValidator:
 
     def validate_feature_explosion(
         self,
-        X: Union[pd.DataFrame, np.ndarray],
-        y: Optional[Union[pd.Series, np.ndarray]] = None,
-        feature_names: Optional[List[str]] = None,
+        X: pd.DataFrame | np.ndarray,
+        y: pd.Series | np.ndarray | None = None,
+        feature_names: list[str] | None = None,
     ) -> FeatureExplosionResult:
         """
         Validate for feature explosion.
@@ -161,7 +161,7 @@ class FeatureExplosionValidator:
         n_samples = X.shape[0]
 
         # Calculate feature-to-sample ratio
-        ratio = n_features / n_samples if n_samples > 0 else float('inf')
+        ratio = n_features / n_samples if n_samples > 0 else float("inf")
 
         # Calculate recommended max features (Ilmanen's rule: ~10% of samples)
         recommended_max = max(10, int(n_samples * self.max_features_ratio))
@@ -211,8 +211,8 @@ class FeatureExplosionValidator:
 
     def analyze_multicollinearity(
         self,
-        X: Union[pd.DataFrame, np.ndarray],
-        feature_names: Optional[List[str]] = None,
+        X: pd.DataFrame | np.ndarray,
+        feature_names: list[str] | None = None,
     ) -> MulticollinearityResult:
         """
         Analyze multicollinearity among features.
@@ -260,7 +260,7 @@ class FeatureExplosionValidator:
         try:
             condition_number = np.linalg.cond(X.values)
         except (ValueError, TypeError, np.linalg.LinAlgError):
-            condition_number = float('inf')
+            condition_number = float("inf")
 
         # Determine if multicollinearity exists
         has_multicollinearity = (
@@ -294,10 +294,10 @@ class FeatureExplosionValidator:
 
     def recommend_feature_reduction(
         self,
-        X: Union[pd.DataFrame, np.ndarray],
-        feature_names: Optional[List[str]] = None,
+        X: pd.DataFrame | np.ndarray,
+        feature_names: list[str] | None = None,
         method: str = "combined",
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Recommend features to remove to reduce explosion.
 
@@ -393,7 +393,7 @@ class FeatureExplosionValidator:
             logger.warning(f"VIF calculation failed: {e}")
             return 0.0
 
-    def _calculate_all_vif(self, X: pd.DataFrame) -> Dict[str, float]:
+    def _calculate_all_vif(self, X: pd.DataFrame) -> dict[str, float]:
         """Calculate VIF for all features."""
         vif_dict = {}
 
@@ -403,7 +403,7 @@ class FeatureExplosionValidator:
             for feature in X.columns:
                 # Skip if feature has zero variance
                 if X[feature].var() < 1e-10:
-                    vif_dict[feature] = float('inf')
+                    vif_dict[feature] = float("inf")
                     continue
 
                 # Get other features
@@ -427,7 +427,7 @@ class FeatureExplosionValidator:
                 r_squared = 1 - (ss_res / ss_tot) if ss_tot > 0 else 0
 
                 # VIF = 1 / (1 - R²)
-                vif = 1 / (1 - r_squared) if r_squared < 1 else float('inf')
+                vif = 1 / (1 - r_squared) if r_squared < 1 else float("inf")
                 vif_dict[feature] = vif
 
         except (ValueError, TypeError, ZeroDivisionError) as e:
@@ -452,9 +452,9 @@ class FeatureExplosionValidator:
 
 
 def validate_feature_explosion(
-    X: Union[pd.DataFrame, np.ndarray],
-    y: Optional[Union[pd.Series, np.ndarray]] = None,
-    config: Optional[Dict[str, Any]] = None,
+    X: pd.DataFrame | np.ndarray,
+    y: pd.Series | np.ndarray | None = None,
+    config: dict[str, Any] | None = None,
 ) -> FeatureExplosionResult:
     """
     Convenience function for feature explosion validation.
@@ -472,8 +472,8 @@ def validate_feature_explosion(
 
 
 def analyze_multicollinearity(
-    X: Union[pd.DataFrame, np.ndarray],
-    config: Optional[Dict[str, Any]] = None,
+    X: pd.DataFrame | np.ndarray,
+    config: dict[str, Any] | None = None,
 ) -> MulticollinearityResult:
     """
     Convenience function for multicollinearity analysis.

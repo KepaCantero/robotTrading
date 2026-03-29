@@ -61,11 +61,11 @@ class JWTTokenManager:
         """
         try:
             import jwt
-        except ImportError:
+        except ImportError as exc:
             logger.error(
                 "JWT library not available. Install with: pip install pyjwt", exc_info=True
             )
-            raise ImportError("JWT library not available. Install with: pip install pyjwt")
+            raise ImportError("JWT library not available. Install with: pip install pyjwt") from exc
 
         to_encode = data.copy()
 
@@ -102,11 +102,11 @@ class JWTTokenManager:
         """
         try:
             import jwt
-        except ImportError:
+        except ImportError as exc:
             logger.error(
                 "JWT library not available. Install with: pip install pyjwt", exc_info=True
             )
-            raise ImportError("JWT library not available. Install with: pip install pyjwt")
+            raise ImportError("JWT library not available. Install with: pip install pyjwt") from exc
 
         try:
             payload = jwt.decode(token, self.secret_key, algorithms=[self.algorithm])
@@ -137,7 +137,7 @@ class JWTTokenManager:
             raise
         except Exception as e:
             logger.warning(
-                f"Token verification failed: {str(e)}", extra={"error": str(e)}, exc_info=True
+                f"Token verification failed: {e!s}", extra={"error": str(e)}, exc_info=True
             )
             return None
 
@@ -164,7 +164,7 @@ class JWTTokenManager:
             payload = jwt.decode(token, options={"verify_signature": False})
             return payload
         except Exception as e:
-            logger.warning(f"Token decode failed: {str(e)}", exc_info=True)
+            logger.warning(f"Token decode failed: {e!s}", exc_info=True)
             return None
 
     def refresh_token(self, token: str) -> str | None:

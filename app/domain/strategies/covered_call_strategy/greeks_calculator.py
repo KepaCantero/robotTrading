@@ -140,13 +140,13 @@ class BlackScholesGreeks:
         Calcular Greeks usando fórmulas Black-Scholes.
 
         Para una opción call europea:
-        - d1 = (ln(S/K) + (r + σ²/2)T) / (σ√T)
-        - d2 = d1 - σ√T
+        - d1 = (ln(S/K) + (r + sigma^2/2)T) / (sigmasqrtT)
+        - d2 = d1 - sigmasqrtT
 
         - Delta = N(d1)
-        - Gamma = N'(d1) / (Sσ√T)
-        - Theta = -(SN'(d1)σ) / (2√T) - rKe^(-rT)N(d2)
-        - Vega = SN'(d1)√T
+        - Gamma = N'(d1) / (SsigmasqrtT)
+        - Theta = -(SN'(d1)sigma) / (2sqrtT) - rKe^(-rT)N(d2)
+        - Vega = SN'(d1)sqrtT
         - Rho = KTe^(-rT)N(d2)
 
         Donde:
@@ -210,7 +210,7 @@ class BlackScholesGreeks:
         """
         Calcular d1 del modelo Black-Scholes.
 
-        d1 = [ln(S/K) + (r - q + σ²/2)T] / (σ√T)
+        d1 = [ln(S/K) + (r - q + sigma^2/2)T] / (sigmasqrtT)
         """
         if T == 0 or sigma == 0:
             return 0.0
@@ -226,11 +226,11 @@ class BlackScholesGreeks:
 
         Usa la aproximación de Abramowitz y Stegun (1964).
 
-        Para x >= 0: N(x) = 1 - φ(x) * (a1*t + a2*t² + a3*t³ + a4*t⁴ + a5*t⁵)
+        Para x >= 0: N(x) = 1 - phi(x) * (a1*t + a2*t^2 + a3*t^3 + a4*t⁴ + a5*t⁵)
         Para x < 0: N(x) = 1 - N(-x)  (por simetría)
 
         donde:
-        - φ(x) = PDF de la normal
+        - phi(x) = PDF de la normal
         - t = 1 / (1 + p*x)
         - p, a1, a2, ... son constantes
 
@@ -269,13 +269,13 @@ class BlackScholesGreeks:
         """
         Función de densidad de probabilidad normal (PDF).
 
-        φ(x) = (1 / √(2π)) * e^(-x²/2)
+        phi(x) = (1 / sqrt(2pi)) * e^(-x^2/2)
 
         Args:
             x: Valor
 
         Returns:
-            φ(x) = PDF de N(0,1) en x
+            phi(x) = PDF de N(0,1) en x
         """
         return math.exp(-0.5 * x * x) / self.SQRT_2_PI
 

@@ -11,7 +11,7 @@ import logging
 from dataclasses import dataclass, field
 from decimal import Decimal
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -41,19 +41,19 @@ class StockMetrics:
     """
 
     ticker: str
-    strategy: Optional[StrategyType] = None
-    weight: Decimal = Decimal('0')
-    capital: Decimal = Decimal('0')
-    sps_score: Decimal = Decimal('0')  # Strategy Preference Score
-    sortino_ratio: Optional[Decimal] = None
-    h_long: Optional[Decimal] = None  # Long memory Hurst exponent
-    h_short: Optional[Decimal] = None  # Short memory Hurst exponent
-    half_life_tau: Optional[Decimal] = None  # Mean reversion half-life
-    garch_volatility: Optional[Decimal] = None
-    category: Optional[StockCategory] = None
+    strategy: StrategyType | None = None
+    weight: Decimal = Decimal("0")
+    capital: Decimal = Decimal("0")
+    sps_score: Decimal = Decimal("0")  # Strategy Preference Score
+    sortino_ratio: Decimal | None = None
+    h_long: Decimal | None = None  # Long memory Hurst exponent
+    h_short: Decimal | None = None  # Short memory Hurst exponent
+    half_life_tau: Decimal | None = None  # Mean reversion half-life
+    garch_volatility: Decimal | None = None
+    category: StockCategory | None = None
     decision_log: str = ""
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
         logger.debug(
             "Converting StockMetrics to dict",
@@ -63,18 +63,18 @@ class StockMetrics:
             },
         )
         return {
-            'ticker': self.ticker,
-            'strategy': self.strategy.value if self.strategy else None,
-            'weight': float(self.weight),
-            'capital': float(self.capital),
-            'sps_score': float(self.sps_score),
-            'sortino_ratio': float(self.sortino_ratio) if self.sortino_ratio else None,
-            'h_long': float(self.h_long) if self.h_long else None,
-            'h_short': float(self.h_short) if self.h_short else None,
-            'half_life_tau': float(self.half_life_tau) if self.half_life_tau else None,
-            'garch_volatility': float(self.garch_volatility) if self.garch_volatility else None,
-            'category': self.category.value if self.category else None,
-            'decision_log': self.decision_log,
+            "ticker": self.ticker,
+            "strategy": self.strategy.value if self.strategy else None,
+            "weight": float(self.weight),
+            "capital": float(self.capital),
+            "sps_score": float(self.sps_score),
+            "sortino_ratio": float(self.sortino_ratio) if self.sortino_ratio else None,
+            "h_long": float(self.h_long) if self.h_long else None,
+            "h_short": float(self.h_short) if self.h_short else None,
+            "half_life_tau": float(self.half_life_tau) if self.half_life_tau else None,
+            "garch_volatility": float(self.garch_volatility) if self.garch_volatility else None,
+            "category": self.category.value if self.category else None,
+            "decision_log": self.decision_log,
         }
 
 
@@ -90,24 +90,24 @@ class PairMetrics:
     ticker2: str
     cointegration_score: Decimal
     correlation: Decimal
-    half_life_tau: Optional[Decimal] = None
-    hedge_ratio: Optional[Decimal] = None
+    half_life_tau: Decimal | None = None
+    hedge_ratio: Decimal | None = None
     decision_log: str = ""
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
         logger.debug(
             "Converting PairMetrics to dict",
             extra={"ticker1": self.ticker1, "ticker2": self.ticker2},
         )
         return {
-            'ticker1': self.ticker1,
-            'ticker2': self.ticker2,
-            'cointegration_score': float(self.cointegration_score),
-            'correlation': float(self.correlation),
-            'half_life_tau': float(self.half_life_tau) if self.half_life_tau else None,
-            'hedge_ratio': float(self.hedge_ratio) if self.hedge_ratio else None,
-            'decision_log': self.decision_log,
+            "ticker1": self.ticker1,
+            "ticker2": self.ticker2,
+            "cointegration_score": float(self.cointegration_score),
+            "correlation": float(self.correlation),
+            "half_life_tau": float(self.half_life_tau) if self.half_life_tau else None,
+            "hedge_ratio": float(self.hedge_ratio) if self.hedge_ratio else None,
+            "decision_log": self.decision_log,
         }
 
 
@@ -119,12 +119,12 @@ class AllocationResult:
     Pure domain entity representing allocation outcomes.
     """
 
-    allocations: Dict[str, StockMetrics] = field(default_factory=dict)
-    pairs: List[PairMetrics] = field(default_factory=list)
-    residual_capital: Optional[Decimal] = None
-    decision_logs: List[str] = field(default_factory=list)
+    allocations: dict[str, StockMetrics] = field(default_factory=dict)
+    pairs: list[PairMetrics] = field(default_factory=list)
+    residual_capital: Decimal | None = None
+    decision_logs: list[str] = field(default_factory=list)
     validation_passed: bool = False
-    validation_errors: List[str] = field(default_factory=list)
+    validation_errors: list[str] = field(default_factory=list)
 
     def get_total_allocated_capital(self) -> Decimal:
         """Calculate total allocated capital."""
@@ -147,7 +147,7 @@ class AllocationResult:
         logger.debug("Retrieved pairs count", extra={"count": count})
         return count
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
         logger.debug(
             "Converting AllocationResult to dict",
@@ -158,17 +158,17 @@ class AllocationResult:
             },
         )
         return {
-            'allocations': {
+            "allocations": {
                 ticker: metrics.to_dict() for ticker, metrics in self.allocations.items()
             },
-            'pairs': [pair.to_dict() for pair in self.pairs],
-            'residual_capital': float(self.residual_capital),
-            'decision_logs': self.decision_logs,
-            'validation_passed': self.validation_passed,
-            'validation_errors': self.validation_errors,
-            'total_allocated_capital': float(self.get_total_allocated_capital()),
-            'allocation_count': self.get_allocation_count(),
-            'pairs_count': self.get_pairs_count(),
+            "pairs": [pair.to_dict() for pair in self.pairs],
+            "residual_capital": float(self.residual_capital),
+            "decision_logs": self.decision_logs,
+            "validation_passed": self.validation_passed,
+            "validation_errors": self.validation_errors,
+            "total_allocated_capital": float(self.get_total_allocated_capital()),
+            "allocation_count": self.get_allocation_count(),
+            "pairs_count": self.get_pairs_count(),
         }
 
 
@@ -183,9 +183,9 @@ class AllocationConfig:
         self,
         initial_capital: Decimal,
         max_positions: int = 10,
-        max_position_size: Optional[Decimal] = None,
-        min_position_size: Optional[Decimal] = None,
-        reserve_ratio: Optional[Decimal] = None,
+        max_position_size: Decimal | None = None,
+        min_position_size: Decimal | None = None,
+        reserve_ratio: Decimal | None = None,
     ):
         """
         Initialize allocation configuration.
@@ -198,11 +198,11 @@ class AllocationConfig:
             reserve_ratio: Ratio of capital to keep in reserve
         """
         if max_position_size is None:
-            max_position_size = Decimal('0.10')
+            max_position_size = Decimal("0.10")
         if min_position_size is None:
-            min_position_size = Decimal('0.05')
+            min_position_size = Decimal("0.05")
         if reserve_ratio is None:
-            reserve_ratio = Decimal('0.10')
+            reserve_ratio = Decimal("0.10")
         logger.debug(
             "Initializing AllocationConfig",
             extra={
@@ -274,15 +274,15 @@ class AllocationConfig:
         )
         return allocatable
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
         logger.debug("Converting AllocationConfig to dict")
         return {
-            'initial_capital': float(self.initial_capital),
-            'max_positions': self.max_positions,
-            'max_position_size': float(self.max_position_size),
-            'min_position_size': float(self.min_position_size),
-            'reserve_ratio': float(self.reserve_ratio),
-            'allocatable_capital': float(self.get_allocatable_capital()),
-            'reservable_capital': float(self.get_reservable_capital()),
+            "initial_capital": float(self.initial_capital),
+            "max_positions": self.max_positions,
+            "max_position_size": float(self.max_position_size),
+            "min_position_size": float(self.min_position_size),
+            "reserve_ratio": float(self.reserve_ratio),
+            "allocatable_capital": float(self.get_allocatable_capital()),
+            "reservable_capital": float(self.get_reservable_capital()),
         }

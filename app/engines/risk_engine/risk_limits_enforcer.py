@@ -22,7 +22,7 @@ Reference: Hull, Options, Futures, and Other Derivatives, Chapter 18
 import logging
 from datetime import datetime
 from decimal import Decimal
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 import numpy as np
 
@@ -61,7 +61,7 @@ class RiskLimitsEnforcer:
     Monitors portfolio risk and automatically enforces limits.
     """
 
-    def __init__(self, config: Optional[Dict[str, Any]] = None):
+    def __init__(self, config: Optional[dict[str, Any]] = None):
         """
         Initialize risk limits enforcer.
 
@@ -87,7 +87,7 @@ class RiskLimitsEnforcer:
         # Enforcement state
         self.trading_halted = False
         self.halt_reason = None
-        self.enforcement_history: List[Dict[str, Any]] = []
+        self.enforcement_history: list[dict[str, Any]] = []
 
         self.logger = logging.getLogger(self.__class__.__name__)
 
@@ -96,7 +96,7 @@ class RiskLimitsEnforcer:
         portfolio: Portfolio,
         current_var: float,
         portfolio_value: Optional[float] = None,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Check if portfolio VaR exceeds limits and recommend actions.
 
@@ -117,69 +117,68 @@ class RiskLimitsEnforcer:
 
             # Determine action
             action = None
-            severity = 'NORMAL'
+            severity = "NORMAL"
             messages = []
 
             if current_var >= self.var_halt_limit:
-                action = 'HALT_TRADING'
-                severity = 'CRITICAL'
+                action = "HALT_TRADING"
+                severity = "CRITICAL"
                 messages.append(
-                    f'VaR {var_pct:.2f}% exceeds halt limit {self.var_halt_limit*100:.2f}%'
+                    f"VaR {var_pct:.2f}% exceeds halt limit {self.var_halt_limit * 100:.2f}%"
                 )
                 self.trading_halted = True
-                self.halt_reason = f'VaR limit breach: {var_pct:.2f}%'
+                self.halt_reason = f"VaR limit breach: {var_pct:.2f}%"
 
             elif current_var >= self.var_critical_limit:
-                action = 'REDUCE_POSITIONS'
-                severity = 'CRITICAL'
+                action = "REDUCE_POSITIONS"
+                severity = "CRITICAL"
                 reduction_needed = self._calculate_required_reduction(
                     current_var, self.var_warning_limit
                 )
                 messages.append(
-                    f'VaR {var_pct:.2f}% exceeds critical limit '
-                    f'{self.var_critical_limit*100:.2f}%'
+                    f"VaR {var_pct:.2f}% exceeds critical limit "
+                    f"{self.var_critical_limit * 100:.2f}%"
                 )
-                messages.append(f'Reduce positions by {reduction_needed:.1f}%')
+                messages.append(f"Reduce positions by {reduction_needed:.1f}%")
 
             elif current_var >= self.var_warning_limit:
-                action = 'MONITOR'
-                severity = 'WARNING'
+                action = "MONITOR"
+                severity = "WARNING"
                 messages.append(
-                    f'VaR {var_pct:.2f}% exceeds warning limit '
-                    f'{self.var_warning_limit*100:.2f}%'
+                    f"VaR {var_pct:.2f}% exceeds warning limit {self.var_warning_limit * 100:.2f}%"
                 )
 
             else:
-                messages.append(f'VaR {var_pct:.2f}% within acceptable limits')
+                messages.append(f"VaR {var_pct:.2f}% within acceptable limits")
 
             # Calculate VaR utilization
             utilization = current_var / self.var_critical_limit
 
             result = {
-                'current_var': current_var,
-                'var_amount': var_amount,
-                'var_pct': var_pct,
-                'var_utilization': utilization,
-                'severity': severity,
-                'action': action,
-                'messages': messages,
-                'limits': {
-                    'warning': self.var_warning_limit * 100,
-                    'critical': self.var_critical_limit * 100,
-                    'halt': self.var_halt_limit * 100,
+                "current_var": current_var,
+                "var_amount": var_amount,
+                "var_pct": var_pct,
+                "var_utilization": utilization,
+                "severity": severity,
+                "action": action,
+                "messages": messages,
+                "limits": {
+                    "warning": self.var_warning_limit * 100,
+                    "critical": self.var_critical_limit * 100,
+                    "halt": self.var_halt_limit * 100,
                 },
-                'trading_halted': self.trading_halted,
+                "trading_halted": self.trading_halted,
             }
 
             # Log enforcement action
-            if action and action != 'MONITOR':
-                self._log_enforcement('var_limit', result)
+            if action and action != "MONITOR":
+                self._log_enforcement("var_limit", result)
 
             return result
 
         except (ValueError, TypeError, AttributeError) as e:
-            self.logger.error(f'Error checking VaR limits: {e}', exc_info=True)
-            return {'error': str(e)}
+            self.logger.error(f"Error checking VaR limits: {e}", exc_info=True)
+            return {"error": str(e)}
 
     def _calculate_required_reduction(
         self,
@@ -206,7 +205,7 @@ class RiskLimitsEnforcer:
     def enforce_position_limits(
         self,
         portfolio: Portfolio,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Enforce position size and concentration limits.
 
@@ -218,7 +217,7 @@ class RiskLimitsEnforcer:
         """
         try:
             if portfolio.total_equity == 0:
-                return {'error': 'Portfolio value is zero'}
+                return {"error": "Portfolio value is zero"}
 
             violations = []
             position_limits = {}
@@ -231,22 +230,22 @@ class RiskLimitsEnforcer:
                 if weight > self.max_position_pct:
                     violations.append(
                         {
-                            'type': 'position_size',
-                            'symbol': position.symbol,
-                            'current_weight': weight,
-                            'limit': self.max_position_pct,
-                            'excess': weight - self.max_position_pct,
-                            'action': 'REDUCE',
-                            'required_reduction': (weight - self.max_position_pct)
+                            "type": "position_size",
+                            "symbol": position.symbol,
+                            "current_weight": weight,
+                            "limit": self.max_position_pct,
+                            "excess": weight - self.max_position_pct,
+                            "action": "REDUCE",
+                            "required_reduction": (weight - self.max_position_pct)
                             * portfolio.total_equity,
                         }
                     )
 
                 position_limits[position.symbol] = {
-                    'current_weight': weight,
-                    'limit': self.max_position_pct,
-                    'utilization': weight / self.max_position_pct,
-                    'status': 'OK' if weight <= self.max_position_pct else 'EXCEEDED',
+                    "current_weight": weight,
+                    "limit": self.max_position_pct,
+                    "utilization": weight / self.max_position_pct,
+                    "status": "OK" if weight <= self.max_position_pct else "EXCEEDED",
                 }
 
             # Check concentration (top N positions)
@@ -264,37 +263,37 @@ class RiskLimitsEnforcer:
             if top_concentration > self.max_concentration_pct:
                 violations.append(
                     {
-                        'type': 'concentration',
-                        'description': 'Top 3 positions',
-                        'current_concentration': top_concentration,
-                        'limit': self.max_concentration_pct,
-                        'excess': top_concentration - self.max_concentration_pct,
-                        'action': 'DIVERSIFY',
+                        "type": "concentration",
+                        "description": "Top 3 positions",
+                        "current_concentration": top_concentration,
+                        "limit": self.max_concentration_pct,
+                        "excess": top_concentration - self.max_concentration_pct,
+                        "action": "DIVERSIFY",
                     }
                 )
 
             result = {
-                'violations': violations,
-                'position_limits': position_limits,
-                'top_concentration': top_concentration,
-                'concentration_limit': self.max_concentration_pct,
-                'compliance': len(violations) == 0,
+                "violations": violations,
+                "position_limits": position_limits,
+                "top_concentration": top_concentration,
+                "concentration_limit": self.max_concentration_pct,
+                "compliance": len(violations) == 0,
             }
 
             if violations:
-                self._log_enforcement('position_limits', result)
+                self._log_enforcement("position_limits", result)
 
             return result
 
         except (ValueError, TypeError, AttributeError) as e:
-            self.logger.error(f'Error enforcing position limits: {e}', exc_info=True)
-            return {'error': str(e)}
+            self.logger.error(f"Error enforcing position limits: {e}", exc_info=True)
+            return {"error": str(e)}
 
     def generate_risk_heatmap(
         self,
         portfolio: Portfolio,
-        risk_contributions: Optional[Dict[str, float]] = None,
-    ) -> Dict[str, Any]:
+        risk_contributions: Optional[dict[str, float]] = None,
+    ) -> dict[str, Any]:
         """
         Generate portfolio risk heatmap by position.
 
@@ -307,7 +306,7 @@ class RiskLimitsEnforcer:
         """
         try:
             if portfolio.total_equity == 0:
-                return {'error': 'Portfolio value is zero'}
+                return {"error": "Portfolio value is zero"}
 
             heatmap_data = []
             total_risk = 0.0
@@ -320,10 +319,10 @@ class RiskLimitsEnforcer:
                 try:
                     config = get_config()
                     high_risk_threshold = float(
-                        getattr(config.trading, 'risk_heatmap_high_threshold', 0.15)
+                        getattr(config.trading, "risk_heatmap_high_threshold", 0.15)
                     )
                     medium_risk_threshold = float(
-                        getattr(config.trading, 'risk_heatmap_medium_threshold', 0.10)
+                        getattr(config.trading, "risk_heatmap_medium_threshold", 0.10)
                     )
                 except (AttributeError, ValueError, TypeError) as e:
                     self.logger.warning(
@@ -333,14 +332,14 @@ class RiskLimitsEnforcer:
                     medium_risk_threshold = 0.10
 
                 if weight > high_risk_threshold:
-                    risk_level = 'HIGH'
-                    risk_color = 'red'
+                    risk_level = "HIGH"
+                    risk_color = "red"
                 elif weight > medium_risk_threshold:
-                    risk_level = 'MEDIUM'
-                    risk_color = 'yellow'
+                    risk_level = "MEDIUM"
+                    risk_color = "yellow"
                 else:
-                    risk_level = 'LOW'
-                    risk_color = 'green'
+                    risk_level = "LOW"
+                    risk_color = "green"
 
                 # Risk contribution
                 risk_contribution = (
@@ -350,38 +349,38 @@ class RiskLimitsEnforcer:
 
                 heatmap_data.append(
                     {
-                        'symbol': position.symbol,
-                        'weight': weight,
-                        'value': float(position.market_value),
-                        'risk_level': risk_level,
-                        'risk_color': risk_color,
-                        'risk_contribution': risk_contribution,
+                        "symbol": position.symbol,
+                        "weight": weight,
+                        "value": float(position.market_value),
+                        "risk_level": risk_level,
+                        "risk_color": risk_color,
+                        "risk_contribution": risk_contribution,
                     }
                 )
 
             # Sort by risk contribution
-            heatmap_data.sort(key=lambda x: abs(x['risk_contribution']), reverse=True)
+            heatmap_data.sort(key=lambda x: abs(x["risk_contribution"]), reverse=True)
 
             # Calculate percentages
             if total_risk > 0:
                 for item in heatmap_data:
-                    item['risk_pct'] = abs(item['risk_contribution']) / total_risk * 100
+                    item["risk_pct"] = abs(item["risk_contribution"]) / total_risk * 100
 
             return {
-                'heatmap': heatmap_data,
-                'total_risk': total_risk,
-                'highest_risk': heatmap_data[0] if heatmap_data else None,
-                'risk_distribution': self._analyze_risk_distribution(heatmap_data),
+                "heatmap": heatmap_data,
+                "total_risk": total_risk,
+                "highest_risk": heatmap_data[0] if heatmap_data else None,
+                "risk_distribution": self._analyze_risk_distribution(heatmap_data),
             }
 
         except (ValueError, TypeError, AttributeError) as e:
-            self.logger.error(f'Error generating risk heatmap: {e}', exc_info=True)
-            return {'error': str(e)}
+            self.logger.error(f"Error generating risk heatmap: {e}", exc_info=True)
+            return {"error": str(e)}
 
     def _analyze_risk_distribution(
         self,
-        heatmap_data: List[Dict[str, Any]],
-    ) -> Dict[str, Any]:
+        heatmap_data: list[dict[str, Any]],
+    ) -> dict[str, Any]:
         """
         Analyze risk distribution across positions.
 
@@ -395,17 +394,17 @@ class RiskLimitsEnforcer:
             return {}
 
         # Concentration metrics
-        top_3_risk = sum(item.get('risk_pct', 0) for item in heatmap_data[:3])
-        top_5_risk = sum(item.get('risk_pct', 0) for item in heatmap_data[:5])
+        top_3_risk = sum(item.get("risk_pct", 0) for item in heatmap_data[:3])
+        top_5_risk = sum(item.get("risk_pct", 0) for item in heatmap_data[:5])
 
         # Risk concentration assessment using config
         try:
             config = get_config()
             high_threshold = float(
-                getattr(config.trading, 'risk_concentration_high_threshold', 60.0)
+                getattr(config.trading, "risk_concentration_high_threshold", 60.0)
             )
             medium_threshold = float(
-                getattr(config.trading, 'risk_concentration_medium_threshold', 40.0)
+                getattr(config.trading, "risk_concentration_medium_threshold", 40.0)
             )
         except (AttributeError, ValueError, TypeError) as e:
             self.logger.warning(f"Error getting risk concentration thresholds: {e}, using defaults")
@@ -413,25 +412,25 @@ class RiskLimitsEnforcer:
             medium_threshold = 40.0
 
         if top_3_risk > high_threshold:
-            concentration = 'HIGH'
+            concentration = "HIGH"
         elif top_3_risk > medium_threshold:
-            concentration = 'MEDIUM'
+            concentration = "MEDIUM"
         else:
-            concentration = 'LOW'
+            concentration = "LOW"
 
         return {
-            'top_3_concentration': top_3_risk,
-            'top_5_concentration': top_5_risk,
-            'concentration_level': concentration,
-            'n_positions': len(heatmap_data),
+            "top_3_concentration": top_3_risk,
+            "top_5_concentration": top_5_risk,
+            "concentration_level": concentration,
+            "n_positions": len(heatmap_data),
         }
 
     def attribute_risk_by_asset_class(
         self,
         portfolio: Portfolio,
-        returns_history: Dict[str, List[float]],
-        asset_class_mapping: Optional[Dict[str, str]] = None,
-    ) -> Dict[str, Any]:
+        returns_history: dict[str, list[float]],
+        asset_class_mapping: Optional[dict[str, str]] = None,
+    ) -> dict[str, Any]:
         """
         Attribute risk by asset class.
 
@@ -445,24 +444,24 @@ class RiskLimitsEnforcer:
         """
         try:
             if portfolio.total_equity == 0:
-                return {'error': 'Portfolio value is zero'}
+                return {"error": "Portfolio value is zero"}
 
             # Default asset class mapping (simplified)
             if asset_class_mapping is None:
                 asset_class_mapping = {}
                 for position in portfolio.positions:
                     # Simple heuristic based on symbol
-                    if position.symbol.endswith('-USD'):
-                        asset_class_mapping[position.symbol] = 'crypto'
+                    if position.symbol.endswith("-USD"):
+                        asset_class_mapping[position.symbol] = "crypto"
                     else:
-                        asset_class_mapping[position.symbol] = 'equities'
+                        asset_class_mapping[position.symbol] = "equities"
 
             # Group by asset class
             class_exposures = {}
             class_volatilities = {}
 
             for position in portfolio.positions:
-                asset_class = asset_class_mapping.get(position.symbol, 'unknown')
+                asset_class = asset_class_mapping.get(position.symbol, "unknown")
                 exposure = float(position.market_value)
 
                 if asset_class not in class_exposures:
@@ -485,7 +484,7 @@ class RiskLimitsEnforcer:
             try:
                 config = get_config()
                 default_vol = float(
-                    getattr(config.trading, 'risk_enforcer_default_volatility', 0.2)
+                    getattr(config.trading, "risk_enforcer_default_volatility", 0.2)
                 )
             except (AttributeError, ValueError, TypeError) as e:
                 self.logger.warning(f"Error getting default volatility: {e}, using default 0.2")
@@ -502,11 +501,11 @@ class RiskLimitsEnforcer:
                 risk_contribution = weight * avg_vol
 
                 risk_attributions[asset_class] = {
-                    'exposure': exposure,
-                    'weight': weight,
-                    'avg_volatility': avg_vol,
-                    'risk_contribution': risk_contribution,
-                    'n_positions': len(
+                    "exposure": exposure,
+                    "weight": weight,
+                    "avg_volatility": avg_vol,
+                    "risk_contribution": risk_contribution,
+                    "n_positions": len(
                         [
                             p
                             for p in portfolio.positions
@@ -516,28 +515,28 @@ class RiskLimitsEnforcer:
                 }
 
             # Calculate percentages
-            total_risk = sum(attr['risk_contribution'] for attr in risk_attributions.values())
+            total_risk = sum(attr["risk_contribution"] for attr in risk_attributions.values())
 
             for asset_class in risk_attributions:
                 if total_risk > 0:
-                    risk_attributions[asset_class]['risk_pct'] = (
-                        risk_attributions[asset_class]['risk_contribution'] / total_risk * 100
+                    risk_attributions[asset_class]["risk_pct"] = (
+                        risk_attributions[asset_class]["risk_contribution"] / total_risk * 100
                     )
 
             return {
-                'by_asset_class': risk_attributions,
-                'total_exposure': total_exposure,
-                'total_risk': total_risk,
-                'dominant_risk': (
-                    max(risk_attributions.items(), key=lambda x: x[1]['risk_contribution'])[0]
+                "by_asset_class": risk_attributions,
+                "total_exposure": total_exposure,
+                "total_risk": total_risk,
+                "dominant_risk": (
+                    max(risk_attributions.items(), key=lambda x: x[1]["risk_contribution"])[0]
                     if risk_attributions
                     else None
                 ),
             }
 
         except (ValueError, TypeError, AttributeError) as e:
-            self.logger.error(f'Error attributing risk: {e}', exc_info=True)
-            return {'error': str(e)}
+            self.logger.error(f"Error attributing risk: {e}", exc_info=True)
+            return {"error": str(e)}
 
     def calculate_dynamic_position_size(
         self,
@@ -572,9 +571,9 @@ class RiskLimitsEnforcer:
         adjusted_value = base_position_value * scale_factor
 
         self.logger.debug(
-            f'Dynamic position sizing: base={base_position_value:.2f}, '
-            f'utilization={current_var_utilization:.2%}, scale={scale_factor:.2%}, '
-            f'adjusted={adjusted_value:.2f}'
+            f"Dynamic position sizing: base={base_position_value:.2f}, "
+            f"utilization={current_var_utilization:.2%}, scale={scale_factor:.2%}, "
+            f"adjusted={adjusted_value:.2f}"
         )
 
         return adjusted_value
@@ -582,38 +581,38 @@ class RiskLimitsEnforcer:
     def _log_enforcement(
         self,
         enforcement_type: str,
-        result: Dict[str, Any],
+        result: dict[str, Any],
     ) -> None:
         """Log enforcement action to history."""
         log_entry = {
-            'type': enforcement_type,
-            'timestamp': datetime.utcnow().isoformat(),
-            'result': result,
+            "type": enforcement_type,
+            "timestamp": datetime.utcnow().isoformat(),
+            "result": result,
         }
 
         self.enforcement_history.append(log_entry)
 
-        self.logger.warning(f'Risk enforcement action: {enforcement_type} - {result}')
+        self.logger.warning(f"Risk enforcement action: {enforcement_type} - {result}")
 
     def reset_trading_halt(self) -> None:
         """Reset trading halt flag (use after manual review)."""
         self.trading_halted = False
         self.halt_reason = None
-        self.logger.info('Trading halt flag reset')
+        self.logger.info("Trading halt flag reset")
 
-    def get_enforcement_status(self) -> Dict[str, Any]:
+    def get_enforcement_status(self) -> dict[str, Any]:
         """Get current enforcement status."""
         return {
-            'trading_halted': self.trading_halted,
-            'halt_reason': self.halt_reason,
-            'enforcement_count': len(self.enforcement_history),
-            'limits': {
-                'var_warning': self.var_warning_limit * 100,
-                'var_critical': self.var_critical_limit * 100,
-                'var_halt': self.var_halt_limit * 100,
-                'max_position': self.max_position_pct * 100,
-                'max_concentration': self.max_concentration_pct * 100,
-                'max_leverage': self.max_leverage,
-                'max_drawdown': self.max_drawdown_pct * 100,
+            "trading_halted": self.trading_halted,
+            "halt_reason": self.halt_reason,
+            "enforcement_count": len(self.enforcement_history),
+            "limits": {
+                "var_warning": self.var_warning_limit * 100,
+                "var_critical": self.var_critical_limit * 100,
+                "var_halt": self.var_halt_limit * 100,
+                "max_position": self.max_position_pct * 100,
+                "max_concentration": self.max_concentration_pct * 100,
+                "max_leverage": self.max_leverage,
+                "max_drawdown": self.max_drawdown_pct * 100,
             },
         }

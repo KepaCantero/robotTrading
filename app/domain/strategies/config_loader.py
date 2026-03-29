@@ -9,7 +9,7 @@ import json
 import logging
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 import yaml
 
@@ -27,7 +27,7 @@ class StrategyConfigLoader:
             config_path: Ruta al archivo de configuración
         """
         self.config_path = Path(config_path)
-        self.config: Dict[str, Any] = {}
+        self.config: dict[str, Any] = {}
         self.last_loaded: Optional[datetime] = None
         self._validate_config_path()
 
@@ -38,7 +38,7 @@ class StrategyConfigLoader:
             logger.info(f"Creating config directory: {self.config_path.parent}")
             self.config_path.parent.mkdir(parents=True, exist_ok=True)
 
-    def load_config(self) -> Dict[str, Any]:
+    def load_config(self) -> dict[str, Any]:
         """
         Cargar configuración desde archivo.
 
@@ -54,10 +54,10 @@ class StrategyConfigLoader:
 
         try:
             if self.config_path.suffix in [".yaml", ".yml"]:
-                with open(self.config_path, "r", encoding="utf-8") as f:
+                with open(self.config_path, encoding="utf-8") as f:
                     self.config = yaml.safe_load(f) or {}
             elif self.config_path.suffix == ".json":
-                with open(self.config_path, "r", encoding="utf-8") as f:
+                with open(self.config_path, encoding="utf-8") as f:
                     self.config = json.load(f)
             else:
                 raise ValueError(f"Unsupported config file format: {self.config_path.suffix}")
@@ -72,10 +72,10 @@ class StrategyConfigLoader:
             return self.config
 
         except (FileNotFoundError, ValueError, KeyError, TypeError) as e:
-            logger.error(f"Failed to load config from {self.config_path}: {str(e)}")
+            logger.error(f"Failed to load config from {self.config_path}: {e!s}")
             raise
 
-    def save_config(self, config: Optional[Dict[str, Any]] = None) -> None:
+    def save_config(self, config: Optional[dict[str, Any]] = None) -> None:
         """
         Guardar configuración en archivo.
 
@@ -96,10 +96,10 @@ class StrategyConfigLoader:
             logger.info(f"Saved config to: {self.config_path}")
 
         except (FileNotFoundError, ValueError, KeyError, TypeError) as e:
-            logger.error(f"Failed to save config to {self.config_path}: {str(e)}")
+            logger.error(f"Failed to save config to {self.config_path}: {e!s}")
             raise
 
-    def get_active_strategies(self) -> List[str]:
+    def get_active_strategies(self) -> list[str]:
         """
         Obtener estrategias activas.
 
@@ -108,7 +108,7 @@ class StrategyConfigLoader:
         """
         return self.config.get("active_strategies", [])
 
-    def get_strategy_config(self, strategy_name: str) -> Dict[str, Any]:
+    def get_strategy_config(self, strategy_name: str) -> dict[str, Any]:
         """
         Obtener configuración de estrategia específica.
 
@@ -130,7 +130,7 @@ class StrategyConfigLoader:
 
         return strategies[strategy_name]
 
-    def get_backtesting_strategies(self) -> List[str]:
+    def get_backtesting_strategies(self) -> list[str]:
         """
         Obtener estrategias para backtesting.
 
@@ -148,7 +148,7 @@ class StrategyConfigLoader:
         """
         return self.config.get("paper_trading_strategy", "")
 
-    def get_logging_config(self) -> Dict[str, Any]:
+    def get_logging_config(self) -> dict[str, Any]:
         """
         Obtener configuración de logging.
 
@@ -198,7 +198,7 @@ class StrategyConfigLoader:
         logger.info("Config validation passed")
         return True
 
-    def add_strategy_config(self, strategy_name: str, strategy_config: Dict[str, Any]) -> None:
+    def add_strategy_config(self, strategy_name: str, strategy_config: dict[str, Any]) -> None:
         """
         Añadir configuración de estrategia.
 
@@ -225,7 +225,7 @@ class StrategyConfigLoader:
         else:
             logger.warning(f"Strategy config not found: {strategy_name}")
 
-    def update_strategy_config(self, strategy_name: str, updates: Dict[str, Any]) -> None:
+    def update_strategy_config(self, strategy_name: str, updates: dict[str, Any]) -> None:
         """
         Actualizar configuración de estrategia.
 
@@ -245,7 +245,7 @@ class StrategyConfigLoader:
 
         logger.info(f"Updated strategy config: {strategy_name}")
 
-    def reload_config(self) -> Dict[str, Any]:
+    def reload_config(self) -> dict[str, Any]:
         """
         Recargar configuración desde archivo.
 
@@ -255,7 +255,7 @@ class StrategyConfigLoader:
         logger.info("Reloading config...")
         return self.load_config()
 
-    def get_config_summary(self) -> Dict[str, Any]:
+    def get_config_summary(self) -> dict[str, Any]:
         """
         Obtener resumen de la configuración.
 

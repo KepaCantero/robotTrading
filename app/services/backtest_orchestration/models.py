@@ -10,10 +10,7 @@ from dataclasses import dataclass, field
 from datetime import date, datetime
 from decimal import Decimal
 from enum import Enum
-from typing import TYPE_CHECKING, Dict, List, Optional
-
-if TYPE_CHECKING:
-    pass
+from typing import Optional
 
 logger = logging.getLogger(__name__)
 
@@ -106,7 +103,7 @@ class BacktestConfig:
 
     # Strategy parameters
     strategy_name: str = "momentum_modular"
-    symbols: List[str] = field(default_factory=list)
+    symbols: list[str] = field(default_factory=list)
     max_positions: int = 10
     max_position_size_pct: Decimal = field(
         default_factory=_get_default_position_size
@@ -188,14 +185,14 @@ class BacktestResult:
 
     # Validation results
     validation_passed: bool = True
-    validation_warnings: List[str] = field(default_factory=list)
-    validation_failures: List[str] = field(default_factory=list)
+    validation_warnings: list[str] = field(default_factory=list)
+    validation_failures: list[str] = field(default_factory=list)
 
     # Execution timing
     execution_timestamp: datetime = field(default_factory=datetime.utcnow)
     execution_duration_seconds: float = 0.0
 
-    def to_dict(self) -> Dict:
+    def to_dict(self) -> dict:
         """Convert result to dictionary."""
         logger.debug(
             "Converting backtest result to dict",
@@ -250,7 +247,7 @@ class BacktestOrchestrationRequest:
     start_date: date
     end_date: date
     strategy_name: str = "momentum_modular"
-    symbols: List[str] = field(default_factory=list)
+    symbols: list[str] = field(default_factory=list)
 
 
 @dataclass
@@ -260,7 +257,7 @@ class BacktestOrchestrationResult:
     success: bool
     backtest_result: Optional[BacktestResult] = None
     error_message: str = ""
-    warnings: List[str] = field(default_factory=list)
+    warnings: list[str] = field(default_factory=list)
     feasibility_ratio: Decimal = field(default=Decimal("0.0"))
     feasibility_status: str = "unknown"  # APPROVED, CONDITIONAL, REJECTED
     orchestration_time_ms: float = 0.0

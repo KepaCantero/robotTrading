@@ -6,7 +6,7 @@ import logging
 from datetime import datetime, timedelta
 from decimal import Decimal
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Optional
 
 import numpy as np
 import pandas as pd
@@ -35,7 +35,7 @@ class PortfolioAnalyzer:
         self,
         criteria: str = "momentum_signal",  # "momentum_signal", "performance", "volatility"
         lookback_days: int = 365,
-    ) -> Tuple[str, Dict]:
+    ) -> tuple[str, dict]:
         """
         Seleccionar el mejor stock según criterio.
 
@@ -82,17 +82,17 @@ class PortfolioAnalyzer:
                 df = pd.DataFrame(
                     [
                         {
-                            'date': q.timestamp,
-                            'close': float(q.close if q.close else q.last),
-                            'open': float(q.open if q.open else q.last),
-                            'high': float(q.high if q.high else q.last),
-                            'low': float(q.low if q.low else q.last),
-                            'volume': float(q.volume),
+                            "date": q.timestamp,
+                            "close": float(q.close if q.close else q.last),
+                            "open": float(q.open if q.open else q.last),
+                            "high": float(q.high if q.high else q.last),
+                            "low": float(q.low if q.low else q.last),
+                            "volume": float(q.volume),
                         }
                         for q in quotes
                     ]
                 )
-                df.set_index('date', inplace=True)
+                df.set_index("date", inplace=True)
 
                 # Calcular métricas según criterio
                 if criteria == "momentum_signal":
@@ -108,8 +108,8 @@ class PortfolioAnalyzer:
                     best_score = score
                     best_symbol = symbol
                     best_metrics = metrics
-                    best_metrics['symbol'] = symbol
-                    best_metrics['score'] = score
+                    best_metrics["symbol"] = symbol
+                    best_metrics["score"] = score
 
             except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
                 logger.warning(f"Error analizando {symbol}: {e}")
@@ -120,32 +120,32 @@ class PortfolioAnalyzer:
             return best_symbol, best_metrics
         else:
             # Fallback a símbolo por defecto
-            return "AAPL", {'symbol': 'AAPL', 'score': 0.0}
+            return "AAPL", {"symbol": "AAPL", "score": 0.0}
 
-    def _calculate_momentum_score(self, df: pd.DataFrame) -> Tuple[float, Dict]:
+    def _calculate_momentum_score(self, df: pd.DataFrame) -> tuple[float, dict]:
         """Calcular score de momentum."""
         if len(df) < 20:
             return 0.0, {}
 
         # Calcular RSI
-        delta = df['close'].diff()
+        delta = df["close"].diff()
         gain = (delta.where(delta > 0, 0)).rolling(window=14).mean()
         loss = (-delta.where(delta < 0, 0)).rolling(window=14).mean()
         rs = gain / (loss + 1e-8)
         rsi = 100 - (100 / (1 + rs))
 
         # Calcular momentum (ROC)
-        roc = ((df['close'] - df['close'].shift(20)) / df['close'].shift(20)) * 100
+        roc = ((df["close"] - df["close"].shift(20)) / df["close"].shift(20)) * 100
 
         # Calcular EMA cross
-        ema_fast = df['close'].ewm(span=12, adjust=False).mean()
-        ema_slow = df['close'].ewm(span=26, adjust=False).mean()
+        ema_fast = df["close"].ewm(span=12, adjust=False).mean()
+        ema_slow = df["close"].ewm(span=26, adjust=False).mean()
 
         # Score basado en condiciones de momentum
         current_rsi = rsi.iloc[-1]
         current_roc = roc.iloc[-1]
         ema_bullish = ema_fast.iloc[-1] > ema_slow.iloc[-1]
-        price_above_ema = df['close'].iloc[-1] > ema_fast.iloc[-1]
+        price_above_ema = df["close"].iloc[-1] > ema_fast.iloc[-1]
 
         score = 0.0
         score += 0.3 if (40 < current_rsi < 70) else 0  # RSI en zona de momentum
@@ -154,40 +154,40 @@ class PortfolioAnalyzer:
         score += 0.2 if price_above_ema else 0  # Precio sobre EMA
 
         metrics = {
-            'rsi': float(current_rsi),
-            'roc': float(current_roc),
-            'ema_bullish': ema_bullish,
-            'return_1y': float((df['close'].iloc[-1] / df['close'].iloc[0] - 1) * 100),
+            "rsi": float(current_rsi),
+            "roc": float(current_roc),
+            "ema_bullish": ema_bullish,
+            "return_1y": float((df["close"].iloc[-1] / df["close"].iloc[0] - 1) * 100),
         }
 
         return score, metrics
 
-    def _calculate_performance_score(self, df: pd.DataFrame) -> Tuple[float, Dict]:
+    def _calculate_performance_score(self, df: pd.DataFrame) -> tuple[float, dict]:
         """Calcular score basado en performance."""
         if len(df) < 2:
             return 0.0, {}
 
-        return_pct = (df['close'].iloc[-1] / df['close'].iloc[0] - 1) * 100
-        volatility = df['close'].pct_change().std() * np.sqrt(252) * 100
+        return_pct = (df["close"].iloc[-1] / df["close"].iloc[0] - 1) * 100
+        volatility = df["close"].pct_change().std() * np.sqrt(252) * 100
 
         sharpe = return_pct / volatility if volatility > 0 else 0
 
         metrics = {
-            'return_1y': float(return_pct),
-            'volatility': float(volatility),
-            'sharpe': float(sharpe),
+            "return_1y": float(return_pct),
+            "volatility": float(volatility),
+            "sharpe": float(sharpe),
         }
 
         return sharpe, metrics
 
-    def _calculate_volatility_score(self, df: pd.DataFrame) -> Tuple[float, Dict]:
+    def _calculate_volatility_score(self, df: pd.DataFrame) -> tuple[float, dict]:
         """Calcular score basado en volatilidad (menor es mejor para algunos casos)."""
-        volatility = df['close'].pct_change().std() * np.sqrt(252) * 100
+        volatility = df["close"].pct_change().std() * np.sqrt(252) * 100
 
         # Score inverso: menor volatilidad = mayor score (hasta cierto punto)
         score = 1.0 / (1.0 + volatility / 50.0)
 
-        metrics = {'volatility': float(volatility)}
+        metrics = {"volatility": float(volatility)}
         return score, metrics
 
 
@@ -214,7 +214,7 @@ class AutomatedBacktestRunner:
         if config_path:
             import yaml
 
-            with open(config_path, 'r') as f:
+            with open(config_path) as f:
                 self.config = yaml.safe_load(f)
         else:
             self.config = self._load_default_config()
@@ -223,9 +223,9 @@ class AutomatedBacktestRunner:
         self.quotes = self._load_historical_data()
 
         # Resultados
-        self.results: List[Dict[str, Any]] = []
+        self.results: list[dict[str, Any]] = []
 
-    def _load_default_config(self) -> Dict:
+    def _load_default_config(self) -> dict:
         """Cargar configuración por defecto."""
         config_path = (
             Path(__file__).parent.parent.parent.parent
@@ -236,11 +236,11 @@ class AutomatedBacktestRunner:
         if config_path.exists():
             import yaml
 
-            with open(config_path, 'r') as f:
+            with open(config_path) as f:
                 return yaml.safe_load(f)
         return {}
 
-    def _load_historical_data(self) -> List[Quote]:
+    def _load_historical_data(self) -> list[Quote]:
         """Cargar datos históricos para el símbolo."""
         loader = DataLoader()
         quotes = loader.load_market_data(
@@ -257,7 +257,7 @@ class AutomatedBacktestRunner:
         logger.info(f"Cargados {len(quotes)} quotes para {self.symbol}")
         return quotes
 
-    def run_baseline_backtest(self) -> Dict[str, Any]:
+    def run_baseline_backtest(self) -> dict[str, Any]:
         """Ejecutar backtest con todos los módulos activos (baseline)."""
         logger.info("=" * 80)
         logger.info("EJECUTANDO BACKTEST BASELINE (Todos los módulos activos)")
@@ -289,7 +289,7 @@ class AutomatedBacktestRunner:
 
         return metrics
 
-    def run_ablation_study(self) -> List[Dict[str, Any]]:
+    def run_ablation_study(self) -> list[dict[str, Any]]:
         """Ejecutar estudio de ablation desactivando módulos uno por uno."""
         logger.info("=" * 80)
         logger.info("EJECUTANDO ESTUDIO DE ABLATION")
@@ -330,13 +330,13 @@ class AutomatedBacktestRunner:
 
             result = backtester.run_backtest(self.quotes, signals=signals)
             metrics = self._extract_metrics(result, f"ABLATION - Without {module_name}")
-            metrics['disabled_module'] = module_name
+            metrics["disabled_module"] = module_name
             ablation_results.append(metrics)
             self.results.append(metrics)
 
         return ablation_results
 
-    def run_learning_engines_backtest(self) -> List[Dict[str, Any]]:
+    def run_learning_engines_backtest(self) -> list[dict[str, Any]]:
         """Ejecutar backtests con cada learning engine."""
         logger.info("=" * 80)
         logger.info("EJECUTANDO BACKTESTS CON LEARNING ENGINES")
@@ -361,7 +361,7 @@ class AutomatedBacktestRunner:
 
         return learning_results
 
-    def _run_with_learning_engine(self, engine_type: str, algorithm: str) -> Dict[str, Any]:
+    def _run_with_learning_engine(self, engine_type: str, algorithm: str) -> dict[str, Any]:
         """Ejecutar backtest con un learning engine específico."""
         try:
             # Crear estrategia con learning engine
@@ -391,7 +391,7 @@ class AutomatedBacktestRunner:
             )
 
             # Entrenar learning engine
-            if hasattr(strategy, 'learning_engine') and strategy.learning_engine:
+            if hasattr(strategy, "learning_engine") and strategy.learning_engine:
                 training_data = self._prepare_training_data(training_quotes, engine_type)
                 strategy.learning_engine.train(training_data)
 
@@ -413,27 +413,27 @@ class AutomatedBacktestRunner:
 
             result = backtester.run_backtest(test_quotes, signals=signals)
             metrics = self._extract_metrics(result, f"{engine_type.upper()} - {algorithm.upper()}")
-            metrics['learning_engine'] = engine_type
-            metrics['algorithm'] = algorithm
+            metrics["learning_engine"] = engine_type
+            metrics["algorithm"] = algorithm
 
             return metrics
 
         except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
             logger.error(f"Error ejecutando {engine_type}: {e}", exc_info=True)
             return {
-                'name': f"{engine_type.upper()} - {algorithm.upper()}",
-                'error': str(e),
-                'total_pnl': 0.0,
-                'win_rate': 0.0,
-                'sharpe_ratio': 0.0,
-                'max_drawdown': 0.0,
-                'total_trades': 0,
-                'return_pct': 0.0,
+                "name": f"{engine_type.upper()} - {algorithm.upper()}",
+                "error": str(e),
+                "total_pnl": 0.0,
+                "win_rate": 0.0,
+                "sharpe_ratio": 0.0,
+                "max_drawdown": 0.0,
+                "total_trades": 0,
+                "return_pct": 0.0,
             }
 
     def _create_strategy_with_modules(
         self,
-        disable_modules: List[str],
+        disable_modules: list[str],
         enable_learning: bool = False,
         learning_engine_type: Optional[str] = None,
         learning_algorithm: Optional[str] = None,
@@ -468,7 +468,7 @@ class AutomatedBacktestRunner:
 
         return strategy
 
-    def _prepare_training_data(self, quotes: List[Quote], engine_type: str) -> Dict:
+    def _prepare_training_data(self, quotes: list[Quote], engine_type: str) -> dict:
         """Preparar datos de entrenamiento según tipo de engine."""
         from app.backtesting.engine import SimpleBacktester
         from app.backtesting.models import BacktestConfig
@@ -516,30 +516,30 @@ class AutomatedBacktestRunner:
 
         return {}
 
-    def _extract_metrics(self, result, name: str) -> Dict[str, Any]:
+    def _extract_metrics(self, result, name: str) -> dict[str, Any]:
         """Extraer métricas del resultado del backtest."""
         if result is None:
             return {
-                'name': name,
-                'total_pnl': 0.0,
-                'win_rate': 0.0,
-                'sharpe_ratio': 0.0,
-                'max_drawdown': 0.0,
-                'total_trades': 0,
-                'return_pct': 0.0,
+                "name": name,
+                "total_pnl": 0.0,
+                "win_rate": 0.0,
+                "sharpe_ratio": 0.0,
+                "max_drawdown": 0.0,
+                "total_trades": 0,
+                "return_pct": 0.0,
             }
 
         performance = result.performance
 
         return {
-            'name': name,
-            'total_pnl': float(performance.total_pnl),
-            'win_rate': float(performance.win_rate) * 100,
-            'sharpe_ratio': float(performance.sharpe_ratio) if performance.sharpe_ratio else 0.0,
-            'max_drawdown': float(performance.max_drawdown_percentage),
-            'total_trades': performance.total_trades,
-            'return_pct': float(result.total_return),
-            'final_capital': float(result.final_capital),
+            "name": name,
+            "total_pnl": float(performance.total_pnl),
+            "win_rate": float(performance.win_rate) * 100,
+            "sharpe_ratio": float(performance.sharpe_ratio) if performance.sharpe_ratio else 0.0,
+            "max_drawdown": float(performance.max_drawdown_percentage),
+            "total_trades": performance.total_trades,
+            "return_pct": float(result.total_return),
+            "final_capital": float(result.final_capital),
         }
 
     def generate_summary_report(self) -> pd.DataFrame:
@@ -551,7 +551,7 @@ class AutomatedBacktestRunner:
         df = pd.DataFrame(self.results)
 
         # Ordenar por Sharpe ratio (descendente)
-        df = df.sort_values('sharpe_ratio', ascending=False)
+        df = df.sort_values("sharpe_ratio", ascending=False)
 
         logger.info("\n" + "=" * 80)
         logger.info("RESUMEN COMPARATIVO DE BACKTESTS")
@@ -613,11 +613,11 @@ def run_automated_backtest(
     )
 
     # Ejecutar backtests
-    logger.info(f"\n{'='*80}")
+    logger.info(f"\n{'=' * 80}")
     logger.info(f"INICIANDO BACKTEST AUTOMATIZADO PARA {symbol}")
     logger.info(f"Período: {start_date.date()} a {end_date.date()}")
     logger.info(f"Capital inicial: ${initial_capital:,.2f}")
-    logger.info(f"{'='*80}\n")
+    logger.info(f"{'=' * 80}\n")
 
     # 1. Baseline
     baseline = runner.run_baseline_backtest()
@@ -646,18 +646,18 @@ def run_automated_backtest(
         logger.info(f"   Total Trades: {int(best['total_trades'])}")
 
     return {
-        'symbol': symbol,
-        'baseline': baseline,
-        'ablation_results': ablation_results,
-        'learning_results': learning_results,
-        'summary': summary,
+        "symbol": symbol,
+        "baseline": baseline,
+        "ablation_results": ablation_results,
+        "learning_results": learning_results,
+        "summary": summary,
     }
 
 
 if __name__ == "__main__":
     # Configurar logging
     logging.basicConfig(
-        level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+        level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
     )
 
     # Ejecutar backtest automatizado

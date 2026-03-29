@@ -8,7 +8,7 @@ import logging
 from datetime import datetime
 from decimal import Decimal
 from enum import Enum
-from typing import Dict, Union
+from typing import Union
 
 from pydantic import BaseModel, Field, field_validator
 
@@ -39,10 +39,10 @@ class InputProfile(BaseModel):
     objetivo_inversion: ObjectivoInversion = Field(..., description="Investment objective")
     risk_tolerance: RiskTolerance = Field(..., description="Risk tolerance level")
     investment_horizon: int = Field(..., ge=0, description="Investment horizon in months")
-    constraints: Dict[str, Union[str, int, float, bool, None]] = Field(
+    constraints: dict[str, Union[str, int, float, bool, None]] = Field(
         default_factory=dict, description="Optional constraints"
     )
-    metadata: Dict[str, Union[str, int, float, bool, None]] = Field(
+    metadata: dict[str, Union[str, int, float, bool, None]] = Field(
         default_factory=dict, description="Additional metadata"
     )
     created_at: datetime = Field(

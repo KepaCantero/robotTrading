@@ -15,18 +15,20 @@ Responsibilities:
 from __future__ import annotations
 
 import logging
-from typing import Any, Dict, List
+from typing import TYPE_CHECKING, Any
 
 import pandas as pd
 
 from app.backtesting.services.models import BaselineOptimizationComparison, OptimizedStrategy
-from app.domain.models.input_profile import InputProfile
+
+if TYPE_CHECKING:
+    from app.domain.models.input_profile import InputProfile
 
 logger = logging.getLogger(__name__)
 
-ConfigDict = Dict[str, Any]
-MetricsDict = Dict[str, Any]
-OptimizationHistoryEntry = Dict[str, Any]
+ConfigDict = dict[str, Any]
+MetricsDict = dict[str, Any]
+OptimizationHistoryEntry = dict[str, Any]
 
 
 class MetricsCalculationService:
@@ -95,8 +97,8 @@ class MetricsCalculationService:
         logger.debug("Acceptance criteria validation passed")
 
     def calculate_improvements(
-        self, baseline: Dict[str, Any], optimized: Dict[str, Any]
-    ) -> Dict[str, float]:
+        self, baseline: dict[str, Any], optimized: dict[str, Any]
+    ) -> dict[str, float]:
         """
         Calculate improvement metrics between baseline and optimized results.
 
@@ -220,8 +222,8 @@ class MetricsCalculationService:
         )
 
     def calculate_parameter_importance(
-        self, history: List[OptimizationHistoryEntry]
-    ) -> Dict[str, float]:
+        self, history: list[OptimizationHistoryEntry]
+    ) -> dict[str, float]:
         """
         Calculate parameter importance from optimization history.
 
@@ -252,7 +254,7 @@ class MetricsCalculationService:
         return importance
 
     def evaluate_readiness(
-        self, profile: InputProfile, optimized: OptimizedStrategy, improvements: Dict[str, float]
+        self, profile: InputProfile, optimized: OptimizedStrategy, improvements: dict[str, float]
     ) -> tuple[bool, str]:
         """
         Evaluate if strategy is ready for paper trading.

@@ -360,7 +360,7 @@ class DailyReconciler:
 - **Matched:** {result.matched_positions}
 - **Mismatched:** {result.mismatched_positions}
 - **Missing:** {result.missing_positions}
-- **Balance Status:** {'✅ BALANCED' if result.is_balanced else '⚠️ UNBALANCED'}
+- **Balance Status:** {"✅ BALANCED" if result.is_balanced else "⚠️ UNBALANCED"}
 """
 
         if result.discrepancies:
@@ -374,14 +374,14 @@ class DailyReconciler:
                 report += f"### {disc['symbol']} [{severity_emoji}]\n"
                 report += f"- **Status:** {disc['status']}\n"
 
-                if disc.get('discrepancies'):
-                    for d in disc['discrepancies']:
+                if disc.get("discrepancies"):
+                    for d in disc["discrepancies"]:
                         report += f"  - **{d['type']}:** {d}\n"
 
-                if disc.get('detail'):
+                if disc.get("detail"):
                     report += f"- **Detail:** {disc['detail']}\n"
 
-                if disc.get('type'):
+                if disc.get("type"):
                     report += f"- **Type:** {disc['type']}\n"
 
                 report += "\n"

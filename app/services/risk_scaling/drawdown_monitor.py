@@ -19,7 +19,7 @@ import logging
 from dataclasses import dataclass
 from datetime import datetime
 from decimal import ROUND_HALF_UP, Decimal
-from typing import List, Optional, Tuple
+from typing import Optional
 
 import numpy as np
 
@@ -66,8 +66,8 @@ class DrawdownMonitor:
 
     def calculate_drawdown(
         self,
-        equity_curve: List[Decimal],
-    ) -> Tuple[Decimal, Decimal]:
+        equity_curve: list[Decimal],
+    ) -> tuple[Decimal, Decimal]:
         """
         Calculate current drawdown and maximum drawdown.
 
@@ -194,7 +194,7 @@ class DrawdownMonitor:
 
     def has_recovered(
         self,
-        equity_curve: List[Decimal],
+        equity_curve: list[Decimal],
     ) -> bool:
         """
         Check if equity has recovered to new all-time high.
@@ -247,7 +247,7 @@ class DrawdownMonitor:
 
     def get_drawdown_timeline(
         self,
-        equity_curve: List[EquityPoint],
+        equity_curve: list[EquityPoint],
     ) -> dict:
         """
         Get detailed drawdown timeline information.
@@ -297,7 +297,7 @@ class DrawdownMonitor:
 
     def calculate_underwater_duration(
         self,
-        equity_curve: List[EquityPoint],
+        equity_curve: list[EquityPoint],
     ) -> dict:
         """
         Calculate how long equity has been underwater (below previous peak).
@@ -342,7 +342,7 @@ class DrawdownMonitor:
     def suggest_drawdown_action(
         self,
         current_drawdown: Decimal,
-    ) -> Tuple[str, str]:
+    ) -> tuple[str, str]:
         """
         Suggest action based on current drawdown.
 
@@ -368,9 +368,7 @@ class DrawdownMonitor:
             )
         elif level == "CAUTION":
             action = "REDUCE_20"
-            desc = (
-                f"Drawdown at {current_drawdown:.1%}. Reduce positions to 80% " f"of normal sizing."
-            )
+            desc = f"Drawdown at {current_drawdown:.1%}. Reduce positions to 80% of normal sizing."
         else:
             action = "NORMAL"
             desc = f"Drawdown at {current_drawdown:.1%}. Normal trading mode."

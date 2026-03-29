@@ -11,15 +11,15 @@ from __future__ import annotations
 import logging
 import time
 import uuid
-from typing import TYPE_CHECKING, Callable, Dict, List, Optional
+from typing import TYPE_CHECKING, Callable
 
-from fastapi import Request, Response
 from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
 
-# Use TYPE_CHECKING for type hints only
 if TYPE_CHECKING:
-    pass
+    from fastapi import Request, Response
+
+# Use TYPE_CHECKING for type hints only
 
 
 def _set_request_attr(request: Request, name: str, value: object) -> None:
@@ -37,7 +37,7 @@ def _set_request_attr(request: Request, name: str, value: object) -> None:
     object.__setattr__(request, name, value)
 
 
-def _get_request_attr(request: Request, name: str, default: object = None) -> Optional[object]:
+def _get_request_attr(request: Request, name: str, default: object = None) -> object | None:
     """
     Safely get an attribute from the Request object.
 
@@ -141,7 +141,7 @@ class ErrorHandlingMiddleware(BaseHTTPMiddleware):
         """Log request start."""
         # Lazily load centralized logger and LogService
         centralized_logger = _get_centralized_logger()
-        LogLevel, LogService = _get_log_level_and_service()
+        _LogLevel, LogService = _get_log_level_and_service()
 
         metadata = {
             "request_id": _get_request_attr(request, "request_id"),
@@ -210,7 +210,7 @@ class ErrorHandlingMiddleware(BaseHTTPMiddleware):
         """Log request error."""
         # Lazily load centralized logger and LogService
         centralized_logger = _get_centralized_logger()
-        LogLevel, LogService = _get_log_level_and_service()
+        _LogLevel, LogService = _get_log_level_and_service()
 
         metadata = {
             "request_id": _get_request_attr(request, "request_id"),
@@ -303,14 +303,14 @@ class RateLimitingMiddleware(BaseHTTPMiddleware):
     def __init__(self, app: object, requests_per_minute: int = 60) -> None:
         super().__init__(app)
         self.requests_per_minute = requests_per_minute
-        self.request_counts: Dict[str, List[float]] = {}
+        self.request_counts: dict[str, list[float]] = {}
         self.logger = logging.getLogger(__name__)
 
     async def dispatch(self, request: Request, call_next: Callable) -> Response:
         """Apply rate limiting."""
         # Lazily load centralized logger and LogService
         centralized_logger = _get_centralized_logger()
-        LogLevel, LogService = _get_log_level_and_service()
+        _LogLevel, LogService = _get_log_level_and_service()
 
         client_ip = request.client.host if request.client else "unknown"
         current_time = time.time()

@@ -27,13 +27,15 @@ from collections import defaultdict
 from dataclasses import dataclass, field
 from datetime import date
 from decimal import Decimal
-from pathlib import Path
-from typing import Dict, List, Optional, Tuple, Union
+from typing import TYPE_CHECKING
 
 import numpy as np
 import pandas as pd
 
 from .models import DelistedStock, DelistingReason
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
@@ -57,7 +59,7 @@ class SurvivorshipFreeResult:
     bias_factor: float = field(default=1.0)
     delisted_included: int = field(default=0)
     delisted_return_contribution: float = field(default=0.0)
-    warning: Optional[str] = field(default=None)
+    warning: str | None = field(default=None)
 
 
 class SurvivorshipAdjuster:
@@ -100,7 +102,7 @@ class SurvivorshipAdjuster:
 
     def __init__(
         self,
-        delisted_db_path: Optional[Path] = None,
+        delisted_db_path: Path | None = None,
         auto_load: bool = True,
     ):
         """
@@ -111,8 +113,8 @@ class SurvivorshipAdjuster:
             auto_load: Whether to automatically load the database
         """
         self.delisted_db_path = delisted_db_path
-        self._delisted_stocks: Dict[str, DelistedStock] = {}
-        self._delisting_by_date: Dict[date, List[str]] = defaultdict(list)
+        self._delisted_stocks: dict[str, DelistedStock] = {}
+        self._delisting_by_date: dict[date, list[str]] = defaultdict(list)
 
         if delisted_db_path and auto_load:
             self.load_delisted_database(delisted_db_path)
@@ -181,9 +183,9 @@ class SurvivorshipAdjuster:
 
     def get_adjusted_universe(
         self,
-        current_universe: List[str],
+        current_universe: list[str],
         as_of_date: date,
-    ) -> List[str]:
+    ) -> list[str]:
         """
         Get the point-in-time universe as of a specific date.
 
@@ -214,7 +216,7 @@ class SurvivorshipAdjuster:
 
     def calculate_survivorship_free_returns(
         self,
-        current_universe: List[str],
+        current_universe: list[str],
         returns_data: pd.DataFrame,
         backtest_start: date,
         backtest_end: date,
@@ -322,10 +324,10 @@ class SurvivorshipAdjuster:
 
     def _calculate_survivorship_adjustment(
         self,
-        current_universe: List[str],
+        current_universe: list[str],
         backtest_start: date,
         backtest_end: date,
-    ) -> Dict[str, Union[int, float]]:
+    ) -> dict[str, int | float]:
         """Calculate the survivorship bias adjustment factor."""
         period_years = (backtest_end - backtest_start).days / 365.25
 
@@ -384,7 +386,7 @@ class SurvivorshipAdjuster:
         self,
         backtest_start: date,
         backtest_end: date,
-    ) -> Dict[str, float]:
+    ) -> dict[str, float]:
         """Get returns for delisted stocks during the period."""
         # Use generator to process delisted stocks efficiently
         delisted_returns = {}
@@ -396,7 +398,7 @@ class SurvivorshipAdjuster:
         self,
         backtest_start: date,
         backtest_end: date,
-    ) -> Tuple[str, float]:
+    ) -> tuple[str, float]:
         """
         Generate returns for delisted stocks during the period.
 
@@ -424,11 +426,11 @@ class SurvivorshipAdjuster:
 
     def create_point_in_time_universe(
         self,
-        current_universe: List[str],
+        current_universe: list[str],
         backtest_start: date,
         backtest_end: date,
         frequency: str = "M",
-    ) -> Dict[date, List[str]]:
+    ) -> dict[date, list[str]]:
         """
         Create a point-in-time universe for backtesting.
 
@@ -445,7 +447,7 @@ class SurvivorshipAdjuster:
             Dictionary mapping dates to available universe
         """
         # Map old frequency codes to new pandas format
-        freq_map = {'M': 'ME', 'Q': 'QE'}
+        freq_map = {"M": "ME", "Q": "QE"}
         freq = freq_map.get(frequency, frequency)
 
         dates = pd.date_range(start=backtest_start, end=backtest_end, freq=freq)
@@ -469,8 +471,8 @@ class SurvivorshipAdjuster:
         self,
         start_date: date,
         end_date: date,
-        reason: Optional[DelistingReason] = None,
-    ) -> List[DelistedStock]:
+        reason: DelistingReason | None = None,
+    ) -> list[DelistedStock]:
         """
         Get delisting events within a date range.
 
@@ -496,10 +498,10 @@ class SurvivorshipAdjuster:
 
     def calculate_universe_statistics(
         self,
-        current_universe: List[str],
+        current_universe: list[str],
         backtest_start: date,
         backtest_end: date,
-    ) -> Dict[str, Union[int, float]]:
+    ) -> dict[str, int | float]:
         """
         Calculate statistics about the survivorship bias.
 

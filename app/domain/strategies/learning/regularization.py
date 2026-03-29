@@ -25,7 +25,7 @@ import logging
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any
 
 import numpy as np
 import pandas as pd
@@ -68,16 +68,16 @@ class RegularizationResult:
     explained_variance: float
 
     # Feature importance
-    feature_importance: Dict[str, float] = field(default_factory=dict)
+    feature_importance: dict[str, float] = field(default_factory=dict)
 
     # Convergence info
     n_iterations: int = 0
     converged: bool = True
 
     # Additional info
-    details: Dict[str, Any] = field(default_factory=dict)
+    details: dict[str, Any] = field(default_factory=dict)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
         return {
             "timestamp": self.timestamp.isoformat(),
@@ -115,15 +115,15 @@ class RegularizationPath:
 
     timestamp: datetime
     regularization_type: RegularizationType
-    path_points: List[RegularizationPathPoint]
-    feature_names: List[str]
+    path_points: list[RegularizationPathPoint]
+    feature_names: list[str]
 
     # Optimal point
     optimal_alpha: float
     optimal_score: float
     optimal_n_nonzero: int
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
         return {
             "timestamp": self.timestamp.isoformat(),
@@ -152,7 +152,7 @@ class L1Regularization:
     L1 penalty encourages sparse solutions, effectively performing
     feature selection.
 
-    Optimization: min ||y - Xβ||² + λ||β||₁
+    Optimization: min ||y - Xbeta||^2 + lambda||beta||₁
 
     Properties:
     - Sparse solutions (many coefficients = 0)
@@ -177,13 +177,13 @@ class L1Regularization:
         fit_intercept: bool = True,
         max_iter: int = 1000,
         tol: float = 1e-4,
-        random_state: Optional[int] = None,
+        random_state: int | None = None,
     ):
         """
         Initialize L1 Regularization.
 
         Args:
-            alpha: Regularization strength (λ)
+            alpha: Regularization strength (lambda)
             fit_intercept: Whether to fit intercept
             max_iter: Maximum iterations
             tol: Tolerance for convergence
@@ -197,10 +197,10 @@ class L1Regularization:
 
     def fit(
         self,
-        X: Union[np.ndarray, pd.DataFrame],
-        y: Union[np.ndarray, pd.Series],
-        sample_weight: Optional[np.ndarray] = None,
-    ) -> "L1Regularization":
+        X: np.ndarray | pd.DataFrame,
+        y: np.ndarray | pd.Series,
+        sample_weight: np.ndarray | None = None,
+    ) -> L1Regularization:
         """
         Fit Lasso regression.
 
@@ -230,7 +230,7 @@ class L1Regularization:
 
         return self
 
-    def predict(self, X: Union[np.ndarray, pd.DataFrame]) -> np.ndarray:
+    def predict(self, X: np.ndarray | pd.DataFrame) -> np.ndarray:
         """
         Predict using fitted model.
 
@@ -246,18 +246,18 @@ class L1Regularization:
 
     def score(
         self,
-        X: Union[np.ndarray, pd.DataFrame],
-        y: Union[np.ndarray, pd.Series],
+        X: np.ndarray | pd.DataFrame,
+        y: np.ndarray | pd.Series,
     ) -> float:
         """
-        Return R² score.
+        Return R^2 score.
 
         Args:
             X: Feature matrix
             y: Target vector
 
         Returns:
-            R² score
+            R^2 score
         """
         check_is_fitted(self, ["lasso_"])
         return self.lasso_.score(X, y)
@@ -289,10 +289,10 @@ class L2Regularization:
     L2 penalty shrinks coefficients towards zero but doesn't set them
     to exactly zero.
 
-    Optimization: min ||y - Xβ||² + λ||β||₂²
+    Optimization: min ||y - Xbeta||^2 + lambda||beta||₂^2
 
     Properties:
-    - Closed-form solution: β = (X'X + λI)⁻¹X'y
+    - Closed-form solution: beta = (X'X + lambdaI)⁻¹X'y
     - Shrinks coefficients proportionally
     - Handles multicollinearity well
     - Stable solution
@@ -314,14 +314,14 @@ class L2Regularization:
         alpha: float = 1.0,
         fit_intercept: bool = True,
         solver: str = "auto",
-        max_iter: Optional[int] = None,
+        max_iter: int | None = None,
         tol: float = 1e-4,
     ):
         """
         Initialize L2 Regularization.
 
         Args:
-            alpha: Regularization strength (λ)
+            alpha: Regularization strength (lambda)
             fit_intercept: Whether to fit intercept
             solver: Solver to use ('auto', 'svd', 'cholesky', 'lsqr', etc.)
             max_iter: Maximum iterations (for iterative solvers)
@@ -335,10 +335,10 @@ class L2Regularization:
 
     def fit(
         self,
-        X: Union[np.ndarray, pd.DataFrame],
-        y: Union[np.ndarray, pd.Series],
-        sample_weight: Optional[np.ndarray] = None,
-    ) -> "L2Regularization":
+        X: np.ndarray | pd.DataFrame,
+        y: np.ndarray | pd.Series,
+        sample_weight: np.ndarray | None = None,
+    ) -> L2Regularization:
         """
         Fit Ridge regression.
 
@@ -368,7 +368,7 @@ class L2Regularization:
 
         return self
 
-    def predict(self, X: Union[np.ndarray, pd.DataFrame]) -> np.ndarray:
+    def predict(self, X: np.ndarray | pd.DataFrame) -> np.ndarray:
         """
         Predict using fitted model.
 
@@ -384,18 +384,18 @@ class L2Regularization:
 
     def score(
         self,
-        X: Union[np.ndarray, pd.DataFrame],
-        y: Union[np.ndarray, pd.Series],
+        X: np.ndarray | pd.DataFrame,
+        y: np.ndarray | pd.Series,
     ) -> float:
         """
-        Return R² score.
+        Return R^2 score.
 
         Args:
             X: Feature matrix
             y: Target vector
 
         Returns:
-            R² score
+            R^2 score
         """
         check_is_fitted(self, ["ridge_"])
         return self.ridge_.score(X, y)
@@ -420,9 +420,9 @@ class ElasticNetRegularization:
     - L1: Sparsity and feature selection
     - L2: Stability with correlated features
 
-    Optimization: min ||y - Xβ||² + λ₁||β||₁ + λ₂||β||₂²
+    Optimization: min ||y - Xbeta||^2 + lambda₁||beta||₁ + lambda₂||beta||₂^2
 
-    Equivalent to: min ||y - Xβ||² + λ(α||β||₁ + (1-α)||β||₂²)
+    Equivalent to: min ||y - Xbeta||^2 + lambda(alpha||beta||₁ + (1-alpha)||beta||₂^2)
 
     Properties:
     - Sparse solutions (like Lasso)
@@ -435,7 +435,7 @@ class ElasticNetRegularization:
     - Can select more than n features
 
     Disadvantages:
-    - Two hyperparameters to tune (λ, α)
+    - Two hyperparameters to tune (lambda, alpha)
     - No closed-form solution
     """
 
@@ -446,14 +446,14 @@ class ElasticNetRegularization:
         fit_intercept: bool = True,
         max_iter: int = 1000,
         tol: float = 1e-4,
-        random_state: Optional[int] = None,
+        random_state: int | None = None,
     ):
         """
         Initialize Elastic Net Regularization.
 
         Args:
-            alpha: Overall regularization strength (λ)
-            l1_ratio: L1 mixing parameter (α in formula)
+            alpha: Overall regularization strength (lambda)
+            l1_ratio: L1 mixing parameter (alpha in formula)
                      0 = Ridge, 1 = Lasso, 0.5 = equal mix
             fit_intercept: Whether to fit intercept
             max_iter: Maximum iterations
@@ -469,10 +469,10 @@ class ElasticNetRegularization:
 
     def fit(
         self,
-        X: Union[np.ndarray, pd.DataFrame],
-        y: Union[np.ndarray, pd.Series],
-        sample_weight: Optional[np.ndarray] = None,
-    ) -> "ElasticNetRegularization":
+        X: np.ndarray | pd.DataFrame,
+        y: np.ndarray | pd.Series,
+        sample_weight: np.ndarray | None = None,
+    ) -> ElasticNetRegularization:
         """
         Fit Elastic Net regression.
 
@@ -503,7 +503,7 @@ class ElasticNetRegularization:
 
         return self
 
-    def predict(self, X: Union[np.ndarray, pd.DataFrame]) -> np.ndarray:
+    def predict(self, X: np.ndarray | pd.DataFrame) -> np.ndarray:
         """
         Predict using fitted model.
 
@@ -519,18 +519,18 @@ class ElasticNetRegularization:
 
     def score(
         self,
-        X: Union[np.ndarray, pd.DataFrame],
-        y: Union[np.ndarray, pd.Series],
+        X: np.ndarray | pd.DataFrame,
+        y: np.ndarray | pd.Series,
     ) -> float:
         """
-        Return R² score.
+        Return R^2 score.
 
         Args:
             X: Feature matrix
             y: Target vector
 
         Returns:
-            R² score
+            R^2 score
         """
         check_is_fitted(self, ["enet_"])
         return self.enet_.score(X, y)
@@ -558,9 +558,9 @@ class AdaptiveLasso:
     Uses weights to penalize coefficients adaptively based on
     initial OLS estimates.
 
-    Weighted penalty: λ Σ wⱼ|βⱼ|
+    Weighted penalty: lambda Sigma wⱼ|betaⱼ|
 
-    Where weights wⱼ = 1/|β̂ⱼ|^γ (β̂ from OLS or Ridge)
+    Where weights wⱼ = 1/|betâⱼ|^gamma (betâ from OLS or Ridge)
 
     Properties:
     - Oracle properties (consistent and asymptotically normal)
@@ -583,7 +583,7 @@ class AdaptiveLasso:
         gamma: float = 1.0,
         max_iter: int = 1000,
         tol: float = 1e-4,
-        random_state: Optional[int] = None,
+        random_state: int | None = None,
     ):
         """
         Initialize Adaptive Lasso.
@@ -603,9 +603,9 @@ class AdaptiveLasso:
 
     def fit(
         self,
-        X: Union[np.ndarray, pd.DataFrame],
-        y: Union[np.ndarray, pd.Series],
-    ) -> "AdaptiveLasso":
+        X: np.ndarray | pd.DataFrame,
+        y: np.ndarray | pd.Series,
+    ) -> AdaptiveLasso:
         """
         Fit Adaptive Lasso.
 
@@ -650,7 +650,7 @@ class AdaptiveLasso:
 
         return self
 
-    def predict(self, X: Union[np.ndarray, pd.DataFrame]) -> np.ndarray:
+    def predict(self, X: np.ndarray | pd.DataFrame) -> np.ndarray:
         """
         Predict using fitted model.
 
@@ -698,10 +698,10 @@ class RegularizationAnalyzer:
 
     def analyze_l1_regularization(
         self,
-        X: Union[np.ndarray, pd.DataFrame],
-        y: Union[np.ndarray, pd.Series],
+        X: np.ndarray | pd.DataFrame,
+        y: np.ndarray | pd.Series,
         alpha: float = 1.0,
-        feature_names: Optional[List[str]] = None,
+        feature_names: list[str] | None = None,
     ) -> RegularizationResult:
         """
         Analyze L1 regularization (Lasso).
@@ -768,18 +768,17 @@ class RegularizationAnalyzer:
         )
 
         logger.info(
-            f"L1 (alpha={alpha}): {n_nonzero}/{n_features} features, "
-            f"test_score={test_score:.4f}"
+            f"L1 (alpha={alpha}): {n_nonzero}/{n_features} features, test_score={test_score:.4f}"
         )
 
         return result
 
     def analyze_l2_regularization(
         self,
-        X: Union[np.ndarray, pd.DataFrame],
-        y: Union[np.ndarray, pd.Series],
+        X: np.ndarray | pd.DataFrame,
+        y: np.ndarray | pd.Series,
         alpha: float = 1.0,
-        feature_names: Optional[List[str]] = None,
+        feature_names: list[str] | None = None,
     ) -> RegularizationResult:
         """
         Analyze L2 regularization (Ridge).
@@ -850,11 +849,11 @@ class RegularizationAnalyzer:
 
     def analyze_elastic_net(
         self,
-        X: Union[np.ndarray, pd.DataFrame],
-        y: Union[np.ndarray, pd.Series],
+        X: np.ndarray | pd.DataFrame,
+        y: np.ndarray | pd.Series,
         alpha: float = 1.0,
         l1_ratio: float = 0.5,
-        feature_names: Optional[List[str]] = None,
+        feature_names: list[str] | None = None,
     ) -> RegularizationResult:
         """
         Analyze Elastic Net regularization.
@@ -932,13 +931,13 @@ class RegularizationAnalyzer:
 
     def compute_regularization_path(
         self,
-        X: Union[np.ndarray, pd.DataFrame],
-        y: Union[np.ndarray, pd.Series],
+        X: np.ndarray | pd.DataFrame,
+        y: np.ndarray | pd.Series,
         regularization_type: RegularizationType = RegularizationType.L1,
         n_alphas: int = 50,
-        alpha_range: Tuple[float, float] = (1e-4, 10.0),
+        alpha_range: tuple[float, float] = (1e-4, 10.0),
         l1_ratio: float = 0.5,
-        feature_names: Optional[List[str]] = None,
+        feature_names: list[str] | None = None,
     ) -> RegularizationPath:
         """
         Compute regularization path.
@@ -977,9 +976,9 @@ class RegularizationAnalyzer:
             try:
                 # Fit model with this alpha
                 if regularization_type == RegularizationType.L1:
-                    model: Union[
-                        L1Regularization, L2Regularization, ElasticNetRegularization
-                    ] = L1Regularization(alpha=alpha, random_state=self.random_state)
+                    model: L1Regularization | L2Regularization | ElasticNetRegularization = (
+                        L1Regularization(alpha=alpha, random_state=self.random_state)
+                    )
                 elif regularization_type == RegularizationType.L2:
                     model = L2Regularization(alpha=alpha)
                 else:  # ELASTIC_NET
@@ -1035,20 +1034,19 @@ class RegularizationAnalyzer:
         )
 
         logger.info(
-            f"Regularization path: optimal_alpha={best_alpha:.4f}, "
-            f"optimal_score={best_score:.4f}"
+            f"Regularization path: optimal_alpha={best_alpha:.4f}, optimal_score={best_score:.4f}"
         )
 
         return result
 
     def compare_regularization_methods(
         self,
-        X: Union[np.ndarray, pd.DataFrame],
-        y: Union[np.ndarray, pd.Series],
-        alphas: Optional[List[float]] = None,
-        l1_ratios: Optional[List[float]] = None,
-        feature_names: Optional[List[str]] = None,
-    ) -> Dict[str, List[RegularizationResult]]:
+        X: np.ndarray | pd.DataFrame,
+        y: np.ndarray | pd.Series,
+        alphas: list[float] | None = None,
+        l1_ratios: list[float] | None = None,
+        feature_names: list[str] | None = None,
+    ) -> dict[str, list[RegularizationResult]]:
         """
         Compare different regularization methods.
 
@@ -1068,7 +1066,7 @@ class RegularizationAnalyzer:
         if l1_ratios is None:
             l1_ratios = [0.2, 0.5, 0.8]
 
-        results: Dict[str, List[RegularizationResult]] = {
+        results: dict[str, list[RegularizationResult]] = {
             "l1": [],
             "l2": [],
             "elastic_net": [],
@@ -1111,11 +1109,11 @@ class RegularizationAnalyzer:
 
 
 def optimize_regularization(
-    X: Union[np.ndarray, pd.DataFrame],
-    y: Union[np.ndarray, pd.Series],
+    X: np.ndarray | pd.DataFrame,
+    y: np.ndarray | pd.Series,
     method: str = "lasso",
     cv_folds: int = 5,
-    feature_names: Optional[List[str]] = None,
+    feature_names: list[str] | None = None,
 ) -> RegularizationResult:
     """
     Convenience function for automatic regularization optimization.

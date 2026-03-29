@@ -8,7 +8,7 @@ from different sectors, allocated according to strategy percentages.
 import asyncio
 import logging
 from datetime import datetime
-from typing import Any, Dict, List, Optional, Set
+from typing import Any, Optional
 
 from app.backtesting.data_loader import DataLoader
 from app.domain.models.market_data import Quote
@@ -48,7 +48,7 @@ class PortfolioBuilder:
         start_date: datetime,
         end_date: datetime,
         max_symbols_per_strategy: Optional[int] = None,
-    ) -> List[Quote]:
+    ) -> list[Quote]:
         """
         Build a complete portfolio with quotes from all strategy sectors.
 
@@ -143,9 +143,9 @@ class PortfolioBuilder:
 
     def _collect_all_symbols(
         self,
-        strategies: List[str],
+        strategies: list[str],
         max_symbols_per_strategy: Optional[int] = None,
-    ) -> Set[str]:
+    ) -> set[str]:
         """
         Collect all symbols needed across strategies.
 
@@ -224,7 +224,7 @@ class PortfolioBuilder:
 
         return all_symbols
 
-    def get_strategy_symbols_mapping(self) -> Dict[str, List[str]]:
+    def get_strategy_symbols_mapping(self) -> dict[str, list[str]]:
         """
         Get mapping of strategy to its symbols.
 
@@ -240,7 +240,7 @@ class PortfolioBuilder:
 
         return mapping
 
-    def get_portfolio_summary(self) -> Dict[str, Any]:
+    def get_portfolio_summary(self) -> dict[str, Any]:
         """
         Get summary of portfolio configuration.
 

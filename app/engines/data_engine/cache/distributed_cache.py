@@ -15,7 +15,7 @@ import asyncio
 import json
 import logging
 from datetime import datetime, timedelta
-from typing import TYPE_CHECKING, Dict, List, Optional, Union
+from typing import TYPE_CHECKING, Optional, Union
 
 # Fallback pattern: Try to import redis, provide in-memory fallback if not available
 # Using module-level pattern for optional dependencies
@@ -54,7 +54,7 @@ Base = declarative_base()
 class CacheEntry(Base):
     """Modelo de entrada de cache en PostgreSQL."""
 
-    __tablename__ = 'cache_entries'
+    __tablename__ = "cache_entries"
 
     key = Column(String(255), primary_key=True)
     data = Column(LargeBinary, nullable=False)
@@ -66,8 +66,8 @@ class CacheEntry(Base):
     metadata_json = Column(Text)  # JSON metadata
 
     __table_args__ = (
-        Index('idx_symbol_source', 'symbol', 'source'),
-        Index('idx_expires_at', 'expires_at'),
+        Index("idx_symbol_source", "symbol", "source"),
+        Index("idx_expires_at", "expires_at"),
     )
 
 
@@ -79,7 +79,7 @@ class DistributedCache:
     Fallback a cache en memoria si Redis no está disponible.
     """
 
-    def __init__(self, config: Optional[Dict[str, Union[str, int, float, bool]]] = None):
+    def __init__(self, config: Optional[dict[str, Union[str, int, float, bool]]] = None):
         """
         Inicializar cache distribuido.
 
@@ -96,19 +96,19 @@ class DistributedCache:
         self.config = config
 
         # Todos los valores deben venir de config, NO hardcodeados
-        if 'default_ttl' not in config:
+        if "default_ttl" not in config:
             raise ValueError("default_ttl debe estar en config (cargado desde YAML)")
-        if 'use_redis' not in config:
+        if "use_redis" not in config:
             raise ValueError("use_redis debe estar en config (cargado desde YAML)")
-        if 'use_postgres' not in config:
+        if "use_postgres" not in config:
             raise ValueError("use_postgres debe estar en config (cargado desde YAML)")
 
-        self.default_ttl = config['default_ttl']
-        self.use_redis = config.get('use_redis', False)
-        self.use_postgres = config.get('use_postgres', False)
+        self.default_ttl = config["default_ttl"]
+        self.use_redis = config.get("use_redis", False)
+        self.use_postgres = config.get("use_postgres", False)
 
         # Redis client
-        self.redis_client: Optional["Redis"] = None
+        self.redis_client: Optional[Redis] = None
         if self.use_redis:
             if not REDIS_AVAILABLE or _redis_module is None:
                 logger.warning(
@@ -117,7 +117,7 @@ class DistributedCache:
                 self.use_redis = False
             else:
                 try:
-                    redis_url = config.get('redis_url')
+                    redis_url = config.get("redis_url")
                     if not redis_url:
                         raise ValueError("redis_url debe estar en config cuando use_redis=True")
                     self.redis_client = _redis_module.from_url(redis_url, decode_responses=False)
@@ -131,7 +131,7 @@ class DistributedCache:
         self.postgres_session = None
         if self.use_postgres:
             try:
-                postgres_url = config.get('postgres_url')
+                postgres_url = config.get("postgres_url")
                 if not postgres_url:
                     logger.warning("PostgreSQL URL no proporcionada. Cache solo en Redis/memoria.")
                     self.use_postgres = False
@@ -141,10 +141,10 @@ class DistributedCache:
                     self.postgres_session = Session()
 
                     # Configurar esquema desde config
-                    postgres_schema = config.get('postgres_schema', {})
+                    postgres_schema = config.get("postgres_schema", {})
                     # Actualizar tabla si hay configuración personalizada
                     CacheEntry.__tablename__ = postgres_schema.get(
-                        'table_name', 'data_engine_cache'
+                        "table_name", "data_engine_cache"
                     )
 
                     # Crear tablas si no existen
@@ -157,7 +157,7 @@ class DistributedCache:
                 self.use_postgres = False
 
         # Fallback: cache en memoria
-        self.memory_cache: Dict[str, Dict[str, Union[str, int, float, bool, Dict, List]]] = {}
+        self.memory_cache: dict[str, dict[str, Union[str, int, float, bool, dict, list]]] = {}
 
         logger.info(
             f"DistributedCache inicializado: Redis={self.use_redis}, PostgreSQL={self.use_postgres}"
@@ -171,7 +171,9 @@ class DistributedCache:
                 parts.append(f"{key}:{value}")
         return ":".join(parts)
 
-    async def get(self, key: str, default: Optional[Union[str, int, float, bool, Dict, List]] = None) -> Optional[Union[str, int, float, bool, Dict, List]]:
+    async def get(
+        self, key: str, default: Optional[Union[str, int, float, bool, dict, list]] = None
+    ) -> Optional[Union[str, int, float, bool, dict, list]]:
         """
         Obtener valor del cache.
 
@@ -226,8 +228,8 @@ class DistributedCache:
         # Fallback a memoria
         if key in self.memory_cache:
             entry = self.memory_cache[key]
-            if entry['expires_at'] > datetime.utcnow():
-                return entry['data']
+            if entry["expires_at"] > datetime.utcnow():
+                return entry["data"]
             else:
                 # Expirar entrada
                 del self.memory_cache[key]
@@ -237,9 +239,9 @@ class DistributedCache:
     async def set(
         self,
         key: str,
-        value: Union[str, int, float, bool, Dict, List],
+        value: Union[str, int, float, bool, dict, list],
         ttl: Optional[int] = None,
-        metadata: Optional[Dict[str, Union[str, int, float, bool]]] = None,
+        metadata: Optional[dict[str, Union[str, int, float, bool]]] = None,
     ) -> bool:
         """
         Guardar valor en cache.
@@ -273,9 +275,9 @@ class DistributedCache:
             try:
                 # Extraer metadata útil
                 metadata_json = json.dumps(metadata) if metadata else None
-                symbol = metadata.get('symbol') if metadata else None
-                source = metadata.get('source') if metadata else None
-                data_type = metadata.get('data_type', 'unknown') if metadata else 'unknown'
+                symbol = metadata.get("symbol") if metadata else None
+                source = metadata.get("source") if metadata else None
+                data_type = metadata.get("data_type", "unknown") if metadata else "unknown"
 
                 entry = CacheEntry(
                     key=key,
@@ -291,7 +293,7 @@ class DistributedCache:
                 existing = self.postgres_session.query(CacheEntry).filter_by(key=key).first()
                 if existing:
                     for attr, val in entry.__dict__.items():
-                        if attr != '_sa_instance_state':
+                        if attr != "_sa_instance_state":
                             setattr(existing, attr, val)
                 else:
                     self.postgres_session.add(entry)
@@ -310,7 +312,7 @@ class DistributedCache:
                 success = False
 
         # Fallback a memoria
-        self.memory_cache[key] = {'data': value, 'expires_at': expires_at}
+        self.memory_cache[key] = {"data": value, "expires_at": expires_at}
 
         return success
 
@@ -388,7 +390,7 @@ class DistributedCache:
 
         # Memoria
         expired_keys = [
-            key for key, entry in self.memory_cache.items() if entry['expires_at'] < now
+            key for key, entry in self.memory_cache.items() if entry["expires_at"] < now
         ]
         for key in expired_keys:
             del self.memory_cache[key]
@@ -407,11 +409,11 @@ class DistributedCache:
         if self.postgres_engine:
             self.postgres_engine.dispose()
 
-    def get_status(self) -> Dict[str, Union[str, int, float, bool, None]]:
+    def get_status(self) -> dict[str, Union[str, int, float, bool, None]]:
         """Obtener estado del cache."""
         return {
-            'redis_enabled': self.use_redis,
-            'postgres_enabled': self.use_postgres,
-            'memory_cache_size': len(self.memory_cache),
-            'default_ttl': self.default_ttl,
+            "redis_enabled": self.use_redis,
+            "postgres_enabled": self.use_postgres,
+            "memory_cache_size": len(self.memory_cache),
+            "default_ttl": self.default_ttl,
         }

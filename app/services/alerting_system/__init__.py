@@ -104,33 +104,33 @@ def reset_alerting_orchestrator() -> None:
 
 
 __all__ = [
-    # Services
-    "AlertRuleEngine",
-    "AlertManager",
-    "NotificationDispatcher",
-    "TelegramChannel",
-    "AlertingOrchestrator",
-    "MetricsDrivenAlerter",
-    "AlertRuleTemplates",
-    # Models
-    "AlertRule",
     "AlertEvent",
     "AlertHistory",
+    "AlertManager",
+    # Models
+    "AlertRule",
+    # Services
+    "AlertRuleEngine",
+    "AlertRuleTemplates",
     "AlertSeverity",
     "AlertState",
-    "ThresholdRule",
+    "AlertingHealth",
+    "AlertingOrchestrator",
+    "AlertingStatistics",
     "ChangeRule",
     "ComparisonOperator",
     "LogicOperator",
-    "NotificationChannelType",
-    "NotificationTarget",
-    "AlertingHealth",
-    "AlertingStatistics",
     "MetricQueryConfig",
+    "MetricsDrivenAlerter",
+    "NotificationChannelType",
+    "NotificationDispatcher",
+    "NotificationTarget",
+    "TelegramChannel",
+    "ThresholdRule",
     # Functions
     "get_alerting_orchestrator",
     "initialize_alerting_orchestrator",
+    "reset_alerting_orchestrator",
     "start_alerting",
     "stop_alerting",
-    "reset_alerting_orchestrator",
 ]

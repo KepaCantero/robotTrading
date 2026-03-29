@@ -11,7 +11,7 @@ Proporciona API unificada para:
 
 import logging
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 import numpy as np
 
@@ -40,7 +40,7 @@ class ContextEngine:
     una visión completa del contexto de mercado.
     """
 
-    def __init__(self, config: Dict[str, Any] = None):
+    def __init__(self, config: Optional[dict[str, Any]] = None):
         """
         Inicializar Context Engine.
 
@@ -51,27 +51,27 @@ class ContextEngine:
         self.config = config
 
         # Inicializar detectores de régimen
-        self.hmm_detector = HMMRegimeDetector(config.get('hmm_config', {}))
-        self.clustering_detector = ClusteringRegimeDetector(config.get('clustering_config', {}))
+        self.hmm_detector = HMMRegimeDetector(config.get("hmm_config", {}))
+        self.clustering_detector = ClusteringRegimeDetector(config.get("clustering_config", {}))
         self.correlation_regime_detector = CorrelationRegimeDetector(
-            config.get('correlation_regime_config', {})
+            config.get("correlation_regime_config", {})
         )
 
         # Inicializar analizadores de volatilidad
         self.structural_change_detector = StructuralChangeDetector(
-            config.get('structural_change_config', {})
+            config.get("structural_change_config", {})
         )
         self.volatility_regime_detector = VolatilityRegimeDetector(
-            config.get('volatility_regime_config', {})
+            config.get("volatility_regime_config", {})
         )
-        self.garch_analyzer = GARCHAnalyzer(config.get('garch_config', {}))
+        self.garch_analyzer = GARCHAnalyzer(config.get("garch_config", {}))
 
         # Inicializar analizadores de correlación
         self.rolling_correlation = RollingCorrelationAnalyzer(
-            config.get('rolling_correlation_config', {})
+            config.get("rolling_correlation_config", {})
         )
-        self.dcc_garch = DCCGARCHAnalyzer(config.get('dcc_garch_config', {}))
-        self.network_analyzer = CorrelationNetworkAnalyzer(config.get('network_config', {}))
+        self.dcc_garch = DCCGARCHAnalyzer(config.get("dcc_garch_config", {}))
+        self.network_analyzer = CorrelationNetworkAnalyzer(config.get("network_config", {}))
 
         # Inicializar indicadores macro
         self.vix_analyzer = VIXAnalyzer()
@@ -80,16 +80,16 @@ class ContextEngine:
         self.market_breadth = MarketBreadthAnalyzer()
 
         # Cache
-        self.cache: Dict[str, Dict[str, Any]] = {}
-        self.cache_ttl = config.get('cache_ttl', 3600)  # 1 hora
+        self.cache: dict[str, dict[str, Any]] = {}
+        self.cache_ttl = config.get("cache_ttl", 3600)  # 1 hora
 
         logger.info("ContextEngine inicializado")
 
     def get_current_regime(
         self,
-        prices: List[float],
-        method: str = 'ensemble',  # hmm, clustering, correlation, ensemble
-    ) -> Dict[str, Any]:
+        prices: list[float],
+        method: str = "ensemble",  # hmm, clustering, correlation, ensemble
+    ) -> dict[str, Any]:
         """
         Obtener régimen actual de mercado.
 
@@ -104,41 +104,41 @@ class ContextEngine:
         cache_key = f"regime_{method}_{len(prices)}"
         if cache_key in self.cache:
             cached = self.cache[cache_key]
-            if datetime.now() - cached.get('timestamp', datetime.min) < timedelta(
+            if datetime.now() - cached.get("timestamp", datetime.min) < timedelta(
                 seconds=self.cache_ttl
             ):
-                return cached.get('data', {})
+                return cached.get("data", {})
 
         results = {}
 
-        if method == 'hmm' or method == 'ensemble':
+        if method == "hmm" or method == "ensemble":
             hmm_result = self.hmm_detector.detect(prices)
-            results['hmm'] = hmm_result
+            results["hmm"] = hmm_result
 
-        if method == 'clustering' or method == 'ensemble':
+        if method == "clustering" or method == "ensemble":
             clustering_result = self.clustering_detector.detect(prices)
-            results['clustering'] = clustering_result
+            results["clustering"] = clustering_result
 
-        if method == 'ensemble':
+        if method == "ensemble":
             # Combinar resultados
             regime = self._combine_regime_results(results)
             result = {
-                'regime': regime['regime'],
-                'confidence': regime['confidence'],
-                'methods': results,
+                "regime": regime["regime"],
+                "confidence": regime["confidence"],
+                "methods": results,
             }
         else:
             # Usar resultado del método específico
             result = results.get(method, {})
 
         # Cachear resultado
-        self.cache[cache_key] = {'data': result, 'timestamp': datetime.now()}
+        self.cache[cache_key] = {"data": result, "timestamp": datetime.now()}
 
         return result
 
     def get_volatility_regime(
-        self, prices: List[float], volatility_history: Optional[List[float]] = None
-    ) -> Dict[str, Any]:
+        self, prices: list[float], volatility_history: Optional[list[float]] = None
+    ) -> dict[str, Any]:
         """
         Obtener régimen de volatilidad.
 
@@ -152,10 +152,10 @@ class ContextEngine:
         cache_key = f"volatility_{len(prices)}"
         if cache_key in self.cache:
             cached = self.cache[cache_key]
-            if datetime.now() - cached.get('timestamp', datetime.min) < timedelta(
+            if datetime.now() - cached.get("timestamp", datetime.min) < timedelta(
                 seconds=self.cache_ttl
             ):
-                return cached.get('data', {})
+                return cached.get("data", {})
 
         # Detectar régimen de volatilidad
         vol_regime = self.volatility_regime_detector.detect(prices, volatility_history)
@@ -168,23 +168,23 @@ class ContextEngine:
         garch_result = self.garch_analyzer.detect_clustering(returns)
 
         result = {
-            'regime': vol_regime.get('regime', 'unknown'),
-            'volatility': vol_regime.get('volatility', 0.0),
-            'percentile': vol_regime.get('percentile', 50),
-            'structural_change': structural_change,
-            'garch_clustering': garch_result,
+            "regime": vol_regime.get("regime", "unknown"),
+            "volatility": vol_regime.get("volatility", 0.0),
+            "percentile": vol_regime.get("percentile", 50),
+            "structural_change": structural_change,
+            "garch_clustering": garch_result,
         }
 
         # Cachear
-        self.cache[cache_key] = {'data': result, 'timestamp': datetime.now()}
+        self.cache[cache_key] = {"data": result, "timestamp": datetime.now()}
 
         return result
 
     def get_correlation_matrix(
         self,
-        price_data: Dict[str, List[float]],
-        method: str = 'rolling',  # rolling, dcc_garch, network
-    ) -> Dict[str, Any]:
+        price_data: dict[str, list[float]],
+        method: str = "rolling",  # rolling, dcc_garch, network
+    ) -> dict[str, Any]:
         """
         Obtener matriz de correlación.
 
@@ -198,10 +198,10 @@ class ContextEngine:
         cache_key = f"correlation_{method}_{len(price_data)}"
         if cache_key in self.cache:
             cached = self.cache[cache_key]
-            if datetime.now() - cached.get('timestamp', datetime.min) < timedelta(
+            if datetime.now() - cached.get("timestamp", datetime.min) < timedelta(
                 seconds=self.cache_ttl
             ):
-                return cached.get('data', {})
+                return cached.get("data", {})
 
         # Convertir a returns
         returns_data = {}
@@ -210,57 +210,54 @@ class ContextEngine:
                 returns = [prices[i + 1] / prices[i] - 1 for i in range(len(prices) - 1)]
                 returns_data[symbol] = returns
 
-        if method == 'rolling':
+        if method == "rolling":
             result = self.rolling_correlation.calculate_rolling_correlation(returns_data)
-        elif method == 'dcc_garch':
+        elif method == "dcc_garch":
             result = self.dcc_garch.analyze(returns_data)
-        elif method == 'network':
+        elif method == "network":
             # Calcular matriz primero
             rolling_result = self.rolling_correlation.calculate_rolling_correlation(returns_data)
-            corr_matrix = np.array(rolling_result.get('correlation_matrix', []))
+            corr_matrix = np.array(rolling_result.get("correlation_matrix", []))
             if len(corr_matrix) > 0:
                 network_result = self.network_analyzer.analyze_network(
                     corr_matrix, list(returns_data.keys())
                 )
                 result = {
-                    'correlation_matrix': rolling_result.get('correlation_matrix'),
-                    'network_analysis': network_result,
+                    "correlation_matrix": rolling_result.get("correlation_matrix"),
+                    "network_analysis": network_result,
                 }
             else:
-                result = {'correlation_matrix': None}
+                result = {"correlation_matrix": None}
         else:
-            result = {'error': f'Método desconocido: {method}'}
+            result = {"error": f"Método desconocido: {method}"}
 
         # Cachear
-        self.cache[cache_key] = {'data': result, 'timestamp': datetime.now()}
+        self.cache[cache_key] = {"data": result, "timestamp": datetime.now()}
 
         return result
 
-    def _combine_regime_results(self, results: Dict[str, Any]) -> Dict[str, Any]:
+    def _combine_regime_results(self, results: dict[str, Any]) -> dict[str, Any]:
         """Combinar resultados de múltiples métodos."""
         regimes = []
         confidences = []
 
         for _method, result in results.items():
-            if 'regime' in result:
-                regimes.append(result['regime'])
-            if 'confidence' in result:
-                confidences.append(result['confidence'])
+            if "regime" in result:
+                regimes.append(result["regime"])
+            if "confidence" in result:
+                confidences.append(result["confidence"])
 
         # Régimen más común
-        if regimes:
-            regime = max(set(regimes), key=regimes.count)
-        else:
-            regime = 'unknown'
+        regime = max(set(regimes), key=regimes.count) if regimes else "unknown"
 
         # Confianza promedio
         confidence = np.mean(confidences) if confidences else 0.0
 
-        return {'regime': regime, 'confidence': confidence}
+        return {"regime": regime, "confidence": confidence}
 
     def get_context_summary(
-        self, prices: List[float], price_data: Optional[Dict[str, List[float]]] = None
-    ) -> Dict[str, Any]:
+        self, prices: list[float], price_data: Optional[dict[str, list[float]]] = None
+    ) -> dict[str, Any]:
         """
         Obtener resumen completo de contexto.
 
@@ -272,12 +269,12 @@ class ContextEngine:
             Dict con resumen completo
         """
         summary = {
-            'regime': self.get_current_regime(prices, method='ensemble'),
-            'volatility_regime': self.get_volatility_regime(prices),
-            'timestamp': datetime.now().isoformat(),
+            "regime": self.get_current_regime(prices, method="ensemble"),
+            "volatility_regime": self.get_volatility_regime(prices),
+            "timestamp": datetime.now().isoformat(),
         }
 
         if price_data:
-            summary['correlation'] = self.get_correlation_matrix(price_data, method='rolling')
+            summary["correlation"] = self.get_correlation_matrix(price_data, method="rolling")
 
         return summary

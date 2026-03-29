@@ -1,5 +1,4 @@
 # mypy: ignore-errors
-# flake8: noqa: SIM111
 """
 Multi-Objective Optimization - FASE 6.1 Extension
 
@@ -12,7 +11,7 @@ Provides multi-objective optimization capabilities:
 
 import logging
 from dataclasses import dataclass, field
-from typing import Any, Callable, Dict, List, Optional, Tuple
+from typing import Any, Callable, Optional
 
 import numpy as np
 
@@ -31,12 +30,12 @@ class ParetoSolution:
     Represents a non-dominated solution in multi-objective optimization.
     """
 
-    params: Dict[str, Any]
-    objectives: Tuple[float, ...]
+    params: dict[str, Any]
+    objectives: tuple[float, ...]
     trial_id: str = ""
     rank: int = 0
     crowding_distance: float = 0.0
-    additional_metrics: Dict[str, Any] = field(default_factory=dict)
+    additional_metrics: dict[str, Any] = field(default_factory=dict)
 
     def dominates(self, other: "ParetoSolution") -> bool:
         """
@@ -51,17 +50,15 @@ class ParetoSolution:
         Returns:
             True if this solution dominates other
         """
-        at_least_one_better = False
+        at_least_one_better = any(
+            obj_a > obj_b for obj_a, obj_b in zip(self.objectives, other.objectives)
+        )
+        all_at_least_equal = all(
+            obj_a >= obj_b for obj_a, obj_b in zip(self.objectives, other.objectives)
+        )
+        return at_least_one_better and all_at_least_equal
 
-        for obj_a, obj_b in zip(self.objectives, other.objectives):
-            if obj_a < obj_b:  # Assuming all objectives are to be maximized
-                return False
-            elif obj_a > obj_b:
-                at_least_one_better = True
-
-        return at_least_one_better
-
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary representation."""
         return {
             "params": self.params,
@@ -81,17 +78,17 @@ class ParetoFront:
     Contains all non-dominated solutions from multi-objective optimization.
     """
 
-    solutions: List[ParetoSolution] = field(default_factory=list)
-    objective_names: List[str] = field(default_factory=list)
+    solutions: list[ParetoSolution] = field(default_factory=list)
+    objective_names: list[str] = field(default_factory=list)
     n_trials: int = 0
-    fronts: List[List[ParetoSolution]] = field(default_factory=list)
+    fronts: list[list[ParetoSolution]] = field(default_factory=list)
 
     def __post_init__(self):
         """Calculate fronts if not provided."""
         if not self.fronts and self.solutions:
             self.fronts = self._non_dominated_sorting()
 
-    def _non_dominated_sorting(self) -> List[List[ParetoSolution]]:
+    def _non_dominated_sorting(self) -> list[list[ParetoSolution]]:
         """
         Perform non-dominated sorting (NSGA-II style).
 
@@ -138,7 +135,7 @@ class ParetoFront:
 
         return fronts
 
-    def calculate_crowding_distance(self, front: List[ParetoSolution]) -> None:
+    def calculate_crowding_distance(self, front: list[ParetoSolution]) -> None:
         """
         Calculate crowding distance for a front.
 
@@ -179,7 +176,7 @@ class ParetoFront:
                         ) / obj_range
                         sorted_front[i].crowding_distance += distance
 
-    def get_pareto_front(self) -> List[ParetoSolution]:
+    def get_pareto_front(self) -> list[ParetoSolution]:
         """
         Get the first Pareto front (non-dominated solutions).
 
@@ -208,7 +205,7 @@ class ParetoFront:
 
     def get_best_by_weighted_criteria(
         self,
-        weights: Optional[List[float]] = None,
+        weights: Optional[list[float]] = None,
     ) -> Optional[ParetoSolution]:
         """
         Get best solution by weighted sum of objectives.
@@ -285,9 +282,9 @@ class ParetoFront:
 
     def _point_line_distance(
         self,
-        point: Tuple[float, ...],
-        line_start: Tuple[float, ...],
-        line_end: Tuple[float, ...],
+        point: tuple[float, ...],
+        line_start: tuple[float, ...],
+        line_end: tuple[float, ...],
     ) -> float:
         """Calculate perpendicular distance from point to line."""
         if len(point) < 2:
@@ -313,7 +310,7 @@ class ParetoFront:
         self,
         n_solutions: int = 10,
         use_crowding: bool = True,
-    ) -> List[ParetoSolution]:
+    ) -> list[ParetoSolution]:
         """
         Get diverse set of solutions from Pareto front.
 
@@ -349,7 +346,7 @@ class ParetoFront:
             indices = np.linspace(0, len(front) - 1, n_solutions, dtype=int)
             return [front[i] for i in indices]
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary representation."""
         return {
             "solutions": [s.to_dict() for s in self.solutions],
@@ -379,7 +376,7 @@ class MultiObjectiveOptimizer:
     def __init__(
         self,
         config: OptimizationConfig,
-        objective_names: Optional[List[str]] = None,
+        objective_names: Optional[list[str]] = None,
     ):
         """
         Initialize multi-objective optimizer.
@@ -394,7 +391,7 @@ class MultiObjectiveOptimizer:
 
     async def optimize_multi_objective(
         self,
-        objectives: List[Callable[[Dict[str, Any]], float]],
+        objectives: list[Callable[[dict[str, Any]], float]],
         param_grid: ParameterGrid,
     ) -> ParetoFront:
         """
@@ -411,7 +408,7 @@ class MultiObjectiveOptimizer:
 
         if len(objectives) != len(self.objective_names):
             raise ValueError(
-                f"Expected {len(self.objective_names)} objectives, " f"got {len(objectives)}"
+                f"Expected {len(self.objective_names)} objectives, got {len(objectives)}"
             )
 
         # Use random search to sample parameter combinations
@@ -459,8 +456,8 @@ class MultiObjectiveOptimizer:
 
 
 def find_non_dominated_solutions(
-    solutions: List[Tuple[Dict[str, Any], Tuple[float, ...]]],
-) -> List[Tuple[Dict[str, Any], Tuple[float, ...]]]:
+    solutions: list[tuple[dict[str, Any], tuple[float, ...]]],
+) -> list[tuple[dict[str, Any], tuple[float, ...]]]:
     """
     Find non-dominated solutions from a list.
 
@@ -501,8 +498,8 @@ def find_non_dominated_solutions(
 
 
 def calculate_hypervolume(
-    front: List[Tuple[float, ...]],
-    reference_point: Tuple[float, ...],
+    front: list[tuple[float, ...]],
+    reference_point: tuple[float, ...],
 ) -> float:
     """
     Calculate hypervolume indicator for a Pareto front.
@@ -556,7 +553,7 @@ class ScalarizationOptimizer:
         self,
         config: OptimizationConfig,
         scalarization_method: str = "weighted_sum",
-        weights: Optional[List[float]] = None,
+        weights: Optional[list[float]] = None,
     ):
         """
         Initialize scalarization optimizer.
@@ -575,8 +572,8 @@ class ScalarizationOptimizer:
 
     def scalarize(
         self,
-        objectives: Tuple[float, ...],
-        ideal_point: Optional[Tuple[float, ...]] = None,
+        objectives: tuple[float, ...],
+        ideal_point: Optional[tuple[float, ...]] = None,
     ) -> float:
         """
         Convert multiple objectives to single value.
@@ -628,9 +625,9 @@ class ScalarizationOptimizer:
 
     async def optimize(
         self,
-        objectives: List[Callable[[Dict[str, Any]], float]],
+        objectives: list[Callable[[dict[str, Any]], float]],
         param_grid: ParameterGrid,
-        weights: Optional[List[float]] = None,
+        weights: Optional[list[float]] = None,
     ) -> OptimizationResult:
         """
         Optimize using scalarization.

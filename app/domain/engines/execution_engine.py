@@ -6,7 +6,7 @@ Engine for executing trades with optimal execution strategies.
 
 import logging
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -29,7 +29,7 @@ class ExecutionEngine:
     and optimal fill rates.
     """
 
-    def __init__(self, config: Optional[Dict[str, Any]] = None):
+    def __init__(self, config: Optional[dict[str, Any]] = None):
         """
         Initialize the Execution Engine.
 
@@ -46,7 +46,7 @@ class ExecutionEngine:
         quantity: float,
         mode: ExecutionMode = ExecutionMode.MARKET,
         **kwargs,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Execute a trade order.
 
@@ -81,7 +81,7 @@ class ExecutionEngine:
 
         return result
 
-    def execute_batch(self, orders: List[Dict[str, Any]], **kwargs) -> List[Dict[str, Any]]:
+    def execute_batch(self, orders: list[dict[str, Any]], **kwargs) -> list[dict[str, Any]]:
         """
         Execute a batch of orders.
 
@@ -111,10 +111,11 @@ class ExecutionEngine:
             "Batch execution completed",
             extra={
                 "orders_executed": len(results),
-                "success_rate": sum(1 for r in results if r.get("status") == "filled")
-                / len(results)
-                if results
-                else 0,
+                "success_rate": (
+                    sum(1 for r in results if r.get("status") == "filled") / len(results)
+                    if results
+                    else 0
+                ),
             },
         )
 
@@ -122,7 +123,7 @@ class ExecutionEngine:
 
     def calculate_market_impact(
         self, symbol: str, quantity: float, side: str, **kwargs
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Calculate estimated market impact for an order.
 

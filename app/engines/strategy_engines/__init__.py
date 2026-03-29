@@ -17,17 +17,17 @@ from .pairs_engine import PairsTradingStrategyEngine
 from .trend_following_engine import TrendFollowingStrategyEngine
 
 __all__ = [
-    "BaseStrategyEngine",
-    "MomentumStrategyEngine",
-    "MeanReversionStrategyEngine",
-    "PairsTradingStrategyEngine",
-    "ModularMomentumStrategyEngine",
-    "BreakoutStrategyEngine",
-    "TrendFollowingStrategyEngine",
     "ArbitrageStrategyEngine",
+    "BaseStrategyEngine",
     # Ensembles
     "BaseStrategyEnsemble",
-    "WeightedEnsemble",
+    "BreakoutStrategyEngine",
+    "MeanReversionStrategyEngine",
+    "ModularMomentumStrategyEngine",
+    "MomentumStrategyEngine",
+    "PairsTradingStrategyEngine",
     "RegimeBasedSelector",
+    "TrendFollowingStrategyEngine",
     "VotingEnsemble",
+    "WeightedEnsemble",
 ]

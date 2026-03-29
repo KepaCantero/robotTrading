@@ -22,7 +22,6 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
 
 # Import Base and metadata from app.infrastructure.persistence.database
 from app.infrastructure.persistence import Base
-
 from app.shared.config.config import get_settings
 
 # Configure logger for migration operations

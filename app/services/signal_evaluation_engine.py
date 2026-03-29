@@ -7,7 +7,7 @@ de evaluación de la gestión de señales y ejecución.
 
 import logging
 from datetime import datetime
-from typing import Any, Dict, Optional
+from typing import Any, Optional
 
 from app.domain.models.signal import MarketData, SignalType
 from app.shared.config.centralized_config import get_config
@@ -45,8 +45,8 @@ class SignalEvaluationEngine:
         symbol: str,
         signal_type: SignalType,
         market_data: MarketData,
-        metadata: Dict[str, Any],
-    ) -> Dict[str, Any]:
+        metadata: dict[str, Any],
+    ) -> dict[str, Any]:
         """
         Evaluar la calidad de una señal.
 
@@ -96,7 +96,7 @@ class SignalEvaluationEngine:
         logger.debug(f"Signal evaluation for {symbol}: {evaluation_result}")
         return evaluation_result
 
-    def _calculate_strength_score(self, market_data: MarketData, metadata: Dict[str, Any]) -> float:
+    def _calculate_strength_score(self, market_data: MarketData, metadata: dict[str, Any]) -> float:
         """Calcular score de fuerza de la señal."""
         # Implementación simplificada basada en volatilidad y volumen
         volatility = metadata.get("volatility", 0.0)
@@ -115,7 +115,7 @@ class SignalEvaluationEngine:
         return min(max(strength_score, 0.0), 100.0)
 
     def _calculate_confidence_score(
-        self, market_data: MarketData, metadata: Dict[str, Any]
+        self, market_data: MarketData, metadata: dict[str, Any]
     ) -> float:
         """Calcular score de confianza de la señal."""
         # Implementación simplificada basada en consistencia de datos
@@ -134,7 +134,7 @@ class SignalEvaluationEngine:
         return min(max(confidence_score, 0.0), 100.0)
 
     def _calculate_liquidity_score(
-        self, market_data: MarketData, metadata: Dict[str, Any]
+        self, market_data: MarketData, metadata: dict[str, Any]
     ) -> float:
         """Calcular score de liquidez."""
         # Implementación simplificada basada en spread y volumen
@@ -178,7 +178,7 @@ class SignalEvaluationEngine:
             and liquidity_score >= self.min_liquidity_score
         )
 
-    def get_evaluation_statistics(self) -> Dict[str, Any]:
+    def get_evaluation_statistics(self) -> dict[str, Any]:
         """Obtener estadísticas de evaluación."""
         total_evaluations = self.evaluations_count
         acceptance_rate = (

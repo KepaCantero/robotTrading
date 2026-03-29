@@ -10,8 +10,9 @@ Refactorización de MeanReversionStrategy como Strategy Engine con:
 
 import logging
 from collections import deque
+from collections.abc import Sequence
 from decimal import Decimal
-from typing import Any, Dict, List, Optional, Sequence
+from typing import Any, Optional
 
 from app.domain.models.market_data import Quote
 from app.domain.models.portfolio import Portfolio
@@ -34,7 +35,7 @@ class MeanReversionStrategyEngine(BaseStrategyEngine):
     - Callbacks para aprendizaje continuo
     """
 
-    def __init__(self, config: Dict[str, Any]):
+    def __init__(self, config: dict[str, Any]):
         """
         Inicializar mean reversion strategy engine.
 
@@ -113,7 +114,7 @@ class MeanReversionStrategyEngine(BaseStrategyEngine):
             },
         )
         config_value = (
-            strategy_config.parameters.get('z_score_threshold') if strategy_config else 'NO_CONFIG'
+            strategy_config.parameters.get("z_score_threshold") if strategy_config else "NO_CONFIG"
         )
         logger.info(
             "CRITICAL: z_score_threshold configuration loaded",
@@ -133,7 +134,7 @@ class MeanReversionStrategyEngine(BaseStrategyEngine):
 
     def extract_features(
         self, market_data: Quote, historical_data: Optional[Sequence[Quote]] = None
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Extraer features estandarizados para Learning Engine.
 
@@ -147,7 +148,7 @@ class MeanReversionStrategyEngine(BaseStrategyEngine):
             Diccionario con features estandarizados
         """
         features = {
-            "timestamp": market_data.timestamp if hasattr(market_data, 'timestamp') else None,
+            "timestamp": market_data.timestamp if hasattr(market_data, "timestamp") else None,
             "symbol": market_data.symbol,
             "price": float(market_data.close or market_data.bid or market_data.last or 0),
         }
@@ -166,9 +167,9 @@ class MeanReversionStrategyEngine(BaseStrategyEngine):
             # Usar pandas-ta para calcular mean y std
             import pandas as pd
 
-            df = pd.DataFrame({'close': prices})
-            mean = df['close'].rolling(window=self.lookback_period).mean().iloc[-1]
-            std = df['close'].rolling(window=self.lookback_period).std().iloc[-1]
+            df = pd.DataFrame({"close": prices})
+            mean = df["close"].rolling(window=self.lookback_period).mean().iloc[-1]
+            std = df["close"].rolling(window=self.lookback_period).std().iloc[-1]
 
             if std is not None and std > 0 and not pd.isna(std):
                 z_score = (current_price - mean) / std
@@ -258,23 +259,23 @@ class MeanReversionStrategyEngine(BaseStrategyEngine):
             signal_type=signal_type,
             strength=strength,
             price=Decimal(str(current_price)),
-            timestamp=market_data.timestamp if hasattr(market_data, 'timestamp') else None,
+            timestamp=market_data.timestamp if hasattr(market_data, "timestamp") else None,
             confidence=confidence,
             liquidity_score=70.0,
             priority_score=confidence * 0.8,
             source=SignalSource.MEAN_REVERSION,
             volume=Decimal("1"),
             metadata={
-                'strategy': self.name,
-                'z_score': float(z_score),
-                'mean': float(mean),
-                'std': float(std),
-                'volatility': volatility,
-                'price_mean_distance': (float((current_price - mean) / mean) if mean > 0 else 0.0),
+                "strategy": self.name,
+                "z_score": float(z_score),
+                "mean": float(mean),
+                "std": float(std),
+                "volatility": volatility,
+                "price_mean_distance": (float((current_price - mean) / mean) if mean > 0 else 0.0),
             },
         )
 
-    def _generate_signals_impl(self, market_data: Quote) -> List[Signal]:
+    def _generate_signals_impl(self, market_data: Quote) -> list[Signal]:
         """
         Implementación específica de generación de señales para mean reversion.
 
@@ -298,9 +299,9 @@ class MeanReversionStrategyEngine(BaseStrategyEngine):
 
             import pandas as pd
 
-            df = pd.DataFrame({'close': list(self.price_history)})
-            mean = df['close'].rolling(window=self.lookback_period).mean().iloc[-1]
-            std = df['close'].rolling(window=self.lookback_period).std().iloc[-1]
+            df = pd.DataFrame({"close": list(self.price_history)})
+            mean = df["close"].rolling(window=self.lookback_period).mean().iloc[-1]
+            std = df["close"].rolling(window=self.lookback_period).std().iloc[-1]
 
             if std is None or std <= 0 or pd.isna(std):
                 return []
@@ -379,7 +380,7 @@ class MeanReversionStrategyEngine(BaseStrategyEngine):
                 "Error generando señal en MeanReversionStrategyEngine",
                 extra={
                     "strategy": "mean_reversion",
-                    "symbol": getattr(market_data, 'symbol', None),
+                    "symbol": getattr(market_data, "symbol", None),
                     "error_type": type(e).__name__,
                 },
                 exc_info=True,
@@ -415,8 +416,8 @@ class MeanReversionStrategyEngine(BaseStrategyEngine):
         # Volatility thresholds from config (very low and low volatility for confidence bonus)
         centralized_config = get_config()
         # Use getattr() for Pydantic models - they don't have .get() method
-        vol_very_low = getattr(centralized_config.trading, 'volatility_confidence_very_low', 0.01)
-        vol_low = getattr(centralized_config.trading, 'volatility_confidence_low', 0.02)
+        vol_very_low = getattr(centralized_config.trading, "volatility_confidence_very_low", 0.01)
+        vol_low = getattr(centralized_config.trading, "volatility_confidence_low", 0.02)
 
         if volatility < vol_very_low:
             confidence += 10.0
@@ -425,7 +426,7 @@ class MeanReversionStrategyEngine(BaseStrategyEngine):
 
         return min(100.0, max(0.0, confidence))
 
-    def get_required_parameters(self) -> List[str]:
+    def get_required_parameters(self) -> list[str]:
         """Obtener parámetros requeridos."""
         return [
             "z_score_threshold",
@@ -463,7 +464,7 @@ class MeanReversionStrategyEngine(BaseStrategyEngine):
             return False
 
         # Verificar volatilidad (mean reversion requiere volatilidad controlada)
-        volatility = signal.metadata.get('volatility', 0.0)
+        volatility = signal.metadata.get("volatility", 0.0)
         if volatility > float(self.volatility_threshold * 2):  # Permitir hasta 2x el threshold
             logger.debug(
                 "Risk check fallido: volatilidad muy alta",

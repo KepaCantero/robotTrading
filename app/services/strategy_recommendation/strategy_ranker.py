@@ -7,9 +7,10 @@ Provides ranking and comparison of strategies based on scored metrics.
 import logging
 from dataclasses import dataclass
 from decimal import Decimal
-from typing import Dict, List, Optional
+from typing import TYPE_CHECKING, Optional
 
-from .strategy_scorer import StrategyScore
+if TYPE_CHECKING:
+    from .strategy_scorer import StrategyScore
 
 logger = logging.getLogger(__name__)
 
@@ -42,15 +43,15 @@ class StrategyRanker:
 
     def __init__(self):
         """Initialize strategy ranker."""
-        self.ranking_history: Dict[str, List[RankedStrategy]] = {}
-        self.current_ranking: List[RankedStrategy] = []
+        self.ranking_history: dict[str, list[RankedStrategy]] = {}
+        self.current_ranking: list[RankedStrategy] = []
         logger.info("✅ StrategyRanker initialized")
 
     async def rank_strategies(
         self,
-        scores: List['StrategyScore'],  # From StrategyScorer
+        scores: list["StrategyScore"],  # From StrategyScorer
         metric: str = "overall_score",
-    ) -> List[RankedStrategy]:
+    ) -> list[RankedStrategy]:
         """
         Rank strategies by a specific metric.
 
@@ -99,7 +100,7 @@ class StrategyRanker:
     async def get_top_strategies(
         self,
         n: int = 5,
-    ) -> List[RankedStrategy]:
+    ) -> list[RankedStrategy]:
         """
         Get top N strategies from current ranking.
 
@@ -114,7 +115,7 @@ class StrategyRanker:
     async def get_bottom_strategies(
         self,
         n: int = 5,
-    ) -> List[RankedStrategy]:
+    ) -> list[RankedStrategy]:
         """
         Get bottom N strategies from current ranking.
 
@@ -140,8 +141,8 @@ class StrategyRanker:
 
     async def compare_strategies(
         self,
-        strategy_names: List[str],
-    ) -> List[RankedStrategy]:
+        strategy_names: list[str],
+    ) -> list[RankedStrategy]:
         """
         Get comparison of specific strategies.
 
@@ -154,7 +155,7 @@ class StrategyRanker:
         comparison = [s for s in self.current_ranking if s.strategy_name in strategy_names]
         return comparison
 
-    async def get_ranking_gaps(self) -> Dict[str, Decimal]:
+    async def get_ranking_gaps(self) -> dict[str, Decimal]:
         """
         Calculate gaps between consecutive ranked strategies.
 
@@ -166,14 +167,14 @@ class StrategyRanker:
             current = self.current_ranking[i]
             next_strategy = self.current_ranking[i + 1]
             gap = current.overall_score - next_strategy.overall_score
-            gaps[f"rank_{i+1}_to_{i+2}"] = gap
+            gaps[f"rank_{i + 1}_to_{i + 2}"] = gap
 
         return gaps
 
     async def get_performance_clusters(
         self,
         num_clusters: int = 3,
-    ) -> Dict[str, List[RankedStrategy]]:
+    ) -> dict[str, list[RankedStrategy]]:
         """
         Cluster strategies into performance groups.
 
@@ -204,7 +205,7 @@ class StrategyRanker:
         self,
         strategy1: str,
         strategy2: str,
-    ) -> Optional[Dict]:
+    ) -> Optional[dict]:
         """
         Compare two strategies pairwise.
 
@@ -232,7 +233,7 @@ class StrategyRanker:
             ),
         }
 
-    def get_ranker_status(self) -> Dict:
+    def get_ranker_status(self) -> dict:
         """Get ranker status."""
         return {
             "current_ranking_count": len(self.current_ranking),

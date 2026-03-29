@@ -9,7 +9,7 @@ import asyncio
 import logging
 from datetime import datetime
 from decimal import Decimal
-from typing import Dict, List, Optional
+from typing import Optional
 
 logger = logging.getLogger(__name__)
 
@@ -41,7 +41,7 @@ class QlibConnector:
         self.qlib_path = qlib_path
         self.market = market
         self.connected = False
-        self.available_factors: Dict[str, Dict] = {}
+        self.available_factors: dict[str, dict] = {}
         self._initialize_factors()
         logger.info(f"✅ QlibConnector initialized (market={market})")
 
@@ -101,17 +101,17 @@ class QlibConnector:
             logger.info("✅ Connected to Qlib data provider")
             return True
         except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
-            logger.error(f"❌ Failed to connect to Qlib: {str(e)}")
+            logger.error(f"❌ Failed to connect to Qlib: {e!s}")
             self.connected = False
             return False
 
     async def download_market_data(
         self,
-        symbols: List[str],
+        symbols: list[str],
         start_date: datetime,
         end_date: datetime,
-        fields: List[str] = None,
-    ) -> Dict:
+        fields: Optional[list[str]] = None,
+    ) -> dict:
         """
         Download market data using Qlib.
 
@@ -136,22 +136,21 @@ class QlibConnector:
             # data = D.features(symbols, start_date, end_date, fields)
 
             logger.info(
-                f"✅ Downloaded market data for {len(symbols)} symbols "
-                f"({start_date} to {end_date})"
+                f"✅ Downloaded market data for {len(symbols)} symbols ({start_date} to {end_date})"
             )
             return data
 
         except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
-            logger.error(f"❌ Failed to download market data: {str(e)}")
+            logger.error(f"❌ Failed to download market data: {e!s}")
             return {}
 
     async def calculate_factors(
         self,
-        symbols: List[str],
+        symbols: list[str],
         start_date: datetime,
         end_date: datetime,
-        factors: List[str],
-    ) -> Dict:
+        factors: list[str],
+    ) -> dict:
         """
         Calculate financial factors for symbols.
 
@@ -177,14 +176,14 @@ class QlibConnector:
             return factor_data
 
         except (asyncio.TimeoutError, OSError) as e:
-            logger.error(f"❌ Failed to calculate factors: {str(e)}")
+            logger.error(f"❌ Failed to calculate factors: {e!s}")
             return {}
 
     async def get_feature_engineering(
         self,
-        data: Dict,
-        feature_engineering_config: Dict,
-    ) -> Dict:
+        data: dict,
+        feature_engineering_config: dict,
+    ) -> dict:
         """
         Apply feature engineering to data.
 
@@ -202,16 +201,16 @@ class QlibConnector:
             return engineered
 
         except (asyncio.TimeoutError, OSError) as e:
-            logger.error(f"❌ Feature engineering failed: {str(e)}")
+            logger.error(f"❌ Feature engineering failed: {e!s}")
             return {}
 
     async def prepare_backtest_data(
         self,
-        symbols: List[str],
+        symbols: list[str],
         start_date: datetime,
         end_date: datetime,
         frequency: str = "daily",
-    ) -> Dict:
+    ) -> dict:
         """
         Prepare data for backtesting.
 
@@ -240,16 +239,16 @@ class QlibConnector:
             return data
 
         except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
-            logger.error(f"❌ Failed to prepare backtest data: {str(e)}")
+            logger.error(f"❌ Failed to prepare backtest data: {e!s}")
             return {}
 
-    def get_factor_list(self, category: Optional[str] = None) -> Dict:
+    def get_factor_list(self, category: Optional[str] = None) -> dict:
         """Get available factors."""
         if category:
             return self.available_factors.get(category, {})
         return self.available_factors
 
-    def get_connector_status(self) -> Dict:
+    def get_connector_status(self) -> dict:
         """Get connector status."""
         return {
             "connected": self.connected,

@@ -16,7 +16,7 @@ import logging
 from dataclasses import dataclass, field
 from decimal import Decimal
 from enum import Enum
-from typing import Any, Dict, Optional
+from typing import Any, Optional
 
 from app.domain.models.investment_profile import CapitalTier, InvestmentProfile
 
@@ -62,7 +62,7 @@ class ModuleParameters:
     max_positions: int
 
     # Module-specific parameters (dict allows flexibility)
-    module_specific: Dict[str, Any] = field(default_factory=dict)
+    module_specific: dict[str, Any] = field(default_factory=dict)
 
     # Risk adjustment factor (applies to position sizing)
     risk_adjustment: Decimal = Decimal("1.0")
@@ -100,7 +100,7 @@ class ModuleParameterSet:
     objetivo_inversion: str
 
     # Dict mapping module names to their parameters
-    modules: Dict[str, ModuleParameters] = field(default_factory=dict)
+    modules: dict[str, ModuleParameters] = field(default_factory=dict)
 
     # Metadata
     generated_at: str = ""
@@ -139,7 +139,7 @@ class ModuleParametrizer:
     5. Validation of parameter ranges
     """
 
-    def __init__(self, config: Dict[str, Any]):
+    def __init__(self, config: dict[str, Any]):
         """
         Initialize ModuleParametrizer with module configuration.
 
@@ -147,7 +147,7 @@ class ModuleParametrizer:
             config: Module configuration dict (either raw or with 'modules' key)
         """
         # Handle both formats: raw modules dict or dict with 'modules' key
-        self.config = config.get('modules', config)
+        self.config = config.get("modules", config)
 
         logger.info("ModuleParametrizer initialized with configuration")
 
@@ -171,7 +171,7 @@ class ModuleParametrizer:
                 input_id=investment_profile.input_id,
                 capital_tier=investment_profile.capital_tier,
                 objetivo_inversion=investment_profile.objetivo_inversion.value,
-                generated_at=__import__('datetime').datetime.now().isoformat(),
+                generated_at=__import__("datetime").datetime.now().isoformat(),
             )
 
             # Generate parameters for each enabled module
@@ -228,41 +228,41 @@ class ModuleParametrizer:
 
         # Get tier-specific variant
         tier_value = investment_profile.capital_tier.value
-        if tier_value not in module_config.get('tiers', {}):
+        if tier_value not in module_config.get("tiers", {}):
             raise ValueError(f"No configuration for module {module_name} at tier {tier_value}")
 
-        tier_config = module_config['tiers'][tier_value]
+        tier_config = module_config["tiers"][tier_value]
 
         # Determine preset
-        preset = tier_config.get('preset', 'balanced')
+        preset = tier_config.get("preset", "balanced")
 
         # Extract core parameters (apply tier-specific overrides first, then module-level defaults)
-        base_config = module_config.get('base', {})
+        base_config = module_config.get("base", {})
 
         max_position_size = Decimal(
-            str(tier_config.get('max_position_size', base_config.get('max_position_size', '0.10')))
+            str(tier_config.get("max_position_size", base_config.get("max_position_size", "0.10")))
         )
 
         stop_loss_pct = Decimal(
-            str(tier_config.get('stop_loss_pct', base_config.get('stop_loss_pct', '0.03')))
+            str(tier_config.get("stop_loss_pct", base_config.get("stop_loss_pct", "0.03")))
         )
 
         take_profit_pct = Decimal(
-            str(tier_config.get('take_profit_pct', base_config.get('take_profit_pct', '0.08')))
+            str(tier_config.get("take_profit_pct", base_config.get("take_profit_pct", "0.08")))
         )
 
         max_exposure = Decimal(
-            str(tier_config.get('max_exposure', base_config.get('max_exposure', '0.30')))
+            str(tier_config.get("max_exposure", base_config.get("max_exposure", "0.30")))
         )
 
-        max_positions = tier_config.get('max_positions', base_config.get('max_positions', 5))
+        max_positions = tier_config.get("max_positions", base_config.get("max_positions", 5))
 
         risk_adjustment = Decimal(
-            str(tier_config.get('risk_adjustment', base_config.get('risk_adjustment', '1.0')))
+            str(tier_config.get("risk_adjustment", base_config.get("risk_adjustment", "1.0")))
         )
 
         # Extract module-specific parameters
-        module_specific = tier_config.get('module_specific', {})
+        module_specific = tier_config.get("module_specific", {})
 
         # Apply risk scaling if enabled
         if investment_profile.risk_scaling_enabled:

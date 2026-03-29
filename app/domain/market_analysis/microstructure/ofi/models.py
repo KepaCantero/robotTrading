@@ -10,11 +10,14 @@ module, ensuring type safety and validation.
 import logging
 from dataclasses import dataclass
 from datetime import datetime, timezone
-from decimal import Decimal
 from enum import Enum
+from typing import TYPE_CHECKING
 
 import numpy as np
 from pydantic import BaseModel, ConfigDict, Field, field_validator
+
+if TYPE_CHECKING:
+    from decimal import Decimal
 
 logger = logging.getLogger(__name__)
 
@@ -683,9 +686,9 @@ class CumulativeOFI:
         """Initialize history if not provided."""
         # Convert to tuple if list was passed for frozen dataclass
         if isinstance(self.history, list):
-            object.__setattr__(self, 'history', tuple(self.history))
+            object.__setattr__(self, "history", tuple(self.history))
 
-    def update(self, ofi_value: float, timestamp: datetime) -> "CumulativeOFI":
+    def update(self, ofi_value: float, timestamp: datetime) -> CumulativeOFI:
         """
         Update COFI with new OFI value.
 
@@ -705,7 +708,7 @@ class CumulativeOFI:
             },
         )
         new_cofi = self.current_cofi + ofi_value
-        new_history = self.history + ((timestamp, new_cofi),)
+        new_history = (*self.history, (timestamp, new_cofi))
 
         # Update statistics
         new_max = max(self.max_cofi, new_cofi)
@@ -750,7 +753,7 @@ class CumulativeOFI:
         z = self.z_score()
         return z is not None and z < -threshold
 
-    def reset(self, new_start_time: datetime) -> "CumulativeOFI":
+    def reset(self, new_start_time: datetime) -> CumulativeOFI:
         """
         Reset COFI tracking.
 

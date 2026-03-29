@@ -23,7 +23,6 @@ from __future__ import annotations
 import logging
 from dataclasses import dataclass
 from decimal import Decimal
-from typing import List, Optional, Union
 
 import numpy as np
 import pandas as pd
@@ -42,7 +41,7 @@ class BollingerBandsSignal:
     lower_band: Decimal
     bandwidth: float  # (upper - lower) / middle
     pct_b: float  # (price - lower) / (upper - lower)
-    timestamp: Union[pd.Timestamp, int]
+    timestamp: pd.Timestamp | int
     strength: float  # Signal strength (0-100)
 
 
@@ -80,7 +79,7 @@ class BollingerBandsIndicator:
         %B = (Price - Lower) / (Upper - Lower)
     """
 
-    def __init__(self, config: Optional[BollingerBandsConfig] = None):
+    def __init__(self, config: BollingerBandsConfig | None = None):
         """
         Initialize Bollinger Bands indicator.
 
@@ -94,7 +93,7 @@ class BollingerBandsIndicator:
         )
 
     def calculate(
-        self, prices: pd.Series, timestamps: Optional[pd.DatetimeIndex] = None
+        self, prices: pd.Series, timestamps: pd.DatetimeIndex | None = None
     ) -> pd.DataFrame:
         """
         Calculate Bollinger Bands for a price series.
@@ -109,8 +108,7 @@ class BollingerBandsIndicator:
         try:
             if len(prices) < self.config.period:
                 logger.warning(
-                    f"Insufficient data for Bollinger Bands: "
-                    f"{len(prices)} < {self.config.period}"
+                    f"Insufficient data for Bollinger Bands: {len(prices)} < {self.config.period}"
                 )
                 return self._create_empty_result(len(prices))
 
@@ -156,8 +154,8 @@ class BollingerBandsIndicator:
     def generate_signals(
         self,
         prices: pd.Series,
-        timestamps: Optional[pd.DatetimeIndex] = None,
-    ) -> List[BollingerBandsSignal]:
+        timestamps: pd.DatetimeIndex | None = None,
+    ) -> list[BollingerBandsSignal]:
         """
         Generate trading signals based on Bollinger Bands.
 
@@ -403,7 +401,7 @@ class BollingerBandsIndicator:
 
 
 def calculate_bollinger_bands(
-    prices: List[float] | pd.Series,
+    prices: list[float] | pd.Series,
     period: int = 20,
     num_std: float = 2.0,
     ma_type: str = "sma",

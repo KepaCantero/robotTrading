@@ -8,7 +8,7 @@ import logging
 import shutil
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any, Optional
 
 import yaml
 
@@ -49,7 +49,7 @@ class YAMLConfigUpdater:
         )
 
     def _validate_optimized_params(
-        self, params: Dict[str, Any], param_type: str = "general"
+        self, params: dict[str, Any], param_type: str = "general"
     ) -> bool:
         """
         Validate optimized parameters before applying to configuration.
@@ -120,16 +120,20 @@ class YAMLConfigUpdater:
 
             elif param_type == "detector":
                 # Detectors have various parameters
-                if ("period" in key_lower or "window" in key_lower) and (not isinstance(value, int) or value < 1):
+                if ("period" in key_lower or "window" in key_lower) and (
+                    not isinstance(value, int) or value < 1
+                ):
                     raise ValueError(
                         f"Detector parameter '{key}' must be a positive integer, got {value}"
                     )
 
-            elif param_type == "strategy" and "exposure" in key_lower and (not isinstance(value, (int, float)) or not (0 <= value <= 1)):
+            elif (
+                param_type == "strategy"
+                and "exposure" in key_lower
+                and (not isinstance(value, (int, float)) or not (0 <= value <= 1))
+            ):
                 # Strategy parameters
-                raise ValueError(
-                    f"Strategy exposure '{key}' must be between 0 and 1, got {value}"
-                )
+                raise ValueError(f"Strategy exposure '{key}' must be between 0 and 1, got {value}")
 
             # General numeric validation
             if isinstance(value, (int, float)):
@@ -156,7 +160,7 @@ class YAMLConfigUpdater:
     def update_filter_thresholds(
         self,
         filter_name: str,
-        optimized_params: Dict[str, float],
+        optimized_params: dict[str, float],
         tier: Optional[str] = None,
         preset: Optional[str] = None,
     ) -> bool:
@@ -256,7 +260,7 @@ class YAMLConfigUpdater:
     def update_detector_params(
         self,
         detector_name: str,
-        optimized_params: Dict[str, Any],
+        optimized_params: dict[str, Any],
         tier: Optional[str] = None,
     ) -> bool:
         """
@@ -336,7 +340,7 @@ class YAMLConfigUpdater:
     def update_strategy_params(
         self,
         strategy_name: str,
-        optimized_params: Dict[str, Any],
+        optimized_params: dict[str, Any],
         tier: Optional[str] = None,
     ) -> bool:
         """
@@ -416,7 +420,7 @@ class YAMLConfigUpdater:
     def update_learning_params(
         self,
         section: str,
-        optimized_params: Dict[str, Any],
+        optimized_params: dict[str, Any],
         tier: Optional[str] = None,
     ) -> bool:
         """
@@ -500,8 +504,8 @@ class YAMLConfigUpdater:
     # ========================================================================
 
     def update_multiple_filters(
-        self, filter_updates: Dict[str, Dict[str, float]], tier: Optional[str] = None
-    ) -> Dict[str, bool]:
+        self, filter_updates: dict[str, dict[str, float]], tier: Optional[str] = None
+    ) -> dict[str, bool]:
         """
         Actualiza múltiples filtros en una sola operación.
 
@@ -521,7 +525,7 @@ class YAMLConfigUpdater:
         return results
 
     def update_from_optimization_results(
-        self, optimization_results: Dict[str, Any], tier: Optional[str] = None
+        self, optimization_results: dict[str, Any], tier: Optional[str] = None
     ) -> bool:
         """
         Actualiza configs desde resultados de optimización completos.
@@ -594,7 +598,7 @@ class YAMLConfigUpdater:
 
         return backup_path
 
-    def _validate_yaml(self, config: Dict) -> bool:
+    def _validate_yaml(self, config: dict) -> bool:
         """
         Valida que la config YAML sea correcta.
 
@@ -611,7 +615,7 @@ class YAMLConfigUpdater:
             return False
 
     def _register_change(
-        self, file: str, section: str, params: Dict, tier: Optional[str] = None
+        self, file: str, section: str, params: dict, tier: Optional[str] = None
     ) -> None:
         """
         Registra un cambio en el historial.

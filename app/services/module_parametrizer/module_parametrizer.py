@@ -14,7 +14,7 @@ import logging
 from datetime import datetime
 from decimal import Decimal
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import ClassVar, Optional
 
 import yaml
 
@@ -42,7 +42,7 @@ class ModuleParametrizer:
     """
 
     # Capital-tier minimum thresholds for expensive/complex modules
-    CAPITAL_GATES = {
+    CAPITAL_GATES: ClassVar[dict] = {
         "ml_ensemble": Decimal("500000"),  # Large accounts only
         "transformer_learning": Decimal("250000"),  # Medium+ accounts
         "deep_learning_engine": Decimal("100000"),  # Small+ accounts
@@ -56,7 +56,7 @@ class ModuleParametrizer:
         Args:
             config_path: Path to module_parameters.yaml config file
         """
-        self.parametrization_history: List[ParameterizationResult] = []
+        self.parametrization_history: list[ParameterizationResult] = []
 
         # Load module configuration
         if config_path is None:
@@ -68,7 +68,7 @@ class ModuleParametrizer:
         self.module_templates = self._load_module_templates()
         logger.info("✅ ModuleParametrizer initialized")
 
-    def _load_module_templates(self) -> Dict:
+    def _load_module_templates(self) -> dict:
         """Load module parameter templates from YAML."""
         try:
             if not self.config_path.exists():
@@ -77,7 +77,7 @@ class ModuleParametrizer:
                 )
                 return {"modules": {}}
 
-            with open(self.config_path, 'r') as f:
+            with open(self.config_path) as f:
                 config = yaml.safe_load(f)
 
             modules_config = config.get("modules", {})
@@ -160,9 +160,9 @@ class ModuleParametrizer:
 
     def _apply_capital_gating(
         self,
-        enabled_modules: List[str],
+        enabled_modules: list[str],
         initial_capital: Decimal,
-    ) -> tuple[List[str], List[str]]:
+    ) -> tuple[list[str], list[str]]:
         """
         Filter modules based on capital tier.
 
@@ -287,8 +287,8 @@ class ModuleParametrizer:
     def _create_parameter_set(
         self,
         request: ParameterizationRequest,
-        module_parameters: Dict[str, ModuleParameterConfig],
-        disabled_modules: List[str],
+        module_parameters: dict[str, ModuleParameterConfig],
+        disabled_modules: list[str],
     ) -> ModuleParameterSet:
         """Create ModuleParameterSet from parametrized modules."""
         # Categorize modules by priority
@@ -324,7 +324,7 @@ class ModuleParametrizer:
     def _validate_parameter_set(
         self,
         parameter_set: ModuleParameterSet,
-    ) -> List[str]:
+    ) -> list[str]:
         """Validate generated parameter set and return warnings."""
         warnings = []
 
@@ -346,9 +346,7 @@ class ModuleParametrizer:
             parameter_set.total_modules_enabled > 0
             and len(parameter_set.high_priority_modules) == 0
         ):
-            warnings.append(
-                "⚠️  No high-priority modules enabled - may affect strategy consistency"
-            )
+            warnings.append("⚠️  No high-priority modules enabled - may affect strategy consistency")
 
         # Check estimated cost
         if parameter_set.total_estimated_cost_usd > Decimal("1000"):
@@ -362,14 +360,14 @@ class ModuleParametrizer:
     async def get_parametrization_history(
         self,
         limit: Optional[int] = None,
-    ) -> List[ParameterizationResult]:
+    ) -> list[ParameterizationResult]:
         """Get parametrization history."""
         results = self.parametrization_history
         if limit:
             results = results[-limit:]
         return results
 
-    def get_parametrizer_status(self) -> Dict:
+    def get_parametrizer_status(self) -> dict:
         """Get parametrizer operational status."""
         return {
             "total_parametrizations": len(self.parametrization_history),

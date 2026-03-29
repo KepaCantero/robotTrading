@@ -19,12 +19,13 @@ from __future__ import annotations
 import logging
 from datetime import datetime
 from decimal import Decimal
-from typing import Any, Dict, List, Optional, Union
-
-import pandas as pd
+from typing import TYPE_CHECKING, Any
 
 from app.domain.services.compliance.results import PreTradeCheckResult
 from app.domain.services.compliance.service_registry import get_service_registry
+
+if TYPE_CHECKING:
+    import pandas as pd
 
 logger = logging.getLogger(__name__)
 
@@ -53,7 +54,7 @@ class PreTradeComplianceChecker:
     def __init__(self) -> None:
         """Initialize the pre-trade checker with service registry."""
         self._registry = get_service_registry()
-        self._cache: Dict[str, Any] = {}
+        self._cache: dict[str, Any] = {}
 
     # =========================================================================
     # MAIN CHECK METHOD
@@ -65,11 +66,11 @@ class PreTradeComplianceChecker:
         side: str,
         quantity: Decimal,
         current_price: Decimal,
-        price_history: Optional[pd.DataFrame] = None,
-        order_book: Optional[Any] = None,
+        price_history: pd.DataFrame | None = None,
+        order_book: object | None = None,
         urgency: float = 0.5,
-        signal_time: Optional[datetime] = None,
-        **kwargs: Union[str, int, float, bool, Dict, List],  # Extension point for additional params
+        signal_time: datetime | None = None,
+        **kwargs: str | int | float | bool | dict | list,  # Extension point for additional params
     ) -> PreTradeCheckResult:
         """
         Perform comprehensive pre-trade check using all available services.
@@ -88,7 +89,7 @@ class PreTradeComplianceChecker:
         Returns:
             PreTradeCheckResult with aggregated decision and recommendations
         """
-        reasons: List[str] = []
+        reasons: list[str] = []
         can_execute = True
         confidence = 1.0
 
@@ -180,12 +181,12 @@ class PreTradeComplianceChecker:
         side: str,
         quantity: Decimal,
         current_price: Decimal,
-        order_book: Optional[Any],
-        price_history: Optional[pd.DataFrame],
+        order_book: object | None,
+        price_history: pd.DataFrame | None,
         urgency: float,
-        signal_time: Optional[datetime],
+        signal_time: datetime | None,
         result: PreTradeCheckResult,
-        reasons: List[str],
+        reasons: list[str],
     ) -> None:
         """Check Harris microstructure analysis."""
         harris = self._registry.get_service("harris_integrator")
@@ -226,10 +227,10 @@ class PreTradeComplianceChecker:
         self,
         symbol: str,
         quantity: Decimal,
-        order_book: Optional[Any],
-        price_history: Optional[pd.DataFrame],
+        order_book: object | None,
+        price_history: pd.DataFrame | None,
         result: PreTradeCheckResult,
-        reasons: List[str],
+        reasons: list[str],
     ) -> None:
         """Check O'Hara liquidity analysis."""
         if price_history is None:
@@ -265,9 +266,9 @@ class PreTradeComplianceChecker:
 
     def _check_chan_regime(
         self,
-        price_history: Optional[pd.DataFrame],
+        price_history: pd.DataFrame | None,
         result: PreTradeCheckResult,
-        reasons: List[str],
+        reasons: list[str],
     ) -> None:
         """Check Chan regime detection."""
         if price_history is None:
@@ -297,9 +298,9 @@ class PreTradeComplianceChecker:
     def _check_narang_alpha(
         self,
         symbol: str,
-        price_history: Optional[pd.DataFrame],
+        price_history: pd.DataFrame | None,
         result: PreTradeCheckResult,
-        reasons: List[str],
+        reasons: list[str],
     ) -> None:
         """Check Narang alpha generation."""
         if price_history is None:
@@ -330,9 +331,9 @@ class PreTradeComplianceChecker:
 
     def _check_hull_risk(
         self,
-        price_history: Optional[pd.DataFrame],
+        price_history: pd.DataFrame | None,
         result: PreTradeCheckResult,
-        reasons: List[str],
+        reasons: list[str],
     ) -> None:
         """Check Hull risk calculations."""
         if price_history is None:
@@ -360,13 +361,13 @@ class PreTradeComplianceChecker:
     # HELPER METHODS
     # =========================================================================
 
-    def _estimate_adv(self, price_history: Optional[pd.DataFrame]) -> Decimal:
+    def _estimate_adv(self, price_history: pd.DataFrame | None) -> Decimal:
         """Estimate average daily volume from price history."""
         if price_history is not None and "volume" in price_history.columns:
             return Decimal(str(price_history["volume"].mean()))
         return Decimal("1000000")  # Default
 
-    def get_available_checks(self) -> List[str]:
+    def get_available_checks(self) -> list[str]:
         """Get list of available pre-trade checks."""
         checks = []
 

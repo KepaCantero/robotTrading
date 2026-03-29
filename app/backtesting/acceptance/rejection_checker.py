@@ -6,7 +6,7 @@ Follows Single Responsibility Principle (SOL-001).
 """
 
 from dataclasses import dataclass
-from typing import List, Optional
+from typing import Optional
 
 from app.backtesting.acceptance.models import CriterionResult
 
@@ -75,7 +75,7 @@ class RejectionCriteriaChecker:
         )
 
     def check_equity_curve_trend(
-        self, equity_curve_last_years: Optional[List[float]]
+        self, equity_curve_last_years: Optional[list[float]]
     ) -> Optional[CriterionResult]:
         """
         Check equity curve trend criterion.
@@ -108,8 +108,8 @@ class RejectionCriteriaChecker:
         self,
         commission_impact: Optional[float] = None,
         failed_regimes: Optional[int] = None,
-        equity_curve_last_years: Optional[List[float]] = None,
-    ) -> List[CriterionResult]:
+        equity_curve_last_years: Optional[list[float]] = None,
+    ) -> list[CriterionResult]:
         """
         Check all rejection criteria.
 
@@ -121,7 +121,7 @@ class RejectionCriteriaChecker:
         Returns:
             List of CriterionResult (only non-None results)
         """
-        results: List[CriterionResult] = []
+        results: list[CriterionResult] = []
 
         commission_result = self.check_commission_impact(commission_impact)
         if commission_result:

@@ -13,8 +13,9 @@ Características principales:
 
 import logging
 from collections import deque
+from collections.abc import Sequence
 from decimal import Decimal
-from typing import Any, Dict, List, Optional, Sequence
+from typing import Any, Optional
 
 from app.domain.models.market_data import Quote
 from app.domain.models.portfolio import Portfolio
@@ -39,7 +40,7 @@ class TrendFollowingStrategyEngine(BaseStrategyEngine):
     - Requiere confirmación por volumen (volume_ratio >= min_volume_ratio).
     """
 
-    def __init__(self, config: Dict[str, Any]):
+    def __init__(self, config: dict[str, Any]):
         """
         Inicializar TrendFollowingStrategyEngine.
 
@@ -152,7 +153,7 @@ class TrendFollowingStrategyEngine(BaseStrategyEngine):
         self,
         market_data: Quote,
         historical_data: Optional[Sequence[Quote]] = None,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Extraer features estandarizados para Learning Engine.
 
@@ -163,7 +164,7 @@ class TrendFollowingStrategyEngine(BaseStrategyEngine):
         - volume_ratio
         - price_position (precio relativo a EMA opcional)
         """
-        features: Dict[str, Any] = {
+        features: dict[str, Any] = {
             "timestamp": getattr(market_data, "timestamp", None),
             "symbol": market_data.symbol,
             "price": float(market_data.close or market_data.bid or market_data.last or 0),
@@ -240,7 +241,7 @@ class TrendFollowingStrategyEngine(BaseStrategyEngine):
 
         return features
 
-    def _generate_signals_impl(self, market_data: Quote) -> List[Signal]:
+    def _generate_signals_impl(self, market_data: Quote) -> list[Signal]:
         """
         Implementación específica de generación de señales para trend following.
 
@@ -417,7 +418,7 @@ class TrendFollowingStrategyEngine(BaseStrategyEngine):
                 "Error generando señal en TrendFollowingStrategyEngine",
                 extra={
                     "strategy": "trend_following",
-                    "symbol": getattr(market_data, 'symbol', None),
+                    "symbol": getattr(market_data, "symbol", None),
                     "error_type": type(e).__name__,
                 },
                 exc_info=True,
@@ -446,7 +447,7 @@ class TrendFollowingStrategyEngine(BaseStrategyEngine):
         confidence = adx_score + macd_score + volume_score
         return min(100.0, max(0.0, confidence))
 
-    def get_required_parameters(self) -> List[str]:
+    def get_required_parameters(self) -> list[str]:
         """
         Obtener lista de parámetros requeridos.
 

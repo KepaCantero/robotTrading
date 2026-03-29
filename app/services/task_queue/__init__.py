@@ -23,10 +23,10 @@ from .persistent_queue import (
 )
 
 __all__ = [
+    "PersistentTaskQueue",
     "Task",
     "TaskPriority",
     "TaskStatus",
-    "PersistentTaskQueue",
-    "exponential_backoff",
     "create_task",
+    "exponential_backoff",
 ]

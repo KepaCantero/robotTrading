@@ -14,7 +14,6 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass
-from typing import Dict, List, Optional, Tuple
 
 import numpy as np
 from scipy.cluster.hierarchy import cophenet, leaves_list, linkage
@@ -43,22 +42,22 @@ class HRPResult:
 
     weights: np.ndarray  # HRP weights
     hierarchy: np.ndarray  # Linkage matrix (hierarchical clustering)
-    order: List[int]  # Order of assets in hierarchy
-    clusters: Dict[str, List[int]]  # Cluster assignments
-    symbols: List[str]  # Asset symbols
+    order: list[int]  # Order of assets in hierarchy
+    clusters: dict[str, list[int]]  # Cluster assignments
+    symbols: list[str]  # Asset symbols
 
     # Quality metrics
     cophenetic_corr: float  # Quality of dendrogram preservation
 
     @property
-    def weights_dict(self) -> Dict[str, float]:
+    def weights_dict(self) -> dict[str, float]:
         """Get weights as dictionary."""
         return {symbol: float(weight) for symbol, weight in zip(self.symbols, self.weights)}
 
     def get_cluster_allocation(
         self,
         n_clusters: int,
-    ) -> Dict[int, List[str]]:
+    ) -> dict[int, list[str]]:
         """
         Get cluster allocation for specified number of clusters.
 
@@ -128,7 +127,7 @@ class HierarchicalRiskParity:
     def optimize(
         self,
         cov_matrix: np.ndarray,
-        symbols: Optional[List[str]] = None,
+        symbols: list[str] | None = None,
     ) -> HRPResult:
         """
         Compute HRP portfolio weights.
@@ -193,7 +192,7 @@ class HierarchicalRiskParity:
                 e,
                 {"n_assets": n_assets, "linkage_method": self._linkage_method},
             )
-            raise ValueError(f"Hierarchical clustering failed: {e}")
+            raise ValueError(f"Hierarchical clustering failed: {e}") from e
 
         # Step 3: Get dendrogram order
         order = leaves_list(hierarchy)
@@ -291,7 +290,7 @@ class HierarchicalRiskParity:
         self,
         hierarchy: np.ndarray,
         n_assets: int,
-    ) -> Dict[int, List[int]]:
+    ) -> dict[int, list[int]]:
         """
         Get all clusters from hierarchy.
 
@@ -315,7 +314,7 @@ class HierarchicalRiskParity:
     def _bisect_cluster_weights(
         self,
         cov_matrix: np.ndarray,
-        clusters: Dict[int, List[int]],
+        clusters: dict[int, list[int]],
         initial_weights: np.ndarray,
     ) -> np.ndarray:
         """
@@ -365,7 +364,7 @@ class HierarchicalRiskParity:
     def _get_cluster_variance(
         self,
         cov_matrix: np.ndarray,
-        indices: List[int],
+        indices: list[int],
         weights: np.ndarray,
     ) -> float:
         """Calculate variance of a cluster."""
@@ -391,8 +390,8 @@ class HierarchicalRiskParity:
     def _extract_clusters(
         self,
         hierarchy: np.ndarray,
-        symbols: List[str],
-    ) -> Dict[str, List[int]]:
+        symbols: list[str],
+    ) -> dict[str, list[int]]:
         """
         Extract cluster assignments from hierarchy.
 
@@ -419,7 +418,7 @@ class HierarchicalRiskParity:
     def get_dendrogram_data(
         self,
         cov_matrix: np.ndarray,
-    ) -> Tuple[np.ndarray, List[int]]:
+    ) -> tuple[np.ndarray, list[int]]:
         """
         Get data for plotting dendrogram.
 
@@ -460,7 +459,7 @@ def inverse_variance_weights(cov_matrix: np.ndarray) -> np.ndarray:
     """
     Compute inverse variance weights (IVP).
 
-    Simple baseline: w_i ∝ 1/σ_i²
+    Simple baseline: w_i ∝ 1/sigma_i^2
 
     Args:
         cov_matrix: Covariance matrix

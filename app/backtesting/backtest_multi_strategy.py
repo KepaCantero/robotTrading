@@ -19,14 +19,16 @@ from __future__ import annotations
 import logging
 from datetime import datetime
 from decimal import Decimal
-from typing import Any, Dict, List
+from typing import TYPE_CHECKING, Any, ClassVar
 
 logger = logging.getLogger(__name__)
 
-from app.backtesting.core.memory_manager import AggressiveMemoryManager
 from app.backtesting.engines.multi_strategy_engine import MultiStrategyBacktester
 from app.backtesting.factories import StrategyFactory
-from app.backtesting.models import BacktestConfig
+
+if TYPE_CHECKING:
+    from app.backtesting.core.memory_manager import AggressiveMemoryManager
+    from app.backtesting.models import BacktestConfig
 
 
 class BacktestMultiStrategyRunner:
@@ -41,23 +43,23 @@ class BacktestMultiStrategyRunner:
     """
 
     # Strategy name mapping from YAML to factory names
-    STRATEGY_NAME_MAP = {
-        'momentum_modular': 'modular_momentum',
-        'mean_reversion_modular': 'mean_reversion',
-        'pairs_trading_modular': 'pairs_trading',
-        'dividend_screener': 'modular_momentum',
-        'portfolio_optimization': 'modular_momentum',
-        'dividend_predictor': 'modular_momentum',
-        'sector_rotation': 'momentum',
-        'ml_ensemble': 'modular_momentum',
+    STRATEGY_NAME_MAP: ClassVar[dict] = {
+        "momentum_modular": "modular_momentum",
+        "mean_reversion_modular": "mean_reversion",
+        "pairs_trading_modular": "pairs_trading",
+        "dividend_screener": "modular_momentum",
+        "portfolio_optimization": "modular_momentum",
+        "dividend_predictor": "modular_momentum",
+        "sector_rotation": "momentum",
+        "ml_ensemble": "modular_momentum",
     }
 
     def __init__(
         self,
         backtest_config: BacktestConfig,
         memory_manager: AggressiveMemoryManager,
-        raw_config: Dict[str, Any],
-        quotes: List,
+        raw_config: dict[str, Any],
+        quotes: list,
     ):
         """
         Initialize BacktestMultiStrategyRunner.
@@ -76,7 +78,7 @@ class BacktestMultiStrategyRunner:
     def run_multi_strategy_backtest(
         self,
         thresholds_helper,
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """
         Execute multi-strategy backtest with capital allocation.
 
@@ -222,7 +224,7 @@ class BacktestMultiStrategyRunner:
 
     def _create_strategy_config_for_type(
         self, strategy_name: str, strategy_mapping
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Create configuration for a specific strategy type.
 
@@ -285,7 +287,7 @@ class BacktestMultiStrategyRunner:
 
         return base_config
 
-    def _get_filter_config(self) -> Dict[str, Any]:
+    def _get_filter_config(self) -> dict[str, Any]:
         """
         Get filter configuration from YAML config.
 
@@ -310,11 +312,11 @@ class BacktestMultiStrategyRunner:
 
     def _format_multi_strategy_results(
         self,
-        consolidated_results: Dict,
+        consolidated_results: dict,
         strategy_mapping,
         profile,
         thresholds_helper,
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """
         Format multi-strategy backtest results.
 

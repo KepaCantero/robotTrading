@@ -10,7 +10,7 @@ SOLID Principles:
 """
 
 import logging
-from typing import Dict, List, Optional
+from typing import Optional
 
 from app.domain.models.momentum import (
     MomentumAnalysis,
@@ -24,9 +24,15 @@ from app.services.momentum.data_provider import MockPriceDataProvider
 from app.services.momentum.indicators.calculator import TechnicalIndicatorCalculator
 from app.services.momentum.protocols import (
     IndicatorCalculator,
-    MomentumAnalyzer as MomentumAnalyzerProtocol,
     PriceDataProvider,
+)
+from app.services.momentum.protocols import (
+    MomentumAnalyzer as MomentumAnalyzerProtocol,
+)
+from app.services.momentum.protocols import (
     SignalGenerator as SignalGeneratorProtocol,
+)
+from app.services.momentum.protocols import (
     StrategyManager as StrategyManagerProtocol,
 )
 from app.services.momentum.signal_generator import SignalGenerator
@@ -73,7 +79,7 @@ class MomentumAnalysisService:
         self.analyzer = analyzer
         self.signal_generator = signal_generator
         self.strategy_manager = strategy_manager
-        self.analyses: Dict[str, MomentumAnalysis] = {}
+        self.analyses: dict[str, MomentumAnalysis] = {}
 
     async def analyze_asset_momentum(
         self, symbol: str, timeframe: Timeframe = Timeframe.DAILY
@@ -138,7 +144,7 @@ class MomentumAnalysisService:
 
     async def get_momentum_signals(
         self, filter_criteria: Optional[MomentumFilter] = None
-    ) -> List[MomentumSignal]:
+    ) -> list[MomentumSignal]:
         """
         Get momentum signals based on filter criteria.
 
@@ -159,7 +165,7 @@ class MomentumAnalysisService:
         all_signals.sort(key=lambda x: x.momentum_score, reverse=True)
         return all_signals
 
-    async def get_strategy_signals(self, strategy_name: str) -> List[MomentumSignal]:
+    async def get_strategy_signals(self, strategy_name: str) -> list[MomentumSignal]:
         """
         Get signals for a specific strategy.
 
@@ -172,7 +178,7 @@ class MomentumAnalysisService:
         all_signals = await self.get_momentum_signals()
         return await self.strategy_manager.get_strategy_signals(strategy_name, all_signals)
 
-    async def get_top_momentum_assets(self, limit: int = 10) -> List[Dict[str, any]]:
+    async def get_top_momentum_assets(self, limit: int = 10) -> list[dict[str, any]]:
         """
         Get top momentum assets.
 
@@ -210,7 +216,7 @@ class MomentumAnalysisService:
         return await self.strategy_manager.get_strategy(strategy_name)
 
     async def update_strategy(
-        self, strategy_name: str, updated_fields: Dict[str, any]
+        self, strategy_name: str, updated_fields: dict[str, any]
     ) -> Optional[MomentumStrategy]:
         """
         Update a momentum strategy.
@@ -236,7 +242,7 @@ class MomentumAnalysisService:
         """
         return await self.strategy_manager.delete_strategy(strategy_name)
 
-    async def get_analyses(self) -> List[MomentumAnalysis]:
+    async def get_analyses(self) -> list[MomentumAnalysis]:
         """
         Get all momentum analyses.
 

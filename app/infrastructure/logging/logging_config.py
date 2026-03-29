@@ -8,7 +8,8 @@ import warnings
 from contextvars import ContextVar
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
-from typing import Dict, List, Optional, Pattern, Union
+from re import Pattern
+from typing import Optional, Union
 
 """
 Logging Configuration Module
@@ -70,7 +71,7 @@ def set_correlation_id(cid: str) -> None:
 
 
 # LOG-005: Patterns for detecting sensitive data in logs
-_SENSITIVE_PATTERNS: Dict[str, Pattern[str]] = {
+_SENSITIVE_PATTERNS: dict[str, Pattern[str]] = {
     "password": re.compile(r"password['\"]?\s*[:=]\s*['\"]?[\w\-]+", re.IGNORECASE),
     "token": re.compile(r"token['\"]?\s*[:=]\s*['\"]?[\w\-\.]+", re.IGNORECASE),
     "api_key": re.compile(r"api[_-]?key['\"]?\s*[:=]\s*['\"]?[\w\-]+", re.IGNORECASE),
@@ -195,7 +196,9 @@ class SensitiveDataFilter(logging.Filter):
 
         return redacted
 
-    def _redact_dict(self, data: Dict[str, Union[str, int, float, bool, List, Dict, None]]) -> Dict[str, Union[str, int, float, bool, List, Dict, None]]:
+    def _redact_dict(
+        self, data: dict[str, Union[str, int, float, bool, list, dict, None]]
+    ) -> dict[str, Union[str, int, float, bool, list, dict, None]]:
         """
         Redact sensitive values from a dictionary.
 
@@ -208,7 +211,7 @@ class SensitiveDataFilter(logging.Filter):
         if not isinstance(data, dict):
             return {}
 
-        redacted: Dict[str, Union[str, int, float, bool, List, Dict, None]] = {}
+        redacted: dict[str, Union[str, int, float, bool, list, dict, None]] = {}
         for key, value in data.items():
             key_lower = key.lower().replace("-", "_").replace(".", "")
 
@@ -359,7 +362,7 @@ class JSONFormatter(logging.Formatter):
         timing_ms = (time.time() - self._start_time) * 1000
 
         # Create structured log data
-        log_data: Dict[str, Union[str, int, float, List, Dict, None]] = {
+        log_data: dict[str, Union[str, int, float, list, dict, None]] = {
             "timestamp": self.formatTime(record, self.datefmt),
             "level": record.levelname,
             "logger": record.name,
@@ -479,32 +482,35 @@ def setup_file_logging(
         warning_formatter: logging.Formatter = JSONFormatter()
         error_formatter: logging.Formatter = JSONFormatter()
         console_formatter: logging.Formatter = logging.Formatter(
-            '%(levelname)s - %(name)s - %(message)s'
+            "%(levelname)s - %(name)s - %(message)s"
         )
     else:
         # LOG-006: Use TimedFormatter for timing information
         all_formatter = TimedFormatter(
-            '%(asctime)s - %(name)s - %(levelname)s - %(correlation_id)s - '
-            '[%(elapsed_ms).2fms / %(delta_ms).2fms] - %(message)s',
-            datefmt='%Y-%m-%d %H:%M:%S',
+            "%(asctime)s - %(name)s - %(levelname)s - %(correlation_id)s - "
+            "[%(elapsed_ms).2fms / %(delta_ms).2fms] - %(message)s",
+            datefmt="%Y-%m-%d %H:%M:%S",
         )
         warning_formatter = TimedFormatter(
-            '%(asctime)s - %(name)s - %(levelname)s - %(correlation_id)s - '
-            '[%(elapsed_ms).2fms] - %(funcName)s:%(lineno)d - %(message)s',
-            datefmt='%Y-%m-%d %H:%M:%S',
+            "%(asctime)s - %(name)s - %(levelname)s - %(correlation_id)s - "
+            "[%(elapsed_ms).2fms] - %(funcName)s:%(lineno)d - %(message)s",
+            datefmt="%Y-%m-%d %H:%M:%S",
         )
         error_formatter = TimedFormatter(
-            '%(asctime)s - %(name)s - %(levelname)s - %(correlation_id)s - '
-            '[%(elapsed_ms).2fms] - %(funcName)s:%(lineno)d - %(pathname)s - %(message)s',
-            datefmt='%Y-%m-%d %H:%M:%S',
+            "%(asctime)s - %(name)s - %(levelname)s - %(correlation_id)s - "
+            "[%(elapsed_ms).2fms] - %(funcName)s:%(lineno)d - %(pathname)s - %(message)s",
+            datefmt="%Y-%m-%d %H:%M:%S",
         )
         console_formatter = logging.Formatter(
-            '%(levelname)s - %(name)s - %(correlation_id)s - %(message)s'
+            "%(levelname)s - %(name)s - %(correlation_id)s - %(message)s"
         )
 
     # Handler for ALL logs (INFO and above)
     all_handler = RotatingFileHandler(
-        all_log, maxBytes=10 * 1024 * 1024, backupCount=10, encoding='utf-8'  # 10MB
+        all_log,
+        maxBytes=10 * 1024 * 1024,
+        backupCount=10,
+        encoding="utf-8",  # 10MB
     )
     all_handler.setLevel(logging.INFO)
     all_handler.setFormatter(all_formatter)
@@ -513,7 +519,10 @@ def setup_file_logging(
 
     # Handler for WARNINGS and above
     warning_handler = RotatingFileHandler(
-        warning_log, maxBytes=10 * 1024 * 1024, backupCount=10, encoding='utf-8'  # 10MB
+        warning_log,
+        maxBytes=10 * 1024 * 1024,
+        backupCount=10,
+        encoding="utf-8",  # 10MB
     )
     warning_handler.setLevel(logging.WARNING)
     warning_handler.setFormatter(warning_formatter)
@@ -525,7 +534,7 @@ def setup_file_logging(
         error_log,
         maxBytes=10 * 1024 * 1024,  # 10MB
         backupCount=20,  # Keep more error logs
-        encoding='utf-8',
+        encoding="utf-8",
     )
     error_handler.setLevel(logging.ERROR)
     error_handler.setFormatter(error_formatter)
@@ -573,9 +582,9 @@ def setup_module_loggers(use_json: bool = False) -> None:
     else:
         # LOG-006: Use TimedFormatter with timing info
         formatter = TimedFormatter(
-            '%(asctime)s - %(levelname)s - %(correlation_id)s - '
-            '[%(elapsed_ms).2fms] - %(funcName)s:%(lineno)d - %(message)s',
-            datefmt='%Y-%m-%d %H:%M:%S',
+            "%(asctime)s - %(levelname)s - %(correlation_id)s - "
+            "[%(elapsed_ms).2fms] - %(funcName)s:%(lineno)d - %(message)s",
+            datefmt="%Y-%m-%d %H:%M:%S",
         )
 
     # LOG-005: Create sensitive data filter for module handlers
@@ -587,7 +596,7 @@ def setup_module_loggers(use_json: bool = False) -> None:
         # Create module-specific error log
         module_log_file = log_path / f"{module_name.replace('.', '_')}_errors.log"
         handler = RotatingFileHandler(
-            module_log_file, maxBytes=10 * 1024 * 1024, backupCount=5, encoding='utf-8'
+            module_log_file, maxBytes=10 * 1024 * 1024, backupCount=5, encoding="utf-8"
         )
         handler.setLevel(logging.WARNING)  # WARNING and above
         handler.setFormatter(formatter)

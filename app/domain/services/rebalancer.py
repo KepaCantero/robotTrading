@@ -10,12 +10,14 @@ Reference: Rule 05-architecture.md, Rule 03-solid-principles.md
 from __future__ import annotations
 
 import logging
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from decimal import Decimal
-from typing import Dict, List, Optional
+from typing import TYPE_CHECKING
 
-from app.domain.entities.portfolio import Portfolio
 from app.domain.value_objects.percentage import Percentage
+
+if TYPE_CHECKING:
+    from app.domain.entities.portfolio import Portfolio
 
 logger = logging.getLogger(__name__)
 
@@ -40,7 +42,7 @@ class RebalancePlan:
 
     total_value: Decimal
     cash_available: Decimal
-    trades: List[RebalanceTrade]
+    trades: list[RebalanceTrade]
     total_drift: Decimal  # Overall portfolio drift
     estimated_cost: Decimal  # Estimated transaction costs
 
@@ -53,9 +55,13 @@ class RebalancePlan:
 class RebalanceConfig:
     """Configuration for rebalancing."""
 
-    drift_threshold: Percentage = Percentage.from_percent(5)  # 5% drift threshold
+    drift_threshold: Percentage = field(
+        default_factory=lambda: Percentage.from_percent(5)
+    )  # 5% drift threshold
     min_trade_size: Decimal = Decimal("100")  # Minimum trade size
-    max_trade_size_pct: Percentage = Percentage.from_percent(20)  # Max single trade
+    max_trade_size_pct: Percentage = field(
+        default_factory=lambda: Percentage.from_percent(20)
+    )  # Max single trade
     allow_fractional: bool = False  # Allow fractional shares
     cost_per_trade: Decimal = Decimal("1")  # Estimated cost per trade
 
@@ -70,7 +76,7 @@ class Rebalancer:
     - Minimizing transaction costs
     """
 
-    def __init__(self, config: Optional[RebalanceConfig] = None) -> None:
+    def __init__(self, config: RebalanceConfig | None = None) -> None:
         """
         Initialize rebalancer.
 
@@ -82,8 +88,8 @@ class Rebalancer:
     def calculate_drift(
         self,
         portfolio: Portfolio,
-        target_weights: Dict[str, Decimal],
-    ) -> Dict[str, Decimal]:
+        target_weights: dict[str, Decimal],
+    ) -> dict[str, Decimal]:
         """
         Calculate current drift from target weights.
 
@@ -103,11 +109,8 @@ class Rebalancer:
 
         for symbol, target_weight in target_weights.items():
             position = portfolio.get_position(symbol)
-            if position:
-                # P0-2: Explicit zero-check before division (total_value already validated)
-                current_weight = position.get_value().amount / total_value
-            else:
-                current_weight = Decimal("0")
+            # P0-2: Explicit zero-check before division (total_value already validated)
+            current_weight = position.get_value().amount / total_value if position else Decimal("0")
 
             # Drift = current - target (in percentage points)
             drift[symbol] = (current_weight - target_weight) * Decimal("100")
@@ -126,7 +129,7 @@ class Rebalancer:
     def create_rebalance_plan(
         self,
         portfolio: Portfolio,
-        target_weights: Dict[str, Decimal],
+        target_weights: dict[str, Decimal],
     ) -> RebalancePlan:
         """
         Create rebalancing plan to achieve target weights.
@@ -228,11 +231,9 @@ class Rebalancer:
                     continue
 
                 # Calculate average price for validation (handle zero quantity case)
-                if current_qty > 0:
-                    avg_price = current_value / current_qty
-                else:
-                    # For new positions, use current market price
-                    avg_price = current_price
+                avg_price = (
+                    current_value / current_qty if current_qty > 0 else current_price
+                )  # For new positions, use current market price
 
                 trades.append(
                     RebalanceTrade(
@@ -271,8 +272,8 @@ class Rebalancer:
 
     def optimize_rebalance_order(
         self,
-        trades: List[RebalanceTrade],
-    ) -> List[RebalanceTrade]:
+        trades: list[RebalanceTrade],
+    ) -> list[RebalanceTrade]:
         """
         Optimize order of trades for rebalancing.
 
@@ -313,7 +314,7 @@ class Rebalancer:
         self,
         plan: RebalancePlan,
         portfolio: Portfolio,
-    ) -> tuple[bool, List[str]]:
+    ) -> tuple[bool, list[str]]:
         """
         Validate rebalancing plan.
 
@@ -380,7 +381,7 @@ class Rebalancer:
 
         return is_valid, issues
 
-    def get_rebalance_summary(self, plan: RebalancePlan) -> Dict[str, str]:
+    def get_rebalance_summary(self, plan: RebalancePlan) -> dict[str, str]:
         """
         Get human-readable rebalancing summary.
 

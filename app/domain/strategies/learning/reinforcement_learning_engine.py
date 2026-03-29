@@ -3,7 +3,7 @@ ReinforcementLearningEngine - Aprende políticas óptimas de trading con RL.
 """
 
 import logging
-from typing import Any, Dict, List, Optional, Tuple
+from typing import TYPE_CHECKING, Any, Optional
 
 import numpy as np
 
@@ -14,15 +14,17 @@ logger = logging.getLogger(__name__)
 # REQUIRED: stable-baselines3 is REQUIRED - NO FALLBACKS
 import os
 
-os.environ.setdefault('TF_CPP_MIN_LOG_LEVEL', '2')
-os.environ.setdefault('OMP_NUM_THREADS', '1')  # Reducir threads para evitar bloqueos
+os.environ.setdefault("TF_CPP_MIN_LOG_LEVEL", "2")
+os.environ.setdefault("OMP_NUM_THREADS", "1")  # Reducir threads para evitar bloqueos
 
 # REQUIRED: gymnasium is REQUIRED - migrated from deprecated gym
 import gymnasium as gym
 import gymnasium.spaces
 from stable_baselines3 import A2C, DDPG, DQN, PPO, SAC, TD3
-from stable_baselines3.common.base_class import BaseAlgorithm
 from stable_baselines3.common.callbacks import BaseCallback
+
+if TYPE_CHECKING:
+    from stable_baselines3.common.base_class import BaseAlgorithm
 
 
 class TradingEnv:
@@ -34,7 +36,7 @@ class TradingEnv:
     Recompensas: P&L ajustado por riesgo, Sharpe ratio, drawdown
     """
 
-    def __init__(self, config: Dict):
+    def __init__(self, config: dict):
         """Inicializar entorno de trading."""
         self.config = config
         self.reset()
@@ -96,7 +98,7 @@ class TradingEnv:
         # Gymnasium API: return (observation, info)
         return observation, info
 
-    def step(self, action, market_data: Dict) -> Tuple[np.ndarray, float, bool, bool, Dict]:
+    def step(self, action, market_data: dict) -> tuple[np.ndarray, float, bool, bool, dict]:
         """
         Ejecutar acción en el entorno.
 
@@ -109,7 +111,7 @@ class TradingEnv:
         Returns:
             observation, reward, terminated, truncated, info (Gymnasium API)
         """
-        price = market_data.get('price', 0)
+        price = market_data.get("price", 0)
         prev_equity = self.equity[-1]
 
         # Manejar acción discreta o continua
@@ -149,14 +151,14 @@ class TradingEnv:
         # Actualizar equity
         if self.position != 0:
             unrealized_pnl = (
-                (price - self.trades[-1]['entry_price'])
+                (price - self.trades[-1]["entry_price"])
                 * self.position
-                * self.trades[-1]['quantity']
+                * self.trades[-1]["quantity"]
             )
             current_equity = (
                 self.cash
                 + unrealized_pnl
-                + (self.trades[-1]['entry_price'] * self.trades[-1]['quantity'])
+                + (self.trades[-1]["entry_price"] * self.trades[-1]["quantity"])
             )
         else:
             current_equity = self.cash
@@ -181,51 +183,51 @@ class TradingEnv:
         self.current_step += 1
 
         info = {
-            'equity': current_equity,
-            'position': self.position,
-            'drawdown': drawdown,
-            'max_drawdown': self.max_drawdown,
+            "equity": current_equity,
+            "position": self.position,
+            "drawdown": drawdown,
+            "max_drawdown": self.max_drawdown,
         }
 
         # Gymnasium API: return (observation, reward, terminated, truncated, info)
         return self._get_observation(market_data), reward, terminated, truncated, info
 
-    def _execute_buy(self, price: float, market_data: Dict):
+    def _execute_buy(self, price: float, market_data: dict):
         """Ejecutar compra."""
         # Calcular cantidad basada en capital disponible
         quantity = (self.cash * 0.1) / price  # Usar 10% del capital
 
-        cost = quantity * price * (1 + self.reward_config['transaction_cost'])
+        cost = quantity * price * (1 + self.reward_config["transaction_cost"])
 
         if cost <= self.cash:
             self.cash -= cost
             self.position = 1
             self.trades.append(
                 {
-                    'entry_price': price,
-                    'quantity': quantity,
-                    'type': 'BUY',
-                    'step': self.current_step,
-                    'metadata': market_data,
+                    "entry_price": price,
+                    "quantity": quantity,
+                    "type": "BUY",
+                    "step": self.current_step,
+                    "metadata": market_data,
                 }
             )
 
-    def _execute_sell(self, price: float, market_data: Dict):
+    def _execute_sell(self, price: float, market_data: dict):
         """Ejecutar venta."""
         if self.trades:
             trade = self.trades[-1]
-            revenue = trade['quantity'] * price * (1 - self.reward_config['transaction_cost'])
+            revenue = trade["quantity"] * price * (1 - self.reward_config["transaction_cost"])
 
-            pnl = (price - trade['entry_price']) * trade['quantity'] * self.position
+            pnl = (price - trade["entry_price"]) * trade["quantity"] * self.position
 
             self.cash += revenue
             self.position = 0
 
-            trade['exit_price'] = price
-            trade['pnl'] = pnl
-            trade['exit_step'] = self.current_step
+            trade["exit_price"] = price
+            trade["pnl"] = pnl
+            trade["exit_step"] = self.current_step
 
-    def _adjust_stop_loss(self, market_data: Dict, adjustment: float = 0.0):
+    def _adjust_stop_loss(self, market_data: dict, adjustment: float = 0.0):
         """Ajustar stop-loss dinámicamente."""
         # En producción, ajustar parámetros de stop-loss basado en adjustment
         # adjustment: -0.1 a 0.1 (ajuste porcentual)
@@ -234,7 +236,7 @@ class TradingEnv:
             # Por ahora, placeholder - se implementará lógica real más adelante
             pass
 
-    def _adjust_take_profit(self, market_data: Dict, adjustment: float = 0.0):
+    def _adjust_take_profit(self, market_data: dict, adjustment: float = 0.0):
         """Ajustar take-profit dinámicamente."""
         # En producción, ajustar parámetros de take-profit basado en adjustment
         # adjustment: -0.1 a 0.1 (ajuste porcentual)
@@ -252,37 +254,37 @@ class TradingEnv:
         sharpe_component = 0.0  # Placeholder
 
         # Drawdown penalty
-        drawdown_penalty = self.max_drawdown * self.reward_config['drawdown_penalty']
+        drawdown_penalty = self.max_drawdown * self.reward_config["drawdown_penalty"]
 
         # Recompensa total
         reward = (
-            pnl_change * self.reward_config['pnl_weight']
-            + sharpe_component * self.reward_config['sharpe_weight']
+            pnl_change * self.reward_config["pnl_weight"]
+            + sharpe_component * self.reward_config["sharpe_weight"]
             - drawdown_penalty
         )
 
         return float(reward)
 
-    def _get_observation(self, market_data: Optional[Dict] = None) -> np.ndarray:
+    def _get_observation(self, market_data: Optional[dict] = None) -> np.ndarray:
         """Obtener observación del entorno."""
         obs = np.zeros(self.observation_dim, dtype=np.float32)
 
         if market_data:
             # Features de indicadores
-            obs[0] = market_data.get('rsi', 50) / 100.0  # Normalizar
+            obs[0] = market_data.get("rsi", 50) / 100.0  # Normalizar
             obs[1] = (
-                market_data.get('ema_fast', 0) / 1000.0 if market_data.get('ema_fast', 0) > 0 else 0
+                market_data.get("ema_fast", 0) / 1000.0 if market_data.get("ema_fast", 0) > 0 else 0
             )
             obs[2] = (
-                market_data.get('ema_slow', 0) / 1000.0 if market_data.get('ema_slow', 0) > 0 else 0
+                market_data.get("ema_slow", 0) / 1000.0 if market_data.get("ema_slow", 0) > 0 else 0
             )
-            obs[3] = market_data.get('momentum makes_roc', 0)
-            obs[4] = market_data.get('volume_ratio', 1)
-            obs[5] = market_data.get('atr_percentile', 50) / 100.0
+            obs[3] = market_data.get("momentum makes_roc", 0)
+            obs[4] = market_data.get("volume_ratio", 1)
+            obs[5] = market_data.get("atr_percentile", 50) / 100.0
 
             # Contexto de mercado
-            obs[6] = market_data.get('trend_strength', 0)
-            obs[7] = market_data.get('volatility_regime_encoded', 0.5)  # 0=low, 0.5=normal, 1=high
+            obs[6] = market_data.get("trend_strength", 0)
+            obs[7] = market_data.get("volatility_regime_encoded", 0.5)  # 0=low, 0.5=normal, 1=high
 
             # Posición actual
             obs[8] = float(self.position)
@@ -317,7 +319,7 @@ class ReinforcementLearningEngine(BaseLearningEngine):
     - Controlar exposición al riesgo
     """
 
-    def __init__(self, config: Dict):
+    def __init__(self, config: dict):
         """Inicializar motor de RL."""
         super().__init__("reinforcement_learning", config)
 
@@ -333,9 +335,9 @@ class ReinforcementLearningEngine(BaseLearningEngine):
 
     def train(
         self,
-        training_data: Optional[Dict[str, Any]] = None,
-        validation_data: Optional[Dict[str, Any]] = None,
-    ) -> Dict[str, float]:
+        training_data: Optional[dict[str, Any]] = None,
+        validation_data: Optional[dict[str, Any]] = None,
+    ) -> dict[str, float]:
         """
         Entrenar agente RL.
 
@@ -351,23 +353,23 @@ class ReinforcementLearningEngine(BaseLearningEngine):
             logger.info("No training data provided - marking model as trained (dummy mode)")
             self.is_trained = True
             return {
-                'reward': 0.0,
-                'steps': 0,
-                'episodes': 0,
+                "reward": 0.0,
+                "steps": 0,
+                "episodes": 0,
             }
 
         # stable-baselines3 es REQUIRED - ya importado al inicio del módulo
 
         # Crear entorno
         env_config = self.env_config.copy()
-        env_config['observation_dim'] = self._get_observation_dim(training_data)
-        env_config['max_steps'] = len(training_data['market_sequences'])
-        env_config['initial_capital'] = training_data.get('initial_capital', 100000.0)
+        env_config["observation_dim"] = self._get_observation_dim(training_data)
+        env_config["max_steps"] = len(training_data["market_sequences"])
+        env_config["initial_capital"] = training_data.get("initial_capital", 100000.0)
 
         # Determinar si necesitamos action space continuo o discreto
-        continuous_action_algorithms = ['ddpg', 'td3', 'sac']
+        continuous_action_algorithms = ["ddpg", "td3", "sac"]
         use_continuous = self.algorithm.lower() in continuous_action_algorithms
-        env_config['use_continuous_action'] = use_continuous
+        env_config["use_continuous_action"] = use_continuous
 
         self.env = TradingEnv(env_config)
 
@@ -442,15 +444,14 @@ class ReinforcementLearningEngine(BaseLearningEngine):
             )
         else:
             raise ValueError(
-                f"Algoritmo {self.algorithm} no soportado. "
-                "Opciones: ppo, a2c, ddpg, dqn, td3, sac"
+                f"Algoritmo {self.algorithm} no soportado. Opciones: ppo, a2c, ddpg, dqn, td3, sac"
             )
 
         # Entrenar
         logger.info(f"Entrenando agente {self.algorithm} por {self.training_steps} pasos...")
 
         # Wrapper para pasar datos de mercado al entorno
-        market_sequences = training_data['market_sequences']
+        market_sequences = training_data["market_sequences"]
 
         class MarketDataCallback(BaseCallback):
             def __init__(self, market_data_list):
@@ -484,7 +485,7 @@ class ReinforcementLearningEngine(BaseLearningEngine):
                     market_data = market_sequences[step]
 
                     action, _ = self.agent.predict(obs, deterministic=False)
-                    obs, reward, terminated, truncated, info = self.env.step(action, market_data)
+                    obs, reward, terminated, truncated, _info = self.env.step(action, market_data)
                     done = terminated or truncated
 
                     total_reward += reward
@@ -499,7 +500,7 @@ class ReinforcementLearningEngine(BaseLearningEngine):
         self.is_trained = True
 
         # Evaluar en datos de validación
-        metrics = {'total_reward': total_reward, 'episodes': max_episodes}
+        metrics = {"total_reward": total_reward, "episodes": max_episodes}
 
         if validation_data:
             eval_metrics = self._evaluate_on_data(validation_data)
@@ -507,30 +508,30 @@ class ReinforcementLearningEngine(BaseLearningEngine):
 
         return metrics
 
-    def _get_observation_dim(self, training_data: Dict) -> int:
+    def _get_observation_dim(self, training_data: dict) -> int:
         """Determinar dimensión de observación."""
-        if training_data.get('market_sequences'):
-            sample = training_data['market_sequences'][0]
+        if training_data.get("market_sequences"):
+            sample = training_data["market_sequences"][0]
             return len(self._extract_features(sample))
         return 20  # Default
 
-    def _extract_features(self, market_data: Dict) -> List[float]:
+    def _extract_features(self, market_data: dict) -> list[float]:
         """Extraer features de datos de mercado."""
         features = [
-            market_data.get('rsi', 50) / 100.0,
-            market_data.get('price', 0) / 1000.0,
-            market_data.get('volume_ratio', 1),
-            market_data.get('trend_strength', 0),
-            market_data.get('volatility_percentile', 50) / 100.0,
+            market_data.get("rsi", 50) / 100.0,
+            market_data.get("price", 0) / 1000.0,
+            market_data.get("volume_ratio", 1),
+            market_data.get("trend_strength", 0),
+            market_data.get("volatility_percentile", 50) / 100.0,
         ]
         return features
 
-    def _evaluate_on_data(self, validation_data: Dict) -> Dict[str, float]:
+    def _evaluate_on_data(self, validation_data: dict) -> dict[str, float]:
         """Evaluar agente en datos de validación."""
         # Placeholder: implementar evaluación
-        return {'validation_reward': 0.0, 'validation_sharpe': 0.0}
+        return {"validation_reward": 0.0, "validation_sharpe": 0.0}
 
-    def predict(self, features: Dict[str, Any]) -> Dict[str, Any]:
+    def predict(self, features: dict[str, Any]) -> dict[str, Any]:
         """
         Generar acción recomendada.
 
@@ -552,18 +553,18 @@ class ReinforcementLearningEngine(BaseLearningEngine):
         """
         if not self.is_ready():
             return {
-                'action': 0,
-                'action_name': 'HOLD',
-                'confidence': 0.0,
-                'filter_adjustments': {},
-                'risk_adjustments': {},
+                "action": 0,
+                "action_name": "HOLD",
+                "confidence": 0.0,
+                "filter_adjustments": {},
+                "risk_adjustments": {},
             }
 
         # Assert env and agent are initialized
         assert self.env is not None, "Environment not initialized"
         assert self.agent is not None, "Agent not initialized"
 
-        market_data = features['market_data']
+        market_data = features["market_data"]
 
         # Obtener observación
         obs = self.env._get_observation(market_data)
@@ -571,31 +572,31 @@ class ReinforcementLearningEngine(BaseLearningEngine):
         # Predecir acción
         action, _ = self.agent.predict(obs, deterministic=True)
 
-        action_names = ['HOLD', 'BUY', 'SELL', 'ADJUST_STOP_LOSS', 'ADJUST_TAKE_PROFIT']
+        action_names = ["HOLD", "BUY", "SELL", "ADJUST_STOP_LOSS", "ADJUST_TAKE_PROFIT"]
 
         # Generar ajustes basados en acción
         filter_adjustments = {}
         risk_adjustments = {}
 
         if action == 1:  # BUY
-            filter_adjustments = {'rsi_buy_min': -3, 'momentum_threshold': -0.005}
-            risk_adjustments = {'position_size_multiplier': 1.0}
+            filter_adjustments = {"rsi_buy_min": -3, "momentum_threshold": -0.005}
+            risk_adjustments = {"position_size_multiplier": 1.0}
         elif action == 2:  # SELL
-            risk_adjustments = {'close_position': True}
+            risk_adjustments = {"close_position": True}
         elif action == 3:  # Ajustar stop-loss
-            risk_adjustments = {'stop_loss_multiplier': 0.9}  # Ajustar más ajustado
+            risk_adjustments = {"stop_loss_multiplier": 0.9}  # Ajustar más ajustado
         elif action == 4:  # Ajustar take-profit
-            risk_adjustments = {'take_profit_multiplier': 1.1}  # Objetivo más alto
+            risk_adjustments = {"take_profit_multiplier": 1.1}  # Objetivo más alto
 
         return {
-            'action': int(action),
-            'action_name': action_names[action] if action < len(action_names) else 'UNKNOWN',
-            'confidence': 0.8,  # Placeholder: calcular confianza real
-            'filter_adjustments': filter_adjustments,
-            'risk_adjustments': risk_adjustments,
+            "action": int(action),
+            "action_name": action_names[action] if action < len(action_names) else "UNKNOWN",
+            "confidence": 0.8,  # Placeholder: calcular confianza real
+            "filter_adjustments": filter_adjustments,
+            "risk_adjustments": risk_adjustments,
         }
 
-    def evaluate(self, test_data: Dict[str, Any]) -> Dict[str, float]:
+    def evaluate(self, test_data: dict[str, Any]) -> dict[str, float]:
         """Evaluar agente en datos de prueba."""
         # Assert env and agent are initialized
         assert self.env is not None, "Environment not initialized"
@@ -605,11 +606,11 @@ class ReinforcementLearningEngine(BaseLearningEngine):
         obs = self.env.reset()
         total_reward = 0.0
 
-        market_sequences = test_data.get('market_sequences', [])
+        market_sequences = test_data.get("market_sequences", [])
 
         for _steps, market_data in enumerate(market_sequences):
             action, _ = self.agent.predict(obs, deterministic=True)
-            obs, reward, terminated, truncated, info = self.env.step(action, market_data)
+            obs, reward, terminated, truncated, _info = self.env.step(action, market_data)
             done = terminated or truncated
             total_reward += reward
 
@@ -619,14 +620,14 @@ class ReinforcementLearningEngine(BaseLearningEngine):
         sharpe = self._calculate_sharpe(self.env.equity) if len(self.env.equity) > 1 else 0.0
 
         return {
-            'total_reward': float(total_reward),
-            'final_equity': float(self.env.equity[-1]),
-            'sharpe_ratio': float(sharpe),
-            'max_drawdown': float(self.env.max_drawdown),
-            'total_trades': len(self.env.trades),
+            "total_reward": float(total_reward),
+            "final_equity": float(self.env.equity[-1]),
+            "sharpe_ratio": float(sharpe),
+            "max_drawdown": float(self.env.max_drawdown),
+            "total_trades": len(self.env.trades),
         }
 
-    def _calculate_sharpe(self, equity_history: List[float]) -> float:
+    def _calculate_sharpe(self, equity_history: list[float]) -> float:
         """Calcular Sharpe ratio aproximado."""
         if len(equity_history) < 2:
             return 0.0

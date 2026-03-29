@@ -9,7 +9,7 @@ import logging
 from datetime import datetime, timedelta
 from decimal import Decimal
 from enum import Enum
-from typing import Any, Dict, Optional
+from typing import Any, Optional
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
@@ -72,7 +72,7 @@ class Order(BaseModel):
     cancelled_at: Optional[datetime] = Field(None, description="Timestamp when order was cancelled")
     rejected_reason: Optional[str] = Field(None, description="Reason for order rejection")
     commission: Decimal = Field(default=Decimal("0"), description="Commission paid")
-    metadata: Dict[str, Any] = Field(default_factory=dict, description="Additional order metadata")
+    metadata: dict[str, Any] = Field(default_factory=dict, description="Additional order metadata")
 
     @field_validator("quantity", "filled_quantity", "commission")
     @classmethod
@@ -379,7 +379,7 @@ class MarketData(BaseModel):
     volume: Decimal = Field(..., description="Trading volume")
     bid: Optional[Decimal] = Field(None, description="Best bid price")
     ask: Optional[Decimal] = Field(None, description="Best ask price")
-    metadata: Dict[str, Any] = Field(default_factory=dict, description="Additional market data")
+    metadata: dict[str, Any] = Field(default_factory=dict, description="Additional market data")
 
     @field_validator("open_price", "high_price", "low_price", "close_price", "volume", "bid", "ask")
     @classmethod

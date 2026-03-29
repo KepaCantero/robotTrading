@@ -10,7 +10,7 @@ import logging
 from datetime import datetime
 from decimal import Decimal
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Optional
 
 import yaml
 
@@ -57,8 +57,8 @@ class ProfileGenerator:
         Args:
             config_path: Path to investment_profiles.yaml config file
         """
-        self.generation_history: List[ProfileGenerationResult] = []
-        self.profile_cache: Dict[str, InvestmentProfile] = {}
+        self.generation_history: list[ProfileGenerationResult] = []
+        self.profile_cache: dict[str, InvestmentProfile] = {}
 
         # Load profile configuration
         if config_path is None:
@@ -78,7 +78,7 @@ class ProfileGenerator:
 
         logger.info("✅ ProfileGenerator initialized with MAESTRO PHASE 1 integration")
 
-    def _load_profile_templates(self) -> Dict:
+    def _load_profile_templates(self) -> dict:
         """Load investment profile templates from YAML."""
         try:
             if not self.config_path.exists():
@@ -87,7 +87,7 @@ class ProfileGenerator:
                 )
                 return self._get_default_templates()
 
-            with open(self.config_path, 'r') as f:
+            with open(self.config_path) as f:
                 templates = yaml.safe_load(f)
             logger.info(f"✅ Loaded {len(templates)} profile templates")
             return templates
@@ -95,7 +95,7 @@ class ProfileGenerator:
             logger.error(f"❌ Error loading templates: {e}")
             return self._get_default_templates()
 
-    def _get_default_templates(self) -> Dict:
+    def _get_default_templates(self) -> dict:
         """Get default profile templates."""
         return {
             "maximizar_capital": {
@@ -369,16 +369,16 @@ class ProfileGenerator:
 
     def _get_profile_template(
         self, objective: InvestmentObjective, tier: CapitalTier
-    ) -> Optional[Dict]:
+    ) -> Optional[dict]:
         """Get profile template for objective and tier."""
         try:
             obj_key = objective.value
             tier_key = tier.value
 
             # Handle both flat and nested YAML structures
-            if 'profiles' in self.profile_templates:
+            if "profiles" in self.profile_templates:
                 # Nested structure with 'profiles' key
-                return self.profile_templates['profiles'].get(obj_key, {}).get(tier_key)
+                return self.profile_templates["profiles"].get(obj_key, {}).get(tier_key)
             else:
                 # Flat structure
                 return self.profile_templates.get(obj_key, {}).get(tier_key)
@@ -392,7 +392,7 @@ class ProfileGenerator:
         tier: CapitalTier,
         objective: InvestmentObjective,
         risk_profile: RiskProfile,
-        template: Dict,
+        template: dict,
     ) -> InvestmentProfile:
         """Create investment profile from template."""
         # Handle None or empty template
@@ -447,7 +447,7 @@ class ProfileGenerator:
 
     def _validate_profile(
         self, profile: InvestmentProfile, request: ProfileGenerationRequest
-    ) -> List[str]:
+    ) -> list[str]:
         """Validate generated profile and return warnings."""
         warnings = []
 
@@ -527,7 +527,7 @@ class ProfileGenerator:
                 "BALANCED": (Decimal("3"), Decimal("8")),
                 "AGGRESSIVE": (Decimal("4"), Decimal("12")),
             }
-            min_realistic, max_realistic = realistic_alpha_ranges.get(
+            _min_realistic, max_realistic = realistic_alpha_ranges.get(
                 strategy_type, (Decimal("3"), Decimal("8"))
             )
             profile.capacity_fade_adjusted_alpha = self.fade_analyzer.estimate_capacity_fade(
@@ -571,14 +571,14 @@ class ProfileGenerator:
 
     async def get_generation_history(
         self, limit: Optional[int] = None
-    ) -> List[ProfileGenerationResult]:
+    ) -> list[ProfileGenerationResult]:
         """Get profile generation history."""
         results = self.generation_history
         if limit:
             results = results[-limit:]
         return results
 
-    def get_generator_status(self) -> Dict:
+    def get_generator_status(self) -> dict:
         """Get generator operational status."""
         return {
             "total_profiles_generated": len(self.generation_history),

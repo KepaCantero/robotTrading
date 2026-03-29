@@ -9,7 +9,7 @@ Métodos soportados:
 
 import logging
 from decimal import Decimal
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 import numpy as np
 
@@ -27,7 +27,7 @@ class OutlierDetector:
     Detecta valores anómalos que pueden indicar errores de datos.
     """
 
-    def __init__(self, config: Dict[str, Any] = None):
+    def __init__(self, config: Optional[dict[str, Any]] = None):
         """
         Inicializar detector.
 
@@ -35,12 +35,12 @@ class OutlierDetector:
             config: Configuración
         """
         config = config or {}
-        self.method = config.get('method', 'iqr')  # iqr, zscore, isolation_forest
-        self.iqr_multiplier = config.get('iqr_multiplier', 1.5)
-        self.zscore_threshold = config.get('zscore_threshold', 3.0)
-        self.isolation_contamination = config.get('isolation_contamination', 0.1)
+        self.method = config.get("method", "iqr")  # iqr, zscore, isolation_forest
+        self.iqr_multiplier = config.get("iqr_multiplier", 1.5)
+        self.zscore_threshold = config.get("zscore_threshold", 3.0)
+        self.isolation_contamination = config.get("isolation_contamination", 0.1)
 
-    def detect(self, values: List[Any], method: Optional[str] = None) -> Dict[str, Any]:
+    def detect(self, values: list[Any], method: Optional[str] = None) -> dict[str, Any]:
         """
         Detectar outliers en una lista de valores.
 
@@ -66,23 +66,23 @@ class OutlierDetector:
         except (ValueError, TypeError, KeyError, AttributeError):
             logger.error("Error convirtiendo valores a array")
             return {
-                'outliers': [],
-                'outlier_values': [],
-                'is_outlier': [False] * len(values),
-                'method_used': method,
+                "outliers": [],
+                "outlier_values": [],
+                "is_outlier": [False] * len(values),
+                "method_used": method,
             }
 
-        if method == 'iqr':
+        if method == "iqr":
             return self._detect_iqr(values_array, values)
-        elif method == 'zscore':
+        elif method == "zscore":
             return self._detect_zscore(values_array, values)
-        elif method == 'isolation_forest':
+        elif method == "isolation_forest":
             return self._detect_isolation_forest(values_array, values)
         else:
             logger.warning(f"Método {method} no reconocido, usando IQR")
             return self._detect_iqr(values_array, values)
 
-    def _detect_iqr(self, values_array: np.ndarray, original_values: List[Any]) -> Dict[str, Any]:
+    def _detect_iqr(self, values_array: np.ndarray, original_values: list[Any]) -> dict[str, Any]:
         """Detección usando IQR (Interquartile Range)."""
         q1 = np.percentile(values_array, 25)
         q3 = np.percentile(values_array, 75)
@@ -96,17 +96,17 @@ class OutlierDetector:
         outlier_values = [original_values[i] for i in outlier_indices]
 
         return {
-            'outliers': outlier_indices,
-            'outlier_values': outlier_values,
-            'is_outlier': is_outlier.tolist(),
-            'method_used': 'iqr',
-            'lower_bound': float(lower_bound),
-            'upper_bound': float(upper_bound),
+            "outliers": outlier_indices,
+            "outlier_values": outlier_values,
+            "is_outlier": is_outlier.tolist(),
+            "method_used": "iqr",
+            "lower_bound": float(lower_bound),
+            "upper_bound": float(upper_bound),
         }
 
     def _detect_zscore(
-        self, values_array: np.ndarray, original_values: List[Any]
-    ) -> Dict[str, Any]:
+        self, values_array: np.ndarray, original_values: list[Any]
+    ) -> dict[str, Any]:
         """Detección usando Z-score."""
         mean = np.mean(values_array)
         std = np.std(values_array)
@@ -114,10 +114,10 @@ class OutlierDetector:
         if std == 0:
             # Sin variación, no hay outliers
             return {
-                'outliers': [],
-                'outlier_values': [],
-                'is_outlier': [False] * len(values_array),
-                'method_used': 'zscore',
+                "outliers": [],
+                "outlier_values": [],
+                "is_outlier": [False] * len(values_array),
+                "method_used": "zscore",
             }
 
         z_scores = np.abs((values_array - mean) / std)
@@ -126,16 +126,16 @@ class OutlierDetector:
         outlier_values = [original_values[i] for i in outlier_indices]
 
         return {
-            'outliers': outlier_indices,
-            'outlier_values': outlier_values,
-            'is_outlier': is_outlier.tolist(),
-            'method_used': 'zscore',
-            'z_scores': z_scores.tolist(),
+            "outliers": outlier_indices,
+            "outlier_values": outlier_values,
+            "is_outlier": is_outlier.tolist(),
+            "method_used": "zscore",
+            "z_scores": z_scores.tolist(),
         }
 
     def _detect_isolation_forest(
-        self, values_array: np.ndarray, original_values: List[Any]
-    ) -> Dict[str, Any]:
+        self, values_array: np.ndarray, original_values: list[Any]
+    ) -> dict[str, Any]:
         """Detección usando Isolation Forest."""
         # sklearn is REQUIRED - no fallback check needed
 
@@ -155,10 +155,10 @@ class OutlierDetector:
             outlier_values = [original_values[i] for i in outlier_indices]
 
             return {
-                'outliers': outlier_indices,
-                'outlier_values': outlier_values,
-                'is_outlier': is_outlier.tolist(),
-                'method_used': 'isolation_forest',
+                "outliers": outlier_indices,
+                "outlier_values": outlier_values,
+                "is_outlier": is_outlier.tolist(),
+                "method_used": "isolation_forest",
             }
 
         except (RuntimeError, ValueError, TypeError, KeyError) as e:
@@ -166,8 +166,8 @@ class OutlierDetector:
             return self._detect_zscore(values_array, original_values)
 
     def detect_in_ohlcv(
-        self, ohlcv_data: List[Dict[str, Any]], check_fields: List[str] = None
-    ) -> Dict[str, Any]:
+        self, ohlcv_data: list[dict[str, Any]], check_fields: Optional[list[str]] = None
+    ) -> dict[str, Any]:
         """
         Detectar outliers en datos OHLCV.
 
@@ -179,7 +179,7 @@ class OutlierDetector:
             Dict con outliers por campo
         """
         if check_fields is None:
-            check_fields = ['open', 'high', 'low', 'close', 'volume']
+            check_fields = ["open", "high", "low", "close", "volume"]
 
         results = {}
 
@@ -191,10 +191,10 @@ class OutlierDetector:
         # Combinar resultados
         all_outlier_indices = set()
         for field_result in results.values():
-            all_outlier_indices.update(field_result.get('outliers', []))
+            all_outlier_indices.update(field_result.get("outliers", []))
 
         return {
-            'field_results': results,
-            'combined_outliers': sorted(all_outlier_indices),
-            'total_outliers': len(all_outlier_indices),
+            "field_results": results,
+            "combined_outliers": sorted(all_outlier_indices),
+            "total_outliers": len(all_outlier_indices),
         }

@@ -16,7 +16,6 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from decimal import Decimal
 from enum import Enum
-from typing import List, Optional, Tuple
 
 import numpy as np
 
@@ -68,8 +67,8 @@ class TransactionCostModel(ABC):
         side: str,
         quantity: Decimal,
         price: Decimal,
-        volume: Optional[Decimal] = None,
-        adv: Optional[Decimal] = None,
+        volume: Decimal | None = None,
+        adv: Decimal | None = None,
     ) -> CostBreakdown:
         """
         Calculate transaction cost breakdown.
@@ -89,7 +88,7 @@ class TransactionCostModel(ABC):
     @abstractmethod
     def estimate_total_cost(
         self,
-        trades: List[Tuple[str, str, Decimal, Decimal]],
+        trades: list[tuple[str, str, Decimal, Decimal]],
     ) -> Decimal:
         """
         Estimate total cost for list of trades.
@@ -113,10 +112,10 @@ class LinearCostModel(TransactionCostModel):
 
     def __init__(
         self,
-        commission_per_share: Optional[Decimal] = None,
-        min_commission: Optional[Decimal] = None,
-        exchange_fee_rate: Optional[Decimal] = None,  # $0.00023 per share
-        sec_fee_rate: Optional[Decimal] = None,  # SEC fee for sells only
+        commission_per_share: Decimal | None = None,
+        min_commission: Decimal | None = None,
+        exchange_fee_rate: Decimal | None = None,  # $0.00023 per share
+        sec_fee_rate: Decimal | None = None,  # SEC fee for sells only
     ):
         """
         Initialize linear cost model.
@@ -146,8 +145,8 @@ class LinearCostModel(TransactionCostModel):
         side: str,
         quantity: Decimal,
         price: Decimal,
-        volume: Optional[Decimal] = None,
-        adv: Optional[Decimal] = None,
+        volume: Decimal | None = None,
+        adv: Decimal | None = None,
     ) -> CostBreakdown:
         """Calculate linear transaction costs."""
         # Commission
@@ -182,7 +181,7 @@ class LinearCostModel(TransactionCostModel):
 
     def estimate_total_cost(
         self,
-        trades: List[Tuple[str, str, Decimal, Decimal]],
+        trades: list[tuple[str, str, Decimal, Decimal]],
     ) -> Decimal:
         """Estimate total cost for all trades."""
         total = Decimal("0")
@@ -206,8 +205,8 @@ class PiecewiseLinearCostModel(TransactionCostModel):
 
     def __init__(
         self,
-        tiers: List[Tuple[Decimal, Decimal]],
-        min_commission: Optional[Decimal] = None,
+        tiers: list[tuple[Decimal, Decimal]],
+        min_commission: Decimal | None = None,
     ):
         """
         Initialize piecewise linear cost model.
@@ -237,8 +236,8 @@ class PiecewiseLinearCostModel(TransactionCostModel):
         side: str,
         quantity: Decimal,
         price: Decimal,
-        volume: Optional[Decimal] = None,
-        adv: Optional[Decimal] = None,
+        volume: Decimal | None = None,
+        adv: Decimal | None = None,
     ) -> CostBreakdown:
         """Calculate piecewise linear transaction costs."""
         rate = self._get_rate_for_quantity(quantity)
@@ -271,7 +270,7 @@ class PiecewiseLinearCostModel(TransactionCostModel):
 
     def estimate_total_cost(
         self,
-        trades: List[Tuple[str, str, Decimal, Decimal]],
+        trades: list[tuple[str, str, Decimal, Decimal]],
     ) -> Decimal:
         """Estimate total cost for all trades."""
         total = Decimal("0")
@@ -291,7 +290,7 @@ class MarketImpactModel(ABC):
         price: Decimal,
         adv: Decimal,
         volatility: float = 0.2,
-        participation_rate: Optional[float] = None,
+        participation_rate: float | None = None,
     ) -> Decimal:
         """
         Calculate market impact cost.
@@ -353,7 +352,7 @@ class AlmgrenChristModel(MarketImpactModel):
         price: Decimal,
         adv: Decimal,
         volatility: float = 0.2,
-        participation_rate: Optional[float] = None,
+        participation_rate: float | None = None,
     ) -> Decimal:
         """
         Calculate Almgren-Chriss market impact.
@@ -438,7 +437,7 @@ class SquareRootImpactModel(MarketImpactModel):
         price: Decimal,
         adv: Decimal,
         volatility: float = 0.2,
-        participation_rate: Optional[float] = None,
+        participation_rate: float | None = None,
     ) -> Decimal:
         """
         Calculate square root market impact.
@@ -478,9 +477,9 @@ class ImpactParameters:
 
     adv: Decimal  # Average daily volume
     volatility: float  # Annualized volatility
-    market_cap: Optional[Decimal] = None  # Market capitalization
-    spread: Optional[Decimal] = None  # Bid-ask spread
-    price: Optional[Decimal] = None  # Current price
+    market_cap: Decimal | None = None  # Market capitalization
+    spread: Decimal | None = None  # Bid-ask spread
+    price: Decimal | None = None  # Current price
 
 
 @dataclass

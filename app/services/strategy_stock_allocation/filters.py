@@ -46,7 +46,7 @@ class StockFilter:
 
     def _check_required_columns(self, df: pd.DataFrame, ticker: str, rejection_log: list) -> bool:
         """Check if all required columns are present."""
-        required_cols = ['open', 'high', 'low', 'close', 'volume']
+        required_cols = ["open", "high", "low", "close", "volume"]
         if not all(col in df.columns for col in required_cols):
             if self.config.LOG_FILTER_REJECTIONS:
                 rejection_log.append(f"{ticker}: Missing columns")
@@ -68,7 +68,7 @@ class StockFilter:
 
     def _check_no_nans(self, df: pd.DataFrame, ticker: str, rejection_log: list) -> bool:
         """Check for NaN values in required columns."""
-        required_cols = ['open', 'high', 'low', 'close', 'volume']
+        required_cols = ["open", "high", "low", "close", "volume"]
         nan_counts = df[required_cols].isna().sum()
         if nan_counts.any():
             if self.config.LOG_FILTER_REJECTIONS:
@@ -97,11 +97,11 @@ class StockFilter:
     def _check_price_consistency(self, df: pd.DataFrame, ticker: str, rejection_log: list) -> bool:
         """Check for price inconsistencies."""
         invalid_prices = (
-            (df['high'] < df['low']).any()
-            or (df['close'] > df['high']).any()
-            or (df['close'] < df['low']).any()
-            or (df['open'] > df['high']).any()
-            or (df['open'] < df['low']).any()
+            (df["high"] < df["low"]).any()
+            or (df["close"] > df["high"]).any()
+            or (df["close"] < df["low"]).any()
+            or (df["open"] > df["high"]).any()
+            or (df["open"] < df["low"]).any()
         )
         if invalid_prices:
             if self.config.LOG_FILTER_REJECTIONS:
@@ -111,7 +111,7 @@ class StockFilter:
 
     def _check_positive_prices(self, df: pd.DataFrame, ticker: str, rejection_log: list) -> bool:
         """Check for zero or negative prices."""
-        if (df[['open', 'high', 'low', 'close']] <= 0).any().any():
+        if (df[["open", "high", "low", "close"]] <= 0).any().any():
             if self.config.LOG_FILTER_REJECTIONS:
                 rejection_log.append(f"{ticker}: Zero or negative prices")
             return False
@@ -121,7 +121,7 @@ class StockFilter:
         self, df: pd.DataFrame, ticker: str, rejection_log: list
     ) -> tuple[bool, float]:
         """Check volatility is valid and not extreme."""
-        prices = df['close'].values
+        prices = df["close"].values
         returns = np.diff(prices) / prices[:-1]
         volatility = np.std(returns)
 
@@ -141,8 +141,8 @@ class StockFilter:
         self, df: pd.DataFrame, ticker: str, rejection_log: list
     ) -> tuple[bool, float]:
         """Check liquidity meets minimum requirements."""
-        avg_volume = df['volume'].mean()
-        avg_price = df['close'].mean()
+        avg_volume = df["volume"].mean()
+        avg_price = df["close"].mean()
         avg_liquidity_usd = avg_volume * avg_price
         min_liquidity_required = self.config.MIN_LIQUIDITY_USD * 0.02
 

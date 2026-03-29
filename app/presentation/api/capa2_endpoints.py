@@ -4,7 +4,7 @@ import traceback
 import uuid
 from datetime import datetime
 from decimal import Decimal
-from typing import Any, Dict, Optional
+from typing import Any, Optional
 
 from fastapi import APIRouter, BackgroundTasks, HTTPException, Request
 from pydantic import BaseModel, Field
@@ -48,7 +48,7 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/capa2", tags=["CAPA 2 Parametrization Framework"])
 
 # In-memory job storage (in production, use database or Celery)
-_jobs: Dict[str, Dict[str, Any]] = {}
+_jobs: dict[str, dict[str, Any]] = {}
 
 # Initialize services (lazy initialization in endpoints where needed)
 # These services are expensive to initialize upfront, so we'll instantiate them
@@ -105,7 +105,7 @@ class ProcessInputRequest(BaseModel):
     objetivo_inversion: str = Field(..., description="Investment objective")
     risk_tolerance: str = Field(..., description="Risk tolerance level")
     investment_horizon: int = Field(..., ge=1, le=600, description="Investment horizon in months")
-    constraints: Optional[Dict[str, Any]] = Field(None, description="Optional constraints")
+    constraints: Optional[dict[str, Any]] = Field(None, description="Optional constraints")
 
 
 class ProcessInputResponse(BaseModel):
@@ -151,7 +151,7 @@ class ParametrizeModulesResponse(BaseModel):
     parameter_set_id: str
     total_modules: int
     total_max_exposure: float
-    modules_summary: Dict[str, Any]
+    modules_summary: dict[str, Any]
     timestamp: str
 
 
@@ -179,7 +179,7 @@ class BacktestStatusResponse(BaseModel):
     job_id: str
     status: str  # "pending", "running", "completed", "failed"
     progress: Optional[int] = None
-    result: Optional[Dict[str, Any]] = None
+    result: Optional[dict[str, Any]] = None
     error: Optional[str] = None
     timestamp: str
 
@@ -191,7 +191,7 @@ class CompleteWorkflowRequest(BaseModel):
     objetivo_inversion: str
     risk_tolerance: str
     investment_horizon: int
-    constraints: Optional[Dict[str, Any]] = None
+    constraints: Optional[dict[str, Any]] = None
 
 
 class DeploymentDecisionResponse(BaseModel):
@@ -298,7 +298,7 @@ async def process_input(request: ProcessInputRequest, http_request: Request):
             error_message=str(e),
             stack_trace=traceback.format_exc(),
         )
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
 
 
 # ============================================================================
@@ -333,7 +333,7 @@ async def generate_profile(request: GenerateProfileRequest):
 
     except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
         logger.error(f"❌ Error generating profile: {e}")
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
 
 
 # ============================================================================
@@ -368,7 +368,7 @@ async def parametrize_modules(request: ParametrizeModulesRequest):
 
     except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
         logger.error(f"❌ Error parametrizing modules: {e}")
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
 
 
 # ============================================================================
@@ -409,7 +409,7 @@ async def execute_backtest(request: ExecuteBacktestRequest, background_tasks: Ba
 
     except (asyncio.TimeoutError, OSError) as e:
         logger.error(f"❌ Error creating backtest job: {e}")
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
 
 
 async def _execute_backtest_background(job_id: str, parameter_set_id: str, profile_id: str):
@@ -469,7 +469,7 @@ async def backtest_status(job_id: str):
 
     except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
         logger.error(f"❌ Error checking backtest status: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 # ============================================================================
@@ -550,14 +550,14 @@ async def complete_workflow(request: CompleteWorkflowRequest, background_tasks: 
 
     except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
         logger.error(f"❌ Error starting workflow: {e}")
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
 
 
 async def _execute_complete_workflow(workflow_id: str, request: CompleteWorkflowRequest):
     """Execute complete workflow in background."""
 
     try:
-        results: Dict[str, Any] = {}
+        results: dict[str, Any] = {}
 
         # Stage 1: Process input (T1.1)
         _jobs[workflow_id]["stage"] = "input_processing"
@@ -699,7 +699,7 @@ async def workflow_status(workflow_id: str):
 
     except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
         logger.error(f"❌ Error checking workflow status: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 # ============================================================================

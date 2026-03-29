@@ -18,7 +18,6 @@ from __future__ import annotations
 import logging
 from dataclasses import dataclass, field
 from decimal import Decimal
-from typing import Dict, List, Optional, Tuple
 
 from .market_impact import ImpactConfig, MarketImpactModel
 from .models import CostBreakdown, ExecutionResult, ExecutionSummary, MarketSnapshot, Order
@@ -138,7 +137,7 @@ class RealisticExecutionModel:
     - Small cap: 25-50+ bps
     """
 
-    def __init__(self, config: Optional[ExecutionConfig] = None):
+    def __init__(self, config: ExecutionConfig | None = None):
         """
         Initialize realistic execution model.
 
@@ -265,16 +264,16 @@ class RealisticExecutionModel:
 
         if self.config.enable_logging:
             logger.info(
-                f"Execution result: {execution_summary} " f"(Total cost: ${result.total_cost:.2f})"
+                f"Execution result: {execution_summary} (Total cost: ${result.total_cost:.2f})"
             )
 
         return result
 
     async def execute_orders_batch(
         self,
-        orders: List[Order],
-        market_snapshots: Dict[str, MarketSnapshot],
-    ) -> List[ExecutionResult]:
+        orders: list[Order],
+        market_snapshots: dict[str, MarketSnapshot],
+    ) -> list[ExecutionResult]:
         """
         Execute multiple orders in batch.
 
@@ -319,8 +318,8 @@ class RealisticExecutionModel:
         shares: int,
         price: Decimal,
         adv: Decimal,
-        volatility: Optional[Decimal] = None,
-    ) -> Dict[str, Decimal]:
+        volatility: Decimal | None = None,
+    ) -> dict[str, Decimal]:
         """
         Quick estimate of execution cost without full simulation.
 
@@ -396,7 +395,7 @@ class RealisticExecutionModel:
         self,
         order: Order,
         market_snapshot: MarketSnapshot,
-    ) -> Tuple[bool, List[str]]:
+    ) -> tuple[bool, list[str]]:
         """
         Validate if order is likely to be filled.
 
@@ -427,17 +426,17 @@ class RealisticExecutionModel:
         # Check participation rate
         if participation_rate > self.config.max_participation_rate:
             warnings.append(
-                f"Order size ({participation_rate*100:.1f}% of ADV) exceeds "
-                f"maximum participation rate ({self.config.max_participation_rate*100:.0f}%)"
+                f"Order size ({participation_rate * 100:.1f}% of ADV) exceeds "
+                f"maximum participation rate ({self.config.max_participation_rate * 100:.0f}%)"
             )
 
         # Estimate fill probability
         fill_prob = self.fill_simulator.estimate_fill_probability(order, market_snapshot)
 
         if fill_prob < 0.5:
-            warnings.append(f"Low fill probability: {fill_prob*100:.0f}%")
+            warnings.append(f"Low fill probability: {fill_prob * 100:.0f}%")
         elif fill_prob < 0.8:
-            warnings.append(f"Moderate fill probability: {fill_prob*100:.0f}%")
+            warnings.append(f"Moderate fill probability: {fill_prob * 100:.0f}%")
 
         is_feasible = fill_prob > 0 and market_snapshot.is_market_open
 

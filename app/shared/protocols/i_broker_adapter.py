@@ -1,6 +1,7 @@
 """
 Broker adapter protocols
 """
+
 from typing import Protocol
 
 

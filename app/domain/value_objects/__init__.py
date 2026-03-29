@@ -42,28 +42,28 @@ except ImportError:
     _backtest_type_available = False
 
 __all__ = [
-    'Money',
-    'Capital',
-    'RiskParameters',
-    'InvestmentHorizon',
-    'HorizonCategory',
-    'TaxResidence',
-    'RegulatoryRegion',
-    'Percentage',
-    'Weight',
-    'Symbol',
-    'AssetClass',
-    'Exchange',
+    "AssetClass",
+    "Capital",
+    "Exchange",
+    "HorizonCategory",
+    "InvestmentHorizon",
+    "Money",
+    "Percentage",
+    "RegulatoryRegion",
+    "RiskParameters",
+    "Symbol",
+    "TaxResidence",
+    "Weight",
 ]
 
 if _trading_params_available:
-    __all__.append('TradingParameters')
+    __all__.append("TradingParameters")
 
 if _backtest_config_available:
-    __all__.append('BacktestConfigValue')
+    __all__.append("BacktestConfigValue")
 
 if _backtest_result_available:
-    __all__.append('BacktestResultValue')
+    __all__.append("BacktestResultValue")
 
 if _backtest_type_available:
-    __all__.append('BacktestType')
+    __all__.append("BacktestType")

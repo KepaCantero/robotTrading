@@ -26,7 +26,7 @@ from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Callable, ClassVar
 
 import aiosqlite
 import numpy as np
@@ -73,9 +73,9 @@ class ChecklistItem:
     item_type: ChecklistItemType
     is_required: bool = True
     estimated_minutes: int = 5
-    depends_on: List[str] = field(default_factory=list)
+    depends_on: list[str] = field(default_factory=list)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
         return {
             "item_id": self.item_id,
@@ -94,10 +94,10 @@ class ChecklistCompletion:
 
     item_id: str
     is_completed: bool = False
-    completed_by: Optional[str] = None
-    completed_at: Optional[datetime] = None
-    notes: Optional[str] = None
-    artifacts: List[str] = field(default_factory=list)  # Links to docs, etc.
+    completed_by: str | None = None
+    completed_at: datetime | None = None
+    notes: str | None = None
+    artifacts: list[str] = field(default_factory=list)  # Links to docs, etc.
 
 
 @dataclass
@@ -110,30 +110,30 @@ class HandoffContext:
     """
 
     # System status
-    system_health: Dict[str, str] = field(default_factory=dict)
-    active_incidents: List[Dict[str, Any]] = field(default_factory=list)
-    recent_incidents: List[Dict[str, Any]] = field(default_factory=list)
+    system_health: dict[str, str] = field(default_factory=dict)
+    active_incidents: list[dict[str, Any]] = field(default_factory=list)
+    recent_incidents: list[dict[str, Any]] = field(default_factory=list)
 
     # Outstanding work
-    outstanding_tasks: List[Dict[str, Any]] = field(default_factory=list)
-    in_progress_changes: List[Dict[str, Any]] = field(default_factory=list)
-    pending_deployments: List[Dict[str, Any]] = field(default_factory=list)
+    outstanding_tasks: list[dict[str, Any]] = field(default_factory=list)
+    in_progress_changes: list[dict[str, Any]] = field(default_factory=list)
+    pending_deployments: list[dict[str, Any]] = field(default_factory=list)
 
     # Knowledge artifacts
-    documentation_links: List[str] = field(default_factory=list)
-    runbook_references: List[str] = field(default_factory=list)
-    important_contacts: Dict[str, str] = field(default_factory=dict)
+    documentation_links: list[str] = field(default_factory=list)
+    runbook_references: list[str] = field(default_factory=list)
+    important_contacts: dict[str, str] = field(default_factory=dict)
 
     # Metrics and trends
-    key_metrics: Dict[str, Any] = field(default_factory=dict)
-    recent_alerts: List[Dict[str, Any]] = field(default_factory=list)
+    key_metrics: dict[str, Any] = field(default_factory=dict)
+    recent_alerts: list[dict[str, Any]] = field(default_factory=list)
 
     # Special considerations
-    known_issues: List[Dict[str, Any]] = field(default_factory=list)
-    upcoming_maintenance: List[Dict[str, Any]] = field(default_factory=list)
-    special_instructions: Optional[str] = None
+    known_issues: list[dict[str, Any]] = field(default_factory=list)
+    upcoming_maintenance: list[dict[str, Any]] = field(default_factory=list)
+    special_instructions: str | None = None
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
         return {
             "system_health": self.system_health,
@@ -167,14 +167,14 @@ class HandoffSession:
     to_engineer_id: str
     scheduled_start: datetime
     scheduled_end: datetime
-    checklist_items: List[ChecklistItem]
+    checklist_items: list[ChecklistItem]
     status: HandoffStatus = HandoffStatus.PENDING
-    actual_start: Optional[datetime] = None
-    actual_end: Optional[datetime] = None
-    context: Optional[HandoffContext] = None
-    completions: Dict[str, ChecklistCompletion] = field(default_factory=dict)
+    actual_start: datetime | None = None
+    actual_end: datetime | None = None
+    context: HandoffContext | None = None
+    completions: dict[str, ChecklistCompletion] = field(default_factory=dict)
     notes: str = ""
-    quality_score: Optional[float] = None  # 0.0 to 1.0
+    quality_score: float | None = None  # 0.0 to 1.0
     created_at: datetime = field(default_factory=datetime.utcnow)
 
     def __post_init__(self):
@@ -223,8 +223,8 @@ class HandoffSession:
         self,
         item_id: str,
         completed_by: str,
-        notes: Optional[str] = None,
-        artifacts: Optional[List[str]] = None,
+        notes: str | None = None,
+        artifacts: list[str] | None = None,
     ) -> bool:
         """
         Mark checklist item as complete.
@@ -259,7 +259,7 @@ class HandoffSession:
         required = [c for c in self.completions.values() if c.is_completed]
         return len(required) / len(self.completions) * 100
 
-    def get_required_remaining(self) -> List[ChecklistItem]:
+    def get_required_remaining(self) -> list[ChecklistItem]:
         """Get list of required items not yet completed."""
         remaining = []
         for item in self.checklist_items:
@@ -310,7 +310,7 @@ class HandoffSession:
 
         return self.quality_score
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
         return {
             "session_id": self.session_id,
@@ -352,9 +352,9 @@ class HandoffConfig:
     db_path: str = "data/oncall_handoff.db"
 
     # Callbacks
-    on_handoff_completed: Optional[Callable[[HandoffSession], None]] = None
-    on_handoff_failed: Optional[Callable[[HandoffSession], None]] = None
-    on_quality_low: Optional[Callable[[HandoffSession], None]] = None
+    on_handoff_completed: Callable[[HandoffSession], None] | None = None
+    on_handoff_failed: Callable[[HandoffSession], None] | None = None
+    on_quality_low: Callable[[HandoffSession], None] | None = None
 
 
 class HandoffManager:
@@ -376,7 +376,7 @@ class HandoffManager:
     """
 
     # Default checklist items
-    DEFAULT_CHECKLIST = [
+    DEFAULT_CHECKLIST: ClassVar[list] = [
         ChecklistItem(
             item_id="incident_review",
             title="Review Active Incidents",
@@ -437,8 +437,8 @@ class HandoffManager:
 
     def __init__(
         self,
-        config: Optional[HandoffConfig] = None,
-        checklist_items: Optional[List[ChecklistItem]] = None,
+        config: HandoffConfig | None = None,
+        checklist_items: list[ChecklistItem] | None = None,
     ):
         """
         Initialize handoff manager.
@@ -452,7 +452,7 @@ class HandoffManager:
         self.logger = logging.getLogger(f"{__name__}")
 
         # State
-        self._sessions: Dict[str, HandoffSession] = {}
+        self._sessions: dict[str, HandoffSession] = {}
         self._lock = asyncio.Lock()
 
         self.logger.info(
@@ -624,7 +624,7 @@ class HandoffManager:
         from_engineer_id: str,
         to_engineer_id: str,
         scheduled_start: datetime,
-        context: Optional[HandoffContext] = None,
+        context: HandoffContext | None = None,
     ) -> HandoffSession:
         """
         Create new handoff session.
@@ -759,7 +759,7 @@ class HandoffManager:
                         self.logger.error(f"Error in handoff completed callback: {e}")
 
                 self.logger.info(
-                    f"Completed handoff session: {session_id} " f"(quality: {quality_score})"
+                    f"Completed handoff session: {session_id} (quality: {quality_score})"
                 )
 
                 return True
@@ -773,8 +773,8 @@ class HandoffManager:
         session_id: str,
         item_id: str,
         completed_by: str,
-        notes: Optional[str] = None,
-        artifacts: Optional[List[str]] = None,
+        notes: str | None = None,
+        artifacts: list[str] | None = None,
     ) -> bool:
         """
         Complete a checklist item.
@@ -877,7 +877,7 @@ class HandoffManager:
         except (aiosqlite.Error, asyncio.TimeoutError, OSError) as e:
             self.logger.error(f"Error saving session: {e}")
 
-    async def get_handoff_metrics(self) -> Dict[str, Any]:
+    async def get_handoff_metrics(self) -> dict[str, Any]:
         """
         Get handoff metrics.
 

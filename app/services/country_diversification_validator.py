@@ -6,7 +6,7 @@ Validates country/geographic concentration constraints and generates rebalancing
 
 import logging
 from decimal import Decimal
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Optional
 
 from app.domain.models.portfolio import Portfolio, Position
 from app.shared.config.centralized_config import SectorCountryDiversificationConfig
@@ -23,7 +23,7 @@ class CountryDiversificationValidator:
         self.checks_performed = 0
         self.violations_found = 0
 
-    def validate_country_limits(self, portfolio: Portfolio) -> List[Dict[str, Any]]:
+    def validate_country_limits(self, portfolio: Portfolio) -> list[dict[str, Any]]:
         """
         Check country exposure against limits.
 
@@ -79,7 +79,7 @@ class CountryDiversificationValidator:
 
     def validate_new_position_country(
         self, portfolio: Portfolio, position: Position
-    ) -> Tuple[bool, Optional[str]]:
+    ) -> tuple[bool, Optional[str]]:
         """
         Check if adding position would violate country limits.
 
@@ -108,7 +108,7 @@ class CountryDiversificationValidator:
 
         return True, None
 
-    def get_country_rebalancing_suggestions(self, portfolio: Portfolio) -> List[Dict[str, Any]]:
+    def get_country_rebalancing_suggestions(self, portfolio: Portfolio) -> list[dict[str, Any]]:
         """
         Generate rebalancing suggestions for over-concentrated countries.
 
@@ -145,7 +145,7 @@ class CountryDiversificationValidator:
         logger.info(f"Generated {len(suggestions)} country rebalancing suggestions")
         return suggestions
 
-    def get_country_statistics(self, portfolio: Portfolio) -> Dict[str, Any]:
+    def get_country_statistics(self, portfolio: Portfolio) -> dict[str, Any]:
         """Return comprehensive country metrics."""
         country_exposure = self._calculate_country_exposure(portfolio)
         total_value = portfolio.total_equity
@@ -189,9 +189,9 @@ class CountryDiversificationValidator:
             "violations_found": self.violations_found,
         }
 
-    def _calculate_country_exposure(self, portfolio: Portfolio) -> Dict[str, Decimal]:
+    def _calculate_country_exposure(self, portfolio: Portfolio) -> dict[str, Decimal]:
         """Calculate aggregate exposure per country."""
-        exposure: Dict[str, Decimal] = {}
+        exposure: dict[str, Decimal] = {}
 
         for position in portfolio.positions:
             if position.country is None or position.hedging.is_hedge:

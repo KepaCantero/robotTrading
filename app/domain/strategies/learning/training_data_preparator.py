@@ -5,7 +5,7 @@ TrainingDataPreparator - Prepara datos de entrenamiento completos para learning 
 import logging
 from datetime import datetime, timedelta
 from decimal import Decimal
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 import numpy as np
 import pandas as pd
@@ -59,11 +59,11 @@ class TrainingDataPreparator:
 
     def prepare_supervised_training_data(
         self,
-        quotes: List[Quote],
-        trades: List[Trade],
+        quotes: list[Quote],
+        trades: list[Trade],
         min_sequence_length: int = 60,
         lookahead_days: int = 10,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Preparar datos de entrenamiento para Supervised Learning.
 
@@ -82,7 +82,7 @@ class TrainingDataPreparator:
             logger.warning(
                 f"Insufficient data: {len(quotes)} quotes < {min_sequence_length} minimum"
             )
-            return {'features': pd.DataFrame(), 'labels': pd.Series([], dtype=int)}
+            return {"features": pd.DataFrame(), "labels": pd.Series([], dtype=int)}
 
         # Convertir quotes a DataFrame para cálculo de indicadores
         df = self._quotes_to_dataframe(quotes)
@@ -99,7 +99,7 @@ class TrainingDataPreparator:
 
         for i in range(min_sequence_length, len(indicators_df)):
             quote = quotes[i]
-            timestamp = quote.timestamp if hasattr(quote, 'timestamp') else df.index[i]
+            timestamp = quote.timestamp if hasattr(quote, "timestamp") else df.index[i]
 
             # Obtener indicadores actuales
             indicators = self._extract_indicators_from_row(indicators_df.iloc[i])
@@ -117,10 +117,10 @@ class TrainingDataPreparator:
                 filter_results=filter_results,
                 market_context=market_context,
                 metadata={
-                    'timestamp': timestamp,
-                    'symbol': quote.symbol,
-                    'recent_trades': self._get_recent_trades_before_timestamp(trades, timestamp),
-                    'recent_win_rate': self._calculate_recent_win_rate(trades, timestamp),
+                    "timestamp": timestamp,
+                    "symbol": quote.symbol,
+                    "recent_trades": self._get_recent_trades_before_timestamp(trades, timestamp),
+                    "recent_win_rate": self._calculate_recent_win_rate(trades, timestamp),
                 },
             )
 
@@ -139,7 +139,9 @@ class TrainingDataPreparator:
                 # Si no hay label pero hay trades cercanos (en un rango más amplio), usar label 0
                 # Esto ayuda a balancear cuando hay muy pocos trades
                 has_nearby_trades = self._has_trades_nearby(
-                    timestamp, trades_by_timestamp, lookahead_days * 2  # Buscar en ventana doble
+                    timestamp,
+                    trades_by_timestamp,
+                    lookahead_days * 2,  # Buscar en ventana doble
                 )
                 if has_nearby_trades:
                     # Hay trades cercanos pero no en la ventana específica -> label 0
@@ -158,7 +160,7 @@ class TrainingDataPreparator:
                 min_sequence_length, min(len(indicators_df), min_sequence_length + 100)
             ):  # Limitar a 100 samples para evitar sobrecarga
                 quote = quotes[i]
-                timestamp = quote.timestamp if hasattr(quote, 'timestamp') else df.index[i]
+                timestamp = quote.timestamp if hasattr(quote, "timestamp") else df.index[i]
 
                 indicators = self._extract_indicators_from_row(indicators_df.iloc[i])
                 market_context = self._estimate_market_context(indicators_df.iloc[: i + 1])
@@ -169,12 +171,12 @@ class TrainingDataPreparator:
                     filter_results=filter_results,
                     market_context=market_context,
                     metadata={
-                        'timestamp': timestamp,
-                        'symbol': quote.symbol,
-                        'recent_trades': self._get_recent_trades_before_timestamp(
+                        "timestamp": timestamp,
+                        "symbol": quote.symbol,
+                        "recent_trades": self._get_recent_trades_before_timestamp(
                             trades, timestamp
                         ),
-                        'recent_win_rate': self._calculate_recent_win_rate(trades, timestamp),
+                        "recent_win_rate": self._calculate_recent_win_rate(trades, timestamp),
                     },
                 )
 
@@ -183,7 +185,7 @@ class TrainingDataPreparator:
 
             if not features_list:
                 logger.error("No features generated even with fallback strategy")
-                return {'features': pd.DataFrame(), 'labels': pd.Series([], dtype=int)}
+                return {"features": pd.DataFrame(), "labels": pd.Series([], dtype=int)}
             else:
                 logger.info(
                     f"Fallback strategy: Generated {len(features_list)} samples with default labels"
@@ -191,10 +193,10 @@ class TrainingDataPreparator:
 
         # Crear DataFrame de features
         # Extraer feature_names del primer elemento (debería ser igual para todos)
-        feature_names = features_list[0].get('feature_names', []) if features_list else []
+        feature_names = features_list[0].get("feature_names", []) if features_list else []
         # Extraer solo los feature_vectors para el DataFrame
         X_df = pd.DataFrame(
-            [f.get('feature_vector', []) for f in features_list], columns=feature_names
+            [f.get("feature_vector", []) for f in features_list], columns=feature_names
         )
         y_series = pd.Series(labels_list, dtype=int)
 
@@ -205,7 +207,7 @@ class TrainingDataPreparator:
 
         logger.info(f"Prepared training data: {len(X_df)} samples, {len(feature_names)} features")
         logger.info(
-            f"  Labels: {len(unique_labels)} classes - Positive: {positive_count} ({positive_count/len(y_series)*100:.1f}%), Negative: {negative_count} ({negative_count/len(y_series)*100:.1f}%)"
+            f"  Labels: {len(unique_labels)} classes - Positive: {positive_count} ({positive_count / len(y_series) * 100:.1f}%), Negative: {negative_count} ({negative_count / len(y_series) * 100:.1f}%)"
         )
 
         # Si solo hay una clase, intentar balancear ajustando criterios de éxito o usando datos adicionales
@@ -230,15 +232,15 @@ class TrainingDataPreparator:
                     "    4. Revisar configuración de la estrategia (puede estar generando muy pocas señales)"
                 )
 
-        return {'features': X_df, 'labels': y_series}
+        return {"features": X_df, "labels": y_series}
 
     def prepare_deep_learning_training_data(
         self,
-        quotes: List[Quote],
-        trades: List[Trade],
+        quotes: list[Quote],
+        trades: list[Trade],
         sequence_length: int = 60,
         min_sequence_length: int = 120,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Preparar datos de entrenamiento para Deep Learning (LSTM/GRU/Transformers).
 
@@ -258,7 +260,7 @@ class TrainingDataPreparator:
             logger.warning(
                 f"Insufficient data: {len(quotes)} quotes < {min_sequence_length} minimum"
             )
-            return {'sequences': np.array([]), 'labels': np.array([])}
+            return {"sequences": np.array([]), "labels": np.array([])}
 
         df = self._quotes_to_dataframe(quotes)
         indicators_df = self._calculate_technical_indicators(df)
@@ -285,14 +287,14 @@ class TrainingDataPreparator:
 
                 historical_data.append(
                     {
-                        'indicators': indicators,
-                        'filter_results': filter_results,
-                        'market_context': market_context,
-                        'metadata': {
-                            'timestamp': (
-                                quote.timestamp if hasattr(quote, 'timestamp') else df.index[j]
+                        "indicators": indicators,
+                        "filter_results": filter_results,
+                        "market_context": market_context,
+                        "metadata": {
+                            "timestamp": (
+                                quote.timestamp if hasattr(quote, "timestamp") else df.index[j]
                             ),
-                            'symbol': quote.symbol,
+                            "symbol": quote.symbol,
                         },
                     }
                 )
@@ -306,7 +308,7 @@ class TrainingDataPreparator:
             )
 
             # Generar label
-            timestamp = quotes[i].timestamp if hasattr(quotes[i], 'timestamp') else df.index[i]
+            timestamp = quotes[i].timestamp if hasattr(quotes[i], "timestamp") else df.index[i]
             label = self._generate_label_for_timestamp(
                 timestamp, trades_by_timestamp, df, i, lookahead_days=10
             )
@@ -318,7 +320,7 @@ class TrainingDataPreparator:
 
         if not sequences:
             logger.warning("No sequences generated")
-            return {'sequences': np.array([]), 'labels': np.array([])}
+            return {"sequences": np.array([]), "labels": np.array([])}
 
         X_sequences = np.array(sequences, dtype=np.float32)
         y_labels = np.array(labels, dtype=int)
@@ -329,11 +331,10 @@ class TrainingDataPreparator:
         negative_count = len(y_labels) - positive_count
 
         logger.info(
-            f"Prepared DL training data: {len(X_sequences)} sequences, "
-            f"shape {X_sequences.shape}"
+            f"Prepared DL training data: {len(X_sequences)} sequences, shape {X_sequences.shape}"
         )
         logger.info(
-            f"  Labels: {len(unique_labels)} classes - Positive: {positive_count} ({positive_count/len(y_labels)*100:.1f}%), Negative: {negative_count} ({negative_count/len(y_labels)*100:.1f}%)"
+            f"  Labels: {len(unique_labels)} classes - Positive: {positive_count} ({positive_count / len(y_labels) * 100:.1f}%), Negative: {negative_count} ({negative_count / len(y_labels) * 100:.1f}%)"
         )
 
         # Si solo hay una clase, advertir
@@ -342,11 +343,11 @@ class TrainingDataPreparator:
                 f"⚠️ Solo hay {len(unique_labels)} clase(s) en los labels. Esto puede causar problemas en el entrenamiento."
             )
 
-        return {'sequences': X_sequences, 'labels': y_labels}
+        return {"sequences": X_sequences, "labels": y_labels}
 
     def prepare_reinforcement_learning_data(
-        self, quotes: List[Quote], initial_capital: Optional[Decimal] = None
-    ) -> Dict[str, Any]:
+        self, quotes: list[Quote], initial_capital: Optional[Decimal] = None
+    ) -> dict[str, Any]:
         """
         Preparar datos de mercado para Reinforcement Learning.
 
@@ -374,52 +375,52 @@ class TrainingDataPreparator:
 
             market_sequences.append(
                 {
-                    'price': (
+                    "price": (
                         float(quote.bid)
-                        if hasattr(quote, 'bid')
+                        if hasattr(quote, "bid")
                         else float(quote.close)
-                        if hasattr(quote, 'close')
+                        if hasattr(quote, "close")
                         else 0.0
                     ),
-                    'volume': float(getattr(quote, 'volume', 0)),
-                    'timestamp': quote.timestamp if hasattr(quote, 'timestamp') else df.index[i],
-                    'indicators': indicators,
-                    'market_context': market_context,
+                    "volume": float(getattr(quote, "volume", 0)),
+                    "timestamp": quote.timestamp if hasattr(quote, "timestamp") else df.index[i],
+                    "indicators": indicators,
+                    "market_context": market_context,
                 }
             )
 
         logger.info(f"Prepared RL data: {len(market_sequences)} market data points")
 
-        return {'market_sequences': market_sequences, 'initial_capital': float(initial_capital)}
+        return {"market_sequences": market_sequences, "initial_capital": float(initial_capital)}
 
-    def _quotes_to_dataframe(self, quotes: List[Quote]) -> pd.DataFrame:
+    def _quotes_to_dataframe(self, quotes: list[Quote]) -> pd.DataFrame:
         """Convertir quotes a DataFrame."""
         data = []
         for quote in quotes:
-            timestamp = quote.timestamp if hasattr(quote, 'timestamp') else datetime.now()
+            timestamp = quote.timestamp if hasattr(quote, "timestamp") else datetime.now()
             price = (
                 float(quote.bid)
-                if hasattr(quote, 'bid')
+                if hasattr(quote, "bid")
                 else float(quote.close)
-                if hasattr(quote, 'close')
+                if hasattr(quote, "close")
                 else 0.0
             )
-            volume = float(getattr(quote, 'volume', 0))
+            volume = float(getattr(quote, "volume", 0))
 
             data.append(
                 {
-                    'timestamp': timestamp,
-                    'open': price,  # Simplificado: usar mismo precio
-                    'high': price,
-                    'low': price,
-                    'close': price,
-                    'volume': volume,
+                    "timestamp": timestamp,
+                    "open": price,  # Simplificado: usar mismo precio
+                    "high": price,
+                    "low": price,
+                    "close": price,
+                    "volume": volume,
                 }
             )
 
         df = pd.DataFrame(data)
-        if 'timestamp' in df.columns:
-            df.set_index('timestamp', inplace=True)
+        if "timestamp" in df.columns:
+            df.set_index("timestamp", inplace=True)
 
         return df
 
@@ -432,132 +433,132 @@ class TrainingDataPreparator:
                 "pandas_ta no disponible, usando cálculos básicos sin indicadores avanzados"
             )
             # Usar cálculos básicos simples
-            indicators_df['rsi'] = 50.0
-            indicators_df['ema_fast'] = df['close'].ewm(span=12, adjust=False).mean()
-            indicators_df['ema_slow'] = df['close'].ewm(span=26, adjust=False).mean()
-            indicators_df['momentum_roc'] = df['close'].pct_change(14) * 100
-            indicators_df['atr'] = (df['high'] - df['low']).rolling(14).mean()
-            indicators_df['stoch_rsi_k'] = 50.0
-            indicators_df['stoch_rsi_d'] = 50.0
+            indicators_df["rsi"] = 50.0
+            indicators_df["ema_fast"] = df["close"].ewm(span=12, adjust=False).mean()
+            indicators_df["ema_slow"] = df["close"].ewm(span=26, adjust=False).mean()
+            indicators_df["momentum_roc"] = df["close"].pct_change(14) * 100
+            indicators_df["atr"] = (df["high"] - df["low"]).rolling(14).mean()
+            indicators_df["stoch_rsi_k"] = 50.0
+            indicators_df["stoch_rsi_d"] = 50.0
         else:
             # RSI
-            indicators_df['rsi'] = ta.rsi(df['close'], length=14)
+            indicators_df["rsi"] = ta.rsi(df["close"], length=14)
 
             # EMAs
-            indicators_df['ema_fast'] = ta.ema(df['close'], length=12)
-            indicators_df['ema_slow'] = ta.ema(df['close'], length=26)
+            indicators_df["ema_fast"] = ta.ema(df["close"], length=12)
+            indicators_df["ema_slow"] = ta.ema(df["close"], length=26)
 
             # Momentum / ROC
-            indicators_df['momentum_roc'] = ta.roc(df['close'], length=14)
+            indicators_df["momentum_roc"] = ta.roc(df["close"], length=14)
 
             # ATR
-            atr = ta.atr(df['high'], df['low'], df['close'], length=14)
-            indicators_df['atr'] = atr
+            atr = ta.atr(df["high"], df["low"], df["close"], length=14)
+            indicators_df["atr"] = atr
 
             # StochRSI
-            stoch_rsi = ta.stochrsi(df['close'], length=14)
+            stoch_rsi = ta.stochrsi(df["close"], length=14)
             if isinstance(stoch_rsi, pd.DataFrame):
-                indicators_df['stoch_rsi_k'] = (
+                indicators_df["stoch_rsi_k"] = (
                     stoch_rsi.iloc[:, 0] if len(stoch_rsi.columns) > 0 else 50.0
                 )
-                indicators_df['stoch_rsi_d'] = (
+                indicators_df["stoch_rsi_d"] = (
                     stoch_rsi.iloc[:, 1] if len(stoch_rsi.columns) > 1 else 50.0
                 )
             else:
-                indicators_df['stoch_rsi_k'] = stoch_rsi if stoch_rsi is not None else 50.0
-                indicators_df['stoch_rsi_d'] = 50.0
+                indicators_df["stoch_rsi_k"] = stoch_rsi if stoch_rsi is not None else 50.0
+                indicators_df["stoch_rsi_d"] = 50.0
 
         # Volume ratios (común para ambos casos)
-        indicators_df['avg_volume'] = df['volume'].rolling(window=20).mean()
-        indicators_df['volume_ratio'] = df['volume'] / indicators_df['avg_volume'].replace(0, 1)
+        indicators_df["avg_volume"] = df["volume"].rolling(window=20).mean()
+        indicators_df["volume_ratio"] = df["volume"] / indicators_df["avg_volume"].replace(0, 1)
 
         # Relative ATR y percentile (común para ambos casos)
         if PANDAS_TA_AVAILABLE:
-            indicators_df['relative_atr'] = (indicators_df['atr'] / df['close'] * 100).fillna(0)
+            indicators_df["relative_atr"] = (indicators_df["atr"] / df["close"] * 100).fillna(0)
         else:
-            indicators_df['relative_atr'] = (indicators_df['atr'] / df['close'] * 100).fillna(0)
+            indicators_df["relative_atr"] = (indicators_df["atr"] / df["close"] * 100).fillna(0)
 
-        indicators_df['atr_percentile'] = (
-            indicators_df['atr']
+        indicators_df["atr_percentile"] = (
+            indicators_df["atr"]
             .rolling(window=30)
             .apply(lambda x: (x.iloc[-1] <= x).mean() * 100 if len(x) > 0 else 50, raw=False)
             .fillna(50)
         )
 
         # Precio actual
-        indicators_df['price'] = df['close']
+        indicators_df["price"] = df["close"]
 
         # Usar ffill() en lugar de fillna(method='ffill') para evitar deprecation warning
         return indicators_df.ffill().fillna(0)
 
-    def _extract_indicators_from_row(self, row: pd.Series) -> Dict[str, float]:
+    def _extract_indicators_from_row(self, row: pd.Series) -> dict[str, float]:
         """Extraer indicadores de una fila del DataFrame."""
         return {
-            'rsi': float(row.get('rsi', 50.0)),
-            'ema_fast': float(row.get('ema_fast', 0.0)),
-            'ema_slow': float(row.get('ema_slow', 0.0)),
-            'momentum_roc': float(row.get('momentum_roc', 0.0)),
-            'volume_ratio': float(row.get('volume_ratio', 1.0)),
-            'volume': float(row.get('volume', 0.0)),
-            'avg_volume': float(row.get('avg_volume', 0.0)),
-            'atr': float(row.get('atr', 0.0)),
-            'relative_atr': float(row.get('relative_atr', 0.0)),
-            'atr_percentile': float(row.get('atr_percentile', 50.0)),
-            'stoch_rsi_k': float(row.get('stoch_rsi_k', 50.0)),
-            'stoch_rsi_d': float(row.get('stoch_rsi_d', 50.0)),
-            'price': float(row.get('price', 0.0)),
+            "rsi": float(row.get("rsi", 50.0)),
+            "ema_fast": float(row.get("ema_fast", 0.0)),
+            "ema_slow": float(row.get("ema_slow", 0.0)),
+            "momentum_roc": float(row.get("momentum_roc", 0.0)),
+            "volume_ratio": float(row.get("volume_ratio", 1.0)),
+            "volume": float(row.get("volume", 0.0)),
+            "avg_volume": float(row.get("avg_volume", 0.0)),
+            "atr": float(row.get("atr", 0.0)),
+            "relative_atr": float(row.get("relative_atr", 0.0)),
+            "atr_percentile": float(row.get("atr_percentile", 50.0)),
+            "stoch_rsi_k": float(row.get("stoch_rsi_k", 50.0)),
+            "stoch_rsi_d": float(row.get("stoch_rsi_d", 50.0)),
+            "price": float(row.get("price", 0.0)),
         }
 
-    def _estimate_market_context(self, historical_df: pd.DataFrame) -> Dict[str, Any]:
+    def _estimate_market_context(self, historical_df: pd.DataFrame) -> dict[str, Any]:
         """Estimar contexto de mercado desde datos históricos."""
         if len(historical_df) < 26:
             return {
-                'type': 'unknown',
-                'confidence': 0.0,
-                'trend_strength': 0.0,
-                'volatility_regime': 'normal',
-                'volatility_percentile': 50.0,
-                'in_range': False,
+                "type": "unknown",
+                "confidence": 0.0,
+                "trend_strength": 0.0,
+                "volatility_regime": "normal",
+                "volatility_percentile": 50.0,
+                "in_range": False,
             }
 
         # Detectar tendencia usando EMAs
-        ema_fast = historical_df['ema_fast'].iloc[-1] if 'ema_fast' in historical_df.columns else 0
-        ema_slow = historical_df['ema_slow'].iloc[-1] if 'ema_slow' in historical_df.columns else 0
-        price = historical_df['close'].iloc[-1]
+        ema_fast = historical_df["ema_fast"].iloc[-1] if "ema_fast" in historical_df.columns else 0
+        ema_slow = historical_df["ema_slow"].iloc[-1] if "ema_slow" in historical_df.columns else 0
+        price = historical_df["close"].iloc[-1]
 
         trend_strength = abs(ema_fast - ema_slow) / ema_slow if ema_slow > 0 else 0.0
 
         if ema_fast > ema_slow and price > ema_fast:
-            market_type = 'trend_up'
+            market_type = "trend_up"
         elif ema_fast < ema_slow and price < ema_fast:
-            market_type = 'trend_down'
+            market_type = "trend_down"
         else:
-            market_type = 'range'
+            market_type = "range"
 
         # Volatilidad
         atr_percentile = (
-            historical_df['atr_percentile'].iloc[-1]
-            if 'atr_percentile' in historical_df.columns
+            historical_df["atr_percentile"].iloc[-1]
+            if "atr_percentile" in historical_df.columns
             else 50.0
         )
 
         if atr_percentile >= 75:
-            vol_regime = 'high'
+            vol_regime = "high"
         elif atr_percentile <= 25:
-            vol_regime = 'low'
+            vol_regime = "low"
         else:
-            vol_regime = 'normal'
+            vol_regime = "normal"
 
         return {
-            'type': market_type,
-            'confidence': min(1.0, trend_strength * 10),
-            'trend_strength': trend_strength,
-            'volatility_regime': vol_regime,
-            'volatility_percentile': atr_percentile,
-            'in_range': market_type == 'range',
+            "type": market_type,
+            "confidence": min(1.0, trend_strength * 10),
+            "trend_strength": trend_strength,
+            "volatility_regime": vol_regime,
+            "volatility_percentile": atr_percentile,
+            "in_range": market_type == "range",
         }
 
-    def _simulate_filter_results(self, indicators: Dict, market_context: Dict) -> Dict[str, Dict]:
+    def _simulate_filter_results(self, indicators: dict, market_context: dict) -> dict[str, dict]:
         """Simular resultados de filtros para entrenamiento (simplificado)."""
         # En producción, esto vendría de evaluaciones reales de filtros
         # Por ahora, simulamos resultados basados en indicadores
@@ -565,61 +566,61 @@ class TrainingDataPreparator:
         filter_results = {}
 
         # EMA Filter
-        ema_fast = indicators.get('ema_fast', 0)
-        ema_slow = indicators.get('ema_slow', 0)
-        price = indicators.get('price', 0)
-        filter_results['ema_filter'] = {
-            'passed': price > ema_fast > ema_slow if price > 0 else False,
-            'confidence': abs(ema_fast - ema_slow) / ema_slow if ema_slow > 0 else 0.0,
+        ema_fast = indicators.get("ema_fast", 0)
+        ema_slow = indicators.get("ema_slow", 0)
+        price = indicators.get("price", 0)
+        filter_results["ema_filter"] = {
+            "passed": price > ema_fast > ema_slow if price > 0 else False,
+            "confidence": abs(ema_fast - ema_slow) / ema_slow if ema_slow > 0 else 0.0,
         }
 
         # RSI Filter
-        rsi = indicators.get('rsi', 50)
-        filter_results['rsi_filter'] = {
-            'passed': 40 < rsi < 70,  # Zona de momentum
-            'confidence': 1.0 - abs(rsi - 55) / 55,
+        rsi = indicators.get("rsi", 50)
+        filter_results["rsi_filter"] = {
+            "passed": 40 < rsi < 70,  # Zona de momentum
+            "confidence": 1.0 - abs(rsi - 55) / 55,
         }
 
         # Momentum Filter
-        momentum = indicators.get('momentum_roc', 0)
-        filter_results['momentum_filter'] = {
-            'passed': momentum > 0.01,  # Momentum positivo
-            'confidence': min(1.0, momentum * 50) if momentum > 0 else 0.0,
+        momentum = indicators.get("momentum_roc", 0)
+        filter_results["momentum_filter"] = {
+            "passed": momentum > 0.01,  # Momentum positivo
+            "confidence": min(1.0, momentum * 50) if momentum > 0 else 0.0,
         }
 
         # Volume Filter
-        volume_ratio = indicators.get('volume_ratio', 1.0)
-        filter_results['volume_filter'] = {
-            'passed': volume_ratio > 1.1,
-            'confidence': min(1.0, (volume_ratio - 1.0) / 1.0),
+        volume_ratio = indicators.get("volume_ratio", 1.0)
+        filter_results["volume_filter"] = {
+            "passed": volume_ratio > 1.1,
+            "confidence": min(1.0, (volume_ratio - 1.0) / 1.0),
         }
 
         # ATR Filter
-        atr_percentile = indicators.get('atr_percentile', 50)
-        filter_results['atr_filter'] = {
-            'passed': atr_percentile > 60,  # Alta volatilidad
-            'confidence': (atr_percentile - 50) / 50,
+        atr_percentile = indicators.get("atr_percentile", 50)
+        filter_results["atr_filter"] = {
+            "passed": atr_percentile > 60,  # Alta volatilidad
+            "confidence": (atr_percentile - 50) / 50,
         }
 
         # StochRSI Filter
-        stoch_k = indicators.get('stoch_rsi_k', 50)
-        filter_results['stoch_rsi_filter'] = {
-            'passed': 15 < stoch_k < 85,
-            'confidence': 1.0 - abs(stoch_k - 50) / 50,
+        stoch_k = indicators.get("stoch_rsi_k", 50)
+        filter_results["stoch_rsi_filter"] = {
+            "passed": 15 < stoch_k < 85,
+            "confidence": 1.0 - abs(stoch_k - 50) / 50,
         }
 
         return filter_results
 
-    def _create_trades_timestamp_map(self, trades: List, df: pd.DataFrame) -> Dict[datetime, List]:
+    def _create_trades_timestamp_map(self, trades: list, df: pd.DataFrame) -> dict[datetime, list]:
         """Crear mapa de trades por timestamp."""
-        trades_map: Dict[datetime, List] = {}
+        trades_map: dict[datetime, list] = {}
 
         for trade in trades:
             # Manejar tanto dicts como objetos Trade
             if isinstance(trade, dict):
-                entry_time = trade.get('entry_time')
+                entry_time = trade.get("entry_time")
             else:
-                entry_time = getattr(trade, 'entry_time', None)
+                entry_time = getattr(trade, "entry_time", None)
 
             if entry_time:
                 timestamp = entry_time
@@ -634,7 +635,7 @@ class TrainingDataPreparator:
     def _generate_label_for_timestamp(
         self,
         timestamp: datetime,
-        trades_map: Dict[datetime, List[Trade]],
+        trades_map: dict[datetime, list[Trade]],
         df: pd.DataFrame,
         current_idx: int,
         lookahead_days: int = 10,
@@ -696,13 +697,13 @@ class TrainingDataPreparator:
         for trade in relevant_trades:
             # Manejar tanto dicts como objetos Trade
             if isinstance(trade, dict):
-                status = trade.get('status', '')
-                pnl = trade.get('pnl', 0)
+                status = trade.get("status", "")
+                pnl = trade.get("pnl", 0)
             else:
-                status = getattr(trade, 'status', None)
-                pnl = getattr(trade, 'pnl', None)
+                status = getattr(trade, "status", None)
+                pnl = getattr(trade, "pnl", None)
 
-            if status == TradeStatus.CLOSED or status == 'CLOSED':
+            if status == TradeStatus.CLOSED or status == "CLOSED":
                 total_closed += 1
                 # Considerar exitoso si P&L es positivo
                 if pnl is not None:
@@ -723,7 +724,7 @@ class TrainingDataPreparator:
         return None
 
     def _has_trades_nearby(
-        self, timestamp: datetime, trades_map: Dict[datetime, List[Trade]], window_days: int = 30
+        self, timestamp: datetime, trades_map: dict[datetime, list[Trade]], window_days: int = 30
     ) -> bool:
         """
         Verificar si hay trades cerca de un timestamp (sin importar su resultado).
@@ -740,30 +741,35 @@ class TrainingDataPreparator:
         start_timestamp = timestamp - timedelta(days=window_days // 2)
         end_timestamp = timestamp + timedelta(days=window_days)
 
-        return any(start_timestamp <= trade_date <= end_timestamp for trade_date in trades_map.keys())
+        return any(start_timestamp <= trade_date <= end_timestamp for trade_date in trades_map)
 
     def _get_recent_trades_before_timestamp(
-        self, trades: List[Trade], timestamp: datetime, max_trades: int = 5
-    ) -> List[Dict[str, Any]]:
+        self, trades: list[Trade], timestamp: datetime, max_trades: int = 5
+    ) -> list[dict[str, Any]]:
         """Obtener trades recientes antes de un timestamp."""
         recent_trades = []
 
         for trade in reversed(trades):
             # Manejar tanto dicts como objetos Trade
             if isinstance(trade, dict):
-                entry_time = trade.get('entry_time')
-                status = trade.get('status', '')
-                pnl = trade.get('pnl')
-                exit_time = trade.get('exit_time')
+                entry_time = trade.get("entry_time")
+                status = trade.get("status", "")
+                pnl = trade.get("pnl")
+                exit_time = trade.get("exit_time")
             else:
-                entry_time = getattr(trade, 'entry_time', None)
-                status = getattr(trade, 'status', None)
-                pnl = getattr(trade, 'pnl', None)
-                exit_time = getattr(trade, 'exit_time', None)
+                entry_time = getattr(trade, "entry_time", None)
+                status = getattr(trade, "status", None)
+                pnl = getattr(trade, "pnl", None)
+                exit_time = getattr(trade, "exit_time", None)
 
-            if entry_time and entry_time < timestamp and (status == TradeStatus.CLOSED or status == 'CLOSED') and pnl is not None:
+            if (
+                entry_time
+                and entry_time < timestamp
+                and (status == TradeStatus.CLOSED or status == "CLOSED")
+                and pnl is not None
+            ):
                 recent_trades.append(
-                    {'pnl': float(pnl), 'entry_time': entry_time, 'exit_time': exit_time}
+                    {"pnl": float(pnl), "entry_time": entry_time, "exit_time": exit_time}
                 )
 
                 if len(recent_trades) >= max_trades:
@@ -772,7 +778,7 @@ class TrainingDataPreparator:
         return list(reversed(recent_trades))  # Orden cronológico
 
     def _calculate_recent_win_rate(
-        self, trades: List, timestamp: datetime, window_days: int = 30
+        self, trades: list, timestamp: datetime, window_days: int = 30
     ) -> float:
         """
         Calcular win rate reciente antes de un timestamp.
@@ -792,12 +798,12 @@ class TrainingDataPreparator:
 
         relevant_trades = []
         for t in trades:
-            entry_time = get_attr(t, 'entry_time')
-            status = get_attr(t, 'status')
-            pnl = get_attr(t, 'pnl')
+            entry_time = get_attr(t, "entry_time")
+            status = get_attr(t, "status")
+            pnl = get_attr(t, "pnl")
 
             # Manejar TradeStatus enum o string
-            if hasattr(status, 'name'):
+            if hasattr(status, "name"):
                 status_str = status.name
             elif isinstance(status, str):
                 status_str = status.upper()
@@ -807,7 +813,7 @@ class TrainingDataPreparator:
             if (
                 entry_time
                 and start_timestamp <= entry_time < timestamp
-                and status_str == 'CLOSED'
+                and status_str == "CLOSED"
                 and pnl is not None
             ):
                 relevant_trades.append(t)
@@ -815,5 +821,5 @@ class TrainingDataPreparator:
         if not relevant_trades:
             return 0.5  # Default
 
-        winning_trades = [t for t in relevant_trades if get_attr(t, 'pnl', 0) > 0]
+        winning_trades = [t for t in relevant_trades if get_attr(t, "pnl", 0) > 0]
         return len(winning_trades) / len(relevant_trades) if relevant_trades else 0.5

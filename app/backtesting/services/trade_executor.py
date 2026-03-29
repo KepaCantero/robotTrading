@@ -14,12 +14,10 @@ from __future__ import annotations
 
 import logging
 from decimal import Decimal
-from typing import Callable, Optional
+from typing import TYPE_CHECKING, Callable
 from uuid import uuid4
 
 from app.backtesting.models import BacktestConfig, Trade, TradeStatus
-from app.backtesting.services.pnl_calculator import ProfitAndLossCalculator
-from app.backtesting.services.position_manager import PositionManager
 from app.backtesting.services.transaction_cost_model import (
     BrokerType,
     OrderType,
@@ -30,7 +28,11 @@ from app.backtesting.services.transaction_cost_model import (
 # SHARED UTILITIES: Centralized slippage and trade utilities
 from app.backtesting.shared.slippage_utils import apply_slippage as shared_apply_slippage
 from app.backtesting.shared.trade_utils import build_trade_reason as shared_build_trade_reason
-from app.domain.models.signal import Signal
+
+if TYPE_CHECKING:
+    from app.backtesting.services.pnl_calculator import ProfitAndLossCalculator
+    from app.backtesting.services.position_manager import PositionManager
+    from app.domain.models.signal import Signal
 
 logger = logging.getLogger(__name__)
 
@@ -60,8 +62,8 @@ class TradeExecutor:
         config: BacktestConfig,
         position_manager: PositionManager,
         pnl_calculator: ProfitAndLossCalculator,
-        diagnostic_logger: Optional[object] = None,
-        strategy: Optional[object] = None,
+        diagnostic_logger: object | None = None,
+        strategy: object | None = None,
         use_realistic_costs: bool = True,
         broker_type: BrokerType = BrokerType.INTERACTIVE_BROKERS,
     ):
@@ -114,8 +116,8 @@ class TradeExecutor:
         capital: Decimal,
         close_position_func: Callable,
         validate_profitability_func: Callable,
-        position_size: Optional[Decimal] = None,  # Pass from ComplianceEngine to avoid duplication
-    ) -> tuple[Optional[Trade], Decimal]:
+        position_size: Decimal | None = None,  # Pass from ComplianceEngine to avoid duplication
+    ) -> tuple[Trade | None, Decimal]:
         """
         Execute a buy signal with all validations.
 
@@ -164,7 +166,7 @@ class TradeExecutor:
 
         if position_size <= 0:
             logger.warning(
-                f"BUY {signal.symbol} (strategy={strategy_name}): " f"position_size <= 0, skipping"
+                f"BUY {signal.symbol} (strategy={strategy_name}): position_size <= 0, skipping"
             )
             return None, capital
 
@@ -322,7 +324,7 @@ class TradeExecutor:
         market_data: object,
         capital: Decimal,
         trades: list[Trade],
-    ) -> tuple[Optional[Trade], Decimal]:
+    ) -> tuple[Trade | None, Decimal]:
         """
         Execute a sell signal with P&L calculation.
 
@@ -486,7 +488,7 @@ class TradeExecutor:
 
         return trade, capital + proceeds
 
-    def _get_strategy_commission(self, signal: Signal, strategy_name: str) -> Optional[Decimal]:
+    def _get_strategy_commission(self, signal: Signal, strategy_name: str) -> Decimal | None:
         """Get commission percentage for strategy."""
         from decimal import InvalidOperation
 
@@ -505,7 +507,7 @@ class TradeExecutor:
 
         return None
 
-    def _get_strategy_slippage(self, signal: Signal) -> Optional[Decimal]:
+    def _get_strategy_slippage(self, signal: Signal) -> Decimal | None:
         """Get slippage percentage for strategy."""
         from decimal import InvalidOperation
 
@@ -525,7 +527,7 @@ class TradeExecutor:
         return None
 
     def _apply_slippage(
-        self, price: Decimal, is_buy: bool, slippage_pct: Optional[Decimal] = None
+        self, price: Decimal, is_buy: bool, slippage_pct: Decimal | None = None
     ) -> Decimal:
         """
         Apply slippage to execution price.
@@ -556,8 +558,8 @@ class TradeExecutor:
         side: str,
         quantity: Decimal,
         price: Decimal,
-        signal: Optional[Signal] = None,
-        market_data: Optional[object] = None,
+        signal: Signal | None = None,
+        market_data: object | None = None,
     ) -> TransactionCostResult:
         """
         Calculate transaction costs using TransactionCostModel.
@@ -591,9 +593,11 @@ class TradeExecutor:
                 gross_value=trade_value,
                 commission=commission,
                 total_cost=commission,
-                total_cost_bps=(commission / trade_value * Decimal("10000"))
-                if trade_value > 0
-                else Decimal("0"),
+                total_cost_bps=(
+                    (commission / trade_value * Decimal("10000"))
+                    if trade_value > 0
+                    else Decimal("0")
+                ),
             )
 
         # Use realistic TransactionCostModel

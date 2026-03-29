@@ -13,7 +13,7 @@ tax engine based on the investor's country of tax residence.
 """
 
 import logging
-from typing import Dict, Optional
+from typing import Optional
 
 from app.services.tax_efficiency.engines.base import TaxEngine
 from app.services.tax_efficiency.engines.spain_tax_engine import SpainTaxEngine
@@ -22,7 +22,7 @@ logger = logging.getLogger(__name__)
 
 
 # Registry of available tax engines
-TAX_ENGINES: Dict[str, type] = {
+TAX_ENGINES: dict[str, type] = {
     "ES": SpainTaxEngine,
     # Add more engines as they are implemented:
     # "US": USTaxEngine,
@@ -34,7 +34,7 @@ TAX_ENGINES: Dict[str, type] = {
 
 def get_tax_engine(
     country_code: str = "ES",
-    config: Optional[Dict] = None,
+    config: Optional[dict] = None,
 ) -> TaxEngine:
     """
     Get tax engine for specified country.
@@ -63,7 +63,7 @@ def get_tax_engine(
     """
     if not country_code or len(country_code) != 2:
         raise ValueError(
-            f"Invalid country code '{country_code}'. " "Must be a 2-letter ISO country code."
+            f"Invalid country code '{country_code}'. Must be a 2-letter ISO country code."
         )
 
     country_code = country_code.upper()
@@ -71,9 +71,7 @@ def get_tax_engine(
     engine_class = TAX_ENGINES.get(country_code)
 
     if not engine_class:
-        logger.warning(
-            f"No tax engine implemented for {country_code}, " f"defaulting to Spain engine"
-        )
+        logger.warning(f"No tax engine implemented for {country_code}, defaulting to Spain engine")
         engine_class = SpainTaxEngine
 
     engine = engine_class(config or {})
@@ -105,9 +103,7 @@ def register_tax_engine(country_code: str, engine_class: type) -> None:
         >>> register_tax_engine("PT", PortugalTaxEngine)
     """
     if not issubclass(engine_class, TaxEngine):
-        raise ValueError(
-            f"Engine class must inherit from TaxEngine, " f"got {engine_class.__name__}"
-        )
+        raise ValueError(f"Engine class must inherit from TaxEngine, got {engine_class.__name__}")
 
     country_code = country_code.upper()
     TAX_ENGINES[country_code] = engine_class

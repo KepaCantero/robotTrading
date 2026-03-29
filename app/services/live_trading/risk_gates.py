@@ -21,7 +21,7 @@ import logging
 from dataclasses import dataclass
 from decimal import Decimal
 from enum import Enum
-from typing import Dict, List, Optional, Tuple
+from typing import Optional
 
 from fastapi import Depends
 
@@ -85,8 +85,8 @@ class RiskCheckResult:
 
     passed: bool
     risk_level: RiskLevel
-    violations: List[str] = None
-    warnings: List[str] = None
+    violations: list[str] = None
+    warnings: list[str] = None
 
     def __post_init__(self):
         if self.violations is None:
@@ -125,7 +125,7 @@ class RiskGates:
 
         # Additional risk parameters from config
         self.stop_loss_pct = Decimal(str(thresholds.stop_loss_pct))  # From config: 0.05
-        self.max_risk_per_trade = getattr(config.trading, 'max_risk_per_trade', 0.02)
+        self.max_risk_per_trade = getattr(config.trading, "max_risk_per_trade", 0.02)
         self.circuit_breaker_daily_loss = Decimal(  # Chan #15: 5% daily loss circuit breaker
             str(thresholds.circuit_breaker_daily_loss)
         )  # 0.03
@@ -324,7 +324,7 @@ class RiskGates:
         self.max_intraday_value = capital
         logger.info(f"Start of day capital set to ${capital:,.2f}")
 
-    async def check_daily_loss(self, daily_loss: Decimal) -> Tuple[bool, str]:
+    async def check_daily_loss(self, daily_loss: Decimal) -> tuple[bool, str]:
         """
         Check if daily loss limit exceeded.
 
@@ -344,7 +344,7 @@ class RiskGates:
 
         return True, "Daily loss within limits"
 
-    async def check_drawdown(self, current_value: Decimal, peak_value: Decimal) -> Tuple[bool, str]:
+    async def check_drawdown(self, current_value: Decimal, peak_value: Decimal) -> tuple[bool, str]:
         """
         Check if maximum drawdown exceeded.
 
@@ -370,7 +370,7 @@ class RiskGates:
         self,
         symbol: str,
         target_quantity: Decimal,
-    ) -> Tuple[bool, Optional[Decimal]]:
+    ) -> tuple[bool, Optional[Decimal]]:
         """
         Check if target position quantity is within limits.
 
@@ -390,16 +390,14 @@ class RiskGates:
 
         if target_quantity > max_qty:
             adjusted_qty = max_qty
-            logger.warning(
-                f"⚠️ Adjusted {symbol} quantity from {target_quantity} to {adjusted_qty}"
-            )
+            logger.warning(f"⚠️ Adjusted {symbol} quantity from {target_quantity} to {adjusted_qty}")
             return False, adjusted_qty
 
         return True, target_quantity
 
     async def check_sector_concentration(
         self,
-        sector_allocations: Dict[str, Decimal],
+        sector_allocations: dict[str, Decimal],
     ) -> RiskCheckResult:
         """
         Check concentration by sector.
@@ -426,8 +424,8 @@ class RiskGates:
 
     async def check_correlation_risk(
         self,
-        positions: Dict[str, Decimal],  # symbol → allocation
-        correlations: Dict[Tuple[str, str], Decimal],  # (symbol1, symbol2) → correlation
+        positions: dict[str, Decimal],  # symbol → allocation
+        correlations: dict[tuple[str, str], Decimal],  # (symbol1, symbol2) → correlation
     ) -> RiskCheckResult:
         """
         Check portfolio correlation risk.

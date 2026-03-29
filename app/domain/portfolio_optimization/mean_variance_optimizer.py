@@ -27,13 +27,12 @@ from enum import Enum
 from typing import TYPE_CHECKING
 
 import numpy as np
-from numpy.typing import NDArray
 from scipy.optimize import minimize
 
 from app.shared.config.centralized_config import get_config
 
 if TYPE_CHECKING:
-    pass
+    from numpy.typing import NDArray
 
 logger = logging.getLogger(__name__)
 
@@ -144,8 +143,8 @@ class MeanVarianceOptimizer:
     __slots__ = (
         "_lookback_days",
         "_max_position",
-        "_risk_free_rate",
         "_regularization_gamma",
+        "_risk_free_rate",
         "_sum_tolerance",
     )
 
@@ -153,7 +152,7 @@ class MeanVarianceOptimizer:
         self,
         lookback_days: int = 252,
         max_position: float = 0.20,
-        risk_free_rate: float = None,
+        risk_free_rate: float | None = None,
         regularization_gamma: float = 0.01,
         sum_tolerance: float = 1e-6,
     ) -> None:
@@ -379,8 +378,7 @@ class MeanVarianceOptimizer:
         # Validate covariance matrix is positive semi-definite
         if not self._is_positive_semi_definite(cov_matrix):
             logger.warning(
-                "Covariance matrix is not positive semi-definite. "
-                "Applying nearest PSD correction."
+                "Covariance matrix is not positive semi-definite. Applying nearest PSD correction."
             )
             cov_matrix = self._nearest_positive_semi_definite(cov_matrix)
 
@@ -1067,7 +1065,7 @@ class MeanVarianceOptimizer:
             )
         else:
             logger.info(
-                f"Rule 14: Diversification check passed - " f"Avg correlation={avg_correlation:.2f}"
+                f"Rule 14: Diversification check passed - Avg correlation={avg_correlation:.2f}"
             )
 
         return result
@@ -1198,7 +1196,7 @@ class MeanVarianceOptimizer:
                 expected_risk=0.0,
                 sharpe_ratio=0.0,
                 success=False,
-                message=f"Optimization failed: {str(e)}",
+                message=f"Optimization failed: {e!s}",
                 method=method,
             )
 

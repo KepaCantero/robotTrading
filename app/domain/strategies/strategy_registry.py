@@ -28,7 +28,7 @@ import logging
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Any, Dict, List, Optional, Type, TypeVar
+from typing import Any, TypeVar
 
 logger = logging.getLogger(__name__)
 
@@ -63,7 +63,7 @@ class BaseStrategy(ABC):
         ```
     """
 
-    def __init__(self, config: Dict[str, Any]):
+    def __init__(self, config: dict[str, Any]):
         """
         Initialize strategy with configuration.
 
@@ -105,7 +105,7 @@ class BaseStrategy(ABC):
         """
         return True
 
-    def get_required_parameters(self) -> List[str]:
+    def get_required_parameters(self) -> list[str]:
         """
         Get list of required configuration parameters.
 
@@ -114,7 +114,7 @@ class BaseStrategy(ABC):
         """
         return []
 
-    def get_metadata(self) -> Dict[str, Any]:
+    def get_metadata(self) -> dict[str, Any]:
         """
         Get strategy metadata.
 
@@ -162,15 +162,15 @@ class StrategyContext:
         ```
     """
 
-    def __init__(self, strategy: Optional[BaseStrategy] = None):
+    def __init__(self, strategy: BaseStrategy | None = None):
         """
         Initialize context with optional strategy.
 
         Args:
             strategy: Initial strategy (can be set later)
         """
-        self._strategy: Optional[BaseStrategy] = strategy
-        self._execution_history: List[Dict[str, Any]] = []
+        self._strategy: BaseStrategy | None = strategy
+        self._execution_history: list[dict[str, Any]] = []
 
     def set_strategy(self, strategy: BaseStrategy) -> None:
         """
@@ -187,7 +187,7 @@ class StrategyContext:
         self._strategy = strategy
         logger.info(f"Set strategy to: {strategy.__class__.__name__}")
 
-    def get_strategy(self) -> Optional[BaseStrategy]:
+    def get_strategy(self) -> BaseStrategy | None:
         """
         Get the current strategy.
 
@@ -249,7 +249,7 @@ class StrategyContext:
             logger.error("Strategy execution failed: %s", str(e), exc_info=True)
             raise
 
-    def get_execution_history(self) -> List[Dict[str, Any]]:
+    def get_execution_history(self) -> list[dict[str, Any]]:
         """
         Get strategy execution history.
 
@@ -273,12 +273,12 @@ class StrategyMetadata:
     """
 
     name: str
-    strategy_class: Type[BaseStrategy]
+    strategy_class: type[BaseStrategy]
     description: str = ""
     version: str = "1.0.0"
     category: str = "general"
-    tags: List[str] = field(default_factory=list)
-    required_parameters: List[str] = field(default_factory=list)
+    tags: list[str] = field(default_factory=list)
+    required_parameters: list[str] = field(default_factory=list)
     enabled: bool = True
     registered_at: datetime = field(default_factory=datetime.utcnow)
 
@@ -316,17 +316,17 @@ class StrategyRegistry:
 
     def __init__(self):
         """Initialize empty registry."""
-        self._strategies: Dict[str, StrategyMetadata] = {}
-        self._instances: Dict[str, BaseStrategy] = {}
+        self._strategies: dict[str, StrategyMetadata] = {}
+        self._instances: dict[str, BaseStrategy] = {}
         logger.info("StrategyRegistry initialized")
 
     def register(
         self,
         name: str,
-        strategy_class: Type[BaseStrategy],
+        strategy_class: type[BaseStrategy],
         description: str = "",
         category: str = "general",
-        tags: Optional[List[str]] = None,
+        tags: list[str] | None = None,
         enabled: bool = True,
         replace: bool = False,
     ) -> None:
@@ -422,7 +422,7 @@ class StrategyRegistry:
     def create(
         self,
         name: str,
-        config: Optional[Dict[str, Any]] = None,
+        config: dict[str, Any] | None = None,
         cache_instance: bool = False,
     ) -> BaseStrategy:
         """
@@ -478,7 +478,7 @@ class StrategyRegistry:
             if not strategy.validate_config():
                 missing = strategy.get_required_parameters()
                 raise ValueError(
-                    f"Invalid configuration for '{name}'. " f"Missing parameters: {missing}"
+                    f"Invalid configuration for '{name}'. Missing parameters: {missing}"
                 )
 
             # Cache if requested
@@ -512,10 +512,10 @@ class StrategyRegistry:
 
     def list_strategies(
         self,
-        category: Optional[str] = None,
+        category: str | None = None,
         enabled_only: bool = False,
-        tags: Optional[List[str]] = None,
-    ) -> List[StrategyMetadata]:
+        tags: list[str] | None = None,
+    ) -> list[StrategyMetadata]:
         """
         List registered strategies with optional filtering.
 
@@ -557,7 +557,7 @@ class StrategyRegistry:
 
         return strategies
 
-    def find_by_category(self, category: str) -> List[StrategyMetadata]:
+    def find_by_category(self, category: str) -> list[StrategyMetadata]:
         """
         Find all strategies in a category.
 
@@ -588,7 +588,7 @@ class StrategyRegistry:
         self._instances.clear()
         logger.info("Cleared strategy instance cache")
 
-    def categories(self) -> List[str]:
+    def categories(self) -> list[str]:
         """
         Get list of all categories.
 
@@ -641,7 +641,7 @@ class StrategyFactory:
         ```
     """
 
-    def __init__(self, registry: Optional[StrategyRegistry] = None):
+    def __init__(self, registry: StrategyRegistry | None = None):
         """
         Initialize factory with registry.
 
@@ -653,7 +653,7 @@ class StrategyFactory:
     def create(
         self,
         name: str,
-        config: Optional[Dict[str, Any]] = None,
+        config: dict[str, Any] | None = None,
     ) -> BaseStrategy:
         """
         Create a strategy instance.
@@ -670,7 +670,7 @@ class StrategyFactory:
     def create_context(
         self,
         name: str,
-        config: Optional[Dict[str, Any]] = None,
+        config: dict[str, Any] | None = None,
     ) -> StrategyContext:
         """
         Create a strategy context with the strategy.
@@ -688,8 +688,8 @@ class StrategyFactory:
 
     def create_batch(
         self,
-        strategy_configs: List[tuple[str, Dict[str, Any]]],
-    ) -> List[BaseStrategy]:
+        strategy_configs: list[tuple[str, dict[str, Any]]],
+    ) -> list[BaseStrategy]:
         """
         Create multiple strategies.
 
@@ -714,7 +714,7 @@ class StrategyFactory:
             strategies.append(strategy)
         return strategies
 
-    def list_available(self) -> List[str]:
+    def list_available(self) -> list[str]:
         """
         List available strategy names.
 
@@ -733,8 +733,8 @@ def register_strategy(
     name: str,
     description: str = "",
     category: str = "general",
-    tags: Optional[List[str]] = None,
-    registry: Optional[StrategyRegistry] = None,
+    tags: list[str] | None = None,
+    registry: StrategyRegistry | None = None,
 ):
     """
     Decorator to automatically register strategy classes.
@@ -760,7 +760,7 @@ def register_strategy(
         ```
     """
 
-    def decorator(cls: Type[BaseStrategy]) -> Type[BaseStrategy]:
+    def decorator(cls: type[BaseStrategy]) -> type[BaseStrategy]:
         # Use default registry if none provided
         target_registry = registry or _default_registry
 
@@ -790,7 +790,7 @@ def get_default_registry() -> StrategyRegistry:
     return _default_registry
 
 
-def register_default_strategy(name: str, strategy_class: Type[BaseStrategy], **kwargs) -> None:
+def register_default_strategy(name: str, strategy_class: type[BaseStrategy], **kwargs) -> None:
     """
     Register a strategy in the default registry.
 
@@ -802,7 +802,7 @@ def register_default_strategy(name: str, strategy_class: Type[BaseStrategy], **k
     _default_registry.register(name, strategy_class, **kwargs)
 
 
-def create_default_strategy(name: str, config: Optional[Dict[str, Any]] = None) -> BaseStrategy:
+def create_default_strategy(name: str, config: dict[str, Any] | None = None) -> BaseStrategy:
     """
     Create a strategy from the default registry.
 

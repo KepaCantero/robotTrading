@@ -33,8 +33,8 @@ def get_di_container():
 
 
 __all__ = [
+    "APP_DESCRIPTION",
     "APP_NAME",
     "APP_VERSION",
-    "APP_DESCRIPTION",
     "get_di_container",
 ]

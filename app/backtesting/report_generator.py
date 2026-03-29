@@ -14,7 +14,7 @@ import logging
 import time
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, Optional, TypedDict
+from typing import Optional, TypedDict
 
 from app.backtesting.models import BacktestConfig, BacktestResult, PerformanceMetrics
 
@@ -120,7 +120,7 @@ class BacktestReportGenerator:
         result: BacktestResult,
         config: BacktestConfig,
         backtest_id: str,
-    ) -> Dict[str, Path]:
+    ) -> dict[str, Path]:
         """
         Generate comprehensive backtest report.
 
@@ -142,7 +142,7 @@ class BacktestReportGenerator:
 
         report_start_time = time.time()
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        files: Dict[str, Path] = {}
+        files: dict[str, Path] = {}
         errors = []
 
         # 1. Executive Summary
@@ -317,8 +317,8 @@ class BacktestReportGenerator:
         return f"""# Executive Summary
 
 **Backtest ID:** {config.strategy_name}
-**Period:** {result.start_date.strftime('%Y-%m-%d')} to {result.end_date.strftime('%Y-%m-%d')}
-**Generated:** {datetime.now().strftime('%Y-%m-%d %H:%M:%S UTC')}
+**Period:** {result.start_date.strftime("%Y-%m-%d")} to {result.end_date.strftime("%Y-%m-%d")}
+**Generated:** {datetime.now().strftime("%Y-%m-%d %H:%M:%S UTC")}
 
 ## Performance Overview
 
@@ -419,7 +419,7 @@ Max Position Size: {float(config.max_position_size):.2f}%
 
 ---
 
-*Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S UTC')}*
+*Generated: {datetime.now().strftime("%Y-%m-%d %H:%M:%S UTC")}*
 """
 
     def _generate_risk_analysis(self, result: BacktestResult, config: BacktestConfig) -> str:
@@ -467,7 +467,7 @@ Max Position Size: {float(config.max_position_size):.2f}%
 
 ---
 
-*Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S UTC')}*
+*Generated: {datetime.now().strftime("%Y-%m-%d %H:%M:%S UTC")}*
 """
 
     def _generate_recommendations(
@@ -517,13 +517,13 @@ Max Position Size: {float(config.max_position_size):.2f}%
         rec_text += f"**Generated:** {datetime.now().strftime('%Y-%m-%d %H:%M:%S UTC')}\n\n"
 
         for i, rec in enumerate(recommendations, 1):
-            rec_text += f"""## {i}. [{rec['priority']}] {rec['category']}
+            rec_text += f"""## {i}. [{rec["priority"]}] {rec["category"]}
 
-**Issue:** {rec['issue']}
+**Issue:** {rec["issue"]}
 
-**Recommendation:** {rec['recommendation']}
+**Recommendation:** {rec["recommendation"]}
 
-**Expected Impact:** {rec['expected_impact']}
+**Expected Impact:** {rec["expected_impact"]}
 
 ---
 

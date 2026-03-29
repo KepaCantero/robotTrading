@@ -9,7 +9,7 @@ Rule 28 Compliant: Uses environment variables for credentials.
 
 import logging
 import os
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 from requests.exceptions import HTTPError, RequestException
 
@@ -19,7 +19,12 @@ logger = logging.getLogger(__name__)
 class KnowledgeGraphBuilder:
     """Build knowledge graphs for trading analysis."""
 
-    def __init__(self, graph_uri: str = None, user: str = None, password: str = None):
+    def __init__(
+        self,
+        graph_uri: Optional[str] = None,
+        user: Optional[str] = None,
+        password: Optional[str] = None,
+    ):
         """
         Initialize knowledge graph builder.
 
@@ -72,13 +77,13 @@ class KnowledgeGraphBuilder:
             ValueError,
             OSError,
         ) as e:
-            logger.error(f"❌ Failed to connect to Neo4j: {str(e)}")
+            logger.error(f"❌ Failed to connect to Neo4j: {e!s}")
             self.connected = False
             return False
 
     async def create_asset_nodes(
         self,
-        assets: List[Dict[str, Any]],
+        assets: list[dict[str, Any]],
     ) -> int:
         """
         Create asset nodes in knowledge graph.
@@ -112,12 +117,12 @@ class KnowledgeGraphBuilder:
             ValueError,
             OSError,
         ) as e:
-            logger.error(f"❌ Failed to create asset nodes: {str(e)}")
+            logger.error(f"❌ Failed to create asset nodes: {e!s}")
             return 0
 
     async def create_strategy_nodes(
         self,
-        strategies: List[Dict[str, Any]],
+        strategies: list[dict[str, Any]],
     ) -> int:
         """
         Create strategy nodes in knowledge graph.
@@ -145,12 +150,12 @@ class KnowledgeGraphBuilder:
             return count
 
         except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
-            logger.error(f"❌ Failed to create strategy nodes: {str(e)}")
+            logger.error(f"❌ Failed to create strategy nodes: {e!s}")
             return 0
 
     async def create_correlation_relationships(
         self,
-        correlations: List[Dict[str, Any]],
+        correlations: list[dict[str, Any]],
     ) -> int:
         """
         Create correlation relationships between assets.
@@ -179,12 +184,12 @@ class KnowledgeGraphBuilder:
             return count
 
         except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
-            logger.error(f"❌ Failed to create correlation relationships: {str(e)}")
+            logger.error(f"❌ Failed to create correlation relationships: {e!s}")
             return 0
 
     async def create_strategy_asset_relationships(
         self,
-        relationships: List[Dict[str, str]],
+        relationships: list[dict[str, str]],
     ) -> int:
         """
         Create relationships between strategies and assets they trade.
@@ -213,12 +218,12 @@ class KnowledgeGraphBuilder:
             return count
 
         except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
-            logger.error(f"❌ Failed to create strategy-asset relationships: {str(e)}")
+            logger.error(f"❌ Failed to create strategy-asset relationships: {e!s}")
             return 0
 
     async def create_performance_nodes(
         self,
-        performances: List[Dict[str, Any]],
+        performances: list[dict[str, Any]],
     ) -> int:
         """
         Create performance nodes for strategies.
@@ -256,14 +261,14 @@ class KnowledgeGraphBuilder:
             ValueError,
             OSError,
         ) as e:
-            logger.error(f"❌ Failed to create performance nodes: {str(e)}")
+            logger.error(f"❌ Failed to create performance nodes: {e!s}")
             return 0
 
     async def find_similar_assets(
         self,
         asset_symbol: str,
         limit: int = 10,
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """
         Find assets similar to given asset based on correlations.
 
@@ -300,14 +305,14 @@ class KnowledgeGraphBuilder:
             return similar_assets
 
         except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
-            logger.error(f"❌ Failed to find similar assets: {str(e)}")
+            logger.error(f"❌ Failed to find similar assets: {e!s}")
             return []
 
     async def find_best_strategies_for_asset(
         self,
         asset_symbol: str,
         limit: int = 10,
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """
         Find best performing strategies for an asset.
 
@@ -347,7 +352,7 @@ class KnowledgeGraphBuilder:
             return strategies
 
         except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
-            logger.error(f"❌ Failed to find strategies: {str(e)}")
+            logger.error(f"❌ Failed to find strategies: {e!s}")
             return []
 
     async def find_correlated_assets(
@@ -355,7 +360,7 @@ class KnowledgeGraphBuilder:
         asset_symbol: str,
         min_correlation: float = 0.7,
         limit: int = 20,
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """
         Find assets highly correlated with given asset.
 
@@ -394,10 +399,10 @@ class KnowledgeGraphBuilder:
             return correlated
 
         except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
-            logger.error(f"❌ Failed to find correlated assets: {str(e)}")
+            logger.error(f"❌ Failed to find correlated assets: {e!s}")
             return []
 
-    async def get_strategy_network(self) -> Dict[str, Any]:
+    async def get_strategy_network(self) -> dict[str, Any]:
         """
         Get network statistics for strategies.
 
@@ -429,14 +434,14 @@ class KnowledgeGraphBuilder:
             return network_stats
 
         except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
-            logger.error(f"❌ Failed to get network statistics: {str(e)}")
+            logger.error(f"❌ Failed to get network statistics: {e!s}")
             return {}
 
     async def get_asset_portfolio_recommendations(
         self,
-        current_assets: List[str],
+        current_assets: list[str],
         target_diversification: float = 0.5,
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """
         Get portfolio recommendations based on knowledge graph.
 
@@ -471,10 +476,10 @@ class KnowledgeGraphBuilder:
             return recommendations
 
         except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
-            logger.error(f"❌ Failed to generate recommendations: {str(e)}")
+            logger.error(f"❌ Failed to generate recommendations: {e!s}")
             return []
 
-    def get_builder_status(self) -> Dict[str, Any]:
+    def get_builder_status(self) -> dict[str, Any]:
         """Get knowledge graph builder status."""
         return {
             "connected": self.connected,
@@ -493,7 +498,7 @@ class KnowledgeGraphBuilder:
             self.connected = False
             logger.info("✅ Disconnected from Neo4j")
         except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
-            logger.error(f"❌ Error disconnecting: {str(e)}")
+            logger.error(f"❌ Error disconnecting: {e!s}")
 
 
 # Singleton instance
@@ -501,9 +506,9 @@ _graph_builder: Optional[KnowledgeGraphBuilder] = None
 
 
 def get_knowledge_graph_builder(
-    graph_uri: str = None,
-    user: str = None,
-    password: str = None,
+    graph_uri: Optional[str] = None,
+    user: Optional[str] = None,
+    password: Optional[str] = None,
 ) -> KnowledgeGraphBuilder:
     """Get or create singleton knowledge graph builder.
 

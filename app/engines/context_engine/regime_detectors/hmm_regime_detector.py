@@ -4,8 +4,9 @@ HMMRegimeDetector - Detección de régimen usando Hidden Markov Models.
 Usa HMM para detectar regímenes de mercado (bull, bear, sideways).
 """
 
+import importlib.util
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 import numpy as np
 
@@ -15,65 +16,89 @@ logger = logging.getLogger(__name__)
 from sklearn.preprocessing import StandardScaler
 
 # Optional: hmmlearn with fallback
-try:
-    from hmmlearn import hmm
+# Use importlib to check availability without triggering an unused import
+HMM_AVAILABLE = importlib.util.find_spec("hmmlearn") is not None
 
-    HMM_AVAILABLE = True
+if HMM_AVAILABLE:
     logger.info("hmmlearn is available - using Hidden Markov Models for regime detection")
-except ImportError:
-    HMM_AVAILABLE = False
+else:
     logger.warning(
         "hmmlearn is not available. HMM regime detection will use fallback to GaussianMixture. "
         "For optimal regime detection, install hmmlearn: pip install hmmlearn"
     )
-    # Import fallback
 
-    from sklearn.mixture import GaussianMixture
+from sklearn.mixture import GaussianMixture
 
-    class HMMFallback:
-        """
-        Fallback adapter for hmmlearn using sklearn's GaussianMixture.
 
-        Provides similar interface to hmmlearn.GaussianHMM for backward compatibility.
-        """
+class HMMFallback:
+    """
+    Fallback adapter for hmmlearn using sklearn's GaussianMixture.
 
-        def __init__(self, n_components=2, covariance_type="full", n_iter=100, **kwargs):
-            self.n_components = n_components
-            self.covariance_type = covariance_type
-            self.n_iter = n_iter
-            self.gmm = GaussianMixture(
-                n_components=n_components,
-                covariance_type=covariance_type,
-                max_iter=n_iter,
-                **kwargs,
-            )
-            self.means_ = None
-            self.covars_ = None
-            self.transmat_ = None
+    Provides similar interface to hmmlearn.GaussianHMM for backward compatibility.
+    """
 
-        def fit(self, X):
-            """Fit the Gaussian Mixture Model."""
-            self.gmm.fit(X)
-            self.means_ = self.gmm.means_
-            self.covars_ = self.gmm.covariances_
-            # Create a simple transition matrix (stationary distribution)
-            self.transmat_ = np.full(
-                (self.n_components, self.n_components), 1.0 / self.n_components
-            )
-            return self
+    def __init__(self, n_components=2, covariance_type="full", n_iter=100, **kwargs):
+        self.n_components = n_components
+        self.covariance_type = covariance_type
+        self.n_iter = n_iter
+        self.gmm = GaussianMixture(
+            n_components=n_components,
+            covariance_type=covariance_type,
+            max_iter=n_iter,
+            **kwargs,
+        )
+        self.means_ = None
+        self.covars_ = None
+        self.transmat_ = None
 
-        def predict(self, X):
-            """Predict component labels."""
-            return self.gmm.predict(X)
+    def fit(self, X):
+        """Fit the Gaussian Mixture Model."""
+        self.gmm.fit(X)
+        self.means_ = self.gmm.means_
+        self.covars_ = self.gmm.covariances_
+        # Create a simple transition matrix (stationary distribution)
+        self.transmat_ = np.full((self.n_components, self.n_components), 1.0 / self.n_components)
+        return self
 
-        def score_samples(self, X):
-            """Compute the weighted log probabilities for each sample."""
-            return self.gmm.score_samples(X)
+    def predict(self, X):
+        """Predict component labels."""
+        return self.gmm.predict(X)
 
-    class hmm:
-        """Namespace for fallback HMM implementation."""
+    def score_samples(self, X):
+        """Compute the weighted log probabilities for each sample."""
+        return self.gmm.score_samples(X)
 
-        GaussianHMM = HMMFallback
+
+def _create_gaussian_hmm(n_components=2, covariance_type="full", n_iter=100, **kwargs):
+    """Create a GaussianHMM instance.
+
+    Uses hmmlearn when available, otherwise falls back to HMMFallback.
+    """
+    if HMM_AVAILABLE:
+        from hmmlearn import hmm as _hmm
+
+        return _hmm.GaussianHMM(
+            n_components=n_components,
+            covariance_type=covariance_type,
+            n_iter=n_iter,
+            **kwargs,
+        )
+    return HMMFallback(
+        n_components=n_components,
+        covariance_type=covariance_type,
+        n_iter=n_iter,
+        **kwargs,
+    )
+
+
+class HMM:
+    """Namespace for HMM implementation.
+
+    When hmmlearn is available, delegates to hmmlearn.hmm.GaussianHMM.
+    Otherwise falls back to HMMFallback (GaussianMixture-based).
+    """
+
+    GaussianHMM = staticmethod(_create_gaussian_hmm)
 
 
 class HMMRegimeDetector:
@@ -83,7 +108,7 @@ class HMMRegimeDetector:
     Detecta regímenes ocultos basados en observaciones de precios y volatilidad.
     """
 
-    def __init__(self, config: Dict[str, Any] = None):
+    def __init__(self, config: Optional[dict[str, Any]] = None):
         """
         Inicializar detector HMM.
 
@@ -91,20 +116,20 @@ class HMMRegimeDetector:
             config: Configuración
         """
         config = config or {}
-        self.n_regimes = config.get('n_regimes', 3)  # Bull, Bear, Sideways
-        self.n_features = config.get('n_features', 2)  # Returns, Volatility
-        self.window_size = config.get('window_size', 100)
-        self.min_samples = config.get('min_samples', 50)
+        self.n_regimes = config.get("n_regimes", 3)  # Bull, Bear, Sideways
+        self.n_features = config.get("n_features", 2)  # Returns, Volatility
+        self.window_size = config.get("window_size", 100)
+        self.min_samples = config.get("min_samples", 50)
 
         self.model = None
         self.scaler = StandardScaler()
         self.regime_labels = (
-            ['bear', 'sideways', 'bull']
+            ["bear", "sideways", "bull"]
             if self.n_regimes == 3
-            else [f'regime_{i}' for i in range(self.n_regimes)]
+            else [f"regime_{i}" for i in range(self.n_regimes)]
         )
 
-    def fit(self, prices: List[float]) -> bool:
+    def fit(self, prices: list[float]) -> bool:
         """
         Entrenar modelo HMM con datos históricos.
 
@@ -136,7 +161,7 @@ class HMMRegimeDetector:
                 observations = self.scaler.fit_transform(observations)
 
             # Entrenar HMM
-            self.model = hmm.GaussianHMM(
+            self.model = HMM.GaussianHMM(
                 n_components=self.n_regimes, covariance_type="full", n_iter=100
             )
             self.model.fit(observations)
@@ -148,7 +173,7 @@ class HMMRegimeDetector:
             logger.error(f"Error entrenando HMM: {e}")
             return False
 
-    def detect(self, prices: List[float]) -> Dict[str, Any]:
+    def detect(self, prices: list[float]) -> dict[str, Any]:
         """
         Detectar régimen actual.
 
@@ -165,10 +190,10 @@ class HMMRegimeDetector:
         if not self.model and not self.fit(prices):
             # Intentar entrenar si no está entrenado
             return {
-                'regime': 'unknown',
-                'probability': 0.0,
-                'regime_probabilities': {},
-                'confidence': 0.0,
+                "regime": "unknown",
+                "probability": 0.0,
+                "regime_probabilities": {},
+                "confidence": 0.0,
             }
 
         try:
@@ -210,20 +235,20 @@ class HMMRegimeDetector:
             confidence = float(max(probs))
 
             return {
-                'regime': regime,
-                'probability': probability,
-                'regime_probabilities': regime_probs,
-                'confidence': confidence,
-                'state': int(current_state),
+                "regime": regime,
+                "probability": probability,
+                "regime_probabilities": regime_probs,
+                "confidence": confidence,
+                "state": int(current_state),
             }
 
         except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
             logger.error(f"Error detectando régimen con HMM: {e}")
             return {
-                'regime': 'unknown',
-                'probability': 0.0,
-                'regime_probabilities': {},
-                'confidence': 0.0,
+                "regime": "unknown",
+                "probability": 0.0,
+                "regime_probabilities": {},
+                "confidence": 0.0,
             }
 
     def _calculate_rolling_volatility(self, returns: np.ndarray, window: int = 20) -> np.ndarray:

@@ -9,7 +9,7 @@ import logging
 import time
 from datetime import datetime
 from enum import Enum
-from typing import Dict, List, Optional
+from typing import Optional
 
 logger = logging.getLogger(__name__)
 
@@ -31,8 +31,8 @@ class PrometheusMetric:
         name: str,
         metric_type: MetricType,
         description: str,
-        labels: Optional[List[str]] = None,
-        buckets: Optional[List[float]] = None,
+        labels: Optional[list[str]] = None,
+        buckets: Optional[list[float]] = None,
     ):
         """
         Initialize a Prometheus metric.
@@ -49,7 +49,7 @@ class PrometheusMetric:
         self.description = description
         self.labels = labels or []
         self.buckets = buckets or [0.1, 0.5, 1.0, 5.0, 10.0, 50.0, 100.0]
-        self.values: Dict[str, float] = {}
+        self.values: dict[str, float] = {}
         self.created_at = datetime.now()
 
 
@@ -96,9 +96,9 @@ class PrometheusMetricsCollector:
 
     def __init__(self):
         """Initialize Prometheus metrics collector."""
-        self.metrics: Dict[str, PrometheusMetric] = {}
-        self.metric_values: Dict[str, Dict[str, float]] = {}
-        self.timestamps: Dict[str, float] = {}
+        self.metrics: dict[str, PrometheusMetric] = {}
+        self.metric_values: dict[str, dict[str, float]] = {}
+        self.timestamps: dict[str, float] = {}
         self._initialize_metrics()
         logger.info("✅ PrometheusMetricsCollector initialized")
 
@@ -256,7 +256,7 @@ class PrometheusMetricsCollector:
         name: str,
         metric_type: MetricType,
         description: str,
-        buckets: Optional[List[float]] = None,
+        buckets: Optional[list[float]] = None,
     ) -> None:
         """Register a new metric."""
         metric = PrometheusMetric(
@@ -273,7 +273,7 @@ class PrometheusMetricsCollector:
         self,
         metric_name: str,
         value: float,
-        labels: Optional[Dict[str, str]] = None,
+        labels: Optional[dict[str, str]] = None,
     ) -> bool:
         """
         Set gauge metric value.
@@ -306,7 +306,7 @@ class PrometheusMetricsCollector:
         self,
         metric_name: str,
         value: float = 1.0,
-        labels: Optional[Dict[str, str]] = None,
+        labels: Optional[dict[str, str]] = None,
     ) -> bool:
         """
         Increment counter metric.
@@ -340,7 +340,7 @@ class PrometheusMetricsCollector:
         self,
         metric_name: str,
         value: float,
-        labels: Optional[Dict[str, str]] = None,
+        labels: Optional[dict[str, str]] = None,
     ) -> bool:
         """
         Record histogram observation.
@@ -375,7 +375,7 @@ class PrometheusMetricsCollector:
         logger.debug(f"✅ Observed histogram {metric_name}: {value}")
         return True
 
-    def _build_key(self, metric_name: str, labels: Optional[Dict[str, str]] = None) -> str:
+    def _build_key(self, metric_name: str, labels: Optional[dict[str, str]] = None) -> str:
         """Build metric key with labels."""
         if not labels:
             return metric_name
@@ -386,7 +386,7 @@ class PrometheusMetricsCollector:
     def get_metric_value(
         self,
         metric_name: str,
-        labels: Optional[Dict[str, str]] = None,
+        labels: Optional[dict[str, str]] = None,
     ) -> Optional[float]:
         """Get current metric value."""
         if metric_name not in self.metrics:
@@ -433,8 +433,8 @@ class PrometheusMetricsCollector:
 
                     # Sum and count
                     total = sum(observations)
-                    lines.append(f'{metric_name}_sum{{{key}}} {total}')
-                    lines.append(f'{metric_name}_count{{{key}}} {len(observations)}')
+                    lines.append(f"{metric_name}_sum{{{key}}} {total}")
+                    lines.append(f"{metric_name}_count{{{key}}} {len(observations)}")
 
             else:
                 # Gauge or counter
@@ -448,7 +448,7 @@ class PrometheusMetricsCollector:
 
         return "\n".join(lines)
 
-    def get_metrics_summary(self) -> Dict:
+    def get_metrics_summary(self) -> dict:
         """Get summary of all metrics."""
         summary = {
             "total_metrics": len(self.metrics),
@@ -469,7 +469,7 @@ class PrometheusMetricsCollector:
             summary["metrics"][metric_name] = {
                 "type": metric_type,
                 "description": metric.description,
-                "current_value": list(values.values())[0] if values else None,
+                "current_value": next(iter(values.values())) if values else None,
                 "label_count": len(values),
             }
 

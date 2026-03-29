@@ -54,10 +54,14 @@ from .cross_sectional_consistency import (
 )
 from .cross_validation import (
     PurgedCVConfig,
-    PurgedKFold as PurgedKFoldCV,
     PurgedSplitResult,
-    PurgedTimeSeriesSplit as PurgedTimeSeriesSplitCV,
     cv_score,
+)
+from .cross_validation import (
+    PurgedKFold as PurgedKFoldCV,
+)
+from .cross_validation import (
+    PurgedTimeSeriesSplit as PurgedTimeSeriesSplitCV,
 )
 from .cross_validation_methods import (
     CrossValidation,
@@ -137,101 +141,101 @@ from .walk_forward import (
 )
 
 __all__ = [
+    # Bias-Variance Analysis (Hastie)
+    "BiasVarianceAnalyzer",
+    "BiasVarianceResult",
+    # Bonferroni Correction (Ernest Chan)
+    "BonferroniCorrector",
+    # ESL Cross-Validation Methods (Hastie Chapter 7)
+    "CVMethod",
+    "CVResult",
+    "ConsistencyLevel",
+    # Cross-Sectional Consistency (Ilmanen)
+    "CrossSectionalConsistencyChecker",
+    "CrossSectionalResult",
+    "CrossValidation",
+    "DecileAnalysisResult",
+    "DrawdownValidationError",
+    "DrawdownValidator",
+    "FeatureExplosionLevel",
+    "FeatureExplosionResult",
+    # Feature Explosion Validator
+    "FeatureExplosionValidator",
+    "HypothesisTest",
+    "KFoldCV",
+    "LearningCurveResult",
+    "LeaveOneOutCV",
     # FASE 5.3: Validation Module (New)
     # Models
     "MarketRegime",
+    "ModelComplexityLevel",
+    "MulticollinearityResult",
+    "MultipleTestResult",
+    "NestedCVResult",
+    "NestedCrossValidation",
+    # Overfitting Detection
+    "OverfittingDetector",
     "OverfittingLevel",
     "OverfittingMetrics",
+    # Parameter Stability
+    "ParameterStabilityAnalyzer",
     "ParameterStabilityResult",
+    "ParameterTestResult",
     "PeriodResult",
+    "PnLValidationError",
+    # Task 17: Backtest Fixes
+    "PnLValidator",
+    "PurgedCVConfig",
+    # Purged K-Fold CV (López de Prado Chapter 4)
+    "PurgedKFold",
+    "PurgedKFoldCV",  # Event-aware version from cross_validation.py
+    "PurgedKFoldConfig",
+    "PurgedSplit",
+    "PurgedSplitResult",
+    "PurgedTimeSeriesSplit",
+    "PurgedTimeSeriesSplitCV",
     "RegimeConfig",
-    "RegimeType",
+    # Regime Detection
+    "RegimeDetector",
     "RegimeTransitionMatrix",
+    "RegimeType",
+    "RollingWindowOptimizer",
     "StabilityLevel",
+    "StabilityTestResult",
+    "StratifiedKFoldCV",
+    "TimeSeriesSplitCV",
     "TrendRegime",
     "VolatilityRegime",
     "WalkForwardConfig",
     "WalkForwardResult",
     # Walk-Forward Validation
     "WalkForwardValidator",
-    "RollingWindowOptimizer",
-    "calculate_degradation",
-    "calculate_consistency_score",
-    # Overfitting Detection
-    "OverfittingDetector",
+    "analyze_bias_variance",
+    "analyze_multicollinearity",
     "analyze_parameter_stability",
-    "calculate_overfitting_metrics",
-    "classify_stability",
-    "calculate_stability_score",
-    "detect_parameter_drift",
-    "generate_stability_recommendation",
-    # Regime Detection
-    "RegimeDetector",
-    "classify_market_state",
-    "detect_regime_from_data",
-    # Parameter Stability
-    "ParameterStabilityAnalyzer",
-    "calculate_parameter_stability",
-    "detect_parameter_drift_simple",
-    "filter_stable_parameters",
-    "rank_parameters_by_stability",
-    # Purged K-Fold CV (López de Prado Chapter 4)
-    "PurgedKFold",
-    "PurgedKFoldCV",  # Event-aware version from cross_validation.py
-    "PurgedKFoldConfig",
-    "PurgedCVConfig",
-    "PurgedSplit",
-    "PurgedSplitResult",
-    "PurgedTimeSeriesSplit",
-    "PurgedTimeSeriesSplitCV",
-    "cv_score",
     "apply_embargo",
+    "calculate_consistency_score",
+    "calculate_degradation",
+    "calculate_overfitting_metrics",
+    "calculate_parameter_stability",
+    "calculate_stability_score",
+    "classify_market_state",
+    "classify_stability",
+    "correct_for_multiple_testing",
+    "cross_validate",
     "cross_validate_with_purging",
+    "cv_score",
+    "detect_parameter_drift",
+    "detect_parameter_drift_simple",
+    "detect_regime_from_data",
+    "filter_stable_parameters",
+    "generate_stability_recommendation",
     "get_embargo_indices",
     "get_purge_indices",
-    "purged_kfold_splits",
-    # Bonferroni Correction (Ernest Chan)
-    "BonferroniCorrector",
-    "HypothesisTest",
-    "MultipleTestResult",
-    "ParameterTestResult",
-    "correct_for_multiple_testing",
     "is_strategy_significant",
-    # Cross-Sectional Consistency (Ilmanen)
-    "CrossSectionalConsistencyChecker",
-    "ConsistencyLevel",
-    "DecileAnalysisResult",
-    "CrossSectionalResult",
-    "validate_cross_sectional_consistency",
-    # Bias-Variance Analysis (Hastie)
-    "BiasVarianceAnalyzer",
-    "ModelComplexityLevel",
-    "BiasVarianceResult",
-    "LearningCurveResult",
-    "StabilityTestResult",
-    "analyze_bias_variance",
-    # Feature Explosion Validator
-    "FeatureExplosionValidator",
-    "FeatureExplosionLevel",
-    "FeatureExplosionResult",
-    "MulticollinearityResult",
-    "validate_feature_explosion",
-    "analyze_multicollinearity",
-    # ESL Cross-Validation Methods (Hastie Chapter 7)
-    "CVMethod",
-    "CVResult",
-    "NestedCVResult",
-    "KFoldCV",
-    "LeaveOneOutCV",
-    "StratifiedKFoldCV",
-    "TimeSeriesSplitCV",
-    "NestedCrossValidation",
-    "CrossValidation",
-    "cross_validate",
     "nested_cross_validate",
-    # Task 17: Backtest Fixes
-    "PnLValidator",
-    "PnLValidationError",
-    "DrawdownValidator",
-    "DrawdownValidationError",
+    "purged_kfold_splits",
+    "rank_parameters_by_stability",
+    "validate_cross_sectional_consistency",
+    "validate_feature_explosion",
 ]

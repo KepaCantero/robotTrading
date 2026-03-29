@@ -9,7 +9,7 @@ import asyncio
 import logging
 from datetime import datetime, timedelta
 from decimal import Decimal
-from typing import Dict, Optional
+from typing import ClassVar, Optional
 
 from ib_insync import IB, util
 
@@ -29,7 +29,7 @@ class CurrencyConverter:
     RATE_VALIDITY = timedelta(minutes=5)
 
     # Default fallback rates (used only when IB is unavailable)
-    FALLBACK_RATES = {
+    FALLBACK_RATES: ClassVar[dict] = {
         ("EUR", "USD"): Decimal("1.08"),
         ("USD", "EUR"): Decimal("0.93"),
     }
@@ -42,7 +42,7 @@ class CurrencyConverter:
             ib_connection: Optional IB connection for live rates
         """
         self.ib = ib_connection
-        self._rates_cache: Dict[tuple, tuple] = {}  # (base, quote) -> (rate, timestamp)
+        self._rates_cache: dict[tuple, tuple] = {}  # (base, quote) -> (rate, timestamp)
         self._last_update: Optional[datetime] = None
 
     def _is_rate_valid(self, timestamp: datetime) -> bool:

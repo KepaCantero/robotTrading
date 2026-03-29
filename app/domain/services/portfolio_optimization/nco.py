@@ -11,7 +11,6 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass
-from typing import Dict, List, Optional, Tuple
 
 import numpy as np
 from scipy.cluster.hierarchy import fcluster, linkage
@@ -41,13 +40,13 @@ class NCOResult:
     """Result of Nested Clustered Optimization."""
 
     weights: np.ndarray  # NCO weights
-    cluster_weights: Dict[int, np.ndarray]  # Weights within each cluster
-    cluster_allocation: Dict[int, float]  # Allocation to each cluster
+    cluster_weights: dict[int, np.ndarray]  # Weights within each cluster
+    cluster_allocation: dict[int, float]  # Allocation to each cluster
     n_clusters: int  # Number of clusters used
-    symbols: List[str]  # Asset symbols
+    symbols: list[str]  # Asset symbols
 
     @property
-    def weights_dict(self) -> Dict[str, float]:
+    def weights_dict(self) -> dict[str, float]:
         """Get weights as dictionary."""
         return {symbol: float(weight) for symbol, weight in zip(self.symbols, self.weights)}
 
@@ -86,8 +85,7 @@ class NestedClusteredOptimizer:
 
         if optimization_method not in ["sharpe", "min_variance"]:
             raise ValueError(
-                f"optimization_method must be 'sharpe' or 'min_variance', "
-                f"got {optimization_method}"
+                f"optimization_method must be 'sharpe' or 'min_variance', got {optimization_method}"
             )
 
         self._min_cluster_size = min_cluster_size
@@ -96,9 +94,9 @@ class NestedClusteredOptimizer:
     def optimize(
         self,
         cov_matrix: np.ndarray,
-        expected_returns: Optional[np.ndarray] = None,
-        symbols: Optional[List[str]] = None,
-        n_clusters: Optional[int] = None,
+        expected_returns: np.ndarray | None = None,
+        symbols: list[str] | None = None,
+        n_clusters: int | None = None,
     ) -> NCOResult:
         """
         Compute NCO portfolio weights.
@@ -138,9 +136,9 @@ class NestedClusteredOptimizer:
     def _validate_optimization_inputs(
         self,
         cov_matrix: np.ndarray,
-        expected_returns: Optional[np.ndarray],
-        symbols: Optional[List[str]],
-    ) -> Tuple[np.ndarray, Optional[np.ndarray], List[str]]:
+        expected_returns: np.ndarray | None,
+        symbols: list[str] | None,
+    ) -> tuple[np.ndarray, np.ndarray | None, list[str]]:
         """Validate and sanitize optimization inputs."""
         is_valid, validated_cov, error_msg = validate_covariance_matrix(
             cov_matrix,
@@ -180,8 +178,8 @@ class NestedClusteredOptimizer:
     def _preprocess_covariance_matrix(
         self,
         cov_matrix: np.ndarray,
-        n_clusters: Optional[int],
-    ) -> Tuple[int, np.ndarray, int, np.ndarray]:
+        n_clusters: int | None,
+    ) -> tuple[int, np.ndarray, int, np.ndarray]:
         """Preprocess covariance matrix and create hierarchical clusters."""
         n_assets = cov_matrix.shape[0]
 
@@ -200,10 +198,10 @@ class NestedClusteredOptimizer:
     def _optimize_within_clusters(
         self,
         cov_matrix: np.ndarray,
-        expected_returns: Optional[np.ndarray],
+        expected_returns: np.ndarray | None,
         n_clusters: int,
         assignments: np.ndarray,
-    ) -> Tuple[Dict[int, np.ndarray], Dict[int, float]]:
+    ) -> tuple[dict[int, np.ndarray], dict[int, float]]:
         """Optimize weights within each cluster."""
         cluster_weights = {}
         cluster_vars = {}
@@ -239,12 +237,12 @@ class NestedClusteredOptimizer:
 
     def _postprocess_optimization_results(
         self,
-        cluster_weights: Dict[int, np.ndarray],
-        cluster_vars: Dict[int, float],
+        cluster_weights: dict[int, np.ndarray],
+        cluster_vars: dict[int, float],
         n_clusters: int,
         assignments: np.ndarray,
         n_assets: int,
-        symbols: List[str],
+        symbols: list[str],
     ) -> NCOResult:
         """Allocate across clusters and combine with intra-cluster weights."""
         cluster_allocation = self._allocate_across_clusters(cluster_vars)
@@ -360,7 +358,7 @@ class NestedClusteredOptimizer:
     def _setup_optimization_constraints(
         self,
         n_assets: int,
-    ) -> Tuple[list, list, np.ndarray]:
+    ) -> tuple[list, list, np.ndarray]:
         """Setup constraints, bounds, and initial guess for optimization."""
         constraints = [{"type": "eq", "fun": lambda w: np.sum(w) - 1.0}]
         bounds = [(0.0, 1.0) for _ in range(n_assets)]
@@ -406,8 +404,8 @@ class NestedClusteredOptimizer:
 
     def _allocate_across_clusters(
         self,
-        cluster_vars: Dict[int, float],
-    ) -> Dict[int, float]:
+        cluster_vars: dict[int, float],
+    ) -> dict[int, float]:
         """
         Allocate weight across clusters using inverse variance.
 
@@ -434,10 +432,10 @@ class NestedClusteredOptimizer:
 
 def get_nco_with_multiple_n(
     cov_matrix: np.ndarray,
-    expected_returns: Optional[np.ndarray] = None,
-    symbols: Optional[List[str]] = None,
-    n_clusters_range: Optional[List[int]] = None,
-) -> Dict[int, NCOResult]:
+    expected_returns: np.ndarray | None = None,
+    symbols: list[str] | None = None,
+    n_clusters_range: list[int] | None = None,
+) -> dict[int, NCOResult]:
     """
     Run NCO for multiple cluster numbers and return all results.
 

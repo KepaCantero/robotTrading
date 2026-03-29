@@ -18,7 +18,7 @@ Implementa arquitectura profesional, verificable y auditable con:
 
 import logging
 from collections import defaultdict
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Optional
 
 import numpy as np
 import pandas as pd
@@ -33,17 +33,18 @@ logger = logging.getLogger(__name__)
 
 # Optional dependencies - use numpy/pandas when not available
 try:
-    from statsmodels.regression.linear_model import OLS as sm_OLS
+    from statsmodels.regression.linear_model import OLS as _OLS_IMPL
 
     STATSMODELS_AVAILABLE = True
-
-    def OLS(*args, **kwargs):
-        return sm_OLS(*args, **kwargs)
-
 except ImportError:
-    from app.shared.performance.statsmodels_fallback import OLS
+    from app.shared.performance.statsmodels_fallback import OLS as _OLS_IMPL
 
     STATSMODELS_AVAILABLE = False
+
+
+def ols(*args: object, **kwargs: object) -> object:
+    return _OLS_IMPL(*args, **kwargs)
+
 
 # Import adfuller and kpss from statsmodels or fallback
 try:
@@ -91,12 +92,12 @@ class PairMetrics(BaseModel):
 class AllocationResult(BaseModel):
     """Result of stock allocation."""
 
-    allocations: Dict[str, StockMetrics] = Field(default_factory=dict)
-    pairs: List[PairMetrics] = Field(default_factory=list)
+    allocations: dict[str, StockMetrics] = Field(default_factory=dict)
+    pairs: list[PairMetrics] = Field(default_factory=list)
     residual_capital: float = 0.0
-    decision_logs: List[str] = Field(default_factory=list)
+    decision_logs: list[str] = Field(default_factory=list)
     validation_passed: bool = False
-    validation_errors: List[str] = Field(default_factory=list)
+    validation_errors: list[str] = Field(default_factory=list)
 
 
 class StrategyStockAllocator:
@@ -144,10 +145,10 @@ class StrategyStockAllocator:
         self.indicator_calculator = TechnicalIndicatorCalculator()
 
         # Internal state
-        self.filtered_stocks: Dict[str, pd.DataFrame] = {}
-        self.stock_metrics: Dict[str, Dict[str, Any]] = {}
-        self.pair_metrics: List[PairMetrics] = []
-        self.decision_logs: List[str] = []
+        self.filtered_stocks: dict[str, pd.DataFrame] = {}
+        self.stock_metrics: dict[str, dict[str, Any]] = {}
+        self.pair_metrics: list[PairMetrics] = []
+        self.decision_logs: list[str] = []
 
         logger.info(
             f"StrategyStockAllocator initialized with config from {source}: "
@@ -156,7 +157,7 @@ class StrategyStockAllocator:
             f"MAX_STRATEGY_EXPOSURE={config.MAX_STRATEGY_EXPOSURE:.0%}"
         )
 
-    def filter_stocks(self, historical_data: Dict[str, pd.DataFrame]) -> Dict[str, pd.DataFrame]:
+    def filter_stocks(self, historical_data: dict[str, pd.DataFrame]) -> dict[str, pd.DataFrame]:
         """
         Filter stocks with complete data validation.
 
@@ -188,7 +189,7 @@ class StrategyStockAllocator:
                 continue
 
             # Check required columns
-            required_cols = ['open', 'high', 'low', 'close', 'volume']
+            required_cols = ["open", "high", "low", "close", "volume"]
             if not all(col in df.columns for col in required_cols):
                 rejection_reasons.append(
                     f"Missing required columns: {set(required_cols) - set(df.columns)}"
@@ -240,11 +241,11 @@ class StrategyStockAllocator:
 
             # Check price consistency (high >= low, etc.)
             invalid_prices = (
-                (df['high'] < df['low']).any()
-                or (df['close'] > df['high']).any()
-                or (df['close'] < df['low']).any()
-                or (df['open'] > df['high']).any()
-                or (df['open'] < df['low']).any()
+                (df["high"] < df["low"]).any()
+                or (df["close"] > df["high"]).any()
+                or (df["close"] < df["low"]).any()
+                or (df["open"] > df["high"]).any()
+                or (df["open"] < df["low"]).any()
             )
             if invalid_prices:
                 rejection_reasons.append("Price inconsistencies (high < low, etc.)")
@@ -253,14 +254,14 @@ class StrategyStockAllocator:
                 continue
 
             # Check for zero or negative prices
-            if (df[['open', 'high', 'low', 'close']] <= 0).any().any():
+            if (df[["open", "high", "low", "close"]] <= 0).any().any():
                 rejection_reasons.append("Zero or negative prices")
                 if self.config.LOG_FILTER_REJECTIONS:
                     rejection_log.append(f"{ticker}: Zero or negative prices")
                 continue
 
             # Check volatility
-            prices = df['close'].values
+            prices = df["close"].values
             returns = np.diff(prices) / prices[:-1]
             volatility = np.std(returns)
 
@@ -279,8 +280,8 @@ class StrategyStockAllocator:
 
             # Check liquidity (volume * price) - VERY RELAXED: use 2% of requirement as minimum
             # Target: allow at least 15-20 stocks to pass (increased from 3-5)
-            avg_volume = df['volume'].mean()
-            avg_price = df['close'].mean()
+            avg_volume = df["volume"].mean()
+            avg_price = df["close"].mean()
             avg_liquidity_usd = avg_volume * avg_price
             min_liquidity_required = (
                 self.config.MIN_LIQUIDITY_USD * 0.02
@@ -340,7 +341,7 @@ class StrategyStockAllocator:
             Hurst exponent (0 < H < 1), or None if calculation fails
             H > 0.55: Momentum/trending
             H < 0.45: Mean reverting
-            H ≈ 0.5: Random walk
+            H ~ 0.5: Random walk
         """
         if len(prices) < 50:
             logger.warning(f"Insufficient data for Hurst: {len(prices)} < 50")
@@ -433,7 +434,7 @@ class StrategyStockAllocator:
             log_rs = log_rs[valid_mask]
 
             # Linear regression
-            slope, intercept = np.polyfit(log_lags, log_rs, 1)
+            slope, _intercept = np.polyfit(log_lags, log_rs, 1)
 
             # Hurst exponent is the slope
             hurst = float(slope)
@@ -450,7 +451,7 @@ class StrategyStockAllocator:
             logger.error(f"Error calculating Hurst exponent: {e}", exc_info=True)
             return None
 
-    def classify_market_regime(self, prices: np.ndarray) -> Dict[str, Optional[float]]:
+    def classify_market_regime(self, prices: np.ndarray) -> dict[str, Optional[float]]:
         """
         Classify market regime using Hurst exponent (short and long horizons).
 
@@ -494,7 +495,7 @@ class StrategyStockAllocator:
         logger.debug(f"Regime classification: {result}")
         return result
 
-    def test_stationarity(self, series: pd.Series) -> Dict[str, Any]:
+    def test_stationarity(self, series: pd.Series) -> dict[str, Any]:
         """
         Dual stationarity test: ADF + KPSS.
 
@@ -528,14 +529,14 @@ class StrategyStockAllocator:
                 logger.debug("statsmodels not available - stationarity test skipped")
                 return result
 
-            adf_result = adfuller(clean_series, autolag='AIC')
+            adf_result = adfuller(clean_series, autolag="AIC")
             adf_pvalue = adf_result[1]
             result["adf_pvalue"] = float(adf_pvalue)
             result["adf_stationary"] = adf_pvalue < self.config.ADF_P_VALUE_THRESHOLD
 
             # KPSS Test (null hypothesis: stationary) - REQUIRED: use statsmodels
             try:
-                kpss_result = kpss(clean_series, regression='ct', nlags='auto')
+                kpss_result = kpss(clean_series, regression="ct", nlags="auto")
                 kpss_pvalue = kpss_result[1]
                 result["kpss_pvalue"] = float(kpss_pvalue)
                 result["kpss_stationary"] = kpss_pvalue > self.config.KPSS_P_VALUE_THRESHOLD
@@ -563,7 +564,7 @@ class StrategyStockAllocator:
 
     def calculate_half_life(self, spread: pd.Series) -> Optional[float]:
         """
-        Calculate half-life (τ) from Ornstein-Uhlenbeck model.
+        Calculate half-life (tau) from Ornstein-Uhlenbeck model.
 
         Half-life represents how long it takes for a spread to revert half-way
         to its mean after a deviation.
@@ -584,11 +585,11 @@ class StrategyStockAllocator:
             if len(clean_spread) < 20:
                 return None
 
-            # O-U model: dy(t) = -θ * (y(t) - μ) * dt + σ * dW(t)
-            # where θ is the mean reversion speed
+            # O-U model: dy(t) = -theta * (y(t) - mu) * dt + sigma * dW(t)
+            # where theta is the mean reversion speed
 
             # Estimate using linear regression:
-            # y(t+1) - y(t) = -θ * (y(t) - μ) + ε(t)
+            # y(t+1) - y(t) = -theta * (y(t) - mu) + epsilon(t)
 
             y = clean_spread.values
             y_lag = y[:-1]
@@ -602,22 +603,22 @@ class StrategyStockAllocator:
             y_lag = y_lag[valid_mask]
             y_diff = y_diff[valid_mask]
 
-            # Estimate mean (μ)
+            # Estimate mean (mu)
             mu = np.mean(y_lag)
 
             # Calculate deviation from mean
             y_deviation = y_lag - mu
 
-            # Linear regression: y_diff = -θ * y_deviation + ε
+            # Linear regression: y_diff = -theta * y_deviation + epsilon
             # Use numpy.polyfit for linear regression (valid method for O-U parameter estimation)
             if np.std(y_deviation) > 0:
                 # numpy.polyfit performs linear regression: returns [slope, intercept]
                 coeffs = np.polyfit(y_deviation, y_diff, 1)
-                theta = -float(coeffs[0])  # Negative because: y_diff = -θ * y_deviation
+                theta = -float(coeffs[0])  # Negative because: y_diff = -theta * y_deviation
             else:
                 return None
 
-            # Half-life: τ = -ln(2) / θ
+            # Half-life: tau = -ln(2) / theta
             # Ensure theta is positive and reasonable (mean reversion)
             # Theta should be > 0 for mean reversion, but need to check for numerical issues
             if theta > 1e-10:  # Avoid division by very small numbers
@@ -717,8 +718,8 @@ class StrategyStockAllocator:
             if ARCH_AVAILABLE:
                 try:
                     # Fit GARCH(1,1) model
-                    model = arch_model(clean_returns * 100, vol='Garch', p=1, q=1, rescale=False)
-                    fitted = model.fit(disp='of')
+                    model = arch_model(clean_returns * 100, vol="Garch", p=1, q=1, rescale=False)
+                    fitted = model.fit(disp="of")
 
                     # Forecast volatility
                     forecast = fitted.forecast(horizon=self.config.GARCH_FORECAST_HORIZON)
@@ -740,7 +741,7 @@ class StrategyStockAllocator:
             logger.error(f"Error calculating GARCH volatility: {e}", exc_info=True)
             return None
 
-    def score_momentum(self, ticker: str, data: pd.DataFrame) -> Dict[str, Any]:
+    def score_momentum(self, ticker: str, data: pd.DataFrame) -> dict[str, Any]:
         """
         Score asset for Momentum strategy.
 
@@ -754,13 +755,13 @@ class StrategyStockAllocator:
             Dictionary with scores and metrics
         """
         try:
-            prices = data['close'].values
-            volumes = data['volume'].values if 'volume' in data.columns else None
+            prices = data["close"].values
+            volumes = data["volume"].values if "volume" in data.columns else None
 
             # Calculate technical indicators
             prices_list = prices.tolist()
             rsi = self.indicator_calculator.calculate_rsi(prices_list, 14)
-            macd, macd_signal, macd_histogram = self.indicator_calculator.calculate_macd(
+            macd, _macd_signal, _macd_histogram = self.indicator_calculator.calculate_macd(
                 prices_list
             )
             roc = self.indicator_calculator.calculate_roc(prices_list, period=12)
@@ -778,9 +779,9 @@ class StrategyStockAllocator:
             if self.config.DYNAMIC_WINDOW_ENABLED and len(prices) >= self.config.SLOPE_WINDOW_MIN:
                 window_min = self.config.SLOPE_WINDOW_MIN
                 window_max = min(self.config.SLOPE_WINDOW_MAX, len(prices))
-                best_slope_mse = float('inf')
+                best_slope_mse = float("inf")
                 best_slope_pct = 0.0
-                best_roc_mse = float('inf')
+                best_roc_mse = float("inf")
                 best_roc = roc
 
                 # Try different windows (step by 5 days for efficiency)
@@ -901,11 +902,11 @@ class StrategyStockAllocator:
             logger.error(f"Error scoring momentum for {ticker}: {e}", exc_info=True)
             return {"score": 0.0}
 
-    def score_mean_reversion(self, ticker: str, data: pd.DataFrame) -> Dict[str, Any]:
+    def score_mean_reversion(self, ticker: str, data: pd.DataFrame) -> dict[str, Any]:
         """
         Score asset for Mean Reversion strategy.
 
-        Metrics: Half-life (τ), Z-score, GARCH volatility.
+        Metrics: Half-life (tau), Z-score, GARCH volatility.
 
         Args:
             ticker: Stock ticker
@@ -915,8 +916,8 @@ class StrategyStockAllocator:
             Dictionary with scores and metrics
         """
         try:
-            prices = data['close'].values
-            volumes = data['volume'].values if 'volume' in data.columns else None
+            prices = data["close"].values
+            volumes = data["volume"].values if "volume" in data.columns else None
 
             # Calculate returns
             returns = pd.Series(np.diff(prices) / prices[:-1])
@@ -1014,8 +1015,8 @@ class StrategyStockAllocator:
             return {"score": 0.0}
 
     def score_pairs_trading(
-        self, pair: Tuple[str, str], data1: pd.DataFrame, data2: pd.DataFrame
-    ) -> Dict[str, Any]:
+        self, pair: tuple[str, str], data1: pd.DataFrame, data2: pd.DataFrame
+    ) -> dict[str, Any]:
         """
         Score pair for Pairs Trading strategy.
 
@@ -1044,8 +1045,8 @@ class StrategyStockAllocator:
                     "reason": f"Insufficient lookback: {min_len} < {min_lookback}",
                 }
 
-            prices1 = data1['close'].values[-min_len:]
-            prices2 = data2['close'].values[-min_len:]
+            prices1 = data1["close"].values[-min_len:]
+            prices2 = data2["close"].values[-min_len:]
 
             # Correlation
             correlation = np.corrcoef(prices1, prices2)[0, 1]
@@ -1074,12 +1075,12 @@ class StrategyStockAllocator:
             if min_len >= min_lookback:
                 try:
                     # OLS regression: prices2 = alpha + beta * prices1
-                    model = OLS(prices2, prices1).fit()
+                    model = ols(prices2, prices1).fit()
                     hedge_ratio = float(model.params[0])
                     residuals = model.resid
 
                     # ADF test on residuals - STRICT: p < 0.01 to avoid spurious relationships
-                    adf_result = adfuller(residuals, autolag='AIC')
+                    adf_result = adfuller(residuals, autolag="AIC")
                     adf_pvalue = adf_result[1]
 
                     cointegration_passed = adf_pvalue < self.config.ADF_P_VALUE_THRESHOLD  # 0.01
@@ -1133,7 +1134,7 @@ class StrategyStockAllocator:
                     return {
                         "score": 0.0,
                         "rejected": True,
-                        "reason": f"Cointegration test error: {str(e)}",
+                        "reason": f"Cointegration test error: {e!s}",
                     }
             else:
                 return {
@@ -1162,8 +1163,8 @@ class StrategyStockAllocator:
                 }
 
             # Liquidity (use average of both assets)
-            volumes1 = data1['volume'].values[-min_len:] if 'volume' in data1.columns else None
-            volumes2 = data2['volume'].values[-min_len:] if 'volume' in data2.columns else None
+            volumes1 = data1["volume"].values[-min_len:] if "volume" in data1.columns else None
+            volumes2 = data2["volume"].values[-min_len:] if "volume" in data2.columns else None
 
             liquidity_score = 0.5
             if volumes1 is not None and volumes2 is not None:
@@ -1214,12 +1215,12 @@ class StrategyStockAllocator:
             return {"score": 0.0, "rejected": True}
 
     def calculate_wcm_scores(
-        self, filtered_stocks: Dict[str, pd.DataFrame]
-    ) -> Dict[str, Dict[str, float]]:
+        self, filtered_stocks: dict[str, pd.DataFrame]
+    ) -> dict[str, dict[str, float]]:
         """
         Calculate Weighted Scoring Model (WCM) scores for all assets.
 
-        Normalizes metrics and calculates SPS_{i,k} = Σ(W_{k,j} × Score_{i,j}^{Norm})
+        Normalizes metrics and calculates SPS_{i,k} = Sigma(W_{k,j} * Score_{i,j}^{Norm})
 
         Args:
             filtered_stocks: Dictionary of filtered stocks with data
@@ -1361,12 +1362,12 @@ class StrategyStockAllocator:
         logger.info(f"Calculated scores for {len(all_scores)} assets and {len(pair_scores)} pairs")
         return all_scores
 
-    def allocate_capital_ERC(
+    def allocate_capital_erc(
         self,
-        scores: Dict[str, Dict[str, float]],
+        scores: dict[str, dict[str, float]],
         total_capital: float,
-        strategy_allocations: Dict[str, float],
-    ) -> Dict[str, float]:
+        strategy_allocations: dict[str, float],
+    ) -> dict[str, float]:
         """
         Allocate capital using ERC (Equal Risk Contribution) / Risk Parity.
 
@@ -1392,7 +1393,7 @@ class StrategyStockAllocator:
             returns_dict = {}
             for ticker in tickers:
                 if ticker in self.filtered_stocks:
-                    prices = self.filtered_stocks[ticker]['close'].values
+                    prices = self.filtered_stocks[ticker]["close"].values
                     returns = np.diff(prices) / prices[:-1]
                     returns_dict[ticker] = returns
 
@@ -1400,7 +1401,7 @@ class StrategyStockAllocator:
                 logger.warning("No returns data available for ERC - using equal weights")
                 # Equal weights allocation (valid method when no covariance data)
                 equal_weight = 1.0 / len(tickers)
-                return {ticker: total_capital * equal_weight for ticker in tickers}
+                return dict.fromkeys(tickers, total_capital * equal_weight)
 
             # Build covariance matrix
             min_len = min(len(r) for r in returns_dict.values())
@@ -1432,7 +1433,7 @@ class StrategyStockAllocator:
                 return variance_risk_contrib
 
             # Constraints: weights sum to 1
-            constraints = [{'type': 'eq', 'fun': lambda w: np.sum(w) - 1.0}]
+            constraints = [{"type": "eq", "fun": lambda w: np.sum(w) - 1.0}]
 
             # Bounds: each weight between 0 and max_strategy_exposure
             max_weight = self.config.MAX_STRATEGY_EXPOSURE
@@ -1442,12 +1443,12 @@ class StrategyStockAllocator:
             result = minimize(
                 objective,
                 initial_weights,
-                method='SLSQP',
+                method="SLSQP",
                 bounds=bounds,
                 constraints=constraints,
                 options={
-                    'maxiter': self.config.ERC_MAX_ITERATIONS,
-                    'ftol': self.config.ERC_OPTIMIZATION_TOLERANCE,
+                    "maxiter": self.config.ERC_MAX_ITERATIONS,
+                    "ftol": self.config.ERC_OPTIMIZATION_TOLERANCE,
                 },
             )
 
@@ -1485,7 +1486,7 @@ class StrategyStockAllocator:
                 # Equal weights allocation (valid method when optimization fails)
                 # BUT: Cap at MAX_STRATEGY_EXPOSURE if equal weight exceeds limit
                 equal_weight = min(1.0 / len(tickers), self.config.MAX_STRATEGY_EXPOSURE)
-                allocations = {ticker: total_capital * equal_weight for ticker in tickers}
+                allocations = dict.fromkeys(tickers, total_capital * equal_weight)
 
                 # If we capped weights, we need to normalize
                 total_allocated = sum(allocations.values())
@@ -1536,7 +1537,7 @@ class StrategyStockAllocator:
                 return {}
 
             equal_weight = 1.0 / len(tickers)
-            allocations = {ticker: total_capital * equal_weight for ticker in tickers}
+            allocations = dict.fromkeys(tickers, total_capital * equal_weight)
 
             # Fix floating point errors
             allocated_sum = sum(allocations.values())
@@ -1549,17 +1550,17 @@ class StrategyStockAllocator:
 
     def validate_assignment(
         self,
-        allocations: Dict[str, StockMetrics],
+        allocations: dict[str, StockMetrics],
         total_capital: float,
-        strategy_allocations: Dict[str, float],
-    ) -> Tuple[bool, List[str]]:
+        strategy_allocations: dict[str, float],
+    ) -> tuple[bool, list[str]]:
         """
         Validate final allocation.
 
         Checks:
         - Capital total assigned = capital initial
         - No limits exceeded
-        - Cointegration and τ validated
+        - Cointegration and tau validated
         - No strategy overlap
 
         Args:
@@ -1590,7 +1591,11 @@ class StrategyStockAllocator:
                     )
 
                 # Check half-life if mean reversion
-                if alloc.strategy == "mean_reversion" and alloc.half_life_tau is not None and alloc.half_life_tau > self.config.MAX_HALF_LIFE_DAYS:
+                if (
+                    alloc.strategy == "mean_reversion"
+                    and alloc.half_life_tau is not None
+                    and alloc.half_life_tau > self.config.MAX_HALF_LIFE_DAYS
+                ):
                     errors.append(
                         f"{ticker}: Half-life {alloc.half_life_tau:.2f} > max {self.config.MAX_HALF_LIFE_DAYS}"
                     )
@@ -1631,15 +1636,15 @@ class StrategyStockAllocator:
 
         except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.error(f"Error validating allocation: {e}", exc_info=True)
-            return False, [f"Validation error: {str(e)}"]
+            return False, [f"Validation error: {e!s}"]
 
     def generate_output(
-        self, allocations: Dict[str, StockMetrics], pairs: List[PairMetrics]
+        self, allocations: dict[str, StockMetrics], pairs: list[PairMetrics]
     ) -> pd.DataFrame:
         """
         Generate consolidated output DataFrame.
 
-        Columns: Ticker, Estrategia, Peso, Capital, SPS, Sortino, H_long, H_short, τ, σ_GARCH, Decision_Log.
+        Columns: Ticker, Estrategia, Peso, Capital, SPS, Sortino, H_long, H_short, tau, sigma_GARCH, Decision_Log.
 
         Args:
             allocations: Dictionary of allocations
@@ -1662,8 +1667,8 @@ class StrategyStockAllocator:
                 ),
                 "H_long": f"{alloc.h_long:.4f}" if alloc.h_long is not None else "N/A",
                 "H_short": f"{alloc.h_short:.4f}" if alloc.h_short is not None else "N/A",
-                "τ": f"{alloc.half_life_tau:.2f}" if alloc.half_life_tau is not None else "N/A",
-                "σ_GARCH": (
+                "tau": f"{alloc.half_life_tau:.2f}" if alloc.half_life_tau is not None else "N/A",
+                "sigma_GARCH": (
                     f"{alloc.garch_volatility:.4f}" if alloc.garch_volatility is not None else "N/A"
                 ),
                 "Decision_Log": alloc.decision_log,
@@ -1681,8 +1686,8 @@ class StrategyStockAllocator:
                 "Sortino": "N/A",
                 "H_long": "N/A",
                 "H_short": "N/A",
-                "τ": f"{pair.half_life_tau:.2f}" if pair.half_life_tau is not None else "N/A",
-                "σ_GARCH": "N/A",
+                "tau": f"{pair.half_life_tau:.2f}" if pair.half_life_tau is not None else "N/A",
+                "sigma_GARCH": "N/A",
                 "Decision_Log": pair.decision_log,
             }
             rows.append(row)
@@ -1693,9 +1698,9 @@ class StrategyStockAllocator:
 
     def allocate(
         self,
-        historical_data: Dict[str, pd.DataFrame],
+        historical_data: dict[str, pd.DataFrame],
         total_capital: float,
-        strategy_allocations: Optional[Dict[str, float]] = None,
+        strategy_allocations: Optional[dict[str, float]] = None,
     ) -> AllocationResult:
         """
         Main allocation method: complete pipeline from data to allocation.
@@ -1758,11 +1763,11 @@ class StrategyStockAllocator:
             )
         elif len(sorted_pairs) > 0:
             logger.warning(
-                f"⚠️ Found {len(sorted_pairs)} pairs but none were assigned (MAX_ASSETS_PER_PAIR={self.config.MAX_ASSETS_PER_PAIR} limit reached)"
+                f"⚠ Found {len(sorted_pairs)} pairs but none were assigned (MAX_ASSETS_PER_PAIR={self.config.MAX_ASSETS_PER_PAIR} limit reached)"
             )
         else:
             logger.info(
-                f"ℹ️ No pairs found to assign (checked {len(self.pair_metrics)} pairs in pair_metrics)"
+                f"i No pairs found to assign (checked {len(self.pair_metrics)} pairs in pair_metrics)"
             )
 
         # Assign remaining assets to Momentum or Mean Reversion
@@ -1796,7 +1801,7 @@ class StrategyStockAllocator:
             strategy_assignments[moved_ticker] = "momentum"
             momentum_tickers.append(moved_ticker)
             logger.info(
-                f"⚠️ Momentum had no tickers, reassigned {moved_ticker} from mean_reversion to momentum"
+                f"⚠ Momentum had no tickers, reassigned {moved_ticker} from mean_reversion to momentum"
             )
         elif len(mean_reversion_tickers) == 0 and len(momentum_tickers) > 1:
             # Move one ticker from momentum to mean_reversion
@@ -1804,7 +1809,7 @@ class StrategyStockAllocator:
             strategy_assignments[moved_ticker] = "mean_reversion"
             mean_reversion_tickers.append(moved_ticker)
             logger.info(
-                f"⚠️ Mean Reversion had no tickers, reassigned {moved_ticker} from momentum to mean_reversion"
+                f"⚠ Mean Reversion had no tickers, reassigned {moved_ticker} from momentum to mean_reversion"
             )
 
         # ENSURE MINIMUM TICKERS: If we have very few tickers assigned, expand assignments
@@ -1817,12 +1822,12 @@ class StrategyStockAllocator:
         # If we have very few assigned, assign ALL available tickers (no filtering by score)
         if total_assigned < min_target_tickers:
             unassigned_tickers = [
-                ticker for ticker in all_scores.keys() if ticker not in strategy_assignments
+                ticker for ticker in all_scores if ticker not in strategy_assignments
             ]
 
             if len(unassigned_tickers) > 0:
                 logger.info(
-                    f"⚠️ Only {total_assigned} tickers assigned (need {min_target_tickers}), "
+                    f"⚠ Only {total_assigned} tickers assigned (need {min_target_tickers}), "
                     f"assigning ALL {len(unassigned_tickers)} remaining tickers to utilize capital"
                 )
 
@@ -1898,13 +1903,13 @@ class StrategyStockAllocator:
                 continue
 
             # Calculate scores for this strategy
-            # FIX: allocate_capital_ERC expects Dict[str, Dict[str, float]] where inner dict has strategy scores
+            # FIX: allocate_capital_erc expects Dict[str, Dict[str, float]] where inner dict has strategy scores
             # all_scores is Dict[str, Dict[str, float]] with format: {ticker: {strategy: score}}
             # So we need to pass the scores correctly
             strategy_scores = {ticker: all_scores.get(ticker, {}) for ticker in strategy_tickers}
 
             # ERC allocation within strategy
-            strategy_allocs = self.allocate_capital_ERC(
+            strategy_allocs = self.allocate_capital_erc(
                 strategy_scores, strategy_capital, {strategy: strategy_capital}
             )
 
@@ -1952,7 +1957,7 @@ class StrategyStockAllocator:
         # The goal is to use ALL capital, not leave residual
         if unused_capital > 0.01 and len(final_allocations) > 0:
             logger.warning(
-                f"⚠️ Unallocated capital detected: ${unused_capital:,.2f}. "
+                f"⚠ Unallocated capital detected: ${unused_capital:,.2f}. "
                 f"Redistributing to {len(final_allocations)} active allocations (respecting {max_weight_per_ticker:.1%} limit)."
             )
 

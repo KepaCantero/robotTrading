@@ -3,7 +3,7 @@ MomentumFilter - Filtro de momentum usando Rate of Change (ROC).
 """
 
 import logging
-from typing import Dict
+from typing import Optional
 
 from ..base_filter import BaseFilter
 
@@ -18,7 +18,11 @@ class MomentumFilter(BaseFilter):
     """
 
     def __init__(
-        self, config: Dict = None, preset: str = "balanced", tier: str = None, use_yaml: bool = True
+        self,
+        config: Optional[dict] = None,
+        preset: str = "balanced",
+        tier: Optional[str] = None,
+        use_yaml: bool = True,
     ):
         """Inicializar filtro de momentum."""
         super().__init__("momentum_filter", config, preset, tier, use_yaml)
@@ -34,7 +38,7 @@ class MomentumFilter(BaseFilter):
         # FIX: Raised from -0.015 - allow earlier SELL signals on weakening momentum
         self.min_negative_momentum = self.thresholds.get("min_negative_momentum", -0.005)
 
-    def _apply_filter_logic(self, indicators: Dict, market_context: Dict, signal_type: str) -> Dict:
+    def _apply_filter_logic(self, indicators: dict, market_context: dict, signal_type: str) -> dict:
         """Aplicar lógica del filtro de momentum."""
         momentum = indicators.get("momentum_roc")
         if momentum is None:
@@ -43,10 +47,10 @@ class MomentumFilter(BaseFilter):
 
         if momentum is None:
             return {
-                'passed': False,
-                'confidence': 0.0,
-                'reason': 'Momentum indicator missing',
-                'metadata': {},
+                "passed": False,
+                "confidence": 0.0,
+                "reason": "Momentum indicator missing",
+                "metadata": {},
             }
 
         if signal_type == "BUY":
@@ -58,21 +62,21 @@ class MomentumFilter(BaseFilter):
                 confidence = 0.6 + (normalized_momentum * 0.4)
 
                 return {
-                    'passed': True,
-                    'confidence': confidence,
-                    'reason': f'Positive momentum {momentum:.4f} >= threshold {self.min_positive_momentum:.4f}',
-                    'metadata': {
-                        'momentum': momentum,
-                        'threshold': self.min_positive_momentum,
-                        'normalized': normalized_momentum,
+                    "passed": True,
+                    "confidence": confidence,
+                    "reason": f"Positive momentum {momentum:.4f} >= threshold {self.min_positive_momentum:.4f}",
+                    "metadata": {
+                        "momentum": momentum,
+                        "threshold": self.min_positive_momentum,
+                        "normalized": normalized_momentum,
                     },
                 }
             else:
                 return {
-                    'passed': False,
-                    'confidence': 0.0,
-                    'reason': f'Momentum {momentum:.4f} below threshold {self.min_positive_momentum:.4f}',
-                    'metadata': {'momentum': momentum},
+                    "passed": False,
+                    "confidence": 0.0,
+                    "reason": f"Momentum {momentum:.4f} below threshold {self.min_positive_momentum:.4f}",
+                    "metadata": {"momentum": momentum},
                 }
 
         elif signal_type == "SELL":
@@ -82,21 +86,21 @@ class MomentumFilter(BaseFilter):
                 confidence = 0.6 + (normalized_momentum * 0.4)
 
                 return {
-                    'passed': True,
-                    'confidence': confidence,
-                    'reason': f'Negative momentum {momentum:.4f} <= threshold {self.min_negative_momentum:.4f}',
-                    'metadata': {
-                        'momentum': momentum,
-                        'threshold': self.min_negative_momentum,
-                        'normalized': normalized_momentum,
+                    "passed": True,
+                    "confidence": confidence,
+                    "reason": f"Negative momentum {momentum:.4f} <= threshold {self.min_negative_momentum:.4f}",
+                    "metadata": {
+                        "momentum": momentum,
+                        "threshold": self.min_negative_momentum,
+                        "normalized": normalized_momentum,
                     },
                 }
             else:
                 return {
-                    'passed': False,
-                    'confidence': 0.0,
-                    'reason': f'Momentum {momentum:.4f} above threshold {self.min_negative_momentum:.4f}',
-                    'metadata': {'momentum': momentum},
+                    "passed": False,
+                    "confidence": 0.0,
+                    "reason": f"Momentum {momentum:.4f} above threshold {self.min_negative_momentum:.4f}",
+                    "metadata": {"momentum": momentum},
                 }
 
-        return {'passed': False, 'confidence': 0.0, 'reason': 'Unknown signal type', 'metadata': {}}
+        return {"passed": False, "confidence": 0.0, "reason": "Unknown signal type", "metadata": {}}

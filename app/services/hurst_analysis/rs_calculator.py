@@ -278,10 +278,7 @@ def _calculate_hurst_rs_numba(
         variance += diff_window * diff_window
 
     # Calculate slope (Hurst exponent)
-    if variance > 0:
-        hurst = covariance / variance
-    else:
-        hurst = 0.5
+    hurst = covariance / variance if variance > 0 else 0.5
 
     # Clip to reasonable bounds [0, 1]
     if hurst < 0:

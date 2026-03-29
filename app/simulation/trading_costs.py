@@ -14,6 +14,7 @@ Key concepts implemented:
 Reference:
     Harris, L. (2003). Trading and Exchanges, Chapters 8-9.
 """
+
 # mypy: ignore-errors
 
 import logging
@@ -21,7 +22,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from decimal import Decimal
 from enum import Enum
-from typing import Dict, List, Optional, Tuple
+from typing import Optional
 
 import numpy as np
 
@@ -76,7 +77,7 @@ class CostBreakdown:
     quantity: Decimal
     execution_price: Decimal
     benchmark_price: Decimal
-    components: Dict[CostComponent, Decimal] = field(default_factory=dict)
+    components: dict[CostComponent, Decimal] = field(default_factory=dict)
     total_cost: Decimal = Decimal("0")
     total_cost_bps: Decimal = Decimal("0")
     effective_spread: Decimal = Decimal("0")
@@ -116,7 +117,7 @@ class ExecutionQualityMetrics:
     execution_id: str
     fill_rate: Decimal
     avg_fill_price: Decimal
-    benchmark_prices: Dict[str, Decimal]
+    benchmark_prices: dict[str, Decimal]
     effective_spread_bps: Decimal
     price_improvement_bps: Decimal = Decimal("0")
     timing_cost_bps: Decimal = Decimal("0")
@@ -185,7 +186,7 @@ class MarketImpactModel:
         current_price: float,
         adv: Optional[float] = None,
         volatility: Optional[float] = None,
-    ) -> Tuple[float, float]:
+    ) -> tuple[float, float]:
         """
         Calculate market impact for an order.
 
@@ -252,7 +253,7 @@ class BidAskSpreadAnalyzer:
 
     def __init__(self):
         """Initialize the spread analyzer."""
-        self._spread_history: List[Tuple[datetime, Decimal, Decimal]] = []
+        self._spread_history: list[tuple[datetime, Decimal, Decimal]] = []
 
     def add_spread_observation(
         self,
@@ -277,7 +278,7 @@ class BidAskSpreadAnalyzer:
         total = sum(spread for _, spread, _ in observations)
         return total / Decimal(str(len(observations)))
 
-    def get_spread_statistics(self) -> Dict[str, float]:
+    def get_spread_statistics(self) -> dict[str, float]:
         """Get spread statistics."""
         if not self._spread_history:
             return {}
@@ -359,7 +360,7 @@ class TimingRiskCalculator:
         volatility: float,
         execution_period_hours: float,
         arrival_price: Optional[Decimal] = None,
-    ) -> Dict[str, Decimal]:
+    ) -> dict[str, Decimal]:
         """
         Calculate timing risk for an execution.
 
@@ -603,7 +604,7 @@ class TradingCostAnalyzer:
         cost_breakdown: CostBreakdown,
         fill_rate: Optional[Decimal] = None,
         peer_fill_rate: Optional[Decimal] = None,
-        market_conditions: Optional[Dict[str, float]] = None,
+        market_conditions: Optional[dict[str, float]] = None,
     ) -> ExecutionQualityMetrics:
         """
         Evaluate execution quality on a 0-100 scale.

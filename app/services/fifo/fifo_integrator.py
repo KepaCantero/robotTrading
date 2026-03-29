@@ -24,7 +24,7 @@ import logging
 from dataclasses import dataclass, field
 from datetime import datetime
 from decimal import Decimal
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 from uuid import UUID, uuid4
 
 from sqlalchemy import select
@@ -61,7 +61,7 @@ class Trade:
     broker_trade_id: Optional[str] = None
     order_id: Optional[str] = None
     fill_type: str = "FULL"  # FULL or PARTIAL
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
@@ -123,7 +123,7 @@ class FIFOIntegrator:
             user_id: User UUID for tax reporting. Defaults to settings value.
         """
         self.user_id = user_id or uuid4()
-        self._accounts_cache: Dict[str, UUID] = {}
+        self._accounts_cache: dict[str, UUID] = {}
         self.logger = logging.getLogger(self.__class__.__name__)
 
     async def initialize(self) -> None:
@@ -398,7 +398,7 @@ class FIFOIntegrator:
         except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
             self.logger.error(f"Error handling position closed: {e}")
 
-    async def get_open_lots(self, symbol: str) -> List[LotInfo]:
+    async def get_open_lots(self, symbol: str) -> list[LotInfo]:
         """
         Get all open lots for a symbol.
 
@@ -510,7 +510,7 @@ class FIFOIntegrator:
 
     async def get_realized_gains_losses(
         self, symbol: Optional[str] = None, year: Optional[int] = None
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Get realized gains and losses summary.
 
@@ -566,7 +566,7 @@ class FIFOIntegrator:
             self.logger.error(f"Error getting realized gains/losses: {e}")
             return {}
 
-    async def verify_fifo_integrity(self, symbol: str) -> Dict[str, Any]:
+    async def verify_fifo_integrity(self, symbol: str) -> dict[str, Any]:
         """
         Verify FIFO lot integrity for a symbol.
 

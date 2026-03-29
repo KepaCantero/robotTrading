@@ -26,10 +26,14 @@ from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from decimal import Decimal
 from enum import Enum
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 
-from app.services.transaction_costs import ExecutionAlgorithm  # Enum
-from app.services.transaction_costs import MarketData, OrderSpecification, TransactionCostModel
+from app.services.transaction_costs import (
+    ExecutionAlgorithm,  # Enum
+    MarketData,
+    OrderSpecification,
+    TransactionCostModel,
+)
 from app.shared.config.centralized_config import get_config
 
 logger = logging.getLogger(__name__)
@@ -86,16 +90,16 @@ class ChildOrder:
     side: OrderSide
     quantity: Decimal
     order_type: OrderType
-    limit_price: Optional[Decimal] = None
-    stop_price: Optional[Decimal] = None
+    limit_price: Decimal | None = None
+    stop_price: Decimal | None = None
     time_in_force: TimeInForce = TimeInForce.DAY
-    target_time: Optional[datetime] = None
-    target_participation_rate: Optional[float] = None
+    target_time: datetime | None = None
+    target_participation_rate: float | None = None
     status: OrderStatus = OrderStatus.PENDING
     filled_quantity: Decimal = Decimal("0")
     average_fill_price: Decimal = Decimal("0")
     created_at: datetime = field(default_factory=datetime.now)
-    filled_at: Optional[datetime] = None
+    filled_at: datetime | None = None
 
 
 @dataclass
@@ -124,8 +128,8 @@ class IntradayVolumeProfile:
     """Historical intraday volume distribution for VWAP/TWAP."""
 
     symbol: str
-    time_bins: List[datetime.time]  # Time intervals
-    volume_distribution: List[float]  # % of volume at each interval
+    time_bins: list[datetime.time]  # Time intervals
+    volume_distribution: list[float]  # % of volume at each interval
     total_daily_volume: Decimal
 
 
@@ -140,7 +144,7 @@ class ExecutionAlgoBase(ABC):
     4. Achieve target participation or benchmark
     """
 
-    def __init__(self, config: Dict[str, Any]):
+    def __init__(self, config: dict[str, Any]):
         self.config = config
         self.name = config.get("name", self.__class__.__name__)
         self.algorithm_type = ExecutionAlgorithm[config.get("algorithm_type", "MARKET").upper()]
@@ -154,7 +158,7 @@ class ExecutionAlgoBase(ABC):
         market_data: MarketData,
         start_time: datetime,
         end_time: datetime,
-    ) -> List[ChildOrder]:
+    ) -> list[ChildOrder]:
         """
         Generate child orders for execution.
 
@@ -172,9 +176,9 @@ class ExecutionAlgoBase(ABC):
     def should_update_child_orders(
         self,
         parent_order: OrderSpecification,
-        child_orders: List[ChildOrder],
+        child_orders: list[ChildOrder],
         market_data: MarketData,
-    ) -> Tuple[bool, List[ChildOrder]]:
+    ) -> tuple[bool, list[ChildOrder]]:
         """
         Determine if child orders should be updated based on market conditions.
 
@@ -220,7 +224,7 @@ class VWAPExecution(ExecutionAlgoBase):
     - Benchmark commonly used by traders
     """
 
-    def __init__(self, config: Dict[str, Any]):
+    def __init__(self, config: dict[str, Any]):
         super().__init__(config)
         self.algorithm_type = ExecutionAlgorithm.VWAP
         self.volume_profile_lookback = config.get("volume_profile_lookback", 20)  # days
@@ -231,7 +235,7 @@ class VWAPExecution(ExecutionAlgoBase):
         market_data: MarketData,
         start_time: datetime,
         end_time: datetime,
-    ) -> List[ChildOrder]:
+    ) -> list[ChildOrder]:
         """
         Generate VWAP child orders.
 
@@ -304,15 +308,15 @@ class VWAPExecution(ExecutionAlgoBase):
     def should_update_child_orders(
         self,
         parent_order: OrderSpecification,
-        child_orders: List[ChildOrder],
+        child_orders: list[ChildOrder],
         market_data: MarketData,
-    ) -> Tuple[bool, List[ChildOrder]]:
+    ) -> tuple[bool, list[ChildOrder]]:
         """VWAP typically doesn't update child orders."""
         return False, child_orders
 
     def _get_intraday_volume_profile(
         self, symbol: str, current_time: datetime
-    ) -> Optional[IntradayVolumeProfile]:
+    ) -> IntradayVolumeProfile | None:
         """
         Get historical intraday volume distribution.
 
@@ -356,7 +360,7 @@ class VWAPExecution(ExecutionAlgoBase):
 
     def _generate_time_slices(
         self, start_time: datetime, end_time: datetime, minutes: int = 5
-    ) -> List[datetime]:
+    ) -> list[datetime]:
         """Generate time slices for execution."""
         slices = []
         current = start_time
@@ -374,7 +378,11 @@ class VWAPExecution(ExecutionAlgoBase):
     def _get_volume_percentage(self, time: datetime.time, profile: IntradayVolumeProfile) -> float:
         """Get volume percentage for a given time."""
         for i, bin_time in enumerate(profile.time_bins):
-            if time.hour == bin_time.hour and time.minute >= bin_time.minute and i + 1 < len(profile.time_bins):
+            if (
+                time.hour == bin_time.hour
+                and time.minute >= bin_time.minute
+                and i + 1 < len(profile.time_bins)
+            ):
                 next_time = profile.time_bins[i + 1]
                 if time.minute < next_time.minute:
                     return profile.volume_distribution[i]
@@ -406,7 +414,7 @@ class TWAPExecution(ExecutionAlgoBase):
     - Simplicity over optimization
     """
 
-    def __init__(self, config: Dict[str, Any]):
+    def __init__(self, config: dict[str, Any]):
         super().__init__(config)
         self.algorithm_type = ExecutionAlgorithm.TWAP
 
@@ -416,7 +424,7 @@ class TWAPExecution(ExecutionAlgoBase):
         market_data: MarketData,
         start_time: datetime,
         end_time: datetime,
-    ) -> List[ChildOrder]:
+    ) -> list[ChildOrder]:
         """
         Generate TWAP child orders.
 
@@ -461,15 +469,15 @@ class TWAPExecution(ExecutionAlgoBase):
     def should_update_child_orders(
         self,
         parent_order: OrderSpecification,
-        child_orders: List[ChildOrder],
+        child_orders: list[ChildOrder],
         market_data: MarketData,
-    ) -> Tuple[bool, List[ChildOrder]]:
+    ) -> tuple[bool, list[ChildOrder]]:
         """TWAP typically doesn't update child orders."""
         return False, child_orders
 
     def _generate_time_slices(
         self, start_time: datetime, end_time: datetime, minutes: int = 10
-    ) -> List[datetime]:
+    ) -> list[datetime]:
         """Generate time slices for execution."""
         slices = []
         current = start_time
@@ -506,7 +514,7 @@ class POVExecution(ExecutionAlgoBase):
     - Controlling participation rate
     """
 
-    def __init__(self, config: Dict[str, Any]):
+    def __init__(self, config: dict[str, Any]):
         super().__init__(config)
         self.algorithm_type = ExecutionAlgorithm.POV
         self.target_participation_rate = config.get("target_participation_rate", 0.10)  # 10%
@@ -517,7 +525,7 @@ class POVExecution(ExecutionAlgoBase):
         market_data: MarketData,
         start_time: datetime,
         end_time: datetime,
-    ) -> List[ChildOrder]:
+    ) -> list[ChildOrder]:
         """
         Generate POV child orders.
 
@@ -544,9 +552,9 @@ class POVExecution(ExecutionAlgoBase):
     def should_update_child_orders(
         self,
         parent_order: OrderSpecification,
-        child_orders: List[ChildOrder],
+        child_orders: list[ChildOrder],
         market_data: MarketData,
-    ) -> Tuple[bool, List[ChildOrder]]:
+    ) -> tuple[bool, list[ChildOrder]]:
         """
         POV should update based on actual volume traded.
 
@@ -574,7 +582,7 @@ class MarketExecution(ExecutionAlgoBase):
     WARNING: "NUNCA uses Market Orders para órdenes > 1% ADV"
     """
 
-    def __init__(self, config: Dict[str, Any]):
+    def __init__(self, config: dict[str, Any]):
         super().__init__(config)
         self.algorithm_type = ExecutionAlgorithm.MARKET
         self.max_order_size_pct = config.get("max_order_size_pct", 0.01)  # 1% of ADV
@@ -585,7 +593,7 @@ class MarketExecution(ExecutionAlgoBase):
         market_data: MarketData,
         start_time: datetime,
         end_time: datetime,
-    ) -> List[ChildOrder]:
+    ) -> list[ChildOrder]:
         """
         Generate immediate market order.
 
@@ -618,9 +626,9 @@ class MarketExecution(ExecutionAlgoBase):
     def should_update_child_orders(
         self,
         parent_order: OrderSpecification,
-        child_orders: List[ChildOrder],
+        child_orders: list[ChildOrder],
         market_data: MarketData,
-    ) -> Tuple[bool, List[ChildOrder]]:
+    ) -> tuple[bool, list[ChildOrder]]:
         """Market orders execute immediately - no updates."""
         return False, child_orders
 
@@ -636,12 +644,12 @@ class ExecutionEngine:
     4. Handling exceptions and market conditions
     """
 
-    def __init__(self, config: Dict[str, Any]):
+    def __init__(self, config: dict[str, Any]):
         self.config = config
-        self.cost_model: Optional[TransactionCostModel] = None
+        self.cost_model: TransactionCostModel | None = None
 
         # Execution algorithms
-        self.algorithms: Dict[ExecutionAlgorithm, ExecutionAlgoBase] = {
+        self.algorithms: dict[ExecutionAlgorithm, ExecutionAlgoBase] = {
             ExecutionAlgorithm.VWAP: VWAPExecution(config.get("vwap_config", {})),
             ExecutionAlgorithm.TWAP: TWAPExecution(config.get("twap_config", {})),
             ExecutionAlgorithm.POV: POVExecution(config.get("pov_config", {})),
@@ -649,7 +657,7 @@ class ExecutionEngine:
         }
 
         # Execution history
-        self.execution_reports: List[ExecutionReport] = []
+        self.execution_reports: list[ExecutionReport] = []
 
     def set_cost_model(self, cost_model: TransactionCostModel) -> None:
         """Set transaction cost model for algorithm selection."""
@@ -704,8 +712,8 @@ class ExecutionEngine:
         order: OrderSpecification,
         market_data: MarketData,
         start_time: datetime,
-        end_time: Optional[datetime] = None,
-    ) -> Tuple[ExecutionReport, List[ChildOrder]]:
+        end_time: datetime | None = None,
+    ) -> tuple[ExecutionReport, list[ChildOrder]]:
         """
         Execute an order using the appropriate algorithm.
 
@@ -746,7 +754,7 @@ class ExecutionEngine:
         return execution_report, child_orders
 
     def _generate_mock_execution_report(
-        self, order: OrderSpecification, market_data: MarketData, child_orders: List[ChildOrder]
+        self, order: OrderSpecification, market_data: MarketData, child_orders: list[ChildOrder]
     ) -> ExecutionReport:
         """Generate a mock execution report for testing."""
         total_quantity = sum(co.quantity for co in child_orders)
@@ -779,7 +787,7 @@ class ExecutionEngine:
             slippage_bps=slippage_bps,
         )
 
-    def analyze_execution_quality(self, execution_report: ExecutionReport) -> Dict[str, Any]:
+    def analyze_execution_quality(self, execution_report: ExecutionReport) -> dict[str, Any]:
         """
         Analyze execution quality and generate recommendations.
 
@@ -828,7 +836,7 @@ class ExecutionEngine:
         return analysis
 
 
-def get_execution_engine(config: Dict[str, Any]) -> ExecutionEngine:
+def get_execution_engine(config: dict[str, Any]) -> ExecutionEngine:
     """
     Factory function to create execution engine.
 
@@ -842,18 +850,18 @@ def get_execution_engine(config: Dict[str, Any]) -> ExecutionEngine:
 
 
 __all__ = [
-    "OrderStatus",
-    "OrderType",
-    "TimeInForce",
-    "OrderSide",
     "ChildOrder",
+    "ExecutionAlgoBase",
+    "ExecutionEngine",
     "ExecutionReport",
     "IntradayVolumeProfile",
-    "ExecutionAlgoBase",
-    "VWAPExecution",
-    "TWAPExecution",
-    "POVExecution",
     "MarketExecution",
-    "ExecutionEngine",
+    "OrderSide",
+    "OrderStatus",
+    "OrderType",
+    "POVExecution",
+    "TWAPExecution",
+    "TimeInForce",
+    "VWAPExecution",
     "get_execution_engine",
 ]

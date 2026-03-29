@@ -11,7 +11,6 @@ These templates provide sensible defaults for:
 
 import logging
 from decimal import Decimal
-from typing import List
 
 from app.services.alerting_system.models import (
     AlertRule,
@@ -346,7 +345,7 @@ class AlertRuleTemplates:
     # ==================== Utility Methods ====================
 
     @staticmethod
-    def get_all_default_templates() -> List[AlertRule]:
+    def get_all_default_templates() -> list[AlertRule]:
         """Return all default alert rule templates."""
         logger.debug("Loading all default alert rule templates")
 
@@ -434,7 +433,7 @@ class AlertRuleTemplates:
         return templates[rule_id]
 
     @staticmethod
-    def get_templates_by_category(category: str) -> List[AlertRule]:
+    def get_templates_by_category(category: str) -> list[AlertRule]:
         """Get all templates for a specific category."""
         logger.debug("Fetching templates by category", extra={"category": category})
 
@@ -451,7 +450,7 @@ class AlertRuleTemplates:
         return filtered
 
     @staticmethod
-    def get_critical_templates() -> List[AlertRule]:
+    def get_critical_templates() -> list[AlertRule]:
         """Get all CRITICAL severity templates."""
         logger.debug("Fetching all CRITICAL severity templates")
 

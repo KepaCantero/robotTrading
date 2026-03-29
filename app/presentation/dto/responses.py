@@ -3,7 +3,6 @@ Response DTOs for Presentation Layer
 """
 
 from decimal import Decimal
-from typing import List
 
 from pydantic import BaseModel, Field
 
@@ -14,7 +13,7 @@ class PortfolioResponse(BaseModel):
     portfolio_id: str = Field(..., description="Portfolio ID")
     total_value: Decimal = Field(..., description="Total portfolio value")
     currency: str = Field(..., description="Currency code")
-    positions: List[dict] = Field(default_factory=list, description="Portfolio positions")
+    positions: list[dict] = Field(default_factory=list, description="Portfolio positions")
 
 
 class StrategyResponse(BaseModel):
@@ -23,7 +22,7 @@ class StrategyResponse(BaseModel):
     strategy_id: str = Field(..., description="Strategy ID")
     strategy_type: str = Field(..., description="Strategy type")
     status: str = Field(..., description="Execution status")
-    signals: List[dict] = Field(default_factory=list, description="Trading signals")
+    signals: list[dict] = Field(default_factory=list, description="Trading signals")
 
 
 class HealthResponse(BaseModel):

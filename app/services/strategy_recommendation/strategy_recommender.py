@@ -7,7 +7,7 @@ Integrates scoring and ranking to provide comprehensive strategy recommendations
 import logging
 from dataclasses import dataclass
 from decimal import Decimal
-from typing import Dict, List, Optional
+from typing import Optional
 
 logger = logging.getLogger(__name__)
 
@@ -20,7 +20,7 @@ class StrategyRecommendation:
     confidence_level: str  # high, medium, low
     overall_score: Decimal  # 0-100
     reasoning: str  # Why this strategy is recommended
-    alternatives: List[str]  # Alternative strategies to consider
+    alternatives: list[str]  # Alternative strategies to consider
     risk_assessment: str  # low, medium, high
     estimated_annual_return: Decimal
     max_expected_drawdown: Decimal
@@ -41,12 +41,12 @@ class StrategyRecommender:
 
     def __init__(self):
         """Initialize strategy recommender."""
-        self.recommendation_history: List[StrategyRecommendation] = []
+        self.recommendation_history: list[StrategyRecommendation] = []
         logger.info("✅ StrategyRecommender initialized")
 
     async def recommend_strategy(
         self,
-        ranked_strategies: List,
+        ranked_strategies: list,
         objective: str = "balanced",
         risk_profile: str = "moderate",
     ) -> StrategyRecommendation:
@@ -122,13 +122,23 @@ class StrategyRecommender:
         suitability = Decimal("50")  # Base score
 
         # Objective match scoring
-        if objective == "growth" and strategy.return_score > Decimal("70") or objective == "income" and strategy.consistency_score > Decimal("70") or objective == "preservation" and strategy.risk_score > Decimal("70"):
+        if (
+            (objective == "growth" and strategy.return_score > Decimal("70"))
+            or (objective == "income" and strategy.consistency_score > Decimal("70"))
+            or (objective == "preservation" and strategy.risk_score > Decimal("70"))
+        ):
             suitability += Decimal("20")
         elif objective == "balanced":
             suitability += Decimal("15")
 
         # Risk profile match
-        if risk_profile == "conservative" and strategy.risk_score > Decimal("70") or risk_profile == "moderate" and Decimal("60") <= strategy.risk_score <= Decimal("80") or risk_profile == "aggressive" and strategy.return_score > Decimal("70"):
+        if (
+            (risk_profile == "conservative" and strategy.risk_score > Decimal("70"))
+            or (
+                risk_profile == "moderate" and Decimal("60") <= strategy.risk_score <= Decimal("80")
+            )
+            or (risk_profile == "aggressive" and strategy.return_score > Decimal("70"))
+        ):
             suitability += Decimal("20")
 
         return min(Decimal("100"), suitability)
@@ -166,8 +176,7 @@ class StrategyRecommender:
         )
 
         reasons.append(
-            f"This strategy excels in {strongest_metric[0]} "
-            f"(score: {strongest_metric[1]:.0f}/100)"
+            f"This strategy excels in {strongest_metric[0]} (score: {strongest_metric[1]:.0f}/100)"
         )
 
         if objective == "growth":
@@ -232,7 +241,7 @@ class StrategyRecommender:
     async def get_all_recommendations(
         self,
         limit: Optional[int] = None,
-    ) -> List[StrategyRecommendation]:
+    ) -> list[StrategyRecommendation]:
         """
         Get recommendation history.
 
@@ -246,7 +255,7 @@ class StrategyRecommender:
             return self.recommendation_history
         return self.recommendation_history[-limit:]
 
-    def get_recommender_status(self) -> Dict:
+    def get_recommender_status(self) -> dict:
         """Get recommender status."""
         return {
             "total_recommendations": len(self.recommendation_history),

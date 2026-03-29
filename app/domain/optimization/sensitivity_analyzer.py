@@ -15,7 +15,7 @@ import logging
 from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional, Tuple, Union
+from typing import Any, Callable, Optional, Union
 
 import numpy as np
 
@@ -28,16 +28,16 @@ class SensitivityResult:
 
     parameter_name: str
     base_value: Union[float, int]
-    variations_tested: Dict[str, Dict[str, Any]] = field(default_factory=dict)
+    variations_tested: dict[str, dict[str, Any]] = field(default_factory=dict)
     elasticity_score: float = 0.0
     sensitivity_level: str = "UNKNOWN"  # ROBUST, NORMAL, CRITICAL
     optimal_value: Optional[Union[float, int]] = None
     plateau_width: float = 0.0  # Width of good performance zone around optimal
-    confidence_interval_95: Tuple[float, float] = (0.0, 0.0)
-    monte_carlo_results: Dict[str, Any] = field(default_factory=dict)
+    confidence_interval_95: tuple[float, float] = (0.0, 0.0)
+    monte_carlo_results: dict[str, Any] = field(default_factory=dict)
     timestamp: datetime = field(default_factory=datetime.now)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for serialization."""
         return {
             "parameter_name": self.parameter_name,
@@ -58,16 +58,16 @@ class SensitivityReport:
     """Comprehensive sensitivity analysis report."""
 
     analysis_date: datetime = field(default_factory=datetime.now)
-    parameter_results: Dict[str, SensitivityResult] = field(default_factory=dict)
-    stability_heatmap: Dict[str, Dict[str, Any]] = field(
+    parameter_results: dict[str, SensitivityResult] = field(default_factory=dict)
+    stability_heatmap: dict[str, dict[str, Any]] = field(
         default_factory=dict
     )  # param -> variation_key -> {value, performance}
-    robust_parameters: List[str] = field(default_factory=list)
-    critical_parameters: List[str] = field(default_factory=list)
-    normal_parameters: List[str] = field(default_factory=list)
+    robust_parameters: list[str] = field(default_factory=list)
+    critical_parameters: list[str] = field(default_factory=list)
+    normal_parameters: list[str] = field(default_factory=list)
     overall_robustness_score: float = 0.0  # 0-100
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for serialization."""
         return {
             "analysis_date": self.analysis_date.isoformat(),
@@ -102,7 +102,7 @@ class SensitivityAnalyzer:
 
     def __init__(
         self,
-        config: Optional[Dict[str, Any]] = None,
+        config: Optional[dict[str, Any]] = None,
         backtest_function: Optional[Callable] = None,
     ):
         """
@@ -114,10 +114,10 @@ class SensitivityAnalyzer:
         """
         self.config = config or self._get_default_config()
         self.backtest_function = backtest_function
-        self.analysis_cache: Dict[str, Any] = {}
+        self.analysis_cache: dict[str, Any] = {}
 
     @staticmethod
-    def _get_default_config() -> Dict[str, Any]:
+    def _get_default_config() -> dict[str, Any]:
         """Get default sensitivity analysis configuration."""
         return {
             "sensitivity": {
@@ -142,7 +142,7 @@ class SensitivityAnalyzer:
 
     def analyze_parameter_sensitivity(
         self,
-        initial_params: Dict[str, Union[float, int]],
+        initial_params: dict[str, Union[float, int]],
         performance_metric: str = "sharpe_ratio",
     ) -> SensitivityReport:
         """
@@ -198,8 +198,8 @@ class SensitivityAnalyzer:
         self,
         param_name: str,
         param_value: Union[float, int],
-        base_params: Dict[str, Union[float, int]],
-        variation_steps: List[float],
+        base_params: dict[str, Union[float, int]],
+        variation_steps: list[float],
         performance_metric: str,
     ) -> SensitivityResult:
         """
@@ -209,8 +209,8 @@ class SensitivityAnalyzer:
         Calculates elasticity: % change in performance / % change in parameter.
         """
         result = SensitivityResult(parameter_name=param_name, base_value=param_value)
-        performances: Dict[float, float] = {}
-        varied_values: Dict[float, Union[float, int]] = {}
+        performances: dict[float, float] = {}
+        varied_values: dict[float, Union[float, int]] = {}
 
         # Test each variation level
         for variation_pct in variation_steps:
@@ -295,7 +295,7 @@ class SensitivityAnalyzer:
         return result
 
     def _calculate_elasticity(
-        self, performances: Dict[float, float], varied_values: Dict[float, Union[float, int]]
+        self, performances: dict[float, float], varied_values: dict[float, Union[float, int]]
     ) -> float:
         """
         Calculate elasticity: % change in performance / % change in parameter.
@@ -350,8 +350,8 @@ class SensitivityAnalyzer:
 
     def _calculate_plateau_width(
         self,
-        performances: Dict[float, float],
-        varied_values: Dict[float, Union[float, int]],
+        performances: dict[float, float],
+        varied_values: dict[float, Union[float, int]],
         base_perf: float,
     ) -> float:
         """
@@ -384,9 +384,9 @@ class SensitivityAnalyzer:
         self,
         param_name: str,
         param_value: Union[float, int],
-        base_params: Dict[str, Union[float, int]],
+        base_params: dict[str, Union[float, int]],
         performance_metric: str,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Run Monte Carlo sensitivity test with random parameter variations.
 
@@ -480,7 +480,7 @@ class SensitivityAnalyzer:
 
         return max(0.0, min(100.0, score))
 
-    def get_sensitivity_summary(self, report: SensitivityReport) -> Dict[str, Any]:
+    def get_sensitivity_summary(self, report: SensitivityReport) -> dict[str, Any]:
         """Get readable summary of sensitivity analysis."""
         return {
             "analysis_date": report.analysis_date.isoformat(),

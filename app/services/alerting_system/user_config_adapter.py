@@ -1,9 +1,9 @@
 """
 Adapter to convert UserSettings to Alerting System configuration.
 """
+
 import logging
 import os
-from typing import List
 
 from app.infrastructure.config.user_settings import UserSettings
 from app.services.alerting_system.models import NotificationChannelType, NotificationTarget
@@ -11,7 +11,7 @@ from app.services.alerting_system.models import NotificationChannelType, Notific
 logger = logging.getLogger(__name__)
 
 
-def user_settings_to_notification_targets(settings: UserSettings) -> List[NotificationTarget]:
+def user_settings_to_notification_targets(settings: UserSettings) -> list[NotificationTarget]:
     """
     Convert UserSettings notification preferences to NotificationTarget list.
 

@@ -25,18 +25,21 @@ import logging
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import Callable, Dict, Generator, List, Optional, Tuple, Union
+from typing import TYPE_CHECKING, Callable, Union
 
 import numpy as np
 import pandas as pd
 
 # Type alias for parameter values in cross-validation
 ParamValue = Union[int, float, str, bool]
-ParamGrid = Dict[str, List[ParamValue]]
-ParamDict = Dict[str, ParamValue]
-DataSplit = Tuple[Union[pd.DataFrame, np.ndarray], Union[pd.DataFrame, np.ndarray]]
+ParamGrid = dict[str, list[ParamValue]]
+ParamDict = dict[str, ParamValue]
+DataSplit = tuple[Union[pd.DataFrame, np.ndarray], Union[pd.DataFrame, np.ndarray]]
 from sklearn.base import BaseEstimator, clone
 from sklearn.model_selection import KFold, LeaveOneOut, StratifiedKFold
+
+if TYPE_CHECKING:
+    from collections.abc import Generator
 
 logger = logging.getLogger(__name__)
 
@@ -61,22 +64,24 @@ class CVResult:
     n_splits: int
     mean_score: float
     std_score: float
-    fold_scores: List[float]
-    fit_times: List[float]
-    score_times: List[float]
+    fold_scores: list[float]
+    fit_times: list[float]
+    score_times: list[float]
     params: ParamDict = field(default_factory=dict)
 
     # Additional statistics
     min_score: float = 0.0
     max_score: float = 0.0
     score_range: float = 0.0
-    confidence_interval: Tuple[float, float] = (0.0, 0.0)
+    confidence_interval: tuple[float, float] = (0.0, 0.0)
 
     # Model-specific info
     model_name: str = ""
     scorer_name: str = ""
 
-    def to_dict(self) -> Dict[str, Union[str, int, float, List[float], ParamDict, Tuple[float, float]]]:
+    def to_dict(
+        self,
+    ) -> dict[str, str | int | float | list[float] | ParamDict | tuple[float, float]]:
         """Convert to dictionary."""
         return {
             "timestamp": self.timestamp.isoformat(),
@@ -108,10 +113,10 @@ class NestedCVResult:
     best_inner_score: float
     n_outer_splits: int
     n_inner_splits: int
-    outer_fold_scores: List[float]
-    selected_params_per_fold: List[ParamDict]
+    outer_fold_scores: list[float]
+    selected_params_per_fold: list[ParamDict]
 
-    def to_dict(self) -> Dict[str, Union[str, int, float, List[float], ParamDict]]:
+    def to_dict(self) -> dict[str, str | int | float | list[float] | ParamDict]:
         """Convert to dictionary."""
         return {
             "timestamp": self.timestamp.isoformat(),
@@ -142,7 +147,7 @@ class KFoldCV:
         self,
         n_splits: int = 5,
         shuffle: bool = False,
-        random_state: Optional[int] = None,
+        random_state: int | None = None,
     ):
         """
         Initialize K-Fold CV.
@@ -161,10 +166,10 @@ class KFoldCV:
 
     def split(
         self,
-        X: Union[pd.DataFrame, np.ndarray],
-        y: Optional[Union[pd.Series, np.ndarray]] = None,
-        groups: Optional[Union[pd.Series, np.ndarray]] = None,
-    ) -> Generator[Tuple[np.ndarray, np.ndarray], None, None]:
+        X: pd.DataFrame | np.ndarray,
+        y: pd.Series | np.ndarray | None = None,
+        groups: pd.Series | np.ndarray | None = None,
+    ) -> Generator[tuple[np.ndarray, np.ndarray], None, None]:
         """
         Generate train/test splits.
 
@@ -182,8 +187,7 @@ class KFoldCV:
             random_state=self.random_state,
         )
 
-        for train_idx, test_idx in kfold.split(X, y, groups):
-            yield train_idx, test_idx
+        yield from kfold.split(X, y, groups)
 
     def get_n_splits(self) -> int:
         """Return the number of splits."""
@@ -217,10 +221,10 @@ class LeaveOneOutCV:
 
     def split(
         self,
-        X: Union[pd.DataFrame, np.ndarray],
-        y: Optional[Union[pd.Series, np.ndarray]] = None,
-        groups: Optional[Union[pd.Series, np.ndarray]] = None,
-    ) -> Generator[Tuple[np.ndarray, np.ndarray], None, None]:
+        X: pd.DataFrame | np.ndarray,
+        y: pd.Series | np.ndarray | None = None,
+        groups: pd.Series | np.ndarray | None = None,
+    ) -> Generator[tuple[np.ndarray, np.ndarray], None, None]:
         """
         Generate train/test splits.
 
@@ -232,10 +236,9 @@ class LeaveOneOutCV:
         Yields:
             (train_indices, test_indices) tuples
         """
-        for train_idx, test_idx in self.loo.split(X, y, groups):
-            yield train_idx, test_idx
+        yield from self.loo.split(X, y, groups)
 
-    def get_n_splits(self, X: Union[pd.DataFrame, np.ndarray]) -> int:
+    def get_n_splits(self, X: pd.DataFrame | np.ndarray) -> int:
         """
         Return the number of splits.
 
@@ -266,7 +269,7 @@ class StratifiedKFoldCV:
         self,
         n_splits: int = 5,
         shuffle: bool = False,
-        random_state: Optional[int] = None,
+        random_state: int | None = None,
     ):
         """
         Initialize Stratified K-Fold CV.
@@ -285,10 +288,10 @@ class StratifiedKFoldCV:
 
     def split(
         self,
-        X: Union[pd.DataFrame, np.ndarray],
-        y: Union[pd.Series, np.ndarray],
-        groups: Optional[Union[pd.Series, np.ndarray]] = None,
-    ) -> Generator[Tuple[np.ndarray, np.ndarray], None, None]:
+        X: pd.DataFrame | np.ndarray,
+        y: pd.Series | np.ndarray,
+        groups: pd.Series | np.ndarray | None = None,
+    ) -> Generator[tuple[np.ndarray, np.ndarray], None, None]:
         """
         Generate stratified train/test splits.
 
@@ -304,10 +307,7 @@ class StratifiedKFoldCV:
             raise ValueError("y must be provided for stratified K-fold")
 
         # Convert to numpy array if needed
-        if isinstance(y, pd.Series):
-            y_array = y.values
-        else:
-            y_array = y
+        y_array = y.values if isinstance(y, pd.Series) else y
 
         skfold = StratifiedKFold(
             n_splits=self.n_splits,
@@ -315,8 +315,7 @@ class StratifiedKFoldCV:
             random_state=self.random_state,
         )
 
-        for train_idx, test_idx in skfold.split(X, y_array, groups):
-            yield train_idx, test_idx
+        yield from skfold.split(X, y_array, groups)
 
     def get_n_splits(self) -> int:
         """Return the number of splits."""
@@ -341,8 +340,8 @@ class TimeSeriesSplitCV:
     def __init__(
         self,
         n_splits: int = 5,
-        max_train_size: Optional[int] = None,
-        test_size: Optional[int] = None,
+        max_train_size: int | None = None,
+        test_size: int | None = None,
     ):
         """
         Initialize Time Series Split CV.
@@ -361,10 +360,10 @@ class TimeSeriesSplitCV:
 
     def split(
         self,
-        X: Union[pd.DataFrame, np.ndarray],
-        y: Optional[Union[pd.Series, np.ndarray]] = None,
-        groups: Optional[Union[pd.Series, np.ndarray]] = None,
-    ) -> Generator[Tuple[np.ndarray, np.ndarray], None, None]:
+        X: pd.DataFrame | np.ndarray,
+        y: pd.Series | np.ndarray | None = None,
+        groups: pd.Series | np.ndarray | None = None,
+    ) -> Generator[tuple[np.ndarray, np.ndarray], None, None]:
         """
         Generate time-series-aware train/test splits.
 
@@ -376,16 +375,10 @@ class TimeSeriesSplitCV:
         Yields:
             (train_indices, test_indices) tuples
         """
-        if isinstance(X, (pd.DataFrame, pd.Series)):
-            n_samples = len(X)
-        else:
-            n_samples = X.shape[0]
+        n_samples = len(X) if isinstance(X, (pd.DataFrame, pd.Series)) else X.shape[0]
 
         # Calculate test size
-        if self.test_size is None:
-            test_size = n_samples // (self.n_splits + 1)
-        else:
-            test_size = self.test_size
+        test_size = n_samples // (self.n_splits + 1) if self.test_size is None else self.test_size
 
         for i in range(self.n_splits):
             # Test set
@@ -437,7 +430,7 @@ class NestedCrossValidation:
         param_grid: ParamGrid,
         outer_cv: object = None,
         inner_cv: object = None,
-        scoring: Optional[Union[str, Callable]] = None,
+        scoring: str | Callable | None = None,
         n_jobs: int = 1,
     ):
         """
@@ -467,8 +460,8 @@ class NestedCrossValidation:
 
     def fit(
         self,
-        X: Union[pd.DataFrame, np.ndarray],
-        y: Union[pd.Series, np.ndarray],
+        X: pd.DataFrame | np.ndarray,
+        y: pd.Series | np.ndarray,
     ) -> NestedCVResult:
         """
         Perform nested cross-validation.
@@ -545,10 +538,10 @@ class NestedCrossValidation:
 
     def _split_data(
         self,
-        X: Union[pd.DataFrame, np.ndarray],
+        X: pd.DataFrame | np.ndarray,
         train_idx: np.ndarray,
         test_idx: np.ndarray,
-    ) -> Tuple[Union[pd.DataFrame, np.ndarray], Union[pd.DataFrame, np.ndarray]]:
+    ) -> tuple[pd.DataFrame | np.ndarray, pd.DataFrame | np.ndarray]:
         """Split feature matrix."""
         if isinstance(X, pd.DataFrame):
             return X.iloc[train_idx], X.iloc[test_idx]
@@ -556,10 +549,10 @@ class NestedCrossValidation:
 
     def _split_target(
         self,
-        y: Union[pd.Series, np.ndarray],
+        y: pd.Series | np.ndarray,
         train_idx: np.ndarray,
         test_idx: np.ndarray,
-    ) -> Tuple[Union[pd.Series, np.ndarray], Union[pd.Series, np.ndarray]]:
+    ) -> tuple[pd.Series | np.ndarray, pd.Series | np.ndarray]:
         """Split target vector."""
         if isinstance(y, pd.Series):
             return y.iloc[train_idx], y.iloc[test_idx]
@@ -579,7 +572,7 @@ class CrossValidation:
         method: CVMethod = CVMethod.KFOLD,
         n_splits: int = 5,
         shuffle: bool = False,
-        random_state: Optional[int] = None,
+        random_state: int | None = None,
         **kwargs,
     ):
         """
@@ -601,7 +594,9 @@ class CrossValidation:
         # Initialize CV splitter
         self._cv_splitter = self._get_splitter()
 
-    def _get_splitter(self) -> Union["KFoldCV", "LeaveOneOutCV", "StratifiedKFoldCV", "TimeSeriesSplitCV"]:
+    def _get_splitter(
+        self,
+    ) -> KFoldCV | LeaveOneOutCV | StratifiedKFoldCV | TimeSeriesSplitCV:
         """Get CV splitter based on method."""
         if self.method == CVMethod.KFOLD:
             return KFoldCV(
@@ -628,10 +623,10 @@ class CrossValidation:
 
     def split(
         self,
-        X: Union[pd.DataFrame, np.ndarray],
-        y: Optional[Union[pd.Series, np.ndarray]] = None,
-        groups: Optional[Union[pd.Series, np.ndarray]] = None,
-    ) -> Generator[Tuple[np.ndarray, np.ndarray], None, None]:
+        X: pd.DataFrame | np.ndarray,
+        y: pd.Series | np.ndarray | None = None,
+        groups: pd.Series | np.ndarray | None = None,
+    ) -> Generator[tuple[np.ndarray, np.ndarray], None, None]:
         """
         Generate train/test splits.
 
@@ -648,9 +643,9 @@ class CrossValidation:
     def cross_validate(
         self,
         estimator: BaseEstimator,
-        X: Union[pd.DataFrame, np.ndarray],
-        y: Union[pd.Series, np.ndarray],
-        scoring: Optional[Union[str, Callable]] = None,
+        X: pd.DataFrame | np.ndarray,
+        y: pd.Series | np.ndarray,
+        scoring: str | Callable | None = None,
         return_estimator: bool = False,
     ) -> CVResult:
         """
@@ -732,10 +727,10 @@ class CrossValidation:
 
     def _split_data(
         self,
-        X: Union[pd.DataFrame, np.ndarray],
+        X: pd.DataFrame | np.ndarray,
         train_idx: np.ndarray,
         test_idx: np.ndarray,
-    ) -> Tuple[Union[pd.DataFrame, np.ndarray], Union[pd.DataFrame, np.ndarray]]:
+    ) -> tuple[pd.DataFrame | np.ndarray, pd.DataFrame | np.ndarray]:
         """Split feature matrix."""
         if isinstance(X, pd.DataFrame):
             return X.iloc[train_idx], X.iloc[test_idx]
@@ -743,10 +738,10 @@ class CrossValidation:
 
     def _split_target(
         self,
-        y: Union[pd.Series, np.ndarray],
+        y: pd.Series | np.ndarray,
         train_idx: np.ndarray,
         test_idx: np.ndarray,
-    ) -> Tuple[Union[pd.Series, np.ndarray], Union[pd.Series, np.ndarray]]:
+    ) -> tuple[pd.Series | np.ndarray, pd.Series | np.ndarray]:
         """Split target vector."""
         if isinstance(y, pd.Series):
             return y.iloc[train_idx], y.iloc[test_idx]
@@ -759,11 +754,11 @@ class CrossValidation:
 
 def cross_validate(
     estimator: BaseEstimator,
-    X: Union[pd.DataFrame, np.ndarray],
-    y: Union[pd.Series, np.ndarray],
+    X: pd.DataFrame | np.ndarray,
+    y: pd.Series | np.ndarray,
     method: str = "kfold",
     n_splits: int = 5,
-    scoring: Optional[Union[str, Callable]] = None,
+    scoring: str | Callable | None = None,
     **kwargs,
 ) -> CVResult:
     """
@@ -810,12 +805,12 @@ def cross_validate(
 
 def nested_cross_validate(
     estimator: BaseEstimator,
-    X: Union[pd.DataFrame, np.ndarray],
-    y: Union[pd.Series, np.ndarray],
+    X: pd.DataFrame | np.ndarray,
+    y: pd.Series | np.ndarray,
     param_grid: ParamGrid,
     outer_splits: int = 5,
     inner_splits: int = 3,
-    scoring: Optional[Union[str, Callable]] = None,
+    scoring: str | Callable | None = None,
     n_jobs: int = 1,
 ) -> NestedCVResult:
     """

@@ -9,9 +9,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from datetime import datetime
-from typing import Any, Dict, List, Optional
-from uuid import UUID
+from typing import TYPE_CHECKING, Any
 
 from app.domain.models.market_data import (
     DataFeedConfig,
@@ -25,6 +23,10 @@ from app.domain.models.market_data import (
 )
 from app.infrastructure.data.feeds import DataFeedInterface, create_data_feed
 
+if TYPE_CHECKING:
+    from datetime import datetime
+    from uuid import UUID
+
 logger = logging.getLogger(__name__)
 
 
@@ -32,10 +34,10 @@ class MarketDataService:
     """Centralized market data service with caching and feed management."""
 
     def __init__(self):
-        self.feed_configs: Dict[UUID, DataFeedConfig] = {}
-        self.active_feeds: Dict[UUID, DataFeedInterface] = {}
-        self.subscriptions: Dict[UUID, MarketDataSubscription] = {}
-        self.cache: Dict[str, MarketDataCache] = {}
+        self.feed_configs: dict[UUID, DataFeedConfig] = {}
+        self.active_feeds: dict[UUID, DataFeedInterface] = {}
+        self.subscriptions: dict[UUID, MarketDataSubscription] = {}
+        self.cache: dict[str, MarketDataCache] = {}
         self._cache_lock = asyncio.Lock()
         self._feed_lock = asyncio.Lock()
 
@@ -101,11 +103,11 @@ class MarketDataService:
                 return True
             return False
 
-    async def get_feed_config(self, config_id: UUID) -> Optional[DataFeedConfig]:
+    async def get_feed_config(self, config_id: UUID) -> DataFeedConfig | None:
         """Get a data feed configuration."""
         return self.feed_configs.get(config_id)
 
-    async def list_feed_configs(self) -> List[DataFeedConfig]:
+    async def list_feed_configs(self) -> list[DataFeedConfig]:
         """List all data feed configurations."""
         return list(self.feed_configs.values())
 
@@ -145,7 +147,7 @@ class MarketDataService:
             return success
         return False
 
-    async def get_quote(self, symbol: str, feed_id: Optional[UUID] = None) -> Optional[Quote]:
+    async def get_quote(self, symbol: str, feed_id: UUID | None = None) -> Quote | None:
         """Get real-time quote for a symbol."""
         # Check cache first
         cached_quote = await self._get_cached_quote(symbol)
@@ -179,8 +181,8 @@ class MarketDataService:
         start_date: datetime,
         end_date: datetime,
         frequency: DataFrequency = DataFrequency.DAILY,
-        feed_id: Optional[UUID] = None,
-    ) -> List[HistoricalData]:
+        feed_id: UUID | None = None,
+    ) -> list[HistoricalData]:
         """Get historical data for a symbol."""
         # Check cache first
         cache_key = f"{symbol}_{frequency}_{start_date.date()}_{end_date.date()}"
@@ -212,9 +214,7 @@ class MarketDataService:
             logger.error(f"Error getting historical data for {symbol}: {e}")
             return []
 
-    async def subscribe_to_symbols(
-        self, symbols: List[str], feed_id: Optional[UUID] = None
-    ) -> bool:
+    async def subscribe_to_symbols(self, symbols: list[str], feed_id: UUID | None = None) -> bool:
         """Subscribe to real-time updates for symbols."""
         feed = await self._get_active_feed(feed_id)
         if not feed:
@@ -228,7 +228,7 @@ class MarketDataService:
                 for symbol in symbols:
                     subscription = MarketDataSubscription(
                         symbol=symbol,
-                        feed_config_id=feed_id or list(self.feed_configs.keys())[0],
+                        feed_config_id=feed_id or next(iter(self.feed_configs.keys())),
                         frequency=DataFrequency.REAL_TIME,
                     )
                     self.subscriptions[subscription.id] = subscription
@@ -242,7 +242,7 @@ class MarketDataService:
             logger.error(f"Error subscribing to symbols {symbols}: {e}")
             return False
 
-    async def get_top_liquid_assets_quotes(self, limit: int = 20) -> List[Quote]:
+    async def get_top_liquid_assets_quotes(self, limit: int = 20) -> list[Quote]:
         """Get quotes for top liquid assets."""
         # Default liquid assets
         liquid_symbols = [
@@ -276,7 +276,7 @@ class MarketDataService:
 
         return quotes
 
-    async def _get_active_feed(self, feed_id: Optional[UUID] = None) -> Optional[DataFeedInterface]:
+    async def _get_active_feed(self, feed_id: UUID | None = None) -> DataFeedInterface | None:
         """Get an active feed, preferring the specified one."""
         if feed_id and feed_id in self.active_feeds:
             return self.active_feeds[feed_id]
@@ -288,7 +288,7 @@ class MarketDataService:
 
         return None
 
-    async def _get_cached_quote(self, symbol: str) -> Optional[MarketDataCache]:
+    async def _get_cached_quote(self, symbol: str) -> MarketDataCache | None:
         """Get cached quote data."""
         async with self._cache_lock:
             cache_key = f"quote_{symbol}"
@@ -319,7 +319,7 @@ class MarketDataService:
             # Cleanup old cache entries if needed
             await self._cleanup_cache()
 
-    async def _get_cached_historical_data(self, cache_key: str) -> Optional[List[HistoricalData]]:
+    async def _get_cached_historical_data(self, cache_key: str) -> list[HistoricalData] | None:
         """Get cached historical data."""
         async with self._cache_lock:
             cache_item = self.cache.get(cache_key)
@@ -329,7 +329,7 @@ class MarketDataService:
                 return historical_data
             return None
 
-    async def _cache_historical_data(self, cache_key: str, data: List[HistoricalData]):
+    async def _cache_historical_data(self, cache_key: str, data: list[HistoricalData]):
         """Cache historical data."""
         async with self._cache_lock:
             self.cache[cache_key] = MarketDataCache(
@@ -365,7 +365,7 @@ class MarketDataService:
             for key, _ in sorted_items[:items_to_remove]:
                 del self.cache[key]
 
-    async def get_cache_stats(self) -> Dict[str, Any]:
+    async def get_cache_stats(self) -> dict[str, Any]:
         """Get cache statistics."""
         async with self._cache_lock:
             total_entries = len(self.cache)
@@ -387,7 +387,7 @@ class MarketDataService:
             self.cache.clear()
             logger.info("Cache cleared")
 
-    async def get_service_status(self) -> Dict[str, Any]:
+    async def get_service_status(self) -> dict[str, Any]:
         """Get service status information."""
         return {
             "active_feeds": len(self.active_feeds),

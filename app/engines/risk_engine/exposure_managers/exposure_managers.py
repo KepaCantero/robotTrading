@@ -11,7 +11,7 @@ import logging
 from abc import ABC, abstractmethod
 from datetime import datetime
 from decimal import Decimal
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 from app.domain.models.portfolio import Portfolio
 
@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
 class BaseExposureManager(ABC):
     """Clase base para exposure managers."""
 
-    def __init__(self, config: Dict[str, Any]):
+    def __init__(self, config: dict[str, Any]):
         """
         Inicializar exposure manager.
 
@@ -32,7 +32,7 @@ class BaseExposureManager(ABC):
         self.logger = logging.getLogger(self.__class__.__name__)
 
     @abstractmethod
-    def analyze_exposure(self, portfolio: Portfolio, **kwargs) -> Dict[str, Any]:
+    def analyze_exposure(self, portfolio: Portfolio, **kwargs) -> dict[str, Any]:
         """
         Analizar exposición del portfolio.
 
@@ -52,30 +52,30 @@ class ExposureManager(BaseExposureManager):
     Gestiona exposición del portfolio por múltiples dimensiones.
     """
 
-    def __init__(self, config: Dict[str, Any]):
+    def __init__(self, config: dict[str, Any]):
         """Inicializar exposure manager."""
         super().__init__(config)
 
         # Límites de exposición
-        self.max_asset_exposure = config.get('max_asset_exposure', 0.20)  # 20% por activo
-        self.max_sector_exposure = config.get('max_sector_exposure', 0.30)  # 30% por sector
-        self.max_strategy_exposure = config.get('max_strategy_exposure', 0.40)  # 40% por estrategia
-        self.max_total_exposure = config.get('max_total_exposure', 0.95)  # 95% total
+        self.max_asset_exposure = config.get("max_asset_exposure", 0.20)  # 20% por activo
+        self.max_sector_exposure = config.get("max_sector_exposure", 0.30)  # 30% por sector
+        self.max_strategy_exposure = config.get("max_strategy_exposure", 0.40)  # 40% por estrategia
+        self.max_total_exposure = config.get("max_total_exposure", 0.95)  # 95% total
 
         # Leverage
-        self.max_leverage = config.get('max_leverage', 1.0)  # Sin leverage por defecto
-        self.warn_leverage = config.get('warn_leverage', 0.8)  # Warning a 80%
+        self.max_leverage = config.get("max_leverage", 1.0)  # Sin leverage por defecto
+        self.warn_leverage = config.get("warn_leverage", 0.8)  # Warning a 80%
 
         # Historial de violaciones
-        self.exposure_violations: List[Dict[str, Any]] = []
+        self.exposure_violations: list[dict[str, Any]] = []
         self.max_violation_history = 1000
 
     def analyze_exposure(
         self,
         portfolio: Portfolio,
-        strategy_allocations: Optional[Dict[str, List[str]]] = None,
+        strategy_allocations: Optional[dict[str, list[str]]] = None,
         **kwargs,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Analizar exposición completa del portfolio.
 
@@ -111,13 +111,13 @@ class ExposureManager(BaseExposureManager):
             )
 
             return {
-                'asset_exposure': asset_exposure,
-                'sector_exposure': sector_exposure,
-                'strategy_exposure': strategy_exposure,
-                'leverage': leverage_analysis,
-                'concentration': concentration_analysis,
-                'violations': violations,
-                'total_exposure': (
+                "asset_exposure": asset_exposure,
+                "sector_exposure": sector_exposure,
+                "strategy_exposure": strategy_exposure,
+                "leverage": leverage_analysis,
+                "concentration": concentration_analysis,
+                "violations": violations,
+                "total_exposure": (
                     float(
                         sum(pos.market_value for pos in portfolio.positions)
                         / portfolio.total_equity
@@ -125,16 +125,16 @@ class ExposureManager(BaseExposureManager):
                     if portfolio.total_equity > 0
                     else 0.0
                 ),
-                'timestamp': datetime.utcnow().isoformat(),
+                "timestamp": datetime.utcnow().isoformat(),
             }
         except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
             self.logger.error(f"Error analizando exposición: {e}", exc_info=True)
-            return {'error': str(e)}
+            return {"error": str(e)}
 
-    def _analyze_asset_exposure(self, portfolio: Portfolio) -> Dict[str, Any]:
+    def _analyze_asset_exposure(self, portfolio: Portfolio) -> dict[str, Any]:
         """Analizar exposición por activo."""
         if portfolio.total_equity == 0:
-            return {'exposures': {}, 'max_exposure': 0.0, 'violations': []}
+            return {"exposures": {}, "max_exposure": 0.0, "violations": []}
 
         exposures = {}
         violations = []
@@ -142,41 +142,41 @@ class ExposureManager(BaseExposureManager):
         for position in portfolio.positions:
             exposure = float(position.market_value / portfolio.total_equity)
             exposures[position.symbol] = {
-                'exposure': exposure,
-                'value': float(position.market_value),
-                'quantity': float(position.quantity),
-                'limit': self.max_asset_exposure,
-                'violation': exposure > self.max_asset_exposure,
+                "exposure": exposure,
+                "value": float(position.market_value),
+                "quantity": float(position.quantity),
+                "limit": self.max_asset_exposure,
+                "violation": exposure > self.max_asset_exposure,
             }
 
             if exposure > self.max_asset_exposure:
                 violations.append(
                     {
-                        'type': 'asset_exposure',
-                        'symbol': position.symbol,
-                        'exposure': exposure,
-                        'limit': self.max_asset_exposure,
-                        'severity': (
-                            'high' if exposure > self.max_asset_exposure * 1.5 else 'medium'
+                        "type": "asset_exposure",
+                        "symbol": position.symbol,
+                        "exposure": exposure,
+                        "limit": self.max_asset_exposure,
+                        "severity": (
+                            "high" if exposure > self.max_asset_exposure * 1.5 else "medium"
                         ),
                     }
                 )
 
         max_exposure = (
-            max(exposures.values(), key=lambda x: x['exposure'])['exposure'] if exposures else 0.0
+            max(exposures.values(), key=lambda x: x["exposure"])["exposure"] if exposures else 0.0
         )
 
         return {
-            'exposures': exposures,
-            'max_exposure': max_exposure,
-            'violations': violations,
-            'limit': self.max_asset_exposure,
+            "exposures": exposures,
+            "max_exposure": max_exposure,
+            "violations": violations,
+            "limit": self.max_asset_exposure,
         }
 
-    def _analyze_sector_exposure(self, portfolio: Portfolio) -> Dict[str, Any]:
+    def _analyze_sector_exposure(self, portfolio: Portfolio) -> dict[str, Any]:
         """Analizar exposición por sector."""
         if portfolio.total_equity == 0:
-            return {'exposures': {}, 'max_exposure': 0.0, 'violations': []}
+            return {"exposures": {}, "max_exposure": 0.0, "violations": []}
 
         # Agrupar por asset class (usando como proxy de sector)
         sector_exposures = {}
@@ -184,7 +184,7 @@ class ExposureManager(BaseExposureManager):
         for position in portfolio.positions:
             sector = (
                 position.asset_class.value
-                if hasattr(position.asset_class, 'value')
+                if hasattr(position.asset_class, "value")
                 else str(position.asset_class)
             )
 
@@ -200,42 +200,42 @@ class ExposureManager(BaseExposureManager):
         for sector, value in sector_exposures.items():
             exposure = float(value / portfolio.total_equity)
             exposures[sector] = {
-                'exposure': exposure,
-                'value': float(value),
-                'limit': self.max_sector_exposure,
-                'violation': exposure > self.max_sector_exposure,
+                "exposure": exposure,
+                "value": float(value),
+                "limit": self.max_sector_exposure,
+                "violation": exposure > self.max_sector_exposure,
             }
 
             if exposure > self.max_sector_exposure:
                 violations.append(
                     {
-                        'type': 'sector_exposure',
-                        'sector': sector,
-                        'exposure': exposure,
-                        'limit': self.max_sector_exposure,
-                        'severity': (
-                            'high' if exposure > self.max_sector_exposure * 1.5 else 'medium'
+                        "type": "sector_exposure",
+                        "sector": sector,
+                        "exposure": exposure,
+                        "limit": self.max_sector_exposure,
+                        "severity": (
+                            "high" if exposure > self.max_sector_exposure * 1.5 else "medium"
                         ),
                     }
                 )
 
         max_exposure = (
-            max(exposures.values(), key=lambda x: x['exposure'])['exposure'] if exposures else 0.0
+            max(exposures.values(), key=lambda x: x["exposure"])["exposure"] if exposures else 0.0
         )
 
         return {
-            'exposures': exposures,
-            'max_exposure': max_exposure,
-            'violations': violations,
-            'limit': self.max_sector_exposure,
+            "exposures": exposures,
+            "max_exposure": max_exposure,
+            "violations": violations,
+            "limit": self.max_sector_exposure,
         }
 
     def _analyze_strategy_exposure(
-        self, portfolio: Portfolio, strategy_allocations: Dict[str, List[str]]
-    ) -> Dict[str, Any]:
+        self, portfolio: Portfolio, strategy_allocations: dict[str, list[str]]
+    ) -> dict[str, Any]:
         """Analizar exposición por estrategia."""
         if portfolio.total_equity == 0:
-            return {'exposures': {}, 'max_exposure': 0.0, 'violations': []}
+            return {"exposures": {}, "max_exposure": 0.0, "violations": []}
 
         # Crear mapa símbolo -> estrategia
         symbol_to_strategy = {}
@@ -247,7 +247,7 @@ class ExposureManager(BaseExposureManager):
         strategy_exposures = {}
 
         for position in portfolio.positions:
-            strategy = symbol_to_strategy.get(position.symbol, 'unknown')
+            strategy = symbol_to_strategy.get(position.symbol, "unknown")
 
             if strategy not in strategy_exposures:
                 strategy_exposures[strategy] = Decimal("0")
@@ -261,40 +261,40 @@ class ExposureManager(BaseExposureManager):
         for strategy, value in strategy_exposures.items():
             exposure = float(value / portfolio.total_equity)
             exposures[strategy] = {
-                'exposure': exposure,
-                'value': float(value),
-                'limit': self.max_strategy_exposure,
-                'violation': exposure > self.max_strategy_exposure,
+                "exposure": exposure,
+                "value": float(value),
+                "limit": self.max_strategy_exposure,
+                "violation": exposure > self.max_strategy_exposure,
             }
 
             if exposure > self.max_strategy_exposure:
                 violations.append(
                     {
-                        'type': 'strategy_exposure',
-                        'strategy': strategy,
-                        'exposure': exposure,
-                        'limit': self.max_strategy_exposure,
-                        'severity': (
-                            'high' if exposure > self.max_strategy_exposure * 1.5 else 'medium'
+                        "type": "strategy_exposure",
+                        "strategy": strategy,
+                        "exposure": exposure,
+                        "limit": self.max_strategy_exposure,
+                        "severity": (
+                            "high" if exposure > self.max_strategy_exposure * 1.5 else "medium"
                         ),
                     }
                 )
 
         max_exposure = (
-            max(exposures.values(), key=lambda x: x['exposure'])['exposure'] if exposures else 0.0
+            max(exposures.values(), key=lambda x: x["exposure"])["exposure"] if exposures else 0.0
         )
 
         return {
-            'exposures': exposures,
-            'max_exposure': max_exposure,
-            'violations': violations,
-            'limit': self.max_strategy_exposure,
+            "exposures": exposures,
+            "max_exposure": max_exposure,
+            "violations": violations,
+            "limit": self.max_strategy_exposure,
         }
 
-    def _analyze_leverage(self, portfolio: Portfolio) -> Dict[str, Any]:
+    def _analyze_leverage(self, portfolio: Portfolio) -> dict[str, Any]:
         """Analizar leverage del portfolio."""
         if portfolio.total_equity == 0:
-            return {'leverage': 0.0, 'warnings': [], 'violations': []}
+            return {"leverage": 0.0, "warnings": [], "violations": []}
 
         # Leverage = exposición total / equity
         total_exposure = sum(pos.market_value for pos in portfolio.positions)
@@ -306,42 +306,42 @@ class ExposureManager(BaseExposureManager):
         if leverage > self.max_leverage:
             violations.append(
                 {
-                    'type': 'leverage',
-                    'leverage': leverage,
-                    'limit': self.max_leverage,
-                    'severity': 'critical',
+                    "type": "leverage",
+                    "leverage": leverage,
+                    "limit": self.max_leverage,
+                    "severity": "critical",
                 }
             )
         elif leverage > self.warn_leverage:
             warnings.append(
                 {
-                    'type': 'leverage_warning',
-                    'leverage': leverage,
-                    'warning_threshold': self.warn_leverage,
-                    'severity': 'medium',
+                    "type": "leverage_warning",
+                    "leverage": leverage,
+                    "warning_threshold": self.warn_leverage,
+                    "severity": "medium",
                 }
             )
 
         return {
-            'leverage': leverage,
-            'total_exposure': float(total_exposure),
-            'equity': float(portfolio.total_equity),
-            'warnings': warnings,
-            'violations': violations,
-            'max_leverage': self.max_leverage,
-            'warn_leverage': self.warn_leverage,
+            "leverage": leverage,
+            "total_exposure": float(total_exposure),
+            "equity": float(portfolio.total_equity),
+            "warnings": warnings,
+            "violations": violations,
+            "max_leverage": self.max_leverage,
+            "warn_leverage": self.warn_leverage,
         }
 
-    def _analyze_concentration(self, portfolio: Portfolio) -> Dict[str, Any]:
+    def _analyze_concentration(self, portfolio: Portfolio) -> dict[str, Any]:
         """Analizar concentración del portfolio usando Herfindahl index."""
         if portfolio.total_equity == 0:
-            return {'herfindahl_index': 0.0, 'effective_n': 0, 'concentration_level': 'low'}
+            return {"herfindahl_index": 0.0, "effective_n": 0, "concentration_level": "low"}
 
         # Calcular pesos de cada posición
         weights = [float(pos.market_value / portfolio.total_equity) for pos in portfolio.positions]
 
         if not weights:
-            return {'herfindahl_index': 0.0, 'effective_n': 0, 'concentration_level': 'low'}
+            return {"herfindahl_index": 0.0, "effective_n": 0, "concentration_level": "low"}
 
         # Herfindahl index: suma de cuadrados de pesos
         herfindahl_index = sum(w**2 for w in weights)
@@ -351,52 +351,52 @@ class ExposureManager(BaseExposureManager):
 
         # Nivel de concentración
         if herfindahl_index > 0.5:
-            concentration_level = 'very_high'
+            concentration_level = "very_high"
         elif herfindahl_index > 0.3:
-            concentration_level = 'high'
+            concentration_level = "high"
         elif herfindahl_index > 0.15:
-            concentration_level = 'medium'
+            concentration_level = "medium"
         else:
-            concentration_level = 'low'
+            concentration_level = "low"
 
         return {
-            'herfindahl_index': float(herfindahl_index),
-            'effective_n': float(effective_n),
-            'concentration_level': concentration_level,
-            'n_positions': len(weights),
-            'top_5_weight': (
+            "herfindahl_index": float(herfindahl_index),
+            "effective_n": float(effective_n),
+            "concentration_level": concentration_level,
+            "n_positions": len(weights),
+            "top_5_weight": (
                 sum(sorted(weights, reverse=True)[:5]) if len(weights) >= 5 else sum(weights)
             ),
-            'top_10_weight': (
+            "top_10_weight": (
                 sum(sorted(weights, reverse=True)[:10]) if len(weights) >= 10 else sum(weights)
             ),
         }
 
     def _detect_violations(
         self,
-        asset_exposure: Dict[str, Any],
-        sector_exposure: Dict[str, Any],
-        strategy_exposure: Dict[str, Any],
-        leverage_analysis: Dict[str, Any],
-    ) -> List[Dict[str, Any]]:
+        asset_exposure: dict[str, Any],
+        sector_exposure: dict[str, Any],
+        strategy_exposure: dict[str, Any],
+        leverage_analysis: dict[str, Any],
+    ) -> list[dict[str, Any]]:
         """Detectar todas las violaciones de exposición."""
         violations = []
 
         # Violaciones de activos
-        violations.extend(asset_exposure.get('violations', []))
+        violations.extend(asset_exposure.get("violations", []))
 
         # Violaciones de sectores
-        violations.extend(sector_exposure.get('violations', []))
+        violations.extend(sector_exposure.get("violations", []))
 
         # Violaciones de estrategias
-        violations.extend(strategy_exposure.get('violations', []))
+        violations.extend(strategy_exposure.get("violations", []))
 
         # Violaciones de leverage
-        violations.extend(leverage_analysis.get('violations', []))
+        violations.extend(leverage_analysis.get("violations", []))
 
         # Guardar en historial
         for violation in violations:
-            violation['timestamp'] = datetime.utcnow().isoformat()
+            violation["timestamp"] = datetime.utcnow().isoformat()
             self.exposure_violations.append(violation)
 
         # Mantener historial limitado
@@ -405,13 +405,13 @@ class ExposureManager(BaseExposureManager):
 
         return violations
 
-    def get_status(self) -> Dict[str, Any]:
+    def get_status(self) -> dict[str, Any]:
         """Obtener estado del manager."""
         return {
-            'max_asset_exposure': self.max_asset_exposure,
-            'max_sector_exposure': self.max_sector_exposure,
-            'max_strategy_exposure': self.max_strategy_exposure,
-            'max_total_exposure': self.max_total_exposure,
-            'max_leverage': self.max_leverage,
-            'violations_count': len(self.exposure_violations),
+            "max_asset_exposure": self.max_asset_exposure,
+            "max_sector_exposure": self.max_sector_exposure,
+            "max_strategy_exposure": self.max_strategy_exposure,
+            "max_total_exposure": self.max_total_exposure,
+            "max_leverage": self.max_leverage,
+            "violations_count": len(self.exposure_violations),
         }

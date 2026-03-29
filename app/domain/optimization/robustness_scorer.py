@@ -21,7 +21,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 import numpy as np
 
@@ -79,11 +79,11 @@ class RobustnessResult:
     production_readiness: ProductionReadiness = ProductionReadiness.FAIL
     risk_level: RiskLevel = RiskLevel.HIGH
     score_details: Optional[RobustnessScoreDetail] = None
-    risk_factors: List[RiskFactor] = field(default_factory=list)
-    recommendations: List[str] = field(default_factory=list)
+    risk_factors: list[RiskFactor] = field(default_factory=list)
+    recommendations: list[str] = field(default_factory=list)
     timestamp: datetime = field(default_factory=datetime.now)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for serialization."""
         return {
             "strategy_name": self.strategy_name,
@@ -111,13 +111,13 @@ class RobustnessReport:
     """Comprehensive robustness analysis report."""
 
     analysis_date: datetime = field(default_factory=datetime.now)
-    results: Dict[str, RobustnessResult] = field(default_factory=dict)
+    results: dict[str, RobustnessResult] = field(default_factory=dict)
     summary_score: float = 0.0
     deployable_count: int = 0
     warning_count: int = 0
     failed_count: int = 0
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for serialization."""
         return {
             "analysis_date": self.analysis_date.isoformat(),
@@ -146,7 +146,7 @@ class RobustnessScorer:
     Answers: "Is this safe to deploy in live trading?"
     """
 
-    def __init__(self, config: Optional[Dict[str, Any]] = None):
+    def __init__(self, config: Optional[dict[str, Any]] = None):
         """
         Initialize robustness scorer.
 
@@ -156,7 +156,7 @@ class RobustnessScorer:
         self.config = config or self._get_default_config()
 
     @staticmethod
-    def _get_default_config() -> Dict[str, Any]:
+    def _get_default_config() -> dict[str, Any]:
         """Get default configuration."""
         return {
             "robustness": {
@@ -262,7 +262,7 @@ class RobustnessScorer:
 
         return result
 
-    def _identify_risk_factors(self, scores: Dict[str, float]) -> List[RiskFactor]:
+    def _identify_risk_factors(self, scores: dict[str, float]) -> list[RiskFactor]:
         """Identify risk factors from score components."""
         factors = []
         thresholds = self.config["robustness"]["component_targets"]
@@ -274,7 +274,7 @@ class RobustnessScorer:
                     name="Low Consistency",
                     severity=RiskLevel.HIGH,
                     description=f"Only {scores['consistency']:.1f}% of windows meet performance thresholds "
-                    f"(target: {thresholds['min_consistency']*100:.0f}%)",
+                    f"(target: {thresholds['min_consistency'] * 100:.0f}%)",
                     recommendation="Improve parameter selection or lower thresholds",
                     impact_on_score=15.0,
                 )
@@ -334,7 +334,7 @@ class RobustnessScorer:
 
         return factors
 
-    def _calculate_risk_penalty(self, risk_factors: List[RiskFactor]) -> float:
+    def _calculate_risk_penalty(self, risk_factors: list[RiskFactor]) -> float:
         """Calculate total penalty from risk factors."""
         return sum(rf.impact_on_score for rf in risk_factors)
 
@@ -349,7 +349,7 @@ class RobustnessScorer:
         else:
             return ProductionReadiness.FAIL
 
-    def _determine_risk_level(self, risk_factors: List[RiskFactor]) -> RiskLevel:
+    def _determine_risk_level(self, risk_factors: list[RiskFactor]) -> RiskLevel:
         """Determine overall risk level from risk factors."""
         if not risk_factors:
             return RiskLevel.LOW
@@ -377,8 +377,8 @@ class RobustnessScorer:
         return RiskLevel.LOW
 
     def _generate_recommendations(
-        self, scores: Dict[str, float], risk_factors: List[RiskFactor]
-    ) -> List[str]:
+        self, scores: dict[str, float], risk_factors: list[RiskFactor]
+    ) -> list[str]:
         """Generate actionable recommendations."""
         recommendations = []
 
@@ -409,7 +409,7 @@ class RobustnessScorer:
 
     def batch_score_parameters(
         self,
-        results: Dict[str, Dict[str, float]],
+        results: dict[str, dict[str, float]],
         strategy_name: str,
     ) -> RobustnessReport:
         """
@@ -493,20 +493,13 @@ class RobustnessScorer:
             if result.score_details:
                 details = result.score_details
                 logger.debug("  Breakdown:")
+                print(f"    - Consistency: {details.consistency_score:6.1f} (% windows profitable)")
+                print(f"    - Stability:   {details.stability_score:6.1f} (parameter consistency)")
                 print(
-                    f"    - Consistency: {details.consistency_score:6.1f} " "(% windows profitable)"
-                )
-                print(
-                    f"    - Stability:   {details.stability_score:6.1f} " f"(parameter consistency)"
-                )
-                print(
-                    f"    - Sensitivity: {details.sensitivity_score:6.1f} "
-                    "(robustness to changes)"
+                    f"    - Sensitivity: {details.sensitivity_score:6.1f} (robustness to changes)"
                 )
                 logger.debug(f"    - Overfitting: {details.overfitting_penalty:6.1f} (IS/OOS gap)")
-                print(
-                    f"    - Regime Robust: {details.regime_robustness_score:6.1f} " "(cross-regime)"
-                )
+                print(f"    - Regime Robust: {details.regime_robustness_score:6.1f} (cross-regime)")
 
             if result.risk_factors:
                 logger.debug("  Risk Factors:")

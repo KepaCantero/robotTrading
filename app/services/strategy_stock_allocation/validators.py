@@ -93,7 +93,11 @@ class AllocationValidator:
                     )
 
                 # Check half-life if mean reversion
-                if alloc.strategy == "mean_reversion" and alloc.half_life_tau is not None and alloc.half_life_tau > self.config.MAX_HALF_LIFE_DAYS:
+                if (
+                    alloc.strategy == "mean_reversion"
+                    and alloc.half_life_tau is not None
+                    and alloc.half_life_tau > self.config.MAX_HALF_LIFE_DAYS
+                ):
                     errors.append(
                         f"{ticker}: Half-life {alloc.half_life_tau:.2f} > max {self.config.MAX_HALF_LIFE_DAYS}"
                     )
@@ -134,4 +138,4 @@ class AllocationValidator:
 
         except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.error(f"Error validating allocation: {e}", exc_info=True)
-            return False, [f"Validation error: {str(e)}"]
+            return False, [f"Validation error: {e!s}"]

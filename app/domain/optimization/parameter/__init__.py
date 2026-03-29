@@ -69,27 +69,27 @@ from .trial import TrialHistory, TrialResult, TrialStatus
 __all__ = [
     # Base classes
     "BaseOptimizer",
-    "OptimizationConfig",
-    "OptimizationResult",
+    "BayesianOptimizer",
     # Optimizers
     "GridSearchOptimizer",
-    "RandomSearchOptimizer",
-    "BayesianOptimizer",
     # Multi-objective
     "MultiObjectiveOptimizer",
-    "ParetoFront",
-    "ParetoSolution",
-    "ScalarizationOptimizer",
-    "find_non_dominated_solutions",
-    "calculate_hypervolume",
+    "OptimizationConfig",
+    "OptimizationResult",
+    "ParameterConstraint",
+    "ParameterGrid",
     # Models
     "ParameterRange",
-    "ParameterGrid",
-    "ParameterConstraint",
-    "ParameterType",
     "ParameterScale",
+    "ParameterType",
+    "ParetoFront",
+    "ParetoSolution",
+    "RandomSearchOptimizer",
+    "ScalarizationOptimizer",
+    "TrialHistory",
     # Trial tracking
     "TrialResult",
     "TrialStatus",
-    "TrialHistory",
+    "calculate_hypervolume",
+    "find_non_dominated_solutions",
 ]

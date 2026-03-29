@@ -7,7 +7,7 @@ Defines Pydantic models for SHAP, LIME, and feature importance explanations.
 import logging
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any, ClassVar, Optional
 
 from pydantic import BaseModel, Field
 
@@ -33,14 +33,14 @@ class SHAPExplanation(BaseModel):
     prediction_id: str = Field(..., description="Unique ID for this prediction")
     predicted_value: float = Field(..., description="Model's prediction")
     base_value: float = Field(..., description="Base value (model average)")
-    shap_values: List[SHAPValue] = Field(..., description="List of SHAP values")
+    shap_values: list[SHAPValue] = Field(..., description="List of SHAP values")
     timestamp: datetime = Field(default_factory=datetime.now)
     model_name: Optional[str] = Field(None, description="Name of the model")
 
     class Config:
-        json_encoders = {datetime: lambda v: v.isoformat()}
+        json_encoders: ClassVar[dict] = {datetime: lambda v: v.isoformat()}
 
-    def get_top_features(self, n: int = 5) -> List[SHAPValue]:
+    def get_top_features(self, n: int = 5) -> list[SHAPValue]:
         """Get top n most important features by absolute SHAP value."""
         logger.debug(
             "Getting top SHAP features",
@@ -66,7 +66,7 @@ class SHAPExplanation(BaseModel):
 class SHAPSummaryPlot(BaseModel):
     """SHAP summary statistics."""
 
-    feature_importance: Dict[str, float] = Field(
+    feature_importance: dict[str, float] = Field(
         ..., description="Average absolute SHAP values per feature"
     )
     mean_prediction: float = Field(..., description="Mean prediction value")
@@ -94,13 +94,13 @@ class LIMEExplanation(BaseModel):
     prediction_id: str = Field(..., description="Unique ID for this prediction")
     predicted_class: str = Field(..., description="Predicted class/value")
     predicted_probability: float = Field(..., description="Confidence score")
-    explanation: List[LIMEFeature] = Field(..., description="Feature contributions")
+    explanation: list[LIMEFeature] = Field(..., description="Feature contributions")
     num_features_used: int = Field(..., description="Number of features in explanation")
     intercept: float = Field(..., description="Intercept of local linear model")
     timestamp: datetime = Field(default_factory=datetime.now)
 
     class Config:
-        json_encoders = {datetime: lambda v: v.isoformat()}
+        json_encoders: ClassVar[dict] = {datetime: lambda v: v.isoformat()}
 
 
 # ============================================================================
@@ -122,14 +122,14 @@ class FeatureImportanceReport(BaseModel):
 
     model_name: str = Field(..., description="Name of the model")
     timestamp: datetime = Field(default_factory=datetime.now)
-    features: List[FeatureImportance] = Field(..., description="All features with importance")
+    features: list[FeatureImportance] = Field(..., description="All features with importance")
     method: str = Field(..., description="Method used for computation")
     total_features: int = Field(..., description="Total number of features")
 
     class Config:
-        json_encoders = {datetime: lambda v: v.isoformat()}
+        json_encoders: ClassVar[dict] = {datetime: lambda v: v.isoformat()}
 
-    def get_top_features(self, n: int = 10) -> List[FeatureImportance]:
+    def get_top_features(self, n: int = 10) -> list[FeatureImportance]:
         """Get top n most important features."""
         logger.debug(
             "Getting top important features",
@@ -173,7 +173,7 @@ class PredictionExplanation(BaseModel):
     lime_explanation: Optional[LIMEExplanation] = Field(None, description="LIME explanation")
 
     # Feature importance
-    feature_importance: Optional[List[FeatureImportance]] = Field(
+    feature_importance: Optional[list[FeatureImportance]] = Field(
         None, description="Feature importance scores"
     )
 
@@ -181,7 +181,7 @@ class PredictionExplanation(BaseModel):
     model_name: Optional[str] = Field(None, description="Name of the model")
 
     class Config:
-        json_encoders = {datetime: lambda v: v.isoformat()}
+        json_encoders: ClassVar[dict] = {datetime: lambda v: v.isoformat()}
 
 
 # ============================================================================
@@ -193,15 +193,15 @@ class PartialDependence(BaseModel):
     """Partial dependence of prediction on a feature."""
 
     feature_name: str = Field(..., description="Feature name")
-    feature_values: List[float] = Field(..., description="Feature values tested")
-    predictions: List[float] = Field(..., description="Corresponding predictions")
+    feature_values: list[float] = Field(..., description="Feature values tested")
+    predictions: list[float] = Field(..., description="Corresponding predictions")
 
 
 class PDPExplanation(BaseModel):
     """Partial Dependence Plot (PDP) data."""
 
     model_name: str = Field(..., description="Model name")
-    partial_dependences: List[PartialDependence] = Field(..., description="PDP for each feature")
+    partial_dependences: list[PartialDependence] = Field(..., description="PDP for each feature")
 
 
 class ICEExplanation(BaseModel):
@@ -209,9 +209,9 @@ class ICEExplanation(BaseModel):
 
     model_name: str = Field(..., description="Model name")
     feature_name: str = Field(..., description="Feature name")
-    sample_ids: List[str] = Field(..., description="Sample IDs")
-    feature_values: List[float] = Field(..., description="Feature values")
-    predictions: List[List[float]] = Field(..., description="Predictions per sample")
+    sample_ids: list[str] = Field(..., description="Sample IDs")
+    feature_values: list[float] = Field(..., description="Feature values")
+    predictions: list[list[float]] = Field(..., description="Predictions per sample")
 
 
 # ============================================================================
@@ -232,22 +232,22 @@ class InterpretationReport(BaseModel):
     )
 
     # Example predictions with explanations
-    sample_explanations: List[PredictionExplanation] = Field(
+    sample_explanations: list[PredictionExplanation] = Field(
         default_factory=list, description="Sample predictions with explanations"
     )
 
     # Model insights
-    insights: Dict[str, Any] = Field(
+    insights: dict[str, Any] = Field(
         default_factory=dict, description="Key insights about model behavior"
     )
 
     # Recommendations
-    recommendations: List[str] = Field(
+    recommendations: list[str] = Field(
         default_factory=list, description="Recommendations based on interpretation"
     )
 
     class Config:
-        json_encoders = {datetime: lambda v: v.isoformat()}
+        json_encoders: ClassVar[dict] = {datetime: lambda v: v.isoformat()}
 
 
 @dataclass

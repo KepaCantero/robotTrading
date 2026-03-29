@@ -14,7 +14,7 @@ This follows the Factory pattern for better separation of concerns.
 """
 
 import logging
-from typing import Dict, List, Optional, Union
+from typing import ClassVar, Optional, Union
 
 from app.domain.strategies.mean_reversion import MeanReversionStrategy
 from app.domain.strategies.momentum import MomentumStrategy
@@ -36,18 +36,18 @@ class StrategyFactory:
     """
 
     # Strategy type mapping
-    STRATEGY_CLASSES = {
-        'mean_reversion': MeanReversionStrategy,
-        'momentum': MomentumStrategy,
-        'modular_momentum': ModularMomentumStrategy,
-        'pairs_trading': PairsTradingStrategy,
+    STRATEGY_CLASSES: ClassVar[dict] = {
+        "mean_reversion": MeanReversionStrategy,
+        "momentum": MomentumStrategy,
+        "modular_momentum": ModularMomentumStrategy,
+        "pairs_trading": PairsTradingStrategy,
     }
 
     @classmethod
     def create_strategy(
         cls,
-        strategy_config: Dict[str, Union[str, int, float, bool, List, Dict]],
-        symbols: Optional[List[str]] = None,
+        strategy_config: dict[str, Union[str, int, float, bool, list, dict]],
+        symbols: Optional[list[str]] = None,
     ) -> Union[MomentumStrategy, MeanReversionStrategy, PairsTradingStrategy]:
         """
         Create a strategy instance from configuration.
@@ -62,7 +62,7 @@ class StrategyFactory:
         Raises:
             ValueError: If strategy type is unknown
         """
-        strategy_type = strategy_config.get('type', 'momentum')
+        strategy_type = strategy_config.get("type", "momentum")
 
         strategy_class = cls.STRATEGY_CLASSES.get(strategy_type)
         if not strategy_class:
@@ -90,14 +90,16 @@ class StrategyFactory:
         Returns:
             Strategy name as string
         """
-        if hasattr(strategy, 'name'):
+        if hasattr(strategy, "name"):
             return strategy.name
 
         # Fallback to class name
         return strategy.__class__.__name__
 
     @classmethod
-    def extract_thresholds(cls, strategy_config: Dict[str, Union[str, int, float, bool, List, Dict]]) -> Dict[str, Union[str, int, float, bool, List, Dict]]:
+    def extract_thresholds(
+        cls, strategy_config: dict[str, Union[str, int, float, bool, list, dict]]
+    ) -> dict[str, Union[str, int, float, bool, list, dict]]:
         """
         Extract trading thresholds from strategy configuration.
 
@@ -107,21 +109,23 @@ class StrategyFactory:
         Returns:
             Dictionary with thresholds for buy/sell signals
         """
-        thresholds = strategy_config.get('thresholds', {})
+        thresholds = strategy_config.get("thresholds", {})
 
         # Default thresholds if not specified
         if not thresholds:
             thresholds = {
-                'buy_threshold': 0.7,  # Buy when signal > 70%
-                'sell_threshold': 0.3,  # Sell when signal < 30%
-                'stop_loss': -0.05,  # -5% stop loss
-                'take_profit': 0.10,  # +10% take profit
+                "buy_threshold": 0.7,  # Buy when signal > 70%
+                "sell_threshold": 0.3,  # Sell when signal < 30%
+                "stop_loss": -0.05,  # -5% stop loss
+                "take_profit": 0.10,  # +10% take profit
             }
 
         return thresholds
 
     @classmethod
-    def create_baseline_config(cls, base_config: Dict[str, Union[str, int, float, bool, List, Dict]]) -> Dict[str, Union[str, int, float, bool, List, Dict]]:
+    def create_baseline_config(
+        cls, base_config: dict[str, Union[str, int, float, bool, list, dict]]
+    ) -> dict[str, Union[str, int, float, bool, list, dict]]:
         """
         Create baseline strategy configuration.
 
@@ -131,30 +135,32 @@ class StrategyFactory:
         Returns:
             Strategy configuration for baseline test
         """
-        strategy_type = base_config.get('strategy', {}).get('type', 'modular_momentum')
+        strategy_type = base_config.get("strategy", {}).get("type", "modular_momentum")
 
         config = {
-            'type': strategy_type,
-            'parameters': base_config.get('strategy', {}).get('parameters', {}),
-            'thresholds': cls.extract_thresholds(base_config.get('strategy', {})),
+            "type": strategy_type,
+            "parameters": base_config.get("strategy", {}).get("parameters", {}),
+            "thresholds": cls.extract_thresholds(base_config.get("strategy", {})),
         }
 
         # Add default filters for modular_momentum to ensure signals are generated
-        if strategy_type == 'modular_momentum':
-            config['modules'] = {
-                'ema_filter': {'enabled': True},
-                'rsi_filter': {'enabled': True},
-                'stoch_rsi_filter': {'enabled': True},
-                'momentum_filter': {'enabled': True},
-                'volume_filter': {'enabled': True},
-                'atr_filter': {'enabled': True},
+        if strategy_type == "modular_momentum":
+            config["modules"] = {
+                "ema_filter": {"enabled": True},
+                "rsi_filter": {"enabled": True},
+                "stoch_rsi_filter": {"enabled": True},
+                "momentum_filter": {"enabled": True},
+                "volume_filter": {"enabled": True},
+                "atr_filter": {"enabled": True},
             }
-            config['preset'] = 'balanced'
+            config["preset"] = "balanced"
 
         return config
 
     @classmethod
-    def create_multi_strategy_configs(cls, base_config: Dict[str, Union[str, int, float, bool, List, Dict]]) -> List[Dict[str, Union[str, int, float, bool, List, Dict]]]:
+    def create_multi_strategy_configs(
+        cls, base_config: dict[str, Union[str, int, float, bool, list, dict]]
+    ) -> list[dict[str, Union[str, int, float, bool, list, dict]]]:
         """
         Create configurations for multiple strategies.
 
@@ -164,25 +170,25 @@ class StrategyFactory:
         Returns:
             List of strategy configurations
         """
-        base_strategy_config = base_config.get('strategy', {})
-        symbols = base_config.get('input', {}).get('symbols', ['AAPL'])
+        base_strategy_config = base_config.get("strategy", {})
+        symbols = base_config.get("input", {}).get("symbols", ["AAPL"])
 
         configs = []
 
         # Create config for each strategy type
-        for strategy_type in ['momentum', 'mean_reversion', 'modular_momentum']:
+        for strategy_type in ["momentum", "mean_reversion", "modular_momentum"]:
             strategy_config = {
-                'type': strategy_type,
-                'symbols': symbols,
-                'parameters': base_strategy_config.get('parameters', {}),
-                'thresholds': cls.extract_thresholds(base_strategy_config),
+                "type": strategy_type,
+                "symbols": symbols,
+                "parameters": base_strategy_config.get("parameters", {}),
+                "thresholds": cls.extract_thresholds(base_strategy_config),
             }
             configs.append(strategy_config)
 
         return configs
 
     @classmethod
-    def list_available_strategies(cls) -> List[str]:
+    def list_available_strategies(cls) -> list[str]:
         """
         List all available strategy types.
 
@@ -192,7 +198,9 @@ class StrategyFactory:
         return list(cls.STRATEGY_CLASSES.keys())
 
     @classmethod
-    def validate_config(cls, strategy_config: Dict[str, Union[str, int, float, bool, List, Dict]]) -> bool:
+    def validate_config(
+        cls, strategy_config: dict[str, Union[str, int, float, bool, list, dict]]
+    ) -> bool:
         """
         Validate strategy configuration.
 
@@ -202,7 +210,7 @@ class StrategyFactory:
         Returns:
             True if valid, False otherwise
         """
-        strategy_type = strategy_config.get('type')
+        strategy_type = strategy_config.get("type")
 
         if not strategy_type:
             logger.warning("Strategy config missing 'type' field")
@@ -213,9 +221,13 @@ class StrategyFactory:
             return False
 
         # Check for required fields
-        if 'thresholds' in strategy_config:
-            thresholds = strategy_config['thresholds']
-            if 'buy_threshold' in thresholds and 'sell_threshold' in thresholds and thresholds['buy_threshold'] <= thresholds['sell_threshold']:
+        if "thresholds" in strategy_config:
+            thresholds = strategy_config["thresholds"]
+            if (
+                "buy_threshold" in thresholds
+                and "sell_threshold" in thresholds
+                and thresholds["buy_threshold"] <= thresholds["sell_threshold"]
+            ):
                 logger.warning("buy_threshold must be > sell_threshold")
                 return False
 
@@ -223,8 +235,8 @@ class StrategyFactory:
 
 
 def create_strategy_from_config(
-    strategy_config: Dict[str, Union[str, int, float, bool, List, Dict]],
-    symbols: Optional[List[str]] = None,
+    strategy_config: dict[str, Union[str, int, float, bool, list, dict]],
+    symbols: Optional[list[str]] = None,
 ) -> Union[MomentumStrategy, MeanReversionStrategy, PairsTradingStrategy]:
     """
     Convenience function to create a strategy from configuration.
@@ -239,7 +251,7 @@ def create_strategy_from_config(
     return StrategyFactory.create_strategy(strategy_config, symbols)
 
 
-def get_strategy_metadata(strategy: object) -> Dict[str, Union[str, int, float, bool, List, Dict]]:
+def get_strategy_metadata(strategy: object) -> dict[str, Union[str, int, float, bool, list, dict]]:
     """
     Get metadata about a strategy instance.
 
@@ -250,7 +262,7 @@ def get_strategy_metadata(strategy: object) -> Dict[str, Union[str, int, float, 
         Dictionary with strategy metadata
     """
     return {
-        'name': StrategyFactory.get_strategy_name(strategy),
-        'class': strategy.__class__.__name__,
-        'module': strategy.__class__.__module__,
+        "name": StrategyFactory.get_strategy_name(strategy),
+        "class": strategy.__class__.__name__,
+        "module": strategy.__class__.__module__,
     }

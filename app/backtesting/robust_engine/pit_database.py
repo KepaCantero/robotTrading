@@ -24,12 +24,14 @@ from __future__ import annotations
 import logging
 from dataclasses import dataclass
 from datetime import date, datetime
-from decimal import Decimal
-from typing import Any, Dict, List, Optional, Tuple
+from typing import TYPE_CHECKING, Any
 
 import pandas as pd
 
-from ..point_in_time_database import CorporateAction, PITDataSnapshot, PointInTimeDatabase
+if TYPE_CHECKING:
+    from decimal import Decimal
+
+    from ..point_in_time_database import CorporateAction, PITDataSnapshot, PointInTimeDatabase
 
 logger = logging.getLogger(__name__)
 
@@ -47,9 +49,9 @@ class PITUniverseQuery:
     """
 
     query_date: date
-    min_market_cap: Optional[Decimal] = None
-    sectors: Optional[List[str]] = None
-    max_universe_size: Optional[int] = None
+    min_market_cap: Decimal | None = None
+    sectors: list[str] | None = None
+    max_universe_size: int | None = None
 
 
 @dataclass
@@ -118,9 +120,9 @@ class PITDatabaseClient:
         self.enable_caching = enable_caching
 
         # Internal caches
-        self._universe_cache: Dict[date, List[str]] = {}
-        self._data_cache: Dict[Tuple[str, date], pd.DataFrame] = {}
-        self._snapshot_cache: Dict[date, PITDataSnapshot] = {}
+        self._universe_cache: dict[date, list[str]] = {}
+        self._data_cache: dict[tuple[str, date], pd.DataFrame] = {}
+        self._snapshot_cache: dict[date, PITDataSnapshot] = {}
 
         # Statistics
         self._cache_hits: int = 0
@@ -134,10 +136,10 @@ class PITDatabaseClient:
     def get_universe_as_of(
         self,
         query_date: date,
-        min_market_cap: Optional[Decimal] = None,
-        sectors: Optional[List[str]] = None,
-        max_universe_size: Optional[int] = None,
-    ) -> List[str]:
+        min_market_cap: Decimal | None = None,
+        sectors: list[str] | None = None,
+        max_universe_size: int | None = None,
+    ) -> list[str]:
         """
         Get the trading universe as of a specific historical date.
 
@@ -193,7 +195,7 @@ class PITDatabaseClient:
         query_date: date,
         lookback_days: int = 252,
         adjust_for_corporate_actions: bool = True,
-    ) -> Optional[pd.DataFrame]:
+    ) -> pd.DataFrame | None:
         """
         Get OHLCV data as of a specific date.
 
@@ -235,7 +237,7 @@ class PITDatabaseClient:
         before_count = len(data)
         # Properly check for DatetimeIndex - isinstance check is more reliable than hasattr
         # because .date is an accessor property on DatetimeIndex, not a direct attribute
-        if isinstance(data.index, pd.DatetimeIndex) or hasattr(data.index, 'date'):
+        if isinstance(data.index, pd.DatetimeIndex) or hasattr(data.index, "date"):
             data = data[data.index.date < query_date]
         else:
             data = data[data.index < query_date]
@@ -325,8 +327,8 @@ class PITDatabaseClient:
     def get_snapshot_as_of(
         self,
         query_date: date,
-        current_symbols: List[str],
-        data_sources: Dict[str, pd.DataFrame],
+        current_symbols: list[str],
+        data_sources: dict[str, pd.DataFrame],
     ) -> PITDataSnapshot:
         """
         Create or retrieve a point-in-time snapshot of market data.
@@ -359,11 +361,11 @@ class PITDatabaseClient:
 
     def create_point_in_time_universe(
         self,
-        current_universe: List[str],
+        current_universe: list[str],
         backtest_start: date,
         backtest_end: date,
         frequency: str = "M",
-    ) -> Dict[date, List[str]]:
+    ) -> dict[date, list[str]]:
         """
         Create a point-in-time universe for backtesting.
 
@@ -395,7 +397,7 @@ class PITDatabaseClient:
         symbol: str,
         start_date: date,
         end_date: date,
-    ) -> List[CorporateAction]:
+    ) -> list[CorporateAction]:
         """
         Get corporate actions for a symbol within a date range.
 
@@ -429,7 +431,7 @@ class PITDatabaseClient:
             self._snapshot_cache.clear()
             logger.debug(f"Cleared PIT cache (estimated size: {estimated_size_mb:.1f}MB)")
 
-    def get_cache_statistics(self) -> Dict[str, Any]:
+    def get_cache_statistics(self) -> dict[str, Any]:
         """
         Get cache performance statistics.
 

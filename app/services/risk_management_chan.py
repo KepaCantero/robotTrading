@@ -21,12 +21,14 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass
-from typing import Optional, Tuple
+from typing import TYPE_CHECKING
 
 import numpy as np
-import pandas as pd
 
 from app.shared.config.centralized_config import get_config
+
+if TYPE_CHECKING:
+    import pandas as pd
 
 logger = logging.getLogger(__name__)
 
@@ -51,7 +53,7 @@ class PositionSizeResult:
     dollar_amount: float
     risk_amount: float
     risk_percentage: float
-    kelly_fraction: Optional[float] = None
+    kelly_fraction: float | None = None
     method_used: str = ""
 
 
@@ -82,8 +84,8 @@ class ChanStopLossCalculator:
 
     def __init__(
         self,
-        atr_multiplier: float = None,
-        fixed_stop_pct: float = None,
+        atr_multiplier: float | None = None,
+        fixed_stop_pct: float | None = None,
     ):
         """
         Initialize stop-loss calculator.
@@ -95,12 +97,12 @@ class ChanStopLossCalculator:
         # Get defaults from config
         config = get_config()
         self.atr_multiplier = (
-            float(getattr(config.trading, 'chan_atr_multiplier', 2.0))
+            float(getattr(config.trading, "chan_atr_multiplier", 2.0))
             if atr_multiplier is None
             else float(atr_multiplier)
         )
         self.fixed_stop_pct = (
-            float(getattr(config.trading, 'chan_fixed_stop_pct', 0.05))
+            float(getattr(config.trading, "chan_fixed_stop_pct", 0.05))
             if fixed_stop_pct is None
             else float(fixed_stop_pct)
         )
@@ -110,7 +112,7 @@ class ChanStopLossCalculator:
         entry_price: float,
         atr: float,
         direction: str = "long",
-        multiplier: Optional[float] = None,
+        multiplier: float | None = None,
     ) -> StopLossResult:
         """
         Calculate ATR-based stop loss.
@@ -172,7 +174,7 @@ class ChanStopLossCalculator:
         self,
         entry_price: float,
         direction: str = "long",
-        stop_pct: Optional[float] = None,
+        stop_pct: float | None = None,
     ) -> StopLossResult:
         """
         Calculate fixed percentage stop loss.
@@ -212,7 +214,7 @@ class ChanStopLossCalculator:
             logger.error(f"Error calculating fixed stop loss: {e}")
             # Get fallback stop percentage from config
             config = get_config()
-            fallback_stop = float(getattr(config.trading, 'stop_loss_pct', 0.05))
+            fallback_stop = float(getattr(config.trading, "stop_loss_pct", 0.05))
             return StopLossResult(
                 stop_loss_price=entry_price * (1 - fallback_stop),
                 stop_loss_distance=entry_price * fallback_stop,
@@ -228,7 +230,7 @@ class ChanStopLossCalculator:
         highest_price_since_entry: float,
         atr: float,
         direction: str = "long",
-        multiplier: Optional[float] = None,
+        multiplier: float | None = None,
     ) -> StopLossResult:
         """
         Calculate trailing stop loss.
@@ -279,7 +281,7 @@ class ChanStopLossCalculator:
             logger.error(f"Error calculating trailing stop: {e}")
             # Get fallback stop percentage from config
             config = get_config()
-            fallback_stop = float(getattr(config.trading, 'stop_loss_pct', 0.05))
+            fallback_stop = float(getattr(config.trading, "stop_loss_pct", 0.05))
             return StopLossResult(
                 stop_loss_price=current_price * (1 - fallback_stop),
                 stop_loss_distance=current_price * fallback_stop,
@@ -303,8 +305,8 @@ class ChanPositionSizer:
 
     def __init__(
         self,
-        risk_per_trade: float = None,
-        max_position_pct: float = None,
+        risk_per_trade: float | None = None,
+        max_position_pct: float | None = None,
     ):
         """
         Initialize position sizer.
@@ -316,12 +318,12 @@ class ChanPositionSizer:
         # Get defaults from config
         config = get_config()
         self.risk_per_trade = (
-            float(getattr(config.trading, 'max_risk_per_trade', 0.02))
+            float(getattr(config.trading, "max_risk_per_trade", 0.02))
             if risk_per_trade is None
             else float(risk_per_trade)
         )
         self.max_position_pct = (
-            float(getattr(config.trading, 'max_position_size', 0.25))
+            float(getattr(config.trading, "max_position_size", 0.25))
             if max_position_pct is None
             else float(max_position_pct)
         )
@@ -331,7 +333,7 @@ class ChanPositionSizer:
         capital: float,
         entry_price: float,
         stop_loss_price: float,
-        risk_per_trade: Optional[float] = None,
+        risk_per_trade: float | None = None,
     ) -> PositionSizeResult:
         """
         Calculate position size based on risk.
@@ -367,7 +369,7 @@ class ChanPositionSizer:
                 logger.warning("Stop loss equals entry price, using minimum position")
                 # Get minimum position size from config
                 config = get_config()
-                min_pos_pct = float(getattr(config.trading, 'min_position_size', 0.01))
+                min_pos_pct = float(getattr(config.trading, "min_position_size", 0.01))
                 risk_per_share = entry_price * min_pos_pct
 
             # Calculate shares
@@ -493,7 +495,7 @@ class ChanPositionSizer:
         entry_price: float,
         stop_loss_price: float,
         volatility: float,
-        target_risk: float = None,
+        target_risk: float | None = None,
     ) -> PositionSizeResult:
         """
         Calculate position size adjusted for volatility.
@@ -516,7 +518,7 @@ class ChanPositionSizer:
         # Get default target risk from config
         if target_risk is None:
             config = get_config()
-            target_risk = float(getattr(config.trading, 'max_risk_per_trade', 0.02))
+            target_risk = float(getattr(config.trading, "max_risk_per_trade", 0.02))
         try:
             # Base position on risk
             base_result = self.calculate_risk_based_position(
@@ -531,7 +533,7 @@ class ChanPositionSizer:
             config = get_config()
             # volatility_threshold_extreme is stored as a percentage (50.0 = 50%), convert to decimal
             high_volatility_threshold = (
-                float(getattr(config.trading, 'volatility_threshold_extreme', 50.0)) / 100.0
+                float(getattr(config.trading, "volatility_threshold_extreme", 50.0)) / 100.0
             )
 
             # If volatility is high (above threshold), reduce position
@@ -576,7 +578,7 @@ class ChanDrawdownController:
 
     def __init__(
         self,
-        max_drawdown: float = None,
+        max_drawdown: float | None = None,
         peak_equity: float = 100000.0,
     ):
         """
@@ -718,8 +720,8 @@ class ChanRiskMetrics:
     def calculate_all_metrics(
         self,
         returns: pd.Series,
-        equity_curve: Optional[pd.Series] = None,
-        risk_free_rate: float = None,
+        equity_curve: pd.Series | None = None,
+        risk_free_rate: float | None = None,
     ) -> RiskMetrics:
         """
         Calculate all risk metrics.
@@ -735,7 +737,7 @@ class ChanRiskMetrics:
         # Get default risk-free rate from config
         if risk_free_rate is None:
             config = get_config()
-            risk_free_rate = float(getattr(config.trading, 'portfolio_risk_free_rate', 0.02))
+            risk_free_rate = float(getattr(config.trading, "portfolio_risk_free_rate", 0.02))
         try:
             returns_clean = returns.dropna()
 
@@ -813,7 +815,7 @@ class ChanRiskMetrics:
         except (ValueError, IndexError):
             return 0.0
 
-    def _calculate_max_drawdown(self, equity_curve: pd.Series) -> Tuple[float, int]:
+    def _calculate_max_drawdown(self, equity_curve: pd.Series) -> tuple[float, int]:
         """Calculate maximum drawdown and duration."""
         try:
             rolling_max = equity_curve.expanding().max()
@@ -824,7 +826,7 @@ class ChanRiskMetrics:
             # Find duration of max drawdown
             max_dd_idx = drawdown.idxmin()
             peak_idx = (equity_curve[:max_dd_idx]).idxmax()
-            duration = (max_dd_idx - peak_idx).days if hasattr(max_dd_idx, 'days') else 0
+            duration = (max_dd_idx - peak_idx).days if hasattr(max_dd_idx, "days") else 0
 
             return float(max_dd), int(duration)
 
@@ -929,7 +931,7 @@ def calculate_optimal_position_size(
     elif method == "volatility_adjusted":
         # Get default volatility from config if not provided
         config = get_config()
-        default_vol = float(getattr(config.trading, 'pairs_trading_default_volatility', 0.02))
+        default_vol = float(getattr(config.trading, "pairs_trading_default_volatility", 0.02))
         return sizer.calculate_volatility_adjusted_position(
             capital,
             entry_price,

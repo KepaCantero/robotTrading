@@ -15,13 +15,13 @@ from __future__ import annotations
 
 import logging
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any
 
 import yaml
 
 logger = logging.getLogger(__name__)
 
-ConfigDict = Dict[str, Any]
+ConfigDict = dict[str, Any]
 
 
 class ConfigurationService:
@@ -131,7 +131,7 @@ class ConfigurationService:
         """Get backtest period configuration."""
         return self.config.get("backtest_period", {})
 
-    def get_symbols(self) -> List[str]:
+    def get_symbols(self) -> list[str]:
         """Get symbols configuration."""
         return self.config.get("symbols", ["AAPL", "MSFT", "GOOGL", "AMZN", "TSLA"])
 
@@ -175,7 +175,7 @@ class ConfigurationService:
         """Get reporting configuration."""
         return self.config.get("reporting", {})
 
-    def load_investment_horizons(self) -> List[int]:
+    def load_investment_horizons(self) -> list[int]:
         """
         Load investment horizons from configuration.
 

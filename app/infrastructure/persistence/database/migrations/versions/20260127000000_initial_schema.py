@@ -10,7 +10,8 @@ Create Date: 2026-01-27
 
 """
 
-from typing import Sequence, Union
+from collections.abc import Sequence
+from typing import Union
 
 import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql

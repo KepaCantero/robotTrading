@@ -28,16 +28,16 @@ from .canary_deployment import (
 from .traffic_splitter import SplitStrategy, TrafficConfig, TrafficSplitter
 
 __all__ = [
-    "CanaryDeployment",
+    "CanaryAnalysisResult",
+    "CanaryAnalyzer",
     "CanaryConfig",
-    "CanaryStatus",
+    "CanaryDeployment",
     "CanaryMetrics",
     "CanaryRollbackDecision",
-    "CanaryAnalyzer",
+    "CanaryStatus",
     "MetricComparison",
-    "CanaryAnalysisResult",
     "RollbackTrigger",
-    "TrafficSplitter",
     "SplitStrategy",
     "TrafficConfig",
+    "TrafficSplitter",
 ]

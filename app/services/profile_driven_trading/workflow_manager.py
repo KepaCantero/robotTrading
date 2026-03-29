@@ -8,7 +8,7 @@ state tracking, and rollback capabilities.
 import asyncio
 import logging
 from datetime import datetime
-from typing import Any, Callable, Dict, List, Optional, Tuple
+from typing import Any, Callable, Optional
 
 from .models import StageResult, StageType
 
@@ -25,7 +25,7 @@ class PipelineResult:
     def __init__(
         self,
         success: bool,
-        stage_results: List[StageResult],
+        stage_results: list[StageResult],
         total_duration_ms: float,
         error_message: str = "",
     ):
@@ -62,8 +62,8 @@ class WorkflowManager:
             max_concurrent_stages: Maximum number of stages to run concurrently
         """
         self.max_concurrent_stages = max_concurrent_stages
-        self.execution_history: List[PipelineResult] = []
-        self._current_state: Dict[str, Any] = {}
+        self.execution_history: list[PipelineResult] = []
+        self._current_state: dict[str, Any] = {}
 
         logger.info(f"✅ WorkflowManager initialized (max_concurrent={max_concurrent_stages})")
 
@@ -120,7 +120,7 @@ class WorkflowManager:
 
         except (asyncio.TimeoutError, OSError) as e:
             duration_ms = (datetime.utcnow() - start_time).total_seconds() * 1000
-            error_msg = f"Stage {stage_type.value} failed: {str(e)}"
+            error_msg = f"Stage {stage_type.value} failed: {e!s}"
             errors.append(error_msg)
 
             logger.error(f"❌ {error_msg}", exc_info=True)
@@ -140,7 +140,7 @@ class WorkflowManager:
 
     async def execute_pipeline(
         self,
-        stages: List[Tuple[StageType, Callable, Dict[str, Any]]],
+        stages: list[tuple[StageType, Callable, dict[str, Any]]],
         stop_on_error: bool = True,
     ) -> PipelineResult:
         """
@@ -154,7 +154,7 @@ class WorkflowManager:
             PipelineResult with all stage results
         """
         start_time = datetime.utcnow()
-        stage_results: List[StageResult] = []
+        stage_results: list[StageResult] = []
         pipeline_success = True
         error_message = ""
 
@@ -196,8 +196,8 @@ class WorkflowManager:
 
     async def execute_parallel_stages(
         self,
-        stages: List[Tuple[StageType, Callable, Dict[str, Any]]],
-    ) -> List[StageResult]:
+        stages: list[tuple[StageType, Callable, dict[str, Any]]],
+    ) -> list[StageResult]:
         """
         Execute multiple stages in parallel.
 
@@ -229,7 +229,7 @@ class WorkflowManager:
 
         return results
 
-    def get_current_state(self) -> Dict[str, Any]:
+    def get_current_state(self) -> dict[str, Any]:
         """Get current workflow state."""
         return self._current_state.copy()
 
@@ -238,7 +238,7 @@ class WorkflowManager:
         self._current_state = {}
         logger.info("🔄 Workflow state reset")
 
-    def get_execution_statistics(self) -> Dict[str, Any]:
+    def get_execution_statistics(self) -> dict[str, Any]:
         """
         Get statistics about pipeline executions.
 
@@ -267,7 +267,7 @@ class WorkflowManager:
             ),
         }
 
-    def create_rollback_checkpoint(self) -> Dict[str, Any]:
+    def create_rollback_checkpoint(self) -> dict[str, Any]:
         """
         Create a checkpoint of current state for potential rollback.
 
@@ -281,7 +281,7 @@ class WorkflowManager:
         logger.debug("📸 Rollback checkpoint created")
         return checkpoint
 
-    async def rollback_to_checkpoint(self, checkpoint: Dict[str, Any]) -> bool:
+    async def rollback_to_checkpoint(self, checkpoint: dict[str, Any]) -> bool:
         """
         Rollback to a previous checkpoint.
 

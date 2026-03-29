@@ -27,16 +27,16 @@ from .paper_adapter import PaperAdapter
 
 __all__ = [
     "AlpacaAdapter",
+    "CurrencyConverter",
     "IBAdapter",
     "IBConnection",
     "IBKRSpainAdapter",
     "PaperAdapter",
-    "CurrencyConverter",
     "create_index_contract",
     "create_stock_contract",
+    "get_currency_converter",
     "get_ib_adapter",
     "get_ibex35_symbols",
-    "get_currency_converter",
     "get_ibkr_spain_adapter",
     "is_ibex35_symbol",
 ]

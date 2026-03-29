@@ -17,16 +17,16 @@ st.set_page_config(
 import os
 import sys
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import Optional
 
 # CRÍTICO: Configurar variables de entorno ANTES de imports pesados
-os.environ.setdefault('OMP_NUM_THREADS', '1')
-os.environ.setdefault('TF_CPP_MIN_LOG_LEVEL', '2')
-os.environ.setdefault('NUMEXPR_MAX_THREADS', '1')
-os.environ.setdefault('MKL_NUM_THREADS', '1')
-os.environ.setdefault('OPENBLAS_NUM_THREADS', '1')
-if 'CUDA_VISIBLE_DEVICES' not in os.environ:
-    os.environ['CUDA_VISIBLE_DEVICES'] = ''
+os.environ.setdefault("OMP_NUM_THREADS", "1")
+os.environ.setdefault("TF_CPP_MIN_LOG_LEVEL", "2")
+os.environ.setdefault("NUMEXPR_MAX_THREADS", "1")
+os.environ.setdefault("MKL_NUM_THREADS", "1")
+os.environ.setdefault("OPENBLAS_NUM_THREADS", "1")
+if "CUDA_VISIBLE_DEVICES" not in os.environ:
+    os.environ["CUDA_VISIBLE_DEVICES"] = ""
 
 # Add project root to Python path
 project_root = Path(__file__).parent.parent.parent
@@ -64,69 +64,69 @@ logger = logging.getLogger(__name__)
 # ============================================================================
 
 OBJECTIVES = {
-    'max_drawdown': {
-        'target': 20.0,
-        'operator': '<',
-        'description': 'Protección del capital ante rachas negativas',
-        'unit': '%',
-        'better_direction': 'lower',
+    "max_drawdown": {
+        "target": 20.0,
+        "operator": "<",
+        "description": "Protección del capital ante rachas negativas",
+        "unit": "%",
+        "better_direction": "lower",
     },
-    'sharpe_ratio': {
-        'target': 1.2,
-        'operator': '>',
-        'description': 'Buena relación retorno/riesgo',
-        'unit': '',
-        'better_direction': 'higher',
+    "sharpe_ratio": {
+        "target": 1.2,
+        "operator": ">",
+        "description": "Buena relación retorno/riesgo",
+        "unit": "",
+        "better_direction": "higher",
     },
-    'sortino_ratio': {
-        'target': 1.5,
-        'operator': '>',
-        'description': 'Minimiza penalización por pérdidas',
-        'unit': '',
-        'better_direction': 'higher',
+    "sortino_ratio": {
+        "target": 1.5,
+        "operator": ">",
+        "description": "Minimiza penalización por pérdidas",
+        "unit": "",
+        "better_direction": "higher",
     },
-    'volatility': {
-        'target_min': 10.0,
-        'target_max': 15.0,
-        'operator': 'range',
-        'description': 'Control de fluctuaciones de cartera',
-        'unit': '%',
-        'better_direction': 'mid',
+    "volatility": {
+        "target_min": 10.0,
+        "target_max": 15.0,
+        "operator": "range",
+        "description": "Control de fluctuaciones de cartera",
+        "unit": "%",
+        "better_direction": "mid",
     },
-    'profit_factor': {
-        'target': 1.4,
-        'operator': '>',
-        'description': 'Ganancias por cada unidad de pérdida',
-        'unit': '',
-        'better_direction': 'higher',
+    "profit_factor": {
+        "target": 1.4,
+        "operator": ">",
+        "description": "Ganancias por cada unidad de pérdida",
+        "unit": "",
+        "better_direction": "higher",
     },
-    'win_rate': {
-        'target_min': 45.0,
-        'target_max': 60.0,
-        'operator': 'range',
-        'description': 'Ideal si las ganancias promedio > pérdidas promedio',
-        'unit': '%',
-        'better_direction': 'mid',
+    "win_rate": {
+        "target_min": 45.0,
+        "target_max": 60.0,
+        "operator": "range",
+        "description": "Ideal si las ganancias promedio > pérdidas promedio",
+        "unit": "%",
+        "better_direction": "mid",
     },
 }
 
 
-def evaluate_objective(metric_name: str, value: float) -> Tuple[bool, str]:
+def evaluate_objective(metric_name: str, value: float) -> tuple[bool, str]:
     """Evalúa si una métrica cumple con el objetivo."""
     if metric_name not in OBJECTIVES:
         return False, "❓ Objetivo no definido"
 
     obj = OBJECTIVES[metric_name]
-    operator = obj.get('operator', '>')
+    operator = obj.get("operator", ">")
 
-    if operator == '>':
-        passes = value > obj['target']
+    if operator == ">":
+        passes = value > obj["target"]
         target_str = f">{obj['target']}{obj['unit']}"
-    elif operator == '<':
-        passes = value < abs(obj['target'])  # Max drawdown es negativo
+    elif operator == "<":
+        passes = value < abs(obj["target"])  # Max drawdown es negativo
         target_str = f"<{obj['target']}{obj['unit']}"
-    elif operator == 'range':
-        passes = obj['target_min'] <= value <= obj['target_max']
+    elif operator == "range":
+        passes = obj["target_min"] <= value <= obj["target_max"]
         target_str = f"{obj['target_min']}-{obj['target_max']}{obj['unit']}"
     else:
         return False, "❓ Operador desconocido"
@@ -142,7 +142,7 @@ def evaluate_objective(metric_name: str, value: float) -> Tuple[bool, str]:
 
 def render_objective_card(metric_name: str, value: float, test_name: str = ""):
     """Renderiza una tarjeta de objetivo con color verde/rojo."""
-    passes, status = evaluate_objective(metric_name, value)
+    passes, _status = evaluate_objective(metric_name, value)
     obj = OBJECTIVES[metric_name]
 
     # Color segun cumplimiento
@@ -154,13 +154,10 @@ def render_objective_card(metric_name: str, value: float, test_name: str = ""):
         _ = "#dc2626"
 
     # Formatear valor
-    unit = obj.get('unit', '')
-    if unit == '%':
-        _ = f"{abs(value):.2f}%"
-    else:
-        _ = f"{value:.2f}"
+    unit = obj.get("unit", "")
+    _ = f"{abs(value):.2f}%" if unit == "%" else f"{value:.2f}"
 
-    metric_name.replace('_', ' ').title()
+    metric_name.replace("_", " ").title()
 
     st.markdown(
         """
@@ -187,13 +184,13 @@ def render_objective_card(metric_name: str, value: float, test_name: str = ""):
 def get_metric_value(row: pd.Series, metric_name: str) -> Optional[float]:
     """Obtiene el valor de una métrica desde una fila del DataFrame."""
     metric_map = {
-        'max_drawdown': 'max_drawdown',
-        'sharpe_ratio': 'sharpe_ratio',
-        'sortino_ratio': 'sortino_ratio',
-        'volatility': 'volatility',
-        'annualized_volatility': 'volatility',  # Alias
-        'profit_factor': 'profit_factor',
-        'win_rate': 'win_rate',
+        "max_drawdown": "max_drawdown",
+        "sharpe_ratio": "sharpe_ratio",
+        "sortino_ratio": "sortino_ratio",
+        "volatility": "volatility",
+        "annualized_volatility": "volatility",  # Alias
+        "profit_factor": "profit_factor",
+        "win_rate": "win_rate",
     }
 
     col_name = metric_map.get(metric_name, metric_name)
@@ -238,7 +235,7 @@ def show_objectives_summary(df: pd.DataFrame):
     st.header("📊 Resumen de Cumplimiento de Objetivos")
 
     if df.empty:
-        st.warning("⚠️ No hay resultados para mostrar")
+        st.warning("⚠ No hay resultados para mostrar")
         return
 
     # Evaluar cada test contra objetivos
@@ -246,21 +243,21 @@ def show_objectives_summary(df: pd.DataFrame):
     results_summary = []
 
     # Convertir a lista de dicts (más rápido que iterrows para acceso aleatorio)
-    df_records = df.to_dict('records')
+    df_records = df.to_dict("records")
 
     for idx, row in enumerate(df_records):
-        test_name = row.get('test_name', f'Test {idx}')
-        test_type = row.get('test_type', 'unknown')
+        test_name = row.get("test_name", f"Test {idx}")
+        test_type = row.get("test_type", "unknown")
 
         metrics_status = {}
         total_passed = 0
         total_metrics = 0
 
-        for metric_name in OBJECTIVES.keys():
+        for metric_name in OBJECTIVES:
             value = get_metric_value(pd.Series(row), metric_name)
             if value is not None:
                 passes, _ = evaluate_objective(metric_name, value)
-                metrics_status[metric_name] = {'value': value, 'passes': passes}
+                metrics_status[metric_name] = {"value": value, "passes": passes}
                 total_metrics += 1
                 if passes:
                     total_passed += 1
@@ -269,52 +266,52 @@ def show_objectives_summary(df: pd.DataFrame):
             pass_rate = (total_passed / total_metrics) * 100
             results_summary.append(
                 {
-                    'test_name': test_name,
-                    'test_type': test_type,
-                    'pass_rate': pass_rate,
-                    'passed': total_passed,
-                    'total': total_metrics,
-                    'metrics': metrics_status,
-                    'row': row,
+                    "test_name": test_name,
+                    "test_type": test_type,
+                    "pass_rate": pass_rate,
+                    "passed": total_passed,
+                    "total": total_metrics,
+                    "metrics": metrics_status,
+                    "row": row,
                 }
             )
 
     # Ordenar por tasa de cumplimiento
-    results_summary.sort(key=lambda x: x['pass_rate'], reverse=True)
+    results_summary.sort(key=lambda x: x["pass_rate"], reverse=True)
 
     # Mostrar resumen
     if not results_summary:
-        st.warning("⚠️ No se pudieron evaluar métricas")
+        st.warning("⚠ No se pudieron evaluar métricas")
         return
 
     # Tabs por tipo de test
-    test_types = list({r['test_type'] for r in results_summary})
+    test_types = list({r["test_type"] for r in results_summary})
 
     if len(test_types) > 1:
         tabs = st.tabs([f"📋 {t.replace('_', ' ').title()}" for t in test_types])
 
         for tab_idx, test_type in enumerate(test_types):
             with tabs[tab_idx]:
-                show_test_type_results([r for r in results_summary if r['test_type'] == test_type])
+                show_test_type_results([r for r in results_summary if r["test_type"] == test_type])
     else:
         show_test_type_results(results_summary)
 
 
-def show_test_type_results(results: List[Dict]):
+def show_test_type_results(results: list[dict]):
     """Muestra resultados de un tipo de test específico."""
     for result in results:
         with st.expander(
-            f"{'✅' if result['pass_rate'] == 100 else '⚠️' if result['pass_rate'] >= 50 else '❌'} "
+            f"{'✅' if result['pass_rate'] == 100 else '⚠' if result['pass_rate'] >= 50 else '❌'} "
             f"{result['test_name']} - {result['passed']}/{result['total']} objetivos cumplidos ({result['pass_rate']:.0f}%)",
             expanded=False,
         ):
             # Mostrar métricas en grid
             cols = st.columns(3)
 
-            for metric_idx, (metric_name, metric_data) in enumerate(result['metrics'].items()):
+            for metric_idx, (metric_name, metric_data) in enumerate(result["metrics"].items()):
                 col = cols[metric_idx % 3]
                 with col:
-                    render_objective_card(metric_name, metric_data['value'], result['test_name'])
+                    render_objective_card(metric_name, metric_data["value"], result["test_name"])
 
 
 def show_best_strategies(df: pd.DataFrame):
@@ -322,19 +319,19 @@ def show_best_strategies(df: pd.DataFrame):
     st.header("🏆 Estrategias que Cumplen TODOS los Objetivos")
 
     if df.empty:
-        st.warning("⚠️ No hay resultados")
+        st.warning("⚠ No hay resultados")
         return
 
     perfect_strategies = []
 
     # VECTORIZED: Usar to_dict('records') en lugar de iterrows
-    df_records = df.to_dict('records')
+    df_records = df.to_dict("records")
 
     for idx, row in enumerate(df_records):
         all_pass = True
         metrics_values = {}
 
-        for metric_name in OBJECTIVES.keys():
+        for metric_name in OBJECTIVES:
             value = get_metric_value(pd.Series(row), metric_name)
             if value is not None:
                 passes, _ = evaluate_objective(metric_name, value)
@@ -347,15 +344,15 @@ def show_best_strategies(df: pd.DataFrame):
         if all_pass:
             perfect_strategies.append(
                 {
-                    'test_name': row.get('test_name', f'Test {idx}'),
-                    'test_type': row.get('test_type', 'unknown'),
-                    'metrics': metrics_values,
-                    'row': row,
+                    "test_name": row.get("test_name", f"Test {idx}"),
+                    "test_type": row.get("test_type", "unknown"),
+                    "metrics": metrics_values,
+                    "row": row,
                 }
             )
 
     if not perfect_strategies:
-        st.info("ℹ️ Ninguna estrategia cumple todos los objetivos actualmente")
+        st.info("i Ninguna estrategia cumple todos los objetivos actualmente")
         st.markdown("💡 Revisa las estrategias con mejor tasa de cumplimiento en el resumen")
     else:
         st.success(f"✅ {len(perfect_strategies)} estrategia(s) cumple(n) todos los objetivos")
@@ -363,10 +360,10 @@ def show_best_strategies(df: pd.DataFrame):
         for strategy in perfect_strategies:
             with st.expander(f"✅ {strategy['test_name']}", expanded=False):
                 cols = st.columns(3)
-                for metric_idx, (metric_name, value) in enumerate(strategy['metrics'].items()):
+                for metric_idx, (metric_name, value) in enumerate(strategy["metrics"].items()):
                     col = cols[metric_idx % 3]
                     with col:
-                        render_objective_card(metric_name, value, strategy['test_name'])
+                        render_objective_card(metric_name, value, strategy["test_name"])
 
 
 def show_objective_comparison(df: pd.DataFrame):
@@ -377,7 +374,7 @@ def show_objective_comparison(df: pd.DataFrame):
         return
 
     # Crear un tab por objetivo
-    tabs = st.tabs([f"🎯 {m.replace('_', ' ').title()}" for m in OBJECTIVES.keys()])
+    tabs = st.tabs([f"🎯 {m.replace('_', ' ').title()}" for m in OBJECTIVES])
 
     for tab_idx, metric_name in enumerate(OBJECTIVES.keys()):
         with tabs[tab_idx]:
@@ -390,72 +387,72 @@ def show_objective_comparison(df: pd.DataFrame):
                 if value is not None:
                     passes, _ = evaluate_objective(current_metric_name, value)
                     return {
-                        'Test': row.get('test_name', f'Test {idx}'),
-                        'Tipo': row.get('test_type', 'unknown'),
-                        'Valor': value,
-                        'Cumple': '✅' if passes else '❌',
-                        'Status': passes,
+                        "Test": row.get("test_name", f"Test {idx}"),
+                        "Tipo": row.get("test_type", "unknown"),
+                        "Valor": value,
+                        "Cumple": "✅" if passes else "❌",
+                        "Status": passes,
                     }
                 return None
 
             # Convertir a lista de dicts para procesamiento más rápido
-            df_records = df.to_dict('records')
+            df_records = df.to_dict("records")
             data = [evaluate_row(row, idx, metric_name) for idx, row in enumerate(df_records)]
 
             if not data:
-                st.warning(f"⚠️ No hay datos para {metric_name}")
+                st.warning(f"⚠ No hay datos para {metric_name}")
                 continue
 
             # Crear DataFrame y mostrar
             comp_df = pd.DataFrame(data)
 
             # Ordenar por valor (mejor primero)
-            if obj['better_direction'] == 'higher':
-                comp_df = comp_df.sort_values('Valor', ascending=False)
-            elif obj['better_direction'] == 'lower':
-                comp_df = comp_df.sort_values('Valor', ascending=True)
+            if obj["better_direction"] == "higher":
+                comp_df = comp_df.sort_values("Valor", ascending=False)
+            elif obj["better_direction"] == "lower":
+                comp_df = comp_df.sort_values("Valor", ascending=True)
             else:  # mid
                 # Para rangos, los más cercanos al centro primero
-                target_mid = (obj['target_min'] + obj['target_max']) / 2
-                comp_df['distance_from_target'] = abs(comp_df['Valor'] - target_mid)
-                comp_df = comp_df.sort_values('distance_from_target')
+                target_mid = (obj["target_min"] + obj["target_max"]) / 2
+                comp_df["distance_from_target"] = abs(comp_df["Valor"] - target_mid)
+                comp_df = comp_df.sort_values("distance_from_target")
 
             # Mostrar gráfico
             if plotly_available:
                 fig = px.bar(
                     comp_df,
-                    x='Test',
-                    y='Valor',
-                    color='Status',
-                    color_discrete_map={True: '#10b981', False: '#ef4444'},
+                    x="Test",
+                    y="Valor",
+                    color="Status",
+                    color_discrete_map={True: "#10b981", False: "#ef4444"},
                     title=f"{metric_name.replace('_', ' ').title()} - Comparación de Tests",
-                    labels={'Valor': f"Valor ({obj.get('unit', '')})"},
+                    labels={"Valor": f"Valor ({obj.get('unit', '')})"},
                 )
 
                 # Añadir línea de objetivo
-                if obj['operator'] == '>':
+                if obj["operator"] == ">":
                     fig.add_hline(
-                        y=obj['target'],
+                        y=obj["target"],
                         line_dash="dash",
                         line_color="blue",
                         annotation_text=f"Objetivo: >{obj['target']}",
                     )
-                elif obj['operator'] == '<':
+                elif obj["operator"] == "<":
                     fig.add_hline(
-                        y=obj['target'],
+                        y=obj["target"],
                         line_dash="dash",
                         line_color="blue",
                         annotation_text=f"Objetivo: <{obj['target']}",
                     )
-                elif obj['operator'] == 'range':
+                elif obj["operator"] == "range":
                     fig.add_hline(
-                        y=obj['target_min'],
+                        y=obj["target_min"],
                         line_dash="dash",
                         line_color="blue",
                         annotation_text=f"Min: {obj['target_min']}",
                     )
                     fig.add_hline(
-                        y=obj['target_max'],
+                        y=obj["target_max"],
                         line_dash="dash",
                         line_color="blue",
                         annotation_text=f"Max: {obj['target_max']}",
@@ -465,7 +462,7 @@ def show_objective_comparison(df: pd.DataFrame):
 
             # Mostrar tabla
             st.dataframe(
-                comp_df[['Test', 'Tipo', 'Valor', 'Cumple']],
+                comp_df[["Test", "Tipo", "Valor", "Cumple"]],
                 use_container_width=True,
                 hide_index=True,
             )
@@ -492,7 +489,7 @@ def main():
 
         # Sidebar
         with st.sidebar:
-            st.header("⚙️ Configuración")
+            st.header("⚙ Configuración")
             st.markdown("---")
             st.info(
                 """
@@ -517,7 +514,7 @@ def main():
         if df is None or df.empty:
             st.warning(
                 """
-            ⚠️ No se encontraron resultados de backtesting.
+            ⚠ No se encontraron resultados de backtesting.
 
             Ejecuta algunos backtests primero:
             ```bash

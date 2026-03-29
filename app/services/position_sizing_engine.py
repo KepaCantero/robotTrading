@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import logging
 from decimal import Decimal
-from typing import Dict, Optional, Union
 
 import numpy as np
 
@@ -45,7 +44,7 @@ class PositionSizingEngine:
     Position Sizing: risk_per_trade = 2% capital / (ATR * 2)
     """
 
-    def __init__(self, atr_multiplier: Optional[float] = None):
+    def __init__(self, atr_multiplier: float | None = None):
         """
         Initialize calculator.
 
@@ -54,7 +53,7 @@ class PositionSizingEngine:
         """
         if atr_multiplier is None and HAS_CONFIG_LOADER:
             strategy_config = get_strategy_config()
-            atr_multiplier = strategy_config.get_atr_multiplier('default_stop')
+            atr_multiplier = strategy_config.get_atr_multiplier("default_stop")
         elif atr_multiplier is None:
             # Use centralized config for default ATR multiplier
             trading_config = get_config()
@@ -69,9 +68,9 @@ class PositionSizingEngine:
         self,
         entry_price: Decimal,
         direction: str,
-        atr: Optional[float] = None,
-        stop_loss_pct: Optional[float] = None,
-    ) -> Optional[Decimal]:
+        atr: float | None = None,
+        stop_loss_pct: float | None = None,
+    ) -> Decimal | None:
         """
         TASK-IND-2: Calculate dynamic stop loss price.
 
@@ -123,10 +122,10 @@ class PositionSizingEngine:
     def calculate_position_size_from_atr(
         self,
         capital: Decimal,
-        risk_per_trade_pct: Optional[float] = None,
-        entry_price: Decimal = None,
-        atr: Optional[float] = None,
-    ) -> Optional[Decimal]:
+        risk_per_trade_pct: float | None = None,
+        entry_price: Decimal | None = None,
+        atr: float | None = None,
+    ) -> Decimal | None:
         """
         TASK-IND-4: Calculate position size based on ATR.
 
@@ -151,8 +150,8 @@ class PositionSizingEngine:
                 strategy_config = get_strategy_config()
                 risk_config = strategy_config.get_risk_config()
                 risk_per_trade_pct = float(
-                    risk_config.get('risk_per_trade', {}).get(
-                        'default', self._tt.risk_per_trade_default
+                    risk_config.get("risk_per_trade", {}).get(
+                        "default", self._tt.risk_per_trade_default
                     )
                 )
             else:
@@ -203,11 +202,11 @@ class PositionSizingEngine:
 
     def calculate_kelly_position_size(
         self,
-        win_rate: Union[float, Decimal],
-        avg_win: Union[float, Decimal],
-        avg_loss: Union[float, Decimal],
-        capital: Optional[Decimal] = None,
-    ) -> Dict[str, Union[Decimal, float]]:
+        win_rate: float | Decimal,
+        avg_win: float | Decimal,
+        avg_loss: float | Decimal,
+        capital: Decimal | None = None,
+    ) -> dict[str, Decimal | float]:
         """
         RULE-01-1.9: Calculate Kelly Criterion position size with Half-Kelly safety.
 
@@ -352,9 +351,9 @@ class PositionSizingEngine:
 
     def calculate_kelly_from_backtest(
         self,
-        performance_metrics: Dict[str, Union[Decimal, float, int]],
-        capital: Optional[Decimal] = None,
-    ) -> Dict[str, Union[Decimal, float, str]]:
+        performance_metrics: dict[str, Decimal | float | int],
+        capital: Decimal | None = None,
+    ) -> dict[str, Decimal | float | str]:
         """
         Calculate Kelly position size from backtest performance metrics.
 
@@ -455,7 +454,7 @@ class MetaLabelingPositionSizer:
         >>> print(f"Position sizes: {position_sizes}")
     """
 
-    def __init__(self, config: Optional[Dict] = None):
+    def __init__(self, config: dict | None = None):
         """
         Initialize meta-labeling position sizer.
 
@@ -490,8 +489,8 @@ class MetaLabelingPositionSizer:
         self,
         signals: np.ndarray,
         meta_proba: np.ndarray,
-        expected_returns: Optional[np.ndarray] = None,
-        capital: Optional[Union[Decimal, float]] = None,
+        expected_returns: np.ndarray | None = None,
+        capital: Decimal | float | None = None,
     ) -> np.ndarray:
         """
         Calculate position size using meta-labeling probabilities.
@@ -528,8 +527,7 @@ class MetaLabelingPositionSizer:
         # Validate inputs
         if len(signals) != len(meta_proba):
             raise ValueError(
-                f"signals and meta_proba must have same length: "
-                f"{len(signals)} != {len(meta_proba)}"
+                f"signals and meta_proba must have same length: {len(signals)} != {len(meta_proba)}"
             )
 
         if expected_returns is not None and len(expected_returns) != len(signals):
@@ -577,8 +575,8 @@ class MetaLabelingPositionSizer:
         X: np.ndarray,
         primary_predictions: np.ndarray,
         meta_model=None,
-        expected_returns: Optional[np.ndarray] = None,
-        capital: Optional[Union[Decimal, float]] = None,
+        expected_returns: np.ndarray | None = None,
+        capital: Decimal | float | None = None,
     ) -> np.ndarray:
         """
         Calculate position sizes using a trained meta-model.
@@ -639,9 +637,9 @@ class MetaLabelingPositionSizer:
         self,
         X_train: np.ndarray,
         y_train: np.ndarray,
-        X_test: Optional[np.ndarray] = None,
-        y_test: Optional[np.ndarray] = None,
-    ) -> Dict:
+        X_test: np.ndarray | None = None,
+        y_test: np.ndarray | None = None,
+    ) -> dict:
         """
         Fit meta-labeling model on training data.
 
@@ -751,7 +749,7 @@ class PositionSizingEngineWithMetaLabeling(PositionSizingEngine):
         ... )
     """
 
-    def __init__(self, atr_multiplier: Optional[float] = None):
+    def __init__(self, atr_multiplier: float | None = None):
         """Initialize extended position sizing engine."""
         super().__init__(atr_multiplier)
         self.meta_sizer = MetaLabelingPositionSizer()
@@ -760,8 +758,8 @@ class PositionSizingEngineWithMetaLabeling(PositionSizingEngine):
         self,
         signals: np.ndarray,
         meta_proba: np.ndarray,
-        expected_returns: Optional[np.ndarray] = None,
-        capital: Optional[Union[Decimal, float]] = None,
+        expected_returns: np.ndarray | None = None,
+        capital: Decimal | float | None = None,
     ) -> np.ndarray:
         """
         Calculate position sizes using meta-labeling.
@@ -797,9 +795,9 @@ class PositionSizingEngineWithMetaLabeling(PositionSizingEngine):
         win_rate: float,
         avg_win: float,
         avg_loss: float,
-        capital: Union[Decimal, float],
-        expected_returns: Optional[np.ndarray] = None,
-    ) -> Dict[str, np.ndarray]:
+        capital: Decimal | float,
+        expected_returns: np.ndarray | None = None,
+    ) -> dict[str, np.ndarray]:
         """
         Calculate position sizes using hybrid meta-labeling + Kelly approach.
 

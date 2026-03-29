@@ -10,7 +10,7 @@ import logging
 from datetime import datetime
 from decimal import Decimal
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 from app.domain.models.signal import Signal
 
@@ -28,7 +28,7 @@ class StrategyLogger:
             log_path: Ruta al archivo de logs
         """
         self.log_path = Path(log_path)
-        self.logs: List[Dict[str, Any]] = []
+        self.logs: list[dict[str, Any]] = []
         self.created_at = datetime.utcnow()
 
         # Crear directorio de logs si no existe
@@ -41,7 +41,7 @@ class StrategyLogger:
         """Cargar logs existentes desde archivo."""
         if self.log_path.exists():
             try:
-                with open(self.log_path, "r", encoding="utf-8") as f:
+                with open(self.log_path, encoding="utf-8") as f:
                     self.logs = json.load(f)
                 logger.info(f"Loaded {len(self.logs)} existing logs from {self.log_path}")
             except OSError as e:
@@ -61,7 +61,7 @@ class StrategyLogger:
 
     def _create_log_entry(
         self, event: str, strategy_name: str, level: str = "INFO", **kwargs
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Crear entrada de log.
 
@@ -183,7 +183,7 @@ class StrategyLogger:
         self._save_logs()
         logger.error(f"Strategy '{strategy_name}' execution error: {error}")
 
-    def log_strategy_loaded(self, strategy_name: str, config: Dict[str, Any]) -> None:
+    def log_strategy_loaded(self, strategy_name: str, config: dict[str, Any]) -> None:
         """
         Log de estrategia cargada.
 
@@ -234,7 +234,7 @@ class StrategyLogger:
         self._save_logs()
         logger.info(f"Strategy '{strategy_name}' deactivated")
 
-    def _serialize_signal(self, signal: Signal) -> Dict[str, Any]:
+    def _serialize_signal(self, signal: Signal) -> dict[str, Any]:
         """
         Serializar señal para logging.
 
@@ -258,7 +258,7 @@ class StrategyLogger:
             "metadata": signal.metadata,
         }
 
-    def get_strategy_metrics(self, strategy_name: str) -> Dict[str, Any]:
+    def get_strategy_metrics(self, strategy_name: str) -> dict[str, Any]:
         """
         Obtener métricas de estrategia.
 
@@ -298,7 +298,7 @@ class StrategyLogger:
             "last_log": strategy_logs[-1]["timestamp"] if strategy_logs else None,
         }
 
-    def get_all_metrics(self) -> Dict[str, Any]:
+    def get_all_metrics(self) -> dict[str, Any]:
         """
         Obtener métricas de todas las estrategias.
 

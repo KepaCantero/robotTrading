@@ -15,9 +15,8 @@ SINGLE SOURCE OF TRUTH: All values from CentralizedConfig.
 from __future__ import annotations
 
 import logging
-from datetime import datetime
 from decimal import Decimal
-from typing import Dict, List, Optional, Tuple, Union
+from typing import TYPE_CHECKING
 
 from app.backtesting.base_engine import (
     BaseBacktestEngine,
@@ -28,7 +27,11 @@ from app.backtesting.base_engine import (
 )
 from app.backtesting.models import BacktestConfig, BacktestResult
 from app.backtesting.services.transaction_cost_model import BrokerType, TransactionCostModel
-from app.domain.models.market_data import Quote
+
+if TYPE_CHECKING:
+    from datetime import datetime
+
+    from app.domain.models.market_data import Quote
 
 logger = logging.getLogger(__name__)
 
@@ -60,9 +63,9 @@ class ExecutionBacktestEngine(BaseBacktestEngine[BacktestConfig, BacktestResult]
         self,
         config: BacktestConfig,
         execution_type: ExecutionType = ExecutionType.PESSIMISTIC,
-        base_slippage_bps: Optional[Decimal] = None,
-        transaction_cost_model: Optional[TransactionCostModel] = None,
-        enable_next_day_execution: Optional[bool] = None,
+        base_slippage_bps: Decimal | None = None,
+        transaction_cost_model: TransactionCostModel | None = None,
+        enable_next_day_execution: bool | None = None,
         strategy_name: str = "execution_engine",
     ):
         """
@@ -98,7 +101,7 @@ class ExecutionBacktestEngine(BaseBacktestEngine[BacktestConfig, BacktestResult]
         )
 
         # Track open positions for intra-bar execution
-        self._open_positions: List[Position] = []
+        self._open_positions: list[Position] = []
 
         logger.info(
             f"ExecutionBacktestEngine initialized with execution_type={execution_type.value}, "
@@ -115,10 +118,10 @@ class ExecutionBacktestEngine(BaseBacktestEngine[BacktestConfig, BacktestResult]
 
     def run_backtest(
         self,
-        market_data: Union[List[object], List[Quote]],
-        signals: Optional[List[object]] = None,
-        start_date: Optional[datetime] = None,
-        end_date: Optional[datetime] = None,
+        market_data: list[object] | list[Quote],
+        signals: list[object] | None = None,
+        start_date: datetime | None = None,
+        end_date: datetime | None = None,
         **kwargs,
     ) -> BacktestResult:
         """
@@ -148,7 +151,7 @@ class ExecutionBacktestEngine(BaseBacktestEngine[BacktestConfig, BacktestResult]
         self._open_positions.clear()
 
         # Process market data with pessimistic execution
-        execution_results: List[ExecutionResult] = []
+        execution_results: list[ExecutionResult] = []
 
         for i, md in enumerate(market_data):
             # Update last known price
@@ -206,7 +209,7 @@ class ExecutionBacktestEngine(BaseBacktestEngine[BacktestConfig, BacktestResult]
         signal_price: Decimal,
         next_open_price: Decimal,
         next_bar_time: datetime,
-        volatility: Optional[Decimal] = None,
+        volatility: Decimal | None = None,
     ) -> ExecutionResult:
         """
         Execute entry order with realistic delays (Req #10).
@@ -272,7 +275,7 @@ class ExecutionBacktestEngine(BaseBacktestEngine[BacktestConfig, BacktestResult]
         bar_low: Decimal,
         bar_close: Decimal,
         bar_time: datetime,
-    ) -> Tuple[Optional[ExecutionResult], Optional[Position]]:
+    ) -> tuple[ExecutionResult | None, Position | None]:
         """
         Process intra-bar execution for stops (Req #10 - Pessimistic).
 
@@ -372,9 +375,9 @@ class ExecutionBacktestEngine(BaseBacktestEngine[BacktestConfig, BacktestResult]
 
     def compare_vs_optimistic(
         self,
-        quotes: List[Quote],
-        signals: List[object],
-    ) -> Dict[str, object]:
+        quotes: list[Quote],
+        signals: list[object],
+    ) -> dict[str, object]:
         """
         Compare pessimistic vs optimistic execution (Req #10).
 
@@ -409,7 +412,7 @@ class ExecutionBacktestEngine(BaseBacktestEngine[BacktestConfig, BacktestResult]
     # PRIVATE HELPER METHODS
     # =========================================================================
 
-    def _calculate_slippage(self, side: str, volatility: Optional[Decimal]) -> Decimal:
+    def _calculate_slippage(self, side: str, volatility: Decimal | None) -> Decimal:
         """Calculate slippage based on volatility."""
         slippage = self.base_slippage_bps
 
@@ -421,10 +424,10 @@ class ExecutionBacktestEngine(BaseBacktestEngine[BacktestConfig, BacktestResult]
 
     def _process_signals_with_delay(
         self,
-        signals: List[object],
-        market_data: List[object],
+        signals: list[object],
+        market_data: list[object],
         current_index: int,
-    ) -> List[ExecutionResult]:
+    ) -> list[ExecutionResult]:
         """Process signals with next-day execution delay."""
         results = []
 
@@ -453,9 +456,11 @@ class ExecutionBacktestEngine(BaseBacktestEngine[BacktestConfig, BacktestResult]
 
                 result = self.execute_entry_order(
                     symbol=signal.symbol,
-                    side=signal.signal_type.value.lower()
-                    if hasattr(signal.signal_type, "value")
-                    else str(signal.signal_type).lower(),
+                    side=(
+                        signal.signal_type.value.lower()
+                        if hasattr(signal.signal_type, "value")
+                        else str(signal.signal_type).lower()
+                    ),
                     quantity=Decimal("100"),  # Default quantity
                     signal_time=signal.timestamp,
                     signal_price=signal_price,
@@ -466,7 +471,7 @@ class ExecutionBacktestEngine(BaseBacktestEngine[BacktestConfig, BacktestResult]
 
         return results
 
-    def _check_intra_bar_execution(self, md: object) -> List[ExecutionResult]:
+    def _check_intra_bar_execution(self, md: object) -> list[ExecutionResult]:
         """Check for intra-bar stop executions."""
         results = []
 
@@ -517,7 +522,7 @@ class ExecutionBacktestEngine(BaseBacktestEngine[BacktestConfig, BacktestResult]
 
     def _create_result_from_executions(
         self,
-        execution_results: List[ExecutionResult],
+        execution_results: list[ExecutionResult],
         start_date: datetime,
         end_date: datetime,
     ) -> BacktestResult:
@@ -545,15 +550,17 @@ class ExecutionBacktestEngine(BaseBacktestEngine[BacktestConfig, BacktestResult]
             total_trades=len(execution_results),
             winning_trades=sum(1 for r in execution_results if r.execution_price > r.signal_price),
             losing_trades=sum(1 for r in execution_results if r.execution_price <= r.signal_price),
-            win_rate=Decimal(
-                str(
-                    sum(1 for r in execution_results if r.execution_price > r.signal_price)
-                    / len(execution_results)
-                    * 100
+            win_rate=(
+                Decimal(
+                    str(
+                        sum(1 for r in execution_results if r.execution_price > r.signal_price)
+                        / len(execution_results)
+                        * 100
+                    )
                 )
-            )
-            if execution_results
-            else Decimal("0"),
+                if execution_results
+                else Decimal("0")
+            ),
             total_pnl=self.state.capital - self.config.initial_capital,
             total_pnl_percentage=total_return,
             gross_profit=Decimal("0"),
@@ -585,8 +592,8 @@ def create_position_with_stops(
     quantity: Decimal,
     entry_price: Decimal,
     entry_time: datetime,
-    stop_loss_pct: Optional[Decimal] = None,
-    take_profit_pct: Optional[Decimal] = None,
+    stop_loss_pct: Decimal | None = None,
+    take_profit_pct: Decimal | None = None,
 ) -> Position:
     """
     Create a position with stop loss and take profit levels.

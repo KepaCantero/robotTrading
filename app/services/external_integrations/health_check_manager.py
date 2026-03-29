@@ -5,13 +5,15 @@ Monitors the health of external services (QuestDB, Dagster, MLFlow, Zipline)
 and provides status information.
 """
 
-import asyncio
 import logging
 from datetime import datetime
 from enum import Enum
-from typing import Dict, List, Optional
+from typing import TYPE_CHECKING, Optional
 
 from pydantic import BaseModel
+
+if TYPE_CHECKING:
+    import asyncio
 
 logger = logging.getLogger(__name__)
 
@@ -70,8 +72,8 @@ class HealthCheckManager:
         """
         self.config = config or HealthCheckConfig()
         self.logger = logging.getLogger(self.__class__.__name__)
-        self.service_health: Dict[str, ServiceHealth] = {}
-        self.check_tasks: Dict[str, asyncio.Task] = {}
+        self.service_health: dict[str, ServiceHealth] = {}
+        self.check_tasks: dict[str, asyncio.Task] = {}
 
     def register_service(self, service_name: str) -> None:
         """
@@ -171,7 +173,7 @@ class HealthCheckManager:
         """
         return self.service_health.get(service_name)
 
-    def get_all_health_status(self) -> Dict[str, ServiceHealth]:
+    def get_all_health_status(self) -> dict[str, ServiceHealth]:
         """
         Get health status of all services.
 
@@ -195,7 +197,7 @@ class HealthCheckManager:
             return False
         return health.status == HealthStatus.HEALTHY
 
-    def get_unhealthy_services(self) -> List[str]:
+    def get_unhealthy_services(self) -> list[str]:
         """
         Get list of unhealthy services.
 
@@ -208,7 +210,7 @@ class HealthCheckManager:
             if health.status == HealthStatus.UNHEALTHY
         ]
 
-    def get_degraded_services(self) -> List[str]:
+    def get_degraded_services(self) -> list[str]:
         """
         Get list of degraded services.
 

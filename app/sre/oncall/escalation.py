@@ -27,7 +27,7 @@ from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Callable
 
 import aiosqlite
 
@@ -89,7 +89,7 @@ class EscalationLevel:
         """Get escalation threshold as timedelta."""
         return timedelta(minutes=self.escalation_minutes)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
         return {
             "level": self.level,
@@ -115,8 +115,8 @@ class EscalationPath:
     path_id: str
     name: str
     service: str
-    levels: List[EscalationLevel]
-    severity_filter: List[IncidentSeverity] = field(default_factory=list)
+    levels: list[EscalationLevel]
+    severity_filter: list[IncidentSeverity] = field(default_factory=list)
     is_active: bool = True
     created_at: datetime = field(default_factory=datetime.utcnow)
 
@@ -132,16 +132,16 @@ class EscalationPath:
         # Validate level ordering
         for i, level in enumerate(self.levels):
             if level.level != i + 1:
-                raise ValueError(f"Level {i+1} has incorrect level number: {level.level}")
+                raise ValueError(f"Level {i + 1} has incorrect level number: {level.level}")
 
-    def get_level(self, level_num: int) -> Optional[EscalationLevel]:
+    def get_level(self, level_num: int) -> EscalationLevel | None:
         """Get escalation level by number."""
         for level in self.levels:
             if level.level == level_num:
                 return level
         return None
 
-    def get_next_level(self, current_level: int) -> Optional[EscalationLevel]:
+    def get_next_level(self, current_level: int) -> EscalationLevel | None:
         """Get next escalation level."""
         return self.get_level(current_level + 1)
 
@@ -167,7 +167,7 @@ class EscalationPath:
         # Check if there's a next level
         return self.get_next_level(current_level) is not None
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
         return {
             "path_id": self.path_id,
@@ -198,12 +198,12 @@ class EscalationIncident:
     current_level: int = 1
     status: EscalationStatus = EscalationStatus.PENDING
     created_at: datetime = field(default_factory=datetime.utcnow)
-    acknowledged_at: Optional[datetime] = None
-    escalated_at: Optional[datetime] = None
-    resolved_at: Optional[datetime] = None
-    acknowledged_by: Optional[str] = None
-    contact_history: List[Dict[str, Any]] = field(default_factory=list)
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    acknowledged_at: datetime | None = None
+    escalated_at: datetime | None = None
+    resolved_at: datetime | None = None
+    acknowledged_by: str | None = None
+    contact_history: list[dict[str, Any]] = field(default_factory=list)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
     def __post_init__(self):
         """Validate incident invariants."""
@@ -258,7 +258,7 @@ class EscalationIncident:
         level: int,
         method: str,
         success: bool,
-        notes: Optional[str] = None,
+        notes: str | None = None,
     ) -> None:
         """Record contact attempt."""
         self.contact_history.append(
@@ -271,7 +271,7 @@ class EscalationIncident:
             }
         )
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
         return {
             "incident_id": self.incident_id,
@@ -301,7 +301,7 @@ class EscalationPolicy:
     auto_escalation_check_interval_seconds: int = 60  # Check every minute
 
     # Notification settings
-    notification_methods: List[str] = field(default_factory=lambda: ["sms", "email", "call"])
+    notification_methods: list[str] = field(default_factory=lambda: ["sms", "email", "call"])
     max_contact_attempts: int = 3
     retry_delay_minutes: int = 5
 
@@ -315,9 +315,9 @@ class EscalationPolicy:
     db_path: str = "data/oncall_escalation.db"
 
     # Callbacks
-    on_escalation: Optional[Callable[[EscalationIncident], None]] = None
-    on_acknowledgement: Optional[Callable[[EscalationIncident], None]] = None
-    on_resolution: Optional[Callable[[EscalationIncident], None]] = None
+    on_escalation: Callable[[EscalationIncident], None] | None = None
+    on_acknowledgement: Callable[[EscalationIncident], None] | None = None
+    on_resolution: Callable[[EscalationIncident], None] | None = None
 
 
 class EscalationManager:
@@ -340,8 +340,8 @@ class EscalationManager:
 
     def __init__(
         self,
-        paths: List[EscalationPath],
-        config: Optional[EscalationPolicy] = None,
+        paths: list[EscalationPath],
+        config: EscalationPolicy | None = None,
     ):
         """
         Initialize escalation manager.
@@ -355,11 +355,11 @@ class EscalationManager:
         self.logger = logging.getLogger(f"{__name__}")
 
         # State
-        self._incidents: Dict[str, EscalationIncident] = {}
+        self._incidents: dict[str, EscalationIncident] = {}
         self._lock = asyncio.Lock()
 
         # Auto-escalation task
-        self._escalation_task: Optional[asyncio.Task] = None
+        self._escalation_task: asyncio.Task | None = None
         self._is_running = False
 
         self.logger.info(
@@ -681,8 +681,8 @@ class EscalationManager:
         title: str,
         description: str,
         service: str,
-        metadata: Optional[Dict[str, Any]] = None,
-    ) -> Optional[EscalationIncident]:
+        metadata: dict[str, Any] | None = None,
+    ) -> EscalationIncident | None:
         """
         Create new escalation incident.
 
@@ -864,7 +864,7 @@ class EscalationManager:
         except (aiosqlite.Error, asyncio.TimeoutError, OSError) as e:
             self.logger.error(f"Error saving incident: {e}")
 
-    async def get_active_incidents(self) -> List[Dict[str, Any]]:
+    async def get_active_incidents(self) -> list[dict[str, Any]]:
         """
         Get all active incidents.
 
@@ -878,7 +878,7 @@ class EscalationManager:
                 if incident.status not in (EscalationStatus.RESOLVED, EscalationStatus.CANCELLED)
             ]
 
-    async def get_incident_metrics(self) -> Dict[str, Any]:
+    async def get_incident_metrics(self) -> dict[str, Any]:
         """
         Get escalation metrics.
 

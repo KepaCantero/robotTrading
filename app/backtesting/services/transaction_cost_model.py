@@ -23,7 +23,7 @@ import logging
 from dataclasses import dataclass, field
 from decimal import ROUND_HALF_UP, Decimal
 from enum import Enum
-from typing import Any, Dict, Optional
+from typing import Any, ClassVar
 
 # SINGLE SOURCE OF TRUTH: Import CentralizedConfig for all values
 from app.shared.config.centralized_config import get_config
@@ -65,16 +65,16 @@ class BrokerConfig:
     """
 
     # Commission structure - defaults from CentralizedConfig
-    commission_per_share: Optional[Decimal] = None  # IBKR: $0.005/share
-    commission_minimum: Optional[Decimal] = None  # IBKR: $1.00 minimum
-    commission_maximum: Optional[Decimal] = None  # IBKR: 0.5% of trade value max
+    commission_per_share: Decimal | None = None  # IBKR: $0.005/share
+    commission_minimum: Decimal | None = None  # IBKR: $1.00 minimum
+    commission_maximum: Decimal | None = None  # IBKR: 0.5% of trade value max
 
     # Exchange fees (SEC, TAF, etc.) - these are regulatory, not broker-specific
     sec_fee_rate: Decimal = Decimal("0.0000278")  # SEC fee per dollar of sale
     taf_fee_per_share: Decimal = Decimal("0.000166")  # Trading Activity Fee
 
     # Spread assumptions (typical for liquid stocks) - from CentralizedConfig
-    default_spread_bps: Optional[Decimal] = None
+    default_spread_bps: Decimal | None = None
     large_cap_spread_bps: Decimal = Decimal("3")  # 3 bps for large caps
     small_cap_spread_bps: Decimal = Decimal("15")  # 15 bps for small caps
 
@@ -83,7 +83,7 @@ class BrokerConfig:
     permanent_impact_coefficient: Decimal = Decimal("0.05")  # Permanent impact
 
     # Participation rate limits - from CentralizedConfig
-    max_participation_rate: Optional[Decimal] = None
+    max_participation_rate: Decimal | None = None
 
     def __post_init__(self):
         """Fill in defaults from CentralizedConfig after initialization."""
@@ -125,12 +125,12 @@ class TransactionCostResult:
     total_cost_bps: Decimal = Decimal("0")
 
     # Effective execution price
-    effective_price: Optional[Decimal] = None
+    effective_price: Decimal | None = None
 
     # Metadata
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for logging/serialization."""
         return {
             "gross_value": float(self.gross_value),
@@ -173,7 +173,7 @@ class TransactionCostModel:
 
     # Default configurations per broker - use BrokerConfig() for CentralizedConfig defaults
     # Note: BrokerConfig.__post_init__ fills in defaults from CentralizedConfig
-    BROKER_CONFIGS: Dict[BrokerType, BrokerConfig] = {
+    BROKER_CONFIGS: ClassVar[dict[BrokerType, BrokerConfig]] = {
         # IBKR: Uses CentralizedConfig defaults (commission_per_share, min, max)
         BrokerType.INTERACTIVE_BROKERS: BrokerConfig(),  # Defaults from CentralizedConfig
         # ALPACA: Commission-free trading
@@ -193,7 +193,7 @@ class TransactionCostModel:
     def __init__(
         self,
         broker: BrokerType = BrokerType.INTERACTIVE_BROKERS,
-        config: Optional[BrokerConfig] = None,
+        config: BrokerConfig | None = None,
         conservative: bool = True,
     ):
         """
@@ -215,8 +215,8 @@ class TransactionCostModel:
         quantity: Decimal,
         price: Decimal,
         order_type: OrderType = OrderType.MARKET,
-        average_volume: Optional[Decimal] = None,
-        volatility: Optional[Decimal] = None,
+        average_volume: Decimal | None = None,
+        volatility: Decimal | None = None,
         market_cap_category: str = "large_cap",
         urgency: float = 0.5,
     ) -> TransactionCostResult:
@@ -358,7 +358,7 @@ class TransactionCostModel:
         quantity: Decimal,
         price: Decimal,
         average_volume: Decimal,
-        volatility: Optional[Decimal],
+        volatility: Decimal | None,
         urgency: float,
     ) -> Decimal:
         """
@@ -416,7 +416,7 @@ class TransactionCostModel:
         self,
         gross_value: Decimal,
         order_type: OrderType,
-        volatility: Optional[Decimal],
+        volatility: Decimal | None,
         urgency: float,
     ) -> Decimal:
         """
@@ -469,8 +469,8 @@ class TransactionCostModel:
         symbol: str,
         quantity: Decimal,
         price: Decimal,
-        average_volume: Optional[Decimal] = None,
-        volatility: Optional[Decimal] = None,
+        average_volume: Decimal | None = None,
+        volatility: Decimal | None = None,
     ) -> Decimal:
         """
         Get estimated round-trip cost (buy + sell).

@@ -17,7 +17,7 @@ import logging
 import traceback
 from datetime import datetime
 from decimal import Decimal
-from typing import Any, Dict
+from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, Request
 
@@ -38,7 +38,7 @@ def get_cost_analysis_service() -> CostAnalysisService:
 
 @router.post("/analyze-trade")
 async def analyze_trade_costs(
-    trade_data: Dict[str, Any],
+    trade_data: dict[str, Any],
     http_request: Request,
     service: CostAnalysisService = Depends(get_cost_analysis_service),
 ):
@@ -125,7 +125,7 @@ async def analyze_trade_costs(
             error_message=str(e),
             stack_trace=traceback.format_exc(),
         )
-        raise HTTPException(status_code=504, detail=f"Timeout analyzing trade costs: {str(e)}")
+        raise HTTPException(status_code=504, detail=f"Timeout analyzing trade costs: {e!s}") from e
     except (ValueError, TypeError, KeyError, AttributeError) as e:
         logger.error(
             "Error analyzing trade costs",
@@ -144,12 +144,12 @@ async def analyze_trade_costs(
             error_message=str(e),
             stack_trace=traceback.format_exc(),
         )
-        raise HTTPException(status_code=400, detail=f"Error analyzing trade costs: {str(e)}")
+        raise HTTPException(status_code=400, detail=f"Error analyzing trade costs: {e!s}") from e
 
 
 @router.post("/analyze-strategy")
 async def analyze_strategy_costs(
-    strategy_data: Dict[str, Any],
+    strategy_data: dict[str, Any],
     service: CostAnalysisService = Depends(get_cost_analysis_service),
 ):
     """Analyze costs for an entire trading strategy."""
@@ -221,12 +221,12 @@ async def analyze_strategy_costs(
         }
 
     except (ValueError, TypeError, KeyError, AttributeError) as e:
-        raise HTTPException(status_code=400, detail=f"Error analyzing strategy costs: {str(e)}")
+        raise HTTPException(status_code=400, detail=f"Error analyzing strategy costs: {e!s}") from e
 
 
 @router.post("/validate-profitability")
 async def validate_profitability(
-    analysis_data: Dict[str, Any],
+    analysis_data: dict[str, Any],
     service: CostAnalysisService = Depends(get_cost_analysis_service),
 ):
     """Validate profitability of a trading strategy."""
@@ -249,7 +249,7 @@ async def validate_profitability(
             net_profit=Decimal(str(analysis_data["net_profit"])),
             cost_impact_ratio=Decimal(str(analysis_data["cost_impact_ratio"])),
             profitability_threshold=Decimal(
-                str(getattr(get_config().trading, 'cost_profitability_threshold', 0.02))
+                str(getattr(get_config().trading, "cost_profitability_threshold", 0.02))
             ),  # Default threshold from config
             cost_breakdowns=[],
             is_profitable=analysis_data["is_profitable"],
@@ -270,7 +270,7 @@ async def validate_profitability(
         }
 
     except (ValueError, TypeError, KeyError, AttributeError) as e:
-        raise HTTPException(status_code=400, detail=f"Error validating profitability: {str(e)}")
+        raise HTTPException(status_code=400, detail=f"Error validating profitability: {e!s}") from e
 
 
 @router.get("/cost-parameters")
@@ -296,7 +296,7 @@ async def get_cost_parameters(
 
 @router.post("/cost-parameters")
 async def update_cost_parameters(
-    parameters: Dict[str, Any],
+    parameters: dict[str, Any],
     service: CostAnalysisService = Depends(get_cost_analysis_service),
 ):
     """Update cost parameters configuration."""
@@ -304,7 +304,7 @@ async def update_cost_parameters(
         config = get_config()
 
         if "commission_rates" in parameters:
-            max_commission_rate = float(getattr(config.trading, 'cost_max_commission_rate', 0.1))
+            max_commission_rate = float(getattr(config.trading, "cost_max_commission_rate", 0.1))
             for asset_class, rate in parameters["commission_rates"].items():
                 if rate > max_commission_rate:  # Max commission from config
                     raise ValueError(
@@ -316,7 +316,7 @@ async def update_cost_parameters(
             }
 
         if "slippage_rates" in parameters:
-            max_slippage_rate = float(getattr(config.trading, 'cost_max_slippage_rate', 0.05))
+            max_slippage_rate = float(getattr(config.trading, "cost_max_slippage_rate", 0.05))
             for asset_class, rate in parameters["slippage_rates"].items():
                 if rate > max_slippage_rate:  # Max slippage from config
                     raise ValueError(
@@ -350,7 +350,7 @@ async def update_cost_parameters(
         }
 
     except (ValueError, TypeError, KeyError, AttributeError) as e:
-        raise HTTPException(status_code=400, detail=f"Error updating cost parameters: {str(e)}")
+        raise HTTPException(status_code=400, detail=f"Error updating cost parameters: {e!s}") from e
 
 
 @router.get("/cost-breakdown/{trade_id}")

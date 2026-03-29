@@ -11,7 +11,7 @@ Orchestrates final decision to deploy strategy or not based on:
 import logging
 from datetime import datetime
 from decimal import Decimal
-from typing import Dict, List, Optional
+from typing import Optional
 
 from pydantic import BaseModel, Field
 
@@ -35,8 +35,8 @@ class DeploymentInput(BaseModel):
 
     # From validation engine
     validation_passed: bool = Field(..., description="Validation gates passed")
-    validation_failures: List[str] = Field(default=[], description="Validation failure reasons")
-    validation_warnings: List[str] = Field(default=[], description="Validation warnings")
+    validation_failures: list[str] = Field(default=[], description="Validation failure reasons")
+    validation_warnings: list[str] = Field(default=[], description="Validation warnings")
 
     # From strategy recommender
     recommendation_score: Decimal = Field(..., description="Recommendation score (0-100)")
@@ -89,9 +89,9 @@ class DeploymentRationale(BaseModel):
     )
     overall_assessment: str = Field(..., description="Overall decision rationale")
 
-    critical_factors: List[str] = Field(..., description="Critical factors influencing decision")
-    improvement_areas: List[str] = Field(..., description="Areas for improvement if applicable")
-    conditions: List[str] = Field(default=[], description="Conditions for conditional approval")
+    critical_factors: list[str] = Field(..., description="Critical factors influencing decision")
+    improvement_areas: list[str] = Field(..., description="Areas for improvement if applicable")
+    conditions: list[str] = Field(default=[], description="Conditions for conditional approval")
 
 
 class DeploymentDecision(BaseModel):
@@ -123,13 +123,13 @@ class DeploymentDecision(BaseModel):
     rationale: DeploymentRationale = Field(..., description="Decision rationale")
 
     # Summary metrics
-    key_metrics: Dict[str, Decimal] = Field(..., description="Key metrics for decision")
+    key_metrics: dict[str, Decimal] = Field(..., description="Key metrics for decision")
 
     # Recommendation for user
     recommendation_text: str = Field(..., description="Human-readable recommendation")
 
     # Next steps if conditional
-    next_steps: List[str] = Field(default=[], description="Suggested next steps")
+    next_steps: list[str] = Field(default=[], description="Suggested next steps")
 
     decision_timestamp: datetime = Field(
         default_factory=datetime.utcnow, description="Decision time"

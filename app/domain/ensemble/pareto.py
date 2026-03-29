@@ -10,7 +10,6 @@ for finding optimal strategy weight allocations across multiple objectives.
 import logging
 import random
 from decimal import Decimal
-from typing import Dict, List, Optional, Set, Tuple, Union
 
 import numpy as np
 
@@ -40,7 +39,7 @@ class ParetoFrontOptimizer:
 
     def __init__(
         self,
-        strategies: List[str],
+        strategies: list[str],
         objective_config: ObjectiveConfig,
         population_size: int = 50,
         mutation_rate: float = 0.1,
@@ -87,11 +86,11 @@ class ParetoFrontOptimizer:
 
     def optimize(
         self,
-        returns_data: Dict[str, np.ndarray],
-        risk_data: Optional[Dict[str, np.ndarray]] = None,
+        returns_data: dict[str, np.ndarray],
+        risk_data: dict[str, np.ndarray] | None = None,
         generations: int = 100,
-        seed: Optional[int] = None,
-    ) -> List[ParetoSolution]:
+        seed: int | None = None,
+    ) -> list[ParetoSolution]:
         """Run NSGA-II optimization to find Pareto front.
 
         Args:
@@ -115,10 +114,10 @@ class ParetoFrontOptimizer:
                 np.random.seed(seed)
 
             # Initialize population
-            initial_population: List[Dict[str, float]] = self._initialize_population()
+            initial_population: list[dict[str, float]] = self._initialize_population()
 
             # Evaluate initial population
-            population: List[ParetoSolution] = self._evaluate_population(
+            population: list[ParetoSolution] = self._evaluate_population(
                 initial_population, returns_data, risk_data
             )
 
@@ -172,8 +171,8 @@ class ParetoFrontOptimizer:
 
     def _validate_optimization_data(
         self,
-        returns_data: Dict[str, np.ndarray],
-        risk_data: Optional[Dict[str, np.ndarray]],
+        returns_data: dict[str, np.ndarray],
+        risk_data: dict[str, np.ndarray] | None,
     ) -> None:
         """Validate optimization input data.
 
@@ -204,7 +203,7 @@ class ParetoFrontOptimizer:
                 if strategy in risk_data and not isinstance(risk_data[strategy], np.ndarray):
                     raise ValueError(f"Risk data for {strategy} must be numpy array")
 
-    def _initialize_population(self) -> List[Dict[str, float]]:
+    def _initialize_population(self) -> list[dict[str, float]]:
         """Initialize random population with valid weight allocations.
 
         Returns:
@@ -222,10 +221,10 @@ class ParetoFrontOptimizer:
 
     def _evaluate_population(
         self,
-        population: Union[List[Dict[str, float]], List[ParetoSolution]],
-        returns_data: Dict[str, np.ndarray],
-        risk_data: Optional[Dict[str, np.ndarray]] = None,
-    ) -> List[ParetoSolution]:
+        population: list[dict[str, float]] | list[ParetoSolution],
+        returns_data: dict[str, np.ndarray],
+        risk_data: dict[str, np.ndarray] | None = None,
+    ) -> list[ParetoSolution]:
         """Evaluate objective functions for population.
 
         Args:
@@ -236,13 +235,13 @@ class ParetoFrontOptimizer:
         Returns:
             List of evaluated solutions with objective values
         """
-        evaluated: List[ParetoSolution] = []
+        evaluated: list[ParetoSolution] = []
 
         for individual in population:
             try:
                 # Normalize to a dict[str, float] allocation
                 if isinstance(individual, ParetoSolution):
-                    allocation: Dict[str, float] = {
+                    allocation: dict[str, float] = {
                         k: float(v) for k, v in individual.strategy_weights.items()
                     }
                 else:
@@ -273,10 +272,10 @@ class ParetoFrontOptimizer:
 
     def _calculate_objectives(
         self,
-        allocation: Dict[str, float],
-        returns_data: Dict[str, np.ndarray],
-        risk_data: Optional[Dict[str, np.ndarray]] = None,
-    ) -> Dict[str, float]:
+        allocation: dict[str, float],
+        returns_data: dict[str, np.ndarray],
+        risk_data: dict[str, np.ndarray] | None = None,
+    ) -> dict[str, float]:
         """Calculate objective function values for an allocation.
 
         Args:
@@ -325,8 +324,8 @@ class ParetoFrontOptimizer:
 
     def _calculate_portfolio_return(
         self,
-        allocation: Dict[str, float],
-        returns_data: Dict[str, np.ndarray],
+        allocation: dict[str, float],
+        returns_data: dict[str, np.ndarray],
     ) -> float:
         """Calculate weighted portfolio return.
 
@@ -357,8 +356,8 @@ class ParetoFrontOptimizer:
 
     def _calculate_portfolio_risk(
         self,
-        allocation: Dict[str, float],
-        returns_data: Dict[str, np.ndarray],
+        allocation: dict[str, float],
+        returns_data: dict[str, np.ndarray],
     ) -> float:
         """Calculate portfolio volatility (standard deviation).
 
@@ -388,8 +387,8 @@ class ParetoFrontOptimizer:
 
     def _calculate_downside_risk(
         self,
-        allocation: Dict[str, float],
-        returns_data: Dict[str, np.ndarray],
+        allocation: dict[str, float],
+        returns_data: dict[str, np.ndarray],
     ) -> float:
         """Calculate downside deviation (Sortino ratio denominator).
 
@@ -423,8 +422,8 @@ class ParetoFrontOptimizer:
 
     def _calculate_max_drawdown(
         self,
-        allocation: Dict[str, float],
-        returns_data: Dict[str, np.ndarray],
+        allocation: dict[str, float],
+        returns_data: dict[str, np.ndarray],
     ) -> float:
         """Calculate maximum drawdown.
 
@@ -460,8 +459,8 @@ class ParetoFrontOptimizer:
 
     def _calculate_diversification_ratio(
         self,
-        allocation: Dict[str, float],
-        returns_data: Dict[str, np.ndarray],
+        allocation: dict[str, float],
+        returns_data: dict[str, np.ndarray],
     ) -> float:
         """Calculate diversification ratio.
 
@@ -500,10 +499,10 @@ class ParetoFrontOptimizer:
 
     def _calculate_metrics(
         self,
-        allocation: Dict[str, float],
-        returns_data: Dict[str, np.ndarray],
-        risk_data: Optional[Dict[str, np.ndarray]] = None,
-    ) -> Dict[str, float]:
+        allocation: dict[str, float],
+        returns_data: dict[str, np.ndarray],
+        risk_data: dict[str, np.ndarray] | None = None,
+    ) -> dict[str, float]:
         """Calculate additional performance metrics.
 
         Args:
@@ -562,7 +561,7 @@ class ParetoFrontOptimizer:
             logger.error("Kurtosis calculation failed", exc_info=True)
             return 0.0
 
-    def _non_dominated_sort(self, population: List[ParetoSolution]) -> List[List[ParetoSolution]]:
+    def _non_dominated_sort(self, population: list[ParetoSolution]) -> list[list[ParetoSolution]]:
         """Perform non-dominated sorting (NSGA-II).
 
         Args:
@@ -571,12 +570,12 @@ class ParetoFrontOptimizer:
         Returns:
             List of fronts (each front is a list of solutions)
         """
-        fronts: List[List[ParetoSolution]] = []
-        current_front: List[ParetoSolution] = []
+        fronts: list[list[ParetoSolution]] = []
+        current_front: list[ParetoSolution] = []
 
         # Calculate domination counts and dominated sets using indices
-        domination_counts: Dict[int, int] = {}
-        dominated_sets: Dict[int, Set[int]] = {i: set() for i in range(len(population))}
+        domination_counts: dict[int, int] = {}
+        dominated_sets: dict[int, set[int]] = {i: set() for i in range(len(population))}
 
         for i, solution_i in enumerate(population):
             domination_count = 0
@@ -602,7 +601,7 @@ class ParetoFrontOptimizer:
         # Build subsequent fronts
         i = 0
         while fronts[i]:
-            next_front: List[ParetoSolution] = []
+            next_front: list[ParetoSolution] = []
 
             for solution in fronts[i]:
                 # Find the index of this solution
@@ -672,7 +671,7 @@ class ParetoFrontOptimizer:
 
         return at_least_one_better
 
-    def _calculate_crowding_distance(self, fronts: List[List[ParetoSolution]]) -> None:
+    def _calculate_crowding_distance(self, fronts: list[list[ParetoSolution]]) -> None:
         """Calculate crowding distance for each front.
 
         Crowding distance measures how close a solution is to its neighbors,
@@ -684,7 +683,7 @@ class ParetoFrontOptimizer:
         for front_idx, front in enumerate(fronts):
             if len(front) <= 2:
                 # Boundary solutions get infinite distance
-                boundary_front: List[ParetoSolution] = []
+                boundary_front: list[ParetoSolution] = []
                 for solution in front:
                     boundary_front.append(
                         solution.model_copy(update={"crowding_distance": float("inf")})
@@ -729,13 +728,13 @@ class ParetoFrontOptimizer:
                         distances[idx] += distance
 
             # Create new front with updated distances
-            new_front: List[ParetoSolution] = []
+            new_front: list[ParetoSolution] = []
             for i, solution in enumerate(front):
                 new_front.append(solution.model_copy(update={"crowding_distance": distances[i]}))
 
             fronts[front_idx] = new_front
 
-    def _create_offspring(self, population: List[ParetoSolution]) -> List[ParetoSolution]:
+    def _create_offspring(self, population: list[ParetoSolution]) -> list[ParetoSolution]:
         """Create offspring through selection, crossover, and mutation.
 
         Args:
@@ -744,7 +743,7 @@ class ParetoFrontOptimizer:
         Returns:
             List of offspring solutions
         """
-        offspring: List[ParetoSolution] = []
+        offspring: list[ParetoSolution] = []
 
         while len(offspring) < self.population_size:
             # Tournament selection
@@ -783,7 +782,7 @@ class ParetoFrontOptimizer:
         return offspring[: self.population_size]
 
     def _tournament_selection(
-        self, population: List[ParetoSolution], tournament_size: int = 2
+        self, population: list[ParetoSolution], tournament_size: int = 2
     ) -> ParetoSolution:
         """Binary tournament selection based on rank and crowding distance.
 
@@ -807,8 +806,8 @@ class ParetoFrontOptimizer:
         return candidates[0]
 
     def _crossover(
-        self, parent1: Dict[str, Decimal], parent2: Dict[str, Decimal]
-    ) -> Tuple[Dict[str, Decimal], Dict[str, Decimal]]:
+        self, parent1: dict[str, Decimal], parent2: dict[str, Decimal]
+    ) -> tuple[dict[str, Decimal], dict[str, Decimal]]:
         """Simulated binary crossover (SBX) for weight allocation.
 
         Args:
@@ -826,10 +825,7 @@ class ParetoFrontOptimizer:
         eta = 20  # Distribution index
         u = random.random()
 
-        if u <= 0.5:
-            beta = (2 * u) ** (1 / (eta + 1))
-        else:
-            beta = (1 / (2 * (1 - u))) ** (1 / (eta + 1))
+        beta = (2 * u) ** (1 / (eta + 1)) if u <= 0.5 else (1 / (2 * (1 - u))) ** (1 / (eta + 1))
 
         c1 = 0.5 * ((1 + beta) * p1 + (1 - beta) * p2)
         c2 = 0.5 * ((1 - beta) * p1 + (1 + beta) * p2)
@@ -848,7 +844,7 @@ class ParetoFrontOptimizer:
 
         return child1, child2
 
-    def _mutate(self, weights: Dict[str, Decimal]) -> Dict[str, Decimal]:
+    def _mutate(self, weights: dict[str, Decimal]) -> dict[str, Decimal]:
         """Polynomial mutation for weight allocation.
 
         Args:
@@ -882,7 +878,7 @@ class ParetoFrontOptimizer:
         # Convert back to dict
         return {s: Decimal(str(weight)) for s, weight in zip(self.strategies, w)}
 
-    def _select_new_population(self, combined: List[ParetoSolution]) -> List[ParetoSolution]:
+    def _select_new_population(self, combined: list[ParetoSolution]) -> list[ParetoSolution]:
         """Select new population from combined population using NSGA-II selection.
 
         Args:
@@ -898,7 +894,7 @@ class ParetoFrontOptimizer:
         self._calculate_crowding_distance(fronts)
 
         # Select from fronts until population is filled
-        new_population: List[ParetoSolution] = []
+        new_population: list[ParetoSolution] = []
 
         for front in fronts:
             if len(new_population) + len(front) <= self.population_size:

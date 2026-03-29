@@ -13,7 +13,7 @@ Calculates sophisticated financial metrics including:
 
 import logging
 from decimal import Decimal
-from typing import List, Optional
+from typing import Optional
 
 import numpy as np
 from scipy import stats
@@ -26,7 +26,7 @@ logger = logging.getLogger(__name__)
 class AdvancedMetricsCalculator:
     """Calculator for advanced financial metrics."""
 
-    def __init__(self, risk_free_rate: Decimal = None, confidence_level: float = 0.95):
+    def __init__(self, risk_free_rate: Optional[Decimal] = None, confidence_level: float = 0.95):
         """
         Initialize advanced metrics calculator.
 
@@ -74,7 +74,7 @@ class AdvancedMetricsCalculator:
             return None
 
     def calculate_omega_ratio(
-        self, returns: List[Decimal], threshold: float = 0.0
+        self, returns: list[Decimal], threshold: float = 0.0
     ) -> Optional[Decimal]:
         """
         Calculate Omega Ratio.
@@ -121,7 +121,7 @@ class AdvancedMetricsCalculator:
             return None
 
     def calculate_ulcer_index(
-        self, equity_curve: List[Decimal], rolling_window: int = 14
+        self, equity_curve: list[Decimal], rolling_window: int = 14
     ) -> Optional[Decimal]:
         """
         Calculate Ulcer Index.
@@ -159,7 +159,7 @@ class AdvancedMetricsCalculator:
             logger.error(f"Error calculating Ulcer index: {e}")
             return None
 
-    def calculate_annualized_volatility(self, returns: List[Decimal]) -> Optional[Decimal]:
+    def calculate_annualized_volatility(self, returns: list[Decimal]) -> Optional[Decimal]:
         """
         Calculate Annualized Volatility.
 
@@ -257,7 +257,7 @@ class AdvancedMetricsCalculator:
             logger.error(f"Error calculating Profit factor: {e}")
             return None
 
-    def calculate_skewness(self, returns: List[Decimal]) -> Optional[Decimal]:
+    def calculate_skewness(self, returns: list[Decimal]) -> Optional[Decimal]:
         """
         Calculate Skewness of Returns.
 
@@ -285,7 +285,7 @@ class AdvancedMetricsCalculator:
             logger.error(f"Error calculating Skewness: {e}")
             return None
 
-    def calculate_kurtosis(self, returns: List[Decimal]) -> Optional[Decimal]:
+    def calculate_kurtosis(self, returns: list[Decimal]) -> Optional[Decimal]:
         """
         Calculate Kurtosis of Returns (Excess Kurtosis).
 
@@ -315,7 +315,7 @@ class AdvancedMetricsCalculator:
             return None
 
     def calculate_var(
-        self, returns: List[Decimal], confidence: Optional[float] = None
+        self, returns: list[Decimal], confidence: Optional[float] = None
     ) -> Optional[Decimal]:
         """
         Calculate Value at Risk (VaR).
@@ -349,7 +349,7 @@ class AdvancedMetricsCalculator:
             return None
 
     def calculate_cvar(
-        self, returns: List[Decimal], confidence: Optional[float] = None
+        self, returns: list[Decimal], confidence: Optional[float] = None
     ) -> Optional[Decimal]:
         """
         Calculate Conditional Value at Risk (CVaR) / Expected Shortfall.
@@ -393,7 +393,7 @@ class AdvancedMetricsCalculator:
             return None
 
     def calculate_sortino_modified(
-        self, returns: List[Decimal], target_return: float = 0.0
+        self, returns: list[Decimal], target_return: float = 0.0
     ) -> Optional[Decimal]:
         """
         Calculate Modified Sortino Ratio.
@@ -434,7 +434,7 @@ class AdvancedMetricsCalculator:
             logger.error(f"Error calculating Modified Sortino: {e}")
             return None
 
-    def calculate_tail_ratio(self, returns: List[Decimal]) -> Optional[Decimal]:
+    def calculate_tail_ratio(self, returns: list[Decimal]) -> Optional[Decimal]:
         """
         Calculate Tail Ratio (Req #6 - Advanced Metrics).
 
@@ -477,7 +477,7 @@ class AdvancedMetricsCalculator:
             return None
 
     def calculate_sqn(
-        self, returns: List[Decimal], number_of_trades: Optional[int] = None
+        self, returns: list[Decimal], number_of_trades: Optional[int] = None
     ) -> Optional[Decimal]:
         """
         Calculate System Quality Number (SQN) (Req #6 - Advanced Metrics).
@@ -523,8 +523,8 @@ class AdvancedMetricsCalculator:
 
     def calculate_all_advanced_metrics(
         self,
-        returns: List[Decimal],
-        equity_curve: List[Decimal],
+        returns: list[Decimal],
+        equity_curve: list[Decimal],
         cagr: Decimal,
         max_drawdown: Decimal,
         total_pnl: Decimal,

@@ -11,7 +11,7 @@ SOLID Principles:
 
 import logging
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 from app.domain.models.momentum import (
     MomentumFilter,
@@ -47,7 +47,7 @@ class StrategyManager:
             storage: Storage backend for strategy persistence
         """
         self.storage = storage
-        self.strategies: Dict[str, MomentumStrategy] = {}
+        self.strategies: dict[str, MomentumStrategy] = {}
         self._initialize_default_strategies()
 
     def initialize_default_strategies(self) -> None:
@@ -145,7 +145,7 @@ class StrategyManager:
         return self.strategies.get(strategy_name)
 
     async def update_strategy(
-        self, strategy_name: str, updated_fields: Dict[str, Any]
+        self, strategy_name: str, updated_fields: dict[str, Any]
     ) -> Optional[MomentumStrategy]:
         """
         Update a momentum strategy.
@@ -190,8 +190,8 @@ class StrategyManager:
         return True
 
     async def get_strategy_signals(
-        self, strategy_name: str, all_signals: List[MomentumSignal]
-    ) -> List[MomentumSignal]:
+        self, strategy_name: str, all_signals: list[MomentumSignal]
+    ) -> list[MomentumSignal]:
         """
         Get signals for a specific strategy.
 
@@ -218,8 +218,8 @@ class StrategyManager:
         return strategy_signals
 
     async def get_top_momentum_assets(
-        self, all_signals: List[MomentumSignal], limit: int = 10
-    ) -> List[Dict[str, Any]]:
+        self, all_signals: list[MomentumSignal], limit: int = 10
+    ) -> list[dict[str, Any]]:
         """
         Get top momentum assets.
 
@@ -256,7 +256,7 @@ class StrategyManager:
 
         return top_assets
 
-    def get_all_strategies(self) -> Dict[str, MomentumStrategy]:
+    def get_all_strategies(self) -> dict[str, MomentumStrategy]:
         """
         Get all strategies.
 

@@ -6,8 +6,9 @@ with asyncpg driver, including session management and connection pooling.
 """
 
 import logging
+from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager, contextmanager
-from typing import Any, AsyncGenerator, Optional
+from typing import Any, Optional
 
 from sqlalchemy import MetaData
 from sqlalchemy.exc import (
@@ -16,7 +17,9 @@ from sqlalchemy.exc import (
     DisconnectionError,
     IntegrityError,
     OperationalError,
-    TimeoutError,
+)
+from sqlalchemy.exc import (
+    TimeoutError as SQLAlchemyTimeoutError,
 )
 from sqlalchemy.ext.asyncio import (
     AsyncEngine,
@@ -115,7 +118,7 @@ def get_database_engine() -> AsyncEngine:
                     f"Database engine created (host={url_part}, pool_size={settings.database_pool_size})"
                 )
 
-        except (ArgumentError, OperationalError, TimeoutError, ValueError) as e:
+        except (ArgumentError, OperationalError, SQLAlchemyTimeoutError, ValueError) as e:
             logger.error(f"Failed to create database engine: {e}")
             raise RuntimeError(f"Database engine creation failed: {e}") from e
 
@@ -178,7 +181,7 @@ async def get_db_session() -> AsyncGenerator[AsyncSession, None]:
     async with session_factory() as session:
         try:
             yield session
-        except (DatabaseError, OperationalError, TimeoutError, DisconnectionError) as e:
+        except (DatabaseError, OperationalError, SQLAlchemyTimeoutError, DisconnectionError) as e:
             logger.error(f"Database session error: {e}")
             await session.rollback()
             raise
@@ -212,7 +215,7 @@ async def get_db_transaction() -> AsyncGenerator[AsyncSession, None]:
             yield session
             await session.commit()
             logger.debug("Database transaction committed successfully")
-        except (DatabaseError, OperationalError, IntegrityError, TimeoutError) as e:
+        except (DatabaseError, OperationalError, IntegrityError, SQLAlchemyTimeoutError) as e:
             logger.error(f"Database transaction error: {e}")
             await session.rollback()
             raise
@@ -239,7 +242,7 @@ async def init_database() -> None:
 
         logger.info("Database initialized successfully")
 
-    except (DatabaseError, OperationalError, TimeoutError) as e:
+    except (DatabaseError, OperationalError, SQLAlchemyTimeoutError) as e:
         logger.error(f"Database initialization failed: {e}")
         raise RuntimeError(f"Database initialization failed: {e}") from e
 
@@ -281,7 +284,7 @@ async def check_database_connection() -> bool:
         logger.debug("Database connection check successful")
         return True
 
-    except (OperationalError, DatabaseError, TimeoutError) as e:
+    except (OperationalError, DatabaseError, SQLAlchemyTimeoutError) as e:
         logger.error(f"Database connection check failed: {e}")
         return False
 
@@ -401,16 +404,16 @@ def get_sync_db() -> Session:
 # Export commonly used items
 __all__ = [
     "Base",
-    "metadata",
-    "get_database_engine",
-    "get_session_factory",
-    "get_db_session",
-    "get_db_transaction",
-    "get_sync_db",
-    "init_database",
-    "close_database",
     "check_database_connection",
-    "get_database_info",
+    "close_database",
     "execute_query",
     "execute_scalar",
+    "get_database_engine",
+    "get_database_info",
+    "get_db_session",
+    "get_db_transaction",
+    "get_session_factory",
+    "get_sync_db",
+    "init_database",
+    "metadata",
 ]

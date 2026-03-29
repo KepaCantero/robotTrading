@@ -19,7 +19,7 @@ import logging
 from dataclasses import dataclass, field
 from decimal import Decimal
 from enum import Enum
-from typing import Dict, Optional
+from typing import ClassVar
 
 # SINGLE SOURCE OF TRUTH: Import CentralizedConfig
 from app.shared.config.centralized_config import get_config
@@ -76,7 +76,7 @@ class TimeOfDayImpact:
 
 
 # Time-of-day impact multipliers
-TIME_OF_DAY_IMPACTS: Dict[TimeOfDay, TimeOfDayImpact] = {
+TIME_OF_DAY_IMPACTS: dict[TimeOfDay, TimeOfDayImpact] = {
     TimeOfDay.PRE_MARKET: TimeOfDayImpact(
         time_of_day=TimeOfDay.PRE_MARKET,
         slippage_multiplier=Decimal("2.0"),  # 2x slippage
@@ -192,7 +192,7 @@ class SlippageEstimate:
     volatility_impact: Decimal
     adv_impact: Decimal
     spread_impact: Decimal
-    components: Dict[str, Decimal] = field(default_factory=dict)
+    components: dict[str, Decimal] = field(default_factory=dict)
 
     @property
     def total_impact_bps(self) -> Decimal:
@@ -252,7 +252,7 @@ class SlippageModel:
     """
 
     # Base slippage by market cap (in bps)
-    MARKET_CAP_BASE_SLIPPAGE = {
+    MARKET_CAP_BASE_SLIPPAGE: ClassVar[dict] = {
         MarketCapCategory.LARGE_CAP: Decimal("3.5"),  # 2-5 bps average
         MarketCapCategory.MID_CAP: Decimal("7.5"),  # 5-10 bps
         MarketCapCategory.SMALL_CAP: Decimal("17.5"),  # 10-25 bps
@@ -260,7 +260,7 @@ class SlippageModel:
     }
 
     # ADV thresholds for market cap classification (daily dollar volume)
-    ADV_THRESHOLDS = {
+    ADV_THRESHOLDS: ClassVar[dict] = {
         MarketCapCategory.LARGE_CAP: Decimal("1000000000"),  # >$1B daily
         MarketCapCategory.MID_CAP: Decimal("100000000"),  # $100M-$1B
         MarketCapCategory.SMALL_CAP: Decimal("10000000"),  # $10M-$100M
@@ -272,7 +272,7 @@ class SlippageModel:
     VIX_HIGH_VOLATILITY = Decimal("30")  # Above 30 = high vol
     VIX_EXTREME_VOLATILITY = Decimal("50")  # Above 50 = extreme vol
 
-    def __init__(self, config: Optional[SlippageConfig] = None):
+    def __init__(self, config: SlippageConfig | None = None):
         """
         Initialize slippage model.
 
@@ -303,7 +303,7 @@ class SlippageModel:
     def calculate_base_slippage(
         self,
         adv: Decimal,
-        volatility: Optional[Decimal] = None,
+        volatility: Decimal | None = None,
     ) -> Decimal:
         """
         Calculate base slippage based on market cap (ADV).
@@ -352,8 +352,8 @@ class SlippageModel:
 
     def calculate_volatility_impact(
         self,
-        volatility: Optional[Decimal],
-        vix: Optional[Decimal] = None,
+        volatility: Decimal | None,
+        vix: Decimal | None = None,
     ) -> Decimal:
         """
         Calculate slippage multiplier from volatility.
@@ -455,9 +455,9 @@ class SlippageModel:
         bid: Decimal,
         ask: Decimal,
         adv: Decimal,
-        volatility: Optional[Decimal] = None,
-        vix: Optional[Decimal] = None,
-        timestamp: Optional[object] = None,  # datetime-like object
+        volatility: Decimal | None = None,
+        vix: Decimal | None = None,
+        timestamp: object | None = None,  # datetime-like object
     ) -> SlippageEstimate:
         """
         Estimate slippage for an order.

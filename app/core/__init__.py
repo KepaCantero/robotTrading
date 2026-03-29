@@ -64,11 +64,17 @@ except ImportError:
     SystemAvailability: Optional[type[Any]] = None
     _compliance_engine_available = False
 
-# Legacy support (DEPRECATED - use ComplianceEngine instead)
+# =============================================================================
+# LEGACY SUPPORT (DEPRECATED - use ComplianceEngine instead)
+# =============================================================================
 try:
     from app.domain.services.compliance.compliance_integration import (
         ComplianceIntegrationEngine as ComplianceIntegrationEngineDeprecated,
+    )
+    from app.domain.services.compliance.compliance_integration import (
         get_compliance_integration_engine as get_compliance_integration_engine_deprecated,
+    )
+    from app.domain.services.compliance.compliance_integration import (
         get_execution_recommendation,
         quick_pre_trade_check,
     )
@@ -84,32 +90,32 @@ except ImportError:
     _compliance_integration_available = False
 
 __all__ = [
-    # Configuration
-    "YAMLConfigLoader",
-    "get_config_loader",
-    "load_strategy_stock_allocator_config",
-    "YAMLConfigUpdater",
-    # Timezone utilities (Phase 0.3)
-    "utc_now",
-    "to_utc",
-    "to_market_time",
-    "format_utc",
-    "format_market_time",
-    "get_market_timezone",
-    "is_market_open",
-    "get_market_open_close_time",
     # THE ONLY COMPLIANCE ENGINE - USE THIS
     "ComplianceEngine",
-    "PreTradeAnalysis",
-    "PostTradeAnalysis",
-    "PortfolioOptimization",
-    "get_compliance_engine",
-    "quick_check",
-    "get_execution_plan",
-    "SystemAvailability",
     # Legacy (DEPRECATED)
     "ComplianceIntegrationEngineDeprecated",
+    "PortfolioOptimization",
+    "PostTradeAnalysis",
+    "PreTradeAnalysis",
+    "SystemAvailability",
+    # Configuration
+    "YAMLConfigLoader",
+    "YAMLConfigUpdater",
+    "format_market_time",
+    "format_utc",
+    "get_compliance_engine",
     "get_compliance_integration_engine_deprecated",
-    "quick_pre_trade_check",
+    "get_config_loader",
+    "get_execution_plan",
     "get_execution_recommendation",
+    "get_market_open_close_time",
+    "get_market_timezone",
+    "is_market_open",
+    "load_strategy_stock_allocator_config",
+    "quick_check",
+    "quick_pre_trade_check",
+    "to_market_time",
+    "to_utc",
+    # Timezone utilities (Phase 0.3)
+    "utc_now",
 ]

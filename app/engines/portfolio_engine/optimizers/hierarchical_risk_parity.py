@@ -20,7 +20,7 @@ Algorithm steps:
 from __future__ import annotations
 
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 import numpy as np
 from scipy.cluster.hierarchy import cophenet, dendrogram, linkage
@@ -77,10 +77,10 @@ class HierarchicalRiskParity:
         self.logger = logging.getLogger(self.__class__.__name__)
 
         # Store for analysis
-        self.linkage_matrix_: Optional[np.ndarray] = None
-        self.cophenet_correlation_: Optional[float] = None
-        self.ordered_indices_: Optional[List[int]] = None
-        self.cluster_tree_: Optional[Dict[str, Any]] = None
+        self.linkage_matrix_: np.ndarray | None = None
+        self.cophenet_correlation_: float | None = None
+        self.ordered_indices_: list[int] | None = None
+        self.cluster_tree_: dict[str, Any] | None = None
 
         logger.info(
             f"HierarchicalRiskParity initialized: linkage={linkage_method}, "
@@ -90,7 +90,7 @@ class HierarchicalRiskParity:
     def get_weights(
         self,
         cov_matrix: np.ndarray,
-        returns: Optional[np.ndarray] = None,
+        returns: np.ndarray | None = None,
     ) -> np.ndarray:
         """
         Calculate HRP portfolio weights.
@@ -149,7 +149,7 @@ class HierarchicalRiskParity:
         self.cophenet_correlation_ = cophenet(self.linkage_matrix_, pdist(distance_matrix))[0]
 
         logger.debug(
-            f"HRP clustering complete: cophenet correlation = " f"{self.cophenet_correlation_:.4f}"
+            f"HRP clustering complete: cophenet correlation = {self.cophenet_correlation_:.4f}"
         )
 
         # Step 3: Quasi-diagonalization
@@ -213,9 +213,9 @@ class HierarchicalRiskParity:
         For HRP, we use: distance = sqrt((1 - correlation) / 2)
 
         This ensures:
-        - correlation = 1  → distance = 0 (identical)
-        - correlation = 0  → distance = sqrt(0.5) (uncorrelated)
-        - correlation = -1 → distance = 1 (opposite)
+        - correlation = 1  -> distance = 0 (identical)
+        - correlation = 0  -> distance = sqrt(0.5) (uncorrelated)
+        - correlation = -1 -> distance = 1 (opposite)
 
         Args:
             corr_matrix: Correlation matrix
@@ -224,7 +224,7 @@ class HierarchicalRiskParity:
             Distance matrix
         """
         # Convert correlation to distance
-        # d = sqrt((1 - ρ) / 2)
+        # d = sqrt((1 - rho) / 2)
         distance_matrix = np.sqrt((1.0 - corr_matrix) / 2.0)
 
         # Ensure diagonal is zero
@@ -236,7 +236,7 @@ class HierarchicalRiskParity:
         self,
         corr_matrix: np.ndarray,
         linkage_matrix: np.ndarray,
-    ) -> List[int]:
+    ) -> list[int]:
         """
         Reorder covariance matrix by dendrogram order.
 
@@ -268,7 +268,7 @@ class HierarchicalRiskParity:
         self,
         n: int,
         linkage_matrix: np.ndarray,
-    ) -> List[int]:
+    ) -> list[int]:
         """
         Get seriated indices from linkage matrix.
 
@@ -325,7 +325,7 @@ class HierarchicalRiskParity:
         self,
         cov_matrix: np.ndarray,
         linkage_matrix: np.ndarray,
-        indices: List[int],
+        indices: list[int],
     ) -> np.ndarray:
         """
         Recursively bisect clusters and allocate weights.
@@ -396,10 +396,10 @@ class HierarchicalRiskParity:
 
     def _find_split_point(
         self,
-        indices: List[int],
+        indices: list[int],
         linkage_matrix: np.ndarray,
         n_assets: int,
-    ) -> Optional[int]:
+    ) -> int | None:
         """
         Find the optimal split point for recursive bisection.
 
@@ -462,7 +462,7 @@ class HierarchicalRiskParity:
     def _get_cluster_variance(
         self,
         cov_matrix: np.ndarray,
-        indices: List[int],
+        indices: list[int],
         weights: np.ndarray,
     ) -> float:
         """
@@ -484,11 +484,11 @@ class HierarchicalRiskParity:
 
         return max(cluster_var, 1e-10)  # Avoid division by zero
 
-    def get_cluster_tree(self) -> Optional[Dict[str, Any]]:
+    def get_cluster_tree(self) -> dict[str, Any] | None:
         """Get the cluster tree structure for visualization."""
         return self.cluster_tree_
 
-    def get_dendrogram_data(self) -> Optional[Dict[str, Any]]:
+    def get_dendrogram_data(self) -> dict[str, Any] | None:
         """
         Get data for plotting dendrogram.
 
@@ -504,7 +504,7 @@ class HierarchicalRiskParity:
             "ordered_indices": self.ordered_indices_,
         }
 
-    def get_metrics(self, weights: np.ndarray, cov_matrix: np.ndarray) -> Dict[str, float]:
+    def get_metrics(self, weights: np.ndarray, cov_matrix: np.ndarray) -> dict[str, float]:
         """
         Calculate portfolio metrics.
 
@@ -542,7 +542,7 @@ class HRPOptimizer:
     (Markowitz, RiskParity, etc.) while using HRP internally.
     """
 
-    def __init__(self, config: Optional[Dict[str, Any]] = None):
+    def __init__(self, config: dict[str, Any] | None = None):
         """
         Initialize HRP optimizer.
 
@@ -562,8 +562,8 @@ class HRPOptimizer:
         self,
         expected_returns: np.ndarray,
         cov_matrix: np.ndarray,
-        constraints: Optional[Dict[str, Any]] = None,
-    ) -> Dict[str, Any]:
+        constraints: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
         """
         Optimize using HRP.
 
@@ -610,7 +610,7 @@ class HRPOptimizer:
             self.logger.error(f"Error in HRP optimization: {e}", exc_info=True)
             return self._equal_weight_fallback(len(expected_returns))
 
-    def _equal_weight_fallback(self, n: int) -> Dict[str, Any]:
+    def _equal_weight_fallback(self, n: int) -> dict[str, Any]:
         """Fallback to equal weights."""
         weight = 1.0 / n
         return {
@@ -652,9 +652,9 @@ def compute_hrp_weights(
 def plot_hrp_dendrogram(
     cov_matrix: np.ndarray,
     linkage_method: str = "single",
-    labels: Optional[List[str]] = None,
+    labels: list[str] | None = None,
     ax=None,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Plot HRP dendrogram for visualization.
 
@@ -675,8 +675,10 @@ def plot_hrp_dendrogram(
     """
     try:
         import matplotlib.pyplot as plt
-    except ImportError:
-        raise ImportError("matplotlib is required for plotting. Install: pip install matplotlib")
+    except ImportError as exc:
+        raise ImportError(
+            "matplotlib is required for plotting. Install: pip install matplotlib"
+        ) from exc
 
     # Compute HRP
     hrp = HierarchicalRiskParity(linkage_method=linkage_method)
@@ -689,7 +691,7 @@ def plot_hrp_dendrogram(
 
     # Create axis if not provided
     if ax is None:
-        fig, ax = plt.subplots(figsize=(10, 6))
+        _fig, ax = plt.subplots(figsize=(10, 6))
 
     # Plot dendrogram
     dendrogram(
@@ -723,8 +725,8 @@ def plot_hrp_dendrogram(
 
 
 __all__ = [
-    "HierarchicalRiskParity",
     "HRPOptimizer",
+    "HierarchicalRiskParity",
     "compute_hrp_weights",
     "plot_hrp_dendrogram",
 ]

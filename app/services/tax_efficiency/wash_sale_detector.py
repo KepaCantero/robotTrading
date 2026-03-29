@@ -10,7 +10,7 @@ import logging
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from decimal import Decimal
-from typing import Dict, List, Optional
+from typing import Optional
 
 logger = logging.getLogger(__name__)
 
@@ -24,7 +24,7 @@ class Trade:
     side: str  # 'BUY' or 'SELL'
     quantity: Decimal
     price: Decimal
-    total_value: Decimal  # quantity × price
+    total_value: Decimal  # quantity * price
 
 
 @dataclass
@@ -66,15 +66,15 @@ class WashSaleDetector:
 
     def __init__(self):
         """Initialize wash-sale detector."""
-        self.violation_history: List[WashSaleViolation] = []
-        self.cost_basis_adjustments: Dict[str, List[CostBasisAdjustment]] = {}
+        self.violation_history: list[WashSaleViolation] = []
+        self.cost_basis_adjustments: dict[str, list[CostBasisAdjustment]] = {}
         logger.info("✅ WashSaleDetector initialized")
 
     def detect_wash_sale(
         self,
         sell_trade: Trade,
-        buy_trades: List[Trade],
-        substantially_identical_symbols: Optional[List[str]] = None,
+        buy_trades: list[Trade],
+        substantially_identical_symbols: Optional[list[str]] = None,
     ) -> Optional[WashSaleViolation]:
         """
         Detect wash-sale violation for a sell transaction.
@@ -130,7 +130,7 @@ class WashSaleDetector:
 
             self.violation_history.append(violation)
             logger.warning(
-                f"⚠️ Wash-sale violation detected: {sell_trade.symbol} sale on {sell_trade.date.date()}, "
+                f"⚠ Wash-sale violation detected: {sell_trade.symbol} sale on {sell_trade.date.date()}, "
                 f"replacement purchase on {buy_trade.date.date()}"
             )
 
@@ -173,7 +173,7 @@ class WashSaleDetector:
 
         logger.info(
             f"✅ Cost basis adjusted for {symbol}: "
-            f"€{original_cost_basis:,.2f} → €{adjusted_basis:,.2f}"
+            f"€{original_cost_basis:,.2f} -> €{adjusted_basis:,.2f}"
         )
 
         return adjustment
@@ -262,7 +262,7 @@ class WashSaleDetector:
 
         return total_adjustment / quantity_owned
 
-    def generate_compliance_report(self) -> Dict:
+    def generate_compliance_report(self) -> dict:
         """
         Generate wash-sale compliance report.
 

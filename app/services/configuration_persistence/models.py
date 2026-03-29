@@ -7,7 +7,7 @@ Persists strategy configurations to in-memory store with optional persistence.
 import logging
 from datetime import datetime
 from decimal import Decimal
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 from pydantic import BaseModel, Field
 
@@ -30,8 +30,8 @@ class StrategyConfiguration(BaseModel):
     max_acceptable_drawdown_pct: Decimal = Field(..., description="Max acceptable drawdown %")
 
     # Module configuration
-    enabled_modules: List[str] = Field(..., description="List of enabled modules")
-    module_parameters: Dict[str, Any] = Field(default={}, description="Module-specific parameters")
+    enabled_modules: list[str] = Field(..., description="List of enabled modules")
+    module_parameters: dict[str, Any] = Field(default={}, description="Module-specific parameters")
 
     # Backtest results
     feasibility_ratio: Optional[Decimal] = Field(None, description="Feasibility ratio")
@@ -40,7 +40,7 @@ class StrategyConfiguration(BaseModel):
     max_drawdown_pct: Optional[Decimal] = Field(None, description="Max drawdown %")
 
     # Portfolio allocation
-    portfolio_allocations: Dict[str, Decimal] = Field(default={}, description="Module allocations")
+    portfolio_allocations: dict[str, Decimal] = Field(default={}, description="Module allocations")
 
     # Validation & Recommendation
     validation_passed: Optional[bool] = Field(None, description="Validation gate status")
@@ -97,7 +97,7 @@ class ConfigurationListResponse(BaseModel):
     success: bool = Field(default=True, description="Query success")
     total_count: int = Field(..., description="Total configurations stored")
     active_count: int = Field(..., description="Active configurations")
-    configurations: List[StrategyConfiguration] = Field(..., description="List of configurations")
+    configurations: list[StrategyConfiguration] = Field(..., description="List of configurations")
     error_message: Optional[str] = Field(None, description="Error if query failed")
 
 

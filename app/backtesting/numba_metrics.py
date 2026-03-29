@@ -25,7 +25,6 @@ Compliance: Rule 19, Rule 23 - High Performance Python
 """
 
 import logging
-from typing import Tuple
 
 import numpy as np
 
@@ -37,7 +36,8 @@ import numpy as np
 logger = logging.getLogger(__name__)
 
 try:
-    from numba import __version__ as numba_version, jit
+    from numba import __version__ as numba_version
+    from numba import jit
 
     NUMBA_AVAILABLE = True
     NUMBA_VERSION = numba_version
@@ -578,7 +578,7 @@ def calculate_profit_factor_numba(pnl_array: np.ndarray) -> float:
 
 
 @jit(nopython=True, cache=False)
-def calculate_avg_win_loss_numba(pnl_array: np.ndarray) -> Tuple[float, float]:
+def calculate_avg_win_loss_numba(pnl_array: np.ndarray) -> tuple[float, float]:
     """
     Calculate average win and average loss using Numba JIT.
 

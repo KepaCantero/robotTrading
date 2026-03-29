@@ -9,8 +9,10 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass, field
-from decimal import Decimal
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from decimal import Decimal
 
 logger = logging.getLogger(__name__)
 
@@ -311,7 +313,7 @@ class BenchmarkResult:
             Formatted summary string.
         """
         speedup_str = (
-            f"{self.speedup:.2f}x" if self.speedup >= 1 else f"{1/self.speedup:.2f}x slower"
+            f"{self.speedup:.2f}x" if self.speedup >= 1 else f"{1 / self.speedup:.2f}x slower"
         )
 
         return (

@@ -8,7 +8,7 @@ import logging
 from collections import defaultdict
 from datetime import datetime
 from decimal import Decimal
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 from app.domain.models.order import Order, OrderStatus
 
@@ -45,8 +45,8 @@ class FillRatioTracker:
 
     def __init__(self, max_history: int = 10000):
         self.max_history = max_history
-        self.fill_metrics: List[FillMetrics] = []
-        self.metrics_by_symbol: Dict[str, List[FillMetrics]] = defaultdict(list)
+        self.fill_metrics: list[FillMetrics] = []
+        self.metrics_by_symbol: dict[str, list[FillMetrics]] = defaultdict(list)
 
     def track_order(self, order: Order) -> FillMetrics:
         """
@@ -142,7 +142,7 @@ class FillRatioTracker:
 
     def get_fill_ratio_stats(
         self, symbol: Optional[str] = None, last_n: int = 100
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Get fill ratio statistics.
 

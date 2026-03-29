@@ -11,18 +11,21 @@ Implements Tomasini's event queue pattern from "Trading Systems":
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import logging
 import uuid
 from collections import deque
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum, IntEnum
-from typing import Any, Awaitable, Callable, Dict, List, Optional
+from typing import TYPE_CHECKING, Any, Callable
 
 import numpy as np
 
 from app.domain.entities.order import Order
-import contextlib
+
+if TYPE_CHECKING:
+    from collections.abc import Awaitable
 
 logger = logging.getLogger(__name__)
 
@@ -90,9 +93,9 @@ class Event:
     event_id: str = field(compare=False, default="")
     event_type: EventType = field(compare=False, default=EventType.MARKET_DATA_UPDATE)
     timestamp: datetime = field(compare=False, default_factory=datetime.utcnow)
-    order_id: Optional[str] = field(compare=False, default=None)
-    data: Dict[str, Any] = field(compare=False, default_factory=dict)
-    callback: Optional[Callable[[], Awaitable[None]]] = field(compare=False, default=None)
+    order_id: str | None = field(compare=False, default=None)
+    data: dict[str, Any] = field(compare=False, default_factory=dict)
+    callback: Callable[[], Awaitable[None]] | None = field(compare=False, default=None)
 
     def __post_init__(self):
         """Generate event ID if not provided."""
@@ -163,16 +166,16 @@ class TomasiniEventQueue:
             enable_history: Whether to maintain event history
         """
         # Priority queue (implemented with sorted list for simplicity)
-        self._queue: List[Event] = []
+        self._queue: list[Event] = []
         self._queue_lock = asyncio.Lock()
 
         # Event processing
         self._processing = False
-        self._processor_task: Optional[asyncio.Task] = None
+        self._processor_task: asyncio.Task | None = None
         self._processing_timeout = processing_timeout
 
         # Event handlers
-        self._handlers: Dict[EventType, List[EventHandler]] = {}
+        self._handlers: dict[EventType, list[EventHandler]] = {}
 
         # Event history (Tomasini's audit trail)
         self._history: deque = deque(maxlen=10000 if enable_history else 0)
@@ -324,7 +327,7 @@ class TomasiniEventQueue:
 
         logger.info("Event processor stopped")
 
-    async def _get_next_event(self) -> Optional[Event]:
+    async def _get_next_event(self) -> Event | None:
         """Get next event from queue."""
         async with self._queue_lock:
             if not self._queue:
@@ -377,7 +380,7 @@ class TomasiniEventQueue:
         event_type: EventType,
         order: Order,
         priority: EventPriority = EventPriority.NORMAL,
-        data: Optional[Dict[str, Any]] = None,
+        data: dict[str, Any] | None = None,
     ) -> Event:
         """
         Create an order event.
@@ -404,7 +407,7 @@ class TomasiniEventQueue:
         await self.put(event)
         return event
 
-    def get_stats(self) -> Dict[str, Any]:
+    def get_stats(self) -> dict[str, Any]:
         """
         Get queue statistics.
 
@@ -424,7 +427,7 @@ class TomasiniEventQueue:
             "history_size": len(self._history),
         }
 
-    def get_history(self, limit: int = 100) -> List[Dict[str, Any]]:
+    def get_history(self, limit: int = 100) -> list[dict[str, Any]]:
         """
         Get event history.
 
@@ -514,7 +517,7 @@ class OrderSubmitHandler(OrderEventHandler):
             ValueError: If order not found in internal storage
         """
         # Try to get order from the order_queue's internal orders dict
-        if hasattr(self.order_queue, 'orders') and order_id in self.order_queue.orders:
+        if hasattr(self.order_queue, "orders") and order_id in self.order_queue.orders:
             return self.order_queue.orders[order_id]
 
         # If not found, return a placeholder order with the given ID

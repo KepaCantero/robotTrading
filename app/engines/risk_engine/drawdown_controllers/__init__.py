@@ -13,7 +13,7 @@ from .drawdown_controllers import (
 
 __all__ = [
     "BaseDrawdownController",
-    "DrawdownController",
     "CircuitBreakerController",
+    "DrawdownController",
     "PeakDrawdownController",
 ]

@@ -14,10 +14,11 @@ import gc
 import logging
 import os
 import sys
+from collections.abc import Awaitable
 from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
-from typing import Any, Awaitable, Callable, Dict, List, Optional
+from typing import Any, Callable, Optional
 
 import psutil
 
@@ -59,7 +60,7 @@ class MemorySnapshot:
     available_mb: float
     gc_objects: int
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
         return {
             "timestamp": self.timestamp.isoformat(),
@@ -100,7 +101,7 @@ class MemoryMonitor:
         # State
         self._is_monitoring = False
         self._monitor_task: Optional[asyncio.Task] = None
-        self._snapshots: List[MemorySnapshot] = []
+        self._snapshots: list[MemorySnapshot] = []
         self._restart_count = 0
         self._last_restart: Optional[datetime] = None
 
@@ -198,7 +199,7 @@ class MemoryMonitor:
         except (asyncio.TimeoutError, OSError):
             return 0.0
 
-    def get_detailed_stats(self) -> Dict[str, Any]:
+    def get_detailed_stats(self) -> dict[str, Any]:
         """Get detailed memory statistics."""
         logger.debug("Getting detailed memory statistics")
         try:
@@ -258,9 +259,7 @@ class MemoryMonitor:
         elif action == MemoryAction.CLOSE_POSITIONS and self.position_closer:
             # Close positions before restart
             try:
-                logger.info(
-                    "Closing positions before restart", extra={"action": "close_positions"}
-                )
+                logger.info("Closing positions before restart", extra={"action": "close_positions"})
                 await self.position_closer()
             except (asyncio.TimeoutError, OSError) as e:
                 logger.error(
@@ -319,7 +318,7 @@ class MemoryMonitor:
             logger.info(
                 "Executing process restart", extra={"executable": sys.executable, "argv": sys.argv}
             )
-            os.execv(sys.executable, [sys.executable] + sys.argv)
+            os.execv(sys.executable, [sys.executable, *sys.argv])
         except (asyncio.TimeoutError, OSError) as e:
             logger.error(
                 "Error restarting process", extra={"error_type": type(e).__name__}, exc_info=True
@@ -360,11 +359,11 @@ class MemoryMonitor:
                 gc_objects=0,
             )
 
-    def get_snapshots(self, limit: int = 10) -> List[MemorySnapshot]:
+    def get_snapshots(self, limit: int = 10) -> list[MemorySnapshot]:
         """Get recent memory snapshots."""
         return self._snapshots[-limit:]
 
-    def get_statistics(self) -> Dict[str, Any]:
+    def get_statistics(self) -> dict[str, Any]:
         """Get monitor statistics."""
         current_snapshot = self.take_snapshot()
 

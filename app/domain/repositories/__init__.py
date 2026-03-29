@@ -10,4 +10,4 @@ from .order_repository import OrderRepository
 from .portfolio_repository import PortfolioRepository
 from .position_repository import PositionRepository
 
-__all__ = ['PortfolioRepository', 'PositionRepository', 'OrderRepository']
+__all__ = ["OrderRepository", "PortfolioRepository", "PositionRepository"]

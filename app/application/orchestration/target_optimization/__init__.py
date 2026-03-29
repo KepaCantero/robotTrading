@@ -33,21 +33,21 @@ from .models import (
 
 # Models
 __all__ = [
+    "AbsoluteReturnTarget",
+    "AbsoluteReturnValidation",
+    "CapacityFadeAnalyzer",
     "CapitalTier",
     "CapitalTierConfig",
     "CapitalTierResult",
-    "CapitalTierThresholds",
-    "RiskProfile",
-    "StrategyFeatures",
-    "AbsoluteReturnTarget",
-    "AbsoluteReturnValidation",
     # T1.1 Selectors
     "CapitalTierSelector",
-    "StrategyFeatureGatekeeper",
+    "CapitalTierThresholds",
+    "FeasibilityValidator",
+    "ParameterOptimizer",
+    "RiskProfile",
     "RiskProfileScaler",
+    "StrategyFeatureGatekeeper",
+    "StrategyFeatures",
     # T1.2 Optimizers
     "TargetAlphaCalculator",
-    "CapacityFadeAnalyzer",
-    "ParameterOptimizer",
-    "FeasibilityValidator",
 ]

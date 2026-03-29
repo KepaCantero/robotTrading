@@ -11,9 +11,12 @@ significant changes in market regime that may require strategy adjustments.
 from __future__ import annotations
 
 import logging
+from typing import TYPE_CHECKING
 
 from app.services.hurst_analysis.models import RegimeChange
-from app.services.hurst_analysis.protocols import RegimeClassifierProtocol
+
+if TYPE_CHECKING:
+    from app.services.hurst_analysis.protocols import RegimeClassifierProtocol
 
 logger = logging.getLogger(__name__)
 
@@ -105,7 +108,7 @@ class RegimeChangeDetector:
 
         # Get current and previous Hurst values
         current_ts, current_hurst = history[-1]
-        previous_ts, previous_hurst = history[-lookback_periods - 1]
+        _previous_ts, previous_hurst = history[-lookback_periods - 1]
 
         # Calculate absolute difference
         hurst_diff = abs(current_hurst - previous_hurst)

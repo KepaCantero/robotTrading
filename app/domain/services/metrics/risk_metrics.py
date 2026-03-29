@@ -20,7 +20,6 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass
-from typing import List, Optional, Union
 
 import numpy as np
 import pandas as pd
@@ -33,7 +32,7 @@ logger = logging.getLogger(__name__)
 DEFAULT_CONFIDENCE_LEVEL = 0.95
 
 
-def _to_array(returns: Union[pd.Series, np.ndarray, List[float]]) -> np.ndarray:
+def _to_array(returns: pd.Series | np.ndarray | list[float]) -> np.ndarray:
     """Convert returns to numpy array, handling various input types."""
     if isinstance(returns, pd.Series):
         arr = returns.values.astype(np.float64)
@@ -49,8 +48,8 @@ class VaRResult:
     """Value at Risk calculation result."""
 
     var_historical: float  # Historical VaR
-    var_parametric: Optional[float] = None  # Parametric VaR (normal assumption)
-    var_cornish_fisher: Optional[float] = None  # Cornish-Fisher adjusted VaR
+    var_parametric: float | None = None  # Parametric VaR (normal assumption)
+    var_cornish_fisher: float | None = None  # Cornish-Fisher adjusted VaR
     confidence_level: float = 0.95
     method_used: str = "historical"
 
@@ -70,12 +69,12 @@ class RiskMetricsResult:
     annualized_volatility: float
 
     # Distribution metrics
-    skewness: Optional[float]
-    kurtosis: Optional[float]
+    skewness: float | None
+    kurtosis: float | None
 
     # Beta and correlation (if benchmark provided)
-    beta: Optional[float]
-    correlation: Optional[float]
+    beta: float | None
+    correlation: float | None
 
 
 class RiskMetricsCalculator:
@@ -97,7 +96,7 @@ class RiskMetricsCalculator:
     def __init__(
         self,
         confidence_level: float = DEFAULT_CONFIDENCE_LEVEL,
-        trading_days: int = None,
+        trading_days: int | None = None,
     ):
         """
         Initialize risk metrics calculator.
@@ -119,8 +118,8 @@ class RiskMetricsCalculator:
 
     def var(
         self,
-        returns: Union[pd.Series, np.ndarray, List[float]],
-        confidence: Optional[float] = None,
+        returns: pd.Series | np.ndarray | list[float],
+        confidence: float | None = None,
         method: str = "historical",
     ) -> float:
         """
@@ -216,8 +215,8 @@ class RiskMetricsCalculator:
 
     def var_comprehensive(
         self,
-        returns: Union[pd.Series, np.ndarray, List[float]],
-        confidence: Optional[float] = None,
+        returns: pd.Series | np.ndarray | list[float],
+        confidence: float | None = None,
     ) -> VaRResult:
         """
         Calculate VaR using multiple methods.
@@ -257,8 +256,8 @@ class RiskMetricsCalculator:
 
     def cvar(
         self,
-        returns: Union[pd.Series, np.ndarray, List[float]],
-        confidence: Optional[float] = None,
+        returns: pd.Series | np.ndarray | list[float],
+        confidence: float | None = None,
     ) -> float:
         """
         Calculate Conditional Value at Risk (Expected Shortfall).
@@ -301,10 +300,10 @@ class RiskMetricsCalculator:
 
     def volatility(
         self,
-        returns: Union[pd.Series, np.ndarray, List[float]],
+        returns: pd.Series | np.ndarray | list[float],
         annualize: bool = True,
         method: str = "simple",
-        window: Optional[int] = None,
+        window: int | None = None,
     ) -> float:
         """
         Calculate volatility.
@@ -350,7 +349,7 @@ class RiskMetricsCalculator:
 
     def rolling_volatility(
         self,
-        returns: Union[pd.Series, np.ndarray, List[float]],
+        returns: pd.Series | np.ndarray | list[float],
         window: int = 21,
         annualize: bool = True,
     ) -> np.ndarray:
@@ -390,8 +389,8 @@ class RiskMetricsCalculator:
 
     def beta(
         self,
-        asset_returns: Union[pd.Series, np.ndarray, List[float]],
-        market_returns: Union[pd.Series, np.ndarray, List[float]],
+        asset_returns: pd.Series | np.ndarray | list[float],
+        market_returns: pd.Series | np.ndarray | list[float],
     ) -> float:
         """
         Calculate beta (asset sensitivity to market).
@@ -433,8 +432,8 @@ class RiskMetricsCalculator:
 
     def correlation(
         self,
-        returns1: Union[pd.Series, np.ndarray, List[float]],
-        returns2: Union[pd.Series, np.ndarray, List[float]],
+        returns1: pd.Series | np.ndarray | list[float],
+        returns2: pd.Series | np.ndarray | list[float],
     ) -> float:
         """
         Calculate correlation between two return series.
@@ -480,8 +479,8 @@ class RiskMetricsCalculator:
 
     def tracking_error(
         self,
-        portfolio_returns: Union[pd.Series, np.ndarray, List[float]],
-        benchmark_returns: Union[pd.Series, np.ndarray, List[float]],
+        portfolio_returns: pd.Series | np.ndarray | list[float],
+        benchmark_returns: pd.Series | np.ndarray | list[float],
         annualize: bool = True,
     ) -> float:
         """
@@ -526,8 +525,8 @@ class RiskMetricsCalculator:
 
     def information_ratio(
         self,
-        portfolio_returns: Union[pd.Series, np.ndarray, List[float]],
-        benchmark_returns: Union[pd.Series, np.ndarray, List[float]],
+        portfolio_returns: pd.Series | np.ndarray | list[float],
+        benchmark_returns: pd.Series | np.ndarray | list[float],
         annualize: bool = True,
     ) -> float:
         """
@@ -578,8 +577,8 @@ class RiskMetricsCalculator:
 
     def upside_capture(
         self,
-        portfolio_returns: Union[pd.Series, np.ndarray, List[float]],
-        benchmark_returns: Union[pd.Series, np.ndarray, List[float]],
+        portfolio_returns: pd.Series | np.ndarray | list[float],
+        benchmark_returns: pd.Series | np.ndarray | list[float],
     ) -> float:
         """
         Calculate upside capture ratio.
@@ -620,8 +619,8 @@ class RiskMetricsCalculator:
 
     def downside_capture(
         self,
-        portfolio_returns: Union[pd.Series, np.ndarray, List[float]],
-        benchmark_returns: Union[pd.Series, np.ndarray, List[float]],
+        portfolio_returns: pd.Series | np.ndarray | list[float],
+        benchmark_returns: pd.Series | np.ndarray | list[float],
     ) -> float:
         """
         Calculate downside capture ratio.
@@ -666,8 +665,8 @@ class RiskMetricsCalculator:
 
     def calculate_all(
         self,
-        returns: Union[pd.Series, np.ndarray, List[float]],
-        benchmark_returns: Optional[Union[pd.Series, np.ndarray, List[float]]] = None,
+        returns: pd.Series | np.ndarray | list[float],
+        benchmark_returns: pd.Series | np.ndarray | list[float] | None = None,
     ) -> RiskMetricsResult:
         """
         Calculate all risk metrics at once.
@@ -736,7 +735,7 @@ class RiskMetricsCalculator:
     # HELPER METHODS
     # =========================================================================
 
-    def _calculate_skewness(self, returns: np.ndarray) -> Optional[float]:
+    def _calculate_skewness(self, returns: np.ndarray) -> float | None:
         """Calculate skewness of returns."""
         if len(returns) < 3:
             return None
@@ -752,7 +751,7 @@ class RiskMetricsCalculator:
                 return 0.0
             return float(np.mean(((returns - mean) / std) ** 3))
 
-    def _calculate_kurtosis(self, returns: np.ndarray) -> Optional[float]:
+    def _calculate_kurtosis(self, returns: np.ndarray) -> float | None:
         """Calculate excess kurtosis of returns."""
         if len(returns) < 4:
             return None
@@ -775,7 +774,7 @@ class RiskMetricsCalculator:
 
 
 def get_var(
-    returns: Union[pd.Series, np.ndarray, List[float]],
+    returns: pd.Series | np.ndarray | list[float],
     confidence: float = 0.95,
     method: str = "historical",
 ) -> float:
@@ -795,7 +794,7 @@ def get_var(
 
 
 def get_cvar(
-    returns: Union[pd.Series, np.ndarray, List[float]],
+    returns: pd.Series | np.ndarray | list[float],
     confidence: float = 0.95,
 ) -> float:
     """
@@ -813,7 +812,7 @@ def get_cvar(
 
 
 def get_volatility(
-    returns: Union[pd.Series, np.ndarray, List[float]],
+    returns: pd.Series | np.ndarray | list[float],
     annualize: bool = True,
 ) -> float:
     """
@@ -831,8 +830,8 @@ def get_volatility(
 
 
 def get_beta(
-    asset_returns: Union[pd.Series, np.ndarray, List[float]],
-    market_returns: Union[pd.Series, np.ndarray, List[float]],
+    asset_returns: pd.Series | np.ndarray | list[float],
+    market_returns: pd.Series | np.ndarray | list[float],
 ) -> float:
     """
     Convenience function to calculate beta.
@@ -849,8 +848,8 @@ def get_beta(
 
 
 def get_correlation(
-    returns1: Union[pd.Series, np.ndarray, List[float]],
-    returns2: Union[pd.Series, np.ndarray, List[float]],
+    returns1: pd.Series | np.ndarray | list[float],
+    returns2: pd.Series | np.ndarray | list[float],
 ) -> float:
     """
     Convenience function to calculate correlation.
@@ -867,8 +866,8 @@ def get_correlation(
 
 
 def get_tracking_error(
-    portfolio_returns: Union[pd.Series, np.ndarray, List[float]],
-    benchmark_returns: Union[pd.Series, np.ndarray, List[float]],
+    portfolio_returns: pd.Series | np.ndarray | list[float],
+    benchmark_returns: pd.Series | np.ndarray | list[float],
     annualize: bool = True,
 ) -> float:
     """
@@ -887,8 +886,8 @@ def get_tracking_error(
 
 
 def get_information_ratio(
-    portfolio_returns: Union[pd.Series, np.ndarray, List[float]],
-    benchmark_returns: Union[pd.Series, np.ndarray, List[float]],
+    portfolio_returns: pd.Series | np.ndarray | list[float],
+    benchmark_returns: pd.Series | np.ndarray | list[float],
     annualize: bool = True,
 ) -> float:
     """

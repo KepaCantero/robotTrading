@@ -11,7 +11,7 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass
-from typing import Dict, List, Optional
+from typing import ClassVar
 
 import numpy as np
 import pandas as pd
@@ -41,7 +41,7 @@ class MarketQualityMetrics:
 
     # Trading recommendation
     can_trade: bool
-    max_position_size: Optional[float]
+    max_position_size: float | None
     recommended_order_type: str  # MARKET, LIMIT, ICEBERG, etc.
 
 
@@ -61,14 +61,14 @@ class MarketQualityCalculator:
     IMPACT_WEIGHT = 0.15
 
     # Thresholds for regime classification
-    SPREAD_THRESHOLDS = {
+    SPREAD_THRESHOLDS: ClassVar[dict] = {
         "EXCELLENT": 2.0,  # < 2 bps
         "GOOD": 5.0,  # < 5 bps
         "FAIR": 15.0,  # < 15 bps
         "POOR": 50.0,  # < 50 bps
     }
 
-    VOLATILITY_THRESHOLDS = {
+    VOLATILITY_THRESHOLDS: ClassVar[dict] = {
         "LOW": 0.10,  # < 10% annualized
         "NORMAL": 0.25,  # < 25%
         "HIGH": 0.50,  # < 50%
@@ -99,12 +99,12 @@ class MarketQualityCalculator:
         self,
         symbol: str,
         price_history: pd.DataFrame,
-        volume_history: Optional[pd.DataFrame] = None,
-        order_books: Optional[List[Dict]] = None,
+        volume_history: pd.DataFrame | None = None,
+        order_books: list[dict] | None = None,
         price_col: str = "close",
         volume_col: str = "volume",
-        bid_col: Optional[str] = "bid",
-        ask_col: Optional[str] = "ask",
+        bid_col: str | None = "bid",
+        ask_col: str | None = "ask",
     ) -> MarketQualityMetrics:
         """
         Calculate comprehensive market quality metrics.
@@ -179,8 +179,8 @@ class MarketQualityCalculator:
     def _calculate_spread_bps(
         self,
         df: pd.DataFrame,
-        bid_col: Optional[str],
-        ask_col: Optional[str],
+        bid_col: str | None,
+        ask_col: str | None,
         price_col: str,
     ) -> float:
         """Calculate average spread in basis points."""
@@ -201,7 +201,7 @@ class MarketQualityCalculator:
 
     def _calculate_average_depth(
         self,
-        order_books: Optional[List[Dict]],
+        order_books: list[dict] | None,
     ) -> float:
         """Calculate average order book depth."""
         if not order_books:
@@ -254,7 +254,7 @@ class MarketQualityCalculator:
         df: pd.DataFrame,
         volume_col: str,
         price_col: str,
-    ) -> Dict[str, float]:
+    ) -> dict[str, float]:
         """
         Estimate market impact function: impact ~ a * (size / ADV)^b
 
@@ -366,7 +366,7 @@ class MarketQualityCalculator:
         avg_daily_volume: float,
         quality_score: float,
         volatility: float,
-    ) -> Optional[float]:
+    ) -> float | None:
         """
         Calculate maximum recommended position size.
 
@@ -415,9 +415,9 @@ class MarketQualityCalculator:
 
     def compare_market_quality(
         self,
-        symbols: List[str],
-        price_data: Dict[str, pd.DataFrame],
-        volume_data: Optional[Dict[str, pd.DataFrame]] = None,
+        symbols: list[str],
+        price_data: dict[str, pd.DataFrame],
+        volume_data: dict[str, pd.DataFrame] | None = None,
     ) -> pd.DataFrame:
         """
         Compare market quality across multiple symbols.

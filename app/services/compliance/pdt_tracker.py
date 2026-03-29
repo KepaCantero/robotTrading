@@ -21,7 +21,7 @@ from dataclasses import dataclass
 from datetime import date, datetime, timedelta
 from decimal import Decimal
 from enum import Enum
-from typing import Dict, List, Optional, Tuple
+from typing import Optional
 
 from app.shared.utils.timezone_utils import utc_now
 
@@ -132,15 +132,15 @@ class PDTTracker:
         self.country = country
 
         # Position tracking
-        self._open_positions: Dict[str, List[Dict]] = defaultdict(list)
-        self._closed_positions: List[Dict] = []
+        self._open_positions: dict[str, list[dict]] = defaultdict(list)
+        self._closed_positions: list[dict] = []
 
         # Day trade tracking
-        self._day_trades: List[DayTradeRecord] = []
-        self._day_trades_by_date: Dict[date, int] = defaultdict(int)
+        self._day_trades: list[DayTradeRecord] = []
+        self._day_trades_by_date: dict[date, int] = defaultdict(int)
 
         # Trade history
-        self._all_trades: List[Dict] = []
+        self._all_trades: list[dict] = []
 
         logger.info(f"PDTTracker initialized for {country.value}")
 
@@ -149,7 +149,7 @@ class PDTTracker:
         account_equity: Decimal,
         symbol: Optional[str] = None,
         side: Optional[str] = None,
-    ) -> Tuple[bool, str]:
+    ) -> tuple[bool, str]:
         """
         Check if account would violate PDT rule with a new trade.
 
@@ -270,8 +270,7 @@ class PDTTracker:
         if self.country == Country.US and account_equity < self.PDT_MIN_EQUITY:
             is_restricted = True
             restriction_reason = (
-                f"Account equity ${account_equity:,.2f} below "
-                f"${self.PDT_MIN_EQUITY:,.2f} minimum"
+                f"Account equity ${account_equity:,.2f} below ${self.PDT_MIN_EQUITY:,.2f} minimum"
             )
 
         # Check day trade count restriction
@@ -290,7 +289,7 @@ class PDTTracker:
             restriction_reason=restriction_reason,
         )
 
-    def get_day_trades(self, days: int = 5) -> List[DayTradeRecord]:
+    def get_day_trades(self, days: int = 5) -> list[DayTradeRecord]:
         """
         Get day trades in last N days.
 
@@ -357,7 +356,7 @@ class PDTTracker:
         self._day_trades.append(day_trade)
         self._day_trades_by_date[trade_date] += 1
 
-        logger.info(f"Day trade recorded: {symbol} - " f"PnL: ${pnl:.2f}")
+        logger.info(f"Day trade recorded: {symbol} - PnL: ${pnl:.2f}")
 
     def reset(self) -> None:
         """Reset all tracking (for testing)."""

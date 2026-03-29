@@ -11,14 +11,17 @@ and the nested YAML configuration structure used by strategies.
 """
 
 import copy
-from typing import Dict, List, Optional, Union
+from typing import ClassVar, Optional, Union
 
 from app.backtesting.shared.types import ConfigKeys
 
 # Type alias for nested configuration dictionaries
-ConfigDict = Dict[str, Union[int, float, str, bool, "ConfigDict", List[Union[int, float, str, bool, "ConfigDict"]]]]
+ConfigDict = dict[
+    str,
+    Union[int, float, str, bool, "ConfigDict", list[Union[int, float, str, bool, "ConfigDict"]]],
+]
 ParamValue = Union[int, float]
-ParamDict = Dict[str, ParamValue]
+ParamDict = dict[str, ParamValue]
 
 
 class ParameterMappingService:
@@ -48,13 +51,13 @@ class ParameterMappingService:
     """
 
     # RSI context types that should receive the same threshold
-    RSI_CONTEXTS: List[str] = ["trend_up", "trend_down", "range", "high_vol"]
+    RSI_CONTEXTS: ClassVar[list[str]] = ["trend_up", "trend_down", "range", "high_vol"]
 
     # Volume preset types that should receive the same threshold
-    VOLUME_PRESETS: List[str] = ["conservative", "balanced", "aggressive"]
+    VOLUME_PRESETS: ClassVar[list[str]] = ["conservative", "balanced", "aggressive"]
 
     # Parameter to config path mappings
-    PARAMETER_MAPPINGS: Dict[str, Dict[str, Union[List[str], str]]] = {
+    PARAMETER_MAPPINGS: ClassVar[dict[str, dict[str, Union[list[str], str]]]] = {
         "rsi_threshold": {
             "path": ["modules", "rsi_filter", "adaptive_thresholds"],
             "contexts": RSI_CONTEXTS,
@@ -125,7 +128,9 @@ class ParameterMappingService:
         return config
 
     @classmethod
-    def _apply_mapping(cls, strategy: ConfigDict, mapping: Dict[str, Union[List[str], str]], value: ParamValue) -> None:
+    def _apply_mapping(
+        cls, strategy: ConfigDict, mapping: dict[str, Union[list[str], str]], value: ParamValue
+    ) -> None:
         """
         Apply a parameter mapping to the strategy config.
 
@@ -198,9 +203,7 @@ class ParameterMappingService:
         cls._apply_mapping(strategy, mapping, volume_threshold)
 
     @classmethod
-    def map_risk_params(
-        cls, strategy: ConfigDict, stop_loss: float, take_profit: float
-    ) -> None:
+    def map_risk_params(cls, strategy: ConfigDict, stop_loss: float, take_profit: float) -> None:
         """
         Map risk management parameters.
 
@@ -264,9 +267,7 @@ class ParameterMappingService:
 
 
 # Convenience function for backward compatibility
-def map_params_to_config(
-    params: ParamDict, base_config: Optional[ConfigDict] = None
-) -> ConfigDict:
+def map_params_to_config(params: ParamDict, base_config: Optional[ConfigDict] = None) -> ConfigDict:
     """
     Convenience function for backward compatibility.
 

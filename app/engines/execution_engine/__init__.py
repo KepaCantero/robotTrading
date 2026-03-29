@@ -38,8 +38,8 @@ from .microstructure import (
 )
 
 __all__ = [
+    "ExecutionPlan",
     "MarketMicrostructureEngine",
     "MicrostructureAnalysisResult",
-    "ExecutionPlan",
     "get_market_microstructure_engine",
 ]

@@ -7,10 +7,12 @@ Pydantic models for the covered call strategy.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import date
 from decimal import Decimal
 from enum import Enum
-from typing import Dict, List, Optional
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from datetime import date
 
 
 class Moneyness(str, Enum):
@@ -85,20 +87,20 @@ class CallOption:
     symbol: str
     strike: Decimal
     expiry: date
-    bid: Optional[Decimal] = None
-    ask: Optional[Decimal] = None
-    mid_price: Optional[Decimal] = None
-    implied_volatility: Optional[Decimal] = None
-    delta: Optional[Decimal] = None
-    gamma: Optional[Decimal] = None
-    theta: Optional[Decimal] = None
-    vega: Optional[Decimal] = None
-    volume: Optional[int] = None
-    open_interest: Optional[int] = None
+    bid: Decimal | None = None
+    ask: Decimal | None = None
+    mid_price: Decimal | None = None
+    implied_volatility: Decimal | None = None
+    delta: Decimal | None = None
+    gamma: Decimal | None = None
+    theta: Decimal | None = None
+    vega: Decimal | None = None
+    volume: int | None = None
+    open_interest: int | None = None
     days_to_expiry: int = 0
-    underlying_price: Optional[Decimal] = None
+    underlying_price: Decimal | None = None
     moneyness: Moneyness = Moneyness.ATM
-    expiry_date: Optional[date] = None  # Alias for expiry
+    expiry_date: date | None = None  # Alias for expiry
 
     def __post_init__(self):
         """Set expiry_date alias if not provided."""
@@ -181,9 +183,9 @@ class CoveredCallPosition:
     total_premium: Decimal
     opened_at: date
     assignment_probability: AssignmentProbability = AssignmentProbability.LOW
-    current_price: Optional[Decimal] = None
-    current_delta: Optional[Decimal] = None
-    expected_return: Optional[Decimal] = None
+    current_price: Decimal | None = None
+    current_delta: Decimal | None = None
+    expected_return: Decimal | None = None
 
     @property
     def break_even_price(self) -> Decimal:
@@ -213,11 +215,11 @@ class RollDecision:
     """
 
     should_roll: bool
-    roll_type: Optional[RollType] = None
-    new_strike: Optional[Decimal] = None
-    new_expiry: Optional[date] = None
-    new_option: Optional[CallOption] = None
-    additional_premium: Optional[Decimal] = None
+    roll_type: RollType | None = None
+    new_strike: Decimal | None = None
+    new_expiry: date | None = None
+    new_option: CallOption | None = None
+    additional_premium: Decimal | None = None
     confidence: Decimal = Decimal("0")
     reason: str = ""
 
@@ -270,8 +272,8 @@ class OptionScreeningCriteria:
     min_premium: Decimal = Decimal("0.01")  # 1% premium minimum
     min_open_interest: int = 100
     min_volume: int = 10
-    target_delta: Optional[Decimal] = None
-    max_theta_decay: Optional[Decimal] = None
+    target_delta: Decimal | None = None
+    max_theta_decay: Decimal | None = None
     avoid_earnings: bool = True
     avoid_events: bool = True
 
@@ -293,8 +295,8 @@ class OptionScreenerResult:
 
     symbol: str
     underlying_price: Decimal
-    options_passed: List[CallOption]
-    options_failed: Dict[str, List[str]]
+    options_passed: list[CallOption]
+    options_failed: dict[str, list[str]]
     total_evaluated: int
     screening_time_ms: float
     criteria: OptionScreeningCriteria
@@ -307,7 +309,7 @@ class OptionScreenerResult:
         return (len(self.options_passed) / self.total_evaluated) * 100.0
 
     @property
-    def best_option(self) -> Optional[CallOption]:
+    def best_option(self) -> CallOption | None:
         """Get the best option from passed options."""
         if not self.options_passed:
             return None

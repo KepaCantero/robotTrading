@@ -6,7 +6,7 @@ Provides methods to explain model predictions using SHAP and LIME techniques.
 
 import logging
 from datetime import datetime
-from typing import Dict, List, Optional, Union
+from typing import Optional, Union
 
 import numpy as np
 from requests.exceptions import HTTPError, RequestException
@@ -21,7 +21,7 @@ class SHAPExplainer:
         self,
         model: object,
         data: np.ndarray,
-        config: Optional[Dict[str, Union[float, int, str, bool]]] = None,
+        config: Optional[dict[str, Union[float, int, str, bool]]] = None,
     ):
         """
         Initialize SHAP explainer.
@@ -46,17 +46,17 @@ class SHAPExplainer:
             logger.info("✅ Connected to SHAP explainer")
             return True
         except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
-            logger.error(f"❌ Failed to initialize SHAP: {str(e)}")
+            logger.error(f"❌ Failed to initialize SHAP: {e!s}")
             self.connected = False
             return False
 
     async def explain_prediction(
         self,
         sample: np.ndarray,
-        feature_names: List[str],
-        prediction_id: str = None,
-        model_name: str = None,
-    ) -> Dict[str, Union[str, float, List[Dict[str, Union[str, float, bool]]]]]:
+        feature_names: list[str],
+        prediction_id: Optional[str] = None,
+        model_name: Optional[str] = None,
+    ) -> dict[str, Union[str, float, list[dict[str, Union[str, float, bool]]]]]:
         """
         Explain a single prediction using SHAP.
 
@@ -101,15 +101,15 @@ class SHAPExplainer:
             return explanation
 
         except (ValueError, TypeError, KeyError, AttributeError) as e:
-            logger.error(f"❌ SHAP explanation failed: {str(e)}")
+            logger.error(f"❌ SHAP explanation failed: {e!s}")
             return {}
 
     async def explain_batch(
         self,
         samples: np.ndarray,
-        feature_names: List[str],
-        model_name: str = None,
-    ) -> List[Dict[str, Union[str, float, List[Dict[str, Union[str, float, bool]]]]]]:
+        feature_names: list[str],
+        model_name: Optional[str] = None,
+    ) -> list[dict[str, Union[str, float, list[dict[str, Union[str, float, bool]]]]]]:
         """
         Explain multiple predictions using SHAP.
 
@@ -139,10 +139,10 @@ class SHAPExplainer:
             return explanations
 
         except (ValueError, TypeError, KeyError, AttributeError) as e:
-            logger.error(f"❌ Batch SHAP explanation failed: {str(e)}")
+            logger.error(f"❌ Batch SHAP explanation failed: {e!s}")
             return []
 
-    def get_explainer_status(self) -> Dict[str, Union[bool, str, int]]:
+    def get_explainer_status(self) -> dict[str, Union[bool, str, int]]:
         """Get explainer status."""
         return {
             "connected": self.connected,
@@ -158,7 +158,7 @@ class LIMEExplainer:
         self,
         model: object,
         data: np.ndarray,
-        config: Optional[Dict[str, Union[float, int, str, bool]]] = None,
+        config: Optional[dict[str, Union[float, int, str, bool]]] = None,
     ):
         """
         Initialize LIME explainer.
@@ -186,17 +186,17 @@ class LIMEExplainer:
             logger.info("✅ Connected to LIME explainer")
             return True
         except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
-            logger.error(f"❌ Failed to initialize LIME: {str(e)}")
+            logger.error(f"❌ Failed to initialize LIME: {e!s}")
             self.connected = False
             return False
 
     async def explain_prediction(
         self,
         sample: np.ndarray,
-        feature_names: List[str],
-        prediction_id: str = None,
+        feature_names: list[str],
+        prediction_id: Optional[str] = None,
         num_features: int = 10,
-    ) -> Dict[str, Union[str, float, bool, int, List[Dict[str, Union[str, float, bool]]]]]:
+    ) -> dict[str, Union[str, float, bool, int, list[dict[str, Union[str, float, bool]]]]]:
         """
         Explain a single prediction using LIME.
 
@@ -249,10 +249,10 @@ class LIMEExplainer:
             return explanation
 
         except (ValueError, TypeError, KeyError, AttributeError) as e:
-            logger.error(f"❌ LIME explanation failed: {str(e)}")
+            logger.error(f"❌ LIME explanation failed: {e!s}")
             return {}
 
-    def get_explainer_status(self) -> Dict[str, Union[bool, str, int]]:
+    def get_explainer_status(self) -> dict[str, Union[bool, str, int]]:
         """Get explainer status."""
         return {
             "connected": self.connected,
@@ -280,9 +280,9 @@ class FeatureImportanceCalculator:
 
     async def calculate_permutation_importance(
         self,
-        feature_names: List[str],
+        feature_names: list[str],
         n_repeats: int = 10,
-    ) -> Dict[str, float]:
+    ) -> dict[str, float]:
         """
         Calculate permutation importance.
 
@@ -311,13 +311,13 @@ class FeatureImportanceCalculator:
             return importance_dict
 
         except (ValueError, TypeError, KeyError, AttributeError) as e:
-            logger.error(f"❌ Permutation importance calculation failed: {str(e)}")
+            logger.error(f"❌ Permutation importance calculation failed: {e!s}")
             return {}
 
     async def calculate_tree_importance(
         self,
-        feature_names: List[str],
-    ) -> Dict[str, float]:
+        feature_names: list[str],
+    ) -> dict[str, float]:
         """
         Calculate feature importance from tree-based model.
 
@@ -342,14 +342,14 @@ class FeatureImportanceCalculator:
             return importance_dict
 
         except (ValueError, TypeError, KeyError, AttributeError) as e:
-            logger.error(f"❌ Tree importance calculation failed: {str(e)}")
+            logger.error(f"❌ Tree importance calculation failed: {e!s}")
             return {}
 
     async def calculate_all_importance_methods(
         self,
-        feature_names: List[str],
+        feature_names: list[str],
         n_repeats: int = 10,
-    ) -> Dict[str, Dict[str, float]]:
+    ) -> dict[str, dict[str, float]]:
         """
         Calculate feature importance using multiple methods.
 
@@ -377,10 +377,10 @@ class FeatureImportanceCalculator:
             return results
 
         except (ValueError, TypeError, KeyError, AttributeError) as e:
-            logger.error(f"❌ All importance calculation failed: {str(e)}")
+            logger.error(f"❌ All importance calculation failed: {e!s}")
             return {}
 
-    def get_calculator_status(self) -> Dict[str, Union[int, tuple]]:
+    def get_calculator_status(self) -> dict[str, Union[int, tuple]]:
         """Get calculator status."""
         return {
             "num_features": self.X_data.shape[1],
@@ -398,7 +398,7 @@ _importance_calculator: Optional[FeatureImportanceCalculator] = None
 def get_shap_explainer(
     model: object,
     data: np.ndarray,
-    config: Optional[Dict[str, Union[float, int, str, bool]]] = None,
+    config: Optional[dict[str, Union[float, int, str, bool]]] = None,
 ) -> SHAPExplainer:
     """Get or create singleton SHAP explainer."""
     global _shap_explainer
@@ -411,7 +411,7 @@ def get_shap_explainer(
 def get_lime_explainer(
     model: object,
     data: np.ndarray,
-    config: Optional[Dict[str, Union[float, int, str, bool]]] = None,
+    config: Optional[dict[str, Union[float, int, str, bool]]] = None,
 ) -> LIMEExplainer:
     """Get or create singleton LIME explainer."""
     global _lime_explainer

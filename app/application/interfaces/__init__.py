@@ -8,5 +8,5 @@ following the Humble Object pattern to keep presentation logic testable.
 from .backtest_presenter import BacktestPresenter
 
 __all__ = [
-    'BacktestPresenter',
+    "BacktestPresenter",
 ]

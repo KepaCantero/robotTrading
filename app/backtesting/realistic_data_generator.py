@@ -16,7 +16,7 @@ import logging
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import List, Optional
+from typing import ClassVar, Optional
 
 import numpy as np
 
@@ -63,7 +63,7 @@ class RealisticDataGenerator:
     """
 
     # Default regime parameters (calibrated from historical equity data)
-    DEFAULT_REGIMES = {
+    DEFAULT_REGIMES: ClassVar[dict] = {
         MarketRegime.BULL: RegimeParameters(
             name=MarketRegime.BULL,
             drift=0.0005,  # ~12.6% annually
@@ -156,7 +156,7 @@ class RealisticDataGenerator:
         start_date: datetime,
         use_regime_switching: bool = True,
         initial_regime: MarketRegime = MarketRegime.BULL,
-    ) -> List[Quote]:
+    ) -> list[Quote]:
         """
         Generate realistic market data quotes.
 
@@ -270,7 +270,7 @@ class RealisticDataGenerator:
 
     def _generate_regime_sequence(
         self, n_days: int, initial_regime: MarketRegime
-    ) -> List[MarketRegime]:
+    ) -> list[MarketRegime]:
         """
         Generate regime sequence using Markov chain.
 
@@ -304,12 +304,12 @@ class RealisticDataGenerator:
 
     def _prices_to_realistic_quotes(
         self,
-        prices: List[float],
-        volumes: List[int],
-        dates: List[datetime],
+        prices: list[float],
+        volumes: list[int],
+        dates: list[datetime],
         symbol: str,
-        regimes: Optional[List[MarketRegime]] = None,
-    ) -> List[Quote]:
+        regimes: Optional[list[MarketRegime]] = None,
+    ) -> list[Quote]:
         """
         Convert price list to realistic Quote objects with proper OHLC.
 
@@ -418,10 +418,10 @@ class RealisticDataGenerator:
 
     def generate_monte_carlo_scenario(
         self,
-        base_quotes: List[Quote],
+        base_quotes: list[Quote],
         n_simulations: int = 100,
         volatility_adjustment: float = 1.0,
-    ) -> List[List[Quote]]:
+    ) -> list[list[Quote]]:
         """
         Generate Monte Carlo scenarios from base quotes.
 

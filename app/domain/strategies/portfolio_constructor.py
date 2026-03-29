@@ -19,7 +19,7 @@ SOLID Principles:
 import logging
 from datetime import datetime, timedelta
 from decimal import Decimal
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 import numpy as np
 from scipy.optimize import Bounds, minimize
@@ -69,8 +69,8 @@ class FactorPortfolioConstructor:
 
     def construct_portfolio(
         self,
-        profiles: List[FactorProfile],
-        factor_scores_dict: Dict[str, Any],
+        profiles: list[FactorProfile],
+        factor_scores_dict: dict[str, Any],
         total_capital: Decimal,
     ) -> FactorPortfolio:
         """
@@ -132,9 +132,9 @@ class FactorPortfolioConstructor:
 
     def _select_top_stocks(
         self,
-        profiles: List[FactorProfile],
-        factor_scores_dict: Dict[str, Any],
-    ) -> List[FactorProfile]:
+        profiles: list[FactorProfile],
+        factor_scores_dict: dict[str, Any],
+    ) -> list[FactorProfile]:
         """
         Select top stocks based on composite factor score with sector diversification.
 
@@ -171,7 +171,7 @@ class FactorPortfolioConstructor:
 
         # Select top N stocks with sector diversification
         selected_profiles = []
-        sector_counts: Dict[str, int] = {}  # Track stocks per sector
+        sector_counts: dict[str, int] = {}  # Track stocks per sector
 
         # Target max stocks per sector (based on max_sector_weight)
         # If max_sector_weight is 0.25 and portfolio_size is 20, max 5 stocks per sector
@@ -255,8 +255,8 @@ class FactorPortfolioConstructor:
 
     def _optimize_weights(
         self,
-        profiles: List[FactorProfile],
-        factor_scores_dict: Dict[str, Any],
+        profiles: list[FactorProfile],
+        factor_scores_dict: dict[str, Any],
     ) -> FactorOptimizationResult:
         """
         Optimize portfolio weights using factor tilt optimization.
@@ -482,10 +482,10 @@ class FactorPortfolioConstructor:
 
     def _create_positions(
         self,
-        profiles: List[FactorProfile],
-        weights: Dict[str, Decimal],
-        factor_scores_dict: Dict[str, Any],
-    ) -> List[FactorPosition]:
+        profiles: list[FactorProfile],
+        weights: dict[str, Decimal],
+        factor_scores_dict: dict[str, Any],
+    ) -> list[FactorPosition]:
         """Create portfolio positions from weights."""
         positions = []
 
@@ -531,9 +531,9 @@ class FactorPortfolioConstructor:
 
     def _calculate_portfolio_factor_exposures(
         self,
-        positions: List[FactorPosition],
-        factor_scores_dict: Dict[str, Any],
-    ) -> Dict[str, Decimal]:
+        positions: list[FactorPosition],
+        factor_scores_dict: dict[str, Any],
+    ) -> dict[str, Decimal]:
         """Calculate portfolio-level factor exposures."""
         portfolio_exposures = {
             "value": Decimal("0"),
@@ -556,7 +556,7 @@ class FactorPortfolioConstructor:
 
         return portfolio_exposures
 
-    def _calculate_sector_weights(self, positions: List[FactorPosition]) -> Dict[str, Decimal]:
+    def _calculate_sector_weights(self, positions: list[FactorPosition]) -> dict[str, Decimal]:
         """
         Calculate sector weights as percentage of total portfolio weight.
 
@@ -593,7 +593,7 @@ class FactorPortfolioConstructor:
     def _apply_sector_constraints(
         self,
         weights: np.ndarray,
-        sectors: List[str],
+        sectors: list[str],
     ) -> np.ndarray:
         """
         Apply sector weight constraints to portfolio weights.
@@ -687,8 +687,8 @@ class FactorPortfolioConstructor:
     def rebalance(
         self,
         current_portfolio: FactorPortfolio,
-        profiles: List[FactorProfile],
-        factor_scores_dict: Dict[str, Any],
+        profiles: list[FactorProfile],
+        factor_scores_dict: dict[str, Any],
         total_capital: Decimal,
     ) -> FactorPortfolio:
         """
@@ -725,7 +725,7 @@ class FactorPortfolioConstructor:
     def analyze_drift(
         self,
         portfolio: FactorPortfolio,
-        factor_scores_dict: Dict[str, Any],
+        factor_scores_dict: dict[str, Any],
     ) -> FactorRebalanceRecommendation:
         """
         Analyze portfolio drift and recommend rebalancing.
@@ -798,7 +798,7 @@ class FactorPortfolioConstructor:
     def get_portfolio_metrics(
         self,
         portfolio: FactorPortfolio,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Get comprehensive portfolio metrics.
 
@@ -884,11 +884,11 @@ class LowVolatilityPortfolio:
             expected_volatility = Decimal("0.12")
         if portfolio_beta is None:
             portfolio_beta = Decimal("0.7")
-        self.positions: List[LowVolatilityPosition] = []
+        self.positions: list[LowVolatilityPosition] = []
         self.total_value = total_value
         self.expected_volatility = expected_volatility
         self.portfolio_beta = portfolio_beta
-        self.sector_weights: Dict[str, Decimal] = {}
+        self.sector_weights: dict[str, Decimal] = {}
         self.created_at = datetime.utcnow()
 
 
@@ -915,7 +915,7 @@ class LowVolatilityPortfolioConstructor:
 
     def construct_portfolio(
         self,
-        stocks: List[Any],  # List[LowVolatilityStock]
+        stocks: list[Any],  # List[LowVolatilityStock]
         total_capital: Decimal,
         returns_matrix: Optional[np.ndarray] = None,
     ) -> LowVolatilityPortfolio:
@@ -933,7 +933,7 @@ class LowVolatilityPortfolioConstructor:
         logger.info(f"Constructing low volatility portfolio from {len(stocks)} stocks")
 
         # Limit to configured portfolio size
-        max_positions = getattr(self.config, 'portfolio_size', 30)
+        max_positions = getattr(self.config, "portfolio_size", 30)
         selected_stocks = stocks[:max_positions]
 
         # Calculate equal weights (simplified - could use min variance optimization)
@@ -945,17 +945,17 @@ class LowVolatilityPortfolioConstructor:
 
         # Create portfolio
         portfolio = LowVolatilityPortfolio(total_value=total_capital)
-        sector_weights: Dict[str, Decimal] = {}
+        sector_weights: dict[str, Decimal] = {}
 
         for stock in selected_stocks:
-            profile = getattr(stock, 'profile', None)
+            profile = getattr(stock, "profile", None)
             if profile is None:
                 continue
 
-            symbol = getattr(profile, 'symbol', 'UNKNOWN')
-            sector = getattr(profile, 'sector', 'Unknown')
-            beta = getattr(profile, 'beta', Decimal("1.0"))
-            vol = getattr(profile, 'annualized_volatility', Decimal("0.15"))
+            symbol = getattr(profile, "symbol", "UNKNOWN")
+            sector = getattr(profile, "sector", "Unknown")
+            beta = getattr(profile, "beta", Decimal("1.0"))
+            vol = getattr(profile, "annualized_volatility", Decimal("0.15"))
 
             position = LowVolatilityPosition(
                 symbol=symbol,
@@ -995,7 +995,7 @@ class LowVolatilityPortfolioConstructor:
     def rebalance(
         self,
         current_portfolio: LowVolatilityPortfolio,
-        new_stocks: List[Any],
+        new_stocks: list[Any],
         total_capital: Decimal,
         returns_matrix: Optional[np.ndarray] = None,
     ) -> LowVolatilityPortfolio:
@@ -1014,7 +1014,7 @@ class LowVolatilityPortfolioConstructor:
         logger.info("Rebalancing low volatility portfolio")
         return self.construct_portfolio(new_stocks, total_capital, returns_matrix)
 
-    def analyze_drift(self, portfolio: LowVolatilityPortfolio) -> Dict[str, Any]:
+    def analyze_drift(self, portfolio: LowVolatilityPortfolio) -> dict[str, Any]:
         """
         Analyze portfolio drift.
 
@@ -1024,7 +1024,7 @@ class LowVolatilityPortfolioConstructor:
         Returns:
             Dict with drift analysis
         """
-        rebalance_threshold = getattr(self.config, 'rebalance_threshold', Decimal("0.05"))
+        rebalance_threshold = getattr(self.config, "rebalance_threshold", Decimal("0.05"))
 
         # Simplified drift analysis
         return {

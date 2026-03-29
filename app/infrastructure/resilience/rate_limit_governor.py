@@ -23,7 +23,7 @@ import time
 from dataclasses import dataclass, field
 from decimal import Decimal
 from enum import Enum
-from typing import Callable, Dict, List, Optional
+from typing import Callable, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -53,13 +53,13 @@ class RateLimitConfig:
     ban_recovery_time: int = 86400  # 24 horas en segundos
 
     # Límites específicos por broker
-    broker_limits: Dict[str, int] = field(
+    broker_limits: dict[str, int] = field(
         default_factory=lambda: {
-            'binance': 20,  # 20 requests/segundo
-            'kraken': 10,  # Kraken es más agresivo
-            'coinbase': 10,
-            'oanda': 15,
-            'degiro': 5,  # Degiro es muy lento
+            "binance": 20,  # 20 requests/segundo
+            "kraken": 10,  # Kraken es más agresivo
+            "coinbase": 10,
+            "oanda": 15,
+            "degiro": 5,  # Degiro es muy lento
         }
     )
 
@@ -204,17 +204,17 @@ class TokenBucketAlgorithm:
     def get_stats(self) -> dict:
         """Obtener estadísticas del token bucket"""
         return {
-            'tokens_remaining': self.state.tokens,
-            'tokens_capacity': self.state.capacity,
-            'total_requests': self.state.total_requests,
-            'successful_requests': self.state.successful_requests,
-            'blocked_requests': self.state.blocked_requests,
-            'block_rate': (
+            "tokens_remaining": self.state.tokens,
+            "tokens_capacity": self.state.capacity,
+            "total_requests": self.state.total_requests,
+            "successful_requests": self.state.successful_requests,
+            "blocked_requests": self.state.blocked_requests,
+            "block_rate": (
                 self.state.blocked_requests / self.state.total_requests
                 if self.state.total_requests > 0
                 else 0.0
             ),
-            'utilization_pct': (
+            "utilization_pct": (
                 (1 - self.state.tokens / self.state.capacity) * 100
                 if self.state.capacity > 0
                 else 0.0
@@ -239,8 +239,8 @@ class WebSocketFirstStrategy:
     def __init__(self, config: RateLimitConfig):
         self.config = config
         self._websocket = None
-        self._subscriptions: Dict[str, List[Callable]] = {}
-        self._price_cache: Dict[str, tuple] = {}  # symbol -> (price, timestamp)
+        self._subscriptions: dict[str, list[Callable]] = {}
+        self._price_cache: dict[str, tuple] = {}  # symbol -> (price, timestamp)
         self._is_connected = False
         self._use_websocket = config.websocket_enabled
 
@@ -324,7 +324,7 @@ class WebSocketFirstStrategy:
             )
 
             # Task para procesar mensajes
-            asyncio.create_task(self._process_messages())
+            self._process_task = asyncio.create_task(self._process_messages())
 
         except (asyncio.TimeoutError, OSError) as e:
             logger.error(
@@ -367,9 +367,9 @@ class WebSocketFirstStrategy:
         """Manejar mensaje del WebSocket"""
         # Extraer symbol y precio
         # Esto es broker-specific, cada broker tiene formato diferente
-        if 'symbol' in data and 'price' in data:
-            symbol = data['symbol']
-            price = Decimal(str(data['price']))
+        if "symbol" in data and "price" in data:
+            symbol = data["symbol"]
+            price = Decimal(str(data["price"]))
 
             # Actualizar cache
             self._price_cache[symbol] = (float(price), time.time())
@@ -606,16 +606,16 @@ class RateLimitGovernor:
     def get_stats(self) -> dict:
         """Obtener estadísticas completas."""
         return {
-            'broker': self.broker_name,
-            'configured_rate': self.config.max_requests_per_second,
-            'current_rate': self.adaptive_limiter.current_rate,
-            'websocket_connected': self.websocket_strategy._is_connected,
-            'token_bucket': self.token_bucket.get_stats(),
-            'adaptive': {
-                'initial_rate': self.adaptive_limiter.initial_rate,
-                'current_rate': self.adaptive_limiter.current_rate,
-                '429_count': self.adaptive_limiter._429_count,
-                'success_count': self.adaptive_limiter._success_count,
+            "broker": self.broker_name,
+            "configured_rate": self.config.max_requests_per_second,
+            "current_rate": self.adaptive_limiter.current_rate,
+            "websocket_connected": self.websocket_strategy._is_connected,
+            "token_bucket": self.token_bucket.get_stats(),
+            "adaptive": {
+                "initial_rate": self.adaptive_limiter.initial_rate,
+                "current_rate": self.adaptive_limiter.current_rate,
+                "429_count": self.adaptive_limiter._429_count,
+                "success_count": self.adaptive_limiter._success_count,
             },
         }
 

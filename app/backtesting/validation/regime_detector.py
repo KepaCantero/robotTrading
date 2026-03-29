@@ -22,7 +22,7 @@ from __future__ import annotations
 
 import logging
 from datetime import date, datetime
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 import numpy as np
 import pandas as pd
@@ -72,7 +72,7 @@ class RegimeDetector:
         ```
     """
 
-    def __init__(self, config: Optional[RegimeConfig] = None):
+    def __init__(self, config: RegimeConfig | None = None):
         """
         Initialize regime detector.
 
@@ -96,9 +96,9 @@ class RegimeDetector:
         - Neutral: Between SMA(100) and SMA(200)
 
         Volatility:
-        - Low: Vol < historical median × 0.8
-        - Normal: Within 0.8-1.2× median
-        - High: Vol > historical median × 1.2
+        - Low: Vol < historical median * 0.8
+        - Normal: Within 0.8-1.2* median
+        - High: Vol > historical median * 1.2
 
         Args:
             prices: Price series
@@ -146,7 +146,7 @@ class RegimeDetector:
         self,
         prices: pd.Series,
         returns: pd.Series,
-    ) -> List[MarketRegime]:
+    ) -> list[MarketRegime]:
         """
         Detect regime history and transitions.
 
@@ -167,7 +167,7 @@ class RegimeDetector:
             window_returns = returns.iloc[i - window : i]
 
             as_of_date = (
-                prices.index[i].date() if hasattr(prices.index[i], 'date') else prices.index[i]
+                prices.index[i].date() if hasattr(prices.index[i], "date") else prices.index[i]
             )
 
             try:
@@ -192,7 +192,7 @@ class RegimeDetector:
 
     def calculate_transition_matrix(
         self,
-        regime_history: List[MarketRegime],
+        regime_history: list[MarketRegime],
     ) -> RegimeTransitionMatrix:
         """
         Calculate regime transition probabilities.
@@ -359,7 +359,7 @@ class RegimeDetector:
             x = np.arange(len(lookback_prices))
             slope, intercept = np.polyfit(x, lookback_prices.values, 1)
 
-            # Calculate R²
+            # Calculate R^2
             y_pred = slope * x + intercept
             ss_res = np.sum((lookback_prices.values - y_pred) ** 2)
             ss_tot = np.sum((lookback_prices.values - np.mean(lookback_prices.values)) ** 2)
@@ -379,7 +379,7 @@ class RegimeDetector:
         elif normalized_range < 0.05 or (  # Tight range or clear peaks/valleys
             abs(maxima_idx[0] - minima_idx[0])
             if len(maxima_idx) > 0 and len(minima_idx) > 0
-            else 0 > len(lookback_prices) / 2
+            else len(lookback_prices) / 2 < 0
         ):
             # Clear peaks and valleys indicate range
             return TrendRegime.RANGE
@@ -441,7 +441,7 @@ class RegimeDetector:
         prices: pd.Series,
         regime_type: RegimeType,
         volatility_regime: VolatilityRegime,
-    ) -> Optional[int]:
+    ) -> int | None:
         """
         Calculate expected duration of current regime in days.
 
@@ -480,7 +480,7 @@ class RegimeDetector:
         regime_type: RegimeType,
         volatility_regime: VolatilityRegime,
         trend_regime: TrendRegime,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Get additional regime characteristics.
 
@@ -537,7 +537,7 @@ class RegimeDetector:
 
         return characteristics
 
-    def get_regime_aware_recommendation(self, regime: MarketRegime) -> List[str]:
+    def get_regime_aware_recommendation(self, regime: MarketRegime) -> list[str]:
         """
         Get strategy recommendations based on current regime.
 
@@ -624,8 +624,8 @@ class RegimeDetector:
 
 def detect_regime_from_data(
     prices: pd.Series,
-    returns: Optional[pd.Series] = None,
-    config: Optional[RegimeConfig] = None,
+    returns: pd.Series | None = None,
+    config: RegimeConfig | None = None,
 ) -> MarketRegime:
     """
     Quick regime detection from price data.
@@ -643,7 +643,7 @@ def detect_regime_from_data(
 
     detector = RegimeDetector(config)
 
-    as_of_date = prices.index[-1].date() if hasattr(prices.index[-1], 'date') else prices.index[-1]
+    as_of_date = prices.index[-1].date() if hasattr(prices.index[-1], "date") else prices.index[-1]
 
     return detector.detect_regime(prices, returns, as_of_date)
 

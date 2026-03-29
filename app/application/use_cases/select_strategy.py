@@ -129,16 +129,13 @@ class WalkForwardResultProtocol(Protocol):
     consistency_score: Decimal
     num_periods: int
 
-    def get_degradation_summary(self) -> dict[str, object]:
-        ...
+    def get_degradation_summary(self) -> dict[str, object]: ...
 
     @property
-    def os_performance(self) -> dict[str, object]:
-        ...
+    def os_performance(self) -> dict[str, object]: ...
 
     @property
-    def is_performance(self) -> dict[str, object]:
-        ...
+    def is_performance(self) -> dict[str, object]: ...
 
 
 # Type variable for generic strategy operations
@@ -427,7 +424,7 @@ class StrategySelector:
         alternatives = configurations[1:6]  # Top 5 alternatives
 
         logger.info(
-            f"Selected strategy: {selected.strategy_name} " f"(score: {selected.total_score:.1f})"
+            f"Selected strategy: {selected.strategy_name} (score: {selected.total_score:.1f})"
         )
 
         if progress_callback:
@@ -619,7 +616,9 @@ class StrategySelector:
         if objective == ObjectivoInversion.MAXIMIZAR_DIVIDENDOS:
             if "dividend" in strategy_name:
                 return Decimal("30")
-        elif objective == ObjectivoInversion.MAXIMIZAR_CAPITAL and ("momentum" in strategy_name or "trend" in strategy_name):
+        elif objective == ObjectivoInversion.MAXIMIZAR_CAPITAL and (
+            "momentum" in strategy_name or "trend" in strategy_name
+        ):
             return Decimal("20")
 
         return Decimal("0")
@@ -746,7 +745,7 @@ class StrategySelector:
                     commission_per_trade=Decimal("1.0"),
                     slippage_percentage=Decimal("0.1"),
                     risk_free_rate=Decimal(
-                        str(getattr(get_config().trading, 'risk_free_rate', 0.02))
+                        str(getattr(get_config().trading, "risk_free_rate", 0.02))
                     ),
                 )
 
@@ -796,8 +795,7 @@ class StrategySelector:
             # If we're already in an async context, we can't use asyncio.run()
             # Create a task and let the caller handle it
             raise RuntimeError(
-                "Cannot run async optimization from within an async context. "
-                "Use 'await' instead."
+                "Cannot run async optimization from within an async context. Use 'await' instead."
             )
         except RuntimeError:
             # No running loop, safe to use asyncio.run()
@@ -936,12 +934,7 @@ class StrategySelector:
         from datetime import datetime
         from decimal import Decimal
 
-        from app.domain.models.signal import (
-            Signal,
-            SignalSource,
-            SignalStrength,
-            SignalType,
-        )
+        from app.domain.models.signal import Signal, SignalSource, SignalStrength, SignalType
 
         signals = []
 
@@ -964,10 +957,7 @@ class StrategySelector:
                     continue
 
                 # Determine signal type
-                if signal_value > 0:
-                    signal_type = SignalType.BUY
-                else:
-                    signal_type = SignalType.SELL
+                signal_type = SignalType.BUY if signal_value > 0 else SignalType.SELL
 
                 # Get timestamp
                 if hasattr(idx, "to_pydatetime"):
@@ -1174,7 +1164,7 @@ class StrategySelector:
                     commission_per_trade=Decimal("1.0"),
                     slippage_percentage=Decimal("0.1"),
                     risk_free_rate=Decimal(
-                        str(getattr(get_config().trading, 'risk_free_rate', 0.02))
+                        str(getattr(get_config().trading, "risk_free_rate", 0.02))
                     ),
                 )
 
@@ -1705,10 +1695,10 @@ class StrategySelector:
                 # StrategyProtocol. Cast to satisfy mypy's strict return type checking.
                 from typing import cast
 
-                return cast(StrategyProtocol, strategy)
+                return cast("StrategyProtocol", strategy)
             except (ValueError, KeyError, TypeError) as e:
                 logger.error(f"Failed to create strategy {strategy_name}: {e}")
-                raise ValueError(f"Could not create strategy {strategy_name}: {e}")
+                raise ValueError(f"Could not create strategy {strategy_name}: {e}") from e
 
         # Define parameter grid
         param_grid = {k: [v] for k, v in parameters.items()} if parameters else {}
@@ -1913,19 +1903,19 @@ class StrategySelector:
         config = get_config()
         return {
             "expected_return": Decimal(
-                str(getattr(config.trading, 'momentum_expected_return', 0.15))
+                str(getattr(config.trading, "momentum_expected_return", 0.15))
             ),  # Use centralized config
             "expected_risk": Decimal(
-                str(getattr(config.trading, 'momentum_expected_risk', 0.20))
+                str(getattr(config.trading, "momentum_expected_risk", 0.20))
             ),  # Use centralized config
             "sharpe_ratio": Decimal(
-                str(getattr(config.trading, 'momentum_sharpe_ratio', 0.75))
+                str(getattr(config.trading, "momentum_sharpe_ratio", 0.75))
             ),  # Use centralized config
             "max_drawdown": Decimal(
-                str(getattr(config.trading, 'momentum_max_drawdown', 0.25))
+                str(getattr(config.trading, "momentum_max_drawdown", 0.25))
             ),  # Use centralized config
             "win_rate": Decimal(
-                str(getattr(config.trading, 'momentum_win_rate', 0.55))
+                str(getattr(config.trading, "momentum_win_rate", 0.55))
             ),  # Use centralized config
         }
 
@@ -1954,19 +1944,19 @@ class StrategySelector:
         config = get_config()
         return {
             "expected_return": Decimal(
-                str(getattr(config.trading, 'low_vol_expected_return', 0.10))
+                str(getattr(config.trading, "low_vol_expected_return", 0.10))
             ),  # Lower return but more stable
             "expected_risk": Decimal(
-                str(getattr(config.trading, 'low_vol_expected_risk', 0.10))
+                str(getattr(config.trading, "low_vol_expected_risk", 0.10))
             ),  # Lower volatility
             "sharpe_ratio": Decimal(
-                str(getattr(config.trading, 'low_vol_sharpe_ratio', 1.00))
+                str(getattr(config.trading, "low_vol_sharpe_ratio", 1.00))
             ),  # Better risk-adjusted return
             "max_drawdown": Decimal(
-                str(getattr(config.trading, 'low_vol_max_drawdown', 0.15))
+                str(getattr(config.trading, "low_vol_max_drawdown", 0.15))
             ),  # Use centralized config
             "win_rate": Decimal(
-                str(getattr(config.trading, 'low_vol_win_rate', 0.55))
+                str(getattr(config.trading, "low_vol_win_rate", 0.55))
             ),  # Use centralized config
         }
 
@@ -2275,9 +2265,11 @@ class SelectStrategyUseCase:
 
         # Sort by suitability
         recommendations.sort(
-            key=lambda r: float(r["suitability_score"])
-            if isinstance(r["suitability_score"], (int, float, str))
-            else 0.0,
+            key=lambda r: (
+                float(r["suitability_score"])
+                if isinstance(r["suitability_score"], (int, float, str))
+                else 0.0
+            ),
             reverse=True,
         )
 

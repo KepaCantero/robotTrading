@@ -20,13 +20,15 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass
-from datetime import datetime
-from typing import Any, Dict, List, Optional, Tuple
+from typing import TYPE_CHECKING, Any, ClassVar
 
 import numpy as np
 import pandas as pd
 
 from app.shared.config.centralized_config import get_config
+
+if TYPE_CHECKING:
+    from datetime import datetime
 
 logger = logging.getLogger(__name__)
 
@@ -42,7 +44,7 @@ class BiasDetectionResult:
     has_data_snooping_bias: bool
     corrected_sharpe_ratio: float
     original_sharpe_ratio: float
-    recommendations: List[str]
+    recommendations: list[str]
 
 
 @dataclass
@@ -52,9 +54,9 @@ class CorporateAction:
     date: datetime
     symbol: str
     action_type: str  # 'split', 'dividend', 'dividend_return', 'rights_issue'
-    ratio: Optional[float] = None  # For splits
-    amount: Optional[float] = None  # For dividends
-    metadata: Optional[Dict[str, Any]] = None
+    ratio: float | None = None  # For splits
+    amount: float | None = None  # For dividends
+    metadata: dict[str, Any] | None = None
 
 
 @dataclass
@@ -62,10 +64,10 @@ class PointInTimeData:
     """Point-in-time data snapshot."""
 
     as_of_date: datetime
-    available_symbols: List[str]
-    delisted_symbols: List[str]
-    new_listings: List[str]
-    corporate_actions: List[CorporateAction]
+    available_symbols: list[str]
+    delisted_symbols: list[str]
+    new_listings: list[str]
+    corporate_actions: list[CorporateAction]
 
 
 class LookAheadBiasCorrector:
@@ -91,13 +93,13 @@ class LookAheadBiasCorrector:
             strict_mode: If True, reject any potential look-ahead bias
         """
         self.strict_mode = strict_mode
-        self.detected_issues: List[str] = []
+        self.detected_issues: list[str] = []
 
     def validate_no_lookahead(
         self,
         signals: pd.DataFrame,
         market_data: pd.DataFrame,
-        signal_columns: List[str],
+        signal_columns: list[str],
         timestamp_column: str = "timestamp",
     ) -> BiasDetectionResult:
         """
@@ -183,7 +185,7 @@ class LookAheadBiasCorrector:
                 recommendations=[f"Error in validation: {e}"],
             )
 
-    def _generate_lookahead_recommendations(self) -> List[str]:
+    def _generate_lookahead_recommendations(self) -> list[str]:
         """Generate recommendations to fix look-ahead bias."""
         recommendations = []
 
@@ -197,8 +199,7 @@ class LookAheadBiasCorrector:
                 )
             elif "forward filling" in issue:
                 recommendations.append(
-                    "Use backward filling (ffill) instead of forward filling, "
-                    "or leave NaN values"
+                    "Use backward filling (ffill) instead of forward filling, or leave NaN values"
                 )
 
         if not recommendations:
@@ -219,7 +220,7 @@ class DividendAndSplitAdjuster:
     """
 
     # Typical adjustment factors
-    STOCK_SPLIT_FACTORS = {
+    STOCK_SPLIT_FACTORS: ClassVar[dict] = {
         "2-for-1": 0.5,
         "3-for-2": 2 / 3,
         "3-for-1": 1 / 3,
@@ -234,7 +235,7 @@ class DividendAndSplitAdjuster:
             adjustment_method: 'backwards' (Ernest Chan's preferred) or 'forwards'
         """
         self.adjustment_method = adjustment_method
-        self.adjustment_factors: Dict[str, List[Tuple[datetime, float]]] = {}
+        self.adjustment_factors: dict[str, list[tuple[datetime, float]]] = {}
 
     def apply_stock_split(
         self,
@@ -419,7 +420,7 @@ class BacktestValidator:
         self,
         min_samples: int = 100,
         confidence_level: float = 0.95,
-        risk_free_rate: Optional[float] = None,
+        risk_free_rate: float | None = None,
     ):
         """
         Initialize backtest validator.
@@ -447,7 +448,7 @@ class BacktestValidator:
         returns: pd.Series,
         signals: pd.DataFrame,
         market_data: pd.DataFrame,
-        benchmark_returns: Optional[pd.Series] = None,
+        benchmark_returns: pd.Series | None = None,
     ) -> BiasDetectionResult:
         """
         Perform comprehensive backtest validation.
@@ -504,8 +505,7 @@ class BacktestValidator:
             if has_snooping:
                 has_issues = True
                 recommendations.append(
-                    "Possible data snooping detected - "
-                    "strategy may be overfit to historical data"
+                    "Possible data snooping detected - strategy may be overfit to historical data"
                 )
 
             # 4. Sample size validation
@@ -547,7 +547,7 @@ class BacktestValidator:
     def _calculate_sharpe_ratio(
         self,
         returns: pd.Series,
-        risk_free_rate: Optional[float] = None,
+        risk_free_rate: float | None = None,
     ) -> float:
         """Calculate annualized Sharpe ratio using config defaults."""
         try:
@@ -573,7 +573,7 @@ class BacktestValidator:
     def _check_data_snooping(
         self,
         returns: pd.Series,
-        benchmark_returns: Optional[pd.Series] = None,
+        benchmark_returns: pd.Series | None = None,
     ) -> bool:
         """
         Check for data snooping bias.
@@ -597,10 +597,7 @@ class BacktestValidator:
 
             # Check 3: Sample size to parameter ratio
             # (simplified - would need strategy parameters for full check)
-            if len(returns) < self._annual_trading_days:  # Less than one year of daily data
-                return True
-
-            return False
+            return len(returns) < self._annual_trading_days  # Less than one year of daily data
 
         except (ValueError, TypeError):
             return False
@@ -608,8 +605,8 @@ class BacktestValidator:
 
 def create_bias_correction_pipeline(
     raw_data: pd.DataFrame,
-    dividend_data: Optional[pd.DataFrame] = None,
-    split_data: Optional[pd.DataFrame] = None,
+    dividend_data: pd.DataFrame | None = None,
+    split_data: pd.DataFrame | None = None,
 ) -> pd.DataFrame:
     """
     Create a bias correction pipeline for backtesting data.
@@ -654,7 +651,11 @@ def create_bias_correction_pipeline(
                 )
 
         # Step 2: Calculate total return (if dividends available)
-        if dividend_data is not None and not dividend_data.empty and "close" in adjusted_data.columns:
+        if (
+            dividend_data is not None
+            and not dividend_data.empty
+            and "close" in adjusted_data.columns
+        ):
             prices = adjusted_data["close"]
             dividends = (
                 dividend_data.set_index("date")["amount"]

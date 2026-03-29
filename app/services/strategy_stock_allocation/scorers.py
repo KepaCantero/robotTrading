@@ -8,7 +8,7 @@ Pairs Trading strategies following Single Responsibility Principle.
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING, Callable, Optional, Union
+from typing import TYPE_CHECKING, Callable
 
 import numpy as np
 import pandas as pd
@@ -17,26 +17,24 @@ from scipy import stats
 if TYPE_CHECKING:
     from app.shared.config.params.strategy_config import StockAllocationSettings
 
-from .calculators import HalfLifeCalculator, HurstCalculator
+    from .calculators import HalfLifeCalculator, HurstCalculator
+
 
 logger = logging.getLogger(__name__)
 
 # Optional dependencies
 try:
-    from statsmodels.regression.linear_model import OLS as sm_OLS
+    from statsmodels.regression.linear_model import OLS as _OLS_IMPL
     from statsmodels.tsa.stattools import adfuller
 
     STATSMODELS_AVAILABLE = True
 
-    def OLS(*args, **kwargs):
-        return sm_OLS(*args, **kwargs)
-
 except ImportError:
-    from app.shared.performance.statsmodels_fallback import OLS
+    from app.shared.performance.statsmodels_fallback import OLS as _OLS_IMPL
 
     STATSMODELS_AVAILABLE = False
 
-    def adfuller(*args, **kwargs):
+    def adfuller(*args: object, **kwargs: object) -> object:
         """
         Fallback adfuller function when statsmodels is not available.
 
@@ -52,6 +50,10 @@ except ImportError:
         )
         # Return p-value of 1.0 (fail to reject null hypothesis of non-stationarity)
         return (None, 1.0, None, None, None, None, None)
+
+
+def ols(*args: object, **kwargs: object) -> object:
+    return _OLS_IMPL(*args, **kwargs)
 
 
 # Check for arch package
@@ -88,7 +90,9 @@ class MomentumScorer:
         self.hurst_calculator = hurst_calculator
         self.indicator_calculator = technical_indicator_calculator
 
-    def score(self, ticker: str, data: pd.DataFrame) -> dict[str, Union[float, str, bool, None, dict[str, float]]]:
+    def score(
+        self, ticker: str, data: pd.DataFrame
+    ) -> dict[str, float | str | bool | None | dict[str, float]]:
         """
         Score asset for Momentum strategy.
 
@@ -102,13 +106,13 @@ class MomentumScorer:
             Dictionary with scores and metrics
         """
         try:
-            prices = data['close'].values
-            volumes = data['volume'].values if 'volume' in data.columns else None
+            prices = data["close"].values
+            volumes = data["volume"].values if "volume" in data.columns else None
 
             # Calculate technical indicators
             prices_list = prices.tolist()
             rsi = self.indicator_calculator.calculate_rsi(prices_list, 14)
-            macd, macd_signal, macd_histogram = self.indicator_calculator.calculate_macd(
+            macd, _macd_signal, _macd_histogram = self.indicator_calculator.calculate_macd(
                 prices_list
             )
             roc = self.indicator_calculator.calculate_roc(prices_list, period=12)
@@ -251,9 +255,9 @@ class MomentumScorer:
         """Select optimal window for slope and ROC calculations."""
         window_min = self.config.SLOPE_WINDOW_MIN
         window_max = min(self.config.SLOPE_WINDOW_MAX, len(prices))
-        best_slope_mse = float('inf')
+        best_slope_mse = float("inf")
         best_slope_pct = 0.0
-        best_roc_mse = float('inf')
+        best_roc_mse = float("inf")
         best_roc = roc
 
         for window in range(window_min, window_max + 1, 5):
@@ -303,7 +307,7 @@ class MeanReversionScorer:
     """
     Scores assets for Mean Reversion strategy.
 
-    Metrics: Half-life (τ), Z-score, GARCH volatility, Hurst.
+    Metrics: Half-life (tau), Z-score, GARCH volatility, Hurst.
     """
 
     def __init__(
@@ -324,11 +328,11 @@ class MeanReversionScorer:
         self.hurst_calculator = hurst_calculator
         self.half_life_calculator = half_life_calculator
 
-    def score(self, ticker: str, data: pd.DataFrame) -> dict[str, Union[float, str, bool, None]]:
+    def score(self, ticker: str, data: pd.DataFrame) -> dict[str, float | str | bool | None]:
         """
         Score asset for Mean Reversion strategy.
 
-        Metrics: Half-life (τ), Z-score, GARCH volatility.
+        Metrics: Half-life (tau), Z-score, GARCH volatility.
 
         Args:
             ticker: Stock ticker
@@ -338,8 +342,8 @@ class MeanReversionScorer:
             Dictionary with scores and metrics
         """
         try:
-            prices = data['close'].values
-            volumes = data['volume'].values if 'volume' in data.columns else None
+            prices = data["close"].values
+            volumes = data["volume"].values if "volume" in data.columns else None
 
             # Calculate returns
             returns = pd.Series(np.diff(prices) / prices[:-1])
@@ -459,8 +463,8 @@ class MeanReversionScorer:
             # Try GARCH(1,1) if available
             if ARCH_AVAILABLE:
                 try:
-                    model = arch_model(clean_returns * 100, vol='Garch', p=1, q=1, rescale=False)
-                    fitted = model.fit(disp='of')
+                    model = arch_model(clean_returns * 100, vol="Garch", p=1, q=1, rescale=False)
+                    fitted = model.fit(disp="of")
 
                     forecast = fitted.forecast(horizon=self.config.GARCH_FORECAST_HORIZON)
                     forecast_vol = np.sqrt(forecast.variance.values[-1, -1]) / 100
@@ -524,7 +528,7 @@ class PairsTradingScorer:
         self,
         config: StockAllocationSettings,
         half_life_calculator: HalfLifeCalculator,
-        garch_volatility_calculator: Callable[[pd.Series], Optional[float]],
+        garch_volatility_calculator: Callable[[pd.Series], float | None],
     ) -> None:
         """
         Initialize pairs trading scorer.
@@ -540,7 +544,7 @@ class PairsTradingScorer:
 
     def score(
         self, pair: tuple[str, str], data1: pd.DataFrame, data2: pd.DataFrame
-    ) -> dict[str, Union[float, str, bool, None]]:
+    ) -> dict[str, float | str | bool | None]:
         """
         Score pair for Pairs Trading strategy.
 
@@ -569,8 +573,8 @@ class PairsTradingScorer:
                     "reason": f"Insufficient lookback: {min_len} < {min_lookback}",
                 }
 
-            prices1 = data1['close'].values[-min_len:]
-            prices2 = data2['close'].values[-min_len:]
+            prices1 = data1["close"].values[-min_len:]
+            prices2 = data2["close"].values[-min_len:]
 
             # Correlation
             correlation = np.corrcoef(prices1, prices2)[0, 1]
@@ -613,8 +617,8 @@ class PairsTradingScorer:
                 }
 
             # Liquidity
-            volumes1 = data1['volume'].values[-min_len:] if 'volume' in data1.columns else None
-            volumes2 = data2['volume'].values[-min_len:] if 'volume' in data2.columns else None
+            volumes1 = data1["volume"].values[-min_len:] if "volume" in data1.columns else None
+            volumes2 = data2["volume"].values[-min_len:] if "volume" in data2.columns else None
 
             liquidity_score = 0.5
             if volumes1 is not None and volumes2 is not None:
@@ -682,12 +686,12 @@ class PairsTradingScorer:
 
         try:
             # OLS regression: prices2 = alpha + beta * prices1
-            model = OLS(prices2, prices1).fit()
+            model = ols(prices2, prices1).fit()
             hedge_ratio = float(model.params[0])
             residuals = model.resid
 
             # ADF test on residuals
-            adf_result = adfuller(residuals, autolag='AIC')
+            adf_result = adfuller(residuals, autolag="AIC")
             adf_pvalue = adf_result[1]
 
             cointegration_passed = adf_pvalue < self.config.ADF_P_VALUE_THRESHOLD
@@ -743,7 +747,7 @@ class WCMScoreCalculator:
     """
     Calculates Weighted Scoring Model (WCM) scores for all assets.
 
-    Normalizes metrics and calculates SPS_{i,k} = Σ(W_{k,j} × Score_{i,j}^{Norm})
+    Normalizes metrics and calculates SPS_{i,k} = Sigma(W_{k,j} * Score_{i,j}^{Norm})
     """
 
     def __init__(
@@ -768,7 +772,7 @@ class WCMScoreCalculator:
         self,
         filtered_stocks: dict[str, pd.DataFrame],
         config: StockAllocationSettings,
-    ) -> tuple[dict[str, dict[str, float]], list[dict[str, Union[float, str, None]]]]:
+    ) -> tuple[dict[str, dict[str, float]], list[dict[str, float | str | None]]]:
         """
         Calculate WCM scores for all assets.
 
@@ -814,7 +818,7 @@ class WCMScoreCalculator:
 
     def _score_pairs(
         self, filtered_stocks: dict[str, pd.DataFrame], config: StockAllocationSettings
-    ) -> list[dict[str, Union[float, str, None]]]:
+    ) -> list[dict[str, float | str | None]]:
         """Score all pairs for pairs trading."""
         tickers = list(filtered_stocks.keys())
         pair_metrics = []

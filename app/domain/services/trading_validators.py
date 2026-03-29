@@ -77,7 +77,7 @@ class TradingValidator:
         # Validate max_position_percent is reasonable
         if not (min_position_pct <= max_position_percent <= max_position_limit_pct):
             raise ValueError(
-                f"max_position_percent must be between {min_position_pct*100:.1f}% and {max_position_limit_pct*100:.1f}%, got {max_position_percent*100:.1f}%"
+                f"max_position_percent must be between {min_position_pct * 100:.1f}% and {max_position_limit_pct * 100:.1f}%, got {max_position_percent * 100:.1f}%"
             )
 
         max_position = capital * max_position_percent
@@ -86,7 +86,7 @@ class TradingValidator:
         if position_size > max_position:
             raise ValueError(
                 f"Position size ${position_size:.2f} exceeds maximum "
-                f"allowed ${max_position:.2f} ({max_position_percent*100:.1f}% of capital). "
+                f"allowed ${max_position:.2f} ({max_position_percent * 100:.1f}% of capital). "
                 f"This risk limit is in place to prevent catastrophic losses. "
                 f"Available capital: ${capital:.2f}"
             )
@@ -101,7 +101,7 @@ class TradingValidator:
 
         logger.debug(
             f"Position size validation passed: ${position_size:.2f} / ${capital:.2f} "
-            f"({position_size/capital*100:.1f}% of capital, max {max_position_percent*100:.1f}%)"
+            f"({position_size / capital * 100:.1f}% of capital, max {max_position_percent * 100:.1f}%)"
         )
 
         return True
@@ -170,7 +170,7 @@ class TradingValidator:
             loss_percent = (entry_price - stop_loss) / entry_price
             if loss_percent > stop_loss_warning_pct:
                 logger.warning(
-                    f"Stop-loss for long position is {loss_percent*100:.1f}% away from entry. "
+                    f"Stop-loss for long position is {loss_percent * 100:.1f}% away from entry. "
                     f"Entry: ${entry_price:.2f}, Stop: ${stop_loss:.2f}. "
                     "This is a very wide stop-loss. Consider a tighter risk limit."
                 )
@@ -191,7 +191,7 @@ class TradingValidator:
             loss_percent = (stop_loss - entry_price) / entry_price
             if loss_percent > stop_loss_warning_pct:
                 logger.warning(
-                    f"Stop-loss for short position is {loss_percent*100:.1f}% away from entry. "
+                    f"Stop-loss for short position is {loss_percent * 100:.1f}% away from entry. "
                     f"Entry: ${entry_price:.2f}, Stop: ${stop_loss:.2f}. "
                     "This is a very wide stop-loss. Consider a tighter risk limit."
                 )
@@ -211,7 +211,7 @@ class TradingValidator:
         entry_price: Decimal,
         stop_loss: Decimal,
         take_profit: Optional[Decimal] = None,
-        min_reward_risk_ratio: Decimal = None,
+        min_reward_risk_ratio: Optional[Decimal] = None,
     ) -> bool:
         """
         Validate that the trade has a favorable risk-reward ratio.

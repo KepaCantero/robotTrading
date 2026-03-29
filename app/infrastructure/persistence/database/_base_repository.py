@@ -7,8 +7,7 @@ and the Protocol for type-safe SQLAlchemy model access.
 
 from __future__ import annotations
 
-import uuid
-from typing import Generic, Protocol, TypeVar, runtime_checkable
+from typing import TYPE_CHECKING, Generic, Protocol, TypeVar, runtime_checkable
 
 from sqlalchemy.exc import (
     DatabaseError,
@@ -17,10 +16,14 @@ from sqlalchemy.exc import (
     OperationalError,
     ProgrammingError,
 )
-from sqlalchemy.orm import Session
 from structlog import get_logger
 
 from app.shared.exceptions.exceptions import raise_database_error
+
+if TYPE_CHECKING:
+    import uuid
+
+    from sqlalchemy.orm import Session
 
 
 @runtime_checkable
@@ -63,7 +66,7 @@ class BaseRepository(Generic[T]):
                 error=str(e),
             )
             raise_database_error(
-                f"Failed to create {self.model_class.__name__}: {str(e)}",
+                f"Failed to create {self.model_class.__name__}: {e!s}",
                 "create",
                 self.model_class.__tablename__,
             )
@@ -91,7 +94,7 @@ class BaseRepository(Generic[T]):
                 error=str(e),
             )
             raise_database_error(
-                f"Failed to get {self.model_class.__name__} by ID: {str(e)}",
+                f"Failed to get {self.model_class.__name__} by ID: {e!s}",
                 "get_by_id",
                 self.model_class.__tablename__,
             )
@@ -120,20 +123,20 @@ class BaseRepository(Generic[T]):
                 error=str(e),
             )
             raise_database_error(
-                f"Failed to get all {self.model_class.__name__}: {str(e)}",
+                f"Failed to get all {self.model_class.__name__}: {e!s}",
                 "get_all",
                 self.model_class.__tablename__,
             )
 
-    def update(self, id: uuid.UUID, **kwargs) -> T | None:
+    def update(self, record_id: uuid.UUID, **kwargs) -> T | None:
         """Update record by ID."""
         try:
-            instance = self.get_by_id(id)
+            instance = self.get_by_id(record_id)
             if not instance:
                 logger.warning(
                     "update_not_found",
                     model=self.model_class.__name__,
-                    id=str(id),
+                    id=str(record_id),
                 )
                 return None
             for key, value in kwargs.items():
@@ -144,7 +147,7 @@ class BaseRepository(Generic[T]):
             logger.info(
                 "updated_record",
                 model=self.model_class.__name__,
-                id=str(id),
+                id=str(record_id),
                 fields=list(kwargs.keys()),
             )
             return instance
@@ -153,24 +156,24 @@ class BaseRepository(Generic[T]):
             logger.error(
                 "update_failed",
                 model=self.model_class.__name__,
-                id=str(id),
+                id=str(record_id),
                 error=str(e),
             )
             raise_database_error(
-                f"Failed to update {self.model_class.__name__}: {str(e)}",
+                f"Failed to update {self.model_class.__name__}: {e!s}",
                 "update",
                 self.model_class.__tablename__,
             )
 
-    def delete(self, id: uuid.UUID) -> bool:
+    def delete(self, record_id: uuid.UUID) -> bool:
         """Delete record by ID."""
         try:
-            instance = self.get_by_id(id)
+            instance = self.get_by_id(record_id)
             if not instance:
                 logger.warning(
                     "delete_not_found",
                     model=self.model_class.__name__,
-                    id=str(id),
+                    id=str(record_id),
                 )
                 return False
             self.session.delete(instance)
@@ -178,7 +181,7 @@ class BaseRepository(Generic[T]):
             logger.info(
                 "deleted_record",
                 model=self.model_class.__name__,
-                id=str(id),
+                id=str(record_id),
             )
             return True
         except (IntegrityError, DataError, OperationalError, ProgrammingError, DatabaseError) as e:
@@ -186,11 +189,11 @@ class BaseRepository(Generic[T]):
             logger.error(
                 "delete_failed",
                 model=self.model_class.__name__,
-                id=str(id),
+                id=str(record_id),
                 error=str(e),
             )
             raise_database_error(
-                f"Failed to delete {self.model_class.__name__}: {str(e)}",
+                f"Failed to delete {self.model_class.__name__}: {e!s}",
                 "delete",
                 self.model_class.__tablename__,
             )
@@ -212,7 +215,7 @@ class BaseRepository(Generic[T]):
                 error=str(e),
             )
             raise_database_error(
-                f"Failed to count {self.model_class.__name__}: {str(e)}",
+                f"Failed to count {self.model_class.__name__}: {e!s}",
                 "count",
                 self.model_class.__tablename__,
             )

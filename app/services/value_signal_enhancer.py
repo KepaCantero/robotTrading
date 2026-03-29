@@ -22,7 +22,7 @@ import logging
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 import numpy as np
 import pandas as pd
@@ -65,11 +65,11 @@ class ValueSignalResult:
     z_score: float  # Z-score relative to universe
     is_cheap: bool
     is_expensive: bool
-    metric_contributions: Dict[str, float]
+    metric_contributions: dict[str, float]
     risk_adjusted_score: float
-    details: Dict[str, Any] = field(default_factory=dict)
+    details: dict[str, Any] = field(default_factory=dict)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
         return {
             "timestamp": self.timestamp.isoformat(),
@@ -98,7 +98,7 @@ class CrossSectionalValueResult:
     cheap_count: int
     expensive_count: int
     value_spread: float  # Return spread between cheap and expensive
-    details: Dict[str, Any] = field(default_factory=dict)
+    details: dict[str, Any] = field(default_factory=dict)
 
 
 class ValueSignalEnhancer:
@@ -119,7 +119,7 @@ class ValueSignalEnhancer:
     - Adjusts for risk and quality
     """
 
-    def __init__(self, config: Optional[Dict[str, Any]] = None):
+    def __init__(self, config: dict[str, Any] | None = None):
         """
         Initialize value signal enhancer.
 
@@ -144,8 +144,8 @@ class ValueSignalEnhancer:
         self,
         data: pd.DataFrame,
         asset: str,
-        sector: Optional[str] = None,
-        sector_data: Optional[pd.DataFrame] = None,
+        sector: str | None = None,
+        sector_data: pd.DataFrame | None = None,
     ) -> ValueSignalResult:
         """
         Calculate enhanced value signal for a single asset.
@@ -178,12 +178,8 @@ class ValueSignalEnhancer:
             value = asset_data[metric]
 
             # Handle different metric types
-            if metric in ["dividend_yield", "fcf_yield"]:
-                # Higher is better
-                raw_score = value
-            else:
-                # Lower is better (inverse for ratios)
-                raw_score = 1 / (value + 1e-8)
+            # Higher is better for yields, lower is better for ratios (inverse)
+            raw_score = value if metric in ["dividend_yield", "fcf_yield"] else 1 / (value + 1e-8)
 
             # Winsorize outliers
             cross_sectional = data[metric].dropna()
@@ -266,7 +262,7 @@ class ValueSignalEnhancer:
     def calculate_cross_sectional_values(
         self,
         data: pd.DataFrame,
-        returns: Optional[pd.DataFrame] = None,
+        returns: pd.DataFrame | None = None,
     ) -> CrossSectionalValueResult:
         """
         Calculate cross-sectional value statistics.
@@ -354,8 +350,8 @@ class ValueSignalEnhancer:
     def calculate_time_series_value_momentum(
         self,
         historical_values: pd.Series,
-        lookback_periods: Optional[List[int]] = None,
-    ) -> Dict[str, float]:
+        lookback_periods: list[int] | None = None,
+    ) -> dict[str, float]:
         """
         Calculate time-series momentum for value signals.
 
@@ -465,7 +461,7 @@ class ValueSignalEnhancer:
 def calculate_enhanced_value_signal(
     data: pd.DataFrame,
     asset: str,
-    config: Optional[Dict[str, Any]] = None,
+    config: dict[str, Any] | None = None,
 ) -> ValueSignalResult:
     """
     Convenience function to calculate enhanced value signal.

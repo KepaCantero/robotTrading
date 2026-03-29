@@ -27,7 +27,7 @@ import logging
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from decimal import Decimal
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 
 import numpy as np
 import pandas as pd
@@ -50,7 +50,7 @@ class PreTradeCheckResult:
 
     can_execute: bool
     confidence: float
-    reasons: List[str]
+    reasons: list[str]
 
     # Harris rule specific results
     order_book_depth_ok: bool
@@ -62,11 +62,11 @@ class PreTradeCheckResult:
     # Execution recommendations
     recommended_venue: str
     recommended_order_type: str
-    recommended_limit_price: Optional[Decimal]
+    recommended_limit_price: Decimal | None
     estimated_cost_bps: float
 
     # Risk factors
-    risk_factors: Dict[str, float]
+    risk_factors: dict[str, float]
 
 
 @dataclass
@@ -91,8 +91,8 @@ class PostTradeAnalysis:
     vs_nbbo_bps: float
 
     # Timestamps
-    signal_time: Optional[datetime]
-    decision_time: Optional[datetime]
+    signal_time: datetime | None
+    decision_time: datetime | None
     submission_time: datetime
     execution_time: datetime
 
@@ -135,10 +135,10 @@ class HarrisMicrostructureIntegrator:
         self.dark_router = get_dark_pool_router()
 
         # Rule 6.5: Quote stuffing detection state
-        self._quote_counts: Dict[str, List[datetime]] = {}
+        self._quote_counts: dict[str, list[datetime]] = {}
 
         # Rule 6.3: Timing cost tracking
-        self._signal_times: Dict[str, datetime] = {}
+        self._signal_times: dict[str, datetime] = {}
 
         logger.info(
             f"HarrisMicrostructureIntegrator initialized for {asset_class} "
@@ -152,7 +152,7 @@ class HarrisMicrostructureIntegrator:
         order_book: OrderBookSnapshot,
         order_size: Decimal,
         max_participation: float = 0.20,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Harris Rule 6.1: Analyze order book depth before execution.
 
@@ -317,7 +317,7 @@ class HarrisMicrostructureIntegrator:
 
         if quote_rate > threshold_quotes_per_second:
             logger.warning(
-                f"Harris 6.5: Quote stuffing detected for {symbol}: " f"{quote_rate:.0f} quotes/sec"
+                f"Harris 6.5: Quote stuffing detected for {symbol}: {quote_rate:.0f} quotes/sec"
             )
             return True
 
@@ -386,8 +386,8 @@ class HarrisMicrostructureIntegrator:
         order_size: Decimal,
         adv: Decimal,
         max_participation: float = 0.20,
-        volatility: Optional[float] = None,
-    ) -> Dict[str, Any]:
+        volatility: float | None = None,
+    ) -> dict[str, Any]:
         """
         Harris Rule 6.8: Validate liquidity assumption.
 
@@ -400,7 +400,7 @@ class HarrisMicrostructureIntegrator:
         warnings = []
         if participation > max_participation:
             warnings.append(
-                f"Order too large: {participation:.1%} of ADV " f"(max: {max_participation:.0%})"
+                f"Order too large: {participation:.1%} of ADV (max: {max_participation:.0%})"
             )
 
         if volatility and volatility > 0.05:  # >5% daily vol
@@ -419,9 +419,9 @@ class HarrisMicrostructureIntegrator:
 
     def evaluate_execution_quality(
         self,
-        executions: List[Any],
-        nbbo_snapshot: Dict[str, Tuple[Decimal, Decimal]],
-    ) -> Dict[str, float]:
+        executions: list[Any],
+        nbbo_snapshot: dict[str, tuple[Decimal, Decimal]],
+    ) -> dict[str, float]:
         """
         Harris Rule 6.10: Evaluate execution quality vs NBBO.
 
@@ -429,8 +429,8 @@ class HarrisMicrostructureIntegrator:
         """
         improvements = []
 
-        for exec in executions:
-            symbol = exec.symbol
+        for exec_record in executions:
+            symbol = exec_record.symbol
             nbbo = nbbo_snapshot.get(symbol)
 
             if not nbbo:
@@ -438,12 +438,12 @@ class HarrisMicrostructureIntegrator:
 
             nbbo_bid, nbbo_ask = nbbo
 
-            if exec.side == "BUY":
+            if exec_record.side == "BUY":
                 benchmark_price = nbbo_ask
-                improvement = float(benchmark_price - exec.price) / float(benchmark_price)
+                improvement = float(benchmark_price - exec_record.price) / float(benchmark_price)
             else:  # SELL
                 benchmark_price = nbbo_bid
-                improvement = float(exec.price - benchmark_price) / float(benchmark_price)
+                improvement = float(exec_record.price - benchmark_price) / float(benchmark_price)
 
             improvements.append(improvement)
 
@@ -469,11 +469,11 @@ class HarrisMicrostructureIntegrator:
         side: str,
         quantity: Decimal,
         current_price: Decimal,
-        order_book: Optional[OrderBookSnapshot] = None,
-        price_history: Optional[pd.DataFrame] = None,
-        adv: Optional[Decimal] = None,
+        order_book: OrderBookSnapshot | None = None,
+        price_history: pd.DataFrame | None = None,
+        adv: Decimal | None = None,
         urgency: float = 0.5,
-        signal_time: Optional[datetime] = None,
+        signal_time: datetime | None = None,
     ) -> PreTradeCheckResult:
         """
         Comprehensive pre-trade check using all Harris rules.
@@ -527,7 +527,7 @@ class HarrisMicrostructureIntegrator:
         config = get_config()
         # Default volatility from config or use default value
         try:
-            volatility = getattr(config.trading, 'max_risk_per_trade', 0.02)
+            volatility = getattr(config.trading, "max_risk_per_trade", 0.02)
         except AttributeError:
             volatility = 0.02  # Default 2% daily volatility
 
@@ -624,13 +624,13 @@ class HarrisMicrostructureIntegrator:
         side: str,
         quantity: Decimal,
         execution_price: Decimal,
-        signal_price: Optional[Decimal],
-        signal_time: Optional[datetime],
+        signal_price: Decimal | None,
+        signal_time: datetime | None,
         submission_time: datetime,
         execution_time: datetime,
-        arrival_price: Optional[Decimal] = None,
-        decision_price: Optional[Decimal] = None,
-        nbbo_at_execution: Optional[Tuple[Decimal, Decimal]] = None,
+        arrival_price: Decimal | None = None,
+        decision_price: Decimal | None = None,
+        nbbo_at_execution: tuple[Decimal, Decimal] | None = None,
     ) -> PostTradeAnalysis:
         """
         Post-trade execution analysis using Harris concepts.

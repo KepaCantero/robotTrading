@@ -15,6 +15,7 @@ References:
 - Glosten, L.R., & Milgrom, P.R. (1985) "Bid, Ask and Transaction Prices"
 - Easley, D., et al. (1996) "Liquidity, Information, and Infrequently Traded Stocks"
 """
+
 from __future__ import annotations  # Enable Python 3.10+ union syntax in Python 3.9
 
 import logging
@@ -22,11 +23,14 @@ from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from decimal import Decimal
 from enum import Enum
+from typing import TYPE_CHECKING
 
 import numpy as np
-import pandas as pd
 
 from app.shared.config.centralized_config import get_config
+
+if TYPE_CHECKING:
+    import pandas as pd
 
 logger = logging.getLogger(__name__)
 
@@ -115,7 +119,7 @@ class OrderFlowSnapshot:
         if total > 0:
             self.order_imbalance = (self.buy_volume - self.sell_volume) / total
         else:
-            self.order_imbalance = Decimal('0')
+            self.order_imbalance = Decimal("0")
 
 
 @dataclass
@@ -142,12 +146,12 @@ class InformationAsymmetryMetrics:
     def to_dict(self) -> dict:
         """Convert to dictionary for serialization"""
         return {
-            'timestamp': self.timestamp.isoformat(),
-            'probability_of_informed_trading': self.probability_of_informed_trading,
-            'order_flow_toxicity': self.order_flow_toxicity,
-            'informed_trader_intensity': self.informed_trader_intensity,
-            'information_asymmetry_index': self.information_asymmetry_index,
-            'adverse_selection_risk': self.adverse_selection_risk,
+            "timestamp": self.timestamp.isoformat(),
+            "probability_of_informed_trading": self.probability_of_informed_trading,
+            "order_flow_toxicity": self.order_flow_toxicity,
+            "informed_trader_intensity": self.informed_trader_intensity,
+            "information_asymmetry_index": self.information_asymmetry_index,
+            "adverse_selection_risk": self.adverse_selection_risk,
         }
 
 
@@ -238,14 +242,14 @@ class OrderFlowAnalyzer:
         recent_orders = [o for o in self._order_history if o.timestamp > cutoff]
 
         if not recent_orders:
-            return Decimal('0')
+            return Decimal("0")
 
         buy_volume = sum(o.size for o in recent_orders if o.side == OrderSide.BUY)
         sell_volume = sum(o.size for o in recent_orders if o.side == OrderSide.SELL)
 
         total = buy_volume + sell_volume
         if total == 0:
-            return Decimal('0')
+            return Decimal("0")
 
         return (buy_volume - sell_volume) / total
 
@@ -278,10 +282,10 @@ class OrderFlowAnalyzer:
 
         # Calculate correlation between order flow and price changes
         # Buy orders coded as +1, sell as -1
-        flow_direction = np.where(recent_trades['side'].str.upper() == 'BUY', 1, -1)
+        flow_direction = np.where(recent_trades["side"].str.upper() == "BUY", 1, -1)
 
         # Weight by trade size
-        weighted_flow = flow_direction * recent_trades['size'].values
+        weighted_flow = flow_direction * recent_trades["size"].values
 
         # Normalize
         if len(weighted_flow) > 0 and weighted_flow.std() > 0:
@@ -317,12 +321,12 @@ class OrderFlowAnalyzer:
         Calculate PIN (Probability of INformed Trading)
 
         Based on the Easley et al. (1996) model:
-        PIN = α * μ / (α * μ + ε_s + ε_b)
+        PIN = alpha * mu / (alpha * mu + epsilon_s + epsilon_b)
 
         Where:
-        - α = probability of information event
-        - μ = arrival rate of informed traders
-        - ε = arrival rate of uninformed traders
+        - alpha = probability of information event
+        - mu = arrival rate of informed traders
+        - epsilon = arrival rate of uninformed traders
 
         Args:
             order_snapshots: Historical order flow snapshots
@@ -347,13 +351,13 @@ class OrderFlowAnalyzer:
         mean_absolute_imbalance = np.mean([abs(x) for x in imbalances])
 
         # Estimate components
-        # α (alpha) - probability of information event
+        # alpha (alpha) - probability of information event
         alpha = min(1.0, imbalance_variance * 10)
 
-        # μ (mu) - informed trader arrival rate
+        # mu (mu) - informed trader arrival rate
         mu = mean_absolute_imbalance * price_volatility * 100
 
-        # ε (epsilon) - uninformed trader arrival
+        # epsilon (epsilon) - uninformed trader arrival
         epsilon_b = 1.0  # Normalized buy pressure
         epsilon_s = 1.0  # Normalized sell pressure
 
@@ -402,7 +406,7 @@ class OrderFlowAnalyzer:
         imbalance = float((buy_volume - sell_volume) / total_volume)
 
         # Calculate price momentum
-        returns = price_history['close'].pct_change().dropna()
+        returns = price_history["close"].pct_change().dropna()
         if len(returns) < 5:
             return False, 0.0, "Insufficient price history"
 
@@ -460,9 +464,9 @@ class OrderFlowAnalyzer:
         if executions.empty or subsequent_prices.empty:
             logger.debug("Empty data, returning zero adverse selection metrics")
             return {
-                'avg_adverse_cost_bps': 0.0,
-                'adverse_selection_rate': 0.0,
-                'total_adverse_cost_usd': 0.0,
+                "avg_adverse_cost_bps": 0.0,
+                "adverse_selection_rate": 0.0,
+                "total_adverse_cost_usd": 0.0,
             }
 
         adverse_costs = []
@@ -470,9 +474,9 @@ class OrderFlowAnalyzer:
         total_cost = 0.0
 
         for idx, exec_row in executions.iterrows():
-            exec_price = exec_row['price']
-            exec_side = exec_row['side']
-            exec_size = exec_row['size']
+            exec_price = exec_row["price"]
+            exec_side = exec_row["side"]
+            exec_size = exec_row["size"]
 
             # Get subsequent price (next period)
             if idx >= len(subsequent_prices):
@@ -483,7 +487,7 @@ class OrderFlowAnalyzer:
             # Calculate adverse cost
             # For buys: adverse if price goes down after
             # For sells: adverse if price goes up after
-            if exec_side.upper() == 'BUY':
+            if exec_side.upper() == "BUY":
                 price_move = (exec_price - future_price) / exec_price
                 if price_move > 0:  # Price went down - adverse
                     cost = price_move * float(exec_size) * exec_price
@@ -501,15 +505,15 @@ class OrderFlowAnalyzer:
         if not adverse_costs:
             logger.debug("No adverse costs found")
             return {
-                'avg_adverse_cost_bps': 0.0,
-                'adverse_selection_rate': 0.0,
-                'total_adverse_cost_usd': 0.0,
+                "avg_adverse_cost_bps": 0.0,
+                "adverse_selection_rate": 0.0,
+                "total_adverse_cost_usd": 0.0,
             }
 
         result = {
-            'avg_adverse_cost_bps': np.mean(adverse_costs) * 10000,
-            'adverse_selection_rate': adverse_count / len(executions),
-            'total_adverse_cost_usd': total_cost,
+            "avg_adverse_cost_bps": np.mean(adverse_costs) * 10000,
+            "adverse_selection_rate": adverse_count / len(executions),
+            "total_adverse_cost_usd": total_cost,
         }
         logger.info("Adverse selection cost measured", extra=result)
         return result
@@ -548,10 +552,10 @@ class OrderFlowAnalyzer:
             future = now + timedelta(seconds=forecast_horizon_seconds)
             return OrderFlowForecast(
                 forecast_time=future,
-                expected_buy_volume=Decimal('0'),
-                expected_sell_volume=Decimal('0'),
-                expected_imbalance=Decimal('0'),
-                confidence_interval=(Decimal('0'), Decimal('0')),
+                expected_buy_volume=Decimal("0"),
+                expected_sell_volume=Decimal("0"),
+                expected_imbalance=Decimal("0"),
+                confidence_interval=(Decimal("0"), Decimal("0")),
                 forecast_method="insufficient_data",
             )
 
@@ -619,10 +623,7 @@ class OrderFlowAnalyzer:
 
         # Calculate expected imbalance
         total = buy_forecast + sell_forecast
-        if total > 0:
-            expected_imbalance = (buy_forecast - sell_forecast) / total
-        else:
-            expected_imbalance = 0.0
+        expected_imbalance = (buy_forecast - sell_forecast) / total if total > 0 else 0.0
 
         # Confidence interval (simplified)
         std = np.std([b - s for b, s in zip(buy_volumes, sell_volumes)])
@@ -673,9 +674,9 @@ class OrderFlowAnalyzer:
         """
         if not orders:
             return {
-                'information_content': 0.0,
-                'signal_to_noise_ratio': 0.0,
-                'information_quality': 'LOW',
+                "information_content": 0.0,
+                "signal_to_noise_ratio": 0.0,
+                "information_quality": "LOW",
             }
 
         # Separate by order type
@@ -689,9 +690,9 @@ class OrderFlowAnalyzer:
         total_volume = market_volume + limit_volume
         if total_volume == 0:
             return {
-                'information_content': 0.0,
-                'signal_to_noise_ratio': 0.0,
-                'information_quality': 'LOW',
+                "information_content": 0.0,
+                "signal_to_noise_ratio": 0.0,
+                "information_quality": "LOW",
             }
 
         # Information content: market orders are more informative
@@ -704,23 +705,20 @@ class OrderFlowAnalyzer:
         signal = abs(float(buy_volume - sell_volume))
         noise = float(total_volume)
 
-        if noise > 0:
-            snr = signal / noise
-        else:
-            snr = 0.0
+        snr = signal / noise if noise > 0 else 0.0
 
         # Information quality classification
         if information_content > 0.7 and snr > 0.3:
-            quality = 'HIGH'
+            quality = "HIGH"
         elif information_content > 0.4 and snr > 0.15:
-            quality = 'MEDIUM'
+            quality = "MEDIUM"
         else:
-            quality = 'LOW'
+            quality = "LOW"
 
         return {
-            'information_content': information_content,
-            'signal_to_noise_ratio': snr,
-            'information_quality': quality,
+            "information_content": information_content,
+            "signal_to_noise_ratio": snr,
+            "information_quality": quality,
         }
 
     def generate_order_flow_report(
@@ -758,9 +756,9 @@ class OrderFlowAnalyzer:
         info_metrics = self.calculate_information_content(
             current_orders,
             (
-                Decimal(str(price_history['close'].iloc[-1]))
+                Decimal(str(price_history["close"].iloc[-1]))
                 if not price_history.empty
-                else Decimal('0')
+                else Decimal("0")
             ),
         )
 
@@ -769,25 +767,25 @@ class OrderFlowAnalyzer:
 
         # Determine risk level
         if imbalance > 0.4 or imbalance < -0.4:
-            risk_level = 'HIGH'
+            risk_level = "HIGH"
         elif imbalance > 0.2 or imbalance < -0.2:
-            risk_level = 'MEDIUM'
+            risk_level = "MEDIUM"
         else:
-            risk_level = 'LOW'
+            risk_level = "LOW"
 
         report = {
-            'timestamp': datetime.now().isoformat(),
-            'order_imbalance': float(imbalance),
-            'informed_trading_detected': is_informed,
-            'informed_trading_confidence': confidence,
-            'informed_trading_explanation': explanation,
-            'information_content': info_metrics['information_content'],
-            'signal_to_noise_ratio': info_metrics['signal_to_noise_ratio'],
-            'information_quality': info_metrics['information_quality'],
-            'forecast_imbalance': float(forecast.expected_imbalance),
-            'forecast_time': forecast.forecast_time.isoformat(),
-            'adverse_selection_risk': risk_level,
-            'recommendations': self._generate_recommendations(imbalance, is_informed, info_metrics),
+            "timestamp": datetime.now().isoformat(),
+            "order_imbalance": float(imbalance),
+            "informed_trading_detected": is_informed,
+            "informed_trading_confidence": confidence,
+            "informed_trading_explanation": explanation,
+            "information_content": info_metrics["information_content"],
+            "signal_to_noise_ratio": info_metrics["signal_to_noise_ratio"],
+            "information_quality": info_metrics["information_quality"],
+            "forecast_imbalance": float(forecast.expected_imbalance),
+            "forecast_time": forecast.forecast_time.isoformat(),
+            "adverse_selection_risk": risk_level,
+            "recommendations": self._generate_recommendations(imbalance, is_informed, info_metrics),
         }
         logger.info(
             "Order flow report generated",
@@ -817,10 +815,10 @@ class OrderFlowAnalyzer:
                 f"Order imbalance extreme ({imbalance:+.2f}) - expect volatility"
             )
 
-        if info_metrics['information_content'] > 0.7:
+        if info_metrics["information_content"] > 0.7:
             recommendations.append("High information content - market likely to move")
 
-        if info_metrics['signal_to_noise_ratio'] < 0.1:
+        if info_metrics["signal_to_noise_ratio"] < 0.1:
             recommendations.append("Low signal-to-noise - weak trading signals")
 
         if not recommendations:
@@ -864,7 +862,7 @@ class OrderFlowSimulator:
         num_orders: int,
         base_price: float,
         price_impact: float = 0.001,
-        spread_bps: float = None,
+        spread_bps: float | None = None,
     ) -> list[Order]:
         """
         Generate simulated order flow
@@ -980,15 +978,15 @@ def get_order_flow_simulator(
 
 
 __all__ = [
-    "OrderType",
-    "OrderSide",
-    "TraderType",
-    "Order",
-    "OrderFlowSnapshot",
     "InformationAsymmetryMetrics",
-    "OrderFlowForecast",
+    "Order",
     "OrderFlowAnalyzer",
+    "OrderFlowForecast",
     "OrderFlowSimulator",
+    "OrderFlowSnapshot",
+    "OrderSide",
+    "OrderType",
+    "TraderType",
     "get_order_flow_analyzer",
     "get_order_flow_simulator",
 ]

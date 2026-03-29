@@ -11,7 +11,7 @@ SOLID Principles:
 
 import logging
 from decimal import Decimal
-from typing import TYPE_CHECKING, List, Optional, Tuple
+from typing import TYPE_CHECKING, Optional
 
 import numpy as np
 import pandas as pd
@@ -52,7 +52,7 @@ class TechnicalIndicatorCalculator:
     """
 
     @staticmethod
-    def calculate_rsi(prices: List[float], period: int = 14) -> Optional[float]:
+    def calculate_rsi(prices: list[float], period: int = 14) -> Optional[float]:
         """
         Calculate Relative Strength Index using pandas-ta-classic.rsi() library.
 
@@ -113,7 +113,7 @@ class TechnicalIndicatorCalculator:
             return None
 
     @staticmethod
-    def calculate_ema(prices: List[float], period: int = 9) -> Optional[float]:
+    def calculate_ema(prices: list[float], period: int = 9) -> Optional[float]:
         """
         Calculate Exponential Moving Average using pandas-ta or manual fallback.
 
@@ -169,11 +169,11 @@ class TechnicalIndicatorCalculator:
 
     @staticmethod
     def calculate_macd(
-        prices: List[float],
+        prices: list[float],
         fast_period: int = 12,
         slow_period: int = 26,
         signal_period: int = 9,
-    ) -> Tuple[Optional[float], Optional[float], Optional[float]]:
+    ) -> tuple[Optional[float], Optional[float], Optional[float]]:
         """
         Calculate MACD using pandas_ta_classic.macd() library.
 
@@ -240,7 +240,7 @@ class TechnicalIndicatorCalculator:
             return None, None, None
 
     @staticmethod
-    def calculate_roc(prices: List[float], period: int = 12) -> Optional[float]:
+    def calculate_roc(prices: list[float], period: int = 12) -> Optional[float]:
         """
         Calculate Rate of Change using pandas_ta_classic.roc() library.
 
@@ -273,8 +273,8 @@ class TechnicalIndicatorCalculator:
 
     @staticmethod
     def calculate_stochastic_rsi(
-        rsi_values: List[float], period: int = 14, smooth_k: int = 3
-    ) -> Tuple[Optional[float], Optional[float]]:
+        rsi_values: list[float], period: int = 14, smooth_k: int = 3
+    ) -> tuple[Optional[float], Optional[float]]:
         """
         Calculate Stochastic RSI from pre-calculated RSI values using pandas vectorized operations.
 
@@ -346,7 +346,7 @@ class TechnicalIndicatorCalculator:
 
     @staticmethod
     def calculate_atr(
-        highs: List[float], lows: List[float], closes: List[float], period: int = 14
+        highs: list[float], lows: list[float], closes: list[float], period: int = 14
     ) -> Optional[float]:
         """
         Calculate Average True Range using pandas_ta_classic.atr() library.
@@ -384,7 +384,7 @@ class TechnicalIndicatorCalculator:
 
     @staticmethod
     def calculate_adx(
-        highs: List[float], lows: List[float], closes: List[float], period: int = 14
+        highs: list[float], lows: list[float], closes: list[float], period: int = 14
     ) -> Optional[float]:
         """
         Calculate Average Directional Index using pandas_ta_classic.adx() library.
@@ -432,7 +432,7 @@ class TechnicalIndicatorCalculator:
             raise
 
     @staticmethod
-    def calculate_obv(prices: List[float], volumes: List[float]) -> Optional[float]:
+    def calculate_obv(prices: list[float], volumes: list[float]) -> Optional[float]:
         """
         Calculate On-Balance Volume (OBV) indicator.
 
@@ -456,8 +456,7 @@ class TechnicalIndicatorCalculator:
         """
         if len(prices) != len(volumes):
             raise ValueError(
-                f"OBV: prices and volumes must have same length: "
-                f"{len(prices)} != {len(volumes)}"
+                f"OBV: prices and volumes must have same length: {len(prices)} != {len(volumes)}"
             )
 
         if len(prices) < 2:
@@ -465,7 +464,7 @@ class TechnicalIndicatorCalculator:
             return None
 
         try:
-            obv_values: List[float] = [0.0]
+            obv_values: list[float] = [0.0]
 
             for i in range(1, len(prices)):
                 if prices[i] > prices[i - 1]:
@@ -484,7 +483,7 @@ class TechnicalIndicatorCalculator:
             raise
 
     @staticmethod
-    def calculate_volume_sma(volumes: List[Decimal], period: int = 20) -> Optional[Decimal]:
+    def calculate_volume_sma(volumes: list[Decimal], period: int = 20) -> Optional[Decimal]:
         """
         Calculate Volume Simple Moving Average using pandas.rolling() library.
 
@@ -513,7 +512,7 @@ class TechnicalIndicatorCalculator:
 
     @staticmethod
     def calculate_vwap(
-        prices: List[float], volumes: List[float], period: Optional[int] = None
+        prices: list[float], volumes: list[float], period: Optional[int] = None
     ) -> Optional[float]:
         """
         Calculate Volume-Weighted Average Price using pandas DataFrame operations.
@@ -555,7 +554,7 @@ class TechnicalIndicatorCalculator:
 
     @staticmethod
     def calculate_zscore(
-        prices: List[float], period: int = 30, std: float = 1.0
+        prices: list[float], period: int = 30, std: float = 1.0
     ) -> Optional[float]:
         """
         Calculate Z-score using pandas-ta-classic.zscore() library.
@@ -592,7 +591,7 @@ class TechnicalIndicatorCalculator:
 
     @staticmethod
     def calculate_volatility(
-        prices: List[float], tf: str = "days", returns: bool = False, log: bool = False
+        prices: list[float], tf: str = "days", returns: bool = False, log: bool = False
     ) -> Optional[float]:
         """
         Calculate volatility using pandas-ta-classic.volatility() library.
@@ -658,7 +657,7 @@ class TechnicalIndicatorCalculator:
 
     @staticmethod
     def detect_macd_divergence(
-        prices: List[float], macd_histograms: List[float], lookback: int = 5
+        prices: list[float], macd_histograms: list[float], lookback: int = 5
     ) -> Optional[str]:
         """
         Detect MACD histogram divergence patterns using numpy.
@@ -706,10 +705,10 @@ class TechnicalIndicatorCalculator:
     def calculate_all_indicators(
         self,
         symbol: str,
-        prices: List[float],
-        highs: List[float],
-        lows: List[float],
-        volumes: List[Decimal],
+        prices: list[float],
+        highs: list[float],
+        lows: list[float],
+        volumes: list[Decimal],
     ) -> "TechnicalIndicators":
         """
         Calculate all technical indicators at once.

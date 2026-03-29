@@ -14,13 +14,15 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass
-from typing import Dict
+from typing import TYPE_CHECKING
 
 import numpy as np
-import pandas as pd
 from scipy import stats
 
 from app.shared.config.centralized_config import get_config
+
+if TYPE_CHECKING:
+    import pandas as pd
 
 logger = logging.getLogger(__name__)
 
@@ -73,7 +75,7 @@ class FactorLoadings:
         """
         Predict return using factor loadings.
 
-        R = α + β_mkt * R_mkt + β_smb * SMB + β_hml * HML + β_umd * UMD
+        R = alpha + beta_mkt * R_mkt + beta_smb * SMB + beta_hml * HML + beta_umd * UMD
 
         Args:
             factor_returns: Factor returns for prediction period
@@ -97,9 +99,9 @@ class FactorModelResult:
 
     loadings: FactorLoadings  # Factor betas
     r_squared: float  # R-squared (fit quality)
-    p_values: Dict[str, float]  # Statistical significance
-    t_stats: Dict[str, float]  # T-statistics
-    standard_errors: Dict[str, float]  # Standard errors
+    p_values: dict[str, float]  # Statistical significance
+    t_stats: dict[str, float]  # T-statistics
+    standard_errors: dict[str, float]  # Standard errors
     n_obs: int  # Number of observations
     p_value_significance_threshold: float = 0.1  # Configured threshold for alpha significance
 
@@ -109,7 +111,7 @@ class FactorModelResult:
         try:
             config = get_config()
             significance_threshold = float(
-                getattr(config.trading, 'p_value_significance_threshold', 0.05)
+                getattr(config.trading, "p_value_significance_threshold", 0.05)
             )
         except Exception:
             significance_threshold = 0.05
@@ -155,7 +157,7 @@ class FamaFrenchModel:
         if risk_free_rate is None:
             try:
                 config = get_config()
-                risk_free_rate = float(getattr(config.trading, 'risk_free_rate', 0.02))
+                risk_free_rate = float(getattr(config.trading, "risk_free_rate", 0.02))
             except Exception:
                 risk_free_rate = 0.02
         self._risk_free_rate = risk_free_rate
@@ -172,7 +174,7 @@ class FamaFrenchModel:
         """
         Estimate factor loadings via OLS regression.
 
-        R_i - R_f = α + β_mkt * (R_m - R_f) + β_smb * SMB + β_hml * HML + ε
+        R_i - R_f = alpha + beta_mkt * (R_m - R_f) + beta_smb * SMB + beta_hml * HML + epsilon
 
         Args:
             asset_returns: Asset excess returns (T periods)
@@ -358,7 +360,7 @@ class FamaFrenchModel:
         factor_returns: pd.DataFrame,  # Columns: Rm-Rf, SMB, HML, UMD
         target_factor: str = "hml",  # Factor to target
         long_leg: bool = True,  # Long or short the factor
-    ) -> Dict[str, float]:
+    ) -> dict[str, float]:
         """
         Construct a pure factor portfolio.
 
@@ -378,7 +380,7 @@ class FamaFrenchModel:
 
         # Placeholder: equal weight to top quintile of factor exposure
         n_assets = 50  # Assuming 50 assets
-        weights: Dict[str, float] = {}
+        weights: dict[str, float] = {}
 
         if long_leg:
             # Long top 20% of assets by factor loading

@@ -16,7 +16,7 @@ Crypto-specific indicators differ from traditional markets:
 
 import logging
 from decimal import Decimal
-from typing import Dict, Optional, Tuple
+from typing import Optional
 
 import numpy as np
 import pandas as pd
@@ -43,7 +43,7 @@ class CryptoIndicators:
 
     def __init__(self):
         """Initialize crypto indicators calculator."""
-        self.indicator_cache: Dict[str, Dict] = {}
+        self.indicator_cache: dict[str, dict] = {}
 
     def calculate_nvt_ratio(
         self,
@@ -105,7 +105,7 @@ class CryptoIndicators:
 
         return mayer_multiple
 
-    def calculate_fear_greed_index(self, metrics: Dict[str, float]) -> float:
+    def calculate_fear_greed_index(self, metrics: dict[str, float]) -> float:
         """
         Calculate Fear & Greed index for crypto markets.
 
@@ -218,7 +218,7 @@ class CryptoIndicators:
         """
         Calculate volatility-adjusted momentum score.
 
-        Score = (return / volatility) × beta_adjustment
+        Score = (return / volatility) * beta_adjustment
 
         Where:
         - return: n-day return
@@ -248,10 +248,7 @@ class CryptoIndicators:
         volatility = returns.std() * np.sqrt(365)  # 365 days for crypto
 
         # Risk-adjusted return (Sharpe-like ratio without risk-free rate)
-        if volatility > 0:
-            risk_adj_return = total_return / volatility
-        else:
-            risk_adj_return = 0
+        risk_adj_return = total_return / volatility if volatility > 0 else 0
 
         # Normalize to 0-100 scale
         # Assume reasonable range is -2 to +2 risk-adjusted returns
@@ -268,8 +265,7 @@ class CryptoIndicators:
         final_score = max(0, min(100, raw_score))
 
         logger.debug(
-            f"Momentum score: {final_score:.1f} "
-            f"(return={total_return:.2%}, vol={volatility:.2%})"
+            f"Momentum score: {final_score:.1f} (return={total_return:.2%}, vol={volatility:.2%})"
         )
 
         return final_score
@@ -480,7 +476,7 @@ class CryptoIndicators:
 
     def calculate_macd(
         self, prices: pd.Series, fast: int = 12, slow: int = 26, signal: int = 9
-    ) -> Tuple[pd.Series, pd.Series, pd.Series]:
+    ) -> tuple[pd.Series, pd.Series, pd.Series]:
         """
         Calculate MACD indicator.
 

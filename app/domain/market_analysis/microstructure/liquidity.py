@@ -15,6 +15,7 @@ References:
 - Stoll, H.R. (2000) "Friction"
 - Kyle, A.S. (1985) "Continuous Auctions and Insider Trading"
 """
+
 from __future__ import annotations
 
 import logging
@@ -22,12 +23,14 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 from decimal import Decimal
 from enum import Enum
-from typing import Dict, List, Tuple
+from typing import TYPE_CHECKING
 
 import numpy as np
-import pandas as pd
 
 from app.shared.config.centralized_config import get_config
+
+if TYPE_CHECKING:
+    import pandas as pd
 
 logger = logging.getLogger(__name__)
 
@@ -72,16 +75,16 @@ class LiquidityMetrics:
     liquidity_score: float
     liquidity_regime: str
 
-    def to_dict(self) -> Dict:
+    def to_dict(self) -> dict:
         """Convert to dictionary"""
         return {
-            'timestamp': self.timestamp.isoformat(),
-            'bid_ask_spread_bps': self.bid_ask_spread_bps,
-            'quoted_depth': str(self.quoted_depth),
-            'effective_spread_bps': self.effective_spread_bps,
-            'depth_slope': self.depth_slope,
-            'liquidity_score': self.liquidity_score,
-            'liquidity_regime': self.liquidity_regime,
+            "timestamp": self.timestamp.isoformat(),
+            "bid_ask_spread_bps": self.bid_ask_spread_bps,
+            "quoted_depth": str(self.quoted_depth),
+            "effective_spread_bps": self.effective_spread_bps,
+            "depth_slope": self.depth_slope,
+            "liquidity_score": self.liquidity_score,
+            "liquidity_regime": self.liquidity_regime,
         }
 
 
@@ -112,12 +115,12 @@ class SpreadDecomposition:
     def to_dict(self) -> dict:
         """Convert to dictionary"""
         return {
-            'timestamp': self.timestamp.isoformat(),
-            'total_spread_bps': self.total_spread_bps,
-            'order_processing_bps': self.order_processing_bps,
-            'inventory_holding_bps': self.inventory_holding_bps,
-            'adverse_selection_bps': self.adverse_selection_bps,
-            'dominant_component': self.dominant_component.value,
+            "timestamp": self.timestamp.isoformat(),
+            "total_spread_bps": self.total_spread_bps,
+            "order_processing_bps": self.order_processing_bps,
+            "inventory_holding_bps": self.inventory_holding_bps,
+            "adverse_selection_bps": self.adverse_selection_bps,
+            "dominant_component": self.dominant_component.value,
         }
 
 
@@ -145,12 +148,12 @@ class DepthProfile:
     def to_dict(self) -> dict:
         """Convert to dictionary"""
         return {
-            'timestamp': self.timestamp.isoformat(),
-            'bid_levels': [(str(p), str(v)) for p, v in self.bid_levels],
-            'ask_levels': [(str(p), str(v)) for p, v in self.ask_levels],
-            'total_bid_depth': str(self.total_bid_depth),
-            'total_ask_depth': str(self.total_ask_depth),
-            'imbalance_ratio': self.imbalance_ratio,
+            "timestamp": self.timestamp.isoformat(),
+            "bid_levels": [(str(p), str(v)) for p, v in self.bid_levels],
+            "ask_levels": [(str(p), str(v)) for p, v in self.ask_levels],
+            "total_bid_depth": str(self.total_bid_depth),
+            "total_ask_depth": str(self.total_ask_depth),
+            "imbalance_ratio": self.imbalance_ratio,
         }
 
 
@@ -174,12 +177,12 @@ class LiquidityRisk:
     def to_dict(self) -> dict:
         """Convert to dictionary"""
         return {
-            'timestamp': self.timestamp.isoformat(),
-            'liquidity_gap': str(self.liquidity_gap),
-            'execution_shortfall_risk': self.execution_shortfall_risk,
-            'market_impact_estimate': self.market_impact_estimate,
-            'risk_level': self.risk_level,
-            'recommendations': self.recommendations,
+            "timestamp": self.timestamp.isoformat(),
+            "liquidity_gap": str(self.liquidity_gap),
+            "execution_shortfall_risk": self.execution_shortfall_risk,
+            "market_impact_estimate": self.market_impact_estimate,
+            "risk_level": self.risk_level,
+            "recommendations": self.recommendations,
         }
 
 
@@ -234,21 +237,21 @@ class LiquidityAnalyzer:
         logger.debug(
             "Measuring market depth",
             extra={
-                "bid_levels": len(order_book.get('bids', [])),
-                "ask_levels": len(order_book.get('asks', [])),
+                "bid_levels": len(order_book.get("bids", [])),
+                "ask_levels": len(order_book.get("asks", [])),
                 "target_size": str(target_size) if target_size else None,
             },
         )
-        bids = order_book.get('bids', [])
-        asks = order_book.get('asks', [])
+        bids = order_book.get("bids", [])
+        asks = order_book.get("asks", [])
 
         timestamp = datetime.now()
 
         # Calculate cumulative depth
         bid_levels = []
         ask_levels = []
-        cumulative_bid = Decimal('0')
-        cumulative_ask = Decimal('0')
+        cumulative_bid = Decimal("0")
+        cumulative_ask = Decimal("0")
 
         # Process bids (descending price)
         for price, size in bids[: self.depth_levels]:
@@ -261,10 +264,10 @@ class LiquidityAnalyzer:
             ask_levels.append((price, cumulative_ask))
 
         # Total depth
-        total_bid_depth = Decimal('0')
+        total_bid_depth = Decimal("0")
         for _, size in bids:
             total_bid_depth += size
-        total_ask_depth = Decimal('0')
+        total_ask_depth = Decimal("0")
         for _, size in asks:
             total_ask_depth += size
 
@@ -352,18 +355,18 @@ class LiquidityAnalyzer:
             Regime classification
         """
         config = get_config()
-        high_threshold = getattr(config.market_microstructure, 'liquidity_high_threshold', 80.0)
-        normal_threshold = getattr(config.market_microstructure, 'liquidity_normal_threshold', 60.0)
-        low_threshold = getattr(config.market_microstructure, 'liquidity_low_threshold', 40.0)
+        high_threshold = getattr(config.market_microstructure, "liquidity_high_threshold", 80.0)
+        normal_threshold = getattr(config.market_microstructure, "liquidity_normal_threshold", 60.0)
+        low_threshold = getattr(config.market_microstructure, "liquidity_low_threshold", 40.0)
 
         if liquidity_score >= high_threshold:
-            return 'HIGH'
+            return "HIGH"
         elif liquidity_score >= normal_threshold:
-            return 'NORMAL'
+            return "NORMAL"
         elif liquidity_score >= low_threshold:
-            return 'LOW'
+            return "LOW"
         else:
-            return 'POOR'
+            return "POOR"
 
     def decompose_spread(
         self,
@@ -460,7 +463,7 @@ class LiquidityAnalyzer:
         """
         midpoint = (bid_price + ask_price) / 2
 
-        if side.upper() == 'BUY':
+        if side.upper() == "BUY":
             # Buyer pays more than midpoint
             effective_spread = 2 * (execution_price - midpoint) / midpoint
         else:
@@ -496,7 +499,7 @@ class LiquidityAnalyzer:
 
         for shock_time in shock_times:
             # Find price at shock
-            shock_prices = price_history[price_history.index == shock_time]['close']
+            shock_prices = price_history[price_history.index == shock_time]["close"]
 
             if shock_prices.empty:
                 continue
@@ -512,7 +515,7 @@ class LiquidityAnalyzer:
             if pre_shock_window.empty:
                 continue
 
-            reference_price = pre_shock_window['close'].mean()
+            reference_price = pre_shock_window["close"].mean()
             target_price = reference_price * 0.99  # Allow 1% tolerance
 
             # Search for recovery
@@ -525,7 +528,7 @@ class LiquidityAnalyzer:
                 continue
 
             # Check if recovered
-            recovered = recovery_window[recovery_window['close'] >= target_price]
+            recovered = recovery_window[recovery_window["close"] >= target_price]
 
             if not recovered.empty:
                 recovery_time = (recovered.index[0] - shock_time).total_seconds()
@@ -546,7 +549,7 @@ class LiquidityAnalyzer:
         available_depth: Decimal,
         volatility: float,
         average_daily_volume: float,
-        urgency: str = 'NORMAL',
+        urgency: str = "NORMAL",
     ) -> LiquidityRisk:
         """
         Assess liquidity risk for a trade
@@ -564,11 +567,11 @@ class LiquidityAnalyzer:
         timestamp = datetime.now()
 
         # Liquidity gap
-        liquidity_gap = max(Decimal('0'), required_size - available_depth)
+        liquidity_gap = max(Decimal("0"), required_size - available_depth)
 
         # Execution shortfall risk
         # Probability of not executing at desired price
-        depth_ratio = float(available_depth / max(required_size, Decimal('1')))
+        depth_ratio = float(available_depth / max(required_size, Decimal("1")))
         shortfall_risk = max(0, min(1, 1 - depth_ratio))
 
         # Adjust for volatility
@@ -579,23 +582,23 @@ class LiquidityAnalyzer:
         market_impact = volatility * np.sqrt(participation_rate) * 10000
 
         # Determine risk level
-        if shortfall_risk > 0.5 or liquidity_gap > required_size * Decimal('0.5'):
-            risk_level = 'HIGH'
-        elif shortfall_risk > 0.2 or liquidity_gap > required_size * Decimal('0.2'):
-            risk_level = 'MEDIUM'
+        if shortfall_risk > 0.5 or liquidity_gap > required_size * Decimal("0.5"):
+            risk_level = "HIGH"
+        elif shortfall_risk > 0.2 or liquidity_gap > required_size * Decimal("0.2"):
+            risk_level = "MEDIUM"
         else:
-            risk_level = 'LOW'
+            risk_level = "LOW"
 
         # Generate recommendations
         recommendations = []
 
-        if risk_level == 'HIGH':
+        if risk_level == "HIGH":
             recommendations.append(
                 "Significant liquidity gap - reduce order size or use algorithmic execution"
             )
             recommendations.append("Consider executing over multiple days")
 
-        if urgency == 'HIGH' and risk_level != 'LOW':
+        if urgency == "HIGH" and risk_level != "LOW":
             recommendations.append("High urgency with liquidity risk - expect significant slippage")
 
         if market_impact > 50:  # More than 50 bps
@@ -637,19 +640,19 @@ class LiquidityAnalyzer:
         timestamp = datetime.now()
 
         # Get best bid and ask
-        bids = order_book.get('bids', [])
-        asks = order_book.get('asks', [])
+        bids = order_book.get("bids", [])
+        asks = order_book.get("asks", [])
 
         if not bids or not asks:
             # Default values if no book data
             return LiquidityMetrics(
                 timestamp=timestamp,
                 bid_ask_spread_bps=0.0,
-                quoted_depth=Decimal('0'),
+                quoted_depth=Decimal("0"),
                 effective_spread_bps=0.0,
                 depth_slope=0.0,
                 liquidity_score=0.0,
-                liquidity_regime='UNKNOWN',
+                liquidity_regime="UNKNOWN",
             )
 
         best_bid = float(bids[0][0])
@@ -660,7 +663,7 @@ class LiquidityAnalyzer:
         spread_bps = (best_ask - best_bid) / midpoint * 10000
 
         # Calculate quoted depth
-        quoted_depth = Decimal('0')
+        quoted_depth = Decimal("0")
         for _, size in bids[:5]:
             quoted_depth += size
         for _, size in asks[:5]:
@@ -679,12 +682,12 @@ class LiquidityAnalyzer:
 
         # Calculate volatility
         if len(price_history) >= 20:
-            returns = price_history['close'].pct_change().dropna()
+            returns = price_history["close"].pct_change().dropna()
             volatility = returns.tail(20).std()
         else:
             config = get_config()
             volatility = getattr(
-                config.market_microstructure, 'default_volatility', 0.02
+                config.market_microstructure, "default_volatility", 0.02
             )  # Default from config
 
         # Calculate composite liquidity score
@@ -722,12 +725,12 @@ class LiquidityAnalyzer:
         midpoint: float,
     ) -> float:
         """Calculate effective spread for executing target_size"""
-        order_book.get('bids', [])
-        asks = order_book.get('asks', [])
+        order_book.get("bids", [])
+        asks = order_book.get("asks", [])
 
         # For buys, walk through ask side
         remaining_size = target_size
-        total_cost = Decimal('0')
+        total_cost = Decimal("0")
 
         for price, size in asks:
             if remaining_size <= 0:
@@ -747,15 +750,15 @@ class LiquidityAnalyzer:
 
     def _calculate_depth_slope(
         self,
-        order_book: Dict[str, List[Tuple[Decimal, Decimal]]],
+        order_book: dict[str, list[tuple[Decimal, Decimal]]],
     ) -> float:
         """
         Calculate order book depth slope
 
         Steeper slope = less liquidity at better prices
         """
-        bids = order_book.get('bids', [])
-        asks = order_book.get('asks', [])
+        bids = order_book.get("bids", [])
+        asks = order_book.get("asks", [])
 
         if len(bids) < 2 or len(asks) < 2:
             return 0.0
@@ -785,13 +788,13 @@ class LiquidityAnalyzer:
             Trend direction ('IMPROVING', 'STABLE', 'DETERIORATING')
         """
         if len(self._historical_metrics) < 5:
-            return 'UNKNOWN'
+            return "UNKNOWN"
 
         recent_scores = [m.liquidity_score for m in self._historical_metrics[-5:]]
         older_scores = [m.liquidity_score for m in self._historical_metrics[:-5]]
 
         if not older_scores:
-            return 'STABLE'
+            return "STABLE"
 
         recent_avg = float(np.mean(recent_scores))
         older_avg = float(np.mean(older_scores))
@@ -799,11 +802,11 @@ class LiquidityAnalyzer:
         change = (recent_avg - older_avg) / max(older_avg, 1.0)
 
         if change > 0.05:
-            return 'IMPROVING'
+            return "IMPROVING"
         elif change < -0.05:
-            return 'DETERIORATING'
+            return "DETERIORATING"
         else:
-            return 'STABLE'
+            return "STABLE"
 
     def generate_liquidity_report(
         self,
@@ -836,25 +839,25 @@ class LiquidityAnalyzer:
 
         # Decompose spread
         config = get_config()
-        default_vol = getattr(config.market_microstructure, 'default_volatility', 0.02)
+        default_vol = getattr(config.market_microstructure, "default_volatility", 0.02)
         spread_decomp = self.decompose_spread(
             spread_bps=metrics.bid_ask_spread_bps,
             price_variance=(
-                price_history['close'].pct_change().var() if len(price_history) > 1 else 0.0001
+                price_history["close"].pct_change().var() if len(price_history) > 1 else 0.0001
             ),
             order_flow_imbalance=depth_profile.imbalance_ratio,
             volume=volume,
             volatility=(
-                price_history['close'].pct_change().std() if len(price_history) > 1 else default_vol
+                price_history["close"].pct_change().std() if len(price_history) > 1 else default_vol
             ),
         )
 
         # Assess liquidity risk
         risk = self.assess_liquidity_risk(
-            required_size=required_size or Decimal('1000'),
+            required_size=required_size or Decimal("1000"),
             available_depth=metrics.quoted_depth,
             volatility=(
-                price_history['close'].pct_change().std() if len(price_history) > 1 else default_vol
+                price_history["close"].pct_change().std() if len(price_history) > 1 else default_vol
             ),
             average_daily_volume=volume,
         )
@@ -863,14 +866,14 @@ class LiquidityAnalyzer:
         trend = self.get_liquidity_trend()
 
         return {
-            'symbol': symbol,
-            'timestamp': datetime.now().isoformat(),
-            'metrics': metrics.to_dict(),
-            'depth_profile': depth_profile.to_dict(),
-            'spread_decomposition': spread_decomp.to_dict(),
-            'liquidity_risk': risk.to_dict(),
-            'trend': trend,
-            'recommendations': self._generate_liquidity_recommendations(
+            "symbol": symbol,
+            "timestamp": datetime.now().isoformat(),
+            "metrics": metrics.to_dict(),
+            "depth_profile": depth_profile.to_dict(),
+            "spread_decomposition": spread_decomp.to_dict(),
+            "liquidity_risk": risk.to_dict(),
+            "trend": trend,
+            "recommendations": self._generate_liquidity_recommendations(
                 metrics, spread_decomp, risk
             ),
         }
@@ -885,9 +888,9 @@ class LiquidityAnalyzer:
         recommendations = []
 
         # Regime-based recommendations
-        if metrics.liquidity_regime == 'POOR':
+        if metrics.liquidity_regime == "POOR":
             recommendations.append("POOR liquidity - avoid trading or use extreme caution")
-        elif metrics.liquidity_regime == 'LOW':
+        elif metrics.liquidity_regime == "LOW":
             recommendations.append("LOW liquidity - reduce order sizes")
 
         # Spread component recommendations
@@ -947,16 +950,16 @@ class LiquidityMonitor:
         """
         alerts = []
         config = get_config()
-        wide_spread_threshold = getattr(config.market_microstructure, 'wide_spread_bps', 10.0)
+        wide_spread_threshold = getattr(config.market_microstructure, "wide_spread_bps", 10.0)
 
         # Low liquidity score alert
         if current_metrics.liquidity_score < self.liquidity_threshold:
             alerts.append(
                 {
-                    'type': 'LOW_LIQUIDITY',
-                    'severity': 'HIGH' if current_metrics.liquidity_score < 30 else 'MEDIUM',
-                    'message': f"Liquidity score ({current_metrics.liquidity_score:.1f}) below threshold ({self.liquidity_threshold})",
-                    'timestamp': datetime.now().isoformat(),
+                    "type": "LOW_LIQUIDITY",
+                    "severity": "HIGH" if current_metrics.liquidity_score < 30 else "MEDIUM",
+                    "message": f"Liquidity score ({current_metrics.liquidity_score:.1f}) below threshold ({self.liquidity_threshold})",
+                    "timestamp": datetime.now().isoformat(),
                 }
             )
 
@@ -964,10 +967,10 @@ class LiquidityMonitor:
         if current_metrics.bid_ask_spread_bps > wide_spread_threshold:
             alerts.append(
                 {
-                    'type': 'WIDE_SPREAD',
-                    'severity': 'MEDIUM',
-                    'message': f"Bid-ask spread ({current_metrics.bid_ask_spread_bps:.2f} bps) unusually wide",
-                    'timestamp': datetime.now().isoformat(),
+                    "type": "WIDE_SPREAD",
+                    "severity": "MEDIUM",
+                    "message": f"Bid-ask spread ({current_metrics.bid_ask_spread_bps:.2f} bps) unusually wide",
+                    "timestamp": datetime.now().isoformat(),
                 }
             )
 
@@ -1011,14 +1014,14 @@ def get_liquidity_monitor(
 
 
 __all__ = [
-    "LiquidityDimension",
-    "SpreadComponent",
-    "LiquidityMetrics",
-    "SpreadDecomposition",
     "DepthProfile",
-    "LiquidityRisk",
     "LiquidityAnalyzer",
+    "LiquidityDimension",
+    "LiquidityMetrics",
     "LiquidityMonitor",
+    "LiquidityRisk",
+    "SpreadComponent",
+    "SpreadDecomposition",
     "get_liquidity_analyzer",
     "get_liquidity_monitor",
 ]

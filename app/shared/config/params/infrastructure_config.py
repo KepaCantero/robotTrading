@@ -9,7 +9,7 @@ TASK-24: SRP Refactoring
 """
 
 import logging
-from typing import List, Optional
+from typing import Optional
 
 from pydantic import BaseModel, Field, field_validator
 
@@ -60,8 +60,7 @@ class DatabaseConfig(BaseModel):
         db_password = os.getenv("DB_PASSWORD", self.password)
         if not db_password:
             raise ValueError(
-                "DB_PASSWORD environment variable not set. "
-                "Cannot build secure connection string."
+                "DB_PASSWORD environment variable not set. Cannot build secure connection string."
             )
         return f"postgresql://{self.user}:{db_password}@{self.host}:{self.port}/{self.name}"
 
@@ -113,8 +112,8 @@ class APIConfig(BaseModel):
     rate_limit_per_minute: int = Field(default=100, description="Rate limit per minute")
 
     # CORS
-    cors_origins: List[str] = Field(default=["*"], description="CORS allowed origins")
-    cors_methods: List[str] = Field(
+    cors_origins: list[str] = Field(default=["*"], description="CORS allowed origins")
+    cors_methods: list[str] = Field(
         default=["GET", "POST", "PUT", "DELETE"], description="CORS allowed methods"
     )
 

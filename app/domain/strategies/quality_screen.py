@@ -13,7 +13,6 @@ from __future__ import annotations
 import logging
 from dataclasses import dataclass
 from enum import Enum
-from typing import Dict, List, Tuple
 
 import numpy as np
 
@@ -213,7 +212,7 @@ class QualityMetrics:
 class QualityPortfolio:
     """Portfolio constructed using quality strategy."""
 
-    positions: Dict[str, float]  # Symbol -> weight
+    positions: dict[str, float]  # Symbol -> weight
     portfolio_quality_score: float  # Weighted average quality score
     portfolio_profitability: float  # Weighted average profitability
     portfolio_financial_health: float  # Weighted average financial health
@@ -291,8 +290,8 @@ class QualityInvesting:
 
     def screen_quality_stocks(
         self,
-        quality_metrics: Dict[str, QualityMetrics],
-    ) -> List[str]:
+        quality_metrics: dict[str, QualityMetrics],
+    ) -> list[str]:
         """
         Screen quality stocks based on criteria.
 
@@ -342,15 +341,12 @@ class QualityInvesting:
             return False
 
         # Bankruptcy risk
-        if metrics.altman_z_score < 1.8:  # Distress zone
-            return False
-
-        return True
+        return metrics.altman_z_score >= 1.8  # Not in distress zone
 
     def rank_quality_stocks(
         self,
-        quality_metrics: Dict[str, QualityMetrics],
-    ) -> List[Tuple[str, float]]:
+        quality_metrics: dict[str, QualityMetrics],
+    ) -> list[tuple[str, float]]:
         """
         Rank quality stocks by quality-value composite.
 
@@ -413,7 +409,7 @@ class QualityInvesting:
 
     def construct_portfolio(
         self,
-        quality_metrics: Dict[str, QualityMetrics],
+        quality_metrics: dict[str, QualityMetrics],
         capital: float,
         max_positions: int = 25,
         min_weight: float | None = None,
@@ -446,7 +442,7 @@ class QualityInvesting:
         if min_weight is None:
             try:
                 config = get_config()
-                min_weight = float(getattr(config.trading, 'min_allocation_weight', 0.02))
+                min_weight = float(getattr(config.trading, "min_allocation_weight", 0.02))
             except Exception:
                 min_weight = 0.02
 
@@ -525,10 +521,10 @@ class QualityInvesting:
 
     def _apply_weight_constraints(
         self,
-        weights: Dict[str, float],
+        weights: dict[str, float],
         min_weight: float,
         max_weight: float,
-    ) -> Dict[str, float]:
+    ) -> dict[str, float]:
         """Apply min/max weight constraints."""
         # Cap at max_weight
         weights = {s: min(w, max_weight) for s, w in weights.items()}
@@ -568,10 +564,7 @@ class QualityInvesting:
         category = metrics.quality_category
 
         # Valuation check
-        if fair_value > 0:
-            valuation_ratio = current_price / fair_value
-        else:
-            valuation_ratio = 1.0
+        valuation_ratio = current_price / fair_value if fair_value > 0 else 1.0
 
         # High quality stocks
         if category == QualitySignal.HIGH_QUALITY:
@@ -614,9 +607,9 @@ class QualityInvesting:
 
     def calculate_gross_profitability_premium(
         self,
-        quality_metrics: Dict[str, QualityMetrics],
-        returns: Dict[str, float],
-    ) -> Tuple[float, float]:
+        quality_metrics: dict[str, QualityMetrics],
+        returns: dict[str, float],
+    ) -> tuple[float, float]:
         """
         Calculate gross profitability premium.
 

@@ -6,13 +6,13 @@ Uses multiple strategies for portfolio allocation:
 2. Risk-parity: Weight by inverse volatility (requires historical data)
 3. Efficient frontier: Maximize Sharpe ratio (requires expected returns/covariance)
 
-Fallback chain: Try efficient frontier → risk parity → equal weight
+Fallback chain: Try efficient frontier -> risk parity -> equal weight
 """
 
 import logging
 from datetime import datetime
 from decimal import Decimal
-from typing import Dict, List, Optional
+from typing import ClassVar, Optional
 
 import numpy as np
 
@@ -32,7 +32,7 @@ class PortfolioConstructor:
     """
 
     # Risk profiles affect how aggressively we allocate
-    RISK_PROFILE_CONFIG = {
+    RISK_PROFILE_CONFIG: ClassVar[dict] = {
         "aggressive": {
             "efficiency_weight": Decimal("0.7"),  # Higher weight on high-return modules
             "volatility_tolerance": Decimal("0.25"),  # Can accept higher volatility
@@ -48,7 +48,7 @@ class PortfolioConstructor:
     }
 
     # Module characteristics (volatility, expected return, minimum allocation)
-    MODULE_CHARACTERISTICS = {
+    MODULE_CHARACTERISTICS: ClassVar[dict] = {
         "momentum": {
             "volatility_score": Decimal("0.18"),  # Moderate
             "expected_return": Decimal("12"),  # 12% annually
@@ -101,7 +101,7 @@ class PortfolioConstructor:
 
     def __init__(self):
         """Initialize portfolio constructor."""
-        self.construction_history: List[PortfolioAllocation] = []
+        self.construction_history: list[PortfolioAllocation] = []
         logger.info("✅ PortfolioConstructor initialized")
 
     async def construct_portfolio(
@@ -191,7 +191,7 @@ class PortfolioConstructor:
     async def _construct_efficient_frontier_portfolio(
         self,
         request: PortfolioConstructionRequest,
-        risk_config: Dict,
+        risk_config: dict,
     ) -> PortfolioAllocation:
         """
         Construct portfolio using efficient frontier optimization.
@@ -292,7 +292,7 @@ class PortfolioConstructor:
                 if portfolio_volatility > 0
                 else Decimal("0")
             )  # Assuming 2% risk-free rate
-            portfolio_drawdown = portfolio_volatility * Decimal("2")  # Max drawdown ≈ 2σ
+            portfolio_drawdown = portfolio_volatility * Decimal("2")  # Max drawdown ~ 2sigma
 
             # Calculate diversification ratio
             equal_weight_volatility = sum(
@@ -538,14 +538,14 @@ class PortfolioConstructor:
     async def get_construction_history(
         self,
         limit: Optional[int] = None,
-    ) -> List[PortfolioAllocation]:
+    ) -> list[PortfolioAllocation]:
         """Get portfolio construction history."""
         results = self.construction_history
         if limit:
             results = results[-limit:]
         return results
 
-    def get_constructor_status(self) -> Dict:
+    def get_constructor_status(self) -> dict:
         """Get constructor operational status."""
         successful = sum(1 for p in self.construction_history if p.success)
         total = len(self.construction_history)

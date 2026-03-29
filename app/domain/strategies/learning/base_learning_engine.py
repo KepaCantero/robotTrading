@@ -15,7 +15,7 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, ClassVar, Optional
 
 # SECURITY: Using joblib instead of pickle for sklearn model serialization (REQUIRED)
 # joblib is safer than pickle as it only serializes numpy arrays and sklearn objects
@@ -43,13 +43,13 @@ class TrainingSnapshot:
     """Snapshot of model training state."""
 
     timestamp: datetime
-    train_metrics: Dict[str, float]
-    validation_metrics: Dict[str, float]
-    feature_importance: Dict[str, float]
+    train_metrics: dict[str, float]
+    validation_metrics: dict[str, float]
+    feature_importance: dict[str, float]
     n_samples: int
-    model_params: Dict[str, Any] = field(default_factory=dict)
+    model_params: dict[str, Any] = field(default_factory=dict)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
         return {
             "timestamp": self.timestamp.isoformat(),
@@ -67,12 +67,12 @@ class StabilityReport:
 
     status: StabilityStatus
     stability_score: float
-    feature_importance_change: Dict[str, float]
+    feature_importance_change: dict[str, float]
     performance_drift: float
     confidence_degradation: float
-    details: Dict[str, Any] = field(default_factory=dict)
+    details: dict[str, Any] = field(default_factory=dict)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
         return {
             "status": self.status.value,
@@ -97,7 +97,7 @@ class BaseLearningEngine(ABC):
     - Analizar curvas de aprendizaje (Hastie)
     """
 
-    def __init__(self, name: str, config: Dict):
+    def __init__(self, name: str, config: dict):
         """
         Inicializar motor de aprendizaje.
 
@@ -113,7 +113,7 @@ class BaseLearningEngine(ABC):
         self.is_trained = False
 
         # Time stability tracking (Ilmanen)
-        self._training_history: List[TrainingSnapshot] = []
+        self._training_history: list[TrainingSnapshot] = []
         self._max_history_size = config.get("max_history_size", 100)
         self._stability_threshold = config.get("stability_threshold", 0.3)
 
@@ -121,8 +121,8 @@ class BaseLearningEngine(ABC):
         self._feature_explosion_threshold = config.get("feature_explosion_threshold", 0.1)
 
         # Learning curve tracking (Hastie)
-        self._learning_curve_data: List[
-            Tuple[int, float, float]
+        self._learning_curve_data: list[
+            tuple[int, float, float]
         ] = []  # (n_samples, train_score, val_score)
 
         # Crear directorio de modelos si no existe
@@ -134,9 +134,9 @@ class BaseLearningEngine(ABC):
     @abstractmethod
     def train(
         self,
-        training_data: Optional[Dict[str, Any]] = None,
-        validation_data: Optional[Dict[str, Any]] = None,
-    ) -> Dict[str, float]:
+        training_data: Optional[dict[str, Any]] = None,
+        validation_data: Optional[dict[str, Any]] = None,
+    ) -> dict[str, float]:
         """
         Entrenar el modelo.
 
@@ -149,7 +149,7 @@ class BaseLearningEngine(ABC):
         """
 
     @abstractmethod
-    def predict(self, features: Dict[str, Any]) -> Dict[str, Any]:
+    def predict(self, features: dict[str, Any]) -> dict[str, Any]:
         """
         Generar predicciones o recomendaciones.
 
@@ -167,7 +167,7 @@ class BaseLearningEngine(ABC):
             }
         """
 
-    def explain(self, features: Dict[str, Any], prediction: Optional[Dict[str, Any]] = None) -> str:
+    def explain(self, features: dict[str, Any], prediction: Optional[dict[str, Any]] = None) -> str:
         """
         Generar explicación textual de la predicción.
 
@@ -181,9 +181,9 @@ class BaseLearningEngine(ABC):
         if prediction is None:
             prediction = self.predict(features)
 
-        action = prediction.get('recommended_action', 'HOLD')
-        confidence = prediction.get('confidence', 0.0)
-        prob = prediction.get('success_probability', 0.0)
+        action = prediction.get("recommended_action", "HOLD")
+        confidence = prediction.get("confidence", 0.0)
+        prob = prediction.get("success_probability", 0.0)
 
         return (
             f"Acción recomendada: {action}. "
@@ -192,7 +192,7 @@ class BaseLearningEngine(ABC):
         )
 
     @abstractmethod
-    def evaluate(self, test_data: Dict[str, Any]) -> Dict[str, float]:
+    def evaluate(self, test_data: dict[str, Any]) -> dict[str, float]:
         """
         Evaluar el modelo con datos de prueba.
 
@@ -220,10 +220,10 @@ class BaseLearningEngine(ABC):
         save_path = path or self.model_path
 
         # Change extension to .joblib for clarity
-        if save_path.endswith('.pkl'):
-            save_path = save_path.replace('.pkl', '.joblib')
-        elif not save_path.endswith('.joblib'):
-            save_path = save_path + '.joblib'
+        if save_path.endswith(".pkl"):
+            save_path = save_path.replace(".pkl", ".joblib")
+        elif not save_path.endswith(".joblib"):
+            save_path = save_path + ".joblib"
 
         try:
             if not JOBLIB_AVAILABLE:
@@ -232,22 +232,22 @@ class BaseLearningEngine(ABC):
 
             # Save model using joblib (secure for sklearn objects)
             model_data = {
-                'model': self.model,
-                'config': self.config,
-                'trained_at': datetime.now().isoformat(),
-                'engine_type': self.name,
+                "model": self.model,
+                "config": self.config,
+                "trained_at": datetime.now().isoformat(),
+                "engine_type": self.name,
             }
             joblib.dump(model_data, save_path)
 
             # Also save metadata separately as JSON for easy inspection
-            metadata_path = save_path.replace('.joblib', '.metadata.json')
+            metadata_path = save_path.replace(".joblib", ".metadata.json")
             metadata = {
-                'config': self.config,
-                'trained_at': datetime.now().isoformat(),
-                'engine_type': self.name,
-                'model_path': save_path,
+                "config": self.config,
+                "trained_at": datetime.now().isoformat(),
+                "engine_type": self.name,
+                "model_path": save_path,
             }
-            with open(metadata_path, 'w') as f:
+            with open(metadata_path, "w") as f:
                 json.dump(metadata, f, indent=2, default=str)
 
             logger.info(f"{self.name}: Modelo guardado en {save_path}")
@@ -269,9 +269,9 @@ class BaseLearningEngine(ABC):
         load_path = path or self.model_path
 
         # Handle migration from old .pkl to new .joblib format
-        if load_path.endswith('.pkl'):
+        if load_path.endswith(".pkl"):
             # Try .joblib first
-            joblib_path = load_path.replace('.pkl', '.joblib')
+            joblib_path = load_path.replace(".pkl", ".joblib")
             if os.path.exists(joblib_path):
                 load_path = joblib_path
             # If .pkl still exists, migrate it
@@ -290,7 +290,7 @@ class BaseLearningEngine(ABC):
 
             # Load model using joblib (secure)
             saved_data = joblib.load(load_path)
-            self.model = saved_data['model']
+            self.model = saved_data["model"]
             self.is_trained = True
             logger.info(f"{self.name}: Modelo cargado desde {load_path}")
             return True
@@ -320,24 +320,24 @@ class BaseLearningEngine(ABC):
             class _MigrationUnpickler(pickle.Unpickler):
                 """Restrict pickle deserialization to known safe classes for migration."""
 
-                ALLOWED_CLASSES = {
-                    ('builtins', 'dict'): dict,
-                    ('builtins', 'list'): list,
-                    ('builtins', 'tuple'): tuple,
-                    ('builtins', 'set'): set,
-                    ('builtins', 'frozenset'): frozenset,
-                    ('builtins', 'str'): str,
-                    ('builtins', 'int'): int,
-                    ('builtins', 'float'): float,
-                    ('builtins', 'bool'): bool,
-                    ('builtins', 'bytes'): bytes,
-                    ('builtins', 'bytearray'): bytearray,
-                    ('builtins', 'NoneType'): type(None),
-                    ('collections', 'OrderedDict'): None,
-                    ('collections', 'defaultdict'): None,
-                    ('numpy.core.multiarray', '_reconstruct'): None,
-                    ('numpy', 'dtype'): None,
-                    ('numpy', 'ndarray'): None,
+                ALLOWED_CLASSES: ClassVar[dict] = {
+                    ("builtins", "dict"): dict,
+                    ("builtins", "list"): list,
+                    ("builtins", "tuple"): tuple,
+                    ("builtins", "set"): set,
+                    ("builtins", "frozenset"): frozenset,
+                    ("builtins", "str"): str,
+                    ("builtins", "int"): int,
+                    ("builtins", "float"): float,
+                    ("builtins", "bool"): bool,
+                    ("builtins", "bytes"): bytes,
+                    ("builtins", "bytearray"): bytearray,
+                    ("builtins", "NoneType"): type(None),
+                    ("collections", "OrderedDict"): None,
+                    ("collections", "defaultdict"): None,
+                    ("numpy.core.multiarray", "_reconstruct"): None,
+                    ("numpy", "dtype"): None,
+                    ("numpy", "ndarray"): None,
                 }
 
                 def find_class(self, module: str, name: str) -> type:
@@ -356,7 +356,7 @@ class BaseLearningEngine(ABC):
                         f"Only basic Python and numpy types are allowed."
                     )
 
-            with open(pkl_path, 'rb') as f:
+            with open(pkl_path, "rb") as f:
                 saved_data = _MigrationUnpickler(f).load()
 
             # Validate loaded data structure
@@ -366,18 +366,18 @@ class BaseLearningEngine(ABC):
                 )
 
             # Save in new secure format
-            joblib_path = pkl_path.replace('.pkl', '.joblib')
+            joblib_path = pkl_path.replace(".pkl", ".joblib")
             joblib.dump(saved_data, joblib_path)
 
             # Save metadata
-            metadata_path = joblib_path.replace('.joblib', '.metadata.json')
+            metadata_path = joblib_path.replace(".joblib", ".metadata.json")
             metadata = {
-                'config': saved_data.get('config', {}),
-                'trained_at': saved_data.get('trained_at', datetime.now().isoformat()),
-                'engine_type': saved_data.get('engine_type', self.name),
-                'model_path': joblib_path,
+                "config": saved_data.get("config", {}),
+                "trained_at": saved_data.get("trained_at", datetime.now().isoformat()),
+                "engine_type": saved_data.get("engine_type", self.name),
+                "model_path": joblib_path,
             }
-            with open(metadata_path, 'w') as f:
+            with open(metadata_path, "w") as f:
                 json.dump(metadata, f, indent=2, default=str)
 
             # Remove old .pkl file after successful migration
@@ -386,7 +386,7 @@ class BaseLearningEngine(ABC):
             logger.info(f"Successfully migrated {pkl_path} to {joblib_path}")
 
             # Load the migrated model
-            self.model = saved_data['model']
+            self.model = saved_data["model"]
             self.is_trained = True
             return True
 
@@ -400,11 +400,11 @@ class BaseLearningEngine(ABC):
 
     def record_training_snapshot(
         self,
-        train_metrics: Dict[str, float],
-        validation_metrics: Dict[str, float],
-        feature_importance: Dict[str, float],
+        train_metrics: dict[str, float],
+        validation_metrics: dict[str, float],
+        feature_importance: dict[str, float],
         n_samples: int,
-        model_params: Optional[Dict[str, Any]] = None,
+        model_params: Optional[dict[str, Any]] = None,
     ) -> None:
         """
         Record a training snapshot for stability tracking (Ilmanen).
@@ -458,7 +458,7 @@ class BaseLearningEngine(ABC):
             )
 
         # Analyze feature importance stability
-        feature_changes: Dict[str, float] = {}
+        feature_changes: dict[str, float] = {}
         all_features: set[str] = set()
 
         for snapshot in self._training_history:
@@ -527,7 +527,7 @@ class BaseLearningEngine(ABC):
             },
         )
 
-    def check_feature_explosion(self, n_features: int, n_samples: int) -> Dict[str, Any]:
+    def check_feature_explosion(self, n_features: int, n_samples: int) -> dict[str, Any]:
         """
         Check for feature explosion (Ilmanen's methodology).
 
@@ -538,7 +538,7 @@ class BaseLearningEngine(ABC):
         Returns:
             Dict with feature explosion analysis
         """
-        ratio = n_features / n_samples if n_samples > 0 else float('inf')
+        ratio = n_features / n_samples if n_samples > 0 else float("inf")
 
         is_safe = ratio < self._feature_explosion_threshold
         recommended_max = int(n_samples * self._feature_explosion_threshold)
@@ -553,7 +553,7 @@ class BaseLearningEngine(ABC):
             "status": "safe" if is_safe else "warning",
         }
 
-    def get_learning_curve_analysis(self) -> Dict[str, Any]:
+    def get_learning_curve_analysis(self) -> dict[str, Any]:
         """
         Analyze learning curve data (Hastie's methodology).
 
@@ -616,7 +616,7 @@ class BaseLearningEngine(ABC):
             "n_data_points": len(self._learning_curve_data),
         }
 
-    def get_training_history(self) -> List[TrainingSnapshot]:
+    def get_training_history(self) -> list[TrainingSnapshot]:
         """Get training history."""
         return self._training_history.copy()
 

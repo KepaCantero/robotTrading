@@ -20,9 +20,7 @@ import logging
 import math
 from collections import deque
 from dataclasses import dataclass, field
-from datetime import datetime
-from decimal import Decimal
-from typing import Optional
+from typing import TYPE_CHECKING
 
 import numpy as np
 
@@ -32,6 +30,10 @@ from app.domain.market_analysis.microstructure.ofi.models import (
     TickData,
 )
 from app.domain.market_analysis.microstructure.ofi.ofi_calculator import OFICalculator
+
+if TYPE_CHECKING:
+    from datetime import datetime
+    from decimal import Decimal
 
 logger = logging.getLogger(__name__)
 
@@ -91,7 +93,7 @@ class OrderBookLevel:
     quantity: int
     orders_count: int = 1
 
-    def __add__(self, other: "OrderBookLevel") -> "OrderBookLevel":
+    def __add__(self, other: OrderBookLevel) -> OrderBookLevel:
         """Combine two levels (same price)."""
         if self.price != other.price:
             raise ValueError("Cannot combine levels with different prices")
@@ -511,7 +513,7 @@ class TickLevelOFIProcessor:
 
         return buy_vol / sell_vol
 
-    def detect_aggressive_surge(self, threshold: float = 2.0, window: int = 20) -> Optional[str]:
+    def detect_aggressive_surge(self, threshold: float = 2.0, window: int = 20) -> str | None:
         """
         Detect surge in aggressive trading activity.
 

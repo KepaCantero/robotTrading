@@ -20,7 +20,7 @@ from __future__ import annotations
 
 import logging
 from datetime import timedelta
-from typing import Any, Dict, List, Optional
+from typing import TYPE_CHECKING, Any
 
 import numpy as np
 import pandas as pd
@@ -33,9 +33,11 @@ from app.backtesting.backtesting_compliance import (
 )
 from app.backtesting.core.error_handling import train_with_retry
 from app.backtesting.core.executor import SimpleBacktestExecutor
-from app.backtesting.core.memory_manager import AggressiveMemoryManager
 from app.backtesting.models import BacktestConfig
 from app.domain.strategies.momentum_modular.strategy import ModularMomentumStrategy
+
+if TYPE_CHECKING:
+    from app.backtesting.core.memory_manager import AggressiveMemoryManager
 
 
 class BacktestValidator:
@@ -55,8 +57,8 @@ class BacktestValidator:
         self,
         backtest_config: BacktestConfig,
         memory_manager: AggressiveMemoryManager,
-        raw_config: Dict[str, Any],
-        quotes: List,
+        raw_config: dict[str, Any],
+        quotes: list,
     ):
         """
         Initialize BacktestValidator.
@@ -74,7 +76,7 @@ class BacktestValidator:
 
         # Initialize BacktestingCompliance for R5, R6, R7, DATA-001
         self.backtesting_compliance = create_backtesting_compliance()
-        self.compliance_results: List[BacktestingComplianceResult] = []
+        self.compliance_results: list[BacktestingComplianceResult] = []
 
     # =========================================================================
     # Out-of-Sample Backtest - Main Entry Point
@@ -87,7 +89,7 @@ class BacktestValidator:
         metrics_helper,
         audit_helper,
         thresholds_helper,
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """
         Execute out-of-sample backtest with rigorous validation.
 
@@ -113,11 +115,11 @@ class BacktestValidator:
 
         # Load and validate configuration
         oos_config = self._load_oos_config()
-        train_ratio = oos_config.get('train_ratio', 0.70)
-        acceptable_degradation = oos_config.get('acceptable_degradation_pct', 0.30)
-        concept_drift_threshold = oos_config.get('concept_drift_threshold', 0.50)
+        train_ratio = oos_config.get("train_ratio", 0.70)
+        acceptable_degradation = oos_config.get("acceptable_degradation_pct", 0.30)
+        concept_drift_threshold = oos_config.get("concept_drift_threshold", 0.50)
 
-        logger.info(f"OOS Configuration: {train_ratio:.0%} train, {1-train_ratio:.0%} test")
+        logger.info(f"OOS Configuration: {train_ratio:.0%} train, {1 - train_ratio:.0%} test")
         logger.info(f"Acceptable degradation: {acceptable_degradation:.0%}")
         logger.info(f"Concept drift threshold: {concept_drift_threshold:.0%}")
 
@@ -184,8 +186,8 @@ class BacktestValidator:
         )
 
         self.memory_manager.add_result(result_dict)
-        self.memory_manager.add_backtest_object('out_of_sample', oos_result)
-        audit_helper(result_dict, 'out_of_sample', strategy)
+        self.memory_manager.add_backtest_object("out_of_sample", oos_result)
+        audit_helper(result_dict, "out_of_sample", strategy)
 
         self._log_oos_completion(result_dict, degradation_analysis, acceptable_degradation)
 
@@ -195,13 +197,11 @@ class BacktestValidator:
     # Out-of-Sample Backtest - Helper Methods
     # =========================================================================
 
-    def _load_oos_config(self) -> Dict[str, Any]:
+    def _load_oos_config(self) -> dict[str, Any]:
         """Load out-of-sample test configuration."""
-        return self.raw_config.get('backtests', {}).get('out_of_sample', {})
+        return self.raw_config.get("backtests", {}).get("out_of_sample", {})
 
-    def _split_data_for_oos(
-        self, oos_config: Dict[str, Any], train_ratio: float
-    ) -> Optional[tuple]:
+    def _split_data_for_oos(self, oos_config: dict[str, Any], train_ratio: float) -> tuple | None:
         """
         Split quotes into in-sample and out-of-sample periods.
 
@@ -222,8 +222,8 @@ class BacktestValidator:
         in_sample_quotes = [q for q in all_quotes if q.timestamp <= split_date]
         out_of_sample_quotes = [q for q in all_quotes if q.timestamp > split_date]
 
-        min_test_size = oos_config.get('min_test_size', 100)
-        min_train_size = oos_config.get('min_train_size', 100)
+        min_test_size = oos_config.get("min_test_size", 100)
+        min_train_size = oos_config.get("min_train_size", 100)
 
         if len(in_sample_quotes) < min_train_size or len(out_of_sample_quotes) < min_test_size:
             logger.error(
@@ -247,7 +247,7 @@ class BacktestValidator:
 
     def _run_stationarity_tests(
         self, in_sample_prices: pd.Series, oos_prices: pd.Series, adfuller_func
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Run ADF stationarity tests on both sample period returns."""
         logger.info("\n" + "-" * 80)
         logger.info("STATIONARITY TESTS (Augmented Dickey-Fuller)")
@@ -256,7 +256,7 @@ class BacktestValidator:
         in_sample_returns = in_sample_prices.pct_change().dropna()
         oos_returns = oos_prices.pct_change().dropna()
 
-        adf_in_sample = adfuller_func(in_sample_returns, regression='c')
+        adf_in_sample = adfuller_func(in_sample_returns, regression="c")
         is_in_sample_stationary = adf_in_sample[1] < 0.05
 
         logger.info("In-Sample Returns:")
@@ -264,7 +264,7 @@ class BacktestValidator:
         logger.info(f"  p-value:       {adf_in_sample[1]:.4f}")
         logger.info(f"  Stationary:    {is_in_sample_stationary}")
 
-        adf_oos = adfuller_func(oos_returns, regression='c')
+        adf_oos = adfuller_func(oos_returns, regression="c")
         is_oos_stationary = adf_oos[1] < 0.05
 
         logger.info("Out-of-Sample Returns:")
@@ -273,30 +273,30 @@ class BacktestValidator:
         logger.info(f"  Stationary:    {is_oos_stationary}")
 
         if is_in_sample_stationary and is_oos_stationary:
-            recommendation = 'Suitable for mean reversion'
+            recommendation = "Suitable for mean reversion"
         elif not is_in_sample_stationary:
-            recommendation = 'Use returns instead of prices'
+            recommendation = "Use returns instead of prices"
         else:
-            recommendation = 'Regime change detected - proceed with caution'
+            recommendation = "Regime change detected - proceed with caution"
 
         logger.info(f"\nRecommendation: {recommendation}")
 
         return {
-            'in_sample': {
-                'adf_statistic': float(adf_in_sample[0]),
-                'p_value': float(adf_in_sample[1]),
-                'is_stationary': is_in_sample_stationary,
+            "in_sample": {
+                "adf_statistic": float(adf_in_sample[0]),
+                "p_value": float(adf_in_sample[1]),
+                "is_stationary": is_in_sample_stationary,
             },
-            'out_of_sample': {
-                'adf_statistic': float(adf_oos[0]),
-                'p_value': float(adf_oos[1]),
-                'is_stationary': is_oos_stationary,
+            "out_of_sample": {
+                "adf_statistic": float(adf_oos[0]),
+                "p_value": float(adf_oos[1]),
+                "is_stationary": is_oos_stationary,
             },
-            'both_stationary': is_in_sample_stationary and is_oos_stationary,
-            'recommendation': recommendation,
+            "both_stationary": is_in_sample_stationary and is_oos_stationary,
+            "recommendation": recommendation,
         }
 
-    def _train_strategy_on_in_sample(self, strategy_config: Dict[str, Any]) -> tuple:
+    def _train_strategy_on_in_sample(self, strategy_config: dict[str, Any]) -> tuple:
         """
         Train strategy on in-sample data only.
 
@@ -311,13 +311,13 @@ class BacktestValidator:
         strategy = ModularMomentumStrategy(strategy_config)
         learning_engine_used = None
 
-        if hasattr(strategy, 'learning_engine') and strategy.learning_engine:
+        if hasattr(strategy, "learning_engine") and strategy.learning_engine:
             try:
                 training_success = train_with_retry(
-                    strategy=strategy, engine_type='supervised', use_subprocess=False
+                    strategy=strategy, engine_type="supervised", use_subprocess=False
                 )
                 if training_success:
-                    learning_engine_used = 'supervised'
+                    learning_engine_used = "supervised"
                     logger.info("Learning engine trained successfully on in-sample data")
                 else:
                     logger.warning("Learning engine training failed, using untrained strategy")
@@ -328,7 +328,7 @@ class BacktestValidator:
 
     def _execute_in_sample_backtest(
         self,
-        in_sample_quotes: List,
+        in_sample_quotes: list,
         strategy,
         strategy_name_helper,
         metrics_helper,
@@ -359,8 +359,8 @@ class BacktestValidator:
 
     def _execute_oos_backtest(
         self,
-        out_of_sample_quotes: List,
-        strategy_config: Dict[str, Any],
+        out_of_sample_quotes: list,
+        strategy_config: dict[str, Any],
         strategy_name_helper,
         metrics_helper,
     ) -> tuple:
@@ -410,20 +410,20 @@ class BacktestValidator:
 
     def _analyze_performance_degradation(
         self,
-        in_sample_metrics: Dict,
-        oos_metrics: Dict,
+        in_sample_metrics: dict,
+        oos_metrics: dict,
         in_sample_result,
         oos_result,
         acceptable_degradation: float,
         concept_drift_threshold: float,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Analyze performance degradation between in-sample and out-of-sample."""
         logger.info("\n" + "-" * 80)
         logger.info("PERFORMANCE DEGRADATION ANALYSIS")
         logger.info("-" * 80)
 
-        is_return = in_sample_metrics['return_pct']
-        oos_return = oos_metrics['return_pct']
+        is_return = in_sample_metrics["return_pct"]
+        oos_return = oos_metrics["return_pct"]
         is_sharpe = float(in_sample_result.performance.sharpe_ratio or 0)
         oos_sharpe = float(oos_result.performance.sharpe_ratio or 0)
         is_win_rate = float(in_sample_result.performance.win_rate)
@@ -460,21 +460,21 @@ class BacktestValidator:
         )
 
         return {
-            'return_drop_pct': float(return_drop),
-            'sharpe_drop_pct': float(sharpe_drop),
-            'win_rate_drop_pct': float(win_rate_drop),
-            'max_dd_change_pct': float(oos_max_dd - is_max_dd),
-            'is_acceptable': bool(is_acceptable),
-            'acceptable_threshold': float(acceptable_degradation * 100),
-            'concept_drift_detected': bool(concept_drift_detected),
-            'is_return': is_return,
-            'oos_return': oos_return,
-            'is_sharpe': is_sharpe,
-            'oos_sharpe': oos_sharpe,
-            'is_win_rate': is_win_rate,
-            'oos_win_rate': oos_win_rate,
-            'is_max_dd': is_max_dd,
-            'oos_max_dd': oos_max_dd,
+            "return_drop_pct": float(return_drop),
+            "sharpe_drop_pct": float(sharpe_drop),
+            "win_rate_drop_pct": float(win_rate_drop),
+            "max_dd_change_pct": float(oos_max_dd - is_max_dd),
+            "is_acceptable": bool(is_acceptable),
+            "acceptable_threshold": float(acceptable_degradation * 100),
+            "concept_drift_detected": bool(concept_drift_detected),
+            "is_return": is_return,
+            "oos_return": oos_return,
+            "is_sharpe": is_sharpe,
+            "oos_sharpe": oos_sharpe,
+            "is_win_rate": is_win_rate,
+            "oos_win_rate": oos_win_rate,
+            "is_max_dd": is_max_dd,
+            "oos_max_dd": oos_max_dd,
         }
 
     def _log_degradation_analysis(
@@ -521,7 +521,7 @@ class BacktestValidator:
 
     def _analyze_volatility_regime(
         self, in_sample_returns: pd.Series, oos_returns: pd.Series
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Analyze volatility regime changes between periods."""
         in_vol = float(in_sample_returns.std() * np.sqrt(252))
         oos_vol = float(oos_returns.std() * np.sqrt(252))
@@ -533,15 +533,15 @@ class BacktestValidator:
         logger.info(f"  Regime Change:  {vol_regime_change}")
 
         return {
-            'in_sample_annualized': in_vol,
-            'oos_annualized': oos_vol,
-            'regime_change_detected': vol_regime_change,
-            'vol_change_pct': float((oos_vol - in_vol) / in_vol * 100) if in_vol > 0 else 0.0,
+            "in_sample_annualized": in_vol,
+            "oos_annualized": oos_vol,
+            "regime_change_detected": vol_regime_change,
+            "vol_change_pct": float((oos_vol - in_vol) / in_vol * 100) if in_vol > 0 else 0.0,
         }
 
     def _run_triple_barrier_validation(
         self, in_sample_prices: pd.Series, oos_prices: pd.Series
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Run triple barrier labeling validation."""
         logger.info("\n" + "-" * 80)
         logger.info("TRIPLE BARRIER LABELING VALIDATION")
@@ -559,9 +559,9 @@ class BacktestValidator:
         logger.info(f"  Degradation:   {(in_signal_quality - oos_signal_quality) * 100:+.1f}%")
 
         return {
-            'in_sample_signal_quality': float(in_signal_quality),
-            'oos_signal_quality': float(oos_signal_quality),
-            'quality_degradation_pct': float((in_signal_quality - oos_signal_quality) * 100),
+            "in_sample_signal_quality": float(in_signal_quality),
+            "oos_signal_quality": float(oos_signal_quality),
+            "quality_degradation_pct": float((in_signal_quality - oos_signal_quality) * 100),
         }
 
     def _build_oos_result_dict(
@@ -580,78 +580,78 @@ class BacktestValidator:
         strategy_config,
         strategy,
         thresholds_helper,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Build comprehensive result dictionary for OOS test."""
-        is_acceptable = degradation_analysis['is_acceptable']
-        concept_drift_detected = degradation_analysis['concept_drift_detected']
+        is_acceptable = degradation_analysis["is_acceptable"]
+        concept_drift_detected = degradation_analysis["concept_drift_detected"]
 
         return {
-            'test_type': 'out_of_sample',
-            'test_name': 'Out-of-Sample Validation',
-            'in_sample_period': {
-                'start': in_sample_quotes[0].timestamp.date().isoformat(),
-                'end': in_sample_quotes[-1].timestamp.date().isoformat(),
-                'n_quotes': len(in_sample_quotes),
+            "test_type": "out_of_sample",
+            "test_name": "Out-of-Sample Validation",
+            "in_sample_period": {
+                "start": in_sample_quotes[0].timestamp.date().isoformat(),
+                "end": in_sample_quotes[-1].timestamp.date().isoformat(),
+                "n_quotes": len(in_sample_quotes),
             },
-            'out_of_sample_period': {
-                'start': out_of_sample_quotes[0].timestamp.date().isoformat(),
-                'end': out_of_sample_quotes[-1].timestamp.date().isoformat(),
-                'n_quotes': len(out_of_sample_quotes),
+            "out_of_sample_period": {
+                "start": out_of_sample_quotes[0].timestamp.date().isoformat(),
+                "end": out_of_sample_quotes[-1].timestamp.date().isoformat(),
+                "n_quotes": len(out_of_sample_quotes),
             },
-            'in_sample_metrics': {
-                'return': degradation_analysis['is_return'],
-                'sharpe': degradation_analysis['is_sharpe'],
-                'win_rate': degradation_analysis['is_win_rate'],
-                'max_dd': degradation_analysis['is_max_dd'],
-                'total_trades': in_sample_result.performance.total_trades,
-                'total_pnl': float(in_sample_metrics['total_pnl']),
-                'final_capital': float(in_sample_metrics['final_capital']),
+            "in_sample_metrics": {
+                "return": degradation_analysis["is_return"],
+                "sharpe": degradation_analysis["is_sharpe"],
+                "win_rate": degradation_analysis["is_win_rate"],
+                "max_dd": degradation_analysis["is_max_dd"],
+                "total_trades": in_sample_result.performance.total_trades,
+                "total_pnl": float(in_sample_metrics["total_pnl"]),
+                "final_capital": float(in_sample_metrics["final_capital"]),
             },
-            'out_of_sample_metrics': {
-                'return': degradation_analysis['oos_return'],
-                'sharpe': degradation_analysis['oos_sharpe'],
-                'win_rate': degradation_analysis['oos_win_rate'],
-                'max_dd': degradation_analysis['oos_max_dd'],
-                'total_trades': oos_result.performance.total_trades,
-                'total_pnl': float(oos_metrics['total_pnl']),
-                'final_capital': float(oos_metrics['final_capital']),
+            "out_of_sample_metrics": {
+                "return": degradation_analysis["oos_return"],
+                "sharpe": degradation_analysis["oos_sharpe"],
+                "win_rate": degradation_analysis["oos_win_rate"],
+                "max_dd": degradation_analysis["oos_max_dd"],
+                "total_trades": oos_result.performance.total_trades,
+                "total_pnl": float(oos_metrics["total_pnl"]),
+                "final_capital": float(oos_metrics["final_capital"]),
             },
-            'performance_degradation': {
-                'return_drop_pct': degradation_analysis['return_drop_pct'],
-                'sharpe_drop_pct': degradation_analysis['sharpe_drop_pct'],
-                'win_rate_drop_pct': degradation_analysis['win_rate_drop_pct'],
-                'max_dd_change_pct': degradation_analysis['max_dd_change_pct'],
-                'is_acceptable': is_acceptable,
-                'acceptable_threshold': degradation_analysis['acceptable_threshold'],
+            "performance_degradation": {
+                "return_drop_pct": degradation_analysis["return_drop_pct"],
+                "sharpe_drop_pct": degradation_analysis["sharpe_drop_pct"],
+                "win_rate_drop_pct": degradation_analysis["win_rate_drop_pct"],
+                "max_dd_change_pct": degradation_analysis["max_dd_change_pct"],
+                "is_acceptable": is_acceptable,
+                "acceptable_threshold": degradation_analysis["acceptable_threshold"],
             },
-            'concept_drift': {
-                'detected': concept_drift_detected,
-                'threshold': float(self._load_oos_config().get('concept_drift_threshold', 0.50)),
-                'in_sample_return': degradation_analysis['is_return'],
-                'oos_return': degradation_analysis['oos_return'],
-                'return_ratio': (
-                    degradation_analysis['oos_return'] / degradation_analysis['is_return']
-                    if degradation_analysis['is_return'] != 0
+            "concept_drift": {
+                "detected": concept_drift_detected,
+                "threshold": float(self._load_oos_config().get("concept_drift_threshold", 0.50)),
+                "in_sample_return": degradation_analysis["is_return"],
+                "oos_return": degradation_analysis["oos_return"],
+                "return_ratio": (
+                    degradation_analysis["oos_return"] / degradation_analysis["is_return"]
+                    if degradation_analysis["is_return"] != 0
                     else 0.0
                 ),
             },
-            'volatility_regime': volatility_analysis,
-            'stationarity_test': stationarity_test,
-            'triple_barrier': triple_barrier,
-            'learning_engine_used': learning_engine_used,
-            'frozen_parameters': True,
-            'validation_passed': bool(is_acceptable and not concept_drift_detected),
-            'overall_status': 'PASS' if (is_acceptable and not concept_drift_detected) else 'FAIL',
-            'modules_active': (
-                list(self.raw_config['modules']['filters'].keys())
-                if 'modules' in self.raw_config
+            "volatility_regime": volatility_analysis,
+            "stationarity_test": stationarity_test,
+            "triple_barrier": triple_barrier,
+            "learning_engine_used": learning_engine_used,
+            "frozen_parameters": True,
+            "validation_passed": bool(is_acceptable and not concept_drift_detected),
+            "overall_status": "PASS" if (is_acceptable and not concept_drift_detected) else "FAIL",
+            "modules_active": (
+                list(self.raw_config["modules"]["filters"].keys())
+                if "modules" in self.raw_config
                 else []
             ),
-            'thresholds': thresholds_helper(strategy_config),
+            "thresholds": thresholds_helper(strategy_config),
         }
 
     def _log_oos_completion(
-        self, result_dict: Dict, degradation_analysis: Dict, acceptable_degradation: float
+        self, result_dict: dict, degradation_analysis: dict, acceptable_degradation: float
     ):
         """Log OOS backtest completion summary."""
         logger.info("\n" + "=" * 80)
@@ -659,11 +659,11 @@ class BacktestValidator:
         logger.info("=" * 80)
         logger.info(f"Overall Status: {result_dict['overall_status']}")
         logger.info(f"Validation Passed: {result_dict['validation_passed']}")
-        detected = 'DETECTED' if degradation_analysis['concept_drift_detected'] else 'NOT DETECTED'
+        detected = "DETECTED" if degradation_analysis["concept_drift_detected"] else "NOT DETECTED"
         logger.info(f"Concept Drift: {detected}")
         logger.info(
             f"Degradation: {degradation_analysis['sharpe_drop_pct']:.1f}% "
-            f"(threshold: {acceptable_degradation*100:.0f}%)"
+            f"(threshold: {acceptable_degradation * 100:.0f}%)"
         )
         logger.info("=" * 80)
 
@@ -677,7 +677,7 @@ class BacktestValidator:
         target_return: float = 0.02,
         stop_loss: float = 0.01,
         max_holding: int = 20,
-    ) -> List[int]:
+    ) -> list[int]:
         """
         Apply triple barrier labeling (Lopez de Prado).
 
@@ -721,7 +721,7 @@ class BacktestValidator:
 
     def run_compliance_validation(
         self,
-        results: List[Dict[str, Any]],
+        results: list[dict[str, Any]],
         count_parameters_helper,
         extract_walk_forward_helper,
     ) -> BacktestingComplianceResult:
@@ -751,12 +751,12 @@ class BacktestValidator:
 
         walk_forward_windows = extract_walk_forward_helper(results)
 
-        mc_results = [r for r in results if r.get('test_type') == 'monte_carlo']
+        mc_results = [r for r in results if r.get("test_type") == "monte_carlo"]
         n_mc_simulations = len(mc_results)
         mc_var_95 = 0.0
         mc_var_99 = 0.0
         if mc_results:
-            returns = [r.get('return_pct', 0) for r in mc_results]
+            returns = [r.get("return_pct", 0) for r in mc_results]
             mc_var_95 = float(np.percentile(returns, 5)) if returns else 0.0
             mc_var_99 = float(np.percentile(returns, 1)) if returns else 0.0
 
@@ -792,25 +792,29 @@ class BacktestValidator:
         """
         count = 0
 
-        modules = self.raw_config.get('modules', {})
+        modules = self.raw_config.get("modules", {})
         for _module_name, module_config in modules.items():
             if isinstance(module_config, dict):
-                if 'thresholds' in module_config:
-                    count += len(module_config['thresholds'])
-                if 'parameters' in module_config:
-                    count += len(module_config['parameters'])
+                if "thresholds" in module_config:
+                    count += len(module_config["thresholds"])
+                if "parameters" in module_config:
+                    count += len(module_config["parameters"])
 
-        learning_engines = self.raw_config.get('learning_engines', {})
+        learning_engines = self.raw_config.get("learning_engines", {})
         for _engine_name, engine_config in learning_engines.items():
-            if isinstance(engine_config, dict) and engine_config.get('enabled', False) and 'config' in engine_config:
-                count += len(engine_config['config'])
+            if (
+                isinstance(engine_config, dict)
+                and engine_config.get("enabled", False)
+                and "config" in engine_config
+            ):
+                count += len(engine_config["config"])
 
         # Base backtest parameters
         count += 6
 
         return count
 
-    def extract_walk_forward_results(self, results: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    def extract_walk_forward_results(self, results: list[dict[str, Any]]) -> list[dict[str, Any]]:
         """
         Extract walk-forward results for R5 validation.
 
@@ -820,17 +824,17 @@ class BacktestValidator:
         Returns:
             List of results per walk-forward window
         """
-        wf_results = [r for r in results if 'walk_forward' in r.get('test_type', '')]
+        wf_results = [r for r in results if "walk_forward" in r.get("test_type", "")]
         windows = []
 
         for r in wf_results:
             windows.append(
                 {
-                    'is_return': r.get('train_return', 0),
-                    'oos_return': r.get('return_pct', 0),
-                    'is_sharpe': r.get('train_sharpe', 0),
-                    'oos_sharpe': r.get('sharpe_ratio', 0),
-                    'trades': r.get('total_trades', 0),
+                    "is_return": r.get("train_return", 0),
+                    "oos_return": r.get("return_pct", 0),
+                    "is_sharpe": r.get("train_sharpe", 0),
+                    "oos_sharpe": r.get("sharpe_ratio", 0),
+                    "trades": r.get("total_trades", 0),
                 }
             )
 
@@ -840,8 +844,8 @@ class BacktestValidator:
         self,
         baseline_predictions: np.ndarray,
         optimized_predictions: np.ndarray,
-        val_quotes: List,
-    ) -> Dict[str, float]:
+        val_quotes: list,
+    ) -> dict[str, float]:
         """
         Apply meta-labeling from Lopez de Prado (rule 3).
 
@@ -868,9 +872,9 @@ class BacktestValidator:
             weighted_performance = (meta_labels * confidence_weights).mean()
 
             return {
-                'meta_accuracy': float(meta_accuracy),
-                'weighted_performance': float(weighted_performance),
-                'prediction_correlation': float(
+                "meta_accuracy": float(meta_accuracy),
+                "weighted_performance": float(weighted_performance),
+                "prediction_correlation": float(
                     np.corrcoef(baseline_predictions, optimized_predictions)[0, 1]
                     if len(baseline_predictions) > 1 and len(optimized_predictions) > 1
                     else 0

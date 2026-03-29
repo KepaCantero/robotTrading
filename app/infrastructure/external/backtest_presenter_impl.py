@@ -8,12 +8,16 @@ following the Humble Object pattern to keep UI code testable.
 from __future__ import annotations
 
 import logging
-from typing import Any, Dict, List, Optional
+from typing import TYPE_CHECKING, Any
 
 from ...application.interfaces.backtest_presenter import BacktestPresenter
-from ...application.use_cases.analyze_backtest_results_use_case import AnalyzeBacktestResultsUseCase
-from ...domain.entities.backtest import Backtest
-from ...domain.repositories.backtest_repository import BacktestRepository
+
+if TYPE_CHECKING:
+    from ...application.use_cases.analyze_backtest_results_use_case import (
+        AnalyzeBacktestResultsUseCase,
+    )
+    from ...domain.entities.backtest import Backtest
+    from ...domain.repositories.backtest_repository import BacktestRepository
 
 logger = logging.getLogger(__name__)
 
@@ -42,7 +46,7 @@ class BacktestPresenterImpl(BacktestPresenter):
         self._backtest_repository = backtest_repository
         self._analyzer = analyzer
 
-    def present_backtest_result(self, backtest_id: str) -> Optional[Dict[str, Any]]:
+    def present_backtest_result(self, backtest_id: str) -> dict[str, Any] | None:
         """
         Present a single backtest result.
 
@@ -59,7 +63,7 @@ class BacktestPresenterImpl(BacktestPresenter):
 
         return self._format_backtest(backtest)
 
-    def present_backtest_list(self, limit: int = 20, offset: int = 0) -> List[Dict[str, Any]]:
+    def present_backtest_list(self, limit: int = 20, offset: int = 0) -> list[dict[str, Any]]:
         """
         Present a list of backtests.
 
@@ -73,7 +77,7 @@ class BacktestPresenterImpl(BacktestPresenter):
         backtests = self._backtest_repository.find_all(limit=limit, offset=offset)
         return [self._format_backtest_summary(bt) for bt in backtests]
 
-    def present_performance_summary(self, backtest_id: str) -> Optional[Dict[str, Any]]:
+    def present_performance_summary(self, backtest_id: str) -> dict[str, Any] | None:
         """
         Present performance summary for a backtest.
 
@@ -89,11 +93,11 @@ class BacktestPresenterImpl(BacktestPresenter):
             return self.present_error(f"No performance data for {backtest_id}")
 
         return {
-            'status': 'success',
-            'data': summary,
+            "status": "success",
+            "data": summary,
         }
 
-    def present_comparison(self, backtest_ids: List[str]) -> Optional[Dict[str, Any]]:
+    def present_comparison(self, backtest_ids: list[str]) -> dict[str, Any] | None:
         """
         Present comparison of multiple backtests.
 
@@ -109,11 +113,11 @@ class BacktestPresenterImpl(BacktestPresenter):
             return self.present_error("Could not compare backtests")
 
         return {
-            'status': 'success',
-            'data': comparison,
+            "status": "success",
+            "data": comparison,
         }
 
-    def present_error(self, error_message: str) -> Dict[str, Any]:
+    def present_error(self, error_message: str) -> dict[str, Any]:
         """
         Present an error message.
 
@@ -124,11 +128,11 @@ class BacktestPresenterImpl(BacktestPresenter):
             Presentation-ready error dictionary
         """
         return {
-            'status': 'error',
-            'error': error_message,
+            "status": "error",
+            "error": error_message,
         }
 
-    def _format_backtest(self, backtest: Backtest) -> Dict[str, Any]:
+    def _format_backtest(self, backtest: Backtest) -> dict[str, Any]:
         """
         Format a backtest entity for presentation.
 
@@ -141,39 +145,39 @@ class BacktestPresenterImpl(BacktestPresenter):
         result = backtest.result
 
         return {
-            'status': 'success',
-            'data': {
-                'backtest_id': backtest.backtest_id,
-                'strategy': backtest.config.strategy_name,
-                'status': backtest.status.value,
-                'created_at': backtest.created_at.isoformat(),
-                'started_at': backtest.started_at.isoformat() if backtest.started_at else None,
-                'completed_at': (
+            "status": "success",
+            "data": {
+                "backtest_id": backtest.backtest_id,
+                "strategy": backtest.config.strategy_name,
+                "status": backtest.status.value,
+                "created_at": backtest.created_at.isoformat(),
+                "started_at": backtest.started_at.isoformat() if backtest.started_at else None,
+                "completed_at": (
                     backtest.completed_at.isoformat() if backtest.completed_at else None
                 ),
-                'duration_seconds': backtest.get_duration(),
-                'results': (
+                "duration_seconds": backtest.get_duration(),
+                "results": (
                     {
-                        'initial_capital': str(result.initial_capital) if result else None,
-                        'final_capital': str(result.final_capital) if result else None,
-                        'total_return_pct': str(result.total_return_pct) if result else None,
-                        'sharpe_ratio': (
+                        "initial_capital": str(result.initial_capital) if result else None,
+                        "final_capital": str(result.final_capital) if result else None,
+                        "total_return_pct": str(result.total_return_pct) if result else None,
+                        "sharpe_ratio": (
                             str(result.sharpe_ratio) if result and result.sharpe_ratio else None
                         ),
-                        'max_drawdown': (
+                        "max_drawdown": (
                             str(result.max_drawdown) if result and result.max_drawdown else None
                         ),
-                        'total_trades': result.total_trades if result else 0,
-                        'win_rate': str(result.win_rate) if result and result.win_rate else None,
+                        "total_trades": result.total_trades if result else 0,
+                        "win_rate": str(result.win_rate) if result and result.win_rate else None,
                     }
                     if result
                     else None
                 ),
-                'error': backtest.error_message,
+                "error": backtest.error_message,
             },
         }
 
-    def _format_backtest_summary(self, backtest: Backtest) -> Dict[str, Any]:
+    def _format_backtest_summary(self, backtest: Backtest) -> dict[str, Any]:
         """
         Format a backtest summary for list views.
 
@@ -184,13 +188,13 @@ class BacktestPresenterImpl(BacktestPresenter):
             Formatted summary dictionary
         """
         return {
-            'backtest_id': backtest.backtest_id,
-            'strategy': backtest.config.strategy_name,
-            'status': backtest.status.value,
-            'created_at': backtest.created_at.isoformat(),
-            'completed_at': backtest.completed_at.isoformat() if backtest.completed_at else None,
-            'total_return_pct': str(backtest.result.total_return_pct) if backtest.result else None,
-            'sharpe_ratio': (
+            "backtest_id": backtest.backtest_id,
+            "strategy": backtest.config.strategy_name,
+            "status": backtest.status.value,
+            "created_at": backtest.created_at.isoformat(),
+            "completed_at": backtest.completed_at.isoformat() if backtest.completed_at else None,
+            "total_return_pct": str(backtest.result.total_return_pct) if backtest.result else None,
+            "sharpe_ratio": (
                 str(backtest.result.sharpe_ratio)
                 if backtest.result and backtest.result.sharpe_ratio
                 else None

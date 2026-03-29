@@ -12,7 +12,7 @@ Advanced clustering and dimensionality reduction techniques:
 """
 
 import logging
-from typing import Dict, List, Optional, Tuple
+from typing import Optional
 
 import numpy as np
 from sklearn.cluster import DBSCAN, AgglomerativeClustering
@@ -40,8 +40,8 @@ class AdvancedClusteringAnalyzer:
         self.scaler = StandardScaler()
 
     def hierarchical_clustering(
-        self, data: List[List[float]], n_clusters: int = 3, linkage_method: str = 'ward'
-    ) -> Dict:
+        self, data: list[list[float]], n_clusters: int = 3, linkage_method: str = "ward"
+    ) -> dict:
         """
         Perform hierarchical clustering with dendrogram.
 
@@ -74,18 +74,15 @@ class AdvancedClusteringAnalyzer:
             linkage_matrix = scipy_linkage(X_scaled, method=linkage_method)
 
             # Calculate silhouette score
-            if len(set(labels)) > 1:
-                sil_score = float(silhouette_score(X_scaled, labels))
-            else:
-                sil_score = 0.0
+            sil_score = float(silhouette_score(X_scaled, labels)) if len(set(labels)) > 1 else 0.0
 
             return {
-                'labels': [int(var_l) for var_l in labels],
-                'n_clusters': n_clusters,
-                'linkage_method': linkage_method,
-                'linkage_matrix': linkage_matrix.tolist(),
-                'silhouette_score': sil_score,
-                'cluster_sizes': self._get_cluster_sizes(labels),
+                "labels": [int(var_l) for var_l in labels],
+                "n_clusters": n_clusters,
+                "linkage_method": linkage_method,
+                "linkage_matrix": linkage_matrix.tolist(),
+                "silhouette_score": sil_score,
+                "cluster_sizes": self._get_cluster_sizes(labels),
             }
 
         except (ValueError, TypeError, KeyError, AttributeError) as e:
@@ -93,8 +90,8 @@ class AdvancedClusteringAnalyzer:
             return None
 
     def dbscan_clustering(
-        self, data: List[List[float]], eps: float = 0.5, min_samples: int = 5
-    ) -> Dict:
+        self, data: list[list[float]], eps: float = 0.5, min_samples: int = 5
+    ) -> dict:
         """
         Perform DBSCAN density-based clustering.
 
@@ -139,13 +136,13 @@ class AdvancedClusteringAnalyzer:
                 sil_score = 0.0
 
             return {
-                'labels': [int(var_l) for var_l in labels],
-                'n_clusters': n_clusters,
-                'n_noise_points': n_noise,
-                'eps': eps,
-                'min_samples': min_samples,
-                'silhouette_score': sil_score,
-                'cluster_sizes': self._get_cluster_sizes(labels),
+                "labels": [int(var_l) for var_l in labels],
+                "n_clusters": n_clusters,
+                "n_noise_points": n_noise,
+                "eps": eps,
+                "min_samples": min_samples,
+                "silhouette_score": sil_score,
+                "cluster_sizes": self._get_cluster_sizes(labels),
             }
 
         except (ValueError, TypeError, KeyError, AttributeError) as e:
@@ -154,10 +151,10 @@ class AdvancedClusteringAnalyzer:
 
     def pca_analysis(
         self,
-        data: List[List[float]],
+        data: list[list[float]],
         n_components: Optional[int] = None,
         variance_threshold: float = 0.95,
-    ) -> Dict:
+    ) -> dict:
         """
         Perform Principal Component Analysis.
 
@@ -197,13 +194,13 @@ class AdvancedClusteringAnalyzer:
             cumulative_var = np.cumsum(explained_var)
 
             return {
-                'n_components': n_components,
-                'explained_variance': [float(v) for v in explained_var],
-                'cumulative_variance': [float(v) for v in cumulative_var],
-                'total_variance_explained': float(cumulative_var[-1]),
-                'components': pca.components_.tolist(),
-                'transformed_data': X_pca.tolist(),
-                'mean': pca.mean_.tolist(),
+                "n_components": n_components,
+                "explained_variance": [float(v) for v in explained_var],
+                "cumulative_variance": [float(v) for v in cumulative_var],
+                "total_variance_explained": float(cumulative_var[-1]),
+                "components": pca.components_.tolist(),
+                "transformed_data": X_pca.tolist(),
+                "mean": pca.mean_.tolist(),
             }
 
         except (ValueError, TypeError, KeyError, AttributeError) as e:
@@ -212,10 +209,10 @@ class AdvancedClusteringAnalyzer:
 
     def ica_analysis(
         self,
-        data: List[List[float]],
+        data: list[list[float]],
         n_components: Optional[int] = None,
-        algorithm: str = 'parallel',
-    ) -> Dict:
+        algorithm: str = "parallel",
+    ) -> dict:
         """
         Perform Independent Component Analysis.
 
@@ -257,12 +254,12 @@ class AdvancedClusteringAnalyzer:
             W = np.linalg.pinv(A)  # Unmixing matrix
 
             return {
-                'n_components': n_components,
-                'algorithm': algorithm,
-                'independent_components': [float(v) for v in S[0]] if len(S) > 0 else [],
-                'mixing_matrix': A.tolist(),
-                'unmixing_matrix': W.tolist(),
-                'transformed_data': S.tolist(),
+                "n_components": n_components,
+                "algorithm": algorithm,
+                "independent_components": [float(v) for v in S[0]] if len(S) > 0 else [],
+                "mixing_matrix": A.tolist(),
+                "unmixing_matrix": W.tolist(),
+                "transformed_data": S.tolist(),
             }
 
         except (ValueError, TypeError, KeyError, AttributeError) as e:
@@ -271,11 +268,11 @@ class AdvancedClusteringAnalyzer:
 
     def tsne_visualization(
         self,
-        data: List[List[float]],
+        data: list[list[float]],
         n_components: int = 2,
         perplexity: int = 30,
         n_iter: int = 1000,
-    ) -> Optional[Dict]:
+    ) -> Optional[dict]:
         """
         Perform t-SNE dimensionality reduction for visualization.
 
@@ -335,16 +332,16 @@ class AdvancedClusteringAnalyzer:
 
             # Get KL divergence - handle both kl_divergence_ (newer) and accessing from result
             kl_div = 0.0
-            if hasattr(tsne, 'kl_divergence_'):
+            if hasattr(tsne, "kl_divergence_"):
                 kl_div = float(tsne.kl_divergence_)
 
             result = {
-                'n_components': n_components,
-                'perplexity': perplexity,
-                'n_iterations': n_iter,
-                'max_iter': n_iter,  # Also provide max_iter for newer sklearn
-                'transformed_data': X_tsne.tolist(),
-                'kl_divergence': kl_div,
+                "n_components": n_components,
+                "perplexity": perplexity,
+                "n_iterations": n_iter,
+                "max_iter": n_iter,  # Also provide max_iter for newer sklearn
+                "transformed_data": X_tsne.tolist(),
+                "kl_divergence": kl_div,
             }
             return result
 
@@ -352,7 +349,7 @@ class AdvancedClusteringAnalyzer:
             logger.error(f"Error in t-SNE analysis: {e}")
             return None
 
-    def silhouette_analysis(self, data: List[List[float]], labels: List[int]) -> Dict:
+    def silhouette_analysis(self, data: list[list[float]], labels: list[int]) -> dict:
         """
         Analyze cluster quality using silhouette scores.
 
@@ -395,11 +392,11 @@ class AdvancedClusteringAnalyzer:
                     cluster_scores[int(label)] = float(np.mean(sample_scores[cluster_mask]))
 
             return {
-                'overall_score': overall_score,
-                'cluster_scores': cluster_scores,
-                'sample_scores': [float(s) for s in sample_scores],
-                'n_clusters': len(unique_labels),
-                'interpretation': self._interpret_silhouette(overall_score),
+                "overall_score": overall_score,
+                "cluster_scores": cluster_scores,
+                "sample_scores": [float(s) for s in sample_scores],
+                "n_clusters": len(unique_labels),
+                "interpretation": self._interpret_silhouette(overall_score),
             }
 
         except (ValueError, TypeError, KeyError, AttributeError) as e:
@@ -408,10 +405,10 @@ class AdvancedClusteringAnalyzer:
 
     def optimal_clusters(
         self,
-        data: List[List[float]],
-        k_range: Tuple[int, int] = (2, 10),
-        method: str = 'silhouette',
-    ) -> Dict:
+        data: list[list[float]],
+        k_range: tuple[int, int] = (2, 10),
+        method: str = "silhouette",
+    ) -> dict:
         """
         Find optimal number of clusters using silhouette or elbow method.
 
@@ -443,7 +440,7 @@ class AdvancedClusteringAnalyzer:
             best_k = min_k
             best_score = -1
 
-            if method == 'silhouette':
+            if method == "silhouette":
                 # Silhouette analysis
                 from sklearn.cluster import KMeans
 
@@ -461,7 +458,7 @@ class AdvancedClusteringAnalyzer:
                         logger.warning(f"Error for k={k}: {e}")
                         continue
 
-            elif method == 'elbow':
+            elif method == "elbow":
                 # Elbow method (inertia)
                 from sklearn.cluster import KMeans
 
@@ -480,16 +477,13 @@ class AdvancedClusteringAnalyzer:
                     inertias = [scores[k] for k in ks]
                     differences = np.diff(inertias)
                     second_diff = np.diff(differences)
-                    if len(second_diff) > 0:
-                        best_k = ks[np.argmax(second_diff) + 1]
-                    else:
-                        best_k = ks[0]
+                    best_k = ks[np.argmax(second_diff) + 1] if len(second_diff) > 0 else ks[0]
 
             return {
-                'method': method,
-                'optimal_k': best_k,
-                'scores': scores,
-                'k_range': [min_k, max_k],
+                "method": method,
+                "optimal_k": best_k,
+                "scores": scores,
+                "k_range": [min_k, max_k],
             }
 
         except (ValueError, TypeError, KeyError, AttributeError) as e:
@@ -497,7 +491,7 @@ class AdvancedClusteringAnalyzer:
             return None
 
     @staticmethod
-    def _get_cluster_sizes(labels: List[int]) -> Dict[int, int]:
+    def _get_cluster_sizes(labels: list[int]) -> dict[int, int]:
         """Get size of each cluster."""
         sizes = {}
         for label in set(labels):

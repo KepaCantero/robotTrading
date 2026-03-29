@@ -24,7 +24,7 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 import numpy as np
 from scipy import stats
@@ -54,21 +54,21 @@ class MultipleTestResult:
     num_tests: int
     num_significant_uncorrected: int
     num_significant_corrected: int
-    tests: List[HypothesisTest]
+    tests: list[HypothesisTest]
     correction_method: str  # 'bonferroni', 'holm', 'bh'
-    false_discovery_rate: Optional[float]  # Estimated FDR
+    false_discovery_rate: float | None  # Estimated FDR
 
 
 @dataclass
 class ParameterTestResult:
     """Result of testing multiple parameter combinations."""
 
-    best_parameters: Dict[str, Any]
+    best_parameters: dict[str, Any]
     best_sharpe_ratio: float
     is_significant_after_correction: bool
     num_parameters_tested: int
     corrected_significance_level: float
-    all_results: List[Dict[str, Any]]
+    all_results: list[dict[str, Any]]
 
 
 class BonferroniCorrector:
@@ -79,8 +79,8 @@ class BonferroniCorrector:
     when performing multiple statistical tests simultaneously.
 
     Principle:
-        If performing n tests at significance level α,
-        the corrected significance level is α/n.
+        If performing n tests at significance level alpha,
+        the corrected significance level is alpha/n.
 
     This prevents the accumulation of Type I errors (false positives)
     when testing many strategies or parameter combinations.
@@ -98,8 +98,8 @@ class BonferroniCorrector:
 
     def correct_p_values(
         self,
-        p_values: List[float],
-        test_names: Optional[List[str]] = None,
+        p_values: list[float],
+        test_names: list[str] | None = None,
         method: str = "bonferroni",
     ) -> MultipleTestResult:
         """
@@ -191,7 +191,7 @@ class BonferroniCorrector:
 
     def test_strategy_significance(
         self,
-        sharpe_ratios: Dict[str, float],
+        sharpe_ratios: dict[str, float],
         null_sharpe: float = 0.0,
         num_observations: int = 252,
         method: str = "bonferroni",
@@ -243,7 +243,7 @@ class BonferroniCorrector:
 
     def test_parameter_combinations(
         self,
-        backtest_results: List[Dict[str, Any]],
+        backtest_results: list[dict[str, Any]],
         metric: str = "sharpe_ratio",
         method: str = "bonferroni",
     ) -> ParameterTestResult:
@@ -321,12 +321,12 @@ class BonferroniCorrector:
                 all_results=[],
             )
 
-    def _bonferroni_correction(self, p_values: List[float]) -> List[float]:
+    def _bonferroni_correction(self, p_values: list[float]) -> list[float]:
         """Apply standard Bonferroni correction."""
         num_tests = len(p_values)
         return [min(p * num_tests, 1.0) for p in p_values]
 
-    def _holm_correction(self, p_values: List[float]) -> List[float]:
+    def _holm_correction(self, p_values: list[float]) -> list[float]:
         """
         Apply Holm-Bonferroni correction (step-down procedure).
 
@@ -352,7 +352,7 @@ class BonferroniCorrector:
 
         return corrected_p_values
 
-    def _benjamini_hochberg(self, p_values: List[float]) -> List[float]:
+    def _benjamini_hochberg(self, p_values: list[float]) -> list[float]:
         """
         Apply Benjamini-Hochberg correction.
 
@@ -382,7 +382,7 @@ class BonferroniCorrector:
 
         return corrected_p_values
 
-    def _estimate_fdr(self, corrected_p_values: List[float]) -> float:
+    def _estimate_fdr(self, corrected_p_values: list[float]) -> float:
         """
         Estimate false discovery rate from corrected p-values.
 
@@ -426,10 +426,10 @@ class BonferroniCorrector:
 
 
 def correct_for_multiple_testing(
-    p_values: List[float],
+    p_values: list[float],
     family_wise_error_rate: float = 0.05,
     method: str = "bonferroni",
-) -> List[float]:
+) -> list[float]:
     """
     Convenience function to correct p-values for multiple testing.
 

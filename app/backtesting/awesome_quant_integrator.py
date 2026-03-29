@@ -8,7 +8,7 @@ Provides comprehensive financial metrics using AWESOME-QUANT libraries:
 """
 
 import logging
-from typing import Dict, Optional, TypedDict
+from typing import Optional, TypedDict
 
 import numpy as np
 import pandas as pd
@@ -130,8 +130,8 @@ class PyfolioMetrics(TypedDict, total=False):
 class AwesomeQuantMetricsDict(TypedDict, total=False):
     """Container for all AWESOME-QUANT metrics."""
 
-    quantstats: Dict[str, float]
-    empyrical: Dict[str, float]
+    quantstats: dict[str, float]
+    empyrical: dict[str, float]
     pyfolio: PyfolioMetrics
 
 
@@ -173,7 +173,7 @@ class FallbackMetrics(TypedDict, total=False):
 class AwesomeQuantIntegrator:
     """Integrate AWESOME-QUANT libraries for advanced metrics and analysis."""
 
-    def __init__(self, risk_free_rate: float = None):
+    def __init__(self, risk_free_rate: Optional[float] = None):
         """
         Initialize AWESOME-QUANT integrator.
 
@@ -211,7 +211,7 @@ class AwesomeQuantIntegrator:
 
     def calculate_quantstats_metrics(
         self, returns: pd.Series, benchmark_returns: Optional[pd.Series] = None
-    ) -> Dict[str, float]:
+    ) -> dict[str, float]:
         """
         Calculate comprehensive metrics using quantstats.
 
@@ -293,7 +293,7 @@ class AwesomeQuantIntegrator:
 
     def calculate_empyrical_metrics(
         self, returns: pd.Series, benchmark_returns: Optional[pd.Series] = None
-    ) -> Dict[str, float]:
+    ) -> dict[str, float]:
         """
         Calculate metrics using empyrical library.
 
@@ -476,7 +476,7 @@ class AwesomeQuantIntegrator:
         self,
         returns: pd.Series,
         benchmark_returns: Optional[pd.Series] = None,
-    ) -> Dict[str, float]:
+    ) -> dict[str, float]:
         """
         Get unified view of key metrics across all libraries.
 
@@ -629,7 +629,7 @@ class AwesomeQuantIntegrator:
             if losses.sum() > 0:
                 metrics["omega_ratio"] = float(gains.sum() / losses.sum())
             else:
-                metrics["omega_ratio"] = float('inf') if gains.sum() > 0 else 0.0
+                metrics["omega_ratio"] = float("inf") if gains.sum() > 0 else 0.0
 
             # Win rate
             metrics["win_rate"] = float((returns > 0).mean()) if len(returns) > 0 else 0.0

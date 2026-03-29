@@ -7,7 +7,7 @@ Detecta y aplica splits, dividendos, y otras corporate actions.
 import logging
 from datetime import datetime
 from decimal import Decimal
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -19,7 +19,7 @@ class CorporateActionsHandler:
     Detecta, almacena y aplica corporate actions (splits, dividendos, etc.)
     """
 
-    def __init__(self, config: Dict[str, Any] = None):
+    def __init__(self, config: Optional[dict[str, Any]] = None):
         """
         Inicializar handler.
 
@@ -27,8 +27,8 @@ class CorporateActionsHandler:
             config: Configuración
         """
         config = config or {}
-        self.actions_db: Dict[str, List[Dict[str, Any]]] = {}
-        self.auto_detect = config.get('auto_detect', False)
+        self.actions_db: dict[str, list[dict[str, Any]]] = {}
+        self.auto_detect = config.get("auto_detect", False)
 
     def register_split(
         self, symbol: str, date: datetime, ratio: float, description: Optional[str] = None
@@ -46,10 +46,10 @@ class CorporateActionsHandler:
             self.actions_db[symbol] = []
 
         action = {
-            'type': 'split',
-            'date': date,
-            'ratio': ratio,
-            'description': description or f"{ratio}:1 split",
+            "type": "split",
+            "date": date,
+            "ratio": ratio,
+            "description": description or f"{ratio}:1 split",
         }
 
         self.actions_db[symbol].append(action)
@@ -71,10 +71,10 @@ class CorporateActionsHandler:
             self.actions_db[symbol] = []
 
         action = {
-            'type': 'dividend',
-            'date': date,
-            'amount': float(amount),
-            'description': description or f"Dividend ${amount}",
+            "type": "dividend",
+            "date": date,
+            "amount": float(amount),
+            "description": description or f"Dividend ${amount}",
         }
 
         self.actions_db[symbol].append(action)
@@ -86,7 +86,7 @@ class CorporateActionsHandler:
         action_type: Optional[str] = None,
         start_date: Optional[datetime] = None,
         end_date: Optional[datetime] = None,
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """
         Obtener corporate actions para un símbolo.
 
@@ -106,24 +106,24 @@ class CorporateActionsHandler:
 
         # Filtrar por tipo
         if action_type:
-            actions = [a for a in actions if a.get('type') == action_type]
+            actions = [a for a in actions if a.get("type") == action_type]
 
         # Filtrar por fecha
         if start_date:
-            actions = [a for a in actions if a.get('date') >= start_date]
+            actions = [a for a in actions if a.get("date") >= start_date]
 
         if end_date:
-            actions = [a for a in actions if a.get('date') <= end_date]
+            actions = [a for a in actions if a.get("date") <= end_date]
 
-        return sorted(actions, key=lambda x: x.get('date'))
+        return sorted(actions, key=lambda x: x.get("date"))
 
     def detect_split_from_price_jump(
         self,
         symbol: str,
-        prices: List[Decimal],
-        timestamps: List[datetime],
+        prices: list[Decimal],
+        timestamps: list[datetime],
         threshold: float = 0.4,  # 40% jump indica posible split
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """
         Detectar splits automáticamente basado en saltos de precio.
 
@@ -156,27 +156,27 @@ class CorporateActionsHandler:
                     if 1.5 <= ratio <= 10:  # Ratios razonables
                         detected_splits.append(
                             {
-                                'type': 'split',
-                                'date': timestamps[i],
-                                'ratio': ratio,
-                                'description': f"Auto-detectado: {ratio:.2f}:1 split",
+                                "type": "split",
+                                "date": timestamps[i],
+                                "ratio": ratio,
+                                "description": f"Auto-detectado: {ratio:.2f}:1 split",
                             }
                         )
 
         # Registrar splits detectados
         for split in detected_splits:
-            self.register_split(symbol, split['date'], split['ratio'], split['description'])
+            self.register_split(symbol, split["date"], split["ratio"], split["description"])
 
         return detected_splits
 
     def apply_adjustments_to_prices(
         self,
         symbol: str,
-        prices: List[Decimal],
-        timestamps: List[datetime],
+        prices: list[Decimal],
+        timestamps: list[datetime],
         adjust_splits: bool = True,
         adjust_dividends: bool = True,
-    ) -> List[Decimal]:
+    ) -> list[Decimal]:
         """
         Aplicar ajustes de corporate actions a precios históricos.
 
@@ -197,22 +197,22 @@ class CorporateActionsHandler:
         actions = self.get_actions(symbol)
 
         # Ordenar acciones por fecha (más reciente primero)
-        actions = sorted(actions, key=lambda x: x.get('date'), reverse=True)
+        actions = sorted(actions, key=lambda x: x.get("date"), reverse=True)
 
         for action in actions:
-            action_date = action.get('date')
-            action_type = action.get('type')
+            action_date = action.get("date")
+            action_type = action.get("type")
 
             # Aplicar ajustes a precios antes de la fecha de la acción
             for i, (price, ts) in enumerate(zip(adjusted_prices, timestamps)):
                 if ts < action_date:
-                    if action_type == 'split' and adjust_splits:
-                        ratio = action.get('ratio', 1.0)
+                    if action_type == "split" and adjust_splits:
+                        ratio = action.get("ratio", 1.0)
                         if ratio > 0:
                             adjusted_prices[i] = price * Decimal(str(ratio))
 
-                    elif action_type == 'dividend' and adjust_dividends:
-                        amount = Decimal(str(action.get('amount', 0)))
+                    elif action_type == "dividend" and adjust_dividends:
+                        amount = Decimal(str(action.get("amount", 0)))
                         adjusted_prices[i] = price - amount
 
         return adjusted_prices

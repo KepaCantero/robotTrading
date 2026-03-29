@@ -8,7 +8,7 @@ import contextlib
 import json
 import logging
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Optional
 
 logger = logging.getLogger(__name__)
 
@@ -21,7 +21,7 @@ class DashboardDataLoader:
         self.backtest_path = Path("reports/backtesting")
         self.paper_trading_path = Path("app/providers/paper_trading.py")
 
-    def load_backtest_results(self, strategy_name: str) -> Optional[Dict]:
+    def load_backtest_results(self, strategy_name: str) -> Optional[dict]:
         """
         Load backtest results for a strategy.
 
@@ -38,13 +38,13 @@ class DashboardDataLoader:
             return None
 
         try:
-            with open(result_file, "r") as f:
+            with open(result_file) as f:
                 return json.load(f)
         except OSError as e:
             logger.error(f"Error loading backtest results: {e}")
             return None
 
-    def list_strategies(self) -> List[Dict]:
+    def list_strategies(self) -> list[dict]:
         """
         List all available strategies.
 
@@ -93,7 +93,7 @@ class DashboardDataLoader:
         if paper_log.exists():
             try:
                 # Read last few lines to check for recent activity
-                with open(paper_log, "r") as f:
+                with open(paper_log) as f:
                     lines = f.readlines()[-10:] if f.readlines() else []
                 if lines and "running" in str(lines).lower():
                     return "Running"
@@ -126,15 +126,15 @@ class DashboardDataLoader:
         paper_log = self.paper_trading_path.parent / f"paper_trading_{strategy_name}.log"
         if paper_log.exists():
             try:
-                with open(paper_log, "r") as f:
+                with open(paper_log) as f:
                     content = f.read()
                 # Look for PnL pattern in log (e.g., "PnL: 123.45")
                 import re
 
-                pnl_match = re.search(r'[Pp][Nn][Ll]:\s*[-+]?\d*\.?\d+', content)
+                pnl_match = re.search(r"[Pp][Nn][Ll]:\s*[-+]?\d*\.?\d+", content)
                 if pnl_match:
                     with contextlib.suppress(ValueError, IndexError):
-                        return float(pnl_match.group().split(':')[1].strip())
+                        return float(pnl_match.group().split(":")[1].strip())
             except OSError:
                 pass
 

@@ -13,7 +13,7 @@ Strategy:
 import logging
 from datetime import datetime, timedelta
 from decimal import Decimal
-from typing import List, Optional, Tuple
+from typing import ClassVar, Optional
 
 from app.services.smart_order_routing.models import ExecutionPlan, OrderTranche, TimeWindow
 
@@ -41,7 +41,7 @@ class IntraDayExecutionScheduler:
     MARKET_CLOSE = datetime.now().replace(hour=16, minute=0, second=0, microsecond=0)
 
     # Good execution windows (volatility calm zones)
-    GOOD_EXECUTION_WINDOWS = [
+    GOOD_EXECUTION_WINDOWS: ClassVar[list] = [
         TimeWindow(start="10:30", end="11:15", name="post_open"),
         TimeWindow(start="13:00", end="14:15", name="post_lunch"),
         TimeWindow(start="14:30", end="15:00", name="pre_close"),
@@ -49,7 +49,7 @@ class IntraDayExecutionScheduler:
     ]
 
     # Volatility peaks to avoid
-    VOLATILITY_PEAKS = [
+    VOLATILITY_PEAKS: ClassVar[list] = [
         ("09:30", "10:00"),  # Opening auction
         ("11:30", "13:00"),  # Lunch
         ("15:00", "16:00"),  # Closing auction
@@ -63,7 +63,7 @@ class IntraDayExecutionScheduler:
         self,
         num_windows: int = 3,
         max_total_hours: int = 6,
-    ) -> List[TimeWindow]:
+    ) -> list[TimeWindow]:
         """
         Find optimal execution windows within market hours.
 
@@ -148,7 +148,7 @@ class LargePositionBuilder:
 
     # Size allocation weights (increase for later windows)
     # e.g., [0.20, 0.24, 0.26, 0.30] for 4 tranches = 100%
-    TRANCHE_WEIGHTS_BY_COUNT = {
+    TRANCHE_WEIGHTS_BY_COUNT: ClassVar[dict] = {
         1: [Decimal("1.00")],
         2: [Decimal("0.40"), Decimal("0.60")],
         3: [Decimal("0.25"), Decimal("0.35"), Decimal("0.40")],
@@ -236,7 +236,7 @@ class LargePositionBuilder:
 
         if len(windows) < num_tranches:
             raise ValueError(
-                f"Only {len(windows)} good windows available, " f"requested {num_tranches} tranches"
+                f"Only {len(windows)} good windows available, requested {num_tranches} tranches"
             )
 
         logger.info(f"Selected {len(windows)} execution windows for {symbol}")
@@ -270,9 +270,7 @@ class LargePositionBuilder:
             },
         )
 
-        logger.info(
-            f"Execution plan created: {len(tranches)} tranches, " f"strategy: intraday_phased"
-        )
+        logger.info(f"Execution plan created: {len(tranches)} tranches, strategy: intraday_phased")
 
         return execution_plan
 
@@ -280,9 +278,9 @@ class LargePositionBuilder:
         self,
         symbol: str,
         total_size: Decimal,
-        windows: List[TimeWindow],
+        windows: list[TimeWindow],
         target_price: Optional[Decimal] = None,
-    ) -> List[OrderTranche]:
+    ) -> list[OrderTranche]:
         """
         Allocate position size across execution windows.
 
@@ -308,7 +306,7 @@ class LargePositionBuilder:
         num_windows = len(windows)
 
         if num_windows not in self.TRANCHE_WEIGHTS_BY_COUNT:
-            raise ValueError(f"Unsupported number of tranches: {num_windows}. " f"Must be 1-5.")
+            raise ValueError(f"Unsupported number of tranches: {num_windows}. Must be 1-5.")
 
         weights = self.TRANCHE_WEIGHTS_BY_COUNT[num_windows]
 
@@ -339,7 +337,7 @@ class LargePositionBuilder:
             remaining -= size
 
             logger.info(
-                f"{symbol}: Tranche {i+1}/{num_windows} → "
+                f"{symbol}: Tranche {i + 1}/{num_windows} -> "
                 f"€{size:,.2f} at {window.name} ({window.start})"
             )
 
@@ -390,15 +388,15 @@ class LargePositionBuilder:
         # Market impact scales with sqrt(participation_rate)
         #
         # SINGLE EXECUTION:
-        #   Impact = k × sqrt(participation_rate) = k × sqrt(Q/V)
+        #   Impact = k * sqrt(participation_rate) = k * sqrt(Q/V)
         #
         # N TRANCHES (spreading over time reduces effective volume pressure):
         #   Each tranche has participation = (Q/N) / V
         #   But temporal spreading means we don't see cumulative impact
-        #   Effective impact = k × sqrt(Q / (N × V)) = k × sqrt(participation_rate / N)
+        #   Effective impact = k * sqrt(Q / (N * V)) = k * sqrt(participation_rate / N)
         #
         # IMPACT REDUCTION RATIO:
-        #   Reduction factor = sqrt(Q/V) / sqrt(Q/(N×V)) = sqrt(N)
+        #   Reduction factor = sqrt(Q/V) / sqrt(Q/(N*V)) = sqrt(N)
         #   So splitting into N tranches reduces impact by sqrt(N) factor
 
         single_exec_impact = single_exec_participation.sqrt()
@@ -445,7 +443,7 @@ class LargePositionBuilder:
         self,
         symbol: str,
         num_tranches: int,
-    ) -> Tuple[timedelta, str]:
+    ) -> tuple[timedelta, str]:
         """
         Estimate total duration for building position.
 

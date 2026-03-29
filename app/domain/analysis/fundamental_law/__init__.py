@@ -4,7 +4,7 @@ Fundamental Law of Active Management Module
 This module implements the Fundamental Law of Active Management (Grinold-Kahn),
 which decomposes the Information Ratio into skill (IC) and breadth (BR) components:
 
-    IR = IC × √BR × TC
+    IR = IC * sqrtBR * TC
 
 Where:
     - IR = Information Ratio (risk-adjusted excess return)
@@ -60,11 +60,11 @@ from app.domain.analysis.fundamental_law.models import (
 )
 
 __all__ = [
-    "FundamentalLawCalculator",
-    "FundamentalLawComponents",
-    "StrategyAnalysis",
-    "ICCalculator",
-    "ICMetrics",
     "BreadthCalculator",
     "BreadthMetrics",
+    "FundamentalLawCalculator",
+    "FundamentalLawComponents",
+    "ICCalculator",
+    "ICMetrics",
+    "StrategyAnalysis",
 ]

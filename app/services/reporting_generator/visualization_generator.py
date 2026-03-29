@@ -10,7 +10,7 @@ import logging
 from dataclasses import dataclass
 from datetime import datetime
 from decimal import Decimal
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 import numpy as np
 
@@ -29,9 +29,9 @@ class PlotlyChart:
     chart_id: str
     title: str
     chart_type: str  # "line", "scatter", "bar", "heatmap", "waterfall"
-    data: Dict[str, Any]  # Plotly data structure
-    layout: Dict[str, Any]  # Plotly layout structure
-    config: Dict[str, Any]  # Plotly config for interactivity
+    data: dict[str, Any]  # Plotly data structure
+    layout: dict[str, Any]  # Plotly layout structure
+    config: dict[str, Any]  # Plotly config for interactivity
 
     def to_json(self) -> str:
         """Convert chart to JSON for HTML embedding."""
@@ -46,12 +46,12 @@ class PlotlyChart:
     def to_html_div(self) -> str:
         """Generate HTML div with embedded Plotly chart."""
         html = f'<div id="{self.chart_id}" class="plotly-chart"></div>\n'
-        html += '<script>\n'
-        html += f'var data_{self.chart_id} = {json.dumps(self.data)};\n'
-        html += f'var layout_{self.chart_id} = {json.dumps(self.layout)};\n'
-        html += f'var config_{self.chart_id} = {json.dumps(self.config)};\n'
+        html += "<script>\n"
+        html += f"var data_{self.chart_id} = {json.dumps(self.data)};\n"
+        html += f"var layout_{self.chart_id} = {json.dumps(self.layout)};\n"
+        html += f"var config_{self.chart_id} = {json.dumps(self.config)};\n"
         html += f'Plotly.newPlot("{self.chart_id}", data_{self.chart_id}, layout_{self.chart_id}, config_{self.chart_id});\n'
-        html += '</script>\n'
+        html += "</script>\n"
         return html
 
 
@@ -101,9 +101,9 @@ class AdvancedVisualizationGenerator:
 
     def generate_cumulative_returns_chart(
         self,
-        returns: List[Decimal],
+        returns: list[Decimal],
         title: str = "Cumulative Returns",
-        benchmark_returns: Optional[List[Decimal]] = None,
+        benchmark_returns: Optional[list[Decimal]] = None,
     ) -> PlotlyChart:
         """
         Generate cumulative returns line chart.
@@ -197,7 +197,7 @@ class AdvancedVisualizationGenerator:
 
     def generate_drawdown_waterfall(
         self,
-        returns: List[Decimal],
+        returns: list[Decimal],
         title: str = "Drawdown Analysis",
     ) -> PlotlyChart:
         """
@@ -298,7 +298,7 @@ class AdvancedVisualizationGenerator:
 
     def generate_rolling_metrics_chart(
         self,
-        returns: List[Decimal],
+        returns: list[Decimal],
         window: int = 30,
         title: str = "Rolling Sharpe Ratio & Volatility",
     ) -> PlotlyChart:
@@ -401,7 +401,7 @@ class AdvancedVisualizationGenerator:
 
     def generate_heatmap_monthly_returns(
         self,
-        returns: List[Decimal],
+        returns: list[Decimal],
         title: str = "Monthly Returns Heatmap",
     ) -> PlotlyChart:
         """
@@ -508,7 +508,7 @@ class AdvancedVisualizationGenerator:
 
     def generate_factor_exposures_chart(
         self,
-        factor_data: Dict[str, Decimal],
+        factor_data: dict[str, Decimal],
         title: str = "Factor Exposures",
     ) -> PlotlyChart:
         """
@@ -587,7 +587,7 @@ class AdvancedVisualizationGenerator:
     # UTILITY METHODS
     # ========================================================================
 
-    def get_generator_status(self) -> Dict:
+    def get_generator_status(self) -> dict:
         """Get generator operational status."""
         return {
             "status": "operational",

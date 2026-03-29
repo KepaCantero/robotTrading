@@ -13,7 +13,7 @@ from datetime import datetime
 from decimal import Decimal
 from enum import Enum
 from statistics import mean
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 import aiosqlite
 
@@ -43,11 +43,11 @@ class MetricComparison:
     threshold: Decimal
 
     # Statistical analysis
-    p_value: Optional[Decimal] = None
-    confidence_interval: Optional[tuple[Decimal, Decimal]] = None
+    p_value: Decimal | None = None
+    confidence_interval: tuple[Decimal, Decimal] | None = None
     sample_size: int = 0
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
         return {
             "metric": self.metric_name,
@@ -80,16 +80,16 @@ class CanaryAnalysisResult:
     confidence: Decimal  # 0.0 to 1.0
 
     # Metric comparisons
-    comparisons: List[MetricComparison]
+    comparisons: list[MetricComparison]
 
     # Rollback trigger
-    rollback_trigger: Optional[RollbackTrigger] = None
-    rollback_reason: Optional[str] = None
+    rollback_trigger: RollbackTrigger | None = None
+    rollback_reason: str | None = None
 
     # Recommendations
-    recommendations: List[str] = field(default_factory=list)
+    recommendations: list[str] = field(default_factory=list)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
         return {
             "deployment_id": self.deployment_id,
@@ -214,7 +214,7 @@ class CanaryAnalyzer:
         self,
         deployment_id: int,
         stage: int,
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """Load metrics for a specific stage."""
         try:
             async with aiosqlite.connect(self.db_path) as db:
@@ -263,8 +263,8 @@ class CanaryAnalyzer:
 
     async def _calculate_aggregate_metrics(
         self,
-        metrics: List[Dict[str, Any]],
-    ) -> Dict[str, Any]:
+        metrics: list[dict[str, Any]],
+    ) -> dict[str, Any]:
         """Calculate aggregate metrics from multiple samples."""
         if not metrics:
             return {}
@@ -331,8 +331,8 @@ class CanaryAnalyzer:
 
     async def _compare_metrics(
         self,
-        aggregate: Dict[str, Any],
-    ) -> List[MetricComparison]:
+        aggregate: dict[str, Any],
+    ) -> list[MetricComparison]:
         """Compare canary and baseline metrics."""
         comparisons = []
 
@@ -417,8 +417,8 @@ class CanaryAnalyzer:
 
     async def _make_decision(
         self,
-        comparisons: List[MetricComparison],
-    ) -> Dict[str, Any]:
+        comparisons: list[MetricComparison],
+    ) -> dict[str, Any]:
         """Make rollback/promotion decision."""
         rollback = False
         promote = True
@@ -477,7 +477,10 @@ class CanaryAnalyzer:
                             f"WARNING: Availability {comp.canary_value * 100:.2f}% below threshold"
                         )
 
-                elif comp.metric_name == "throughput" and comp.delta_percentage < -self.promotion_thresholds["throughput_drop_max"]:
+                elif (
+                    comp.metric_name == "throughput"
+                    and comp.delta_percentage < -self.promotion_thresholds["throughput_drop_max"]
+                ):
                     promote = False
                     recommendations.append(
                         f"WARNING: Throughput drop {abs(comp.delta_percentage) * 100:.1f}% exceeds threshold"

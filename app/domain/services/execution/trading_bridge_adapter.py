@@ -12,7 +12,7 @@ from __future__ import annotations
 import logging
 from dataclasses import asdict, dataclass
 from decimal import Decimal
-from typing import TYPE_CHECKING, Any, Dict, List, Optional
+from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from app.services.live_trading.alert_to_trade_mapper import TradeSignal
@@ -44,11 +44,11 @@ class TradeResultData:
     commission: Decimal
     slippage_bps: Decimal
     signal_price: Decimal
-    error: Optional[str] = None
+    error: str | None = None
 
 
 # Type alias for protocol compatibility (dict is expected by ITradeExecutor)
-TradeResult = Dict[str, Any]
+TradeResult = dict[str, Any]
 
 
 class TradingBridgeAdapter(ITradeExecutor):
@@ -70,7 +70,7 @@ class TradingBridgeAdapter(ITradeExecutor):
 
     def __init__(
         self,
-        trading_bridge: Optional["TradingBridgeOrchestrator"] = None,
+        trading_bridge: TradingBridgeOrchestrator | None = None,
         enable_logging: bool = False,
     ):
         """
@@ -88,12 +88,12 @@ class TradingBridgeAdapter(ITradeExecutor):
 
         self.trading_bridge = trading_bridge or get_trading_bridge_orchestrator()
         self.enable_logging = enable_logging
-        self._order_mapping: Dict[str, str] = {}  # Maps order_id to execution_id
+        self._order_mapping: dict[str, str] = {}  # Maps order_id to execution_id
 
     async def execute_order(
         self,
-        signal: "TradeSignal",
-    ) -> "TradeResult":
+        signal: TradeSignal,
+    ) -> TradeResult:
         """
         Execute order using TradingBridgeOrchestrator.
 
@@ -283,7 +283,7 @@ class TradingBridgeAdapter(ITradeExecutor):
             logger.error(f"TradingBridgeAdapter.get_order_status failed: {e}")
             return "UNKNOWN"
 
-    async def get_open_orders(self) -> List:
+    async def get_open_orders(self) -> list:
         """
         Get open orders via TradingBridgeOrchestrator.
 
@@ -307,7 +307,7 @@ class TradingBridgeAdapter(ITradeExecutor):
     # Additional methods for enhanced functionality
     # -------------------------------------------------------------------------
 
-    def get_execution_history(self) -> List:
+    def get_execution_history(self) -> list:
         """
         Get execution history from trading bridge.
 
@@ -316,7 +316,7 @@ class TradingBridgeAdapter(ITradeExecutor):
         """
         return self.trading_bridge.get_recent_executions(limit=100)
 
-    def get_bridge_statistics(self) -> Dict[str, Any]:
+    def get_bridge_statistics(self) -> dict[str, Any]:
         """
         Get trading bridge statistics.
 
@@ -325,7 +325,7 @@ class TradingBridgeAdapter(ITradeExecutor):
         """
         return self.trading_bridge.get_bridge_statistics()
 
-    def get_order_mapping(self) -> Dict[str, str]:
+    def get_order_mapping(self) -> dict[str, str]:
         """
         Get order ID to execution ID mapping.
 

@@ -27,16 +27,16 @@ from app.services.configuration_persistence.models import (
 
 # Repository (type-based)
 __all__ = [
-    "ConfigurationRepository",
-    "StoredConfiguration",
-    # Persistence (strategy-centric)
-    "ConfigurationPersistence",
-    "get_configuration_persistence",
-    # Models
-    "StrategyConfiguration",
-    "ConfigurationSaveRequest",
+    "ConfigurationListResponse",
     "ConfigurationLoadRequest",
     "ConfigurationLoadResponse",
-    "ConfigurationListResponse",
+    # Persistence (strategy-centric)
+    "ConfigurationPersistence",
+    "ConfigurationRepository",
+    "ConfigurationSaveRequest",
+    "StoredConfiguration",
+    # Models
+    "StrategyConfiguration",
     "VersionedConfiguration",
+    "get_configuration_persistence",
 ]

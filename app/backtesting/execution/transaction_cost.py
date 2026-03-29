@@ -19,7 +19,6 @@ import logging
 from dataclasses import dataclass, field
 from decimal import Decimal
 from enum import Enum
-from typing import Dict, List, Optional, Tuple
 
 logger = logging.getLogger(__name__)
 
@@ -59,8 +58,8 @@ class FeeConfig:
 
     fee_type: FeeType
     rate: Decimal
-    min_fee: Optional[Decimal] = None
-    max_fee: Optional[Decimal] = None
+    min_fee: Decimal | None = None
+    max_fee: Decimal | None = None
     applies_to_buy: bool = False
     applies_to_sell: bool = True
     description: str = ""
@@ -79,13 +78,13 @@ class CommissionTier:
     """
 
     min_shares: int
-    max_shares: Optional[int]
+    max_shares: int | None
     rate: Decimal
     min_commission: Decimal
 
 
 # US Equity regulatory fees (2024 rates)
-US_EQUITY_FEES: Dict[str, FeeConfig] = {
+US_EQUITY_FEES: dict[str, FeeConfig] = {
     "sec_fee": FeeConfig(
         fee_type=FeeType.SEC_FEE,
         rate=Decimal("0.0000078"),  # $0.0000078 per dollar sold (Section 31)
@@ -144,7 +143,7 @@ class TransactionCost:
     total_cost: Decimal
 
     # Detailed breakdown for transparency
-    fee_details: Dict[str, Decimal] = field(default_factory=dict)
+    fee_details: dict[str, Decimal] = field(default_factory=dict)
 
     @property
     def regulatory_fees(self) -> Decimal:
@@ -156,7 +155,7 @@ class TransactionCost:
         """Sum of execution-related fees."""
         return self.commission + self.regulatory_fees
 
-    def to_dict(self) -> Dict[str, float]:
+    def to_dict(self) -> dict[str, float]:
         """
         Convert to dictionary for serialization.
 
@@ -195,11 +194,11 @@ class CostConfig:
     # Commission settings
     commission_per_share: Decimal = Decimal("0.005")  # $0.005 per share (half penny)
     min_commission: Decimal = Decimal("1.0")  # $1 minimum
-    max_commission: Optional[Decimal] = None  # No maximum by default
+    max_commission: Decimal | None = None  # No maximum by default
     commission_type: CommissionType = CommissionType.FIXED_PER_SHARE
 
     # Tiered commission (for large accounts)
-    commission_tiers: List[CommissionTier] = field(default_factory=list)
+    commission_tiers: list[CommissionTier] = field(default_factory=list)
 
     # Regulatory fee flags
     use_sec_fee: bool = True
@@ -207,7 +206,7 @@ class CostConfig:
     use_exchange_fees: bool = True
 
     # Custom fees (for specific brokers/exchanges)
-    custom_fees: Dict[str, FeeConfig] = field(default_factory=dict)
+    custom_fees: dict[str, FeeConfig] = field(default_factory=dict)
 
 
 class TransactionCostCalculator:
@@ -233,7 +232,7 @@ class TransactionCostCalculator:
         logger.debug(f"Total cost: ${cost.total_cost:.2f}")
     """
 
-    def __init__(self, config: Optional[CostConfig] = None):
+    def __init__(self, config: CostConfig | None = None):
         """
         Initialize transaction cost calculator.
 
@@ -243,7 +242,7 @@ class TransactionCostCalculator:
         self.config = config or CostConfig()
 
         # Build fee lookup from config and defaults
-        self.fees: Dict[str, FeeConfig] = {}
+        self.fees: dict[str, FeeConfig] = {}
         self.fees.update(US_EQUITY_FEES)
         self.fees.update(self.config.custom_fees)
 
@@ -403,7 +402,7 @@ class TransactionCostCalculator:
     def calculate_exchange_fee(
         self,
         shares: int,
-        exchange: Optional[str] = None,
+        exchange: str | None = None,
     ) -> Decimal:
         """
         Calculate exchange fees.
@@ -477,7 +476,7 @@ class TransactionCostCalculator:
         side: str,
         shares: int,
         price: Decimal,
-        exchange: Optional[str] = None,
+        exchange: str | None = None,
     ) -> TransactionCost:
         """
         Calculate total transaction cost for a trade.
@@ -549,7 +548,7 @@ class TransactionCostCalculator:
         shares: int,
         price_min: Decimal,
         price_max: Decimal,
-    ) -> Tuple[TransactionCost, TransactionCost]:
+    ) -> tuple[TransactionCost, TransactionCost]:
         """
         Estimate cost range for an order with price uncertainty.
 
@@ -594,7 +593,7 @@ class TransactionCostCalculator:
         side: str,
         shares: int,
         price: Decimal,
-        exchange: Optional[str] = None,
+        exchange: str | None = None,
     ) -> Decimal:
         """
         Get effective all-in cost per share including all fees.

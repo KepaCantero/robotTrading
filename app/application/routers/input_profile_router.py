@@ -223,7 +223,7 @@ class InputProfileRouter:
 
         if tolerance not in configs:
             raise ValueError(
-                f"Unknown risk tolerance: {tolerance}. " f"Must be one of: {list(configs.keys())}"
+                f"Unknown risk tolerance: {tolerance}. Must be one of: {list(configs.keys())}"
             )
 
         config = configs[tolerance]

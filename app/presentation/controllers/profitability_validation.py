@@ -4,13 +4,13 @@ API endpoints para validación de rentabilidad de estrategias.
 Este módulo proporciona endpoints REST para validar que las estrategias
 generen rentabilidad neta positiva después de todos los costos operativos.
 """
+
 # mypy: ignore-errors
 
 from __future__ import annotations
 
 import logging
 from decimal import Decimal
-from typing import List
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.responses import JSONResponse
@@ -100,17 +100,17 @@ async def validate_strategy_profitability(
         return result
 
     except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
-        logger.error(f"Error validating strategy profitability: {str(e)}")
+        logger.error(f"Error validating strategy profitability: {e!s}")
         raise HTTPException(
             status_code=DEFAULT_VALUE_500,
-            detail=f"Internal error during profitability validation: {str(e)}",
-        )
+            detail=f"Internal error during profitability validation: {e!s}",
+        ) from e
 
 
-@router.post("/validate/batch", response_model=List[ValidationResponse])
+@router.post("/validate/batch", response_model=list[ValidationResponse])
 async def validate_multiple_strategies(
-    requests: List[ValidationRequest],
-) -> List[ValidationResponse]:
+    requests: list[ValidationRequest],
+) -> list[ValidationResponse]:
     """
     Validar rentabilidad de múltiples estrategias en lote.
 
@@ -146,7 +146,7 @@ async def validate_multiple_strategies(
                 result = profitability_service.validate_strategy_profitability(request)
                 results.append(result)
             except (ValueError, TypeError, KeyError, AttributeError) as e:
-                logger.error(f"Error validating strategy {request.strategy_name}: {str(e)}")
+                logger.error(f"Error validating strategy {request.strategy_name}: {e!s}")
                 # Continuar con otras estrategias en caso de error individual
                 continue
 
@@ -155,16 +155,16 @@ async def validate_multiple_strategies(
         return results
 
     except (ValueError, TypeError, KeyError, AttributeError) as e:
-        logger.error(f"Error in batch profitability validation: {str(e)}")
+        logger.error(f"Error in batch profitability validation: {e!s}")
         raise HTTPException(
             status_code=DEFAULT_VALUE_500,
-            detail=f"Internal error during batch validation: {str(e)}",
-        )
+            detail=f"Internal error during batch validation: {e!s}",
+        ) from e
 
 
 @router.post("/compare", response_model=StrategyComparison)
 async def compare_strategies(
-    validations: List[ProfitabilityValidation],
+    validations: list[ProfitabilityValidation],
 ) -> StrategyComparison:
     """
     Comparar múltiples estrategias validadas.
@@ -204,17 +204,17 @@ async def compare_strategies(
         return comparison
 
     except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
-        logger.error(f"Error comparing strategies: {str(e)}")
+        logger.error(f"Error comparing strategies: {e!s}")
         raise HTTPException(
             status_code=DEFAULT_VALUE_500,
-            detail=f"Internal error during strategy comparison: {str(e)}",
-        )
+            detail=f"Internal error during strategy comparison: {e!s}",
+        ) from e
 
 
 @router.post("/analyze/historical", response_model=HistoricalValidation)
 async def analyze_historical_performance(
     strategy_name: str = Query(..., description="Nombre de la estrategia"),
-    validations: List[ProfitabilityValidation] = Depends(),
+    validations: list[ProfitabilityValidation] = Depends(),
 ) -> HistoricalValidation:
     """
     Analizar rendimiento histórico de una estrategia.
@@ -260,16 +260,16 @@ async def analyze_historical_performance(
         return historical_analysis
 
     except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
-        logger.error(f"Error analyzing historical performance: {str(e)}")
+        logger.error(f"Error analyzing historical performance: {e!s}")
         raise HTTPException(
             status_code=DEFAULT_VALUE_500,
-            detail=f"Internal error during historical analysis: {str(e)}",
-        )
+            detail=f"Internal error during historical analysis: {e!s}",
+        ) from e
 
 
 @router.post("/report", response_model=ValidationReport)
 async def generate_validation_report(
-    validations: List[ProfitabilityValidation],
+    validations: list[ProfitabilityValidation],
     include_comparison: bool = Query(
         default=True, description="Incluir comparación de estrategias"
     ),
@@ -311,11 +311,11 @@ async def generate_validation_report(
         return report
 
     except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
-        logger.error(f"Error generating validation report: {str(e)}")
+        logger.error(f"Error generating validation report: {e!s}")
         raise HTTPException(
             status_code=DEFAULT_VALUE_500,
-            detail=f"Internal error during report generation: {str(e)}",
-        )
+            detail=f"Internal error during report generation: {e!s}",
+        ) from e
 
 
 @router.get("/criteria/default", response_model=ValidationCriteria)
@@ -350,11 +350,11 @@ async def get_default_validation_criteria() -> ValidationCriteria:
         return criteria
 
     except (ValueError, TypeError, KeyError, AttributeError) as e:
-        logger.error(f"Error retrieving default criteria: {str(e)}")
+        logger.error(f"Error retrieving default criteria: {e!s}")
         raise HTTPException(
             status_code=DEFAULT_VALUE_500,
-            detail=f"Internal error retrieving default criteria: {str(e)}",
-        )
+            detail=f"Internal error retrieving default criteria: {e!s}",
+        ) from e
 
 
 @router.get("/health")
@@ -380,7 +380,7 @@ async def health_check() -> JSONResponse:
         )
 
     except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
-        logger.error(f"Health check failed: {str(e)}")
+        logger.error(f"Health check failed: {e!s}")
         return JSONResponse(
             status_code=DEFAULT_VALUE_503,
             content={
@@ -436,8 +436,8 @@ async def get_metrics_summary() -> JSONResponse:
         return JSONResponse(status_code=DEFAULT_VALUE_200, content=summary)
 
     except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
-        logger.error(f"Error retrieving metrics summary: {str(e)}")
+        logger.error(f"Error retrieving metrics summary: {e!s}")
         raise HTTPException(
             status_code=DEFAULT_VALUE_500,
-            detail=f"Internal error retrieving metrics summary: {str(e)}",
-        )
+            detail=f"Internal error retrieving metrics summary: {e!s}",
+        ) from e

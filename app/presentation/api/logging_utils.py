@@ -8,9 +8,10 @@ to enable request tracking throughout the application.
 from __future__ import annotations
 
 import logging
-from typing import Optional
+from typing import TYPE_CHECKING
 
-from fastapi import Request
+if TYPE_CHECKING:
+    from fastapi import Request
 
 logger = logging.getLogger(__name__)
 
@@ -102,7 +103,7 @@ def log_warning(
 def log_error(
     request: Request,
     message: str,
-    exception: Optional[Exception] = None,
+    exception: Exception | None = None,
     **kwargs: object,
 ) -> None:
     """
@@ -145,9 +146,9 @@ def log_debug(
 
 __all__ = [
     "get_correlation_id_from_request",
-    "log_with_context",
+    "log_debug",
+    "log_error",
     "log_info",
     "log_warning",
-    "log_error",
-    "log_debug",
+    "log_with_context",
 ]

@@ -19,7 +19,7 @@ SOLID Principles:
 import logging
 import time
 from decimal import Decimal
-from typing import Dict, List, Optional
+from typing import ClassVar, Optional
 
 from .models import (
     LowVolatilityProfile,
@@ -45,7 +45,7 @@ class LowBetaScreener:
     """
 
     # Mapping de sectores a nivel defensivo
-    SECTOR_DEFENSIVE_LEVELS = {
+    SECTOR_DEFENSIVE_LEVELS: ClassVar[dict] = {
         "Utilities": SectorDefensiveLevel.HIGHLY_DEFENSIVE,
         "Consumer Staples": SectorDefensiveLevel.HIGHLY_DEFENSIVE,
         "Healthcare": SectorDefensiveLevel.DEFENSIVE,
@@ -96,7 +96,7 @@ class LowBetaScreener:
 
     def screen(
         self,
-        profiles: List[LowVolatilityProfile],
+        profiles: list[LowVolatilityProfile],
     ) -> LowVolatilityScreeningResult:
         """
         Aplicar screening a lista de perfiles.
@@ -109,8 +109,8 @@ class LowBetaScreener:
         """
         start_time = time.time()
 
-        passed: List[LowVolatilityStockResult] = []
-        failed: Dict[str, List[str]] = {}
+        passed: list[LowVolatilityStockResult] = []
+        failed: dict[str, list[str]] = {}
         total_evaluated = len(profiles)
 
         logger.info(
@@ -145,7 +145,7 @@ class LowBetaScreener:
 
         return result
 
-    def _evaluate_profile(self, profile: LowVolatilityProfile) -> List[str]:
+    def _evaluate_profile(self, profile: LowVolatilityProfile) -> list[str]:
         """
         Evaluar si un perfil pasa todos los filtros.
 
@@ -155,7 +155,7 @@ class LowBetaScreener:
         Returns:
             Lista de razones por las que falló (vacía si pasó)
         """
-        failures: List[str] = []
+        failures: list[str] = []
 
         # 1. Volatilidad histórica check
         avg_vol = profile.volatility_metrics.average_volatility
@@ -195,19 +195,28 @@ class LowBetaScreener:
                 )
 
         # 6. Low vol score check
-        if profile.low_vol_score is not None and profile.low_vol_score < self.criteria.min_low_vol_score:
+        if (
+            profile.low_vol_score is not None
+            and profile.low_vol_score < self.criteria.min_low_vol_score
+        ):
             failures.append(
                 f"Low vol score bajo: {profile.low_vol_score:.1f} < {self.criteria.min_low_vol_score}"
             )
 
         # 7. Defensive score check
-        if profile.defensive_score is not None and profile.defensive_score < self.criteria.min_defensive_score:
+        if (
+            profile.defensive_score is not None
+            and profile.defensive_score < self.criteria.min_defensive_score
+        ):
             failures.append(
                 f"Defensive score bajo: {profile.defensive_score:.1f} < {self.criteria.min_defensive_score}"
             )
 
         # 8. Stability score check
-        if profile.stability_score is not None and profile.stability_score < self.criteria.min_stability_score:
+        if (
+            profile.stability_score is not None
+            and profile.stability_score < self.criteria.min_stability_score
+        ):
             failures.append(
                 f"Stability score bajo: {profile.stability_score:.1f} < {self.criteria.min_stability_score}"
             )
@@ -231,23 +240,35 @@ class LowBetaScreener:
                     failures.append(f"Sector no defensivo: {sector}")
 
         # 10. Market cap check
-        if self.criteria.min_market_cap is not None and profile.market_cap is not None and profile.market_cap < self.criteria.min_market_cap:
+        if (
+            self.criteria.min_market_cap is not None
+            and profile.market_cap is not None
+            and profile.market_cap < self.criteria.min_market_cap
+        ):
             failures.append(
                 f"Market cap muy bajo: ${profile.market_cap:.0f}M < ${self.criteria.min_market_cap:.0f}M"
             )
 
         # 11. Valuation checks (optional)
-        if self.config.max_pe_ratio is not None and profile.pe_ratio is not None and profile.pe_ratio > self.config.max_pe_ratio:
-            failures.append(
-                f"P/E muy alto: {profile.pe_ratio:.1f} > {self.config.max_pe_ratio}"
-            )
+        if (
+            self.config.max_pe_ratio is not None
+            and profile.pe_ratio is not None
+            and profile.pe_ratio > self.config.max_pe_ratio
+        ):
+            failures.append(f"P/E muy alto: {profile.pe_ratio:.1f} > {self.config.max_pe_ratio}")
 
-        if self.config.max_pb_ratio is not None and profile.pb_ratio is not None and profile.pb_ratio > self.config.max_pb_ratio:
-            failures.append(
-                f"P/B muy alto: {profile.pb_ratio:.1f} > {self.config.max_pb_ratio}"
-            )
+        if (
+            self.config.max_pb_ratio is not None
+            and profile.pb_ratio is not None
+            and profile.pb_ratio > self.config.max_pb_ratio
+        ):
+            failures.append(f"P/B muy alto: {profile.pb_ratio:.1f} > {self.config.max_pb_ratio}")
 
-        if self.config.max_debt_to_equity is not None and profile.debt_to_equity is not None and profile.debt_to_equity > self.config.max_debt_to_equity:
+        if (
+            self.config.max_debt_to_equity is not None
+            and profile.debt_to_equity is not None
+            and profile.debt_to_equity > self.config.max_debt_to_equity
+        ):
             failures.append(
                 f"D/E muy alto: {profile.debt_to_equity:.1f} > {self.config.max_debt_to_equity}"
             )
@@ -301,7 +322,7 @@ class LowBetaScreener:
             "quality": float(self.config.quality_weight),
         }
 
-        weighted_score = sum(scores[k] * weights[k] for k in scores.keys())
+        weighted_score = sum(scores[k] * weights[k] for k in scores)
 
         return min(Decimal("100"), max(Decimal("0"), Decimal(str(weighted_score))))
 

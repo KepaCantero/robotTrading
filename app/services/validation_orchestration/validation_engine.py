@@ -15,7 +15,7 @@ import logging
 from dataclasses import dataclass, field
 from decimal import Decimal
 from enum import Enum
-from typing import Dict, List, Optional
+from typing import Optional
 
 from app.domain.models.investment_profile import CapitalTier, InvestmentProfile
 from app.services.backtesting_orchestration import ExtendedBacktestResult
@@ -40,7 +40,7 @@ class GateResult:
     status: GateStatus
     message: str
     severity: str = "info"  # info, warning, critical
-    details: Dict = field(default_factory=dict)
+    details: dict = field(default_factory=dict)
     recommendation: Optional[str] = None
 
 
@@ -62,9 +62,9 @@ class ValidationReport:
     feasibility_ratio: GateResult
 
     # Consolidated results
-    critical_failures: List[str] = field(default_factory=list)
-    warnings: List[str] = field(default_factory=list)
-    recommendations: List[str] = field(default_factory=list)
+    critical_failures: list[str] = field(default_factory=list)
+    warnings: list[str] = field(default_factory=list)
+    recommendations: list[str] = field(default_factory=list)
 
     # Metadata
     validation_timestamp: str = ""

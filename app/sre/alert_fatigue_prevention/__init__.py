@@ -29,16 +29,16 @@ from .alert_grouper import AlertCluster, AlertGrouper, GroupingStrategy
 from .alert_prioritizer import AlertPrioritizer, PriorityScore
 
 __all__ = [
-    "AlertFatiguePreventer",
-    "AlertFatigueConfig",
-    "AlertSeverity",
     "AlertCategory",
-    "ProcessedAlert",
-    "AlertGroup",
-    "AlertStats",
-    "AlertGrouper",
-    "GroupingStrategy",
     "AlertCluster",
+    "AlertFatigueConfig",
+    "AlertFatiguePreventer",
+    "AlertGroup",
+    "AlertGrouper",
     "AlertPrioritizer",
+    "AlertSeverity",
+    "AlertStats",
+    "GroupingStrategy",
     "PriorityScore",
+    "ProcessedAlert",
 ]

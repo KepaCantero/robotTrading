@@ -8,15 +8,15 @@ Can be hosted separately from the main service for independence.
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import logging
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 import aiosqlite
-import contextlib
 
 logger = logging.getLogger(__name__)
 
@@ -49,19 +49,19 @@ class MonitorConfig:
     alert_after_minutes: int = 5  # Alert after N minutes of failures
 
     # Alert channels
-    alert_channels: List[AlertChannel] = field(default_factory=lambda: [AlertChannel.EMAIL])
+    alert_channels: list[AlertChannel] = field(default_factory=lambda: [AlertChannel.EMAIL])
 
     # Channel configs
-    email_config: Dict[str, Any] = field(default_factory=dict)
-    slack_config: Dict[str, Any] = field(default_factory=dict)
-    pagerduty_config: Dict[str, Any] = field(default_factory=dict)
-    twilio_config: Dict[str, Any] = field(default_factory=dict)
-    webhook_config: Dict[str, Any] = field(default_factory=dict)
+    email_config: dict[str, Any] = field(default_factory=dict)
+    slack_config: dict[str, Any] = field(default_factory=dict)
+    pagerduty_config: dict[str, Any] = field(default_factory=dict)
+    twilio_config: dict[str, Any] = field(default_factory=dict)
+    webhook_config: dict[str, Any] = field(default_factory=dict)
 
     # Database
     db_path: str = "data/external_monitor.db"
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
         return {
             "service_name": self.service_name,
@@ -81,12 +81,12 @@ class HealthCheckResult:
 
     timestamp: datetime
     success: bool
-    status_code: Optional[int] = None
-    response_time_ms: Optional[float] = None
-    error_message: Optional[str] = None
+    status_code: int | None = None
+    response_time_ms: float | None = None
+    error_message: str | None = None
     consecutive_failures: int = 0
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
         return {
             "timestamp": self.timestamp.isoformat(),
@@ -131,14 +131,14 @@ class ExternalMonitor:
         # State
         self._running = False
         self._consecutive_failures = 0
-        self._last_failure_time: Optional[datetime] = None
+        self._last_failure_time: datetime | None = None
         self._alert_sent = False
 
         # History
-        self._check_history: List[HealthCheckResult] = []
+        self._check_history: list[HealthCheckResult] = []
 
         # Task
-        self._monitor_task: Optional[asyncio.Task] = None
+        self._monitor_task: asyncio.Task | None = None
 
     async def initialize(self) -> None:
         """Initialize external monitor."""
@@ -264,23 +264,25 @@ class ExternalMonitor:
         try:
             import aiohttp
 
-            async with aiohttp.ClientSession() as session:
-                async with session.get(
+            async with (
+                aiohttp.ClientSession() as session,
+                session.get(
                     self.config.health_check_url,
                     timeout=self.config.timeout_seconds,
-                ) as response:
-                    response_time = (datetime.utcnow() - start_time).total_seconds() * 1000
-                    await response.read()
+                ) as response,
+            ):
+                response_time = (datetime.utcnow() - start_time).total_seconds() * 1000
+                await response.read()
 
-                    success = response.status == self.config.expected_status_code
+                success = response.status == self.config.expected_status_code
 
-                    return HealthCheckResult(
-                        timestamp=start_time,
-                        success=success,
-                        status_code=response.status,
-                        response_time_ms=response_time,
-                        consecutive_failures=0 if success else self._consecutive_failures + 1,
-                    )
+                return HealthCheckResult(
+                    timestamp=start_time,
+                    success=success,
+                    status_code=response.status,
+                    response_time_ms=response_time,
+                    consecutive_failures=0 if success else self._consecutive_failures + 1,
+                )
 
         except asyncio.TimeoutError:
             return HealthCheckResult(
@@ -404,9 +406,11 @@ class ExternalMonitor:
                 ],
             }
 
-            async with aiohttp.ClientSession() as session:
-                async with session.post(webhook_url, json=message) as response:
-                    return response.status == 200
+            async with (
+                aiohttp.ClientSession() as session,
+                session.post(webhook_url, json=message) as response,
+            ):
+                return response.status == 200
 
         except Exception as e:
             self.logger.error(f"Error sending Slack alert: {e}")
@@ -443,9 +447,11 @@ class ExternalMonitor:
                 "timestamp": result.timestamp.isoformat(),
             }
 
-            async with aiohttp.ClientSession() as session:
-                async with session.post(webhook_url, json=payload) as response:
-                    return response.status == 200
+            async with (
+                aiohttp.ClientSession() as session,
+                session.post(webhook_url, json=payload) as response,
+            ):
+                return response.status == 200
 
         except Exception as e:
             self.logger.error(f"Error sending webhook alert: {e}")
@@ -481,7 +487,7 @@ class ExternalMonitor:
         self,
         channel: AlertChannel,
         success: bool,
-        error_message: Optional[str],
+        error_message: str | None,
     ) -> None:
         """Save alert to database."""
         try:
@@ -515,7 +521,7 @@ class ExternalMonitor:
         """Get consecutive failure count."""
         return self._consecutive_failures
 
-    def get_summary(self) -> Dict[str, Any]:
+    def get_summary(self) -> dict[str, Any]:
         """Get monitor summary."""
         success_count = sum(1 for c in self._check_history if c.success)
         total_count = len(self._check_history)

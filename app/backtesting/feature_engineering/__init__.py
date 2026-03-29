@@ -47,30 +47,30 @@ from .fractional_differentiation import (
 )
 
 __all__ = [
-    # Fractional Differentiation
-    "FractionalDifferentiation",
-    "FractionalDiffTransformer",
-    "get_weights",
-    "fractional_diff",
-    "find_optimal_d",
-    "apply_frac_diff_to_dataframe",
+    "FeatureClusterer",
+    "FeatureImportanceConfig",
+    "FeatureImportanceMDA",
+    "FeatureImportanceMDI",
+    "FeatureImportanceSFI",
     # Feature Importance (López de Prado)
     "FinancialMLFeatureImportance",
-    "FeatureImportanceMDI",
-    "FeatureImportanceMDA",
-    "FeatureImportanceSFI",
-    "FeatureImportanceConfig",
+    "FinancialMLFeatureImportanceWithUniqueness",
+    "FractionalDiffTransformer",
+    # Fractional Differentiation
+    "FractionalDifferentiation",
     "ImportanceResult",
-    "calculate_feature_importance",
+    "MDAWithUniqueness",
+    "MDIWithUniqueness",
     # NEW: Feature Importance with Uniqueness (95% compliance)
     "UniquenessCalculator",
-    "MDIWithUniqueness",
-    "MDAWithUniqueness",
-    "FeatureClusterer",
-    "FinancialMLFeatureImportanceWithUniqueness",
-    "calculate_feature_importance_with_uniqueness",
     "UniquenessConfig",
     "UniquenessResult",
+    "apply_frac_diff_to_dataframe",
+    "calculate_feature_importance",
+    "calculate_feature_importance_with_uniqueness",
+    "find_optimal_d",
+    "fractional_diff",
+    "get_weights",
 ]
 
 # Version info

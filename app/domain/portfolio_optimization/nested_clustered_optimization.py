@@ -356,7 +356,7 @@ class NestedClusteredOptimization:
         n_clusters = len(np.unique(labels[labels >= 0]))
         n_noise: int = np.sum(labels == -1)
 
-        logger.info(f"DBSCAN clustering: {n_clusters} clusters found, " f"{n_noise} noise points")
+        logger.info(f"DBSCAN clustering: {n_clusters} clusters found, {n_noise} noise points")
 
         return labels.astype(np.int32)
 
@@ -680,9 +680,9 @@ class NestedClusteredOptimization:
                 f"NCO optimization failed: {e}",
                 exc_info=True,
                 extra={
-                    "n_assets": len(expected_returns)
-                    if hasattr(expected_returns, "__len__")
-                    else None,
+                    "n_assets": (
+                        len(expected_returns) if hasattr(expected_returns, "__len__") else None
+                    ),
                     "cov_shape": cov_matrix.shape if hasattr(cov_matrix, "shape") else None,
                 },
             )

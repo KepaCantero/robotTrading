@@ -9,7 +9,7 @@ Incluye:
 
 import logging
 from collections import defaultdict
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Optional
 
 import numpy as np
 import pandas as pd
@@ -40,7 +40,7 @@ class SharedBackbone(nn.Module):
     def __init__(
         self,
         input_dim: int,
-        hidden_dims: List[int],
+        hidden_dims: list[int],
         dropout: float = 0.1,
     ):
         """
@@ -84,7 +84,7 @@ class TaskHead(nn.Module):
     def __init__(
         self,
         input_dim: int,
-        hidden_dims: List[int],
+        hidden_dims: list[int],
         output_dim: int = 1,
         task_type: str = "regression",
     ):
@@ -131,8 +131,8 @@ class MultiTaskModel(nn.Module):
     def __init__(
         self,
         input_dim: int,
-        shared_hidden_dims: List[int],
-        task_configs: Dict[str, Dict[str, Any]],
+        shared_hidden_dims: list[int],
+        task_configs: dict[str, dict[str, Any]],
         dropout: float = 0.1,
     ):
         """
@@ -161,15 +161,15 @@ class MultiTaskModel(nn.Module):
         # Task heads
         self.task_heads = nn.ModuleDict()
         for task_name, task_config in task_configs.items():
-            hidden_dims = task_config.get('hidden_dims', [64, 32])
-            task_type = task_config.get('type', 'regression')
-            output_dim = task_config.get('output_dim', 1)
+            hidden_dims = task_config.get("hidden_dims", [64, 32])
+            task_type = task_config.get("type", "regression")
+            output_dim = task_config.get("output_dim", 1)
 
             self.task_heads[task_name] = TaskHead(
                 backbone_output_dim, hidden_dims, output_dim, task_type
             )
 
-    def forward(self, x: torch.Tensor, task_name: Optional[str] = None) -> Dict[str, torch.Tensor]:
+    def forward(self, x: torch.Tensor, task_name: Optional[str] = None) -> dict[str, torch.Tensor]:
         """
         Forward pass.
 
@@ -200,7 +200,7 @@ class MultiObjectiveOptimizer:
     - Drawdown (minimizar)
     """
 
-    def __init__(self, config: Dict[str, Any] = None):
+    def __init__(self, config: Optional[dict[str, Any]] = None):
         """
         Inicializar optimizador multi-objetivo.
 
@@ -211,22 +211,22 @@ class MultiObjectiveOptimizer:
 
         # Pesos adaptativos para cada objetivo
         self.weights = {
-            'return': config.get('return_weight', 0.4),
-            'sharpe': config.get('sharpe_weight', 0.4),
-            'drawdown': config.get('drawdown_weight', 0.2),
+            "return": config.get("return_weight", 0.4),
+            "sharpe": config.get("sharpe_weight", 0.4),
+            "drawdown": config.get("drawdown_weight", 0.2),
         }
 
         # Normalización de objetivos
-        self.normalize_objectives = config.get('normalize_objectives', True)
+        self.normalize_objectives = config.get("normalize_objectives", True)
 
         # Historial para adaptación de pesos
-        self.objective_history: Dict[str, List[float]] = defaultdict(list)
+        self.objective_history: dict[str, list[float]] = defaultdict(list)
 
     def compute_weighted_loss(
         self,
-        predictions: Dict[str, torch.Tensor],
-        targets: Dict[str, torch.Tensor],
-        task_losses: Dict[str, torch.Tensor],
+        predictions: dict[str, torch.Tensor],
+        targets: dict[str, torch.Tensor],
+        task_losses: dict[str, torch.Tensor],
     ) -> torch.Tensor:
         """
         Calcular pérdida ponderada multi-objetivo.
@@ -249,8 +249,8 @@ class MultiObjectiveOptimizer:
         return total_loss
 
     def update_weights_adaptive(
-        self, performance_history: Dict[str, List[float]], window_size: int = 10
-    ) -> Dict[str, float]:
+        self, performance_history: dict[str, list[float]], window_size: int = 10
+    ) -> dict[str, float]:
         """
         Actualizar pesos adaptativamente basado en performance reciente.
 
@@ -265,7 +265,7 @@ class MultiObjectiveOptimizer:
             return self.weights
 
         # Calcular tendencias recientes
-        trends: Dict[str, float] = {}
+        trends: dict[str, float] = {}
         for objective, history in performance_history.items():
             if len(history) >= window_size:
                 recent = history[-window_size:]
@@ -294,7 +294,7 @@ class MultiObjectiveOptimizer:
 
         return self.weights.copy()
 
-    def get_objective_weights(self) -> Dict[str, float]:
+    def get_objective_weights(self) -> dict[str, float]:
         """Obtener pesos actuales."""
         return self.weights.copy()
 
@@ -309,7 +309,7 @@ class MultiTaskLearningEngine:
     - MultiObjectiveOptimizer para balancear objetivos
     """
 
-    def __init__(self, config: Dict[str, Any]):
+    def __init__(self, config: dict[str, Any]):
         """
         Inicializar multi-task learning engine.
 
@@ -317,34 +317,34 @@ class MultiTaskLearningEngine:
             config: Configuración
         """
         self.config = config
-        self.model: Optional["MultiTaskModel"] = None
+        self.model: Optional[MultiTaskModel] = None
         self.optimizer: Optional[Any] = None  # optim.Adam when torch is available
         self.multi_objective_optimizer = MultiObjectiveOptimizer(
-            config.get('multi_objective_config', {})
+            config.get("multi_objective_config", {})
         )
 
         # Configuración de tareas
         self.task_configs = config.get(
-            'tasks',
+            "tasks",
             {
-                'return': {'hidden_dims': [64, 32], 'type': 'regression', 'output_dim': 1},
-                'sharpe': {'hidden_dims': [64, 32], 'type': 'regression', 'output_dim': 1},
-                'drawdown': {'hidden_dims': [64, 32], 'type': 'regression', 'output_dim': 1},
+                "return": {"hidden_dims": [64, 32], "type": "regression", "output_dim": 1},
+                "sharpe": {"hidden_dims": [64, 32], "type": "regression", "output_dim": 1},
+                "drawdown": {"hidden_dims": [64, 32], "type": "regression", "output_dim": 1},
             },
         )
 
         # Parámetros de entrenamiento
-        self.input_dim = config.get('input_dim', 50)
-        self.shared_hidden_dims = config.get('shared_hidden_dims', [128, 64])
-        self.learning_rate = config.get('learning_rate', 0.001)
-        self.epochs = config.get('epochs', 100)
-        self.batch_size = config.get('batch_size', 32)
+        self.input_dim = config.get("input_dim", 50)
+        self.shared_hidden_dims = config.get("shared_hidden_dims", [128, 64])
+        self.learning_rate = config.get("learning_rate", 0.001)
+        self.epochs = config.get("epochs", 100)
+        self.batch_size = config.get("batch_size", 32)
 
         self.is_trained = False
 
     def _prepare_training_data(
-        self, training_data: Dict[str, Any]
-    ) -> Tuple[torch.Tensor, Dict[str, torch.Tensor]]:
+        self, training_data: dict[str, Any]
+    ) -> tuple[torch.Tensor, dict[str, torch.Tensor]]:
         """
         Preparar datos de entrenamiento.
 
@@ -358,7 +358,7 @@ class MultiTaskLearningEngine:
             raise ImportError("PyTorch requerido")
 
         # Features
-        features = training_data.get('features')
+        features = training_data.get("features")
         if isinstance(features, np.ndarray):
             features_tensor = torch.FloatTensor(features)
         elif isinstance(features, pd.DataFrame):
@@ -368,8 +368,8 @@ class MultiTaskLearningEngine:
 
         # Targets por tarea
         targets_dict = {}
-        for task_name in self.task_configs.keys():
-            task_targets = training_data.get(f'targets_{task_name}')
+        for task_name in self.task_configs:
+            task_targets = training_data.get(f"targets_{task_name}")
             if task_targets is not None:
                 if isinstance(task_targets, np.ndarray):
                     targets_dict[task_name] = torch.FloatTensor(task_targets)
@@ -381,8 +381,8 @@ class MultiTaskLearningEngine:
         return features_tensor, targets_dict
 
     def train(
-        self, training_data: Dict[str, Any], validation_data: Optional[Dict[str, Any]] = None
-    ) -> Dict[str, Any]:
+        self, training_data: dict[str, Any], validation_data: Optional[dict[str, Any]] = None
+    ) -> dict[str, Any]:
         """
         Entrenar modelo multi-tarea.
 
@@ -406,7 +406,7 @@ class MultiTaskLearningEngine:
                     self.input_dim,
                     self.shared_hidden_dims,
                     self.task_configs,
-                    dropout=self.config.get('dropout', 0.1),
+                    dropout=self.config.get("dropout", 0.1),
                 )
             model = self.model  # Local reference for type narrowing
 
@@ -418,14 +418,14 @@ class MultiTaskLearningEngine:
             # Loss functions por tarea
             loss_functions = {}
             for task_name, task_config in self.task_configs.items():
-                task_type = task_config.get('type', 'regression')
-                if task_type == 'regression':
+                task_type = task_config.get("type", "regression")
+                if task_type == "regression":
                     loss_functions[task_name] = nn.MSELoss()
                 else:
                     loss_functions[task_name] = nn.BCELoss()
 
             # Training loop
-            metrics: Dict[str, List[float]] = defaultdict(list)
+            metrics: dict[str, list[float]] = defaultdict(list)
             model.train()
 
             for epoch in range(self.epochs):
@@ -436,12 +436,12 @@ class MultiTaskLearningEngine:
 
                 # Calcular pérdidas por tarea
                 task_losses = {}
-                for task_name in self.task_configs.keys():
+                for task_name in self.task_configs:
                     if task_name in y_train_dict and task_name in predictions:
                         loss_fn = loss_functions[task_name]
                         loss = loss_fn(predictions[task_name], y_train_dict[task_name].unsqueeze(1))
                         task_losses[task_name] = loss
-                        metrics[f'{task_name}_loss'].append(float(loss.item()))
+                        metrics[f"{task_name}_loss"].append(float(loss.item()))
 
                 # Pérdida total ponderada
                 total_loss = self.multi_objective_optimizer.compute_weighted_loss(
@@ -452,24 +452,24 @@ class MultiTaskLearningEngine:
                 total_loss.backward()
                 optimizer.step()
 
-                metrics['total_loss'].append(float(total_loss.item()))
+                metrics["total_loss"].append(float(total_loss.item()))
 
                 # Actualizar pesos adaptativos cada 10 epochs
                 if (epoch + 1) % 10 == 0 and epoch > 0:
                     # Usar historial de pérdidas para actualizar pesos
                     recent_performance = {
-                        task_name: metrics[f'{task_name}_loss'][-10:]
-                        for task_name in self.task_configs.keys()
-                        if f'{task_name}_loss' in metrics
+                        task_name: metrics[f"{task_name}_loss"][-10:]
+                        for task_name in self.task_configs
+                        if f"{task_name}_loss" in metrics
                     }
                     new_weights = self.multi_objective_optimizer.update_weights_adaptive(
                         recent_performance, window_size=10
                     )
-                    logger.debug(f"Epoch {epoch+1}: Updated weights = {new_weights}")
+                    logger.debug(f"Epoch {epoch + 1}: Updated weights = {new_weights}")
 
                 if (epoch + 1) % 20 == 0:
                     logger.info(
-                        f"Epoch {epoch+1}/{self.epochs}, "
+                        f"Epoch {epoch + 1}/{self.epochs}, "
                         f"Total Loss: {total_loss.item():.4f}, "
                         f"Task Losses: {[f'{k}={v.item():.4f}' for k, v in task_losses.items()]}"
                     )
@@ -478,25 +478,25 @@ class MultiTaskLearningEngine:
             if validation_data:
                 val_metrics = self._evaluate(validation_data)
                 for k, v in val_metrics.items():
-                    metrics[f'val_{k}'] = [v]
+                    metrics[f"val_{k}"] = [v]
 
             self.is_trained = True
 
             return {
-                'final_total_loss': metrics['total_loss'][-1],
-                'final_task_losses': {
-                    task_name: metrics[f'{task_name}_loss'][-1]
-                    for task_name in self.task_configs.keys()
-                    if f'{task_name}_loss' in metrics
+                "final_total_loss": metrics["total_loss"][-1],
+                "final_task_losses": {
+                    task_name: metrics[f"{task_name}_loss"][-1]
+                    for task_name in self.task_configs
+                    if f"{task_name}_loss" in metrics
                 },
-                'final_weights': self.multi_objective_optimizer.get_objective_weights(),
+                "final_weights": self.multi_objective_optimizer.get_objective_weights(),
             }
 
         except (FileNotFoundError, ValueError, KeyError, TypeError) as e:
             logger.error(f"Error entrenando multi-task model: {e}", exc_info=True)
             raise
 
-    def _evaluate(self, test_data: Dict[str, Any]) -> Dict[str, float]:
+    def _evaluate(self, test_data: dict[str, Any]) -> dict[str, float]:
         """Evaluar modelo."""
         if not PYTORCH_AVAILABLE or self.model is None:
             return {}
@@ -509,7 +509,7 @@ class MultiTaskLearningEngine:
                 predictions = self.model(X_test)
 
                 metrics = {}
-                for task_name in self.task_configs.keys():
+                for task_name in self.task_configs:
                     if task_name in predictions and task_name in y_test_dict:
                         pred = predictions[task_name].cpu().numpy().flatten()
                         true = y_test_dict[task_name].cpu().numpy().flatten()
@@ -518,8 +518,8 @@ class MultiTaskLearningEngine:
                         mse = np.mean((pred - true) ** 2)
                         mae = np.mean(np.abs(pred - true))
 
-                        metrics[f'{task_name}_mse'] = float(mse)
-                        metrics[f'{task_name}_mae'] = float(mae)
+                        metrics[f"{task_name}_mse"] = float(mse)
+                        metrics[f"{task_name}_mae"] = float(mae)
 
             return metrics
 
@@ -527,7 +527,7 @@ class MultiTaskLearningEngine:
             logger.error(f"Error evaluando: {e}", exc_info=True)
             return {}
 
-    def predict(self, features: Dict[str, Any]) -> Dict[str, Any]:
+    def predict(self, features: dict[str, Any]) -> dict[str, Any]:
         """
         Predecir para todas las tareas.
 
@@ -538,7 +538,7 @@ class MultiTaskLearningEngine:
             Dict con predicciones por tarea
         """
         if not PYTORCH_AVAILABLE or self.model is None or not self.is_trained:
-            return {'return': 0.0, 'sharpe': 0.0, 'drawdown': 0.0, 'confidence': 0.0}
+            return {"return": 0.0, "sharpe": 0.0, "drawdown": 0.0, "confidence": 0.0}
 
         try:
             # Preparar features
@@ -549,7 +549,7 @@ class MultiTaskLearningEngine:
             elif isinstance(features, dict):
                 # Convertir dict a array
                 features_array = np.array(
-                    [features.get(f'feature_{i}', 0.0) for i in range(self.input_dim)]
+                    [features.get(f"feature_{i}", 0.0) for i in range(self.input_dim)]
                 )
                 features_tensor = torch.FloatTensor(features_array).unsqueeze(0)
             else:
@@ -570,12 +570,12 @@ class MultiTaskLearningEngine:
                     values = list(result.values())
                     normalized = np.array(values) / (float(np.max(np.abs(values))) + 1e-8)
                     confidence = 1.0 - min(1.0, float(np.std(normalized)))
-                    result['confidence'] = float(confidence)
+                    result["confidence"] = float(confidence)
                 else:
-                    result['confidence'] = 0.5
+                    result["confidence"] = 0.5
 
                 return result
 
         except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.error(f"Error prediciendo: {e}", exc_info=True)
-            return {'return': 0.0, 'sharpe': 0.0, 'drawdown': 0.0, 'confidence': 0.0}
+            return {"return": 0.0, "sharpe": 0.0, "drawdown": 0.0, "confidence": 0.0}

@@ -8,21 +8,23 @@ rather than concrete classes. This improves testability and maintainability.
 
 from __future__ import annotations
 
-from decimal import Decimal
-from typing import Any, Optional, Protocol
+from typing import TYPE_CHECKING, Any, Protocol
 
-from app.domain.models.signal import Signal
+if TYPE_CHECKING:
+    from decimal import Decimal
+
+    from app.domain.models.signal import Signal
 
 
 class StrategyRegistryProto(Protocol):
     """Protocol for strategy registry - allows mocking in tests."""
 
     @property
-    def active_strategy(self) -> Optional[str]:
+    def active_strategy(self) -> str | None:
         """Name of active strategy."""
         ...
 
-    def get_active_strategy(self) -> Optional[Any]:
+    def get_active_strategy(self) -> Any | None:
         """Get currently active strategy."""
         ...
 
@@ -51,7 +53,7 @@ class StrategyLoggerProto(Protocol):
         self,
         strategy_name: str,
         signal: Signal,
-        execution_price: Optional[Decimal] = None,
+        execution_price: Decimal | None = None,
     ) -> None:
         """Log signal execution event."""
         ...
@@ -60,7 +62,7 @@ class StrategyLoggerProto(Protocol):
         self,
         strategy_name: str,
         error: str,
-        error_type: Optional[str] = None,
+        error_type: str | None = None,
     ) -> None:
         """Log strategy error event."""
         ...

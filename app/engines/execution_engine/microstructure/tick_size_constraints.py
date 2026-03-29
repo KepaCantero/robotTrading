@@ -15,9 +15,10 @@ from __future__ import annotations
 import logging
 from dataclasses import dataclass
 from decimal import Decimal
-from typing import Dict, List, Optional
+from typing import TYPE_CHECKING, ClassVar
 
-import pandas as pd
+if TYPE_CHECKING:
+    import pandas as pd
 
 logger = logging.getLogger(__name__)
 
@@ -49,7 +50,7 @@ class TickConstraintsResult:
     tick_size: Decimal
 
     # Constraints
-    valid_prices: List[Decimal]
+    valid_prices: list[Decimal]
     min_price: Decimal
     max_price: Decimal
     n_price_levels: int
@@ -67,7 +68,7 @@ class TickSizeConstraints:
     """
 
     # Common tick sizes by exchange/asset class
-    DEFAULT_TICK_SIZES = {
+    DEFAULT_TICK_SIZES: ClassVar[dict] = {
         # US Equities
         "NYSE_EQUITY": Decimal("0.01"),
         "NASDAQ_EQUITY": Decimal("0.01"),
@@ -86,7 +87,7 @@ class TickSizeConstraints:
     }
 
     # Spread regimes (in ticks)
-    SPREAD_REGIMES = {
+    SPREAD_REGIMES: ClassVar[dict] = {
         "SUB_TICK": (0, 1),
         "TIGHT": (1, 3),
         "NORMAL": (3, 10),
@@ -95,7 +96,7 @@ class TickSizeConstraints:
 
     def __init__(
         self,
-        default_tick_size: Optional[Decimal] = None,
+        default_tick_size: Decimal | None = None,
     ):
         """
         Initialize tick size constraints handler.
@@ -106,15 +107,15 @@ class TickSizeConstraints:
         if default_tick_size is None:
             default_tick_size = Decimal("0.01")
         self.default_tick_size = default_tick_size
-        self._tick_cache: Dict[str, Decimal] = {}
+        self._tick_cache: dict[str, Decimal] = {}
 
         logger.info(f"TickSizeConstraints initialized with default_tick={default_tick_size}")
 
     def get_tick_size(
         self,
         symbol: str,
-        price: Optional[Decimal] = None,
-        exchange: Optional[str] = None,
+        price: Decimal | None = None,
+        exchange: str | None = None,
     ) -> Decimal:
         """
         Get tick size for a symbol.
@@ -142,8 +143,8 @@ class TickSizeConstraints:
     def _determine_tick_size(
         self,
         symbol: str,
-        exchange: Optional[str],
-        price: Optional[Decimal],
+        exchange: str | None,
+        price: Decimal | None,
     ) -> Decimal:
         """Determine tick size from symbol/exchange."""
         # Check predefined
@@ -185,8 +186,8 @@ class TickSizeConstraints:
     def round_to_tick(
         self,
         price: Decimal,
-        tick_size: Optional[Decimal] = None,
-        symbol: Optional[str] = None,
+        tick_size: Decimal | None = None,
+        symbol: str | None = None,
         round_down: bool = False,
     ) -> Decimal:
         """
@@ -202,18 +203,12 @@ class TickSizeConstraints:
             Rounded price
         """
         if tick_size is None:
-            if symbol:
-                tick_size = self.get_tick_size(symbol, price)
-            else:
-                tick_size = self.default_tick_size
+            tick_size = self.get_tick_size(symbol, price) if symbol else self.default_tick_size
 
         # Calculate rounded price
         ticks = price / tick_size
 
-        if round_down:
-            rounded_ticks = int(ticks)
-        else:
-            rounded_ticks = int(ticks + Decimal("0.5"))
+        rounded_ticks = int(ticks) if round_down else int(ticks + Decimal("0.5"))
 
         return rounded_ticks * tick_size
 
@@ -223,7 +218,7 @@ class TickSizeConstraints:
         reference_price: Decimal,
         current_bid: Decimal,
         current_ask: Decimal,
-        tick_size: Optional[Decimal] = None,
+        tick_size: Decimal | None = None,
         aggressiveness: float = 0.5,
     ) -> Decimal:
         """
@@ -262,7 +257,7 @@ class TickSizeConstraints:
         price: Decimal,
         bid: Decimal,
         ask: Decimal,
-        historical_spreads: Optional[pd.Series] = None,
+        historical_spreads: pd.Series | None = None,
     ) -> TickSizeAnalysis:
         """
         Analyze tick size regime (O'Hara Rule 7.8).
@@ -332,12 +327,8 @@ class TickSizeConstraints:
         side: str,
     ) -> bool:
         """Check if price can be improved by one tick."""
-        if side == "BUY":
-            # Can we bid higher?
-            improved = price + tick_size
-        else:
-            # Can we ask lower?
-            improved = price - tick_size
+        # Check if price can be improved by one tick
+        improved = price + tick_size if side == "BUY" else price - tick_size
 
         # Simple check: not zero
         return improved > 0
@@ -347,7 +338,7 @@ class TickSizeConstraints:
         symbol: str,
         min_price: Decimal,
         max_price: Decimal,
-        price: Optional[Decimal] = None,
+        price: Decimal | None = None,
     ) -> TickConstraintsResult:
         """
         Calculate valid price levels and constraints.
@@ -375,10 +366,7 @@ class TickSizeConstraints:
             current += tick_size
 
         # Minimum spread (1 tick)
-        if min_price > 0:
-            min_spread = float(tick_size / min_price) * 10000
-        else:
-            min_spread = 0.0
+        min_spread = float(tick_size / min_price) * 10000 if min_price > 0 else 0.0
 
         # Liquidity implication
         if n_levels > 1000:
@@ -404,7 +392,7 @@ class TickSizeConstraints:
         symbol: str,
         price_range: Decimal,
         avg_daily_volume: float,
-        current_tick_size: Optional[Decimal] = None,
+        current_tick_size: Decimal | None = None,
     ) -> Decimal:
         """
         Calculate optimal tick size for market quality.
@@ -440,10 +428,10 @@ class TickSizeConstraints:
 
     def validate_price_ticks(
         self,
-        prices: List[Decimal],
+        prices: list[Decimal],
         tick_size: Decimal,
         tolerance: float = 0.01,
-    ) -> Dict[str, any]:
+    ) -> dict[str, any]:
         """
         Validate if prices are on valid ticks.
 
@@ -490,7 +478,7 @@ _tick_size_constraints: TickSizeConstraints = None
 
 
 def get_tick_size_constraints(
-    default_tick_size: Optional[Decimal] = None,
+    default_tick_size: Decimal | None = None,
 ) -> TickSizeConstraints:
     """Get or create global TickSizeConstraints instance."""
     if default_tick_size is None:

@@ -13,7 +13,7 @@ import inspect
 import logging
 from datetime import datetime
 from decimal import Decimal
-from typing import Any, Callable, Dict, List, Optional, Type
+from typing import Any, Callable, Optional
 
 from pydantic import BaseModel, Field, ValidationError, field_validator
 
@@ -191,10 +191,10 @@ class PositionContract(TradingDataContract):
 
 
 def contract(
-    preconditions: Optional[List[Callable]] = None,
-    postconditions: Optional[List[Callable]] = None,
-    invariants: Optional[List[Callable]] = None,
-    data_contract: Optional[Type[TradingDataContract]] = None,
+    preconditions: Optional[list[Callable]] = None,
+    postconditions: Optional[list[Callable]] = None,
+    invariants: Optional[list[Callable]] = None,
+    data_contract: Optional[type[TradingDataContract]] = None,
 ):
     """
     Decorator for implementing Design by Contract.
@@ -221,7 +221,7 @@ def contract(
                                 function_name,
                             )
                     except (ValueError, TypeError, KeyError, AttributeError) as e:
-                        raise PreconditionError(f"Precondition error: {str(e)}", function_name)
+                        raise PreconditionError(f"Precondition error: {e!s}", function_name) from e
 
             # Validate data contract if provided
             if data_contract:
@@ -256,16 +256,16 @@ def contract(
 
                 except ValidationError as e:
                     raise ContractViolationError(
-                        f"Data validation error: {str(e)}",
+                        f"Data validation error: {e!s}",
                         "DATA_CONTRACT",
                         function_name,
-                    )
+                    ) from e
 
             # Execute function
             try:
                 result = func(*args, **kwargs)
             except (ValueError, TypeError, KeyError, AttributeError) as e:
-                logger.error(f"Function {function_name} failed: {str(e)}")
+                logger.error(f"Function {function_name} failed: {e!s}")
                 raise
 
             # Validate postconditions
@@ -278,7 +278,9 @@ def contract(
                                 function_name,
                             )
                     except (ValueError, TypeError, KeyError, AttributeError) as e:
-                        raise PostconditionError(f"Postcondition error: {str(e)}", function_name)
+                        raise PostconditionError(
+                            f"Postcondition error: {e!s}", function_name
+                        ) from e
 
             return result
 
@@ -311,7 +313,10 @@ def validate_non_zero_quantity(*args, **kwargs) -> bool:
 def validate_reasonable_price(*args, **kwargs) -> bool:
     """Precondition: Price must be reasonable."""
     # Look for Decimal arguments
-    return all(not (isinstance(arg, Decimal) and not Decimal("0.01") <= arg <= Decimal("1000000")) for arg in args)
+    return all(
+        not (isinstance(arg, Decimal) and not Decimal("0.01") <= arg <= Decimal("1000000"))
+        for arg in args
+    )
 
 
 def validate_signal_confidence(*args, **kwargs) -> bool:
@@ -342,7 +347,7 @@ def validate_profit_loss(result, *args, **kwargs) -> bool:
 # Example usage decorators for common patterns
 
 
-def trading_operation(data_contract: Type[TradingDataContract]):
+def trading_operation(data_contract: type[TradingDataContract]):
     """Decorator for trading operations with data validation."""
     return contract(
         preconditions=[validate_positive_amount],
@@ -351,7 +356,7 @@ def trading_operation(data_contract: Type[TradingDataContract]):
     )
 
 
-def signal_analysis(data_contract: Type[TradingDataContract]):
+def signal_analysis(data_contract: type[TradingDataContract]):
     """Decorator for signal analysis operations."""
     return contract(preconditions=[validate_signal_confidence], data_contract=data_contract)
 
@@ -367,7 +372,7 @@ def risk_calculation():
 # Contract validation utilities
 
 
-def validate_trading_data(data: Dict[str, Any], contract_type: Type[TradingDataContract]) -> bool:
+def validate_trading_data(data: dict[str, Any], contract_type: type[TradingDataContract]) -> bool:
     """
     Validate trading data against a contract.
 
@@ -386,14 +391,14 @@ def validate_trading_data(data: Dict[str, Any], contract_type: Type[TradingDataC
         return contract_instance.validate_trading_data()
     except ValidationError as e:
         raise ContractViolationError(
-            f"Data validation failed: {str(e)}",
+            f"Data validation failed: {e!s}",
             "DATA_VALIDATION",
             "validate_trading_data",
-        )
+        ) from e
 
 
 def validate_batch_trading_data(
-    data_list: List[Dict[str, Any]], contract_type: Type[TradingDataContract]
+    data_list: list[dict[str, Any]], contract_type: type[TradingDataContract]
 ) -> bool:
     """
     Validate a batch of trading data against a contract.
@@ -413,8 +418,8 @@ def validate_batch_trading_data(
             validate_trading_data(data, contract_type)
         except ContractViolationError as e:
             raise ContractViolationError(
-                f"Batch validation failed at index {i}: {str(e)}",
+                f"Batch validation failed at index {i}: {e!s}",
                 "BATCH_VALIDATION",
                 "validate_batch_trading_data",
-            )
+            ) from e
     return True

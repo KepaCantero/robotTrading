@@ -11,7 +11,7 @@ Used for:
 import logging
 from datetime import datetime
 from decimal import Decimal
-from typing import Dict, List, Optional
+from typing import Optional
 from uuid import uuid4
 
 from app.services.live_trading.broker_connector import (
@@ -40,8 +40,8 @@ class PaperAdapter:
         if initial_cash is None:
             initial_cash = Decimal("100000")
         self.account: Optional[BrokerAccount] = None
-        self.positions: Dict[str, BrokerPosition] = {}
-        self.orders: Dict[str, BrokerOrder] = {}
+        self.positions: dict[str, BrokerPosition] = {}
+        self.orders: dict[str, BrokerOrder] = {}
         self.is_connected = False
         self.initial_cash = initial_cash
         self.auto_fill_orders = auto_fill_orders
@@ -174,7 +174,7 @@ class PaperAdapter:
             return order_id
 
         except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
-            logger.error(f"❌ Paper order placement failed: {str(e)}")
+            logger.error(f"❌ Paper order placement failed: {e!s}")
             raise
 
     async def cancel_order(self, order_id: str) -> bool:
@@ -228,7 +228,7 @@ class PaperAdapter:
 
         return self.account
 
-    async def get_positions(self) -> List[BrokerPosition]:
+    async def get_positions(self) -> list[BrokerPosition]:
         """Get all open positions in paper trading.
 
         Returns:
@@ -247,7 +247,7 @@ class PaperAdapter:
         """
         return self.positions.get(symbol)
 
-    async def update_positions(self) -> Dict[str, BrokerPosition]:
+    async def update_positions(self) -> dict[str, BrokerPosition]:
         """Update all positions (alias for get_positions).
 
         Returns:

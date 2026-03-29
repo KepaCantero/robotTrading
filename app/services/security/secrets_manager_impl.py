@@ -18,7 +18,7 @@ import os
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Optional, Protocol
+from typing import Optional, Protocol
 
 from cryptography.fernet import Fernet, InvalidToken
 
@@ -56,7 +56,7 @@ class SecretStorage(Protocol):
         """Delete a secret value."""
         ...
 
-    def list_keys(self) -> List[str]:
+    def list_keys(self) -> list[str]:
         """List all stored secret keys."""
         ...
 
@@ -112,7 +112,7 @@ class EnvironmentStorage:
             return True
         return False
 
-    def list_keys(self) -> List[str]:
+    def list_keys(self) -> list[str]:
         """
         List all secret keys in environment variables.
 
@@ -153,7 +153,7 @@ class EncryptedFileStorage:
             encryption_key = key.encode()
 
         self._fernet = Fernet(encryption_key)
-        self._data: Dict[str, str] = {}
+        self._data: dict[str, str] = {}
         self._load()
 
     def _load(self) -> None:
@@ -224,7 +224,7 @@ class EncryptedFileStorage:
             return True
         return False
 
-    def list_keys(self) -> List[str]:
+    def list_keys(self) -> list[str]:
         """
         List all secret keys in the encrypted file.
 
@@ -260,7 +260,7 @@ class SecretsManagerImpl:
             storage_backend = EnvironmentStorage()
 
         self._storage = storage_backend
-        self._secrets: Dict[str, SecretValue] = {}
+        self._secrets: dict[str, SecretValue] = {}
         self._fernet: Optional[Fernet] = None
 
         # Initialize encryption for in-memory values
@@ -391,7 +391,7 @@ class SecretsManagerImpl:
         logger.info(f"Secret '{key}' rotated")
         return True
 
-    def list_secrets(self) -> List[str]:
+    def list_secrets(self) -> list[str]:
         """
         List all secret keys.
 

@@ -7,7 +7,7 @@ Creates HTML reports with performance metrics, visualizations, and recommendatio
 import logging
 from datetime import datetime
 from decimal import Decimal
-from typing import Dict, List, Optional
+from typing import ClassVar, Optional
 
 import numpy as np
 
@@ -29,7 +29,7 @@ class ReportingGenerator:
     """
 
     # Metric thresholds for rating
-    METRIC_THRESHOLDS = {
+    METRIC_THRESHOLDS: ClassVar[dict] = {
         "sharpe_ratio": {
             "excellent": Decimal("2.0"),
             "good": Decimal("1.0"),
@@ -54,7 +54,7 @@ class ReportingGenerator:
 
     def __init__(self):
         """Initialize reporting generator."""
-        self.report_history: List[PerformanceReport] = []
+        self.report_history: list[PerformanceReport] = []
         logger.info("✅ ReportingGenerator initialized")
 
     async def generate_report(
@@ -213,7 +213,7 @@ class ReportingGenerator:
         metrics: StrategyMetrics,
         target_return: Decimal,
         target_drawdown: Decimal,
-    ) -> List[str]:
+    ) -> list[str]:
         """Identify strategy strengths."""
         strengths = []
 
@@ -258,7 +258,7 @@ class ReportingGenerator:
         metrics: StrategyMetrics,
         target_return: Decimal,
         target_drawdown: Decimal,
-    ) -> List[str]:
+    ) -> list[str]:
         """Identify strategy weaknesses."""
         weaknesses = []
 
@@ -298,10 +298,10 @@ class ReportingGenerator:
 
     async def _generate_recommendations(
         self,
-        weaknesses: List[str],
+        weaknesses: list[str],
         metrics: StrategyMetrics,
-        allocations: List[AllocationSnapshot],
-    ) -> List[str]:
+        allocations: list[AllocationSnapshot],
+    ) -> list[str]:
         """Generate improvement recommendations."""
         recommendations = []
 
@@ -382,12 +382,12 @@ class ReportingGenerator:
         self,
         request: ReportGenerationRequest,
         rating: str,
-        strengths: List[str],
-        weaknesses: List[str],
-        recommendations: List[str],
+        strengths: list[str],
+        weaknesses: list[str],
+        recommendations: list[str],
     ) -> str:
         """Generate HTML report content."""
-        timestamp = datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S UTC')
+        timestamp = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S UTC")
 
         html = f"""
         <!DOCTYPE html>
@@ -512,7 +512,7 @@ class ReportingGenerator:
 
         return html
 
-    def _prepare_charts_data(self, metrics: StrategyMetrics) -> Dict:
+    def _prepare_charts_data(self, metrics: StrategyMetrics) -> dict:
         """Prepare data for charts and visualizations."""
         return {
             "performance": {
@@ -530,14 +530,14 @@ class ReportingGenerator:
     async def get_report_history(
         self,
         limit: Optional[int] = None,
-    ) -> List[PerformanceReport]:
+    ) -> list[PerformanceReport]:
         """Get report history."""
         results = self.report_history
         if limit:
             results = results[-limit:]
         return results
 
-    def get_generator_status(self) -> Dict:
+    def get_generator_status(self) -> dict:
         """Get generator operational status."""
         successful = sum(1 for r in self.report_history if r.success)
         total = len(self.report_history)

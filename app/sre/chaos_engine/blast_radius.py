@@ -24,7 +24,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from decimal import Decimal
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 import aiosqlite
 
@@ -52,20 +52,20 @@ class BlastRadiusConfig:
     percentage: Decimal = Decimal("10")  # For PERCENTAGE scope
 
     # Specific targets
-    pods: List[str] = field(default_factory=list)
-    nodes: List[str] = field(default_factory=list)
-    zones: List[str] = field(default_factory=list)
-    regions: List[str] = field(default_factory=list)
+    pods: list[str] = field(default_factory=list)
+    nodes: list[str] = field(default_factory=list)
+    zones: list[str] = field(default_factory=list)
+    regions: list[str] = field(default_factory=list)
 
     # Traffic splitting
-    traffic_split: Dict[str, Decimal] = field(default_factory=dict)
+    traffic_split: dict[str, Decimal] = field(default_factory=dict)
 
     # Constraints
     max_failure_domains: int = 1
     require_quorum: bool = True
     min_healthy_pods: int = 2
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
         return {
             "scope": self.scope.value,
@@ -87,11 +87,11 @@ class ContainmentState:
 
     config: BlastRadiusConfig
     applied_at: datetime
-    active_failures: List[str] = field(default_factory=list)
-    isolated_domains: List[str] = field(default_factory=list)
-    health_status: Dict[str, bool] = field(default_factory=dict)
+    active_failures: list[str] = field(default_factory=list)
+    isolated_domains: list[str] = field(default_factory=list)
+    health_status: dict[str, bool] = field(default_factory=dict)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
         return {
             "config": self.config.to_dict(),
@@ -131,8 +131,8 @@ class BlastRadiusController:
         self.logger = logging.getLogger(f"{__name__}.{service_name}")
 
         # State
-        self._active_containment: Optional[ContainmentState] = None
-        self._containment_history: List[ContainmentState] = []
+        self._active_containment: ContainmentState | None = None
+        self._containment_history: list[ContainmentState] = []
         self._lock = asyncio.Lock()
 
     async def initialize(self) -> None:
@@ -231,7 +231,7 @@ class BlastRadiusController:
         except (aiosqlite.Error, asyncio.TimeoutError, OSError) as e:
             self.logger.error(f"Error loading containment: {e}")
 
-    async def apply_controls(self, config_dict: Dict[str, Any]) -> ContainmentState:
+    async def apply_controls(self, config_dict: dict[str, Any]) -> ContainmentState:
         """
         Apply blast radius controls.
 
@@ -271,7 +271,10 @@ class BlastRadiusController:
     async def _validate_config(self, config: BlastRadiusConfig) -> None:
         """Validate blast radius configuration."""
         # Check minimum healthy pods
-        if config.scope in [BlastRadiusScope.SINGLE_POD, BlastRadiusScope.PERCENTAGE] and config.min_healthy_pods < 1:
+        if (
+            config.scope in [BlastRadiusScope.SINGLE_POD, BlastRadiusScope.PERCENTAGE]
+            and config.min_healthy_pods < 1
+        ):
             raise ValueError("Must maintain at least 1 healthy pod")
 
         # Check quorum requirements
@@ -298,7 +301,7 @@ class BlastRadiusController:
 
     async def _apply_traffic_split(
         self,
-        traffic_split: Dict[str, Decimal],
+        traffic_split: dict[str, Decimal],
         state: ContainmentState,
     ) -> None:
         """Apply traffic splitting."""
@@ -400,15 +403,15 @@ class BlastRadiusController:
         except (aiosqlite.Error, asyncio.TimeoutError, OSError) as e:
             self.logger.error(f"Error marking containment removed: {e}")
 
-    async def get_active_containment(self) -> Optional[ContainmentState]:
+    async def get_active_containment(self) -> ContainmentState | None:
         """Get active containment."""
         return self._active_containment
 
-    async def get_containment_history(self, limit: int = 100) -> List[ContainmentState]:
+    async def get_containment_history(self, limit: int = 100) -> list[ContainmentState]:
         """Get containment history."""
         return self._containment_history[-limit:]
 
-    async def check_health_in_containment(self) -> Dict[str, bool]:
+    async def check_health_in_containment(self) -> dict[str, bool]:
         """Check health of contained domains."""
         if not self._active_containment:
             return {}

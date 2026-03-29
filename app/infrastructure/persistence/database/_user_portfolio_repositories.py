@@ -6,8 +6,7 @@ Split from repositories.py to improve maintainability index.
 
 from __future__ import annotations
 
-import uuid
-from decimal import Decimal
+from typing import TYPE_CHECKING
 
 from sqlalchemy import and_
 from sqlalchemy.exc import (
@@ -21,6 +20,10 @@ from sqlalchemy.exc import (
 from app.infrastructure.persistence.database._base_repository import BaseRepository, logger
 from app.infrastructure.persistence.database.models import Asset, Portfolio, Position, User
 from app.shared.exceptions.exceptions import raise_database_error
+
+if TYPE_CHECKING:
+    import uuid
+    from decimal import Decimal
 
 
 class UserRepository(BaseRepository[User]):
@@ -49,7 +52,7 @@ class UserRepository(BaseRepository[User]):
                 error=str(e),
             )
             raise_database_error(
-                f"Failed to get user by username: {str(e)}", "get_by_username", "users"
+                f"Failed to get user by username: {e!s}", "get_by_username", "users"
             )
 
     def get_by_email(self, email: str) -> User | None:
@@ -74,7 +77,7 @@ class UserRepository(BaseRepository[User]):
                 email=email,
                 error=str(e),
             )
-            raise_database_error(f"Failed to get user by email: {str(e)}", "get_by_email", "users")
+            raise_database_error(f"Failed to get user by email: {e!s}", "get_by_email", "users")
 
     def get_active_users(self) -> list[User]:
         """Get all active users."""
@@ -96,9 +99,7 @@ class UserRepository(BaseRepository[User]):
                 "get_active_users_failed",
                 error=str(e),
             )
-            raise_database_error(
-                f"Failed to get active users: {str(e)}", "get_active_users", "users"
-            )
+            raise_database_error(f"Failed to get active users: {e!s}", "get_active_users", "users")
 
 
 class PortfolioRepository(BaseRepository[Portfolio]):
@@ -127,7 +128,7 @@ class PortfolioRepository(BaseRepository[Portfolio]):
                 error=str(e),
             )
             raise_database_error(
-                f"Failed to get portfolios by user: {str(e)}",
+                f"Failed to get portfolios by user: {e!s}",
                 "get_by_user",
                 "portfolios",
             )
@@ -159,7 +160,7 @@ class PortfolioRepository(BaseRepository[Portfolio]):
                 error=str(e),
             )
             raise_database_error(
-                f"Failed to get active portfolios by user: {str(e)}",
+                f"Failed to get active portfolios by user: {e!s}",
                 "get_active_by_user",
                 "portfolios",
             )
@@ -191,7 +192,7 @@ class PortfolioRepository(BaseRepository[Portfolio]):
                 error=str(e),
             )
             raise_database_error(
-                f"Failed to update portfolio total value: {str(e)}",
+                f"Failed to update portfolio total value: {e!s}",
                 "update_total_value",
                 "portfolios",
             )
@@ -222,9 +223,7 @@ class AssetRepository(BaseRepository[Asset]):
                 symbol=symbol,
                 error=str(e),
             )
-            raise_database_error(
-                f"Failed to get asset by symbol: {str(e)}", "get_by_symbol", "assets"
-            )
+            raise_database_error(f"Failed to get asset by symbol: {e!s}", "get_by_symbol", "assets")
 
     def get_by_asset_class(self, asset_class: str) -> list[Asset]:
         """Get assets by asset class."""
@@ -249,7 +248,7 @@ class AssetRepository(BaseRepository[Asset]):
                 error=str(e),
             )
             raise_database_error(
-                f"Failed to get assets by class: {str(e)}",
+                f"Failed to get assets by class: {e!s}",
                 "get_by_asset_class",
                 "assets",
             )
@@ -275,7 +274,7 @@ class AssetRepository(BaseRepository[Asset]):
                 error=str(e),
             )
             raise_database_error(
-                f"Failed to get active assets: {str(e)}", "get_active_assets", "assets"
+                f"Failed to get active assets: {e!s}", "get_active_assets", "assets"
             )
 
     def search_by_name(self, name_pattern: str) -> list[Asset]:
@@ -301,7 +300,7 @@ class AssetRepository(BaseRepository[Asset]):
                 error=str(e),
             )
             raise_database_error(
-                f"Failed to search assets by name: {str(e)}", "search_by_name", "assets"
+                f"Failed to search assets by name: {e!s}", "search_by_name", "assets"
             )
 
 
@@ -333,7 +332,7 @@ class PositionRepository(BaseRepository[Position]):
                 error=str(e),
             )
             raise_database_error(
-                f"Failed to get positions by portfolio: {str(e)}",
+                f"Failed to get positions by portfolio: {e!s}",
                 "get_by_portfolio",
                 "positions",
             )
@@ -374,7 +373,7 @@ class PositionRepository(BaseRepository[Position]):
                 error=str(e),
             )
             raise_database_error(
-                f"Failed to get position by portfolio and asset: {str(e)}",
+                f"Failed to get position by portfolio and asset: {e!s}",
                 "get_by_portfolio_and_asset",
                 "positions",
             )
@@ -411,7 +410,7 @@ class PositionRepository(BaseRepository[Position]):
                 error=str(e),
             )
             raise_database_error(
-                f"Failed to get open positions: {str(e)}",
+                f"Failed to get open positions: {e!s}",
                 "get_open_positions",
                 "positions",
             )
@@ -443,7 +442,7 @@ class PositionRepository(BaseRepository[Position]):
                 error=str(e),
             )
             raise_database_error(
-                f"Failed to update position price: {str(e)}",
+                f"Failed to update position price: {e!s}",
                 "update_position_price",
                 "positions",
             )

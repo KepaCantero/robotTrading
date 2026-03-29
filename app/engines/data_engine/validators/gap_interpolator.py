@@ -10,7 +10,7 @@ Métodos soportados:
 
 import logging
 from decimal import Decimal
-from typing import Any, Dict, List
+from typing import Any, Optional
 
 import pandas as pd
 
@@ -24,7 +24,7 @@ class GapInterpolator:
     Rellena valores faltantes en series temporales.
     """
 
-    def __init__(self, config: Dict[str, Any] = None):
+    def __init__(self, config: Optional[dict[str, Any]] = None):
         """
         Inicializar interpolador.
 
@@ -33,19 +33,19 @@ class GapInterpolator:
         """
         config = config or {}
         self.method = config.get(
-            'method', 'forward_fill'
+            "method", "forward_fill"
         )  # forward_fill, backward_fill, linear, spline
-        self.max_gap_days = config.get('max_gap_days', 5)  # Máximo de días para interpolar
+        self.max_gap_days = config.get("max_gap_days", 5)  # Máximo de días para interpolar
         self.interpolate_volume = config.get(
-            'interpolate_volume', False
+            "interpolate_volume", False
         )  # Interpolar volumen (generalmente 0)
 
     def interpolate(
         self,
-        data: List[Dict[str, Any]],
-        timestamp_field: str = 'timestamp',
-        value_fields: List[str] = None,
-    ) -> List[Dict[str, Any]]:
+        data: list[dict[str, Any]],
+        timestamp_field: str = "timestamp",
+        value_fields: Optional[list[str]] = None,
+    ) -> list[dict[str, Any]]:
         """
         Interpolar gaps en datos temporales.
 
@@ -61,7 +61,7 @@ class GapInterpolator:
             return data
 
         if value_fields is None:
-            value_fields = ['open', 'high', 'low', 'close']
+            value_fields = ["open", "high", "low", "close"]
 
         # Convertir a DataFrame para facilitar interpolación
         df = pd.DataFrame(data)
@@ -77,18 +77,18 @@ class GapInterpolator:
                 df[field] = self._interpolate_field(df, field, timestamp_field)
 
         # Interpolar volumen si está configurado
-        if 'volume' in df.columns and self.interpolate_volume:
-            df['volume'] = self._interpolate_field(df, 'volume', timestamp_field)
-        elif 'volume' in df.columns:
+        if "volume" in df.columns and self.interpolate_volume:
+            df["volume"] = self._interpolate_field(df, "volume", timestamp_field)
+        elif "volume" in df.columns:
             # Volumen generalmente se rellena con 0
-            df['volume'] = df['volume'].fillna(0)
+            df["volume"] = df["volume"].fillna(0)
 
         # Convertir de vuelta a lista de dicts
-        result = df.to_dict('records')
+        result = df.to_dict("records")
 
         # Convertir Decimal de vuelta si es necesario
         for item in result:
-            for field in value_fields + ['volume']:
+            for field in [*value_fields, "volume"]:
                 if field in item and isinstance(item[field], (int, float)):
                     if pd.notna(item[field]):
                         item[field] = Decimal(str(item[field]))
@@ -113,34 +113,34 @@ class GapInterpolator:
             return df[field]
 
         method_map = {
-            'forward_fill': 'ffill',
-            'backward_fill': 'bfill',
-            'linear': 'linear',
-            'spline': 'polynomial',
+            "forward_fill": "ffill",
+            "backward_fill": "bfill",
+            "linear": "linear",
+            "spline": "polynomial",
         }
 
-        pandas_method = method_map.get(self.method, 'ffill')
+        pandas_method = method_map.get(self.method, "ffill")
 
-        if self.method == 'linear':
+        if self.method == "linear":
             # Linear interpolation
-            return df[field].interpolate(method='linear', limit_direction='both')
-        elif self.method == 'spline':
+            return df[field].interpolate(method="linear", limit_direction="both")
+        elif self.method == "spline":
             # Spline interpolation (requiere scipy)
             try:
-                return df[field].interpolate(method='polynomial', order=3, limit_direction='both')
+                return df[field].interpolate(method="polynomial", order=3, limit_direction="both")
             except (RuntimeError, ValueError, TypeError, KeyError):
                 logger.warning("Spline interpolation falló, usando linear")
-                return df[field].interpolate(method='linear', limit_direction='both')
+                return df[field].interpolate(method="linear", limit_direction="both")
         else:
             # Forward fill o backward fill
             return df[field].fillna(method=pandas_method, limit=self.max_gap_days)
 
     def detect_gaps(
         self,
-        data: List[Dict[str, Any]],
-        timestamp_field: str = 'timestamp',
-        expected_frequency: str = '1D',  # pandas frequency string
-    ) -> Dict[str, Any]:
+        data: list[dict[str, Any]],
+        timestamp_field: str = "timestamp",
+        expected_frequency: str = "1D",  # pandas frequency string
+    ) -> dict[str, Any]:
         """
         Detectar gaps en datos temporales.
 
@@ -156,7 +156,7 @@ class GapInterpolator:
                 - max_gap_days: float
         """
         if not data:
-            return {'gaps': [], 'total_gaps': 0, 'max_gap_days': 0}
+            return {"gaps": [], "total_gaps": 0, "max_gap_days": 0}
 
         df = pd.DataFrame(data)
         df[timestamp_field] = pd.to_datetime(df[timestamp_field])
@@ -180,19 +180,19 @@ class GapInterpolator:
                 if current_ts is not None:
                     # Fin de gap
                     gap_days = (ts - current_ts).days
-                    gaps.append({'start': current_ts, 'end': ts, 'duration_days': gap_days})
+                    gaps.append({"start": current_ts, "end": ts, "duration_days": gap_days})
                     current_ts = None
 
         # Gap final si existe
         if current_ts is not None:
             gaps.append(
                 {
-                    'start': current_ts,
-                    'end': expected_index[-1],
-                    'duration_days': (expected_index[-1] - current_ts).days,
+                    "start": current_ts,
+                    "end": expected_index[-1],
+                    "duration_days": (expected_index[-1] - current_ts).days,
                 }
             )
 
-        max_gap_days = max([g['duration_days'] for g in gaps], default=0)
+        max_gap_days = max([g["duration_days"] for g in gaps], default=0)
 
-        return {'gaps': gaps, 'total_gaps': len(gaps), 'max_gap_days': float(max_gap_days)}
+        return {"gaps": gaps, "total_gaps": len(gaps), "max_gap_days": float(max_gap_days)}

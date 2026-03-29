@@ -12,7 +12,7 @@ import logging
 from datetime import datetime
 from decimal import Decimal
 from enum import Enum
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Optional
 from uuid import UUID, uuid4
 
 from pydantic import BaseModel, Field, field_validator, model_validator
@@ -63,7 +63,7 @@ class ExtendedPortfolio(BasePortfolio):
             calculated_total += position.market_value
 
         # Get tolerance from config
-        tolerance = Decimal(str(getattr(cfg.trading, 'portfolio_value_tolerance', 0.01)))
+        tolerance = Decimal(str(getattr(cfg.trading, "portfolio_value_tolerance", 0.01)))
         if abs(self.total_value - calculated_total) > tolerance:
             logger.error(
                 "ExtendedPortfolio validation failed: total value mismatch",
@@ -330,14 +330,14 @@ class PortfolioAnalytics(BaseModel):
     liquidity_score: Decimal = Field(..., description="Liquidity score (0-100)")
 
     # Recommendations
-    recommendations: List[str] = Field(
+    recommendations: list[str] = Field(
         default_factory=list, description="Portfolio recommendations"
     )
-    warnings: List[str] = Field(default_factory=list, description="Portfolio warnings")
+    warnings: list[str] = Field(default_factory=list, description="Portfolio warnings")
 
     # Metadata
     analysis_version: str = Field(default="1.0", description="Analysis version")
-    metadata: Dict[str, Any] = Field(default_factory=dict, description="Additional metadata")
+    metadata: dict[str, Any] = Field(default_factory=dict, description="Additional metadata")
 
     @field_validator("risk_score", "health_score", "diversification_score", "liquidity_score")
     @classmethod
@@ -376,16 +376,16 @@ class PortfolioAllocation(BaseModel):
     )
 
     # Sector Allocation
-    sector_allocations: Dict[str, Decimal] = Field(
+    sector_allocations: dict[str, Decimal] = Field(
         default_factory=dict, description="Sector allocations"
     )
 
     # Top Holdings
-    top_holdings: List[Dict[str, Any]] = Field(default_factory=list, description="Top holdings")
+    top_holdings: list[dict[str, Any]] = Field(default_factory=list, description="Top holdings")
 
     # Allocation Quality
-    target_allocation: Optional[Dict[str, Decimal]] = Field(None, description="Target allocation")
-    allocation_deviation: Optional[Dict[str, Decimal]] = Field(
+    target_allocation: Optional[dict[str, Decimal]] = Field(None, description="Target allocation")
+    allocation_deviation: Optional[dict[str, Decimal]] = Field(
         None, description="Allocation deviation from target"
     )
 
@@ -428,7 +428,7 @@ class PortfolioAllocation(BaseModel):
         )
 
         # Get tolerance from config
-        tolerance = Decimal(str(getattr(cfg.trading, 'portfolio_allocation_tolerance', 0.01)))
+        tolerance = Decimal(str(getattr(cfg.trading, "portfolio_allocation_tolerance", 0.01)))
         if abs(total_allocation - Decimal("100")) > tolerance:
             logger.error(
                 "PortfolioAllocation validation failed: allocations do not sum to 100%",
@@ -466,7 +466,7 @@ class PortfolioRebalance(BaseModel):
     target_allocation: PortfolioAllocation = Field(..., description="Target allocation")
 
     # Rebalancing Actions
-    rebalance_actions: List[Dict[str, Any]] = Field(
+    rebalance_actions: list[dict[str, Any]] = Field(
         default_factory=list, description="Rebalancing actions"
     )
     estimated_cost: Decimal = Field(default=Decimal("0"), description="Estimated rebalancing cost")
@@ -495,21 +495,21 @@ class PortfolioComparison(BaseModel):
     """Portfolio comparison analysis."""
 
     id: UUID = Field(default_factory=uuid4, description="Unique comparison identifier")
-    portfolio_ids: List[UUID] = Field(..., description="Portfolio IDs to compare")
+    portfolio_ids: list[UUID] = Field(..., description="Portfolio IDs to compare")
     comparison_date: datetime = Field(
         default_factory=datetime.utcnow, description="Comparison date"
     )
 
     # Performance Comparison
-    performance_comparison: Dict[str, PortfolioPerformanceRecord] = Field(
+    performance_comparison: dict[str, PortfolioPerformanceRecord] = Field(
         ..., description="Performance comparison"
     )
-    risk_comparison: Dict[str, RiskMetrics] = Field(..., description="Risk comparison")
+    risk_comparison: dict[str, RiskMetrics] = Field(..., description="Risk comparison")
 
     # Ranking
-    performance_ranking: List[Tuple[UUID, Decimal]] = Field(..., description="Performance ranking")
-    risk_ranking: List[Tuple[UUID, Decimal]] = Field(..., description="Risk ranking")
-    sharpe_ranking: List[Tuple[UUID, Decimal]] = Field(..., description="Sharpe ratio ranking")
+    performance_ranking: list[tuple[UUID, Decimal]] = Field(..., description="Performance ranking")
+    risk_ranking: list[tuple[UUID, Decimal]] = Field(..., description="Risk ranking")
+    sharpe_ranking: list[tuple[UUID, Decimal]] = Field(..., description="Sharpe ratio ranking")
 
     # Analysis
     best_performer: UUID = Field(..., description="Best performing portfolio")
@@ -518,7 +518,7 @@ class PortfolioComparison(BaseModel):
 
     # Summary
     comparison_summary: str = Field(..., description="Comparison summary")
-    recommendations: List[str] = Field(default_factory=list, description="Recommendations")
+    recommendations: list[str] = Field(default_factory=list, description="Recommendations")
 
     @model_validator(mode="after")
     def validate_comparison_data(self) -> "PortfolioComparison":

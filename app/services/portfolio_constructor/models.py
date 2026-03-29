@@ -6,7 +6,7 @@ Data structures for portfolio construction and allocation.
 
 import logging
 from decimal import Decimal
-from typing import List, Optional
+from typing import Optional
 
 from pydantic import BaseModel, Field
 
@@ -21,7 +21,7 @@ class PortfolioConstructionRequest(BaseModel):
     capital_eur: Decimal
     risk_profile: str  # aggressive/balanced/conservative
     investment_objective: str  # maximizar_capital, balanced_growth, etc.
-    enabled_modules: List[str]  # List of enabled trading modules
+    enabled_modules: list[str]  # List of enabled trading modules
     target_annual_return_pct: Decimal
     max_acceptable_drawdown_pct: Decimal
 
@@ -41,7 +41,7 @@ class PortfolioAllocation(BaseModel):
     success: bool = True
     profile_id: str
     total_capital_eur: Decimal
-    allocations: List[AllocationWeight]
+    allocations: list[AllocationWeight]
     allocation_method: str  # "equal_weight", "efficient_frontier", "risk_parity"
     expected_portfolio_return_pct: Decimal
     expected_portfolio_sharpe: Decimal

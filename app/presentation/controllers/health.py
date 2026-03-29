@@ -10,7 +10,7 @@ import asyncio
 import logging
 import os
 from datetime import datetime
-from typing import Any, Dict, Optional
+from typing import Any
 
 from fastapi import APIRouter
 from pydantic import BaseModel
@@ -32,7 +32,7 @@ class HealthCheckResponse(BaseModel):
 
     status: str  # "healthy", "degraded", "unhealthy"
     timestamp: str
-    checks: Dict[str, Any]
+    checks: dict[str, Any]
     uptime_seconds: float
 
 
@@ -44,10 +44,10 @@ class HealthChecker:
     def __init__(self) -> None:
         """Initialize the health checker."""
         self.start_time: datetime = datetime.now()
-        self._db_path: Optional[str] = None
-        self._broker: Optional[Any] = None
+        self._db_path: str | None = None
+        self._broker: object | None = None
 
-    def set_dependencies(self, db_path: Optional[str] = None, broker: Optional[Any] = None) -> None:
+    def set_dependencies(self, db_path: str | None = None, broker: object | None = None) -> None:
         """
         Set dependencies for health checks.
 
@@ -58,7 +58,7 @@ class HealthChecker:
         self._db_path = db_path
         self._broker = broker
 
-    async def check_database(self) -> Dict[str, Any]:
+    async def check_database(self) -> dict[str, Any]:
         """
         Check database connection and integrity.
 
@@ -96,9 +96,9 @@ class HealthChecker:
             }
 
         except (IntegrityError, OperationalError, DatabaseError, DataError, ProgrammingError) as e:
-            return {"status": "unhealthy", "message": f"Database error: {str(e)}"}
+            return {"status": "unhealthy", "message": f"Database error: {e!s}"}
 
-    async def check_broker(self) -> Dict[str, Any]:
+    async def check_broker(self) -> dict[str, Any]:
         """
         Check broker API connectivity.
 
@@ -123,9 +123,9 @@ class HealthChecker:
         except asyncio.TimeoutError:
             return {"status": "unhealthy", "message": "Broker connection timeout"}
         except OSError as e:
-            return {"status": "unhealthy", "message": f"Broker error: {str(e)}"}
+            return {"status": "unhealthy", "message": f"Broker error: {e!s}"}
 
-    def check_memory(self) -> Dict[str, Any]:
+    def check_memory(self) -> dict[str, Any]:
         """
         Check memory usage.
 
@@ -160,9 +160,9 @@ class HealthChecker:
             }
 
         except (asyncio.TimeoutError, OSError) as e:
-            return {"status": "degraded", "message": f"Memory check error: {str(e)}"}
+            return {"status": "degraded", "message": f"Memory check error: {e!s}"}
 
-    async def check_positions(self) -> Dict[str, Any]:
+    async def check_positions(self) -> dict[str, Any]:
         """
         Check active positions.
 
@@ -180,16 +180,16 @@ class HealthChecker:
             return {"status": "healthy", "count": count, "message": f"{count} open positions"}
 
         except (asyncio.TimeoutError, OSError) as e:
-            return {"status": "degraded", "message": f"Position check error: {str(e)}", "count": 0}
+            return {"status": "degraded", "message": f"Position check error: {e!s}", "count": 0}
 
-    async def run_all_checks(self) -> Dict[str, Any]:
+    async def run_all_checks(self) -> dict[str, Any]:
         """
         Run all health checks and return combined status.
 
         Returns:
             Dict with all check results
         """
-        checks: Dict[str, Dict[str, Any]] = {
+        checks: dict[str, dict[str, Any]] = {
             "database": await self.check_database(),
             "broker": await self.check_broker(),
             "memory": self.check_memory(),
@@ -213,7 +213,7 @@ class HealthChecker:
 
 
 # Global health checker instance
-_health_checker: Optional[HealthChecker] = None
+_health_checker: HealthChecker | None = None
 
 
 def get_health_checker() -> HealthChecker:

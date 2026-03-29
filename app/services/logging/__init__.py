@@ -6,6 +6,6 @@ from app.infrastructure.logging.append_only_log import AppendOnlyLog
 from app.infrastructure.logging.trading_decision_logger import TradingDecisionLogger
 
 __all__ = [
-    "TradingDecisionLogger",
     "AppendOnlyLog",
+    "TradingDecisionLogger",
 ]

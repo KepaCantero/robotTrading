@@ -19,7 +19,7 @@ from contextlib import contextmanager, suppress
 from datetime import datetime, timezone
 from decimal import Decimal
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Optional
 
 from sqlalchemy.exc import (
     DatabaseError,
@@ -52,21 +52,21 @@ class DecimalEncoder(json.JSONEncoder):
         return super().default(obj)
 
 
-def decimal_decoder(dct: Dict) -> Dict:
+def decimal_decoder(dct: dict) -> dict:
     """JSON decoder hook for Decimal fields."""
     decimal_fields = {
-        'quantity',
-        'price',
-        'filled_quantity',
-        'average_price',
-        'fees',
-        'net_proceeds',
+        "quantity",
+        "price",
+        "filled_quantity",
+        "average_price",
+        "fees",
+        "net_proceeds",
     }
     for key in decimal_fields:
         if key in dct and dct[key] is not None:
             dct[key] = Decimal(str(dct[key]))
     # Handle datetime fields
-    datetime_fields = {'created_at', 'updated_at', 'execution_time', 'timestamp'}
+    datetime_fields = {"created_at", "updated_at", "execution_time", "timestamp"}
     for key in datetime_fields:
         if key in dct and dct[key] is not None and isinstance(dct[key], str):
             with suppress(ValueError):
@@ -113,7 +113,7 @@ class OrderPersistence:
         - Thread-local connection reuse
         """
         # Reuse connection per thread
-        if not hasattr(self._local, 'conn') or self._local.conn is None:
+        if not hasattr(self._local, "conn") or self._local.conn is None:
             conn = sqlite3.connect(
                 str(self.db_path),
                 timeout=5.0,  # 5 second busy timeout
@@ -211,7 +211,7 @@ class OrderPersistence:
 
             logger.info("Database schema initialized")
 
-    def save_order(self, order_data: Dict) -> bool:
+    def save_order(self, order_data: dict) -> bool:
         """
         Save or update an order.
 
@@ -227,12 +227,12 @@ class OrderPersistence:
 
                 # Check if order exists
                 cursor.execute(
-                    "SELECT order_id FROM orders WHERE order_id = ?", (order_data['order_id'],)
+                    "SELECT order_id FROM orders WHERE order_id = ?", (order_data["order_id"],)
                 )
                 exists = cursor.fetchone() is not None
 
                 now = utc_now().isoformat()
-                metadata = json.dumps(order_data.get('metadata', {}), cls=DecimalEncoder)
+                metadata = json.dumps(order_data.get("metadata", {}), cls=DecimalEncoder)
 
                 if exists:
                     cursor.execute(
@@ -247,17 +247,17 @@ class OrderPersistence:
                         WHERE order_id = ?
                     """,
                         (
-                            order_data.get('status', 'unknown'),
-                            str(order_data.get('filled_quantity', '0')),
+                            order_data.get("status", "unknown"),
+                            str(order_data.get("filled_quantity", "0")),
                             (
-                                str(order_data.get('average_price'))
-                                if order_data.get('average_price')
+                                str(order_data.get("average_price"))
+                                if order_data.get("average_price")
                                 else None
                             ),
                             now,
-                            1 if order_data.get('is_pending', True) else 0,
+                            1 if order_data.get("is_pending", True) else 0,
                             metadata,
-                            order_data['order_id'],
+                            order_data["order_id"],
                         ),
                     )
                 else:
@@ -270,29 +270,29 @@ class OrderPersistence:
                         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                     """,
                         (
-                            order_data['order_id'],
-                            order_data['symbol'],
-                            order_data.get('side', 'unknown'),
-                            order_data.get('order_type', 'market'),
-                            str(order_data['quantity']),
-                            str(order_data.get('price')) if order_data.get('price') else None,
+                            order_data["order_id"],
+                            order_data["symbol"],
+                            order_data.get("side", "unknown"),
+                            order_data.get("order_type", "market"),
+                            str(order_data["quantity"]),
+                            str(order_data.get("price")) if order_data.get("price") else None,
                             (
-                                str(order_data.get('stop_price'))
-                                if order_data.get('stop_price')
+                                str(order_data.get("stop_price"))
+                                if order_data.get("stop_price")
                                 else None
                             ),
-                            order_data.get('status', 'pending'),
-                            str(order_data.get('filled_quantity', '0')),
+                            order_data.get("status", "pending"),
+                            str(order_data.get("filled_quantity", "0")),
                             (
-                                str(order_data.get('average_price'))
-                                if order_data.get('average_price')
+                                str(order_data.get("average_price"))
+                                if order_data.get("average_price")
                                 else None
                             ),
-                            order_data.get('created_at', now),
+                            order_data.get("created_at", now),
                             now,
-                            order_data.get('broker_order_id'),
+                            order_data.get("broker_order_id"),
                             metadata,
-                            1 if order_data.get('is_pending', True) else 0,
+                            1 if order_data.get("is_pending", True) else 0,
                         ),
                     )
 
@@ -302,7 +302,7 @@ class OrderPersistence:
             logger.error(f"Failed to save order: {e}")
             return False
 
-    def get_order(self, order_id: str) -> Optional[Dict]:
+    def get_order(self, order_id: str) -> Optional[dict]:
         """
         Get order by ID.
 
@@ -326,7 +326,7 @@ class OrderPersistence:
             logger.error(f"Failed to get order: {e}")
             return None
 
-    def get_pending_orders(self, symbol: Optional[str] = None) -> List[Dict]:
+    def get_pending_orders(self, symbol: Optional[str] = None) -> list[dict]:
         """
         Get all pending orders.
 
@@ -353,7 +353,7 @@ class OrderPersistence:
             logger.error(f"Failed to get pending orders: {e}")
             return []
 
-    def get_executed_orders(self, symbol: Optional[str] = None) -> List[Dict]:
+    def get_executed_orders(self, symbol: Optional[str] = None) -> list[dict]:
         """
         Get all executed orders.
 
@@ -383,7 +383,7 @@ class OrderPersistence:
             logger.error(f"Failed to get executed orders: {e}")
             return []
 
-    def get_order_history(self, symbol: Optional[str] = None, limit: int = 1000) -> List[Dict]:
+    def get_order_history(self, symbol: Optional[str] = None, limit: int = 1000) -> list[dict]:
         """
         Get order history.
 
@@ -437,7 +437,7 @@ class OrderPersistence:
             logger.error(f"Failed to mark order executed: {e}")
             return False
 
-    def save_execution(self, execution_data: Dict) -> bool:
+    def save_execution(self, execution_data: dict) -> bool:
         """
         Save an execution record.
 
@@ -457,17 +457,17 @@ class OrderPersistence:
                     ) VALUES (?, ?, ?, ?, ?, ?, ?)
                 """,
                     (
-                        execution_data['order_id'],
-                        execution_data['symbol'],
-                        str(execution_data['quantity']),
-                        str(execution_data['price']),
+                        execution_data["order_id"],
+                        execution_data["symbol"],
+                        str(execution_data["quantity"]),
+                        str(execution_data["price"]),
                         (
-                            execution_data.get('execution_time', utc_now()).isoformat()
-                            if isinstance(execution_data.get('execution_time'), datetime)
-                            else execution_data.get('execution_time', utc_now().isoformat())
+                            execution_data.get("execution_time", utc_now()).isoformat()
+                            if isinstance(execution_data.get("execution_time"), datetime)
+                            else execution_data.get("execution_time", utc_now().isoformat())
                         ),
-                        str(execution_data.get('fees', '0')),
-                        str(execution_data.get('net_proceeds', '0')),
+                        str(execution_data.get("fees", "0")),
+                        str(execution_data.get("net_proceeds", "0")),
                     ),
                 )
                 return True
@@ -478,7 +478,7 @@ class OrderPersistence:
 
     def get_executions(
         self, order_id: Optional[str] = None, symbol: Optional[str] = None
-    ) -> List[Dict]:
+    ) -> list[dict]:
         """
         Get execution records.
 
@@ -508,7 +508,7 @@ class OrderPersistence:
             logger.error(f"Failed to get executions: {e}")
             return []
 
-    def save_error(self, error_data: Dict) -> bool:
+    def save_error(self, error_data: dict) -> bool:
         """
         Save an order error record.
 
@@ -528,17 +528,17 @@ class OrderPersistence:
                     ) VALUES (?, ?, ?, ?, ?, ?, ?)
                 """,
                     (
-                        error_data['order_id'],
-                        error_data['symbol'],
-                        error_data['error_code'],
-                        error_data['error_message'],
+                        error_data["order_id"],
+                        error_data["symbol"],
+                        error_data["error_code"],
+                        error_data["error_message"],
                         (
-                            error_data.get('timestamp', utc_now()).isoformat()
-                            if isinstance(error_data.get('timestamp'), datetime)
-                            else error_data.get('timestamp', utc_now().isoformat())
+                            error_data.get("timestamp", utc_now()).isoformat()
+                            if isinstance(error_data.get("timestamp"), datetime)
+                            else error_data.get("timestamp", utc_now().isoformat())
                         ),
-                        error_data.get('retry_count', 0),
-                        error_data.get('max_retries', 3),
+                        error_data.get("retry_count", 0),
+                        error_data.get("max_retries", 3),
                     ),
                 )
                 return True
@@ -549,7 +549,7 @@ class OrderPersistence:
 
     def get_errors(
         self, order_id: Optional[str] = None, symbol: Optional[str] = None
-    ) -> List[Dict]:
+    ) -> list[dict]:
         """
         Get error records.
 
@@ -577,43 +577,43 @@ class OrderPersistence:
             logger.error(f"Failed to get errors: {e}")
             return []
 
-    def _row_to_dict(self, row: sqlite3.Row) -> Dict:
+    def _row_to_dict(self, row: sqlite3.Row) -> dict:
         """Convert SQLite row to dictionary with proper types."""
         data = dict(row)
         # Convert string quantities back to Decimal
-        for key in ['quantity', 'price', 'stop_price', 'filled_quantity', 'average_price']:
+        for key in ["quantity", "price", "stop_price", "filled_quantity", "average_price"]:
             if data.get(key) is not None:
                 data[key] = Decimal(data[key])
         # Parse metadata
-        if data.get('metadata'):
+        if data.get("metadata"):
             try:
-                data['metadata'] = json.loads(data['metadata'], object_hook=decimal_decoder)
+                data["metadata"] = json.loads(data["metadata"], object_hook=decimal_decoder)
             except json.JSONDecodeError:
-                data['metadata'] = {}
+                data["metadata"] = {}
         # Convert timestamps
-        for key in ['created_at', 'updated_at']:
+        for key in ["created_at", "updated_at"]:
             if data.get(key):
                 with suppress(ValueError):
                     data[key] = datetime.fromisoformat(data[key])
         return data
 
-    def _execution_row_to_dict(self, row: sqlite3.Row) -> Dict:
+    def _execution_row_to_dict(self, row: sqlite3.Row) -> dict:
         """Convert execution row to dictionary."""
         data = dict(row)
-        for key in ['quantity', 'price', 'fees', 'net_proceeds']:
+        for key in ["quantity", "price", "fees", "net_proceeds"]:
             if data.get(key) is not None:
                 data[key] = Decimal(data[key])
-        if data.get('execution_time'):
+        if data.get("execution_time"):
             with suppress(ValueError):
-                data['execution_time'] = datetime.fromisoformat(data['execution_time'])
+                data["execution_time"] = datetime.fromisoformat(data["execution_time"])
         return data
 
-    def _error_row_to_dict(self, row: sqlite3.Row) -> Dict:
+    def _error_row_to_dict(self, row: sqlite3.Row) -> dict:
         """Convert error row to dictionary."""
         data = dict(row)
-        if data.get('timestamp'):
+        if data.get("timestamp"):
             with suppress(ValueError):
-                data['timestamp'] = datetime.fromisoformat(data['timestamp'])
+                data["timestamp"] = datetime.fromisoformat(data["timestamp"])
         return data
 
     def cleanup_old_orders(self, days: int = 30) -> int:
@@ -647,7 +647,7 @@ class OrderPersistence:
             logger.error(f"Failed to cleanup old orders: {e}")
             return 0
 
-    def get_stats(self) -> Dict:
+    def get_stats(self) -> dict:
         """Get persistence statistics."""
         try:
             with self._get_connection() as conn:
@@ -666,12 +666,12 @@ class OrderPersistence:
                 errors = cursor.fetchone()[0]
 
                 return {
-                    'pending_orders': pending,
-                    'executed_orders': executed,
-                    'total_orders': pending + executed,
-                    'executions': executions,
-                    'errors': errors,
-                    'database_path': str(self.db_path),
+                    "pending_orders": pending,
+                    "executed_orders": executed,
+                    "total_orders": pending + executed,
+                    "executions": executions,
+                    "errors": errors,
+                    "database_path": str(self.db_path),
                 }
 
         except (IntegrityError, OperationalError, DatabaseError, DataError, ProgrammingError) as e:
@@ -680,7 +680,7 @@ class OrderPersistence:
 
     def close(self) -> None:
         """Close thread-local database connection."""
-        if hasattr(self._local, 'conn') and self._local.conn is not None:
+        if hasattr(self._local, "conn") and self._local.conn is not None:
             with suppress(sqlite3.Error):
                 self._local.conn.close()
             self._local.conn = None

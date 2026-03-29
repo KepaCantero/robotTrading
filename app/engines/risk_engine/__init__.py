@@ -46,9 +46,7 @@ from __future__ import annotations
 import logging
 from abc import ABC, abstractmethod
 from datetime import datetime
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Protocol, Union, runtime_checkable
-
-import numpy as np
+from typing import TYPE_CHECKING, Any, Protocol, runtime_checkable
 
 from .alert_system import AlertSystem
 from .correlation_analyzers import CorrelationAnalyzer
@@ -66,6 +64,8 @@ from .var_calculators.ewma_var import EWMAVaRCalculator
 
 # Use TYPE_CHECKING for type hints only - no runtime import
 if TYPE_CHECKING:
+    import numpy as np
+
     from app.domain.models.portfolio import Portfolio
 
 
@@ -93,23 +93,23 @@ except ImportError:
     )
 
 __all__ = [
-    "RiskEngine",
-    "BaseRiskEngine",
-    "PortfolioProtocol",  # Protocol for dependency injection
     "AlertSystem",
-    "DrawdownController",
-    "CorrelationAnalyzer",
-    "ExposureManager",
-    "RiskAttributor",
-    "StressTester",
+    "BaseRiskEngine",
     # New Hull-compliant components
     "ComponentVaRCalculator",
-    "EWMAVaRCalculator",
-    "GreeksCalculator",
-    "CorrelationStressTester",
-    "PortfolioVarianceStressTester",
     "ComprehensiveStressScenarios",
+    "CorrelationAnalyzer",
+    "CorrelationStressTester",
+    "DrawdownController",
+    "EWMAVaRCalculator",
+    "ExposureManager",
+    "GreeksCalculator",
+    "PortfolioProtocol",  # Protocol for dependency injection
+    "PortfolioVarianceStressTester",
+    "RiskAttributor",
+    "RiskEngine",
     "RiskLimitsEnforcer",
+    "StressTester",
 ]
 
 
@@ -124,7 +124,7 @@ class PortfolioProtocol(Protocol):
         ...
 
     @property
-    def capital(self) -> Union[float, int]:
+    def capital(self) -> float | int:
         """Current capital."""
         ...
 
@@ -134,8 +134,8 @@ class VaRCalculatorProtocol(Protocol):
     """Protocol for VaR Calculator to enable dependency injection."""
 
     def calculate_var(
-        self, returns: np.ndarray, portfolio_value: Optional[float] = None
-    ) -> Dict[str, Any]:
+        self, returns: np.ndarray, portfolio_value: float | None = None
+    ) -> dict[str, Any]:
         """Calculate Value at Risk."""
         ...
 
@@ -144,7 +144,7 @@ class VaRCalculatorProtocol(Protocol):
 class StressTesterProtocol(Protocol):
     """Protocol for Stress Tester to enable dependency injection."""
 
-    def run_stress_tests(self, portfolio: "Portfolio") -> Dict[str, Any]:
+    def run_stress_tests(self, portfolio: Portfolio) -> dict[str, Any]:
         """Run stress tests on portfolio."""
         ...
 
@@ -153,7 +153,7 @@ class StressTesterProtocol(Protocol):
 class ExposureManagerProtocol(Protocol):
     """Protocol for Exposure Manager to enable dependency injection."""
 
-    def analyze_exposure(self, portfolio: "Portfolio") -> Dict[str, Any]:
+    def analyze_exposure(self, portfolio: Portfolio) -> dict[str, Any]:
         """Analyze portfolio exposure."""
         ...
 
@@ -162,7 +162,7 @@ class ExposureManagerProtocol(Protocol):
 class DrawdownControllerProtocol(Protocol):
     """Protocol for Drawdown Controller to enable dependency injection."""
 
-    def assess_drawdown(self, portfolio: "Portfolio") -> Dict[str, Any]:
+    def assess_drawdown(self, portfolio: Portfolio) -> dict[str, Any]:
         """Assess portfolio drawdown."""
         ...
 
@@ -172,8 +172,8 @@ class CorrelationAnalyzerProtocol(Protocol):
     """Protocol for Correlation Analyzer to enable dependency injection."""
 
     def analyze_correlations(
-        self, portfolio: "Portfolio", prices_history: Union[np.ndarray, Dict[str, np.ndarray]]
-    ) -> Dict[str, Any]:
+        self, portfolio: Portfolio, prices_history: np.ndarray | dict[str, np.ndarray]
+    ) -> dict[str, Any]:
         """Analyze portfolio correlations."""
         ...
 
@@ -184,10 +184,10 @@ class RiskAttributorProtocol(Protocol):
 
     def attribute_risk(
         self,
-        portfolio: "Portfolio",
-        returns_history: Optional[np.ndarray] = None,
-        prices_history: Optional[np.ndarray] = None,
-    ) -> Dict[str, Any]:
+        portfolio: Portfolio,
+        returns_history: np.ndarray | None = None,
+        prices_history: np.ndarray | None = None,
+    ) -> dict[str, Any]:
         """Attribute risk by factor."""
         ...
 
@@ -197,12 +197,12 @@ class AlertSystemProtocol(Protocol):
     """Protocol for Alert System to enable dependency injection."""
 
     def check_thresholds(
-        self, assessment: Dict[str, Any], portfolio: "Portfolio"
-    ) -> List[Dict[str, Any]]:
+        self, assessment: dict[str, Any], portfolio: Portfolio
+    ) -> list[dict[str, Any]]:
         """Check risk thresholds."""
         ...
 
-    def send_alerts(self, alerts: List[Dict[str, Any]]) -> None:
+    def send_alerts(self, alerts: list[dict[str, Any]]) -> None:
         """Send alerts."""
         ...
 
@@ -246,7 +246,7 @@ def _get_portfolio_risk_manager():
             """Placeholder when services can't be imported."""
 
             def assess_portfolio_risk(self, portfolio):
-                return {'risk_level': 'unknown'}
+                return {"risk_level": "unknown"}
 
         return _PortfolioRiskManagerPlaceholder
 
@@ -254,7 +254,7 @@ def _get_portfolio_risk_manager():
 class BaseRiskEngine(ABC):
     """Clase base para Risk Engine."""
 
-    def __init__(self, config: Dict[str, Any]):
+    def __init__(self, config: dict[str, Any]):
         """
         Inicializar Risk Engine.
 
@@ -262,7 +262,7 @@ class BaseRiskEngine(ABC):
             config: Configuracion del engine
         """
         self.config = config
-        self.enabled = config.get('enabled', True)
+        self.enabled = config.get("enabled", True)
         self.logger = logging.getLogger(self.__class__.__name__)
         self._initialized = False
 
@@ -271,7 +271,7 @@ class BaseRiskEngine(ABC):
         """Inicializar el engine."""
 
     @abstractmethod
-    def assess_risk(self, portfolio: "Portfolio", **kwargs) -> Dict[str, Any]:
+    def assess_risk(self, portfolio: Portfolio, **kwargs) -> dict[str, Any]:
         """
         Evaluar riesgo del portfolio.
 
@@ -291,7 +291,7 @@ class RiskEngine(BaseRiskEngine):
     Expande PortfolioRiskManager con capacidades avanzadas.
     """
 
-    def __init__(self, config: Dict[str, Any]):
+    def __init__(self, config: dict[str, Any]):
         """Inicializar Risk Engine."""
         super().__init__(config)
 
@@ -308,8 +308,8 @@ class RiskEngine(BaseRiskEngine):
         self.alert_system = None
 
         # Estado del engine
-        self.risk_history: List[Dict[str, Any]] = []
-        self.alert_history: List[Dict[str, Any]] = []
+        self.risk_history: list[dict[str, Any]] = []
+        self.alert_history: list[dict[str, Any]] = []
 
         # Metricas
         self.risk_assessments_performed = 0
@@ -332,7 +332,7 @@ class RiskEngine(BaseRiskEngine):
             self.logger.error(f"Error inicializando RiskEngine: {e}", exc_info=True)
             self._initialized = False
 
-    def assess_risk(self, portfolio: "Portfolio", **kwargs) -> Dict[str, Any]:
+    def assess_risk(self, portfolio: Portfolio, **kwargs) -> dict[str, Any]:
         """
         Evaluar riesgo completo del portfolio.
 
@@ -347,7 +347,7 @@ class RiskEngine(BaseRiskEngine):
             self.initialize()
 
         if not self.enabled:
-            return {'status': 'disabled'}
+            return {"status": "disabled"}
 
         try:
             self.risk_assessments_performed += 1
@@ -362,8 +362,8 @@ class RiskEngine(BaseRiskEngine):
             full_assessment = {
                 **basic_assessment,
                 **advanced_assessment,
-                'timestamp': datetime.utcnow().isoformat(),
-                'assessment_id': self.risk_assessments_performed,
+                "timestamp": datetime.utcnow().isoformat(),
+                "assessment_id": self.risk_assessments_performed,
             }
 
             # Guardar en historial
@@ -376,19 +376,19 @@ class RiskEngine(BaseRiskEngine):
 
         except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
             self.logger.error(f"Error evaluando riesgo: {e}", exc_info=True)
-            return {'error': str(e), 'status': 'error'}
+            return {"error": str(e), "status": "error"}
 
-    def _assess_advanced_risk(self, portfolio: "Portfolio", **kwargs) -> Dict[str, Any]:
+    def _assess_advanced_risk(self, portfolio: Portfolio, **kwargs) -> dict[str, Any]:
         """Evaluar riesgos avanzados."""
         assessment = {}
 
         # VaR si está disponible
         if self.var_calculator:
             try:
-                returns_history = kwargs.get('returns_history')
+                returns_history = kwargs.get("returns_history")
                 if returns_history is not None:
                     var_result = self.var_calculator.calculate_var(returns_history)
-                    assessment['var'] = var_result
+                    assessment["var"] = var_result
             except (ValueError, TypeError, KeyError, AttributeError) as e:
                 self.logger.warning(f"Error calculando VaR: {e}")
 
@@ -396,7 +396,7 @@ class RiskEngine(BaseRiskEngine):
         if self.stress_tester:
             try:
                 stress_result = self.stress_tester.run_stress_tests(portfolio)
-                assessment['stress_tests'] = stress_result
+                assessment["stress_tests"] = stress_result
             except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
                 self.logger.warning(f"Error en stress testing: {e}")
 
@@ -404,7 +404,7 @@ class RiskEngine(BaseRiskEngine):
         if self.exposure_manager:
             try:
                 exposure_result = self.exposure_manager.analyze_exposure(portfolio)
-                assessment['exposure'] = exposure_result
+                assessment["exposure"] = exposure_result
             except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
                 self.logger.warning(f"Error analizando exposición: {e}")
 
@@ -412,19 +412,19 @@ class RiskEngine(BaseRiskEngine):
         if self.drawdown_controller:
             try:
                 drawdown_result = self.drawdown_controller.assess_drawdown(portfolio)
-                assessment['drawdown'] = drawdown_result
+                assessment["drawdown"] = drawdown_result
             except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
                 self.logger.warning(f"Error evaluando drawdown: {e}")
 
         # Correlaciones si está disponible
         if self.correlation_analyzer:
             try:
-                prices_history = kwargs.get('prices_history')
+                prices_history = kwargs.get("prices_history")
                 if prices_history is not None:
                     correlation_result = self.correlation_analyzer.analyze_correlations(
                         portfolio, prices_history
                     )
-                    assessment['correlations'] = correlation_result
+                    assessment["correlations"] = correlation_result
             except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
                 self.logger.warning(f"Error analizando correlaciones: {e}")
 
@@ -432,13 +432,13 @@ class RiskEngine(BaseRiskEngine):
         if self.risk_attributor:
             try:
                 attribution_result = self.risk_attributor.attribute_risk(portfolio, **kwargs)
-                assessment['risk_attribution'] = attribution_result
+                assessment["risk_attribution"] = attribution_result
             except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
                 self.logger.warning(f"Error en risk attribution: {e}")
 
         return assessment
 
-    def _check_alerts(self, assessment: Dict[str, Any], portfolio: "Portfolio") -> None:
+    def _check_alerts(self, assessment: dict[str, Any], portfolio: Portfolio) -> None:
         """Verificar y generar alertas."""
         if not self.alert_system:
             return
@@ -487,7 +487,7 @@ class RiskEngine(BaseRiskEngine):
         self.alert_system = alert_system
         self.logger.info(f"Alert system configurado: {type(alert_system).__name__}")
 
-    def get_status(self) -> Dict[str, Any]:
+    def get_status(self) -> dict[str, Any]:
         """
         Obtener estado del engine.
 
@@ -495,18 +495,18 @@ class RiskEngine(BaseRiskEngine):
             Dict con estado del engine
         """
         return {
-            'enabled': self.enabled,
-            'initialized': self._initialized,
-            'has_var_calculator': self.var_calculator is not None,
-            'has_stress_tester': self.stress_tester is not None,
-            'has_exposure_manager': self.exposure_manager is not None,
-            'has_drawdown_controller': self.drawdown_controller is not None,
-            'has_correlation_analyzer': self.correlation_analyzer is not None,
-            'has_risk_attributor': self.risk_attributor is not None,
-            'has_alert_system': self.alert_system is not None,
-            'risk_assessments_performed': self.risk_assessments_performed,
-            'alerts_triggered': self.alerts_triggered,
-            'risk_history_size': len(self.risk_history),
-            'alert_history_size': len(self.alert_history),
-            'timestamp': datetime.utcnow().isoformat(),
+            "enabled": self.enabled,
+            "initialized": self._initialized,
+            "has_var_calculator": self.var_calculator is not None,
+            "has_stress_tester": self.stress_tester is not None,
+            "has_exposure_manager": self.exposure_manager is not None,
+            "has_drawdown_controller": self.drawdown_controller is not None,
+            "has_correlation_analyzer": self.correlation_analyzer is not None,
+            "has_risk_attributor": self.risk_attributor is not None,
+            "has_alert_system": self.alert_system is not None,
+            "risk_assessments_performed": self.risk_assessments_performed,
+            "alerts_triggered": self.alerts_triggered,
+            "risk_history_size": len(self.risk_history),
+            "alert_history_size": len(self.alert_history),
+            "timestamp": datetime.utcnow().isoformat(),
         }

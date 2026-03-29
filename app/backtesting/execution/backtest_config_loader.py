@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import logging
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any, ClassVar
 
 import yaml
 from pydantic import BaseModel, ConfigDict, Field, field_validator
@@ -22,7 +22,7 @@ class InputConfig(BaseModel):
 
     start_date: str = Field(default="2020-01-01")
     end_date: str = Field(default="2023-12-31")
-    symbols: List[str] = Field(default_factory=lambda: ["AAPL", "MSFT", "GOOGL"])
+    symbols: list[str] = Field(default_factory=lambda: ["AAPL", "MSFT", "GOOGL"])
 
     model_config = ConfigDict(extra="forbid")
 
@@ -39,7 +39,7 @@ class StrategyConfig(BaseModel):
     """Configuration for strategy."""
 
     name: str = Field(default="momentum_modular")
-    parameters: Dict[str, Any] = Field(default_factory=dict)
+    parameters: dict[str, Any] = Field(default_factory=dict)
 
     model_config = ConfigDict(extra="forbid")
 
@@ -136,7 +136,7 @@ class BacktestConfigSettings(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
 
-    def validate_config(self) -> List[str]:
+    def validate_config(self) -> list[str]:
         """
         Validate configuration and return list of errors.
 
@@ -189,7 +189,7 @@ class BacktestConfigLoader:
     - Merging with base configurations
     """
 
-    DEFAULT_CONFIG = {
+    DEFAULT_CONFIG: ClassVar[dict] = {
         "input": {
             "start_date": "2020-01-01",
             "end_date": "2023-12-31",
@@ -236,7 +236,7 @@ class BacktestConfigLoader:
             config_path: Path to YAML configuration file
         """
         self.config_path = Path(config_path)
-        self.raw_config: Dict[str, Any] = self._load_config()
+        self.raw_config: dict[str, Any] = self._load_config()
         self._pydantic_config: BacktestConfigSettings | None = None
 
         # Try to create Pydantic config for validation
@@ -245,7 +245,7 @@ class BacktestConfigLoader:
         except Exception as e:
             logger.warning(f"Failed to create Pydantic config: {e}")
 
-    def _load_config(self) -> Dict[str, Any]:
+    def _load_config(self) -> dict[str, Any]:
         """
         Load configuration from YAML file.
 
@@ -260,7 +260,7 @@ class BacktestConfigLoader:
             return self.DEFAULT_CONFIG.copy()
 
         try:
-            with open(self.config_path, "r") as f:
+            with open(self.config_path) as f:
                 config = yaml.safe_load(f)
 
             # Merge with defaults
@@ -278,7 +278,7 @@ class BacktestConfigLoader:
             logger.error(f"OS error reading config file {self.config_path}: {e}", exc_info=True)
             return self.DEFAULT_CONFIG.copy()
 
-    def _merge_with_defaults(self, config: Dict[str, Any]) -> Dict[str, Any]:
+    def _merge_with_defaults(self, config: dict[str, Any]) -> dict[str, Any]:
         """
         Merge loaded config with defaults.
 
@@ -298,7 +298,7 @@ class BacktestConfigLoader:
 
         return merged
 
-    def get_backtest_config(self) -> Dict[str, Any]:
+    def get_backtest_config(self) -> dict[str, Any]:
         """
         Get backtest-specific configuration.
 
@@ -322,7 +322,7 @@ class BacktestConfigLoader:
             ),
         }
 
-    def validate(self) -> List[str]:
+    def validate(self) -> list[str]:
         """
         Validate configuration.
 

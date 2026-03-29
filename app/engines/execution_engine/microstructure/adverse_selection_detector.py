@@ -16,7 +16,6 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass
-from typing import Optional
 
 import numpy as np
 import pandas as pd
@@ -64,8 +63,8 @@ class AdverseSelectionResult:
     # Metrics
     adverse_move_rate: float  # % of moves against you
     avg_adverse_cost_bps: float
-    vpin: Optional[float]
-    toxicity: Optional[float]
+    vpin: float | None
+    toxicity: float | None
 
     # Recommendation
     should_reduce_trading: bool
@@ -110,7 +109,7 @@ class VPINCalculator:
         df: pd.DataFrame,
         price_col: str = "price",
         volume_col: str = "volume",
-        buy_col: Optional[str] = None,  # If available, buy volume
+        buy_col: str | None = None,  # If available, buy volume
     ) -> VPINResult:
         """
         Calculate VPIN from trade data.
@@ -142,7 +141,7 @@ class VPINCalculator:
 
         if len(bucketed) < self.n_buckets:
             logger.warning(
-                f"Insufficient data for VPIN: {len(bucketed)} buckets, " f"need {self.n_buckets}"
+                f"Insufficient data for VPIN: {len(bucketed)} buckets, need {self.n_buckets}"
             )
             return VPINResult(
                 symbol="unknown",
@@ -259,7 +258,7 @@ class OrderFlowToxicity:
         self.toxicity_threshold = toxicity_threshold
 
         logger.info(
-            f"OrderFlowToxicity initialized: window={window}, " f"threshold={toxicity_threshold}"
+            f"OrderFlowToxicity initialized: window={window}, threshold={toxicity_threshold}"
         )
 
     def calculate_toxicity(
@@ -267,8 +266,8 @@ class OrderFlowToxicity:
         df: pd.DataFrame,
         price_col: str = "price",
         volume_col: str = "volume",
-        bid_col: Optional[str] = None,
-        ask_col: Optional[str] = None,
+        bid_col: str | None = None,
+        ask_col: str | None = None,
     ) -> OrderToxicityResult:
         """
         Calculate order flow toxicity.
@@ -324,10 +323,7 @@ class OrderFlowToxicity:
         sell_volume = df.loc[~df["is_buy"], volume_col].sum()
 
         total_flow = buy_volume + sell_volume
-        if total_flow > 0:
-            ofi = (buy_volume - sell_volume) / total_flow
-        else:
-            ofi = 0.0
+        ofi = (buy_volume - sell_volume) / total_flow if total_flow > 0 else 0.0
 
         return OrderToxicityResult(
             symbol="unknown",
@@ -440,10 +436,10 @@ class AdverseSelectionDetector:
         adverse_moves = 0
         adverse_costs = []
 
-        for _, exec in executions.iterrows():
-            exec_time = exec[exec_time_col]
-            exec_side = exec[exec_side_col]
-            exec_price = float(exec[exec_price_col])
+        for _, exec_row in executions.iterrows():
+            exec_time = exec_row[exec_time_col]
+            exec_side = exec_row[exec_side_col]
+            exec_price = float(exec_row[exec_price_col])
 
             # Get future price
             future_time = exec_time + pd.Timedelta(minutes=self.lookforward_minutes)
@@ -496,10 +492,7 @@ class AdverseSelectionDetector:
         detected = adverse_rate > self.adverse_threshold
 
         # Confidence based on multiple signals
-        if detected:
-            confidence = min(1.0, adverse_rate + (vpin_result.vpin * 0.3))
-        else:
-            confidence = 0.0
+        confidence = min(1.0, adverse_rate + vpin_result.vpin * 0.3) if detected else 0.0
 
         # Recommendation
         if detected and confidence > 0.7:

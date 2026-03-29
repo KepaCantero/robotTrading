@@ -7,8 +7,8 @@ from .models import DeploymentDecision, DeploymentInput, DeploymentRationale
 
 __all__ = [
     "DeployDecisionOrchestrator",
-    "get_deploy_orchestrator",
     "DeploymentDecision",
     "DeploymentInput",
     "DeploymentRationale",
+    "get_deploy_orchestrator",
 ]

@@ -13,7 +13,7 @@ import logging
 import subprocess
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 # REQUIRED: aiofiles is REQUIRED - NO FALLBACKS
 import aiofiles
@@ -47,7 +47,7 @@ class AuditTrail:
         self,
         config_path: str,
         code_version: Optional[str] = None,
-        additional_data: Optional[Dict[str, Any]] = None,
+        additional_data: Optional[dict[str, Any]] = None,
     ) -> str:
         """
         Generar hash SHA256 único para una configuración.
@@ -67,7 +67,7 @@ class AuditTrail:
         if not config_path_obj.exists():
             raise FileNotFoundError(f"Archivo de configuración no encontrado: {config_path}")
 
-        with open(config_path_obj, 'rb') as f:
+        with open(config_path_obj, "rb") as f:
             config_content = f.read()
 
         # Obtener versión de código
@@ -79,21 +79,21 @@ class AuditTrail:
 
         # Construir string para hash
         hash_input = {
-            'config_content': config_content.decode('utf-8'),
-            'code_version': code_version,
-            'git_commit': git_info.get('commit_hash', ''),
-            'git_branch': git_info.get('branch', ''),
-            'timestamp': datetime.now().isoformat(),
+            "config_content": config_content.decode("utf-8"),
+            "code_version": code_version,
+            "git_commit": git_info.get("commit_hash", ""),
+            "git_branch": git_info.get("branch", ""),
+            "timestamp": datetime.now().isoformat(),
         }
 
         if additional_data:
-            hash_input['additional'] = additional_data
+            hash_input["additional"] = additional_data
 
         # Convertir a string determinístico
         hash_string = json.dumps(hash_input, sort_keys=True, ensure_ascii=False)
 
         # Generar hash
-        hash_obj = hashlib.sha256(hash_string.encode('utf-8'))
+        hash_obj = hashlib.sha256(hash_string.encode("utf-8"))
         hash_hex = hash_obj.hexdigest()
 
         logger.debug(f"Hash generado: {hash_hex[:16]}...")
@@ -105,46 +105,46 @@ class AuditTrail:
         # Intentar obtener de Git
         if self.enable_git_tracking:
             git_info = self._get_git_info()
-            if git_info.get('commit_hash'):
-                return git_info['commit_hash']
+            if git_info.get("commit_hash"):
+                return git_info["commit_hash"]
 
         # Fallback: timestamp
         return datetime.now().strftime("%Y%m%d")
 
-    def _get_git_info(self) -> Dict[str, str]:
+    def _get_git_info(self) -> dict[str, str]:
         """Obtener información de Git."""
-        git_info = {'commit_hash': '', 'branch': '', 'is_dirty': False}
+        git_info = {"commit_hash": "", "branch": "", "is_dirty": False}
 
         try:
             # Commit hash
             result = subprocess.run(
-                ['git', 'rev-parse', 'HEAD'], capture_output=True, text=True, check=True, timeout=5
+                ["git", "rev-parse", "HEAD"], capture_output=True, text=True, check=True, timeout=5
             )
-            git_info['commit_hash'] = result.stdout.strip()
+            git_info["commit_hash"] = result.stdout.strip()
         except (subprocess.CalledProcessError, FileNotFoundError, subprocess.TimeoutExpired) as e:
             logger.debug(f"Error getting git commit hash: {e}", exc_info=True)
 
         try:
             # Branch
             result = subprocess.run(
-                ['git', 'rev-parse', '--abbrev-re', 'HEAD'],
+                ["git", "rev-parse", "--abbrev-re", "HEAD"],
                 capture_output=True,
                 text=True,
                 check=True,
                 timeout=5,
             )
-            git_info['branch'] = result.stdout.strip()
+            git_info["branch"] = result.stdout.strip()
         except (subprocess.CalledProcessError, FileNotFoundError, subprocess.TimeoutExpired) as e:
             logger.debug(f"Error getting git branch: {e}", exc_info=True)
 
         try:
             # Check si hay cambios sin commit
             result = subprocess.run(
-                ['git', 'diff', '--quiet'], capture_output=True, check=False, timeout=5
+                ["git", "diff", "--quiet"], capture_output=True, check=False, timeout=5
             )
-            git_info['is_dirty'] = result.returncode != 0
+            git_info["is_dirty"] = result.returncode != 0
         except (subprocess.CalledProcessError, FileNotFoundError, subprocess.TimeoutExpired) as e:
-            git_info['is_dirty'] = True  # Asumir dirty si no se puede verificar
+            git_info["is_dirty"] = True  # Asumir dirty si no se puede verificar
             logger.debug(f"Error checking git dirty state: {e}", exc_info=True)
 
         return git_info
@@ -153,7 +153,7 @@ class AuditTrail:
         self,
         config_path: str,
         hash_value: str,
-        metadata: Optional[Dict[str, Any]] = None,
+        metadata: Optional[dict[str, Any]] = None,
         result_path: Optional[str] = None,
     ) -> None:
         """
@@ -166,18 +166,18 @@ class AuditTrail:
             result_path: Ruta a resultados de backtest
         """
         record = {
-            'timestamp': datetime.now().isoformat(),
-            'config_path': str(config_path),
-            'hash': hash_value,
-            'code_version': self._get_code_version(),
-            'git_info': self._get_git_info() if self.enable_git_tracking else {},
-            'metadata': metadata or {},
-            'result_path': str(result_path) if result_path else None,
+            "timestamp": datetime.now().isoformat(),
+            "config_path": str(config_path),
+            "hash": hash_value,
+            "code_version": self._get_code_version(),
+            "git_info": self._get_git_info() if self.enable_git_tracking else {},
+            "metadata": metadata or {},
+            "result_path": str(result_path) if result_path else None,
         }
 
         # Guardar en JSONL (una línea por registro)
-        async with aiofiles.open(self.log_file, 'a') as f:
-            await f.write(json.dumps(record, ensure_ascii=False) + '\n')
+        async with aiofiles.open(self.log_file, "a") as f:
+            await f.write(json.dumps(record, ensure_ascii=False) + "\n")
 
         logger.info(f"✅ Registro de auditoría guardado: {hash_value[:16]}...")
 
@@ -185,7 +185,7 @@ class AuditTrail:
         self,
         config_path: str,
         hash_value: str,
-        metadata: Optional[Dict[str, Any]] = None,
+        metadata: Optional[dict[str, Any]] = None,
         result_path: Optional[str] = None,
     ) -> None:
         """
@@ -198,22 +198,22 @@ class AuditTrail:
             result_path: Ruta a resultados de backtest
         """
         record = {
-            'timestamp': datetime.now().isoformat(),
-            'config_path': str(config_path),
-            'hash': hash_value,
-            'code_version': self._get_code_version(),
-            'git_info': self._get_git_info() if self.enable_git_tracking else {},
-            'metadata': metadata or {},
-            'result_path': str(result_path) if result_path else None,
+            "timestamp": datetime.now().isoformat(),
+            "config_path": str(config_path),
+            "hash": hash_value,
+            "code_version": self._get_code_version(),
+            "git_info": self._get_git_info() if self.enable_git_tracking else {},
+            "metadata": metadata or {},
+            "result_path": str(result_path) if result_path else None,
         }
 
         # Guardar en JSONL (una línea por registro)
-        with open(self.log_file, 'a') as f:
-            f.write(json.dumps(record, ensure_ascii=False) + '\n')
+        with open(self.log_file, "a") as f:
+            f.write(json.dumps(record, ensure_ascii=False) + "\n")
 
         logger.info(f"✅ Registro de auditoría guardado: {hash_value[:16]}...")
 
-    def verify_reproducibility(self, target_hash: str) -> Dict[str, Any]:
+    def verify_reproducibility(self, target_hash: str) -> dict[str, Any]:
         """
         Verificar si una configuración puede reproducirse.
 
@@ -230,39 +230,39 @@ class AuditTrail:
 
         if not record:
             return {
-                'reproducible': False,
-                'reason': 'Hash no encontrado en registros de auditoría',
-                'target_hash': target_hash,
+                "reproducible": False,
+                "reason": "Hash no encontrado en registros de auditoría",
+                "target_hash": target_hash,
             }
 
         # Verificar si el código actual coincide
         current_code_version = self._get_code_version()
-        record_code_version = record.get('code_version', '')
+        record_code_version = record.get("code_version", "")
 
         code_matches = current_code_version == record_code_version
 
         # Verificar si la configuración existe
-        config_path = Path(record.get('config_path', ''))
+        config_path = Path(record.get("config_path", ""))
         config_exists = config_path.exists()
 
         # Verificar si es un commit limpio
         git_info = self._get_git_info() if self.enable_git_tracking else {}
-        is_dirty = git_info.get('is_dirty', False)
+        is_dirty = git_info.get("is_dirty", False)
 
         reproducible = code_matches and config_exists and not is_dirty
 
         result = {
-            'reproducible': reproducible,
-            'target_hash': target_hash,
-            'record_found': True,
-            'code_version_matches': code_matches,
-            'current_code_version': current_code_version,
-            'record_code_version': record_code_version,
-            'config_exists': config_exists,
-            'config_path': str(config_path),
-            'is_dirty': is_dirty,
-            'original_timestamp': record.get('timestamp'),
-            'metadata': record.get('metadata', {}),
+            "reproducible": reproducible,
+            "target_hash": target_hash,
+            "record_found": True,
+            "code_version_matches": code_matches,
+            "current_code_version": current_code_version,
+            "record_code_version": record_code_version,
+            "config_exists": config_exists,
+            "config_path": str(config_path),
+            "is_dirty": is_dirty,
+            "original_timestamp": record.get("timestamp"),
+            "metadata": record.get("metadata", {}),
         }
 
         if reproducible:
@@ -280,16 +280,16 @@ class AuditTrail:
 
         return result
 
-    def _find_record_by_hash(self, target_hash: str) -> Optional[Dict[str, Any]]:
+    def _find_record_by_hash(self, target_hash: str) -> Optional[dict[str, Any]]:
         """Buscar registro por hash."""
         if not self.log_file.exists():
             return None
 
-        with open(self.log_file, 'r') as f:
+        with open(self.log_file) as f:
             for line in f:
                 try:
                     record = json.loads(line.strip())
-                    if record.get('hash') == target_hash:
+                    if record.get("hash") == target_hash:
                         return record
                 except json.JSONDecodeError:
                     continue
@@ -298,7 +298,7 @@ class AuditTrail:
 
     def list_audit_records(
         self, limit: Optional[int] = None, filter_by_config: Optional[str] = None
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """
         Listar registros de auditoría.
 
@@ -313,13 +313,13 @@ class AuditTrail:
             return []
 
         records = []
-        with open(self.log_file, 'r') as f:
+        with open(self.log_file) as f:
             for line in f:
                 try:
                     record = json.loads(line.strip())
 
                     # Filtrar por configuración si se especifica
-                    if filter_by_config and filter_by_config not in record.get('config_path', ''):
+                    if filter_by_config and filter_by_config not in record.get("config_path", ""):
                         continue
 
                     records.append(record)
@@ -332,6 +332,6 @@ class AuditTrail:
                     continue
 
         # Ordenar por timestamp (más reciente primero)
-        records.sort(key=lambda x: x.get('timestamp', ''), reverse=True)
+        records.sort(key=lambda x: x.get("timestamp", ""), reverse=True)
 
         return records

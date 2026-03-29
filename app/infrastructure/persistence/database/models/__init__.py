@@ -10,13 +10,13 @@ Instead of dynamic importlib, we use deferred imports in functions.
 
 from __future__ import annotations
 
-from datetime import datetime
-
 from typing import TYPE_CHECKING, Protocol, runtime_checkable
 
 # Use TYPE_CHECKING for type hints only
 if TYPE_CHECKING:
     # These imports are only for static type checking
+    from datetime import datetime
+
     from sqlalchemy.orm import DeclarativeBase as DeclarativeBase
 
 
@@ -244,19 +244,19 @@ def __getattr__(name: str):
 # Note: Model classes are dynamically loaded via __getattr__
 # Only export the protocols which are defined at module level
 __all__ = [
-    # Protocols for type hints
-    "UserModelProtocol",
     "APIKeyModelProtocol",
-    "PortfolioModelProtocol",
     "AssetModelProtocol",
-    "PositionModelProtocol",
-    "TradeModelProtocol",
-    "MarketDataModelProtocol",
-    "SignalModelProtocol",
     "BacktestModelProtocol",
-    "RiskMetricsModelProtocol",
-    "SystemLogModelProtocol",
-    "PositionStateModelProtocol",
+    "MarketDataModelProtocol",
+    "PortfolioModelProtocol",
+    "PositionModelProtocol",
     # Model classes (dynamically loaded)
     "PositionState",
+    "PositionStateModelProtocol",
+    "RiskMetricsModelProtocol",
+    "SignalModelProtocol",
+    "SystemLogModelProtocol",
+    "TradeModelProtocol",
+    # Protocols for type hints
+    "UserModelProtocol",
 ]

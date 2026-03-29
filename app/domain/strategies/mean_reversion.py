@@ -12,10 +12,8 @@ from __future__ import annotations
 
 import logging
 from decimal import Decimal
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from app.domain.models.market_data import Quote
-from app.domain.models.portfolio import Portfolio
 from app.domain.models.signal import Signal, SignalSource, SignalStrength, SignalType
 from app.domain.services.analysis.momentum import TechnicalIndicatorCalculator
 from app.shared.config.centralized_config import (
@@ -25,6 +23,10 @@ from app.shared.config.centralized_config import (
 )
 
 from .base import BaseStrategy
+
+if TYPE_CHECKING:
+    from app.domain.models.market_data import Quote
+    from app.domain.models.portfolio import Portfolio
 
 logger = logging.getLogger(__name__)
 
@@ -107,7 +109,7 @@ class MeanReversionStrategy(BaseStrategy):
 
         logger.info(f"MeanReversionStrategy initialized: {self.name}")
         config_value = (
-            strategy_config.parameters.get('z_score_threshold') if strategy_config else 'NO_CONFIG'
+            strategy_config.parameters.get("z_score_threshold") if strategy_config else "NO_CONFIG"
         )
         logger.info(
             f"⚠️ CRITICAL: z_score_threshold={self.z_score_threshold} (target: 1.0, config loaded: {config_value})"
@@ -154,12 +156,12 @@ class MeanReversionStrategy(BaseStrategy):
             )
 
             # Logging periódico para diagnóstico
-            if not hasattr(self, '_call_count'):
+            if not hasattr(self, "_call_count"):
                 self._call_count = 0
             self._call_count += 1
 
             # Update price history for tracking
-            if not hasattr(self, 'price_history'):
+            if not hasattr(self, "price_history"):
                 from collections import deque
 
                 self.price_history = deque(maxlen=200)
@@ -345,13 +347,11 @@ class MeanReversionStrategy(BaseStrategy):
         current_price = float(market_data.last)
 
         # Add current price for calculation
-        prices_with_current = prices_list + [current_price]
+        prices_with_current = [*prices_list, current_price]
 
         # Calculate z-score using pandas-ta-classic (rolling z-score with lookback_period)
-        z_score_raw = (
-            self.indicator_calculator.calculate_zscore(
-                prices_with_current, period=self.lookback_period, std=1.0
-            )
+        z_score_raw = self.indicator_calculator.calculate_zscore(
+            prices_with_current, period=self.lookback_period, std=1.0
         )
 
         if z_score_raw is None:
@@ -391,11 +391,11 @@ class MeanReversionStrategy(BaseStrategy):
         # ✅ USE LIBRARY: Use TechnicalIndicatorCalculator.calculate_volatility() (pandas-ta-classic)
         prices_list = [float(p) for p in list(self.price_history)]
         current_price = float(market_data.last)
-        prices_with_current = prices_list + [current_price]
+        prices_with_current = [*prices_list, current_price]
 
         # Calculate volatility using pandas-ta-classic (daily volatility)
         volatility_raw = self.indicator_calculator.calculate_volatility(
-            prices_with_current, tf='days', returns=False, log=False
+            prices_with_current, tf="days", returns=False, log=False
         )
 
         if volatility_raw is None:

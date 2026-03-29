@@ -8,7 +8,7 @@ capital allocation based on portfolio.yaml configuration.
 import logging
 from decimal import Decimal
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Set
+from typing import Any, Optional
 
 import yaml
 
@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 class SectorFilter:
     """Filters market data by sector."""
 
-    def __init__(self, sector_symbols: Dict[str, List[str]]):
+    def __init__(self, sector_symbols: dict[str, list[str]]):
         """
         Initialize sector filter.
 
@@ -29,14 +29,14 @@ class SectorFilter:
         """
         self.sector_symbols = sector_symbols
         # Create reverse mapping: symbol -> sectors
-        self.symbol_to_sectors: Dict[str, Set[str]] = {}
+        self.symbol_to_sectors: dict[str, set[str]] = {}
         for sector, symbols in sector_symbols.items():
             for symbol in symbols:
                 if symbol not in self.symbol_to_sectors:
                     self.symbol_to_sectors[symbol] = set()
                 self.symbol_to_sectors[symbol].add(sector)
 
-    def symbol_belongs_to_sector(self, symbol: str, sectors: List[str]) -> bool:
+    def symbol_belongs_to_sector(self, symbol: str, sectors: list[str]) -> bool:
         """
         Check if symbol belongs to any of the specified sectors.
 
@@ -50,7 +50,7 @@ class SectorFilter:
         symbol_sectors = self.symbol_to_sectors.get(symbol, set())
         return any(s in symbol_sectors for s in sectors)
 
-    def filter_symbols_by_sector(self, symbols: List[str], allowed_sectors: List[str]) -> List[str]:
+    def filter_symbols_by_sector(self, symbols: list[str], allowed_sectors: list[str]) -> list[str]:
         """
         Filter symbols by allowed sectors.
 
@@ -83,7 +83,7 @@ class PortfolioConfigManager:
             config_path: Path to portfolio configuration file
         """
         self.config_path = Path(config_path)
-        self.config: Dict[str, Any] = {}
+        self.config: dict[str, Any] = {}
         self.sector_filter: Optional[SectorFilter] = None
         self.allocation_manager: Optional[MultiStrategyAllocationManager] = None
 
@@ -93,7 +93,7 @@ class PortfolioConfigManager:
     def load_config(self) -> None:
         """Load configuration from YAML file."""
         try:
-            with open(self.config_path, "r", encoding="utf-8") as f:
+            with open(self.config_path, encoding="utf-8") as f:
                 self.config = yaml.safe_load(f) or {}
 
             # Initialize sector filter
@@ -139,7 +139,7 @@ class PortfolioConfigManager:
                     f"(range: {allocation.min_weight:.1%} - {allocation.max_weight:.1%})"
                 )
 
-    def get_strategy_sectors(self, strategy_name: str) -> List[str]:
+    def get_strategy_sectors(self, strategy_name: str) -> list[str]:
         """
         Get allowed sectors for a strategy.
 
@@ -152,7 +152,7 @@ class PortfolioConfigManager:
         strategy_config = self.config.get("strategy_allocations", {}).get(strategy_name, {})
         return strategy_config.get("sectors", [])
 
-    def get_strategy_market_types(self, strategy_name: str) -> List[str]:
+    def get_strategy_market_types(self, strategy_name: str) -> list[str]:
         """
         Get allowed market types for a strategy.
 
@@ -165,7 +165,7 @@ class PortfolioConfigManager:
         strategy_config = self.config.get("strategy_allocations", {}).get(strategy_name, {})
         return strategy_config.get("market_types", [])
 
-    def get_strategy_symbols(self, strategy_name: str) -> List[str]:
+    def get_strategy_symbols(self, strategy_name: str) -> list[str]:
         """
         Get allowed symbols for a strategy (based on sectors).
 
@@ -229,7 +229,7 @@ class PortfolioConfigManager:
 
         return self.allocation_manager
 
-    def get_rebalancing_config(self, strategy_name: Optional[str] = None) -> Dict[str, Any]:
+    def get_rebalancing_config(self, strategy_name: Optional[str] = None) -> dict[str, Any]:
         """
         Get rebalancing configuration.
 
@@ -246,7 +246,7 @@ class PortfolioConfigManager:
             portfolio_config = self.config.get("portfolio", {})
             return portfolio_config.get("global_rebalancing", {})
 
-    def get_reporting_config(self) -> Dict[str, Any]:
+    def get_reporting_config(self) -> dict[str, Any]:
         """Get reporting configuration."""
         portfolio_config = self.config.get("portfolio", {})
         return portfolio_config.get("reporting", {})
@@ -266,7 +266,7 @@ class PortfolioConfigManager:
             self.config["portfolio"] = {}
         self.config["portfolio"]["total_capital"] = float(new_capital)
 
-    def get_enabled_strategies(self) -> List[str]:
+    def get_enabled_strategies(self) -> list[str]:
         """
         Get list of enabled strategies.
 

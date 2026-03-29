@@ -5,13 +5,13 @@ Centralizes all external API URLs and timeouts to avoid hardcoding.
 Load from environment variables with sensible defaults.
 
 Usage:
-    from app.shared.config.api_endpoints import APIEndpoints, EndpointConfig
+    from app.shared.config.api_endpoints import APIEndpoints, EndpointRegistry
 
     # Simple URL access
     url = APIEndpoints.ALPACA_PAPER
 
     # Full endpoint config with timeouts
-    endpoint = EndpointConfig.ALPACA_PAPER
+    endpoint = EndpointRegistry().alpaca_paper
     async with httpx.AsyncClient(timeout=endpoint.timeout) as client:
         response = await client.get(endpoint.url)
 
@@ -22,7 +22,7 @@ Usage:
 import logging
 import os
 from dataclasses import dataclass
-from typing import Dict, Optional
+from typing import Optional
 
 logger = logging.getLogger(__name__)
 
@@ -47,7 +47,7 @@ class EndpointConfig:
     write_timeout: float = 30.0
 
     @property
-    def timeout(self) -> Dict[str, float]:
+    def timeout(self) -> dict[str, float]:
         """Get timeout dict for httpx client."""
         return {
             "connect": self.connect_timeout,
@@ -117,7 +117,7 @@ class APIEndpoints:
         return f"{cls.ECB_EXCHANGE_RATES}/D.{currency}.EUR.SP00.A"
 
     @classmethod
-    def from_env(cls) -> Dict[str, str]:
+    def from_env(cls) -> dict[str, str]:
         """Load endpoints from environment variables (for overrides)."""
         logger.debug("Loading endpoints from environment variables")
         endpoints = {
@@ -144,7 +144,7 @@ class EndpointRegistry:
     """
 
     _instance: Optional["EndpointRegistry"] = None
-    _endpoints: Dict[str, EndpointConfig]
+    _endpoints: dict[str, EndpointConfig]
 
     def __init__(self) -> None:
         """Initialize the endpoint registry."""
@@ -265,32 +265,32 @@ class EndpointRegistry:
         """Get just the URL for an endpoint."""
         return self.get(name).url
 
-    def get_timeout(self, name: str) -> Dict[str, float]:
+    def get_timeout(self, name: str) -> dict[str, float]:
         """Get timeout configuration for an endpoint."""
         return self.get(name).timeout
 
     @property
-    def ALPACA_PAPER(self) -> EndpointConfig:
+    def alpaca_paper(self) -> EndpointConfig:
         """Alpaca paper trading endpoint."""
         return self.get("alpaca_paper")
 
     @property
-    def ALPACA_LIVE(self) -> EndpointConfig:
+    def alpaca_live(self) -> EndpointConfig:
         """Alpaca live trading endpoint."""
         return self.get("alpaca_live")
 
     @property
-    def YAHOO_FINANCE(self) -> EndpointConfig:
+    def yahoo_finance(self) -> EndpointConfig:
         """Yahoo Finance endpoint."""
         return self.get("yahoo_finance")
 
     @property
-    def POLYGON(self) -> EndpointConfig:
+    def polygon(self) -> EndpointConfig:
         """Polygon.io endpoint."""
         return self.get("polygon")
 
     @property
-    def BINANCE(self) -> EndpointConfig:
+    def binance(self) -> EndpointConfig:
         """Binance endpoint."""
         return self.get("binance")
 

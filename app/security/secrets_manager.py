@@ -22,7 +22,7 @@ import os
 import secrets
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Set
+from typing import Any, ClassVar, Optional
 
 from cryptography.fernet import Fernet
 from cryptography.hazmat.primitives import hashes
@@ -61,7 +61,7 @@ class Secret:
         rotated_at: Optional[datetime] = None,
         expires_at: Optional[datetime] = None,
         version: int = 1,
-        metadata: Optional[Dict[str, Any]] = None,
+        metadata: Optional[dict[str, Any]] = None,
     ):
         self.name = name
         self.value = value
@@ -82,7 +82,7 @@ class Secret:
         rotation_date = self.rotated_at + timedelta(days=rotation_period_days)
         return datetime.utcnow() > rotation_date
 
-    def to_dict(self, include_value: bool = False) -> Dict[str, Any]:
+    def to_dict(self, include_value: bool = False) -> dict[str, Any]:
         """Convert to dictionary (optionally including value)."""
         data = {
             "name": self.name,
@@ -112,14 +112,14 @@ class SecretsManager:
     """
 
     # Required secrets for operation
-    REQUIRED_SECRETS: Set[str] = {
+    REQUIRED_SECRETS: ClassVar[set[str]] = {
         "SECRET_KEY",
         "DATABASE_URL",
         "API_KEY_HASH",  # Hash of API keys
     }
 
     # Optional but recommended secrets
-    RECOMMENDED_SECRETS: Set[str] = {
+    RECOMMENDED_SECRETS: ClassVar[set[str]] = {
         "REDIS_URL",
         "ENCRYPTION_KEY",
         "JWT_SECRET",
@@ -147,8 +147,8 @@ class SecretsManager:
         """
         self.auto_rotate = auto_rotate
         self.rotation_period_days = rotation_period_days
-        self.secrets: Dict[str, Secret] = {}
-        self.audit_log: List[Dict[str, Any]] = []
+        self.secrets: dict[str, Secret] = {}
+        self.audit_log: list[dict[str, Any]] = []
 
         # Initialize encryption
         if encryption_key is None:
@@ -312,7 +312,7 @@ class SecretsManager:
         name: str,
         value: str,
         expires_in_days: Optional[int] = None,
-        metadata: Optional[Dict[str, Any]] = None,
+        metadata: Optional[dict[str, Any]] = None,
     ) -> Secret:
         """
         Store a secret securely.
@@ -420,7 +420,7 @@ class SecretsManager:
                 {"secret": name, "error": str(e)},
                 success=False,
             )
-            raise SecretRotationError(f"Failed to rotate secret {name}: {e}")
+            raise SecretRotationError(f"Failed to rotate secret {name}: {e}") from e
 
     def _generate_secret_value(self, name: str) -> str:
         """
@@ -447,7 +447,7 @@ class SecretsManager:
             decrypted = self.cipher.decrypt(encrypted)
             return decrypted.decode()
         except Exception as e:
-            raise SecretValidationError(f"Failed to decrypt secret: {e}")
+            raise SecretValidationError(f"Failed to decrypt secret: {e}") from e
 
     def delete_secret(self, name: str) -> bool:
         """
@@ -470,7 +470,7 @@ class SecretsManager:
             return True
         return False
 
-    def list_secrets(self, include_metadata: bool = True) -> List[Dict[str, Any]]:
+    def list_secrets(self, include_metadata: bool = True) -> list[dict[str, Any]]:
         """
         List all secrets (without values).
 
@@ -482,7 +482,7 @@ class SecretsManager:
         """
         return [secret.to_dict(include_value=False) for secret in self.secrets.values()]
 
-    def export_secrets(self, include_values: bool = False) -> Dict[str, Any]:
+    def export_secrets(self, include_values: bool = False) -> dict[str, Any]:
         """
         Export secrets for backup.
 
@@ -507,7 +507,7 @@ class SecretsManager:
 
         return data
 
-    def import_secrets(self, data: Dict[str, Any]) -> int:
+    def import_secrets(self, data: dict[str, Any]) -> int:
         """
         Import secrets from backup.
 
@@ -544,7 +544,7 @@ class SecretsManager:
     def _log_audit_event(
         self,
         action: str,
-        details: Dict[str, Any],
+        details: dict[str, Any],
         success: bool = True,
     ):
         """
@@ -574,7 +574,7 @@ class SecretsManager:
         self,
         action: Optional[str] = None,
         limit: int = 100,
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """
         Get audit log entries.
 

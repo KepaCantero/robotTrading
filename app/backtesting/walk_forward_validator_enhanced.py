@@ -54,7 +54,7 @@ Domain Design (DOM-001):
 import logging
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Optional
 
 import numpy as np
 from scipy import stats
@@ -87,7 +87,7 @@ class ParameterHistory:
     """Track parameter evolution across walk-forward windows."""
 
     window_id: int
-    parameters: Dict[str, float]
+    parameters: dict[str, float]
     in_sample_sharpe: float
     out_of_sample_sharpe: float
     in_sample_return: float
@@ -96,7 +96,7 @@ class ParameterHistory:
     window_end: datetime
     regime: str
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
         return {
             "window_id": self.window_id,
@@ -125,9 +125,9 @@ class ParameterStabilityMetrics:
     drift_trend: float  # Linear regression slope (trend)
     drift_significance: float  # P-value for trend
     is_stable: bool
-    confidence_interval_95: Tuple[float, float]
+    confidence_interval_95: tuple[float, float]
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
         return {
             "parameter_name": self.parameter_name,
@@ -181,13 +181,13 @@ class TomasiniWindowResult:
     regime_change: bool
 
     # Optimal parameters for this window
-    optimal_parameters: Dict[str, float]
+    optimal_parameters: dict[str, float]
 
     # Validation status
     passed: bool
-    failure_reasons: List[str] = field(default_factory=list)
+    failure_reasons: list[str] = field(default_factory=list)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
         return {
             "window_id": self.window_id,
@@ -252,24 +252,24 @@ class TomasiniWalkForwardResult:
     avg_sharpe_degradation: float
 
     # Window results
-    windows: List[TomasiniWindowResult]
+    windows: list[TomasiniWindowResult]
 
     # Parameter stability
-    parameter_stability: Dict[str, ParameterStabilityMetrics]
+    parameter_stability: dict[str, ParameterStabilityMetrics]
 
     # Robustness metrics
     robustness_score: float
-    regime_robustness: Dict[str, float]
+    regime_robustness: dict[str, float]
 
     # Failure analysis
-    failure_reasons: List[str]
+    failure_reasons: list[str]
 
     # Tomasini-specific metrics
     tomasini_score: float  # 0-100 overall score
     parameter_stability_score: float  # 0-100
     consistency_score: float  # 0-100
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
         return {
             "overall": {
@@ -328,7 +328,7 @@ class TomasiniWalkForwardValidator:
     5. IS/OOS consistency ratio > 0.7 required
     """
 
-    def __init__(self, config: Optional[Dict[str, Any]] = None):
+    def __init__(self, config: Optional[dict[str, Any]] = None):
         """
         Initialize Tomasini walk-forward validator.
 
@@ -369,7 +369,7 @@ class TomasiniWalkForwardValidator:
         )
 
         # State tracking
-        self.parameter_history: List[ParameterHistory] = []
+        self.parameter_history: list[ParameterHistory] = []
         self.regime_detector: Optional[ClusteringRegimeDetector] = None
 
         if self.regime_aware and REGIME_DETECTOR_AVAILABLE:
@@ -385,7 +385,7 @@ class TomasiniWalkForwardValidator:
         start_date: datetime,
         end_date: datetime,
         train_years: Optional[float] = None,
-    ) -> List[Dict[str, datetime]]:
+    ) -> list[dict[str, datetime]]:
         """
         Create rolling windows with Tomasini-compliant step sizing.
 
@@ -445,12 +445,12 @@ class TomasiniWalkForwardValidator:
 
         logger.info(
             f"Created {len(windows)} rolling windows "
-            f"(train={train_years}y, step={self.step_pct*100:.0f}%, test={test_days/252:.1f}y)"
+            f"(train={train_years}y, step={self.step_pct * 100:.0f}%, test={test_days / 252:.1f}y)"
         )
 
         return windows
 
-    def detect_regime(self, quotes: List[Quote], start_date: datetime, end_date: datetime) -> str:
+    def detect_regime(self, quotes: list[Quote], start_date: datetime, end_date: datetime) -> str:
         """
         Detect market regime for a given period.
 
@@ -495,12 +495,12 @@ class TomasiniWalkForwardValidator:
 
     def optimize_parameters(
         self,
-        train_quotes: List[Quote],
-        train_signals: List[Any],
-        param_grid: Dict[str, List[Any]],
+        train_quotes: list[Quote],
+        train_signals: list[Any],
+        param_grid: dict[str, list[Any]],
         config: BacktestConfig,
         optimization_metric: str = "sharpe_ratio",
-    ) -> Tuple[Dict[str, Any], Dict[str, float]]:
+    ) -> tuple[dict[str, Any], dict[str, float]]:
         """
         Optimize parameters using grid search on training data.
 
@@ -569,19 +569,19 @@ class TomasiniWalkForwardValidator:
                 logger.warning(f"Backtest failed for params {params}: {e}")
                 continue
 
-        logger.info(f"Best parameters: {best_params}, " f"{optimization_metric}={best_score:.3f}")
+        logger.info(f"Best parameters: {best_params}, {optimization_metric}={best_score:.3f}")
 
         return best_params, best_metrics
 
     def calculate_window_metrics(
         self,
-        quotes: List[Quote],
-        signals: List[Any],
+        quotes: list[Quote],
+        signals: list[Any],
         start_date: datetime,
         end_date: datetime,
         config: BacktestConfig,
-        optimal_params: Optional[Dict[str, Any]] = None,
-    ) -> Dict[str, float]:
+        optimal_params: Optional[dict[str, Any]] = None,
+    ) -> dict[str, float]:
         """
         Calculate metrics for a specific window.
 
@@ -625,7 +625,7 @@ class TomasiniWalkForwardValidator:
             logger.warning(f"Window backtest failed: {e}")
             return self._empty_metrics()
 
-    def _empty_metrics(self) -> Dict[str, float]:
+    def _empty_metrics(self) -> dict[str, float]:
         """Return empty metrics dict."""
         return {
             "total_return": 0.0,
@@ -639,12 +639,12 @@ class TomasiniWalkForwardValidator:
 
     def validate_strategy(
         self,
-        quotes: List[Quote],
-        signals: List[Any],
+        quotes: list[Quote],
+        signals: list[Any],
         config: BacktestConfig,
         start_date: datetime,
         end_date: datetime,
-        param_grid: Optional[Dict[str, List[Any]]] = None,
+        param_grid: Optional[dict[str, list[Any]]] = None,
     ) -> TomasiniWalkForwardResult:
         """
         Run Tomasini walk-forward validation.
@@ -666,17 +666,17 @@ class TomasiniWalkForwardValidator:
         # Check minimum cycles
         if len(windows) < self.min_cycles:
             logger.warning(
-                f"Insufficient windows: {len(windows)} < {self.min_cycles} " f"(Tomasini minimum)"
+                f"Insufficient windows: {len(windows)} < {self.min_cycles} (Tomasini minimum)"
             )
             return self._insufficient_windows_result(len(windows))
 
         # Process each window
-        window_results: List[TomasiniWindowResult] = []
-        parameter_history: List[ParameterHistory] = []
+        window_results: list[TomasiniWindowResult] = []
+        parameter_history: list[ParameterHistory] = []
 
         for i, window in enumerate(windows):
             logger.info(
-                f"Processing window {i+1}/{len(windows)}: "
+                f"Processing window {i + 1}/{len(windows)}: "
                 f"{window['train_start'].strftime('%Y-%m-%d')} to "
                 f"{window['test_end'].strftime('%Y-%m-%d')}"
             )
@@ -852,8 +852,8 @@ class TomasiniWalkForwardValidator:
 
     def _calculate_aggregate_results(
         self,
-        window_results: List[TomasiniWindowResult],
-        parameter_history: List[ParameterHistory],
+        window_results: list[TomasiniWindowResult],
+        parameter_history: list[ParameterHistory],
     ) -> TomasiniWalkForwardResult:
         """Calculate aggregate results from all windows."""
 
@@ -923,8 +923,8 @@ class TomasiniWalkForwardValidator:
         )
 
     def calculate_parameter_stability(
-        self, history: List[ParameterHistory]
-    ) -> Dict[str, ParameterStabilityMetrics]:
+        self, history: list[ParameterHistory]
+    ) -> dict[str, ParameterStabilityMetrics]:
         """
         Calculate parameter stability metrics across windows.
 
@@ -973,7 +973,9 @@ class TomasiniWalkForwardValidator:
 
             # Drift analysis (linear regression)
             if len(values) >= 3:
-                slope, intercept, r_value, p_value, std_err = stats.linregress(window_ids, values)
+                slope, _intercept, _r_value, p_value, _std_err = stats.linregress(
+                    window_ids, values
+                )
                 drift_trend = slope
                 drift_significance = p_value
             else:
@@ -1017,7 +1019,7 @@ class TomasiniWalkForwardValidator:
         return stability_metrics
 
     def _calculate_parameter_stability_score(
-        self, stability_metrics: Dict[str, ParameterStabilityMetrics]
+        self, stability_metrics: dict[str, ParameterStabilityMetrics]
     ) -> float:
         """
         Calculate overall parameter stability score (0-1).
@@ -1037,7 +1039,7 @@ class TomasiniWalkForwardValidator:
 
         return stability_ratio if stability_ratio >= min_stable else stability_ratio * 0.5
 
-    def _calculate_regime_robustness(self, windows: List[TomasiniWindowResult]) -> Dict[str, float]:
+    def _calculate_regime_robustness(self, windows: list[TomasiniWindowResult]) -> dict[str, float]:
         """Calculate robustness across different market regimes."""
 
         regime_performance = {}  # regime -> list of returns

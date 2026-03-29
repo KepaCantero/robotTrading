@@ -5,7 +5,7 @@ Clasifica volatilidad en high/normal/low usando percentiles.
 """
 
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 import numpy as np
 from scipy import stats
@@ -20,7 +20,7 @@ class VolatilityRegimeDetector:
     Clasifica volatilidad en high/normal/low basado en percentiles históricos.
     """
 
-    def __init__(self, config: Dict[str, Any] = None):
+    def __init__(self, config: Optional[dict[str, Any]] = None):
         """
         Inicializar detector.
 
@@ -28,14 +28,14 @@ class VolatilityRegimeDetector:
             config: Configuración
         """
         config = config or {}
-        self.high_threshold = config.get('high_threshold', 75)  # Percentil 75
-        self.low_threshold = config.get('low_threshold', 25)  # Percentil 25
-        self.window_size = config.get('window_size', 100)
-        self.min_samples = config.get('min_samples', 50)
+        self.high_threshold = config.get("high_threshold", 75)  # Percentil 75
+        self.low_threshold = config.get("low_threshold", 25)  # Percentil 25
+        self.window_size = config.get("window_size", 100)
+        self.min_samples = config.get("min_samples", 50)
 
         self.historical_volatility = []
 
-    def _calculate_volatility(self, prices: List[float], window: int = 20) -> float:
+    def _calculate_volatility(self, prices: list[float], window: int = 20) -> float:
         """Calcular volatilidad usando rolling std de returns."""
         if len(prices) < window + 1:
             return 0.0
@@ -44,8 +44,8 @@ class VolatilityRegimeDetector:
         return float(np.std(returns))
 
     def detect(
-        self, prices: List[float], volatility_history: Optional[List[float]] = None
-    ) -> Dict[str, Any]:
+        self, prices: list[float], volatility_history: Optional[list[float]] = None
+    ) -> dict[str, Any]:
         """
         Detectar régimen de volatilidad.
 
@@ -57,7 +57,7 @@ class VolatilityRegimeDetector:
             Dict con régimen detectado
         """
         if len(prices) < self.min_samples:
-            return {'regime': 'unknown', 'volatility': 0.0, 'percentile': 50, 'confidence': 0.0}
+            return {"regime": "unknown", "volatility": 0.0, "percentile": 50, "confidence": 0.0}
 
         try:
             # Calcular volatilidad actual
@@ -83,10 +83,10 @@ class VolatilityRegimeDetector:
 
             if len(self.historical_volatility) < self.min_samples:
                 return {
-                    'regime': 'unknown',
-                    'volatility': current_vol,
-                    'percentile': 50,
-                    'confidence': 0.0,
+                    "regime": "unknown",
+                    "volatility": current_vol,
+                    "percentile": 50,
+                    "confidence": 0.0,
                 }
 
             # Calcular percentil
@@ -94,16 +94,16 @@ class VolatilityRegimeDetector:
 
             # Determinar régimen
             if percentile >= self.high_threshold:
-                regime = 'high'
+                regime = "high"
             elif percentile <= self.low_threshold:
-                regime = 'low'
+                regime = "low"
             else:
-                regime = 'normal'
+                regime = "normal"
 
             # Calcular confianza (distancia al threshold más cercano)
-            if regime == 'high':
+            if regime == "high":
                 confidence = min(1.0, (percentile - self.high_threshold) / 25)
-            elif regime == 'low':
+            elif regime == "low":
                 confidence = min(1.0, (self.low_threshold - percentile) / 25)
             else:
                 # Normal: confianza basada en distancia al centro
@@ -111,14 +111,14 @@ class VolatilityRegimeDetector:
                 confidence = max(0.0, 1.0 - distance_from_center / 25)
 
             return {
-                'regime': regime,
-                'volatility': current_vol,
-                'percentile': percentile,
-                'confidence': confidence,
-                'historical_mean': float(np.mean(self.historical_volatility)),
-                'historical_std': float(np.std(self.historical_volatility)),
+                "regime": regime,
+                "volatility": current_vol,
+                "percentile": percentile,
+                "confidence": confidence,
+                "historical_mean": float(np.mean(self.historical_volatility)),
+                "historical_std": float(np.std(self.historical_volatility)),
             }
 
         except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.error(f"Error detectando régimen de volatilidad: {e}")
-            return {'regime': 'unknown', 'volatility': 0.0, 'percentile': 50, 'confidence': 0.0}
+            return {"regime": "unknown", "volatility": 0.0, "percentile": 50, "confidence": 0.0}

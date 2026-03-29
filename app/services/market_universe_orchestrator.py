@@ -12,7 +12,7 @@ Created: 2025-01-23
 """
 
 import logging
-from typing import Dict, Optional
+from typing import Optional
 
 import pandas as pd
 
@@ -63,7 +63,7 @@ class MarketUniverseOrchestrator:
         min_avg_volume: int = 1_000_000,
         min_price: float = 5.0,
         max_volatility: float = 0.15,
-    ) -> Dict[str, pd.DataFrame]:
+    ) -> dict[str, pd.DataFrame]:
         """
         Obtiene universo de mercado completo y filtrado para asignación.
 
@@ -141,7 +141,7 @@ class MarketUniverseOrchestrator:
     async def allocate_from_market_universe(
         self,
         total_capital: float,
-        strategy_allocations: Optional[Dict[str, float]] = None,
+        strategy_allocations: Optional[dict[str, float]] = None,
         include_sp500: bool = True,
         include_nasdaq100: bool = False,
         include_ibex35: bool = False,
@@ -228,7 +228,7 @@ class MarketUniverseOrchestrator:
     async def get_sp500_for_allocation(
         self,
         total_capital: float,
-        strategy_allocations: Optional[Dict[str, float]] = None,
+        strategy_allocations: Optional[dict[str, float]] = None,
         top_n: int = 100,
         **kwargs,
     ) -> AllocationResult:
@@ -259,7 +259,7 @@ class MarketUniverseOrchestrator:
     async def get_ibex35_for_allocation(
         self,
         total_capital: float,
-        strategy_allocations: Optional[Dict[str, float]] = None,
+        strategy_allocations: Optional[dict[str, float]] = None,
         top_n: int = 35,
         **kwargs,
     ) -> AllocationResult:
@@ -290,7 +290,7 @@ class MarketUniverseOrchestrator:
     async def get_crypto_for_allocation(
         self,
         total_capital: float,
-        strategy_allocations: Optional[Dict[str, float]] = None,
+        strategy_allocations: Optional[dict[str, float]] = None,
         top_n: int = 20,
         **kwargs,
     ) -> AllocationResult:
@@ -321,7 +321,7 @@ class MarketUniverseOrchestrator:
     async def get_mixed_universe_for_allocation(
         self,
         total_capital: float,
-        strategy_allocations: Optional[Dict[str, float]] = None,
+        strategy_allocations: Optional[dict[str, float]] = None,
         sp500_top: int = 50,
         crypto_top: int = 10,
         **kwargs,

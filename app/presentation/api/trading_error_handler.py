@@ -13,7 +13,7 @@ GAP Fixes:
 import logging
 import traceback
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 from fastapi import APIRouter, HTTPException, Request, status
 from pydantic import BaseModel, Field
@@ -43,7 +43,7 @@ class ErrorHandlingRequest(BaseModel):
     error_type: str = Field(..., description="Type of error")
     context: ErrorContext = Field(..., description="Context where error occurred")
     operation_id: Optional[str] = Field(None, description="Operation identifier")
-    metadata: Optional[Dict[str, Any]] = Field(
+    metadata: Optional[dict[str, Any]] = Field(
         default_factory=dict, description="Additional metadata"
     )
 
@@ -53,8 +53,8 @@ class ErrorHandlingResponse(BaseModel):
 
     operation_id: str = Field(..., description="Operation identifier")
     context: str = Field(..., description="Error context")
-    error: Dict[str, Any] = Field(..., description="Error details")
-    actions_taken: Dict[str, Any] = Field(..., description="Actions taken")
+    error: dict[str, Any] = Field(..., description="Error details")
+    actions_taken: dict[str, Any] = Field(..., description="Actions taken")
     timestamp: str = Field(..., description="Timestamp of error handling")
 
 
@@ -70,10 +70,10 @@ class CircuitBreakerStatus(BaseModel):
 class ErrorStatistics(BaseModel):
     """Error statistics model."""
 
-    error_counts: Dict[str, int] = Field(..., description="Error counts by context and category")
-    circuit_breakers: Dict[str, bool] = Field(..., description="Circuit breaker statuses")
-    last_error_times: Dict[str, str] = Field(..., description="Last error times")
-    retry_counts: Dict[str, int] = Field(..., description="Retry counts")
+    error_counts: dict[str, int] = Field(..., description="Error counts by context and category")
+    circuit_breakers: dict[str, bool] = Field(..., description="Circuit breaker statuses")
+    last_error_times: dict[str, str] = Field(..., description="Last error times")
+    retry_counts: dict[str, int] = Field(..., description="Retry counts")
     timestamp: str = Field(..., description="Statistics timestamp")
 
 
@@ -158,8 +158,8 @@ async def handle_error_endpoint(
         )
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to handle error: {str(e)}",
-        )
+            detail=f"Failed to handle error: {e!s}",
+        ) from e
 
 
 @router.get("/statistics", response_model=ErrorStatistics, status_code=status.HTTP_200_OK)
@@ -178,13 +178,13 @@ async def get_error_statistics_endpoint():
         logger.error(f"Error in get_error_statistics_endpoint: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to get error statistics: {str(e)}",
-        )
+            detail=f"Failed to get error statistics: {e!s}",
+        ) from e
 
 
 @router.get(
     "/circuit-breakers",
-    response_model=List[CircuitBreakerStatus],
+    response_model=list[CircuitBreakerStatus],
     status_code=status.HTTP_200_OK,
 )
 async def get_circuit_breaker_status_endpoint():
@@ -226,8 +226,8 @@ async def get_circuit_breaker_status_endpoint():
         logger.error(f"Error in get_circuit_breaker_status_endpoint: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to get circuit breaker status: {str(e)}",
-        )
+            detail=f"Failed to get circuit breaker status: {e!s}",
+        ) from e
 
 
 @router.post("/circuit-breakers/reset", status_code=status.HTTP_200_OK)
@@ -253,8 +253,8 @@ async def reset_circuit_breaker_endpoint(request: CircuitBreakerResetRequest):
         logger.error(f"Error in reset_circuit_breaker_endpoint: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to reset circuit breaker: {str(e)}",
-        )
+            detail=f"Failed to reset circuit breaker: {e!s}",
+        ) from e
 
 
 @router.get("/contexts", status_code=status.HTTP_200_OK)
@@ -279,8 +279,8 @@ async def get_error_contexts_endpoint():
         logger.error(f"Error in get_error_contexts_endpoint: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to get error contexts: {str(e)}",
-        )
+            detail=f"Failed to get error contexts: {e!s}",
+        ) from e
 
 
 @router.get("/actions", status_code=status.HTTP_200_OK)
@@ -305,8 +305,8 @@ async def get_error_actions_endpoint():
         logger.error(f"Error in get_error_actions_endpoint: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to get error actions: {str(e)}",
-        )
+            detail=f"Failed to get error actions: {e!s}",
+        ) from e
 
 
 @router.get("/rules/{context}", status_code=status.HTTP_200_OK)
@@ -329,8 +329,8 @@ async def get_error_rules_endpoint(context: ErrorContext):
         logger.error(f"Error in get_error_rules_endpoint: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to get error rules: {str(e)}",
-        )
+            detail=f"Failed to get error rules: {e!s}",
+        ) from e
 
 
 @router.get("/health", status_code=status.HTTP_200_OK)
@@ -368,5 +368,5 @@ async def health_check_endpoint():
         logger.error(f"Error in health_check_endpoint: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Health check failed: {str(e)}",
-        )
+            detail=f"Health check failed: {e!s}",
+        ) from e

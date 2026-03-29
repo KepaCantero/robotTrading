@@ -17,7 +17,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from decimal import Decimal
 from enum import Enum
-from typing import Callable, Dict, List, Optional, Union
+from typing import Callable, Optional, Union
 
 from requests.exceptions import HTTPError
 
@@ -49,10 +49,10 @@ class EmergencyCloseResult:
     failed_positions: int
     total_value: Decimal
     execution_time_seconds: float
-    errors: List[str] = field(default_factory=list)
+    errors: list[str] = field(default_factory=list)
     timestamp: datetime = field(default_factory=utc_now)
 
-    def to_dict(self) -> Dict[str, Union[str, int, float, bool, Decimal, List[str], datetime]]:
+    def to_dict(self) -> dict[str, Union[str, int, float, bool, Decimal, list[str], datetime]]:
         """Convert to dictionary."""
         return {
             "success": self.success,
@@ -109,7 +109,9 @@ class EmergencyCloser:
 
         # State
         self._is_closing = False
-        self._audit_log: List[Dict[str, Union[str, int, float, bool, Decimal, List[str], datetime]]] = []
+        self._audit_log: list[
+            dict[str, Union[str, int, float, bool, Decimal, list[str], datetime]]
+        ] = []
         self._last_trigger: Optional[EmergencyTrigger] = None
         self._last_close_time: Optional[datetime] = None
 
@@ -132,7 +134,7 @@ class EmergencyCloser:
         """Handle shutdown signals."""
         logger.critical(f"Received signal {signum} - initiating emergency shutdown")
         # Create async task to handle shutdown
-        asyncio.create_task(self.on_system_shutdown())
+        self._shutdown_task = asyncio.create_task(self.on_system_shutdown())
 
     async def on_connection_lost(self) -> EmergencyCloseResult:
         """
@@ -220,7 +222,7 @@ class EmergencyCloser:
 
         # Send alert
         await self._send_alert(
-            f"EMERGENCY: Critical error detected. Closing all positions. Error: {str(error)}"
+            f"EMERGENCY: Critical error detected. Closing all positions. Error: {error!s}"
         )
 
         result = await self.close_all_positions(EmergencyTrigger.CRITICAL_ERROR)
@@ -390,7 +392,7 @@ class EmergencyCloser:
                         errors.append(result.get("error", "Unknown error"))
                 except (ValueError, TypeError, KeyError, AttributeError) as e:
                     failed += 1
-                    errors.append(f"Error closing {position.symbol}: {str(e)}")
+                    errors.append(f"Error closing {position.symbol}: {e!s}")
                     logger.error(f"Error closing position {position.symbol}: {e}")
 
             execution_time = asyncio.get_event_loop().time() - start_time
@@ -419,7 +421,7 @@ class EmergencyCloser:
         finally:
             self._is_closing = False
 
-    async def _get_all_positions(self) -> List[object]:
+    async def _get_all_positions(self) -> list[object]:
         """Get all open positions from broker."""
         try:
             positions = await self.broker.get_positions()
@@ -428,7 +430,9 @@ class EmergencyCloser:
             logger.error(f"Error fetching positions: {e}")
             return []
 
-    async def _close_position(self, position: object) -> Dict[str, Union[str, int, float, bool, Decimal]]:
+    async def _close_position(
+        self, position: object
+    ) -> dict[str, Union[str, int, float, bool, Decimal]]:
         """
         Close a single position.
 
@@ -440,10 +444,10 @@ class EmergencyCloser:
         """
         try:
             # Determine order side (opposite of position side)
-            side = getattr(position, 'side', 'LONG')
+            side = getattr(position, "side", "LONG")
             order_side = "SELL" if side == "LONG" else "BUY"
 
-            quantity = getattr(position, 'quantity', Decimal("0"))
+            quantity = getattr(position, "quantity", Decimal("0"))
 
             # Place market order - use centralized config for timeout
             tt = get_config().trading_thresholds
@@ -462,7 +466,7 @@ class EmergencyCloser:
                 logger.critical(f"Closed position: {position.symbol} ({quantity} shares)")
                 return {
                     "success": True,
-                    "value": quantity * getattr(position, 'current_price', Decimal("0")),
+                    "value": quantity * getattr(position, "current_price", Decimal("0")),
                 }
             else:
                 return {
@@ -473,7 +477,7 @@ class EmergencyCloser:
         except (asyncio.TimeoutError, OSError) as e:
             return {
                 "success": False,
-                "error": f"Error closing {position.symbol}: {str(e)}",
+                "error": f"Error closing {position.symbol}: {e!s}",
             }
 
     async def _wait_for_confirmation(self) -> bool:
@@ -503,7 +507,9 @@ class EmergencyCloser:
             except (asyncio.TimeoutError, OSError) as e:
                 logger.error(f"Error sending alert: {e}")
 
-    def get_audit_log(self, limit: int = 100) -> List[Dict[str, Union[str, int, float, bool, Decimal, List[str], datetime]]]:
+    def get_audit_log(
+        self, limit: int = 100
+    ) -> list[dict[str, Union[str, int, float, bool, Decimal, list[str], datetime]]]:
         """Get audit log entries."""
         return self._audit_log[-limit:]
 

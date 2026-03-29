@@ -16,7 +16,7 @@ import logging
 from dataclasses import dataclass, field
 from datetime import datetime
 from decimal import Decimal
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Optional
 
 import numpy as np
 
@@ -61,7 +61,7 @@ class CapitalLevelResult:
     partial_fills: int  # Number of trades reduced by ADV rule
     rejected_orders: int  # Number of orders rejected (< 50% fill)
     performance_metrics: Optional[PerformanceMetrics] = None
-    equity_curve: List[Tuple[datetime, Decimal]] = field(default_factory=list)
+    equity_curve: list[tuple[datetime, Decimal]] = field(default_factory=list)
 
 
 @dataclass
@@ -72,16 +72,16 @@ class CapitalScaleAnalysisReport:
     timestamp: datetime
     start_date: datetime
     end_date: datetime
-    capital_level_results: List[CapitalLevelResult]
+    capital_level_results: list[CapitalLevelResult]
     adv_rule_enabled: bool
     adv_limit_pct: Decimal
 
     # Comparative metrics
     alpha_degradation: Decimal  # CAGR difference between smallest and largest
-    commission_impact_gradient: List[Decimal]  # Commission impact by level
+    commission_impact_gradient: list[Decimal]  # Commission impact by level
     scalability_score: Decimal  # 0-100 score
     recommended_capital: Decimal  # Optimal capital level
-    warnings: List[str] = field(default_factory=list)
+    warnings: list[str] = field(default_factory=list)
     passed: bool = True
 
 
@@ -95,7 +95,7 @@ class CapitalScaleAnalyzer:
 
     def __init__(
         self,
-        capital_levels: Optional[List[Decimal]] = None,
+        capital_levels: Optional[list[Decimal]] = None,
         adv_limit_pct: Optional[Decimal] = None,  # Uses config default if None
         enable_adv_rule: bool = True,
         enable_adaptive_commission: bool = True,
@@ -125,7 +125,7 @@ class CapitalScaleAnalyzer:
         # Commission models by capital level (from CentralizedConfig via constants.py compatibility)
         from app.backtesting.constants import CapitalScaleConstants
 
-        self._commission_models = CapitalScaleConstants().COMMISSION_MODELS
+        self._commission_models = CapitalScaleConstants().commission_models
 
     def calculate_commission_for_level(
         self, capital_level: Decimal, trade_value: Decimal
@@ -180,7 +180,7 @@ class CapitalScaleAnalyzer:
         order_size: Decimal,
         adv: Decimal,
         symbol: str,
-    ) -> Tuple[Decimal, bool, bool]:
+    ) -> tuple[Decimal, bool, bool]:
         """
         Apply 2% ADV rule to order size.
 
@@ -213,11 +213,11 @@ class CapitalScaleAnalyzer:
 
     def simulate_single_capital_level(
         self,
-        quotes: List[Quote],
-        signals: List[Any],
+        quotes: list[Quote],
+        signals: list[Any],
         base_config: BacktestConfig,
         capital_level: Decimal,
-        adv_data: Optional[Dict[str, Decimal]] = None,
+        adv_data: Optional[dict[str, Decimal]] = None,
     ) -> CapitalLevelResult:
         """
         Simulate strategy for a single capital level.
@@ -306,12 +306,12 @@ class CapitalScaleAnalyzer:
 
     def analyze_capital_scaling(
         self,
-        quotes: List[Quote],
-        signals: List[Any],
+        quotes: list[Quote],
+        signals: list[Any],
         config: BacktestConfig,
         start_date: datetime,
         end_date: datetime,
-        adv_data: Optional[Dict[str, Decimal]] = None,
+        adv_data: Optional[dict[str, Decimal]] = None,
     ) -> CapitalScaleAnalysisReport:
         """
         Run complete multi-scale capital analysis.
@@ -329,8 +329,8 @@ class CapitalScaleAnalyzer:
         """
         logger.info(f"Starting capital scale analysis with {len(self.capital_levels)} levels")
 
-        results: List[CapitalLevelResult] = []
-        warnings: List[str] = []
+        results: list[CapitalLevelResult] = []
+        warnings: list[str] = []
 
         # Simulate each capital level
         for capital_level in sorted(self.capital_levels):
@@ -354,7 +354,7 @@ class CapitalScaleAnalyzer:
 
             except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
                 logger.error(f"Error simulating capital level {capital_level}: {e}", exc_info=True)
-                warnings.append(f"€{capital_level:,.0f}: Simulation failed - {str(e)}")
+                warnings.append(f"€{capital_level:,.0f}: Simulation failed - {e!s}")
 
         if not results:
             return CapitalScaleAnalysisReport(
@@ -416,7 +416,7 @@ class CapitalScaleAnalyzer:
             passed=passed,
         )
 
-    def _calculate_alpha_degradation(self, results: List[CapitalLevelResult]) -> Decimal:
+    def _calculate_alpha_degradation(self, results: list[CapitalLevelResult]) -> Decimal:
         """
         Calculate alpha degradation between smallest and largest capital.
 
@@ -435,7 +435,7 @@ class CapitalScaleAnalyzer:
         return max(Decimal("0"), degradation)  # Non-negative
 
     def _calculate_scalability_score(
-        self, results: List[CapitalLevelResult], alpha_degradation: Decimal
+        self, results: list[CapitalLevelResult], alpha_degradation: Decimal
     ) -> Decimal:
         """
         Calculate overall scalability score (0-100).
@@ -487,7 +487,7 @@ class CapitalScaleAnalyzer:
         total_score = degradation_score + commission_score + stability_score
         return min(Decimal("100"), max(Decimal("0"), total_score))
 
-    def _find_optimal_capital(self, results: List[CapitalLevelResult]) -> Decimal:
+    def _find_optimal_capital(self, results: list[CapitalLevelResult]) -> Decimal:
         """
         Find optimal capital level based on:
         - Highest risk-adjusted return (Sharpe)

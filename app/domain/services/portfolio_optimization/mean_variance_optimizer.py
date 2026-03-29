@@ -11,7 +11,7 @@ from __future__ import annotations
 import logging
 from dataclasses import dataclass
 from decimal import Decimal
-from typing import Dict, List, Tuple
+from typing import TYPE_CHECKING
 
 import numpy as np
 from scipy.optimize import minimize
@@ -21,7 +21,9 @@ from app.domain.services.portfolio_optimization._validation import (
     log_optimization_failure,
     validate_covariance_matrix,
 )
-from app.domain.services.portfolio_optimization.covariance_calculator import CovarianceResult
+
+if TYPE_CHECKING:
+    from app.domain.services.portfolio_optimization.covariance_calculator import CovarianceResult
 
 logger = logging.getLogger(__name__)
 
@@ -42,18 +44,18 @@ class OptimizationResult:
     expected_return: float  # Expected portfolio return (annualized)
     expected_risk: float  # Expected portfolio risk (std dev, annualized)
     sharpe_ratio: float  # Sharpe ratio
-    symbols: List[str]  # Asset symbols
+    symbols: list[str]  # Asset symbols
 
     # Optimization metadata
     converged: bool  # Whether optimization converged
     message: str  # Optimizer message
 
     @property
-    def weights_dict(self) -> Dict[str, float]:
+    def weights_dict(self) -> dict[str, float]:
         """Get weights as dictionary."""
         return {symbol: float(weight) for symbol, weight in zip(self.symbols, self.weights)}
 
-    def get_allocation(self, total_capital: Decimal) -> Dict[str, Decimal]:
+    def get_allocation(self, total_capital: Decimal) -> dict[str, Decimal]:
         """
         Get dollar allocation for each asset.
 
@@ -75,15 +77,15 @@ class EfficientFrontier:
 
     returns: np.ndarray  # Portfolio returns (annualized)
     risks: np.ndarray  # Portfolio risks (std dev, annualized)
-    weights_list: List[np.ndarray]  # Weight sets for each point
+    weights_list: list[np.ndarray]  # Weight sets for each point
     sharpe_ratios: np.ndarray  # Sharpe ratios
 
-    def get_max_sharpe_point(self) -> Tuple[int, float, float]:
+    def get_max_sharpe_point(self) -> tuple[int, float, float]:
         """Get index, return, and risk of max Sharpe point."""
         idx = np.argmax(self.sharpe_ratios)
         return int(idx), float(self.returns[idx]), float(self.risks[idx])
 
-    def get_min_variance_point(self) -> Tuple[int, float, float]:
+    def get_min_variance_point(self) -> tuple[int, float, float]:
         """Get index, return, and risk of min variance point."""
         idx = np.argmin(self.risks)
         return int(idx), float(self.returns[idx]), float(self.risks[idx])
@@ -504,7 +506,7 @@ class MeanVarianceOptimizer:
                 e,
                 {"n_assets": n_assets},
             )
-            raise ValueError(f"Cannot invert covariance matrix: {e}")
+            raise ValueError(f"Cannot invert covariance matrix: {e}") from e
 
         # GMV weights (analytical)
         ones = np.ones(n_assets)

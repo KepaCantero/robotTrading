@@ -18,7 +18,6 @@ Migration Guide:
 
 import warnings
 from decimal import Decimal
-from typing import Dict, List
 
 # Import from centralized config
 from app.shared.config.centralized_config import BacktestingConfig, get_config
@@ -78,7 +77,7 @@ class TieredCommissionModel(TypedDict):
     """Tiered commission model."""
 
     type: str
-    brackets: List[TierBracket]
+    brackets: list[TierBracket]
     description: str
 
 
@@ -98,35 +97,35 @@ class CapitalScaleConstants:
     """
 
     @property
-    def DEFAULT_CAPITAL_LEVELS(self) -> List[Decimal]:
+    def default_capital_levels(self) -> list[Decimal]:
         return _get_backtesting_config().default_capital_levels
 
     @property
-    def ADV_LIMIT_PCT_DEFAULT(self) -> Decimal:
+    def adv_limit_pct_default(self) -> Decimal:
         return _get_backtesting_config().adv_limit_pct
 
     @property
-    def ADV_FILL_RATIO_REJECT_THRESHOLD(self) -> Decimal:
+    def adv_fill_ratio_reject_threshold(self) -> Decimal:
         return _get_backtesting_config().adv_fill_ratio_reject_threshold
 
     @property
-    def COMMISSION_IMPACT_WARNING_THRESHOLD(self) -> Decimal:
+    def commission_impact_warning_threshold(self) -> Decimal:
         return _get_backtesting_config().commission_impact_warning_threshold
 
     @property
-    def COMMISSION_IMPACT_CRITICAL_THRESHOLD(self) -> Decimal:
+    def commission_impact_critical_threshold(self) -> Decimal:
         return _get_backtesting_config().commission_impact_critical_threshold
 
     @property
-    def COMMISSION_IMPACT_OPTIMAL_THRESHOLD(self) -> Decimal:
+    def commission_impact_optimal_threshold(self) -> Decimal:
         return _get_backtesting_config().commission_impact_warning_threshold
 
     @property
-    def ALPHA_DEGRADATION_THRESHOLD(self) -> Decimal:
+    def alpha_degradation_threshold(self) -> Decimal:
         return _get_backtesting_config().alpha_degradation_threshold
 
     @property
-    def COMMISSION_MODELS(self) -> Dict[Decimal, CommissionModel]:
+    def commission_models(self) -> dict[Decimal, CommissionModel]:
         """Build commission models from centralized config."""
         config = _get_backtesting_config()
         return {
@@ -191,31 +190,31 @@ class CapitalScaleConstants:
         }
 
     @property
-    def SCALABILITY_ALPHA_DEGRADATION_MAX_POINTS(self) -> Decimal:
+    def scalability_alpha_degradation_max_points(self) -> Decimal:
         return _get_backtesting_config().scalability_alpha_max_points
 
     @property
-    def SCALABILITY_COMMISSION_MAX_POINTS(self) -> Decimal:
+    def scalability_commission_max_points(self) -> Decimal:
         return _get_backtesting_config().scalability_commission_max_points
 
     @property
-    def SCALABILITY_STABILITY_MAX_POINTS(self) -> Decimal:
+    def scalability_stability_max_points(self) -> Decimal:
         return _get_backtesting_config().scalability_stability_max_points
 
     @property
-    def COMMISSION_IMPACT_EXCELLENT_THRESHOLD(self) -> Decimal:
+    def commission_impact_excellent_threshold(self) -> Decimal:
         return Decimal("0.10")
 
     @property
-    def COMMISSION_IMPACT_GOOD_THRESHOLD(self) -> Decimal:
+    def commission_impact_good_threshold(self) -> Decimal:
         return _get_backtesting_config().commission_impact_warning_threshold
 
     @property
-    def COMMISSION_IMPACT_POOR_THRESHOLD(self) -> Decimal:
+    def commission_impact_poor_threshold(self) -> Decimal:
         return _get_backtesting_config().commission_impact_warning_threshold
 
     @property
-    def WIN_RATE_STABILITY_PENALTY_FACTOR(self) -> Decimal:
+    def win_rate_stability_penalty_factor(self) -> Decimal:
         return Decimal("100")
 
 
@@ -227,23 +226,23 @@ class ExecutionEngineConstants:
     """
 
     @property
-    def BASE_SLIPPAGE_BPS(self) -> Decimal:
+    def base_slippage_bps(self) -> Decimal:
         return _get_backtesting_config().base_slippage_bps
 
     @property
-    def OPTIMISTIC_SLIPPAGE_BPS(self) -> Decimal:
+    def optimistic_slippage_bps(self) -> Decimal:
         return _get_backtesting_config().optimistic_slippage_bps
 
     @property
-    def STOP_SLIPPAGE_MULTIPLIER(self) -> Decimal:
+    def stop_slippage_multiplier(self) -> Decimal:
         return _get_backtesting_config().stop_slippage_multiplier
 
     @property
-    def VOLATILITY_MULTIPLIER(self) -> Decimal:
+    def volatility_multiplier(self) -> Decimal:
         return _get_backtesting_config().volatility_multiplier
 
     @property
-    def ENABLE_NEXT_DAY_EXECUTION(self) -> bool:
+    def enable_next_day_execution(self) -> bool:
         return _get_backtesting_config().enable_next_day_execution
 
 
@@ -256,7 +255,7 @@ class BacktestingConstants:
     Usage (OLD - deprecated):
         from app.backtesting.constants import BACKTESTING_CONSTANTS
         capital_levels = BACKTESTING_CONSTANTS.capital_scale.DEFAULT_CAPITAL_LEVELS
-        base_slippage = BACKTESTING_CONSTANTS.execution.BASE_SLIPPAGE_BPS
+        base_slippage = BACKTESTING_CONSTANTS.execution.base_slippage_bps
 
     Usage (NEW - recommended):
         from app.shared.config.centralized_config import get_config
@@ -279,14 +278,14 @@ BACKTESTING_CONSTANTS = BacktestingConstants()
 
 
 # Convenience functions for backward compatibility
-def get_default_capital_levels() -> List[Decimal]:
+def get_default_capital_levels() -> list[Decimal]:
     """Get default capital levels for scale analysis."""
     return _get_backtesting_config().default_capital_levels.copy()
 
 
-def get_commission_models() -> Dict[Decimal, CommissionModel]:
+def get_commission_models() -> dict[Decimal, CommissionModel]:
     """Get commission models by capital level."""
-    return CapitalScaleConstants().COMMISSION_MODELS.copy()
+    return CapitalScaleConstants().commission_models.copy()
 
 
 def get_base_slippage_bps() -> Decimal:

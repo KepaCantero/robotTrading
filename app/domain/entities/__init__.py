@@ -51,24 +51,24 @@ except ImportError:
     _portfolio_optimization_available = False
 
 __all__ = [
-    'Portfolio',
-    'Order',
+    "Order",
+    "Portfolio",
 ]
 
 if _backtest_available:
-    __all__.extend(['Backtest', 'BacktestStatus', 'BacktestType'])
+    __all__.extend(["Backtest", "BacktestStatus", "BacktestType"])
 
 if _position_available:
-    __all__.append('Position')
+    __all__.append("Position")
 
 if _trade_available:
-    __all__.append('Trade')
+    __all__.append("Trade")
 
 if _pre_trade_analysis_available:
-    __all__.append('PreTradeAnalysis')
+    __all__.append("PreTradeAnalysis")
 
 if _post_trade_analysis_available:
-    __all__.append('PostTradeAnalysis')
+    __all__.append("PostTradeAnalysis")
 
 if _portfolio_optimization_available:
-    __all__.append('PortfolioOptimization')
+    __all__.append("PortfolioOptimization")

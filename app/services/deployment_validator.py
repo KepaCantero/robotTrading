@@ -20,7 +20,7 @@ accounts than to slowly bleed capital on infrastructure costs that exceed return
 import logging
 from decimal import Decimal
 from enum import Enum
-from typing import Dict, Tuple, Optional
+from typing import Optional
 
 from app.services.capital_viability_gate import CapitalViabilityValidator
 from app.services.execution_cost_analyzer import ExecutionCostAnalyzer
@@ -61,8 +61,8 @@ class DeploymentValidator:
         expected_trades_per_month: int = 10,
         learning_enabled: bool = True,
         expensive_modules_enabled: bool = True,
-        account_id: str = None,
-    ) -> Tuple[DeploymentStatus, Dict]:
+        account_id: Optional[str] = None,
+    ) -> tuple[DeploymentStatus, dict]:
         """
         Run all capital gates to determine if account is safe for live deployment.
 
@@ -180,7 +180,7 @@ class DeploymentValidator:
             )
 
         # ===== GATE 4: Expensive Module Gate =====
-        modules_enabled, modules_analysis = ExpensiveModuleGate.get_enabled_modules(
+        modules_enabled, _modules_analysis = ExpensiveModuleGate.get_enabled_modules(
             capital=capital,
             expected_monthly_alpha=expected_monthly_alpha,
         )
@@ -265,7 +265,7 @@ class DeploymentValidator:
             return "large"
 
     @staticmethod
-    def _log_deployment_decision(analysis: Dict, status: DeploymentStatus) -> None:
+    def _log_deployment_decision(analysis: dict, status: DeploymentStatus) -> None:
         """Log deployment validation decision"""
         account_id = analysis.get("account_id", "UNKNOWN")
         capital = analysis.get("capital", Decimal("0"))
@@ -332,7 +332,7 @@ class DeploymentValidator:
     def get_minimum_capital_recommendation(
         monthly_profit_goal: Decimal,
         expected_monthly_alpha: Optional[Decimal] = None,
-    ) -> Dict[str, Decimal]:
+    ) -> dict[str, Decimal]:
         """
         Calculate minimum capital needed based on goals and infrastructure requirements.
 

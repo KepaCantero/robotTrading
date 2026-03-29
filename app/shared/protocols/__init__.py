@@ -16,13 +16,13 @@ from app.shared.protocols.i_trade_executor import ITradeExecutor
 from app.shared.protocols.i_trading_decision_logger import ITradingDecisionLogger
 
 __all__ = [
-    "IPreTradeValidator",
-    "ITradeExecutor",
-    "IPostTradeAnalyzer",
-    "IBrokerAdapter",
-    "ISpainTaxEngine",
-    "ITradingDecisionLogger",
-    "IKillSwitchMonitor",
     "IAlertProcessor",
+    "IBrokerAdapter",
+    "IKillSwitchMonitor",
+    "IPostTradeAnalyzer",
+    "IPreTradeValidator",
+    "ISpainTaxEngine",
     "IStrategyCycleRunner",
+    "ITradeExecutor",
+    "ITradingDecisionLogger",
 ]

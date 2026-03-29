@@ -11,10 +11,10 @@ Permite paralelizar:
 import logging
 import multiprocessing
 from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor, as_completed
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Callable, Optional
 
 # Type alias for task functions
-TaskFunction = Callable[[Dict[str, Any]], Dict[str, Any]]
+TaskFunction = Callable[[dict[str, Any]], dict[str, Any]]
 
 logger = logging.getLogger(__name__)
 
@@ -47,8 +47,8 @@ class ParallelExecutor:
         )
 
     def run_parallel(
-        self, tasks: List[Dict[str, Any]], task_function: TaskFunction, task_name: str = "task"
-    ) -> List[Dict[str, Any]]:
+        self, tasks: list[dict[str, Any]], task_function: TaskFunction, task_name: str = "task"
+    ) -> list[dict[str, Any]]:
         """
         Ejecutar múltiples tareas en paralelo.
 
@@ -91,7 +91,7 @@ class ParallelExecutor:
                         )
                 except (RuntimeError, ValueError, TypeError, KeyError) as e:
                     failed_count += 1
-                    task_name_str = task.get('name', 'unknown')
+                    task_name_str = task.get("name", "unknown")
                     logger.error(f"❌ Error en {task_name} '{task_name_str}': {e}", exc_info=True)
 
         logger.info(f"✅ {task_name} completado: {len(results)} exitosos, {failed_count} fallidos")
@@ -100,7 +100,7 @@ class ParallelExecutor:
 
     def run_monte_carlo_parallel(
         self, num_simulations: int, simulation_function: TaskFunction, **simulation_kwargs
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """
         Ejecutar simulaciones Monte Carlo en paralelo.
 
@@ -115,8 +115,8 @@ class ParallelExecutor:
         # Crear tareas para cada simulación
         tasks = [
             {
-                'simulation_num': i + 1,
-                'name': f'Monte Carlo Simulation {i + 1}',
+                "simulation_num": i + 1,
+                "name": f"Monte Carlo Simulation {i + 1}",
                 **simulation_kwargs,
             }
             for i in range(num_simulations)
@@ -127,8 +127,8 @@ class ParallelExecutor:
         )
 
     def run_grid_search_parallel(
-        self, parameter_combinations: List[Dict[str, Any]], combination_function: TaskFunction
-    ) -> List[Dict[str, Any]]:
+        self, parameter_combinations: list[dict[str, Any]], combination_function: TaskFunction
+    ) -> list[dict[str, Any]]:
         """
         Ejecutar combinaciones de Grid Search en paralelo.
 
@@ -141,9 +141,9 @@ class ParallelExecutor:
         """
         tasks = [
             {
-                'combination_num': i + 1,
-                'name': f'Grid Search Combination {i + 1}',
-                'parameters': combo,
+                "combination_num": i + 1,
+                "name": f"Grid Search Combination {i + 1}",
+                "parameters": combo,
                 **combo,
             }
             for i, combo in enumerate(parameter_combinations)
@@ -154,8 +154,8 @@ class ParallelExecutor:
         )
 
     def run_learning_engines_parallel(
-        self, engines: List[str], engine_function: TaskFunction, **engine_kwargs
-    ) -> List[Dict[str, Any]]:
+        self, engines: list[str], engine_function: TaskFunction, **engine_kwargs
+    ) -> list[dict[str, Any]]:
         """
         Ejecutar tests de learning engines en paralelo.
 
@@ -168,7 +168,7 @@ class ParallelExecutor:
             Lista de resultados de engines
         """
         tasks = [
-            {'engine_name': engine, 'name': f'Learning Engine - {engine}', **engine_kwargs}
+            {"engine_name": engine, "name": f"Learning Engine - {engine}", **engine_kwargs}
             for engine in engines
         ]
 

@@ -3,6 +3,7 @@ Compliance Configuration
 Extracted from compliance_engine.py for SRP compliance.
 TASK-24: SRP Refactoring
 """
+
 from __future__ import annotations
 
 import logging

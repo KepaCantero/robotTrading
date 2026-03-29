@@ -14,7 +14,6 @@ from __future__ import annotations
 
 import logging
 import threading
-from typing import Dict
 
 logger = logging.getLogger(__name__)
 
@@ -41,7 +40,7 @@ class FallbackTracker:
         self._config_key_mismatch_count = 0
         self._fallback_lock = threading.Lock()
 
-    def __getstate__(self) -> Dict:
+    def __getstate__(self) -> dict:
         """
         Get state for pickling (excludes unpicklable thread lock).
 
@@ -50,10 +49,10 @@ class FallbackTracker:
         """
         state = self.__dict__.copy()
         # Remove unpicklable lock - will be recreated in __setstate__
-        state.pop('_fallback_lock', None)
+        state.pop("_fallback_lock", None)
         return state
 
-    def __setstate__(self, state: Dict) -> None:
+    def __setstate__(self, state: dict) -> None:
         """
         Restore state from pickling (recreates lock).
 
@@ -85,7 +84,7 @@ class FallbackTracker:
             else:
                 logger.warning(f"Unknown fallback type: {fallback_type}")
 
-    def get_fallback_metrics(self) -> Dict[str, int]:
+    def get_fallback_metrics(self) -> dict[str, int]:
         """
         Get current fallback metrics (thread-safe).
 

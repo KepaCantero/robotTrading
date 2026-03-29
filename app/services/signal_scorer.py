@@ -8,7 +8,7 @@ utilizando los nuevos motores especializados.
 import logging
 from datetime import datetime, timedelta
 from decimal import Decimal
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 from app.domain.models.signal import (
     MarketData,
@@ -50,7 +50,7 @@ class SignalScorerService:
         # Componentes originales mantenidos para compatibilidad
         self.scorer = SignalScorer()
         self.priority_queue = SignalPriorityQueue(max_size=1000)
-        self.signal_history: List[Signal] = []
+        self.signal_history: list[Signal] = []
         self.max_history_size = 10000
 
         # Configuración
@@ -66,7 +66,7 @@ class SignalScorerService:
         symbol: str,
         signal_type: SignalType,
         market_data: MarketData,
-        metadata: Dict[str, Any],
+        metadata: dict[str, Any],
     ) -> Optional[Signal]:
         """
         Evaluar señal usando el motor de evaluación especializado.
@@ -126,7 +126,7 @@ class SignalScorerService:
             available_capital = portfolio.cash
 
             # Usar motor de sizing
-            position_size, sizing_details = self.sizing_engine.calculate_position_size(
+            position_size, _sizing_details = self.sizing_engine.calculate_position_size(
                 signal, portfolio, available_capital, signal.metadata
             )
 
@@ -168,7 +168,7 @@ class SignalScorerService:
                 }
 
             # Usar motor de ejecución
-            success, execution_details = await self.execution_engine.execute_signal(
+            success, _execution_details = await self.execution_engine.execute_signal(
                 signal, position_size, portfolio, execution_callback
             )
 
@@ -184,7 +184,7 @@ class SignalScorerService:
             logger.error(f"Error executing signal for {signal.symbol}: {e}")
             return False
 
-    async def get_signal_statistics(self) -> Dict[str, Any]:
+    async def get_signal_statistics(self) -> dict[str, Any]:
         """Obtener estadísticas del servicio."""
         # Calcular success rate
         success_rate = (
@@ -241,7 +241,7 @@ class SignalScorerService:
 
         return self.priority_queue.get_highest_priority_signal()
 
-    async def get_signals_by_symbol(self, symbol: str) -> List[Signal]:
+    async def get_signals_by_symbol(self, symbol: str) -> list[Signal]:
         """Obtener señales por símbolo."""
         return [s for s in self.signal_history if s.symbol == symbol]
 

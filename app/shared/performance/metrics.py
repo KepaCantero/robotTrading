@@ -32,7 +32,7 @@ Reference:
 
 import logging
 from decimal import Decimal
-from typing import List, Optional, Union
+from typing import Optional, Union
 
 import numpy as np
 import pandas as pd
@@ -42,27 +42,29 @@ logger = logging.getLogger(__name__)
 # Import the consolidated domain implementation
 from app.domain.services.metrics.performance_metrics import (
     DrawdownResult,
-    PerformanceMetricsCalculator as _PerformanceMetricsCalculator,
     PerformanceResult,
     SharpeRatioResult,
+)
+from app.domain.services.metrics.performance_metrics import (
+    PerformanceMetricsCalculator as _PerformanceMetricsCalculator,
 )
 
 # Re-export dataclasses
 __all__ = [
+    # Direct access to domain implementation
+    "DomainPerformanceMetricsCalculator",
+    "DrawdownResult",
     # Calculator
     "PerformanceMetricsCalculator",
-    "SharpeRatioResult",
-    "DrawdownResult",
     "PerformanceResult",
+    "SharpeRatioResult",
+    "calmar_ratio",
+    "max_drawdown",
+    "omega_ratio",
     # Convenience functions (config-aware)
     "sharpe_ratio",
     "sortino_ratio",
-    "calmar_ratio",
-    "omega_ratio",
-    "max_drawdown",
     "ulcer_index",
-    # Direct access to domain implementation
-    "DomainPerformanceMetricsCalculator",
 ]
 
 
@@ -127,14 +129,14 @@ class PerformanceMetricsCalculator(_PerformanceMetricsCalculator):
 
 
 def _to_float_array(
-    returns: Union[pd.Series, np.ndarray, List[Decimal], List[float]]
+    returns: Union[pd.Series, np.ndarray, list[Decimal], list[float]],
 ) -> np.ndarray:
     """Convert returns to numpy array, handling various input types."""
     logger.debug(
         "Converting returns to float array",
         extra={
             "input_type": type(returns).__name__,
-            "input_length": len(returns) if hasattr(returns, '__len__') else 'N/A',
+            "input_length": len(returns) if hasattr(returns, "__len__") else "N/A",
         },
     )
     if isinstance(returns, pd.Series):
@@ -159,7 +161,7 @@ def _to_float_array(
 
 
 def sharpe_ratio(
-    returns: Union[pd.Series, np.ndarray, List[Decimal], List[float]],
+    returns: Union[pd.Series, np.ndarray, list[Decimal], list[float]],
     risk_free_rate: Optional[float] = None,
     annualize: bool = True,
 ) -> float:
@@ -177,7 +179,7 @@ def sharpe_ratio(
     logger.debug(
         "Calculating Sharpe ratio",
         extra={
-            "returns_length": len(returns) if hasattr(returns, '__len__') else 'N/A',
+            "returns_length": len(returns) if hasattr(returns, "__len__") else "N/A",
             "risk_free_rate": risk_free_rate,
             "annualize": annualize,
         },
@@ -195,7 +197,7 @@ def sharpe_ratio(
 
 
 def sortino_ratio(
-    returns: Union[pd.Series, np.ndarray, List[Decimal], List[float]],
+    returns: Union[pd.Series, np.ndarray, list[Decimal], list[float]],
     risk_free_rate: Optional[float] = None,
     target_return: float = 0.0,
     annualize: bool = True,
@@ -219,8 +221,8 @@ def sortino_ratio(
 
 
 def calmar_ratio(
-    returns: Union[pd.Series, np.ndarray, List[float]],
-    equity_curve: Optional[Union[pd.Series, np.ndarray, List[float]]] = None,
+    returns: Union[pd.Series, np.ndarray, list[float]],
+    equity_curve: Optional[Union[pd.Series, np.ndarray, list[float]]] = None,
 ) -> Optional[float]:
     """
     Calculate Calmar ratio using CentralizedConfig defaults.
@@ -237,7 +239,7 @@ def calmar_ratio(
 
 
 def omega_ratio(
-    returns: Union[pd.Series, np.ndarray, List[Decimal], List[float]],
+    returns: Union[pd.Series, np.ndarray, list[Decimal], list[float]],
     threshold: float = 0.0,
 ) -> float:
     """
@@ -255,7 +257,7 @@ def omega_ratio(
 
 
 def max_drawdown(
-    equity_curve: Union[pd.Series, np.ndarray, List[Decimal], List[float]],
+    equity_curve: Union[pd.Series, np.ndarray, list[Decimal], list[float]],
     as_percentage: bool = False,
 ) -> float:
     """
@@ -273,7 +275,7 @@ def max_drawdown(
 
 
 def ulcer_index(
-    equity_curve: Union[pd.Series, np.ndarray, List[Decimal], List[float]],
+    equity_curve: Union[pd.Series, np.ndarray, list[Decimal], list[float]],
 ) -> float:
     """
     Calculate Ulcer Index.

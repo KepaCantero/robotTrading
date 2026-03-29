@@ -98,7 +98,7 @@ async def example_endpoint(request: Request, body: ExampleRequest) -> ExampleRes
             exception=e,
             input_data=body.data,
         )
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
 
     except Exception as e:
         logger.error(
@@ -116,7 +116,7 @@ async def example_endpoint(request: Request, body: ExampleRequest) -> ExampleRes
             exception=e,
             error_type=type(e).__name__,
         )
-        raise HTTPException(status_code=500, detail="Internal server error")
+        raise HTTPException(status_code=500, detail="Internal server error") from e
 
 
 @router.get("/warnings")
@@ -229,7 +229,7 @@ async def example_error_scenarios(request: Request, body: ExampleRequest) -> dic
             error_category="validation",
             severity="low",
         )
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
 
     except RuntimeError as e:
         # Log critical errors
@@ -241,7 +241,7 @@ async def example_error_scenarios(request: Request, body: ExampleRequest) -> dic
             severity="critical",
             requires_immediate_attention=True,
         )
-        raise HTTPException(status_code=500, detail="Critical system error")
+        raise HTTPException(status_code=500, detail="Critical system error") from e
 
     except Exception as e:
         # Log unexpected errors
@@ -252,7 +252,7 @@ async def example_error_scenarios(request: Request, body: ExampleRequest) -> dic
             error_category="unknown",
             severity="high",
         )
-        raise HTTPException(status_code=500, detail="Unexpected error")
+        raise HTTPException(status_code=500, detail="Unexpected error") from e
 
 
 # ============================================================================

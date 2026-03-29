@@ -50,7 +50,7 @@ from __future__ import annotations
 
 import logging
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import TYPE_CHECKING, Any
 from uuid import uuid4
 
 import numpy as np
@@ -86,19 +86,21 @@ from app.backtesting.shared import (
     TempConfigManager,
     get_empty_metrics,
 )
-from app.domain.models.input_profile import InputProfile
 from app.services.profile_driven_trading.profile_strategy_mapper import (
     StrategyMapping,
     create_profile_mapper,
 )
 from app.shared.config.profile_config_loader import ProfileConfigLoader
 
+if TYPE_CHECKING:
+    from app.domain.models.input_profile import InputProfile
+
 logger = logging.getLogger(__name__)
 
 # Additional type aliases (not in shared module)
-OptimizationHistoryEntry = Dict[str, Any]
-ValidationResultDict = Dict[str, Any]
-PerStrategyResultsDict = Dict[str, Dict[str, Any]]
+OptimizationHistoryEntry = dict[str, Any]
+ValidationResultDict = dict[str, Any]
+PerStrategyResultsDict = dict[str, dict[str, Any]]
 
 
 # ============================================================================
@@ -118,7 +120,7 @@ class ProfileBatchBacktester:
     - ReportGenerationService: Generate HTML reports and exports
 
     Features:
-    - Generate 180 profile combinations (objectives × tiers × risk)
+    - Generate 180 profile combinations (objectives * tiers * risk)
     - Run baseline backtest with default parameters
     - Run Bayesian optimization with Optuna
     - Perform walk-forward validation
@@ -195,11 +197,11 @@ class ProfileBatchBacktester:
         self.professional_reporter = ProfessionalReporter()
 
         # Results storage
-        self.results: Dict[str, ProfileResult] = {}
+        self.results: dict[str, ProfileResult] = {}
 
         # COMPLIANCE: Inicializar BacktestingCompliance para R5, R6, R7, DATA-001
         self.backtesting_compliance = create_backtesting_compliance()
-        self.compliance_results: List[BacktestingComplianceResult] = []
+        self.compliance_results: list[BacktestingComplianceResult] = []
         logger.info("BacktestingCompliance initialized (R5, R6, R7, DATA-001)")
 
         logger.info(f"ProfileBatchBacktester initialized with config: {config_path}")
@@ -208,7 +210,7 @@ class ProfileBatchBacktester:
     # Public API - Configuration
     # ========================================================================
 
-    def get_fallback_metrics(self) -> Dict[str, int]:
+    def get_fallback_metrics(self) -> dict[str, int]:
         """
         Get current fallback metrics (thread-safe).
 
@@ -233,7 +235,7 @@ class ProfileBatchBacktester:
     # Public API - Profile Generation
     # ========================================================================
 
-    def generate_all_profiles(self) -> List[InputProfile]:
+    def generate_all_profiles(self) -> list[InputProfile]:
         """
         Generate all profile combinations for batch testing.
 
@@ -260,7 +262,7 @@ class ProfileBatchBacktester:
 
     def run_all_profiles(
         self, parallel: bool = True, max_workers: int = 20
-    ) -> Dict[str, ProfileResult]:
+    ) -> dict[str, ProfileResult]:
         """
         Run all profiles with optional parallel execution.
 
@@ -407,12 +409,12 @@ class ProfileBatchBacktester:
         """
         return self.report_service.generate_comparison_report(self.results)
 
-    def export_results(self, format: str = "json") -> Path:
+    def export_results(self, output_format: str = "json") -> Path:
         """
         Export results to file.
 
         Args:
-            format: Export format (json, csv, excel)
+            output_format: Export format (json, csv, excel)
 
         Returns:
             Path to exported file
@@ -423,10 +425,10 @@ class ProfileBatchBacktester:
         Example:
             >>> backtester = ProfileBatchBacktester("config.yaml")
             >>> results = backtester.run_all_profiles()
-            >>> path = backtester.export_results(format="excel")
+            >>> path = backtester.export_results(output_format="excel")
             >>> print(f"Results exported to: {path}")
         """
-        return self.report_service.export_results(self.results, format)
+        return self.report_service.export_results(self.results, output_format)
 
     # ========================================================================
     # Internal Methods - Orchestration (kept in main class)
@@ -546,7 +548,7 @@ class ProfileBatchBacktester:
         self,
         profile: InputProfile,
         config: ConfigDict,
-        baseline_metrics: Optional[MetricsDict] = None,
+        baseline_metrics: MetricsDict | None = None,
         multi_strategy: bool = False,
     ) -> OptimizedStrategy:
         """
@@ -924,7 +926,7 @@ class ProfileBatchBacktester:
                 test_end = end_date
 
             logger.info(
-                f"Window {i+1}/{n_windows}: "
+                f"Window {i + 1}/{n_windows}: "
                 f"{window_start.date()} to {test_end.date()} "
                 f"(train: {window_start.date()} to {train_end.date()})"
             )
@@ -959,11 +961,11 @@ class ProfileBatchBacktester:
                 )
 
                 logger.info(
-                    f"  Window {i+1}: Train Sharpe={train_sharpe:.2f}, "
+                    f"  Window {i + 1}: Train Sharpe={train_sharpe:.2f}, "
                     f"Test Sharpe={test_sharpe:.2f}, Decay={train_sharpe - test_sharpe:.2f}"
                 )
             except Exception as e:
-                logger.error(f"Window {i+1} failed: {e}")
+                logger.error(f"Window {i + 1} failed: {e}")
                 continue
 
         # Analyze results
@@ -998,7 +1000,7 @@ class ProfileBatchBacktester:
 
         logger.info(
             f"Walk-forward complete: {len(window_results)} windows, "
-            f"Avg Sharpe={avg_sharpe:.2f} (±{std_sharpe:.2f}), "
+            f"Avg Sharpe={avg_sharpe:.2f} (+/-{std_sharpe:.2f}), "
             f"Success Rate={success_rate:.1%}, Decay={avg_decay:.2f}"
         )
 
@@ -1166,7 +1168,7 @@ class ProfileBatchBacktester:
             }
 
     def _aggregate_multi_strategy_results(
-        self, results: List[MetricsDict], profile: InputProfile
+        self, results: list[MetricsDict], profile: InputProfile
     ) -> MetricsDict:
         """
         Aggregate multi-strategy results.
@@ -1207,7 +1209,7 @@ class ProfileBatchBacktester:
         }
 
     def _apply_ensemble_voting(
-        self, profile: InputProfile, strategy_mapping: StrategyMapping, per_strategy_signals: Dict
+        self, profile: InputProfile, strategy_mapping: StrategyMapping, per_strategy_signals: dict
     ) -> MetricsDict:
         """
         Apply ensemble voting to multi-strategy signals.
@@ -1317,7 +1319,7 @@ class ProfileBatchBacktester:
         return result
 
     def _safe_extract_first_result(
-        self, results: List[MetricsDict], context: str = "backtest"
+        self, results: list[MetricsDict], context: str = "backtest"
     ) -> MetricsDict:
         """
         Safely extract first result from results list.
@@ -1369,20 +1371,20 @@ class ProfileBatchBacktester:
                 # Also update CentralizedConfig in-memory
                 self._update_centralized_config(best_params)
             else:
-                logger.warning("⚠️ Failed to persist some optimized parameters to YAML")
+                logger.warning("⚠ Failed to persist some optimized parameters to YAML")
 
             return success
 
         except ImportError:
             logger.warning("YAMLConfigUpdater not available, skipping config persistence")
             return False
-        except (ValueError, KeyError, TypeError, IOError) as e:
+        except (OSError, ValueError, KeyError, TypeError) as e:
             logger.error(f"Failed to persist optimized parameters: {e}", exc_info=True)
             return False
 
     def _convert_optimized_params_to_yaml_format(
         self, best_params: ParameterDict
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Convert optimization parameters to YAMLConfigUpdater format.
 

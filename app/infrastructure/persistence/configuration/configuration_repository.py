@@ -7,7 +7,7 @@ Type-based storage for various artifact types.
 import logging
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 from uuid import uuid4
 
 logger = logging.getLogger(__name__)
@@ -19,10 +19,10 @@ class StoredConfiguration:
 
     config_id: str
     config_type: str
-    data: Dict[str, Any]
+    data: dict[str, Any]
     created_at: datetime = field(default_factory=datetime.utcnow)
     updated_at: datetime = field(default_factory=datetime.utcnow)
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
 
 class ConfigurationRepository:
@@ -36,14 +36,14 @@ class ConfigurationRepository:
     """
 
     def __init__(self):
-        self._store: Dict[str, StoredConfiguration] = {}
+        self._store: dict[str, StoredConfiguration] = {}
         logger.debug(
             "ConfigurationRepository initialized",
             extra={"component": "ConfigurationRepository", "store_size": 0},
         )
 
     def save(
-        self, config_type: str, data: Dict[str, Any], metadata: Optional[Dict[str, Any]] = None
+        self, config_type: str, data: dict[str, Any], metadata: Optional[dict[str, Any]] = None
     ) -> str:
         """Save a configuration and return its ID."""
         config_id = f"config_{uuid4().hex[:8]}"
@@ -83,7 +83,7 @@ class ConfigurationRepository:
         )
         return config
 
-    def list_by_type(self, config_type: str) -> List[StoredConfiguration]:
+    def list_by_type(self, config_type: str) -> list[StoredConfiguration]:
         """List all configurations of a specific type."""
         configs = [c for c in self._store.values() if c.config_type == config_type]
         logger.debug(
@@ -118,7 +118,7 @@ class ConfigurationRepository:
         )
         return False
 
-    def update(self, config_id: str, data: Dict[str, Any]) -> Optional[StoredConfiguration]:
+    def update(self, config_id: str, data: dict[str, Any]) -> Optional[StoredConfiguration]:
         """Update a configuration's data."""
         if config_id not in self._store:
             logger.warning(

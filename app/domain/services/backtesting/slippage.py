@@ -18,7 +18,6 @@ from dataclasses import dataclass
 from datetime import datetime, time
 from decimal import Decimal
 from enum import Enum
-from typing import Optional
 
 from app.shared.config.centralized_config import get_config
 
@@ -73,10 +72,10 @@ class SlippageModel(ABC):
         side: str,
         quantity: Decimal,
         price: Decimal,
-        timestamp: Optional[datetime] = None,
-        volume: Optional[Decimal] = None,
-        volatility: Optional[float] = None,
-        spread: Optional[Decimal] = None,
+        timestamp: datetime | None = None,
+        volume: Decimal | None = None,
+        volatility: float | None = None,
+        spread: Decimal | None = None,
     ) -> SlippageResult:
         """
         Calculate slippage for an order.
@@ -126,10 +125,10 @@ class LinearSlippageModel(SlippageModel):
         side: str,
         quantity: Decimal,
         price: Decimal,
-        timestamp: Optional[datetime] = None,
-        volume: Optional[Decimal] = None,
-        volatility: Optional[float] = None,
-        spread: Optional[Decimal] = None,
+        timestamp: datetime | None = None,
+        volume: Decimal | None = None,
+        volatility: float | None = None,
+        spread: Decimal | None = None,
     ) -> SlippageResult:
         """Calculate linear slippage."""
         # Base slippage
@@ -185,10 +184,10 @@ class PercentageSlippageModel(SlippageModel):
         side: str,
         quantity: Decimal,
         price: Decimal,
-        timestamp: Optional[datetime] = None,
-        volume: Optional[Decimal] = None,
-        volatility: Optional[float] = None,
-        spread: Optional[Decimal] = None,
+        timestamp: datetime | None = None,
+        volume: Decimal | None = None,
+        volatility: float | None = None,
+        spread: Decimal | None = None,
     ) -> SlippageResult:
         """Calculate percentage slippage."""
         slippage_pct = self._buy_slippage if side == "buy" else self._sell_slippage
@@ -199,10 +198,7 @@ class PercentageSlippageModel(SlippageModel):
 
         slippage_amount = price * Decimal(str(slippage_pct))
 
-        if side == "buy":
-            execution_price = price + slippage_amount
-        else:
-            execution_price = price - slippage_amount
+        execution_price = price + slippage_amount if side == "buy" else price - slippage_amount
 
         return SlippageResult(
             expected_price=price,
@@ -246,10 +242,10 @@ class VolatilityAdjustedSlippage(SlippageModel):
         side: str,
         quantity: Decimal,
         price: Decimal,
-        timestamp: Optional[datetime] = None,
-        volume: Optional[Decimal] = None,
-        volatility: Optional[float] = None,
-        spread: Optional[Decimal] = None,
+        timestamp: datetime | None = None,
+        volume: Decimal | None = None,
+        volatility: float | None = None,
+        spread: Decimal | None = None,
     ) -> SlippageResult:
         """Calculate volatility-adjusted slippage."""
         # Use default volatility if not provided
@@ -271,10 +267,7 @@ class VolatilityAdjustedSlippage(SlippageModel):
 
         slippage_amount = price * Decimal(str(slippage_pct))
 
-        if side == "buy":
-            execution_price = price + slippage_amount
-        else:
-            execution_price = price - slippage_amount
+        execution_price = price + slippage_amount if side == "buy" else price - slippage_amount
 
         return SlippageResult(
             expected_price=price,
@@ -320,7 +313,7 @@ class TimeWeightedSlippageModel(SlippageModel):
         self._open_multiplier = open_multiplier
         self._close_multiplier = close_multiplier
 
-    def _get_time_multiplier(self, timestamp: Optional[datetime]) -> float:
+    def _get_time_multiplier(self, timestamp: datetime | None) -> float:
         """Get time-based multiplier for slippage."""
         if timestamp is None:
             return 1.0
@@ -341,10 +334,10 @@ class TimeWeightedSlippageModel(SlippageModel):
         side: str,
         quantity: Decimal,
         price: Decimal,
-        timestamp: Optional[datetime] = None,
-        volume: Optional[Decimal] = None,
-        volatility: Optional[float] = None,
-        spread: Optional[Decimal] = None,
+        timestamp: datetime | None = None,
+        volume: Decimal | None = None,
+        volatility: float | None = None,
+        spread: Decimal | None = None,
     ) -> SlippageResult:
         """Calculate time-weighted slippage."""
         # Get time multiplier
@@ -364,10 +357,7 @@ class TimeWeightedSlippageModel(SlippageModel):
 
         slippage_amount = price * Decimal(str(slippage_pct))
 
-        if side == "buy":
-            execution_price = price + slippage_amount
-        else:
-            execution_price = price - slippage_amount
+        execution_price = price + slippage_amount if side == "buy" else price - slippage_amount
 
         return SlippageResult(
             expected_price=price,
@@ -399,7 +389,7 @@ class SpreadAwareSlippageModel(SlippageModel):
 
     def __init__(
         self,
-        config: Optional[SpreadAwareSlippageConfig] = None,
+        config: SpreadAwareSlippageConfig | None = None,
     ):
         """
         Initialize spread-aware slippage model.
@@ -419,10 +409,10 @@ class SpreadAwareSlippageModel(SlippageModel):
         side: str,
         quantity: Decimal,
         price: Decimal,
-        timestamp: Optional[datetime] = None,
-        volume: Optional[Decimal] = None,
-        volatility: Optional[float] = None,
-        spread: Optional[Decimal] = None,
+        timestamp: datetime | None = None,
+        volume: Decimal | None = None,
+        volatility: float | None = None,
+        spread: Decimal | None = None,
     ) -> SlippageResult:
         """Calculate spread-aware slippage."""
         slippage_pct = 0.0
@@ -455,10 +445,7 @@ class SpreadAwareSlippageModel(SlippageModel):
 
         slippage_amount = price * Decimal(str(slippage_pct))
 
-        if side == "buy":
-            execution_price = price + slippage_amount
-        else:
-            execution_price = price - slippage_amount
+        execution_price = price + slippage_amount if side == "buy" else price - slippage_amount
 
         return SlippageResult(
             expected_price=price,

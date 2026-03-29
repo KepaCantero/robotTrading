@@ -14,7 +14,7 @@ from __future__ import annotations
 import logging
 from dataclasses import dataclass, field
 from decimal import Decimal
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -37,10 +37,10 @@ class CheckResult:
 
     passed: bool
     confidence: float
-    reasons: List[str] = field(default_factory=list)
-    risk_factors: Dict[str, float] = field(default_factory=dict)
+    reasons: list[str] = field(default_factory=list)
+    risk_factors: dict[str, float] = field(default_factory=dict)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
         logger.debug(
             "Converting CheckResult to dict",
@@ -71,13 +71,13 @@ class PreTradeCheckResult(CheckResult):
     can_execute: bool = True
 
     # Ernest Chan - Regime
-    market_regime: Optional[str] = None
+    market_regime: str | None = None
     regime_confidence: float = 0.0
 
     # Narang - Alpha
-    alpha_signal: Optional[float] = None
-    alpha_decay_rate: Optional[float] = None
-    recommended_holding_period: Optional[int] = None
+    alpha_signal: float | None = None
+    alpha_decay_rate: float | None = None
+    recommended_holding_period: int | None = None
 
     # Harris & O'Hara - Microstructure
     order_book_depth_ok: bool = True
@@ -95,13 +95,13 @@ class PreTradeCheckResult(CheckResult):
     # Execution recommendations
     recommended_venue: str = "lit_exchange"
     recommended_algorithm: str = "LIMIT"
-    recommended_limit_price: Optional[Decimal] = None
+    recommended_limit_price: Decimal | None = None
 
     # Hull - Risk metrics
-    var_1d_95: Optional[float] = None
-    beta: Optional[float] = None
+    var_1d_95: float | None = None
+    beta: float | None = None
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
         base_dict = super().to_dict()
         logger.debug(
@@ -177,7 +177,7 @@ class PostTradeCheckResult(CheckResult):
     latency_ms: float = 0.0
     fill_rate: float = 100.0
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
         base_dict = super().to_dict()
         logger.debug(
@@ -225,19 +225,19 @@ class OptimizeResult(CheckResult):
     Aggregates results from optimization services.
     """
 
-    weights: Dict[str, float] = field(default_factory=dict)
+    weights: dict[str, float] = field(default_factory=dict)
     expected_return: float = 0.0
     expected_risk: float = 0.0
     sharpe_ratio: float = 0.0
 
     # Factor exposures (Narang)
-    factor_exposures: Dict[str, float] = field(default_factory=dict)
+    factor_exposures: dict[str, float] = field(default_factory=dict)
 
     # Regime awareness (Chan)
     regime: str = "UNKNOWN"
     regime_adjusted: bool = False
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
         base_dict = super().to_dict()
         base_dict.update(
@@ -285,19 +285,19 @@ class PortfolioOptimizationResult(CheckResult):
     Maintains backward compatibility with PortfolioOptimizationResult.
     """
 
-    weights: Dict[str, Decimal] = field(default_factory=dict)
+    weights: dict[str, Decimal] = field(default_factory=dict)
     expected_return: float = 0.0
     expected_risk: float = 0.0
     sharpe_ratio: float = 0.0
 
     # Factor exposures (Narang)
-    factor_exposures: Dict[str, float] = field(default_factory=dict)
+    factor_exposures: dict[str, float] = field(default_factory=dict)
 
     # Regime awareness (Chan)
     regime: str = "UNKNOWN"
     regime_adjusted: bool = False
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary with Decimal weights."""
         base_dict = super().to_dict()
         base_dict["weights"] = {k: str(v) for k, v in self.weights.items()}

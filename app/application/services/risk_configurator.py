@@ -15,7 +15,6 @@ from dataclasses import dataclass
 from datetime import datetime
 from decimal import Decimal
 from enum import Enum
-from typing import Dict, Optional, Tuple
 
 import numpy as np
 
@@ -64,7 +63,7 @@ class VaRResult:
     var_99: Decimal  # VaR at 99% confidence
     expected_shortfall_95: Decimal  # ES at 95% confidence
     expected_shortfall_99: Decimal  # ES at 99% confidence
-    confidence_interval: Tuple[Decimal, Decimal]  # 95% CI for VaR
+    confidence_interval: tuple[Decimal, Decimal]  # 95% CI for VaR
     calculation_date: datetime
 
 
@@ -109,7 +108,7 @@ class RiskConfigurator:
 
     def __init__(self):
         """Initialize risk configurator."""
-        self._risk_limits: Dict[RiskLimitType, Decimal] = {}
+        self._risk_limits: dict[RiskLimitType, Decimal] = {}
         self._stress_scenarios = self._initialize_stress_scenarios()
 
     def configure_risk_limits(
@@ -378,10 +377,7 @@ class RiskConfigurator:
             current_value = current_values.get(limit_type, Decimal("0"))
 
             # Calculate utilization
-            if limit_value > 0:
-                utilization = float(current_value / limit_value)
-            else:
-                utilization = 0.0
+            utilization = float(current_value / limit_value) if limit_value > 0 else 0.0
 
             # Check if breached
             is_breached = current_value > limit_value
@@ -403,7 +399,7 @@ class RiskConfigurator:
         self,
         total_risk_budget: Decimal,  # Target portfolio volatility
         asset_class_volatilities: dict[str, float],
-        correlations: Optional[dict[tuple[str, str], float]] = None,
+        correlations: dict[tuple[str, str], float] | None = None,
     ) -> RiskBudget:
         """
         Allocate risk budget across asset classes.

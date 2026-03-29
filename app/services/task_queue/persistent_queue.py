@@ -16,7 +16,7 @@ from dataclasses import dataclass, field
 from datetime import date, datetime, timedelta, timezone
 from decimal import Decimal
 from enum import Enum
-from typing import Callable, Dict, List, Optional, Union
+from typing import Callable
 
 import aiosqlite
 
@@ -57,17 +57,19 @@ def exponential_backoff(attempt: int, base_delay: float = 1.0, max_delay: float 
     return min(delay, max_delay)
 
 
-def serialize_datetime(dt: Optional[datetime]) -> Optional[str]:
+def serialize_datetime(dt: datetime | None) -> str | None:
     """Serialize datetime to ISO format string."""
     return dt.isoformat() if dt else None
 
 
-def deserialize_datetime(dt_str: Optional[str]) -> Optional[datetime]:
+def deserialize_datetime(dt_str: str | None) -> datetime | None:
     """Deserialize ISO format string to datetime."""
     return datetime.fromisoformat(dt_str) if dt_str else None
 
 
-def serialize_value(value: Union[str, int, float, bool, Decimal, datetime, date, Enum, Dict, List, None]) -> Union[str, int, float, bool, List, Dict, None]:
+def serialize_value(
+    value: str | int | float | bool | Decimal | datetime | date | Enum | dict | list | None,
+) -> str | int | float | bool | list | dict | None:
     """Serialize complex types to JSON-compatible values."""
     if isinstance(value, datetime):
         return serialize_datetime(value)
@@ -82,7 +84,9 @@ def serialize_value(value: Union[str, int, float, bool, Decimal, datetime, date,
     return value
 
 
-def deserialize_payload(payload: Dict[str, Union[str, int, float, bool, None]]) -> Dict[str, Union[str, int, float, bool, datetime, Decimal, None]]:
+def deserialize_payload(
+    payload: dict[str, str | int | float | bool | None],
+) -> dict[str, str | int | float | bool | datetime | Decimal | None]:
     """Deserialize payload values to their original types."""
     result = {}
     for key, value in payload.items():
@@ -130,20 +134,20 @@ class Task:
 
     task_id: str
     name: str
-    payload: Dict[str, Union[str, int, float, bool, Decimal, datetime, None]]
+    payload: dict[str, str | int | float | bool | Decimal | datetime | None]
     priority: TaskPriority = TaskPriority.NORMAL
     status: TaskStatus = TaskStatus.PENDING
     created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
-    started_at: Optional[datetime] = None
-    completed_at: Optional[datetime] = None
-    expires_at: Optional[datetime] = None
+    started_at: datetime | None = None
+    completed_at: datetime | None = None
+    expires_at: datetime | None = None
     retry_count: int = 0
     max_retries: int = 3
-    result: Optional[Union[str, int, float, bool, Dict, List, None]] = None
-    error: Optional[str] = None
-    next_retry_at: Optional[datetime] = None
+    result: str | int | float | bool | dict | list | None | None = None
+    error: str | None = None
+    next_retry_at: datetime | None = None
 
-    def to_dict(self) -> Dict[str, Union[str, int, Optional[str]]]:
+    def to_dict(self) -> dict[str, str | int | (str | None)]:
         """Convert task to dictionary for database storage."""
         data = {
             "task_id": self.task_id,
@@ -164,7 +168,7 @@ class Task:
         return data
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Union[str, int, Optional[str]]]) -> "Task":
+    def from_dict(cls, data: dict[str, str | int | (str | None)]) -> Task:
         """Create task from database dictionary."""
         payload = json.loads(data["payload"]) if data.get("payload") else {}
         result = json.loads(data["result"]) if data.get("result") else None
@@ -206,9 +210,7 @@ class Task:
             return False
         if self.is_expired():
             return False
-        if self.next_retry_at and datetime.now(timezone.utc) < self.next_retry_at:
-            return False
-        return True
+        return not (self.next_retry_at and datetime.now(timezone.utc) < self.next_retry_at)
 
 
 class PersistentTaskQueue:
@@ -222,7 +224,7 @@ class PersistentTaskQueue:
     def __init__(
         self,
         db_path: str = "data/task_queue.db",
-        logger: Optional[logging.Logger] = None,
+        logger: logging.Logger | None = None,
     ):
         """
         Initialize task queue with database path.
@@ -235,7 +237,7 @@ class PersistentTaskQueue:
         self.logger = logger or logging.getLogger(__name__)
         self._lock = asyncio.Lock()
         self._running = False
-        self._processing_tasks: Dict[str, asyncio.Task] = {}
+        self._processing_tasks: dict[str, asyncio.Task] = {}
 
     async def initialize(self) -> None:
         """Initialize database schema."""
@@ -278,102 +280,100 @@ class PersistentTaskQueue:
         Returns:
             Task ID
         """
-        async with self._lock:
-            async with aiosqlite.connect(self.db_path) as db:
-                data = task.to_dict()
-                await db.execute(
-                    """
+        async with self._lock, aiosqlite.connect(self.db_path) as db:
+            data = task.to_dict()
+            await db.execute(
+                """
                     INSERT INTO tasks (
                         task_id, name, payload, priority, status,
                         created_at, started_at, completed_at, expires_at,
                         retry_count, max_retries, result, error, next_retry_at
                     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
-                    (
-                        data["task_id"],
-                        data["name"],
-                        data["payload"],
-                        data["priority"],
-                        data["status"],
-                        data["created_at"],
-                        data["started_at"],
-                        data["completed_at"],
-                        data["expires_at"],
-                        data["retry_count"],
-                        data["max_retries"],
-                        data["result"],
-                        data["error"],
-                        data["next_retry_at"],
-                    ),
-                )
-                await db.commit()
+                (
+                    data["task_id"],
+                    data["name"],
+                    data["payload"],
+                    data["priority"],
+                    data["status"],
+                    data["created_at"],
+                    data["started_at"],
+                    data["completed_at"],
+                    data["expires_at"],
+                    data["retry_count"],
+                    data["max_retries"],
+                    data["result"],
+                    data["error"],
+                    data["next_retry_at"],
+                ),
+            )
+            await db.commit()
 
         self.logger.info(
             f"Task {task.task_id} ({task.name}) enqueued with priority {task.priority.name}"
         )
         return task.task_id
 
-    async def dequeue(self) -> Optional[Task]:
+    async def dequeue(self) -> Task | None:
         """
         Get next task to process (priority-ordered).
 
         Returns:
             Next task or None if queue is empty
         """
-        async with self._lock:
-            async with aiosqlite.connect(self.db_path) as db:
-                # Get highest priority pending task that can be processed
-                cursor = await db.execute(
-                    """
+        async with self._lock, aiosqlite.connect(self.db_path) as db:
+            # Get highest priority pending task that can be processed
+            cursor = await db.execute(
+                """
                     SELECT * FROM tasks
                     WHERE status = ?
                     ORDER BY priority DESC, created_at ASC
                     LIMIT 1
                 """,
-                    (TaskStatus.PENDING.value,),
-                )
-                row = await cursor.fetchone()
+                (TaskStatus.PENDING.value,),
+            )
+            row = await cursor.fetchone()
 
-                if not row:
-                    return None
+            if not row:
+                return None
 
-                # Convert row to dict
-                columns = [
-                    "task_id",
-                    "name",
-                    "payload",
-                    "priority",
-                    "status",
-                    "created_at",
-                    "started_at",
-                    "completed_at",
-                    "expires_at",
-                    "retry_count",
-                    "max_retries",
-                    "result",
-                    "error",
-                    "next_retry_at",
-                ]
-                data = dict(zip(columns, row))
-                task = Task.from_dict(data)
+            # Convert row to dict
+            columns = [
+                "task_id",
+                "name",
+                "payload",
+                "priority",
+                "status",
+                "created_at",
+                "started_at",
+                "completed_at",
+                "expires_at",
+                "retry_count",
+                "max_retries",
+                "result",
+                "error",
+                "next_retry_at",
+            ]
+            data = dict(zip(columns, row))
+            task = Task.from_dict(data)
 
-                # Check if task can be processed
-                if not task.can_process():
-                    return None
+            # Check if task can be processed
+            if not task.can_process():
+                return None
 
-                # Mark as processing
-                now = datetime.now(timezone.utc)
-                await self._update_status_started(
-                    db,
-                    task.task_id,
-                    TaskStatus.PROCESSING,
-                    started_at=now,
-                )
-                await db.commit()
+            # Mark as processing
+            now = datetime.now(timezone.utc)
+            await self._update_status_started(
+                db,
+                task.task_id,
+                TaskStatus.PROCESSING,
+                started_at=now,
+            )
+            await db.commit()
 
-                # Update task object to reflect new status
-                task.status = TaskStatus.PROCESSING
-                task.started_at = now
+            # Update task object to reflect new status
+            task.status = TaskStatus.PROCESSING
+            task.started_at = now
 
         self.logger.debug(f"Dequeued task {task.task_id} ({task.name})")
         return task
@@ -397,7 +397,7 @@ class PersistentTaskQueue:
         task_id: str,
         status: TaskStatus,
         completed_at: datetime,
-        result: Optional[str] = None,
+        result: str | None = None,
     ) -> None:
         """Update task status to completed with completed_at and optional result."""
         await db.execute(
@@ -418,7 +418,9 @@ class PersistentTaskQueue:
             (status.value, serialize_datetime(completed_at), task_id),
         )
 
-    async def complete_task(self, task_id: str, result: Optional[Union[str, int, float, bool, Dict, List]] = None) -> None:
+    async def complete_task(
+        self, task_id: str, result: str | int | float | bool | dict | list | None = None
+    ) -> None:
         """
         Mark task as completed.
 
@@ -456,7 +458,7 @@ class PersistentTaskQueue:
         self,
         task_id: str,
         error: str,
-        retry_count: Optional[int] = None,
+        retry_count: int | None = None,
     ) -> None:
         """
         Mark task as failed.
@@ -539,7 +541,7 @@ class PersistentTaskQueue:
 
     async def process_queue(
         self,
-        handler: Callable[[Task], Optional[Union[str, int, float, bool, Dict, List]]],
+        handler: Callable[[Task], str | int | float | bool | dict | list | None],
         max_concurrent: int = 5,
     ) -> None:
         """
@@ -583,7 +585,7 @@ class PersistentTaskQueue:
 
     async def _process_single_task(
         self,
-        handler: Callable[[Task], Optional[Union[str, int, float, bool, Dict, List]]],
+        handler: Callable[[Task], str | int | float | bool | dict | list | None],
         task: Task,
     ) -> None:
         """
@@ -743,7 +745,7 @@ class PersistentTaskQueue:
 
         return count
 
-    async def get_dead_letter_queue(self) -> List[Task]:
+    async def get_dead_letter_queue(self) -> list[Task]:
         """
         Get permanently failed tasks.
 
@@ -784,7 +786,7 @@ class PersistentTaskQueue:
 
             return tasks
 
-    async def get_statistics(self) -> Dict[str, Union[int, Dict[str, int]]]:
+    async def get_statistics(self) -> dict[str, int | dict[str, int]]:
         """
         Get queue statistics.
 
@@ -834,7 +836,7 @@ class PersistentTaskQueue:
                 "processing": len(self._processing_tasks),
             }
 
-    async def get_task(self, task_id: str) -> Optional[Task]:
+    async def get_task(self, task_id: str) -> Task | None:
         """
         Get a task by ID.
 
@@ -872,10 +874,10 @@ class PersistentTaskQueue:
 
     async def list_tasks(
         self,
-        status: Optional[TaskStatus] = None,
+        status: TaskStatus | None = None,
         limit: int = 100,
         offset: int = 0,
-    ) -> List[Task]:
+    ) -> list[Task]:
         """
         List tasks with optional filtering.
 
@@ -953,7 +955,7 @@ class PersistentTaskQueue:
 
         return deleted
 
-    async def clear_completed(self, older_than: Optional[timedelta] = None) -> int:
+    async def clear_completed(self, older_than: timedelta | None = None) -> int:
         """
         Clear completed tasks from the queue.
 
@@ -1012,10 +1014,10 @@ class PersistentTaskQueue:
 async def create_task(
     queue: PersistentTaskQueue,
     name: str,
-    payload: Dict[str, Union[str, int, float, bool, Decimal, datetime, None]],
+    payload: dict[str, str | int | float | bool | Decimal | datetime | None],
     priority: TaskPriority = TaskPriority.NORMAL,
     max_retries: int = 3,
-    expires_at: Optional[datetime] = None,
+    expires_at: datetime | None = None,
 ) -> str:
     """
     Create and enqueue a new task.

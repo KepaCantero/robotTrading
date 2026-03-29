@@ -22,17 +22,19 @@ import asyncio
 import logging
 import traceback
 from decimal import Decimal
-from typing import Annotated, Any, Dict, List, Optional
+from typing import TYPE_CHECKING, Annotated, Any
 
-from fastapi import APIRouter, HTTPException, Request, Depends
+from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel
 from requests.exceptions import HTTPError, RequestException
 
 from app.domain.models.portfolio import AssetUniverse, MarketRegimeData, Position
-from app.services.portfolio_service import PortfolioService
 from app.shared.config.di_container import get_portfolio_service as di_get_portfolio_service
 
 from . import audit_logger, get_correlation_id
+
+if TYPE_CHECKING:
+    from app.services.portfolio_service import PortfolioService
 
 router = APIRouter(prefix="/portfolio", tags=["portfolio"])
 logger = logging.getLogger(__name__)
@@ -46,7 +48,7 @@ class TradeRequest(BaseModel):
 
     symbol: str
     quantity: float
-    price: Optional[float] = None
+    price: float | None = None
 
 
 class TradeResponse(BaseModel):
@@ -56,14 +58,14 @@ class TradeResponse(BaseModel):
     message: str
     symbol: str
     quantity: float
-    price: Optional[float] = None
+    price: float | None = None
 
 
-@router.get("/", response_model=Dict[str, Any])
+@router.get("/", response_model=dict[str, Any])
 async def get_portfolio_summary(
     http_request: Request,
     service: Annotated[PortfolioService, Depends(get_portfolio_service)],
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Get portfolio summary with circuit breaker status.
 
@@ -121,7 +123,7 @@ async def get_portfolio_summary(
             error_message=str(e),
             stack_trace=traceback.format_exc(),
         )
-        raise HTTPException(status_code=504, detail=f"Timeout getting portfolio: {str(e)}")
+        raise HTTPException(status_code=504, detail=f"Timeout getting portfolio: {e!s}") from e
     except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
         logger.error(
             "Error getting portfolio summary",
@@ -139,14 +141,14 @@ async def get_portfolio_summary(
             error_message=str(e),
             stack_trace=traceback.format_exc(),
         )
-        raise HTTPException(status_code=500, detail=f"Error getting portfolio: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error getting portfolio: {e!s}") from e
 
 
-@router.get("/positions", response_model=List[Position])
+@router.get("/positions", response_model=list[Position])
 async def get_positions(
     http_request: Request,
     service: Annotated[PortfolioService, Depends(get_portfolio_service)],
-) -> List[Position]:
+) -> list[Position]:
     """
     Get all positions in the portfolio.
 
@@ -208,7 +210,7 @@ async def get_positions(
             error_message=str(e),
             stack_trace=traceback.format_exc(),
         )
-        raise HTTPException(status_code=504, detail=f"Timeout getting positions: {str(e)}")
+        raise HTTPException(status_code=504, detail=f"Timeout getting positions: {e!s}") from e
     except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
         logger.error(
             "Error getting positions",
@@ -226,7 +228,7 @@ async def get_positions(
             error_message=str(e),
             stack_trace=traceback.format_exc(),
         )
-        raise HTTPException(status_code=500, detail=f"Error getting positions: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error getting positions: {e!s}") from e
 
 
 @router.get("/positions/{symbol}", response_model=Position)
@@ -295,7 +297,7 @@ async def get_position(
             error_message=str(e),
             stack_trace=traceback.format_exc(),
         )
-        raise HTTPException(status_code=504, detail=f"Timeout getting position: {str(e)}")
+        raise HTTPException(status_code=504, detail=f"Timeout getting position: {e!s}") from e
     except OSError as e:
         logger.error(
             "Error getting position",
@@ -314,14 +316,14 @@ async def get_position(
             error_message=str(e),
             stack_trace=traceback.format_exc(),
         )
-        raise HTTPException(status_code=500, detail=f"Error getting position: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error getting position: {e!s}") from e
 
 
-@router.get("/asset-universe", response_model=List[AssetUniverse])
+@router.get("/asset-universe", response_model=list[AssetUniverse])
 async def get_asset_universe(
     http_request: Request,
     service: Annotated[PortfolioService, Depends(get_portfolio_service)],
-) -> List[AssetUniverse]:
+) -> list[AssetUniverse]:
     """
     Get supported asset universe.
 
@@ -370,7 +372,7 @@ async def get_asset_universe(
             error_message=str(e),
             stack_trace=traceback.format_exc(),
         )
-        raise HTTPException(status_code=504, detail=f"Timeout getting asset universe: {str(e)}")
+        raise HTTPException(status_code=504, detail=f"Timeout getting asset universe: {e!s}") from e
     except OSError as e:
         logger.error(
             "Error getting asset universe",
@@ -388,7 +390,7 @@ async def get_asset_universe(
             error_message=str(e),
             stack_trace=traceback.format_exc(),
         )
-        raise HTTPException(status_code=500, detail=f"Error getting asset universe: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error getting asset universe: {e!s}") from e
 
 
 @router.get("/market-regime/{symbol}", response_model=MarketRegimeData)
@@ -459,7 +461,7 @@ async def get_market_regime(
             error_message=str(e),
             stack_trace=traceback.format_exc(),
         )
-        raise HTTPException(status_code=504, detail=f"Timeout getting market regime: {str(e)}")
+        raise HTTPException(status_code=504, detail=f"Timeout getting market regime: {e!s}") from e
     except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
         logger.error(
             "Error getting market regime data",
@@ -478,7 +480,7 @@ async def get_market_regime(
             error_message=str(e),
             stack_trace=traceback.format_exc(),
         )
-        raise HTTPException(status_code=500, detail=f"Error getting market regime: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error getting market regime: {e!s}") from e
 
 
 @router.post("/simulate-trade", response_model=TradeResponse)
@@ -576,7 +578,7 @@ async def simulate_trade(
             error_message=str(e),
             stack_trace=traceback.format_exc(),
         )
-        raise HTTPException(status_code=504, detail=f"Timeout simulating trade: {str(e)}")
+        raise HTTPException(status_code=504, detail=f"Timeout simulating trade: {e!s}") from e
     except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
         logger.error(
             "Error simulating trade",
@@ -595,14 +597,14 @@ async def simulate_trade(
             error_message=str(e),
             stack_trace=traceback.format_exc(),
         )
-        raise HTTPException(status_code=500, detail=f"Error simulating trade: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error simulating trade: {e!s}") from e
 
 
-@router.get("/circuit-breakers", response_model=Dict[str, Dict[str, Any]])
+@router.get("/circuit-breakers", response_model=dict[str, dict[str, Any]])
 async def get_circuit_breaker_status(
     http_request: Request,
     service: Annotated[PortfolioService, Depends(get_portfolio_service)],
-) -> Dict[str, Dict[str, Any]]:
+) -> dict[str, dict[str, Any]]:
     """
     Get circuit breaker status.
 
@@ -657,8 +659,8 @@ async def get_circuit_breaker_status(
             stack_trace=traceback.format_exc(),
         )
         raise HTTPException(
-            status_code=500, detail=f"Error getting circuit breaker status: {str(e)}"
-        )
+            status_code=500, detail=f"Error getting circuit breaker status: {e!s}"
+        ) from e
 
 
 @router.post("/circuit-breakers/{name}/reset")
@@ -666,7 +668,7 @@ async def reset_circuit_breaker(
     name: str,
     http_request: Request,
     service: Annotated[PortfolioService, Depends(get_portfolio_service)],
-) -> Dict[str, str]:
+) -> dict[str, str]:
     """
     Reset a circuit breaker.
 
@@ -725,14 +727,16 @@ async def reset_circuit_breaker(
             error_message=str(e),
             stack_trace=traceback.format_exc(),
         )
-        raise HTTPException(status_code=500, detail=f"Error resetting circuit breaker: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Error resetting circuit breaker: {e!s}"
+        ) from e
 
 
 @router.get("/health")
 async def portfolio_health_check(
     http_request: Request,
     service: Annotated[PortfolioService, Depends(get_portfolio_service)],
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Health check for portfolio service.
 
@@ -832,7 +836,7 @@ async def portfolio_health_check(
             path=http_request.url.path,
             details={"error": str(e)},
         )
-        return {"status": "unhealthy", "message": f"Portfolio service timeout: {str(e)}"}
+        return {"status": "unhealthy", "message": f"Portfolio service timeout: {e!s}"}
     except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
         logger.error(
             "Error during health check",
@@ -849,4 +853,4 @@ async def portfolio_health_check(
             path=http_request.url.path,
             details={"error": str(e)},
         )
-        return {"status": "unhealthy", "message": f"Portfolio service error: {str(e)}"}
+        return {"status": "unhealthy", "message": f"Portfolio service error: {e!s}"}

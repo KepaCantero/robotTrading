@@ -8,7 +8,7 @@ import json
 import logging
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 import pandas as pd
 
@@ -49,7 +49,7 @@ class ComprehensiveBacktestLoader:
 
         self.results_dir.mkdir(parents=True, exist_ok=True)
 
-    def load_all_results(self) -> List[Dict[str, Any]]:
+    def load_all_results(self) -> list[dict[str, Any]]:
         """
         Cargar todos los resultados de comprehensive backtests.
 
@@ -87,11 +87,7 @@ class ComprehensiveBacktestLoader:
                 f"🔍 No se encontraron archivos JSON en {self.results_dir}. Buscando en estructura completa..."
             )
             # Buscar también en el directorio padre (reports/)
-            parent_dir = (
-                self.results_dir.parent
-                if self.results_dir.name == "comprehensive_backtest"
-                else self.results_dir.parent
-            )
+            parent_dir = self.results_dir.parent
             if parent_dir.exists() and parent_dir != self.results_dir:
                 logger.debug(f"🔍 Buscando en directorio padre: {parent_dir}")
                 json_files.extend(list(parent_dir.rglob("*backtest*.json")))
@@ -126,12 +122,12 @@ class ComprehensiveBacktestLoader:
         else:
             # Solo log debug cuando no hay archivos (es normal si no se han ejecutado tests)
             logger.debug(
-                f"ℹ️ No hay archivos JSON aún en {self.results_dir} (normal si no se han ejecutado tests)"
+                f"i No hay archivos JSON aún en {self.results_dir} (normal si no se han ejecutado tests)"
             )
 
         for json_file in json_files:
             try:
-                with open(json_file, 'r') as f:
+                with open(json_file) as f:
                     data = json.load(f)
 
                     # Si es una lista, agregar cada elemento
@@ -140,80 +136,80 @@ class ComprehensiveBacktestLoader:
                         file_results = data
                     elif isinstance(data, dict):
                         # Si tiene 'results', usar eso
-                        file_results = data.get('results', [data])
+                        file_results = data.get("results", [data])
 
                     # Parsear campos de learning engines si vienen como strings
                     for result in file_results:
                         # Parsear before_training_metrics si es string
-                        if 'before_training_metrics' in result:
-                            before_metrics = result['before_training_metrics']
+                        if "before_training_metrics" in result:
+                            before_metrics = result["before_training_metrics"]
                             if isinstance(before_metrics, str) and before_metrics.strip():
                                 try:
                                     import ast
 
-                                    result['before_training_metrics'] = (
+                                    result["before_training_metrics"] = (
                                         ast.literal_eval(before_metrics)
-                                        if before_metrics.startswith('{')
+                                        if before_metrics.startswith("{")
                                         else {}
                                     )
                                 except (ValueError, SyntaxError):
                                     try:
-                                        result['before_training_metrics'] = json.loads(
+                                        result["before_training_metrics"] = json.loads(
                                             before_metrics
                                         )
                                     except (ValueError, json.JSONDecodeError) as e2:
                                         logger.debug(
                                             f"No se pudo parsear before_training_metrics: {before_metrics[:50]} - {e2}"
                                         )
-                                        result['before_training_metrics'] = {}
+                                        result["before_training_metrics"] = {}
 
                         # Parsear after_training_metrics si es string
-                        if 'after_training_metrics' in result:
-                            after_metrics = result['after_training_metrics']
+                        if "after_training_metrics" in result:
+                            after_metrics = result["after_training_metrics"]
                             if isinstance(after_metrics, str) and after_metrics.strip():
                                 try:
                                     import ast
 
-                                    result['after_training_metrics'] = (
+                                    result["after_training_metrics"] = (
                                         ast.literal_eval(after_metrics)
-                                        if after_metrics.startswith('{')
+                                        if after_metrics.startswith("{")
                                         else {}
                                     )
                                 except (ValueError, SyntaxError):
                                     try:
-                                        result['after_training_metrics'] = json.loads(after_metrics)
+                                        result["after_training_metrics"] = json.loads(after_metrics)
                                     except (ValueError, json.JSONDecodeError) as e2:
                                         logger.debug(
                                             f"No se pudo parsear after_training_metrics: {after_metrics[:50]} - {e2}"
                                         )
-                                        result['after_training_metrics'] = {}
+                                        result["after_training_metrics"] = {}
 
                         # Parsear improvement_pct si es string
-                        if 'improvement_pct' in result:
-                            improvement = result['improvement_pct']
+                        if "improvement_pct" in result:
+                            improvement = result["improvement_pct"]
                             if isinstance(improvement, str) and improvement.strip():
                                 try:
                                     import ast
 
-                                    result['improvement_pct'] = (
+                                    result["improvement_pct"] = (
                                         ast.literal_eval(improvement)
-                                        if improvement.startswith('{')
+                                        if improvement.startswith("{")
                                         else {}
                                     )
                                 except (ValueError, SyntaxError):
                                     try:
-                                        result['improvement_pct'] = json.loads(improvement)
+                                        result["improvement_pct"] = json.loads(improvement)
                                     except (ValueError, json.JSONDecodeError) as e2:
                                         logger.debug(
                                             f"No se pudo parsear improvement_pct: {improvement[:50]} - {e2}"
                                         )
-                                        result['improvement_pct'] = {}
+                                        result["improvement_pct"] = {}
 
                         # Contar learning engines con datos de entrenamiento
-                        if result.get('test_type') == 'learning_engine' and (
-                            result.get('before_training_metrics')
-                            or result.get('after_training_metrics')
-                            or result.get('improvement_pct')
+                        if result.get("test_type") == "learning_engine" and (
+                            result.get("before_training_metrics")
+                            or result.get("after_training_metrics")
+                            or result.get("improvement_pct")
                         ):
                             logger.debug(
                                 f"✅ Learning engine result encontrado: {result.get('learning_engine', 'unknown')} "
@@ -233,8 +229,8 @@ class ComprehensiveBacktestLoader:
         learning_engine_count = sum(
             1
             for r in results
-            if r.get('test_type') == 'learning_engine'
-            and (r.get('before_training_metrics') or r.get('after_training_metrics'))
+            if r.get("test_type") == "learning_engine"
+            and (r.get("before_training_metrics") or r.get("after_training_metrics"))
         )
 
         logger.info(
@@ -243,7 +239,7 @@ class ComprehensiveBacktestLoader:
         )
         return results
 
-    def load_latest_results(self) -> Optional[Dict[str, Any]]:
+    def load_latest_results(self) -> Optional[dict[str, Any]]:
         """
         Cargar los resultados más recientes.
 
@@ -272,14 +268,14 @@ class ComprehensiveBacktestLoader:
         df = pd.DataFrame(results)
 
         # Asegurar que las columnas clave existen
-        required_cols = ['test_type', 'total_pnl', 'sharpe_ratio', 'win_rate', 'max_drawdown']
+        required_cols = ["test_type", "total_pnl", "sharpe_ratio", "win_rate", "max_drawdown"]
         for col in required_cols:
             if col not in df.columns:
                 df[col] = None
 
         return df
 
-    def get_results_by_type(self, test_type: str) -> List[Dict[str, Any]]:
+    def get_results_by_type(self, test_type: str) -> list[dict[str, Any]]:
         """
         Obtener resultados filtrados por tipo de test.
 
@@ -290,9 +286,9 @@ class ComprehensiveBacktestLoader:
             Lista de resultados del tipo especificado
         """
         all_results = self.load_all_results()
-        return [r for r in all_results if r.get('test_type') == test_type]
+        return [r for r in all_results if r.get("test_type") == test_type]
 
-    def get_best_result(self, metric: str = 'sharpe_ratio') -> Optional[Dict[str, Any]]:
+    def get_best_result(self, metric: str = "sharpe_ratio") -> Optional[dict[str, Any]]:
         """
         Obtener el mejor resultado según una métrica.
 
@@ -314,9 +310,9 @@ class ComprehensiveBacktestLoader:
             return None
 
         # Retornar el mejor
-        return max(valid_results, key=lambda x: x.get(metric, float('-in')))
+        return max(valid_results, key=lambda x: x.get(metric, float("-in")))
 
-    def get_summary_stats(self) -> Dict[str, Any]:
+    def get_summary_stats(self) -> dict[str, Any]:
         """
         Obtener estadísticas resumidas de todos los resultados.
 
@@ -327,30 +323,30 @@ class ComprehensiveBacktestLoader:
 
         if df.empty:
             return {
-                'total_tests': 0,
-                'test_types': [],
-                'avg_sharpe': 0.0,
-                'avg_pnl': 0.0,
-                'best_sharpe': 0.0,
-                'best_pnl': 0.0,
+                "total_tests": 0,
+                "test_types": [],
+                "avg_sharpe": 0.0,
+                "avg_pnl": 0.0,
+                "best_sharpe": 0.0,
+                "best_pnl": 0.0,
             }
 
         stats = {
-            'total_tests': len(df),
-            'test_types': df['test_type'].unique().tolist() if 'test_type' in df.columns else [],
-            'avg_sharpe': float(df['sharpe_ratio'].mean()) if 'sharpe_ratio' in df.columns else 0.0,
-            'avg_pnl': float(df['total_pnl'].mean()) if 'total_pnl' in df.columns else 0.0,
-            'avg_win_rate': float(df['win_rate'].mean()) if 'win_rate' in df.columns else 0.0,
-            'best_sharpe': float(df['sharpe_ratio'].max()) if 'sharpe_ratio' in df.columns else 0.0,
-            'best_pnl': float(df['total_pnl'].max()) if 'total_pnl' in df.columns else 0.0,
-            'worst_drawdown': (
-                float(df['max_drawdown'].min()) if 'max_drawdown' in df.columns else 0.0
+            "total_tests": len(df),
+            "test_types": df["test_type"].unique().tolist() if "test_type" in df.columns else [],
+            "avg_sharpe": float(df["sharpe_ratio"].mean()) if "sharpe_ratio" in df.columns else 0.0,
+            "avg_pnl": float(df["total_pnl"].mean()) if "total_pnl" in df.columns else 0.0,
+            "avg_win_rate": float(df["win_rate"].mean()) if "win_rate" in df.columns else 0.0,
+            "best_sharpe": float(df["sharpe_ratio"].max()) if "sharpe_ratio" in df.columns else 0.0,
+            "best_pnl": float(df["total_pnl"].max()) if "total_pnl" in df.columns else 0.0,
+            "worst_drawdown": (
+                float(df["max_drawdown"].min()) if "max_drawdown" in df.columns else 0.0
             ),
         }
 
         return stats
 
-    def load_meta_analysis_results(self) -> Optional[Dict[str, Any]]:
+    def load_meta_analysis_results(self) -> Optional[dict[str, Any]]:
         """
         Cargar resultados del meta análisis (si existen).
 
@@ -375,21 +371,21 @@ class ComprehensiveBacktestLoader:
         # Cargar el más reciente
         latest_file = meta_files[0]
         try:
-            with open(latest_file, 'r') as f:
+            with open(latest_file) as f:
                 meta_results = json.load(f)
 
             logger.info(f"✅ Cargados resultados de meta análisis: {latest_file.name}")
             return {
-                'file_path': str(latest_file),
-                'file_name': latest_file.name,
-                'timestamp': datetime.fromtimestamp(latest_file.stat().st_mtime).isoformat(),
-                'data': meta_results,
+                "file_path": str(latest_file),
+                "file_name": latest_file.name,
+                "timestamp": datetime.fromtimestamp(latest_file.stat().st_mtime).isoformat(),
+                "data": meta_results,
             }
         except OSError as e:
             logger.warning(f"Error cargando meta análisis {latest_file.name}: {e}")
             return None
 
-    def get_meta_analysis_summary(self) -> Optional[Dict[str, Any]]:
+    def get_meta_analysis_summary(self) -> Optional[dict[str, Any]]:
         """
         Obtener resumen del meta análisis.
 
@@ -398,26 +394,26 @@ class ComprehensiveBacktestLoader:
         """
         meta_data = self.load_meta_analysis_results()
 
-        if not meta_data or 'data' not in meta_data:
+        if not meta_data or "data" not in meta_data:
             return None
 
-        analysis_data = meta_data['data']
+        analysis_data = meta_data["data"]
 
         summary = {
-            'file_name': meta_data.get('file_name', 'Unknown'),
-            'timestamp': meta_data.get('timestamp', 'Unknown'),
-            'total_backtests_analyzed': analysis_data.get('total_backtests', 0),
-            'clusters_found': (
-                len(analysis_data.get('clusters', {}))
-                if isinstance(analysis_data.get('clusters'), dict)
+            "file_name": meta_data.get("file_name", "Unknown"),
+            "timestamp": meta_data.get("timestamp", "Unknown"),
+            "total_backtests_analyzed": analysis_data.get("total_backtests", 0),
+            "clusters_found": (
+                len(analysis_data.get("clusters", {}))
+                if isinstance(analysis_data.get("clusters"), dict)
                 else 0
             ),
-            'optimal_combinations_count': len(analysis_data.get('optimal_combinations', [])),
-            'avg_sharpe': analysis_data.get('aggregate_metrics', {}).get('avg_sharpe_ratio', 0),
-            'avg_return': analysis_data.get('aggregate_metrics', {}).get('avg_return_pct', 0),
-            'correlations': analysis_data.get('correlations', {}),
-            'clusters': analysis_data.get('clusters', {}),
-            'optimal_combinations': analysis_data.get('optimal_combinations', []),
+            "optimal_combinations_count": len(analysis_data.get("optimal_combinations", [])),
+            "avg_sharpe": analysis_data.get("aggregate_metrics", {}).get("avg_sharpe_ratio", 0),
+            "avg_return": analysis_data.get("aggregate_metrics", {}).get("avg_return_pct", 0),
+            "correlations": analysis_data.get("correlations", {}),
+            "clusters": analysis_data.get("clusters", {}),
+            "optimal_combinations": analysis_data.get("optimal_combinations", []),
         }
 
         return summary

@@ -9,7 +9,7 @@ import logging
 from dataclasses import dataclass, field
 from datetime import datetime
 from decimal import Decimal
-from typing import Dict, List, Optional
+from typing import Optional
 
 logger = logging.getLogger(__name__)
 
@@ -22,7 +22,7 @@ class RLEnvironmentConfig:
     transaction_cost_rate: Decimal = Decimal("0.0005")
     max_stock_holds: int = 10
     action_space_type: str = "continuous"  # or discrete
-    state_features: List[str] = field(
+    state_features: list[str] = field(
         default_factory=lambda: [
             "close",
             "high",
@@ -81,11 +81,9 @@ class FinRLIntegrator:
         self.env_config = env_config or RLEnvironmentConfig()
         self.training_config = training_config or RLTrainingConfig()
         self.trained_model = None
-        self.training_history: List[Dict] = []
+        self.training_history: list[dict] = []
         self.connected = False
-        logger.info(
-            f"✅ FinRLIntegrator initialized " f"(algorithm={self.training_config.algorithm})"
-        )
+        logger.info(f"✅ FinRLIntegrator initialized (algorithm={self.training_config.algorithm})")
 
     async def connect(self) -> bool:
         """Connect to FinRL environment."""
@@ -96,14 +94,14 @@ class FinRLIntegrator:
             logger.info("✅ Connected to FinRL environment")
             return True
         except (FileNotFoundError, ValueError, KeyError, TypeError) as e:
-            logger.error(f"❌ Failed to connect to FinRL: {str(e)}")
+            logger.error(f"❌ Failed to connect to FinRL: {e!s}")
             self.connected = False
             return False
 
     async def prepare_environment(
         self,
-        data: Dict,
-        symbols: List[str],
+        data: dict,
+        symbols: list[str],
     ) -> bool:
         """
         Prepare RL training environment.
@@ -125,14 +123,14 @@ class FinRLIntegrator:
             return True
 
         except (FileNotFoundError, ValueError, KeyError, TypeError) as e:
-            logger.error(f"❌ Failed to prepare environment: {str(e)}")
+            logger.error(f"❌ Failed to prepare environment: {e!s}")
             return False
 
     async def train_model(
         self,
-        training_data: Dict,
-        validation_data: Optional[Dict] = None,
-    ) -> Dict:
+        training_data: dict,
+        validation_data: Optional[dict] = None,
+    ) -> dict:
         """
         Train RL model on historical data.
 
@@ -171,21 +169,19 @@ class FinRLIntegrator:
 
             self.training_history.append(results)
 
-            logger.info(
-                f"✅ Trained {config.algorithm} model " f"({config.total_timesteps} timesteps)"
-            )
+            logger.info(f"✅ Trained {config.algorithm} model ({config.total_timesteps} timesteps)")
             return results
 
         except (FileNotFoundError, ValueError, KeyError, TypeError) as e:
-            logger.error(f"❌ Model training failed: {str(e)}")
+            logger.error(f"❌ Model training failed: {e!s}")
             return {}
 
     async def backtest_model(
         self,
-        model_data: Dict,
+        model_data: dict,
         test_period_start: datetime,
         test_period_end: datetime,
-    ) -> Dict:
+    ) -> dict:
         """
         Backtest trained model on test data.
 
@@ -216,14 +212,14 @@ class FinRLIntegrator:
             return results
 
         except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
-            logger.error(f"❌ Backtest failed: {str(e)}")
+            logger.error(f"❌ Backtest failed: {e!s}")
             return {}
 
     async def generate_trading_signals(
         self,
-        market_data: Dict,
+        market_data: dict,
         model_name: Optional[str] = None,
-    ) -> Dict:
+    ) -> dict:
         """
         Generate trading signals from trained model.
 
@@ -253,14 +249,14 @@ class FinRLIntegrator:
             return signals
 
         except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
-            logger.error(f"❌ Signal generation failed: {str(e)}")
+            logger.error(f"❌ Signal generation failed: {e!s}")
             return {}
 
     async def optimize_portfolio(
         self,
         target_return: Decimal,
         risk_tolerance: Decimal,
-    ) -> Dict:
+    ) -> dict:
         """
         Use RL model to optimize portfolio allocation.
 
@@ -288,14 +284,14 @@ class FinRLIntegrator:
             return optimization_result
 
         except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
-            logger.error(f"❌ Portfolio optimization failed: {str(e)}")
+            logger.error(f"❌ Portfolio optimization failed: {e!s}")
             return {}
 
-    def get_training_history(self) -> List[Dict]:
+    def get_training_history(self) -> list[dict]:
         """Get training history."""
         return self.training_history
 
-    def get_model_info(self) -> Optional[Dict]:
+    def get_model_info(self) -> Optional[dict]:
         """Get trained model information."""
         if self.trained_model is None:
             return None
@@ -306,7 +302,7 @@ class FinRLIntegrator:
             "training_timesteps": self.trained_model["config"].total_timesteps,
         }
 
-    def get_integrator_status(self) -> Dict:
+    def get_integrator_status(self) -> dict:
         """Get integrator status."""
         return {
             "connected": self.connected,

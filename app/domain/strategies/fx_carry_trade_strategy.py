@@ -20,7 +20,6 @@ import logging
 from dataclasses import dataclass, field
 from datetime import date
 from decimal import Decimal
-from typing import Union
 
 from app.domain.strategies.base import BaseStrategy
 from app.domain.strategies.fx_carry_trade.carry_calculator import (
@@ -101,7 +100,7 @@ class FXCarryTradeStrategy(BaseStrategy):
 
     def __init__(
         self,
-        config: dict[str, Union[str, int, float, bool, None]] | FXCarryTradeConfig,
+        config: dict[str, str | int | float | bool | None] | FXCarryTradeConfig,
         rate_provider: FXRateProvider | None = None,
         calculator: CarryCalculator | None = None,
     ) -> None:
@@ -541,7 +540,7 @@ class FXCarryTradeStrategy(BaseStrategy):
         del self.state.current_positions[pair]
         self.state.total_exposure -= abs(position.quantity * exit_price)
 
-        logger.info(f"Closed {pair} position: " f"total_return={closed_position.total_return:.2%}")
+        logger.info(f"Closed {pair} position: total_return={closed_position.total_return:.2%}")
 
         return closed_position
 
@@ -642,7 +641,7 @@ class FXCarryTradeStrategy(BaseStrategy):
             "take_profit",
         ]
 
-    def get_portfolio_summary(self) -> dict[str, Union[str, int, float, bool, None]]:
+    def get_portfolio_summary(self) -> dict[str, str | int | float | bool | None]:
         """
         Get summary of current portfolio state.
 

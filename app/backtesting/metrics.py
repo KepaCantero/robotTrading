@@ -14,7 +14,7 @@ Reference:
 import logging
 from datetime import datetime
 from decimal import Decimal
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 import numpy as np
 
@@ -92,7 +92,7 @@ class MetricsCalculator:
 
     def calculate_all_metrics(
         self,
-        trades: List[Trade],
+        trades: list[Trade],
         initial_capital: Decimal,
         final_capital: Decimal,
         start_date: datetime,
@@ -172,7 +172,7 @@ class MetricsCalculator:
         sharpe_ratio = self._calculate_sharpe_ratio(daily_returns) if daily_returns else None
         sortino_ratio = self._calculate_sortino_ratio(daily_returns) if daily_returns else None
 
-        # Risk/Reward Ratio (TASK-MET-2: Average risk/reward per trade, target ≥1:3)
+        # Risk/Reward Ratio (TASK-MET-2: Average risk/reward per trade, target >=1:3)
         risk_reward_ratio = (
             self._calculate_risk_reward_ratio(closed_trades) if closed_trades else None
         )
@@ -325,7 +325,7 @@ class MetricsCalculator:
             cvar_95=None,
         )
 
-    def _build_equity_curve(self, trades: List[Trade], initial_capital: Decimal) -> List[Decimal]:
+    def _build_equity_curve(self, trades: list[Trade], initial_capital: Decimal) -> list[Decimal]:
         """Build equity curve from trades."""
         equity = [initial_capital]
         current = initial_capital
@@ -337,7 +337,7 @@ class MetricsCalculator:
 
         return equity
 
-    def _calculate_max_drawdown(self, equity_curve: List[Decimal]) -> Decimal:
+    def _calculate_max_drawdown(self, equity_curve: list[Decimal]) -> Decimal:
         """Calculate maximum drawdown."""
         if len(equity_curve) < 2:
             return Decimal("0")
@@ -355,8 +355,8 @@ class MetricsCalculator:
         return max_dd
 
     def _calculate_daily_returns(
-        self, trades: List[Trade], initial_capital: Decimal
-    ) -> List[Decimal]:
+        self, trades: list[Trade], initial_capital: Decimal
+    ) -> list[Decimal]:
         """Calculate daily returns from trades."""
         # Simplified: convert trade P&L to daily returns
         returns = []
@@ -370,7 +370,7 @@ class MetricsCalculator:
 
         return returns
 
-    def _calculate_sharpe_ratio(self, returns: List[Decimal]) -> Optional[Decimal]:
+    def _calculate_sharpe_ratio(self, returns: list[Decimal]) -> Optional[Decimal]:
         """Calculate Sharpe ratio using empyrical if available, otherwise manual."""
         if not returns or len(returns) < 2:
             return None
@@ -388,7 +388,7 @@ class MetricsCalculator:
                     sharpe = ep_module.sharpe_ratio(
                         returns_array,
                         risk_free=daily_risk_free,
-                        period='daily',
+                        period="daily",
                         annualization=self._annual_trading_days,
                     )
                     # Handle NaN
@@ -427,7 +427,7 @@ class MetricsCalculator:
             logger.error(f"Error calculating Sharpe ratio: {e}")
             return None
 
-    def _calculate_sortino_ratio(self, returns: List[Decimal]) -> Optional[Decimal]:
+    def _calculate_sortino_ratio(self, returns: list[Decimal]) -> Optional[Decimal]:
         """Calculate Sortino ratio using empyrical if available, otherwise manual."""
         if not returns or len(returns) < 2:
             return None
@@ -444,7 +444,7 @@ class MetricsCalculator:
                     sortino = ep_module.sortino_ratio(
                         returns_array,
                         risk_free=daily_risk_free,
-                        period='daily',
+                        period="daily",
                         annualization=self._annual_trading_days,
                     )
                     # Handle NaN
@@ -499,12 +499,12 @@ class MetricsCalculator:
             logger.error(f"Error calculating Sortino ratio: {e}")
             return None
 
-    def _calculate_risk_reward_ratio(self, trades: List[Trade]) -> Optional[Decimal]:
+    def _calculate_risk_reward_ratio(self, trades: list[Trade]) -> Optional[Decimal]:
         """
         Calculate average risk/reward ratio per trade (TASK-MET-2).
 
         Risk/Reward = Average Win / Average Loss (absolute values)
-        Target: ≥1:3 (for every $1 risked, expect $3 reward)
+        Target: >=1:3 (for every $1 risked, expect $3 reward)
         """
         try:
             if not trades:
@@ -534,7 +534,7 @@ class MetricsCalculator:
             logger.error(f"Error calculating risk/reward ratio: {e}")
             return None
 
-    def _calculate_avg_trade_duration(self, trades: List[Trade]) -> Decimal:
+    def _calculate_avg_trade_duration(self, trades: list[Trade]) -> Decimal:
         """Calculate average trade duration in days."""
         durations = []
         for trade in trades:
@@ -592,7 +592,7 @@ class MetricsCalculator:
         return cagr
 
 
-def calculate_profit_factor(winning_trades: List[Trade], losing_trades: List[Trade]) -> Decimal:
+def calculate_profit_factor(winning_trades: list[Trade], losing_trades: list[Trade]) -> Decimal:
     """
     Calculate profit factor.
 
@@ -622,8 +622,8 @@ def calculate_profit_factor(winning_trades: List[Trade], losing_trades: List[Tra
 
 
 def calculate_expectancy(
-    winning_trades: List[Trade],
-    losing_trades: List[Trade],
+    winning_trades: list[Trade],
+    losing_trades: list[Trade],
 ) -> Decimal:
     """
     Calculate expectancy (expected value per trade).
@@ -632,7 +632,7 @@ def calculate_expectancy(
     It's a critical metric for determining if a strategy is profitable in the long run.
 
     Formula:
-        Expectancy = (Win Rate × Avg Win) - (Loss Rate × Avg Loss)
+        Expectancy = (Win Rate * Avg Win) - (Loss Rate * Avg Loss)
 
     Interpretation:
     - Positive expectancy: Strategy makes money on average per trade
@@ -641,7 +641,7 @@ def calculate_expectancy(
 
     Example:
         Win Rate: 40%, Avg Win: $500, Avg Loss: $300
-        Expectancy = (0.4 × $500) - (0.6 × $300)
+        Expectancy = (0.4 * $500) - (0.6 * $300)
                    = $200 - $180
                    = $20 per trade
 
@@ -689,10 +689,10 @@ def calculate_expectancy(
 
 
 def calculate_expectancy_with_confidence(
-    winning_trades: List[Trade],
-    losing_trades: List[Trade],
+    winning_trades: list[Trade],
+    losing_trades: list[Trade],
     confidence_level: float = 0.95,
-) -> Dict[str, Decimal]:
+) -> dict[str, Decimal]:
     """
     Calculate expectancy with confidence intervals.
 
@@ -832,7 +832,7 @@ def calculate_matthews_corrcoef(y_true: np.ndarray, y_pred: np.ndarray) -> float
 
 def calculate_classification_metrics_imbalanced(
     y_true: np.ndarray, y_pred: np.ndarray, y_proba: Optional[np.ndarray] = None
-) -> Dict[str, float]:
+) -> dict[str, float]:
     """
     Calculate comprehensive classification metrics for imbalanced data.
 
@@ -872,38 +872,38 @@ def calculate_classification_metrics_imbalanced(
 
     # Initialize metrics dict directly
     metrics = {
-        'f1_weighted': calculate_f1_score(y_true, y_pred, average='weighted'),
-        'f1_macro': calculate_f1_score(y_true, y_pred, average='macro'),
-        'f1_binary': calculate_f1_score(y_true, y_pred, average='binary'),
-        'mcc': calculate_matthews_corrcoef(y_true, y_pred),
-        'balanced_accuracy': float(balanced_accuracy_score(y_true, y_pred)),
-        'confusion_matrix': cm.tolist(),
+        "f1_weighted": calculate_f1_score(y_true, y_pred, average="weighted"),
+        "f1_macro": calculate_f1_score(y_true, y_pred, average="macro"),
+        "f1_binary": calculate_f1_score(y_true, y_pred, average="binary"),
+        "mcc": calculate_matthews_corrcoef(y_true, y_pred),
+        "balanced_accuracy": float(balanced_accuracy_score(y_true, y_pred)),
+        "confusion_matrix": cm.tolist(),
     }
 
     # Extract TP, TN, FP, FN for binary classification
     if len(cm) == 2:
         tn, fp, fn, tp = cm.ravel()
-        metrics['true_positives'] = int(tp)
-        metrics['true_negatives'] = int(tn)
-        metrics['false_positives'] = int(fp)
-        metrics['false_negatives'] = int(fn)
+        metrics["true_positives"] = int(tp)
+        metrics["true_negatives"] = int(tn)
+        metrics["false_positives"] = int(fp)
+        metrics["false_negatives"] = int(fn)
 
     # Precision-Recall AUC (if probabilities provided)
     if y_proba is not None:
         try:
             precision, recall, _ = precision_recall_curve(y_true, y_proba)
-            metrics['pr_auc'] = float(auc(recall, precision))
+            metrics["pr_auc"] = float(auc(recall, precision))
         except Exception:
-            metrics['pr_auc'] = None
+            metrics["pr_auc"] = None
 
     return metrics
 
 
 def calculate_imbalanced_metrics_from_trades(
-    winning_trades: List[Trade],
-    losing_trades: List[Trade],
+    winning_trades: list[Trade],
+    losing_trades: list[Trade],
     predictions: Optional[np.ndarray] = None,
-) -> Dict[str, float]:
+) -> dict[str, float]:
     """
     Calculate imbalanced classification metrics from trade results.
 
@@ -925,19 +925,15 @@ def calculate_imbalanced_metrics_from_trades(
     # Create binary labels from trades
     y_true = np.array([1] * len(winning_trades) + [0] * len(losing_trades))
 
-    if predictions is not None:
-        # Convert predictions to binary
-        y_pred = (predictions > 0).astype(int)
-    else:
-        # No predictions, use perfect prediction
-        y_pred = y_true.copy()
+    # Convert predictions to binary, or use perfect prediction
+    y_pred = (predictions > 0).astype(int) if predictions is not None else y_true.copy()
 
     # Calculate metrics
     metrics = calculate_classification_metrics_imbalanced(y_true, y_pred)
 
     # Add trade-specific metrics
-    metrics['n_winning'] = len(winning_trades)
-    metrics['n_losing'] = len(losing_trades)
+    metrics["n_winning"] = len(winning_trades)
+    metrics["n_losing"] = len(losing_trades)
 
 
 # ============================================================================
@@ -996,7 +992,7 @@ class LopezDePradoMetricsCalculator:
 
     def combine_strategy_sharpes(
         self,
-        sharpes: List[float],
+        sharpes: list[float],
         returns_matrix: np.ndarray,
         method: str = "optimal",
     ) -> SharpeCombinationResult:
@@ -1040,7 +1036,7 @@ class LopezDePradoMetricsCalculator:
 
     def validate_portfolio_stability(
         self,
-        weights_history: List[np.ndarray],
+        weights_history: list[np.ndarray],
         returns_history: Optional[np.ndarray] = None,
         period_length_days: int = 30,
     ) -> PortfolioStabilityMetrics:
@@ -1087,7 +1083,7 @@ class LopezDePradoMetricsCalculator:
     def calculate_turnover_adjusted_metrics(
         self,
         returns: np.ndarray,
-        weights_history: List[np.ndarray],
+        weights_history: list[np.ndarray],
         period_length_days: int = 30,
     ) -> TurnoverAdjustedMetrics:
         """
@@ -1140,12 +1136,12 @@ class LopezDePradoMetricsCalculator:
 
     def generate_comprehensive_report(
         self,
-        sharpes: List[float],
+        sharpes: list[float],
         returns_matrix: np.ndarray,
-        weights_history: List[np.ndarray],
+        weights_history: list[np.ndarray],
         portfolio_returns: np.ndarray,
         current_weights: np.ndarray,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Generate a comprehensive López de Prado metrics report.
 
@@ -1273,7 +1269,7 @@ class LopezDePradoMetricsCalculator:
         stability_result: PortfolioStabilityMetrics,
         turnover_result: TurnoverAdjustedMetrics,
         concentration_result: ConcentrationMetrics,
-    ) -> List[str]:
+    ) -> list[str]:
         """Generate actionable recommendations based on all metrics."""
         recommendations = []
 

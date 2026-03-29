@@ -1,11 +1,12 @@
 """Database health checker for infrastructure layer."""
+
 from __future__ import annotations
 
 import logging
 import sqlite3
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Dict, Protocol
+from typing import Any, Protocol
 
 logger = logging.getLogger(__name__)
 
@@ -15,7 +16,7 @@ class DatabaseHealthCheckerProtocol(Protocol):
 
     def check_health(
         self, db_path: str | None = None, timeout: float | None = None
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Check database connectivity and integrity."""
         ...
 
@@ -41,7 +42,7 @@ class SQLiteDatabaseHealthChecker:
 
     def check_health(
         self, db_path: str | None = None, timeout: float | None = None
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Check database connectivity and integrity."""
         path = db_path or self.config.db_path
         conn_timeout = timeout or self.config.timeout
@@ -96,13 +97,13 @@ class SQLiteDatabaseHealthChecker:
                 "Database error during health check",
                 extra={"db_path": path, "error": str(e), "health_status": "unhealthy"},
             )
-            return {"status": "unhealthy", "message": f"Database error: {str(e)}"}
+            return {"status": "unhealthy", "message": f"Database error: {e!s}"}
         except Exception as e:
             logger.error(
                 "Unexpected error during health check",
                 extra={"db_path": path, "error": str(e), "health_status": "unhealthy"},
             )
-            return {"status": "unhealthy", "message": f"Unexpected error: {str(e)}"}
+            return {"status": "unhealthy", "message": f"Unexpected error: {e!s}"}
 
     def _get_connection(self, db_path: str, timeout: float) -> sqlite3.Connection:
         """Get database connection."""

@@ -11,7 +11,7 @@ import logging
 import os
 import time
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -23,10 +23,10 @@ class FileBasedConfigCache:
     """
 
     def __init__(self):
-        self._cache: Dict[Path, Dict[str, Any]] = {}
-        self._timestamps: Dict[Path, float] = {}
+        self._cache: dict[Path, dict[str, Any]] = {}
+        self._timestamps: dict[Path, float] = {}
 
-    def get_cached(self, config_path: Path) -> Optional[Dict[str, Any]]:
+    def get_cached(self, config_path: Path) -> Optional[dict[str, Any]]:
         """
         Get cached configuration if available and valid.
 
@@ -57,7 +57,7 @@ class FileBasedConfigCache:
         logger.debug(f"Cache hit for {config_path}")
         return self._cache[config_path]
 
-    def set_cached(self, config_path: Path, config: Dict[str, Any]) -> None:
+    def set_cached(self, config_path: Path, config: dict[str, Any]) -> None:
         """
         Cache configuration.
 

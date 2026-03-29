@@ -10,12 +10,8 @@ TASK-24: SRP Refactoring
 
 import logging
 from decimal import Decimal
-from typing import TYPE_CHECKING, Dict, List
 
 from pydantic import BaseModel, Field, field_validator
-
-if TYPE_CHECKING:
-    pass  # Forward references only
 
 logger = logging.getLogger(__name__)
 
@@ -54,7 +50,7 @@ class TieredCommission(CommissionModel):
     """Tiered commission model."""
 
     type: str = "tiered"
-    brackets: List[TierBracket] = Field(description="Commission brackets")
+    brackets: list[TierBracket] = Field(description="Commission brackets")
 
 
 class BacktestingConfig(BaseModel):
@@ -103,16 +99,18 @@ class BacktestingConfig(BaseModel):
         description="Default commission per share",
     )
     default_commission_fixed: Decimal = Field(
-        default=Decimal("5.0"), description="Default fixed commission per trade"  # $5 flat fee
+        default=Decimal("5.0"),
+        description="Default fixed commission per trade",  # $5 flat fee
     )
     min_commission: Decimal = Field(
-        default=Decimal("1.0"), description="Minimum commission per trade"  # $1 minimum
+        default=Decimal("1.0"),
+        description="Minimum commission per trade",  # $1 minimum
     )
 
     # ========== CAPITAL SCALE SETTINGS ==========
     # Consolidated from constants.py CapitalScaleConstants
 
-    default_capital_levels: List[Decimal] = Field(
+    default_capital_levels: list[Decimal] = Field(
         default_factory=lambda: [
             Decimal("1000"),  # Micro
             Decimal("5000"),  # Small
@@ -129,7 +127,8 @@ class BacktestingConfig(BaseModel):
 
     # ADV (Average Daily Volume) settings
     adv_limit_pct: Decimal = Field(
-        default=Decimal("0.02"), description="Maximum position as percentage of ADV"  # 2% ADV rule
+        default=Decimal("0.02"),
+        description="Maximum position as percentage of ADV",  # 2% ADV rule
     )
     adv_fill_ratio_reject_threshold: Decimal = Field(
         default=Decimal("0.5"),  # Reject if fill < 50%
@@ -174,7 +173,7 @@ class BacktestingConfig(BaseModel):
     )
 
     # Position limits by capital tier
-    position_limits_by_tier: Dict[str, Decimal] = Field(
+    position_limits_by_tier: dict[str, Decimal] = Field(
         default_factory=lambda: {
             "micro": Decimal("0.02"),  # 2% for micro accounts
             "small": Decimal("0.05"),  # 5% for small accounts
@@ -199,10 +198,12 @@ class BacktestingConfig(BaseModel):
     # ========== RISK MANAGEMENT DEFAULTS ==========
 
     default_stop_loss_pct: Decimal = Field(
-        default=Decimal("0.05"), description="Default stop loss percentage"  # 5% stop loss
+        default=Decimal("0.05"),
+        description="Default stop loss percentage",  # 5% stop loss
     )
     default_take_profit_pct: Decimal = Field(
-        default=Decimal("0.15"), description="Default take profit percentage"  # 15% take profit
+        default=Decimal("0.15"),
+        description="Default take profit percentage",  # 15% take profit
     )
     default_risk_free_rate: Decimal = Field(
         default=Decimal("0.02"),  # 2% annual risk-free rate
@@ -212,7 +213,8 @@ class BacktestingConfig(BaseModel):
         default=252, description="Number of trading days in a year for annualization"
     )
     default_daily_loss_limit: Decimal = Field(
-        default=Decimal("0.05"), description="Default daily loss limit"  # 5% daily loss limit
+        default=Decimal("0.05"),
+        description="Default daily loss limit",  # 5% daily loss limit
     )
 
     # ========== PERFORMANCE METRICS ==========
@@ -224,7 +226,8 @@ class BacktestingConfig(BaseModel):
         default=Decimal("0.5"), description="Minimum acceptable Sharpe ratio"
     )
     max_acceptable_drawdown: Decimal = Field(
-        default=Decimal("0.25"), description="Maximum acceptable drawdown"  # 25% max drawdown
+        default=Decimal("0.25"),
+        description="Maximum acceptable drawdown",  # 25% max drawdown
     )
 
     # ========== DATA SETTINGS ==========

@@ -10,7 +10,7 @@ import asyncio
 import logging
 from datetime import datetime, timedelta
 from decimal import Decimal
-from typing import Any, Dict, List, Optional
+from typing import Any, ClassVar, Optional
 
 from requests.exceptions import HTTPError, RequestException
 
@@ -35,7 +35,7 @@ class ForexDataFetcher:
     """
 
     # Default forex pairs for major currencies
-    DEFAULT_PAIRS = {
+    DEFAULT_PAIRS: ClassVar[dict] = {
         "EUR": "EUR/USD",
         "GBP": "GBP/USD",
         "JPY": "USD/JPY",  # Inverse pair
@@ -49,7 +49,7 @@ class ForexDataFetcher:
     }
 
     # Default correlations with USD (fallback if API unavailable)
-    DEFAULT_CORRELATIONS = {
+    DEFAULT_CORRELATIONS: ClassVar[dict] = {
         "EUR": Decimal("0.85"),
         "GBP": Decimal("0.80"),
         "JPY": Decimal("0.75"),
@@ -63,7 +63,7 @@ class ForexDataFetcher:
     }
 
     # Default bid-ask spreads (in basis points)
-    DEFAULT_SPREADS = {
+    DEFAULT_SPREADS: ClassVar[dict] = {
         "EUR/USD": Decimal("2"),
         "GBP/USD": Decimal("2"),
         "USD/JPY": Decimal("1"),
@@ -78,8 +78,8 @@ class ForexDataFetcher:
 
     def __init__(self):
         """Initialize forex data fetcher with caching and reconnection manager."""
-        self.rate_cache: Dict[str, tuple[Decimal, datetime]] = {}
-        self.correlation_cache: Optional[tuple[Dict[str, Decimal], datetime]] = None
+        self.rate_cache: dict[str, tuple[Decimal, datetime]] = {}
+        self.correlation_cache: Optional[tuple[dict[str, Decimal], datetime]] = None
         self.rate_cache_duration = timedelta(minutes=60)
         self.correlation_cache_duration = timedelta(days=7)
         self.api_timeout_seconds = 30
@@ -128,7 +128,7 @@ class ForexDataFetcher:
             config=config,
         )
 
-    def get_available_pairs(self) -> Dict[str, str]:
+    def get_available_pairs(self) -> dict[str, str]:
         """
         Get available forex pairs for hedging.
 
@@ -138,7 +138,7 @@ class ForexDataFetcher:
         logger.debug(f"Fetching available forex pairs (returning {len(self.DEFAULT_PAIRS)})")
         return self.DEFAULT_PAIRS.copy()
 
-    def get_correlations(self, base_currency: str = "USD") -> Dict[str, Decimal]:
+    def get_correlations(self, base_currency: str = "USD") -> dict[str, Decimal]:
         """
         Get historical correlations with base currency.
 
@@ -160,7 +160,7 @@ class ForexDataFetcher:
         # Try to fetch from API with reconnection manager (not implemented - would call OANDA/FXCM)
         try:
 
-            async def _fetch_correlations() -> Optional[Dict[str, Decimal]]:
+            async def _fetch_correlations() -> Optional[dict[str, Decimal]]:
                 """Internal fetch function."""
                 return self._fetch_correlations_from_api(base_currency)
 
@@ -182,7 +182,7 @@ class ForexDataFetcher:
         self.correlation_cache = (self.DEFAULT_CORRELATIONS.copy(), utc_now())
         return self.DEFAULT_CORRELATIONS.copy()
 
-    def get_current_rates(self, pairs: List[str]) -> Dict[str, Decimal]:
+    def get_current_rates(self, pairs: list[str]) -> dict[str, Decimal]:
         """
         Get current exchange rates for forex pairs.
 
@@ -253,11 +253,11 @@ class ForexDataFetcher:
             self.correlation_cache = None
             logger.info("Cleared correlation cache")
 
-    def get_connection_stats(self) -> Dict[str, Any]:
+    def get_connection_stats(self) -> dict[str, Any]:
         """Get reconnection statistics."""
         return self.reconnection_manager.get_stats()
 
-    def _fetch_correlations_from_api(self, base_currency: str) -> Optional[Dict[str, Decimal]]:
+    def _fetch_correlations_from_api(self, base_currency: str) -> Optional[dict[str, Decimal]]:
         """
         Fetch correlation matrix from OANDA/FXCM API.
 

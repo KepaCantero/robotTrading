@@ -215,31 +215,31 @@ class BacktestOrchestrator:
 
             # Create temporary config for the backtest
             temp_config = {
-                'input': {
-                    'start_date': data_start_date.strftime("%Y-%m-%d"),
-                    'end_date': data_end_date.strftime("%Y-%m-%d"),
-                    'symbol': backtest_config.symbols[0] if backtest_config.symbols else 'AAPL',
+                "input": {
+                    "start_date": data_start_date.strftime("%Y-%m-%d"),
+                    "end_date": data_end_date.strftime("%Y-%m-%d"),
+                    "symbol": backtest_config.symbols[0] if backtest_config.symbols else "AAPL",
                 },
-                'strategy': {
-                    'name': backtest_config.strategy_name,
-                    'preset': backtest_config.strategy_preset or 'default',
+                "strategy": {
+                    "name": backtest_config.strategy_name,
+                    "preset": backtest_config.strategy_preset or "default",
                 },
-                'capital': {
-                    'initial_capital': float(backtest_config.initial_capital),
+                "capital": {
+                    "initial_capital": float(backtest_config.initial_capital),
                 },
-                'tests': {
-                    'baseline': {'enabled': True},
+                "tests": {
+                    "baseline": {"enabled": True},
                 },
-                'reporting': {
-                    'output_directory': tempfile.gettempdir() + '/backtest_output',
+                "reporting": {
+                    "output_directory": tempfile.gettempdir() + "/backtest_output",
                 },
-                'parallelization': {
-                    'enabled': False,
+                "parallelization": {
+                    "enabled": False,
                 },
             }
 
             # Write temp config
-            with tempfile.NamedTemporaryFile(mode='w', suffix='.yaml', delete=False) as f:
+            with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as f:
                 yaml.dump(temp_config, f)
                 temp_config_path = f.name
 
@@ -250,26 +250,26 @@ class BacktestOrchestrator:
 
                 # Extract baseline result
                 baseline_result = next(
-                    (r for r in runner_results if r.get('test_type') == 'baseline'), None
+                    (r for r in runner_results if r.get("test_type") == "baseline"), None
                 )
 
-                if baseline_result and 'metrics' in baseline_result:
-                    metrics = baseline_result['metrics']
+                if baseline_result and "metrics" in baseline_result:
+                    metrics = baseline_result["metrics"]
                     result = BacktestResult(
                         strategy_name=backtest_config.strategy_name,
                         config=backtest_config,
-                        trades=baseline_result.get('trades', []),
+                        trades=baseline_result.get("trades", []),
                         performance=metrics,
-                        equity_curve=baseline_result.get('equity_curve', []),
+                        equity_curve=baseline_result.get("equity_curve", []),
                         start_date=data_start_date,
                         end_date=data_end_date,
                         final_capital=Decimal(
-                            str(metrics.get('final_capital', backtest_config.initial_capital))
+                            str(metrics.get("final_capital", backtest_config.initial_capital))
                         ),
-                        total_return=Decimal(str(metrics.get('total_return', 0))),
-                        annualized_return=Decimal(str(metrics.get('annualized_return', 0))),
-                        sharpe_ratio=Decimal(str(metrics.get('sharpe_ratio', 0))),
-                        max_drawdown=Decimal(str(metrics.get('max_drawdown', 0))),
+                        total_return=Decimal(str(metrics.get("total_return", 0))),
+                        annualized_return=Decimal(str(metrics.get("annualized_return", 0))),
+                        sharpe_ratio=Decimal(str(metrics.get("sharpe_ratio", 0))),
+                        max_drawdown=Decimal(str(metrics.get("max_drawdown", 0))),
                     )
                     logger.info(f"✅ Real backtest completed: {backtest_config.strategy_name}")
                     return result

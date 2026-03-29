@@ -17,7 +17,7 @@ import json
 import logging
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Union
+from typing import Union
 
 import numpy as np
 import pandas as pd
@@ -27,9 +27,13 @@ from app.domain.models.input_profile import ObjectivoInversion
 
 # Type alias for nested JSON-like result dictionaries
 JsonDict = Union[
-    int, float, str, bool, None,
-    Dict[str, "JsonDict"],
-    List["JsonDict"],
+    int,
+    float,
+    str,
+    bool,
+    None,
+    dict[str, "JsonDict"],
+    list["JsonDict"],
 ]
 
 logger = logging.getLogger(__name__)
@@ -135,7 +139,7 @@ class ReportGenerator:
 
         return html
 
-    def _group_best_strategies(self, results_list: List[object]) -> List[JsonDict]:
+    def _group_best_strategies(self, results_list: list[object]) -> list[JsonDict]:
         """Group best strategies by objective."""
         best_by_objective = []
 
@@ -175,9 +179,7 @@ class ReportGenerator:
 
         return best_by_objective
 
-    def generate_batch_summary(
-        self, results: JsonDict, fallback_metrics: Dict[str, int]
-    ) -> None:
+    def generate_batch_summary(self, results: JsonDict, fallback_metrics: dict[str, int]) -> None:
         """
         Generate batch execution summary.
 
@@ -227,35 +229,35 @@ class ReportGenerator:
             },
         )
 
-    def export_results(self, results: JsonDict, format: str = "json") -> Path:
+    def export_results(self, results: JsonDict, output_format: str = "json") -> Path:
         """
         Export results to file.
 
         Args:
             results: Dictionary of profile_id to ProfileResult
-            format: Export format (json, csv, excel)
+            output_format: Export format (json, csv, excel)
 
         Returns:
             Path to exported file
         """
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
 
-        if format == "json":
+        if output_format == "json":
             return self._export_json(results, timestamp)
-        elif format == "csv":
+        elif output_format == "csv":
             return self._export_csv(results, timestamp)
-        elif format == "excel":
+        elif output_format == "excel":
             return self._export_excel(results, timestamp)
         else:
             logger.error(
                 "Unsupported export format requested",
                 extra={
                     "operation": "export_results",
-                    "requested_format": format,
+                    "requested_format": output_format,
                     "supported_formats": ["json", "csv", "excel"],
                 },
             )
-            raise ValueError(f"Unsupported format: {format}")
+            raise ValueError(f"Unsupported format: {output_format}")
 
     def _export_json(self, results: JsonDict, timestamp: str) -> Path:
         """Export results to JSON."""

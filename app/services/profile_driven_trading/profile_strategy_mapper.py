@@ -21,7 +21,7 @@ Configuration Sources:
 import logging
 from decimal import Decimal
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 import yaml
 from pydantic import BaseModel, Field, field_validator
@@ -106,8 +106,8 @@ class StrategyMapping(BaseModel):
     risk_tolerance: RiskTolerance
 
     # Strategy configuration
-    enabled_strategies: List[str] = Field(description="List of enabled strategy modules")
-    strategy_weights: Dict[str, float] = Field(
+    enabled_strategies: list[str] = Field(description="List of enabled strategy modules")
+    strategy_weights: dict[str, float] = Field(
         default_factory=dict, description="Weight allocation for each strategy"
     )
 
@@ -122,7 +122,7 @@ class StrategyMapping(BaseModel):
     commission_negotiation: bool = Field(description="Whether commission negotiation is enabled")
 
     # Learning configuration
-    enabled_learning_engines: List[str] = Field(
+    enabled_learning_engines: list[str] = Field(
         default_factory=list, description="List of enabled learning engine types"
     )
 
@@ -136,13 +136,13 @@ class StrategyMapping(BaseModel):
     )
 
     # Capital allocation
-    capital_allocation: Optional[Dict[str, Decimal]] = Field(
+    capital_allocation: Optional[dict[str, Decimal]] = Field(
         default=None, description="Capital allocated to each strategy"
     )
 
     @field_validator("strategy_weights")
     @classmethod
-    def validate_weights_sum(cls, v: Dict[str, float]) -> Dict[str, float]:
+    def validate_weights_sum(cls, v: dict[str, float]) -> dict[str, float]:
         """Validate that weights sum approximately to 1.0."""
         if v:
             total = sum(v.values())
@@ -199,7 +199,7 @@ class ProfileStrategyMapper:
 
         logger.info("ProfileStrategyMapper initialized with configurations")
 
-    def _load_yaml(self, path: Path) -> Dict[str, Any]:
+    def _load_yaml(self, path: Path) -> dict[str, Any]:
         """
         Load YAML configuration file.
 
@@ -214,7 +214,7 @@ class ProfileStrategyMapper:
             return {}
 
         try:
-            with open(path, "r") as f:
+            with open(path) as f:
                 data = yaml.safe_load(f) or {}
             logger.debug(f"Loaded configuration from {path}")
             return data
@@ -222,7 +222,7 @@ class ProfileStrategyMapper:
             logger.error(f"Error loading {path}: {e}")
             return {}
 
-    def map_profile_to_strategies(self, profile: InputProfile) -> Dict[str, Any]:
+    def map_profile_to_strategies(self, profile: InputProfile) -> dict[str, Any]:
         """
         Map InputProfile to strategy combination.
 
@@ -307,7 +307,7 @@ class ProfileStrategyMapper:
 
         return strategy_config
 
-    def _get_profile_config(self, objective: str, capital_tier: str) -> Optional[Dict[str, Any]]:
+    def _get_profile_config(self, objective: str, capital_tier: str) -> Optional[dict[str, Any]]:
         """
         Get profile configuration from investment_profiles.yaml.
 
@@ -335,8 +335,7 @@ class ProfileStrategyMapper:
             for fallback_tier in ["small", "medium", "large"]:
                 if fallback_tier in objective_config:
                     logger.warning(
-                        f"Tier '{capital_tier}' not found for {objective}, "
-                        f"using {fallback_tier}"
+                        f"Tier '{capital_tier}' not found for {objective}, using {fallback_tier}"
                     )
                     return objective_config[fallback_tier]
 
@@ -404,8 +403,7 @@ class ProfileStrategyMapper:
         allocations = manager.allocate_capital()
 
         logger.info(
-            f"Capital allocation for €{profile.capital_initial:,.2f}: "
-            f"{len(allocations)} strategies"
+            f"Capital allocation for €{profile.capital_initial:,.2f}: {len(allocations)} strategies"
         )
         for strategy, capital in allocations.items():
             logger.info(f"  {strategy}: €{capital:,.2f}")
@@ -413,8 +411,8 @@ class ProfileStrategyMapper:
         return manager
 
     def _calculate_strategy_weights(
-        self, strategies: List[str], profile_config: Dict[str, Any], risk_tolerance: RiskTolerance
-    ) -> Dict[str, float]:
+        self, strategies: list[str], profile_config: dict[str, Any], risk_tolerance: RiskTolerance
+    ) -> dict[str, float]:
         """
         Calculate strategy weights based on profile and risk tolerance.
 
@@ -472,7 +470,7 @@ class ProfileStrategyMapper:
 
         return weights
 
-    def get_learning_engines(self, profile: InputProfile) -> List[str]:
+    def get_learning_engines(self, profile: InputProfile) -> list[str]:
         """
         Get list of enabled learning engines for the profile.
 
@@ -518,7 +516,7 @@ class ProfileStrategyMapper:
 
         return learning_engines
 
-    def get_ensemble_config(self, profile: InputProfile) -> Dict[str, Any]:
+    def get_ensemble_config(self, profile: InputProfile) -> dict[str, Any]:
         """
         Get ensemble configuration based on risk tolerance and profile.
 
@@ -653,7 +651,7 @@ class ProfileStrategyMapper:
 
         return mapping
 
-    def get_learning_parameters(self, profile: InputProfile, engine_type: str) -> Dict[str, Any]:
+    def get_learning_parameters(self, profile: InputProfile, engine_type: str) -> dict[str, Any]:
         """
         Get learning parameters for a specific engine type.
 
@@ -685,7 +683,7 @@ class ProfileStrategyMapper:
 
         return base_params
 
-    def _deep_merge(self, base: Dict[str, Any], override: Dict[str, Any]) -> Dict[str, Any]:
+    def _deep_merge(self, base: dict[str, Any], override: dict[str, Any]) -> dict[str, Any]:
         """
         Deep merge two dictionaries.
 

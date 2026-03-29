@@ -99,7 +99,7 @@ class RetryManager:
 
                 if attempt >= self.config.max_retries:
                     self.logger.error(
-                        f"❌ {operation_name} failed after {self.config.max_retries + 1} attempts: {str(e)}"
+                        f"❌ {operation_name} failed after {self.config.max_retries + 1} attempts: {e!s}"
                     )
                     raise
 
@@ -107,16 +107,14 @@ class RetryManager:
                 delay_ms = await self._calculate_delay(attempt)
                 self.logger.warning(
                     f"⚠️ {operation_name} failed (attempt {attempt + 1}), "
-                    f"retrying in {delay_ms}ms: {str(e)}"
+                    f"retrying in {delay_ms}ms: {e!s}"
                 )
 
                 await asyncio.sleep(delay_ms / 1000.0)
 
             except (asyncio.TimeoutError, OSError) as e:
                 # Non-retryable exception
-                self.logger.error(
-                    f"❌ {operation_name} failed with non-retryable exception: {str(e)}"
-                )
+                self.logger.error(f"❌ {operation_name} failed with non-retryable exception: {e!s}")
                 raise
 
         # Should not reach here, but just in case

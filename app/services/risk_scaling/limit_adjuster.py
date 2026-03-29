@@ -8,7 +8,7 @@ based on market conditions and portfolio state.
 import logging
 from dataclasses import dataclass
 from decimal import Decimal
-from typing import Dict, Optional, Tuple
+from typing import Optional
 
 from app.shared.config.centralized_config import get_config
 
@@ -69,7 +69,7 @@ class LimitAdjuster:
         """Initialize limit adjuster."""
         logger.info("✅ LimitAdjuster initialized")
 
-    def _get_tier_limits(self, tier: str) -> Dict[str, Decimal]:
+    def _get_tier_limits(self, tier: str) -> dict[str, Decimal]:
         """
         Get default limits for a capital tier from config.
 
@@ -119,7 +119,7 @@ class LimitAdjuster:
         # Default to medium tier for unknown tiers
         return tier_limits.get(tier, self._get_tier_limits("medium"))
 
-    def _get_volatility_multipliers(self) -> Dict[str, Decimal]:
+    def _get_volatility_multipliers(self) -> dict[str, Decimal]:
         """
         Get volatility multipliers from config.
 
@@ -134,7 +134,7 @@ class LimitAdjuster:
             "extreme": _get_config_limit("limit_vol_multiplier_extreme", 0.5),
         }
 
-    def _get_drawdown_multipliers(self) -> Dict[str, Decimal]:
+    def _get_drawdown_multipliers(self) -> dict[str, Decimal]:
         """
         Get drawdown multipliers from config.
 
@@ -175,7 +175,7 @@ class LimitAdjuster:
         base_limits: TradingLimits,
         current_volatility: Decimal,
         average_volatility: Decimal,
-    ) -> Tuple[TradingLimits, str]:
+    ) -> tuple[TradingLimits, str]:
         """
         Adjust limits based on current vs. average volatility.
 
@@ -218,13 +218,15 @@ class LimitAdjuster:
             daily_loss_limit=base_limits.daily_loss_limit * multiplier,
             max_position_size=base_limits.max_position_size * multiplier,
             max_portfolio_leverage=base_limits.max_portfolio_leverage * multiplier,
-            min_margin_requirement=base_limits.min_margin_requirement / multiplier
-            if multiplier > Decimal("0")
-            else base_limits.min_margin_requirement,
+            min_margin_requirement=(
+                base_limits.min_margin_requirement / multiplier
+                if multiplier > Decimal("0")
+                else base_limits.min_margin_requirement
+            ),
             max_drawdown_limit=base_limits.max_drawdown_limit * multiplier,
         )
 
-        reason = f"Volatility {float(vol_ratio):.2f}x ({vol_state}) → multiplier {float(multiplier):.2f}x"
+        reason = f"Volatility {float(vol_ratio):.2f}x ({vol_state}) -> multiplier {float(multiplier):.2f}x"
         logger.info(f"Limit adjustment for volatility: {reason}")
 
         return adjusted, reason
@@ -233,7 +235,7 @@ class LimitAdjuster:
         self,
         base_limits: TradingLimits,
         current_drawdown_pct: Decimal,
-    ) -> Tuple[TradingLimits, str]:
+    ) -> tuple[TradingLimits, str]:
         """
         Tighten limits as portfolio drawdown increases.
 
@@ -281,7 +283,7 @@ class LimitAdjuster:
         )
 
         reason = (
-            f"Drawdown {float(current_drawdown_pct):.1%} ({dd_state}) → "
+            f"Drawdown {float(current_drawdown_pct):.1%} ({dd_state}) -> "
             f"multiplier {float(multiplier):.2f}x"
         )
         logger.info(f"Limit adjustment for drawdown: {reason}")
@@ -323,7 +325,7 @@ class LimitAdjuster:
         max_loss = capital * risk_per_trade_pct * volatility_adjustment
 
         # How far can price move before hitting max_loss
-        # max_loss = position_size × (entry - stop)
+        # max_loss = position_size * (entry - stop)
         # stop = entry - max_loss / position_size
 
         price_distance = max_loss / position_size if position_size > Decimal("0") else Decimal("0")
@@ -445,7 +447,7 @@ class LimitAdjuster:
         current_volatility: Decimal,
         average_volatility: Decimal,
         current_drawdown_pct: Decimal,
-    ) -> Dict[str, any]:
+    ) -> dict[str, any]:
         """
         Get all trading limits with all adjustments applied.
 

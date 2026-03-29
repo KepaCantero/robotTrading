@@ -26,17 +26,17 @@ References:
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import logging
 from collections import deque
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from enum import Enum
 from pathlib import Path
-from typing import Any, Callable, Dict, Optional
+from typing import Any, Callable
 
 import aiosqlite
 import numpy as np
-import contextlib
 
 logger = logging.getLogger(__name__)
 
@@ -79,7 +79,7 @@ class OrderExecutionMetrics:
     fill_rate_pct: float
     timestamp: datetime
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
         return {
             "p50_latency_ms": self.p50_latency_ms,
@@ -108,7 +108,7 @@ class SlippageMetrics:
     slippage_ratio: float  # Positive / (Positive + Negative)
     timestamp: datetime
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
         return {
             "avg_slippage_bps": self.avg_slippage_bps,
@@ -136,7 +136,7 @@ class PositionSyncMetrics:
     avg_quantity_delta: float
     timestamp: datetime
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
         return {
             "sync_health_pct": self.sync_health_pct,
@@ -165,7 +165,7 @@ class MarketDataMetrics:
     last_quote_age_seconds: float
     timestamp: datetime
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
         return {
             "avg_latency_ms": self.avg_latency_ms,
@@ -195,7 +195,7 @@ class StrategyHealthMetrics:
     total_drawdown_pct: float
     timestamp: datetime
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
         return {
             "overall_health_score": self.overall_health_score,
@@ -225,7 +225,7 @@ class RiskLimitMetrics:
     avg_utilization_pct: float
     timestamp: datetime
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
         return {
             "compliance_score": self.compliance_score,
@@ -253,7 +253,7 @@ class TradingMetrics:
     overall_health: TradingHealthStatus
     collected_at: datetime
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
         return {
             "order_execution": self.order_execution.to_dict(),
@@ -277,19 +277,19 @@ class OrderRecord:
     quantity: float
     expected_price: float
     submitted_at: datetime
-    filled_at: Optional[datetime] = None
-    fill_price: Optional[float] = None
+    filled_at: datetime | None = None
+    fill_price: float | None = None
     status: str = "pending"
-    rejection_reason: Optional[str] = None
-    broker_order_id: Optional[str] = None
+    rejection_reason: str | None = None
+    broker_order_id: str | None = None
 
-    def get_latency_ms(self) -> Optional[float]:
+    def get_latency_ms(self) -> float | None:
         """Get order execution latency in milliseconds."""
         if self.filled_at and self.submitted_at:
             return (self.filled_at - self.submitted_at).total_seconds() * 1000
         return None
 
-    def get_slippage_bps(self) -> Optional[float]:
+    def get_slippage_bps(self) -> float | None:
         """Get slippage in basis points."""
         if self.fill_price and self.expected_price:
             price_diff = self.fill_price - self.expected_price
@@ -324,8 +324,8 @@ class TradingMetricsConfig:
     db_path: str = "data/trading_metrics.db"
 
     # Callbacks
-    on_health_change: Optional[Callable[[TradingHealthStatus, TradingHealthStatus], None]] = None
-    on_critical_event: Optional[Callable[[str, Dict[str, Any]], None]] = None
+    on_health_change: Callable[[TradingHealthStatus, TradingHealthStatus], None] | None = None
+    on_critical_event: Callable[[str, dict[str, Any]], None] | None = None
 
 
 class TradingMetricsMonitor:
@@ -348,7 +348,7 @@ class TradingMetricsMonitor:
 
     def __init__(
         self,
-        config: Optional[TradingMetricsConfig] = None,
+        config: TradingMetricsConfig | None = None,
     ):
         """
         Initialize trading metrics monitor.
@@ -365,26 +365,26 @@ class TradingMetricsMonitor:
         self._lock = asyncio.Lock()
 
         # Order tracking
-        self._orders: Dict[str, OrderRecord] = {}
+        self._orders: dict[str, OrderRecord] = {}
         self._order_latencies: deque = deque(maxlen=self.config.order_sample_size)
         self._slippages: deque = deque(maxlen=self.config.slippage_sample_size)
 
         # Position tracking
-        self._internal_positions: Dict[str, float] = {}
-        self._broker_positions: Dict[str, float] = {}
+        self._internal_positions: dict[str, float] = {}
+        self._broker_positions: dict[str, float] = {}
 
         # Market data tracking
-        self._market_data_timestamps: Dict[str, datetime] = {}
+        self._market_data_timestamps: dict[str, datetime] = {}
         self._market_data_latencies: deque = deque(maxlen=1000)
 
         # Strategy tracking
-        self._strategy_health: Dict[str, float] = {}
+        self._strategy_health: dict[str, float] = {}
 
         # Risk limit tracking
-        self._risk_limits: Dict[str, Dict[str, Any]] = {}
+        self._risk_limits: dict[str, dict[str, Any]] = {}
 
         # Collection task
-        self._collection_task: Optional[asyncio.Task] = None
+        self._collection_task: asyncio.Task | None = None
         self._is_running = False
 
         self.logger.info("TradingMetricsMonitor initialized")
@@ -969,7 +969,7 @@ class TradingMetricsMonitor:
         quantity: float,
         expected_price: float,
         submitted_at: datetime,
-        order_id: Optional[str] = None,
+        order_id: str | None = None,
     ) -> str:
         """
         Record an order submission.
@@ -1007,7 +1007,7 @@ class TradingMetricsMonitor:
         order_id: str,
         fill_price: float,
         filled_at: datetime,
-        broker_order_id: Optional[str] = None,
+        broker_order_id: str | None = None,
     ) -> None:
         """
         Update order with fill information.
@@ -1195,14 +1195,14 @@ class TradingMetricsMonitor:
         """
         return self._current_health.value
 
-    async def get_current_metrics(self) -> Optional[TradingMetrics]:
+    async def get_current_metrics(self) -> TradingMetrics | None:
         """Get most recent metrics."""
         async with self._lock:
             if self._metrics_history:
                 return self._metrics_history[-1]
             return None
 
-    async def get_metrics_summary(self) -> Dict[str, Any]:
+    async def get_metrics_summary(self) -> dict[str, Any]:
         """Get comprehensive metrics summary."""
         current = await self.get_current_metrics()
 
@@ -1268,11 +1268,11 @@ class TradingMetricsMonitor:
 
 
 # Singleton instance
-_trading_monitor: Optional[TradingMetricsMonitor] = None
+_trading_monitor: TradingMetricsMonitor | None = None
 
 
 def get_trading_metrics_monitor(
-    config: Optional[TradingMetricsConfig] = None,
+    config: TradingMetricsConfig | None = None,
 ) -> TradingMetricsMonitor:
     """
     Get or create singleton trading metrics monitor.

@@ -12,7 +12,7 @@ from collections import deque
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, Optional
+from typing import Any
 
 import numpy as np
 from scipy.stats import ks_2samp
@@ -42,12 +42,12 @@ class DriftResult:
 
     drift_detected: bool
     drift_type: DriftType
-    p_value: Optional[float] = None
-    statistic: Optional[float] = None
-    threshold: Optional[float] = None
-    confidence: Optional[float] = None
+    p_value: float | None = None
+    statistic: float | None = None
+    threshold: float | None = None
+    confidence: float | None = None
     timestamp: datetime = field(default_factory=datetime.utcnow)
-    details: Dict[str, Any] = field(default_factory=dict)
+    details: dict[str, Any] = field(default_factory=dict)
 
 
 class KSDriftDetector:
@@ -116,11 +116,9 @@ class KSDriftDetector:
                     "p_value": float(p_value),
                     "statistic": float(statistic),
                     "threshold": self.significance_level,
-                    "severity": "high"
-                    if p_value < 0.01
-                    else "moderate"
-                    if p_value < 0.05
-                    else "low",
+                    "severity": (
+                        "high" if p_value < 0.01 else "moderate" if p_value < 0.05 else "low"
+                    ),
                 },
             )
 
@@ -164,7 +162,7 @@ class PSIDriftDetector:
             drift_type=DriftType.FEATURE_DRIFT,
             statistic=psi_value,
             threshold=self.threshold,
-            details={'n_bins': self.n_bins},
+            details={"n_bins": self.n_bins},
         )
 
         # Structured logging for drift detection event (LOG-001)
@@ -179,11 +177,9 @@ class PSIDriftDetector:
                 "n_bins": self.n_bins,
                 "reference_size": len(reference),
                 "current_size": len(current),
-                "severity": "high"
-                if psi_value > 0.5
-                else "moderate"
-                if psi_value > 0.25
-                else "low",
+                "severity": (
+                    "high" if psi_value > 0.5 else "moderate" if psi_value > 0.25 else "low"
+                ),
             },
         )
 
@@ -196,11 +192,9 @@ class PSIDriftDetector:
                     "psi_value": float(psi_value),
                     "threshold": self.threshold,
                     "n_bins": self.n_bins,
-                    "severity": "high"
-                    if psi_value > 0.5
-                    else "moderate"
-                    if psi_value > 0.25
-                    else "low",
+                    "severity": (
+                        "high" if psi_value > 0.5 else "moderate" if psi_value > 0.25 else "low"
+                    ),
                 },
             )
 
@@ -257,7 +251,7 @@ class ADWINDriftDetector:
         self.max_window_size = max_window_size
         self.window: deque = deque(maxlen=max_window_size)
 
-    def detect(self, new_value: float) -> Optional[DriftResult]:
+    def detect(self, new_value: float) -> DriftResult | None:
         """
         Detect drift on streaming data.
 
@@ -292,7 +286,7 @@ class ADWINDriftDetector:
             result = DriftResult(
                 drift_detected=True,
                 drift_type=DriftType.CONCEPT_DRIFT,
-                details={'change_point': change_point, 'window_size': len(self.window)},
+                details={"change_point": change_point, "window_size": len(self.window)},
             )
 
             # Structured logging for drift detection event (LOG-001)
@@ -325,7 +319,7 @@ class ADWINDriftDetector:
 
         return None
 
-    def _find_change_point(self) -> Optional[int]:
+    def _find_change_point(self) -> int | None:
         """
         Find change point in window.
 

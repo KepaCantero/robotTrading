@@ -10,7 +10,7 @@ Implements intelligent order splitting algorithms:
 import logging
 from datetime import datetime, timedelta
 from decimal import Decimal
-from typing import Dict, Optional
+from typing import ClassVar, Optional
 
 from .models import ExecutionPlan, OrderTranche, TimeWindow
 
@@ -28,7 +28,7 @@ class OrderSplittingOptimizer:
 
     # Default intraday volume profile (% of daily volume by hour)
     # Based on typical US market patterns
-    TYPICAL_VOLUME_PROFILE = {
+    TYPICAL_VOLUME_PROFILE: ClassVar[dict] = {
         "09:30-10:00": Decimal("0.15"),  # High volatility opening
         "10:00-11:00": Decimal("0.12"),  # Post-open calm
         "11:00-12:00": Decimal("0.08"),  # Pre-lunch
@@ -49,7 +49,7 @@ class OrderSplittingOptimizer:
         total_size: Decimal,
         strategy: str = "vwap",
         max_exec_time: int = 300_000,  # 5 minutes default
-        constraints: Optional[Dict[str, Decimal]] = None,
+        constraints: Optional[dict[str, Decimal]] = None,
     ) -> ExecutionPlan:
         """
         Create optimal execution plan using specified strategy.
@@ -92,7 +92,7 @@ class OrderSplittingOptimizer:
         symbol: str,
         total_size: Decimal,
         max_exec_time: int,
-        constraints: Dict[str, Decimal],
+        constraints: dict[str, Decimal],
     ) -> ExecutionPlan:
         """
         VWAP Split: Execute proportional to historical volume.
@@ -145,7 +145,7 @@ class OrderSplittingOptimizer:
         symbol: str,
         total_size: Decimal,
         max_exec_time: int,
-        constraints: Dict[str, Decimal],
+        constraints: dict[str, Decimal],
     ) -> ExecutionPlan:
         """
         TWAP Split: Execute evenly over time.
@@ -185,7 +185,7 @@ class OrderSplittingOptimizer:
         symbol: str,
         total_size: Decimal,
         max_exec_time: int,
-        constraints: Dict[str, Decimal],
+        constraints: dict[str, Decimal],
     ) -> ExecutionPlan:
         """
         POI Split: Execute as % of real-time volume (dynamic).
@@ -213,7 +213,7 @@ class OrderSplittingOptimizer:
         symbol: str,
         total_size: Decimal,
         max_exec_time: int,
-        constraints: Dict[str, Decimal],
+        constraints: dict[str, Decimal],
     ) -> ExecutionPlan:
         """
         Intraday Phased: Execute in good windows, avoid volatility peaks.
@@ -241,11 +241,8 @@ class OrderSplittingOptimizer:
             if remaining <= Decimal("0"):
                 break
 
-            if i == len(good_windows) - 1:
-                # Last tranche gets remaining
-                size = remaining
-            else:
-                size = min(remaining, total_size * weight)
+            # Last tranche gets remaining
+            size = remaining if i == len(good_windows) - 1 else min(remaining, total_size * weight)
 
             # Parse window times
             start_hour = int(window.start.split(":")[0])

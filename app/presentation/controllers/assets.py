@@ -4,14 +4,15 @@ FastAPI endpoints for asset management and identification.
 This module provides REST API endpoints for managing assets,
 identifying liquid assets, and retrieving asset rankings.
 """
+
 # mypy: ignore-errors
 
 import asyncio
 import logging
 from datetime import datetime
-from typing import Annotated, Any, Dict, Optional
+from typing import Annotated, Any, Optional
 
-from fastapi import APIRouter, BackgroundTasks, HTTPException, Depends, Query
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query
 from requests.exceptions import HTTPError, RequestException
 
 logger = logging.getLogger(__name__)
@@ -25,7 +26,7 @@ from app.services.asset_identification import (
 router = APIRouter(prefix="/assets", tags=["assets"])
 
 
-@router.get("/", response_model=Dict[str, Any])
+@router.get("/", response_model=dict[str, Any])
 async def get_assets_overview(
     service: Annotated[AssetIdentificationService, Depends(get_asset_identification_service)],
 ):
@@ -45,10 +46,10 @@ async def get_assets_overview(
         logger.error(
             "Error getting assets overview", extra={"error": str(e), "error_type": type(e).__name__}
         )
-        raise HTTPException(status_code=500, detail=f"Error getting assets overview: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error getting assets overview: {e!s}") from e
 
 
-@router.get("/liquid/{asset_class}", response_model=Dict[str, Any])
+@router.get("/liquid/{asset_class}", response_model=dict[str, Any])
 async def get_liquid_assets(
     asset_class: AssetClass,
     limit: Annotated[int, Query(20, ge=1, le=100, description="Number of assets to return")],
@@ -95,10 +96,10 @@ async def get_liquid_assets(
                 "error_type": type(e).__name__,
             },
         )
-        raise HTTPException(status_code=500, detail=f"Error getting liquid assets: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error getting liquid assets: {e!s}") from e
 
 
-@router.get("/rankings/{asset_class}", response_model=Dict[str, Any])
+@router.get("/rankings/{asset_class}", response_model=dict[str, Any])
 async def get_asset_rankings_by_class(
     asset_class: AssetClass,
     service: Annotated[AssetIdentificationService, Depends(get_asset_identification_service)],
@@ -117,10 +118,10 @@ async def get_asset_rankings_by_class(
         }
 
     except (asyncio.TimeoutError, OSError) as e:
-        raise HTTPException(status_code=500, detail=f"Error getting asset rankings: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error getting asset rankings: {e!s}") from e
 
 
-@router.get("/{symbol}", response_model=Dict[str, Any])
+@router.get("/{symbol}", response_model=dict[str, Any])
 async def get_asset_details(
     symbol: str,
     service: Annotated[AssetIdentificationService, Depends(get_asset_identification_service)],
@@ -161,10 +162,10 @@ async def get_asset_details(
             "Error getting asset details",
             extra={"symbol": symbol, "error": str(e), "error_type": type(e).__name__},
         )
-        raise HTTPException(status_code=500, detail=f"Error getting asset details: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error getting asset details: {e!s}") from e
 
 
-@router.get("/{symbol}/liquidity", response_model=Dict[str, Any])
+@router.get("/{symbol}/liquidity", response_model=dict[str, Any])
 async def get_liquidity_metrics(
     symbol: str,
     service: Annotated[AssetIdentificationService, Depends(get_asset_identification_service)],
@@ -194,10 +195,12 @@ async def get_liquidity_metrics(
         }
 
     except (ValueError, TypeError, KeyError, AttributeError) as e:
-        raise HTTPException(status_code=500, detail=f"Error getting liquidity metrics: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Error getting liquidity metrics: {e!s}"
+        ) from e
 
 
-@router.get("/rankings", response_model=Dict[str, Any])
+@router.get("/rankings", response_model=dict[str, Any])
 async def get_asset_rankings(
     asset_class: Annotated[Optional[AssetClass], Query(None, description="Filter by asset class")],
     service: Annotated[AssetIdentificationService, Depends(get_asset_identification_service)],
@@ -215,10 +218,10 @@ async def get_asset_rankings(
         return {"success": True, "rankings": rankings, "timestamp": datetime.utcnow()}
 
     except (asyncio.TimeoutError, OSError) as e:
-        raise HTTPException(status_code=500, detail=f"Error getting asset rankings: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error getting asset rankings: {e!s}") from e
 
 
-@router.post("/filter", response_model=Dict[str, Any])
+@router.post("/filter", response_model=dict[str, Any])
 async def filter_assets(
     filter_criteria: AssetFilter,
     service: Annotated[AssetIdentificationService, Depends(get_asset_identification_service)],
@@ -257,10 +260,10 @@ async def filter_assets(
         }
 
     except (asyncio.TimeoutError, OSError) as e:
-        raise HTTPException(status_code=500, detail=f"Error filtering assets: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error filtering assets: {e!s}") from e
 
 
-@router.post("/refresh-liquidity", response_model=Dict[str, Any])
+@router.post("/refresh-liquidity", response_model=dict[str, Any])
 async def refresh_liquidity_data(
     background_tasks: BackgroundTasks,
     service: Annotated[AssetIdentificationService, Depends(get_asset_identification_service)],
@@ -277,10 +280,12 @@ async def refresh_liquidity_data(
         }
 
     except (asyncio.TimeoutError, OSError) as e:
-        raise HTTPException(status_code=500, detail=f"Error refreshing liquidity data: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Error refreshing liquidity data: {e!s}"
+        ) from e
 
 
-@router.get("/universe", response_model=Dict[str, Any])
+@router.get("/universe", response_model=dict[str, Any])
 async def get_asset_universe(
     asset_class: Annotated[Optional[AssetClass], Query(None, description="Filter by asset class")],
     service: Annotated[AssetIdentificationService, Depends(get_asset_identification_service)],
@@ -298,10 +303,10 @@ async def get_asset_universe(
         return {"success": True, "universe": universe, "timestamp": datetime.utcnow()}
 
     except (asyncio.TimeoutError, OSError) as e:
-        raise HTTPException(status_code=500, detail=f"Error getting asset universe: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error getting asset universe: {e!s}") from e
 
 
-@router.post("/identify/{asset_class}", response_model=Dict[str, Any])
+@router.post("/identify/{asset_class}", response_model=dict[str, Any])
 async def identify_liquid_assets(
     asset_class: AssetClass,
     background_tasks: BackgroundTasks,
@@ -353,10 +358,12 @@ async def identify_liquid_assets(
                 "error_type": type(e).__name__,
             },
         )
-        raise HTTPException(status_code=500, detail=f"Error identifying liquid assets: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Error identifying liquid assets: {e!s}"
+        ) from e
 
 
-@router.post("/filter/{asset_class}", response_model=Dict[str, Any])
+@router.post("/filter/{asset_class}", response_model=dict[str, Any])
 async def filter_assets_by_class(
     asset_class: AssetClass,
     filter_criteria: AssetFilter,
@@ -397,10 +404,10 @@ async def filter_assets_by_class(
         }
 
     except (asyncio.TimeoutError, OSError) as e:
-        raise HTTPException(status_code=500, detail=f"Error filtering assets: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error filtering assets: {e!s}") from e
 
 
-@router.get("/universe/{asset_class}", response_model=Dict[str, Any])
+@router.get("/universe/{asset_class}", response_model=dict[str, Any])
 async def get_universe_summary(
     asset_class: AssetClass,
     service: Annotated[AssetIdentificationService, Depends(get_asset_identification_service)],
@@ -416,10 +423,10 @@ async def get_universe_summary(
         }
 
     except (asyncio.TimeoutError, OSError) as e:
-        raise HTTPException(status_code=500, detail=f"Error getting universe summary: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error getting universe summary: {e!s}") from e
 
 
-@router.get("/classes", response_model=Dict[str, Any])
+@router.get("/classes", response_model=dict[str, Any])
 async def get_asset_classes():
     """Get available asset classes."""
     try:
@@ -438,10 +445,10 @@ async def get_asset_classes():
         }
 
     except (asyncio.TimeoutError, OSError) as e:
-        raise HTTPException(status_code=500, detail=f"Error getting asset classes: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error getting asset classes: {e!s}") from e
 
 
-@router.get("/exchanges", response_model=Dict[str, Any])
+@router.get("/exchanges", response_model=dict[str, Any])
 async def get_exchanges():
     """Get available exchanges."""
     try:
@@ -460,10 +467,10 @@ async def get_exchanges():
         }
 
     except (asyncio.TimeoutError, OSError) as e:
-        raise HTTPException(status_code=500, detail=f"Error getting exchanges: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error getting exchanges: {e!s}") from e
 
 
-@router.get("/health", response_model=Dict[str, Any])
+@router.get("/health", response_model=dict[str, Any])
 async def health_check():
     """Health check endpoint for assets service."""
     logger.debug("Health check requested")
@@ -477,10 +484,10 @@ async def health_check():
 
     except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
         logger.error("Health check failed", extra={"error": str(e)})
-        raise HTTPException(status_code=500, detail=f"Health check failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Health check failed: {e!s}") from e
 
 
-@router.get("/stats", response_model=Dict[str, Any])
+@router.get("/stats", response_model=dict[str, Any])
 async def get_asset_stats(
     service: Annotated[AssetIdentificationService, Depends(get_asset_identification_service)],
 ):
@@ -522,4 +529,4 @@ async def get_asset_stats(
         return {"success": True, "stats": stats, "timestamp": datetime.utcnow()}
 
     except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
-        raise HTTPException(status_code=500, detail=f"Error getting asset stats: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error getting asset stats: {e!s}") from e

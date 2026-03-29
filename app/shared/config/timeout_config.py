@@ -27,7 +27,7 @@ Usage:
 import logging
 import os
 from dataclasses import dataclass
-from typing import Dict, Optional
+from typing import Optional
 
 logger = logging.getLogger(__name__)
 
@@ -196,7 +196,7 @@ class TimeoutConfig:
         """Combined IB timeout (connect + read)."""
         return self.ib_connect + self.ib_read
 
-    def get_httpx_timeout(self) -> Dict[str, float]:
+    def get_httpx_timeout(self) -> dict[str, float]:
         """Get timeout dict for httpx client."""
         return {
             "connect": self.http_connect,

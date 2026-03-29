@@ -3,6 +3,7 @@ Modelo 720 Report Generator
 
 Genera reportes para el Modelo 720 (declaracion de bienes en el extranjero)
 """
+
 import logging
 from datetime import datetime
 from decimal import Decimal

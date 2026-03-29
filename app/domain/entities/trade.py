@@ -12,7 +12,6 @@ from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from decimal import Decimal
 from enum import Enum
-from typing import Optional
 
 from app.domain.entities.position import PositionSide
 from app.domain.value_objects.money import Money
@@ -76,24 +75,24 @@ class Trade:
 
     # Timestamps
     entry_date: datetime = field(default_factory=datetime.utcnow)
-    exit_date: Optional[datetime] = None
+    exit_date: datetime | None = None
 
     # Execution details
     trade_type: TradeType = TradeType.MARKET
     status: TradeStatus = TradeStatus.FILLED
-    exit_reason: Optional[ExitReason] = None
+    exit_reason: ExitReason | None = None
 
     # Costs
     commission_paid: Decimal = Decimal("0")
     slippage_cost: Decimal = Decimal("0")
 
     # Risk management
-    stop_loss: Optional[Decimal] = None
-    take_profit: Optional[Decimal] = None
+    stop_loss: Decimal | None = None
+    take_profit: Decimal | None = None
 
     # Metadata
-    strategy_name: Optional[str] = None
-    notes: Optional[str] = None
+    strategy_name: str | None = None
+    notes: str | None = None
     tags: list[str] = field(default_factory=lambda: [])
 
     def __post_init__(self):
@@ -202,7 +201,7 @@ class Trade:
             delta = self.exit_date - self.entry_date
         return delta.total_seconds() / 3600
 
-    def get_risk_reward_ratio(self) -> Optional[Decimal]:
+    def get_risk_reward_ratio(self) -> Decimal | None:
         """
         Calculate risk/reward ratio based on stop loss and take profit.
 
@@ -220,7 +219,7 @@ class Trade:
 
         return reward / risk
 
-    def get_actual_r_reward(self) -> Optional[Decimal]:
+    def get_actual_r_reward(self) -> Decimal | None:
         """
         Calculate actual risk/reward ratio based on actual P&L.
 
@@ -289,9 +288,9 @@ class Trade:
         side: PositionSide,
         entry_date: datetime,
         exit_date: datetime,
-        exit_reason: Optional[ExitReason] = None,
-        commission: Optional[Decimal] = None,
-        strategy_name: Optional[str] = None,
+        exit_reason: ExitReason | None = None,
+        commission: Decimal | None = None,
+        strategy_name: str | None = None,
     ) -> Trade:
         """
         Create a Trade from a closed position.
@@ -348,12 +347,12 @@ class Trade:
         quantity: Decimal,
         entry_price: Decimal,
         exit_price: Decimal,
-        entry_date: Optional[datetime] = None,
-        exit_date: Optional[datetime] = None,
-        stop_loss: Optional[Decimal] = None,
-        take_profit: Optional[Decimal] = None,
-        commission: Optional[Decimal] = None,
-        strategy_name: Optional[str] = None,
+        entry_date: datetime | None = None,
+        exit_date: datetime | None = None,
+        stop_loss: Decimal | None = None,
+        take_profit: Decimal | None = None,
+        commission: Decimal | None = None,
+        strategy_name: str | None = None,
     ) -> Trade:
         """Create a long trade."""
         if commission is None:
@@ -393,12 +392,12 @@ class Trade:
         quantity: Decimal,
         entry_price: Decimal,
         exit_price: Decimal,
-        entry_date: Optional[datetime] = None,
-        exit_date: Optional[datetime] = None,
-        stop_loss: Optional[Decimal] = None,
-        take_profit: Optional[Decimal] = None,
-        commission: Optional[Decimal] = None,
-        strategy_name: Optional[str] = None,
+        entry_date: datetime | None = None,
+        exit_date: datetime | None = None,
+        stop_loss: Decimal | None = None,
+        take_profit: Decimal | None = None,
+        commission: Decimal | None = None,
+        strategy_name: str | None = None,
     ) -> Trade:
         """Create a short trade."""
         if commission is None:

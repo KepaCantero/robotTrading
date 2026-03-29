@@ -15,10 +15,17 @@ from __future__ import annotations
 
 import logging
 from datetime import datetime, timedelta
+from decimal import Decimal
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
-from requests.exceptions import ConnectionError, HTTPError, RequestException
+from requests.exceptions import (
+    ConnectionError as RequestsConnectionError,
+)
+from requests.exceptions import (
+    HTTPError,
+    RequestException,
+)
 
 from app.services.live_trading.account_synchronizer import (
     AccountSynchronizer,
@@ -26,9 +33,15 @@ from app.services.live_trading.account_synchronizer import (
 )
 from app.services.live_trading.alert_to_trade_mapper import (
     AlertToTradeMapper,
+    AlertToTradeRule,
     get_alert_to_trade_mapper,
 )
-from app.services.live_trading.broker_connector import BrokerConnector, get_broker_connector
+from app.services.live_trading.broker_connector import (
+    BrokerConnector,
+    OrderSide,
+    OrderType,
+    get_broker_connector,
+)
 from app.services.live_trading.order_manager import OrderManager, get_order_manager
 from app.services.live_trading.risk_gates import RiskGates, get_risk_gates
 from app.services.live_trading.trading_audit_trail import TradingAuditTrail, get_trading_audit_trail
@@ -62,9 +75,9 @@ async def start_live_trading(
             "message": "Live trading bridge started successfully",
             "timestamp": datetime.utcnow().isoformat(),
         }
-    except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
+    except (RequestsConnectionError, TimeoutError, HTTPError, RequestException) as e:
         logger.error(f"Failed to start live trading bridge: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @router.post("/stop")
@@ -82,9 +95,9 @@ async def stop_live_trading(
             "message": "Live trading bridge stopped successfully",
             "timestamp": datetime.utcnow().isoformat(),
         }
-    except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
+    except (RequestsConnectionError, TimeoutError, HTTPError, RequestException) as e:
         logger.error(f"Failed to stop live trading bridge: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @router.get("/status")
@@ -95,13 +108,13 @@ async def get_bridge_status(
     try:
         status = orchestrator.get_bridge_statistics()
         return {
-            "is_active": orchestrator.is_running,
+            "is_active": orchestrator.is_active,
             "statistics": status,
             "timestamp": datetime.utcnow().isoformat(),
         }
-    except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
+    except (RequestsConnectionError, TimeoutError, HTTPError, RequestException) as e:
         logger.error(f"Failed to get bridge status: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 # ============================================================================
@@ -115,8 +128,8 @@ async def place_order(
     side: str,
     quantity: float,
     order_type: str = "MARKET",
-    price: Optional[float] = None,
-    stop_price: Optional[float] = None,
+    price: float | None = None,
+    stop_price: float | None = None,
     order_manager: OrderManager = Depends(get_order_manager),
 ) -> dict:
     """Place a direct order (not from alert).
@@ -135,17 +148,23 @@ async def place_order(
         if order_type == "STOP" and stop_price is None:
             raise ValueError("Stop price required for STOP orders")
 
+        order_side = OrderSide(side.lower())
+        order_type_enum = OrderType(order_type.lower())
+        quantity_decimal = Decimal(str(quantity))
+        price_decimal: Optional[Decimal] = Decimal(str(price)) if price is not None else None
+        stop_price_decimal: Optional[Decimal] = Decimal(str(stop_price)) if stop_price is not None else None
+
         order_id = await order_manager.place_order(
             symbol=symbol,
-            side=side,
-            quantity=quantity,
-            order_type=order_type,
-            price=price,
-            stop_price=stop_price,
+            side=order_side,
+            quantity=quantity_decimal,
+            order_type=order_type_enum,
+            price=price_decimal,
+            stop_price=stop_price_decimal,
         )
 
         return {
-            "order_id": order_id,
+            "order_id": order_id.order_id if order_id else None,
             "symbol": symbol,
             "side": side,
             "quantity": quantity,
@@ -153,9 +172,9 @@ async def place_order(
             "status": "SUBMITTED",
             "timestamp": datetime.utcnow().isoformat(),
         }
-    except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
+    except (RequestsConnectionError, TimeoutError, HTTPError, RequestException) as e:
         logger.error(f"Failed to place order: {e}")
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
 
 
 @router.get("/orders/{order_id}")
@@ -171,12 +190,12 @@ async def get_order_status(
 
         return {
             "order_id": order_id,
-            "status": status,
+            "status": status.value if status else None,
             "timestamp": datetime.utcnow().isoformat(),
         }
-    except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
+    except (RequestsConnectionError, TimeoutError, HTTPError, RequestException) as e:
         logger.error(f"Failed to get order status: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @router.delete("/orders/{order_id}")
@@ -196,9 +215,9 @@ async def cancel_order(
             "message": "Order cancelled successfully",
             "timestamp": datetime.utcnow().isoformat(),
         }
-    except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
+    except (RequestsConnectionError, TimeoutError, HTTPError, RequestException) as e:
         logger.error(f"Failed to cancel order: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @router.post("/orders/cancel-all")
@@ -213,15 +232,15 @@ async def cancel_all_orders(
             "message": f"{count} orders cancelled",
             "timestamp": datetime.utcnow().isoformat(),
         }
-    except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
+    except (RequestsConnectionError, TimeoutError, HTTPError, RequestException) as e:
         logger.error(f"Failed to cancel all orders: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @router.get("/orders")
 async def list_orders(
-    status: Optional[str] = None,
-    symbol: Optional[str] = None,
+    status: str | None = None,
+    symbol: str | None = None,
     limit: int = Query(100, ge=1, le=1000),
     order_manager: OrderManager = Depends(get_order_manager),
 ) -> dict:
@@ -238,19 +257,26 @@ async def list_orders(
         elif status == "executed":
             orders = await order_manager.get_executed_orders()
         else:
-            orders = await order_manager.get_order_history(limit=limit)
+            orders = await order_manager.get_order_history()
 
         if symbol:
-            orders = [o for o in orders if o.get("symbol") == symbol]
+            orders = [o for o in orders if o.symbol == symbol]
 
         return {
             "count": len(orders),
-            "orders": orders[:limit],
+            "orders": [o.to_dict() if hasattr(o, "to_dict") else {
+                "order_id": o.order_id,
+                "symbol": o.symbol,
+                "side": o.side.value,
+                "quantity": str(o.quantity),
+                "order_type": o.order_type.value,
+                "status": o.status.value,
+            } for o in orders[:limit]],
             "timestamp": datetime.utcnow().isoformat(),
         }
-    except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
+    except (RequestsConnectionError, TimeoutError, HTTPError, RequestException) as e:
         logger.error(f"Failed to list orders: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 # ============================================================================
@@ -267,19 +293,19 @@ async def get_account_info(
         account = await broker.get_account_info()
         return {
             "account_id": account.account_id,
-            "broker_type": account.broker_type,
+            "broker_type": account.broker_type.value if account.broker_type else None,
             "currency": account.currency,
-            "cash_available": account.cash_available,
-            "portfolio_value": account.portfolio_value,
-            "buying_power": account.buying_power,
-            "equity": account.equity,
-            "margin_used": account.margin_used,
-            "margin_multiplier": account.multiplier,
+            "cash_available": str(account.cash_available),
+            "portfolio_value": str(account.portfolio_value),
+            "buying_power": str(account.buying_power),
+            "equity": str(account.equity),
+            "margin_used": str(account.margin_used),
+            "margin_multiplier": str(account.multiplier),
             "timestamp": datetime.utcnow().isoformat(),
         }
-    except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
+    except (RequestsConnectionError, TimeoutError, HTTPError, RequestException) as e:
         logger.error(f"Failed to get account info: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @router.get("/positions", response_model=None)
@@ -294,20 +320,20 @@ async def list_positions(
             "positions": [
                 {
                     "symbol": p.symbol,
-                    "quantity": p.quantity,
-                    "average_price": p.avg_price,
-                    "current_price": p.current_price,
-                    "market_value": p.market_value,
-                    "unrealized_pl": p.unrealized_pl,
-                    "unrealized_pl_pct": p.unrealized_pl_pct,
+                    "quantity": str(p.quantity),
+                    "average_price": str(p.avg_price),
+                    "current_price": str(p.current_price),
+                    "market_value": str(p.market_value),
+                    "unrealized_pl": str(p.unrealized_pl),
+                    "unrealized_pl_pct": str(p.unrealized_pl_pct),
                 }
-                for p in positions
+                for p in positions.values()
             ],
             "timestamp": datetime.utcnow().isoformat(),
         }
-    except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
+    except (RequestsConnectionError, TimeoutError, HTTPError, RequestException) as e:
         logger.error(f"Failed to list positions: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @router.get("/positions/{symbol}", response_model=None)
@@ -323,17 +349,17 @@ async def get_position(
 
         return {
             "symbol": position.symbol,
-            "quantity": position.quantity,
-            "average_price": position.avg_price,
-            "current_price": position.current_price,
-            "market_value": position.market_value,
-            "unrealized_pl": position.unrealized_pl,
-            "unrealized_pl_pct": position.unrealized_pl_pct,
+            "quantity": str(position.quantity),
+            "average_price": str(position.avg_price),
+            "current_price": str(position.current_price),
+            "market_value": str(position.market_value),
+            "unrealized_pl": str(position.unrealized_pl),
+            "unrealized_pl_pct": str(position.unrealized_pl_pct),
             "timestamp": datetime.utcnow().isoformat(),
         }
-    except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
+    except (RequestsConnectionError, TimeoutError, HTTPError, RequestException) as e:
         logger.error(f"Failed to get position: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 # ============================================================================
@@ -355,23 +381,32 @@ async def validate_order_risk(
     """
     try:
         account = await broker.get_account_info()
-        result = risk_gates.validate_order(
+        if not account:
+            raise HTTPException(status_code=400, detail="Cannot access account information")
+
+        order_side = OrderSide(side.lower())
+        quantity_decimal = Decimal(str(quantity))
+
+        # Determine a price for validation (use equity-based conservative estimate)
+        price = account.portfolio_value / Decimal("100") if account.portfolio_value > 0 else Decimal("100")
+
+        result = await risk_gates.validate_order(
             symbol=symbol,
-            side=side,
-            quantity=quantity,
-            account=account,
+            side=order_side,
+            quantity=quantity_decimal,
+            price=price,
         )
 
         return {
-            "is_valid": result.is_valid,
-            "risk_level": result.risk_level,
+            "is_valid": result.passed,
+            "risk_level": result.risk_level.value,
             "violations": result.violations,
             "warnings": result.warnings,
             "timestamp": datetime.utcnow().isoformat(),
         }
-    except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
+    except (RequestsConnectionError, TimeoutError, HTTPError, RequestException) as e:
         logger.error(f"Failed to validate order risk: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @router.get("/risk/limits")
@@ -380,32 +415,30 @@ async def get_risk_limits(
 ) -> dict:
     """Get current risk gate configuration and limits."""
     try:
-        config = risk_gates.config
-
         return {
             "limits": {
-                "max_position_size": config.max_position_size,
-                "max_leverage": config.max_leverage,
-                "max_concentration": config.max_concentration,
-                "max_daily_loss": config.max_daily_loss,
-                "max_drawdown": config.max_drawdown,
-                "min_cash_reserve": config.min_cash_reserve,
+                "max_position_size": str(risk_gates.max_position_size),
+                "max_leverage": str(risk_gates.max_leverage),
+                "max_concentration": str(risk_gates.max_concentration),
+                "max_daily_loss": str(risk_gates.max_daily_loss),
+                "max_drawdown": str(risk_gates.max_drawdown),
+                "min_cash_reserve": str(risk_gates.min_cash_reserve),
             },
             "timestamp": datetime.utcnow().isoformat(),
         }
-    except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
+    except (RequestsConnectionError, TimeoutError, HTTPError, RequestException) as e:
         logger.error(f"Failed to get risk limits: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @router.patch("/risk/limits")
 async def update_risk_limits(
-    max_position_size: Optional[float] = None,
-    max_leverage: Optional[float] = None,
-    max_concentration: Optional[float] = None,
-    max_daily_loss: Optional[float] = None,
-    max_drawdown: Optional[float] = None,
-    min_cash_reserve: Optional[float] = None,
+    max_position_size: float | None = None,
+    max_leverage: float | None = None,
+    max_concentration: float | None = None,
+    max_daily_loss: float | None = None,
+    max_drawdown: float | None = None,
+    min_cash_reserve: float | None = None,
     risk_gates: RiskGates = Depends(get_risk_gates),
 ) -> dict:
     """Update risk gate limits dynamically.
@@ -414,25 +447,25 @@ async def update_risk_limits(
     """
     try:
         if max_position_size is not None:
-            risk_gates.set_max_position_size(max_position_size)
+            risk_gates.set_max_position_size(Decimal(str(max_position_size)))
         if max_leverage is not None:
-            risk_gates.set_max_leverage(max_leverage)
+            risk_gates.set_max_leverage(Decimal(str(max_leverage)))
         if max_concentration is not None:
-            risk_gates.set_max_concentration(max_concentration)
+            risk_gates.max_concentration = Decimal(str(max_concentration))
         if max_daily_loss is not None:
-            risk_gates.set_max_daily_loss(max_daily_loss)
+            risk_gates.set_max_daily_loss(Decimal(str(max_daily_loss)))
         if max_drawdown is not None:
-            risk_gates.set_max_drawdown(max_drawdown)
+            risk_gates.set_max_drawdown(Decimal(str(max_drawdown)))
         if min_cash_reserve is not None:
-            risk_gates.set_min_cash_reserve(min_cash_reserve)
+            risk_gates.min_cash_reserve = Decimal(str(min_cash_reserve))
 
         return {
             "message": "Risk limits updated successfully",
             "timestamp": datetime.utcnow().isoformat(),
         }
-    except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
+    except (RequestsConnectionError, TimeoutError, HTTPError, RequestException) as e:
         logger.error(f"Failed to update risk limits: {e}")
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
 
 
 # ============================================================================
@@ -442,10 +475,10 @@ async def update_risk_limits(
 
 @router.get("/executions")
 async def list_executions(
-    status: Optional[str] = None,
-    symbol: Optional[str] = None,
-    start_date: Optional[str] = None,
-    end_date: Optional[str] = None,
+    status: str | None = None,
+    symbol: str | None = None,
+    start_date: str | None = None,
+    end_date: str | None = None,
     limit: int = Query(100, ge=1, le=1000),
     orchestrator: TradingBridgeOrchestrator = Depends(get_trading_bridge_orchestrator),
 ) -> dict:
@@ -459,30 +492,31 @@ async def list_executions(
         limit: Maximum results (default 100, max 1000)
     """
     try:
-        executions = await orchestrator.get_recent_executions(limit=limit)
+        executions = orchestrator.get_recent_executions(limit=limit)
+        execution_dicts = [e.to_dict() for e in executions]
 
         if status:
-            executions = [e for e in executions if e.get("status") == status]
+            execution_dicts = [e for e in execution_dicts if e.get("status") == status]
         if symbol:
-            executions = [e for e in executions if e.get("symbol") == symbol]
+            execution_dicts = [e for e in execution_dicts if e.get("symbol") == symbol]
 
         if start_date or end_date:
             start = datetime.fromisoformat(start_date) if start_date else datetime.min
             end = datetime.fromisoformat(end_date) if end_date else datetime.now()
-            executions = [
+            execution_dicts = [
                 e
-                for e in executions
+                for e in execution_dicts
                 if start <= datetime.fromisoformat(e.get("created_at", "")) <= end
             ]
 
         return {
-            "count": len(executions),
-            "executions": executions[:limit],
+            "count": len(execution_dicts),
+            "executions": execution_dicts[:limit],
             "timestamp": datetime.utcnow().isoformat(),
         }
-    except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
+    except (RequestsConnectionError, TimeoutError, HTTPError, RequestException) as e:
         logger.error(f"Failed to list executions: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @router.get("/executions/{execution_id}")
@@ -492,17 +526,17 @@ async def get_execution(
 ) -> dict:
     """Get details of a specific execution."""
     try:
-        execution = await orchestrator.get_execution(execution_id)
+        execution = orchestrator.get_execution(execution_id)
         if not execution:
             raise HTTPException(status_code=404, detail="Execution not found")
 
         return {
-            "execution": execution,
+            "execution": execution.to_dict(),
             "timestamp": datetime.utcnow().isoformat(),
         }
-    except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
+    except (RequestsConnectionError, TimeoutError, HTTPError, RequestException) as e:
         logger.error(f"Failed to get execution: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 # ============================================================================
@@ -512,10 +546,10 @@ async def get_execution(
 
 @router.get("/audit/trail")
 async def get_audit_trail(
-    event_type: Optional[str] = None,
-    symbol: Optional[str] = None,
-    start_date: Optional[str] = None,
-    end_date: Optional[str] = None,
+    event_type: str | None = None,
+    symbol: str | None = None,
+    start_date: str | None = None,
+    end_date: str | None = None,
     limit: int = Query(100, ge=1, le=1000),
     audit_trail: TradingAuditTrail = Depends(get_trading_audit_trail),
 ) -> dict:
@@ -529,28 +563,29 @@ async def get_audit_trail(
         limit: Maximum results
     """
     try:
-        events = await audit_trail.get_recent_events(limit=limit)
+        events = audit_trail.get_recent_events(limit=limit)
+        event_dicts = [e.to_dict() for e in events]
 
         if event_type:
-            events = [e for e in events if e.get("event_type") == event_type]
+            event_dicts = [e for e in event_dicts if e.get("event_type") == event_type]
         if symbol:
-            events = [e for e in events if e.get("symbol") == symbol]
+            event_dicts = [e for e in event_dicts if e.get("symbol") == symbol]
 
         if start_date or end_date:
             start = datetime.fromisoformat(start_date) if start_date else datetime.min
             end = datetime.fromisoformat(end_date) if end_date else datetime.now()
-            events = [
-                e for e in events if start <= datetime.fromisoformat(e.get("timestamp", "")) <= end
+            event_dicts = [
+                e for e in event_dicts if start <= datetime.fromisoformat(e.get("timestamp", "")) <= end
             ]
 
         return {
-            "count": len(events),
-            "events": events[:limit],
+            "count": len(event_dicts),
+            "events": event_dicts[:limit],
             "timestamp": datetime.utcnow().isoformat(),
         }
-    except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
+    except (RequestsConnectionError, TimeoutError, HTTPError, RequestException) as e:
         logger.error(f"Failed to get audit trail: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @router.get("/audit/report")
@@ -567,7 +602,7 @@ async def get_compliance_report(
         end_date = datetime.utcnow()
         start_date = end_date - timedelta(days=days)
 
-        report = await audit_trail.generate_compliance_report(
+        report = audit_trail.generate_compliance_report(
             start_date=start_date, end_date=end_date
         )
 
@@ -583,16 +618,16 @@ async def get_compliance_report(
                 "total_executions": report.total_executions,
                 "failed_risk_checks": report.failed_risk_checks,
                 "non_compliant_events": report.non_compliant_events,
-                "total_volume": report.total_volume,
-                "avg_execution_time_ms": report.avg_execution_time_ms,
+                "total_volume": str(report.total_volume),
+                "avg_execution_time_ms": report.avg_execution_time,
                 "critical_alerts_count": report.critical_alerts_count,
                 "high_risk_trades": report.high_risk_trades,
             },
             "timestamp": datetime.utcnow().isoformat(),
         }
-    except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
+    except (RequestsConnectionError, TimeoutError, HTTPError, RequestException) as e:
         logger.error(f"Failed to generate compliance report: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @router.get("/audit/non-compliant")
@@ -602,16 +637,16 @@ async def list_non_compliant_events(
 ) -> dict:
     """Get non-compliant events that require review."""
     try:
-        events = await audit_trail.get_non_compliant_events()
+        events = audit_trail.get_non_compliant_events()
 
         return {
             "count": len(events),
-            "events": events[:limit],
+            "events": [e.to_dict() for e in events[:limit]],
             "timestamp": datetime.utcnow().isoformat(),
         }
-    except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
+    except (RequestsConnectionError, TimeoutError, HTTPError, RequestException) as e:
         logger.error(f"Failed to list non-compliant events: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 # ============================================================================
@@ -625,15 +660,15 @@ async def get_trading_statistics(
 ) -> dict:
     """Get overall trading statistics and performance metrics."""
     try:
-        stats = await orchestrator.get_bridge_statistics()
+        stats = orchestrator.get_bridge_statistics()
 
         return {
             "statistics": stats,
             "timestamp": datetime.utcnow().isoformat(),
         }
-    except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
+    except (RequestsConnectionError, TimeoutError, HTTPError, RequestException) as e:
         logger.error(f"Failed to get trading statistics: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @router.get("/audit/statistics")
@@ -642,15 +677,15 @@ async def get_audit_statistics(
 ) -> dict:
     """Get audit statistics grouped by event type and risk level."""
     try:
-        stats = await audit_trail.get_audit_statistics()
+        stats = audit_trail.get_audit_statistics()
 
         return {
             "statistics": stats,
             "timestamp": datetime.utcnow().isoformat(),
         }
-    except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
+    except (RequestsConnectionError, TimeoutError, HTTPError, RequestException) as e:
         logger.error(f"Failed to get audit statistics: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @router.get("/portfolio/snapshot")
@@ -663,16 +698,16 @@ async def get_portfolio_snapshot(
 
         return {
             "timestamp": snapshot.timestamp.isoformat(),
-            "total_value": snapshot.total_value,
-            "cash": snapshot.cash,
-            "positions_value": snapshot.positions_value,
-            "margin_used": snapshot.margin_used,
-            "buying_power": snapshot.buying_power,
+            "total_value": str(snapshot.total_value),
+            "cash": str(snapshot.cash),
+            "positions_value": str(snapshot.positions_value),
+            "margin_used": str(snapshot.margin_used),
+            "buying_power": str(snapshot.buying_power),
             "num_positions": snapshot.num_positions,
         }
-    except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
+    except (RequestsConnectionError, TimeoutError, HTTPError, RequestException) as e:
         logger.error(f"Failed to get portfolio snapshot: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @router.get("/portfolio/history")
@@ -691,9 +726,9 @@ async def get_portfolio_history(
 
         history = await account_sync.get_portfolio_history()
         filtered = [
-            h
-            for h in history
-            if start_date <= datetime.fromisoformat(h.get("timestamp", "")) <= end_date
+            s
+            for s in history
+            if start_date <= s.timestamp <= end_date
         ]
 
         return {
@@ -703,12 +738,20 @@ async def get_portfolio_history(
                 "days": days,
             },
             "count": len(filtered),
-            "history": filtered,
+            "history": [
+                {
+                    "timestamp": s.timestamp.isoformat(),
+                    "total_value": str(s.total_value),
+                    "cash": str(s.cash),
+                    "positions_value": str(s.positions_value),
+                }
+                for s in filtered
+            ],
             "timestamp": datetime.utcnow().isoformat(),
         }
-    except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
+    except (RequestsConnectionError, TimeoutError, HTTPError, RequestException) as e:
         logger.error(f"Failed to get portfolio history: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @router.get("/portfolio/daily-return")
@@ -719,14 +762,19 @@ async def get_daily_return(
     try:
         daily_return = await account_sync.calculate_daily_return()
 
+        if daily_return is not None:
+            return {
+                "daily_pnl_pct": str(daily_return),
+                "timestamp": datetime.utcnow().isoformat(),
+            }
         return {
-            "daily_pnl": daily_return.get("pnl", 0),
-            "daily_pnl_pct": daily_return.get("pnl_pct", 0),
+            "daily_pnl_pct": None,
+            "message": "Insufficient data to calculate daily return",
             "timestamp": datetime.utcnow().isoformat(),
         }
-    except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
+    except (RequestsConnectionError, TimeoutError, HTTPError, RequestException) as e:
         logger.error(f"Failed to get daily return: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 # ============================================================================
@@ -744,15 +792,22 @@ async def create_alert_to_trade_rule(
     Defines how alerts are mapped to trade signals with severity scaling.
     """
     try:
-        rule_id = mapper.register_rule(rule_data)
+        rule = AlertToTradeRule(
+            rule_id=rule_data.get("rule_id", ""),
+            alert_rule_id=rule_data.get("alert_rule_id", ""),
+            enabled=rule_data.get("enabled", True),
+            base_quantity=Decimal(str(rule_data.get("base_quantity", 100))),
+            max_position_size=Decimal(str(rule_data.get("max_position_size", 50000))),
+        )
+        mapper.register_rule(rule)
         return {
-            "rule_id": rule_id,
+            "rule_id": rule.rule_id,
             "message": "Rule created successfully",
             "timestamp": datetime.utcnow().isoformat(),
         }
-    except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
+    except (RequestsConnectionError, TimeoutError, HTTPError, RequestException) as e:
         logger.error(f"Failed to create rule: {e}")
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
 
 
 @router.delete("/rules/{rule_id}")
@@ -768,9 +823,9 @@ async def delete_alert_to_trade_rule(
             "message": "Rule deleted successfully",
             "timestamp": datetime.utcnow().isoformat(),
         }
-    except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
+    except (RequestsConnectionError, TimeoutError, HTTPError, RequestException) as e:
         logger.error(f"Failed to delete rule: {e}")
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
 
 
 @router.get("/signals/pending")
@@ -780,15 +835,15 @@ async def list_pending_signals(
 ) -> dict:
     """Get pending (unexecuted) trade signals."""
     try:
-        signals = await mapper.get_pending_signals(limit=limit)
+        signals = mapper.get_pending_signals()
         return {
             "count": len(signals),
-            "signals": signals,
+            "signals": [s.to_dict() for s in signals[:limit]],
             "timestamp": datetime.utcnow().isoformat(),
         }
-    except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
+    except (RequestsConnectionError, TimeoutError, HTTPError, RequestException) as e:
         logger.error(f"Failed to list pending signals: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @router.get("/signals/statistics")
@@ -797,11 +852,11 @@ async def get_signal_statistics(
 ) -> dict:
     """Get trade signal statistics by type and severity."""
     try:
-        stats = await mapper.get_signal_statistics()
+        stats = mapper.get_signal_statistics()
         return {
             "statistics": stats,
             "timestamp": datetime.utcnow().isoformat(),
         }
-    except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
+    except (RequestsConnectionError, TimeoutError, HTTPError, RequestException) as e:
         logger.error(f"Failed to get signal statistics: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e

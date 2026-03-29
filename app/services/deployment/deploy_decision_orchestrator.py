@@ -8,7 +8,7 @@ into a final APPROVED|CONDITIONAL|REJECTED deployment decision.
 import asyncio
 import logging
 from dataclasses import dataclass
-from typing import Dict, List, Optional
+from typing import ClassVar, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -24,10 +24,10 @@ class DeploymentDecision:
     validation_passed: bool
     recommendation_score: float
     portfolio_sharpe: float
-    reasons: List[str]  # Why this decision was made
-    risks: List[str]  # Identified risks
-    recommendations: List[str]  # Recommendations for improvement
-    next_steps: List[str]  # Actions to take
+    reasons: list[str]  # Why this decision was made
+    risks: list[str]  # Identified risks
+    recommendations: list[str]  # Recommendations for improvement
+    next_steps: list[str]  # Actions to take
 
 
 class DeployDecisionOrchestrator:
@@ -44,7 +44,7 @@ class DeployDecisionOrchestrator:
     """
 
     # Decision thresholds
-    APPROVAL_THRESHOLDS = {
+    APPROVAL_THRESHOLDS: ClassVar[dict] = {
         "feasibility_ratio_approved": 1.0,  # Can fully meet target
         "feasibility_ratio_conditional": 0.7,  # Needs optimization
         "feasibility_ratio_rejected": 0.5,  # Not viable
@@ -62,11 +62,11 @@ class DeployDecisionOrchestrator:
 
     async def orchestrate(
         self,
-        validation_report: Dict,
-        backtest_result: Dict,
-        recommendation: Dict,
-        allocation: Dict,
-        investment_profile: Optional[Dict] = None,
+        validation_report: dict,
+        backtest_result: dict,
+        recommendation: dict,
+        allocation: dict,
+        investment_profile: Optional[dict] = None,
     ) -> DeploymentDecision:
         """
         Master orchestration method synthesizing all components.
@@ -175,7 +175,7 @@ class DeployDecisionOrchestrator:
         feasibility_ratio: float,
         recommendation_score: float,
         sharpe_ratio: float,
-    ) -> List[str]:
+    ) -> list[str]:
         """Generate human-readable reasons for decision."""
         reasons = []
 
@@ -206,8 +206,8 @@ class DeployDecisionOrchestrator:
         self,
         feasibility_ratio: float,
         sharpe_ratio: float,
-        allocation: Dict,
-    ) -> List[str]:
+        allocation: dict,
+    ) -> list[str]:
         """Identify key risks in the strategy."""
         risks = []
 
@@ -230,7 +230,7 @@ class DeployDecisionOrchestrator:
         weight_values = [v for v in allocation_weights.values() if isinstance(v, (int, float))]
         max_weight = max(weight_values) if weight_values else 0.0
         if max_weight > 0.50:
-            risks.append(f"High concentration: {max_weight*100:.0f}% in single position")
+            risks.append(f"High concentration: {max_weight * 100:.0f}% in single position")
 
         return risks
 
@@ -239,7 +239,7 @@ class DeployDecisionOrchestrator:
         status: str,
         feasibility_ratio: float,
         recommendation_score: float,
-    ) -> List[str]:
+    ) -> list[str]:
         """Generate actionable recommendations."""
         recommendations = []
 
@@ -261,7 +261,7 @@ class DeployDecisionOrchestrator:
 
         return recommendations
 
-    async def _determine_next_steps(self, status: str) -> List[str]:
+    async def _determine_next_steps(self, status: str) -> list[str]:
         """Determine next actions based on status."""
         next_steps = []
 

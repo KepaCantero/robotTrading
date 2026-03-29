@@ -18,7 +18,7 @@ from datetime import datetime
 from decimal import Decimal
 from enum import Enum
 from itertools import islice
-from typing import Deque, Dict, List, Optional, Set, Tuple
+from typing import Optional
 from uuid import uuid4
 
 from app.services.alerting_system import AlertEvent, AlertManager
@@ -120,13 +120,13 @@ class TradingBridgeOrchestrator:
 
         # Tracking (deque with maxlen to prevent memory leaks)
         self.status = BridgeStatus.IDLE
-        self.executions: Dict[str, AlertToTradeExecution] = {}
-        self.execution_history: Deque[AlertToTradeExecution] = deque(maxlen=10000)
-        self.errors: Dict[str, Tuple[AlertEvent, str]] = {}
+        self.executions: dict[str, AlertToTradeExecution] = {}
+        self.execution_history: deque[AlertToTradeExecution] = deque(maxlen=10000)
+        self.errors: dict[str, tuple[AlertEvent, str]] = {}
         self.is_active = False
 
         # Idempotency: Track processed alert IDs to prevent duplicates
-        self._processed_alert_ids: Set[str] = set()
+        self._processed_alert_ids: set[str] = set()
         self._max_processed_ids = 50000  # Limit memory for processed IDs
 
         # CONCURRENCY: Lock for thread-safe order execution
@@ -225,9 +225,7 @@ class TradingBridgeOrchestrator:
                 )
 
                 if not signal:
-                    logger.warning(
-                        f"⚠️ No trade signal generated for alert: {alert_event.event_id}"
-                    )
+                    logger.warning(f"⚠️ No trade signal generated for alert: {alert_event.event_id}")
                     return None
 
                 # Validate risk gates
@@ -269,8 +267,8 @@ class TradingBridgeOrchestrator:
                 OSError,
             ) as e:
                 self.status = BridgeStatus.ERROR
-                logger.error(f"❌ Error processing alert: {str(e)}")
-                if hasattr(alert_event, 'event_id'):
+                logger.error(f"❌ Error processing alert: {e!s}")
+                if hasattr(alert_event, "event_id"):
                     self.errors[alert_event.event_id] = (alert_event, str(e))
                 return None
 
@@ -357,7 +355,7 @@ class TradingBridgeOrchestrator:
             return RiskCheckResult(
                 passed=False,
                 risk_level=RiskLevel.CRITICAL,
-                violations=[f"Risk validation error: {str(e)}"],
+                violations=[f"Risk validation error: {e!s}"],
             )
 
     async def _execute_trade(
@@ -404,12 +402,12 @@ class TradingBridgeOrchestrator:
             )
 
             # Monitor order status
-            asyncio.create_task(self._monitor_order(execution))
+            self._monitor_task = asyncio.create_task(self._monitor_order(execution))
 
             return execution
 
         except (asyncio.TimeoutError, OSError) as e:
-            logger.error(f"❌ Error executing trade: {str(e)}")
+            logger.error(f"❌ Error executing trade: {e!s}")
             return None
 
     async def _monitor_order(self, execution: AlertToTradeExecution) -> None:
@@ -444,7 +442,7 @@ class TradingBridgeOrchestrator:
                 await asyncio.sleep(check_interval)
 
             except (asyncio.TimeoutError, OSError) as e:
-                logger.error(f"❌ Error monitoring order: {str(e)}")
+                logger.error(f"❌ Error monitoring order: {e!s}")
                 break
 
     def get_execution(self, execution_id: str) -> Optional[AlertToTradeExecution]:
@@ -459,7 +457,7 @@ class TradingBridgeOrchestrator:
         """
         return self.executions.get(execution_id)
 
-    def get_recent_executions(self, limit: int = 10) -> List[AlertToTradeExecution]:
+    def get_recent_executions(self, limit: int = 10) -> list[AlertToTradeExecution]:
         """
         Get recent trade executions.
 

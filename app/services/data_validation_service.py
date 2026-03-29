@@ -12,7 +12,6 @@ import logging
 from dataclasses import dataclass
 from datetime import datetime
 from decimal import Decimal
-from typing import Dict, List
 
 import numpy as np
 from pydantic import BaseModel, Field
@@ -28,7 +27,7 @@ class DataQualityIssue(BaseModel):
     timestamp: datetime = Field(..., description="Timestamp of the issue")
     symbol: str = Field(..., description="Symbol affected")
     message: str = Field(..., description="Description of the issue")
-    details: Dict = Field(default_factory=dict, description="Additional details")
+    details: dict = Field(default_factory=dict, description="Additional details")
 
 
 class DataQualityReport(BaseModel):
@@ -36,7 +35,7 @@ class DataQualityReport(BaseModel):
 
     symbol: str
     total_records: int
-    issues: List[DataQualityIssue] = Field(default_factory=list)
+    issues: list[DataQualityIssue] = Field(default_factory=list)
     gaps_detected: int = 0
     outliers_detected: int = 0
     consistency_errors: int = 0
@@ -95,7 +94,7 @@ class DataValidationService:
             },
         )
 
-    def detect_price_gaps(self, data: List[OHLCData], symbol: str) -> List[DataQualityIssue]:
+    def detect_price_gaps(self, data: list[OHLCData], symbol: str) -> list[DataQualityIssue]:
         """
         TASK-DV-1: Detect price gaps > threshold.
 
@@ -139,7 +138,7 @@ class DataValidationService:
                         severity="warning",
                         timestamp=data[i].timestamp,
                         symbol=symbol,
-                        message=f"Price gap detected: {gap_pct*100:.2f}% "
+                        message=f"Price gap detected: {gap_pct * 100:.2f}% "
                         f"(prev_close={prev_close}, curr_open={curr_open})",
                         details={
                             "gap_percentage": gap_pct * 100,
@@ -163,7 +162,7 @@ class DataValidationService:
 
         return issues
 
-    def identify_outliers(self, data: List[OHLCData], symbol: str) -> List[DataQualityIssue]:
+    def identify_outliers(self, data: list[OHLCData], symbol: str) -> list[DataQualityIssue]:
         """
         TASK-DV-2: Identify outliers using z-score method.
 
@@ -238,7 +237,7 @@ class DataValidationService:
                         timestamp=data[i + 1].timestamp,
                         symbol=symbol,
                         message=f"Outlier detected: z-score={z_score:.2f}, "
-                        f"price_change={change*100:.2f}%",
+                        f"price_change={change * 100:.2f}%",
                         details={
                             "z_score": z_score,
                             "price_change_pct": change * 100,
@@ -265,8 +264,8 @@ class DataValidationService:
         return issues
 
     def validate_ohlc_consistency(
-        self, data: List[OHLCData], symbol: str
-    ) -> List[DataQualityIssue]:
+        self, data: list[OHLCData], symbol: str
+    ) -> list[DataQualityIssue]:
         """
         TASK-DV-3: Validate OHLC consistency.
 
@@ -373,7 +372,7 @@ class DataValidationService:
 
         return issues
 
-    def validate_data_quality(self, data: List[OHLCData], symbol: str) -> DataQualityReport:
+    def validate_data_quality(self, data: list[OHLCData], symbol: str) -> DataQualityReport:
         """
         TASK-DV-4: Complete data quality check before backtest.
 
@@ -457,8 +456,8 @@ class DataValidationService:
         )
 
     def validate_bulk_data(
-        self, data_dict: Dict[str, List[OHLCData]]
-    ) -> Dict[str, DataQualityReport]:
+        self, data_dict: dict[str, list[OHLCData]]
+    ) -> dict[str, DataQualityReport]:
         """
         Validate multiple symbols at once.
 

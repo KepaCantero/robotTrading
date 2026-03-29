@@ -6,7 +6,7 @@ Contains base classes, enums, and common utilities for the configuration system.
 
 import logging
 from enum import Enum
-from typing import Any, Dict
+from typing import Any
 
 from pydantic import BaseModel
 from pydantic_settings import BaseSettings
@@ -44,7 +44,7 @@ class SettingsBase(BaseSettings):
         "extra": "ignore",  # Ignore extra fields from .env not defined in model
     }
 
-    def get_config_summary(self) -> Dict[str, Any]:
+    def get_config_summary(self) -> dict[str, Any]:
         """Get a summary of the current configuration."""
         return {
             "fields": list(self.model_fields.keys()),

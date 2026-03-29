@@ -18,14 +18,12 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 from app.shared.exceptions.exceptions import AlgoTradingError
 
 
-def _get_error_handlers() -> (
-    tuple[
-        Callable,
-        Callable,
-        Callable,
-        Callable,
-    ]
-):
+def _get_error_handlers() -> tuple[
+    Callable,
+    Callable,
+    Callable,
+    Callable,
+]:
     """
     Lazily import error handlers to avoid circular dependencies.
 
@@ -48,15 +46,13 @@ def _get_error_handlers() -> (
     )
 
 
-def _get_middleware_classes() -> (
-    tuple[
-        type,
-        type,
-        type,
-        type,
-        type,
-    ]
-):
+def _get_middleware_classes() -> tuple[
+    type,
+    type,
+    type,
+    type,
+    type,
+]:
     """
     Lazily import middleware classes to avoid circular dependencies.
 

@@ -19,7 +19,7 @@ import logging
 from collections import defaultdict
 from datetime import datetime
 from decimal import Decimal
-from typing import Any, Dict, List, Optional, Union
+from typing import TYPE_CHECKING, Any, ClassVar
 
 import pandas as pd
 
@@ -30,10 +30,7 @@ from app.backtesting.backtesting_compliance import (
 from app.backtesting.base_engine import BaseBacktestEngine, EngineType
 from app.backtesting.models import BacktestConfig, BacktestResult, PerformanceMetrics
 from app.backtesting.signal_diagnostic_logger import SignalDiagnosticLogger
-from app.domain.models.market_data import Quote
-from app.domain.strategies.base import BaseStrategy
 from app.services.dynamic_capital_reallocation import DynamicCapitalReallocationEngine
-from app.services.multi_strategy_allocation import MultiStrategyAllocationManager
 from app.services.portfolio_config_manager import (
     PortfolioConfigManager,
     get_portfolio_config_manager,
@@ -43,6 +40,11 @@ from app.services.strategy_stock_allocator import StrategyStockAllocator
 # SINGLE SOURCE OF TRUTH: Import CentralizedConfig
 from app.shared.config.params.strategy_config import StockAllocationSettings
 
+if TYPE_CHECKING:
+    from app.domain.models.market_data import Quote
+    from app.domain.strategies.base import BaseStrategy
+    from app.services.multi_strategy_allocation import MultiStrategyAllocationManager
+
 logger = logging.getLogger(__name__)
 
 
@@ -50,7 +52,7 @@ logger = logging.getLogger(__name__)
 class MultiStrategyConfig(BacktestConfig):
     """Configuration for multi-strategy backtesting."""
 
-    strategies: Dict[str, Decimal] = {}  # strategy_name -> weight
+    strategies: ClassVar[dict[str, Decimal]] = {}  # strategy_name -> weight
     enable_dynamic_reallocation: bool = True
     reallocation_frequency_days: int = 30
     early_abort_loss_pct: Decimal = Decimal("0.20")
@@ -61,11 +63,11 @@ class MultiStrategyResult:
 
     def __init__(
         self,
-        per_strategy: Dict[str, Dict],
-        combined: Dict,
-        allocation: Dict,
-        results_by_strategy: Dict[str, BacktestResult],
-        stock_allocation: Optional[Dict] = None,
+        per_strategy: dict[str, dict],
+        combined: dict,
+        allocation: dict,
+        results_by_strategy: dict[str, BacktestResult],
+        stock_allocation: dict | None = None,
     ):
         self.per_strategy = per_strategy
         self.combined = combined
@@ -95,11 +97,11 @@ class MultiStrategyBacktestEngine(BaseBacktestEngine[MultiStrategyConfig, MultiS
     def __init__(
         self,
         allocation_manager: MultiStrategyAllocationManager,
-        strategies: Dict[str, BaseStrategy],
-        config_params: Dict[str, Any],
-        portfolio_config_manager: Optional[PortfolioConfigManager] = None,
+        strategies: dict[str, BaseStrategy],
+        config_params: dict[str, Any],
+        portfolio_config_manager: PortfolioConfigManager | None = None,
         enable_diagnostics: bool = True,
-        early_abort_loss_pct: Optional[Decimal] = None,
+        early_abort_loss_pct: Decimal | None = None,
         enable_dynamic_reallocation: bool = True,
         reallocation_frequency_days: int = 30,
     ):
@@ -160,7 +162,7 @@ class MultiStrategyBacktestEngine(BaseBacktestEngine[MultiStrategyConfig, MultiS
 
         # COMPLIANCE: Initialize BacktestingCompliance
         self.backtesting_compliance = create_backtesting_compliance()
-        self.compliance_results: List[BacktestingComplianceResult] = []
+        self.compliance_results: list[BacktestingComplianceResult] = []
 
         logger.info("MultiStrategyBacktestEngine: BacktestingCompliance initialized")
 
@@ -174,10 +176,10 @@ class MultiStrategyBacktestEngine(BaseBacktestEngine[MultiStrategyConfig, MultiS
 
     def run_backtest(
         self,
-        market_data: Union[List[Quote], List[Any]],
-        signals: Optional[List[Any]] = None,
-        start_date: Optional[datetime] = None,
-        end_date: Optional[datetime] = None,
+        market_data: list[Quote] | list[Any],
+        signals: list[Any] | None = None,
+        start_date: datetime | None = None,
+        end_date: datetime | None = None,
         **kwargs,
     ) -> MultiStrategyResult:
         """
@@ -217,8 +219,8 @@ class MultiStrategyBacktestEngine(BaseBacktestEngine[MultiStrategyConfig, MultiS
         use_allocator = self._run_allocation(historical_data, strategy_allocations_dict)
 
         # STEP 3: Run backtest for each strategy
-        results_by_strategy: Dict[str, BacktestResult] = {}
-        signals_by_strategy: Dict[str, List] = {}
+        results_by_strategy: dict[str, BacktestResult] = {}
+        signals_by_strategy: dict[str, list] = {}
 
         for strategy_name, allocated_capital in capital_allocations.items():
             strategy = self.strategies.get(strategy_name)
@@ -301,9 +303,11 @@ class MultiStrategyBacktestEngine(BaseBacktestEngine[MultiStrategyConfig, MultiS
                 "residual_capital": float(self.allocation_result.residual_capital),
                 "validation_errors": self.allocation_result.validation_errors,
                 "allocation_method": "StrategyStockAllocator",
-                "decision_logs": self.allocation_result.decision_logs[-10:]
-                if self.allocation_result.decision_logs
-                else [],
+                "decision_logs": (
+                    self.allocation_result.decision_logs[-10:]
+                    if self.allocation_result.decision_logs
+                    else []
+                ),
             }
 
         logger.info(
@@ -337,8 +341,8 @@ class MultiStrategyBacktestEngine(BaseBacktestEngine[MultiStrategyConfig, MultiS
 
     def _run_allocation(
         self,
-        historical_data: Dict[str, pd.DataFrame],
-        strategy_allocations_dict: Dict[str, float],
+        historical_data: dict[str, pd.DataFrame],
+        strategy_allocations_dict: dict[str, float],
     ) -> bool:
         """Run stock allocation and return True if successful."""
         try:
@@ -375,8 +379,8 @@ class MultiStrategyBacktestEngine(BaseBacktestEngine[MultiStrategyConfig, MultiS
         self,
         strategy: BaseStrategy,
         strategy_name: str,
-        filtered_quotes: List[Quote],
-    ) -> List[Any]:
+        filtered_quotes: list[Quote],
+    ) -> list[Any]:
         """Generate signals for a strategy from filtered quotes."""
         signals = []
         errors_count = 0
@@ -393,9 +397,11 @@ class MultiStrategyBacktestEngine(BaseBacktestEngine[MultiStrategyConfig, MultiS
                             self.diagnostic_logger.log_signal_candidate(
                                 strategy_name,
                                 quote.symbol,
-                                sig.signal_type.value
-                                if hasattr(sig.signal_type, "value")
-                                else str(sig.signal_type),
+                                (
+                                    sig.signal_type.value
+                                    if hasattr(sig.signal_type, "value")
+                                    else str(sig.signal_type)
+                                ),
                                 sig.metadata if hasattr(sig, "metadata") else {},
                             )
             except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
@@ -409,7 +415,7 @@ class MultiStrategyBacktestEngine(BaseBacktestEngine[MultiStrategyConfig, MultiS
 
         return signals
 
-    def _filter_quotes_by_strategy(self, quotes: List[Quote], strategy_name: str) -> List[Quote]:
+    def _filter_quotes_by_strategy(self, quotes: list[Quote], strategy_name: str) -> list[Quote]:
         """Filter quotes by strategy sector configuration."""
         allowed_symbols = self.portfolio_config.get_strategy_symbols(strategy_name)
 
@@ -418,7 +424,7 @@ class MultiStrategyBacktestEngine(BaseBacktestEngine[MultiStrategyConfig, MultiS
 
         return [q for q in quotes if q.symbol in allowed_symbols]
 
-    def _filter_quotes_by_allocator(self, quotes: List[Quote], strategy_name: str) -> List[Quote]:
+    def _filter_quotes_by_allocator(self, quotes: list[Quote], strategy_name: str) -> list[Quote]:
         """Filter quotes based on StrategyStockAllocator assignment results."""
         if not self.allocation_result:
             return self._filter_quotes_by_strategy(quotes, strategy_name)
@@ -440,7 +446,7 @@ class MultiStrategyBacktestEngine(BaseBacktestEngine[MultiStrategyConfig, MultiS
 
         return [q for q in quotes if q.symbol in assigned_symbols]
 
-    def _convert_quotes_to_dataframe_dict(self, quotes: List[Quote]) -> Dict[str, pd.DataFrame]:
+    def _convert_quotes_to_dataframe_dict(self, quotes: list[Quote]) -> dict[str, pd.DataFrame]:
         """Convert List[Quote] to Dict[str, pd.DataFrame] for allocator."""
         quotes_by_symbol = defaultdict(list)
         for quote in quotes:
@@ -469,8 +475,8 @@ class MultiStrategyBacktestEngine(BaseBacktestEngine[MultiStrategyConfig, MultiS
         self,
         strategy_name: str,
         initial_capital: Decimal,
-        start_date: Optional[datetime],
-        end_date: Optional[datetime],
+        start_date: datetime | None,
+        end_date: datetime | None,
     ) -> BacktestResult:
         """Create empty backtest result when no signals generated."""
         total_days = (end_date - start_date).days if start_date and end_date else 1
@@ -482,9 +488,11 @@ class MultiStrategyBacktestEngine(BaseBacktestEngine[MultiStrategyConfig, MultiS
             final_capital=initial_capital,
             total_return=Decimal("0"),
             trades=[],
-            equity_curve=[(start_date, initial_capital), (end_date, initial_capital)]
-            if start_date and end_date
-            else [],
+            equity_curve=(
+                [(start_date, initial_capital), (end_date, initial_capital)]
+                if start_date and end_date
+                else []
+            ),
             performance=PerformanceMetrics(
                 total_trades=0,
                 winning_trades=0,
@@ -510,9 +518,9 @@ class MultiStrategyBacktestEngine(BaseBacktestEngine[MultiStrategyConfig, MultiS
 
     def _consolidate_results(
         self,
-        results_by_strategy: Dict[str, BacktestResult],
-        capital_allocations: Dict[str, Decimal],
-    ) -> Dict:
+        results_by_strategy: dict[str, BacktestResult],
+        capital_allocations: dict[str, Decimal],
+    ) -> dict:
         """Consolidate results from multiple strategies."""
         total_initial = sum(capital_allocations.values())
         total_final = sum(r.final_capital for r in results_by_strategy.values())
@@ -537,12 +545,16 @@ class MultiStrategyBacktestEngine(BaseBacktestEngine[MultiStrategyConfig, MultiS
                 "total_trades": result.performance.total_trades if result.performance else 0,
                 "win_rate": float(result.performance.win_rate) if result.performance else 0.0,
                 "total_return": float(result.total_return),
-                "sharpe_ratio": float(result.performance.sharpe_ratio)
-                if result.performance and result.performance.sharpe_ratio
-                else None,
-                "max_drawdown": float(result.performance.max_drawdown)
-                if result.performance and result.performance.max_drawdown
-                else 0,
+                "sharpe_ratio": (
+                    float(result.performance.sharpe_ratio)
+                    if result.performance and result.performance.sharpe_ratio
+                    else None
+                ),
+                "max_drawdown": (
+                    float(result.performance.max_drawdown)
+                    if result.performance and result.performance.max_drawdown
+                    else 0
+                ),
             }
 
         return {
@@ -572,8 +584,8 @@ class MultiStrategyBacktestEngine(BaseBacktestEngine[MultiStrategyConfig, MultiS
 
     def _calculate_weighted_sharpe(
         self,
-        results_by_strategy: Dict[str, BacktestResult],
-        capital_allocations: Dict[str, Decimal],
+        results_by_strategy: dict[str, BacktestResult],
+        capital_allocations: dict[str, Decimal],
     ) -> float:
         """Calculate weighted average Sharpe ratio."""
         total_sharpe = 0.0
@@ -589,8 +601,8 @@ class MultiStrategyBacktestEngine(BaseBacktestEngine[MultiStrategyConfig, MultiS
 
     def _calculate_weighted_max_dd(
         self,
-        results_by_strategy: Dict[str, BacktestResult],
-        capital_allocations: Dict[str, Decimal],
+        results_by_strategy: dict[str, BacktestResult],
+        capital_allocations: dict[str, Decimal],
     ) -> float:
         """Calculate weighted average max drawdown."""
         total_dd = 0.0
@@ -609,8 +621,8 @@ class MultiStrategyBacktestEngine(BaseBacktestEngine[MultiStrategyConfig, MultiS
         self,
         strategy_name: str,
         result: BacktestResult,
-        start_date: Optional[datetime],
-        end_date: Optional[datetime],
+        start_date: datetime | None,
+        end_date: datetime | None,
     ) -> None:
         """Check if backtest should be aborted due to early losses."""
         if not start_date or not end_date:
@@ -625,7 +637,7 @@ class MultiStrategyBacktestEngine(BaseBacktestEngine[MultiStrategyConfig, MultiS
                     f"exceeds threshold {self.early_abort_loss_pct * 100:.0f}%"
                 )
 
-    def get_allocation_summary(self) -> Dict[str, Any]:
+    def get_allocation_summary(self) -> dict[str, Any]:
         """Get current allocation summary."""
         capital_allocations = self.allocation_manager.allocate_capital()
         total = self.allocation_manager.total_capital

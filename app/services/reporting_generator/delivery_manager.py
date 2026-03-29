@@ -16,7 +16,7 @@ from datetime import datetime
 from decimal import Decimal
 from enum import Enum
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -67,7 +67,7 @@ class EmailConfig:
     smtp_port: int
     sender_email: str
     sender_password: str
-    recipient_emails: List[str]
+    recipient_emails: list[str]
     subject: str
     body: str = "Please find attached your performance report."
     use_tls: bool = True
@@ -195,7 +195,7 @@ class ReportDeliveryManager:
                 file_path=None,
                 file_size_mb=Decimal("0"),
                 export_time_ms=Decimal("0"),
-                message=f"HTML export failed: {str(e)}",
+                message=f"HTML export failed: {e!s}",
                 timestamp=datetime.utcnow(),
             )
 
@@ -259,13 +259,13 @@ class ReportDeliveryManager:
                 file_path=None,
                 file_size_mb=Decimal("0"),
                 export_time_ms=Decimal("0"),
-                message=f"PDF export failed: {str(e)}",
+                message=f"PDF export failed: {e!s}",
                 timestamp=datetime.utcnow(),
             )
 
     def export_to_excel(
         self,
-        metrics_data: Dict[str, Any],
+        metrics_data: dict[str, Any],
         output_path: Path,
         include_timestamp: bool = True,
     ) -> ExportResult:
@@ -323,7 +323,7 @@ class ReportDeliveryManager:
                 file_path=None,
                 file_size_mb=Decimal("0"),
                 export_time_ms=Decimal("0"),
-                message=f"Excel export failed: {str(e)}",
+                message=f"Excel export failed: {e!s}",
                 timestamp=datetime.utcnow(),
             )
 
@@ -388,7 +388,7 @@ class ReportDeliveryManager:
                 channel=DeliveryChannel.EMAIL,
                 delivery_time_ms=Decimal("0"),
                 recipient=", ".join(email_config.recipient_emails),
-                message=f"Email delivery failed: {str(e)}",
+                message=f"Email delivery failed: {e!s}",
                 timestamp=datetime.utcnow(),
             )
 
@@ -464,7 +464,7 @@ class ReportDeliveryManager:
                 channel=DeliveryChannel.S3,
                 delivery_time_ms=Decimal("0"),
                 recipient=f"s3://{s3_config.bucket_name}",
-                message=f"S3 upload failed: {str(e)}",
+                message=f"S3 upload failed: {e!s}",
                 timestamp=datetime.utcnow(),
             )
 
@@ -472,7 +472,7 @@ class ReportDeliveryManager:
     # UTILITY METHODS
     # ========================================================================
 
-    def get_manager_status(self) -> Dict:
+    def get_manager_status(self) -> dict:
         """Get delivery manager operational status."""
         return {
             "status": "operational",

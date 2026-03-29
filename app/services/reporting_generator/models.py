@@ -7,7 +7,7 @@ Generates comprehensive performance reports with visualizations and metrics.
 import logging
 from datetime import datetime
 from decimal import Decimal
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 from pydantic import BaseModel, Field
 
@@ -62,7 +62,7 @@ class ReportGenerationRequest(BaseModel):
     backtest_metrics: StrategyMetrics = Field(..., description="Backtest performance metrics")
 
     # Portfolio allocation
-    allocations: List[AllocationSnapshot] = Field(..., description="Portfolio allocations")
+    allocations: list[AllocationSnapshot] = Field(..., description="Portfolio allocations")
 
     # Additional context
     capital_eur: Decimal = Field(..., description="Capital in EUR")
@@ -91,19 +91,19 @@ class PerformanceReport(BaseModel):
     metrics: StrategyMetrics = Field(..., description="Performance metrics")
 
     # Allocation details
-    allocations: List[AllocationSnapshot] = Field(..., description="Portfolio allocations")
+    allocations: list[AllocationSnapshot] = Field(..., description="Portfolio allocations")
 
     # Performance assessment
     overall_rating: str = Field(
         default="neutral", description="Overall rating: excellent/good/neutral/poor"
     )
-    strengths: List[str] = Field(default=[], description="Strategy strengths identified")
-    weaknesses: List[str] = Field(default=[], description="Strategy weaknesses identified")
-    recommendations: List[str] = Field(default=[], description="Recommendations for improvement")
+    strengths: list[str] = Field(default=[], description="Strategy strengths identified")
+    weaknesses: list[str] = Field(default=[], description="Strategy weaknesses identified")
+    recommendations: list[str] = Field(default=[], description="Recommendations for improvement")
 
     # Report metadata
     html_content: Optional[str] = Field(None, description="HTML report content")
-    charts_data: Optional[Dict[str, Any]] = Field(None, description="Chart data for visualization")
+    charts_data: Optional[dict[str, Any]] = Field(None, description="Chart data for visualization")
 
     # Report timing
     generation_timestamp: datetime = Field(

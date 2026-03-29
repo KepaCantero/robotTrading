@@ -9,7 +9,7 @@ import logging
 from dataclasses import dataclass
 from datetime import datetime
 from decimal import Decimal
-from typing import Dict, List, Optional
+from typing import Optional
 
 logger = logging.getLogger(__name__)
 
@@ -56,7 +56,7 @@ class TaxLotReport:
     net_long_term: Decimal
     net_capital_gain_loss: Decimal
     projected_annual_tax: Decimal
-    unrealized_gains_summary: Dict[str, Decimal]
+    unrealized_gains_summary: dict[str, Decimal]
 
 
 class CapitalGainTracker:
@@ -76,8 +76,8 @@ class CapitalGainTracker:
 
     def __init__(self):
         """Initialize capital gain tracker."""
-        self.realized_gains: List[GainLossRecord] = []
-        self.position_history: Dict[str, List[Dict]] = {}  # symbol → purchase history
+        self.realized_gains: list[GainLossRecord] = []
+        self.position_history: dict[str, list[dict]] = {}  # symbol → purchase history
         logger.info("✅ CapitalGainTracker initialized")
 
     def record_position_purchase(
@@ -117,7 +117,7 @@ class CapitalGainTracker:
         sale_price: Decimal,
         sale_date: datetime,
         method: str = "FIFO",  # FIFO, LIFO, AVERAGE_COST
-    ) -> List[GainLossRecord]:
+    ) -> list[GainLossRecord]:
         """
         Record a position sale and calculate gains/losses.
 
@@ -197,10 +197,10 @@ class CapitalGainTracker:
 
     def calculate_unrealized_gains(
         self,
-        positions: Dict[str, Decimal],  # symbol → current_value
-        current_prices: Dict[str, Decimal],  # symbol → price per share
-        quantities: Dict[str, Decimal],  # symbol → quantity held
-    ) -> Dict[str, PositionGainLoss]:
+        positions: dict[str, Decimal],  # symbol → current_value
+        current_prices: dict[str, Decimal],  # symbol → price per share
+        quantities: dict[str, Decimal],  # symbol → quantity held
+    ) -> dict[str, PositionGainLoss]:
         """
         Calculate unrealized gains/losses for current positions.
 

@@ -18,11 +18,10 @@ import logging
 import threading
 from concurrent.futures import ProcessPoolExecutor, as_completed
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import TYPE_CHECKING, Any
 
 import yaml
 
-from app.domain.models.input_profile import InputProfile
 from app.shared.config.profile_config_loader import ProfileConfigLoader
 
 from .baseline_executor import BaselineBacktestExecutor
@@ -30,12 +29,15 @@ from .profile_generator import ProfileGenerator
 from .report_generator import ReportGenerator
 from .result_aggregator import ProfileResult, ResultAggregator
 
+if TYPE_CHECKING:
+    from app.domain.models.input_profile import InputProfile
+
 logger = logging.getLogger(__name__)
 
 # Type aliases for better type safety
-ConfigDict = Dict[str, Any]
-MetricsDict = Dict[str, Any]  # Re-using from baseline_executor
-FallbackMetricsDict = Dict[str, int]
+ConfigDict = dict[str, Any]
+MetricsDict = dict[str, Any]  # Re-using from baseline_executor
+FallbackMetricsDict = dict[str, int]
 
 
 class ProfileBatchBacktester:
@@ -92,7 +94,7 @@ class ProfileBatchBacktester:
         self.report_generator = ReportGenerator(output_dir)
 
         # Results storage
-        self.results: Dict[str, ProfileResult] = {}
+        self.results: dict[str, ProfileResult] = {}
 
         # Initialize fallback metrics (thread-safe)
         self._fallback_lock = threading.Lock()
@@ -105,7 +107,7 @@ class ProfileBatchBacktester:
         with open(self.config_path) as f:
             return yaml.safe_load(f)
 
-    def generate_all_profiles(self) -> List[InputProfile]:
+    def generate_all_profiles(self) -> list[InputProfile]:
         """
         Generate all profile combinations.
 
@@ -217,7 +219,7 @@ class ProfileBatchBacktester:
 
     def run_all_profiles(
         self, parallel: bool = True, max_workers: int = 20
-    ) -> Dict[str, ProfileResult]:
+    ) -> dict[str, ProfileResult]:
         """
         Run all profiles with optional parallel execution.
 
@@ -247,8 +249,8 @@ class ProfileBatchBacktester:
         return results
 
     def _run_parallel(
-        self, profiles: List[InputProfile], max_workers: int
-    ) -> Dict[str, ProfileResult]:
+        self, profiles: list[InputProfile], max_workers: int
+    ) -> dict[str, ProfileResult]:
         """Run profiles in parallel using ProcessPoolExecutor."""
         results = {}
 
@@ -274,7 +276,7 @@ class ProfileBatchBacktester:
 
         return results
 
-    def _run_sequential(self, profiles: List[InputProfile]) -> Dict[str, ProfileResult]:
+    def _run_sequential(self, profiles: list[InputProfile]) -> dict[str, ProfileResult]:
         """Run profiles sequentially."""
         results = {}
 
@@ -308,17 +310,17 @@ class ProfileBatchBacktester:
         """
         return self.result_aggregator.get_best_strategy(objective, tier, risk)
 
-    def export_results(self, format: str = "json") -> Path:
+    def export_results(self, output_format: str = "json") -> Path:
         """
         Export results to file.
 
         Args:
-            format: Export format (json, csv, excel)
+            output_format: Export format (json, csv, excel)
 
         Returns:
             Path to exported file
         """
-        return self.report_generator.export_results(self.results, format)
+        return self.report_generator.export_results(self.results, output_format)
 
     def generate_comparison_report(self) -> str:
         """

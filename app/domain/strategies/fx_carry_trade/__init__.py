@@ -26,8 +26,8 @@ __all__ = [
     "FXCarrySignal",
     "FXCarryTradeConfig",
     "FXPair",
-    "FXRateQuote",
     "FXRateProvider",
+    "FXRateQuote",
     "InMemoryFXRateProvider",
     "InterestRateQuote",
 ]

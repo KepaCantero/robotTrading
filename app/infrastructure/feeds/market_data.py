@@ -7,7 +7,7 @@ Provides market data retrieval and management.
 import logging
 from datetime import datetime
 from decimal import Decimal
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -16,10 +16,10 @@ class MarketDataService:
     """Service for retrieving and managing market data."""
 
     def __init__(self):
-        self._cache: Dict[str, Any] = {}
-        self._feeds: Dict[str, Any] = {}
+        self._cache: dict[str, Any] = {}
+        self._feeds: dict[str, Any] = {}
 
-    async def get_quote(self, symbol: str) -> Optional[Dict[str, Any]]:
+    async def get_quote(self, symbol: str) -> Optional[dict[str, Any]]:
         """Get current quote for a symbol."""
         # Return cached quote if available
         if symbol in self._cache:
@@ -40,11 +40,11 @@ class MarketDataService:
         symbol: str,
         start_date: datetime,
         end_date: datetime,
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """Get historical data for a symbol."""
         return []
 
-    async def get_top_liquid_quotes(self, limit: int = 10) -> List[Dict[str, Any]]:
+    async def get_top_liquid_quotes(self, limit: int = 10) -> list[dict[str, Any]]:
         """Get top liquid assets quotes."""
         return []
 
@@ -52,7 +52,7 @@ class MarketDataService:
         """Clear the data cache."""
         self._cache.clear()
 
-    def get_cache_stats(self) -> Dict[str, Any]:
+    def get_cache_stats(self) -> dict[str, Any]:
         """Get cache statistics."""
         return {
             "cached_quotes": len(self._cache),

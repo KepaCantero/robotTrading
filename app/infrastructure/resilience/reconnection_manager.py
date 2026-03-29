@@ -9,9 +9,10 @@ Uses centralized configuration for all timeout and backoff parameters.
 import asyncio
 import logging
 import random
+from collections.abc import Awaitable
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Any, Awaitable, Callable, Dict, Optional
+from typing import Any, Callable, Optional
 
 from app.shared.config.centralized_config import get_config
 from app.shared.utils.timezone_utils import utc_now
@@ -29,7 +30,7 @@ class ReconnectionConfig:
 
     def __init__(
         self,
-        custom_config: Optional[Dict] = None,
+        custom_config: Optional[dict] = None,
         *,
         max_attempts: Optional[int] = None,
         base_delay_seconds: Optional[float] = None,
@@ -304,7 +305,7 @@ class ReconnectionManager:
                             break
                 else:
                     # No health check, just wait forever
-                    await asyncio.sleep(float('inf'))
+                    await asyncio.sleep(float("inf"))
 
             except asyncio.CancelledError:
                 logger.info(f"{self.service_name}: Connection maintenance cancelled")
@@ -313,7 +314,7 @@ class ReconnectionManager:
                 logger.error(f"{self.service_name}: Error in connection maintenance: {e}")
                 await asyncio.sleep(reconnect_delay)
 
-    def get_stats(self) -> Dict[str, Any]:
+    def get_stats(self) -> dict[str, Any]:
         """Get connection statistics."""
         return {
             "service_name": self.service_name,

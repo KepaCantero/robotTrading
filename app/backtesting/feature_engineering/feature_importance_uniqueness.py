@@ -46,7 +46,6 @@ from __future__ import annotations
 import logging
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Dict, List, Optional, Union
 
 import numpy as np
 import pandas as pd
@@ -95,30 +94,32 @@ class UniquenessConfig:
 class UniquenessResult:
     """Result of feature importance with uniqueness."""
 
-    feature_names: List[str]
+    feature_names: list[str]
 
     # Importance scores
-    mdi_importance: Dict[str, float] = field(default_factory=dict)
-    mda_importance: Dict[str, float] = field(default_factory=dict)
-    sfi_importance: Dict[str, float] = field(default_factory=dict)
+    mdi_importance: dict[str, float] = field(default_factory=dict)
+    mda_importance: dict[str, float] = field(default_factory=dict)
+    sfi_importance: dict[str, float] = field(default_factory=dict)
 
     # Uniqueness information
     uniqueness_weights: np.ndarray = field(default_factory=lambda: np.array([]))
     avg_uniqueness: float = 0.0
 
     # Feature clusters
-    feature_clusters: Dict[str, List[str]] = field(default_factory=dict)
+    feature_clusters: dict[str, list[str]] = field(default_factory=dict)
 
     # Rankings
-    combined_importance: Dict[str, float] = field(default_factory=dict)
+    combined_importance: dict[str, float] = field(default_factory=dict)
 
     # Metadata
     n_samples: int = 0
     n_features: int = 0
-    methods_used: List[str] = field(default_factory=list)
+    methods_used: list[str] = field(default_factory=list)
     timestamp: datetime = field(default_factory=datetime.now)
 
-    def to_dict(self) -> Dict[str, Union[str, float, int, List[str], Dict[str, float], Dict[str, List[str]]]]:
+    def to_dict(
+        self,
+    ) -> dict[str, str | float | int | list[str] | dict[str, float] | dict[str, list[str]]]:
         """Convert to dictionary."""
         return {
             "feature_names": self.feature_names,
@@ -148,7 +149,7 @@ class UniquenessCalculator:
         >>> model.fit(X, y, sample_weight=weights)
     """
 
-    def __init__(self, config: Optional[UniquenessConfig] = None):
+    def __init__(self, config: UniquenessConfig | None = None):
         """Initialize UniquenessCalculator."""
         self.config = config or UniquenessConfig()
 
@@ -301,7 +302,7 @@ class MDIWithUniqueness:
         >>> importance = mdi.calculate(model, X, y, events, labels)
     """
 
-    def __init__(self, config: Optional[UniquenessConfig] = None):
+    def __init__(self, config: UniquenessConfig | None = None):
         """Initialize MDI with uniqueness."""
         self.config = config or UniquenessConfig()
         self.uniqueness_calc = UniquenessCalculator(config)
@@ -309,12 +310,12 @@ class MDIWithUniqueness:
     def calculate(
         self,
         model: object,
-        X: Union[pd.DataFrame, np.ndarray],
-        y: Union[pd.Series, np.ndarray],
+        X: pd.DataFrame | np.ndarray,
+        y: pd.Series | np.ndarray,
         events: pd.Series,
         labels: pd.DataFrame,
-        feature_names: Optional[List[str]] = None,
-    ) -> Dict[str, float]:
+        feature_names: list[str] | None = None,
+    ) -> dict[str, float]:
         """
         Calculate MDI importance weighted by uniqueness.
 
@@ -398,7 +399,7 @@ class MDAWithUniqueness:
         >>> importance = mda.calculate(model, X, y, events, labels)
     """
 
-    def __init__(self, config: Optional[UniquenessConfig] = None):
+    def __init__(self, config: UniquenessConfig | None = None):
         """Initialize MDA with uniqueness."""
         self.config = config or UniquenessConfig()
         self.uniqueness_calc = UniquenessCalculator(config)
@@ -406,12 +407,12 @@ class MDAWithUniqueness:
     def calculate(
         self,
         model: object,
-        X: Union[pd.DataFrame, np.ndarray],
-        y: Union[pd.Series, np.ndarray],
+        X: pd.DataFrame | np.ndarray,
+        y: pd.Series | np.ndarray,
         events: pd.Series,
         labels: pd.DataFrame,
-        feature_names: Optional[List[str]] = None,
-    ) -> Dict[str, float]:
+        feature_names: list[str] | None = None,
+    ) -> dict[str, float]:
         """
         Calculate MDA importance with uniqueness correction.
 
@@ -534,15 +535,15 @@ class FeatureClusterer:
         >>> clusters = clusterer.cluster_features(X, feature_names)
     """
 
-    def __init__(self, config: Optional[UniquenessConfig] = None):
+    def __init__(self, config: UniquenessConfig | None = None):
         """Initialize FeatureClusterer."""
         self.config = config or UniquenessConfig()
 
     def cluster_features(
         self,
-        X: Union[pd.DataFrame, np.ndarray],
-        feature_names: Optional[List[str]] = None,
-    ) -> Dict[str, List[str]]:
+        X: pd.DataFrame | np.ndarray,
+        feature_names: list[str] | None = None,
+    ) -> dict[str, list[str]]:
         """
         Cluster features based on correlation.
 
@@ -610,7 +611,7 @@ class FinancialMLFeatureImportanceWithUniqueness:
         >>> print(result.get_top_features(n=10))
     """
 
-    def __init__(self, config: Optional[UniquenessConfig] = None):
+    def __init__(self, config: UniquenessConfig | None = None):
         """Initialize feature importance calculator."""
         self.config = config or UniquenessConfig()
 
@@ -622,11 +623,11 @@ class FinancialMLFeatureImportanceWithUniqueness:
     def calculate_importance(
         self,
         model: object,
-        X: Union[pd.DataFrame, np.ndarray],
-        y: Union[pd.Series, np.ndarray],
+        X: pd.DataFrame | np.ndarray,
+        y: pd.Series | np.ndarray,
         events: pd.Series,
         labels: pd.DataFrame,
-        feature_names: Optional[List[str]] = None,
+        feature_names: list[str] | None = None,
     ) -> UniquenessResult:
         """
         Calculate feature importance with uniqueness weighting.
@@ -654,10 +655,7 @@ class FinancialMLFeatureImportanceWithUniqueness:
             X_array = X
             feature_names = feature_names or [f"feature_{i}" for i in range(X.shape[1])]
 
-        if isinstance(y, pd.Series):
-            y_array = y.values
-        else:
-            y_array = y
+        y_array = y.values if isinstance(y, pd.Series) else y
 
         n_features = X_array.shape[1]
         n_samples = X_array.shape[0]
@@ -718,9 +716,9 @@ class FinancialMLFeatureImportanceWithUniqueness:
 
     def _combine_importances(
         self,
-        mdi: Dict[str, float],
-        mda: Dict[str, float],
-    ) -> Dict[str, float]:
+        mdi: dict[str, float],
+        mda: dict[str, float],
+    ) -> dict[str, float]:
         """Combine importance scores from multiple methods."""
         combined = {}
 
@@ -747,13 +745,13 @@ class FinancialMLFeatureImportanceWithUniqueness:
 
 def calculate_feature_importance_with_uniqueness(
     model: object,
-    X: Union[pd.DataFrame, np.ndarray],
-    y: Union[pd.Series, np.ndarray],
+    X: pd.DataFrame | np.ndarray,
+    y: pd.Series | np.ndarray,
     events: pd.Series,
     labels: pd.DataFrame,
     method: str = "combined",
     **kwargs,
-) -> Dict[str, float]:
+) -> dict[str, float]:
     """
     Convenience function to calculate feature importance with uniqueness.
 

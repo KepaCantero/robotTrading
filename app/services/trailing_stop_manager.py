@@ -6,7 +6,7 @@ Implements trailing stop logic that follows price favorably to capture extended 
 
 import logging
 from decimal import Decimal
-from typing import Dict, Optional
+from typing import Optional
 
 logger = logging.getLogger(__name__)
 
@@ -27,8 +27,8 @@ class TrailingStopManager:
             trailing_distance_pct: Percentage distance for trailing stop (default 2%)
         """
         self.trailing_distance_pct = Decimal(str(trailing_distance_pct))
-        self.trailing_stops: Dict[str, Decimal] = {}  # symbol -> current_stop_price
-        self.peak_prices: Dict[str, Decimal] = {}  # symbol -> peak_price
+        self.trailing_stops: dict[str, Decimal] = {}  # symbol -> current_stop_price
+        self.peak_prices: dict[str, Decimal] = {}  # symbol -> peak_price
 
     def update_for_position(
         self,

@@ -22,7 +22,7 @@ from __future__ import annotations
 
 import logging
 import threading
-from typing import Any, Callable, Dict, Optional
+from typing import Any, Callable
 
 logger = logging.getLogger(__name__)
 
@@ -51,7 +51,7 @@ class ComplianceServiceRegistry:
         - Service factories: Deferred instantiation
 
     Example:
-        registry = ComplianceServiceRegistry.getInstance()
+        registry = ComplianceServiceRegistry.get_instance()
 
         # Get service (lazy initialization)
         harris = registry.get_service("harris_integrator")
@@ -61,24 +61,24 @@ class ComplianceServiceRegistry:
             alpha = registry.get_service("alpha_model")
     """
 
-    _instance: Optional["ComplianceServiceRegistry"] = None
+    _instance: ComplianceServiceRegistry | None = None
     _lock = threading.Lock()
 
     def __init__(self) -> None:
-        """Private constructor - use getInstance() instead."""
+        """Private constructor - use get_instance() instead."""
         if ComplianceServiceRegistry._instance is not None:
-            raise RuntimeError("Use getInstance() to get the singleton instance")
+            raise RuntimeError("Use get_instance() to get the singleton instance")
 
-        self._factories: Dict[str, ServiceFactory] = {}
-        self._services: Dict[str, Any] = {}
-        self._availability: Dict[str, bool] = {}
+        self._factories: dict[str, ServiceFactory] = {}
+        self._services: dict[str, Any] = {}
+        self._availability: dict[str, bool] = {}
         self._service_lock = threading.RLock()
 
         # Register all service factories
         self._register_factories()
 
     @classmethod
-    def getInstance(cls) -> "ComplianceServiceRegistry":
+    def get_instance(cls) -> ComplianceServiceRegistry:
         """
         Get the singleton instance.
 
@@ -92,7 +92,7 @@ class ComplianceServiceRegistry:
         return cls._instance
 
     @classmethod
-    def resetInstance(cls) -> None:
+    def reset_instance(cls) -> None:
         """Reset the singleton instance (mainly for testing)."""
         with cls._lock:
             cls._instance = None
@@ -101,7 +101,7 @@ class ComplianceServiceRegistry:
     # PICKLE SUPPORT (for multiprocessing)
     # =========================================================================
 
-    def __getstate__(self) -> Dict[str, Any]:
+    def __getstate__(self) -> dict[str, Any]:
         """
         Get state for pickling (excludes unpicklable locks).
 
@@ -110,13 +110,13 @@ class ComplianceServiceRegistry:
         """
         state = self.__dict__.copy()
         # Remove unpicklable locks - they will be recreated in __setstate__
-        state.pop('_service_lock', None)
+        state.pop("_service_lock", None)
         # Clear cached services as they won't be valid in the new process
-        state['_services'] = {}
-        state['_availability'] = {}
+        state["_services"] = {}
+        state["_availability"] = {}
         return state
 
-    def __setstate__(self, state: Dict[str, Any]) -> None:
+    def __setstate__(self, state: dict[str, Any]) -> None:
         """
         Restore state from pickling (recreates locks).
 
@@ -210,7 +210,7 @@ class ComplianceServiceRegistry:
     # SERVICE ACCESS
     # =========================================================================
 
-    def get_service(self, service_name: str) -> Optional[Any]:
+    def get_service(self, service_name: str) -> Any | None:
         """
         Get a service by name (lazy initialization).
 
@@ -261,7 +261,7 @@ class ComplianceServiceRegistry:
             service = self.get_service(service_name)
             return service is not None
 
-    def get_all_services(self) -> Dict[str, Any]:
+    def get_all_services(self) -> dict[str, Any]:
         """
         Get all registered services.
 
@@ -270,13 +270,13 @@ class ComplianceServiceRegistry:
         """
         with self._service_lock:
             services = {}
-            for service_name in self._factories.keys():
+            for service_name in self._factories:
                 service = self.get_service(service_name)
                 if service is not None:
                     services[service_name] = service
             return services
 
-    def get_availability_report(self) -> Dict[str, bool]:
+    def get_availability_report(self) -> dict[str, bool]:
         """
         Get availability status of all services.
 
@@ -285,7 +285,7 @@ class ComplianceServiceRegistry:
         """
         with self._service_lock:
             availability = {}
-            for service_name in self._factories.keys():
+            for service_name in self._factories:
                 availability[service_name] = self.is_available(service_name)
             return availability
 
@@ -297,7 +297,7 @@ class ComplianceServiceRegistry:
     # Rule 1: Ernest Chan Factories
     # -------------------------------------------------------------------------
 
-    def _create_regime_detector(self) -> Optional[Any]:
+    def _create_regime_detector(self) -> Any | None:
         try:
             from app.services.regime_detection_chan import get_regime_detector
 
@@ -305,7 +305,7 @@ class ComplianceServiceRegistry:
         except ImportError:
             return None
 
-    def _create_vwap_executor(self) -> Optional[Any]:
+    def _create_vwap_executor(self) -> Any | None:
         try:
             from app.domain.services.execution.algorithms import get_execution_algorithm
 
@@ -313,7 +313,7 @@ class ComplianceServiceRegistry:
         except ImportError:
             return None
 
-    def _create_twap_executor(self) -> Optional[Any]:
+    def _create_twap_executor(self) -> Any | None:
         try:
             from app.domain.services.execution.algorithms import get_execution_algorithm
 
@@ -321,7 +321,7 @@ class ComplianceServiceRegistry:
         except ImportError:
             return None
 
-    def _create_is_executor(self) -> Optional[Any]:
+    def _create_is_executor(self) -> Any | None:
         try:
             from app.domain.services.execution.algorithms import get_execution_algorithm
 
@@ -329,7 +329,7 @@ class ComplianceServiceRegistry:
         except ImportError:
             return None
 
-    def _create_pov_executor(self) -> Optional[Any]:
+    def _create_pov_executor(self) -> Any | None:
         try:
             from app.domain.services.execution.algorithms import get_execution_algorithm
 
@@ -337,7 +337,7 @@ class ComplianceServiceRegistry:
         except ImportError:
             return None
 
-    def _create_portfolio_optimizer(self) -> Optional[Any]:
+    def _create_portfolio_optimizer(self) -> Any | None:
         try:
             from app.services.optimization_chan import optimize_portfolio
 
@@ -349,7 +349,7 @@ class ComplianceServiceRegistry:
     # Rule 2: Narang Factories
     # -------------------------------------------------------------------------
 
-    def _create_alpha_model(self) -> Optional[Any]:
+    def _create_alpha_model(self) -> Any | None:
         try:
             from app.domain.strategies.alpha_models import get_alpha_model
 
@@ -362,7 +362,7 @@ class ComplianceServiceRegistry:
         except ImportError:
             return None
 
-    def _create_risk_model(self) -> Optional[Any]:
+    def _create_risk_model(self) -> Any | None:
         try:
             from app.services.risk_models_narang import get_risk_model
 
@@ -375,7 +375,7 @@ class ComplianceServiceRegistry:
         except ImportError:
             return None
 
-    def _create_cost_model(self) -> Optional[Any]:
+    def _create_cost_model(self) -> Any | None:
         try:
             from app.services.transaction_costs import get_transaction_cost_model
 
@@ -383,7 +383,7 @@ class ComplianceServiceRegistry:
         except ImportError:
             return None
 
-    def _create_portfolio_constructor(self) -> Optional[Any]:
+    def _create_portfolio_constructor(self) -> Any | None:
         try:
             from app.services.portfolio_construction_narang import get_portfolio_constructor
 
@@ -395,7 +395,7 @@ class ComplianceServiceRegistry:
         except ImportError:
             return None
 
-    def _create_execution_engine_narang(self) -> Optional[Any]:
+    def _create_execution_engine_narang(self) -> Any | None:
         try:
             from app.services.execution_narang import get_execution_engine
 
@@ -407,7 +407,7 @@ class ComplianceServiceRegistry:
     # Rule 3: López de Prado Factories
     # -------------------------------------------------------------------------
 
-    def _create_meta_labeling(self) -> Optional[Any]:
+    def _create_meta_labeling(self) -> Any | None:
         try:
             from app.backtesting.labeling.meta_labeling import get_meta_labeling
 
@@ -415,7 +415,7 @@ class ComplianceServiceRegistry:
         except ImportError:
             return None
 
-    def _create_purged_cv(self) -> Optional[Any]:
+    def _create_purged_cv(self) -> Any | None:
         try:
             from app.backtesting.validation.cross_validation import PurgedKFold
 
@@ -427,7 +427,7 @@ class ComplianceServiceRegistry:
     # Rule 6: Harris Factories
     # -------------------------------------------------------------------------
 
-    def _create_harris_integrator(self) -> Optional[Any]:
+    def _create_harris_integrator(self) -> Any | None:
         try:
             from app.engines.execution_engine.microstructure.harris_integration import (
                 get_harris_integrator,
@@ -440,7 +440,7 @@ class ComplianceServiceRegistry:
         except ImportError:
             return None
 
-    def _create_order_book_analyzer(self) -> Optional[Any]:
+    def _create_order_book_analyzer(self) -> Any | None:
         try:
             from app.engines.execution_engine.microstructure.order_book_analyzer import (
                 get_order_book_analyzer,
@@ -450,7 +450,7 @@ class ComplianceServiceRegistry:
         except ImportError:
             return None
 
-    def _create_dark_pool_router(self) -> Optional[Any]:
+    def _create_dark_pool_router(self) -> Any | None:
         try:
             from app.engines.execution_engine.microstructure.dark_pool_router import (
                 get_dark_pool_router,
@@ -464,7 +464,7 @@ class ComplianceServiceRegistry:
     # Rule 7: O'Hara Factories
     # -------------------------------------------------------------------------
 
-    def _create_order_flow_analyzer(self) -> Optional[Any]:
+    def _create_order_flow_analyzer(self) -> Any | None:
         try:
             from app.domain.market_analysis.microstructure.order_flow import get_order_flow_analyzer
 
@@ -472,7 +472,7 @@ class ComplianceServiceRegistry:
         except ImportError:
             return None
 
-    def _create_liquidity_analyzer(self) -> Optional[Any]:
+    def _create_liquidity_analyzer(self) -> Any | None:
         try:
             from app.domain.market_analysis.microstructure.liquidity import get_liquidity_analyzer
 
@@ -480,7 +480,7 @@ class ComplianceServiceRegistry:
         except ImportError:
             return None
 
-    def _create_price_discovery_analyzer(self) -> Optional[Any]:
+    def _create_price_discovery_analyzer(self) -> Any | None:
         try:
             from app.domain.market_analysis.microstructure.price_discovery import (
                 get_price_discovery_analyzer,
@@ -490,7 +490,7 @@ class ComplianceServiceRegistry:
         except ImportError:
             return None
 
-    def _create_call_auction(self) -> Optional[Any]:
+    def _create_call_auction(self) -> Any | None:
         try:
             from app.domain.market_analysis.microstructure.trading_mechanisms import (
                 get_call_auction,
@@ -504,18 +504,18 @@ class ComplianceServiceRegistry:
     # Rule 13: Hull Factories
     # -------------------------------------------------------------------------
 
-    def _create_var_calculator(self) -> Optional[Any]:
+    def _create_var_calculator(self) -> Any | None:
         try:
             from app.engines.risk_engine.var_calculators.var_calculators import (
                 HistoricalVaRCalculator,
             )
 
-            config = {'confidence_level': 0.95, 'time_horizon': 1}
+            config = {"confidence_level": 0.95, "time_horizon": 1}
             return HistoricalVaRCalculator(config)
         except ImportError:
             return None
 
-    def _create_greeks_calculator(self) -> Optional[Any]:
+    def _create_greeks_calculator(self) -> Any | None:
         try:
             from app.engines.risk_engine.greeks_calculator import get_greeks_calculator
 
@@ -523,7 +523,7 @@ class ComplianceServiceRegistry:
         except ImportError:
             return None
 
-    def _create_stress_tester(self) -> Optional[Any]:
+    def _create_stress_tester(self) -> Any | None:
         try:
             from app.engines.risk_engine.stress_testers.advanced_stress_scenarios import (
                 get_advanced_stress_tester,
@@ -537,7 +537,7 @@ class ComplianceServiceRegistry:
     # Rule 20: Google SRE Factories
     # -------------------------------------------------------------------------
 
-    def _create_golden_signals(self) -> Optional[Any]:
+    def _create_golden_signals(self) -> Any | None:
         try:
             from app.sre.monitoring.golden_signals import get_golden_signals_monitor
 
@@ -545,7 +545,7 @@ class ComplianceServiceRegistry:
         except ImportError:
             return None
 
-    def _create_trading_metrics(self) -> Optional[Any]:
+    def _create_trading_metrics(self) -> Any | None:
         try:
             from app.sre.monitoring.trading_metrics import get_trading_metrics_monitor
 
@@ -553,7 +553,7 @@ class ComplianceServiceRegistry:
         except ImportError:
             return None
 
-    def _create_toil_tracker(self) -> Optional[Any]:
+    def _create_toil_tracker(self) -> Any | None:
         try:
             from app.sre.automation.toil_tracker import get_toil_tracker
 
@@ -574,10 +574,10 @@ def get_service_registry() -> ComplianceServiceRegistry:
     Returns:
         ComplianceServiceRegistry singleton
     """
-    return ComplianceServiceRegistry.getInstance()
+    return ComplianceServiceRegistry.get_instance()
 
 
-def get_service(service_name: str) -> Optional[Any]:
+def get_service(service_name: str) -> Any | None:
     """
     Get a service from the global registry.
 

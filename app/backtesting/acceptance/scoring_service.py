@@ -6,7 +6,6 @@ Follows Single Responsibility Principle (SOL-001).
 """
 
 from dataclasses import dataclass
-from typing import List
 
 from app.backtesting.acceptance.models import CriterionResult
 
@@ -21,7 +20,7 @@ class ScoringService:
 
     POINTS_PER_CRITERION: float = 20.0
 
-    def calculate_score(self, criteria: List[CriterionResult]) -> float:
+    def calculate_score(self, criteria: list[CriterionResult]) -> float:
         """
         Calculate overall score (0-100) based on criteria results.
 

@@ -8,7 +8,7 @@ import json
 import logging
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 from uuid import uuid4
 
 logger = logging.getLogger(__name__)
@@ -24,7 +24,7 @@ class DataLineageTracker:
     - Dependencias entre datasets
     """
 
-    def __init__(self, config: Dict[str, Any] = None):
+    def __init__(self, config: Optional[dict[str, Any]] = None):
         """
         Inicializar tracker.
 
@@ -32,17 +32,17 @@ class DataLineageTracker:
             config: Configuración
         """
         config = config or {}
-        self.lineage_db_path = Path(config.get('lineage_db_path', 'lineage/db.json'))
+        self.lineage_db_path = Path(config.get("lineage_db_path", "lineage/db.json"))
         self.lineage_db_path.parent.mkdir(parents=True, exist_ok=True)
 
-        self.lineage_records: Dict[str, Dict[str, Any]] = {}
+        self.lineage_records: dict[str, dict[str, Any]] = {}
         self._load_lineage_db()
 
     def _load_lineage_db(self) -> None:
         """Cargar base de datos de lineage."""
         if self.lineage_db_path.exists():
             try:
-                with open(self.lineage_db_path, 'r') as f:
+                with open(self.lineage_db_path) as f:
                     self.lineage_records = json.load(f)
             except OSError as e:
                 logger.warning(f"Error cargando lineage DB: {e}")
@@ -50,7 +50,7 @@ class DataLineageTracker:
     def _save_lineage_db(self) -> None:
         """Guardar base de datos de lineage."""
         try:
-            with open(self.lineage_db_path, 'w') as f:
+            with open(self.lineage_db_path, "w") as f:
                 json.dump(self.lineage_records, f, indent=2, default=str)
         except OSError as e:
             logger.error(f"Error guardando lineage DB: {e}")
@@ -59,8 +59,8 @@ class DataLineageTracker:
         self,
         data_id: str,
         source_type: str,
-        source_config: Dict[str, Any],
-        metadata: Optional[Dict[str, Any]] = None,
+        source_config: dict[str, Any],
+        metadata: Optional[dict[str, Any]] = None,
     ) -> str:
         """
         Registrar origen de datos.
@@ -77,14 +77,14 @@ class DataLineageTracker:
         lineage_id = str(uuid4())
 
         record = {
-            'lineage_id': lineage_id,
-            'data_id': data_id,
-            'source_type': source_type,
-            'source_config': source_config,
-            'metadata': metadata or {},
-            'created_at': datetime.now().isoformat(),
-            'transformations': [],
-            'dependencies': [],
+            "lineage_id": lineage_id,
+            "data_id": data_id,
+            "source_type": source_type,
+            "source_config": source_config,
+            "metadata": metadata or {},
+            "created_at": datetime.now().isoformat(),
+            "transformations": [],
+            "dependencies": [],
         }
 
         self.lineage_records[lineage_id] = record
@@ -97,7 +97,7 @@ class DataLineageTracker:
         self,
         lineage_id: str,
         transformation_type: str,
-        transformation_config: Dict[str, Any],
+        transformation_config: dict[str, Any],
         output_data_id: Optional[str] = None,
     ) -> None:
         """
@@ -114,19 +114,19 @@ class DataLineageTracker:
             return
 
         transformation = {
-            'type': transformation_type,
-            'config': transformation_config,
-            'output_data_id': output_data_id,
-            'applied_at': datetime.now().isoformat(),
+            "type": transformation_type,
+            "config": transformation_config,
+            "output_data_id": output_data_id,
+            "applied_at": datetime.now().isoformat(),
         }
 
-        self.lineage_records[lineage_id]['transformations'].append(transformation)
+        self.lineage_records[lineage_id]["transformations"].append(transformation)
         self._save_lineage_db()
 
         logger.debug(f"Transformación registrada: {transformation_type} en {lineage_id}")
 
     def record_dependency(
-        self, lineage_id: str, dependency_lineage_id: str, dependency_type: str = 'derived_from'
+        self, lineage_id: str, dependency_lineage_id: str, dependency_type: str = "derived_from"
     ) -> None:
         """
         Registrar dependencia entre datasets.
@@ -141,19 +141,19 @@ class DataLineageTracker:
             return
 
         dependency = {
-            'lineage_id': dependency_lineage_id,
-            'type': dependency_type,
-            'recorded_at': datetime.now().isoformat(),
+            "lineage_id": dependency_lineage_id,
+            "type": dependency_type,
+            "recorded_at": datetime.now().isoformat(),
         }
 
-        self.lineage_records[lineage_id]['dependencies'].append(dependency)
+        self.lineage_records[lineage_id]["dependencies"].append(dependency)
         self._save_lineage_db()
 
-    def get_lineage(self, lineage_id: str) -> Optional[Dict[str, Any]]:
+    def get_lineage(self, lineage_id: str) -> Optional[dict[str, Any]]:
         """Obtener lineage completo."""
         return self.lineage_records.get(lineage_id)
 
-    def trace_lineage(self, lineage_id: str) -> Dict[str, Any]:
+    def trace_lineage(self, lineage_id: str) -> dict[str, Any]:
         """
         Trazar lineage completo (recursivo).
 
@@ -170,14 +170,14 @@ class DataLineageTracker:
 
         # Trazar dependencias recursivamente
         dependencies_trace = []
-        for dep in record.get('dependencies', []):
-            dep_id = dep.get('lineage_id')
+        for dep in record.get("dependencies", []):
+            dep_id = dep.get("lineage_id")
             if dep_id:
                 dep_trace = self.trace_lineage(dep_id)
                 if dep_trace:
                     dependencies_trace.append(dep_trace)
 
-        record['dependencies_trace'] = dependencies_trace
+        record["dependencies_trace"] = dependencies_trace
         return record
 
     def query_lineage(
@@ -185,7 +185,7 @@ class DataLineageTracker:
         source_type: Optional[str] = None,
         data_id: Optional[str] = None,
         transformation_type: Optional[str] = None,
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """
         Query lineage por criterios.
 
@@ -202,15 +202,15 @@ class DataLineageTracker:
         for record in self.lineage_records.values():
             match = True
 
-            if source_type and record.get('source_type') != source_type:
+            if source_type and record.get("source_type") != source_type:
                 match = False
 
-            if data_id and record.get('data_id') != data_id:
+            if data_id and record.get("data_id") != data_id:
                 match = False
 
             if transformation_type:
-                transformations = record.get('transformations', [])
-                if not any(t.get('type') == transformation_type for t in transformations):
+                transformations = record.get("transformations", [])
+                if not any(t.get("type") == transformation_type for t in transformations):
                     match = False
 
             if match:

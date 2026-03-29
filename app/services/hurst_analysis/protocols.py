@@ -12,15 +12,16 @@ the required methods automatically satisfies the protocol.
 from __future__ import annotations
 
 import logging
-from datetime import datetime
 from typing import TYPE_CHECKING, Protocol
-
-import numpy as np
 
 logger = logging.getLogger(__name__)
 
 # Use TYPE_CHECKING to avoid circular imports
 if TYPE_CHECKING:
+    from datetime import datetime
+
+    import numpy as np
+
     from app.services.hurst_analysis.models import (
         MarketRegime,
         RegimeChange,
@@ -55,7 +56,7 @@ class HurstCalculator(Protocol):
 class RegimeClassifierProtocol(Protocol):
     """Protocol for market regime classification."""
 
-    def classify(self, hurst_exponent: float) -> "MarketRegime":
+    def classify(self, hurst_exponent: float) -> MarketRegime:
         """Classify market regime based on Hurst exponent."""
         ...
 
@@ -63,7 +64,7 @@ class RegimeClassifierProtocol(Protocol):
 class StrategyRecommenderProtocol(Protocol):
     """Protocol for trading strategy recommendations."""
 
-    def recommend(self, regime: "MarketRegime", hurst_exponent: float) -> "StrategyRecommendation":
+    def recommend(self, regime: MarketRegime, hurst_exponent: float) -> StrategyRecommendation:
         """Recommend trading strategy based on regime."""
         ...
 
@@ -97,7 +98,7 @@ class ChangeDetectorProtocol(Protocol):
         get_history_func: callable,
         lookback_periods: int = 10,
         threshold: float = 0.1,
-    ) -> "RegimeChange | None":
+    ) -> RegimeChange | None:
         """Detect regime change for a symbol."""
         ...
 

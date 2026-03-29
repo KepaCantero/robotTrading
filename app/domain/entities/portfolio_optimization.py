@@ -56,7 +56,7 @@ class PortfolioOptimization:
         tolerance = Decimal("0.01")
         if abs(total_weight - Decimal("1.0")) > tolerance:
             raise ValueError(
-                f"Portfolio weights must sum to 1.0 (±{tolerance}), " f"got {total_weight:.4f}"
+                f"Portfolio weights must sum to 1.0 (±{tolerance}), got {total_weight:.4f}"
             )
 
     def get_weight_summary(self) -> dict[str, str]:

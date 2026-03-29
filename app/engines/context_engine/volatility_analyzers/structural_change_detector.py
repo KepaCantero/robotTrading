@@ -5,7 +5,7 @@ Implementa CUSUM y Chow test para detectar cambios estructurales en series tempo
 """
 
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 import numpy as np
 from scipy import stats
@@ -33,7 +33,7 @@ class StructuralChangeDetector:
     en la distribución de retornos.
     """
 
-    def __init__(self, config: Optional[Dict[str, Any]] = None):
+    def __init__(self, config: Optional[dict[str, Any]] = None):
         """
         Inicializar detector.
 
@@ -41,11 +41,11 @@ class StructuralChangeDetector:
             config: Configuración del detector
         """
         config = config or {}
-        self.method = config.get('method', 'cusum')  # cusum, chow
-        self.significance_level = config.get('significance_level', 0.05)
-        self.window_size = config.get('window_size', 100)
+        self.method = config.get("method", "cusum")  # cusum, chow
+        self.significance_level = config.get("significance_level", 0.05)
+        self.window_size = config.get("window_size", 100)
 
-    def detect_cusum(self, prices: List[float]) -> Dict[str, Any]:
+    def detect_cusum(self, prices: list[float]) -> dict[str, Any]:
         """
         Detectar cambios estructurales usando CUSUM.
 
@@ -57,10 +57,10 @@ class StructuralChangeDetector:
         """
         if len(prices) < self.window_size:
             return {
-                'change_detected': False,
-                'breakpoint': None,
-                'p_value': None,
-                'confidence': 0.0,
+                "change_detected": False,
+                "breakpoint": None,
+                "p_value": None,
+                "confidence": 0.0,
             }
 
         try:
@@ -71,11 +71,11 @@ class StructuralChangeDetector:
             if not STATSMODELS_AVAILABLE:
                 logger.warning("statsmodels no disponible. CUSUM test no puede ejecutarse.")
                 return {
-                    'change_detected': False,
-                    'breakpoint': None,
-                    'p_value': None,
-                    'confidence': 0.0,
-                    'note': 'statsmodels no disponible',
+                    "change_detected": False,
+                    "breakpoint": None,
+                    "p_value": None,
+                    "confidence": 0.0,
+                    "note": "statsmodels no disponible",
                 }
 
             result = breaks_cusumolsresid(returns)
@@ -87,41 +87,41 @@ class StructuralChangeDetector:
             change_detected = p_value is not None and p_value < self.significance_level
 
             return {
-                'change_detected': change_detected,
-                'breakpoint': None,  # CUSUM no detecta breakpoint específico
-                'p_value': float(p_value) if p_value is not None else None,
-                'test_statistic': float(test_statistic),
-                'confidence': 1.0 - float(p_value) if p_value is not None else 0.0,
+                "change_detected": change_detected,
+                "breakpoint": None,  # CUSUM no detecta breakpoint específico
+                "p_value": float(p_value) if p_value is not None else None,
+                "test_statistic": float(test_statistic),
+                "confidence": 1.0 - float(p_value) if p_value is not None else 0.0,
             }
 
         except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.error(f"Error en CUSUM test: {e}")
             return {
-                'change_detected': False,
-                'breakpoint': None,
-                'p_value': None,
-                'confidence': 0.0,
+                "change_detected": False,
+                "breakpoint": None,
+                "p_value": None,
+                "confidence": 0.0,
             }
 
     def detect_chow_test(
-        self, prices: List[float], breakpoint: Optional[int] = None
-    ) -> Dict[str, Any]:
+        self, prices: list[float], split_point: Optional[int] = None
+    ) -> dict[str, Any]:
         """
         Detectar cambios estructurales usando Chow test.
 
         Args:
             prices: Lista de precios
-            breakpoint: Punto de quiebre sospechado (opcional, usa el medio si None)
+            split_point: Punto de quiebre sospechado (opcional, usa el medio si None)
 
         Returns:
             Dict con información de cambios detectados
         """
         if len(prices) < self.window_size:
             return {
-                'change_detected': False,
-                'breakpoint': None,
-                'p_value': None,
-                'confidence': 0.0,
+                "change_detected": False,
+                "breakpoint": None,
+                "p_value": None,
+                "confidence": 0.0,
             }
 
         try:
@@ -131,21 +131,21 @@ class StructuralChangeDetector:
             # Calcular returns
             returns = np.diff(recent_prices) / recent_prices[:-1]
 
-            # Determinar breakpoint
-            if breakpoint is None:
-                breakpoint = len(returns) // 2
+            # Determinar split_point
+            if split_point is None:
+                split_point = len(returns) // 2
 
-            if breakpoint < 10 or breakpoint > len(returns) - 10:
+            if split_point < 10 or split_point > len(returns) - 10:
                 return {
-                    'change_detected': False,
-                    'breakpoint': None,
-                    'p_value': None,
-                    'confidence': 0.0,
+                    "change_detected": False,
+                    "breakpoint": None,
+                    "p_value": None,
+                    "confidence": 0.0,
                 }
 
             # Dividir en dos períodos
-            period1 = returns[:breakpoint]
-            period2 = returns[breakpoint:]
+            period1 = returns[:split_point]
+            period2 = returns[split_point:]
 
             # Calcular estadísticas
             mean1 = np.mean(period1)
@@ -171,25 +171,25 @@ class StructuralChangeDetector:
             change_detected = p_value < self.significance_level
 
             return {
-                'change_detected': change_detected,
-                'breakpoint': breakpoint,
-                'p_value': float(p_value),
-                'f_statistic': float(f_stat) if pooled_var > 0 else 0.0,
-                'mean_before': float(mean1),
-                'mean_after': float(mean2),
-                'confidence': 1.0 - float(p_value),
+                "change_detected": change_detected,
+                "breakpoint": split_point,
+                "p_value": float(p_value),
+                "f_statistic": float(f_stat) if pooled_var > 0 else 0.0,
+                "mean_before": float(mean1),
+                "mean_after": float(mean2),
+                "confidence": 1.0 - float(p_value),
             }
 
         except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.error(f"Error en Chow test: {e}")
             return {
-                'change_detected': False,
-                'breakpoint': None,
-                'p_value': None,
-                'confidence': 0.0,
+                "change_detected": False,
+                "breakpoint": None,
+                "p_value": None,
+                "confidence": 0.0,
             }
 
-    def detect(self, prices: List[float], **kwargs) -> Dict[str, Any]:
+    def detect(self, prices: list[float], **kwargs) -> dict[str, Any]:
         """
         Detectar cambios estructurales.
 
@@ -200,11 +200,11 @@ class StructuralChangeDetector:
         Returns:
             Dict con información de cambios
         """
-        if self.method == 'cusum':
+        if self.method == "cusum":
             return self.detect_cusum(prices)
-        elif self.method == 'chow':
-            breakpoint = kwargs.get('breakpoint')
-            return self.detect_chow_test(prices, breakpoint)
+        elif self.method == "chow":
+            split_point = kwargs.get("breakpoint")
+            return self.detect_chow_test(prices, split_point)
         else:
             logger.warning(f"Método desconocido: {self.method}, usando CUSUM")
             return self.detect_cusum(prices)

@@ -21,7 +21,7 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 from decimal import Decimal
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any, ClassVar, Optional
 
 from app.services.crypto_data_service import get_crypto_fetcher
 from app.services.forex_data_service import get_forex_fetcher
@@ -68,7 +68,7 @@ class MarketAllocation:
     market_type: MarketType
     allocation_pct: Decimal  # Porcentaje del capital total
     current_strategy: StrategyType
-    symbols: List[str]
+    symbols: list[str]
     active_positions: int
     total_pnl: Decimal
     last_rebalance: datetime
@@ -101,7 +101,7 @@ class MultiMarketOrchestrator:
     """
 
     # Asignaciones máximas por mercado (para España residente)
-    MAX_ALLOCATIONS = {
+    MAX_ALLOCATIONS: ClassVar[dict] = {
         MarketType.STOCKS_US: Decimal("0.40"),  # Máx 40% en US (con hedging)
         MarketType.STOCKS_EU: Decimal("0.30"),  # 30% en EU (sin withholding tax)
         MarketType.FOREX: Decimal("0.15"),  # 15% en forex (incluye EUR/USD)
@@ -110,7 +110,7 @@ class MultiMarketOrchestrator:
     }
 
     # Estrategias por régimen de mercado
-    STRATEGY_BY_REGIME = {
+    STRATEGY_BY_REGIME: ClassVar[dict] = {
         MarketRegime.BULL_VOLATILE: StrategyType.MOMENTUM,
         MarketRegime.BULL_STABLE: StrategyType.TREND_FOLLOWING,
         MarketRegime.BEAR_VOLATILE: StrategyType.NEWS_SENTIMENT,  # News-driven
@@ -119,7 +119,7 @@ class MultiMarketOrchestrator:
     }
 
     # Símbolos por mercado (para España investor)
-    MARKET_SYMBOLS = {
+    MARKET_SYMBOLS: ClassVar[dict] = {
         MarketType.STOCKS_US: [
             "AAPL",
             "MSFT",
@@ -197,12 +197,12 @@ class MultiMarketOrchestrator:
         self.forex_fetcher = get_forex_fetcher()
 
         # Estado actual
-        self.allocations: Dict[MarketType, MarketAllocation] = {}
+        self.allocations: dict[MarketType, MarketAllocation] = {}
         self.current_regime = MarketRegime.SIDEWAYS
         self.vix_level: Optional[Decimal] = None
 
         # Sentiment cache
-        self.sentiment_cache: Dict[str, tuple[Decimal, datetime]] = {}
+        self.sentiment_cache: dict[str, tuple[Decimal, datetime]] = {}
         self._max_sentiment_cache_size = 10000  # Limit cache size
 
         logger.info(
@@ -260,7 +260,7 @@ class MultiMarketOrchestrator:
 
         return base_strategy
 
-    async def get_marketaux_sentiment(self, symbol: str) -> Dict[str, Any]:
+    async def get_marketaux_sentiment(self, symbol: str) -> dict[str, Any]:
         """
         Obtener sentimiento de Marketaux API para un símbolo.
 
@@ -323,7 +323,7 @@ class MultiMarketOrchestrator:
 
     async def calculate_allocations(
         self, risk_tolerance: str = "medio"
-    ) -> Dict[MarketType, Decimal]:
+    ) -> dict[MarketType, Decimal]:
         """
         Calcular asignación óptima de capital entre mercados.
 
@@ -381,7 +381,7 @@ class MultiMarketOrchestrator:
         logger.info(f"Calculated allocations for {risk_tolerance} risk: {allocations}")
         return allocations
 
-    async def generate_signals(self, market_type: MarketType) -> List[MarketSignal]:
+    async def generate_signals(self, market_type: MarketType) -> list[MarketSignal]:
         """
         Generar señales de trading para un mercado.
 
@@ -438,7 +438,7 @@ class MultiMarketOrchestrator:
 
         return signals
 
-    async def execute_trades(self, signals: List[MarketSignal]) -> Dict[str, Any]:
+    async def execute_trades(self, signals: list[MarketSignal]) -> dict[str, Any]:
         """
         Ejecutar trades basados en señales.
 
@@ -472,7 +472,7 @@ class MultiMarketOrchestrator:
 
         return results
 
-    async def run_cycle(self, risk_tolerance: str = "medio") -> Dict[str, Any]:
+    async def run_cycle(self, risk_tolerance: str = "medio") -> dict[str, Any]:
         """
         Ejecutar un ciclo completo de análisis y trading.
 

@@ -28,9 +28,12 @@ import logging
 from abc import ABC, abstractmethod
 from contextlib import asynccontextmanager
 from dataclasses import dataclass
-from typing import AsyncIterator, Dict, List, Optional, Protocol, Type, TypeVar, runtime_checkable
+from typing import TYPE_CHECKING, Protocol, TypeVar, runtime_checkable
 
-from .base_repository import AbstractRepository
+if TYPE_CHECKING:
+    from collections.abc import AsyncIterator
+
+    from .base_repository import AbstractRepository
 
 logger = logging.getLogger(__name__)
 
@@ -49,7 +52,7 @@ class TrackedEntity:
 
     entity: object
     state: str  # 'new', 'clean', 'dirty', 'deleted'
-    original_state: Optional[Dict[str, object]] = None
+    original_state: dict[str, object] | None = None
 
 
 class AbstractUnitOfWork(ABC):
@@ -126,7 +129,7 @@ class AbstractUnitOfWork(ABC):
         """
 
     @abstractmethod
-    def collect_new_events(self) -> List[Dict[str, object]]:
+    def collect_new_events(self) -> list[dict[str, object]]:
         """
         Collect all domain events from tracked entities.
 
@@ -183,8 +186,8 @@ class GenericUnitOfWork(AbstractUnitOfWork):
 
     def __init__(self):
         """Initialize Unit of Work."""
-        self._tracked_entities: Dict[str, TrackedEntity] = {}
-        self._repositories: Dict[str, AbstractRepository] = {}
+        self._tracked_entities: dict[str, TrackedEntity] = {}
+        self._repositories: dict[str, AbstractRepository] = {}
         self._committed = False
 
     def __enter__(self):
@@ -219,7 +222,7 @@ class GenericUnitOfWork(AbstractUnitOfWork):
         self._repositories[name] = repository
         setattr(self, name, repository)
 
-    def track_entity(self, entity: object, state: str = 'new') -> None:
+    def track_entity(self, entity: object, state: str = "new") -> None:
         """
         Track an entity for Unit of Work management.
 
@@ -231,7 +234,7 @@ class GenericUnitOfWork(AbstractUnitOfWork):
         self._tracked_entities[entity_id] = TrackedEntity(
             entity=entity,
             state=state,
-            original_state=self._snapshot_entity(entity) if state == 'clean' else None,
+            original_state=self._snapshot_entity(entity) if state == "clean" else None,
         )
 
     def commit(self) -> None:
@@ -246,15 +249,15 @@ class GenericUnitOfWork(AbstractUnitOfWork):
 
         try:
             # Process deleted entities first
-            for tracked in self._get_tracked_by_state('deleted'):
+            for tracked in self._get_tracked_by_state("deleted"):
                 self._delete_entity(tracked)
 
             # Process dirty entities (updates)
-            for tracked in self._get_tracked_by_state('dirty'):
+            for tracked in self._get_tracked_by_state("dirty"):
                 self._update_entity(tracked)
 
             # Process new entities
-            for tracked in self._get_tracked_by_state('new'):
+            for tracked in self._get_tracked_by_state("new"):
                 self._add_entity(tracked)
 
             self._committed = True
@@ -276,17 +279,17 @@ class GenericUnitOfWork(AbstractUnitOfWork):
         self._committed = False
         logger.info("Rolled back Unit of Work changes")
 
-    def collect_new_events(self) -> List[Dict[str, object]]:
+    def collect_new_events(self) -> list[dict[str, object]]:
         """
         Collect domain events from tracked entities.
 
         Returns:
             List of events from all tracked entities
         """
-        events: List[Dict[str, object]] = []
+        events: list[dict[str, object]] = []
         for tracked in self._tracked_entities.values():
             entity = tracked.entity
-            if hasattr(entity, 'events'):
+            if hasattr(entity, "events"):
                 events.extend(entity.events)
                 entity.events.clear()  # Clear after collecting
         return events
@@ -295,15 +298,15 @@ class GenericUnitOfWork(AbstractUnitOfWork):
         """Mark an entity as modified."""
         entity_id = self._get_entity_id(entity)
         if entity_id in self._tracked_entities:
-            self._tracked_entities[entity_id].state = 'dirty'
+            self._tracked_entities[entity_id].state = "dirty"
 
     def mark_deleted(self, entity: object) -> None:
         """Mark an entity as deleted."""
         entity_id = self._get_entity_id(entity)
         if entity_id in self._tracked_entities:
-            self._tracked_entities[entity_id].state = 'deleted'
+            self._tracked_entities[entity_id].state = "deleted"
 
-    def _get_tracked_by_state(self, state: str) -> List[TrackedEntity]:
+    def _get_tracked_by_state(self, state: str) -> list[TrackedEntity]:
         """Get all tracked entities in a specific state."""
         return [t for t in self._tracked_entities.values() if t.state == state]
 
@@ -328,7 +331,7 @@ class GenericUnitOfWork(AbstractUnitOfWork):
         if repo:
             logger.debug(f"Deleting entity: {tracked.entity}")
 
-    def _find_repository_for_entity(self, entity: object) -> Optional[AbstractRepository]:
+    def _find_repository_for_entity(self, entity: object) -> AbstractRepository | None:
         """Find the appropriate repository for an entity."""
         entity_class = entity.__class__.__name__
         for repo in self._repositories.values():
@@ -341,17 +344,17 @@ class GenericUnitOfWork(AbstractUnitOfWork):
     def _get_entity_id(self, entity: object) -> str:
         """Extract unique ID from entity."""
         id_field = (
-            getattr(entity, 'id', None)
-            or getattr(entity, 'entity_id', None)
-            or getattr(entity, 'order_id', None)
-            or getattr(entity, 'portfolio_id', None)
+            getattr(entity, "id", None)
+            or getattr(entity, "entity_id", None)
+            or getattr(entity, "order_id", None)
+            or getattr(entity, "portfolio_id", None)
             or id(entity)
         )
         return f"{entity.__class__.__name__}:{id_field}"
 
-    def _snapshot_entity(self, entity: object) -> Dict[str, object]:
+    def _snapshot_entity(self, entity: object) -> dict[str, object]:
         """Create snapshot of entity state for change detection."""
-        return {k: v for k, v in entity.__dict__.items() if not k.startswith('_')}
+        return {k: v for k, v in entity.__dict__.items() if not k.startswith("_")}
 
     def _cleanup(self) -> None:
         """Clean up resources."""
@@ -362,18 +365,18 @@ class GenericUnitOfWork(AbstractUnitOfWork):
 class AsyncUnitOfWorkProtocol(Protocol):
     """Protocol for async-capable Unit of Work implementations."""
 
-    def commit(self) -> Optional[object]:
+    def commit(self) -> object | None:
         """Commit changes. May be sync or async."""
         ...
 
-    def rollback(self) -> Optional[object]:
+    def rollback(self) -> object | None:
         """Rollback changes. May be sync or async."""
         ...
 
 
 @asynccontextmanager
 async def unit_of_work_context(
-    uow_factory: Type[AbstractUnitOfWork],
+    uow_factory: type[AbstractUnitOfWork],
 ) -> AsyncIterator[AbstractUnitOfWork]:
     """
     Async context manager for Unit of Work.
@@ -411,7 +414,7 @@ async def unit_of_work_context(
 class UnitOfWorkError(Exception):
     """Exception raised for Unit of Work errors."""
 
-    def __init__(self, message: str, uow: Optional[str] = None):
+    def __init__(self, message: str, uow: str | None = None):
         self.uow = uow
         super().__init__(message)
 
@@ -489,11 +492,11 @@ class TradingUnitOfWork(GenericUnitOfWork):
     def __init__(self):
         super().__init__()
         # Repositories will be registered by subclasses
-        self.orders: Optional[AbstractRepository] = None
-        self.portfolios: Optional[AbstractRepository] = None
-        self.positions: Optional[AbstractRepository] = None
+        self.orders: AbstractRepository | None = None
+        self.portfolios: AbstractRepository | None = None
+        self.positions: AbstractRepository | None = None
 
-    def collect_new_events(self) -> List[Dict[str, object]]:
+    def collect_new_events(self) -> list[dict[str, object]]:
         """
         Collect events from all tracked entities.
 
@@ -505,21 +508,21 @@ class TradingUnitOfWork(GenericUnitOfWork):
         - PositionClosed
         - RiskLimitBreached
         """
-        events: List[Dict[str, object]] = []
+        events: list[dict[str, object]] = []
         for tracked in self._tracked_entities.values():
             entity = tracked.entity
 
             # Collect events based on entity type
-            if hasattr(entity, 'events'):
+            if hasattr(entity, "events"):
                 events.extend(entity.events)
                 entity.events.clear()
 
             # Collect state change events
-            if tracked.state == 'new':
-                events.append({'type': f'{entity.__class__.__name__}Created', 'entity': entity})
-            elif tracked.state == 'dirty':
-                events.append({'type': f'{entity.__class__.__name__}Updated', 'entity': entity})
-            elif tracked.state == 'deleted':
-                events.append({'type': f'{entity.__class__.__name__}Deleted', 'entity': entity})
+            if tracked.state == "new":
+                events.append({"type": f"{entity.__class__.__name__}Created", "entity": entity})
+            elif tracked.state == "dirty":
+                events.append({"type": f"{entity.__class__.__name__}Updated", "entity": entity})
+            elif tracked.state == "deleted":
+                events.append({"type": f"{entity.__class__.__name__}Deleted", "entity": entity})
 
         return events

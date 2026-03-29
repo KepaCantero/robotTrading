@@ -13,7 +13,7 @@ import logging
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from decimal import Decimal
-from typing import Dict, List, Tuple, Union
+from typing import Union
 
 import numpy as np
 from scipy.interpolate import griddata
@@ -30,10 +30,10 @@ class ParameterSensitivityResult:
 
     parameter_name: str
     base_value: Union[int, float, Decimal]
-    tested_values: List[Union[int, float, Decimal]]
-    returns: List[float]  # Return for each parameter value
-    sharpe_ratios: List[float]  # Sharpe for each parameter value
-    max_drawdowns: List[float]  # Max DD for each parameter value
+    tested_values: list[Union[int, float, Decimal]]
+    returns: list[float]  # Return for each parameter value
+    sharpe_ratios: list[float]  # Sharpe for each parameter value
+    max_drawdowns: list[float]  # Max DD for each parameter value
 
     # Sensitivity metrics
     return_std: float  # Std dev of returns (lower = more robust)
@@ -62,14 +62,14 @@ class StabilityMapResult:
 
     param1_name: str
     param2_name: str
-    param1_range: Tuple[float, float]  # (min, max)
-    param2_range: Tuple[float, float]  # (min, max)
-    points: List[StabilityMapPoint]
+    param1_range: tuple[float, float]  # (min, max)
+    param2_range: tuple[float, float]  # (min, max)
+    points: list[StabilityMapPoint]
 
     # Stability metrics
     has_plateau: bool  # True if stable plateau exists
     plateau_size: float  # Size of stable region as % of total
-    best_region: Dict[str, float]  # Best performing region
+    best_region: dict[str, float]  # Best performing region
 
     # Visualization data (for 3D plotting)
     mesh_x: np.ndarray = field(default_factory=lambda: np.array([]))
@@ -82,10 +82,10 @@ class StabilityMapResult:
 class StartDateSensitivityResult:
     """Result of start date sensitivity analysis (Req #14)."""
 
-    start_dates: List[datetime]
-    returns: List[float]
-    sharpe_ratios: List[float]
-    max_drawdowns: List[float]
+    start_dates: list[datetime]
+    returns: list[float]
+    sharpe_ratios: list[float]
+    max_drawdowns: list[float]
 
     # Sensitivity metrics
     return_variation: float  # Std dev of returns across start dates
@@ -103,15 +103,15 @@ class RobustnessReport:
 
     strategy_name: str
     timestamp: datetime
-    parameter_sensitivity: List[ParameterSensitivityResult]
-    stability_maps: List[StabilityMapResult]
+    parameter_sensitivity: list[ParameterSensitivityResult]
+    stability_maps: list[StabilityMapResult]
     start_date_sensitivity: StartDateSensitivityResult
 
     # Overall assessment
     overall_robustness_score: float  # 0-100
     is_robust: bool
-    warnings: List[str] = field(default_factory=list)
-    recommendations: List[str] = field(default_factory=list)
+    warnings: list[str] = field(default_factory=list)
+    recommendations: list[str] = field(default_factory=list)
 
 
 class RobustnessTester:
@@ -250,9 +250,9 @@ class RobustnessTester:
     def generate_stability_map(
         self,
         param1_name: str,
-        param1_range: Tuple[float, float],
+        param1_range: tuple[float, float],
         param2_name: str,
-        param2_range: Tuple[float, float],
+        param2_range: tuple[float, float],
         run_backtest_fn: callable,
         n_points_per_dim: int = 10,
     ) -> StabilityMapResult:
@@ -330,10 +330,10 @@ class RobustnessTester:
 
             # Interpolate to create smooth surface
             zi_return = griddata(
-                (x, y), z_return, (xi_grid, yi_grid), method='cubic', fill_value=np.nan
+                (x, y), z_return, (xi_grid, yi_grid), method="cubic", fill_value=np.nan
             )
             zi_sharpe = griddata(
-                (x, y), z_sharpe, (xi_grid, yi_grid), method='cubic', fill_value=np.nan
+                (x, y), z_sharpe, (xi_grid, yi_grid), method="cubic", fill_value=np.nan
             )
         else:
             xi_grid = yi_grid = zi_return = zi_sharpe = np.array([])
@@ -362,8 +362,8 @@ class RobustnessTester:
 
     def analyze_start_date_sensitivity(
         self,
-        quotes: List[Quote],
-        signals: List[object],
+        quotes: list[Quote],
+        signals: list[object],
         config: BacktestConfig,
         start_date_base: datetime,
         end_date: datetime,
@@ -411,7 +411,7 @@ class RobustnessTester:
                 period_signals = [
                     s
                     for s in signals
-                    if hasattr(s, 'timestamp') and start_date <= s.timestamp <= end_date
+                    if hasattr(s, "timestamp") and start_date <= s.timestamp <= end_date
                 ]
 
                 if len(period_quotes) < 100:  # Need minimum data
@@ -460,7 +460,7 @@ class RobustnessTester:
             robustness_score=robustness_score,
         )
 
-    def _detect_stable_plateau(self, points: List[StabilityMapPoint]) -> bool:
+    def _detect_stable_plateau(self, points: list[StabilityMapPoint]) -> bool:
         """Detect if there's a stable plateau (not just a single peak)."""
         if len(points) < 10:
             return False
@@ -475,7 +475,7 @@ class RobustnessTester:
         # Stable if >20% of points are near peak
         return (near_peak / len(points)) > 0.2
 
-    def _calculate_plateau_size(self, points: List[StabilityMapPoint]) -> float:
+    def _calculate_plateau_size(self, points: list[StabilityMapPoint]) -> float:
         """Calculate size of stable plateau as percentage of total."""
         if not points:
             return 0.0
@@ -487,7 +487,7 @@ class RobustnessTester:
         near_peak = sum(1 for r in returns if r >= threshold)
         return (near_peak / len(points)) * 100
 
-    def _find_best_region(self, points: List[StabilityMapPoint]) -> Dict[str, float]:
+    def _find_best_region(self, points: list[StabilityMapPoint]) -> dict[str, float]:
         """Find best performing region in parameter space."""
         if not points:
             return {}
@@ -511,8 +511,8 @@ class RobustnessTester:
     def generate_robustness_report(
         self,
         strategy_name: str,
-        parameter_sensitivity: List[ParameterSensitivityResult],
-        stability_maps: List[StabilityMapResult],
+        parameter_sensitivity: list[ParameterSensitivityResult],
+        stability_maps: list[StabilityMapResult],
         start_date_sensitivity: StartDateSensitivityResult,
     ) -> RobustnessReport:
         """Generate complete robustness report."""

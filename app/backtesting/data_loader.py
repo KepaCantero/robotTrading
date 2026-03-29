@@ -11,7 +11,7 @@ import logging
 from datetime import datetime
 from decimal import Decimal
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 import pandas as pd
 
@@ -94,7 +94,7 @@ class DataLoader:
             base_path: Base path for CSV files (default: data/historical/)
         """
         self.base_path = base_path or Path("data/historical")
-        self.cache: Dict[str, Any] = {}
+        self.cache: dict[str, Any] = {}
 
     def load_market_data(
         self,
@@ -103,7 +103,7 @@ class DataLoader:
         end_date: datetime,
         timeframe: str = "1d",
         source: str = "csv",
-    ) -> List[Quote]:
+    ) -> list[Quote]:
         """
         Load market data for a symbol.
 
@@ -127,7 +127,7 @@ class DataLoader:
         else:
             raise ValueError(f"Unsupported data source: {source}")
 
-    def _load_from_csv(self, symbol: str, start_date: datetime, end_date: datetime) -> List[Quote]:
+    def _load_from_csv(self, symbol: str, start_date: datetime, end_date: datetime) -> list[Quote]:
         """Load data from CSV file."""
         file_path = self.base_path / f"{symbol}.csv"
 
@@ -143,7 +143,7 @@ class DataLoader:
             df.columns = df.columns.str.lower()
 
             # Handle 'date' or 'timestamp' column
-            date_col = 'date' if 'date' in df.columns else 'timestamp'
+            date_col = "date" if "date" in df.columns else "timestamp"
             df[date_col] = pd.to_datetime(df[date_col])
 
             # CRITICAL: Set date column as index for proper timestamp extraction
@@ -168,7 +168,7 @@ class DataLoader:
         start_date: datetime,
         end_date: datetime,
         timeframe: str = "1d",
-    ) -> List[Quote]:
+    ) -> list[Quote]:
         """
         Load data from Yahoo Finance using multiple methods (REQUIRED).
 
@@ -230,7 +230,7 @@ class DataLoader:
         start_date: datetime,
         end_date: datetime,
         timeframe: str = "1d",
-    ) -> List[Quote]:
+    ) -> list[Quote]:
         """
         Load data from Yahoo Finance v8 API directly.
         This is the most reliable method that avoids rate limits.
@@ -250,7 +250,7 @@ class DataLoader:
             }
             interval = interval_map.get(timeframe, "1d")
 
-            url = "https://query1.finance.yahoo.com/v8/finance/chart/{}".format(symbol)
+            url = f"https://query1.finance.yahoo.com/v8/finance/chart/{symbol}"
             params = {
                 "period1": period1,
                 "period2": period2,
@@ -260,10 +260,10 @@ class DataLoader:
             }
 
             headers = {
-                'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-                'Accept': 'application/json',
-                'Accept-Language': 'en-US,en;q=0.9',
-                'Referer': 'https://finance.yahoo.com/',
+                "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+                "Accept": "application/json",
+                "Accept-Language": "en-US,en;q=0.9",
+                "Referer": "https://finance.yahoo.com/",
             }
 
             response = requests.get(url, params=params, headers=headers, timeout=30)
@@ -352,7 +352,7 @@ class DataLoader:
             logger.debug(f"Yahoo Finance v8 API failed for {symbol}: {e}", exc_info=True)
             return []
 
-    def _convert_yfinance_to_quotes(self, hist: pd.DataFrame, symbol: str) -> List[Quote]:
+    def _convert_yfinance_to_quotes(self, hist: pd.DataFrame, symbol: str) -> list[Quote]:
         """Convert yfinance DataFrame to Quote objects using vectorized operations."""
         # VECTORIZED: Use vectorized operations instead of iterrows (100-1000x faster)
         max_volume = Decimal("10000000000")  # 10B shares limit
@@ -393,7 +393,7 @@ class DataLoader:
         ]
         return quotes
 
-    def _convert_dataframe_to_quotes(self, df: pd.DataFrame, symbol: str) -> List[Quote]:
+    def _convert_dataframe_to_quotes(self, df: pd.DataFrame, symbol: str) -> list[Quote]:
         """Convert pandas DataFrame (from yahoo_fin or CSV) to Quote objects using vectorized operations."""
         # VECTORIZED: Use vectorized operations instead of iterrows (100-1000x faster)
         max_volume = Decimal("10000000000")  # 10B shares limit
@@ -467,7 +467,7 @@ class DataLoader:
 
         return quotes
 
-    def save_to_csv(self, data: List[Quote], filename: str) -> None:
+    def save_to_csv(self, data: list[Quote], filename: str) -> None:
         """
         Save quotes to CSV file.
 
@@ -501,7 +501,7 @@ class DataLoader:
 
 def load_market_data(
     symbol: str, start_date: datetime, end_date: datetime, timeframe: str = "1d"
-) -> List[Quote]:
+) -> list[Quote]:
     """
     Convenience function to load market data.
 

@@ -9,7 +9,7 @@ market impact e infraestructura.
 import logging
 import statistics
 from decimal import Decimal
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Optional
 
 from app.domain.models.profitability_validation import (
     CostBreakdown,
@@ -37,10 +37,10 @@ class ProfitabilityCalculator:
 
     def calculate_metrics(
         self,
-        trades_data: List[Dict[str, Any]],
+        trades_data: list[dict[str, Any]],
         initial_capital: Decimal,
         final_capital: Decimal,
-    ) -> Tuple[ProfitabilityMetrics, CostBreakdown]:
+    ) -> tuple[ProfitabilityMetrics, CostBreakdown]:
         """Calcular métricas de rentabilidad y desglose de costos."""
 
         # Calcular ganancia bruta
@@ -86,7 +86,7 @@ class ProfitabilityCalculator:
 
         return metrics, cost_breakdown
 
-    def _estimate_costs_from_trades(self, trades_data: List[Dict[str, Any]]) -> CostBreakdown:
+    def _estimate_costs_from_trades(self, trades_data: list[dict[str, Any]]) -> CostBreakdown:
         """Estimar costos basados en datos de trades."""
 
         config = get_config()
@@ -136,8 +136,8 @@ class ProfitabilityCalculator:
         )
 
     def _calculate_trading_metrics(
-        self, trades_data: List[Dict[str, Any]], initial_capital: Decimal
-    ) -> Tuple[Decimal, Decimal, Decimal]:
+        self, trades_data: list[dict[str, Any]], initial_capital: Decimal
+    ) -> tuple[Decimal, Decimal, Decimal]:
         """Calcular métricas específicas de trading."""
 
         if not trades_data:
@@ -172,7 +172,7 @@ class ProfitabilityCalculator:
         return win_rate, profit_factor, max_drawdown
 
     def _calculate_max_drawdown(
-        self, trades_data: List[Dict[str, Any]], initial_capital: Decimal
+        self, trades_data: list[dict[str, Any]], initial_capital: Decimal
     ) -> Decimal:
         """Calcular el drawdown máximo."""
 
@@ -202,7 +202,7 @@ class ProfitabilityCalculator:
 
         return max_dd
 
-    def _calculate_sharpe_ratio(self, trades_data: List[Dict[str, Any]]) -> Optional[Decimal]:
+    def _calculate_sharpe_ratio(self, trades_data: list[dict[str, Any]]) -> Optional[Decimal]:
         """Calcular Sharpe ratio simplificado."""
 
         if len(trades_data) < 2:
@@ -247,7 +247,7 @@ class ProfitabilityValidator:
 
     def validate_profitability(
         self, metrics: ProfitabilityMetrics, criteria: ValidationCriteria
-    ) -> Tuple[ValidationStatus, List[str], List[str], List[str]]:
+    ) -> tuple[ValidationStatus, list[str], list[str], list[str]]:
         """Validar rentabilidad contra criterios específicos."""
 
         passed_tests = []
@@ -316,10 +316,7 @@ class ProfitabilityValidator:
 
         # Determinar estado general
         if not failed_tests:
-            if not warnings:
-                status = ValidationStatus.PASSED
-            else:
-                status = ValidationStatus.WARNING
+            status = ValidationStatus.PASSED if not warnings else ValidationStatus.WARNING
         else:
             status = ValidationStatus.FAILED
 
@@ -329,8 +326,8 @@ class ProfitabilityValidator:
         self,
         metrics: ProfitabilityMetrics,
         status: ValidationStatus,
-        failed_tests: List[str],
-    ) -> Tuple[str, str]:
+        failed_tests: list[str],
+    ) -> tuple[str, str]:
         """Generar recomendación y nivel de riesgo."""
 
         if status == ValidationStatus.PASSED:
@@ -437,7 +434,7 @@ class ProfitabilityValidationService:
             next_steps=next_steps,
         )
 
-    def compare_strategies(self, validations: List[ProfitabilityValidation]) -> StrategyComparison:
+    def compare_strategies(self, validations: list[ProfitabilityValidation]) -> StrategyComparison:
         """Comparar múltiples estrategias."""
 
         if not validations:
@@ -462,7 +459,7 @@ class ProfitabilityValidationService:
         )
 
     def analyze_historical_performance(
-        self, strategy_name: str, validations: List[ProfitabilityValidation]
+        self, strategy_name: str, validations: list[ProfitabilityValidation]
     ) -> HistoricalValidation:
         """Analizar rendimiento histórico de una estrategia."""
 
@@ -488,7 +485,7 @@ class ProfitabilityValidationService:
 
     def generate_validation_report(
         self,
-        validations: List[ProfitabilityValidation],
+        validations: list[ProfitabilityValidation],
         include_comparison: bool = True,
         include_historical: bool = True,
     ) -> ValidationReport:
@@ -531,7 +528,7 @@ class ProfitabilityValidationService:
         )
 
     def _calculate_final_capital(
-        self, initial_capital: Decimal, trades_data: List[Dict[str, Any]]
+        self, initial_capital: Decimal, trades_data: list[dict[str, Any]]
     ) -> Decimal:
         """Calcular capital final basado en trades."""
 
@@ -546,7 +543,7 @@ class ProfitabilityValidationService:
         return final_capital
 
     def _calculate_average_metrics(
-        self, validations: List[ProfitabilityValidation]
+        self, validations: list[ProfitabilityValidation]
     ) -> ProfitabilityMetrics:
         """Calcular métricas promedio de múltiples validaciones."""
 
@@ -591,8 +588,8 @@ class ProfitabilityValidationService:
         )
 
     def _create_strategy_ranking(
-        self, validations: List[ProfitabilityValidation]
-    ) -> List[Dict[str, Any]]:
+        self, validations: list[ProfitabilityValidation]
+    ) -> list[dict[str, Any]]:
         """Crear ranking de estrategias."""
 
         # Ordenar por ganancia neta
@@ -616,7 +613,7 @@ class ProfitabilityValidationService:
 
         return ranking
 
-    def _analyze_trends(self, validations: List[ProfitabilityValidation]) -> Dict[str, Any]:
+    def _analyze_trends(self, validations: list[ProfitabilityValidation]) -> dict[str, Any]:
         """Analizar tendencias en el rendimiento histórico."""
 
         if len(validations) < 2:
@@ -643,7 +640,7 @@ class ProfitabilityValidationService:
             "consistency": "high" if statistics.stdev(net_profits) < 100 else "low",
         }
 
-    def _calculate_stability_score(self, validations: List[ProfitabilityValidation]) -> Decimal:
+    def _calculate_stability_score(self, validations: list[ProfitabilityValidation]) -> Decimal:
         """Calcular score de estabilidad (0-100)."""
 
         if len(validations) < 2:
@@ -682,7 +679,7 @@ class ProfitabilityValidationService:
         else:
             return "poor"
 
-    def _generate_recommendations(self, validation: ProfitabilityValidation) -> List[str]:
+    def _generate_recommendations(self, validation: ProfitabilityValidation) -> list[str]:
         """Generar recomendaciones específicas para una validación."""
 
         recommendations = []
@@ -706,7 +703,7 @@ class ProfitabilityValidationService:
 
         return recommendations
 
-    def _generate_next_steps(self, validation: ProfitabilityValidation) -> List[str]:
+    def _generate_next_steps(self, validation: ProfitabilityValidation) -> list[str]:
         """Generar próximos pasos basados en la validación."""
 
         next_steps = []
@@ -741,7 +738,7 @@ class ProfitabilityValidationService:
 
         return next_steps
 
-    def _generate_overall_assessment(self, validations: List[ProfitabilityValidation]) -> str:
+    def _generate_overall_assessment(self, validations: list[ProfitabilityValidation]) -> str:
         """Generar evaluación general de todas las validaciones."""
 
         if not validations:
@@ -757,7 +754,7 @@ class ProfitabilityValidationService:
         else:
             return "Multiple strategies require optimization before proceeding"
 
-    def _generate_risk_assessment(self, validations: List[ProfitabilityValidation]) -> str:
+    def _generate_risk_assessment(self, validations: list[ProfitabilityValidation]) -> str:
         """Generar evaluación de riesgo general."""
 
         if not validations:
@@ -774,8 +771,8 @@ class ProfitabilityValidationService:
             return "High risk - multiple strategies need significant optimization"
 
     def _generate_general_recommendations(
-        self, validations: List[ProfitabilityValidation]
-    ) -> List[str]:
+        self, validations: list[ProfitabilityValidation]
+    ) -> list[str]:
         """Generar recomendaciones generales."""
 
         recommendations = []

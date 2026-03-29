@@ -19,8 +19,7 @@ import math
 from collections import deque
 from dataclasses import dataclass
 from datetime import datetime, timezone
-from decimal import Decimal
-from typing import Optional
+from typing import TYPE_CHECKING
 
 import numpy as np
 
@@ -30,6 +29,9 @@ from app.domain.market_analysis.microstructure.ofi.models import (
     OFIStatistics,
     OrderBookSnapshot,
 )
+
+if TYPE_CHECKING:
+    from decimal import Decimal
 
 logger = logging.getLogger(__name__)
 
@@ -168,10 +170,7 @@ class OFICalculator:
             )
 
         # Calculate OFI
-        if total_vol == 0:
-            ofi = 0.0
-        else:
-            ofi = (bid_vol - ask_vol) / total_vol
+        ofi = 0.0 if total_vol == 0 else (bid_vol - ask_vol) / total_vol
 
         # Clamp to configured range for numerical stability
         ofi = max(self.config.ofi_min_value, min(self.config.ofi_max_value, ofi))
@@ -492,7 +491,7 @@ class OFICalculator:
     def calculate_ofi_statistics(
         self,
         ofi_history: list[float],
-        returns_history: Optional[list[float]] = None,
+        returns_history: list[float] | None = None,
         symbol: str = "",
         period_start: datetime | None = None,
         period_end: datetime | None = None,

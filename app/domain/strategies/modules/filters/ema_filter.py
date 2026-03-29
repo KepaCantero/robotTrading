@@ -3,7 +3,7 @@ EMAFilter - Filtro de tendencia basado en cruces de EMA.
 """
 
 import logging
-from typing import Dict
+from typing import Optional
 
 from ..base_filter import BaseFilter
 
@@ -21,7 +21,11 @@ class EMAFilter(BaseFilter):
     """
 
     def __init__(
-        self, config: Dict = None, preset: str = "balanced", tier: str = None, use_yaml: bool = True
+        self,
+        config: Optional[dict] = None,
+        preset: str = "balanced",
+        tier: Optional[str] = None,
+        use_yaml: bool = True,
     ):
         """Inicializar filtro EMA."""
         super().__init__("ema_filter", config, preset, tier, use_yaml)
@@ -39,7 +43,7 @@ class EMAFilter(BaseFilter):
         # FIX: Allow dip buying even if price slightly below EMA fast during pullbacks
         self.allow_dip_buy = self.thresholds.get("allow_dip_buy", True)
 
-    def _apply_filter_logic(self, indicators: Dict, market_context: Dict, signal_type: str) -> Dict:
+    def _apply_filter_logic(self, indicators: dict, market_context: dict, signal_type: str) -> dict:
         """
         Aplicar lógica del filtro EMA.
 
@@ -53,10 +57,10 @@ class EMAFilter(BaseFilter):
 
         if not all([ema_fast, ema_slow, current_price]):
             return {
-                'passed': False,
-                'confidence': 0.0,
-                'reason': 'EMA indicators missing',
-                'metadata': {},
+                "passed": False,
+                "confidence": 0.0,
+                "reason": "EMA indicators missing",
+                "metadata": {},
             }
 
         # DEBUG: Log EMA values to understand why SELL passes but BUY doesn't
@@ -71,20 +75,20 @@ class EMAFilter(BaseFilter):
 
             if not fast_above_slow:
                 return {
-                    'passed': False,
-                    'confidence': 0.0,
-                    'reason': f'EMA fast ({ema_fast:.2f}) not above EMA slow ({ema_slow:.2f})',
-                    'metadata': {'ema_fast': ema_fast, 'ema_slow': ema_slow},
+                    "passed": False,
+                    "confidence": 0.0,
+                    "reason": f"EMA fast ({ema_fast:.2f}) not above EMA slow ({ema_slow:.2f})",
+                    "metadata": {"ema_fast": ema_fast, "ema_slow": ema_slow},
                 }
 
             # Verificar distancia mínima
             distance_pct = (ema_fast - ema_slow) / ema_slow
             if distance_pct < self.min_distance_pct:
                 return {
-                    'passed': False,
-                    'confidence': 0.0,
-                    'reason': f'EMA distance {distance_pct:.4f} < threshold {self.min_distance_pct:.4f}',
-                    'metadata': {'distance_pct': distance_pct},
+                    "passed": False,
+                    "confidence": 0.0,
+                    "reason": f"EMA distance {distance_pct:.4f} < threshold {self.min_distance_pct:.4f}",
+                    "metadata": {"distance_pct": distance_pct},
                 }
 
             # Verificar precio vs EMA según método
@@ -92,10 +96,10 @@ class EMAFilter(BaseFilter):
             if self.confirmation_method == "price_above" and not self.allow_dip_buy:
                 if current_price <= ema_fast:
                     return {
-                        'passed': False,
-                        'confidence': 0.0,
-                        'reason': f'Price ({current_price:.2f}) not above EMA fast ({ema_fast:.2f})',
-                        'metadata': {},
+                        "passed": False,
+                        "confidence": 0.0,
+                        "reason": f"Price ({current_price:.2f}) not above EMA fast ({ema_fast:.2f})",
+                        "metadata": {},
                     }
             elif self.confirmation_method == "price_above" and self.allow_dip_buy:
                 # Allow price to be up to 2% below EMA fast (dip opportunity)
@@ -103,24 +107,24 @@ class EMAFilter(BaseFilter):
                 dip_pct = (ema_fast - current_price) / ema_fast if current_price < ema_fast else 0
                 if dip_pct > max_dip_pct:
                     return {
-                        'passed': False,
-                        'confidence': 0.0,
-                        'reason': f'Price ({current_price:.2f}) too far below EMA fast ({ema_fast:.2f}): dip {dip_pct:.2%} > {max_dip_pct:.2%}',
-                        'metadata': {},
+                        "passed": False,
+                        "confidence": 0.0,
+                        "reason": f"Price ({current_price:.2f}) too far below EMA fast ({ema_fast:.2f}): dip {dip_pct:.2%} > {max_dip_pct:.2%}",
+                        "metadata": {},
                     }
 
             # Calcular confianza basada en distancia
             confidence = min(1.0, (distance_pct / self.min_distance_pct) * 0.8)
 
             return {
-                'passed': True,
-                'confidence': confidence,
-                'reason': f'EMA trend confirmed: distance {distance_pct:.4f}',
-                'metadata': {
-                    'ema_fast': ema_fast,
-                    'ema_slow': ema_slow,
-                    'distance_pct': distance_pct,
-                    'price_above_fast': current_price > ema_fast,
+                "passed": True,
+                "confidence": confidence,
+                "reason": f"EMA trend confirmed: distance {distance_pct:.4f}",
+                "metadata": {
+                    "ema_fast": ema_fast,
+                    "ema_slow": ema_slow,
+                    "distance_pct": distance_pct,
+                    "price_above_fast": current_price > ema_fast,
                 },
             }
 
@@ -130,36 +134,36 @@ class EMAFilter(BaseFilter):
 
             if not slow_above_fast:
                 return {
-                    'passed': False,
-                    'confidence': 0.0,
-                    'reason': f'EMA slow ({ema_slow:.2f}) not above EMA fast ({ema_fast:.2f})',
-                    'metadata': {},
+                    "passed": False,
+                    "confidence": 0.0,
+                    "reason": f"EMA slow ({ema_slow:.2f}) not above EMA fast ({ema_fast:.2f})",
+                    "metadata": {},
                 }
 
             distance_pct = (ema_slow - ema_fast) / ema_fast
             if distance_pct < self.min_distance_pct:
                 return {
-                    'passed': False,
-                    'confidence': 0.0,
-                    'reason': f'EMA distance {distance_pct:.4f} < threshold',
-                    'metadata': {},
+                    "passed": False,
+                    "confidence": 0.0,
+                    "reason": f"EMA distance {distance_pct:.4f} < threshold",
+                    "metadata": {},
                 }
 
             if self.confirmation_method == "price_above" and current_price >= ema_slow:
                 return {
-                    'passed': False,
-                    'confidence': 0.0,
-                    'reason': f'Price ({current_price:.2f}) not below EMA slow ({ema_slow:.2f})',
-                    'metadata': {},
+                    "passed": False,
+                    "confidence": 0.0,
+                    "reason": f"Price ({current_price:.2f}) not below EMA slow ({ema_slow:.2f})",
+                    "metadata": {},
                 }
 
             confidence = min(1.0, (distance_pct / self.min_distance_pct) * 0.8)
 
             return {
-                'passed': True,
-                'confidence': confidence,
-                'reason': 'EMA downtrend confirmed',
-                'metadata': {'distance_pct': distance_pct},
+                "passed": True,
+                "confidence": confidence,
+                "reason": "EMA downtrend confirmed",
+                "metadata": {"distance_pct": distance_pct},
             }
 
-        return {'passed': False, 'confidence': 0.0, 'reason': 'Unknown signal type', 'metadata': {}}
+        return {"passed": False, "confidence": 0.0, "reason": "Unknown signal type", "metadata": {}}

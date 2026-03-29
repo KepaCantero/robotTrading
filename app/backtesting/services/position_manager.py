@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import logging
 from decimal import Decimal
-from typing import Callable, Dict, List, Optional
+from typing import Callable
 
 logger = logging.getLogger(__name__)
 
@@ -30,7 +30,7 @@ class PositionManager:
 
     def __init__(self):
         """Initialize the PositionManager with empty positions."""
-        self.positions: Dict[str, Decimal] = {}
+        self.positions: dict[str, Decimal] = {}
 
     def get_position(self, symbol: str) -> Decimal:
         """
@@ -105,7 +105,7 @@ class PositionManager:
         """
         return self.get_position(symbol) > 0
 
-    def get_all_positions(self) -> Dict[str, Decimal]:
+    def get_all_positions(self) -> dict[str, Decimal]:
         """
         Get all positions.
 
@@ -115,7 +115,7 @@ class PositionManager:
         # Return copy to prevent external modification
         return dict(self.positions)
 
-    def get_symbols_with_positions(self) -> List[str]:
+    def get_symbols_with_positions(self) -> list[str]:
         """
         Get list of symbols with open positions.
 
@@ -137,7 +137,7 @@ class PositionManager:
         """
         return len(self.get_symbols_with_positions())
 
-    def get_total_position_value(self, price_func: Callable[[str], Optional[Decimal]]) -> Decimal:
+    def get_total_position_value(self, price_func: Callable[[str], Decimal | None]) -> Decimal:
         """
         Calculate total value of all open positions.
 

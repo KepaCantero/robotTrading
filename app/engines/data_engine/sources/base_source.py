@@ -4,7 +4,7 @@ BaseDataSource - Interfaz base para todas las fuentes de datos.
 
 import logging
 from abc import ABC, abstractmethod
-from typing import Any, Dict, Optional
+from typing import Any, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -16,7 +16,7 @@ class BaseDataSource(ABC):
     Define la interfaz común que todas las fuentes deben implementar.
     """
 
-    def __init__(self, config: Dict[str, Any]):
+    def __init__(self, config: dict[str, Any]):
         """
         Inicializar fuente de datos.
 
@@ -55,20 +55,20 @@ class BaseDataSource(ABC):
             True si la fuente está saludable
         """
 
-    def get_config(self) -> Dict[str, Any]:
+    def get_config(self) -> dict[str, Any]:
         """Obtener configuración actual."""
         return self.config.copy()
 
-    def update_config(self, new_config: Dict[str, Any]) -> None:
+    def update_config(self, new_config: dict[str, Any]) -> None:
         """Actualizar configuración."""
         self.config.update(new_config)
         logger.info(f"{self.name}: Configuración actualizada")
 
-    def get_status(self) -> Dict[str, Any]:
+    def get_status(self) -> dict[str, Any]:
         """Obtener estado de la fuente."""
         return {
-            'name': self.name,
-            'is_connected': self.is_connected,
-            'last_error': self.last_error,
-            'config': self.config,
+            "name": self.name,
+            "is_connected": self.is_connected,
+            "last_error": self.last_error,
+            "config": self.config,
         }

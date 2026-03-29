@@ -19,7 +19,7 @@ from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from decimal import Decimal
 from enum import Enum
-from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional
+from typing import TYPE_CHECKING, Any, Callable, Optional
 
 from requests.exceptions import HTTPError
 from sqlalchemy.exc import (
@@ -211,7 +211,7 @@ class MonitoredPosition:
 
         return (pnl / total_value) * Decimal("100")
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for serialization."""
         return {
             "position_id": self.position_id,
@@ -235,7 +235,7 @@ class MonitoredPosition:
         }
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> "MonitoredPosition":
+    def from_dict(cls, data: dict[str, Any]) -> "MonitoredPosition":
         """Create MonitoredPosition from dictionary."""
         return cls(
             position_id=data["position_id"],
@@ -288,7 +288,7 @@ class PositionMonitorConfig:
         stop_execution_timeout_seconds: Timeout for stop order execution (uses centralized config)
     """
 
-    def __init__(self, custom_config: Optional[Dict] = None):
+    def __init__(self, custom_config: Optional[dict] = None):
         """
         Initialize PositionMonitorConfig with centralized config values.
 
@@ -381,10 +381,10 @@ class PositionMonitor:
         self._state_sync_task: Optional[asyncio.Task] = None
 
         # Monitored positions (in-memory cache)
-        self._positions: Dict[str, MonitoredPosition] = {}
+        self._positions: dict[str, MonitoredPosition] = {}
 
         # Audit log
-        self._audit_log: List[Dict[str, Any]] = []
+        self._audit_log: list[dict[str, Any]] = []
 
         # Statistics
         self._stats = {
@@ -618,7 +618,7 @@ class PositionMonitor:
                     state_data = json.loads(state_record.positions_json)
 
                     # Restore positions
-                    for pos_data in state_data.get('positions', []):
+                    for pos_data in state_data.get("positions", []):
                         position = MonitoredPosition.from_dict(pos_data)
                         self._positions[position.position_id] = position
 
@@ -692,7 +692,7 @@ class PositionMonitor:
                     f"P&L: {position.calculate_pnl()}"
                 )
 
-    async def _fetch_current_prices(self, symbols: List[str]) -> Dict[str, Decimal]:
+    async def _fetch_current_prices(self, symbols: list[str]) -> dict[str, Decimal]:
         """
         Fetch current prices for multiple symbols.
 
@@ -771,10 +771,10 @@ class PositionMonitor:
         if self.config.execute_stops_automatically:
             from . import stop_executor
 
-            executor: "StopExecutor" = stop_executor.StopExecutor(
+            executor: StopExecutor = stop_executor.StopExecutor(
                 self.broker, order_timeout=self.config.stop_execution_timeout_seconds
             )
-            result: "StopExecutionResult" = await executor.execute_stop_loss(position)
+            result: StopExecutionResult = await executor.execute_stop_loss(position)
 
             if result.success:
                 position.status = PositionStatus.CLOSED
@@ -832,10 +832,10 @@ class PositionMonitor:
         if self.config.execute_stops_automatically:
             from . import stop_executor
 
-            executor: "StopExecutor" = stop_executor.StopExecutor(
+            executor: StopExecutor = stop_executor.StopExecutor(
                 self.broker, order_timeout=self.config.stop_execution_timeout_seconds
             )
-            result: "StopExecutionResult" = await executor.execute_take_profit(position)
+            result: StopExecutionResult = await executor.execute_take_profit(position)
 
             if result.success:
                 position.status = PositionStatus.CLOSED
@@ -881,8 +881,8 @@ class PositionMonitor:
                 positions_list = [pos.to_dict() for pos in self._positions.values()]
                 state_json = json.dumps(
                     {
-                        'positions': positions_list,
-                        'timestamp': datetime.now(timezone.utc).isoformat(),
+                        "positions": positions_list,
+                        "timestamp": datetime.now(timezone.utc).isoformat(),
                     },
                     default=str,
                 )
@@ -915,11 +915,11 @@ class PositionMonitor:
         except (IntegrityError, OperationalError, DatabaseError, DataError, ProgrammingError) as e:
             logger.error(f"Failed to sync state to database: {e}", exc_info=True)
 
-    def get_monitored_positions(self) -> List[MonitoredPosition]:
+    def get_monitored_positions(self) -> list[MonitoredPosition]:
         """Get list of all monitored positions."""
         return list(self._positions.values())
 
-    def get_active_positions(self) -> List[MonitoredPosition]:
+    def get_active_positions(self) -> list[MonitoredPosition]:
         """Get list of active positions only."""
         return [p for p in self._positions.values() if p.status == PositionStatus.ACTIVE]
 
@@ -927,15 +927,15 @@ class PositionMonitor:
         """Get a specific monitored position."""
         return self._positions.get(position_id)
 
-    def get_positions_by_symbol(self, symbol: str) -> List[MonitoredPosition]:
+    def get_positions_by_symbol(self, symbol: str) -> list[MonitoredPosition]:
         """Get all monitored positions for a symbol."""
         return [p for p in self._positions.values() if p.symbol == symbol]
 
-    def get_audit_log(self, limit: int = 100) -> List[Dict[str, Any]]:
+    def get_audit_log(self, limit: int = 100) -> list[dict[str, Any]]:
         """Get audit log entries."""
         return self._audit_log[-limit:]
 
-    def get_statistics(self) -> Dict[str, Any]:
+    def get_statistics(self) -> dict[str, Any]:
         """Get monitor statistics."""
         active = sum(1 for p in self._positions.values() if p.status == PositionStatus.ACTIVE)
         stopped = sum(
@@ -968,7 +968,7 @@ class PositionMonitor:
             "execution_failures": self._stats["execution_failures"],
         }
 
-    def get_position_summary(self) -> Dict[str, Any]:
+    def get_position_summary(self) -> dict[str, Any]:
         """Get summary of all monitored positions."""
         positions = self.get_monitored_positions()
 

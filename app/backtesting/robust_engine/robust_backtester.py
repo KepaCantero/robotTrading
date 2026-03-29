@@ -28,23 +28,29 @@ from dataclasses import dataclass, field
 from datetime import date, datetime
 from decimal import Decimal
 from pathlib import Path
-from typing import Callable, Dict, List, Optional, Tuple, Union
+from typing import TYPE_CHECKING, Callable
 
 import pandas as pd
 
 # SINGLE SOURCE OF TRUTH: Import CentralizedConfig
 from app.shared.config.centralized_config import get_config
 
-from app.domain.models.signal import Signal
-
 from ..point_in_time_database import PointInTimeDatabase
 from .corporate_actions import CorporateActionHandler
 from .dividend_handler import DividendHandler, DripConfig
 from .look_ahead_validator import LookAheadValidator, ValidationResult
 from .models import BacktestCheckpoint, CorporateAction, ProgressUpdate, StockSplit
-from .performance_tracker import PerformanceMetrics, PerformanceTracker, RollingMetrics, YearlyBreakdown
+from .performance_tracker import (
+    PerformanceMetrics,
+    PerformanceTracker,
+    RollingMetrics,
+    YearlyBreakdown,
+)
 from .pit_database import PITDatabaseClient
 from .survivorship_adjuster import SurvivorshipAdjuster, SurvivorshipFreeResult
+
+if TYPE_CHECKING:
+    from app.domain.models.signal import Signal
 
 logger = logging.getLogger(__name__)
 
@@ -94,9 +100,9 @@ class RobustBacktestConfig:
     initial_capital: Decimal = field(default=Decimal("100000"))
     start_date: date = field(default_factory=date.today)
     end_date: date = field(default_factory=date.today)
-    commission_per_trade: Optional[Decimal] = field(default=None)  # Uses CentralizedConfig if None
-    slippage_bps: Optional[Decimal] = field(default=None)  # Uses CentralizedConfig if None
-    risk_free_rate: Optional[Decimal] = field(default=None)  # Uses CentralizedConfig if None
+    commission_per_trade: Decimal | None = field(default=None)  # Uses CentralizedConfig if None
+    slippage_bps: Decimal | None = field(default=None)  # Uses CentralizedConfig if None
+    risk_free_rate: Decimal | None = field(default=None)  # Uses CentralizedConfig if None
 
     # Feature flags
     enable_survivorship_correction: bool = field(default=True)
@@ -104,20 +110,20 @@ class RobustBacktestConfig:
     enable_checkpointing: bool = field(default=True)
 
     # Checkpointing
-    checkpoint_dir: Optional[Path] = field(default=None)
+    checkpoint_dir: Path | None = field(default=None)
     checkpoint_frequency: int = field(default=365)  # Checkpoint annually
 
     # Memory optimization
     chunk_size_days: int = field(default=365)  # Process 1 year at a time
 
     # Progress tracking
-    progress_callback: Optional[Callable[[ProgressUpdate], None]] = field(default=None)
+    progress_callback: Callable[[ProgressUpdate], None] | None = field(default=None)
 
     # DRIP config
     drip_config: DripConfig = field(default_factory=DripConfig)
 
     # Point-in-Time database configuration
-    pit_data_path: Optional[Path] = field(default=None)
+    pit_data_path: Path | None = field(default=None)
     pit_cache_size_mb: int = field(default=100)
 
     # Look-ahead bias validation
@@ -171,12 +177,12 @@ class RobustBacktestResult:
 
     config: RobustBacktestConfig = field(default_factory=RobustBacktestConfig)
     performance: PerformanceMetrics = field(default_factory=PerformanceMetrics)
-    equity_curve: List[Tuple[date, Decimal]] = field(default_factory=list)
-    trades: List[Dict[str, Union[str, int, float, datetime]]] = field(default_factory=list)
-    yearly_breakdown: List[YearlyBreakdown] = field(default_factory=list)
-    rolling_metrics: Optional[RollingMetrics] = field(default=None)
-    survivorship_adjustment: Optional[SurvivorshipFreeResult] = field(default=None)
-    dividend_tracker: Optional[DividendHandler] = field(default=None)
+    equity_curve: list[tuple[date, Decimal]] = field(default_factory=list)
+    trades: list[dict[str, str | int | float | datetime]] = field(default_factory=list)
+    yearly_breakdown: list[YearlyBreakdown] = field(default_factory=list)
+    rolling_metrics: RollingMetrics | None = field(default=None)
+    survivorship_adjustment: SurvivorshipFreeResult | None = field(default=None)
+    dividend_tracker: DividendHandler | None = field(default=None)
     checkpoints_used: int = field(default=0)
     total_duration_seconds: float = field(default=0.0)
 
@@ -239,7 +245,7 @@ class RobustBacktester:
         )
 
         # Initialize Point-in-Time database client
-        self.pit_client: Optional[PITDatabaseClient] = None
+        self.pit_client: PITDatabaseClient | None = None
         if config.pit_data_path is not None:
             pit_db = PointInTimeDatabase(
                 pit_data_path=config.pit_data_path,
@@ -260,20 +266,20 @@ class RobustBacktester:
 
         # State
         self._capital: Decimal = config.initial_capital
-        self._positions: Dict[str, Decimal] = {}
-        self._cost_basis: Dict[str, Decimal] = {}  # Track cost basis per symbol for P&L calculation
-        self._trades: List[Dict[str, Union[str, int, float, datetime]]] = []
-        self._current_date: Optional[date] = config.start_date
+        self._positions: dict[str, Decimal] = {}
+        self._cost_basis: dict[str, Decimal] = {}  # Track cost basis per symbol for P&L calculation
+        self._trades: list[dict[str, str | int | float | datetime]] = []
+        self._current_date: date | None = config.start_date
 
         # Checkpointing
-        self._latest_checkpoint: Optional[BacktestCheckpoint] = None
+        self._latest_checkpoint: BacktestCheckpoint | None = None
         self._checkpoint_count: int = 0
 
         # Validation results
-        self._validation_result: Optional[ValidationResult] = None
+        self._validation_result: ValidationResult | None = None
 
         # Timing
-        self._start_time: Optional[datetime] = None
+        self._start_time: datetime | None = None
 
         # Ensure checkpoint directory exists
         if config.enable_checkpointing and config.checkpoint_dir:
@@ -282,8 +288,8 @@ class RobustBacktester:
     async def run_backtest(
         self,
         strategy: object,
-        market_data: Union[pd.DataFrame, List[object]],
-        signals: Optional[List[Signal]] = None,
+        market_data: pd.DataFrame | list[object],
+        signals: list[Signal] | None = None,
         resume_from_checkpoint: bool = False,
     ) -> RobustBacktestResult:
         """
@@ -355,7 +361,7 @@ class RobustBacktester:
 
     async def _perform_validation_if_enabled(
         self,
-        signals: Optional[List[Signal]],
+        signals: list[Signal] | None,
         market_data: pd.DataFrame,
     ) -> None:
         """
@@ -379,7 +385,7 @@ class RobustBacktester:
 
         if not self._validation_result.is_valid:
             error_msg = (
-                f"Look-ahead bias validation failed. " f"Issues: {self._validation_result.issues}"
+                f"Look-ahead bias validation failed. Issues: {self._validation_result.issues}"
             )
             logger.error(error_msg)
             if self.config.validation_strict_mode:
@@ -431,7 +437,7 @@ class RobustBacktester:
         self,
         strategy: object,
         market_data: pd.DataFrame,
-        signals: Optional[List[Signal]],
+        signals: list[Signal] | None,
     ) -> None:
         """
         Process backtest in chunks for memory efficiency.
@@ -462,7 +468,7 @@ class RobustBacktester:
         total_chunks: int,
         chunk: pd.DataFrame,
         strategy: object,
-        signals: Optional[List[Signal]],
+        signals: list[Signal] | None,
     ) -> None:
         """
         Process a single chunk with progress tracking and checkpointing.
@@ -529,7 +535,7 @@ class RobustBacktester:
         self,
         strategy: object,
         chunk: pd.DataFrame,
-        signals: Optional[List[Signal]],
+        signals: list[Signal] | None,
     ) -> None:
         """
         Process a single chunk of data.
@@ -542,7 +548,7 @@ class RobustBacktester:
         # Use itertuples instead of iterrows for better performance
         for row in chunk.itertuples():
             idx = row.Index
-            current_date = idx.date() if hasattr(idx, 'date') else idx
+            current_date = idx.date() if hasattr(idx, "date") else idx
             self._current_date = current_date
 
             # Check for corporate actions
@@ -565,9 +571,9 @@ class RobustBacktester:
         self,
         strategy: object,
         chunk: pd.DataFrame,
-        idx: Union[pd.Timestamp, int],
+        idx: pd.Timestamp | int,
         row: tuple,
-        signals: Optional[List[Signal]],
+        signals: list[Signal] | None,
         current_date: date,
     ) -> None:
         """
@@ -586,7 +592,7 @@ class RobustBacktester:
             chunk_signals = [s for s in signals if s.timestamp.date() == current_date]
             for signal in chunk_signals:
                 await self._process_signal(signal, row)
-        elif hasattr(strategy, 'generate_signals'):
+        elif hasattr(strategy, "generate_signals"):
             # Generate signals from strategy
             chunk_signals = strategy.generate_signals(chunk.loc[:idx])
             for signal in chunk_signals:
@@ -608,13 +614,13 @@ class RobustBacktester:
         try:
             signal_type = (
                 signal.signal_type.value.lower()
-                if hasattr(signal.signal_type, 'value')
+                if hasattr(signal.signal_type, "value")
                 else str(signal.signal_type).lower()
             )
             symbol = signal.symbol
             # Use Decimal for price to maintain precision
             price_input = (
-                signal.price if hasattr(signal, 'price') else market_data.get('close', Decimal("0"))
+                signal.price if hasattr(signal, "price") else market_data.get("close", Decimal("0"))
             )
             price = (
                 Decimal(str(price_input)) if not isinstance(price_input, Decimal) else price_input
@@ -746,7 +752,7 @@ class RobustBacktester:
     def _split_data_into_chunks(
         self,
         data: pd.DataFrame,
-    ) -> List[pd.DataFrame]:
+    ) -> list[pd.DataFrame]:
         """
         Split data into memory-efficient chunks.
 
@@ -774,7 +780,7 @@ class RobustBacktester:
 
     def _convert_to_dataframe(
         self,
-        data: List[object],
+        data: list[object],
     ) -> pd.DataFrame:
         """
         Convert list of market data objects to DataFrame.
@@ -787,22 +793,22 @@ class RobustBacktester:
         """
         records = []
         for item in data:
-            if hasattr(item, 'timestamp') and hasattr(item, 'close'):
+            if hasattr(item, "timestamp") and hasattr(item, "close"):
                 records.append(
                     {
-                        'timestamp': item.timestamp,
-                        'open': float(getattr(item, 'open', item.close)),
-                        'high': float(getattr(item, 'high', item.close)),
-                        'low': float(getattr(item, 'low', item.close)),
-                        'close': float(item.close),
-                        'volume': float(getattr(item, 'volume', 0)),
-                        'symbol': getattr(item, 'symbol', 'UNKNOWN'),
+                        "timestamp": item.timestamp,
+                        "open": float(getattr(item, "open", item.close)),
+                        "high": float(getattr(item, "high", item.close)),
+                        "low": float(getattr(item, "low", item.close)),
+                        "close": float(item.close),
+                        "volume": float(getattr(item, "volume", 0)),
+                        "symbol": getattr(item, "symbol", "UNKNOWN"),
                     }
                 )
 
         df = pd.DataFrame(records)
-        if not df.empty and 'timestamp' in df.columns:
-            df.set_index('timestamp', inplace=True)
+        if not df.empty and "timestamp" in df.columns:
+            df.set_index("timestamp", inplace=True)
 
         return df
 
@@ -898,7 +904,7 @@ class RobustBacktester:
         )
 
         # Use DecimalEncoder for JSON serialization
-        with open(checkpoint_path, 'w') as f:
+        with open(checkpoint_path, "w") as f:
             json.dump(checkpoint.to_dict(), f, cls=DecimalEncoder, indent=2)
 
         self._latest_checkpoint = checkpoint
@@ -925,7 +931,7 @@ class RobustBacktester:
         latest_file = max(checkpoint_files, key=lambda p: p.stat().st_mtime)
 
         try:
-            with open(latest_file, 'r') as f:
+            with open(latest_file) as f:
                 data = json.load(f)
 
             checkpoint = BacktestCheckpoint.from_dict(data)
@@ -987,7 +993,7 @@ class RobustBacktester:
 
     def _validate_backtest_data(
         self,
-        signals: Union[List[Signal], pd.DataFrame],
+        signals: list[Signal] | pd.DataFrame,
         market_data: pd.DataFrame,
     ) -> ValidationResult:
         """
@@ -1021,7 +1027,7 @@ class RobustBacktester:
 
     def _convert_signals_to_dataframe(
         self,
-        signals: List[Signal],
+        signals: list[Signal],
     ) -> pd.DataFrame:
         """
         Convert list of signal objects to DataFrame.
@@ -1064,7 +1070,7 @@ class RobustBacktester:
 
         return df
 
-    def get_validation_result(self) -> Optional[ValidationResult]:
+    def get_validation_result(self) -> ValidationResult | None:
         """
         Get the validation result from the last backtest.
 
@@ -1073,7 +1079,7 @@ class RobustBacktester:
         """
         return self._validation_result
 
-    def get_pit_cache_statistics(self) -> Dict[str, Union[bool, str, int, float]]:
+    def get_pit_cache_statistics(self) -> dict[str, bool | str | int | float]:
         """
         Get PIT database cache statistics.
 

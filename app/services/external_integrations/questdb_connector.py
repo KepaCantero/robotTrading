@@ -10,7 +10,7 @@ import logging
 from dataclasses import dataclass
 from datetime import datetime
 from decimal import Decimal
-from typing import Dict, List, Optional
+from typing import Optional
 
 import aiohttp
 import numpy as np
@@ -94,11 +94,11 @@ class QuestDBConnector:
         self.http_url = f"http://{host}:{self.http_port}"
         self.connected = False
         self.session: Optional[aiohttp.ClientSession] = None
-        self.write_buffer: List[str] = []
+        self.write_buffer: list[str] = []
         self.buffer_size = 1000
         # In-memory storage for testing
-        self.ohlcv_data: List[TimeSeriesData] = []
-        self.trades: List[TradeRecord] = []
+        self.ohlcv_data: list[TimeSeriesData] = []
+        self.trades: list[TradeRecord] = []
         logger.info(f"✅ QuestDBConnector initialized ({host}:{self.ilp_port}/{self.http_port})")
 
     async def connect(self) -> bool:
@@ -115,7 +115,7 @@ class QuestDBConnector:
             return True
 
         except Exception as e:
-            logger.error(f"❌ QuestDB connection failed: {str(e)}")
+            logger.error(f"❌ QuestDB connection failed: {e!s}")
             self.connected = False
             if self.session:
                 await self.session.close()
@@ -133,7 +133,7 @@ class QuestDBConnector:
             logger.info("✅ Disconnected from QuestDB")
             return True
         except Exception as e:
-            logger.error(f"❌ Disconnect failed: {str(e)}")
+            logger.error(f"❌ Disconnect failed: {e!s}")
             return False
 
     async def insert_ohlcv(self, data: TimeSeriesData) -> bool:
@@ -175,10 +175,10 @@ class QuestDBConnector:
             return True
 
         except (ValueError, TypeError, KeyError, AttributeError) as e:
-            logger.error(f"❌ Insert OHLCV failed: {str(e)}")
+            logger.error(f"❌ Insert OHLCV failed: {e!s}")
             return False
 
-    async def insert_batch_ohlcv(self, data_list: List[TimeSeriesData]) -> int:
+    async def insert_batch_ohlcv(self, data_list: list[TimeSeriesData]) -> int:
         """
         Insert batch of OHLCV data.
 
@@ -236,7 +236,7 @@ class QuestDBConnector:
             return True
 
         except (asyncio.TimeoutError, OSError) as e:
-            logger.error(f"❌ Insert trade failed: {str(e)}")
+            logger.error(f"❌ Insert trade failed: {e!s}")
             return False
 
     async def _flush_buffer(self) -> bool:
@@ -260,7 +260,7 @@ class QuestDBConnector:
                     return False
 
         except Exception as e:
-            logger.error(f"❌ Buffer flush failed: {str(e)}")
+            logger.error(f"❌ Buffer flush failed: {e!s}")
             return False
 
     async def query_ohlcv(
@@ -268,7 +268,7 @@ class QuestDBConnector:
         symbol: str,
         start_time: datetime,
         end_time: datetime,
-    ) -> List[TimeSeriesData]:
+    ) -> list[TimeSeriesData]:
         """
         Query OHLCV data via HTTP REST API.
 
@@ -295,14 +295,14 @@ class QuestDBConnector:
             return results
 
         except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
-            logger.error(f"❌ OHLCV query failed: {str(e)}")
+            logger.error(f"❌ OHLCV query failed: {e!s}")
             return []
 
     async def query_trades(
         self,
         symbol: Optional[str] = None,
         start_time: Optional[datetime] = None,
-    ) -> List[TradeRecord]:
+    ) -> list[TradeRecord]:
         """Query trade records via HTTP REST API."""
         if not self.connected or not self.session:
             return []
@@ -320,7 +320,7 @@ class QuestDBConnector:
             return results
 
         except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
-            logger.error(f"❌ Trade query failed: {str(e)}")
+            logger.error(f"❌ Trade query failed: {e!s}")
             return []
 
     async def get_latest_price(self, symbol: str) -> Optional[Decimal]:
@@ -341,10 +341,10 @@ class QuestDBConnector:
             return price
 
         except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
-            logger.error(f"❌ Failed to get latest price: {str(e)}")
+            logger.error(f"❌ Failed to get latest price: {e!s}")
             return None
 
-    async def get_statistics(self, symbol: str) -> Dict:
+    async def get_statistics(self, symbol: str) -> dict:
         """Get statistics for symbol via HTTP REST API."""
         if not self.connected or not self.session:
             return {}
@@ -367,10 +367,10 @@ class QuestDBConnector:
             return stats
 
         except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
-            logger.error(f"❌ Failed to get statistics: {str(e)}")
+            logger.error(f"❌ Failed to get statistics: {e!s}")
             return {}
 
-    def get_connection_status(self) -> Dict:
+    def get_connection_status(self) -> dict:
         """Get connection status."""
         return {
             "connected": self.connected,

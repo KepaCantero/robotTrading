@@ -20,7 +20,7 @@ from __future__ import annotations
 
 import logging
 from decimal import Decimal
-from typing import Any, Dict, List, Tuple
+from typing import Any
 
 import numpy as np
 import pandas as pd
@@ -78,9 +78,9 @@ class ParameterStabilityAnalyzer:
 
     def analyze(
         self,
-        is_params: List[Dict[str, Any]],
-        os_params: List[Dict[str, Any]],
-    ) -> List[ParameterStabilityResult]:
+        is_params: list[dict[str, Any]],
+        os_params: list[dict[str, Any]],
+    ) -> list[ParameterStabilityResult]:
         """
         Analyze parameter stability.
 
@@ -157,9 +157,9 @@ class ParameterStabilityAnalyzer:
 
     def _get_all_parameter_names(
         self,
-        is_params: List[Dict[str, Any]],
-        os_params: List[Dict[str, Any]],
-    ) -> List[str]:
+        is_params: list[dict[str, Any]],
+        os_params: list[dict[str, Any]],
+    ) -> list[str]:
         """Get all unique parameter names."""
         param_names = set()
 
@@ -173,9 +173,9 @@ class ParameterStabilityAnalyzer:
 
     def _extract_param_values(
         self,
-        param_list: List[Dict[str, Any]],
+        param_list: list[dict[str, Any]],
         param_name: str,
-    ) -> List[float]:
+    ) -> list[float]:
         """Extract parameter values as floats."""
         values = []
 
@@ -197,7 +197,7 @@ class ParameterStabilityAnalyzer:
         """
         Calculate stability score (0-100).
 
-        Score = 100 × (1 - coefficient_of_variation)
+        Score = 100 * (1 - coefficient_of_variation)
         CV = std / mean
 
         Args:
@@ -247,7 +247,7 @@ class ParameterStabilityAnalyzer:
 
     def detect_drift(
         self,
-        param_values: List[float],
+        param_values: list[float],
     ) -> bool:
         """
         Detect parameter drift using Mann-Kendall trend test.
@@ -283,7 +283,7 @@ class ParameterStabilityAnalyzer:
             z = (s - np.sign(s)) / np.sqrt(var_s)
 
             # Test for significance (p < 0.05, two-tailed)
-            # Critical value is approximately ±1.96
+            # Critical value is approximately +/-1.96
             return abs(z) > 1.96
 
         return False
@@ -293,8 +293,8 @@ class ParameterStabilityAnalyzer:
         param_name: str,
         stability_level: StabilityLevel,
         drift_detected: bool,
-        is_values: List[float],
-        os_values: List[float],
+        is_values: list[float],
+        os_values: list[float],
     ) -> str:
         """
         Generate recommendation for parameter stability.
@@ -354,7 +354,7 @@ class ParameterStabilityAnalyzer:
                 "or using regime-specific parameter values."
             )
 
-    def _estimate_reopt_frequency(self, values: List[float]) -> int:
+    def _estimate_reopt_frequency(self, values: list[float]) -> int:
         """
         Estimate optimal reoptimization frequency based on variability.
 
@@ -384,9 +384,9 @@ class ParameterStabilityAnalyzer:
 
     def compare_parameter_distributions(
         self,
-        is_params: List[Dict[str, Any]],
-        os_params: List[Dict[str, Any]],
-    ) -> Dict[str, Any]:
+        is_params: list[dict[str, Any]],
+        os_params: list[dict[str, Any]],
+    ) -> dict[str, Any]:
         """
         Compare parameter distributions between IS and OS.
 
@@ -423,7 +423,7 @@ class ParameterStabilityAnalyzer:
 
     def calculate_parameter_correlation(
         self,
-        params_history: List[Dict[str, Any]],
+        params_history: list[dict[str, Any]],
     ) -> pd.DataFrame:
         """
         Calculate correlation matrix between parameters.
@@ -453,9 +453,9 @@ class ParameterStabilityAnalyzer:
 
     def find_redundant_parameters(
         self,
-        params_history: List[Dict[str, Any]],
+        params_history: list[dict[str, Any]],
         threshold: float = 0.9,
-    ) -> List[Tuple[str, str]]:
+    ) -> list[tuple[str, str]]:
         """
         Find redundant parameters (highly correlated).
 
@@ -488,8 +488,8 @@ class ParameterStabilityAnalyzer:
 
 
 def calculate_parameter_stability(
-    param_values: List[float],
-) -> Dict[str, Any]:
+    param_values: list[float],
+) -> dict[str, Any]:
     """
     Quick calculation of parameter stability metrics.
 
@@ -537,7 +537,7 @@ def calculate_parameter_stability(
 
 
 def detect_parameter_drift_simple(
-    param_values: List[float],
+    param_values: list[float],
     window: int = 3,
 ) -> bool:
     """
@@ -567,8 +567,8 @@ def detect_parameter_drift_simple(
 
 
 def rank_parameters_by_stability(
-    stability_results: List[ParameterStabilityResult],
-) -> List[ParameterStabilityResult]:
+    stability_results: list[ParameterStabilityResult],
+) -> list[ParameterStabilityResult]:
     """
     Rank parameters by stability score.
 
@@ -586,9 +586,9 @@ def rank_parameters_by_stability(
 
 
 def filter_stable_parameters(
-    stability_results: List[ParameterStabilityResult],
+    stability_results: list[ParameterStabilityResult],
     min_score: float = 70.0,
-) -> List[str]:
+) -> list[str]:
     """
     Filter to get only stable parameters.
 

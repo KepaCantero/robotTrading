@@ -65,19 +65,19 @@ __all__ = [
     "PerformanceMetricsCalculator",
     # Risk Metrics Calculator
     "RiskMetricsCalculator",
+    "get_beta",
+    "get_calmar_ratio",
+    "get_correlation",
+    "get_cvar",
+    "get_information_ratio",
+    "get_max_drawdown",
+    "get_omega_ratio",
     # Convenience functions - Performance
     "get_sharpe_ratio",
     "get_sortino_ratio",
-    "get_calmar_ratio",
-    "get_omega_ratio",
-    "get_max_drawdown",
+    "get_tracking_error",
     "get_ulcer_index",
     # Convenience functions - Risk
     "get_var",
-    "get_cvar",
     "get_volatility",
-    "get_beta",
-    "get_correlation",
-    "get_tracking_error",
-    "get_information_ratio",
 ]

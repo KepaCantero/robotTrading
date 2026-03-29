@@ -19,7 +19,7 @@ Backward Compatibility:
 import logging
 from decimal import Decimal
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any, ClassVar, Optional
 
 import yaml
 from pydantic import BaseModel, Field
@@ -36,6 +36,8 @@ from app.shared.config.infrastructure import (
 )
 from app.shared.config.position_sizing import (
     AccountConfiguration as _AccountConfiguration,
+)
+from app.shared.config.position_sizing import (
     PortfolioAllocationThresholds,
     PositionSizingThresholds,
 )
@@ -92,7 +94,7 @@ class TradingThresholds(BaseModel):
     signal_cooldown_minutes: int = Field(
         default=10, description="Signal cooldown period in minutes"
     )
-    signal_compound_weights: Dict[str, float] = Field(
+    signal_compound_weights: dict[str, float] = Field(
         default_factory=lambda: {
             "confidence": 0.30,
             "volume_ratio": 0.25,
@@ -308,7 +310,7 @@ class TradingThresholds(BaseModel):
     low_confidence_threshold: float = Field(default=0.5, description="Low confidence threshold")
 
     # Crypto fallback prices (used when API is unavailable)
-    crypto_fallback_prices: Dict[str, Decimal] = Field(
+    crypto_fallback_prices: dict[str, Decimal] = Field(
         default_factory=lambda: {
             "BTC": Decimal("95000"),
             "ETH": Decimal("3500"),
@@ -1889,11 +1891,11 @@ class CentralizedConfig(SettingsBase):
     )
 
     # Strategy configurations
-    strategies: Dict[str, StrategyConfig] = Field(
+    strategies: dict[str, StrategyConfig] = Field(
         default_factory=dict, description="Strategy configurations"
     )
 
-    model_config = {
+    model_config: ClassVar[dict] = {
         "env_file": ".env",
         "env_file_encoding": "utf-8",
         "case_sensitive": False,
@@ -1910,7 +1912,7 @@ class CentralizedConfig(SettingsBase):
         if strategies_dir.exists():
             for strategy_file in strategies_dir.glob("*.yaml"):
                 try:
-                    with open(strategy_file, "r") as f:
+                    with open(strategy_file) as f:
                         strategy_data = yaml.safe_load(f)
 
                     strategy_name = strategy_file.stem
@@ -1935,7 +1937,7 @@ class CentralizedConfig(SettingsBase):
             raise AttributeError(f"Trading threshold '{threshold_name}' does not exist")
         return getattr(self.trading, threshold_name)
 
-    def update_strategy_config(self, strategy_name: str, updates: Dict[str, Any]) -> bool:
+    def update_strategy_config(self, strategy_name: str, updates: dict[str, Any]) -> bool:
         """Update configuration for a specific strategy."""
         if strategy_name in self.strategies:
             current_config = self.strategies[strategy_name]
@@ -1958,7 +1960,7 @@ class CentralizedConfig(SettingsBase):
         except (ValueError, TypeError, KeyError, AttributeError, IndexError):
             return False
 
-    def get_config_summary(self) -> Dict[str, Any]:
+    def get_config_summary(self) -> dict[str, Any]:
         """Get a summary of the current configuration."""
         return {
             "environment": self.environment.value,
@@ -2022,7 +2024,7 @@ def reload_config() -> CentralizedConfig:
     return _config
 
 
-def get_trading_threshold(threshold_name: str = None) -> Any:
+def get_trading_threshold(threshold_name: Optional[str] = None) -> Any:
     """Get trading thresholds or specific threshold."""
     if threshold_name is None:
         return get_config().trading
@@ -2053,45 +2055,45 @@ def get_spain_tax_config() -> SpainTaxConfig:
 AccountConfiguration = _AccountConfiguration
 
 __all__ = [
+    "APIConfig",
+    "AccountConfiguration",
     # Main configuration
     "CentralizedConfig",
-    "get_config",
-    "set_config",
-    "reload_config",
-    "get_trading_threshold",
-    "get_strategy_config",
-    "get_compliance_config",
-    "get_spain_tax_config",
+    "CircuitBreakerThresholds",
+    "ComplianceConfig",
+    "ConversionMultipliers",
+    "CoveredCallThresholds",
+    "CurrencyHedgingConfig",
+    "DatabaseConfig",
+    "DividendThresholds",
     # Configuration classes
     "Environment",
-    "TradingThresholds",
-    "StrategyConfig",
-    "DatabaseConfig",
-    "RedisConfig",
-    "APIConfig",
+    "FXCarryTradeThresholds",
+    "FundamentalAnalysisThresholds",
     "LoggingConfig",
+    "MarketMicrostructureThresholds",
     "MonitoringConfig",
-    "CurrencyHedgingConfig",
+    "PerformanceMetrics",
+    "PerformanceThresholds",
+    "PortfolioAllocationThresholds",
+    "PositionSizingThresholds",
+    "RedisConfig",
+    "RiskManagementThresholds",
     "SectorCountryDiversificationConfig",
-    "ComplianceConfig",
-    "SpainTaxConfig",
     # Modular components (for direct access)
     "SignalThresholds",
-    "RiskManagementThresholds",
-    "CircuitBreakerThresholds",
     "SlippageThresholds",
-    "PerformanceThresholds",
-    "MarketMicrostructureThresholds",
-    "TradingCostThresholds",
-    "PositionSizingThresholds",
-    "PortfolioAllocationThresholds",
-    "AccountConfiguration",
+    "SpainTaxConfig",
+    "StrategyConfig",
     "TechnicalIndicatorThresholds",
+    "TradingCostThresholds",
+    "TradingThresholds",
     "WindowSizes",
-    "ConversionMultipliers",
-    "PerformanceMetrics",
-    "FundamentalAnalysisThresholds",
-    "DividendThresholds",
-    "FXCarryTradeThresholds",
-    "CoveredCallThresholds",
+    "get_compliance_config",
+    "get_config",
+    "get_spain_tax_config",
+    "get_strategy_config",
+    "get_trading_threshold",
+    "reload_config",
+    "set_config",
 ]

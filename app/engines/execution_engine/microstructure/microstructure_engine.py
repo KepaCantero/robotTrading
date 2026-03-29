@@ -20,7 +20,7 @@ from __future__ import annotations
 import logging
 from dataclasses import dataclass
 from decimal import Decimal
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 
 import numpy as np
 import pandas as pd
@@ -49,27 +49,27 @@ class MicrostructureAnalysisResult:
     timestamp: pd.Timestamp
 
     # Order book analysis
-    book_analysis: Optional[BookAnalysisResult]
+    book_analysis: BookAnalysisResult | None
 
     # Bid-ask bounce
-    bounce_analysis: Optional[BounceAnalysisResult]
+    bounce_analysis: BounceAnalysisResult | None
 
     # Market impact
-    impact_estimate: Optional[MarketImpactEstimate]
+    impact_estimate: MarketImpactEstimate | None
 
     # Adverse selection
-    adverse_selection: Optional[AdverseSelectionResult]
-    vpin: Optional[float]
-    toxicity: Optional[float]
+    adverse_selection: AdverseSelectionResult | None
+    vpin: float | None
+    toxicity: float | None
 
     # Market quality
-    market_quality: Optional[MarketQualityMetrics]
+    market_quality: MarketQualityMetrics | None
 
     # Tick constraints
-    tick_analysis: Optional[TickSizeAnalysis]
+    tick_analysis: TickSizeAnalysis | None
 
     # Dark pool decision
-    dark_pool_decision: Optional[DarkPoolDecision]
+    dark_pool_decision: DarkPoolDecision | None
 
     # Overall recommendation
     should_trade: bool
@@ -86,24 +86,24 @@ class ExecutionPlan:
     order_side: str  # BUY or SELL
 
     # Venue allocation
-    venues: Dict[str, Decimal]  # venue -> size
+    venues: dict[str, Decimal]  # venue -> size
 
     # Timing
-    execution_schedule: List[Tuple[int, Decimal]]  # (time_seconds, size)
+    execution_schedule: list[tuple[int, Decimal]]  # (time_seconds, size)
 
     # Order types
     order_type: str  # MARKET, LIMIT, ICEBERG, VWAP, etc.
 
     # Price limits
-    limit_price: Optional[Decimal]
-    stop_price: Optional[Decimal]
+    limit_price: Decimal | None
+    stop_price: Decimal | None
 
     # Expected costs
     expected_cost_bps: Decimal
     expected_cost_usd: Decimal
 
     # Risk factors
-    risk_factors: Dict[str, float]
+    risk_factors: dict[str, float]
 
 
 class MarketMicrostructureEngine:
@@ -145,10 +145,10 @@ class MarketMicrostructureEngine:
         self,
         symbol: str,
         price_history: pd.DataFrame,
-        order_book: Optional[OrderBookSnapshot] = None,
-        executions: Optional[pd.DataFrame] = None,
-        order_size: Optional[Decimal] = None,
-        order_side: Optional[str] = None,
+        order_book: OrderBookSnapshot | None = None,
+        executions: pd.DataFrame | None = None,
+        order_size: Decimal | None = None,
+        order_side: str | None = None,
     ) -> MicrostructureAnalysisResult:
         """
         Perform comprehensive microstructure analysis.
@@ -319,10 +319,10 @@ class MarketMicrostructureEngine:
 
     def _determine_execution_strategy(
         self,
-        market_quality: Optional[MarketQualityMetrics],
-        adverse_selection: Optional[AdverseSelectionResult],
-        dark_pool_decision: Optional[DarkPoolDecision],
-        impact_estimate: Optional[MarketImpactEstimate],
+        market_quality: MarketQualityMetrics | None,
+        adverse_selection: AdverseSelectionResult | None,
+        dark_pool_decision: DarkPoolDecision | None,
+        impact_estimate: MarketImpactEstimate | None,
     ) -> str:
         """Determine optimal execution strategy."""
         if adverse_selection and adverse_selection.detected:
@@ -446,7 +446,7 @@ class MarketMicrostructureEngine:
     def get_market_microstructure_report(
         self,
         analysis: MicrostructureAnalysisResult,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Generate human-readable microstructure report.
 

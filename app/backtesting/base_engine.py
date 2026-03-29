@@ -17,17 +17,19 @@ from __future__ import annotations
 import logging
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from datetime import date, datetime
 from decimal import Decimal
 from enum import Enum
-from typing import Dict, Generic, List, Optional, Tuple, TypeVar, Union
+from typing import TYPE_CHECKING, Generic, TypeVar
 
 from pydantic import BaseModel
 
-from app.backtesting.models import Trade
-
 # SINGLE SOURCE OF TRUTH: Import CentralizedConfig
 from app.shared.config.centralized_config import get_config
+
+if TYPE_CHECKING:
+    from datetime import date, datetime
+
+    from app.backtesting.models import Trade
 
 logger = logging.getLogger(__name__)
 
@@ -76,10 +78,10 @@ class Position:
     quantity: Decimal
     entry_price: Decimal
     entry_time: datetime
-    stop_loss_price: Optional[Decimal] = None
-    take_profit_price: Optional[Decimal] = None
-    stop_loss_bps: Optional[Decimal] = None
-    take_profit_bps: Optional[Decimal] = None
+    stop_loss_price: Decimal | None = None
+    take_profit_price: Decimal | None = None
+    stop_loss_bps: Decimal | None = None
+    take_profit_bps: Decimal | None = None
 
 
 @dataclass
@@ -102,7 +104,7 @@ class ExecutionResult:
     # For positions with stops
     stop_loss_hit: bool = False
     take_profit_hit: bool = False
-    stop_execution_price: Optional[Decimal] = None
+    stop_execution_price: Decimal | None = None
 
 
 @dataclass
@@ -111,7 +113,7 @@ class SlippageParams:
 
     price: Decimal
     is_buy: bool
-    slippage_pct: Optional[Decimal] = None
+    slippage_pct: Decimal | None = None
     is_stop: bool = False
     is_volatile: bool = False
 
@@ -121,8 +123,8 @@ class EngineInitParams:
     """Parameters for base engine initialization."""
 
     config: BaseModel
-    strategy: Optional[object] = None
-    diagnostic_logger: Optional[object] = None
+    strategy: object | None = None
+    diagnostic_logger: object | None = None
     strategy_name: str = "unknown"
     enable_risk_envelope: bool = True
 
@@ -138,12 +140,12 @@ class BacktestState:
     """
 
     capital: Decimal = Decimal("100000")
-    positions: Dict[str, Decimal] = field(default_factory=dict)
-    cost_basis: Dict[str, Decimal] = field(default_factory=dict)
-    trades: List[Trade] = field(default_factory=list)
-    last_known_prices: Dict[str, Decimal] = field(default_factory=dict)
-    current_date: Optional[date] = None
-    equity_curve: List[Tuple[datetime, Decimal]] = field(default_factory=list)
+    positions: dict[str, Decimal] = field(default_factory=dict)
+    cost_basis: dict[str, Decimal] = field(default_factory=dict)
+    trades: list[Trade] = field(default_factory=list)
+    last_known_prices: dict[str, Decimal] = field(default_factory=dict)
+    current_date: date | None = None
+    equity_curve: list[tuple[datetime, Decimal]] = field(default_factory=list)
 
     def reset(self, initial_capital: Decimal) -> None:
         """Reset all state to initial values."""
@@ -155,7 +157,7 @@ class BacktestState:
         self.current_date = None
         self.equity_curve.clear()
 
-    def to_dict(self) -> Dict[str, Union[int, float, str, bool]]:
+    def to_dict(self) -> dict[str, int | float | str | bool]:
         """Convert state to dictionary for serialization."""
         return {
             "capital": float(self.capital),
@@ -196,8 +198,8 @@ class BaseBacktestEngine(ABC, Generic[ConfigType, ResultType]):
     def __init__(
         self,
         config: ConfigType,
-        strategy: Optional[object] = None,
-        diagnostic_logger: Optional[object] = None,
+        strategy: object | None = None,
+        diagnostic_logger: object | None = None,
         strategy_name: str = "unknown",
         enable_risk_envelope: bool = True,
     ):
@@ -242,10 +244,10 @@ class BaseBacktestEngine(ABC, Generic[ConfigType, ResultType]):
     @abstractmethod
     def run_backtest(
         self,
-        market_data: Union[List[object], object],
-        signals: Optional[List[object]] = None,
-        start_date: Optional[datetime] = None,
-        end_date: Optional[datetime] = None,
+        market_data: list[object] | object,
+        signals: list[object] | None = None,
+        start_date: datetime | None = None,
+        end_date: datetime | None = None,
         **kwargs,
     ) -> ResultType:
         """
@@ -313,7 +315,7 @@ class BaseBacktestEngine(ABC, Generic[ConfigType, ResultType]):
         if hasattr(self.config, "commission_per_trade") and self.config.commission_per_trade < 0:
             raise ValueError("Commission cannot be negative")
 
-    def _validate_market_data(self, market_data: List[object]) -> None:
+    def _validate_market_data(self, market_data: list[object]) -> None:
         """
         Validate market data before processing.
 
@@ -326,7 +328,7 @@ class BaseBacktestEngine(ABC, Generic[ConfigType, ResultType]):
         if not market_data:
             raise ValueError("No market data available for backtest")
 
-    def _validate_signals(self, signals: List[object]) -> None:
+    def _validate_signals(self, signals: list[object]) -> None:
         """
         Validate signals before processing.
 
@@ -462,7 +464,7 @@ class BaseBacktestEngine(ABC, Generic[ConfigType, ResultType]):
                 f"MarketData object has no 'close' or 'close_price' attribute: {type(md)}"
             )
 
-    def _build_price_map(self, market_data: List[object]) -> Dict[str, Decimal]:
+    def _build_price_map(self, market_data: list[object]) -> dict[str, Decimal]:
         """
         Build a price map from market data for accurate position closing.
 
@@ -480,9 +482,9 @@ class BaseBacktestEngine(ABC, Generic[ConfigType, ResultType]):
 
     def _sort_data_by_timestamp(
         self,
-        market_data: List[object],
-        signals: Optional[List[object]] = None,
-    ) -> Tuple[List[object], List[object]]:
+        market_data: list[object],
+        signals: list[object] | None = None,
+    ) -> tuple[list[object], list[object]]:
         """
         Sort market data and signals by timestamp.
 
@@ -502,11 +504,11 @@ class BaseBacktestEngine(ABC, Generic[ConfigType, ResultType]):
 
     def _filter_by_date_range(
         self,
-        data: List[object],
-        start_date: Optional[datetime],
-        end_date: Optional[datetime],
+        data: list[object],
+        start_date: datetime | None,
+        end_date: datetime | None,
         timestamp_attr: str = "timestamp",
-    ) -> List[object]:
+    ) -> list[object]:
         """
         Filter data by date range.
 
@@ -529,7 +531,7 @@ class BaseBacktestEngine(ABC, Generic[ConfigType, ResultType]):
     # PICKLE SUPPORT (for multiprocessing)
     # =========================================================================
 
-    def __getstate__(self) -> Dict[str, Union[int, float, str, bool]]:
+    def __getstate__(self) -> dict[str, int | float | str | bool]:
         """
         Get state for pickling (excludes unpicklable objects).
 
@@ -543,7 +545,7 @@ class BaseBacktestEngine(ABC, Generic[ConfigType, ResultType]):
             "enable_risk_envelope": self.enable_risk_envelope,
         }
 
-    def __setstate__(self, state: Dict[str, Union[int, float, str, bool]]) -> None:
+    def __setstate__(self, state: dict[str, int | float | str | bool]) -> None:
         """
         Restore state from pickling.
 

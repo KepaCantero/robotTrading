@@ -15,7 +15,7 @@ Validates:
 import logging
 from datetime import datetime
 from decimal import Decimal
-from typing import Dict, List, Optional
+from typing import Optional
 
 from .models import (
     CapitalViabilityAnalysis,
@@ -39,7 +39,7 @@ class ValidationEngine:
 
     def __init__(self):
         """Initialize validation engine."""
-        self.validation_history: List[ValidationResult] = []
+        self.validation_history: list[ValidationResult] = []
         # Lazy-load validators
         self._capital_viability_validator = None
         self._expensive_module_gate = None
@@ -192,7 +192,7 @@ class ValidationEngine:
                 is_viable=False,
                 required_alpha_pct=Decimal("0"),
                 expected_alpha_pct=Decimal("0"),
-                reason=f"Validation error: {str(e)}",
+                reason=f"Validation error: {e!s}",
                 recommendation="REVIEW_REQUIRED",
                 severity="CRITICAL",
             )
@@ -254,7 +254,7 @@ class ValidationEngine:
             logger.error(f"❌ Error validating learning viability: {e}")
             return LearningViabilityAnalysis(
                 learning_recommended=False,
-                reason=f"Validation error: {str(e)}",
+                reason=f"Validation error: {e!s}",
                 recommendation="REVIEW_REQUIRED",
                 severity="WARNING",
                 capital_tier="unknown",
@@ -265,7 +265,7 @@ class ValidationEngine:
     def _validate_module_viability(
         self,
         request: ValidationRequest,
-    ) -> Dict[str, ModuleViabilityAnalysis]:
+    ) -> dict[str, ModuleViabilityAnalysis]:
         """Validate expensive module viability using PHASE 0 gate."""
         try:
             gate = self._get_expensive_module_gate()
@@ -303,19 +303,24 @@ class ValidationEngine:
             logger.error(f"❌ Error validating module viability: {e}")
             return {}
 
-    def _validate_risk_metrics(self, request: ValidationRequest) -> List[str]:
+    def _validate_risk_metrics(self, request: ValidationRequest) -> list[str]:
         """Validate risk metrics from backtest."""
         warnings = []
 
         # Validate Sharpe ratio
-        if request.backtest_sharpe_ratio is not None and request.backtest_sharpe_ratio < Decimal("1.0"):
+        if request.backtest_sharpe_ratio is not None and request.backtest_sharpe_ratio < Decimal(
+            "1.0"
+        ):
             warnings.append(
                 f"⚠️  Low Sharpe ratio ({request.backtest_sharpe_ratio:.2f}) - "
                 "consider adjusting parameters"
             )
 
         # Validate max drawdown
-        if request.backtest_max_drawdown_pct is not None and request.backtest_max_drawdown_pct > Decimal("20"):
+        if (
+            request.backtest_max_drawdown_pct is not None
+            and request.backtest_max_drawdown_pct > Decimal("20")
+        ):
             warnings.append(
                 f"⚠️  High max drawdown ({request.backtest_max_drawdown_pct:.2f}%) - "
                 "consider adding risk management"
@@ -370,14 +375,14 @@ class ValidationEngine:
     async def get_validation_history(
         self,
         limit: Optional[int] = None,
-    ) -> List[ValidationResult]:
+    ) -> list[ValidationResult]:
         """Get validation history."""
         results = self.validation_history
         if limit:
             results = results[-limit:]
         return results
 
-    def get_validation_engine_status(self) -> Dict:
+    def get_validation_engine_status(self) -> dict:
         """Get validation engine operational status."""
         passed = sum(1 for r in self.validation_history if r.passed)
         total = len(self.validation_history)

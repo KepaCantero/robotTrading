@@ -9,7 +9,7 @@ import logging
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import Dict, List, Optional
+from typing import Optional
 
 import aiohttp
 import numpy as np
@@ -129,10 +129,10 @@ class AlertingRulesEngine:
 
     def __init__(self):
         """Initialize alerting rules engine."""
-        self.rules: Dict[str, AlertRule] = {}
-        self.alerts: List[Alert] = []
-        self.active_alerts: Dict[str, Alert] = {}  # rule_id -> Alert
-        self.metric_history: Dict[str, List[tuple]] = {}  # metric_name -> [(timestamp, value)]
+        self.rules: dict[str, AlertRule] = {}
+        self.alerts: list[Alert] = []
+        self.active_alerts: dict[str, Alert] = {}  # rule_id -> Alert
+        self.metric_history: dict[str, list[tuple]] = {}  # metric_name -> [(timestamp, value)]
         self.history_size = 1000  # Keep last N values per metric
         self.session: Optional[aiohttp.ClientSession] = None
         self._initialize_default_rules()
@@ -255,7 +255,7 @@ class AlertingRulesEngine:
         logger.info(f"✅ Disabled rule: {rule_id}")
         return True
 
-    async def evaluate_rules(self, metrics: Dict[str, float]) -> List[Alert]:
+    async def evaluate_rules(self, metrics: dict[str, float]) -> list[Alert]:
         """
         Evaluate all rules against current metric values.
 
@@ -379,7 +379,7 @@ class AlertingRulesEngine:
             try:
                 self.session = aiohttp.ClientSession()
             except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
-                logger.error(f"❌ Failed to create session: {str(e)}")
+                logger.error(f"❌ Failed to create session: {e!s}")
                 return
 
         try:
@@ -401,7 +401,7 @@ class AlertingRulesEngine:
                     logger.warning(f"⚠️ Webhook delivery failed (HTTP {resp.status}): {rule.name}")
 
         except (IntegrityError, OperationalError, DatabaseError, DataError, ProgrammingError) as e:
-            logger.error(f"❌ Webhook error: {str(e)}")
+            logger.error(f"❌ Webhook error: {e!s}")
 
     def _create_alert(self, rule: AlertRule, value: float, condition_met: bool) -> Alert:
         """Create an alert instance."""
@@ -425,19 +425,19 @@ class AlertingRulesEngine:
         self.alerts.append(alert)
         return alert
 
-    def get_active_alerts(self) -> List[Alert]:
+    def get_active_alerts(self) -> list[Alert]:
         """Get currently active alerts."""
         return list(self.active_alerts.values())
 
-    def get_recent_alerts(self, limit: int = 100) -> List[Alert]:
+    def get_recent_alerts(self, limit: int = 100) -> list[Alert]:
         """Get recent alerts."""
         return sorted(self.alerts, key=lambda a: a.triggered_at, reverse=True)[:limit]
 
-    def get_alerts_by_severity(self, severity: AlertSeverity) -> List[Alert]:
+    def get_alerts_by_severity(self, severity: AlertSeverity) -> list[Alert]:
         """Get alerts by severity."""
         return [a for a in self.alerts if a.severity == severity]
 
-    def get_rules_summary(self) -> Dict:
+    def get_rules_summary(self) -> dict:
         """Get summary of all rules."""
         return {
             "total_rules": len(self.rules),

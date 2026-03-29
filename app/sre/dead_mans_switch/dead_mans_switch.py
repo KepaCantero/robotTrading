@@ -9,6 +9,7 @@ If pings are missed, triggers alerts and automatic recovery actions.
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import logging
 import os
 import signal
@@ -16,12 +17,11 @@ from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Callable
 
 import aiosqlite
 
 from app.shared.utils.safe_parse import safe_parse
-import contextlib
 
 logger = logging.getLogger(__name__)
 
@@ -45,22 +45,22 @@ class HealthCheckConfig:
     grace_period_seconds: int = 30  # Grace period on startup
 
     # Health check endpoint
-    health_check_url: Optional[str] = None  # External health check URL
+    health_check_url: str | None = None  # External health check URL
     health_check_method: str = "GET"
     health_check_timeout: int = 10
 
     # Alerting
     alert_on_trigger: bool = True
-    alert_channels: List[str] = field(default_factory=lambda: ["email", "slack"])
+    alert_channels: list[str] = field(default_factory=lambda: ["email", "slack"])
 
     # Auto-recovery
     auto_restart: bool = True
-    restart_command: Optional[str] = None
+    restart_command: str | None = None
     max_restart_attempts: int = 3
 
     # Degraded mode
     enable_degraded_mode: bool = True
-    degraded_mode_actions: List[str] = field(default_factory=list)
+    degraded_mode_actions: list[str] = field(default_factory=list)
 
     # Database
     db_path: str = "data/dead_mans_switch.db"
@@ -68,7 +68,7 @@ class HealthCheckConfig:
     # Verification
     require_consecutive_failures: int = 3  # Require N consecutive failures
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
         return {
             "ping_interval_seconds": self.ping_interval_seconds,
@@ -94,11 +94,11 @@ class HeartbeatRecord:
 
     timestamp: datetime
     success: bool
-    response_time_ms: Optional[float] = None
-    error_message: Optional[str] = None
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    response_time_ms: float | None = None
+    error_message: str | None = None
+    metadata: dict[str, Any] = field(default_factory=dict)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
         return {
             "timestamp": self.timestamp.isoformat(),
@@ -115,21 +115,21 @@ class IncidentRecord:
 
     incident_id: str
     triggered_at: datetime
-    resolved_at: Optional[datetime]
+    resolved_at: datetime | None
     missed_pings: int
-    last_ping_at: Optional[datetime]
-    recovery_actions: List[str]
+    last_ping_at: datetime | None
+    recovery_actions: list[str]
     status: SwitchStatus
-    root_cause: Optional[str] = None
+    root_cause: str | None = None
 
     @property
-    def duration_minutes(self) -> Optional[int]:
+    def duration_minutes(self) -> int | None:
         """Calculate incident duration."""
         if not self.resolved_at:
             return None
         return int((self.resolved_at - self.triggered_at).total_seconds() / 60)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
         return {
             "incident_id": self.incident_id,
@@ -173,7 +173,7 @@ class DeadMansSwitch:
     def __init__(
         self,
         service_name: str,
-        config: Optional[HealthCheckConfig] = None,
+        config: HealthCheckConfig | None = None,
     ):
         """
         Initialize dead man's switch.
@@ -188,24 +188,24 @@ class DeadMansSwitch:
 
         # State
         self._status = SwitchStatus.ACTIVE
-        self._last_ping: Optional[datetime] = None
-        self._last_successful_ping: Optional[datetime] = None
+        self._last_ping: datetime | None = None
+        self._last_successful_ping: datetime | None = None
         self._consecutive_failures = 0
         self._restart_attempts = 0
-        self._current_incident: Optional[IncidentRecord] = None
+        self._current_incident: IncidentRecord | None = None
 
         # Heartbeat history
-        self._heartbeat_history: List[HeartbeatRecord] = []
-        self._incident_history: List[IncidentRecord] = []
+        self._heartbeat_history: list[HeartbeatRecord] = []
+        self._incident_history: list[IncidentRecord] = []
 
         # Monitoring task
-        self._monitor_task: Optional[asyncio.Task] = None
-        self._ping_task: Optional[asyncio.Task] = None
+        self._monitor_task: asyncio.Task | None = None
+        self._ping_task: asyncio.Task | None = None
 
         # Callbacks
-        self._on_trigger: Optional[Callable[[IncidentRecord], None]] = None
-        self._on_recover: Optional[Callable[[IncidentRecord], None]] = None
-        self._on_degraded: Optional[Callable[[], None]] = None
+        self._on_trigger: Callable[[IncidentRecord], None] | None = None
+        self._on_recover: Callable[[IncidentRecord], None] | None = None
+        self._on_degraded: Callable[[], None] | None = None
 
         # Lock
         self._lock = asyncio.Lock()
@@ -348,7 +348,7 @@ class DeadMansSwitch:
 
     async def ping(
         self,
-        metadata: Optional[Dict[str, Any]] = None,
+        metadata: dict[str, Any] | None = None,
     ) -> bool:
         """
         Send a heartbeat/ping to the dead man's switch.
@@ -411,21 +411,23 @@ class DeadMansSwitch:
         try:
             import aiohttp
 
-            async with aiohttp.ClientSession() as session:
-                async with session.request(
+            async with (
+                aiohttp.ClientSession() as session,
+                session.request(
                     self.config.health_check_method,
                     self.config.health_check_url,
                     timeout=self.config.health_check_timeout,
-                ) as response:
-                    if response.status >= 400:
-                        raise ConnectionError(f"Health check failed: HTTP {response.status}")
+                ) as response,
+            ):
+                if response.status >= 400:
+                    raise ConnectionError(f"Health check failed: HTTP {response.status}")
 
-                    await response.read()
+                await response.read()
 
-        except asyncio.TimeoutError:
-            raise TimeoutError("Health check timeout")
+        except asyncio.TimeoutError as exc:
+            raise TimeoutError("Health check timeout") from exc
         except Exception as e:
-            raise ConnectionError(f"Health check error: {e}")
+            raise ConnectionError(f"Health check error: {e}") from e
 
     async def _monitor_loop(self) -> None:
         """Monitor for missed pings."""
@@ -733,16 +735,16 @@ class DeadMansSwitch:
         return self._status
 
     @property
-    def last_ping(self) -> Optional[datetime]:
+    def last_ping(self) -> datetime | None:
         """Get last successful ping time."""
         return self._last_successful_ping
 
     @property
-    def current_incident(self) -> Optional[IncidentRecord]:
+    def current_incident(self) -> IncidentRecord | None:
         """Get current incident."""
         return self._current_incident
 
-    def get_summary(self) -> Dict[str, Any]:
+    def get_summary(self) -> dict[str, Any]:
         """Get dead man's switch summary."""
         return {
             "service": self.service_name,

@@ -4,17 +4,17 @@ Shared type definitions for backtesting module.
 Consolidates type aliases that were duplicated across multiple files.
 """
 
-from typing import Any, Dict, List, Union
+from typing import Any, Union
 
 # Type aliases for better type safety and consistency
-ConfigDict = Dict[str, Any]
-MetricsDict = Dict[str, Union[float, int, str, bool, None]]
-ParameterDict = Dict[str, Any]
-OptimizationHistoryEntry = Dict[str, Any]
-ValidationResultDict = Dict[str, Any]
-PerStrategyResultsDict = Dict[str, Dict[str, Any]]
-TradeList = List[Dict[str, Any]]
-SignalList = List[Dict[str, Any]]
+ConfigDict = dict[str, Any]
+MetricsDict = dict[str, Union[float, int, str, bool, None]]
+ParameterDict = dict[str, Any]
+OptimizationHistoryEntry = dict[str, Any]
+ValidationResultDict = dict[str, Any]
+PerStrategyResultsDict = dict[str, dict[str, Any]]
+TradeList = list[dict[str, Any]]
+SignalList = list[dict[str, Any]]
 
 
 # Standard metrics keys - use these constants to avoid typos

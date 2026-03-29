@@ -26,7 +26,7 @@ from dataclasses import dataclass
 from datetime import date, datetime
 from decimal import Decimal
 from enum import Enum
-from typing import Callable, Dict, List, Optional, Union
+from typing import Callable, Optional, Union
 
 from app.shared.utils.timezone_utils import utc_now
 
@@ -63,7 +63,7 @@ class CorporateAction:
     payable_date: Optional[date] = None
     processed_at: Optional[datetime] = None
 
-    def to_dict(self) -> Dict[str, Optional[str]]:
+    def to_dict(self) -> dict[str, Optional[str]]:
         """Convert to dictionary."""
         return {
             "action_type": self.action_type.value,
@@ -95,11 +95,15 @@ class CorporateAction:
         ] and (self.amount is None or self.amount < 0):
             raise ValueError(f"Amount must be non-negative for {self.action_type.value}")
 
-        if self.action_type in [
-            CorporateActionType.MERGER,
-            CorporateActionType.ACQUISITION,
-            CorporateActionType.SYMBOL_CHANGE,
-        ] and not self.new_symbol:
+        if (
+            self.action_type
+            in [
+                CorporateActionType.MERGER,
+                CorporateActionType.ACQUISITION,
+                CorporateActionType.SYMBOL_CHANGE,
+            ]
+            and not self.new_symbol
+        ):
             raise ValueError(f"new_symbol required for {self.action_type.value}")
 
 
@@ -139,7 +143,7 @@ class CorporateActionsHandler:
         self.on_action = on_action
 
         # Action history
-        self._processed_actions: Dict[str, CorporateAction] = {}
+        self._processed_actions: dict[str, CorporateAction] = {}
 
         # Statistics
         self._stats = {
@@ -159,7 +163,7 @@ class CorporateActionsHandler:
         ratio: Decimal,
         ex_date: date,
         record_date: Optional[date] = None,
-    ) -> Dict[str, Union[str, int, List[Dict[str, str]]]]:
+    ) -> dict[str, Union[str, int, list[dict[str, str]]]]:
         """
         Adjust positions for stock split.
 
@@ -264,7 +268,7 @@ class CorporateActionsHandler:
         ex_date: date,
         record_date: Optional[date] = None,
         payable_date: Optional[date] = None,
-    ) -> Dict[str, Optional[str]]:
+    ) -> dict[str, Optional[str]]:
         """
         Record dividend payment.
 
@@ -337,7 +341,7 @@ class CorporateActionsHandler:
         ratio: Decimal,
         ex_date: date,
         record_date: Optional[date] = None,
-    ) -> Dict[str, Union[str, int, List[Dict[str, str]]]]:
+    ) -> dict[str, Union[str, int, list[dict[str, str]]]]:
         """
         Convert positions to acquiring company.
 
@@ -449,7 +453,7 @@ class CorporateActionsHandler:
         delist_date: date,
         reason: Optional[str] = None,
         force_close: bool = True,
-    ) -> Dict[str, Optional[Union[str, int, List[Dict[str, Optional[str]]]]]]:
+    ) -> dict[str, Optional[Union[str, int, list[dict[str, Optional[str]]]]]]:
         """
         Handle delisting - close positions.
 
@@ -566,7 +570,7 @@ class CorporateActionsHandler:
         ratio: Decimal,
         ex_date: date,
         record_date: Optional[date] = None,
-    ) -> Dict[str, Union[str, int, List[Dict[str, str]]]]:
+    ) -> dict[str, Union[str, int, list[dict[str, str]]]]:
         """
         Handle spin-off - create new positions.
 
@@ -670,7 +674,7 @@ class CorporateActionsHandler:
         old_symbol: str,
         new_symbol: str,
         ex_date: date,
-    ) -> Dict[str, Union[str, int, List[Dict[str, str]]]]:
+    ) -> dict[str, Union[str, int, list[dict[str, str]]]]:
         """
         Handle symbol change (ticker rename).
 
@@ -745,7 +749,7 @@ class CorporateActionsHandler:
     # PRIVATE HELPER METHODS
     # ==========================================================================
 
-    async def _get_open_positions(self, symbol: str) -> List[object]:
+    async def _get_open_positions(self, symbol: str) -> list[object]:
         """
         Get open positions for symbol.
 
@@ -814,7 +818,7 @@ class CorporateActionsHandler:
         # when saving the portfolio state.
 
     async def _adjust_dividend_baseline(
-        self, symbol: str, amount: Decimal, positions: List[object]
+        self, symbol: str, amount: Decimal, positions: list[object]
     ) -> None:
         """
         Adjust baseline price for dividend to prevent false stop-loss triggers.
@@ -900,15 +904,15 @@ class CorporateActionsHandler:
     # PUBLIC QUERY METHODS
     # ==========================================================================
 
-    def get_processed_actions(self) -> List[CorporateAction]:
+    def get_processed_actions(self) -> list[CorporateAction]:
         """Get list of processed corporate actions."""
         return list(self._processed_actions.values())
 
-    def get_action_for_symbol(self, symbol: str) -> List[CorporateAction]:
+    def get_action_for_symbol(self, symbol: str) -> list[CorporateAction]:
         """Get all actions for a symbol."""
         return [action for action in self._processed_actions.values() if action.symbol == symbol]
 
-    def get_action_by_type(self, action_type: CorporateActionType) -> List[CorporateAction]:
+    def get_action_by_type(self, action_type: CorporateActionType) -> list[CorporateAction]:
         """Get all actions of a specific type."""
         return [
             action
@@ -916,7 +920,7 @@ class CorporateActionsHandler:
             if action.action_type == action_type
         ]
 
-    def get_stats(self) -> Dict[str, int]:
+    def get_stats(self) -> dict[str, int]:
         """Get handler statistics."""
         return self._stats.copy()
 

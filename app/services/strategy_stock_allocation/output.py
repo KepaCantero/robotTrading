@@ -62,7 +62,7 @@ class OutputGenerator:
         """
         Generate consolidated output DataFrame.
 
-        Columns: Ticker, Estrategia, Peso, Capital, SPS, Sortino, H_long, H_short, τ, σ_GARCH, Decision_Log.
+        Columns: Ticker, Estrategia, Peso, Capital, SPS, Sortino, H_long, H_short, tau, sigma_GARCH, Decision_Log.
 
         Args:
             allocations: Dictionary of allocations
@@ -85,8 +85,8 @@ class OutputGenerator:
                 ),
                 "H_long": f"{alloc.h_long:.4f}" if alloc.h_long is not None else "N/A",
                 "H_short": f"{alloc.h_short:.4f}" if alloc.h_short is not None else "N/A",
-                "τ": f"{alloc.half_life_tau:.2f}" if alloc.half_life_tau is not None else "N/A",
-                "σ_GARCH": (
+                "tau": f"{alloc.half_life_tau:.2f}" if alloc.half_life_tau is not None else "N/A",
+                "sigma_GARCH": (
                     f"{alloc.garch_volatility:.4f}" if alloc.garch_volatility is not None else "N/A"
                 ),
                 "Decision_Log": alloc.decision_log,
@@ -104,8 +104,8 @@ class OutputGenerator:
                 "Sortino": "N/A",
                 "H_long": "N/A",
                 "H_short": "N/A",
-                "τ": f"{pair.half_life_tau:.2f}" if pair.half_life_tau is not None else "N/A",
-                "σ_GARCH": "N/A",
+                "tau": f"{pair.half_life_tau:.2f}" if pair.half_life_tau is not None else "N/A",
+                "sigma_GARCH": "N/A",
                 "Decision_Log": pair.decision_log,
             }
             rows.append(row)

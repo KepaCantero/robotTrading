@@ -9,8 +9,10 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass, field
-from decimal import Decimal
-from typing import Any, Dict, List, Optional
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from decimal import Decimal
 
 logger = logging.getLogger(__name__)
 
@@ -32,17 +34,17 @@ class PreTradeAnalysis:
     # Basic decision
     can_execute: bool
     confidence: float
-    reasons: List[str] = field(default_factory=list)
+    reasons: list[str] = field(default_factory=list)
 
     # ========== 8 MAIN SYSTEMS ==========
 
     # 1. Backtesting Engine
     backtest_confidence: float = 0.0
-    backtest_period: Optional[str] = None
-    historical_sharpe: Optional[float] = None
+    backtest_period: str | None = None
+    historical_sharpe: float | None = None
 
     # 2. Risk Engine (main)
-    portfolio_var: Optional[float] = None
+    portfolio_var: float | None = None
     position_limit_ok: bool = True
     leverage_ratio: float = 0.0
     drawdown_limit_ok: bool = True
@@ -58,7 +60,7 @@ class PreTradeAnalysis:
     missing_data_detected: bool = False
 
     # 5. Context Engine (main)
-    market_regime: Optional[str] = None
+    market_regime: str | None = None
     volatility_regime: str = "NORMAL"
     correlation_regime: str = "NORMAL"
     regime_confidence: float = 0.0
@@ -81,22 +83,22 @@ class PreTradeAnalysis:
     # ========== 12 COMPLIANCE SYSTEMS ==========
 
     # 1. Ernest Chan (Rule 1)
-    chan_regime: Optional[str] = None
-    chan_factor_scores: Dict[str, float] = field(default_factory=dict)
+    chan_regime: str | None = None
+    chan_factor_scores: dict[str, float] = field(default_factory=dict)
     chan_optimization_method: str = "mean_variance"
-    chan_execution_algo: Optional[str] = None
+    chan_execution_algo: str | None = None
 
     # 2. Narang (Rule 2)
-    narang_alpha_signal: Optional[float] = None
+    narang_alpha_signal: float | None = None
     narang_alpha_quality: str = "UNKNOWN"
-    narang_recommended_holding_period: Optional[int] = None
+    narang_recommended_holding_period: int | None = None
     narang_transaction_cost_bps: float = 0.0
 
     # 3. Lopez de Prado (Rule 3)
     sample_weights_available: bool = False
-    meta_labeling_signal: Optional[float] = None
-    purged_cv_score: Optional[float] = None
-    mcc_metric: Optional[float] = None
+    meta_labeling_signal: float | None = None
+    purged_cv_score: float | None = None
+    mcc_metric: float | None = None
 
     # 4. Tomasini (Rule 4)
     tomasini_architecture_score: float = 100.0
@@ -105,7 +107,7 @@ class PreTradeAnalysis:
 
     # 5. Hastie (Rule 5)
     statistical_model_health: float = 100.0
-    cross_validation_score: Optional[float] = None
+    cross_validation_score: float | None = None
     regularization_strength: float = 0.0
     feature_importance_stable: bool = True
 
@@ -128,10 +130,10 @@ class PreTradeAnalysis:
     dependency_health: float = 100.0
 
     # 9. Hull (Rule 13)
-    hull_var_1d_95: Optional[float] = None
-    hull_var_1d_99: Optional[float] = None
-    hull_greeks_delta: Optional[float] = None
-    hull_greeks_gamma: Optional[float] = None
+    hull_var_1d_95: float | None = None
+    hull_var_1d_99: float | None = None
+    hull_greeks_delta: float | None = None
+    hull_greeks_gamma: float | None = None
     hull_stress_test_passed: bool = True
 
     # 10. Google SRE (Rule 20)
@@ -164,7 +166,7 @@ class PreTradeAnalysis:
     # Execution recommendations
     venue: str = "lit_exchange"
     algorithm: str = "LIMIT"
-    limit_price: Optional[Decimal] = None
+    limit_price: Decimal | None = None
 
     # System participation
     systems_contributed: int = 0
@@ -209,7 +211,7 @@ class PreTradeAnalysis:
         )
         return summary
 
-    def get_risk_summary(self) -> Dict[str, Any]:
+    def get_risk_summary(self) -> dict[str, Any]:
         """Get a summary of risk metrics."""
         logger.debug(
             "Generating risk summary",
@@ -228,7 +230,7 @@ class PreTradeAnalysis:
             "liquidity_score": self.liquidity_score,
         }
 
-    def get_compliance_summary(self) -> Dict[str, Any]:
+    def get_compliance_summary(self) -> dict[str, Any]:
         """Get a summary of compliance metrics."""
         logger.debug(
             "Generating compliance summary",

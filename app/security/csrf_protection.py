@@ -57,7 +57,7 @@ class CSRFTokenManager:
         if secret_key is None:
             import os
 
-            secret_key = os.getenv('SECRET_KEY')
+            secret_key = os.getenv("SECRET_KEY")
             if not secret_key or len(secret_key) < 32:
                 raise ValueError("SECRET_KEY environment variable required (min 32 characters)")
 
@@ -165,7 +165,7 @@ class CSRFTokenManager:
             raise
         except Exception as e:
             logger.error(f"CSRF token validation error: {e}")
-            raise HTTPException(status_code=403, detail="Invalid CSRF token")
+            raise HTTPException(status_code=403, detail="Invalid CSRF token") from e
 
     def rotate_token(self, old_token: str, user_id: Optional[str] = None) -> str:
         """

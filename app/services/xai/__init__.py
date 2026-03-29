@@ -25,26 +25,26 @@ from .models import (
 )
 
 __all__ = [
-    # Explainers
-    "SHAPExplainer",
-    "LIMEExplainer",
-    "FeatureImportanceCalculator",
-    # Models
-    "SHAPValue",
-    "SHAPExplanation",
-    "SHAPSummaryPlot",
-    "LIMEFeature",
-    "LIMEExplanation",
+    "ExplainabilityConfig",
     "FeatureImportance",
+    "FeatureImportanceCalculator",
     "FeatureImportanceReport",
-    "PredictionExplanation",
-    "PartialDependence",
-    "PDPExplanation",
     "ICEExplanation",
     "InterpretationReport",
-    "ExplainabilityConfig",
+    "LIMEExplainer",
+    "LIMEExplanation",
+    "LIMEFeature",
+    "PDPExplanation",
+    "PartialDependence",
+    "PredictionExplanation",
+    # Explainers
+    "SHAPExplainer",
+    "SHAPExplanation",
+    "SHAPSummaryPlot",
+    # Models
+    "SHAPValue",
+    "get_importance_calculator",
+    "get_lime_explainer",
     # Singletons
     "get_shap_explainer",
-    "get_lime_explainer",
-    "get_importance_calculator",
 ]

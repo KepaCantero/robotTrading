@@ -13,7 +13,7 @@ import asyncio
 import logging
 from datetime import datetime, timedelta
 from decimal import Decimal
-from typing import Any, Dict, List, Optional
+from typing import Any, ClassVar, Optional
 
 from requests.exceptions import HTTPError, RequestException
 
@@ -39,7 +39,7 @@ class CryptoDataFetcher:
     """
 
     # Major cryptocurrencies supported
-    DEFAULT_CRYPTOS = {
+    DEFAULT_CRYPTOS: ClassVar[dict] = {
         "BTC": {
             "name": "Bitcoin",
             "symbol": "BTC",
@@ -113,7 +113,7 @@ class CryptoDataFetcher:
     }
 
     # Default bid-ask spreads (in basis points) - higher than forex due to volatility
-    DEFAULT_SPREADS = {
+    DEFAULT_SPREADS: ClassVar[dict] = {
         "BTCUSD": Decimal("5"),  # 5 bps
         "ETHUSD": Decimal("10"),  # 10 bps
         "BNBUSD": Decimal("15"),
@@ -127,7 +127,7 @@ class CryptoDataFetcher:
     }
 
     # Crypto-specific risk metrics
-    RISK_METRICS = {
+    RISK_METRICS: ClassVar[dict] = {
         "BTC": {"volatility": Decimal("0.60"), "max_drawdown": Decimal("0.85")},
         "ETH": {"volatility": Decimal("0.80"), "max_drawdown": Decimal("0.90")},
         "altcoins": {"volatility": Decimal("1.20"), "max_drawdown": Decimal("0.95")},
@@ -135,8 +135,8 @@ class CryptoDataFetcher:
 
     def __init__(self):
         """Initialize crypto data fetcher with caching and reconnection manager."""
-        self.price_cache: Dict[str, tuple[Decimal, datetime]] = {}
-        self.ohlcv_cache: Dict[str, tuple[List, datetime]] = {}
+        self.price_cache: dict[str, tuple[Decimal, datetime]] = {}
+        self.ohlcv_cache: dict[str, tuple[list, datetime]] = {}
         self.price_cache_duration = timedelta(minutes=5)  # Crypto prices change fast
         self.ohlcv_cache_duration = timedelta(hours=1)
         self.api_timeout_seconds = 30
@@ -185,7 +185,7 @@ class CryptoDataFetcher:
             config=config,
         )
 
-    def get_available_cryptos(self) -> Dict[str, Dict]:
+    def get_available_cryptos(self) -> dict[str, dict]:
         """
         Get available cryptocurrencies for trading.
 
@@ -195,7 +195,7 @@ class CryptoDataFetcher:
         logger.debug(f"Fetching available cryptos (returning {len(self.DEFAULT_CRYPTOS)})")
         return self.DEFAULT_CRYPTOS.copy()
 
-    def get_crypto_pairs(self) -> List[str]:
+    def get_crypto_pairs(self) -> list[str]:
         """
         Get list of crypto trading pairs.
 
@@ -204,7 +204,7 @@ class CryptoDataFetcher:
         """
         return [crypto["pair"] for crypto in self.DEFAULT_CRYPTOS.values()]
 
-    def get_current_prices(self, symbols: List[str]) -> Dict[str, Decimal]:
+    def get_current_prices(self, symbols: list[str]) -> dict[str, Decimal]:
         """
         Get current prices for crypto symbols.
 
@@ -251,7 +251,7 @@ class CryptoDataFetcher:
 
     def get_historical_ohlcv(
         self, symbol: str, interval: str = "1h", limit: int = 100
-    ) -> Optional[List[Dict]]:
+    ) -> Optional[list[dict]]:
         """
         Get historical OHLCV data for a cryptocurrency.
 
@@ -276,7 +276,7 @@ class CryptoDataFetcher:
         # Try to fetch from API with reconnection manager
         try:
 
-            async def _fetch_ohlcv() -> Optional[List[Dict]]:
+            async def _fetch_ohlcv() -> Optional[list[dict]]:
                 """Internal fetch function."""
                 return self._fetch_ohlcv_from_api(pair, interval, limit)
 
@@ -291,7 +291,7 @@ class CryptoDataFetcher:
 
         return None
 
-    def get_connection_stats(self) -> Dict[str, Any]:
+    def get_connection_stats(self) -> dict[str, Any]:
         """Get reconnection statistics."""
         return self.reconnection_manager.get_stats()
 
@@ -308,7 +308,7 @@ class CryptoDataFetcher:
         logger.debug(f"Getting bid-ask spread for {pair}")
         return self.DEFAULT_SPREADS.get(pair, Decimal("15"))  # Default 15 bps for crypto
 
-    def get_risk_metrics(self, symbol: str) -> Dict[str, Decimal]:
+    def get_risk_metrics(self, symbol: str) -> dict[str, Decimal]:
         """
         Get risk metrics for a cryptocurrency.
 
@@ -373,7 +373,7 @@ class CryptoDataFetcher:
         # 3. WebSocket for real-time updates
         # For now, implicitly return None to trigger fallback pricing
 
-    def _fetch_ohlcv_from_api(self, pair: str, interval: str, limit: int) -> Optional[List[Dict]]:
+    def _fetch_ohlcv_from_api(self, pair: str, interval: str, limit: int) -> Optional[list[dict]]:
         """
         Fetch historical OHLCV data from exchange API.
 
@@ -411,7 +411,7 @@ class CryptoDataFetcher:
 
         # Try to get from config first
         config = get_config()
-        fallback_prices = getattr(config.trading, 'crypto_fallback_prices', None)
+        fallback_prices = getattr(config.trading, "crypto_fallback_prices", None)
 
         if fallback_prices:
             return fallback_prices.get(symbol, Decimal("1.0"))

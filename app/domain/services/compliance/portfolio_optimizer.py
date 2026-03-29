@@ -17,14 +17,16 @@ Date: 2026-02-03
 from __future__ import annotations
 
 import logging
-from decimal import Decimal
-from typing import Any, Dict, List, Optional, Union
+from typing import TYPE_CHECKING, Any
 
 import numpy as np
 import pandas as pd
 
 from app.domain.services.compliance.results import OptimizeResult
 from app.domain.services.compliance.service_registry import get_service_registry
+
+if TYPE_CHECKING:
+    from decimal import Decimal
 
 logger = logging.getLogger(__name__)
 
@@ -51,7 +53,7 @@ class PortfolioComplianceOptimizer:
     def __init__(self) -> None:
         """Initialize the portfolio optimizer with service registry."""
         self._registry = get_service_registry()
-        self._cache: Dict[str, Any] = {}
+        self._cache: dict[str, Any] = {}
 
     # =========================================================================
     # MAIN OPTIMIZE METHOD
@@ -59,12 +61,12 @@ class PortfolioComplianceOptimizer:
 
     def optimize_portfolio(
         self,
-        symbols: List[str],
+        symbols: list[str],
         returns: pd.DataFrame,
-        current_prices: Dict[str, Decimal],
-        price_histories: Optional[Dict[str, pd.DataFrame]] = None,
-        constraints: Optional[Dict[str, Any]] = None,
-        **kwargs: Union[str, int, float, bool, Dict, List],  # Extension point for additional params
+        current_prices: dict[str, Decimal],
+        price_histories: dict[str, pd.DataFrame] | None = None,
+        constraints: dict[str, Any] | None = None,
+        **kwargs: str | int | float | bool | dict | list,  # Extension point for additional params
     ) -> OptimizeResult:
         """
         Perform comprehensive portfolio optimization using all available services.
@@ -135,7 +137,7 @@ class PortfolioComplianceOptimizer:
 
     def _optimize_chan(
         self,
-        symbols: List[str],
+        symbols: list[str],
         returns: pd.DataFrame,
         result: OptimizeResult,
     ) -> bool:
@@ -172,7 +174,7 @@ class PortfolioComplianceOptimizer:
 
     def _apply_equal_weights(
         self,
-        symbols: List[str],
+        symbols: list[str],
         result: OptimizeResult,
     ) -> None:
         """Apply equal weights as fallback."""
@@ -185,7 +187,7 @@ class PortfolioComplianceOptimizer:
 
     def _adjust_for_regime(
         self,
-        price_histories: Dict[str, pd.DataFrame],
+        price_histories: dict[str, pd.DataFrame],
         result: OptimizeResult,
     ) -> None:
         """Adjust portfolio based on market regime."""
@@ -224,7 +226,7 @@ class PortfolioComplianceOptimizer:
 
     def _apply_constraints(
         self,
-        constraints: Dict[str, Any],
+        constraints: dict[str, Any],
         result: OptimizeResult,
     ) -> None:
         """Apply optimization constraints."""
@@ -252,9 +254,9 @@ class PortfolioComplianceOptimizer:
 
     def _cap_weights(
         self,
-        weights: Dict[str, float],
+        weights: dict[str, float],
         max_weight: float,
-    ) -> Dict[str, float]:
+    ) -> dict[str, float]:
         """Cap weights at maximum value."""
         capped = {}
         for symbol, weight in weights.items():
@@ -263,16 +265,16 @@ class PortfolioComplianceOptimizer:
 
     def _floor_weights(
         self,
-        weights: Dict[str, float],
+        weights: dict[str, float],
         min_weight: float,
-    ) -> Dict[str, float]:
+    ) -> dict[str, float]:
         """Floor weights at minimum value."""
         floored = {}
         for symbol, weight in weights.items():
             floored[symbol] = max(weight, min_weight)
         return floored
 
-    def get_available_optimizers(self) -> List[str]:
+    def get_available_optimizers(self) -> list[str]:
         """Get list of available optimization methods."""
         optimizers = []
 
@@ -286,9 +288,9 @@ class PortfolioComplianceOptimizer:
 
     def calculate_portfolio_metrics(
         self,
-        weights: Dict[str, float],
+        weights: dict[str, float],
         returns: pd.DataFrame,
-    ) -> Dict[str, float]:
+    ) -> dict[str, float]:
         """
         Calculate portfolio metrics given weights and returns.
 

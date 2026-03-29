@@ -17,7 +17,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from decimal import Decimal
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional, Set
+from typing import Any, Callable, Optional
 
 from httpx import HTTPError
 
@@ -59,7 +59,7 @@ class MarketState:
     last_update: datetime = field(default_factory=utc_now)
     halt_reason: Optional[str] = None
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
         return {
             "symbol": self.symbol,
@@ -83,7 +83,7 @@ class CircuitBreakerEvent:
     reason: str
     change_pct: Decimal
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
         return {
             "timestamp": self.timestamp.isoformat(),
@@ -97,7 +97,7 @@ class CircuitBreakerEvent:
 class CircuitBreakerConfig:
     """Configuration for circuit breaker behavior - uses centralized config."""
 
-    def __init__(self, custom_config: Optional[Dict] = None):
+    def __init__(self, custom_config: Optional[dict] = None):
         """Initialize config with centralized values."""
         tt = get_config().trading_thresholds
 
@@ -116,14 +116,14 @@ class CircuitBreakerConfig:
 
         # Monitoring settings - from centralized config
         self.check_interval_seconds = float(
-            getattr(tt, 'circuit_breaker_check_interval_seconds', 30.0)
+            getattr(tt, "circuit_breaker_check_interval_seconds", 30.0)
         )
         self.market_index_symbol: str = "SPY"
 
         # Auto-resume settings - from centralized config
         self.auto_resume_on_halt_lift: bool = True
         self.halt_check_interval_seconds = float(
-            getattr(tt, 'circuit_breaker_halt_check_interval_seconds', 60.0)
+            getattr(tt, "circuit_breaker_halt_check_interval_seconds", 60.0)
         )
 
         # Apply any custom overrides
@@ -181,11 +181,11 @@ class CircuitBreakerManager:
         self._halt_check_task: Optional[asyncio.Task] = None
 
         # Track market states
-        self._market_states: Dict[str, MarketState] = {}
-        self._halted_symbols: Set[str] = set()
+        self._market_states: dict[str, MarketState] = {}
+        self._halted_symbols: set[str] = set()
 
         # Event history
-        self._events: List[CircuitBreakerEvent] = []
+        self._events: list[CircuitBreakerEvent] = []
 
         logger.info("CircuitBreakerManager initialized")
 
@@ -284,10 +284,7 @@ class CircuitBreakerManager:
 
         # Check if market index is halted
         market_state = self._market_states.get(self.config.market_index_symbol)
-        if market_state and market_state.status != TradingStatus.TRADING:
-            return True
-
-        return False
+        return bool(market_state and market_state.status != TradingStatus.TRADING)
 
     async def _monitor_loop(self) -> None:
         """Check for halts every 30 seconds."""
@@ -320,8 +317,8 @@ class CircuitBreakerManager:
                 logger.warning(f"Could not fetch data for {self.config.market_index_symbol}")
                 return
 
-            current_price = to_decimal(getattr(index_data, 'last_price', 0))
-            change_pct = to_decimal(getattr(index_data, 'change_percent', 0))
+            current_price = to_decimal(getattr(index_data, "last_price", 0))
+            change_pct = to_decimal(getattr(index_data, "change_percent", 0))
 
             # Update market state
             self._market_states[self.config.market_index_symbol] = MarketState(
@@ -370,8 +367,8 @@ class CircuitBreakerManager:
                         continue
 
                     # Check for halt indicators
-                    is_halted = getattr(quote, 'is_halted', False)
-                    change_pct = to_decimal(getattr(quote, 'change_percent', 0))
+                    is_halted = getattr(quote, "is_halted", False)
+                    change_pct = to_decimal(getattr(quote, "change_percent", 0))
 
                     if is_halted:
                         await self._on_symbol_halted(symbol, "Trading halt detected")
@@ -380,7 +377,7 @@ class CircuitBreakerManager:
                     self._market_states[symbol] = MarketState(
                         symbol=symbol,
                         status=TradingStatus.HALTED if is_halted else TradingStatus.TRADING,
-                        current_price=to_decimal(getattr(quote, 'last_price', 0)),
+                        current_price=to_decimal(getattr(quote, "last_price", 0)),
                         change_pct=change_pct,
                         last_update=utc_now(),
                     )
@@ -400,7 +397,7 @@ class CircuitBreakerManager:
             if not vix_data:
                 return
 
-            vix = to_decimal(getattr(vix_data, 'last_price', 0))
+            vix = to_decimal(getattr(vix_data, "last_price", 0))
 
             if vix >= self.config.VIX_EXTREME:
                 await self.pause_all_trading(f"VIX at panic level: {vix}")
@@ -419,7 +416,7 @@ class CircuitBreakerManager:
     ) -> None:
         """Handle circuit breaker trigger."""
         logger.critical(
-            f"CIRCUIT BREAKER {level.value} TRIGGERED: " f"{symbol} down {abs(change_pct):.1%}"
+            f"CIRCUIT BREAKER {level.value} TRIGGERED: {symbol} down {abs(change_pct):.1%}"
         )
 
         # Pause all trading
@@ -480,7 +477,7 @@ class CircuitBreakerManager:
                 # Check if market is still halted
                 quote = await self.data_service.get_quote(symbol)
 
-                if quote and not getattr(quote, 'is_halted', True):
+                if quote and not getattr(quote, "is_halted", True):
                     # Halt lifted
                     await self.resume_all_trading(f"Halt lifted for {symbol}")
 
@@ -501,11 +498,11 @@ class CircuitBreakerManager:
         """Get current state of a market or symbol."""
         return self._market_states.get(symbol)
 
-    def get_halted_symbols(self) -> Set[str]:
+    def get_halted_symbols(self) -> set[str]:
         """Get set of currently halted symbols."""
         return self._halted_symbols.copy()
 
-    def get_events(self, limit: int = 100) -> List[CircuitBreakerEvent]:
+    def get_events(self, limit: int = 100) -> list[CircuitBreakerEvent]:
         """Get circuit breaker events."""
         return self._events[-limit:]
 

@@ -9,7 +9,7 @@ import logging
 from datetime import datetime
 from decimal import Decimal
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 import numpy as np
 from pydantic import BaseModel, Field, field_validator
@@ -87,7 +87,7 @@ class Asset(BaseModel):
     last_updated: datetime = Field(
         default_factory=datetime.utcnow, description="Last update timestamp"
     )
-    metadata: Dict[str, Any] = Field(default_factory=dict, description="Additional metadata")
+    metadata: dict[str, Any] = Field(default_factory=dict, description="Additional metadata")
 
     @field_validator("symbol")
     @classmethod
@@ -184,7 +184,7 @@ class AssetUniverse(BaseModel):
     """Asset universe representing a collection of assets for trading."""
 
     asset_class: AssetClass = Field(..., description="Asset class for this universe")
-    assets: List[Asset] = Field(default_factory=list, description="List of assets in universe")
+    assets: list[Asset] = Field(default_factory=list, description="List of assets in universe")
     top_n: int = Field(default=20, ge=1, le=100, description="Number of top assets to maintain")
     last_updated: datetime = Field(
         default_factory=datetime.utcnow, description="Last update timestamp"
@@ -303,7 +303,7 @@ class AssetUniverse(BaseModel):
         )
         return False
 
-    def get_top_liquid_assets(self, n: Optional[int] = None) -> List[Asset]:
+    def get_top_liquid_assets(self, n: Optional[int] = None) -> list[Asset]:
         """Get top N most liquid assets."""
         if n is None:
             n = self.top_n
@@ -427,7 +427,7 @@ class AssetRanking(BaseModel):
 
     asset_class: AssetClass = Field(..., description="Asset class")
     ranking_date: datetime = Field(default_factory=datetime.utcnow, description="Ranking date")
-    rankings: List[Dict[str, Any]] = Field(default_factory=list, description="Ranked assets")
+    rankings: list[dict[str, Any]] = Field(default_factory=list, description="Ranked assets")
 
     def add_ranking(
         self,
@@ -457,7 +457,7 @@ class AssetRanking(BaseModel):
         }
         self.rankings.append(ranking_entry)
 
-    def get_top_ranked(self, n: int = 20) -> List[Dict[str, Any]]:
+    def get_top_ranked(self, n: int = 20) -> list[dict[str, Any]]:
         """Get top N ranked assets."""
         sorted_rankings = sorted(self.rankings, key=lambda x: x["rank"])
         result = sorted_rankings[:n]
@@ -477,7 +477,7 @@ class AssetFilter(BaseModel):
     )
     min_volume: Decimal = Field(default=Decimal("100000"), ge=0, description="Minimum daily volume")
     max_spread: Decimal = Field(default=Decimal("0.01"), ge=0, description="Maximum spread")
-    exchanges: Optional[List[Exchange]] = Field(None, description="Allowed exchanges")
+    exchanges: Optional[list[Exchange]] = Field(None, description="Allowed exchanges")
     active_only: bool = Field(default=True, description="Only active assets")
 
     def matches(self, asset: Asset) -> bool:

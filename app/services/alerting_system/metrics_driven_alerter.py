@@ -11,7 +11,7 @@ import logging
 from dataclasses import dataclass, field
 from datetime import datetime
 from decimal import Decimal
-from typing import Dict, List, Optional
+from typing import Optional
 from uuid import uuid4
 
 from app.services.alerting_system.alert_manager import AlertManager
@@ -68,7 +68,7 @@ class EvaluationStatistics:
         self.last_evaluation_at = None
         self.evaluation_start_time = datetime.utcnow()
 
-    def to_dict(self) -> Dict:
+    def to_dict(self) -> dict:
         """Convert to dictionary."""
         uptime_seconds = (datetime.utcnow() - self.evaluation_start_time).total_seconds()
         return {
@@ -104,8 +104,8 @@ class MetricsDrivenAlerter:
         """Initialize the alerter."""
         self.alert_rule_engine = alert_rule_engine
         self.alert_manager = alert_manager
-        self.registered_rules: Dict[str, AlertRule] = {}
-        self.metric_query_configs: Dict[str, MetricQueryConfig] = {}
+        self.registered_rules: dict[str, AlertRule] = {}
+        self.metric_query_configs: dict[str, MetricQueryConfig] = {}
         self.evaluation_stats = EvaluationStatistics()
         self.is_running = False
         self._evaluation_task: Optional[asyncio.Task] = None
@@ -131,7 +131,7 @@ class MetricsDrivenAlerter:
 
     def register_rules(
         self,
-        rules: List[AlertRule],
+        rules: list[AlertRule],
         metric_query_config: MetricQueryConfig,
     ) -> None:
         """Register multiple alert rules with same metric config."""
@@ -140,8 +140,8 @@ class MetricsDrivenAlerter:
 
     async def evaluate_metric_rules(
         self,
-        metric_queries: Dict[str, Dict],
-    ) -> Dict:
+        metric_queries: dict[str, dict],
+    ) -> dict:
         """
         Single evaluation cycle - evaluate all registered rules.
 
@@ -203,7 +203,7 @@ class MetricsDrivenAlerter:
                 self.evaluation_stats.rules_evaluated += 1
 
             except (asyncio.TimeoutError, OSError) as e:
-                error_msg = f"Error evaluating rule {rule_id}: {str(e)}"
+                error_msg = f"Error evaluating rule {rule_id}: {e!s}"
                 self.logger.error(error_msg)
                 results["errors"].append(error_msg)
                 self.evaluation_stats.evaluation_errors += 1
@@ -223,7 +223,7 @@ class MetricsDrivenAlerter:
         self,
         rule: AlertRule,
         current_value: Decimal,
-        metric_data: Dict,
+        metric_data: dict,
     ) -> bool:
         """
         Evaluate threshold-based rules.
@@ -257,7 +257,7 @@ class MetricsDrivenAlerter:
         else:  # OR logic (default)
             return any(threshold_results)
 
-    def _evaluate_change_rule(self, change_rule: ChangeRule, metric_data: Dict) -> bool:
+    def _evaluate_change_rule(self, change_rule: ChangeRule, metric_data: dict) -> bool:
         """
         Evaluate percentage change rule.
 
@@ -293,7 +293,7 @@ class MetricsDrivenAlerter:
     async def _create_and_trigger_alert(
         self,
         rule: AlertRule,
-        metric_data: Dict,
+        metric_data: dict,
     ) -> AlertEvent:
         """
         Create and trigger an alert event.
@@ -366,7 +366,7 @@ class MetricsDrivenAlerter:
                     await self.evaluate_metric_rules(metric_queries)
 
                 except (asyncio.TimeoutError, OSError) as e:
-                    self.logger.error(f"Error in evaluation loop: {str(e)}")
+                    self.logger.error(f"Error in evaluation loop: {e!s}")
                     self.evaluation_stats.evaluation_errors += 1
 
                 # Wait before next evaluation
@@ -387,11 +387,11 @@ class MetricsDrivenAlerter:
             with contextlib.suppress(asyncio.CancelledError):
                 await self._evaluation_task
 
-    def get_evaluation_statistics(self) -> Dict:
+    def get_evaluation_statistics(self) -> dict:
         """Get current evaluation statistics."""
         return self.evaluation_stats.to_dict()
 
-    def get_registered_rules(self) -> Dict[str, AlertRule]:
+    def get_registered_rules(self) -> dict[str, AlertRule]:
         """Get all registered rules."""
         return dict(self.registered_rules)
 

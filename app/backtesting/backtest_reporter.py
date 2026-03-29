@@ -15,18 +15,23 @@ from __future__ import annotations
 import json
 import logging
 from datetime import datetime
-from decimal import Decimal
-from pathlib import Path
-from typing import Dict, List, Optional, Union
 
-import numpy as np
 import pandas as pd
 
 logger = logging.getLogger(__name__)
 
-from app.backtesting.core.memory_manager import AggressiveMemoryManager
+from typing import TYPE_CHECKING
+
 from app.backtesting.factories import StrategyFactory
-from app.backtesting.models import BacktestResult
+
+if TYPE_CHECKING:
+    from decimal import Decimal
+    from pathlib import Path
+
+    import numpy as np
+
+    from app.backtesting.core.memory_manager import AggressiveMemoryManager
+    from app.backtesting.models import BacktestResult
 
 
 class BacktestReporter:
@@ -44,11 +49,11 @@ class BacktestReporter:
     def __init__(
         self,
         memory_manager: AggressiveMemoryManager,
-        raw_config: Dict[str, Union[str, int, float, bool, List, Dict]],
+        raw_config: dict[str, str | int | float | bool | list | dict],
         output_dir: Path,
         meta_enabled: bool = False,
-        audit_trail: Optional[object] = None,
-        learning_storage: Optional[object] = None,
+        audit_trail: object | None = None,
+        learning_storage: object | None = None,
     ):
         """
         Initialize BacktestReporter.
@@ -68,7 +73,9 @@ class BacktestReporter:
         self.audit_trail = audit_trail
         self.learning_storage = learning_storage
 
-    def save_results(self, results: List[Dict[str, Union[str, int, float, bool, List, Dict]]]) -> None:
+    def save_results(
+        self, results: list[dict[str, str | int | float | bool | list | dict]]
+    ) -> None:
         """
         Save results to files.
 
@@ -79,28 +86,31 @@ class BacktestReporter:
             logger.warning("No results to save")
             return
 
-        reporting_config = self.raw_config.get('reporting', {})
-        output_formats = reporting_config.get('output_format', ['csv', 'json'])
+        reporting_config = self.raw_config.get("reporting", {})
+        output_formats = reporting_config.get("output_format", ["csv", "json"])
 
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
 
         # Save CSV
-        if 'csv' in output_formats:
+        if "csv" in output_formats:
             csv_path = self.output_dir / f"backtest_results_{timestamp}.csv"
             df = pd.DataFrame(results)
             df.to_csv(csv_path, index=False)
             logger.info(f"Results saved to CSV: {csv_path}")
 
         # Save JSON
-        if 'json' in output_formats:
+        if "json" in output_formats:
             json_path = self.output_dir / f"backtest_results_{timestamp}.json"
 
-            with open(json_path, 'w') as f:
+            with open(json_path, "w") as f:
                 json.dump(results, f, indent=2, default=str)
             logger.info(f"Results saved to JSON: {json_path}")
 
     def save_test_audit_and_weights(
-        self, result_dict: Dict[str, Union[str, int, float, bool, List, Dict]], test_type: str, strategy: object
+        self,
+        result_dict: dict[str, str | int | float | bool | list | dict],
+        test_type: str,
+        strategy: object,
     ) -> None:
         """
         Save audit and weights for a test.
@@ -119,14 +129,14 @@ class BacktestReporter:
                 self.audit_trail.log_test_result(result_dict)
 
             # Save weights if there's a learning engine
-            if self.learning_storage and result_dict.get('learning_engine'):
-                engine_type = result_dict['learning_engine']
-                if hasattr(strategy, 'learning_engine') and strategy.learning_engine:
+            if self.learning_storage and result_dict.get("learning_engine"):
+                engine_type = result_dict["learning_engine"]
+                if hasattr(strategy, "learning_engine") and strategy.learning_engine:
                     try:
                         self.learning_storage.save_weights(
                             engine_name=engine_type,
                             weights=strategy.learning_engine.model,
-                            test_id=result_dict['test_name'],
+                            test_id=result_dict["test_name"],
                             metrics=result_dict,
                         )
                     except Exception as e:
@@ -136,8 +146,11 @@ class BacktestReporter:
             logger.warning(f"Error saving audit/weights: {e}")
 
     async def save_weights_async(
-        self, engine_type: str, strategy: object, result_dict: Dict[str, Union[str, int, float, bool, List, Dict]]
-    ) -> Optional[str]:
+        self,
+        engine_type: str,
+        strategy: object,
+        result_dict: dict[str, str | int | float | bool | list | dict],
+    ) -> str | None:
         """
         Save learning engine weights asynchronously for better performance.
 
@@ -156,14 +169,14 @@ class BacktestReporter:
             weights_path = await self.learning_storage.save_weights_async(
                 engine_name=engine_type,
                 weights=strategy.learning_engine.model,
-                test_id=result_dict['test_name'],
+                test_id=result_dict["test_name"],
                 metadata={
-                    'test_type': result_dict.get('test_type', 'unknown'),
-                    'timestamp': result_dict.get('timestamp'),
-                    'metrics': {
-                        'total_pnl': result_dict.get('total_pnl'),
-                        'sharpe_ratio': result_dict.get('sharpe_ratio'),
-                        'total_trades': result_dict.get('total_trades'),
+                    "test_type": result_dict.get("test_type", "unknown"),
+                    "timestamp": result_dict.get("timestamp"),
+                    "metrics": {
+                        "total_pnl": result_dict.get("total_pnl"),
+                        "sharpe_ratio": result_dict.get("sharpe_ratio"),
+                        "total_trades": result_dict.get("total_trades"),
                     },
                 },
             )
@@ -173,7 +186,9 @@ class BacktestReporter:
             logger.warning(f"Could not save weights async: {e}")
             return None
 
-    async def finalize_meta_analysis(self, results: List[Dict[str, Union[str, int, float, bool, List, Dict]]]) -> Dict[str, Union[str, int, float, bool, List, Dict]]:
+    async def finalize_meta_analysis(
+        self, results: list[dict[str, str | int | float | bool | list | dict]]
+    ) -> dict[str, str | int | float | bool | list | dict]:
         """
         Finalize meta-analysis after all backtests complete.
 
@@ -189,7 +204,7 @@ class BacktestReporter:
         """
         if (
             not self.meta_enabled
-            or not hasattr(self, 'meta_analyzer')
+            or not hasattr(self, "meta_analyzer")
             or self.meta_analyzer is None
         ):
             logger.info("Meta-analysis not enabled, skipping")
@@ -216,18 +231,18 @@ class BacktestReporter:
             suggestions = self.meta_analyzer.generate_suggestions()
 
             summary = {
-                'total_results_analyzed': num_loaded,
-                'performance_summary': performance,
-                'outliers': outliers,
-                'suggestions': suggestions,
-                'analysis_timestamp': datetime.now().isoformat(),
-                'output_directory': str(self.output_dir),
+                "total_results_analyzed": num_loaded,
+                "performance_summary": performance,
+                "outliers": outliers,
+                "suggestions": suggestions,
+                "analysis_timestamp": datetime.now().isoformat(),
+                "output_directory": str(self.output_dir),
             }
 
             analysis_path = (
                 self.output_dir / f"meta_analysis_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
             )
-            with open(analysis_path, 'w') as f:
+            with open(analysis_path, "w") as f:
                 json.dump(summary, f, indent=2, default=str)
 
             logger.info(f"Meta-analysis complete: {analysis_path}")
@@ -244,7 +259,7 @@ class BacktestReporter:
 
     def calculate_consistent_metrics(
         self, result: BacktestResult, initial_capital: Decimal
-    ) -> Dict[str, float]:
+    ) -> dict[str, float]:
         """
         Calculate consistent metrics from BacktestResult.
 
@@ -262,12 +277,12 @@ class BacktestReporter:
         return_pct = (total_pnl / initial_capital_float * 100) if initial_capital_float > 0 else 0.0
 
         return {
-            'total_pnl': total_pnl,
-            'return_pct': return_pct,
-            'final_capital': final_capital_float,
+            "total_pnl": total_pnl,
+            "return_pct": return_pct,
+            "final_capital": final_capital_float,
         }
 
-    def get_results(self) -> List[Dict[str, Union[str, int, float, bool, List, Dict]]]:
+    def get_results(self) -> list[dict[str, str | int | float | bool | list | dict]]:
         """
         Get all stored results.
 
@@ -276,7 +291,7 @@ class BacktestReporter:
         """
         return self.memory_manager.get_results()
 
-    def get_memory_stats(self) -> Dict[str, Union[str, int, float, bool, List, Dict]]:
+    def get_memory_stats(self) -> dict[str, str | int | float | bool | list | dict]:
         """
         Get memory statistics.
 
@@ -285,7 +300,7 @@ class BacktestReporter:
         """
         return self.memory_manager.get_stats()
 
-    def create_strategy_config(self) -> Dict[str, Union[str, int, float, bool, List, Dict]]:
+    def create_strategy_config(self) -> dict[str, str | int | float | bool | list | dict]:
         """
         Create strategy configuration from YAML config.
 
@@ -297,61 +312,61 @@ class BacktestReporter:
             Strategy configuration dictionary
         """
         # Check for strategy.modules (from optimizer) FIRST
-        strategy_config = self.raw_config.get('strategy', {})
-        if 'modules' in strategy_config:
+        strategy_config = self.raw_config.get("strategy", {})
+        if "modules" in strategy_config:
             return {
-                'type': strategy_config.get('type', 'modular_momentum'),
-                'preset': strategy_config.get('preset', 'balanced'),
-                'modules': strategy_config['modules'],
-                'thresholds': strategy_config.get('thresholds', {}),
-                'risk_manager': strategy_config.get('risk_manager', {}),
+                "type": strategy_config.get("type", "modular_momentum"),
+                "preset": strategy_config.get("preset", "balanced"),
+                "modules": strategy_config["modules"],
+                "thresholds": strategy_config.get("thresholds", {}),
+                "risk_manager": strategy_config.get("risk_manager", {}),
             }
 
         # If config has modules.filters, create adapted config
-        if 'modules' in self.raw_config and 'filters' in self.raw_config['modules']:
+        if "modules" in self.raw_config and "filters" in self.raw_config["modules"]:
             filters_config = {}
-            filters = self.raw_config['modules']['filters']
+            filters = self.raw_config["modules"]["filters"]
 
             # Filter name mapping
             filter_name_map = {
-                'ema': 'ema_filter',
-                'rsi': 'rsi_filter',
-                'stoch_rsi': 'stoch_rsi_filter',
-                'momentum': 'momentum_filter',
-                'volume': 'volume_filter',
-                'atr': 'atr_filter',
+                "ema": "ema_filter",
+                "rsi": "rsi_filter",
+                "stoch_rsi": "stoch_rsi_filter",
+                "momentum": "momentum_filter",
+                "volume": "volume_filter",
+                "atr": "atr_filter",
             }
 
             for filter_name, filter_config in filters.items():
-                if filter_config.get('enabled', False):
-                    if filter_name.endswith('_filter'):
+                if filter_config.get("enabled", False):
+                    if filter_name.endswith("_filter"):
                         mapped_name = filter_name
                     else:
-                        mapped_name = filter_name_map.get(filter_name, f'{filter_name}_filter')
+                        mapped_name = filter_name_map.get(filter_name, f"{filter_name}_filter")
 
                     filter_params = {}
-                    for param_name, param_config in filter_config.get('parameters', {}).items():
-                        if 'default' in param_config:
-                            filter_params[param_name] = param_config['default']
+                    for param_name, param_config in filter_config.get("parameters", {}).items():
+                        if "default" in param_config:
+                            filter_params[param_name] = param_config["default"]
 
-                    filters_config[mapped_name] = {'enabled': True, **filter_params}
+                    filters_config[mapped_name] = {"enabled": True, **filter_params}
 
             return {
-                'type': 'modular_momentum',
-                'preset': 'custom',
-                'modules': filters_config,
-                'presets': {
-                    'custom': {
-                        'combination_mode': 'MAJORITY',
-                        'min_confidence': 0.7,
-                        'learning_mode': 'supervised',
+                "type": "modular_momentum",
+                "preset": "custom",
+                "modules": filters_config,
+                "presets": {
+                    "custom": {
+                        "combination_mode": "MAJORITY",
+                        "min_confidence": 0.7,
+                        "learning_mode": "supervised",
                     }
                 },
             }
 
         return StrategyFactory.create_baseline_config(self.raw_config)
 
-    def extract_filter_thresholds(self) -> Dict[str, Union[str, int, float, bool, List, Dict]]:
+    def extract_filter_thresholds(self) -> dict[str, str | int | float | bool | list | dict]:
         """
         Extract thresholds from filter configuration.
 
@@ -359,15 +374,15 @@ class BacktestReporter:
             Dictionary with thresholds for each active filter
         """
         thresholds = {}
-        filters_config = self.raw_config.get('modules', {}).get('filters', {})
+        filters_config = self.raw_config.get("modules", {}).get("filters", {})
 
         for filter_name, filter_config in filters_config.items():
-            if filter_config.get('enabled', False):
-                params = filter_config.get('parameters', {})
+            if filter_config.get("enabled", False):
+                params = filter_config.get("parameters", {})
                 for param_name, param_config in params.items():
-                    if 'default' in param_config:
+                    if "default" in param_config:
                         threshold_key = f"{filter_name}.{param_name}"
-                        thresholds[threshold_key] = param_config['default']
+                        thresholds[threshold_key] = param_config["default"]
 
         return thresholds
 
@@ -385,7 +400,9 @@ class BacktestReporter:
         """
         return StrategyFactory.get_strategy_name(strategy)
 
-    def extract_thresholds(self, strategy_config: Dict[str, Union[str, int, float, bool, List, Dict]]) -> Dict[str, Union[str, int, float, bool, List, Dict]]:
+    def extract_thresholds(
+        self, strategy_config: dict[str, str | int | float | bool | list | dict]
+    ) -> dict[str, str | int | float | bool | list | dict]:
         """
         Extract thresholds from strategy configuration.
 
@@ -399,7 +416,9 @@ class BacktestReporter:
         """
         return StrategyFactory.extract_thresholds(strategy_config)
 
-    def create_ablation_config(self, disabled_filter: str) -> Dict[str, Union[str, int, float, bool, List, Dict]]:
+    def create_ablation_config(
+        self, disabled_filter: str
+    ) -> dict[str, str | int | float | bool | list | dict]:
         """
         Create strategy configuration with a specific filter disabled for ablation testing.
 
@@ -409,38 +428,38 @@ class BacktestReporter:
         Returns:
             Strategy configuration dictionary with the specified filter disabled
         """
-        if 'modules' not in self.raw_config or 'filters' not in self.raw_config['modules']:
+        if "modules" not in self.raw_config or "filters" not in self.raw_config["modules"]:
             return self.create_strategy_config()
 
         filters_config = {}
-        filters = self.raw_config['modules']['filters']
+        filters = self.raw_config["modules"]["filters"]
 
         for filter_name, filter_config in filters.items():
             if filter_name == disabled_filter:
                 continue
 
-            if filter_config.get('enabled', False):
+            if filter_config.get("enabled", False):
                 filter_params = {}
-                for param_name, param_config in filter_config.get('parameters', {}).items():
-                    if 'default' in param_config:
-                        filter_params[param_name] = param_config['default']
+                for param_name, param_config in filter_config.get("parameters", {}).items():
+                    if "default" in param_config:
+                        filter_params[param_name] = param_config["default"]
 
-                filters_config[filter_name] = {'enabled': True, **filter_params}
+                filters_config[filter_name] = {"enabled": True, **filter_params}
 
         return {
-            'type': 'modular_momentum',
-            'preset': 'custom',
-            'modules': filters_config,
-            'presets': {
-                'custom': {
-                    'combination_mode': 'MAJORITY',
-                    'min_confidence': 0.7,
-                    'learning_mode': 'supervised',
+            "type": "modular_momentum",
+            "preset": "custom",
+            "modules": filters_config,
+            "presets": {
+                "custom": {
+                    "combination_mode": "MAJORITY",
+                    "min_confidence": 0.7,
+                    "learning_mode": "supervised",
                 }
             },
         }
 
-    def extract_transformer_predictions(self, strategy: object, quotes: List) -> 'np.ndarray':
+    def extract_transformer_predictions(self, strategy: object, quotes: list) -> np.ndarray:
         """
         Extract Transformer predictions from strategy.
 
@@ -456,13 +475,13 @@ class BacktestReporter:
         predictions = []
 
         try:
-            if hasattr(strategy, 'learning_engines') and 'transformer' in strategy.learning_engines:
-                transformer_engine = strategy.learning_engines['transformer']
+            if hasattr(strategy, "learning_engines") and "transformer" in strategy.learning_engines:
+                transformer_engine = strategy.learning_engines["transformer"]
 
                 for quote in quotes:
                     features = strategy._compute_features(quote)
                     prediction = transformer_engine.predict(features)
-                    predictions.append(prediction.get('confidence', 0.0))
+                    predictions.append(prediction.get("confidence", 0.0))
 
         except Exception as e:
             logger.warning(f"Error extracting Transformer predictions: {e}")
@@ -470,7 +489,7 @@ class BacktestReporter:
 
         return np.array(predictions)
 
-    def extract_transformer_feature_importance(self, strategy: object) -> Dict[str, float]:
+    def extract_transformer_feature_importance(self, strategy: object) -> dict[str, float]:
         """
         Extract feature importance from Transformer model.
 
@@ -483,15 +502,15 @@ class BacktestReporter:
             Dictionary with feature importance scores
         """
         try:
-            if hasattr(strategy, 'learning_engines') and 'transformer' in strategy.learning_engines:
-                transformer_engine = strategy.learning_engines['transformer']
+            if hasattr(strategy, "learning_engines") and "transformer" in strategy.learning_engines:
+                transformer_engine = strategy.learning_engines["transformer"]
 
-                if hasattr(transformer_engine, 'model') and transformer_engine.model is not None:
+                if hasattr(transformer_engine, "model") and transformer_engine.model is not None:
                     # Extract attention weights as proxy for feature importance
                     feature_importance = {
-                        'attention_score': 1.0,
-                        'sequence_importance': 0.8,
-                        'temporal_importance': 0.9,
+                        "attention_score": 1.0,
+                        "sequence_importance": 0.8,
+                        "temporal_importance": 0.9,
                     }
                     return feature_importance
 

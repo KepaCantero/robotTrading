@@ -19,7 +19,7 @@ import logging
 from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Optional, Union
 
 import numpy as np
 
@@ -44,7 +44,7 @@ class ParameterStabilityResult:
     """Stability analysis result for a single parameter."""
 
     parameter_name: str
-    window_results: List[WindowOptimalValue] = field(default_factory=list)
+    window_results: list[WindowOptimalValue] = field(default_factory=list)
     mean_optimal_value: float = 0.0
     variance: float = 0.0
     std_dev: float = 0.0
@@ -57,7 +57,7 @@ class ParameterStabilityResult:
     is_stable: bool = False  # True if score >= 70
     timestamp: datetime = field(default_factory=datetime.now)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for serialization."""
         return {
             "parameter_name": self.parameter_name,
@@ -81,12 +81,12 @@ class StabilityReport:
     """Comprehensive parameter stability analysis report."""
 
     analysis_date: datetime = field(default_factory=datetime.now)
-    parameter_results: Dict[str, ParameterStabilityResult] = field(default_factory=dict)
-    stable_parameters: List[str] = field(default_factory=list)
-    unstable_parameters: List[str] = field(default_factory=list)
+    parameter_results: dict[str, ParameterStabilityResult] = field(default_factory=dict)
+    stable_parameters: list[str] = field(default_factory=list)
+    unstable_parameters: list[str] = field(default_factory=list)
     overall_stability_score: float = 0.0  # 0-100
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for serialization."""
         return {
             "analysis_date": self.analysis_date.isoformat(),
@@ -117,7 +117,7 @@ class ParameterStabilityMetrics:
     periods or validation folds. Unstable parameters suggest curve-fitting.
     """
 
-    def __init__(self, config: Optional[Dict[str, Any]] = None):
+    def __init__(self, config: Optional[dict[str, Any]] = None):
         """
         Initialize parameter stability metrics analyzer.
 
@@ -127,7 +127,7 @@ class ParameterStabilityMetrics:
         self.config = config or self._get_default_config()
 
     @staticmethod
-    def _get_default_config() -> Dict[str, Any]:
+    def _get_default_config() -> dict[str, Any]:
         """Get default configuration."""
         return {
             "stability": {
@@ -145,7 +145,7 @@ class ParameterStabilityMetrics:
     def calculate_variance_across_windows(
         self,
         parameter_name: str,
-        window_results: List[WindowOptimalValue],
+        window_results: list[WindowOptimalValue],
     ) -> ParameterStabilityResult:
         """
         Calculate variance of parameter values across windows.
@@ -198,7 +198,7 @@ class ParameterStabilityMetrics:
     def calculate_convergence_speed(
         self,
         parameter_name: str,
-        window_results: List[WindowOptimalValue],
+        window_results: list[WindowOptimalValue],
     ) -> float:
         """
         Calculate convergence speed: how quickly parameter values stabilize.
@@ -222,10 +222,7 @@ class ParameterStabilityMetrics:
             weighted_sum += (value - np.mean(optimal_values)) ** 2 * weight
             weight_sum += weight
 
-        if weight_sum > 0:
-            weighted_variance = weighted_sum / weight_sum
-        else:
-            weighted_variance = 0.0
+        weighted_variance = weighted_sum / weight_sum if weight_sum > 0 else 0.0
 
         # Convergence speed: inverse relationship with variance
         # Low variance = high convergence (1.0)
@@ -276,7 +273,7 @@ class ParameterStabilityMetrics:
 
     def analyze_parameter_stability(
         self,
-        parameters: Dict[str, List[WindowOptimalValue]],
+        parameters: dict[str, list[WindowOptimalValue]],
     ) -> StabilityReport:
         """
         Analyze stability of multiple parameters across windows.
@@ -387,7 +384,7 @@ class ParameterStabilityMetrics:
     def rank_parameters_by_stability(
         self,
         report: StabilityReport,
-    ) -> List[Tuple[str, float]]:
+    ) -> list[tuple[str, float]]:
         """
         Rank parameters by stability score (highest to lowest).
 
@@ -404,7 +401,7 @@ class ParameterStabilityMetrics:
         self,
         report: StabilityReport,
         threshold: float = 50.0,
-    ) -> List[str]:
+    ) -> list[str]:
         """
         Detect parameters that may be curve-fitted (unstable).
 
@@ -424,7 +421,7 @@ class ParameterStabilityMetrics:
     def recommend_parameter_simplification(
         self,
         report: StabilityReport,
-    ) -> Dict[str, str]:
+    ) -> dict[str, str]:
         """
         Recommend which parameters could be simplified or removed.
 

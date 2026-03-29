@@ -42,7 +42,7 @@ warnings.warn(
 
 import logging
 from decimal import Decimal
-from typing import Dict, Tuple, Optional
+from typing import Optional
 
 logger = logging.getLogger(__name__)
 
@@ -83,11 +83,11 @@ class RiskEnvelopeValidator:
         symbol: str,
         trade_value: Decimal,
         strategy_name: str,
-        current_portfolio: Dict[str, Decimal],  # symbol -> current position value
-        strategy_positions: Dict[str, Decimal],  # symbol -> position value for this strategy
+        current_portfolio: dict[str, Decimal],  # symbol -> current position value
+        strategy_positions: dict[str, Decimal],  # symbol -> position value for this strategy
         total_capital: Decimal,
         strategy_capital: Decimal,
-    ) -> Tuple[bool, str]:
+    ) -> tuple[bool, str]:
         """
         Validate if a trade would exceed risk envelope constraints.
 
@@ -162,11 +162,11 @@ class RiskEnvelopeValidator:
 
     def get_current_exposures(
         self,
-        current_portfolio: Dict[str, Decimal],
-        strategy_positions: Dict[str, Decimal],
+        current_portfolio: dict[str, Decimal],
+        strategy_positions: dict[str, Decimal],
         total_capital: Decimal,
         strategy_capital: Decimal,
-    ) -> Dict[str, float]:
+    ) -> dict[str, float]:
         """
         Get current exposure metrics.
 

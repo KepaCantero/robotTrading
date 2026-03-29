@@ -9,7 +9,7 @@ different jurisdictions.
 import logging
 from abc import ABC, abstractmethod
 from decimal import Decimal
-from typing import Dict, List, Optional
+from typing import Optional
 
 logger = logging.getLogger(__name__)
 
@@ -23,7 +23,7 @@ class TaxEngine(ABC):
     and handling country-specific tax rules.
     """
 
-    def __init__(self, config: Optional[Dict] = None):
+    def __init__(self, config: Optional[dict] = None):
         """
         Initialize tax engine with optional configuration.
 
@@ -71,7 +71,7 @@ class TaxEngine(ABC):
             True if wash sale rule applies
         """
 
-    def get_tax_summary(self, capital_gains: Decimal, dividends: Decimal) -> Dict:
+    def get_tax_summary(self, capital_gains: Decimal, dividends: Decimal) -> dict:
         """
         Get a summary of tax liability.
 
@@ -108,7 +108,7 @@ class TaxEngine(ABC):
         """
         return Decimal("0")
 
-    def get_tax_brackets(self) -> List[Dict]:
+    def get_tax_brackets(self) -> list[dict]:
         """
         Get all tax brackets for display purposes.
 

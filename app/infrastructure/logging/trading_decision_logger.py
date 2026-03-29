@@ -3,9 +3,10 @@ Trading Decision Logger - R15, R28
 
 Logger append-only con correlation ID para todas las decisiones de trading.
 """
+
 import logging
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 from app.infrastructure.logging.append_only_log import AppendOnlyLog
 from app.services.logging.log_entry import LogEntry
@@ -159,7 +160,7 @@ class TradingDecisionLogger:
             },
         )
 
-    def get_logs_by_correlation_id(self, correlation_id: str) -> List[dict]:
+    def get_logs_by_correlation_id(self, correlation_id: str) -> list[dict]:
         """
         Obtener logs por correlation ID
 
@@ -183,7 +184,7 @@ class TradingDecisionLogger:
         )
         return entries
 
-    def export_for_hacienda(self, year: int) -> List[dict]:
+    def export_for_hacienda(self, year: int) -> list[dict]:
         """
         R28: Exportar logs para Hacienda (5 años)
 
@@ -215,7 +216,7 @@ class TradingDecisionLogger:
         )
 
         # Agrupar por correlation_id y formatear para Hacienda
-        operations: Dict[str, List[Dict[str, Any]]] = {}
+        operations: dict[str, list[dict[str, Any]]] = {}
         for entry in entries:
             corr_id = entry["correlation_id"]
             if corr_id not in operations:

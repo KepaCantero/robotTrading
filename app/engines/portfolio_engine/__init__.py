@@ -9,22 +9,22 @@ Proporciona interfaz clara para:
 - Integración con múltiples brokers
 """
 
+import contextlib
 import logging
 from abc import ABC, abstractmethod
 from datetime import datetime
 from decimal import Decimal
-from typing import Dict, List, Optional, Union
+from typing import Optional, Union
 
 from app.domain.models.portfolio import Portfolio, PortfolioProvider
 from app.engines.portfolio_engine.meta_learners.meta_learners import BaseMetaLearner
 from app.engines.portfolio_engine.optimizers.base import BaseOptimizer
 from app.engines.portfolio_engine.rebalancers.rebalancers import BaseRebalancer
 from app.services.portfolio_service import PortfolioService
-import contextlib
 
 logger = logging.getLogger(__name__)
 
-__all__ = ["PortfolioEngine", "BasePortfolioEngine"]
+__all__ = ["BasePortfolioEngine", "PortfolioEngine"]
 
 
 class BasePortfolioEngine(ABC):
@@ -34,7 +34,7 @@ class BasePortfolioEngine(ABC):
     Define la interfaz común para todos los engines de portfolio.
     """
 
-    def __init__(self, config: Dict[str, object]):
+    def __init__(self, config: dict[str, object]):
         """
         Inicializar Portfolio Engine.
 
@@ -42,7 +42,7 @@ class BasePortfolioEngine(ABC):
             config: Configuración del engine
         """
         self.config = config
-        self.enabled = config.get('enabled', True)
+        self.enabled = config.get("enabled", True)
         self.logger = logging.getLogger(self.__class__.__name__)
         self._initialized = False
 
@@ -54,13 +54,13 @@ class BasePortfolioEngine(ABC):
     def process(self, input_data: object) -> Optional[Portfolio]:
         """Procesar datos de entrada."""
 
-    def health_check(self) -> Dict[str, Union[bool, str]]:
+    def health_check(self) -> dict[str, Union[bool, str]]:
         """Verificar salud del engine."""
         return {
-            'status': 'healthy' if self.enabled else 'disabled',
-            'enabled': self.enabled,
-            'initialized': self._initialized,
-            'timestamp': datetime.utcnow().isoformat(),
+            "status": "healthy" if self.enabled else "disabled",
+            "enabled": self.enabled,
+            "initialized": self._initialized,
+            "timestamp": datetime.utcnow().isoformat(),
         }
 
 
@@ -75,7 +75,7 @@ class PortfolioEngine(BasePortfolioEngine):
     - Rebalanceo dinámico
     """
 
-    def __init__(self, config: Dict[str, object], provider: Optional[PortfolioProvider] = None):
+    def __init__(self, config: dict[str, object], provider: Optional[PortfolioProvider] = None):
         """
         Inicializar Portfolio Engine.
 
@@ -96,8 +96,8 @@ class PortfolioEngine(BasePortfolioEngine):
 
         # Estado del engine
         self.current_portfolio: Optional[Portfolio] = None
-        self.allocation_history: List[Dict[str, object]] = []
-        self.rebalance_history: List[Dict[str, object]] = []
+        self.allocation_history: list[dict[str, object]] = []
+        self.rebalance_history: list[dict[str, object]] = []
 
         # Métricas
         self.total_allocation_operations = 0
@@ -214,7 +214,9 @@ class PortfolioEngine(BasePortfolioEngine):
         self.meta_learner = meta_learner
         self.logger.info(f"Meta-learner configurado: {type(meta_learner).__name__}")
 
-    def get_allocation_by_asset_class(self) -> Dict[str, Dict[str, Union[Decimal, float, int, List[str], str]]]:
+    def get_allocation_by_asset_class(
+        self,
+    ) -> dict[str, dict[str, Union[Decimal, float, int, list[str], str]]]:
         """
         Obtener asignación agrupada por clase de activo.
 
@@ -228,33 +230,33 @@ class PortfolioEngine(BasePortfolioEngine):
         for position in self.current_portfolio.positions:
             asset_class = (
                 position.asset_class.value
-                if hasattr(position.asset_class, 'value')
+                if hasattr(position.asset_class, "value")
                 else str(position.asset_class)
             )
 
             if asset_class not in allocation:
                 allocation[asset_class] = {
-                    'positions': [],
-                    'total_value': Decimal("0"),
-                    'total_weight': 0.0,
-                    'count': 0,
+                    "positions": [],
+                    "total_value": Decimal("0"),
+                    "total_weight": 0.0,
+                    "count": 0,
                 }
 
-            allocation[asset_class]['positions'].append(position.symbol)
-            allocation[asset_class]['total_value'] += position.market_value
-            allocation[asset_class]['count'] += 1
+            allocation[asset_class]["positions"].append(position.symbol)
+            allocation[asset_class]["total_value"] += position.market_value
+            allocation[asset_class]["count"] += 1
 
         # Calcular pesos
         total_value = self.current_portfolio.total_equity
         if total_value > 0:
             for asset_class in allocation:
-                allocation[asset_class]['total_weight'] = float(
-                    allocation[asset_class]['total_value'] / total_value
+                allocation[asset_class]["total_weight"] = float(
+                    allocation[asset_class]["total_value"] / total_value
                 )
 
         return allocation
 
-    def get_status(self) -> Dict[str, Union[bool, str, int, None, Dict[str, int]]]:
+    def get_status(self) -> dict[str, Union[bool, str, int, None, dict[str, int]]]:
         """
         Obtener estado del engine.
 
@@ -262,27 +264,27 @@ class PortfolioEngine(BasePortfolioEngine):
             Dict con estado del engine
         """
         status = {
-            'enabled': self.enabled,
-            'initialized': self._initialized,
-            'has_optimizer': self.optimizer is not None,
-            'has_rebalancer': self.rebalancer is not None,
-            'has_meta_learner': self.meta_learner is not None,
-            'current_portfolio': (
+            "enabled": self.enabled,
+            "initialized": self._initialized,
+            "has_optimizer": self.optimizer is not None,
+            "has_rebalancer": self.rebalancer is not None,
+            "has_meta_learner": self.meta_learner is not None,
+            "current_portfolio": (
                 self.current_portfolio.portfolio_id if self.current_portfolio else None
             ),
-            'total_allocation_operations': self.total_allocation_operations,
-            'total_rebalance_operations': self.total_rebalance_operations,
-            'successful_operations': self.successful_operations,
-            'failed_operations': self.failed_operations,
-            'timestamp': datetime.utcnow().isoformat(),
+            "total_allocation_operations": self.total_allocation_operations,
+            "total_rebalance_operations": self.total_rebalance_operations,
+            "successful_operations": self.successful_operations,
+            "failed_operations": self.failed_operations,
+            "timestamp": datetime.utcnow().isoformat(),
         }
 
         if self.portfolio_service:
             with contextlib.suppress(ValueError, TypeError, KeyError, AttributeError, IndexError):
-                status['portfolio_service_status'] = {
-                    'operations_count': self.portfolio_service.operations_count,
-                    'successful_operations': self.portfolio_service.successful_operations,
-                    'failed_operations': self.portfolio_service.failed_operations,
+                status["portfolio_service_status"] = {
+                    "operations_count": self.portfolio_service.operations_count,
+                    "successful_operations": self.portfolio_service.successful_operations,
+                    "failed_operations": self.portfolio_service.failed_operations,
                 }
 
         return status

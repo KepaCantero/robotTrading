@@ -8,7 +8,7 @@ import json
 import logging
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -20,7 +20,7 @@ class SchemaVersioner:
     Trackea cambios en estructura de datos y permite migraciones.
     """
 
-    def __init__(self, config: Dict[str, Any] = None):
+    def __init__(self, config: Optional[dict[str, Any]] = None):
         """
         Inicializar versioner.
 
@@ -29,12 +29,12 @@ class SchemaVersioner:
         """
         config = config or {}
         self.schema_registry_path = Path(
-            config.get('schema_registry_path', 'schemas/registry.json')
+            config.get("schema_registry_path", "schemas/registry.json")
         )
         self.schema_registry_path.parent.mkdir(parents=True, exist_ok=True)
 
-        self.schemas: Dict[str, Dict[str, Any]] = {}
-        self.versions: Dict[str, List[str]] = {}  # schema_name -> [versions]
+        self.schemas: dict[str, dict[str, Any]] = {}
+        self.versions: dict[str, list[str]] = {}  # schema_name -> [versions]
 
         self._load_registry()
 
@@ -42,10 +42,10 @@ class SchemaVersioner:
         """Cargar registry de schemas."""
         if self.schema_registry_path.exists():
             try:
-                with open(self.schema_registry_path, 'r') as f:
+                with open(self.schema_registry_path) as f:
                     registry = json.load(f)
-                    self.schemas = registry.get('schemas', {})
-                    self.versions = registry.get('versions', {})
+                    self.schemas = registry.get("schemas", {})
+                    self.versions = registry.get("versions", {})
             except (FileNotFoundError, ValueError, KeyError, TypeError) as e:
                 logger.warning(f"Error cargando schema registry: {e}")
 
@@ -53,17 +53,17 @@ class SchemaVersioner:
         """Guardar registry de schemas."""
         try:
             registry = {
-                'schemas': self.schemas,
-                'versions': self.versions,
-                'updated_at': datetime.now().isoformat(),
+                "schemas": self.schemas,
+                "versions": self.versions,
+                "updated_at": datetime.now().isoformat(),
             }
-            with open(self.schema_registry_path, 'w') as f:
+            with open(self.schema_registry_path, "w") as f:
                 json.dump(registry, f, indent=2)
         except OSError as e:
             logger.error(f"Error guardando schema registry: {e}")
 
     def register_schema(
-        self, schema_name: str, version: str, schema_definition: Dict[str, Any]
+        self, schema_name: str, version: str, schema_definition: dict[str, Any]
     ) -> None:
         """
         Registrar un schema.
@@ -75,10 +75,10 @@ class SchemaVersioner:
         """
         key = f"{schema_name}_{version}"
         self.schemas[key] = {
-            'schema_name': schema_name,
-            'version': version,
-            'definition': schema_definition,
-            'registered_at': datetime.now().isoformat(),
+            "schema_name": schema_name,
+            "version": version,
+            "definition": schema_definition,
+            "registered_at": datetime.now().isoformat(),
         }
 
         if schema_name not in self.versions:
@@ -92,7 +92,7 @@ class SchemaVersioner:
 
     def get_schema(
         self, schema_name: str, version: Optional[str] = None
-    ) -> Optional[Dict[str, Any]]:
+    ) -> Optional[dict[str, Any]]:
         """
         Obtener schema.
 
@@ -108,7 +108,7 @@ class SchemaVersioner:
             return self.schemas.get(key)
         else:
             # Retornar versión más reciente
-            if schema_name in self.versions and self.versions[schema_name]:
+            if self.versions.get(schema_name):
                 latest_version = self.versions[schema_name][-1]
                 key = f"{schema_name}_{latest_version}"
                 return self.schemas.get(key)
@@ -117,13 +117,13 @@ class SchemaVersioner:
 
     def get_latest_version(self, schema_name: str) -> Optional[str]:
         """Obtener versión más reciente de un schema."""
-        if schema_name in self.versions and self.versions[schema_name]:
+        if self.versions.get(schema_name):
             return self.versions[schema_name][-1]
         return None
 
     def migrate_data(
-        self, data: Dict[str, Any], schema_name: str, from_version: str, to_version: str
-    ) -> Dict[str, Any]:
+        self, data: dict[str, Any], schema_name: str, from_version: str, to_version: str
+    ) -> dict[str, Any]:
         """
         Migrar datos de una versión a otra.
 
@@ -149,13 +149,13 @@ class SchemaVersioner:
         # Migración básica: mantener campos comunes, agregar defaults para nuevos
         migrated_data = data.copy()
 
-        from_schema['definition'].get('fields', {})
-        to_fields = to_schema['definition'].get('fields', {})
+        from_schema["definition"].get("fields", {})
+        to_fields = to_schema["definition"].get("fields", {})
 
         # Agregar campos nuevos con defaults
         for field_name, field_def in to_fields.items():
             if field_name not in migrated_data:
-                default_value = field_def.get('default')
+                default_value = field_def.get("default")
                 if default_value is not None:
                     migrated_data[field_name] = default_value
 

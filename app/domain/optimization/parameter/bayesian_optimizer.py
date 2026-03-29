@@ -10,7 +10,7 @@ Implements Bayesian optimization with:
 
 import logging
 from datetime import datetime
-from typing import Any, Callable, Dict, List, Optional, Tuple
+from typing import Any, Callable, Optional
 
 from tqdm import tqdm
 
@@ -116,7 +116,7 @@ class BayesianOptimizer(BaseOptimizer):
 
     async def optimize(
         self,
-        objective: Callable[[Dict[str, Any]], float],
+        objective: Callable[[dict[str, Any]], float],
         param_grid: ParameterGrid,
     ) -> OptimizationResult:
         """
@@ -277,7 +277,7 @@ class BayesianOptimizer(BaseOptimizer):
     def _objective_function(
         self,
         trial: "optuna.Trial",
-        objective: Callable[[Dict[str, Any]], float],
+        objective: Callable[[dict[str, Any]], float],
         param_grid: ParameterGrid,
     ) -> float:
         """
@@ -313,7 +313,7 @@ class BayesianOptimizer(BaseOptimizer):
         self,
         trial: "optuna.Trial",
         param_grid: ParameterGrid,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Define Optuna search space from parameter grid.
 
@@ -452,7 +452,7 @@ class MultiObjectiveBayesianOptimizer(BaseOptimizer):
         self,
         config: OptimizationConfig,
         n_trials: int = 100,
-        objectives: List[str] = None,
+        objectives: Optional[list[str]] = None,
     ):
         """
         Initialize multi-objective Bayesian optimizer.
@@ -472,7 +472,7 @@ class MultiObjectiveBayesianOptimizer(BaseOptimizer):
 
     async def optimize_multi_objective(
         self,
-        objectives: List[Callable[[Dict[str, Any]], float]],
+        objectives: list[Callable[[dict[str, Any]], float]],
         param_grid: ParameterGrid,
     ) -> "ParetoFront":
         """
@@ -554,7 +554,7 @@ class MultiObjectiveBayesianOptimizer(BaseOptimizer):
     def _extract_pareto_front(
         self,
         study: "optuna.Study",
-        objectives: List[Callable],
+        objectives: list[Callable],
     ) -> "ParetoFront":
         """Extract Pareto front from Optuna study."""
         best_trials = study.best_trials
@@ -584,8 +584,8 @@ class ParetoSolution:
 
     def __init__(
         self,
-        params: Dict[str, Any],
-        objectives: Tuple[float, ...],
+        params: dict[str, Any],
+        objectives: tuple[float, ...],
         trial_number: int,
     ):
         self.params = params
@@ -598,14 +598,14 @@ class ParetoFront:
 
     def __init__(
         self,
-        solutions: List[ParetoSolution],
-        scores: List[Tuple[float, ...]],
+        solutions: list[ParetoSolution],
+        scores: list[tuple[float, ...]],
         n_trials: int = 0,
     ):
         self.solutions = solutions
         self.scores = scores
         self.n_trials = n_trials
-        self.fronts: List[List[int]] = []
+        self.fronts: list[list[int]] = []
 
     def get_best_solution(self, objective_index: int = 0) -> Optional[ParetoSolution]:
         """Get best solution for a specific objective."""
@@ -616,7 +616,7 @@ class ParetoFront:
 
     def get_solution_by_criteria(
         self,
-        weights: Tuple[float, ...] = None,
+        weights: Optional[tuple[float, ...]] = None,
     ) -> Optional[ParetoSolution]:
         """
         Get solution by weighted criteria.
@@ -649,7 +649,7 @@ class ParetoFront:
 
         return best_solution
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary representation."""
         return {
             "solutions": [

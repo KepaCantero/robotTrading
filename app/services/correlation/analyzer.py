@@ -13,7 +13,7 @@ import contextlib
 import logging
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
-from typing import Dict, List, Optional, Set
+from typing import Optional
 
 import numpy as np
 import pandas as pd
@@ -42,7 +42,7 @@ class CorrelationCache:
 
     matrix: pd.DataFrame
     timestamp: datetime
-    symbols: Set[str]
+    symbols: set[str]
 
     def is_valid(self, max_age_seconds: float) -> bool:
         """Check if cache is still valid."""
@@ -94,9 +94,9 @@ class CorrelationAnalyzer:
         self._fallback_used = 0
 
         # Symbol metadata for fallback correlation
-        self._symbol_sectors: Dict[str, str] = {}
-        self._symbol_markets: Dict[str, str] = {}
-        self._symbol_asset_classes: Dict[str, str] = {}
+        self._symbol_sectors: dict[str, str] = {}
+        self._symbol_markets: dict[str, str] = {}
+        self._symbol_asset_classes: dict[str, str] = {}
 
         logger.info(
             f"CorrelationAnalyzer initialized with lookback={self.config.lookback_days} days, "
@@ -105,7 +105,7 @@ class CorrelationAnalyzer:
 
     async def calculate_correlation_matrix(
         self,
-        symbols: List[str],
+        symbols: list[str],
         lookback_days: Optional[int] = None,
     ) -> pd.DataFrame:
         """
@@ -166,7 +166,7 @@ class CorrelationAnalyzer:
 
         return correlation_matrix
 
-    async def update_correlation_cache(self, symbols: List[str]) -> None:
+    async def update_correlation_cache(self, symbols: list[str]) -> None:
         """
         Update correlation cache.
 
@@ -269,7 +269,7 @@ class CorrelationAnalyzer:
 
         return None
 
-    async def start_background_updates(self, symbols: List[str]) -> None:
+    async def start_background_updates(self, symbols: list[str]) -> None:
         """
         Start background task for periodic correlation updates.
 
@@ -328,9 +328,9 @@ class CorrelationAnalyzer:
 
     async def _fetch_historical_prices(
         self,
-        symbols: List[str],
+        symbols: list[str],
         lookback_days: int,
-    ) -> Dict[str, pd.Series]:
+    ) -> dict[str, pd.Series]:
         """
         Fetch historical prices for multiple symbols.
 
@@ -414,7 +414,7 @@ class CorrelationAnalyzer:
 
         return correlation_matrix
 
-    def _generate_fallback_matrix(self, symbols: List[str]) -> pd.DataFrame:
+    def _generate_fallback_matrix(self, symbols: list[str]) -> pd.DataFrame:
         """
         Generate fallback correlation matrix using simulated values.
 
@@ -480,7 +480,7 @@ class CorrelationAnalyzer:
         # Default fallback
         return self.config.fallback_value
 
-    async def _update_loop(self, symbols: Set[str]) -> None:
+    async def _update_loop(self, symbols: set[str]) -> None:
         """
         Background loop for periodic updates.
 
@@ -508,7 +508,7 @@ class CorrelationAnalyzer:
                 # Wait before retrying
                 await asyncio.sleep(60)
 
-    def get_statistics(self) -> Dict[str, any]:
+    def get_statistics(self) -> dict[str, any]:
         """
         Get correlation analyzer statistics.
 

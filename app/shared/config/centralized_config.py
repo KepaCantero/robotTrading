@@ -28,7 +28,7 @@ SOLID COMPLIANCE:
 import logging
 from enum import Enum
 from pathlib import Path
-from typing import TYPE_CHECKING, Dict, List, Optional, Union
+from typing import Optional, Union
 
 import yaml
 from pydantic import Field
@@ -61,9 +61,6 @@ from app.shared.config.params.strategy_config import StrategyConfig
 from app.shared.config.params.trading_thresholds import TradingThresholds
 from app.shared.config.signal_risk import MarketMicrostructureThresholds
 from app.shared.config.validators import CompositeConfigValidator
-
-if TYPE_CHECKING:
-    pass
 
 logger = logging.getLogger(__name__)
 
@@ -144,7 +141,7 @@ class CentralizedConfig(BaseSettings):
     )
 
     # Strategy configurations
-    strategies: Dict[str, StrategyConfig] = Field(
+    strategies: dict[str, StrategyConfig] = Field(
         default_factory=dict, description="Strategy configurations"
     )
 
@@ -171,7 +168,7 @@ class CentralizedConfig(BaseSettings):
             loaded_count = 0
             for strategy_file in strategies_dir.glob("*.yaml"):
                 try:
-                    with open(strategy_file, "r") as f:
+                    with open(strategy_file) as f:
                         strategy_data = yaml.safe_load(f)
 
                     strategy_name = strategy_file.stem
@@ -228,7 +225,7 @@ class CentralizedConfig(BaseSettings):
             raise AttributeError(f"Trading threshold '{threshold_name}' does not exist")
         return getattr(self.trading, threshold_name)
 
-    def update_strategy_config(self, strategy_name: str, updates: Dict[str, object]) -> bool:
+    def update_strategy_config(self, strategy_name: str, updates: dict[str, object]) -> bool:
         """Update configuration for a specific strategy."""
         if strategy_name in self.strategies:
             current_config = self.strategies[strategy_name]
@@ -262,7 +259,7 @@ class CentralizedConfig(BaseSettings):
             )
             return False
 
-    def get_config_summary(self) -> Dict[str, object]:
+    def get_config_summary(self) -> dict[str, object]:
         """Get a summary of the current configuration."""
         return {
             "environment": self.environment.value,
@@ -324,7 +321,9 @@ def get_config() -> CentralizedConfig:
     return _config
 
 
-def get_trading_threshold(threshold_name: str = None) -> Union[int, float, str, bool, "TradingThresholds"]:
+def get_trading_threshold(
+    threshold_name: Optional[str] = None,
+) -> Union[int, float, str, bool, "TradingThresholds"]:
     """Get trading thresholds or specific threshold."""
     if threshold_name is None:
         return get_config().trading
@@ -342,7 +341,7 @@ def get_compliance_config() -> ComplianceConfig:
     return get_config().compliance
 
 
-def get_strategy_stock_allocator_config(tier: Optional[str] = None) -> Dict[str, object]:
+def get_strategy_stock_allocator_config(tier: Optional[str] = None) -> dict[str, object]:
     """
     Get Strategy Stock Allocator configuration.
 
@@ -378,7 +377,7 @@ def validate_config() -> bool:
     return get_config().validate_configuration()
 
 
-def get_config_summary() -> Dict[str, object]:
+def get_config_summary() -> dict[str, object]:
     """Get a summary of the current configuration."""
     return get_config().get_config_summary()
 
@@ -400,7 +399,7 @@ def update_strategy_config(strategy_name: str, new_config: dict) -> bool:
 # =============================================================================
 
 
-def load_config_from_yaml(config_path: Path) -> Dict[str, object]:
+def load_config_from_yaml(config_path: Path) -> dict[str, object]:
     """
     Load configuration from YAML file.
 
@@ -417,7 +416,7 @@ def load_config_from_yaml(config_path: Path) -> Dict[str, object]:
     return _loader_registry.load(config_path)
 
 
-def load_config_from_json(config_path: Path) -> Dict[str, object]:
+def load_config_from_json(config_path: Path) -> dict[str, object]:
     """
     Load configuration from JSON file.
 
@@ -434,7 +433,7 @@ def load_config_from_json(config_path: Path) -> Dict[str, object]:
     return _loader_registry.load(config_path)
 
 
-def load_config_with_cache(config_path: Path) -> Dict[str, object]:
+def load_config_with_cache(config_path: Path) -> dict[str, object]:
     """
     Load configuration with caching support.
 
@@ -464,7 +463,7 @@ def load_config_with_cache(config_path: Path) -> Dict[str, object]:
 # =============================================================================
 
 
-def validate_atr_multipliers(atr_multipliers: Dict[str, float]) -> bool:
+def validate_atr_multipliers(atr_multipliers: dict[str, float]) -> bool:
     """
     Validate ATR multiplier configuration.
 
@@ -480,7 +479,7 @@ def validate_atr_multipliers(atr_multipliers: Dict[str, float]) -> bool:
     return validator.validate(atr_multipliers)
 
 
-def validate_risk_percentages(risk_config: Dict[str, float]) -> bool:
+def validate_risk_percentages(risk_config: dict[str, float]) -> bool:
     """
     Validate risk percentage configuration.
 
@@ -496,7 +495,7 @@ def validate_risk_percentages(risk_config: Dict[str, float]) -> bool:
     return validator.validate(risk_config)
 
 
-def validate_trading_symbols(symbols: List[str]) -> bool:
+def validate_trading_symbols(symbols: list[str]) -> bool:
     """
     Validate trading symbols list.
 
@@ -512,7 +511,7 @@ def validate_trading_symbols(symbols: List[str]) -> bool:
     return validator.validate({"symbols": symbols})
 
 
-def validate_dates(backtest_config: Dict[str, str]) -> bool:
+def validate_dates(backtest_config: dict[str, str]) -> bool:
     """
     Validate backtesting date configuration.
 
@@ -550,7 +549,9 @@ def validate_config_object(config: Configuration) -> bool:
 # =============================================================================
 
 
-def merge_configs(base_config: Dict[str, object], override_config: Dict[str, object]) -> Dict[str, object]:
+def merge_configs(
+    base_config: dict[str, object], override_config: dict[str, object]
+) -> dict[str, object]:
     """
     Merge two configuration dictionaries recursively.
 
@@ -570,12 +571,12 @@ def merge_configs(base_config: Dict[str, object], override_config: Dict[str, obj
 # =============================================================================
 
 
-def find_magic_values() -> Dict[str, List[str]]:
+def find_magic_values() -> dict[str, list[str]]:
     """Find magic values in the codebase that should be moved to configuration."""
     return get_default_magic_values()
 
 
-def migrate_magic_values(magic_values: Dict[str, List[str]]) -> bool:
+def migrate_magic_values(magic_values: dict[str, list[str]]) -> bool:
     """Migrate magic values to centralized configuration."""
     # This would implement the migration logic
     # For now, return True
@@ -614,7 +615,7 @@ def get_risk_percentage_bounds_property(risk_pct: float) -> bool:
     return isinstance(risk_pct, (int, float)) and 0 < risk_pct <= 1.0
 
 
-def get_symbols_list_property(symbols: List[str]) -> bool:
+def get_symbols_list_property(symbols: list[str]) -> bool:
     """
     Property-based test helper: Symbols list should be valid.
 
@@ -659,7 +660,11 @@ def update_atr_multiplier(config: Configuration, multiplier_name: str, value: fl
     config.set_atr_multiplier(multiplier_name, value)
 
 
-def update_nested_value(config: Configuration, key_path: str, value: Union[str, int, float, bool, Dict[str, object], List[object]]) -> None:
+def update_nested_value(
+    config: Configuration,
+    key_path: str,
+    value: Union[str, int, float, bool, dict[str, object], list[object]],
+) -> None:
     """
     Update nested configuration value.
 
@@ -712,7 +717,7 @@ def concurrent_read_access(config: Configuration, num_threads: int = 10) -> list
 # =============================================================================
 
 
-def full_config_workflow(config_path: Path) -> Dict[str, object]:
+def full_config_workflow(config_path: Path) -> dict[str, object]:
     """
     Test complete configuration workflow: load, access, validate.
 
@@ -744,7 +749,7 @@ def full_config_workflow(config_path: Path) -> Dict[str, object]:
     }
 
 
-def config_with_validation(config_dict: Dict[str, object]) -> tuple:
+def config_with_validation(config_dict: dict[str, object]) -> tuple:
     """
     Create configuration and perform full validation.
 
@@ -779,68 +784,68 @@ from app.shared.config.base.defaults import (
 
 # Re-export Configuration class for backward compatibility
 __all__ = [
+    "APIConfig",
+    "BacktestingConfig",
     # Main configuration
     "CentralizedConfig",
-    "Environment",
-    # Configuration groups (already in separate files)
-    "TradingThresholds",
-    "BacktestingConfig",
-    "StrategyConfig",
-    "DatabaseConfig",
-    "RedisConfig",
-    "APIConfig",
-    "LoggingConfig",
-    "MonitoringConfig",
-    "CurrencyHedgingConfig",
-    "SectorCountryDiversificationConfig",
     "ComplianceConfig",
-    "ShadowModeConfigParams",
-    "MarketMicrostructureThresholds",
     # Legacy wrapper
     "Configuration",
-    # Helper functions
-    "get_config",
-    "get_trading_threshold",
-    "get_strategy_config",
-    "get_compliance_config",
-    "get_strategy_stock_allocator_config",
-    "reload_config",
-    "set_config",
-    "validate_config",
-    "get_config_summary",
-    "validate_configuration",
-    "update_strategy_config",
-    # Loading functions
-    "load_config_from_yaml",
-    "load_config_from_json",
-    "load_config_with_cache",
-    # Validation functions
-    "validate_atr_multipliers",
-    "validate_risk_percentages",
-    "validate_trading_symbols",
-    "validate_dates",
-    "validate_config_object",
-    # Merging functions
-    "merge_configs",
+    "CurrencyHedgingConfig",
+    "DatabaseConfig",
+    "Environment",
+    "LoggingConfig",
+    "MarketMicrostructureThresholds",
+    "MonitoringConfig",
+    "RedisConfig",
+    "SectorCountryDiversificationConfig",
+    "ShadowModeConfigParams",
+    "StrategyConfig",
+    # Configuration groups (already in separate files)
+    "TradingThresholds",
+    # Thread safety
+    "concurrent_read_access",
+    "config_with_validation",
     # Migration utilities
     "find_magic_values",
-    "migrate_magic_values",
+    # Integration test functions
+    "full_config_workflow",
     # Property-based test helpers
     "get_atr_multiplier_positive_property",
-    "get_risk_percentage_bounds_property",
-    "get_symbols_list_property",
+    "get_compliance_config",
+    # Helper functions
+    "get_config",
+    "get_config_summary",
     "get_date_order_property",
+    # Default value functions
+    "get_default_atr_multiplier",
+    "get_default_max_position_size",
+    "get_default_risk_per_trade",
+    "get_default_stop_distance_pct",
+    "get_risk_percentage_bounds_property",
+    "get_strategy_config",
+    "get_strategy_stock_allocator_config",
+    "get_symbols_list_property",
+    "get_trading_threshold",
+    "load_config_from_json",
+    # Loading functions
+    "load_config_from_yaml",
+    "load_config_with_cache",
+    # Merging functions
+    "merge_configs",
+    "migrate_magic_values",
+    "reload_config",
+    "set_config",
     # Update helpers
     "update_atr_multiplier",
     "update_nested_value",
-    # Thread safety
-    "concurrent_read_access",
-    # Integration test functions
-    "full_config_workflow",
-    "config_with_validation",
-    # Default value functions
-    "get_default_atr_multiplier",
-    "get_default_risk_per_trade",
-    "get_default_max_position_size",
-    "get_default_stop_distance_pct",
+    "update_strategy_config",
+    # Validation functions
+    "validate_atr_multipliers",
+    "validate_config",
+    "validate_config_object",
+    "validate_configuration",
+    "validate_dates",
+    "validate_risk_percentages",
+    "validate_trading_symbols",
 ]

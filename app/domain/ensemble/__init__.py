@@ -25,17 +25,17 @@ from .pareto import ParetoFrontOptimizer
 from .strategy_combiner import StrategyCombiner
 
 __all__ = [
-    # Models
-    "ObjectiveConfig",
-    "ParetoSolution",
+    "CombinedPortfolio",
+    "CorrelationAnalyzer",
+    "CorrelationMetrics",
     "EnsembleConfig",
     "EnsembleSignal",
-    "StrategyAllocation",
-    "CombinedPortfolio",
-    "CorrelationMetrics",
+    "EnsembleVoting",
+    # Models
+    "ObjectiveConfig",
     # Classes
     "ParetoFrontOptimizer",
-    "EnsembleVoting",
+    "ParetoSolution",
+    "StrategyAllocation",
     "StrategyCombiner",
-    "CorrelationAnalyzer",
 ]

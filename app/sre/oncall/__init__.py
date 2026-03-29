@@ -45,21 +45,21 @@ from .rotation import OncallRotation, RotationConfig
 logger = logging.getLogger(__name__)
 
 __all__ = [
-    # Rotation
-    "OncallRotation",
-    "RotationConfig",
-    # Escalation
-    "EscalationPolicy",
-    "EscalationPath",
     "EscalationLevel",
     "EscalationManager",
+    "EscalationPath",
+    # Escalation
+    "EscalationPolicy",
     # Handoff
     "HandoffManager",
     "HandoffSession",
     # Dashboard
     "OncallDashboard",
-    "OncallStatus",
     "OncallMetrics",
+    # Rotation
+    "OncallRotation",
+    "OncallStatus",
+    "RotationConfig",
 ]
 
 # Version info

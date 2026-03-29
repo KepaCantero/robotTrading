@@ -23,7 +23,9 @@ from typing import Union
 logger = logging.getLogger(__name__)
 
 
-def safe_parse(value: str, default: Union[str, int, float, bool, list, dict, tuple, set, None] = None) -> Union[str, int, float, bool, list, dict, tuple, set, None]:
+def safe_parse(
+    value: str, default: Union[str, int, float, bool, list, dict, tuple, set, None] = None
+) -> Union[str, int, float, bool, list, dict, tuple, set, None]:
     """
     Safely parse a string containing a Python literal.
 
@@ -64,7 +66,9 @@ def safe_parse(value: str, default: Union[str, int, float, bool, list, dict, tup
         return default
 
 
-def safe_parse_json(value: str, default: Union[str, int, float, bool, list, dict, None] = None) -> Union[str, int, float, bool, list, dict, None]:
+def safe_parse_json(
+    value: str, default: Union[str, int, float, bool, list, dict, None] = None
+) -> Union[str, int, float, bool, list, dict, None]:
     """
     Safely parse a JSON string.
 
@@ -96,7 +100,9 @@ def safe_parse_json(value: str, default: Union[str, int, float, bool, list, dict
         return default
 
 
-def safe_parse_with_fallback(value: str, default: Union[str, int, float, bool, list, dict, tuple, set, None] = None) -> Union[str, int, float, bool, list, dict, tuple, set, None]:
+def safe_parse_with_fallback(
+    value: str, default: Union[str, int, float, bool, list, dict, tuple, set, None] = None
+) -> Union[str, int, float, bool, list, dict, tuple, set, None]:
     """
     Try parsing with literal_eval first, then JSON, then return default.
 

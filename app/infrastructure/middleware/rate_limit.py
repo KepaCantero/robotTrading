@@ -15,7 +15,7 @@ import asyncio
 import time
 from collections import defaultdict
 from dataclasses import dataclass, field
-from typing import Callable, Dict, Optional, Tuple
+from typing import Callable, Optional
 
 from fastapi import HTTPException, Request, Response
 from fastapi.responses import JSONResponse
@@ -106,7 +106,7 @@ class InMemoryRateLimiter:
 
     def __init__(self, config: RateLimitConfig):
         self.config = config
-        self._buckets: Dict[str, TokenBucket] = defaultdict(
+        self._buckets: dict[str, TokenBucket] = defaultdict(
             lambda: TokenBucket(
                 tokens=config.default_rate,
                 capacity=config.default_rate,
@@ -143,7 +143,7 @@ class InMemoryRateLimiter:
         # Read operations
         return self.config.read_rate
 
-    async def check_rate_limit(self, request: Request) -> Tuple[bool, Optional[TokenBucket]]:
+    async def check_rate_limit(self, request: Request) -> tuple[bool, Optional[TokenBucket]]:
         """
         Check if request is within rate limit.
 
@@ -184,7 +184,7 @@ class InMemoryRateLimiter:
 
             return allowed, bucket
 
-    def get_rate_limit_headers(self, bucket: Optional[TokenBucket]) -> Dict[str, str]:
+    def get_rate_limit_headers(self, bucket: Optional[TokenBucket]) -> dict[str, str]:
         """
         Get rate limit headers for response.
 
@@ -286,7 +286,7 @@ class RateLimitDecorator:
         self.requests_per_minute = requests_per_minute
         self.burst_size = burst_size
         self.key_func = key_func or self._default_key_func
-        self._buckets: Dict[str, TokenBucket] = defaultdict(
+        self._buckets: dict[str, TokenBucket] = defaultdict(
             lambda: TokenBucket(
                 tokens=requests_per_minute,
                 capacity=requests_per_minute + burst_size,

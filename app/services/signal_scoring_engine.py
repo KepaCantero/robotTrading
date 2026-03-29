@@ -10,7 +10,7 @@ Uses centralized configuration for all thresholds and parameters.
 import logging
 from collections import defaultdict
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional, Set
+from typing import Any, Optional
 
 from app.domain.models.signal import Signal, SignalType
 from app.shared.config.centralized_config import get_config
@@ -26,7 +26,7 @@ class SignalCooldownManager:
     Uses centralized configuration for cooldown period.
     """
 
-    def __init__(self, default_cooldown_minutes: int = None):
+    def __init__(self, default_cooldown_minutes: Optional[int] = None):
         """
         Initialize cooldown manager.
 
@@ -37,8 +37,8 @@ class SignalCooldownManager:
             config = get_config()
             default_cooldown_minutes = config.trading.signal_cooldown_minutes
         self.default_cooldown_minutes = default_cooldown_minutes
-        self.cooldowns: Dict[str, datetime] = {}  # symbol -> last_signal_time
-        self.custom_cooldowns: Dict[str, int] = {}  # symbol -> custom_cooldown_minutes
+        self.cooldowns: dict[str, datetime] = {}  # symbol -> last_signal_time
+        self.custom_cooldowns: dict[str, int] = {}  # symbol -> custom_cooldown_minutes
 
     def set_cooldown(self, symbol: str, minutes: Optional[int] = None) -> None:
         """
@@ -108,7 +108,7 @@ class SignalCompoundScoreCalculator:
     def calculate_compound_score(
         self,
         signal: Signal,
-        metadata: Optional[Dict[str, Any]] = None,
+        metadata: Optional[dict[str, Any]] = None,
     ) -> float:
         """
         Calculate compound score for a signal.
@@ -147,7 +147,7 @@ class SignalCompoundScoreCalculator:
         # Scale to 0-100
         return round(compound_score * 100, 2)
 
-    def _extract_volume_ratio(self, signal: Signal, metadata: Optional[Dict[str, Any]]) -> float:
+    def _extract_volume_ratio(self, signal: Signal, metadata: Optional[dict[str, Any]]) -> float:
         """Extract and normalize volume ratio from signal metadata."""
         if not metadata:
             return 0.5  # Neutral value if no data
@@ -160,7 +160,7 @@ class SignalCompoundScoreCalculator:
         else:
             return max(0.0, 0.5 - (1.0 - volume_ratio))
 
-    def _extract_volatility(self, signal: Signal, metadata: Optional[Dict[str, Any]]) -> float:
+    def _extract_volatility(self, signal: Signal, metadata: Optional[dict[str, Any]]) -> float:
         """Extract and normalize volatility from signal metadata."""
         if not metadata:
             return 0.5  # Neutral value if no data
@@ -205,8 +205,8 @@ class SignalPriorityRanker:
 
     def __init__(
         self,
-        high_threshold: float = None,
-        medium_threshold: float = None,
+        high_threshold: Optional[float] = None,
+        medium_threshold: Optional[float] = None,
     ):
         """
         Initialize priority ranker.
@@ -244,7 +244,7 @@ class SignalPriorityRanker:
         else:
             return "low"
 
-    def rank_signals(self, signals: List[Signal]) -> List[Signal]:
+    def rank_signals(self, signals: list[Signal]) -> list[Signal]:
         """
         Rank signals by priority.
 
@@ -274,15 +274,15 @@ class PortfolioSignalFilter:
     """
 
     def __init__(self):
-        self.active_positions: Set[str] = set()  # Set of symbols with active positions
-        self.recent_signals: Dict[str, List[Signal]] = defaultdict(list)
+        self.active_positions: set[str] = set()  # Set of symbols with active positions
+        self.recent_signals: dict[str, list[Signal]] = defaultdict(list)
 
     def filter_signals(
         self,
-        signals: List[Signal],
+        signals: list[Signal],
         max_signals_per_symbol: int = 1,
         filter_conflicts: bool = True,
-    ) -> List[Signal]:
+    ) -> list[Signal]:
         """
         Filter signals to avoid conflicts.
 
@@ -298,7 +298,7 @@ class PortfolioSignalFilter:
             return signals
 
         filtered = []
-        symbol_signals: Dict[str, List[Signal]] = defaultdict(list)
+        symbol_signals: dict[str, list[Signal]] = defaultdict(list)
 
         # Group signals by symbol
         for signal in signals:
@@ -349,7 +349,7 @@ class SignalScoringEngine:
     Uses centralized configuration for all parameters.
     """
 
-    def __init__(self, default_cooldown_minutes: int = None):
+    def __init__(self, default_cooldown_minutes: Optional[int] = None):
         """
         Initialize signal scoring engine.
 
@@ -364,7 +364,7 @@ class SignalScoringEngine:
         self.priority_ranker = SignalPriorityRanker()
         self.portfolio_filter = PortfolioSignalFilter()
 
-    def process_signals(self, signals: List[Signal], apply_cooldown: bool = True) -> List[Signal]:
+    def process_signals(self, signals: list[Signal], apply_cooldown: bool = True) -> list[Signal]:
         """
         Process signals through the complete scoring pipeline.
 
@@ -417,7 +417,7 @@ class SignalScoringEngine:
 
         return ranked_signals
 
-    def get_scoring_stats(self) -> Dict[str, Any]:
+    def get_scoring_stats(self) -> dict[str, Any]:
         """Get scoring statistics."""
         return {
             "active_cooldowns": len(self.cooldown_manager.cooldowns),
@@ -429,7 +429,7 @@ class SignalScoringEngine:
 _signal_scoring_engine: Optional[SignalScoringEngine] = None
 
 
-def get_signal_scoring_engine(cooldown_minutes: int = None) -> SignalScoringEngine:
+def get_signal_scoring_engine(cooldown_minutes: Optional[int] = None) -> SignalScoringEngine:
     """Get global signal scoring engine instance. Uses config if cooldown_minutes is None."""
     global _signal_scoring_engine
     if _signal_scoring_engine is None:

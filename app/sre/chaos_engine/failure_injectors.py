@@ -18,6 +18,7 @@ Safety:
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import logging
 import random
 import signal
@@ -26,10 +27,9 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from decimal import Decimal
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Callable
 
 import psutil
-import contextlib
 
 logger = logging.getLogger(__name__)
 
@@ -51,14 +51,14 @@ class InjectionConfig:
     injection_type: InjectionType
     intensity: Decimal = Decimal("0.5")  # 0.0 to 1.0
     duration_seconds: int = 60
-    targets: List[str] = field(default_factory=list)
+    targets: list[str] = field(default_factory=list)
     blast_radius: str = "limited"  # limited, widespread
 
     # Type-specific config
-    delay_ms: Optional[int] = None
-    error_rate: Optional[Decimal] = None
-    cpu_limit: Optional[Decimal] = None
-    memory_limit_mb: Optional[int] = None
+    delay_ms: int | None = None
+    error_rate: Decimal | None = None
+    cpu_limit: Decimal | None = None
+    memory_limit_mb: int | None = None
 
 
 class FailureInjector(ABC):
@@ -75,7 +75,7 @@ class FailureInjector(ABC):
         self.config = config
         self.logger = logging.getLogger(f"{__name__}.{config.injection_type.value}")
         self._active = False
-        self._injection_tasks: List[asyncio.Task] = []
+        self._injection_tasks: list[asyncio.Task] = []
 
     @abstractmethod
     async def inject(self) -> None:
@@ -108,8 +108,8 @@ class PodKiller(FailureInjector):
 
     def __init__(self, config: InjectionConfig):
         super().__init__(config)
-        self._killed_pids: List[int] = []
-        self._original_processes: Dict[int, Dict[str, Any]] = {}
+        self._killed_pids: list[int] = []
+        self._original_processes: dict[int, dict[str, Any]] = {}
 
     async def inject(self) -> None:
         """Start killing pods."""
@@ -133,10 +133,10 @@ class PodKiller(FailureInjector):
         """Get total number of pods."""
         # For local processes, count relevant processes
         count = 0
-        for proc in psutil.process_iter(['pid', 'name', 'cmdline']):
+        for proc in psutil.process_iter(["pid", "name", "cmdline"]):
             try:
-                cmdline = proc.info['cmdline']
-                if cmdline and any('python' in str(c) for c in cmdline):
+                cmdline = proc.info["cmdline"]
+                if cmdline and any("python" in str(c) for c in cmdline):
                     count += 1
             except (psutil.NoSuchProcess, psutil.AccessDenied):
                 pass
@@ -157,10 +157,10 @@ class PodKiller(FailureInjector):
         try:
             # Find relevant processes
             processes = []
-            for proc in psutil.process_iter(['pid', 'name', 'cmdline']):
+            for proc in psutil.process_iter(["pid", "name", "cmdline"]):
                 try:
-                    cmdline = proc.info['cmdline']
-                    if cmdline and any('python' in str(c) for c in cmdline):
+                    cmdline = proc.info["cmdline"]
+                    if cmdline and any("python" in str(c) for c in cmdline):
                         processes.append(proc)
                 except (psutil.NoSuchProcess, psutil.AccessDenied):
                     pass
@@ -181,8 +181,8 @@ class PodKiller(FailureInjector):
             # Store process info for rollback
             with contextlib.suppress(psutil.NoSuchProcess, psutil.AccessDenied):
                 self._original_processes[pid] = {
-                    'name': target.name(),
-                    'cmdline': target.cmdline(),
+                    "name": target.name(),
+                    "cmdline": target.cmdline(),
                 }
 
             # Kill process
@@ -232,8 +232,8 @@ class NetworkDelayInjector(FailureInjector):
 
     def __init__(self, config: InjectionConfig):
         super().__init__(config)
-        self._interfaces: List[str] = []
-        self._original_rules: Dict[str, str] = {}
+        self._interfaces: list[str] = []
+        self._original_rules: dict[str, str] = {}
 
     async def inject(self) -> None:
         """Inject network delays."""
@@ -249,11 +249,11 @@ class NetworkDelayInjector(FailureInjector):
         for interface in self._interfaces:
             await self._apply_delay(interface, delay_ms)
 
-    async def _get_network_interfaces(self) -> List[str]:
+    async def _get_network_interfaces(self) -> list[str]:
         """Get network interfaces."""
         try:
             result = subprocess.run(
-                ['ip', 'link', 'show'],
+                ["ip", "link", "show"],
                 capture_output=True,
                 text=True,
                 timeout=10,
@@ -261,9 +261,9 @@ class NetworkDelayInjector(FailureInjector):
             )
 
             interfaces = []
-            for line in result.stdout.split('\n'):
-                if ': ' in line and 'LOOPBACK' not in line:
-                    interface = line.split(': ')[1].split('@')[0]
+            for line in result.stdout.split("\n"):
+                if ": " in line and "LOOPBACK" not in line:
+                    interface = line.split(": ")[1].split("@")[0]
                     if interface:
                         interfaces.append(interface)
 
@@ -281,16 +281,16 @@ class NetworkDelayInjector(FailureInjector):
 
             # Add delay using tc
             cmd = [
-                'sudo',
-                'tc',
-                'qdisc',
-                'add',
-                'dev',
+                "sudo",
+                "tc",
+                "qdisc",
+                "add",
+                "dev",
                 interface,
-                'root',
-                'netem',
-                'delay',
-                f'{delay_ms}ms',
+                "root",
+                "netem",
+                "delay",
+                f"{delay_ms}ms",
             ]
 
             result = subprocess.run(
@@ -316,7 +316,7 @@ class NetworkDelayInjector(FailureInjector):
         for interface in self._interfaces:
             try:
                 # Remove tc rules
-                cmd = ['sudo', 'tc', 'qdisc', 'del', 'dev', interface, 'root']
+                cmd = ["sudo", "tc", "qdisc", "del", "dev", interface, "root"]
                 subprocess.run(cmd, capture_output=True, timeout=30, check=False)
 
                 self.logger.info(f"Removed delay from {interface}")
@@ -341,8 +341,8 @@ class ErrorInjector(FailureInjector):
 
     def __init__(self, config: InjectionConfig):
         super().__init__(config)
-        self._error_hook: Optional[Callable] = None
-        self._original_handlers: Dict[str, Any] = {}
+        self._error_hook: Callable | None = None
+        self._original_handlers: dict[str, Any] = {}
 
     async def inject(self) -> None:
         """Start error injection."""
@@ -387,7 +387,7 @@ class LatencyInjector(FailureInjector):
 
     def __init__(self, config: InjectionConfig):
         super().__init__(config)
-        self._delay_hooks: List[Callable] = []
+        self._delay_hooks: list[Callable] = []
 
     async def inject(self) -> None:
         """Inject latency."""
@@ -423,7 +423,7 @@ class ResourceStarver(FailureInjector):
 
     def __init__(self, config: InjectionConfig):
         super().__init__(config)
-        self._stress_processes: List[subprocess.Popen] = []
+        self._stress_processes: list[subprocess.Popen] = []
 
     async def inject(self) -> None:
         """Start resource starvation."""
@@ -450,11 +450,11 @@ class ResourceStarver(FailureInjector):
 
             proc = subprocess.Popen(
                 [
-                    'stress-ng',
-                    '--cpu',
+                    "stress-ng",
+                    "--cpu",
                     str(cpu_count),
-                    '--timeout',
-                    f'{self.config.duration_seconds}s',
+                    "--timeout",
+                    f"{self.config.duration_seconds}s",
                 ],
                 stdout=subprocess.DEVNULL,
                 stderr=subprocess.DEVNULL,
@@ -472,13 +472,13 @@ class ResourceStarver(FailureInjector):
             # Allocate memory
             proc = subprocess.Popen(
                 [
-                    'stress-ng',
-                    '--vm',
-                    '1',
-                    '--vm-bytes',
-                    f'{memory_mb}M',
-                    '--timeout',
-                    f'{self.config.duration_seconds}s',
+                    "stress-ng",
+                    "--vm",
+                    "1",
+                    "--vm-bytes",
+                    f"{memory_mb}M",
+                    "--timeout",
+                    f"{self.config.duration_seconds}s",
                 ],
                 stdout=subprocess.DEVNULL,
                 stderr=subprocess.DEVNULL,

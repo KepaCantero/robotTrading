@@ -53,7 +53,6 @@ from __future__ import annotations
 import logging
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Dict, List, Optional, Tuple, Union
 
 import numpy as np
 import pandas as pd
@@ -97,7 +96,7 @@ class CVConfig:
 class CVResult:
     """Result of cross-validation."""
 
-    fold_scores: List[float]
+    fold_scores: list[float]
     """Score for each fold"""
 
     mean_score: float
@@ -106,24 +105,24 @@ class CVResult:
     std_score: float
     """Standard deviation of scores"""
 
-    fold_predictions: List[np.ndarray]
+    fold_predictions: list[np.ndarray]
     """Predictions for each fold"""
 
-    fold_labels: List[np.ndarray]
+    fold_labels: list[np.ndarray]
     """True labels for each fold"""
 
-    train_indices: List[np.ndarray]
+    train_indices: list[np.ndarray]
     """Training indices for each fold"""
 
-    test_indices: List[np.ndarray]
+    test_indices: list[np.ndarray]
     """Test indices for each fold"""
 
-    metadata: Dict[str, Union[str, int, float, bool, None]] = field(default_factory=dict)
+    metadata: dict[str, str | int | float | bool | None] = field(default_factory=dict)
     """Additional metadata"""
 
     timestamp: datetime = field(default_factory=datetime.now)
 
-    def to_dict(self) -> Dict[str, Union[str, int, float, bool, list, None]]:
+    def to_dict(self) -> dict[str, str | int | float | bool | list | None]:
         """Convert to dictionary."""
         return {
             "fold_scores": self.fold_scores,
@@ -172,11 +171,11 @@ class PurgedKFold:
 
     def split(
         self,
-        X: Union[pd.DataFrame, np.ndarray],
-        events: Optional[pd.Series] = None,
-        labels: Optional[pd.DataFrame] = None,
-        y: Optional[Union[pd.Series, np.ndarray]] = None,
-    ) -> Tuple[np.ndarray, np.ndarray]:
+        X: pd.DataFrame | np.ndarray,
+        events: pd.Series | None = None,
+        labels: pd.DataFrame | None = None,
+        y: pd.Series | np.ndarray | None = None,
+    ) -> tuple[np.ndarray, np.ndarray]:
         """
         Generate purged train/test splits.
 
@@ -383,11 +382,11 @@ class MetaLabelingCV:
         self,
         primary_model: object,
         meta_model: object,
-        X: Union[pd.DataFrame, np.ndarray],
-        y: Union[pd.Series, np.ndarray],
-        events: Optional[pd.Series] = None,
-        labels: Optional[pd.DataFrame] = None,
-        sample_weights: Optional[np.ndarray] = None,
+        X: pd.DataFrame | np.ndarray,
+        y: pd.Series | np.ndarray,
+        events: pd.Series | None = None,
+        labels: pd.DataFrame | None = None,
+        sample_weights: np.ndarray | None = None,
     ) -> CVResult:
         """
         Perform cross-validation for meta-labeling.
@@ -539,15 +538,15 @@ class MetaLabelingCV:
 def cv_score_meta_labeling(
     primary_model: object,
     meta_model: object,
-    X: Union[pd.DataFrame, np.ndarray],
-    y: Union[pd.Series, np.ndarray],
-    events: Optional[pd.Series] = None,
-    labels: Optional[pd.DataFrame] = None,
+    X: pd.DataFrame | np.ndarray,
+    y: pd.Series | np.ndarray,
+    events: pd.Series | None = None,
+    labels: pd.DataFrame | None = None,
     n_folds: int = 5,
     purge_pct: float = 0.05,
     embargo_pct: float = 0.01,
     scoring: str = "accuracy",
-) -> Dict[str, float]:
+) -> dict[str, float]:
     """
     Calculate cross-validation score for meta-labeling.
 
@@ -633,9 +632,9 @@ class SequentialBootstrap:
 
     def split(
         self,
-        X: Union[pd.DataFrame, np.ndarray],
-        y: Optional[Union[pd.Series, np.ndarray]] = None,
-    ) -> Tuple[np.ndarray, np.ndarray]:
+        X: pd.DataFrame | np.ndarray,
+        y: pd.Series | np.ndarray | None = None,
+    ) -> tuple[np.ndarray, np.ndarray]:
         """
         Generate sequential train/test splits.
 
@@ -674,7 +673,7 @@ def calculate_purge_embargo_sizes(
     n_folds: int = 5,
     purge_pct: float = 0.05,
     embargo_pct: float = 0.01,
-) -> Dict[str, int]:
+) -> dict[str, int]:
     """
     Calculate purge and embargo sizes for CV.
 

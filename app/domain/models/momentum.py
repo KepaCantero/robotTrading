@@ -9,7 +9,7 @@ import logging
 from datetime import datetime, timedelta
 from decimal import Decimal
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
@@ -84,7 +84,7 @@ class MomentumSignal(BaseModel):
     # Signal metadata
     timestamp: datetime = Field(default_factory=datetime.utcnow, description="Signal timestamp")
     expires_at: datetime = Field(description="Signal expiration time")
-    metadata: Dict[str, Any] = Field(default_factory=dict, description="Additional metadata")
+    metadata: dict[str, Any] = Field(default_factory=dict, description="Additional metadata")
 
     @field_validator("symbol")
     @classmethod
@@ -132,10 +132,16 @@ class MomentumSignal(BaseModel):
 
         # Technical momentum score (based on RSI and MACD)
         technical_score = 0
-        if self.rsi is not None and ((self.direction == "BUY" and self.rsi < 30) or (self.direction == "SELL" and self.rsi > 70)):
+        if self.rsi is not None and (
+            (self.direction == "BUY" and self.rsi < 30)
+            or (self.direction == "SELL" and self.rsi > 70)
+        ):
             technical_score += 30  # Oversold/Overbought
 
-        if self.macd_histogram is not None and ((self.direction == "BUY" and self.macd_histogram > 0) or (self.direction == "SELL" and self.macd_histogram < 0)):
+        if self.macd_histogram is not None and (
+            (self.direction == "BUY" and self.macd_histogram > 0)
+            or (self.direction == "SELL" and self.macd_histogram < 0)
+        ):
             technical_score += 20  # Bullish/Bearish MACD
 
         return (
@@ -459,7 +465,7 @@ class MomentumAnalysis(BaseModel):
     indicators: TechnicalIndicators = Field(..., description="Technical indicators")
 
     # Momentum signals
-    signals: List[MomentumSignal] = Field(default_factory=list, description="Generated signals")
+    signals: list[MomentumSignal] = Field(default_factory=list, description="Generated signals")
 
     # Analysis results
     overall_momentum: float = Field(ge=0, le=100, description="Overall momentum score")
@@ -514,11 +520,11 @@ class MomentumAnalysis(BaseModel):
         self.signals.append(signal)
         self.signal_count = len(self.signals)
 
-    def get_active_signals(self) -> List[MomentumSignal]:
+    def get_active_signals(self) -> list[MomentumSignal]:
         """Get active (non-expired) signals."""
         return [signal for signal in self.signals if not signal.is_expired]
 
-    def get_signals_by_type(self, signal_type: MomentumType) -> List[MomentumSignal]:
+    def get_signals_by_type(self, signal_type: MomentumType) -> list[MomentumSignal]:
         """Get signals by type."""
         return [signal for signal in self.signals if signal.signal_type == signal_type]
 
@@ -526,11 +532,11 @@ class MomentumAnalysis(BaseModel):
 class MomentumFilter(BaseModel):
     """Filter criteria for momentum analysis."""
 
-    symbols: Optional[List[str]] = Field(None, description="Filter by symbols")
-    momentum_types: Optional[List[MomentumType]] = Field(
+    symbols: Optional[list[str]] = Field(None, description="Filter by symbols")
+    momentum_types: Optional[list[MomentumType]] = Field(
         None, description="Filter by momentum types"
     )
-    timeframes: Optional[List[Timeframe]] = Field(None, description="Filter by timeframes")
+    timeframes: Optional[list[Timeframe]] = Field(None, description="Filter by timeframes")
     min_strength: float = Field(default=50.0, ge=0, le=100, description="Minimum signal strength")
     min_confidence: float = Field(
         default=60.0, ge=0, le=100, description="Minimum signal confidence"

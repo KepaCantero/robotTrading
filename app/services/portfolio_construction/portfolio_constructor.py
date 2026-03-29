@@ -8,7 +8,7 @@ import asyncio
 import logging
 from dataclasses import dataclass
 from enum import Enum
-from typing import Dict, List, Optional
+from typing import Optional
 
 logger = logging.getLogger(__name__)
 
@@ -26,7 +26,7 @@ class OptimizationMethod(str, Enum):
 class PortfolioAllocation:
     """Result of portfolio optimization."""
 
-    allocation: Dict[str, float]  # {asset: weight}
+    allocation: dict[str, float]  # {asset: weight}
     method: str  # Optimization method used
     expected_return: float  # Expected annual return
     expected_volatility: float  # Expected annual volatility
@@ -34,7 +34,7 @@ class PortfolioAllocation:
     diversification_ratio: float  # Ratio of weighted avg volatility / portfolio vol
     num_assets: int  # Number of assets in portfolio
     is_optimized: bool  # Whether optimization succeeded
-    optimization_details: Dict  # Additional details from optimization
+    optimization_details: dict  # Additional details from optimization
 
 
 class PortfolioConstructor:
@@ -55,10 +55,10 @@ class PortfolioConstructor:
 
     async def construct_portfolio(
         self,
-        assets: List[str],
-        returns: Dict[str, float],
-        volatilities: Dict[str, float],
-        correlation_matrix: Optional[Dict[str, Dict[str, float]]] = None,
+        assets: list[str],
+        returns: dict[str, float],
+        volatilities: dict[str, float],
+        correlation_matrix: Optional[dict[str, dict[str, float]]] = None,
         method: str = "mean_variance",
         target_return: Optional[float] = None,
     ) -> PortfolioAllocation:
@@ -102,7 +102,7 @@ class PortfolioConstructor:
             # Return equal-weight fallback on error
             return await self._equal_weight_allocation(assets)
 
-    async def _equal_weight_allocation(self, assets: List[str]) -> PortfolioAllocation:
+    async def _equal_weight_allocation(self, assets: list[str]) -> PortfolioAllocation:
         """Simple 1/N equal-weight allocation."""
         n = len(assets)
         weight = 1.0 / n
@@ -122,10 +122,10 @@ class PortfolioConstructor:
 
     async def _mean_variance_optimization(
         self,
-        assets: List[str],
-        returns: Dict[str, float],
-        volatilities: Dict[str, float],
-        correlation_matrix: Optional[Dict[str, Dict[str, float]]] = None,
+        assets: list[str],
+        returns: dict[str, float],
+        volatilities: dict[str, float],
+        correlation_matrix: Optional[dict[str, dict[str, float]]] = None,
         target_return: Optional[float] = None,
     ) -> PortfolioAllocation:
         """
@@ -171,8 +171,8 @@ class PortfolioConstructor:
 
     async def _risk_parity_allocation(
         self,
-        assets: List[str],
-        volatilities: Dict[str, float],
+        assets: list[str],
+        volatilities: dict[str, float],
     ) -> PortfolioAllocation:
         """
         Risk parity allocation - allocate inversely to volatility.
@@ -202,10 +202,10 @@ class PortfolioConstructor:
 
     async def _max_sharpe_optimization(
         self,
-        assets: List[str],
-        returns: Dict[str, float],
-        volatilities: Dict[str, float],
-        correlation_matrix: Optional[Dict[str, Dict[str, float]]] = None,
+        assets: list[str],
+        returns: dict[str, float],
+        volatilities: dict[str, float],
+        correlation_matrix: Optional[dict[str, dict[str, float]]] = None,
     ) -> PortfolioAllocation:
         """
         Maximum Sharpe ratio optimization.
@@ -242,10 +242,10 @@ class PortfolioConstructor:
 
     async def _build_covariance_matrix(
         self,
-        assets: List[str],
-        volatilities: Dict[str, float],
-        correlation_matrix: Dict[str, Dict[str, float]],
-    ) -> Dict[str, Dict[str, float]]:
+        assets: list[str],
+        volatilities: dict[str, float],
+        correlation_matrix: dict[str, dict[str, float]],
+    ) -> dict[str, dict[str, float]]:
         """Build covariance matrix from volatilities and correlations."""
         cov = {}
         for asset1 in assets:
@@ -261,8 +261,8 @@ class PortfolioConstructor:
 
     async def _calculate_portfolio_volatility(
         self,
-        allocation: Dict[str, float],
-        cov_matrix: Dict[str, Dict[str, float]],
+        allocation: dict[str, float],
+        cov_matrix: dict[str, dict[str, float]],
     ) -> float:
         """Calculate portfolio volatility from covariance matrix."""
         variance = 0.0
@@ -277,10 +277,10 @@ class PortfolioConstructor:
 
     async def _calculate_diversification_ratio(
         self,
-        allocation: Dict[str, float],
-        assets: List[str],
-        volatilities: Dict[str, float],
-        cov_matrix: Dict[str, Dict[str, float]],
+        allocation: dict[str, float],
+        assets: list[str],
+        volatilities: dict[str, float],
+        cov_matrix: dict[str, dict[str, float]],
     ) -> float:
         """
         Calculate diversification ratio.
@@ -296,7 +296,7 @@ class PortfolioConstructor:
             return 1.0
         return weighted_avg_vol / portfolio_vol
 
-    def validate_allocation(self, allocation: Dict[str, float]) -> bool:
+    def validate_allocation(self, allocation: dict[str, float]) -> bool:
         """Validate that allocation is properly normalized."""
         total_weight = sum(allocation.values())
         return 0.99 <= total_weight <= 1.01  # Allow small floating point errors

@@ -6,7 +6,7 @@ Part of Alert Fatigue Prevention (SRE Rule 20.11).
 
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Any, Dict, List
+from typing import Any
 
 
 @dataclass
@@ -14,7 +14,7 @@ class PriorityScore:
     """A calculated priority score for an alert."""
 
     score: float
-    factors: Dict[str, float] = field(default_factory=dict)
+    factors: dict[str, float] = field(default_factory=dict)
     calculated_at: datetime = field(default_factory=datetime.utcnow)
     explanation: str = ""
 
@@ -36,7 +36,7 @@ class AlertPrioritizer:
             "historical_frequency": 0.1,
         }
 
-    def calculate_priority(self, alert: Dict[str, Any]) -> PriorityScore:
+    def calculate_priority(self, alert: dict[str, Any]) -> PriorityScore:
         """Calculate priority score for an alert."""
         factors = {}
 
@@ -66,12 +66,12 @@ class AlertPrioritizer:
             explanation=self._generate_explanation(factors, score),
         )
 
-    def _generate_explanation(self, factors: Dict[str, float], score: float) -> str:
+    def _generate_explanation(self, factors: dict[str, float], score: float) -> str:
         """Generate human-readable explanation of priority score."""
         level = "high" if score > 0.7 else "medium" if score > 0.4 else "low"
         return f"Priority is {level} (score: {score:.2f}) based on severity={factors['severity']:.1f}, impact={factors['business_impact']:.1f}"
 
-    def prioritize_batch(self, alerts: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    def prioritize_batch(self, alerts: list[dict[str, Any]]) -> list[dict[str, Any]]:
         """Prioritize a batch of alerts, returning them sorted by priority."""
         prioritized = []
         for alert in alerts:

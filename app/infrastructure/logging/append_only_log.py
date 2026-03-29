@@ -3,11 +3,12 @@ Append-Only Log Storage
 
 Almacenamiento append-only para logs de trading.
 """
+
 import json
 import logging
 from datetime import date, datetime, timedelta
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Dict, List, Union
+from typing import TYPE_CHECKING, Any, Union
 
 logger = logging.getLogger(__name__)
 
@@ -16,7 +17,7 @@ if TYPE_CHECKING:
 
 
 # Define LogEntry type for runtime as Dict for flexibility
-LogEntryType = Union[Dict[str, Any], "LogEntry"]
+LogEntryType = Union[dict[str, Any], "LogEntry"]
 
 
 class AppendOnlyLog:
@@ -93,7 +94,7 @@ class AppendOnlyLog:
             },
         )
 
-    def get_entries_by_correlation_id(self, correlation_id: str) -> List[dict]:
+    def get_entries_by_correlation_id(self, correlation_id: str) -> list[dict]:
         """
         Obtener todas las entradas con un correlation_id
 
@@ -121,7 +122,7 @@ class AppendOnlyLog:
             if not log_file.exists():
                 continue
 
-            with open(log_file, "r") as f:
+            with open(log_file) as f:
                 for line in f:
                     entry = json.loads(line.strip())
                     if entry.get("correlation_id") == correlation_id:
@@ -137,7 +138,7 @@ class AppendOnlyLog:
         )
         return entries
 
-    def export_date_range(self, start_date: date, end_date: date) -> List[dict]:
+    def export_date_range(self, start_date: date, end_date: date) -> list[dict]:
         """
         Exportar entradas en rango de fechas
 
@@ -163,7 +164,7 @@ class AppendOnlyLog:
             log_file = self._get_log_file(current)
 
             if log_file.exists():
-                with open(log_file, "r") as f:
+                with open(log_file) as f:
                     for line in f:
                         entries.append(json.loads(line.strip()))
 

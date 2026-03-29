@@ -8,7 +8,7 @@ strategies to identify redundancy and improve diversification.
 # mypy: ignore-errors
 import logging
 from decimal import Decimal
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Optional
 
 import numpy as np
 
@@ -35,7 +35,7 @@ class CorrelationAnalyzer:
 
     def __init__(
         self,
-        strategies: List[str],
+        strategies: list[str],
         correlation_threshold: float = 0.9,
         method: str = "pearson",
     ):
@@ -69,7 +69,7 @@ class CorrelationAnalyzer:
             logger.error("CorrelationAnalyzer initialization failed", exc_info=True)
             raise ValueError(f"Invalid parameters: {e}") from e
 
-    def analyze_correlations(self, returns_data: Dict[str, np.ndarray]) -> CorrelationMetrics:
+    def analyze_correlations(self, returns_data: dict[str, np.ndarray]) -> CorrelationMetrics:
         """Analyze correlations between strategies.
 
         Args:
@@ -122,7 +122,7 @@ class CorrelationAnalyzer:
             logger.error("Correlation analysis failed", exc_info=True)
             raise RuntimeError(f"Correlation analysis failed: {e}") from e
 
-    def _validate_returns_data(self, returns_data: Dict[str, np.ndarray]) -> None:
+    def _validate_returns_data(self, returns_data: dict[str, np.ndarray]) -> None:
         """Validate returns data.
 
         Args:
@@ -144,7 +144,7 @@ class CorrelationAnalyzer:
             if len(returns_data[strategy]) < 2:
                 raise ValueError(f"Insufficient data for {strategy}")
 
-    def _calculate_correlation_matrix(self, returns_data: Dict[str, np.ndarray]) -> np.ndarray:
+    def _calculate_correlation_matrix(self, returns_data: dict[str, np.ndarray]) -> np.ndarray:
         """Calculate correlation matrix.
 
         Args:
@@ -191,7 +191,7 @@ class CorrelationAnalyzer:
 
     def _calculate_correlation_stats(
         self, corr_matrix: np.ndarray
-    ) -> Tuple[float, float, float, float]:
+    ) -> tuple[float, float, float, float]:
         """Calculate correlation statistics.
 
         Args:
@@ -223,7 +223,7 @@ class CorrelationAnalyzer:
             logger.error("Correlation stats calculation failed", exc_info=True)
             return 0.0, 0.0, 0.0, 0.0
 
-    def _detect_redundant_pairs(self, corr_matrix: np.ndarray) -> List[Tuple[str, str, float]]:
+    def _detect_redundant_pairs(self, corr_matrix: np.ndarray) -> list[tuple[str, str, float]]:
         """Detect redundant strategy pairs.
 
         Args:
@@ -286,7 +286,7 @@ class CorrelationAnalyzer:
             logger.error("Effective number of bets calculation failed", exc_info=True)
             return float(len(self.strategies))
 
-    def _calculate_eigenvalues(self, corr_matrix: np.ndarray) -> List[float]:
+    def _calculate_eigenvalues(self, corr_matrix: np.ndarray) -> list[float]:
         """Calculate eigenvalues of correlation matrix.
 
         Args:
@@ -304,7 +304,7 @@ class CorrelationAnalyzer:
             logger.error("Eigenvalue calculation failed", exc_info=True)
             return [1.0] * len(self.strategies)
 
-    def _calculate_condition_number(self, eigenvalues: List[float]) -> float:
+    def _calculate_condition_number(self, eigenvalues: list[float]) -> float:
         """Calculate condition number of correlation matrix.
 
         Condition number = max(eigenvalue) / min(eigenvalue)
@@ -326,7 +326,7 @@ class CorrelationAnalyzer:
             logger.error("Condition number calculation failed", exc_info=True)
             return 1.0
 
-    def _matrix_to_dict(self, matrix: np.ndarray) -> Dict[str, Dict[str, Decimal]]:
+    def _matrix_to_dict(self, matrix: np.ndarray) -> dict[str, dict[str, Decimal]]:
         """Convert correlation matrix to nested dictionary.
 
         Args:
@@ -347,7 +347,7 @@ class CorrelationAnalyzer:
 
     def get_most_correlated_pair(
         self, metrics: CorrelationMetrics
-    ) -> Optional[Tuple[str, str, float]]:
+    ) -> Optional[tuple[str, str, float]]:
         """Get the most correlated strategy pair.
 
         Args:
@@ -363,7 +363,7 @@ class CorrelationAnalyzer:
 
     def get_least_correlated_pair(
         self, metrics: CorrelationMetrics
-    ) -> Optional[Tuple[str, str, float]]:
+    ) -> Optional[tuple[str, str, float]]:
         """Get the least correlated strategy pair.
 
         Args:
@@ -393,7 +393,7 @@ class CorrelationAnalyzer:
 
     def suggest_strategy_removal(
         self, metrics: CorrelationMetrics, max_to_remove: int = 1
-    ) -> List[str]:
+    ) -> list[str]:
         """Suggest strategies to remove based on redundancy.
 
         Args:
@@ -428,8 +428,8 @@ class CorrelationAnalyzer:
 
     def calculate_portfolio_correlation(
         self,
-        returns_data: Dict[str, np.ndarray],
-        weights: Dict[str, float],
+        returns_data: dict[str, np.ndarray],
+        weights: dict[str, float],
     ) -> float:
         """Calculate average portfolio correlation (weighted).
 
@@ -465,7 +465,7 @@ class CorrelationAnalyzer:
 
     def calculate_partial_correlation(
         self,
-        returns_data: Dict[str, np.ndarray],
+        returns_data: dict[str, np.ndarray],
         strategy1: str,
         strategy2: str,
     ) -> float:
@@ -510,9 +510,9 @@ class CorrelationAnalyzer:
 
     def calculate_rolling_correlation(
         self,
-        returns_data: Dict[str, np.ndarray],
+        returns_data: dict[str, np.ndarray],
         window: int = 60,
-    ) -> Dict[str, Dict[str, List[float]]]:
+    ) -> dict[str, dict[str, list[float]]]:
         """Calculate rolling correlations over time.
 
         Args:
@@ -534,7 +534,7 @@ class CorrelationAnalyzer:
 
             if n_periods < window:
                 raise ValueError(
-                    f"Insufficient data for rolling window. " f"Need {window}, got {n_periods}"
+                    f"Insufficient data for rolling window. Need {window}, got {n_periods}"
                 )
 
             rolling_correlations = {}
@@ -562,7 +562,7 @@ class CorrelationAnalyzer:
             logger.error("Rolling correlation calculation failed", exc_info=True)
             return {}
 
-    def get_correlation_summary(self, metrics: CorrelationMetrics) -> Dict[str, Any]:
+    def get_correlation_summary(self, metrics: CorrelationMetrics) -> dict[str, Any]:
         """Get summary of correlation analysis.
 
         Args:
@@ -597,9 +597,9 @@ class CorrelationAnalyzer:
 
     def test_stability(
         self,
-        returns_data: Dict[str, np.ndarray],
+        returns_data: dict[str, np.ndarray],
         n_splits: int = 5,
-    ) -> Dict[str, float]:
+    ) -> dict[str, float]:
         """Test stability of correlations over time.
 
         Splits data into n periods and calculates correlation in each period

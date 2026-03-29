@@ -20,12 +20,15 @@ from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from decimal import Decimal
 from enum import Enum
-from typing import Any, Dict, Iterator, List, Optional, Protocol
+from typing import TYPE_CHECKING, Any, Protocol
 
 from app.domain.entities.position import Position, PositionSide, PositionStatus
 from app.domain.value_objects.capital import Capital
 from app.domain.value_objects.money import Money
 from app.domain.value_objects.risk_parameters import RiskParameters
+
+if TYPE_CHECKING:
+    from collections.abc import Iterator
 
 logger = logging.getLogger(__name__)
 
@@ -98,7 +101,7 @@ class Portfolio:
 
     # State
     status: PortfolioStatus = PortfolioStatus.ACTIVE
-    positions: Dict[str, Position] = field(default_factory=dict)
+    positions: dict[str, Position] = field(default_factory=dict)
 
     # Metadata
     broker: str = ""
@@ -108,11 +111,9 @@ class Portfolio:
 
     # Dependency Injection (DIP Compliance)
     # Optional logger for audit logging
-    _audit_logger: Optional[logging.Logger] = field(default=None, repr=False, compare=False)
+    _audit_logger: logging.Logger | None = field(default=None, repr=False, compare=False)
     # Optional config provider for dynamic configuration access
-    _config_provider: Optional[TradingConfigProvider] = field(
-        default=None, repr=False, compare=False
-    )
+    _config_provider: TradingConfigProvider | None = field(default=None, repr=False, compare=False)
 
     def __post_init__(self):
         """Validate portfolio invariants."""
@@ -162,7 +163,7 @@ class Portfolio:
             extra={"portfolio_id": self.portfolio_id},
         )
 
-    def _audit_log(self, action: str, details: Dict[str, Any]) -> None:
+    def _audit_log(self, action: str, details: dict[str, Any]) -> None:
         """
         Log audit trail for trading operations.
 
@@ -236,7 +237,7 @@ class Portfolio:
 
         self._mark_updated()
 
-    def remove_position(self, symbol: str, quantity: Optional[Decimal] = None) -> None:
+    def remove_position(self, symbol: str, quantity: Decimal | None = None) -> None:
         """
         Remove a position or part of a position.
 
@@ -328,15 +329,15 @@ class Portfolio:
 
         self._mark_updated()
 
-    def get_position(self, symbol: str) -> Optional[Position]:
+    def get_position(self, symbol: str) -> Position | None:
         """Get position by symbol."""
         return self.positions.get(symbol)
 
-    def get_open_positions(self) -> List[Position]:
+    def get_open_positions(self) -> list[Position]:
         """Get all open positions."""
         return [p for p in self.positions.values() if p.is_open()]
 
-    def get_closed_positions(self) -> List[Position]:
+    def get_closed_positions(self) -> list[Position]:
         """Get all closed positions (not stored by default)."""
         return [p for p in self.positions.values() if p.is_closed()]
 
@@ -439,7 +440,7 @@ class Portfolio:
         """
         return Decimal("1.0")
 
-    def is_risk_limit_exceeded(self, additional_exposure: Optional[Decimal] = None) -> bool:
+    def is_risk_limit_exceeded(self, additional_exposure: Decimal | None = None) -> bool:
         """
         Check if risk limits would be exceeded.
 
@@ -607,10 +608,7 @@ class Portfolio:
             return False
 
         # Check max positions
-        if len(self.get_open_positions()) >= self.capital.max_positions:
-            return False
-
-        return True
+        return not len(self.get_open_positions()) >= self.capital.max_positions
 
     def _mark_updated(self) -> None:
         """Mark portfolio as updated."""
@@ -626,10 +624,10 @@ class Portfolio:
         portfolio_id: str,
         initial_capital: Decimal,
         currency: str = "USD",
-        max_position_size_pct: Optional[Decimal] = None,
-        max_portfolio_exposure_pct: Optional[Decimal] = None,
-        config_provider: Optional[TradingConfigProvider] = None,
-        audit_logger: Optional[logging.Logger] = None,
+        max_position_size_pct: Decimal | None = None,
+        max_portfolio_exposure_pct: Decimal | None = None,
+        config_provider: TradingConfigProvider | None = None,
+        audit_logger: logging.Logger | None = None,
     ) -> Portfolio:
         """
         Factory to create a new portfolio.

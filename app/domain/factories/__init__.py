@@ -27,7 +27,7 @@ import logging
 from abc import ABC, abstractmethod
 from datetime import datetime
 from decimal import Decimal
-from typing import Dict, List, Optional, TypeVar, Union
+from typing import TypeVar
 
 from typing_extensions import Protocol, runtime_checkable
 
@@ -58,9 +58,9 @@ class EntityFactoryProtocol(Protocol):
         quantity: Decimal,
         side: str = "buy",
         order_type: str = "market",
-        price: Optional[Decimal] = None,
-        stop_price: Optional[Decimal] = None,
-        portfolio_id: Optional[str] = None,
+        price: Decimal | None = None,
+        stop_price: Decimal | None = None,
+        portfolio_id: str | None = None,
         **kwargs,
     ) -> Order:
         """Create an Order entity."""
@@ -82,7 +82,7 @@ class EntityFactoryProtocol(Protocol):
         quantity: Decimal,
         entry_price: Decimal,
         currency: str = "USD",
-        side: Optional[str] = None,
+        side: str | None = None,
         **kwargs,
     ) -> Position:
         """Create a Position entity."""
@@ -120,9 +120,9 @@ class AbstractEntityFactory(ABC):
         quantity: Decimal,
         side: str = "buy",
         order_type: str = "market",
-        price: Optional[Decimal] = None,
-        stop_price: Optional[Decimal] = None,
-        portfolio_id: Optional[str] = None,
+        price: Decimal | None = None,
+        stop_price: Decimal | None = None,
+        portfolio_id: str | None = None,
         **kwargs,
     ) -> Order:
         """Create an Order entity."""
@@ -133,15 +133,15 @@ class AbstractEntityFactory(ABC):
         portfolio_id: str,
         initial_capital: Decimal,
         currency: str = "USD",
-        max_position_size_pct: Optional[Decimal] = None,
-        max_portfolio_exposure_pct: Optional[Decimal] = None,
+        max_position_size_pct: Decimal | None = None,
+        max_portfolio_exposure_pct: Decimal | None = None,
         **kwargs,
     ) -> Portfolio:
         """Create a Portfolio entity."""
         if max_position_size_pct is None:
-            max_position_size_pct = Decimal('0.2')
+            max_position_size_pct = Decimal("0.2")
         if max_portfolio_exposure_pct is None:
-            max_portfolio_exposure_pct = Decimal('0.8')
+            max_portfolio_exposure_pct = Decimal("0.8")
 
     @abstractmethod
     def create_position(
@@ -150,7 +150,7 @@ class AbstractEntityFactory(ABC):
         quantity: Decimal,
         entry_price: Decimal,
         currency: str = "USD",
-        side: Optional[str] = None,
+        side: str | None = None,
         **kwargs,
     ) -> Position:
         """Create a Position entity."""
@@ -196,9 +196,9 @@ class TradingEntityFactory(AbstractEntityFactory):
         quantity: Decimal,
         side: str = "buy",
         order_type: str = "market",
-        price: Optional[Decimal] = None,
-        stop_price: Optional[Decimal] = None,
-        portfolio_id: Optional[str] = None,
+        price: Decimal | None = None,
+        stop_price: Decimal | None = None,
+        portfolio_id: str | None = None,
         **kwargs,
     ) -> Order:
         """
@@ -231,17 +231,17 @@ class TradingEntityFactory(AbstractEntityFactory):
             raise ValueError("Symbol is required")
         if quantity <= 0:
             raise ValueError("Quantity must be positive")
-        if side not in ('buy', 'sell'):
+        if side not in ("buy", "sell"):
             raise ValueError("Side must be 'buy' or 'sell'")
 
         # Set price defaults based on order type
-        if order_type == 'limit' and price is None:
+        if order_type == "limit" and price is None:
             raise ValueError("Limit orders must have a price")
-        if order_type in ('stop_loss', 'stop_limit') and stop_price is None:
+        if order_type in ("stop_loss", "stop_limit") and stop_price is None:
             raise ValueError(f"{order_type} orders must have a stop price")
 
         # Generate order ID
-        order_id = kwargs.get('order_id') or self._generate_order_id(symbol)
+        order_id = kwargs.get("order_id") or self._generate_order_id(symbol)
 
         # Create order entity
         order = Order(
@@ -264,8 +264,8 @@ class TradingEntityFactory(AbstractEntityFactory):
         portfolio_id: str,
         initial_capital: Decimal,
         currency: str = "USD",
-        max_position_size_pct: Optional[Decimal] = None,
-        max_portfolio_exposure_pct: Optional[Decimal] = None,
+        max_position_size_pct: Decimal | None = None,
+        max_portfolio_exposure_pct: Decimal | None = None,
         **kwargs,
     ) -> Portfolio:
         """
@@ -286,9 +286,9 @@ class TradingEntityFactory(AbstractEntityFactory):
             ValueError: If parameters are invalid
         """
         if max_position_size_pct is None:
-            max_position_size_pct = Decimal('0.2')
+            max_position_size_pct = Decimal("0.2")
         if max_portfolio_exposure_pct is None:
-            max_portfolio_exposure_pct = Decimal('0.8')
+            max_portfolio_exposure_pct = Decimal("0.8")
         if not portfolio_id:
             raise ValueError("Portfolio ID is required")
         if initial_capital <= 0:
@@ -323,7 +323,7 @@ class TradingEntityFactory(AbstractEntityFactory):
         quantity: Decimal,
         entry_price: Decimal,
         currency: str = "USD",
-        side: Optional[str] = None,
+        side: str | None = None,
         **kwargs,
     ) -> Position:
         """
@@ -368,7 +368,7 @@ class TradingEntityFactory(AbstractEntityFactory):
                 position_side = PositionSide.LONG
         else:
             # Use explicit side parameter
-            if side.lower() not in ('long', 'short'):
+            if side.lower() not in ("long", "short"):
                 raise ValueError("Side must be 'long' or 'short'")
             position_side = PositionSide[side.upper()]
             # Ensure quantity is positive regardless of side
@@ -416,7 +416,7 @@ class OrderFactory:
         ```
     """
 
-    def __init__(self, entity_factory: Optional[AbstractEntityFactory] = None):
+    def __init__(self, entity_factory: AbstractEntityFactory | None = None):
         """
         Initialize with optional entity factory.
 
@@ -426,14 +426,14 @@ class OrderFactory:
         self.entity_factory = entity_factory or TradingEntityFactory()
 
     def create_market_order(
-        self, symbol: str, quantity: Decimal, side: str, portfolio_id: Optional[str] = None
+        self, symbol: str, quantity: Decimal, side: str, portfolio_id: str | None = None
     ) -> Order:
         """Create a market order (executes at current market price)."""
         return self.entity_factory.create_order(
             symbol=symbol,
             quantity=quantity,
             side=side,
-            order_type='market',
+            order_type="market",
             portfolio_id=portfolio_id,
         )
 
@@ -443,7 +443,7 @@ class OrderFactory:
         quantity: Decimal,
         price: Decimal,
         side: str,
-        portfolio_id: Optional[str] = None,
+        portfolio_id: str | None = None,
     ) -> Order:
         """Create a limit order (executes at specified price or better)."""
         return self.entity_factory.create_order(
@@ -451,7 +451,7 @@ class OrderFactory:
             quantity=quantity,
             price=price,
             side=side,
-            order_type='limit',
+            order_type="limit",
             portfolio_id=portfolio_id,
         )
 
@@ -461,7 +461,7 @@ class OrderFactory:
         quantity: Decimal,
         stop_price: Decimal,
         side: str,
-        portfolio_id: Optional[str] = None,
+        portfolio_id: str | None = None,
     ) -> Order:
         """Create a stop-loss order (triggers when price hits stop price)."""
         return self.entity_factory.create_order(
@@ -469,7 +469,7 @@ class OrderFactory:
             quantity=quantity,
             stop_price=stop_price,
             side=side,
-            order_type='stop_loss',
+            order_type="stop_loss",
             portfolio_id=portfolio_id,
         )
 
@@ -479,17 +479,17 @@ class OrderFactory:
         quantity: Decimal,
         price: Decimal,
         side: str,
-        portfolio_id: Optional[str] = None,
+        portfolio_id: str | None = None,
     ) -> Order:
         """Create a take-profit order (closes position at target price)."""
         # Take profit is opposite side of current position
-        original_side = 'buy' if side == 'sell' else 'sell'
+        original_side = "buy" if side == "sell" else "sell"
         return self.entity_factory.create_order(
             symbol=symbol,
             quantity=quantity,
             price=price,
             side=original_side,
-            order_type='take_profit',
+            order_type="take_profit",
             portfolio_id=portfolio_id,
         )
 
@@ -500,7 +500,7 @@ class OrderFactory:
         stop_price: Decimal,
         limit_price: Decimal,
         side: str,
-        portfolio_id: Optional[str] = None,
+        portfolio_id: str | None = None,
     ) -> Order:
         """Create a stop-limit order (combines stop and limit orders)."""
         return self.entity_factory.create_order(
@@ -509,7 +509,7 @@ class OrderFactory:
             stop_price=stop_price,
             price=limit_price,
             side=side,
-            order_type='stop_limit',
+            order_type="stop_limit",
             portfolio_id=portfolio_id,
         )
 
@@ -541,65 +541,65 @@ class OrderBuilder:
 
     def __init__(self):
         """Initialize builder with defaults."""
-        self._symbol: Optional[str] = None
+        self._symbol: str | None = None
         self._side: str = "buy"
-        self._quantity: Optional[Decimal] = None
-        self._price: Optional[Decimal] = None
-        self._stop_price: Optional[Decimal] = None
+        self._quantity: Decimal | None = None
+        self._price: Decimal | None = None
+        self._stop_price: Decimal | None = None
         self._order_type: str = "market"
-        self._portfolio_id: Optional[str] = None
+        self._portfolio_id: str | None = None
         self._time_in_force: str = "GTC"
-        self._expiry_time: Optional[datetime] = None
+        self._expiry_time: datetime | None = None
         self._entity_factory = TradingEntityFactory()
 
-    def for_symbol(self, symbol: str) -> "OrderBuilder":
+    def for_symbol(self, symbol: str) -> OrderBuilder:
         """Set the trading symbol."""
         self._symbol = symbol
         return self
 
-    def buy(self) -> "OrderBuilder":
+    def buy(self) -> OrderBuilder:
         """Set order side to buy."""
         self._side = "buy"
         return self
 
-    def sell(self) -> "OrderBuilder":
+    def sell(self) -> OrderBuilder:
         """Set order side to sell."""
         self._side = "sell"
         return self
 
-    def quantity(self, qty: Decimal) -> "OrderBuilder":
+    def quantity(self, qty: Decimal) -> OrderBuilder:
         """Set order quantity."""
         self._quantity = qty
         return self
 
-    def market_order(self) -> "OrderBuilder":
+    def market_order(self) -> OrderBuilder:
         """Set order type to market."""
         self._order_type = "market"
         return self
 
-    def limit_price(self, price: Decimal) -> "OrderBuilder":
+    def limit_price(self, price: Decimal) -> OrderBuilder:
         """Set limit price (makes it a limit order)."""
         self._price = price
         self._order_type = "limit"
         return self
 
-    def stop_price(self, price: Decimal) -> "OrderBuilder":
+    def stop_price(self, price: Decimal) -> OrderBuilder:
         """Set stop price (makes it a stop order)."""
         self._stop_price = price
         self._order_type = "stop_loss"
         return self
 
-    def for_portfolio(self, portfolio_id: str) -> "OrderBuilder":
+    def for_portfolio(self, portfolio_id: str) -> OrderBuilder:
         """Set the portfolio ID."""
         self._portfolio_id = portfolio_id
         return self
 
-    def with_time_in_force(self, tif: str) -> "OrderBuilder":
+    def with_time_in_force(self, tif: str) -> OrderBuilder:
         """Set time in force (GTC, IOC, FOK, DAY)."""
         self._time_in_force = tif
         return self
 
-    def with_good_til_cancel(self, days: int = 30) -> "OrderBuilder":
+    def with_good_til_cancel(self, days: int = 30) -> OrderBuilder:
         """Set good-til-cancelled with expiry days."""
         from datetime import timedelta
 
@@ -607,22 +607,22 @@ class OrderBuilder:
         self._expiry_time = datetime.utcnow() + timedelta(days=days)
         return self
 
-    def day_order(self) -> "OrderBuilder":
+    def day_order(self) -> OrderBuilder:
         """Set as day order (expires at end of day)."""
         self._time_in_force = "DAY"
         return self
 
-    def immediate_or_cancel(self) -> "OrderBuilder":
+    def immediate_or_cancel(self) -> OrderBuilder:
         """Set as immediate-or-cancel (IOC)."""
         self._time_in_force = "IOC"
         return self
 
-    def fill_or_kill(self) -> "OrderBuilder":
+    def fill_or_kill(self) -> OrderBuilder:
         """Set as fill-or-kill (FOK)."""
         self._time_in_force = "FOK"
         return self
 
-    def with_factory(self, factory: AbstractEntityFactory) -> "OrderBuilder":
+    def with_factory(self, factory: AbstractEntityFactory) -> OrderBuilder:
         """Set custom entity factory."""
         self._entity_factory = factory
         return self
@@ -686,30 +686,30 @@ class OrderPrototype:
         quantity: Decimal,
         side: str = "buy",
         order_type: str = "market",
-        portfolio_id: Optional[str] = None,
-        price: Optional[Decimal] = None,
+        portfolio_id: str | None = None,
+        price: Decimal | None = None,
     ):
         """Initialize prototype with base parameters."""
         self._symbol: str = symbol
         self._quantity: Decimal = quantity
         self._side: str = side
         self._order_type: str = order_type
-        self._portfolio_id: Optional[str] = portfolio_id
-        self._price: Optional[Decimal] = price
+        self._portfolio_id: str | None = portfolio_id
+        self._price: Decimal | None = price
         self._factory = TradingEntityFactory()
 
-    def with_price(self, price: Decimal) -> "OrderPrototype":
+    def with_price(self, price: Decimal) -> OrderPrototype:
         """Create prototype with specific price."""
         return OrderPrototype(
             symbol=self._symbol,
             quantity=self._quantity,
             side=self._side,
-            order_type='limit',
+            order_type="limit",
             portfolio_id=self._portfolio_id,
             price=price,
         )
 
-    def with_quantity(self, quantity: Decimal) -> "OrderPrototype":
+    def with_quantity(self, quantity: Decimal) -> OrderPrototype:
         """Create prototype with specific quantity."""
         return OrderPrototype(
             symbol=self._symbol,
@@ -720,7 +720,7 @@ class OrderPrototype:
             price=self._price,
         )
 
-    def for_symbol(self, symbol: str) -> "OrderPrototype":
+    def for_symbol(self, symbol: str) -> OrderPrototype:
         """Create prototype for different symbol."""
         return OrderPrototype(
             symbol=symbol,
@@ -733,12 +733,12 @@ class OrderPrototype:
 
     def build(
         self,
-        symbol: Optional[str] = None,
-        quantity: Optional[Decimal] = None,
-        side: Optional[str] = None,
-        order_type: Optional[str] = None,
-        portfolio_id: Optional[str] = None,
-        price: Optional[Decimal] = None,
+        symbol: str | None = None,
+        quantity: Decimal | None = None,
+        side: str | None = None,
+        order_type: str | None = None,
+        portfolio_id: str | None = None,
+        price: Decimal | None = None,
         **kwargs,
     ) -> Order:
         """
@@ -792,14 +792,14 @@ class FactoryRegistry:
 
     def __init__(self) -> None:
         """Initialize empty registry."""
-        self._factories: Dict[
-            str, Union[AbstractEntityFactory, "OrderFactory", "OrderBuilder", "OrderPrototype"]
+        self._factories: dict[
+            str, AbstractEntityFactory | OrderFactory | OrderBuilder | OrderPrototype
         ] = {}
 
     def register(
         self,
         name: str,
-        factory: Union[AbstractEntityFactory, "OrderFactory", "OrderBuilder", "OrderPrototype"],
+        factory: AbstractEntityFactory | OrderFactory | OrderBuilder | OrderPrototype,
     ) -> None:
         """
         Register a factory.
@@ -813,7 +813,7 @@ class FactoryRegistry:
 
     def get(
         self, name: str
-    ) -> Union[AbstractEntityFactory, "OrderFactory", "OrderBuilder", "OrderPrototype"]:
+    ) -> AbstractEntityFactory | OrderFactory | OrderBuilder | OrderPrototype:
         """
         Get a registered factory.
 
@@ -830,7 +830,7 @@ class FactoryRegistry:
             raise KeyError(f"Factory '{name}' not registered")
         return self._factories[name]
 
-    def list_factories(self) -> List[str]:
+    def list_factories(self) -> list[str]:
         """List all registered factory names."""
         return list(self._factories.keys())
 
@@ -841,13 +841,13 @@ class FactoryRegistry:
 
 # Default global registry
 _default_registry = FactoryRegistry()
-_default_registry.register('entity', TradingEntityFactory())
-_default_registry.register('order', OrderFactory())
+_default_registry.register("entity", TradingEntityFactory())
+_default_registry.register("order", OrderFactory())
 
 
 def get_factory(
     name: str,
-) -> Union[AbstractEntityFactory, "OrderFactory", "OrderBuilder", "OrderPrototype"]:
+) -> AbstractEntityFactory | OrderFactory | OrderBuilder | OrderPrototype:
     """
     Get a factory from the default registry.
 
@@ -862,7 +862,7 @@ def get_factory(
 
 def register_factory(
     name: str,
-    factory: Union[AbstractEntityFactory, "OrderFactory", "OrderBuilder", "OrderPrototype"],
+    factory: AbstractEntityFactory | OrderFactory | OrderBuilder | OrderPrototype,
 ) -> None:
     """
     Register a factory in the default registry.

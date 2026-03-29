@@ -10,7 +10,7 @@ Manages:
 
 import logging
 from datetime import datetime, timedelta
-from typing import Dict, List, Optional
+from typing import Optional
 from uuid import uuid4
 
 from .models import AlertEvent, AlertHistory, AlertRule, AlertState
@@ -39,14 +39,14 @@ class AlertManager:
         self.dedup_minutes = dedup_minutes
 
         # Active alerts by rule_id
-        self.active_alerts: Dict[str, AlertEvent] = {}
+        self.active_alerts: dict[str, AlertEvent] = {}
 
         # Alert history
-        self.alert_history: List[AlertHistory] = []
+        self.alert_history: list[AlertHistory] = []
         self._max_history = 50000
 
         # Deduplication tracking: (rule_id, symbol, portfolio_id) -> last_trigger_time
-        self.last_triggered_times: Dict[str, datetime] = {}
+        self.last_triggered_times: dict[str, datetime] = {}
 
     def should_trigger_alert(self, rule: AlertRule, event: AlertEvent) -> bool:
         """
@@ -147,7 +147,7 @@ class AlertManager:
 
         if not event:
             logger.warning(
-                f"No active alert found to resolve: " f"rule_id={rule_id}, event_id={event_id}"
+                f"No active alert found to resolve: rule_id={rule_id}, event_id={event_id}"
             )
             return None
 
@@ -206,7 +206,7 @@ class AlertManager:
 
         if not event:
             logger.warning(
-                f"No active alert found to acknowledge: " f"rule_id={rule_id}, event_id={event_id}"
+                f"No active alert found to acknowledge: rule_id={rule_id}, event_id={event_id}"
             )
             return None
 
@@ -256,7 +256,7 @@ class AlertManager:
 
         return False
 
-    def get_active_alerts(self, rule_id: Optional[str] = None) -> List[AlertEvent]:
+    def get_active_alerts(self, rule_id: Optional[str] = None) -> list[AlertEvent]:
         """
         Get list of active alerts.
 
@@ -288,7 +288,7 @@ class AlertManager:
                 return event
         return None
 
-    def get_recent_alerts(self, minutes: int = 60) -> List[AlertEvent]:
+    def get_recent_alerts(self, minutes: int = 60) -> list[AlertEvent]:
         """
         Get alerts triggered in last N minutes.
 
@@ -301,7 +301,7 @@ class AlertManager:
         cutoff = datetime.utcnow() - timedelta(minutes=minutes)
         return [a for a in self.active_alerts.values() if a.triggered_at >= cutoff]
 
-    def get_alert_statistics(self) -> Dict:
+    def get_alert_statistics(self) -> dict:
         """
         Get statistics about alerts.
 
@@ -326,7 +326,7 @@ class AlertManager:
 
     def get_alert_history(
         self, event_id: Optional[str] = None, limit: int = 100
-    ) -> List[AlertHistory]:
+    ) -> list[AlertHistory]:
         """
         Get alert history.
 
@@ -358,7 +358,11 @@ class AlertManager:
         keys_to_remove = []
 
         for key, event in self.active_alerts.items():
-            if event.state in [AlertState.RESOLVED, AlertState.RESOLVED_ACKNOWLEDGED] and event.resolved_at and event.resolved_at < cutoff:
+            if (
+                event.state in [AlertState.RESOLVED, AlertState.RESOLVED_ACKNOWLEDGED]
+                and event.resolved_at
+                and event.resolved_at < cutoff
+            ):
                 keys_to_remove.append(key)
 
         for key in keys_to_remove:
@@ -375,7 +379,7 @@ class AlertManager:
         """Create unique key for alert."""
         return f"{rule.rule_id}:{event.symbol}:{event.portfolio_id}:{event.metric_name}"
 
-    def _record_history(self, event_id: str, rule_id: str, action: str, details: Dict) -> None:
+    def _record_history(self, event_id: str, rule_id: str, action: str, details: dict) -> None:
         """Record alert history entry."""
         history = AlertHistory(
             history_id=f"hist_{uuid4().hex[:12]}",

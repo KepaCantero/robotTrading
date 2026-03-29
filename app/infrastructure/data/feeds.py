@@ -10,7 +10,7 @@ import logging
 from abc import ABC, abstractmethod
 from datetime import datetime
 from decimal import Decimal
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 import aiohttp
 from aiohttp import ClientError
@@ -64,23 +64,27 @@ class DataFeedInterface(ABC):
         start_date: datetime,
         end_date: datetime,
         frequency: DataFrequency = DataFrequency.DAILY,
-    ) -> List[HistoricalData]:
+    ) -> list[HistoricalData]:
         """Get historical data for a symbol."""
 
     @abstractmethod
-    async def subscribe_to_symbols(self, symbols: List[str]) -> bool:
+    async def subscribe_to_symbols(self, symbols: list[str]) -> bool:
         """Subscribe to real-time updates for symbols."""
 
-    async def _make_request(self, url: str, params: Dict[str, Any] = None) -> Dict[str, Any]:
+    async def _make_request(
+        self, url: str, params: Optional[dict[str, Any]] = None
+    ) -> dict[str, Any]:
         """Make HTTP request with rate limiting and error handling."""
         logger.debug(
             "Making HTTP request",
             extra={
                 "url": url,
                 "params": params,
-                "feed_type": self.config.feed_type.value
-                if hasattr(self.config.feed_type, 'value')
-                else str(self.config.feed_type),
+                "feed_type": (
+                    self.config.feed_type.value
+                    if hasattr(self.config.feed_type, "value")
+                    else str(self.config.feed_type)
+                ),
             },
         )
         async with self._rate_limiter:
@@ -203,7 +207,7 @@ class AlphaVantageFeed(DataFeedInterface):
             quote_data = data["Global Quote"]
 
             # Convert raw_data to MetadataDict format (flatten nested values to strings)
-            raw_metadata: Dict[str, MetadataValue] = {
+            raw_metadata: dict[str, MetadataValue] = {
                 f"raw_{k}": str(v) for k, v in quote_data.items()
             }
             return Quote(
@@ -238,7 +242,7 @@ class AlphaVantageFeed(DataFeedInterface):
         start_date: datetime,
         end_date: datetime,
         frequency: DataFrequency = DataFrequency.DAILY,
-    ) -> List[HistoricalData]:
+    ) -> list[HistoricalData]:
         """Get historical data from Alpha Vantage."""
         logger.debug(
             "Getting historical data from Alpha Vantage",
@@ -270,7 +274,7 @@ class AlphaVantageFeed(DataFeedInterface):
             data = await self._make_request(self.base_url, params)
 
             time_series_key = None
-            for key in data.keys():
+            for key in data:
                 if "Time Series" in key:
                     time_series_key = key
                     break
@@ -290,7 +294,7 @@ class AlphaVantageFeed(DataFeedInterface):
 
                 if start_date <= date <= end_date:
                     # Convert values to MetadataDict format
-                    values_metadata: Dict[str, MetadataValue] = {
+                    values_metadata: dict[str, MetadataValue] = {
                         f"raw_{k}": str(v) for k, v in values.items()
                     }
                     historical_data.append(
@@ -319,7 +323,7 @@ class AlphaVantageFeed(DataFeedInterface):
             )
             return []
 
-    async def subscribe_to_symbols(self, symbols: List[str]) -> bool:
+    async def subscribe_to_symbols(self, symbols: list[str]) -> bool:
         """Alpha Vantage doesn't support real-time subscriptions."""
         logger.warning(
             "Alpha Vantage doesn't support real-time subscriptions",
@@ -397,7 +401,7 @@ class YahooFinanceFeed(DataFeedInterface):
                 return None
 
             # Convert result to MetadataDict format (flatten nested structures)
-            yahoo_metadata: Dict[str, MetadataValue] = {
+            yahoo_metadata: dict[str, MetadataValue] = {
                 "symbol": str(meta.get("symbol", symbol)),
                 "currency": str(meta.get("currency", "USD")),
                 "exchangeName": str(meta.get("exchangeName", "")),
@@ -435,7 +439,7 @@ class YahooFinanceFeed(DataFeedInterface):
         start_date: datetime,
         end_date: datetime,
         frequency: DataFrequency = DataFrequency.DAILY,
-    ) -> List[HistoricalData]:
+    ) -> list[HistoricalData]:
         """Get historical data from Yahoo Finance."""
         logger.debug(
             "Getting historical data from Yahoo Finance",
@@ -486,7 +490,7 @@ class YahooFinanceFeed(DataFeedInterface):
 
                 if start_date <= date <= end_date:
                     # Create minimal metadata for historical data
-                    hist_metadata: Dict[str, MetadataValue] = {
+                    hist_metadata: dict[str, MetadataValue] = {
                         "data_index": i,
                         "timestamp_unix": int(timestamp),
                     }
@@ -516,7 +520,7 @@ class YahooFinanceFeed(DataFeedInterface):
             )
             return []
 
-    async def subscribe_to_symbols(self, symbols: List[str]) -> bool:
+    async def subscribe_to_symbols(self, symbols: list[str]) -> bool:
         """Yahoo Finance doesn't support real-time subscriptions."""
         logger.warning(
             "Yahoo Finance doesn't support real-time subscriptions",
@@ -614,7 +618,7 @@ class PolygonFeed(DataFeedInterface):
             calculated_spread = ask - bid if bid > 0 and ask > 0 else Decimal("0.01")
 
             # Convert snapshot to MetadataDict format
-            polygon_metadata: Dict[str, MetadataValue] = {
+            polygon_metadata: dict[str, MetadataValue] = {
                 "ticker": str(snapshot.get("ticker", symbol)),
                 "day_volume": float(day_data.get("v", 0)),
                 "day_vwap": float(day_data.get("vw", 0)),
@@ -652,7 +656,7 @@ class PolygonFeed(DataFeedInterface):
         start_date: datetime,
         end_date: datetime,
         frequency: DataFrequency = DataFrequency.DAILY,
-    ) -> List[HistoricalData]:
+    ) -> list[HistoricalData]:
         """Get historical data from Massive.com (Polygon.io)."""
         logger.debug(
             "Getting historical data from Massive.com (Polygon.io)",
@@ -707,7 +711,7 @@ class PolygonFeed(DataFeedInterface):
 
                 if start_date <= timestamp <= end_date:
                     # Convert result dict to MetadataDict format (flatten nested values)
-                    raw_metadata: Dict[str, MetadataValue] = {
+                    raw_metadata: dict[str, MetadataValue] = {
                         "ticker": str(symbol),
                         "open": float(result.get("o", 0)),
                         "high": float(result.get("h", 0)),
@@ -744,7 +748,7 @@ class PolygonFeed(DataFeedInterface):
             )
             return []
 
-    async def subscribe_to_symbols(self, symbols: List[str]) -> bool:
+    async def subscribe_to_symbols(self, symbols: list[str]) -> bool:
         """Massive.com supports real-time subscriptions via WebSocket (not implemented here)."""
         logger.warning(
             "Massive.com WebSocket subscriptions not implemented in HTTP mode",
@@ -763,9 +767,11 @@ def create_data_feed(config: DataFeedConfig) -> DataFeedInterface:
     logger.debug(
         "Creating data feed",
         extra={
-            "feed_type": config.feed_type.value
-            if hasattr(config.feed_type, 'value')
-            else str(config.feed_type)
+            "feed_type": (
+                config.feed_type.value
+                if hasattr(config.feed_type, "value")
+                else str(config.feed_type)
+            )
         },
     )
     if config.feed_type == DataFeedType.ALPHA_VANTAGE:

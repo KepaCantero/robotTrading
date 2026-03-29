@@ -7,10 +7,11 @@ trading information.
 NOTE: For canonical PerformanceMetrics, use app.backtesting.models.PerformanceMetrics
 This module contains DashboardPerformanceMetrics which is dashboard-specific.
 """
+
 from dataclasses import dataclass, field
 from datetime import datetime
 from decimal import Decimal
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 
 @dataclass
@@ -26,7 +27,7 @@ class PositionSummary:
     unrealized_pnl_pct: float
     side: str  # "long" or "short"
 
-    def to_display_dict(self) -> Dict[str, Any]:
+    def to_display_dict(self) -> dict[str, Any]:
         """Convert to dictionary for display."""
         return {
             "symbol": self.symbol,
@@ -63,7 +64,7 @@ class DashboardPerformanceMetrics:
     portfolio_value: Decimal = Decimal("0")
     starting_capital: Decimal = Decimal("0")
 
-    def to_display_dict(self) -> Dict[str, Any]:
+    def to_display_dict(self) -> dict[str, Any]:
         """Convert to dictionary for display."""
         return {
             "total_pnl": float(self.total_pnl),
@@ -97,7 +98,7 @@ class SystemStatus:
     bridge_status: str
     active_orders: int
 
-    def to_display_dict(self) -> Dict[str, Any]:
+    def to_display_dict(self) -> dict[str, Any]:
         """Convert to dictionary for display."""
         return {
             "kill_switch_active": self.kill_switch_active,
@@ -116,11 +117,11 @@ class DashboardSnapshot:
 
     timestamp: datetime
     performance: PerformanceMetrics
-    positions: List[PositionSummary]
+    positions: list[PositionSummary]
     system_status: SystemStatus
-    recent_alerts: List[Dict[str, Any]] = field(default_factory=list)
+    recent_alerts: list[dict[str, Any]] = field(default_factory=list)
 
-    def to_display_dict(self) -> Dict[str, Any]:
+    def to_display_dict(self) -> dict[str, Any]:
         """Convert to dictionary for display."""
         return {
             "timestamp": self.timestamp.isoformat(),

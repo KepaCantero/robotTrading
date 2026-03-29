@@ -11,7 +11,6 @@ from dataclasses import dataclass, field
 from datetime import datetime, time
 from decimal import Decimal
 from enum import Enum
-from typing import Dict, List, Optional
 
 try:
     from pydantic import BaseModel, Field, field_validator, model_validator
@@ -47,6 +46,9 @@ except ImportError:
                     result[key] = value
             return result
 
+        def __init_subclass__(cls, **kwargs):
+            dataclass(cls)
+
     def field_validator(*args):
         """Fallback field validator decorator."""
 
@@ -62,10 +64,6 @@ except ImportError:
             return func
 
         return decorator
-
-    # Apply dataclass decorator to subclasses
-    def __init_subclass__(cls, **kwargs):
-        dataclass(cls)
 
 
 class OrderSide(str, Enum):
@@ -155,10 +153,10 @@ class MarketSnapshot:
     bid: Decimal
     ask: Decimal
     last_price: Decimal
-    open_price: Optional[Decimal] = None
-    high_price: Optional[Decimal] = None
-    low_price: Optional[Decimal] = None
-    close_price: Optional[Decimal] = None
+    open_price: Decimal | None = None
+    high_price: Decimal | None = None
+    low_price: Decimal | None = None
+    close_price: Decimal | None = None
 
     # Volume data
     bid_size: int = 0
@@ -167,9 +165,9 @@ class MarketSnapshot:
     average_daily_volume: Decimal = Decimal("0")
 
     # Volatility data
-    implied_volatility: Optional[Decimal] = None
-    historical_volatility_20d: Optional[Decimal] = None
-    vix: Optional[Decimal] = None
+    implied_volatility: Decimal | None = None
+    historical_volatility_20d: Decimal | None = None
+    vix: Decimal | None = None
 
     # Market conditions
     is_market_open: bool = True
@@ -237,16 +235,16 @@ class Order:
     quantity: int  # Number of shares
 
     # Price fields (required for limit/stop orders)
-    limit_price: Optional[Decimal] = None
-    stop_price: Optional[Decimal] = None
+    limit_price: Decimal | None = None
+    stop_price: Decimal | None = None
 
     # Timing
     created_at: datetime = field(default_factory=datetime.utcnow)
-    submitted_at: Optional[datetime] = None
-    expires_at: Optional[datetime] = None
+    submitted_at: datetime | None = None
+    expires_at: datetime | None = None
 
     # Constraints
-    max_slippage_bps: Optional[Decimal] = None
+    max_slippage_bps: Decimal | None = None
     min_fill_quantity: int = 0  # Minimum acceptable fill (all-or-none if > 0)
     adv_limit_pct: Decimal = Decimal("0.1")  # Max 10% of ADV by default
 
@@ -378,7 +376,7 @@ class FillResult:
     filled: bool
     filled_shares: int
     fill_price: Decimal
-    fill_time: Optional[datetime]
+    fill_time: datetime | None
 
     # Cost breakdown
     commission: Decimal
@@ -390,11 +388,11 @@ class FillResult:
     fill_reason: FillReason
 
     # Additional context
-    bid_at_fill: Optional[Decimal] = None
-    ask_at_fill: Optional[Decimal] = None
-    spread_at_fill_bps: Optional[Decimal] = None
+    bid_at_fill: Decimal | None = None
+    ask_at_fill: Decimal | None = None
+    spread_at_fill_bps: Decimal | None = None
     adv_at_fill: Decimal = Decimal("0")
-    volatility_at_fill: Optional[Decimal] = None
+    volatility_at_fill: Decimal | None = None
 
     # Partial fill info
     is_partial_fill: bool = False
@@ -403,7 +401,7 @@ class FillResult:
 
     # Metadata
     execution_time_ms: int = 0  # Time taken to execute in milliseconds
-    warnings: List[str] = field(default_factory=list)
+    warnings: list[str] = field(default_factory=list)
 
     @property
     def fill_value(self) -> Decimal:
@@ -440,7 +438,7 @@ class ExecutionResult:
     """
 
     order: Order
-    fills: List[FillResult]
+    fills: list[FillResult]
 
     # Aggregated results
     total_filled_shares: int
@@ -451,8 +449,8 @@ class ExecutionResult:
     total_cost: Decimal
 
     # Timing
-    first_fill_time: Optional[datetime]
-    last_fill_time: Optional[datetime]
+    first_fill_time: datetime | None
+    last_fill_time: datetime | None
 
     # Status
     is_fully_filled: bool
@@ -464,7 +462,7 @@ class ExecutionResult:
 
     # Metadata
     execution_summary: str = ""
-    warnings: List[str] = field(default_factory=list)
+    warnings: list[str] = field(default_factory=list)
 
     @property
     def total_fill_value(self) -> Decimal:
@@ -479,7 +477,7 @@ class ExecutionResult:
         return Decimal("0")
 
     @property
-    def execution_duration_seconds(self) -> Optional[float]:
+    def execution_duration_seconds(self) -> float | None:
         """Time between first and last fill in seconds."""
         if self.first_fill_time and self.last_fill_time:
             return (self.last_fill_time - self.first_fill_time).total_seconds()
@@ -562,7 +560,7 @@ class ExecutionSummary:
                     self.total_all_costs / self.total_execution_value * Decimal("100")
                 )
 
-    def to_dict(self) -> Dict:
+    def to_dict(self) -> dict:
         """Convert summary to dictionary."""
         return {
             "order_statistics": {

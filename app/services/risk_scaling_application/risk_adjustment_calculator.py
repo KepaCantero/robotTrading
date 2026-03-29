@@ -12,7 +12,7 @@ Responsibilities:
 
 import logging
 from decimal import Decimal
-from typing import List, Tuple
+from typing import ClassVar
 
 from app.services.portfolio_constructor import AllocationWeight
 
@@ -32,7 +32,7 @@ class RiskAdjustmentCalculator:
     """
 
     # Market regime adjustment factors
-    REGIME_ADJUSTMENT_FACTORS = {
+    REGIME_ADJUSTMENT_FACTORS: ClassVar[dict] = {
         "bull": {
             "high_volatility_weight_adjust": Decimal("1.2"),
             "low_volatility_weight_adjust": Decimal("0.9"),
@@ -51,14 +51,14 @@ class RiskAdjustmentCalculator:
     }
 
     # Volatility adjustment factors
-    VOLATILITY_ADJUSTMENT_FACTORS = {
+    VOLATILITY_ADJUSTMENT_FACTORS: ClassVar[dict] = {
         "low": Decimal("1.1"),
         "normal": Decimal("1.0"),
         "high": Decimal("0.75"),
     }
 
     # Module volatility classification
-    MODULE_VOLATILITY_CLASS = {
+    MODULE_VOLATILITY_CLASS: ClassVar[dict] = {
         "momentum": "high",
         "machine_learning_basic": "high",
         "transformer_engine": "very_high",
@@ -153,7 +153,7 @@ class RiskAdjustmentCalculator:
         volatility_level: str,
         current_drawdown_pct: Decimal,
         max_drawdown_pct: Decimal,
-    ) -> Tuple[Decimal, Decimal, Decimal, Decimal]:
+    ) -> tuple[Decimal, Decimal, Decimal, Decimal]:
         """
         Calculate adjusted weight for a single allocation.
 
@@ -199,12 +199,12 @@ class RiskAdjustmentCalculator:
 
     def calculate_adjusted_allocations(
         self,
-        original_allocations: List[AllocationWeight],
+        original_allocations: list[AllocationWeight],
         market_regime: str,
         volatility_level: str,
         current_drawdown_pct: Decimal,
         max_drawdown_pct: Decimal,
-    ) -> List[AdjustedAllocationWeight]:
+    ) -> list[AdjustedAllocationWeight]:
         """
         Calculate adjusted allocations for all modules.
 
@@ -237,9 +237,9 @@ class RiskAdjustmentCalculator:
                     original_weight_pct=allocation.weight_pct,
                     adjusted_weight_pct=adj_weight,
                     adjustment_factor=total_adj,
-                    rationale=f"Regime:{market_regime}(×{regime_adj:.2f}) "
-                    f"Vol:{volatility_level}(×{vol_factor:.2f}) "
-                    f"DD:{current_drawdown_pct:.1f}%/{max_drawdown_pct:.1f}%(×{dd_factor:.2f})",
+                    rationale=f"Regime:{market_regime}(*{regime_adj:.2f}) "
+                    f"Vol:{volatility_level}(*{vol_factor:.2f}) "
+                    f"DD:{current_drawdown_pct:.1f}%/{max_drawdown_pct:.1f}%(*{dd_factor:.2f})",
                 )
             )
 
@@ -314,7 +314,7 @@ class RiskAdjustmentCalculator:
 
     def calculate_return_adjustment(
         self,
-        adjusted_allocations: List[AdjustedAllocationWeight],
+        adjusted_allocations: list[AdjustedAllocationWeight],
     ) -> Decimal:
         """
         Calculate expected return impact from adjustments.

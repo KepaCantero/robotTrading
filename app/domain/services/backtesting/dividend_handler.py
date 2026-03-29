@@ -19,7 +19,6 @@ from dataclasses import dataclass
 from datetime import date, timedelta
 from decimal import Decimal
 from enum import Enum
-from typing import Dict, List, Optional, Tuple
 
 
 class DividendType(str, Enum):
@@ -51,7 +50,7 @@ class DividendPayment:
     payable_date: date
     amount_per_share: Decimal
     dividend_type: DividendType
-    frequency: Optional[int] = None  # Number of times per year
+    frequency: int | None = None  # Number of times per year
 
     @property
     def annualized_amount(self) -> Decimal:
@@ -89,7 +88,7 @@ class DividendHandler:
     def __init__(
         self,
         reinvestment_strategy: DividendReinvestmentStrategy = DividendReinvestmentStrategy.REINVEST,
-        reinvestment_threshold: Optional[Decimal] = None,
+        reinvestment_threshold: Decimal | None = None,
         fractional_shares: bool = True,
         tax_withholding_rate: float = 0.0,  # Varies by jurisdiction
     ):
@@ -109,8 +108,8 @@ class DividendHandler:
         self._fractional_shares = fractional_shares
         self._tax_rate = Decimal(str(tax_withholding_rate))
 
-        self._dividends: Dict[str, List[DividendPayment]] = {}
-        self._reinvestments: List[DividendReinvestment] = []
+        self._dividends: dict[str, list[DividendPayment]] = {}
+        self._reinvestments: list[DividendReinvestment] = []
 
     def add_dividend(self, dividend: DividendPayment) -> None:
         """
@@ -127,7 +126,7 @@ class DividendHandler:
         self,
         symbol: str,
         as_of_date: date,
-    ) -> Optional[DividendPayment]:
+    ) -> DividendPayment | None:
         """
         Get most recent dividend for symbol before date.
 
@@ -179,7 +178,7 @@ class DividendHandler:
         quantity: Decimal,
         payment_date: date,
         current_price: Decimal,
-    ) -> Tuple[Decimal, Optional[DividendReinvestment]]:
+    ) -> tuple[Decimal, DividendReinvestment | None]:
         """
         Process dividend payment for a position.
 
@@ -208,7 +207,10 @@ class DividendHandler:
         # Handle based on strategy
         reinvestment = None
 
-        if self._strategy == DividendReinvestmentStrategy.REINVEST or self._strategy == DividendReinvestmentStrategy.THRESHOLD and net_dividend >= self._threshold:
+        if self._strategy == DividendReinvestmentStrategy.REINVEST or (
+            self._strategy == DividendReinvestmentStrategy.THRESHOLD
+            and net_dividend >= self._threshold
+        ):
             reinvestment = self._reinvest_dividend(
                 symbol, net_dividend, payment_date, current_price
             )
@@ -234,10 +236,7 @@ class DividendHandler:
                 fractional_shares=False,
             )
 
-        if self._fractional_shares:
-            shares = dividend_amount / price
-        else:
-            shares = dividend_amount // price
+        shares = dividend_amount / price if self._fractional_shares else dividend_amount // price
 
         reinvestment = DividendReinvestment(
             symbol=symbol,
@@ -253,8 +252,8 @@ class DividendHandler:
 
     def calculate_annual_dividend_income(
         self,
-        positions: Dict[str, Decimal],
-        prices: Dict[str, Decimal],
+        positions: dict[str, Decimal],
+        prices: dict[str, Decimal],
         as_of_date: date,
     ) -> Decimal:
         """
@@ -280,8 +279,8 @@ class DividendHandler:
 
     def calculate_portfolio_dividend_yield(
         self,
-        positions: Dict[str, Decimal],
-        prices: Dict[str, Decimal],
+        positions: dict[str, Decimal],
+        prices: dict[str, Decimal],
         as_of_date: date,
     ) -> float:
         """
@@ -316,7 +315,7 @@ class DividendHandler:
         self,
         symbol: str,
         as_of_date: date,
-    ) -> Optional[date]:
+    ) -> date | None:
         """
         Estimate next dividend date for symbol.
 
@@ -339,10 +338,9 @@ class DividendHandler:
         last_dividend = sorted(past_dividends, key=lambda d: d.ex_date)[-1]
 
         # Estimate based on frequency
-        if last_dividend.frequency:
-            days_between = 365 // last_dividend.frequency
-        else:
-            days_between = 91  # Quarterly default
+        days_between = (
+            365 // last_dividend.frequency if last_dividend.frequency else 91
+        )  # Quarterly default
 
         return last_dividend.ex_date + timedelta(days=days_between)
 
@@ -351,7 +349,7 @@ class DividendHandler:
         symbol: str,
         start_date: date,
         end_date: date,
-    ) -> List[DividendPayment]:
+    ) -> list[DividendPayment]:
         """
         Get dividend history for symbol in date range.
 

@@ -27,7 +27,7 @@ from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional, Tuple
+from typing import Any, Callable
 
 import aiosqlite
 
@@ -86,8 +86,8 @@ class ToilEntry:
     automated: bool = False
     assignable: bool = True
     automation_potential: AutomationPotential = AutomationPotential.MEDIUM
-    engineer: Optional[str] = None
-    tags: List[str] = field(default_factory=list)
+    engineer: str | None = None
+    tags: list[str] = field(default_factory=list)
     notes: str = ""
 
     def __post_init__(self):
@@ -108,7 +108,7 @@ class ToilEntry:
         """
         return not self.automated and self.assignable
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
         return {
             "timestamp": self.timestamp.isoformat(),
@@ -136,7 +136,7 @@ class ToilMetrics:
     automated_minutes: int
     automation_coverage: float
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
         return {
             "total_minutes": self.total_minutes,
@@ -176,7 +176,7 @@ class AutomationOpportunity:
     implementation_effort: str
     priority: int
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
         return {
             "category": self.category.value,
@@ -210,13 +210,13 @@ class ToilReport:
     period_start: datetime
     period_end: datetime
     metrics: ToilMetrics
-    top_toil_sources: List[Tuple[str, int]]
-    automation_opportunities: List[AutomationOpportunity]
-    engineer_breakdown: Dict[str, ToilMetrics]
-    trend_data: List[Dict[str, Any]]
-    recommendations: List[str]
+    top_toil_sources: list[tuple[str, int]]
+    automation_opportunities: list[AutomationOpportunity]
+    engineer_breakdown: dict[str, ToilMetrics]
+    trend_data: list[dict[str, Any]]
+    recommendations: list[str]
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
         return {
             "period_start": self.period_start.isoformat(),
@@ -249,7 +249,7 @@ class ToilConfig:
     automation_target_coverage: float = 80.0  # Target automation coverage %
 
     # Callbacks
-    on_toil_threshold_exceeded: Optional[Callable[[ToilMetrics], None]] = None
+    on_toil_threshold_exceeded: Callable[[ToilMetrics], None] | None = None
 
 
 class ToilTracker:
@@ -286,7 +286,7 @@ class ToilTracker:
     def __init__(
         self,
         service_name: str,
-        config: Optional[ToilConfig] = None,
+        config: ToilConfig | None = None,
     ):
         """
         Initialize toil tracker.
@@ -300,11 +300,11 @@ class ToilTracker:
         self.logger = logging.getLogger(f"{__name__}.{service_name}")
 
         # State
-        self._entries: List[ToilEntry] = []
+        self._entries: list[ToilEntry] = []
         self._lock = asyncio.Lock()
 
         # Category mappings for analysis
-        self._category_patterns: Dict[ToilCategory, List[str]] = {
+        self._category_patterns: dict[ToilCategory, list[str]] = {
             ToilCategory.INCIDENT_RESPONSE: [
                 "incident",
                 "outage",
@@ -507,8 +507,8 @@ class ToilTracker:
         automated: bool = False,
         assignable: bool = True,
         automation_potential: str = "medium",
-        engineer: Optional[str] = None,
-        tags: Optional[List[str]] = None,
+        engineer: str | None = None,
+        tags: list[str] | None = None,
         notes: str = "",
     ) -> ToilEntry:
         """
@@ -620,7 +620,7 @@ class ToilTracker:
     def calculate_toil_percentage(
         self,
         days: int = 30,
-        engineer: Optional[str] = None,
+        engineer: str | None = None,
     ) -> float:
         """
         Calculate toil as percentage of total work.
@@ -675,7 +675,7 @@ class ToilTracker:
             self.logger.error(f"Error calculating toil percentage: {e}")
             return 0.0
 
-    def _calculate_metrics(self, entries: List[ToilEntry]) -> ToilMetrics:
+    def _calculate_metrics(self, entries: list[ToilEntry]) -> ToilMetrics:
         """Calculate metrics from entries."""
         total_minutes = sum(e.duration_minutes for e in entries)
         toil_minutes = sum(e.duration_minutes for e in entries if e.is_toil)
@@ -700,7 +700,7 @@ class ToilTracker:
         self,
         days: int = 30,
         limit: int = 10,
-    ) -> List[Tuple[str, int]]:
+    ) -> list[tuple[str, int]]:
         """
         Get top sources of toil.
 
@@ -717,7 +717,7 @@ class ToilTracker:
             toil_entries = [e for e in self._entries if e.timestamp >= cutoff and e.is_toil]
 
             # Group by category
-            category_minutes: Dict[str, int] = {}
+            category_minutes: dict[str, int] = {}
             for entry in toil_entries:
                 category = entry.category.value
                 category_minutes[category] = (
@@ -741,7 +741,7 @@ class ToilTracker:
         self,
         days: int = 30,
         limit: int = 10,
-    ) -> List[Tuple[str, int]]:
+    ) -> list[tuple[str, int]]:
         """
         Get top individual toil tasks.
 
@@ -758,7 +758,7 @@ class ToilTracker:
             toil_entries = [e for e in self._entries if e.timestamp >= cutoff and e.is_toil]
 
             # Group by task pattern (similar tasks)
-            task_minutes: Dict[str, int] = {}
+            task_minutes: dict[str, int] = {}
             for entry in toil_entries:
                 task = entry.task
                 task_minutes[task] = task_minutes.get(task, 0) + entry.duration_minutes
@@ -779,7 +779,7 @@ class ToilTracker:
     def generate_automation_opportunities(
         self,
         days: int = 30,
-    ) -> List[AutomationOpportunity]:
+    ) -> list[AutomationOpportunity]:
         """
         Identify automation opportunities.
 
@@ -798,7 +798,7 @@ class ToilTracker:
             ]
 
             # Group by category and task pattern
-            opportunities_dict: Dict[str, Dict[str, Any]] = {}
+            opportunities_dict: dict[str, dict[str, Any]] = {}
 
             for entry in toil_entries:
                 key = f"{entry.category.value}:{entry.task}"
@@ -873,7 +873,7 @@ class ToilTracker:
     def get_engineer_breakdown(
         self,
         days: int = 30,
-    ) -> Dict[str, ToilMetrics]:
+    ) -> dict[str, ToilMetrics]:
         """
         Get toil breakdown by engineer.
 
@@ -888,7 +888,7 @@ class ToilTracker:
             filtered = [e for e in self._entries if e.timestamp >= cutoff and e.engineer]
 
             # Group by engineer
-            engineer_entries: Dict[str, List[ToilEntry]] = {}
+            engineer_entries: dict[str, list[ToilEntry]] = {}
             for entry in filtered:
                 engineer = entry.engineer or "unknown"
                 if engineer not in engineer_entries:
@@ -910,7 +910,7 @@ class ToilTracker:
         self,
         days: int = 30,
         bucket_days: int = 7,
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """
         Get historical trend data for toil.
 
@@ -1016,9 +1016,9 @@ class ToilTracker:
     def _generate_recommendations(
         self,
         metrics: ToilMetrics,
-        top_sources: List[Tuple[str, int]],
-        automation_ops: List[AutomationOpportunity],
-    ) -> List[str]:
+        top_sources: list[tuple[str, int]],
+        automation_ops: list[AutomationOpportunity],
+    ) -> list[str]:
         """Generate recommendations based on analysis."""
         recommendations = []
 
@@ -1070,7 +1070,7 @@ class ToilTracker:
     def export_to_json(
         self,
         days: int = 30,
-        filepath: Optional[str] = None,
+        filepath: str | None = None,
     ) -> str:
         """
         Export toil data to JSON.
@@ -1113,12 +1113,12 @@ class ToilTracker:
 
 
 # Singleton instances
-_trackers: Dict[str, ToilTracker] = {}
+_trackers: dict[str, ToilTracker] = {}
 
 
 def get_toil_tracker(
     service_name: str,
-    config: Optional[ToilConfig] = None,
+    config: ToilConfig | None = None,
 ) -> ToilTracker:
     """
     Get or create singleton toil tracker for service.

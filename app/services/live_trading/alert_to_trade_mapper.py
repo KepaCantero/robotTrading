@@ -15,15 +15,12 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from decimal import Decimal
 from enum import Enum
-from typing import TYPE_CHECKING, Dict, List, Optional
+from typing import Optional
 
 from app.services.alerting_system import AlertSeverity
 from app.shared.config.centralized_config import get_config
 
 from .broker_connector import OrderSide, OrderType
-
-if TYPE_CHECKING:
-    pass
 
 logger = logging.getLogger(__name__)
 
@@ -54,7 +51,7 @@ class AlertToTradeRule:
     signal_type: TradeSignalType = TradeSignalType.LONG
     base_quantity: Decimal = Decimal("100")
     # Severity-based scaling
-    severity_multipliers: Dict[AlertSeverity, Decimal] = field(
+    severity_multipliers: dict[AlertSeverity, Decimal] = field(
         default_factory=lambda: {
             AlertSeverity.INFO: Decimal("0.5"),
             AlertSeverity.WARNING: Decimal("1.0"),
@@ -126,9 +123,9 @@ class AlertToTradeMapper:
 
     def __init__(self):
         """Initialize mapper."""
-        self.rules: Dict[str, AlertToTradeRule] = {}
-        self.signals: Dict[str, TradeSignal] = {}
-        self.signal_history: List[TradeSignal] = []
+        self.rules: dict[str, AlertToTradeRule] = {}
+        self.signals: dict[str, TradeSignal] = {}
+        self.signal_history: list[TradeSignal] = []
         logger.info("✅ AlertToTradeMapper initialized")
 
     def register_rule(self, rule: AlertToTradeRule) -> None:
@@ -271,7 +268,7 @@ class AlertToTradeMapper:
         """
         return self.signals.get(signal_id)
 
-    def get_pending_signals(self, alert_rule_id: Optional[str] = None) -> List[TradeSignal]:
+    def get_pending_signals(self, alert_rule_id: Optional[str] = None) -> list[TradeSignal]:
         """
         Get all pending (unmapped to orders) trade signals.
 
@@ -281,7 +278,7 @@ class AlertToTradeMapper:
         Returns:
             List of pending TradeSignal objects
         """
-        pending = [s for s in self.signals.values() if not hasattr(s, 'order_id') or not s.order_id]
+        pending = [s for s in self.signals.values() if not hasattr(s, "order_id") or not s.order_id]
 
         if alert_rule_id:
             pending = [s for s in pending if s.alert_rule_id == alert_rule_id]

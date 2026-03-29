@@ -9,7 +9,7 @@ import logging
 from datetime import datetime
 from decimal import Decimal
 from enum import Enum
-from typing import List, Optional, Protocol
+from typing import Optional, Protocol
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
@@ -69,7 +69,7 @@ class HedgingMetadata(BaseModel):
 
         # Get max hedge cost from config
         config = get_config()
-        max_hedge_cost = Decimal(str(getattr(config.compliance, 'MAX_HEDGE_COST_BPS', 1000)))
+        max_hedge_cost = Decimal(str(getattr(config.compliance, "MAX_HEDGE_COST_BPS", 1000)))
 
         if v > max_hedge_cost:
             logger.error(
@@ -209,7 +209,7 @@ class Position(BaseModel):
             from app.shared.config.centralized_config import get_config
 
             cfg = get_config()
-            tolerance = Decimal(str(getattr(cfg.trading, 'portfolio_pnl_tolerance', 0.01)))
+            tolerance = Decimal(str(getattr(cfg.trading, "portfolio_pnl_tolerance", 0.01)))
             expected_unrealized = self.quantity * (self.market_price - self.avg_price)
             if abs(self.unrealized_pnl - expected_unrealized) > tolerance:
                 logger.error(
@@ -265,7 +265,7 @@ class Portfolio(BaseModel):
 
     portfolio_id: str = Field(default="", description="Unique portfolio identifier")
     cash: Decimal = Field(..., description="Available cash balance")
-    positions: List[Position] = Field(default_factory=list, description="List of positions")
+    positions: list[Position] = Field(default_factory=list, description="List of positions")
     timestamp: datetime = Field(
         default_factory=datetime.utcnow, description="Portfolio snapshot timestamp"
     )
@@ -340,7 +340,7 @@ class AssetUniverse(BaseModel):
 
     broker: str = Field(..., description="Broker identifier")
     asset_class: AssetClass = Field(..., description="Asset class")
-    symbols: List[str] = Field(..., description="List of supported symbols")
+    symbols: list[str] = Field(..., description="List of supported symbols")
     min_volume: Optional[Decimal] = Field(None, description="Minimum daily volume requirement")
     max_spread: Optional[Decimal] = Field(None, description="Maximum bid-ask spread")
 
@@ -454,7 +454,7 @@ class PortfolioProvider(Protocol):
         """Get specific position by symbol."""
         ...
 
-    async def get_asset_universe(self) -> List[AssetUniverse]:
+    async def get_asset_universe(self) -> list[AssetUniverse]:
         """Get supported asset universe for this provider."""
         ...
 
@@ -476,7 +476,7 @@ class TradingClientInterface(Protocol):
         """Cancel an existing order."""
         ...
 
-    async def get_positions(self) -> List[Position]:
+    async def get_positions(self) -> list[Position]:
         """Get current positions."""
         ...
 

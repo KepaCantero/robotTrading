@@ -14,7 +14,7 @@ from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from decimal import Decimal
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Callable
 
 logger = logging.getLogger(__name__)
 
@@ -96,8 +96,8 @@ class OrderFill:
     quantity: Decimal
     price: Decimal
     timestamp: datetime
-    fee: Optional[Decimal] = None
-    liquidity: Optional[str] = None  # "maker" or "taker"
+    fee: Decimal | None = None
+    liquidity: str | None = None  # "maker" or "taker"
 
 
 @dataclass
@@ -117,38 +117,38 @@ class Order:
     side: OrderSide
     order_type: OrderType
     quantity: Decimal
-    price: Optional[Decimal] = None
-    stop_price: Optional[Decimal] = None  # For stop-loss orders
+    price: Decimal | None = None
+    stop_price: Decimal | None = None  # For stop-loss orders
     status: OrderStatus = OrderStatus.PENDING
-    filled_quantity: Decimal = field(default_factory=lambda: Decimal('0'))
-    avg_fill_price: Optional[Decimal] = None
+    filled_quantity: Decimal = field(default_factory=lambda: Decimal("0"))
+    avg_fill_price: Decimal | None = None
     created_at: datetime = field(default_factory=datetime.utcnow)
     updated_at: datetime = field(default_factory=datetime.utcnow)
-    submitted_at: Optional[datetime] = None
-    filled_at: Optional[datetime] = None
-    cancelled_at: Optional[datetime] = None
+    submitted_at: datetime | None = None
+    filled_at: datetime | None = None
+    cancelled_at: datetime | None = None
 
     # Extended state machine attributes (Tomasini)
-    fills: List[OrderFill] = field(default_factory=list)
-    rejection_reason: Optional[str] = None
-    expiry_time: Optional[datetime] = None
+    fills: list[OrderFill] = field(default_factory=list)
+    rejection_reason: str | None = None
+    expiry_time: datetime | None = None
     time_in_force: str = "DAY"  # GTC, IOC, FOK, DAY
 
     # Event tracking
-    event_history: List[Dict[str, Any]] = field(default_factory=list)
+    event_history: list[dict[str, Any]] = field(default_factory=list)
 
     # Validation flags
     is_validated: bool = False
-    validation_errors: List[str] = field(default_factory=list)
+    validation_errors: list[str] = field(default_factory=list)
 
     # External identifiers
-    broker_order_id: Optional[str] = None
-    exchange_order_id: Optional[str] = None
+    broker_order_id: str | None = None
+    exchange_order_id: str | None = None
 
     # Callbacks for event-driven processing (Tomasini)
-    on_fill: Optional[Callable[[OrderFill], None]] = None
-    on_cancel: Optional[Callable[[], None]] = None
-    on_reject: Optional[Callable[[str], None]] = None
+    on_fill: Callable[[OrderFill], None] | None = None
+    on_cancel: Callable[[], None] | None = None
+    on_reject: Callable[[str], None] | None = None
 
     def __post_init__(self) -> None:
         """Validate order invariants."""
@@ -164,7 +164,7 @@ class Order:
         # Record initial state
         self._record_event(OrderEvent.CREATE, {"status": self.status.value})
 
-    def _record_event(self, event: OrderEvent, data: Optional[Dict[str, Any]] = None) -> None:
+    def _record_event(self, event: OrderEvent, data: dict[str, Any] | None = None) -> None:
         """
         Record an event in the order history (Tomasini's event tracking).
 
@@ -293,13 +293,13 @@ class Order:
         """
         if self.status != OrderStatus.VALIDATED:
             raise ValueError(
-                f"Cannot submit order with status {self.status.value}. " f"Order must be VALIDATED."
+                f"Cannot submit order with status {self.status.value}. Order must be VALIDATED."
             )
 
         self._transition_to(OrderStatus.SUBMITTED, OrderEvent.SUBMIT)
         self.submitted_at = datetime.now(timezone.utc)
 
-    def acknowledge(self, broker_order_id: Optional[str] = None) -> None:
+    def acknowledge(self, broker_order_id: str | None = None) -> None:
         """
         Acknowledge order receipt from broker.
 
@@ -323,9 +323,9 @@ class Order:
     def fill(
         self,
         fill_price: Decimal,
-        fill_quantity: Optional[Decimal] = None,
-        fee: Optional[Decimal] = None,
-        liquidity: Optional[str] = None,
+        fill_quantity: Decimal | None = None,
+        fee: Decimal | None = None,
+        liquidity: str | None = None,
     ) -> None:
         """
         Fill order (partial or complete) with comprehensive tracking (Tomasini).
@@ -472,8 +472,7 @@ class Order:
         """
         if self.status != OrderStatus.ACKNOWLEDGED:
             raise ValueError(
-                f"Cannot suspend order with status {self.status.value}. "
-                f"Order must be ACKNOWLEDGED."
+                f"Cannot suspend order with status {self.status.value}. Order must be ACKNOWLEDGED."
             )
 
         self._transition_to(OrderStatus.SUSPENDED, OrderEvent.SUSPEND)
@@ -487,8 +486,7 @@ class Order:
         """
         if self.status != OrderStatus.SUSPENDED:
             raise ValueError(
-                f"Cannot unsuspend order with status {self.status.value}. "
-                f"Order must be SUSPENDED."
+                f"Cannot unsuspend order with status {self.status.value}. Order must be SUSPENDED."
             )
 
         self._transition_to(OrderStatus.ACKNOWLEDGED, OrderEvent.UNSUSPEND)
@@ -515,7 +513,7 @@ class Order:
         self._transition_to(OrderStatus.EXPIRED, OrderEvent.EXPIRE)
 
     def _transition_to(
-        self, new_status: OrderStatus, event: OrderEvent, data: Optional[Dict[str, Any]] = None
+        self, new_status: OrderStatus, event: OrderEvent, data: dict[str, Any] | None = None
     ) -> None:
         """
         Transition to new state with validation (Tomasini's state machine).
@@ -588,13 +586,13 @@ class Order:
 
     def get_total_fees(self) -> Decimal:
         """Get total fees paid across all fills."""
-        return sum(((fill.fee or Decimal('0')) for fill in self.fills), start=Decimal('0'))
+        return sum(((fill.fee or Decimal("0")) for fill in self.fills), start=Decimal("0"))
 
     def get_age_seconds(self) -> float:
         """Get order age in seconds."""
         return (datetime.now(timezone.utc) - self.created_at).total_seconds()
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert order to dictionary representation."""
         return {
             "order_id": self.order_id,

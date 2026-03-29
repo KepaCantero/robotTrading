@@ -25,7 +25,6 @@ Date: 2026-01-28
 import logging
 from dataclasses import dataclass
 from enum import Enum
-from typing import Dict, List, Optional
 
 import numpy as np
 import pandas as pd
@@ -36,7 +35,7 @@ logger = logging.getLogger(__name__)
 
 # Optional: hmmlearn with fallback for regime detection
 try:
-    from hmmlearn import hmm as hmm_module
+    from hmmlearn import hmm as hmmlearn_module
 
     HMM_AVAILABLE = True
     logger.info("hmmlearn is available - using Hidden Markov Models for Chan's regime detection")
@@ -99,7 +98,7 @@ except ImportError:
             """Compute the log probability under the model."""
             return self.gmm.score(X)
 
-    class hmm_module:
+    class HMMModule:
         """Namespace for fallback HMM implementation."""
 
         GaussianHMM = HMMFallback
@@ -127,7 +126,7 @@ class RegimeState:
     expected_volatility: float
     duration_days: int
     start_date: pd.Timestamp
-    end_date: Optional[pd.Timestamp] = None
+    end_date: pd.Timestamp | None = None
 
 
 @dataclass
@@ -173,17 +172,17 @@ class MarketRegimeDetector:
         self.method = method
         self.lookback_window = lookback_window
 
-        self.model: Optional[object] = None
-        self.scaler: Optional[StandardScaler] = None
-        self.regime_history: List[RegimeState] = []
+        self.model: object | None = None
+        self.scaler: StandardScaler | None = None
+        self.regime_history: list[RegimeState] = []
 
         logger.info(f"MarketRegimeDetector initialized: n_regimes={n_regimes}, method={method}")
 
     def detect_regimes(
         self,
         returns: pd.Series,
-        prices: Optional[pd.Series] = None,
-        volume: Optional[pd.Series] = None,
+        prices: pd.Series | None = None,
+        volume: pd.Series | None = None,
     ) -> pd.Series:
         """
         Detect market regimes from price/return data.
@@ -219,7 +218,7 @@ class MarketRegimeDetector:
     def _detect_hmm(
         self,
         returns: pd.Series,
-        prices: Optional[pd.Series] = None,
+        prices: pd.Series | None = None,
     ) -> pd.Series:
         """
         Detect regimes using Hidden Markov Model.
@@ -238,7 +237,7 @@ class MarketRegimeDetector:
         features = self._prepare_features(returns, prices)
 
         # Fit HMM
-        model = hmm_module.GaussianHMM(
+        model = hmmlearn_module.GaussianHMM(
             n_components=self.n_regimes,
             covariance_type="full",
             n_iter=1000,
@@ -281,7 +280,7 @@ class MarketRegimeDetector:
     def _detect_kmeans(
         self,
         returns: pd.Series,
-        prices: Optional[pd.Series] = None,
+        prices: pd.Series | None = None,
     ) -> pd.Series:
         """
         Detect regimes using K-Means clustering.
@@ -337,7 +336,7 @@ class MarketRegimeDetector:
     def _detect_threshold(
         self,
         returns: pd.Series,
-        prices: Optional[pd.Series] = None,
+        prices: pd.Series | None = None,
     ) -> pd.Series:
         """
         Detect regimes using statistical thresholds.
@@ -441,7 +440,7 @@ class MarketRegimeDetector:
     def _prepare_features(
         self,
         returns: pd.Series,
-        prices: Optional[pd.Series] = None,
+        prices: pd.Series | None = None,
     ) -> np.ndarray:
         """
         Prepare features for regime detection.
@@ -488,7 +487,7 @@ class MarketRegimeDetector:
         self,
         regime_labels: np.ndarray,
         returns: np.ndarray,
-    ) -> Dict[int, str]:
+    ) -> dict[int, str]:
         """
         Map numeric regime labels to semantic labels.
 
@@ -507,12 +506,12 @@ class MarketRegimeDetector:
             regime_returns = returns[mask]
 
             regime_characteristics[label] = {
-                'mean_return': float(np.mean(regime_returns)),
-                'volatility': float(np.std(regime_returns)),
+                "mean_return": float(np.mean(regime_returns)),
+                "volatility": float(np.std(regime_returns)),
             }
 
         # Sort by mean return
-        sorted_labels = sorted(regime_characteristics.items(), key=lambda x: x[1]['mean_return'])
+        sorted_labels = sorted(regime_characteristics.items(), key=lambda x: x[1]["mean_return"])
 
         # Map to regime types
         if self.n_regimes == 3:
@@ -538,8 +537,8 @@ class MarketRegimeDetector:
     def _analyze_regime_transitions(
         self,
         transition_matrix: np.ndarray,
-        regime_mapping: Dict[int, str],
-    ) -> List[RegimeTransition]:
+        regime_mapping: dict[int, str],
+    ) -> list[RegimeTransition]:
         """
         Analyze regime transition probabilities.
 
@@ -576,7 +575,7 @@ class MarketRegimeDetector:
     def get_current_regime(
         self,
         returns: pd.Series,
-        prices: Optional[pd.Series] = None,
+        prices: pd.Series | None = None,
     ) -> RegimeState:
         """
         Get the current market regime.
@@ -673,7 +672,7 @@ class VolatilityRegimeDetector:
         self.lookback_window = lookback_window
         self.method = method
 
-        self.model: Optional[object] = None
+        self.model: object | None = None
 
         logger.info(f"VolatilityRegimeDetector initialized: n_regimes={n_regimes}")
 
@@ -713,7 +712,7 @@ class VolatilityRegimeDetector:
         vol_values = volatility.values.reshape(-1, 1)
 
         # Fit HMM
-        model = hmm_module.GaussianHMM(
+        model = hmmlearn_module.GaussianHMM(
             n_components=self.n_regimes,
             covariance_type="full",
             n_iter=1000,
@@ -732,12 +731,12 @@ class VolatilityRegimeDetector:
 
         regime_mapping = {}
         if self.n_regimes == 2:
-            regime_mapping[sorted_indices[0]] = 'low'
-            regime_mapping[sorted_indices[1]] = 'high'
+            regime_mapping[sorted_indices[0]] = "low"
+            regime_mapping[sorted_indices[1]] = "high"
         elif self.n_regimes == 3:
-            regime_mapping[sorted_indices[0]] = 'low'
-            regime_mapping[sorted_indices[1]] = 'medium'
-            regime_mapping[sorted_indices[2]] = 'high'
+            regime_mapping[sorted_indices[0]] = "low"
+            regime_mapping[sorted_indices[1]] = "medium"
+            regime_mapping[sorted_indices[2]] = "high"
 
         # Create series
         regime_series = pd.Series(
@@ -746,7 +745,7 @@ class VolatilityRegimeDetector:
         )
 
         # Reindex to original
-        full_series = pd.Series('medium', index=original_index)
+        full_series = pd.Series("medium", index=original_index)
         full_series.update(regime_series)
 
         return full_series
@@ -764,16 +763,16 @@ class VolatilityRegimeDetector:
         regimes = []
         for vol in volatility:
             if vol <= low_threshold:
-                regimes.append('low')
+                regimes.append("low")
             elif vol >= high_threshold:
-                regimes.append('high')
+                regimes.append("high")
             else:
-                regimes.append('medium')
+                regimes.append("medium")
 
         regime_series = pd.Series(regimes, index=volatility.index)
 
         # Reindex to original
-        full_series = pd.Series('medium', index=original_index)
+        full_series = pd.Series("medium", index=original_index)
         full_series.update(regime_series)
 
         return full_series
@@ -827,13 +826,13 @@ def get_regime_statistics(
 
         stats_list.append(
             {
-                'regime': regime,
-                'periods': mask.sum(),
-                'percentage': mask.mean() * 100,
-                'mean_return': float(regime_returns.mean()),
-                'volatility': float(regime_returns.std()),
-                'sharpe': float(regime_returns.mean() / regime_returns.std() * np.sqrt(252)),
-                'max_drawdown': float(_calculate_max_drawdown(regime_returns)),
+                "regime": regime,
+                "periods": mask.sum(),
+                "percentage": mask.mean() * 100,
+                "mean_return": float(regime_returns.mean()),
+                "volatility": float(regime_returns.std()),
+                "sharpe": float(regime_returns.mean() / regime_returns.std() * np.sqrt(252)),
+                "max_drawdown": float(_calculate_max_drawdown(regime_returns)),
             }
         )
 

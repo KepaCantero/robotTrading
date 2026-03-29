@@ -434,10 +434,7 @@ class TaxOptimizer:
                 return False  # Would trigger wash sale
 
         # Loss is significant enough?
-        if abs(lot.unrealized_pnl) < Decimal("100"):
-            return False  # Too small to matter
-
-        return True
+        return abs(lot.unrealized_pnl) >= Decimal("100")  # Significant enough loss
 
     def optimize_dividend_tax(
         self,
@@ -486,10 +483,7 @@ class TaxOptimizer:
         """
         rates = self._tax_rates.get(jurisdiction, self._tax_rates[TaxJurisdiction.DEFAULT])
 
-        if holding_period_days >= 365:
-            tax_rate = rates["long_term"]
-        else:
-            tax_rate = rates["short_term"]
+        tax_rate = rates["long_term"] if holding_period_days >= 365 else rates["short_term"]
 
         if pre_tax_return > 0:
             tax = pre_tax_return * tax_rate

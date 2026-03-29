@@ -14,7 +14,7 @@ Crypto markets differ significantly from traditional markets:
 import logging
 import time
 from decimal import Decimal
-from typing import Dict, List, Optional
+from typing import ClassVar, Optional
 
 import numpy as np
 
@@ -39,7 +39,7 @@ class CryptoScreener:
     """
 
     # Major exchanges (most liquid, most reliable)
-    MAJOR_EXCHANGES = [
+    MAJOR_EXCHANGES: ClassVar[list] = [
         CryptoExchange.BINANCE,
         CryptoExchange.COINBASE,
         CryptoExchange.KRAKEN,
@@ -47,7 +47,7 @@ class CryptoScreener:
     ]
 
     # Tier 2 exchanges (still reliable, less liquidity)
-    TIER_2_EXCHANGES = [
+    TIER_2_EXCHANGES: ClassVar[list] = [
         CryptoExchange.GEMINI,
         CryptoExchange.BITFINEX,
         CryptoExchange.OKEX,
@@ -56,7 +56,7 @@ class CryptoScreener:
     ]
 
     # Minimum market caps by asset type (USD)
-    MIN_MARKET_CAP_BY_TYPE = {
+    MIN_MARKET_CAP_BY_TYPE: ClassVar[dict] = {
         CryptoAssetType.BITCOIN: Decimal("10000000000"),  # $10B+
         CryptoAssetType.ETHEREUM: Decimal("5000000000"),  # $5B+
         CryptoAssetType.STABLECOIN: Decimal("1000000000"),  # $1B+
@@ -71,7 +71,7 @@ class CryptoScreener:
         CryptoAssetType.OTHER: Decimal("100000000"),  # $100M+
     }
 
-    def __init__(self, config: Optional[Dict] = None):
+    def __init__(self, config: Optional[dict] = None):
         """
         Initialize crypto screener.
 
@@ -79,17 +79,17 @@ class CryptoScreener:
             config: Optional configuration dictionary
         """
         self.config = config or {}
-        self.screening_history: List[CryptoScreeningResult] = []
+        self.screening_history: list[CryptoScreeningResult] = []
 
     def screen(
         self,
-        universe: List[CryptoAsset],
+        universe: list[CryptoAsset],
         min_market_cap: Optional[Decimal] = None,
         min_daily_volume: Optional[Decimal] = None,
         min_liquidity_score: Optional[Decimal] = None,
         max_volatility: Optional[Decimal] = None,
-        required_exchanges: Optional[List[CryptoExchange]] = None,
-        asset_types: Optional[List[CryptoAssetType]] = None,
+        required_exchanges: Optional[list[CryptoExchange]] = None,
+        asset_types: Optional[list[CryptoAssetType]] = None,
     ) -> CryptoScreeningResult:
         """
         Screen crypto assets by criteria.
@@ -120,8 +120,8 @@ class CryptoScreener:
         )
         max_volatility = max_volatility or self.config.get("max_volatility")
 
-        passed_assets: List[CryptoAsset] = []
-        failed_assets: Dict[str, List[str]] = {}
+        passed_assets: list[CryptoAsset] = []
+        failed_assets: dict[str, list[str]] = {}
 
         for asset in universe:
             failures = self._check_asset(
@@ -167,9 +167,9 @@ class CryptoScreener:
         min_daily_volume: Decimal,
         min_liquidity_score: Decimal,
         max_volatility: Optional[Decimal],
-        required_exchanges: Optional[List[CryptoExchange]],
-        asset_types: Optional[List[CryptoAssetType]],
-    ) -> List[str]:
+        required_exchanges: Optional[list[CryptoExchange]],
+        asset_types: Optional[list[CryptoAssetType]],
+    ) -> list[str]:
         """
         Check if an asset meets all screening criteria.
 
@@ -185,7 +185,7 @@ class CryptoScreener:
         Returns:
             List of failure reasons (empty if passes)
         """
-        failures: List[str] = []
+        failures: list[str] = []
 
         # Market cap check
         type_min_cap = self.MIN_MARKET_CAP_BY_TYPE.get(asset.asset_type, Decimal("100000000"))
@@ -215,7 +215,9 @@ class CryptoScreener:
             )
 
         # Exchange listing check
-        if required_exchanges and not any(exchange in asset.exchanges for exchange in required_exchanges):
+        if required_exchanges and not any(
+            exchange in asset.exchanges for exchange in required_exchanges
+        ):
             failures.append(
                 f"Not listed on required exchanges: "
                 f"has {[e.value for e in asset.exchanges]}, "
@@ -264,7 +266,7 @@ class CryptoScreener:
 
         return min(Decimal("100"), score).quantize(Decimal("0.01"))
 
-    def verify_listing(self, symbol: str, major_exchanges: List[CryptoExchange]) -> bool:
+    def verify_listing(self, symbol: str, major_exchanges: list[CryptoExchange]) -> bool:
         """
         Verify asset trades on major exchanges.
 
@@ -305,7 +307,7 @@ class CryptoScreener:
 
         return Decimal(str(score)).quantize(Decimal("0.01"))
 
-    def get_screening_summary(self) -> Dict:
+    def get_screening_summary(self) -> dict:
         """
         Get summary of screening history.
 

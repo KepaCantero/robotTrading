@@ -12,12 +12,13 @@ Date: 2026-02-03
 from __future__ import annotations
 
 import logging
-from datetime import datetime
-from decimal import Decimal
-from typing import Dict, List, Optional, Protocol, Union
+from typing import TYPE_CHECKING, Protocol
 
+if TYPE_CHECKING:
+    from datetime import datetime
+    from decimal import Decimal
 
-import pandas as pd
+    import pandas as pd
 
 logger = logging.getLogger(__name__)
 
@@ -67,9 +68,11 @@ class PreTradeCheckable(ComplianceService, Protocol):
         side: str,
         quantity: Decimal,
         current_price: Decimal,
-        price_history: Optional[pd.DataFrame] = None,
-        **kwargs: Union[str, int, float, bool, Decimal, datetime],  # Extension point for service-specific parameters
-    ) -> Dict[str, Union[bool, float, List[str], Dict[str, float]]]:
+        price_history: pd.DataFrame | None = None,
+        **kwargs: (
+            str | int | float | bool | Decimal | datetime
+        ),  # Extension point for service-specific parameters
+    ) -> dict[str, bool | float | list[str] | dict[str, float]]:
         """
         Perform pre-trade compliance check.
 
@@ -120,12 +123,14 @@ class PostTradeCheckable(ComplianceService, Protocol):
         side: str,
         quantity: Decimal,
         execution_price: Decimal,
-        signal_price: Optional[Decimal] = None,
-        signal_time: Optional[datetime] = None,
-        submission_time: Optional[datetime] = None,
-        execution_time: Optional[datetime] = None,
-        **kwargs: Union[str, int, float, bool, Decimal, datetime],  # Extension point for service-specific parameters
-    ) -> Dict[str, float]:
+        signal_price: Decimal | None = None,
+        signal_time: datetime | None = None,
+        submission_time: datetime | None = None,
+        execution_time: datetime | None = None,
+        **kwargs: (
+            str | int | float | bool | Decimal | datetime
+        ),  # Extension point for service-specific parameters
+    ) -> dict[str, float]:
         """
         Perform post-trade compliance analysis.
 
@@ -176,12 +181,14 @@ class Optimizable(ComplianceService, Protocol):
 
     def optimize_portfolio(
         self,
-        symbols: List[str],
+        symbols: list[str],
         returns: pd.DataFrame,
-        current_prices: Dict[str, Decimal],
-        constraints: Optional[Dict[str, float]] = None,
-        **kwargs: Union[str, int, float, bool, Decimal, datetime],  # Extension point for service-specific parameters
-    ) -> Dict[str, Union[float, Dict[str, float]]]:
+        current_prices: dict[str, Decimal],
+        constraints: dict[str, float] | None = None,
+        **kwargs: (
+            str | int | float | bool | Decimal | datetime
+        ),  # Extension point for service-specific parameters
+    ) -> dict[str, float | dict[str, float]]:
         """
         Optimize portfolio weights.
 
@@ -221,7 +228,9 @@ class RegimeDetectable(ComplianceService, Protocol):
     def detect_regime(
         self,
         price_history: pd.DataFrame,
-        **kwargs: Union[str, int, float, bool, Decimal, datetime],  # Extension point for service-specific parameters
+        **kwargs: (
+            str | int | float | bool | Decimal | datetime
+        ),  # Extension point for service-specific parameters
     ) -> str:
         """
         Detect current market regime.
@@ -245,8 +254,10 @@ class AlphaGeneratable(ComplianceService, Protocol):
         self,
         symbol: str,
         market_data: pd.DataFrame,
-        **kwargs: Union[str, int, float, bool, Decimal, datetime],  # Extension point for service-specific parameters
-    ) -> Dict[str, Union[float, int]]:
+        **kwargs: (
+            str | int | float | bool | Decimal | datetime
+        ),  # Extension point for service-specific parameters
+    ) -> dict[str, float | int]:
         """
         Generate alpha signal.
 
@@ -272,8 +283,10 @@ class RiskCalculable(ComplianceService, Protocol):
     def calculate_risk_metrics(
         self,
         returns: pd.DataFrame,
-        **kwargs: Union[str, int, float, bool, Decimal, datetime],  # Extension point for service-specific parameters
-    ) -> Dict[str, float]:
+        **kwargs: (
+            str | int | float | bool | Decimal | datetime
+        ),  # Extension point for service-specific parameters
+    ) -> dict[str, float]:
         """
         Calculate risk metrics.
 
@@ -299,9 +312,11 @@ class LiquidityAnalyzable(ComplianceService, Protocol):
         self,
         symbol: str,
         quantity: Decimal,
-        order_book: Optional[Dict[str, Union[float, int, Decimal]]] = None,
-        **kwargs: Union[str, int, float, bool, Decimal, datetime],  # Extension point for service-specific parameters
-    ) -> Dict[str, Union[float, str]]:
+        order_book: dict[str, float | int | Decimal] | None = None,
+        **kwargs: (
+            str | int | float | bool | Decimal | datetime
+        ),  # Extension point for service-specific parameters
+    ) -> dict[str, float | str]:
         """
         Analyze liquidity conditions.
 
@@ -331,8 +346,10 @@ class ExecutionAlgorithm(ComplianceService, Protocol):
         side: str,
         quantity: Decimal,
         urgency: float = 0.5,
-        **kwargs: Union[str, int, float, bool, Decimal, datetime],  # Extension point for service-specific parameters
-    ) -> Dict[str, Union[str, Optional[Decimal]]]:
+        **kwargs: (
+            str | int | float | bool | Decimal | datetime
+        ),  # Extension point for service-specific parameters
+    ) -> dict[str, str | (Decimal | None)]:
         """
         Get execution parameters.
 
@@ -363,8 +380,10 @@ class TransactionCostModel(ComplianceService, Protocol):
         side: str,
         quantity: Decimal,
         current_price: Decimal,
-        **kwargs: Union[str, int, float, bool, Decimal, datetime],  # Extension point for service-specific parameters
-    ) -> Dict[str, float]:
+        **kwargs: (
+            str | int | float | bool | Decimal | datetime
+        ),  # Extension point for service-specific parameters
+    ) -> dict[str, float]:
         """
         Estimate transaction costs.
 
@@ -393,7 +412,9 @@ class MetaLabelingService(ComplianceService, Protocol):
     def apply_meta_labels(
         self,
         predictions: pd.DataFrame,
-        **kwargs: Union[str, int, float, bool, Decimal, datetime],  # Extension point for service-specific parameters
+        **kwargs: (
+            str | int | float | bool | Decimal | datetime
+        ),  # Extension point for service-specific parameters
     ) -> pd.DataFrame:
         """
         Apply meta-labeling to predictions.
@@ -416,8 +437,10 @@ class CrossValidationService(ComplianceService, Protocol):
     def get_splits(
         self,
         data: pd.DataFrame,
-        **kwargs: Union[str, int, float, bool, Decimal, datetime],  # Extension point for service-specific parameters
-    ) -> List[tuple]:
+        **kwargs: (
+            str | int | float | bool | Decimal | datetime
+        ),  # Extension point for service-specific parameters
+    ) -> list[tuple]:
         """
         Get cross-validation splits.
 

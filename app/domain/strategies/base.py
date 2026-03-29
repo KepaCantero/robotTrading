@@ -11,12 +11,14 @@ import logging
 from abc import ABC, abstractmethod
 from datetime import datetime, timezone
 from decimal import ROUND_HALF_UP, Decimal
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from app.domain.models.market_data import Quote
-from app.domain.models.portfolio import Portfolio
 from app.domain.models.signal import Signal, SignalType
 from app.shared.config.centralized_config import get_config
+
+if TYPE_CHECKING:
+    from app.domain.models.market_data import Quote
+    from app.domain.models.portfolio import Portfolio
 
 logger = logging.getLogger(__name__)
 
@@ -160,7 +162,7 @@ class BaseStrategy(ABC):
         else:
             try:
                 config = get_config()
-                max_position_size = Decimal(str(getattr(config.trading, 'max_position_size', 0.1)))
+                max_position_size = Decimal(str(getattr(config.trading, "max_position_size", 0.1)))
             except (AttributeError, ValueError):
                 max_position_size = Decimal("0.1")
         available_cash = portfolio.cash
@@ -217,8 +219,8 @@ class BaseStrategy(ABC):
         atr_multiplier = Decimal(str(self.config.get("atr_multiplier", 2.0)))
 
         # Verificar si tenemos ATR en los metadatos de la señal
-        if hasattr(signal, 'metadata') and signal.metadata:
-            atr = signal.metadata.get('atr')
+        if hasattr(signal, "metadata") and signal.metadata:
+            atr = signal.metadata.get("atr")
             if atr is not None:
                 atr_value = Decimal(str(atr))
                 stop_distance = atr_value * atr_multiplier
@@ -237,7 +239,7 @@ class BaseStrategy(ABC):
         else:
             try:
                 config = get_config()
-                stop_loss_pct = Decimal(str(getattr(config.trading, 'stop_loss_pct', 0.05)))
+                stop_loss_pct = Decimal(str(getattr(config.trading, "stop_loss_pct", 0.05)))
             except (AttributeError, ValueError):
                 stop_loss_pct = Decimal("0.05")
 
@@ -266,7 +268,7 @@ class BaseStrategy(ABC):
         else:
             try:
                 config = get_config()
-                take_profit_pct = Decimal(str(getattr(config.trading, 'take_profit_pct', 0.10)))
+                take_profit_pct = Decimal(str(getattr(config.trading, "take_profit_pct", 0.10)))
             except (AttributeError, ValueError):
                 take_profit_pct = Decimal("0.10")
 

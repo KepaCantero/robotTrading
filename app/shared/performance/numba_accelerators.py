@@ -19,7 +19,7 @@ Version: 1.0.0
 """
 
 import logging
-from typing import Optional, Tuple
+from typing import Optional
 
 import numba
 import numpy as np
@@ -249,7 +249,7 @@ def calculate_ema_single_numba(prices: np.ndarray, period: int) -> float:
 @jit(nopython=True, cache=True)
 def calculate_macd_numba(
     prices: np.ndarray, fast_period: int = 12, slow_period: int = 26, signal_period: int = 9
-) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     """
     Calculate MACD using Numba JIT compilation.
 
@@ -547,7 +547,7 @@ def rolling_max_numba(values: np.ndarray, window: int) -> np.ndarray:
 @jit(nopython=True, cache=True)
 def calculate_bollinger_bands_numba(
     prices: np.ndarray, period: int = 20, num_std: float = 2.0
-) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     """
     Calculate Bollinger Bands using Numba JIT compilation.
 
@@ -585,7 +585,7 @@ def calculate_bollinger_bands_numba(
 @jit(nopython=True, cache=True)
 def calculate_stochastic_numba(
     high: np.ndarray, low: np.ndarray, close: np.ndarray, k_period: int = 14, d_period: int = 3
-) -> Tuple[np.ndarray, np.ndarray]:
+) -> tuple[np.ndarray, np.ndarray]:
     """
     Calculate Stochastic Oscillator using Numba JIT compilation.
 
@@ -1036,7 +1036,7 @@ def calculate_ema(prices: list, period: int) -> Optional[float]:
 
 def calculate_macd(
     prices: list, fast_period: int = 12, slow_period: int = 26, signal_period: int = 9
-) -> Tuple[Optional[float], Optional[float], Optional[float]]:
+) -> tuple[Optional[float], Optional[float], Optional[float]]:
     """
     Wrapper for MACD calculation that handles Python lists.
 
@@ -1094,7 +1094,7 @@ def calculate_atr(high: list, low: list, close: list, period: int = 14) -> Optio
 
 def calculate_bollinger_bands(
     prices: list, period: int = 20, num_std: float = 2.0
-) -> Tuple[Optional[float], Optional[float], Optional[float]]:
+) -> tuple[Optional[float], Optional[float], Optional[float]]:
     """
     Wrapper for Bollinger Bands calculation that handles Python lists.
 
@@ -1121,7 +1121,7 @@ def calculate_bollinger_bands(
 
 def calculate_stochastic(
     high: list, low: list, close: list, k_period: int = 14, d_period: int = 3
-) -> Tuple[Optional[float], Optional[float]]:
+) -> tuple[Optional[float], Optional[float]]:
     """
     Wrapper for Stochastic calculation that handles Python lists.
 

@@ -7,7 +7,7 @@ for training data augmentation and backtesting.
 
 import logging
 from dataclasses import dataclass
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 import numpy as np
 from requests.exceptions import HTTPError, RequestException
@@ -20,8 +20,8 @@ class GANConfig:
     """Configuration for GAN training."""
 
     # Network architecture
-    generator_layers: List[int] = None
-    discriminator_layers: List[int] = None
+    generator_layers: list[int] = None
+    discriminator_layers: list[int] = None
     latent_dim: int = 100
     output_dim: int = 5  # OHLCV data
 
@@ -95,7 +95,7 @@ class SyntheticDataGenerator:
             return True
 
         except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
-            logger.error(f"❌ Failed to initialize GAN models: {str(e)}")
+            logger.error(f"❌ Failed to initialize GAN models: {e!s}")
             self.connected = False
             return False
 
@@ -103,7 +103,7 @@ class SyntheticDataGenerator:
         self,
         training_data: np.ndarray,
         labels: Optional[np.ndarray] = None,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Train GAN on historical market data.
 
@@ -184,7 +184,7 @@ class SyntheticDataGenerator:
             return result
 
         except (ValueError, TypeError, KeyError, AttributeError) as e:
-            logger.error(f"❌ GAN training failed: {str(e)}")
+            logger.error(f"❌ GAN training failed: {e!s}")
             return {}
 
     async def generate_samples(
@@ -248,14 +248,14 @@ class SyntheticDataGenerator:
             return synthetic_data
 
         except (ValueError, TypeError, KeyError, AttributeError) as e:
-            logger.error(f"❌ Synthetic data generation failed: {str(e)}")
+            logger.error(f"❌ Synthetic data generation failed: {e!s}")
             return np.array([])
 
     async def evaluate_quality(
         self,
         synthetic_data: np.ndarray,
         real_data: np.ndarray,
-    ) -> Dict[str, float]:
+    ) -> dict[str, float]:
         """
         Evaluate quality of synthetic data.
 
@@ -299,10 +299,10 @@ class SyntheticDataGenerator:
             return metrics
 
         except (ValueError, TypeError, KeyError, AttributeError) as e:
-            logger.error(f"❌ Quality evaluation failed: {str(e)}")
+            logger.error(f"❌ Quality evaluation failed: {e!s}")
             return {}
 
-    def get_generator_status(self) -> Dict[str, Any]:
+    def get_generator_status(self) -> dict[str, Any]:
         """Get generator status."""
         return {
             "connected": self.connected,
@@ -338,14 +338,14 @@ class TimeSeriesGANGenerator:
             logger.info("✅ Connected to TimeSeriesGAN generator")
             return True
         except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
-            logger.error(f"❌ Failed to initialize TimeSeriesGAN: {str(e)}")
+            logger.error(f"❌ Failed to initialize TimeSeriesGAN: {e!s}")
             self.connected = False
             return False
 
     async def generate_sequences(
         self,
         num_sequences: int,
-        sequence_length: int = None,
+        sequence_length: Optional[int] = None,
     ) -> np.ndarray:
         """
         Generate synthetic time series sequences.
@@ -402,10 +402,10 @@ class TimeSeriesGANGenerator:
             return synthetic_sequences
 
         except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
-            logger.error(f"❌ Sequence generation failed: {str(e)}")
+            logger.error(f"❌ Sequence generation failed: {e!s}")
             return np.array([])
 
-    def get_generator_status(self) -> Dict[str, Any]:
+    def get_generator_status(self) -> dict[str, Any]:
         """Get generator status."""
         return {
             "connected": self.connected,

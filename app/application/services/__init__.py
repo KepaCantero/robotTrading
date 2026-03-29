@@ -28,11 +28,15 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from datetime import datetime
 from decimal import Decimal
-from typing import Callable, Dict, Generic, List, Optional, TypeVar, cast
+from typing import TYPE_CHECKING, Callable, Generic, Optional, TypeVar, cast
 
 from app.domain.entities.order import Order, OrderSide, OrderType
 from app.domain.entities.portfolio import Portfolio, Position
-from app.domain.repositories.unit_of_work import AbstractUnitOfWork
+
+if TYPE_CHECKING:
+    from app.domain.repositories.order_repository import OrderRepository
+    from app.domain.repositories.position_repository import PositionRepository
+    from app.domain.repositories.unit_of_work import AbstractUnitOfWork
 
 logger = logging.getLogger(__name__)
 
@@ -210,7 +214,7 @@ class ApplicationService:  # Concrete base class with shared functionality
         self.uow_factory = uow_factory
 
     async def _execute_in_transaction(
-        self, operation: Callable, uow: Optional[AbstractUnitOfWork] = None
+        self, operation: Callable, uow: AbstractUnitOfWork | None = None
     ) -> object:
         """
         Execute an operation within a transaction.
@@ -241,7 +245,7 @@ class CreateOrderCommand(Command):
 
     symbol: str
     quantity: Decimal
-    price: Optional[Decimal]
+    price: Decimal | None
     order_type: str  # 'market', 'limit', etc.
     side: str  # 'buy', 'sell'
     portfolio_id: str
@@ -250,9 +254,9 @@ class CreateOrderCommand(Command):
         """Validate order command."""
         if self.quantity <= 0:
             raise ValueError("Quantity must be positive")
-        if self.order_type == 'limit' and (not self.price or self.price <= 0):
+        if self.order_type == "limit" and (not self.price or self.price <= 0):
             raise ValueError("Limit orders must have a positive price")
-        if self.side not in ('buy', 'sell'):
+        if self.side not in ("buy", "sell"):
             raise ValueError("Side must be 'buy' or 'sell'")
         if not self.symbol:
             raise ValueError("Symbol is required")
@@ -277,7 +281,7 @@ class CancelOrderCommand(Command):
     """Command to cancel an order."""
 
     order_id: str
-    reason: Optional[str] = None
+    reason: str | None = None
 
     def validate(self) -> bool:
         """Validate cancel command."""
@@ -293,23 +297,22 @@ class GetOrderQuery(Query[Optional[Order]]):
     def __init__(self, order_id: str):
         self.order_id = order_id
 
-    async def execute(self, uow: AbstractUnitOfWork) -> Optional[Order]:
+    async def execute(self, uow: AbstractUnitOfWork) -> Order | None:
         """Execute query to find order."""
         return await uow.orders.get(self.order_id)
 
 
-class GetPortfolioOrdersQuery(Query[List[Order]]):
+class GetPortfolioOrdersQuery(Query[list[Order]]):
     """Query to get all orders for a portfolio."""
 
     def __init__(self, portfolio_id: str):
         self.portfolio_id = portfolio_id
 
-    async def execute(self, uow: AbstractUnitOfWork) -> List[Order]:
+    async def execute(self, uow: AbstractUnitOfWork) -> list[Order]:
         """Execute query to find portfolio orders."""
         # Cast to access domain-specific repository method
-        from app.domain.repositories.order_repository import OrderRepository
 
-        orders_repo = cast(OrderRepository, uow.orders)
+        orders_repo = cast("OrderRepository", uow.orders)
         return await orders_repo.find_by_portfolio(self.portfolio_id)
 
 
@@ -388,7 +391,7 @@ class OrderApplicationService(ApplicationService):
                 raise ValueError(f"Order validation failed: {order.validation_errors}")
 
             # Portfolio validates risk limits
-            if portfolio.is_risk_limit_exceeded(command.quantity * (command.price or Decimal('0'))):
+            if portfolio.is_risk_limit_exceeded(command.quantity * (command.price or Decimal("0"))):
                 raise ValueError("Order exceeds portfolio risk limits")
 
             # Save order
@@ -456,7 +459,7 @@ class OrderApplicationService(ApplicationService):
 
         await self._execute_in_transaction(_cancel)
 
-    async def get_order(self, query: GetOrderQuery) -> Optional[Order]:
+    async def get_order(self, query: GetOrderQuery) -> Order | None:
         """
         Get an order by ID.
 
@@ -469,7 +472,7 @@ class OrderApplicationService(ApplicationService):
         async with self.uow_factory() as uow:
             return await query.execute(uow)
 
-    async def get_portfolio_orders(self, query: GetPortfolioOrdersQuery) -> List[Order]:
+    async def get_portfolio_orders(self, query: GetPortfolioOrdersQuery) -> list[Order]:
         """
         Get all orders for a portfolio.
 
@@ -576,15 +579,14 @@ class PortfolioApplicationService(ApplicationService):
             # Save changes
             await uow.portfolios.update(portfolio)
             # Cast to access domain-specific repository method
-            from app.domain.repositories.position_repository import PositionRepository
 
-            positions_repo = cast(PositionRepository, uow.positions)
+            positions_repo = cast("PositionRepository", uow.positions)
             await positions_repo.save(portfolio_id, position)
             logger.info(f"Added position {symbol} to portfolio {portfolio_id}")
 
         await self._execute_in_transaction(_add)
 
-    async def update_position_prices(self, portfolio_id: str, prices: Dict[str, Decimal]) -> None:
+    async def update_position_prices(self, portfolio_id: str, prices: dict[str, Decimal]) -> None:
         """
         Update current prices for positions.
 
@@ -639,7 +641,7 @@ class ServiceOrchestrator:
     """
 
     def __init__(self):
-        self._services: Dict[str, ApplicationService] = {}
+        self._services: dict[str, ApplicationService] = {}
 
     def register_service(self, name: str, service: ApplicationService) -> None:
         """Register an application service."""
@@ -656,7 +658,7 @@ class ServiceOrchestrator:
         Returns:
             Workflow result
         """
-        if workflow_name == 'create_and_submit_order':
+        if workflow_name == "create_and_submit_order":
             return await self._create_and_submit_order(**kwargs)
         else:
             raise ValueError(f"Unknown workflow: {workflow_name}")
@@ -668,12 +670,12 @@ class ServiceOrchestrator:
         This demonstrates how multiple services can be coordinated
         while maintaining transaction boundaries.
         """
-        order_service = self._services.get('orders')
+        order_service = self._services.get("orders")
         if not order_service:
             raise ValueError("Order service not registered")
 
         # Cast to OrderApplicationService to access specific methods
-        order_app_service = cast(OrderApplicationService, order_service)
+        order_app_service = cast("OrderApplicationService", order_service)
 
         # Create order
         order_id = await order_app_service.create_order(order_command)
@@ -724,57 +726,51 @@ from .risk_configurator import (
     StressTestScenario,
     VaRResult,
 )
-from .tax_optimizer import (
-    TaxCalculation,
-    TaxJurisdiction,
-    TaxLot,
-    TaxMethod,
-    TaxOptimizer,
-)
+from .tax_optimizer import TaxCalculation, TaxJurisdiction, TaxLot, TaxMethod, TaxOptimizer
 
 # pylint: enable=wrong-import-position
 
 __all__ = [
+    "ApplicationService",
+    "BusinessRuleError",
+    "CancelOrderCommand",
     # CQRS
     "Command",
-    "Query",
     "CommandHandler",
-    "ApplicationService",
-    "ServiceOrchestrator",
-    # Exceptions
-    "ValidationError",
-    "BusinessRuleError",
-    "NotFoundError",
     # Order Service
     "CreateOrderCommand",
-    "SubmitOrderCommand",
-    "CancelOrderCommand",
+    "DrawdownMetrics",
     "GetOrderQuery",
     "GetPortfolioOrdersQuery",
+    # InputProfile Router
+    "InputProfileRouter",
+    "NotFoundError",
+    "OptimizationConfig",
+    "OptimizationType",
     "OrderApplicationService",
     # Portfolio Service
     "PortfolioApplicationService",
-    # InputProfile Router
-    "InputProfileRouter",
-    "SystemConfiguration",
-    "StrategyType",
-    "OptimizationType",
+    "Query",
     "RebalancingFrequency",
+    "RiskBudget",
     "RiskConfig",
-    "OptimizationConfig",
-    "TaxConfig",
     # Risk Configurator
     "RiskConfigurator",
     "RiskLimit",
     "RiskLimitType",
-    "VaRResult",
-    "DrawdownMetrics",
-    "RiskBudget",
+    "ServiceOrchestrator",
+    "StrategyType",
     "StressTestScenario",
+    "SubmitOrderCommand",
+    "SystemConfiguration",
+    "TaxCalculation",
+    "TaxConfig",
+    "TaxJurisdiction",
+    "TaxLot",
+    "TaxMethod",
     # Tax Optimizer
     "TaxOptimizer",
-    "TaxLot",
-    "TaxCalculation",
-    "TaxMethod",
-    "TaxJurisdiction",
+    "VaRResult",
+    # Exceptions
+    "ValidationError",
 ]

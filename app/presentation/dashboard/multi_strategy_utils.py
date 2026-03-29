@@ -8,13 +8,13 @@ import json
 import logging
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
 
 def save_multi_strategy_results(
-    consolidated_results: Dict[str, Any],
+    consolidated_results: dict[str, Any],
     output_dir: Path,
     backtest_id: str,
 ) -> Path:
@@ -103,7 +103,7 @@ def save_multi_strategy_results(
 
 
 def generate_multi_strategy_summary_text(
-    consolidated_results: Dict[str, Any],
+    consolidated_results: dict[str, Any],
 ) -> str:
     """
     Generate text summary for multi-strategy results.
@@ -134,8 +134,8 @@ def generate_multi_strategy_summary_text(
     summary += "|----------|---------|--------|----------|--------|--------|--------|\n"
 
     for strategy_name, result in per_strategy.items():
-        sharpe = result.get('sharpe_ratio', 0) or 0
-        max_dd = result.get('max_drawdown', 0) or 0
+        sharpe = result.get("sharpe_ratio", 0) or 0
+        max_dd = result.get("max_drawdown", 0) or 0
 
         summary += f"| {strategy_name} | "
         summary += f"${result.get('initial_capital', 0):,.0f} | "
@@ -161,8 +161,8 @@ def generate_multi_strategy_summary_text(
     # Best/Worst performers
     strategy_list = [(name, result) for name, result in per_strategy.items()]
     if strategy_list:
-        best = max(strategy_list, key=lambda x: x[1].get('total_return', 0))
-        worst = min(strategy_list, key=lambda x: x[1].get('total_return', 0))
+        best = max(strategy_list, key=lambda x: x[1].get("total_return", 0))
+        worst = min(strategy_list, key=lambda x: x[1].get("total_return", 0))
 
         summary += f"- **Best Performer**: {best[0]} ({best[1].get('total_return', 0):.2f}%)\n"
         summary += f"- **Worst Performer**: {worst[0]} ({worst[1].get('total_return', 0):.2f}%)\n"
@@ -210,10 +210,10 @@ def generate_multi_strategy_summary_text(
 
 
 def generate_backend_test_summary_with_multi_strategy(
-    consolidated_results: Dict[str, Any],
+    consolidated_results: dict[str, Any],
     selected_module: str,
     selected_strategy: str,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Generate backend test summary including multi-strategy metrics.
 

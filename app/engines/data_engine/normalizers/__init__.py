@@ -15,9 +15,9 @@ from .timestamp_normalizer import TimestampNormalizer
 from .unified_normalizer import UnifiedNormalizer
 
 __all__ = [
-    "TimestampNormalizer",
-    "SymbolNormalizer",
-    "PriceNormalizer",
     "CorporateActionsHandler",
+    "PriceNormalizer",
+    "SymbolNormalizer",
+    "TimestampNormalizer",
     "UnifiedNormalizer",
 ]

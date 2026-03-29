@@ -5,7 +5,7 @@ VECTORIZADO: Usa numpy para todos los cálculos. Sin bucles Python.
 """
 
 import logging
-from typing import Dict, List, Optional, Union
+from typing import Optional, Union
 
 import numpy as np
 
@@ -26,7 +26,9 @@ class TrendDetector(BaseMarketDetector):
     NOTA: Todas las implementaciones están vectorizadas con numpy.
     """
 
-    def __init__(self, config: Dict = None, tier: str = None, use_yaml: bool = True):
+    def __init__(
+        self, config: Optional[dict] = None, tier: Optional[str] = None, use_yaml: bool = True
+    ):
         """Inicializar detector de tendencias."""
         super().__init__("trend_detector", config, tier, use_yaml)
 
@@ -42,7 +44,7 @@ class TrendDetector(BaseMarketDetector):
             "min_trend_strength", trend_config.get("min_trend_strength", 0.6)
         )
 
-    def detect(self, price_history: Union[List[float], np.ndarray], **kwargs) -> Dict:
+    def detect(self, price_history: Union[list[float], np.ndarray], **kwargs) -> dict:
         """
         Detectar tendencia.
 
@@ -62,12 +64,12 @@ class TrendDetector(BaseMarketDetector):
         prices = np.asarray(price_history, dtype=np.float64)
 
         if not self.enabled or len(prices) < self.ema_slow_period:
-            return {'type': 'no_trend', 'strength': 0.0, 'confidence': 0.0, 'method': self.method}
+            return {"type": "no_trend", "strength": 0.0, "confidence": 0.0, "method": self.method}
 
         # Check for NaN/Inf
         if not np.isfinite(prices).all():
             logger.warning("Price history contains NaN or Inf values")
-            return {'type': 'no_trend', 'strength': 0.0, 'confidence': 0.0, 'method': self.method}
+            return {"type": "no_trend", "strength": 0.0, "confidence": 0.0, "method": self.method}
 
         if self.method == "ema_cross":
             return self._detect_ema_cross(prices)
@@ -79,13 +81,13 @@ class TrendDetector(BaseMarketDetector):
             logger.warning(f"Unknown trend detection method: {self.method}")
             return self._detect_ema_cross(prices)
 
-    def _detect_ema_cross(self, prices: np.ndarray) -> Dict:
+    def _detect_ema_cross(self, prices: np.ndarray) -> dict:
         """Detectar tendencia usando cruce de EMAs - VECTORIZADO."""
         ema_fast = self._ema_vectorized(prices, self.ema_fast_period)
         ema_slow = self._ema_vectorized(prices, self.ema_slow_period)
 
         if ema_fast is None or ema_slow is None:
-            return {'type': 'no_trend', 'strength': 0.0, 'confidence': 0.0, 'method': 'ema_cross'}
+            return {"type": "no_trend", "strength": 0.0, "confidence": 0.0, "method": "ema_cross"}
 
         current_price = prices[-1]
         current_fast = ema_fast[-1]
@@ -107,14 +109,14 @@ class TrendDetector(BaseMarketDetector):
 
             if strength >= self.min_trend_strength:
                 return {
-                    'type': 'trend_up',
-                    'strength': float(strength),
-                    'confidence': float(confidence),
-                    'method': 'ema_cross',
-                    'metadata': {
-                        'ema_fast': float(current_fast),
-                        'ema_slow': float(current_slow),
-                        'distance_pct': float(distance),
+                    "type": "trend_up",
+                    "strength": float(strength),
+                    "confidence": float(confidence),
+                    "method": "ema_cross",
+                    "metadata": {
+                        "ema_fast": float(current_fast),
+                        "ema_slow": float(current_slow),
+                        "distance_pct": float(distance),
                     },
                 }
 
@@ -125,32 +127,32 @@ class TrendDetector(BaseMarketDetector):
 
             if strength >= self.min_trend_strength:
                 return {
-                    'type': 'trend_down',
-                    'strength': float(strength),
-                    'confidence': float(confidence),
-                    'method': 'ema_cross',
-                    'metadata': {
-                        'ema_fast': float(current_fast),
-                        'ema_slow': float(current_slow),
-                        'distance_pct': float(distance),
+                    "type": "trend_down",
+                    "strength": float(strength),
+                    "confidence": float(confidence),
+                    "method": "ema_cross",
+                    "metadata": {
+                        "ema_fast": float(current_fast),
+                        "ema_slow": float(current_slow),
+                        "distance_pct": float(distance),
                     },
                 }
 
-        return {'type': 'no_trend', 'strength': 0.0, 'confidence': 0.5, 'method': 'ema_cross'}
+        return {"type": "no_trend", "strength": 0.0, "confidence": 0.5, "method": "ema_cross"}
 
-    def _detect_adx(self, prices: np.ndarray, **kwargs) -> Dict:
+    def _detect_adx(self, prices: np.ndarray, **kwargs) -> dict:
         """
         Detectar tendencia usando ADX - COMPLETAMENTE VECTORIZADO.
 
         Usa numpy para todos los cálculos sin bucles Python.
         """
-        high = np.asarray(kwargs.get('high_history', prices), dtype=np.float64)
-        low = np.asarray(kwargs.get('low_history', prices), dtype=np.float64)
+        high = np.asarray(kwargs.get("high_history", prices), dtype=np.float64)
+        low = np.asarray(kwargs.get("low_history", prices), dtype=np.float64)
 
         period = self.config.get("trend_detection", {}).get("adx_period", 14)
 
         if len(prices) < period + 1:
-            return {'type': 'no_trend', 'strength': 0.0, 'confidence': 0.0, 'method': 'adx'}
+            return {"type": "no_trend", "strength": 0.0, "confidence": 0.0, "method": "adx"}
 
         try:
             # Vectorized True Range calculation
@@ -167,7 +169,7 @@ class TrendDetector(BaseMarketDetector):
             minus_dm = np.where((down_move > up_move) & (down_move > 0), down_move, 0.0)
 
             if len(tr) < period:
-                return {'type': 'no_trend', 'strength': 0.0, 'confidence': 0.0, 'method': 'adx'}
+                return {"type": "no_trend", "strength": 0.0, "confidence": 0.0, "method": "adx"}
 
             # Wilder's smoothing - vectorized
             atr = self._wilder_smooth(tr, period)
@@ -175,7 +177,7 @@ class TrendDetector(BaseMarketDetector):
             smooth_minus_dm = self._wilder_smooth(minus_dm, period)
 
             if atr is None or len(atr) == 0:
-                return {'type': 'no_trend', 'strength': 0.0, 'confidence': 0.0, 'method': 'adx'}
+                return {"type": "no_trend", "strength": 0.0, "confidence": 0.0, "method": "adx"}
 
             # Vectorized +DI, -DI calculation
             # Avoid division by zero
@@ -189,13 +191,13 @@ class TrendDetector(BaseMarketDetector):
             dx = np.abs(plus_di - minus_di) / di_sum_safe * 100.0
 
             if len(dx) < period:
-                return {'type': 'no_trend', 'strength': 0.0, 'confidence': 0.0, 'method': 'adx'}
+                return {"type": "no_trend", "strength": 0.0, "confidence": 0.0, "method": "adx"}
 
             # ADX = smoothed DX
             adx = self._wilder_smooth(dx, period)
 
             if adx is None or len(adx) == 0:
-                return {'type': 'no_trend', 'strength': 0.0, 'confidence': 0.0, 'method': 'adx'}
+                return {"type": "no_trend", "strength": 0.0, "confidence": 0.0, "method": "adx"}
 
             current_adx = float(adx[-1])
             current_plus_di = float(plus_di[-1])
@@ -205,24 +207,24 @@ class TrendDetector(BaseMarketDetector):
             strength = min(1.0, current_adx / 50.0)
 
             if current_adx < 20:
-                trend_type = 'no_trend'
+                trend_type = "no_trend"
                 confidence = 0.3
             elif current_plus_di > current_minus_di:
-                trend_type = 'trend_up'
+                trend_type = "trend_up"
                 confidence = min(1.0, current_adx / 40.0)
             else:
-                trend_type = 'trend_down'
+                trend_type = "trend_down"
                 confidence = min(1.0, current_adx / 40.0)
 
             return {
-                'type': trend_type,
-                'strength': strength,
-                'confidence': confidence,
-                'method': 'adx',
-                'metadata': {
-                    'adx': current_adx,
-                    'plus_di': current_plus_di,
-                    'minus_di': current_minus_di,
+                "type": trend_type,
+                "strength": strength,
+                "confidence": confidence,
+                "method": "adx",
+                "metadata": {
+                    "adx": current_adx,
+                    "plus_di": current_plus_di,
+                    "minus_di": current_minus_di,
                 },
             }
 
@@ -230,7 +232,7 @@ class TrendDetector(BaseMarketDetector):
             logger.warning(f"ADX calculation error: {e}, falling back to EMA")
             return self._detect_ema_cross(prices)
 
-    def _detect_macd(self, prices: np.ndarray, **kwargs) -> Dict:
+    def _detect_macd(self, prices: np.ndarray, **kwargs) -> dict:
         """
         Detectar tendencia usando MACD - COMPLETAMENTE VECTORIZADO.
 
@@ -246,7 +248,7 @@ class TrendDetector(BaseMarketDetector):
         min_periods = slow_period + signal_period
 
         if len(prices) < min_periods:
-            return {'type': 'no_trend', 'strength': 0.0, 'confidence': 0.0, 'method': 'macd'}
+            return {"type": "no_trend", "strength": 0.0, "confidence": 0.0, "method": "macd"}
 
         try:
             # Vectorized EMA calculation
@@ -254,20 +256,20 @@ class TrendDetector(BaseMarketDetector):
             ema_slow = self._ema_vectorized(prices, slow_period)
 
             if ema_fast is None or ema_slow is None:
-                return {'type': 'no_trend', 'strength': 0.0, 'confidence': 0.0, 'method': 'macd'}
+                return {"type": "no_trend", "strength": 0.0, "confidence": 0.0, "method": "macd"}
 
             # Align arrays (slow EMA is shorter)
             offset = len(ema_fast) - len(ema_slow)
             macd_line = ema_fast[offset:] - ema_slow
 
             if len(macd_line) < signal_period:
-                return {'type': 'no_trend', 'strength': 0.0, 'confidence': 0.0, 'method': 'macd'}
+                return {"type": "no_trend", "strength": 0.0, "confidence": 0.0, "method": "macd"}
 
             # Signal line
             signal_line = self._ema_vectorized(macd_line, signal_period)
 
             if signal_line is None or len(signal_line) < 2:
-                return {'type': 'no_trend', 'strength': 0.0, 'confidence': 0.0, 'method': 'macd'}
+                return {"type": "no_trend", "strength": 0.0, "confidence": 0.0, "method": "macd"}
 
             # Align for histogram
             macd_aligned = macd_line[-(len(signal_line)) :]
@@ -288,40 +290,40 @@ class TrendDetector(BaseMarketDetector):
 
             # Determine trend
             if current_macd > current_signal and current_macd > 0:
-                trend_type = 'trend_up'
+                trend_type = "trend_up"
                 confidence = 0.8 if current_histogram > prev_histogram else 0.6
             elif current_macd < current_signal and current_macd < 0:
-                trend_type = 'trend_down'
+                trend_type = "trend_down"
                 confidence = 0.8 if current_histogram < prev_histogram else 0.6
             elif current_macd > current_signal:
-                trend_type = 'trend_up'
+                trend_type = "trend_up"
                 confidence = 0.4
             elif current_macd < current_signal:
-                trend_type = 'trend_down'
+                trend_type = "trend_down"
                 confidence = 0.4
             else:
-                trend_type = 'no_trend'
+                trend_type = "no_trend"
                 confidence = 0.3
 
             # Crossover detection
             crossover = None
             if prev_macd < prev_signal and current_macd > current_signal:
-                crossover = 'bullish_crossover'
+                crossover = "bullish_crossover"
                 confidence = min(1.0, confidence + 0.2)
             elif prev_macd > prev_signal and current_macd < current_signal:
-                crossover = 'bearish_crossover'
+                crossover = "bearish_crossover"
                 confidence = min(1.0, confidence + 0.2)
 
             return {
-                'type': trend_type,
-                'strength': strength,
-                'confidence': min(1.0, confidence),
-                'method': 'macd',
-                'metadata': {
-                    'macd': current_macd,
-                    'signal': current_signal,
-                    'histogram': current_histogram,
-                    'crossover': crossover,
+                "type": trend_type,
+                "strength": strength,
+                "confidence": min(1.0, confidence),
+                "method": "macd",
+                "metadata": {
+                    "macd": current_macd,
+                    "signal": current_signal,
+                    "histogram": current_histogram,
+                    "crossover": crossover,
                 },
             }
 

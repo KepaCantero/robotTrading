@@ -10,7 +10,7 @@ Generates professional reports including:
 import logging
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Dict, List, Optional, TypedDict, Union
+from typing import Optional, TypedDict, Union
 
 import numpy as np
 
@@ -30,9 +30,9 @@ logger = logging.getLogger(__name__)
 class ChartDataDict(TypedDict, total=False):
     """TypedDict for chart data."""
 
-    dates: List[str]
-    strategy: List[float]
-    benchmark: List[float]
+    dates: list[str]
+    strategy: list[float]
+    benchmark: list[float]
 
 
 class ChartDict(TypedDict, total=False):
@@ -57,7 +57,7 @@ class ReportSection:
 
     title: str
     content: str
-    charts: List[ChartDict] = field(default_factory=list)
+    charts: list[ChartDict] = field(default_factory=list)
 
 
 @dataclass
@@ -71,7 +71,7 @@ class ProfessionalReport:
 
     # Core results
     backtest_result: Optional[BacktestResult] = None
-    walk_forward_results: Optional[List[ValidationWindow]] = None
+    walk_forward_results: Optional[list[ValidationWindow]] = None
     capital_scale_results: Optional[CapitalScaleAnalysisReport] = None
     acceptance_report: Optional[AcceptanceReport] = None
 
@@ -166,11 +166,11 @@ class ProfessionalReporter:
 
 | Metric | Value | Status |
 |--------|-------|--------|
-| **Total Return** | {total_return:+.2%} | {'✅' if total_return > 0 else '❌'} |
-| **Sharpe Ratio** | {sharpe:.2f} | {'✅' if sharpe > 1.0 else '⚠️' if sharpe > 0.5 else '❌'} |
-| **Max Drawdown** | {max_dd:.2%} | {'✅' if abs(max_dd) < 0.25 else '❌'} |
-| **Profit Factor** | {profit_factor:.2f} | {'✅' if profit_factor > 1.3 else '❌'} |
-| **Win Rate** | {win_rate:.1f}% | {'✅' if win_rate > 50 else '⚠️'} |
+| **Total Return** | {total_return:+.2%} | {"✅" if total_return > 0 else "❌"} |
+| **Sharpe Ratio** | {sharpe:.2f} | {"✅" if sharpe > 1.0 else "⚠️" if sharpe > 0.5 else "❌"} |
+| **Max Drawdown** | {max_dd:.2%} | {"✅" if abs(max_dd) < 0.25 else "❌"} |
+| **Profit Factor** | {profit_factor:.2f} | {"✅" if profit_factor > 1.3 else "❌"} |
+| **Win Rate** | {win_rate:.1f}% | {"✅" if win_rate > 50 else "⚠️"} |
 
 ## Verdict
 
@@ -215,7 +215,7 @@ class ProfessionalReporter:
         self,
         backtest_result: BacktestResult,
         acceptance_report: AcceptanceReport,
-        walk_forward_results: Optional[List[ValidationWindow]] = None,
+        walk_forward_results: Optional[list[ValidationWindow]] = None,
         capital_scale_results: Optional[CapitalScaleAnalysisReport] = None,
         benchmark_return: float = 0.0,
     ) -> ProfessionalReport:
@@ -332,7 +332,7 @@ class ProfessionalReporter:
 
     def _generate_robustness_section(
         self,
-        walk_forward: Optional[Union[List[ValidationWindow], Dict]],
+        walk_forward: Optional[Union[list[ValidationWindow], dict]],
         capital_scale: Optional[CapitalScaleAnalysisReport],
     ) -> ReportSection:
         """Generate robustness analysis section."""
@@ -450,8 +450,8 @@ class ProfessionalReporter:
 <body>
     <div class="header">
         <h1>{report.strategy_name}</h1>
-        <p>Generated: {report.timestamp.strftime('%Y-%m-%d %H:%M')}</p>
-        <p>Period: {report.period_start.strftime('%Y-%m-%d')} to {report.period_end.strftime('%Y-%m-%d')}</p>
+        <p>Generated: {report.timestamp.strftime("%Y-%m-%d %H:%M")}</p>
+        <p>Period: {report.period_start.strftime("%Y-%m-%d")} to {report.period_end.strftime("%Y-%m-%d")}</p>
     </div>
 
     {self._section_to_html(report.executive_summary)}

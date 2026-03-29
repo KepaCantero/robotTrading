@@ -15,7 +15,7 @@ import contextlib
 import logging
 from datetime import datetime
 from decimal import Decimal
-from typing import Callable, Dict, List, Optional
+from typing import Callable, Optional
 
 from .models import MetricPoint, MetricsCollectionResult, MetricType
 from .questdb_connector import QuestDBConnector
@@ -49,8 +49,8 @@ class MetricsCollector:
         self.collection_interval_seconds = collection_interval_seconds
         self.auto_flush = auto_flush
 
-        self._metric_sources: Dict[str, Callable] = {}
-        self._pending_metrics: List[MetricPoint] = []
+        self._metric_sources: dict[str, Callable] = {}
+        self._pending_metrics: list[MetricPoint] = []
         self._collection_running = False
         self._collection_task: Optional[asyncio.Task] = None
 
@@ -80,7 +80,7 @@ class MetricsCollector:
         start_time = datetime.utcnow()
         metrics_collected = 0
         metrics_failed = 0
-        errors: List[str] = []
+        errors: list[str] = []
 
         try:
             logger.debug("Starting metrics collection cycle")
@@ -237,7 +237,7 @@ class MetricsCollector:
         value: Decimal,
         symbol: Optional[str] = None,
         portfolio_id: Optional[str] = None,
-        tags: Optional[Dict[str, str]] = None,
+        tags: Optional[dict[str, str]] = None,
     ) -> None:
         """
         Add a single metric to the collection.
@@ -260,7 +260,7 @@ class MetricsCollector:
 
         self._pending_metrics.append(metric)
 
-    async def get_statistics(self) -> Dict:
+    async def get_statistics(self) -> dict:
         """
         Get collector statistics.
 

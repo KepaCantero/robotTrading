@@ -29,12 +29,15 @@ from __future__ import annotations
 import logging
 from dataclasses import dataclass
 from enum import Enum
+from typing import TYPE_CHECKING
 
 import numpy as np
-from numpy.typing import NDArray
 from scipy.optimize import minimize
 
 from app.shared.config.centralized_config import get_config
+
+if TYPE_CHECKING:
+    from numpy.typing import NDArray
 
 logger = logging.getLogger(__name__)
 
@@ -116,7 +119,9 @@ class InvestorView:
                     logger.warning(
                         f"Absolute view pick vector should sum to 1, got {self.pick_vector.sum()}"
                     )
-            elif self.view_type == ViewType.RELATIVE and not np.isclose(self.pick_vector.sum(), 0.0):
+            elif self.view_type == ViewType.RELATIVE and not np.isclose(
+                self.pick_vector.sum(), 0.0
+            ):
                 logger.warning(
                     f"Relative view pick vector should sum to 0, got {self.pick_vector.sum()}"
                 )
@@ -807,7 +812,7 @@ class BlackLittermanOptimizer:
                 expected_risk=0.0,
                 sharpe_ratio=0.0,
                 success=False,
-                message=f"Optimization failed: {str(e)}",
+                message=f"Optimization failed: {e!s}",
             )
 
     def _max_sharpe_weights(

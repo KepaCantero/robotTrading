@@ -9,7 +9,7 @@ import logging
 import random
 from datetime import datetime
 from decimal import Decimal
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -37,11 +37,11 @@ class PaperTradingPortfolioProvider:
         )
         self.initial_cash = initial_cash
         self.cash = initial_cash
-        self.positions: Dict[str, Position] = {}
+        self.positions: dict[str, Position] = {}
         self.broker = "paper_trading"
 
         # Simulated market data
-        self.market_prices: Dict[str, Decimal] = {
+        self.market_prices: dict[str, Decimal] = {
             "AAPL": Decimal("150.00"),
             "MSFT": Decimal("300.00"),
             "GOOGL": Decimal("2500.00"),
@@ -129,7 +129,7 @@ class PaperTradingPortfolioProvider:
         """Get specific position by symbol."""
         return self.positions.get(symbol.upper())
 
-    async def get_asset_universe(self) -> List[AssetUniverse]:
+    async def get_asset_universe(self) -> list[AssetUniverse]:
         """Get supported asset universe for this provider."""
         return self.asset_universes
 
@@ -291,11 +291,11 @@ class PaperTradingPortfolioProvider:
             # Simulate price movement (-2% to +2%)
             current_price = self.market_prices[symbol]
             # Use config value for max risk per trade (2% default)
-            change_percent = getattr(cfg.trading, 'max_risk_per_trade', 0.02)
+            change_percent = getattr(cfg.trading, "max_risk_per_trade", 0.02)
             new_price = current_price * (1 + Decimal(str(change_percent)))
             self.market_prices[symbol] = new_price
 
-    def get_supported_symbols(self) -> List[str]:
+    def get_supported_symbols(self) -> list[str]:
         """Get list of all supported symbols."""
         symbols = []
         for universe in self.asset_universes:
@@ -306,7 +306,7 @@ class PaperTradingPortfolioProvider:
         """Check if a symbol is supported."""
         return symbol.upper() in self.get_supported_symbols()
 
-    async def get_portfolio_summary(self) -> Dict[str, Any]:
+    async def get_portfolio_summary(self) -> dict[str, Any]:
         """Get portfolio summary for API responses."""
         portfolio = await self.get_portfolio()
 

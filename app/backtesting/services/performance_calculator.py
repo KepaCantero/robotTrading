@@ -10,7 +10,6 @@ from __future__ import annotations
 import logging
 import math
 from decimal import Decimal
-from typing import List, Optional
 
 from app.backtesting.models import BacktestConfig, PerformanceMetrics, Trade, TradeStatus
 from app.shared.config.centralized_config import get_config
@@ -47,9 +46,9 @@ class PerformanceMetricsCalculator:
 
     def calculate_performance_metrics(
         self,
-        trades: List[Trade],
+        trades: list[Trade],
         max_drawdown: Decimal,
-        initial_capital: Optional[Decimal] = None,
+        initial_capital: Decimal | None = None,
     ) -> PerformanceMetrics:
         """
         Calculate comprehensive performance metrics.
@@ -145,7 +144,7 @@ class PerformanceMetricsCalculator:
             avg_trade_duration=avg_trade_duration,
         )
 
-    def _calculate_sharpe_ratio(self, trades: List[Trade]) -> Optional[Decimal]:
+    def _calculate_sharpe_ratio(self, trades: list[Trade]) -> Decimal | None:
         """
         Calculate Sharpe ratio from realized trade P&L using proper time-series returns.
 
@@ -159,10 +158,10 @@ class PerformanceMetricsCalculator:
         3. These returns compound properly (r1, r2, r3...)
         4. Annualize and calculate Sharpe from the return series
 
-        Formula: Sharpe = (Rp - Rf) / σp
+        Formula: Sharpe = (Rp - Rf) / sigmap
         - Rp: Portfolio return (annualized)
         - Rf: Risk-free rate
-        - σp: Standard deviation of portfolio returns (annualized)
+        - sigmap: Standard deviation of portfolio returns (annualized)
 
         Args:
             trades: List of all trades
@@ -224,9 +223,7 @@ class PerformanceMetricsCalculator:
 
         return sharpe
 
-    def _create_empty_metrics(
-        self, initial_capital: Optional[Decimal] = None
-    ) -> PerformanceMetrics:
+    def _create_empty_metrics(self, initial_capital: Decimal | None = None) -> PerformanceMetrics:
         """
         Create empty performance metrics.
 
@@ -236,8 +233,6 @@ class PerformanceMetricsCalculator:
         Returns:
             PerformanceMetrics with all zeros
         """
-        initial_capital or self.config.initial_capital
-
         return PerformanceMetrics(
             total_trades=0,
             winning_trades=0,
@@ -260,7 +255,7 @@ class PerformanceMetricsCalculator:
             avg_trade_duration=Decimal("0"),
         )
 
-    def calculate_win_rate(self, trades: List[Trade]) -> Decimal:
+    def calculate_win_rate(self, trades: list[Trade]) -> Decimal:
         """
         Calculate win rate from trades.
 
@@ -288,7 +283,7 @@ class PerformanceMetricsCalculator:
         win_rate = Decimal(str((len(winning_trades) / total_trades) * 100))
         return min(Decimal("100"), max(Decimal("0"), win_rate))
 
-    def calculate_profit_factor(self, trades: List[Trade]) -> Decimal:
+    def calculate_profit_factor(self, trades: list[Trade]) -> Decimal:
         """
         Calculate profit factor (gross profit / |gross loss|).
 
@@ -313,7 +308,7 @@ class PerformanceMetricsCalculator:
 
         return gross_profit / gross_loss
 
-    def calculate_expectancy(self, trades: List[Trade]) -> Decimal:
+    def calculate_expectancy(self, trades: list[Trade]) -> Decimal:
         """
         Calculate expectancy (average P&L per trade).
 

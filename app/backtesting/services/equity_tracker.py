@@ -8,11 +8,13 @@ and calculating drawdown metrics.
 from __future__ import annotations
 
 import logging
-from datetime import datetime
 from decimal import Decimal
-from typing import Dict, List, Tuple
+from typing import TYPE_CHECKING
 
-from app.backtesting.services.position_manager import PositionManager
+if TYPE_CHECKING:
+    from datetime import datetime
+
+    from app.backtesting.services.position_manager import PositionManager
 
 logger = logging.getLogger(__name__)
 
@@ -48,7 +50,7 @@ class EquityCurveTracker:
         self.initial_capital = initial_capital
 
         # State
-        self.equity_curve: List[Tuple[datetime, Decimal]] = []
+        self.equity_curve: list[tuple[datetime, Decimal]] = []
         self.max_drawdown = Decimal("0")
         self.peak_equity = initial_capital
 
@@ -56,7 +58,7 @@ class EquityCurveTracker:
         self,
         timestamp: datetime,
         capital: Decimal,
-        last_known_prices: Dict[str, Decimal],
+        last_known_prices: dict[str, Decimal],
     ) -> None:
         """
         Update equity curve with current portfolio value.
@@ -109,7 +111,7 @@ class EquityCurveTracker:
             if current_drawdown < self.max_drawdown:
                 self.max_drawdown = current_drawdown
 
-    def get_equity_curve(self) -> List[Tuple[datetime, Decimal]]:
+    def get_equity_curve(self) -> list[tuple[datetime, Decimal]]:
         """
         Get the equity curve.
 
@@ -153,7 +155,7 @@ class EquityCurveTracker:
     def get_current_portfolio_value(
         self,
         capital: Decimal,
-        last_known_prices: Dict[str, Decimal],
+        last_known_prices: dict[str, Decimal],
     ) -> Decimal:
         """
         Calculate current portfolio value including unrealized P&L.
@@ -183,7 +185,7 @@ class EquityCurveTracker:
         self.peak_equity = self.initial_capital
 
     def _get_entry_price_fallback(
-        self, symbol: str, last_known_prices: Dict[str, Decimal]
+        self, symbol: str, last_known_prices: dict[str, Decimal]
     ) -> Decimal:
         """
         Get fallback entry price for a symbol (rarely used).
@@ -212,7 +214,7 @@ class EquityCurveTracker:
         )
         raise ValueError(f"No entry price found for {symbol} and no last known price available")
 
-    def calculate_returns(self) -> List[Decimal]:
+    def calculate_returns(self) -> list[Decimal]:
         """
         Calculate period-over-period returns from equity curve.
 

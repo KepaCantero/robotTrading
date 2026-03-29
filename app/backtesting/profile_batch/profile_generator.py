@@ -5,7 +5,7 @@ Generates backtest profile combinations for batch testing.
 Handles profile creation, configuration mapping, and tier conversions.
 
 Responsibilities:
-- Generate profile combinations (objectives × risks × tiers × horizons)
+- Generate profile combinations (objectives * risks * tiers * horizons)
 - Map profiles to backtest configurations
 - Handle tier mapping conversions
 - Load investment horizons from config
@@ -16,7 +16,7 @@ from __future__ import annotations
 import logging
 from decimal import Decimal
 from pathlib import Path
-from typing import Any, Dict, List, Union
+from typing import Any, Union
 
 import yaml
 
@@ -27,9 +27,9 @@ from app.shared.utils.tier_mapper import map_profile_tier_to_config
 logger = logging.getLogger(__name__)
 
 # Type aliases for better type safety
-ConfigDict = Dict[str, Any]
-MetricsDict = Dict[str, Union[float, int, str, bool, None]]
-StrategyConfigDict = Dict[str, Any]
+ConfigDict = dict[str, Any]
+MetricsDict = dict[str, Union[float, int, str, bool, None]]
+StrategyConfigDict = dict[str, Any]
 
 
 class ProfileGenerator:
@@ -64,7 +64,7 @@ class ProfileGenerator:
         with open(self.config_path) as f:
             return yaml.safe_load(f)
 
-    def _load_investment_horizons(self) -> List[int]:
+    def _load_investment_horizons(self) -> list[int]:
         """
         Load investment horizons from configuration.
 
@@ -116,7 +116,7 @@ class ProfileGenerator:
 
         return validated_horizons
 
-    def generate_all_profiles(self) -> List[InputProfile]:
+    def generate_all_profiles(self) -> list[InputProfile]:
         """
         Generate all profile combinations.
 
@@ -157,8 +157,8 @@ class ProfileGenerator:
         expected_count = len(objectives) * len(risk_tolerances) * len(capital_tiers) * len(horizons)
         logger.info(
             f"Generated {len(profiles)} profile combinations "
-            f"({len(objectives)} objectives × {len(risk_tolerances)} risks × "
-            f"{len(capital_tiers)} tiers × {len(horizons)} horizons = {expected_count})"
+            f"({len(objectives)} objectives * {len(risk_tolerances)} risks * "
+            f"{len(capital_tiers)} tiers * {len(horizons)} horizons = {expected_count})"
         )
         return profiles
 

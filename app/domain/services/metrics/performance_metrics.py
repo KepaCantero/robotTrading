@@ -21,7 +21,6 @@ from __future__ import annotations
 import logging
 from dataclasses import dataclass
 from decimal import Decimal
-from typing import List, Optional, Union
 
 import numpy as np
 import pandas as pd
@@ -56,7 +55,7 @@ except ImportError:
     qs = None
 
 
-def _to_array(returns: Union[pd.Series, np.ndarray, List[Decimal], List[float]]) -> np.ndarray:
+def _to_array(returns: pd.Series | np.ndarray | list[Decimal] | list[float]) -> np.ndarray:
     """Convert returns to numpy array, handling various input types."""
     if isinstance(returns, pd.Series):
         arr = returns.values.astype(np.float64)
@@ -72,7 +71,7 @@ def _to_array(returns: Union[pd.Series, np.ndarray, List[Decimal], List[float]])
     return arr[~np.isnan(arr)]
 
 
-def _to_decimal(value: Union[float, np.floating, Decimal]) -> Decimal:
+def _to_decimal(value: float | np.floating | Decimal) -> Decimal:
     """Convert value to Decimal for precision."""
     if isinstance(value, Decimal):
         return value
@@ -87,11 +86,11 @@ class SharpeRatioResult:
     annualized_sharpe: float
     daily_mean_return: float
     daily_std_return: float
-    skewness: Optional[float] = None
-    excess_kurtosis: Optional[float] = None
-    confidence_interval_low: Optional[float] = None
-    confidence_interval_high: Optional[float] = None
-    is_statistically_significant: Optional[bool] = None
+    skewness: float | None = None
+    excess_kurtosis: float | None = None
+    confidence_interval_low: float | None = None
+    confidence_interval_high: float | None = None
+    is_statistically_significant: bool | None = None
 
 
 @dataclass
@@ -103,7 +102,7 @@ class DrawdownResult:
     max_drawdown_duration: int  # In periods
     average_drawdown: float
     recovery_factor: float
-    drawdown_distribution: Optional[dict] = None
+    drawdown_distribution: dict | None = None
 
 
 @dataclass
@@ -118,20 +117,20 @@ class PerformanceResult:
     # Risk-adjusted metrics
     sharpe_ratio: float
     sortino_ratio: float
-    calmar_ratio: Optional[float]
-    omega_ratio: Optional[float]
+    calmar_ratio: float | None
+    omega_ratio: float | None
 
     # Risk metrics
     max_drawdown: float
     volatility: float
 
     # Distribution metrics
-    skewness: Optional[float]
-    kurtosis: Optional[float]
+    skewness: float | None
+    kurtosis: float | None
 
     # Additional metrics
-    var_95: Optional[float]
-    cvar_95: Optional[float]
+    var_95: float | None
+    cvar_95: float | None
 
 
 class PerformanceMetricsCalculator:
@@ -151,7 +150,7 @@ class PerformanceMetricsCalculator:
     def __init__(
         self,
         risk_free_rate: float = DEFAULT_RISK_FREE_RATE,
-        trading_days: int = None,
+        trading_days: int | None = None,
         use_empyrical: bool = True,
     ):
         """
@@ -176,10 +175,10 @@ class PerformanceMetricsCalculator:
 
     def sharpe_ratio(
         self,
-        returns: Union[pd.Series, np.ndarray, List[Decimal], List[float]],
-        risk_free_rate: Optional[float] = None,
+        returns: pd.Series | np.ndarray | list[Decimal] | list[float],
+        risk_free_rate: float | None = None,
         annualize: bool = True,
-        periods: Optional[int] = None,
+        periods: int | None = None,
     ) -> float:
         """
         Calculate Sharpe ratio.
@@ -246,7 +245,7 @@ class PerformanceMetricsCalculator:
 
     def sharpe_ratio_with_confidence(
         self,
-        returns: Union[pd.Series, np.ndarray, List[float]],
+        returns: pd.Series | np.ndarray | list[float],
         confidence_level: float = 0.95,
     ) -> SharpeRatioResult:
         """
@@ -327,8 +326,8 @@ class PerformanceMetricsCalculator:
 
     def sortino_ratio(
         self,
-        returns: Union[pd.Series, np.ndarray, List[Decimal], List[float]],
-        risk_free_rate: Optional[float] = None,
+        returns: pd.Series | np.ndarray | list[Decimal] | list[float],
+        risk_free_rate: float | None = None,
         target_return: float = 0.0,
         annualize: bool = True,
     ) -> float:
@@ -404,11 +403,11 @@ class PerformanceMetricsCalculator:
 
     def calmar_ratio(
         self,
-        returns: Union[pd.Series, np.ndarray, List[float]],
-        equity_curve: Optional[Union[pd.Series, np.ndarray, List[float]]] = None,
-        cagr: Optional[float] = None,
-        max_drawdown: Optional[float] = None,
-    ) -> Optional[float]:
+        returns: pd.Series | np.ndarray | list[float],
+        equity_curve: pd.Series | np.ndarray | list[float] | None = None,
+        cagr: float | None = None,
+        max_drawdown: float | None = None,
+    ) -> float | None:
         """
         Calculate Calmar ratio (CAGR / |Max Drawdown|).
 
@@ -462,7 +461,7 @@ class PerformanceMetricsCalculator:
 
     def omega_ratio(
         self,
-        returns: Union[pd.Series, np.ndarray, List[Decimal], List[float]],
+        returns: pd.Series | np.ndarray | list[Decimal] | list[float],
         threshold: float = 0.0,
     ) -> float:
         """
@@ -510,7 +509,7 @@ class PerformanceMetricsCalculator:
 
     def max_drawdown(
         self,
-        equity_curve: Union[pd.Series, np.ndarray, List[Decimal], List[float]],
+        equity_curve: pd.Series | np.ndarray | list[Decimal] | list[float],
         as_percentage: bool = False,
     ) -> float:
         """
@@ -533,7 +532,7 @@ class PerformanceMetricsCalculator:
 
     def max_drawdown_analysis(
         self,
-        equity_curve: Union[pd.Series, np.ndarray, List[float]],
+        equity_curve: pd.Series | np.ndarray | list[float],
         from_returns: bool = False,
     ) -> DrawdownResult:
         """
@@ -612,7 +611,7 @@ class PerformanceMetricsCalculator:
 
     def ulcer_index(
         self,
-        equity_curve: Union[pd.Series, np.ndarray, List[Decimal], List[float]],
+        equity_curve: pd.Series | np.ndarray | list[Decimal] | list[float],
     ) -> float:
         """
         Calculate Ulcer Index.
@@ -650,8 +649,8 @@ class PerformanceMetricsCalculator:
 
     def cagr(
         self,
-        returns: Union[pd.Series, np.ndarray, List[float]],
-        periods_per_year: Optional[int] = None,
+        returns: pd.Series | np.ndarray | list[float],
+        periods_per_year: int | None = None,
     ) -> float:
         """
         Calculate Compound Annual Growth Rate.
@@ -694,7 +693,7 @@ class PerformanceMetricsCalculator:
 
     def volatility(
         self,
-        returns: Union[pd.Series, np.ndarray, List[float]],
+        returns: pd.Series | np.ndarray | list[float],
         annualize: bool = True,
     ) -> float:
         """
@@ -725,8 +724,8 @@ class PerformanceMetricsCalculator:
 
     def calculate_all(
         self,
-        returns: Union[pd.Series, np.ndarray, List[float]],
-        equity_curve: Optional[Union[pd.Series, np.ndarray, List[float]]] = None,
+        returns: pd.Series | np.ndarray | list[float],
+        equity_curve: pd.Series | np.ndarray | list[float] | None = None,
     ) -> PerformanceResult:
         """
         Calculate all performance metrics at once.
@@ -807,7 +806,7 @@ class PerformanceMetricsCalculator:
     # HELPER METHODS
     # =========================================================================
 
-    def _calculate_skewness(self, returns: np.ndarray) -> Optional[float]:
+    def _calculate_skewness(self, returns: np.ndarray) -> float | None:
         """Calculate skewness of returns."""
         if len(returns) < 3:
             return None
@@ -824,7 +823,7 @@ class PerformanceMetricsCalculator:
                 return 0.0
             return float(np.mean(((returns - mean) / std) ** 3))
 
-    def _calculate_kurtosis(self, returns: np.ndarray) -> Optional[float]:
+    def _calculate_kurtosis(self, returns: np.ndarray) -> float | None:
         """Calculate excess kurtosis of returns."""
         if len(returns) < 4:
             return None
@@ -860,7 +859,7 @@ class PerformanceMetricsCalculator:
 
 
 def get_sharpe_ratio(
-    returns: Union[pd.Series, np.ndarray, List[float]],
+    returns: pd.Series | np.ndarray | list[float],
     risk_free_rate: float = DEFAULT_RISK_FREE_RATE,
     annualize: bool = True,
 ) -> float:
@@ -880,7 +879,7 @@ def get_sharpe_ratio(
 
 
 def get_sortino_ratio(
-    returns: Union[pd.Series, np.ndarray, List[float]],
+    returns: pd.Series | np.ndarray | list[float],
     risk_free_rate: float = DEFAULT_RISK_FREE_RATE,
     annualize: bool = True,
 ) -> float:
@@ -900,9 +899,9 @@ def get_sortino_ratio(
 
 
 def get_calmar_ratio(
-    returns: Union[pd.Series, np.ndarray, List[float]],
-    equity_curve: Optional[Union[pd.Series, np.ndarray, List[float]]] = None,
-) -> Optional[float]:
+    returns: pd.Series | np.ndarray | list[float],
+    equity_curve: pd.Series | np.ndarray | list[float] | None = None,
+) -> float | None:
     """
     Convenience function to calculate Calmar ratio.
 
@@ -918,7 +917,7 @@ def get_calmar_ratio(
 
 
 def get_omega_ratio(
-    returns: Union[pd.Series, np.ndarray, List[float]],
+    returns: pd.Series | np.ndarray | list[float],
     threshold: float = 0.0,
 ) -> float:
     """
@@ -936,7 +935,7 @@ def get_omega_ratio(
 
 
 def get_max_drawdown(
-    equity_curve: Union[pd.Series, np.ndarray, List[float]],
+    equity_curve: pd.Series | np.ndarray | list[float],
     as_percentage: bool = False,
 ) -> float:
     """
@@ -954,7 +953,7 @@ def get_max_drawdown(
 
 
 def get_ulcer_index(
-    equity_curve: Union[pd.Series, np.ndarray, List[float]],
+    equity_curve: pd.Series | np.ndarray | list[float],
 ) -> float:
     """
     Convenience function to calculate Ulcer Index.

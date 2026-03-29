@@ -103,7 +103,11 @@ class RiskConfig(BaseModel):
     @classmethod
     def validate_leverage_consistency(cls, v: Decimal, info) -> Decimal:
         """Ensure max_leverage is 1.0 when leverage not allowed."""
-        if "leverage_allowed" in info.data and not info.data["leverage_allowed"] and v != Decimal("1.0"):
+        if (
+            "leverage_allowed" in info.data
+            and not info.data["leverage_allowed"]
+            and v != Decimal("1.0")
+        ):
             logger.warning(
                 "Leverage validation failed",
                 extra={

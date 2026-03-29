@@ -12,8 +12,9 @@ Key principles:
 
 import logging
 import math
+from collections.abc import Sequence
 from decimal import ROUND_HALF_UP, Decimal, InvalidOperation, getcontext
-from typing import Optional, Sequence, Union
+from typing import Optional, Union
 
 # Set high precision for financial calculations
 getcontext().prec = 28  # Sufficient for most financial calculations
@@ -60,7 +61,7 @@ def to_decimal(value: Union[int, float, str, Decimal, None]) -> Optional[Decimal
         try:
             # Remove common currency symbols and formatting
             cleaned = (
-                value.strip().replace('$', '').replace(',', '').replace('€', '').replace('£', '')
+                value.strip().replace("$", "").replace(",", "").replace("€", "").replace("£", "")
             )
             return Decimal(cleaned)
         except (InvalidOperation, ValueError) as e:

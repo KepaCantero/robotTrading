@@ -21,7 +21,7 @@ Reference: Hull, Options, Futures, and Other Derivatives, Chapter 18
 """
 
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 import numpy as np
 
@@ -38,7 +38,7 @@ class ComponentVaRCalculator:
     and position-level risk management.
     """
 
-    def __init__(self, config: Optional[Dict[str, Any]] = None):
+    def __init__(self, config: Optional[dict[str, Any]] = None):
         """
         Initialize Component VaR calculator.
 
@@ -46,16 +46,16 @@ class ComponentVaRCalculator:
             config: Configuration dictionary
         """
         config = config or {}
-        self.confidence_level = config.get('confidence_level', 0.95)
+        self.confidence_level = config.get("confidence_level", 0.95)
         self.logger = logging.getLogger(self.__class__.__name__)
 
     def calculate_component_var(
         self,
         portfolio: Portfolio,
-        returns_history: Dict[str, List[float]],
+        returns_history: dict[str, list[float]],
         portfolio_var: float,
-        method: str = 'parametric',
-    ) -> Dict[str, Any]:
+        method: str = "parametric",
+    ) -> dict[str, Any]:
         """
         Calculate Component VaR for all positions.
 
@@ -70,14 +70,14 @@ class ComponentVaRCalculator:
         """
         try:
             if portfolio.total_equity == 0:
-                return {'error': 'Portfolio value is zero'}
+                return {"error": "Portfolio value is zero"}
 
             # Calculate portfolio returns
             portfolio_returns = self._calculate_portfolio_returns(portfolio, returns_history)
 
             if len(portfolio_returns) < 30:
                 return {
-                    'error': f'Insufficient data: {len(portfolio_returns)} observations, need 30+'
+                    "error": f"Insufficient data: {len(portfolio_returns)} observations, need 30+"
                 }
 
             # Calculate component VaR for each position
@@ -111,12 +111,12 @@ class ComponentVaRCalculator:
                 component_var = portfolio_var * beta * weight
 
                 components[symbol] = {
-                    'weight': weight,
-                    'beta': beta,
-                    'component_var': component_var,
-                    'component_var_pct': 0.0,  # Will be calculated
-                    'marginal_var': component_var / weight if weight > 0 else 0.0,
-                    'position_value': float(position.market_value),
+                    "weight": weight,
+                    "beta": beta,
+                    "component_var": component_var,
+                    "component_var_pct": 0.0,  # Will be calculated
+                    "marginal_var": component_var / weight if weight > 0 else 0.0,
+                    "position_value": float(position.market_value),
                 }
 
                 total_component_var += component_var
@@ -124,31 +124,31 @@ class ComponentVaRCalculator:
             # Calculate percentages
             if total_component_var > 0:
                 for symbol in components:
-                    components[symbol]['component_var_pct'] = (
-                        components[symbol]['component_var'] / total_component_var * 100
+                    components[symbol]["component_var_pct"] = (
+                        components[symbol]["component_var"] / total_component_var * 100
                     )
 
             # Validation check: sum of components should equal portfolio VaR
             sum_check = total_component_var / portfolio_var if portfolio_var != 0 else 0
 
             return {
-                'components': components,
-                'total_component_var': total_component_var,
-                'portfolio_var': portfolio_var,
-                'sum_check': sum_check,  # Should be ~1.0
-                'sum_check_pass': 0.95 <= sum_check <= 1.05,
-                'method': method,
-                'n_positions': len(components),
+                "components": components,
+                "total_component_var": total_component_var,
+                "portfolio_var": portfolio_var,
+                "sum_check": sum_check,  # Should be ~1.0
+                "sum_check_pass": 0.95 <= sum_check <= 1.05,
+                "method": method,
+                "n_positions": len(components),
             }
 
         except (ValueError, TypeError, KeyError, AttributeError) as e:
-            self.logger.error(f'Error calculating component VaR: {e}', exc_info=True)
-            return {'error': str(e)}
+            self.logger.error(f"Error calculating component VaR: {e}", exc_info=True)
+            return {"error": str(e)}
 
     def _calculate_portfolio_returns(
         self,
         portfolio: Portfolio,
-        returns_history: Dict[str, List[float]],
+        returns_history: dict[str, list[float]],
     ) -> np.ndarray:
         """Calculate portfolio returns from position returns."""
         portfolio_symbols = [pos.symbol for pos in portfolio.positions]
@@ -210,10 +210,10 @@ class ComponentVaRCalculator:
     def calculate_incremental_var(
         self,
         portfolio: Portfolio,
-        returns_history: Dict[str, List[float]],
+        returns_history: dict[str, list[float]],
         symbol_to_add: str,
         weight_to_add: float,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Calculate Incremental VaR - change in portfolio VaR if we add a position.
 
@@ -234,14 +234,14 @@ class ComponentVaRCalculator:
             current_returns = self._calculate_portfolio_returns(portfolio, returns_history)
 
             if len(current_returns) < 30:
-                return {'error': 'Insufficient data for incremental VaR'}
+                return {"error": "Insufficient data for incremental VaR"}
 
             # Calculate current VaR (95%)
             var_current = np.percentile(current_returns, 5)
 
             # Calculate new portfolio returns with added position
             if symbol_to_add not in returns_history:
-                return {'error': f'Symbol {symbol_to_add} not in returns history'}
+                return {"error": f"Symbol {symbol_to_add} not in returns history"}
 
             new_returns = returns_history[symbol_to_add]
             min_len = min(len(current_returns), len(new_returns))
@@ -258,20 +258,20 @@ class ComponentVaRCalculator:
             incremental_var = var_new - var_current
 
             return {
-                'current_var': var_current,
-                'new_var': var_new,
-                'incremental_var': incremental_var,
-                'var_change_pct': (
+                "current_var": var_current,
+                "new_var": var_new,
+                "incremental_var": incremental_var,
+                "var_change_pct": (
                     (incremental_var / abs(var_current) * 100) if var_current != 0 else 0
                 ),
-                'symbol': symbol_to_add,
-                'weight': weight_to_add,
-                'recommendation': self._evaluate_incremental_var(incremental_var, var_current),
+                "symbol": symbol_to_add,
+                "weight": weight_to_add,
+                "recommendation": self._evaluate_incremental_var(incremental_var, var_current),
             }
 
         except (ValueError, TypeError, KeyError) as e:
-            self.logger.error(f'Error calculating incremental VaR: {e}', exc_info=True)
-            return {'error': str(e)}
+            self.logger.error(f"Error calculating incremental VaR: {e}", exc_info=True)
+            return {"error": str(e)}
 
     def _evaluate_incremental_var(
         self,
@@ -284,20 +284,20 @@ class ComponentVaRCalculator:
             increase_pct = abs(incremental_var / current_var) if current_var != 0 else 0
 
             if increase_pct > 0.5:  # More than 50% increase
-                return 'REJECT - Risk increase exceeds 50%'
+                return "REJECT - Risk increase exceeds 50%"
             elif increase_pct > 0.2:  # More than 20% increase
-                return 'CAUTION - Significant risk increase'
+                return "CAUTION - Significant risk increase"
             else:
-                return 'ACCEPT - Moderate risk increase'
+                return "ACCEPT - Moderate risk increase"
         else:
             # VaR becomes less negative (decreases risk) - beneficial
-            return 'ACCEPT - Reduces portfolio risk'
+            return "ACCEPT - Reduces portfolio risk"
 
     def generate_risk_budget_report(
         self,
-        component_var_result: Dict[str, Any],
-        risk_budget: Optional[Dict[str, float]] = None,
-    ) -> Dict[str, Any]:
+        component_var_result: dict[str, Any],
+        risk_budget: Optional[dict[str, float]] = None,
+    ) -> dict[str, Any]:
         """
         Generate risk budget report comparing actual vs target risk contributions.
 
@@ -308,37 +308,37 @@ class ComponentVaRCalculator:
         Returns:
             Risk budget analysis
         """
-        if 'components' not in component_var_result:
-            return {'error': 'Invalid component VaR result'}
+        if "components" not in component_var_result:
+            return {"error": "Invalid component VaR result"}
 
-        components = component_var_result['components']
+        components = component_var_result["components"]
 
         report = {
-            'positions': [],
-            'budget_compliance': True,
-            'total_over_budget': 0.0,
+            "positions": [],
+            "budget_compliance": True,
+            "total_over_budget": 0.0,
         }
 
         for symbol, data in components.items():
             target_pct = risk_budget.get(symbol, 0) if risk_budget else 0
-            actual_pct = data['component_var_pct']
+            actual_pct = data["component_var_pct"]
 
             deviation = actual_pct - target_pct
 
             position_report = {
-                'symbol': symbol,
-                'actual_risk_pct': actual_pct,
-                'target_risk_pct': target_pct,
-                'deviation_pct': deviation,
-                'status': 'within_budget' if abs(deviation) <= 5.0 else 'over_budget',
-                'component_var': data['component_var'],
-                'position_value': data['position_value'],
+                "symbol": symbol,
+                "actual_risk_pct": actual_pct,
+                "target_risk_pct": target_pct,
+                "deviation_pct": deviation,
+                "status": "within_budget" if abs(deviation) <= 5.0 else "over_budget",
+                "component_var": data["component_var"],
+                "position_value": data["position_value"],
             }
 
-            report['positions'].append(position_report)
+            report["positions"].append(position_report)
 
             if abs(deviation) > 5.0:
-                report['budget_compliance'] = False
-                report['total_over_budget'] += abs(deviation)
+                report["budget_compliance"] = False
+                report["total_over_budget"] += abs(deviation)
 
         return report

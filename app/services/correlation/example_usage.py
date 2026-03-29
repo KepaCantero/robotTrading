@@ -124,7 +124,7 @@ def example_with_portfolio_risk_manager():
 
     # Check for correlation violations
     correlation_violations = [
-        v for v in risk_assessment['violations'] if v['type'] == 'correlation'
+        v for v in risk_assessment["violations"] if v["type"] == "correlation"
     ]
 
     if correlation_violations:

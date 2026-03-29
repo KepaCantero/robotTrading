@@ -6,9 +6,9 @@ from .models import AdjustedAllocationWeight, RiskAdjustedPortfolio, RiskScaling
 from .risk_scaling_applicator import RiskScalingApplication, get_risk_scaler
 
 __all__ = [
-    "RiskScalingApplication",
-    "get_risk_scaler",
-    "RiskScalingRequest",
-    "RiskAdjustedPortfolio",
     "AdjustedAllocationWeight",
+    "RiskAdjustedPortfolio",
+    "RiskScalingApplication",
+    "RiskScalingRequest",
+    "get_risk_scaler",
 ]

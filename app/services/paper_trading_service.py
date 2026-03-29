@@ -10,7 +10,7 @@ import logging
 import random
 from datetime import datetime
 from decimal import Decimal
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 from uuid import UUID
 
 logger = logging.getLogger(__name__)
@@ -46,19 +46,19 @@ class PaperTradingService:
 
     def __init__(self):
         logger.debug("Initializing PaperTradingService")
-        self.portfolios: Dict[UUID, PaperPortfolio] = {}
-        self.sessions: Dict[UUID, PaperTradingSession] = {}
-        self.configs: Dict[UUID, PaperTradingConfig] = {}
-        self.trades: Dict[UUID, PaperTrade] = {}
+        self.portfolios: dict[UUID, PaperPortfolio] = {}
+        self.sessions: dict[UUID, PaperTradingSession] = {}
+        self.configs: dict[UUID, PaperTradingConfig] = {}
+        self.trades: dict[UUID, PaperTrade] = {}
         # symbol -> portfolio_id -> position
-        self.positions: Dict[str, Dict[UUID, PaperPosition]] = {}
+        self.positions: dict[str, dict[UUID, PaperPosition]] = {}
 
         # Servicio de análisis de slippage dinámico
         slippage_params = SlippageCalculationParams()
         self.slippage_service = DynamicSlippageService(slippage_params)
 
         # Market data cache for realistic pricing
-        self.market_data_cache: Dict[str, Quote] = {}
+        self.market_data_cache: dict[str, Quote] = {}
 
         # Default configuration
         self._create_default_config()
@@ -98,7 +98,7 @@ class PaperTradingService:
             extra={"name": name, "config_id": str(config_id), "initial_cash": str(initial_cash)},
         )
         if config_id is None:
-            config_id = list(self.configs.keys())[0]  # Use default config
+            config_id = next(iter(self.configs.keys()))  # Use default config
 
         config = self.configs[config_id]
 
@@ -140,7 +140,7 @@ class PaperTradingService:
             raise ValueError(f"Portfolio {portfolio_id} not found")
 
         if config_id is None:
-            config_id = list(self.configs.keys())[0]  # Use default config
+            config_id = next(iter(self.configs.keys()))  # Use default config
 
         session = PaperTradingSession(
             portfolio_id=portfolio_id,
@@ -187,7 +187,7 @@ class PaperTradingService:
         # Get configuration - use default config if none specified
         config_id = getattr(portfolio, "config_id", None)
         if config_id is None:
-            config_id = list(self.configs.keys())[0]  # Use default config
+            config_id = next(iter(self.configs.keys()))  # Use default config
 
         config = self.configs[config_id]
 
@@ -313,10 +313,7 @@ class PaperTradingService:
             return False
 
         # Check drawdown limits
-        if portfolio.max_drawdown > config.max_drawdown:
-            return False
-
-        return True
+        return not portfolio.max_drawdown > config.max_drawdown
 
     async def _calculate_execution_costs(
         self, trade: PaperTrade, config: PaperTradingConfig, market_price: Decimal
@@ -481,7 +478,7 @@ class PaperTradingService:
 
         session.last_activity = datetime.utcnow()
 
-    async def update_market_prices(self, quotes: Dict[str, Quote]) -> None:
+    async def update_market_prices(self, quotes: dict[str, Quote]) -> None:
         """Update market prices for all symbols."""
         self.market_data_cache.update(quotes)
 
@@ -512,7 +509,7 @@ class PaperTradingService:
         session_id: Optional[UUID] = None,
         symbol: Optional[str] = None,
         status: Optional[TradeStatus] = None,
-    ) -> List[PaperTrade]:
+    ) -> list[PaperTrade]:
         """Get trades with optional filters."""
         trades = list(self.trades.values())
 
@@ -527,7 +524,7 @@ class PaperTradingService:
 
         return sorted(trades, key=lambda t: t.created_at, reverse=True)
 
-    async def get_positions(self, portfolio_id: UUID) -> List[PaperPosition]:
+    async def get_positions(self, portfolio_id: UUID) -> list[PaperPosition]:
         """Get all positions for a portfolio."""
         positions = []
         for symbol_positions in self.positions.values():
@@ -626,7 +623,7 @@ class PaperTradingService:
             )
             return trade.quantity * market_price * config.slippage_rate
 
-    def _get_price_history(self, symbol: str, days: int = 30) -> List[Decimal]:
+    def _get_price_history(self, symbol: str, days: int = 30) -> list[Decimal]:
         """Obtener historial de precios para cálculo de volatilidad."""
         # En producción, esto vendría del market data service
         # Por ahora, simulamos datos históricos
@@ -642,7 +639,7 @@ class PaperTradingService:
 
         return prices
 
-    async def execute_order(self, order: Order) -> Dict[str, Any]:
+    async def execute_order(self, order: Order) -> dict[str, Any]:
         """
         Execute an Order object using the paper trading service.
 
@@ -662,7 +659,7 @@ class PaperTradingService:
         )
         try:
             # Create a default portfolio if none exists
-            portfolio_id = list(self.portfolios.keys())[0] if self.portfolios else None
+            portfolio_id = next(iter(self.portfolios.keys())) if self.portfolios else None
             if portfolio_id is None:
                 # Create a default portfolio for testing
                 # create_portfolio takes name, not portfolio_id/initial_capital/currency

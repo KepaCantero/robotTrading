@@ -10,7 +10,7 @@ import logging
 from datetime import datetime
 from decimal import Decimal
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 from app.domain.models.portfolio import Portfolio, Position
 from app.shared.config.centralized_config import get_config
@@ -83,7 +83,7 @@ class PortfolioRiskManager:
         self.risk_alerts_sent = 0
 
         # Historial de violaciones
-        self.violation_history: List[Dict[str, Any]] = []
+        self.violation_history: list[dict[str, Any]] = []
         self.max_history_size = 1000
 
         # Estado actual de riesgo
@@ -98,7 +98,7 @@ class PortfolioRiskManager:
 
     def assess_portfolio_risk(
         self, portfolio: Portfolio, new_position: Optional[Position] = None
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Evaluar riesgo del portafolio.
 
@@ -159,7 +159,7 @@ class PortfolioRiskManager:
 
     async def _calculate_risk_metrics_async(
         self, portfolio: Portfolio, new_position: Optional[Position]
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Calcular métricas de riesgo (async version for correlation)."""
         # Calcular exposición total
         total_exposure = self._calculate_total_exposure(portfolio, new_position)
@@ -195,7 +195,7 @@ class PortfolioRiskManager:
 
     def _calculate_risk_metrics(
         self, portfolio: Portfolio, new_position: Optional[Position]
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Calcular métricas de riesgo (synchronous fallback)."""
         # Calcular exposición total
         total_exposure = self._calculate_total_exposure(portfolio, new_position)
@@ -229,7 +229,7 @@ class PortfolioRiskManager:
             "position_count": len(portfolio.positions) + (1 if new_position else 0),
         }
 
-    def _detect_risk_violations(self, risk_metrics: Dict[str, Any]) -> List[Dict[str, Any]]:
+    def _detect_risk_violations(self, risk_metrics: dict[str, Any]) -> list[dict[str, Any]]:
         """Detectar violaciones de riesgo."""
         violations = []
 
@@ -300,7 +300,7 @@ class PortfolioRiskManager:
         return violations
 
     def _determine_risk_level(
-        self, violations: List[Dict[str, Any]], risk_metrics: Dict[str, Any]
+        self, violations: list[dict[str, Any]], risk_metrics: dict[str, Any]
     ) -> RiskLevel:
         """Determinar nivel de riesgo."""
         if not violations:
@@ -321,8 +321,8 @@ class PortfolioRiskManager:
             return RiskLevel.LOW
 
     def _generate_recommendations(
-        self, violations: List[Dict[str, Any]], risk_metrics: Dict[str, Any]
-    ) -> List[str]:
+        self, violations: list[dict[str, Any]], risk_metrics: dict[str, Any]
+    ) -> list[str]:
         """Generar recomendaciones de riesgo."""
         recommendations = []
 
@@ -373,7 +373,7 @@ class PortfolioRiskManager:
 
     def _calculate_sector_exposures(
         self, portfolio: Portfolio, new_position: Optional[Position]
-    ) -> Dict[str, Decimal]:
+    ) -> dict[str, Decimal]:
         """Calcular exposición por sector."""
         sector_exposures = {}
 
@@ -399,7 +399,7 @@ class PortfolioRiskManager:
 
     async def _calculate_correlations_async(
         self, portfolio: Portfolio, new_position: Optional[Position]
-    ) -> Dict[str, float]:
+    ) -> dict[str, float]:
         """
         Calcular correlaciones entre posiciones usando real-time correlation matrix.
 
@@ -497,7 +497,7 @@ class PortfolioRiskManager:
 
     def _calculate_correlations(
         self, portfolio: Portfolio, new_position: Optional[Position]
-    ) -> Dict[str, float]:
+    ) -> dict[str, float]:
         """Calcular correlaciones entre posiciones (synchronous fallback)."""
         correlations = {}
 
@@ -530,7 +530,7 @@ class PortfolioRiskManager:
         return Decimal("0.15")  # 15% de volatilidad simulada
 
     def _record_violations(
-        self, violations: List[Dict[str, Any]], risk_assessment: Dict[str, Any]
+        self, violations: list[dict[str, Any]], risk_assessment: dict[str, Any]
     ) -> None:
         """Registrar violaciones en historial."""
         self.risk_violations_detected += len(violations)
@@ -548,7 +548,7 @@ class PortfolioRiskManager:
         if len(self.violation_history) > self.max_history_size:
             self.violation_history = self.violation_history[-self.max_history_size :]
 
-    def get_risk_statistics(self) -> Dict[str, Any]:
+    def get_risk_statistics(self) -> dict[str, Any]:
         """Obtener estadísticas de riesgo."""
         return {
             "risk_checks_performed": self.risk_checks_performed,
@@ -567,7 +567,7 @@ class PortfolioRiskManager:
 
     def _calculate_currency_exposure(
         self, portfolio: Portfolio, new_position: Optional[Position]
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Calcular exposición de moneda extranjera [TASK-5.5].
 
@@ -575,7 +575,7 @@ class PortfolioRiskManager:
             Dict with currency exposures and totals
         """
         base_currency = portfolio.currency or "USD"
-        exposure_by_currency: Dict[str, Decimal] = {}
+        exposure_by_currency: dict[str, Decimal] = {}
         total_unhedged = Decimal("0")
         total_portfolio_value = portfolio.total_equity
 
@@ -609,7 +609,7 @@ class PortfolioRiskManager:
             "total_portfolio_pct": portfolio_pct,
         }
 
-    def _detect_fx_violations(self, currency_exposures: Dict[str, Any]) -> List[Dict[str, Any]]:
+    def _detect_fx_violations(self, currency_exposures: dict[str, Any]) -> list[dict[str, Any]]:
         """
         Detectar violaciones de exposición a moneda extranjera [TASK-5.5].
 
@@ -624,7 +624,6 @@ class PortfolioRiskManager:
         # Get thresholds from config
         try:
             hedging_config = self.config.currency_hedging
-            hedging_config.single_currency_max
             total_fx_max = hedging_config.total_fx_max
         except (AttributeError, KeyError):
             # Fallback defaults
@@ -661,7 +660,7 @@ class PortfolioRiskManager:
 
         return violations
 
-    def get_recent_violations(self, limit: int = 10) -> List[Dict[str, Any]]:
+    def get_recent_violations(self, limit: int = 10) -> list[dict[str, Any]]:
         """Obtener violaciones recientes."""
         return self.violation_history[-limit:] if self.violation_history else []
 

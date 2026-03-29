@@ -6,7 +6,7 @@ overlapping samples in financial ML training (Chapter 4, "Advances in Financial 
 """
 
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 import numpy as np
 import pandas as pd
@@ -49,7 +49,7 @@ class SupervisedLearningEngine(BaseLearningEngine):
     Optimiza thresholds de filtros basado en datos históricos etiquetados.
     """
 
-    def __init__(self, config: Dict):
+    def __init__(self, config: dict):
         """Inicializar motor de aprendizaje supervisado."""
         super().__init__("supervised", config)
 
@@ -75,15 +75,15 @@ class SupervisedLearningEngine(BaseLearningEngine):
         )
 
         # López de Prado sample weights (Chapter 4)
-        self.sample_weights_: Optional[
-            np.ndarray
-        ] = None  # Stores sample weights from uniqueness calculation
+        self.sample_weights_: Optional[np.ndarray] = (
+            None  # Stores sample weights from uniqueness calculation
+        )
 
     def train(
         self,
-        training_data: Optional[Dict[str, Any]] = None,
-        validation_data: Optional[Dict[str, Any]] = None,
-    ) -> Dict[str, float]:
+        training_data: Optional[dict[str, Any]] = None,
+        validation_data: Optional[dict[str, Any]] = None,
+    ) -> dict[str, float]:
         """
         Entrenar modelo supervisado.
 
@@ -109,16 +109,16 @@ class SupervisedLearningEngine(BaseLearningEngine):
             logger.info("No training data provided - marking model as trained (dummy mode)")
             self.is_trained = True
             return {
-                'accuracy': 0.0,
-                'precision': 0.0,
-                'recall': 0.0,
-                'f1': 0.0,
-                'samples': 0,
+                "accuracy": 0.0,
+                "precision": 0.0,
+                "recall": 0.0,
+                "f1": 0.0,
+                "samples": 0,
             }
 
         # Preparar datos
-        X_train = training_data['features']
-        y_train = training_data['labels']
+        X_train = training_data["features"]
+        y_train = training_data["labels"]
 
         if isinstance(X_train, pd.DataFrame):
             X_train = X_train.values
@@ -128,7 +128,7 @@ class SupervisedLearningEngine(BaseLearningEngine):
         # Validar que hay suficientes datos y múltiples clases
         if len(X_train) == 0 or len(y_train) == 0:
             logger.warning("Datos de entrenamiento vacíos")
-            return {'error': 0.0, 'empty_data': 0.0}
+            return {"error": 0.0, "empty_data": 0.0}
 
         unique_labels = len(np.unique(y_train))
         if unique_labels < 2:
@@ -140,20 +140,20 @@ class SupervisedLearningEngine(BaseLearningEngine):
             )
             # No podemos entrenar sin múltiples clases - retornar error
             return {
-                'error': 0.0,
-                'insufficient_classes': 0.0,
-                'unique_labels': float(unique_labels),
-                'total_samples': float(len(y_train)),
+                "error": 0.0,
+                "insufficient_classes": 0.0,
+                "unique_labels": float(unique_labels),
+                "total_samples": float(len(y_train)),
             }
 
         # Calculate López de Prado sample weights by uniqueness (Chapter 4)
         train_weights = None
         train_idx = None  # Track train indices after split
 
-        if training_data.get('metadata'):
-            metadata = training_data['metadata']
+        if training_data.get("metadata"):
+            metadata = training_data["metadata"]
             # Check if we have the required components for sample weight calculation
-            if all(k in metadata for k in ['events', 'labels', 'prices']):
+            if all(k in metadata for k in ["events", "labels", "prices"]):
                 try:
                     from app.backtesting.labeling.triple_barrier import (
                         calculate_sample_weights_uniqueness,
@@ -161,9 +161,9 @@ class SupervisedLearningEngine(BaseLearningEngine):
 
                     # Calculate sample weights based on uniqueness
                     self.sample_weights_ = calculate_sample_weights_uniqueness(
-                        events=metadata['events'],
-                        labels=metadata['labels'],
-                        price_series=metadata['prices'],
+                        events=metadata["events"],
+                        labels=metadata["labels"],
+                        price_series=metadata["prices"],
                     )
 
                     logger.info(
@@ -189,8 +189,8 @@ class SupervisedLearningEngine(BaseLearningEngine):
 
                 # Get events for embargo calculation if available
                 events = None
-                if training_data.get('metadata') and 'events' in training_data['metadata']:
-                    events = training_data['metadata']['events']
+                if training_data.get("metadata") and "events" in training_data["metadata"]:
+                    events = training_data["metadata"]["events"]
 
                 # Create purged CV splitter
                 purged_cv = PurgedKFold(
@@ -202,7 +202,7 @@ class SupervisedLearningEngine(BaseLearningEngine):
                 # Get first split for train/validation
                 splits = list(
                     purged_cv.split(
-                        training_data['features'], training_data['labels'], events=events
+                        training_data["features"], training_data["labels"], events=events
                     )
                 )
 
@@ -210,16 +210,16 @@ class SupervisedLearningEngine(BaseLearningEngine):
                     train_idx, val_idx = splits[0]
 
                     # Extract train and validation sets
-                    if isinstance(training_data['features'], pd.DataFrame):
-                        X_train = training_data['features'].iloc[train_idx].values
-                        X_val = training_data['features'].iloc[val_idx].values
-                        y_train = training_data['labels'].iloc[train_idx].values
-                        y_val = training_data['labels'].iloc[val_idx].values
+                    if isinstance(training_data["features"], pd.DataFrame):
+                        X_train = training_data["features"].iloc[train_idx].values
+                        X_val = training_data["features"].iloc[val_idx].values
+                        y_train = training_data["labels"].iloc[train_idx].values
+                        y_val = training_data["labels"].iloc[val_idx].values
                     else:
-                        X_train = training_data['features'][train_idx]
-                        X_val = training_data['features'][val_idx]
-                        y_train = training_data['labels'][train_idx]
-                        y_val = training_data['labels'][val_idx]
+                        X_train = training_data["features"][train_idx]
+                        X_val = training_data["features"][val_idx]
+                        y_train = training_data["labels"][train_idx]
+                        y_val = training_data["labels"][val_idx]
 
                     logger.info(
                         f"Using Purged K-Fold CV (López de Prado Chapter 4): "
@@ -249,11 +249,10 @@ class SupervisedLearningEngine(BaseLearningEngine):
                 unique_classes = len(np.unique(y_train))
                 stratify_param = y_train if unique_classes > 1 else None
 
-                if isinstance(training_data['features'], pd.DataFrame):
-                    training_data['features'].index
+                if isinstance(training_data["features"], pd.DataFrame):
                     X_train_df, X_val_df, y_train_series, y_val_series = train_test_split(
-                        training_data['features'],
-                        training_data['labels'],
+                        training_data["features"],
+                        training_data["labels"],
                         test_size=0.2,
                         random_state=42,
                         stratify=stratify_param,
@@ -271,7 +270,7 @@ class SupervisedLearningEngine(BaseLearningEngine):
 
                 # Apply sample weights to training set only (after split)
                 if self.sample_weights_ is not None and train_idx is not None:
-                    if hasattr(train_idx, '__iter__') and not isinstance(train_idx, slice):
+                    if hasattr(train_idx, "__iter__") and not isinstance(train_idx, slice):
                         if isinstance(self.sample_weights_, pd.Series):
                             train_weights = (
                                 self.sample_weights_.loc[train_idx].values
@@ -287,8 +286,8 @@ class SupervisedLearningEngine(BaseLearningEngine):
                         f"Applied sample weights to training set: {len(train_weights)} samples"
                     )
         else:
-            X_val = validation_data['features']
-            y_val = validation_data['labels']
+            X_val = validation_data["features"]
+            y_val = validation_data["labels"]
             if isinstance(X_val, pd.DataFrame):
                 X_val = X_val.values
             if isinstance(y_val, pd.Series):
@@ -334,15 +333,15 @@ class SupervisedLearningEngine(BaseLearningEngine):
 
         # Log sample weight statistics in metrics
         if train_weights is not None:
-            metrics['sample_weights_mean'] = float(np.mean(train_weights))
-            metrics['sample_weights_std'] = float(np.std(train_weights))
-            metrics['sample_weights_min'] = float(np.min(train_weights))
-            metrics['sample_weights_max'] = float(np.max(train_weights))
+            metrics["sample_weights_mean"] = float(np.mean(train_weights))
+            metrics["sample_weights_std"] = float(np.std(train_weights))
+            metrics["sample_weights_min"] = float(np.min(train_weights))
+            metrics["sample_weights_max"] = float(np.max(train_weights))
 
         # Optimizar thresholds si está habilitado
-        if self.optimize_thresholds and training_data.get('metadata'):
+        if self.optimize_thresholds and training_data.get("metadata"):
             optimal_thresholds = self._optimize_thresholds(training_data)
-            metrics['optimal_thresholds'] = optimal_thresholds
+            metrics["optimal_thresholds"] = optimal_thresholds
 
         self.is_trained = True
         return metrics
@@ -369,11 +368,11 @@ class SupervisedLearningEngine(BaseLearningEngine):
     def _train_xgboost(self, X_train, y_train, sample_weights=None):
         """Entrenar XGBoost con sample weights de López de Prado."""
         params = {
-            'n_estimators': self.model_params.get("n_estimators", 100),
-            'max_depth': self.model_params.get("max_depth", 6),
-            'learning_rate': self.model_params.get("learning_rate", 0.1),
-            'subsample': self.model_params.get("subsample", 0.8),
-            'random_state': 42,
+            "n_estimators": self.model_params.get("n_estimators", 100),
+            "max_depth": self.model_params.get("max_depth", 6),
+            "learning_rate": self.model_params.get("learning_rate", 0.1),
+            "subsample": self.model_params.get("subsample", 0.8),
+            "random_state": 42,
             **self.model_params.get("xgboost_params", {}),
         }
 
@@ -387,16 +386,16 @@ class SupervisedLearningEngine(BaseLearningEngine):
     def _train_lightgbm(self, X_train, y_train, X_val, y_val, sample_weights=None):
         """Entrenar LightGBM con early stopping y sample weights de López de Prado."""
         params = {
-            'objective': 'binary',
-            'metric': 'binary_logloss',
-            'boosting_type': 'gbdt',
-            'num_leaves': self.model_params.get("num_leaves", 31),
-            'learning_rate': self.model_params.get("learning_rate", 0.05),
-            'feature_fraction': self.model_params.get("feature_fraction", 0.9),
-            'bagging_fraction': self.model_params.get("bagging_fraction", 0.8),
-            'bagging_freq': self.model_params.get("bagging_freq", 5),
-            'verbose': -1,  # Suprimir output
-            'random_state': 42,
+            "objective": "binary",
+            "metric": "binary_logloss",
+            "boosting_type": "gbdt",
+            "num_leaves": self.model_params.get("num_leaves", 31),
+            "learning_rate": self.model_params.get("learning_rate", 0.05),
+            "feature_fraction": self.model_params.get("feature_fraction", 0.9),
+            "bagging_fraction": self.model_params.get("bagging_fraction", 0.8),
+            "bagging_freq": self.model_params.get("bagging_freq", 5),
+            "verbose": -1,  # Suprimir output
+            "random_state": 42,
             **self.model_params.get("lightgbm_params", {}),
         }
 
@@ -430,20 +429,20 @@ class SupervisedLearningEngine(BaseLearningEngine):
 
             @property
             def feature_importances_(self):
-                return self.model.feature_importance(importance_type='gain')
+                return self.model.feature_importance(importance_type="gain")
 
         return LightGBMWrapper(model)
 
     def _train_catboost(self, X_train, y_train, X_val, y_val, sample_weights=None):
         """Entrenar CatBoost con early stopping y sample weights de López de Prado."""
         params = {
-            'iterations': self.model_params.get("n_estimators", 100),
-            'depth': self.model_params.get("max_depth", 6),
-            'learning_rate': self.model_params.get("learning_rate", 0.1),
-            'loss_function': 'Logloss',
-            'eval_metric': 'AUC',
-            'verbose': False,
-            'random_seed': 42,
+            "iterations": self.model_params.get("n_estimators", 100),
+            "depth": self.model_params.get("max_depth", 6),
+            "learning_rate": self.model_params.get("learning_rate", 0.1),
+            "loss_function": "Logloss",
+            "eval_metric": "AUC",
+            "verbose": False,
+            "random_seed": 42,
             **self.model_params.get("catboost_params", {}),
         }
 
@@ -474,10 +473,10 @@ class SupervisedLearningEngine(BaseLearningEngine):
     def _train_gradient_boosting(self, X_train, y_train, sample_weights=None):
         """Entrenar GradientBoosting con sample weights de López de Prado."""
         params = {
-            'n_estimators': self.model_params.get("n_estimators", 100),
-            'max_depth': self.model_params.get("max_depth", 5),
-            'learning_rate': self.model_params.get("learning_rate", 0.1),
-            'random_state': 42,
+            "n_estimators": self.model_params.get("n_estimators", 100),
+            "max_depth": self.model_params.get("max_depth", 5),
+            "learning_rate": self.model_params.get("learning_rate", 0.1),
+            "random_state": 42,
         }
 
         model = GradientBoostingClassifier(**params)
@@ -514,7 +513,7 @@ class SupervisedLearningEngine(BaseLearningEngine):
             class WeightedBCELoss(nn.Module):
                 def __init__(self):
                     super().__init__()
-                    self.bce = nn.BCELoss(reduction='none')
+                    self.bce = nn.BCELoss(reduction="none")
 
                 def forward(self, pred, target, weights):
                     loss = self.bce(pred, target)
@@ -556,7 +555,7 @@ class SupervisedLearningEngine(BaseLearningEngine):
                         else criterion(val_outputs, y_val_t)
                     )
                     logger.debug(
-                        f"Epoch {epoch+1}/{epochs}, Loss: {loss.item():.4f}, Val Loss: {val_loss.item():.4f}"
+                        f"Epoch {epoch + 1}/{epochs}, Loss: {loss.item():.4f}, Val Loss: {val_loss.item():.4f}"
                     )
 
         return model
@@ -572,14 +571,11 @@ class SupervisedLearningEngine(BaseLearningEngine):
                 y_pred = (predictions >= 0.5).astype(int)
         else:
             # Evaluación para sklearn/xgboost/lightgbm/catboost
-            if hasattr(self.model, 'predict_proba'):
+            if hasattr(self.model, "predict_proba"):
                 proba = self.model.predict_proba(X)
                 # Verificar si solo hay una clase (proba tiene shape [n_samples, 1])
                 # En ese caso, usar la única columna disponible
-                if proba.shape[1] > 1:
-                    predictions = proba[:, 1]
-                else:
-                    predictions = proba[:, 0]
+                predictions = proba[:, 1] if proba.shape[1] > 1 else proba[:, 0]
             else:
                 predictions = self.model.predict(X)
 
@@ -587,10 +583,10 @@ class SupervisedLearningEngine(BaseLearningEngine):
             y_pred = self.model.predict(X)
 
         metrics = {
-            'accuracy': float(accuracy_score(y, y_pred)),
-            'precision': float(precision_score(y, y_pred, zero_division=0)),
-            'recall': float(recall_score(y, y_pred, zero_division=0)),
-            'f1_score': float(f1_score(y, y_pred, zero_division=0)),
+            "accuracy": float(accuracy_score(y, y_pred)),
+            "precision": float(precision_score(y, y_pred, zero_division=0)),
+            "recall": float(recall_score(y, y_pred, zero_division=0)),
+            "f1_score": float(f1_score(y, y_pred, zero_division=0)),
         }
 
         # AUC si hay probabilidades y más de una clase
@@ -599,13 +595,13 @@ class SupervisedLearningEngine(BaseLearningEngine):
             try:
                 if predictions.ndim == 1:
                     # Ya es un array 1D
-                    metrics['roc_auc'] = float(roc_auc_score(y, predictions))
+                    metrics["roc_auc"] = float(roc_auc_score(y, predictions))
                 elif predictions.shape[1] > 1:
                     # Múltiples clases, usar la clase positiva
-                    metrics['roc_auc'] = float(roc_auc_score(y, predictions[:, 1]))
+                    metrics["roc_auc"] = float(roc_auc_score(y, predictions[:, 1]))
                 else:
                     # Solo una columna, usar esa
-                    metrics['roc_auc'] = float(roc_auc_score(y, predictions[:, 0]))
+                    metrics["roc_auc"] = float(roc_auc_score(y, predictions[:, 0]))
             except (ValueError, IndexError) as e:
                 # Si falla (por ejemplo, solo una clase en y), simplemente no calcular AUC
                 logger.debug(f"No se pudo calcular AUC: {e}")
@@ -614,30 +610,29 @@ class SupervisedLearningEngine(BaseLearningEngine):
         try:
             from app.backtesting.metrics import calculate_matthews_corrcoef
 
-            metrics['mcc'] = float(calculate_matthews_corrcoef(y, y_pred))
+            metrics["mcc"] = float(calculate_matthews_corrcoef(y, y_pred))
 
             # Use MCC for model selection - warn if below threshold
             # MCC ranges from -1 to +1, where:
             # - +1: Perfect prediction
             # - 0: Random prediction
             # - -1: Total disagreement
-            if metrics['mcc'] < 0.3:
+            if metrics["mcc"] < 0.3:
                 logger.warning(
                     f"Model MCC {metrics['mcc']:.3f} below threshold 0.3. "
                     "Model may not be reliable for imbalanced data."
                 )
-            elif metrics['mcc'] >= 0.5:
+            elif metrics["mcc"] >= 0.5:
                 logger.info(
-                    f"Model MCC {metrics['mcc']:.3f} indicates good performance "
-                    "on imbalanced data."
+                    f"Model MCC {metrics['mcc']:.3f} indicates good performance on imbalanced data."
                 )
         except Exception as e:
             logger.warning(f"Failed to calculate MCC: {e}")
-            metrics['mcc'] = None
+            metrics["mcc"] = None
 
         return metrics
 
-    def _optimize_thresholds(self, training_data: Dict) -> Dict[str, float]:
+    def _optimize_thresholds(self, training_data: dict) -> dict[str, float]:
         """
         Optimizar thresholds de filtros usando grid search.
 
@@ -670,7 +665,7 @@ class SupervisedLearningEngine(BaseLearningEngine):
         logger.info(f"Thresholds optimizados: {optimal}")
         return optimal
 
-    def predict(self, features: Dict[str, Any]) -> Dict[str, Any]:
+    def predict(self, features: dict[str, Any]) -> dict[str, Any]:
         """
         Predecir probabilidad de éxito de un trade.
 
@@ -690,7 +685,7 @@ class SupervisedLearningEngine(BaseLearningEngine):
             }
         """
         if not self.is_ready():
-            return {'success_probability': 0.5, 'recommended_action': 'HOLD', 'confidence': 0.0}
+            return {"success_probability": 0.5, "recommended_action": "HOLD", "confidence": 0.0}
 
         # Extraer features del dict
         feature_vector = self._extract_features(features)
@@ -703,82 +698,81 @@ class SupervisedLearningEngine(BaseLearningEngine):
                 prob = self.model(X_t).item()
         else:
             # Predicción con sklearn/xgboost
-            if hasattr(self.model, 'predict_proba'):
+            if hasattr(self.model, "predict_proba"):
                 proba = self.model.predict_proba([feature_vector])[0]
                 # Manejar caso donde solo hay una clase
-                if len(proba) > 1:
-                    prob = proba[1]  # Clase positiva
-                else:
-                    prob = proba[0]  # Única clase disponible
+                prob = (
+                    proba[1] if len(proba) > 1 else proba[0]
+                )  # Clase positiva o única clase disponible
             else:
                 pred = self.model.predict([feature_vector])[0]
                 prob = float(pred)
 
         # Decidir acción
         if prob >= 0.6:
-            action = 'BUY'
+            action = "BUY"
         elif prob <= 0.4:
-            action = 'SELL'
+            action = "SELL"
         else:
-            action = 'HOLD'
+            action = "HOLD"
 
         # Feature importance si disponible
         importance = {}
         # LightGBM wrapper tiene feature_importances_ como property
-        if hasattr(self.model, 'feature_importances_'):
+        if hasattr(self.model, "feature_importances_"):
             importances = self.model.feature_importances_
-            if isinstance(features.get('indicators'), dict):
-                feature_names = list(features['indicators'].keys())
+            if isinstance(features.get("indicators"), dict):
+                feature_names = list(features["indicators"].keys())
                 # Puede que tengamos más features que nombres, usar índices genéricos si es necesario
                 for i, imp in enumerate(importances):
                     if i < len(feature_names):
                         importance[feature_names[i]] = float(imp)
                     else:
-                        importance[f'feature_{i}'] = float(imp)
+                        importance[f"feature_{i}"] = float(imp)
         # CatBoost también tiene feature_importances_
-        elif hasattr(self.model, 'get_feature_importance'):
+        elif hasattr(self.model, "get_feature_importance"):
             try:
                 importances = self.model.get_feature_importance()
-                if isinstance(features.get('indicators'), dict):
-                    feature_names = list(features['indicators'].keys())
+                if isinstance(features.get("indicators"), dict):
+                    feature_names = list(features["indicators"].keys())
                     for i, imp in enumerate(importances):
                         if i < len(feature_names):
                             importance[feature_names[i]] = float(imp)
                         else:
-                            importance[f'feature_{i}'] = float(imp)
+                            importance[f"feature_{i}"] = float(imp)
             except (ValueError, TypeError, KeyError, AttributeError) as e:
                 logger.debug(f"No se pudo obtener feature importance: {e}")
 
         return {
-            'success_probability': float(prob),
-            'recommended_action': action,
-            'confidence': abs(prob - 0.5) * 2,  # 0.0 si prob=0.5, 1.0 si prob=0.0 o 1.0
-            'feature_importance': importance,
+            "success_probability": float(prob),
+            "recommended_action": action,
+            "confidence": abs(prob - 0.5) * 2,  # 0.0 si prob=0.5, 1.0 si prob=0.0 o 1.0
+            "feature_importance": importance,
         }
 
-    def _extract_features(self, features: Dict) -> List[float]:
+    def _extract_features(self, features: dict) -> list[float]:
         """Extraer vector de features del dict usando FeatureExtractor."""
         # Usar FeatureExtractor para extracción completa
         from app.domain.strategies.momentum_modular.learning.feature_extractor import (
             FeatureExtractor,
         )
 
-        if not hasattr(self, '_feature_extractor'):
+        if not hasattr(self, "_feature_extractor"):
             self._feature_extractor = FeatureExtractor()
 
         extracted = self._feature_extractor.extract_complete_features(
-            indicators=features.get('indicators', {}),
-            filter_results=features.get('filter_results', {}),
-            market_context=features.get('market_context', {}),
-            metadata=features.get('metadata', {}),
+            indicators=features.get("indicators", {}),
+            filter_results=features.get("filter_results", {}),
+            market_context=features.get("market_context", {}),
+            metadata=features.get("metadata", {}),
         )
 
-        return extracted['feature_vector']
+        return extracted["feature_vector"]
 
-    def evaluate(self, test_data: Dict[str, Any]) -> Dict[str, float]:
+    def evaluate(self, test_data: dict[str, Any]) -> dict[str, float]:
         """Evaluar modelo en datos de prueba."""
-        X_test = test_data['features']
-        y_test = test_data['labels']
+        X_test = test_data["features"]
+        y_test = test_data["labels"]
 
         if isinstance(X_test, pd.DataFrame):
             X_test = X_test.values

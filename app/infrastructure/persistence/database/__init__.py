@@ -5,7 +5,8 @@ TASK-6: Configuración de base de datos
 
 import contextlib
 import logging
-from typing import AsyncGenerator, Optional
+from collections.abc import AsyncGenerator
+from typing import Optional
 
 from sqlalchemy import MetaData, create_engine, event, text
 from sqlalchemy.exc import (
@@ -91,7 +92,7 @@ class DatabaseManager:
 
         except (ValueError, TypeError, KeyError, AttributeError) as e:
             raise_database_error(
-                f"Failed to initialize sync database engine: {str(e)}",
+                f"Failed to initialize sync database engine: {e!s}",
                 "engine_initialization",
             )
 
@@ -138,7 +139,7 @@ class DatabaseManager:
 
         except (ValueError, TypeError, KeyError, AttributeError) as e:
             raise_database_error(
-                f"Failed to initialize async database engine: {str(e)}",
+                f"Failed to initialize async database engine: {e!s}",
                 "async_engine_initialization",
             )
 
@@ -183,7 +184,7 @@ class DatabaseManager:
             logger.info("Database tables created successfully")
 
         except (IntegrityError, OperationalError, DatabaseError, DataError, ProgrammingError) as e:
-            raise_database_error(f"Failed to create database tables: {str(e)}", "create_tables")
+            raise_database_error(f"Failed to create database tables: {e!s}", "create_tables")
 
     def drop_tables(self) -> None:
         """Drop all database tables."""
@@ -195,7 +196,7 @@ class DatabaseManager:
             logger.info("Database tables dropped successfully")
 
         except (IntegrityError, OperationalError, DatabaseError, DataError, ProgrammingError) as e:
-            raise_database_error(f"Failed to drop database tables: {str(e)}", "drop_tables")
+            raise_database_error(f"Failed to drop database tables: {e!s}", "drop_tables")
 
     def get_sync_session(self) -> Session:
         """Get synchronous database session."""

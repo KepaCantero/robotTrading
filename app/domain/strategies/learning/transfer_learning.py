@@ -11,12 +11,12 @@ import json
 import logging
 from datetime import datetime
 from pathlib import Path
-from typing import TYPE_CHECKING, Dict, List, Optional, Tuple, Union
+from typing import TYPE_CHECKING, ClassVar, Optional, Union
 
 import numpy as np
 
 # Type alias for training metrics (heterogeneous dict with floats, lists, and strings)
-TrainingMetrics = Dict[str, Union[float, List[float], str]]
+TrainingMetrics = dict[str, Union[float, list[float], str]]
 
 if TYPE_CHECKING:
     import torch.nn as nn
@@ -85,11 +85,11 @@ class ModelRegistry:
         # Cargar registry existente
         self.registry = self._load_registry()
 
-    def _load_registry(self) -> Dict[str, object]:
+    def _load_registry(self) -> dict[str, object]:
         """Cargar registry desde archivo JSON."""
         if self.registry_file.exists():
             try:
-                with open(self.registry_file, 'r') as f:
+                with open(self.registry_file) as f:
                     return json.load(f)
             except OSError as e:
                 logger.warning(f"Error cargando registry: {e}")
@@ -99,7 +99,7 @@ class ModelRegistry:
     def _save_registry(self) -> None:
         """Guardar registry a archivo JSON."""
         try:
-            with open(self.registry_file, 'w') as f:
+            with open(self.registry_file, "w") as f:
                 json.dump(self.registry, f, indent=2, default=str)
         except OSError as e:
             logger.error(f"Error guardando registry: {e}", exc_info=True)
@@ -112,8 +112,8 @@ class ModelRegistry:
         regime: str,
         model_type: str,
         algorithm: str,
-        metadata: Optional[Dict[str, object]] = None,
-        tags: Optional[List[str]] = None,
+        metadata: Optional[dict[str, object]] = None,
+        tags: Optional[list[str]] = None,
     ) -> bool:
         """
         Registrar un modelo pre-entrenado usando serialización segura.
@@ -144,25 +144,25 @@ class ModelRegistry:
                 if (
                     PYTORCH_AVAILABLE
                     and _torch_module is not None
-                    and 'torch.nn' in str(type(model))
+                    and "torch.nn" in str(type(model))
                 ):
                     # PyTorch model - use torch.save (secure for PyTorch objects)
                     model_path = self.models_dir / f"{model_id}.pt"
                     _torch_module.save(model, model_path)
                     model_saved = True
-                    model_format = 'pt'
+                    model_format = "pt"
                 elif JOBLIB_AVAILABLE and _joblib_module is not None:
                     # sklearn or other models - use joblib (secure)
                     model_path = self.models_dir / f"{model_id}.joblib"
                     _joblib_module.dump(model, model_path)
                     model_saved = True
-                    model_format = 'joblib'
+                    model_format = "joblib"
                 elif MSGPACK_AVAILABLE and _msgpack_module is not None:
                     # Generic Python objects - use msgpack with custom encoding
                     model_path = self.models_dir / f"{model_id}.msgpack"
                     self._save_model_msgpack(model, model_path)
                     model_saved = True
-                    model_format = 'msgpack'
+                    model_format = "msgpack"
                 else:
                     logger.warning(
                         f"No secure serialization available for model {model_id}. "
@@ -177,16 +177,16 @@ class ModelRegistry:
 
             # Registrar en registry
             entry = {
-                'model_id': model_id,
-                'regime': regime,
-                'model_type': model_type,
-                'algorithm': algorithm,
-                'model_path': str(model_path) if model_path else None,
-                'model_format': model_format,
-                'registered_at': datetime.now().isoformat(),
-                'metadata': metadata or {},
-                'tags': tags or [],
-                'model_saved': model_saved,
+                "model_id": model_id,
+                "regime": regime,
+                "model_type": model_type,
+                "algorithm": algorithm,
+                "model_path": str(model_path) if model_path else None,
+                "model_format": model_format,
+                "registered_at": datetime.now().isoformat(),
+                "metadata": metadata or {},
+                "tags": tags or [],
+                "model_saved": model_saved,
             }
 
             # Crear índice por régimen
@@ -199,9 +199,9 @@ class ModelRegistry:
             self.registry[regime][model_type][model_id] = entry
 
             # Índice global
-            if 'all_models' not in self.registry:
-                self.registry['all_models'] = {}
-            self.registry['all_models'][model_id] = entry
+            if "all_models" not in self.registry:
+                self.registry["all_models"] = {}
+            self.registry["all_models"][model_id] = entry
 
             # Guardar registry (puede fallar pero no es crítico)
             try:
@@ -234,25 +234,25 @@ class ModelRegistry:
         buffer = io.BytesIO()
 
         # Try to convert to dict if possible
-        if hasattr(model, '__dict__'):
+        if hasattr(model, "__dict__"):
             # Model has __dict__, convert to dict
             model_dict = {
-                '_module': model.__class__.__module__,
-                '_class': model.__class__.__name__,
-                'data': model.__dict__,
+                "_module": model.__class__.__module__,
+                "_class": model.__class__.__name__,
+                "data": model.__dict__,
             }
             packed = _msgpack_module.packb(model_dict)
         else:
             # Fallback to string representation (not ideal but safe)
-            packed = _msgpack_module.packb({'_repr': repr(model)})
+            packed = _msgpack_module.packb({"_repr": repr(model)})
 
         buffer.write(packed)
         buffer.seek(0)
 
-        with open(path, 'wb') as f:
+        with open(path, "wb") as f:
             f.write(buffer.read())
 
-    def get_model(self, model_id: str) -> Optional[Dict[str, object]]:
+    def get_model(self, model_id: str) -> Optional[dict[str, object]]:
         """
         Obtener información de un modelo por ID.
 
@@ -262,15 +262,15 @@ class ModelRegistry:
         Returns:
             Dict con información del modelo o None
         """
-        return self.registry.get('all_models', {}).get(model_id)
+        return self.registry.get("all_models", {}).get(model_id)
 
     def list_models(
         self,
         regime: Optional[str] = None,
         model_type: Optional[str] = None,
         algorithm: Optional[str] = None,
-        tags: Optional[List[str]] = None,
-    ) -> List[Dict[str, object]]:
+        tags: Optional[list[str]] = None,
+    ) -> list[dict[str, object]]:
         """
         Listar modelos que coinciden con criterios.
 
@@ -294,7 +294,7 @@ class ModelRegistry:
                         results.append(model_entry)
         else:
             # Buscar en todos
-            for model_entry in self.registry.get('all_models', {}).values():
+            for model_entry in self.registry.get("all_models", {}).values():
                 if self._matches_filters(model_entry, model_type, algorithm, tags):
                     results.append(model_entry)
 
@@ -302,18 +302,18 @@ class ModelRegistry:
 
     def _matches_filters(
         self,
-        model_entry: Dict[str, object],
+        model_entry: dict[str, object],
         model_type: Optional[str],
         algorithm: Optional[str],
-        tags: Optional[List[str]],
+        tags: Optional[list[str]],
     ) -> bool:
         """Verificar si un modelo coincide con los filtros."""
-        if model_type and model_entry.get('model_type') != model_type:
+        if model_type and model_entry.get("model_type") != model_type:
             return False
-        if algorithm and model_entry.get('algorithm') != algorithm:
+        if algorithm and model_entry.get("algorithm") != algorithm:
             return False
         if tags:
-            model_tags = model_entry.get('tags', [])
+            model_tags = model_entry.get("tags", [])
             if not any(tag in model_tags for tag in tags):
                 return False
         return True
@@ -333,10 +333,10 @@ class ModelRegistry:
             logger.warning(f"Modelo {model_id} no encontrado en registry")
             return None
 
-        model_path = entry.get('model_path')
+        model_path = entry.get("model_path")
 
         # Si el modelo no fue guardado (no serializable), retornar None
-        if not entry.get('model_saved', False):
+        if not entry.get("model_saved", False):
             logger.info(
                 f"Modelo {model_id} no fue serializado (no serializable). Usar metadata para recrear."
             )
@@ -347,25 +347,23 @@ class ModelRegistry:
             return None
 
         try:
-            model_format = entry.get('model_format', '')
+            model_format = entry.get("model_format", "")
             model_path_obj = Path(model_path)
 
             # SECURITY: Use appropriate loader based on format
-            if model_format == 'pt' or model_path_obj.suffix == '.pt':
+            if model_format == "pt" or model_path_obj.suffix == ".pt":
                 if not PYTORCH_AVAILABLE or _torch_module is None:
                     raise ImportError("PyTorch no disponible para cargar .pt")
-                model = _torch_module.load(
-                    model_path_obj, map_location='cpu'
-                )
-            elif model_format == 'joblib' or model_path_obj.suffix == '.joblib':
+                model = _torch_module.load(model_path_obj, map_location="cpu")
+            elif model_format == "joblib" or model_path_obj.suffix == ".joblib":
                 if not JOBLIB_AVAILABLE or _joblib_module is None:
                     raise ImportError("joblib no disponible para cargar .joblib")
                 model = _joblib_module.load(model_path_obj)
-            elif model_format == 'msgpack' or model_path_obj.suffix == '.msgpack':
+            elif model_format == "msgpack" or model_path_obj.suffix == ".msgpack":
                 if not MSGPACK_AVAILABLE or _msgpack_module is None:
                     raise ImportError("msgpack no disponible para cargar .msgpack")
                 model = self._load_model_msgpack(model_path_obj)
-            elif model_path_obj.suffix == '.pkl':
+            elif model_path_obj.suffix == ".pkl":
                 # SECURITY: Migrate old .pkl files to secure format
                 logger.warning(f"Found old .pkl file for {model_id}, migrating...")
                 model = self._migrate_pkl_model(model_path_obj, entry)
@@ -392,26 +390,26 @@ class ModelRegistry:
         if _msgpack_module is None:
             raise ImportError("msgpack not available")
 
-        with open(path, 'rb') as f:
+        with open(path, "rb") as f:
             data = _msgpack_module.unpackb(f.read(), raw=False)
 
         # Reconstruct object if it was saved with __dict__
-        if '_module' in data and '_class' in data and 'data' in data:
+        if "_module" in data and "_class" in data and "data" in data:
             # Import the class
             import importlib
 
-            module = importlib.import_module(data['_module'])
-            cls = getattr(module, data['_class'])
+            module = importlib.import_module(data["_module"])
+            cls = getattr(module, data["_class"])
             obj = cls.__new__(cls)
-            obj.__dict__.update(data['data'])
+            obj.__dict__.update(data["data"])
             return obj
-        elif '_repr' in data:
+        elif "_repr" in data:
             # Fallback - return the representation as string
-            return data['_repr']
+            return data["_repr"]
         else:
             return data
 
-    def _migrate_pkl_model(self, pkl_path: Path, entry: Dict[str, object]) -> object:
+    def _migrate_pkl_model(self, pkl_path: Path, entry: dict[str, object]) -> object:
         """
         Migrate old .pkl model to secure format (one-time migration).
 
@@ -430,24 +428,24 @@ class ModelRegistry:
             class _MigrationUnpickler(pickle.Unpickler):
                 """Restrict pickle deserialization to known safe classes for migration."""
 
-                ALLOWED_CLASSES = {
-                    ('builtins', 'dict'): dict,
-                    ('builtins', 'list'): list,
-                    ('builtins', 'tuple'): tuple,
-                    ('builtins', 'set'): set,
-                    ('builtins', 'frozenset'): frozenset,
-                    ('builtins', 'str'): str,
-                    ('builtins', 'int'): int,
-                    ('builtins', 'float'): float,
-                    ('builtins', 'bool'): bool,
-                    ('builtins', 'bytes'): bytes,
-                    ('builtins', 'bytearray'): bytearray,
-                    ('builtins', 'NoneType'): type(None),
-                    ('collections', 'OrderedDict'): None,
-                    ('collections', 'defaultdict'): None,
-                    ('numpy.core.multiarray', '_reconstruct'): None,
-                    ('numpy', 'dtype'): None,
-                    ('numpy', 'ndarray'): None,
+                ALLOWED_CLASSES: ClassVar[dict] = {
+                    ("builtins", "dict"): dict,
+                    ("builtins", "list"): list,
+                    ("builtins", "tuple"): tuple,
+                    ("builtins", "set"): set,
+                    ("builtins", "frozenset"): frozenset,
+                    ("builtins", "str"): str,
+                    ("builtins", "int"): int,
+                    ("builtins", "float"): float,
+                    ("builtins", "bool"): bool,
+                    ("builtins", "bytes"): bytes,
+                    ("builtins", "bytearray"): bytearray,
+                    ("builtins", "NoneType"): type(None),
+                    ("collections", "OrderedDict"): None,
+                    ("collections", "defaultdict"): None,
+                    ("numpy.core.multiarray", "_reconstruct"): None,
+                    ("numpy", "dtype"): None,
+                    ("numpy", "ndarray"): None,
                 }
 
                 def find_class(self, module: str, name: str) -> type:
@@ -466,19 +464,19 @@ class ModelRegistry:
                         f"Only basic Python and numpy types are allowed."
                     )
 
-            with open(pkl_path, 'rb') as f:
+            with open(pkl_path, "rb") as f:
                 model = _MigrationUnpickler(f).load()
 
             # Re-save in secure format
-            model_id = entry['model_id']
+            model_id = entry["model_id"]
             if JOBLIB_AVAILABLE and _joblib_module is not None:
                 # Try joblib first
-                joblib_path = pkl_path.with_suffix('.joblib')
+                joblib_path = pkl_path.with_suffix(".joblib")
                 _joblib_module.dump(model, joblib_path)
 
                 # Update registry
-                entry['model_path'] = str(joblib_path)
-                entry['model_format'] = 'joblib'
+                entry["model_path"] = str(joblib_path)
+                entry["model_format"] = "joblib"
                 self._save_registry()
 
                 # Remove old .pkl
@@ -505,7 +503,7 @@ class FineTuner:
     - Adaptación a nuevos regímenes de mercado
     """
 
-    def __init__(self, config: Dict[str, object] = None):
+    def __init__(self, config: Optional[dict[str, object]] = None):
         """
         Inicializar fine-tuner.
 
@@ -522,10 +520,10 @@ class FineTuner:
     def fine_tune(
         self,
         base_model: object,
-        training_data: Dict[str, object],
-        validation_data: Optional[Dict[str, object]] = None,
+        training_data: dict[str, object],
+        validation_data: Optional[dict[str, object]] = None,
         model_type: str = "auto",
-    ) -> Tuple[object, TrainingMetrics]:
+    ) -> tuple[object, TrainingMetrics]:
         """
         Fine-tune un modelo pre-entrenado.
 
@@ -553,11 +551,11 @@ class FineTuner:
         """Detectar tipo de modelo."""
         model_type = str(type(model)).lower()
 
-        if any(x in model_type for x in ['module', 'nn', 'sequential']):
+        if any(x in model_type for x in ["module", "nn", "sequential"]):
             return "pytorch"
         elif any(
             x in model_type
-            for x in ['xgboost', 'lightgbm', 'catboost', 'randomforest', 'gradientboosting']
+            for x in ["xgboost", "lightgbm", "catboost", "randomforest", "gradientboosting"]
         ):
             return "tree"
         else:
@@ -566,9 +564,9 @@ class FineTuner:
     def _fine_tune_pytorch(
         self,
         model: "nn.Module",
-        training_data: Dict[str, object],
-        validation_data: Optional[Dict[str, object]] = None,
-    ) -> Tuple["nn.Module", Dict[str, float]]:
+        training_data: dict[str, object],
+        validation_data: Optional[dict[str, object]] = None,
+    ) -> tuple["nn.Module", dict[str, float]]:
         """
         Fine-tune modelo PyTorch.
 
@@ -594,8 +592,8 @@ class FineTuner:
 
             # Preparar datos
             # Asumir que training_data tiene 'sequences' y 'labels' para deep learning
-            sequences = training_data.get('sequences')
-            labels = training_data.get('labels')
+            sequences = training_data.get("sequences")
+            labels = training_data.get("labels")
 
             if sequences is None or labels is None:
                 logger.error("training_data debe contener 'sequences' y 'labels'")
@@ -623,7 +621,7 @@ class FineTuner:
 
             # Training loop
             fine_tuned_model.train()
-            metrics: TrainingMetrics = {'train_loss': []}
+            metrics: TrainingMetrics = {"train_loss": []}
 
             for epoch in range(self.fine_tune_epochs):
                 optimizer.zero_grad()
@@ -632,17 +630,17 @@ class FineTuner:
                 loss.backward()
                 optimizer.step()
 
-                metrics['train_loss'].append(float(loss.item()))
+                metrics["train_loss"].append(float(loss.item()))
 
                 if (epoch + 1) % 5 == 0:
                     logger.debug(
-                        f"Fine-tuning epoch {epoch+1}/{self.fine_tune_epochs}, Loss: {loss.item():.4f}"
+                        f"Fine-tuning epoch {epoch + 1}/{self.fine_tune_epochs}, Loss: {loss.item():.4f}"
                     )
 
             # Validation
             if validation_data:
-                val_sequences = validation_data.get('sequences')
-                val_labels = validation_data.get('labels')
+                val_sequences = validation_data.get("sequences")
+                val_labels = validation_data.get("labels")
                 if val_sequences is not None and val_labels is not None:
                     fine_tuned_model.eval()
                     with _torch_module.no_grad():
@@ -654,7 +652,7 @@ class FineTuner:
                         )
                         val_outputs = fine_tuned_model(val_sequences_t)
                         val_loss = criterion(val_outputs, val_labels_t)
-                        metrics['val_loss'] = float(val_loss.item())
+                        metrics["val_loss"] = float(val_loss.item())
 
             return fine_tuned_model, metrics
 
@@ -690,9 +688,9 @@ class FineTuner:
     def _fine_tune_tree_based(
         self,
         model: object,
-        training_data: Dict[str, object],
-        validation_data: Optional[Dict[str, object]] = None,
-    ) -> Tuple[object, TrainingMetrics]:
+        training_data: dict[str, object],
+        validation_data: Optional[dict[str, object]] = None,
+    ) -> tuple[object, TrainingMetrics]:
         """
         Fine-tune modelo tree-based (continuar entrenamiento).
 
@@ -705,8 +703,8 @@ class FineTuner:
             (modelo_fine_tuned, métricas)
         """
         try:
-            X_train = training_data.get('features')
-            y_train = training_data.get('labels')
+            X_train = training_data.get("features")
+            y_train = training_data.get("labels")
 
             if X_train is None or y_train is None:
                 logger.error("training_data debe contener 'features' y 'labels'")
@@ -717,18 +715,18 @@ class FineTuner:
 
             model_type = str(type(model)).lower()
 
-            if 'xgboost' in model_type:
+            if "xgboost" in model_type:
                 # XGBoost: continuar entrenamiento
                 model.fit(X_train, y_train, xgb_model=model.get_booster())
-                metrics = {'status': 'continued_training'}
-            elif 'lightgbm' in model_type or 'catboost' in model_type:
+                metrics = {"status": "continued_training"}
+            elif "lightgbm" in model_type or "catboost" in model_type:
                 # LightGBM/CatBoost: continuar entrenamiento
                 # (Requiere implementación específica)
-                metrics = {'status': 'tree_based_continued'}
+                metrics = {"status": "tree_based_continued"}
             else:
                 # Para otros (RandomForest, etc.), retrain desde cero
                 # pero con parámetros del modelo original
-                metrics = {'status': 'retrained_from_scratch'}
+                metrics = {"status": "retrained_from_scratch"}
 
             return model, metrics
 
@@ -745,7 +743,7 @@ class KnowledgeDistiller:
     Útil para comprimir modelos o transferir conocimiento entre regímenes.
     """
 
-    def __init__(self, config: Dict[str, object] = None):
+    def __init__(self, config: Optional[dict[str, object]] = None):
         """
         Inicializar distiller.
 
@@ -761,9 +759,9 @@ class KnowledgeDistiller:
         self,
         teacher_model: object,
         student_model: object,
-        training_data: Dict[str, object],
-        validation_data: Optional[Dict[str, object]] = None,
-    ) -> Tuple[object, TrainingMetrics]:
+        training_data: dict[str, object],
+        validation_data: Optional[dict[str, object]] = None,
+    ) -> tuple[object, TrainingMetrics]:
         """
         Distilar conocimiento de teacher a student.
 
@@ -800,9 +798,9 @@ class KnowledgeDistiller:
     def _detect_model_type(self, model: object) -> str:
         """Detectar tipo de modelo."""
         model_type = str(type(model)).lower()
-        if any(x in model_type for x in ['module', 'nn', 'sequential']):
+        if any(x in model_type for x in ["module", "nn", "sequential"]):
             return "pytorch"
-        elif any(x in model_type for x in ['xgboost', 'lightgbm', 'catboost', 'randomforest']):
+        elif any(x in model_type for x in ["xgboost", "lightgbm", "catboost", "randomforest"]):
             return "tree"
         else:
             return "sklearn"
@@ -811,9 +809,9 @@ class KnowledgeDistiller:
         self,
         teacher: "nn.Module",
         student: "nn.Module",
-        training_data: Dict[str, object],
-        validation_data: Optional[Dict[str, object]] = None,
-    ) -> Tuple["nn.Module", Dict[str, float]]:
+        training_data: dict[str, object],
+        validation_data: Optional[dict[str, object]] = None,
+    ) -> tuple["nn.Module", dict[str, float]]:
         """
         Distillation para modelos PyTorch.
 
@@ -832,8 +830,8 @@ class KnowledgeDistiller:
 
         try:
             # Preparar datos
-            sequences = training_data.get('sequences')
-            labels = training_data.get('labels')
+            sequences = training_data.get("sequences")
+            labels = training_data.get("labels")
 
             if sequences is None or labels is None:
                 logger.error("training_data debe contener 'sequences' y 'labels'")
@@ -863,7 +861,7 @@ class KnowledgeDistiller:
                     student_logits / temperature, dim=1
                 )
                 soft_loss = _torch_module.nn.functional.kl_div(
-                    soft_prob, soft_targets, reduction='batchmean'
+                    soft_prob, soft_targets, reduction="batchmean"
                 ) * (temperature**2)
 
                 # Hard targets (true labels)
@@ -874,7 +872,7 @@ class KnowledgeDistiller:
                 # Combinar
                 return alpha * soft_loss + (1 - alpha) * hard_loss
 
-            metrics: TrainingMetrics = {'train_loss': [], 'distillation_loss': []}
+            metrics: TrainingMetrics = {"train_loss": [], "distillation_loss": []}
 
             # Training loop
             for epoch in range(self.distillation_epochs):
@@ -893,17 +891,17 @@ class KnowledgeDistiller:
                 loss.backward()
                 optimizer.step()
 
-                metrics['train_loss'].append(float(loss.item()))
+                metrics["train_loss"].append(float(loss.item()))
 
                 if (epoch + 1) % 10 == 0:
                     logger.debug(
-                        f"Distillation epoch {epoch+1}/{self.distillation_epochs}, Loss: {loss.item():.4f}"
+                        f"Distillation epoch {epoch + 1}/{self.distillation_epochs}, Loss: {loss.item():.4f}"
                     )
 
             # Validation
             if validation_data:
-                val_sequences = validation_data.get('sequences')
-                val_labels = validation_data.get('labels')
+                val_sequences = validation_data.get("sequences")
+                val_labels = validation_data.get("labels")
                 if val_sequences is not None and val_labels is not None:
                     student.eval()
                     with _torch_module.no_grad():
@@ -915,7 +913,7 @@ class KnowledgeDistiller:
                         )
                         val_outputs = student(val_sequences_t)
                         val_loss = _torch_module.nn.functional.mse_loss(val_outputs, val_labels_t)
-                        metrics['val_loss'] = float(val_loss.item())
+                        metrics["val_loss"] = float(val_loss.item())
 
             return student, metrics
 
@@ -927,24 +925,24 @@ class KnowledgeDistiller:
         self,
         teacher: object,
         student: object,
-        training_data: Dict[str, object],
-        validation_data: Optional[Dict[str, object]] = None,
-    ) -> Tuple[object, TrainingMetrics]:
+        training_data: dict[str, object],
+        validation_data: Optional[dict[str, object]] = None,
+    ) -> tuple[object, TrainingMetrics]:
         """
         Distillation para modelos tree-based.
 
         Usa predicciones del teacher como "soft labels" para entrenar student.
         """
         try:
-            X_train = training_data.get('features')
-            y_train = training_data.get('labels')
+            X_train = training_data.get("features")
+            y_train = training_data.get("labels")
 
             if X_train is None or y_train is None:
                 logger.error("training_data debe contener 'features' y 'labels'")
                 return student, {}
 
             # Obtener predicciones del teacher (soft labels)
-            if hasattr(teacher, 'predict_proba'):
+            if hasattr(teacher, "predict_proba"):
                 teacher_probs = teacher.predict_proba(X_train)
             else:
                 teacher_probs = teacher.predict(X_train)
@@ -959,10 +957,7 @@ class KnowledgeDistiller:
             # Usar soft labels con probabilidad alpha
             if self.alpha > 0:
                 # Convertir true labels a one-hot
-                if y_train.ndim == 1:
-                    y_one_hot = np.eye(2)[y_train.astype(int)]
-                else:
-                    y_one_hot = y_train
+                y_one_hot = np.eye(2)[y_train.astype(int)] if y_train.ndim == 1 else y_train
 
                 # Combinar soft y hard labels
                 combined_labels = self.alpha * teacher_probs_scaled + (1 - self.alpha) * y_one_hot
@@ -980,9 +975,9 @@ class KnowledgeDistiller:
             student.fit(X_train, soft_labels)
 
             metrics = {
-                'status': 'distilled',
-                'teacher_confidence': float(np.mean(np.max(teacher_probs, axis=1))),
-                'student_confidence': float(np.mean(np.max(combined_labels, axis=1))),
+                "status": "distilled",
+                "teacher_confidence": float(np.mean(np.max(teacher_probs, axis=1))),
+                "student_confidence": float(np.mean(np.max(combined_labels, axis=1))),
             }
 
             return student, metrics
@@ -1005,7 +1000,7 @@ class TransferLearningManager:
     Combina ModelRegistry, FineTuner y KnowledgeDistiller.
     """
 
-    def __init__(self, config: Dict[str, object] = None):
+    def __init__(self, config: Optional[dict[str, object]] = None):
         """
         Inicializar manager.
 
@@ -1023,8 +1018,8 @@ class TransferLearningManager:
         regime: str,
         model_type: str,
         algorithm: str,
-        metadata: Optional[Dict[str, object]] = None,
-        tags: Optional[List[str]] = None,
+        metadata: Optional[dict[str, object]] = None,
+        tags: Optional[list[str]] = None,
     ) -> str:
         """
         Crear y registrar un modelo pre-entrenado.
@@ -1056,9 +1051,9 @@ class TransferLearningManager:
     def load_and_finetune(
         self,
         model_id: str,
-        training_data: Dict[str, object],
-        validation_data: Optional[Dict[str, object]] = None,
-    ) -> Tuple[object, TrainingMetrics]:
+        training_data: dict[str, object],
+        validation_data: Optional[dict[str, object]] = None,
+    ) -> tuple[object, TrainingMetrics]:
         """
         Cargar modelo pre-entrenado y hacer fine-tuning.
 
@@ -1077,7 +1072,7 @@ class TransferLearningManager:
 
         # Obtener metadata
         model_info = self.registry.get_model(model_id)
-        model_type = model_info.get('model_type', 'auto')
+        model_type = model_info.get("model_type", "auto")
 
         # Fine-tune
         fine_tuned_model, metrics = self.fine_tuner.fine_tune(
@@ -1109,15 +1104,15 @@ class TransferLearningManager:
 
         # Seleccionar por mejor métrica en metadata
         best_model = None
-        best_score = -float('inf')
+        best_score = -float("inf")
 
         for model_entry in models:
-            metadata = model_entry.get('metadata', {})
+            metadata = model_entry.get("metadata", {})
             # Buscar métricas comunes
-            score = metadata.get('accuracy', metadata.get('f1_score', metadata.get('roc_auc', 0)))
+            score = metadata.get("accuracy", metadata.get("f1_score", metadata.get("roc_auc", 0)))
             if score > best_score:
                 best_score = score
-                best_model = model_entry['model_id']
+                best_model = model_entry["model_id"]
 
         return best_model
 
@@ -1125,9 +1120,9 @@ class TransferLearningManager:
         self,
         teacher_model_id: str,
         student_model: object,
-        training_data: Dict[str, object],
-        validation_data: Optional[Dict[str, object]] = None,
-    ) -> Tuple[object, TrainingMetrics]:
+        training_data: dict[str, object],
+        validation_data: Optional[dict[str, object]] = None,
+    ) -> tuple[object, TrainingMetrics]:
         """
         Distilar conocimiento de un modelo teacher a student.
 

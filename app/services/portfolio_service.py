@@ -10,7 +10,7 @@ from __future__ import annotations
 import logging
 from datetime import datetime
 from decimal import Decimal
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from app.domain.models.portfolio import (
     AssetClass,
@@ -55,7 +55,7 @@ class PortfolioService:
         self.operations_count = 0
         self.successful_operations = 0
         self.failed_operations = 0
-        self.last_operation_time: Optional[datetime] = None
+        self.last_operation_time: datetime | None = None
 
         # Hedging tracking [TASK-5.5]
         self.total_hedges_created = 0
@@ -65,7 +65,7 @@ class PortfolioService:
         self.diversification_breaches = 0
         self.rebalancing_actions = 0
 
-    async def get_portfolio(self) -> Optional[Portfolio]:
+    async def get_portfolio(self) -> Portfolio | None:
         """Obtener portafolio con protección de circuit breaker."""
         try:
             # Verificar circuit breaker de API
@@ -103,7 +103,7 @@ class PortfolioService:
             logger.error(f"Error getting portfolio: {e}")
             return None
 
-    async def get_position(self, symbol: str) -> Optional[Position]:
+    async def get_position(self, symbol: str) -> Position | None:
         """Obtener posición con protección de circuit breaker."""
         try:
             if self.circuit_breaker_manager.is_breaker_open(CircuitBreakerType.API_ERRORS.value):
@@ -279,7 +279,7 @@ class PortfolioService:
             logger.error(f"Error simulating trade for {symbol}: {e}")
             return False
 
-    def get_service_statistics(self) -> Dict[str, Any]:
+    def get_service_statistics(self) -> dict[str, Any]:
         """Obtener estadísticas del servicio."""
         # Estadísticas del servicio principal
         service_stats = {
@@ -304,11 +304,11 @@ class PortfolioService:
             "risk_manager": risk_stats,
         }
 
-    def get_circuit_breaker_status(self) -> Dict[str, Any]:
+    def get_circuit_breaker_status(self) -> dict[str, Any]:
         """Obtener estado de circuit breakers."""
         return self.circuit_breaker_manager.get_all_breaker_statuses()
 
-    def get_risk_assessment(self, portfolio: Portfolio) -> Dict[str, Any]:
+    def get_risk_assessment(self, portfolio: Portfolio) -> dict[str, Any]:
         """Obtener evaluación de riesgo del portafolio."""
         return self.risk_manager.assess_portfolio_risk(portfolio)
 
@@ -334,7 +334,7 @@ class PortfolioService:
         """Resetear un circuit breaker específico."""
         return self.circuit_breaker_manager.reset_breaker(breaker_name)
 
-    def get_portfolio_summary(self, portfolio: Portfolio) -> Dict[str, Any]:
+    def get_portfolio_summary(self, portfolio: Portfolio) -> dict[str, Any]:
         """Obtener resumen del portafolio."""
         return {
             "portfolio_id": portfolio.portfolio_id,
@@ -348,16 +348,16 @@ class PortfolioService:
             "currency": portfolio.currency,
         }
 
-    async def get_asset_universe(self) -> List[AssetUniverse]:
+    async def get_asset_universe(self) -> list[AssetUniverse]:
         """Obtener universo de activos soportados."""
         # Get asset universe configuration from config
         config = get_config()
         tt = config.trading
 
-        equity_max_spread = Decimal(str(getattr(tt, 'asset_universe_equity_max_spread', 0.01)))
-        equity_min_volume = Decimal(str(getattr(tt, 'asset_universe_equity_min_volume', 1000000)))
-        crypto_max_spread = Decimal(str(getattr(tt, 'asset_universe_crypto_max_spread', 0.005)))
-        crypto_min_volume = Decimal(str(getattr(tt, 'asset_universe_crypto_min_volume', 10000000)))
+        equity_max_spread = Decimal(str(getattr(tt, "asset_universe_equity_max_spread", 0.01)))
+        equity_min_volume = Decimal(str(getattr(tt, "asset_universe_equity_min_volume", 1000000)))
+        crypto_max_spread = Decimal(str(getattr(tt, "asset_universe_crypto_max_spread", 0.005)))
+        crypto_min_volume = Decimal(str(getattr(tt, "asset_universe_crypto_min_volume", 10000000)))
 
         # Mock data para testing - en producción vendría de una fuente real
         return [
@@ -377,7 +377,7 @@ class PortfolioService:
             ),
         ]
 
-    async def get_market_regime(self, symbol: str) -> Optional[MarketRegimeData]:
+    async def get_market_regime(self, symbol: str) -> MarketRegimeData | None:
         """Obtener datos de régimen de mercado para un símbolo."""
         # Lista de símbolos soportados para testing
         supported_symbols = [
@@ -397,10 +397,10 @@ class PortfolioService:
         config = get_config()
         tt = config.trading
 
-        default_confidence = getattr(tt, 'market_regime_default_confidence', 0.75)
-        default_atr_ratio = getattr(tt, 'market_regime_default_atr_ratio', 0.02)
-        default_trend_strength = getattr(tt, 'market_regime_default_trend_strength', 0.3)
-        default_volatility_level = getattr(tt, 'market_regime_default_volatility_level', 0.25)
+        default_confidence = getattr(tt, "market_regime_default_confidence", 0.75)
+        default_atr_ratio = getattr(tt, "market_regime_default_atr_ratio", 0.02)
+        default_trend_strength = getattr(tt, "market_regime_default_trend_strength", 0.3)
+        default_volatility_level = getattr(tt, "market_regime_default_volatility_level", 0.25)
 
         # Mock data para testing - en producción vendría de análisis real
         return MarketRegimeData(
@@ -412,7 +412,7 @@ class PortfolioService:
             timestamp=datetime.now(),
         )
 
-    def get_unhedged_currency_exposure(self, portfolio: Portfolio) -> Dict[str, Decimal]:
+    def get_unhedged_currency_exposure(self, portfolio: Portfolio) -> dict[str, Decimal]:
         """
         Get current unhedged currency exposure [TASK-5.5].
 
@@ -427,7 +427,7 @@ class PortfolioService:
             logger.warning(f"Failed to calculate currency exposure: {e}")
             return {}
 
-    def get_hedging_statistics(self) -> Dict[str, Any]:
+    def get_hedging_statistics(self) -> dict[str, Any]:
         """Get hedging statistics [TASK-5.5]."""
         return {
             "total_hedges_created": self.total_hedges_created,
@@ -435,7 +435,7 @@ class PortfolioService:
             "hedging_engine_stats": self.hedging_engine.get_statistics(),
         }
 
-    async def apply_auto_hedging(self, portfolio: Portfolio) -> Dict[str, Any]:
+    async def apply_auto_hedging(self, portfolio: Portfolio) -> dict[str, Any]:
         """
         Apply automatic hedging to portfolio [TASK-5.5].
 
@@ -467,19 +467,19 @@ class PortfolioService:
                 "recommendations_count": 0,
             }
 
-    def get_sector_allocation(self) -> Dict[str, Decimal]:
+    def get_sector_allocation(self) -> dict[str, Decimal]:
         """Get current sector allocation [TASK-5.6]."""
         # This would be called with current portfolio
         # For now, return empty dict as it requires current portfolio instance
         return {}
 
-    def get_country_allocation(self) -> Dict[str, Decimal]:
+    def get_country_allocation(self) -> dict[str, Decimal]:
         """Get current country allocation [TASK-5.6]."""
         # This would be called with current portfolio
         # For now, return empty dict as it requires current portfolio instance
         return {}
 
-    def get_diversification_status(self, portfolio: Portfolio) -> Dict[str, Any]:
+    def get_diversification_status(self, portfolio: Portfolio) -> dict[str, Any]:
         """Get sector and country diversification status [TASK-5.6]."""
         sector_stats = self.sector_validator.get_sector_statistics(portfolio)
         country_stats = self.country_validator.get_country_statistics(portfolio)
@@ -491,7 +491,7 @@ class PortfolioService:
             "rebalancing_actions_taken": self.rebalancing_actions,
         }
 
-    def suggest_rebalancing(self, portfolio: Portfolio) -> Dict[str, List]:
+    def suggest_rebalancing(self, portfolio: Portfolio) -> dict[str, list]:
         """Get sector and country rebalancing suggestions [TASK-5.6]."""
         sector_suggestions = self.sector_validator.get_sector_rebalancing_suggestions(portfolio)
         country_suggestions = self.country_validator.get_country_rebalancing_suggestions(portfolio)

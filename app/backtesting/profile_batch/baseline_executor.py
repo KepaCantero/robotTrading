@@ -14,18 +14,21 @@ Responsibilities:
 from __future__ import annotations
 
 import logging
-from pathlib import Path
-from typing import Any, Dict, List
+from typing import TYPE_CHECKING, Any
 
 from app.backtesting.comprehensive_backtest_runner import ComprehensiveBacktestRunner
 from app.backtesting.shared import MetricsDict, TempConfigManager, get_empty_metrics
-from app.domain.models.input_profile import InputProfile
+
+if TYPE_CHECKING:
+    from pathlib import Path
+
+    from app.domain.models.input_profile import InputProfile
 
 logger = logging.getLogger(__name__)
 
 # Type aliases (additional ones not in shared module)
-ConfigDict = Dict[str, Any]
-PerStrategyDict = Dict[str, MetricsDict]
+ConfigDict = dict[str, Any]
+PerStrategyDict = dict[str, MetricsDict]
 
 
 class BaselineBacktestExecutor:
@@ -135,7 +138,7 @@ class BaselineBacktestExecutor:
         return baseline_results
 
     def aggregate_multi_strategy_results(
-        self, results: List[Dict[str, Any]], profile: InputProfile
+        self, results: list[dict[str, Any]], profile: InputProfile
     ) -> MetricsDict:
         """
         Aggregate multi-strategy backtest results into combined metrics.
@@ -239,7 +242,7 @@ class BaselineBacktestExecutor:
         return combined_metrics
 
     def _safe_extract_first_result(
-        self, results: List[Dict[str, Any]] | None, context: str
+        self, results: list[dict[str, Any]] | None, context: str
     ) -> MetricsDict:
         """
         Safely extract the first result from a list of backtest results.
@@ -264,9 +267,7 @@ class BaselineBacktestExecutor:
             return self._get_empty_metrics()
 
         if not isinstance(results[0], dict):
-            logger.error(
-                f"First result is not a dict for {context}, " f"got type {type(results[0])}"
-            )
+            logger.error(f"First result is not a dict for {context}, got type {type(results[0])}")
             return self._get_empty_metrics()
 
         result = results[0]

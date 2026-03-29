@@ -130,8 +130,8 @@ class VectorizationBenchmark:
 
         if self.verbose:
             logger.debug(f"Sum benchmark (n={n_elements:,}):")
-            logger.debug(f"  Non-vectorized: {non_vectorized_time*1000:.4f}ms")
-            logger.debug(f"  Vectorized: {vectorized_time*1000:.4f}ms")
+            logger.debug(f"  Non-vectorized: {non_vectorized_time * 1000:.4f}ms")
+            logger.debug(f"  Vectorized: {vectorized_time * 1000:.4f}ms")
             logger.debug(f"  Speedup: {speedup:.2f}x")
 
         return BenchmarkResult(
@@ -190,8 +190,8 @@ class VectorizationBenchmark:
 
         if self.verbose:
             logger.debug(f"EWM benchmark (n={n_elements:,}, span={span}):")
-            logger.debug(f"  Non-vectorized: {non_vectorized_time*1000:.4f}ms")
-            logger.debug(f"  Vectorized: {vectorized_time*1000:.4f}ms")
+            logger.debug(f"  Non-vectorized: {non_vectorized_time * 1000:.4f}ms")
+            logger.debug(f"  Vectorized: {vectorized_time * 1000:.4f}ms")
             logger.debug(f"  Speedup: {speedup:.2f}x")
 
         return BenchmarkResult(
@@ -248,8 +248,8 @@ class VectorizationBenchmark:
 
         if self.verbose:
             logger.debug(f"Rolling benchmark (n={n_elements:,}, window={window}):")
-            logger.debug(f"  Non-vectorized: {non_vectorized_time*1000:.4f}ms")
-            logger.debug(f"  Vectorized: {vectorized_time*1000:.4f}ms")
+            logger.debug(f"  Non-vectorized: {non_vectorized_time * 1000:.4f}ms")
+            logger.debug(f"  Vectorized: {vectorized_time * 1000:.4f}ms")
             logger.debug(f"  Speedup: {speedup:.2f}x")
 
         return BenchmarkResult(
@@ -310,8 +310,8 @@ class VectorizationBenchmark:
 
         if self.verbose:
             logger.debug(f"Correlation benchmark (n={n_elements:,}, assets={n_assets}):")
-            logger.debug(f"  Non-vectorized: {non_vectorized_time*1000:.4f}ms")
-            logger.debug(f"  Vectorized: {vectorized_time*1000:.4f}ms")
+            logger.debug(f"  Non-vectorized: {non_vectorized_time * 1000:.4f}ms")
+            logger.debug(f"  Vectorized: {vectorized_time * 1000:.4f}ms")
             logger.debug(f"  Speedup: {speedup:.2f}x")
 
         return BenchmarkResult(
@@ -366,8 +366,8 @@ class VectorizationBenchmark:
 
         if self.verbose:
             logger.debug(f"Elementwise benchmark (n={n_elements:,}):")
-            logger.debug(f"  Non-vectorized: {non_vectorized_time*1000:.4f}ms")
-            logger.debug(f"  Vectorized: {vectorized_time*1000:.4f}ms")
+            logger.debug(f"  Non-vectorized: {non_vectorized_time * 1000:.4f}ms")
+            logger.debug(f"  Vectorized: {vectorized_time * 1000:.4f}ms")
             logger.debug(f"  Speedup: {speedup:.2f}x")
 
         return BenchmarkResult(
@@ -422,8 +422,8 @@ class VectorizationBenchmark:
 
         if self.verbose:
             logger.debug(f"Filtering benchmark (n={n_elements:,}):")
-            logger.debug(f"  Non-vectorized: {non_vectorized_time*1000:.4f}ms")
-            logger.debug(f"  Vectorized: {vectorized_time*1000:.4f}ms")
+            logger.debug(f"  Non-vectorized: {non_vectorized_time * 1000:.4f}ms")
+            logger.debug(f"  Vectorized: {vectorized_time * 1000:.4f}ms")
             logger.debug(f"  Speedup: {speedup:.2f}x")
 
         return BenchmarkResult(
@@ -485,8 +485,8 @@ class VectorizationBenchmark:
 
         if self.verbose:
             logger.debug(f"GroupBy benchmark (n={n_elements:,}, groups={n_groups}):")
-            logger.debug(f"  Non-vectorized: {non_vectorized_time*1000:.4f}ms")
-            logger.debug(f"  Vectorized: {vectorized_time*1000:.4f}ms")
+            logger.debug(f"  Non-vectorized: {non_vectorized_time * 1000:.4f}ms")
+            logger.debug(f"  Vectorized: {vectorized_time * 1000:.4f}ms")
             logger.debug(f"  Speedup: {speedup:.2f}x")
 
         return BenchmarkResult(
@@ -539,8 +539,8 @@ class VectorizationBenchmark:
 
         if self.verbose:
             logger.debug(f"Percentage change benchmark (n={n_elements:,}):")
-            logger.debug(f"  Non-vectorized: {non_vectorized_time*1000:.4f}ms")
-            logger.debug(f"  Vectorized: {vectorized_time*1000:.4f}ms")
+            logger.debug(f"  Non-vectorized: {non_vectorized_time * 1000:.4f}ms")
+            logger.debug(f"  Vectorized: {vectorized_time * 1000:.4f}ms")
             logger.debug(f"  Speedup: {speedup:.2f}x")
 
         return BenchmarkResult(

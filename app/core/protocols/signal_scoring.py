@@ -5,7 +5,7 @@ This protocol defines the interface for signal scoring components,
 allowing domain layer to depend on abstractions rather than concrete implementations.
 """
 
-from typing import List, Protocol, runtime_checkable
+from typing import Protocol, runtime_checkable
 
 from app.domain.models.signal import Signal
 
@@ -19,7 +19,7 @@ class SignalScoringEngineProtocol(Protocol):
     applying cooldown management, compound scoring, and filtering.
     """
 
-    def process_signals(self, signals: List[Signal], apply_cooldown: bool = True) -> List[Signal]:
+    def process_signals(self, signals: list[Signal], apply_cooldown: bool = True) -> list[Signal]:
         """
         Process signals through the complete scoring pipeline.
 

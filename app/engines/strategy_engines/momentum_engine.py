@@ -10,8 +10,9 @@ Refactorización de MomentumStrategy como Strategy Engine con:
 
 import logging
 from collections import deque
+from collections.abc import Sequence
 from decimal import Decimal
-from typing import Any, Dict, List, Optional, Sequence
+from typing import Any, Optional
 
 from app.domain.models.market_data import Quote
 from app.domain.models.portfolio import Portfolio
@@ -35,7 +36,7 @@ class MomentumStrategyEngine(BaseStrategyEngine):
     - Callbacks para aprendizaje continuo
     """
 
-    def __init__(self, config: Dict[str, Any]):
+    def __init__(self, config: dict[str, Any]):
         """
         Inicializar momentum strategy engine.
 
@@ -138,7 +139,7 @@ class MomentumStrategyEngine(BaseStrategyEngine):
 
     def extract_features(
         self, market_data: Quote, historical_data: Optional[Sequence[Quote]] = None
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Extraer features estandarizados para Learning Engine.
 
@@ -150,7 +151,7 @@ class MomentumStrategyEngine(BaseStrategyEngine):
             Diccionario con features estandarizados
         """
         features = {
-            "timestamp": market_data.timestamp if hasattr(market_data, 'timestamp') else None,
+            "timestamp": market_data.timestamp if hasattr(market_data, "timestamp") else None,
             "symbol": market_data.symbol,
             "price": float(market_data.close or market_data.bid or market_data.last or 0),
         }
@@ -163,9 +164,9 @@ class MomentumStrategyEngine(BaseStrategyEngine):
             volumes = list(self.volume_history) if self.volume_history else []
         else:
             prices = [float(q.close or q.bid or q.last or 0) for q in historical_data]
-            highs = [float(getattr(q, 'high', q.close or 0)) for q in historical_data]
-            lows = [float(getattr(q, 'low', q.close or 0)) for q in historical_data]
-            volumes = [float(getattr(q, 'volume', 0)) for q in historical_data]
+            highs = [float(getattr(q, "high", q.close or 0)) for q in historical_data]
+            lows = [float(getattr(q, "low", q.close or 0)) for q in historical_data]
+            volumes = [float(getattr(q, "volume", 0)) for q in historical_data]
 
         # Calcular indicadores técnicos si hay suficiente histórico
         if len(prices) >= max(self.rsi_period, self.ema_period):
@@ -213,7 +214,7 @@ class MomentumStrategyEngine(BaseStrategyEngine):
 
         return features
 
-    def _generate_signals_impl(self, market_data: Quote) -> List[Signal]:
+    def _generate_signals_impl(self, market_data: Quote) -> list[Signal]:
         """
         Implementación específica de generación de señales para momentum.
 
@@ -312,7 +313,7 @@ class MomentumStrategyEngine(BaseStrategyEngine):
                     signal_type=SignalType.BUY,
                     strength=strength,
                     price=Decimal(str(current_price)),
-                    timestamp=market_data.timestamp if hasattr(market_data, 'timestamp') else None,
+                    timestamp=market_data.timestamp if hasattr(market_data, "timestamp") else None,
                     confidence=confidence,
                     liquidity_score=min(100.0, max(0.0, (volume_ratio - 0.5) * 50.0)),
                     priority_score=confidence * 0.7
@@ -320,11 +321,11 @@ class MomentumStrategyEngine(BaseStrategyEngine):
                     source=SignalSource.MOMENTUM,
                     volume=Decimal("1"),  # Placeholder
                     metadata={
-                        'strategy': self.name,
-                        'rsi': rsi,
-                        'ema': ema,
-                        'momentum': momentum,
-                        'volume_ratio': volume_ratio,
+                        "strategy": self.name,
+                        "rsi": rsi,
+                        "ema": ema,
+                        "momentum": momentum,
+                        "volume_ratio": volume_ratio,
                     },
                 )
 
@@ -348,7 +349,7 @@ class MomentumStrategyEngine(BaseStrategyEngine):
                 "Error generando señal en MomentumStrategyEngine",
                 extra={
                     "strategy": "momentum",
-                    "symbol": getattr(market_data, 'symbol', None),
+                    "symbol": getattr(market_data, "symbol", None),
                     "error_type": type(e).__name__,
                 },
                 exc_info=True,
@@ -378,9 +379,9 @@ class MomentumStrategyEngine(BaseStrategyEngine):
             confidence = 50.0
 
             # RSI contribution (RSI bajo = más momentum alcista)
-            rsi_very_oversold = float(getattr(config.trading, 'momentum_rsi_very_oversold', 30.0))
-            rsi_oversold = float(getattr(config.trading, 'momentum_rsi_oversold', 40.0))
-            rsi_neutral_low = float(getattr(config.trading, 'momentum_rsi_neutral_low', 50.0))
+            rsi_very_oversold = float(getattr(config.trading, "momentum_rsi_very_oversold", 30.0))
+            rsi_oversold = float(getattr(config.trading, "momentum_rsi_oversold", 40.0))
+            rsi_neutral_low = float(getattr(config.trading, "momentum_rsi_neutral_low", 50.0))
 
             if rsi < rsi_very_oversold:
                 confidence += 20.0
@@ -391,10 +392,10 @@ class MomentumStrategyEngine(BaseStrategyEngine):
 
             # Momentum contribution
             momentum_high_threshold = float(
-                getattr(config.trading, 'momentum_confidence_high_threshold', 0.05)
+                getattr(config.trading, "momentum_confidence_high_threshold", 0.05)
             )
             momentum_medium_threshold = float(
-                getattr(config.trading, 'momentum_confidence_medium_threshold', 0.02)
+                getattr(config.trading, "momentum_confidence_medium_threshold", 0.02)
             )
 
             if momentum > momentum_high_threshold:
@@ -404,10 +405,10 @@ class MomentumStrategyEngine(BaseStrategyEngine):
 
             # Volume contribution
             volume_high_threshold = float(
-                getattr(config.trading, 'momentum_volume_ratio_high_threshold', 2.0)
+                getattr(config.trading, "momentum_volume_ratio_high_threshold", 2.0)
             )
             volume_medium_threshold = float(
-                getattr(config.trading, 'momentum_volume_ratio_medium_threshold', 1.5)
+                getattr(config.trading, "momentum_volume_ratio_medium_threshold", 1.5)
             )
 
             if volume_ratio > volume_high_threshold:
@@ -443,7 +444,7 @@ class MomentumStrategyEngine(BaseStrategyEngine):
                 confidence += 5.0
             return min(100.0, max(0.0, confidence))
 
-    def get_required_parameters(self) -> List[str]:
+    def get_required_parameters(self) -> list[str]:
         """Obtener parámetros requeridos."""
         return [
             "rsi_threshold",

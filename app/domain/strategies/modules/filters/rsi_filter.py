@@ -19,12 +19,12 @@ This filter now uses centralized configuration from config/indicators.yaml:
 """
 
 import logging
-from typing import Callable, Dict, Optional
+from typing import Callable, ClassVar, Optional
 
 from ..base_filter import BaseFilter
 
 # Type alias for the config loader function
-ConfigLoaderFunc = Callable[..., Dict]
+ConfigLoaderFunc = Callable[..., dict]
 
 # Initialize get_config as None, then try to import
 get_config: Optional[ConfigLoaderFunc] = None
@@ -57,10 +57,14 @@ class RSIFilter(BaseFilter):
     """
 
     # Class-level storage for tracking RSI history per symbol
-    _rsi_history: Dict[str, float] = {}
+    _rsi_history: ClassVar[dict[str, float]] = {}
 
     def __init__(
-        self, config: Dict = None, preset: str = "balanced", tier: str = None, use_yaml: bool = True
+        self,
+        config: Optional[dict] = None,
+        preset: str = "balanced",
+        tier: Optional[str] = None,
+        use_yaml: bool = True,
     ):
         """Inicializar filtro RSI."""
         super().__init__("rsi_filter", config, preset, tier, use_yaml)
@@ -141,7 +145,7 @@ class RSIFilter(BaseFilter):
             cls._rsi_history.clear()
 
     @classmethod
-    def get_rsi_history(cls) -> Dict[str, float]:
+    def get_rsi_history(cls) -> dict[str, float]:
         """
         Get a copy of the current RSI history. Useful for debugging/testing.
 
@@ -150,7 +154,7 @@ class RSIFilter(BaseFilter):
         """
         return cls._rsi_history.copy()
 
-    def _get_thresholds_for_context(self, market_context: Dict) -> Dict:
+    def _get_thresholds_for_context(self, market_context: dict) -> dict:
         """Obtener thresholds según el contexto de mercado."""
         market_type = market_context.get("type", "unknown")
 
@@ -161,7 +165,7 @@ class RSIFilter(BaseFilter):
         # Fallback a preset genérico
         return self.adaptive_thresholds.get("unknown", {"buy_threshold": 30, "sell_threshold": 70})
 
-    def _apply_filter_logic(self, indicators: Dict, market_context: Dict, signal_type: str) -> Dict:
+    def _apply_filter_logic(self, indicators: dict, market_context: dict, signal_type: str) -> dict:
         """
         Aplicar lógica del filtro RSI con CONFIRMACIÓN de cruce (crossover).
 
@@ -175,10 +179,10 @@ class RSIFilter(BaseFilter):
 
         if rsi is None:
             return {
-                'passed': False,
-                'confidence': 0.0,
-                'reason': 'RSI indicator missing',
-                'metadata': {},
+                "passed": False,
+                "confidence": 0.0,
+                "reason": "RSI indicator missing",
+                "metadata": {},
             }
 
         # Obtener thresholds adaptativos
@@ -228,37 +232,37 @@ class RSIFilter(BaseFilter):
                     )
 
                     return {
-                        'passed': True,
-                        'confidence': max(0.5, min(1.0, confidence)),
-                        'reason': f'RSI crossover: {previous_rsi:.2f} -> {rsi:.2f} (crossed above {buy_threshold})',
-                        'metadata': {
-                            'rsi': rsi,
-                            'previous_rsi': previous_rsi,
-                            'buy_threshold': buy_threshold,
-                            'context': market_context.get('type'),
-                            'crossover': True,
-                            'symbol': symbol,
+                        "passed": True,
+                        "confidence": max(0.5, min(1.0, confidence)),
+                        "reason": f"RSI crossover: {previous_rsi:.2f} -> {rsi:.2f} (crossed above {buy_threshold})",
+                        "metadata": {
+                            "rsi": rsi,
+                            "previous_rsi": previous_rsi,
+                            "buy_threshold": buy_threshold,
+                            "context": market_context.get("type"),
+                            "crossover": True,
+                            "symbol": symbol,
                         },
                     }
                 else:
                     # No crossover yet
                     if rsi <= buy_threshold:
                         reason = (
-                            f'RSI {rsi:.2f} <= {buy_threshold} (oversold, waiting for crossover)'
+                            f"RSI {rsi:.2f} <= {buy_threshold} (oversold, waiting for crossover)"
                         )
                     else:
-                        reason = f'RSI {rsi:.2f} > {buy_threshold} (not oversold, no crossover)'
+                        reason = f"RSI {rsi:.2f} > {buy_threshold} (not oversold, no crossover)"
 
                     return {
-                        'passed': False,
-                        'confidence': 0.0,
-                        'reason': reason,
-                        'metadata': {
-                            'rsi': rsi,
-                            'previous_rsi': previous_rsi,
-                            'buy_threshold': buy_threshold,
-                            'waiting_for_crossover': True,
-                            'symbol': symbol,
+                        "passed": False,
+                        "confidence": 0.0,
+                        "reason": reason,
+                        "metadata": {
+                            "rsi": rsi,
+                            "previous_rsi": previous_rsi,
+                            "buy_threshold": buy_threshold,
+                            "waiting_for_crossover": True,
+                            "symbol": symbol,
                         },
                     }
             else:
@@ -276,28 +280,28 @@ class RSIFilter(BaseFilter):
                             f"RSI {rsi:.2f} < {max_buy_rsi} (dip opportunity in uptrend)"
                         )
                         return {
-                            'passed': True,
-                            'confidence': 0.6,
-                            'reason': f'RSI {rsi:.2f} < {max_buy_rsi} (trending market, dip opportunity)',
-                            'metadata': {
-                                'rsi': rsi,
-                                'buy_threshold': buy_threshold,
-                                'max_buy_rsi': max_buy_rsi,
-                                'context': market_context.get('type'),
-                                'trending_mode': True,
-                                'symbol': symbol,
+                            "passed": True,
+                            "confidence": 0.6,
+                            "reason": f"RSI {rsi:.2f} < {max_buy_rsi} (trending market, dip opportunity)",
+                            "metadata": {
+                                "rsi": rsi,
+                                "buy_threshold": buy_threshold,
+                                "max_buy_rsi": max_buy_rsi,
+                                "context": market_context.get("type"),
+                                "trending_mode": True,
+                                "symbol": symbol,
                             },
                         }
                     else:
                         return {
-                            'passed': False,
-                            'confidence': 0.0,
-                            'reason': f'RSI {rsi:.2f} >= {max_buy_rsi} (too high for dip buying)',
-                            'metadata': {
-                                'rsi': rsi,
-                                'max_buy_rsi': max_buy_rsi,
-                                'trending_mode': True,
-                                'symbol': symbol,
+                            "passed": False,
+                            "confidence": 0.0,
+                            "reason": f"RSI {rsi:.2f} >= {max_buy_rsi} (too high for dip buying)",
+                            "metadata": {
+                                "rsi": rsi,
+                                "max_buy_rsi": max_buy_rsi,
+                                "trending_mode": True,
+                                "symbol": symbol,
                             },
                         }
                 else:
@@ -318,29 +322,29 @@ class RSIFilter(BaseFilter):
                         )
 
                         return {
-                            'passed': True,
-                            'confidence': max(0.5, min(1.0, confidence)),
-                            'reason': f'RSI {rsi:.2f} <= {fallback_buy_threshold} (oversold, fallback mode)',
-                            'metadata': {
-                                'rsi': rsi,
-                                'buy_threshold': buy_threshold,
-                                'fallback_threshold': fallback_buy_threshold,
-                                'context': market_context.get('type'),
-                                'fallback_mode': True,
-                                'symbol': symbol,
+                            "passed": True,
+                            "confidence": max(0.5, min(1.0, confidence)),
+                            "reason": f"RSI {rsi:.2f} <= {fallback_buy_threshold} (oversold, fallback mode)",
+                            "metadata": {
+                                "rsi": rsi,
+                                "buy_threshold": buy_threshold,
+                                "fallback_threshold": fallback_buy_threshold,
+                                "context": market_context.get("type"),
+                                "fallback_mode": True,
+                                "symbol": symbol,
                             },
                         }
                     else:
                         return {
-                            'passed': False,
-                            'confidence': 0.0,
-                            'reason': f'RSI {rsi:.2f} > {fallback_buy_threshold} (not oversold enough for fallback)',
-                            'metadata': {
-                                'rsi': rsi,
-                                'buy_threshold': buy_threshold,
-                                'fallback_threshold': fallback_buy_threshold,
-                                'fallback_mode': True,
-                                'symbol': symbol,
+                            "passed": False,
+                            "confidence": 0.0,
+                            "reason": f"RSI {rsi:.2f} > {fallback_buy_threshold} (not oversold enough for fallback)",
+                            "metadata": {
+                                "rsi": rsi,
+                                "buy_threshold": buy_threshold,
+                                "fallback_threshold": fallback_buy_threshold,
+                                "fallback_mode": True,
+                                "symbol": symbol,
                             },
                         }
 
@@ -363,37 +367,37 @@ class RSIFilter(BaseFilter):
                     )
 
                     return {
-                        'passed': True,
-                        'confidence': max(0.5, min(1.0, confidence)),
-                        'reason': f'RSI crossover: {previous_rsi:.2f} -> {rsi:.2f} (crossed below {sell_threshold})',
-                        'metadata': {
-                            'rsi': rsi,
-                            'previous_rsi': previous_rsi,
-                            'sell_threshold': sell_threshold,
-                            'context': market_context.get('type'),
-                            'crossover': True,
-                            'symbol': symbol,
+                        "passed": True,
+                        "confidence": max(0.5, min(1.0, confidence)),
+                        "reason": f"RSI crossover: {previous_rsi:.2f} -> {rsi:.2f} (crossed below {sell_threshold})",
+                        "metadata": {
+                            "rsi": rsi,
+                            "previous_rsi": previous_rsi,
+                            "sell_threshold": sell_threshold,
+                            "context": market_context.get("type"),
+                            "crossover": True,
+                            "symbol": symbol,
                         },
                     }
                 else:
                     # No crossover yet
                     if rsi >= sell_threshold:
                         reason = (
-                            f'RSI {rsi:.2f} >= {sell_threshold} (overbought, waiting for crossover)'
+                            f"RSI {rsi:.2f} >= {sell_threshold} (overbought, waiting for crossover)"
                         )
                     else:
-                        reason = f'RSI {rsi:.2f} < {sell_threshold} (not overbought, no crossover)'
+                        reason = f"RSI {rsi:.2f} < {sell_threshold} (not overbought, no crossover)"
 
                     return {
-                        'passed': False,
-                        'confidence': 0.0,
-                        'reason': reason,
-                        'metadata': {
-                            'rsi': rsi,
-                            'previous_rsi': previous_rsi,
-                            'sell_threshold': sell_threshold,
-                            'waiting_for_crossover': True,
-                            'symbol': symbol,
+                        "passed": False,
+                        "confidence": 0.0,
+                        "reason": reason,
+                        "metadata": {
+                            "rsi": rsi,
+                            "previous_rsi": previous_rsi,
+                            "sell_threshold": sell_threshold,
+                            "waiting_for_crossover": True,
+                            "symbol": symbol,
                         },
                     }
             else:
@@ -415,30 +419,30 @@ class RSIFilter(BaseFilter):
                     )
 
                     return {
-                        'passed': True,
-                        'confidence': max(0.5, min(1.0, confidence)),
-                        'reason': f'RSI {rsi:.2f} >= {fallback_sell_threshold} (overbought, fallback mode)',
-                        'metadata': {
-                            'rsi': rsi,
-                            'sell_threshold': sell_threshold,
-                            'fallback_threshold': fallback_sell_threshold,
-                            'context': market_context.get('type'),
-                            'fallback_mode': True,
-                            'symbol': symbol,
+                        "passed": True,
+                        "confidence": max(0.5, min(1.0, confidence)),
+                        "reason": f"RSI {rsi:.2f} >= {fallback_sell_threshold} (overbought, fallback mode)",
+                        "metadata": {
+                            "rsi": rsi,
+                            "sell_threshold": sell_threshold,
+                            "fallback_threshold": fallback_sell_threshold,
+                            "context": market_context.get("type"),
+                            "fallback_mode": True,
+                            "symbol": symbol,
                         },
                     }
                 else:
                     return {
-                        'passed': False,
-                        'confidence': 0.0,
-                        'reason': f'RSI {rsi:.2f} < {fallback_sell_threshold} (not overbought enough for fallback)',
-                        'metadata': {
-                            'rsi': rsi,
-                            'sell_threshold': sell_threshold,
-                            'fallback_threshold': fallback_sell_threshold,
-                            'fallback_mode': True,
-                            'symbol': symbol,
+                        "passed": False,
+                        "confidence": 0.0,
+                        "reason": f"RSI {rsi:.2f} < {fallback_sell_threshold} (not overbought enough for fallback)",
+                        "metadata": {
+                            "rsi": rsi,
+                            "sell_threshold": sell_threshold,
+                            "fallback_threshold": fallback_sell_threshold,
+                            "fallback_mode": True,
+                            "symbol": symbol,
                         },
                     }
 
-        return {'passed': False, 'confidence': 0.0, 'reason': 'Unknown signal type', 'metadata': {}}
+        return {"passed": False, "confidence": 0.0, "reason": "Unknown signal type", "metadata": {}}

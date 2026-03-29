@@ -5,7 +5,7 @@ Provides professional HTML templates for strategy performance reports.
 """
 
 import logging
-from typing import Dict, Optional
+from typing import Optional
 
 logger = logging.getLogger(__name__)
 
@@ -190,10 +190,10 @@ class ReportTemplates:
     def generate_performance_report_html(
         self,
         strategy_name: str,
-        summary: Dict,
-        metrics: Dict,
-        risk_metrics: Dict,
-        allocation: Dict[str, float],
+        summary: dict,
+        metrics: dict,
+        risk_metrics: dict,
+        allocation: dict[str, float],
     ) -> str:
         """
         Generate complete HTML performance report.
@@ -243,7 +243,7 @@ class ReportTemplates:
         """.format(
             strategy_name=strategy_name,
             css_style=self.CSS_STYLE,
-            generated_time=datetime.now().strftime('%Y-%m-%d %H:%M:%S UTC'),
+            generated_time=datetime.now().strftime("%Y-%m-%d %H:%M:%S UTC"),
             performance_summary=self._generate_performance_summary_html(summary),
             metrics_table=self._generate_metrics_table_html(metrics),
             risk_metrics_table=self._generate_risk_metrics_table_html(risk_metrics),
@@ -252,7 +252,7 @@ class ReportTemplates:
         logger.info(f"Generated HTML report for strategy: {strategy_name}")
         return html
 
-    def _generate_performance_summary_html(self, summary: Dict) -> str:
+    def _generate_performance_summary_html(self, summary: dict) -> str:
         """Generate performance summary cards."""
         total_return_pct = (summary.get("total_return", 0) or 0) * 100
         sharpe = summary.get("sharpe_ratio", 0) or 0
@@ -262,7 +262,7 @@ class ReportTemplates:
         return_class = "positive" if total_return_pct >= 0 else "negative"
         win_rate_class = "positive" if win_rate_pct >= 50 else "negative"
 
-        return """
+        return f"""
         <h2>📈 Performance Summary</h2>
         <div class="metrics-grid">
             <div class="metric-card {return_class}">
@@ -282,16 +282,9 @@ class ReportTemplates:
                 <div class="metric-value">{win_rate_pct:.1f}%</div>
             </div>
         </div>
-        """.format(
-            return_class=return_class,
-            win_rate_class=win_rate_class,
-            total_return_pct=total_return_pct,
-            sharpe=sharpe,
-            max_dd_pct=max_dd_pct,
-            win_rate_pct=win_rate_pct,
-        )
+        """
 
-    def _generate_metrics_table_html(self, metrics: Dict) -> str:
+    def _generate_metrics_table_html(self, metrics: dict) -> str:
         """Generate performance metrics table."""
         html = """
         <h2>📊 Performance Metrics</h2>
@@ -306,12 +299,12 @@ class ReportTemplates:
         """
 
         metric_definitions = {
-            "total_return": ("Total Return", lambda x: f"{x*100:+.2f}%"),
-            "annual_return": ("Annual Return", lambda x: f"{x*100:+.2f}%"),
+            "total_return": ("Total Return", lambda x: f"{x * 100:+.2f}%"),
+            "annual_return": ("Annual Return", lambda x: f"{x * 100:+.2f}%"),
             "sharpe_ratio": ("Sharpe Ratio", lambda x: f"{x:.3f}"),
             "sortino_ratio": ("Sortino Ratio", lambda x: f"{x:.3f}"),
-            "max_drawdown": ("Max Drawdown", lambda x: f"{x*100:.2f}%"),
-            "win_rate": ("Win Rate", lambda x: f"{x*100:.1f}%"),
+            "max_drawdown": ("Max Drawdown", lambda x: f"{x * 100:.2f}%"),
+            "win_rate": ("Win Rate", lambda x: f"{x * 100:.1f}%"),
             "profit_factor": ("Profit Factor", lambda x: f"{x:.2f}"),
             "total_trades": ("Total Trades", lambda x: f"{int(x)}"),
         }
@@ -323,14 +316,12 @@ class ReportTemplates:
                 # formatter is a callable lambda function from metric_definitions
                 formatted = formatter(value)
                 rows.append(
-                    """
+                    f"""
                 <tr>
                     <td>{label}</td>
                     <td class="number">{formatted}</td>
                 </tr>
-                """.format(
-                        label=label, formatted=formatted
-                    )
+                """
                 )
 
         html += "".join(rows)
@@ -340,7 +331,7 @@ class ReportTemplates:
         """
         return html
 
-    def _generate_risk_metrics_table_html(self, risk_metrics: Dict) -> str:
+    def _generate_risk_metrics_table_html(self, risk_metrics: dict) -> str:
         """Generate risk metrics table."""
         html = """
         <h2>⚠️ Risk Metrics</h2>
@@ -355,10 +346,10 @@ class ReportTemplates:
         """
 
         risk_definitions = {
-            "volatility": ("Volatility", lambda x: f"{x*100:.2f}%"),
-            "max_drawdown": ("Max Drawdown", lambda x: f"{x*100:.2f}%"),
-            "var_95": ("Value at Risk (95%)", lambda x: f"{x*100:.2f}%"),
-            "cvar_95": ("Conditional VaR (95%)", lambda x: f"{x*100:.2f}%"),
+            "volatility": ("Volatility", lambda x: f"{x * 100:.2f}%"),
+            "max_drawdown": ("Max Drawdown", lambda x: f"{x * 100:.2f}%"),
+            "var_95": ("Value at Risk (95%)", lambda x: f"{x * 100:.2f}%"),
+            "cvar_95": ("Conditional VaR (95%)", lambda x: f"{x * 100:.2f}%"),
             "calmar_ratio": ("Calmar Ratio", lambda x: f"{x:.2f}"),
         }
 
@@ -369,14 +360,12 @@ class ReportTemplates:
                 # formatter is a callable lambda function from risk_definitions
                 formatted = formatter(value)
                 rows.append(
-                    """
+                    f"""
                 <tr>
                     <td>{label}</td>
                     <td class="number">{formatted}</td>
                 </tr>
-                """.format(
-                        label=label, formatted=formatted
-                    )
+                """
                 )
 
         html += "".join(rows)
@@ -386,7 +375,7 @@ class ReportTemplates:
         """
         return html
 
-    def _generate_allocation_table_html(self, allocation: Dict[str, float]) -> str:
+    def _generate_allocation_table_html(self, allocation: dict[str, float]) -> str:
         """Generate allocation table."""
         html = """
         <h2>🎯 Portfolio Allocation</h2>
@@ -408,7 +397,7 @@ class ReportTemplates:
             weight_pct = weight * 100
             bar_width = weight_pct * 2
             rows.append(
-                """
+                f"""
             <tr>
                 <td><strong>{asset}</strong></td>
                 <td class="number">{weight_pct:.1f}%</td>
@@ -416,9 +405,7 @@ class ReportTemplates:
                     <div class="allocation-bar" style="width: {bar_width}px;"></div>
                 </td>
             </tr>
-            """.format(
-                    asset=asset, weight_pct=weight_pct, bar_width=bar_width
-                )
+            """
             )
 
         html += "".join(rows)
@@ -436,12 +423,12 @@ class ReportTemplates:
         drawdown_pct: float,
     ) -> str:
         """Generate simple one-page summary."""
-        return """
+        return f"""
         <!DOCTYPE html>
         <html>
         <head>
             <title>{strategy_name} Summary</title>
-            {css_style}
+            {self.CSS_STYLE}
         </head>
         <body>
             <div class="container">
@@ -454,13 +441,7 @@ class ReportTemplates:
             </div>
         </body>
         </html>
-        """.format(
-            strategy_name=strategy_name,
-            css_style=self.CSS_STYLE,
-            return_pct=return_pct,
-            sharpe=sharpe,
-            drawdown_pct=drawdown_pct,
-        )
+        """
 
 
 # Singleton

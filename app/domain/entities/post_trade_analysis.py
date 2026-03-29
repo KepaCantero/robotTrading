@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from decimal import Decimal
-from typing import Any, Dict
+from typing import Any
 
 
 @dataclass(frozen=True)
@@ -86,7 +86,7 @@ class PostTradeAnalysis:
         if self.latency_ms < 0:
             raise ValueError(f"latency_ms must be non-negative, got: {self.latency_ms}")
 
-    def get_cost_summary(self) -> Dict[str, float]:
+    def get_cost_summary(self) -> dict[str, float]:
         """Get a summary of all execution costs."""
         return {
             "implementation_shortfall_bps": self.implementation_shortfall_bps,
@@ -96,7 +96,7 @@ class PostTradeAnalysis:
             "total_cost_bps": self.implementation_shortfall_bps,
         }
 
-    def get_quality_summary(self) -> Dict[str, Any]:
+    def get_quality_summary(self) -> dict[str, Any]:
         """Get a summary of execution quality."""
         return {
             "execution_quality_score": self.execution_quality_score,

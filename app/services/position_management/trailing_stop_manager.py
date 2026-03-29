@@ -17,12 +17,8 @@ from __future__ import annotations
 import logging
 from dataclasses import dataclass
 from decimal import Decimal
-from typing import TYPE_CHECKING, Optional
 
 from app.shared.config.centralized_config import get_config
-
-if TYPE_CHECKING:
-    pass
 
 logger = logging.getLogger(__name__)
 
@@ -31,7 +27,7 @@ logger = logging.getLogger(__name__)
 class TrailingStopResult:
     """Resultado del cálculo de trailing stop."""
 
-    new_stop: Optional[Decimal]
+    new_stop: Decimal | None
     previous_stop: Decimal
     r_multiple: float
     action: str  # "break_even", "trailing_50pct", "trailing_1.5pct", "none"
@@ -59,7 +55,7 @@ class TrailingStopManager:
         self,
         entry_price: Decimal,
         initial_stop: Decimal,
-        trailing_pct: Optional[Decimal] = None,
+        trailing_pct: Decimal | None = None,
     ):
         """
         Inicializar TrailingStopManager.
@@ -189,7 +185,7 @@ class TrailingStopManager:
         }
 
     @classmethod
-    def from_dict(cls, data: dict) -> "TrailingStopManager":
+    def from_dict(cls, data: dict) -> TrailingStopManager:
         """Crear instancia desde diccionario."""
         instance = cls(
             entry_price=Decimal(data["entry_price"]),

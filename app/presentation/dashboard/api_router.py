@@ -10,7 +10,6 @@ import asyncio
 import contextlib
 import logging
 from pathlib import Path
-from typing import Dict, List
 
 from fastapi import APIRouter, Depends, HTTPException, WebSocket, WebSocketDisconnect
 from fastapi.responses import HTMLResponse
@@ -46,18 +45,18 @@ async def get_dashboard_frontend():
     try:
         frontend_path = Path(__file__).parent / "frontend" / "index.html"
         if frontend_path.exists():
-            with open(frontend_path, "r") as f:
+            with open(frontend_path) as f:
                 return f.read()
         raise HTTPException(status_code=404, detail="Dashboard frontend not found")
     except OSError as e:
         logger.error(f"Error loading dashboard frontend: {e}", exc_info=True)
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @router.get("/health")
 async def get_health_status(
     dashboard: ProductionDashboard = Depends(get_dashboard),
-) -> Dict:
+) -> dict:
     """
     Get dashboard health status.
 
@@ -68,7 +67,7 @@ async def get_health_status(
         return dashboard.get_health_status()
     except OSError as e:
         logger.error(f"Error getting health status: {e}", exc_info=True)
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @router.get("/metrics", response_model=DashboardMetrics)
@@ -85,13 +84,13 @@ async def get_dashboard_metrics(
         return await dashboard.get_metrics()
     except (asyncio.TimeoutError, OSError) as e:
         logger.error(f"Error getting dashboard metrics: {e}", exc_info=True)
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
-@router.get("/positions", response_model=List[PositionMetric])
+@router.get("/positions", response_model=list[PositionMetric])
 async def get_positions(
     dashboard: ProductionDashboard = Depends(get_dashboard),
-) -> List[PositionMetric]:
+) -> list[PositionMetric]:
     """
     Get current position metrics.
 
@@ -102,14 +101,14 @@ async def get_positions(
         return await dashboard.get_positions()
     except (asyncio.TimeoutError, OSError) as e:
         logger.error(f"Error getting positions: {e}", exc_info=True)
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
-@router.get("/alerts", response_model=List[AlertHistoryItem])
+@router.get("/alerts", response_model=list[AlertHistoryItem])
 async def get_alert_history(
     hours: int = 24,
     dashboard: ProductionDashboard = Depends(get_dashboard),
-) -> List[AlertHistoryItem]:
+) -> list[AlertHistoryItem]:
     """
     Get alert history.
 
@@ -123,14 +122,14 @@ async def get_alert_history(
         return await dashboard.get_alert_history(hours=hours)
     except (asyncio.TimeoutError, OSError) as e:
         logger.error(f"Error getting alert history: {e}", exc_info=True)
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
-@router.get("/historical", response_model=List[HistoricalDataPoint])
+@router.get("/historical", response_model=list[HistoricalDataPoint])
 async def get_historical_data(
     period: str = "7d",
     dashboard: ProductionDashboard = Depends(get_dashboard),
-) -> List[HistoricalDataPoint]:
+) -> list[HistoricalDataPoint]:
     """
     Get historical performance data.
 
@@ -149,14 +148,14 @@ async def get_historical_data(
         raise
     except (asyncio.TimeoutError, OSError) as e:
         logger.error(f"Error getting historical data: {e}", exc_info=True)
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @router.post("/alerts/{alert_id}/acknowledge")
 async def acknowledge_alert(
     alert_id: str,
     dashboard: ProductionDashboard = Depends(get_dashboard),
-) -> Dict[str, bool]:
+) -> dict[str, bool]:
     """
     Acknowledge an alert.
 
@@ -175,14 +174,14 @@ async def acknowledge_alert(
         raise
     except (asyncio.TimeoutError, OSError) as e:
         logger.error(f"Error acknowledging alert: {e}", exc_info=True)
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @router.post("/alerts/{alert_id}/resolve")
 async def resolve_alert(
     alert_id: str,
     dashboard: ProductionDashboard = Depends(get_dashboard),
-) -> Dict[str, bool]:
+) -> dict[str, bool]:
     """
     Resolve an alert.
 
@@ -201,7 +200,7 @@ async def resolve_alert(
         raise
     except (asyncio.TimeoutError, OSError) as e:
         logger.error(f"Error resolving alert: {e}", exc_info=True)
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @router.websocket("/ws")
@@ -230,7 +229,7 @@ async def websocket_endpoint(
 @router.get("/connections")
 async def get_active_connections(
     dashboard: ProductionDashboard = Depends(get_dashboard),
-) -> Dict[str, int]:
+) -> dict[str, int]:
     """
     Get number of active WebSocket connections.
 
@@ -241,13 +240,13 @@ async def get_active_connections(
         return {"active_connections": dashboard.get_connection_count()}
     except OSError as e:
         logger.error(f"Error getting connection count: {e}", exc_info=True)
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @router.get("/stats")
 async def get_dashboard_statistics(
     dashboard: ProductionDashboard = Depends(get_dashboard),
-) -> Dict:
+) -> dict:
     """
     Get aggregated dashboard statistics.
 
@@ -265,13 +264,13 @@ async def get_dashboard_statistics(
         }
     except (ValueError, TypeError, KeyError, AttributeError) as e:
         logger.error(f"Error getting dashboard statistics: {e}", exc_info=True)
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @router.post("/refresh")
 async def refresh_dashboard_data(
     dashboard: ProductionDashboard = Depends(get_dashboard),
-) -> Dict[str, bool]:
+) -> dict[str, bool]:
     """
     Force refresh of all dashboard data.
 
@@ -290,4 +289,4 @@ async def refresh_dashboard_data(
         return {"success": True}
     except (ValueError, TypeError, KeyError, AttributeError) as e:
         logger.error(f"Error refreshing dashboard data: {e}", exc_info=True)
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e

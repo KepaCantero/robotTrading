@@ -15,7 +15,7 @@ This provides more meaningful labels for ML that account for:
 """
 
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple
+from typing import Any, Optional
 
 import numpy as np
 import pandas as pd
@@ -48,9 +48,6 @@ except ImportError:
     HAS_ARCH = False
     arch_model = None
 
-if TYPE_CHECKING:
-    from matplotlib.axes import Axes
-
 
 @dataclass
 class TripleBarrierConfig:
@@ -74,7 +71,7 @@ class TripleBarrierConfig:
     vol_scale: float = 1.5
     vol_window: int = 20
     numba_enabled: bool = True
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
     def __post_init__(self):
         """Validate configuration parameters."""
@@ -165,7 +162,7 @@ def get_barrier_labels_with_timing(
     upper_barrier: float,
     lower_barrier: float,
     vertical_barrier: int,
-) -> Tuple[np.ndarray, np.ndarray]:
+) -> tuple[np.ndarray, np.ndarray]:
     """
     Generate triple barrier labels with timing information.
 
@@ -218,7 +215,7 @@ def calculate_dynamic_barriers(
     events: pd.Series,
     config: TripleBarrierConfig,
     vol_scaling: bool = True,
-) -> Tuple[pd.Series, pd.Series]:
+) -> tuple[pd.Series, pd.Series]:
     """
     Calculate dynamic barriers adjusted for volatility.
 
@@ -353,7 +350,7 @@ class TripleBarrierLabeler:
         self.prices: Optional[pd.Series] = None
         self.events: Optional[pd.Series] = None
         self.labels_: Optional[pd.DataFrame] = None
-        self.barrier_info_: Optional[Dict] = None
+        self.barrier_info_: Optional[dict] = None
 
     def fit(
         self, prices: pd.Series, events: pd.Series, vol_scaling: bool = True
@@ -523,7 +520,7 @@ class TripleBarrierLabeler:
 
         return self.labels_["label"].value_counts()
 
-    def get_average_holding_period(self) -> Dict[int, float]:
+    def get_average_holding_period(self) -> dict[int, float]:
         """
         Get average holding period for each label type.
 
@@ -996,7 +993,7 @@ def purged_cv_split(
     n_samples: int,
     n_folds: int = 5,
     embargo_pct: float = 0.01,
-) -> List[Tuple[np.ndarray, np.ndarray]]:
+) -> list[tuple[np.ndarray, np.ndarray]]:
     """
     Generate purged cross-validation splits for time series.
 

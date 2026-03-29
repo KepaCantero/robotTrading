@@ -14,9 +14,9 @@ from app.services.portfolio_analytics.service import (
 )
 
 __all__ = [
-    "PortfolioAnalyticsService",
     "PerformanceCalculations",
-    "RiskCalculations",
+    "PortfolioAnalyticsService",
     "PortfolioCalculations",
+    "RiskCalculations",
     "get_portfolio_analytics_service",
 ]

@@ -18,7 +18,7 @@ from datetime import datetime, timedelta
 from decimal import Decimal
 from enum import Enum
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Callable
 
 import aiosqlite
 
@@ -46,7 +46,7 @@ class CanaryConfig:
     description: str = ""
 
     # Traffic progression (percentages)
-    stages: List[Decimal] = field(
+    stages: list[Decimal] = field(
         default_factory=lambda: [
             Decimal("1"),  # 1% initial
             Decimal("5"),  # 5%
@@ -75,7 +75,7 @@ class CanaryConfig:
     require_approval: bool = True
     auto_promote: bool = True  # Auto-promote if metrics pass
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
         return {
             "strategy_name": self.strategy_name,
@@ -127,11 +127,11 @@ class CanaryMetrics:
     baseline_throughput: float = 0.0
 
     # Calculated deltas
-    error_rate_delta: Optional[Decimal] = None
-    latency_delta: Optional[Decimal] = None
-    throughput_delta: Optional[Decimal] = None
+    error_rate_delta: Decimal | None = None
+    latency_delta: Decimal | None = None
+    throughput_delta: Decimal | None = None
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
         return {
             "timestamp": self.timestamp.isoformat(),
@@ -178,12 +178,12 @@ class CanaryRollbackDecision:
 
     should_rollback: bool
     reason: str
-    trigger_metric: Optional[str] = None
-    canary_value: Optional[Decimal] = None
-    baseline_value: Optional[Decimal] = None
-    threshold_exceeded: Optional[Decimal] = None
+    trigger_metric: str | None = None
+    canary_value: Decimal | None = None
+    baseline_value: Decimal | None = None
+    threshold_exceeded: Decimal | None = None
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
         return {
             "should_rollback": self.should_rollback,
@@ -213,7 +213,7 @@ class CanaryDeployment:
         self,
         config: CanaryConfig,
         db_path: str = "data/canary_deployments.db",
-        metrics_collector: Optional[Any] = None,
+        metrics_collector: object | None = None,
     ):
         """
         Initialize canary deployment.
@@ -231,16 +231,16 @@ class CanaryDeployment:
         # State
         self._status = CanaryStatus.PENDING
         self._current_stage = 0
-        self._started_at: Optional[datetime] = None
-        self._completed_at: Optional[datetime] = None
-        self._metrics_history: List[CanaryMetrics] = []
-        self._rollback_decisions: List[CanaryRollbackDecision] = []
+        self._started_at: datetime | None = None
+        self._completed_at: datetime | None = None
+        self._metrics_history: list[CanaryMetrics] = []
+        self._rollback_decisions: list[CanaryRollbackDecision] = []
         self._lock = asyncio.Lock()
 
         # Callbacks
-        self._on_stage_complete: Optional[Callable] = None
-        self._on_rollback: Optional[Callable] = None
-        self._on_complete: Optional[Callable] = None
+        self._on_stage_complete: Callable | None = None
+        self._on_rollback: Callable | None = None
+        self._on_complete: Callable | None = None
 
     async def initialize(self) -> None:
         """Initialize canary deployment."""
@@ -505,7 +505,7 @@ class CanaryDeployment:
             self.logger.error(f"Error collecting metrics: {e}")
             return CanaryMetrics(timestamp=datetime.utcnow(), stage=stage)
 
-    def _calculate_delta(self, canary_value: Decimal, baseline_value: Decimal) -> Optional[Decimal]:
+    def _calculate_delta(self, canary_value: Decimal, baseline_value: Decimal) -> Decimal | None:
         """Calculate percentage delta between canary and baseline."""
         if baseline_value == 0:
             return None
@@ -550,7 +550,11 @@ class CanaryDeployment:
             )
 
         # Check error rate increase
-        if metrics.error_rate_delta and metrics.baseline_error_rate > 0 and metrics.error_rate_delta > self.config.rollback_on_error_rate_increase:
+        if (
+            metrics.error_rate_delta
+            and metrics.baseline_error_rate > 0
+            and metrics.error_rate_delta > self.config.rollback_on_error_rate_increase
+        ):
             return CanaryRollbackDecision(
                 should_rollback=True,
                 reason=f"Error rate increased by {metrics.error_rate_delta * 100:.1f}%",
@@ -561,7 +565,11 @@ class CanaryDeployment:
             )
 
         # Check latency increase
-        if metrics.latency_delta and metrics.baseline_latency_p95 > 0 and metrics.latency_delta > self.config.rollback_on_latency_increase:
+        if (
+            metrics.latency_delta
+            and metrics.baseline_latency_p95 > 0
+            and metrics.latency_delta > self.config.rollback_on_latency_increase
+        ):
             return CanaryRollbackDecision(
                 should_rollback=True,
                 reason=f"Latency increased by {metrics.latency_delta * 100:.1f}%",
@@ -634,7 +642,7 @@ class CanaryDeployment:
             raise
 
     async def _update_deployment(
-        self, deployment_id: int, rollback_reason: Optional[str] = None
+        self, deployment_id: int, rollback_reason: str | None = None
     ) -> None:
         """Update deployment in database."""
         try:
@@ -725,11 +733,11 @@ class CanaryDeployment:
         return self._current_stage
 
     @property
-    def metrics_history(self) -> List[CanaryMetrics]:
+    def metrics_history(self) -> list[CanaryMetrics]:
         """Get metrics history."""
         return self._metrics_history
 
-    def get_summary(self) -> Dict[str, Any]:
+    def get_summary(self) -> dict[str, Any]:
         """Get deployment summary."""
         return {
             "strategy": self.config.strategy_name,

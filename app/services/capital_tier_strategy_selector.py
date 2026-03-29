@@ -29,7 +29,7 @@ import logging
 from dataclasses import dataclass
 from decimal import Decimal
 from enum import Enum
-from typing import Dict, List, Optional, Tuple
+from typing import ClassVar, Optional
 
 from app.services.account_configuration import AccountConfiguration, AccountTier
 from app.services.deployment_validator import DeploymentStatus, DeploymentValidator
@@ -89,7 +89,7 @@ class StrategySelection:
     """
 
     primary_strategy: str
-    secondary_strategies: List[str]
+    secondary_strategies: list[str]
     ensemble_type: EnsembleType
     config_variant: str
     reasoning: str
@@ -120,11 +120,11 @@ class RiskProfile:
     max_drawdown_pct: Decimal
     leverage_allowed: Decimal
     learning_enabled: bool
-    modules_enabled: Dict[str, bool]
+    modules_enabled: dict[str, bool]
     position_sizing_strategy: PositionSizingStrategy
 
     # Risk parameter validations
-    def validate(self) -> Tuple[bool, str]:
+    def validate(self) -> tuple[bool, str]:
         """Validate risk profile parameters"""
         if self.max_position_size <= Decimal("0"):
             return False, "max_position_size must be > 0"
@@ -184,9 +184,9 @@ class DeploymentReport:
 
     status: DeploymentStatus
     account_id: Optional[str]
-    issues: List[str]
-    warnings: List[str]
-    recommendations: List[str]
+    issues: list[str]
+    warnings: list[str]
+    recommendations: list[str]
     tier: str
     capital: Decimal
 
@@ -218,7 +218,7 @@ class CapitalTierStrategySelector:
     # STRATEGY RECOMMENDATIONS PER TIER
     # ========================================================================
 
-    STRATEGY_RECOMMENDATIONS = {
+    STRATEGY_RECOMMENDATIONS: ClassVar[dict] = {
         AccountTier.MICRO: {
             "primary": "momentum_engine",
             "secondary": ["mean_reversion_engine"],
@@ -253,7 +253,7 @@ class CapitalTierStrategySelector:
     # LEVERAGE ALLOWANCES PER TIER
     # ========================================================================
 
-    LEVERAGE_ALLOWANCES = {
+    LEVERAGE_ALLOWANCES: ClassVar[dict] = {
         AccountTier.MICRO: Decimal("1.0"),  # No leverage
         AccountTier.SMALL: Decimal("1.25"),  # Up to 1.25x
         AccountTier.MEDIUM: Decimal("1.5"),  # Up to 1.5x
@@ -264,14 +264,14 @@ class CapitalTierStrategySelector:
     # DRAWDOWN TOLERANCE PER TIER
     # ========================================================================
 
-    DRAWDOWN_TOLERANCE = {
+    DRAWDOWN_TOLERANCE: ClassVar[dict] = {
         AccountTier.MICRO: Decimal("0.05"),  # 5% max drawdown
         AccountTier.SMALL: Decimal("0.08"),  # 8% max drawdown
         AccountTier.MEDIUM: Decimal("0.10"),  # 10% max drawdown
         AccountTier.LARGE: Decimal("0.15"),  # 15% max drawdown (can sustain longer periods)
     }
 
-    def __init__(self, capital: Decimal, account_id: str = None):
+    def __init__(self, capital: Decimal, account_id: Optional[str] = None):
         """
         Initialize Capital Tier Strategy Selector.
 
@@ -526,7 +526,7 @@ class CapitalTierStrategySelector:
     # HELPER METHODS
     # ========================================================================
 
-    def _get_enabled_modules(self) -> Dict[str, bool]:
+    def _get_enabled_modules(self) -> dict[str, bool]:
         """
         Get which expensive ML modules are enabled for this tier.
 
@@ -569,7 +569,7 @@ class CapitalTierStrategySelector:
                 "feature_importance_analysis": True,
             }
 
-    def _gate_learning_viability(self) -> Tuple[bool, str]:
+    def _gate_learning_viability(self) -> tuple[bool, str]:
         """
         Check if learning infrastructure is cost-effective for this account.
 
@@ -610,7 +610,7 @@ class CapitalTierStrategySelector:
     # INFORMATION METHODS
     # ========================================================================
 
-    def get_tier_info(self) -> Dict:
+    def get_tier_info(self) -> dict:
         """
         Get information about this tier's capabilities.
 
@@ -643,7 +643,7 @@ class CapitalTierStrategySelector:
         else:
             return f"€{min_cap:,.0f} - €{max_cap:,.0f}"
 
-    def get_upgrade_path(self) -> Dict:
+    def get_upgrade_path(self) -> dict:
         """
         Get upgrade path to next tier.
 
@@ -657,10 +657,10 @@ class CapitalTierStrategySelector:
 # SINGLETON INSTANCE
 # ============================================================================
 
-_selector_instances: Dict[str, CapitalTierStrategySelector] = {}
+_selector_instances: dict[str, CapitalTierStrategySelector] = {}
 
 
-def get_selector(capital: Decimal, account_id: str = None) -> CapitalTierStrategySelector:
+def get_selector(capital: Decimal, account_id: Optional[str] = None) -> CapitalTierStrategySelector:
     """
     Get or create a CapitalTierStrategySelector instance.
 

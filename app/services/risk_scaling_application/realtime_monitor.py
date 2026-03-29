@@ -15,7 +15,7 @@ import logging
 from dataclasses import dataclass, field
 from datetime import datetime
 from decimal import Decimal
-from typing import Dict, List, Optional, Tuple
+from typing import Optional
 
 from .limit_adjuster import AdjustedLimit, LimitBreach
 
@@ -62,8 +62,8 @@ class MonitoringReport:
     critical_breaches: int
     recovery_count: int
 
-    position_snapshots: List[PositionSnapshot] = field(default_factory=list)
-    alerts: List[MonitoringAlert] = field(default_factory=list)
+    position_snapshots: list[PositionSnapshot] = field(default_factory=list)
+    alerts: list[MonitoringAlert] = field(default_factory=list)
 
     def add_alert(self, alert: MonitoringAlert) -> None:
         """Add alert to report."""
@@ -91,11 +91,11 @@ class RealTimeMonitor:
 
     def __init__(self):
         """Initialize real-time monitor."""
-        self.position_history: Dict[str, List[PositionSnapshot]] = {}
-        self.current_positions: Dict[str, Decimal] = {}
-        self.previous_positions: Dict[str, Decimal] = {}
-        self.breach_state: Dict[str, str] = {}  # module_name → "ok"/"warning"/"critical"
-        self.last_alert: Dict[str, MonitoringAlert] = {}  # Most recent alert per module
+        self.position_history: dict[str, list[PositionSnapshot]] = {}
+        self.current_positions: dict[str, Decimal] = {}
+        self.previous_positions: dict[str, Decimal] = {}
+        self.breach_state: dict[str, str] = {}  # module_name → "ok"/"warning"/"critical"
+        self.last_alert: dict[str, MonitoringAlert] = {}  # Most recent alert per module
         logger.info("✅ RealTimeMonitor initialized")
 
     # ========================================================================
@@ -104,9 +104,9 @@ class RealTimeMonitor:
 
     def update_positions(
         self,
-        current_positions: Dict[str, Decimal],
-        adjusted_limits: List[AdjustedLimit],
-    ) -> Tuple[List[PositionSnapshot], List[MonitoringAlert]]:
+        current_positions: dict[str, Decimal],
+        adjusted_limits: list[AdjustedLimit],
+    ) -> tuple[list[PositionSnapshot], list[MonitoringAlert]]:
         """
         Update current positions and detect changes.
 
@@ -182,8 +182,8 @@ class RealTimeMonitor:
 
     def detect_new_breaches(
         self,
-        breaches: List[LimitBreach],
-    ) -> List[MonitoringAlert]:
+        breaches: list[LimitBreach],
+    ) -> list[MonitoringAlert]:
         """
         Detect new limit breaches compared to previous state.
 
@@ -250,9 +250,9 @@ class RealTimeMonitor:
 
     def detect_recovery(
         self,
-        current_positions: Dict[str, Decimal],
-        adjusted_limits: List[AdjustedLimit],
-    ) -> List[MonitoringAlert]:
+        current_positions: dict[str, Decimal],
+        adjusted_limits: list[AdjustedLimit],
+    ) -> list[MonitoringAlert]:
         """
         Detect when positions recover from breached state.
 
@@ -296,7 +296,7 @@ class RealTimeMonitor:
 
     def recommend_scaling_adjustment(
         self,
-        breaches: List[LimitBreach],
+        breaches: list[LimitBreach],
         current_scaling_factor: Decimal,
     ) -> Optional[MonitoringAlert]:
         """
@@ -363,7 +363,7 @@ class RealTimeMonitor:
         self,
         start_time: datetime,
         end_time: datetime,
-        all_alerts: List[MonitoringAlert],
+        all_alerts: list[MonitoringAlert],
     ) -> MonitoringReport:
         """
         Generate comprehensive monitoring report.
@@ -406,7 +406,7 @@ class RealTimeMonitor:
     # Monitoring Statistics
     # ========================================================================
 
-    def get_monitor_status(self) -> Dict:
+    def get_monitor_status(self) -> dict:
         """Get current monitoring status."""
         critical_modules = [m for m, s in self.breach_state.items() if s == "critical"]
         warning_modules = [m for m, s in self.breach_state.items() if s == "warning"]

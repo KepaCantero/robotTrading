@@ -9,7 +9,7 @@ import logging
 from datetime import datetime
 from decimal import Decimal
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
@@ -46,18 +46,18 @@ class ObjectiveConfig(BaseModel):
         use_enum_values=False,  # Keep enums for internal use
     )
 
-    objectives: List[OptimizationObjective] = Field(
+    objectives: list[OptimizationObjective] = Field(
         ...,
         min_length=1,
         max_length=6,
         description="List of optimization objectives",
     )
-    weights: List[float] = Field(
+    weights: list[float] = Field(
         ...,
         min_length=1,
         description="Weights for each objective (must sum to 1.0)",
     )
-    constraints: Optional[Dict[str, Any]] = Field(
+    constraints: Optional[dict[str, Any]] = Field(
         default=None,
         description="Optional constraints for optimization",
     )
@@ -70,7 +70,7 @@ class ObjectiveConfig(BaseModel):
 
     @field_validator("weights")
     @classmethod
-    def validate_weights(cls, v: List[float]) -> List[float]:
+    def validate_weights(cls, v: list[float]) -> list[float]:
         """Validate that weights sum to approximately 1.0."""
         if not all(isinstance(w, (int, float)) for w in v):
             logger.warning(
@@ -94,8 +94,8 @@ class ObjectiveConfig(BaseModel):
     @field_validator("objectives")
     @classmethod
     def validate_objectives_match_weights(
-        cls, v: List[OptimizationObjective], info
-    ) -> List[OptimizationObjective]:
+        cls, v: list[OptimizationObjective], info
+    ) -> list[OptimizationObjective]:
         """Validate that number of objectives matches number of weights."""
         if "weights" in info.data and len(v) != len(info.data["weights"]):
             logger.warning(
@@ -134,11 +134,11 @@ class ParetoSolution(BaseModel):
         str_strip_whitespace=True,
     )
 
-    strategy_weights: Dict[str, Decimal] = Field(
+    strategy_weights: dict[str, Decimal] = Field(
         ...,
         description="Weight allocation for each strategy",
     )
-    objective_values: Dict[str, float] = Field(
+    objective_values: dict[str, float] = Field(
         ...,
         description="Values for each objective",
     )
@@ -152,7 +152,7 @@ class ParetoSolution(BaseModel):
         ge=0.0,
         description="Crowding distance for diversity",
     )
-    metrics: Dict[str, float] = Field(
+    metrics: dict[str, float] = Field(
         default_factory=dict,
         description="Additional performance metrics",
     )
@@ -174,7 +174,7 @@ class ParetoSolution(BaseModel):
 
     @field_validator("strategy_weights")
     @classmethod
-    def validate_strategy_weights(cls, v: Dict[str, Decimal]) -> Dict[str, Decimal]:
+    def validate_strategy_weights(cls, v: dict[str, Decimal]) -> dict[str, Decimal]:
         """Validate that strategy weights sum to approximately 1.0."""
         if not v:
             logger.warning("Empty strategy weights provided")
@@ -250,12 +250,12 @@ class EnsembleConfig(BaseModel):
         ...,
         description="Ensemble combination method to use",
     )
-    strategies: List[str] = Field(
+    strategies: list[str] = Field(
         ...,
         min_length=2,
         description="List of strategy names to include",
     )
-    strategy_weights: Optional[Dict[str, float]] = Field(
+    strategy_weights: Optional[dict[str, float]] = Field(
         default=None,
         description="Optional custom weights for strategies",
     )
@@ -285,7 +285,7 @@ class EnsembleConfig(BaseModel):
 
     @field_validator("strategy_weights")
     @classmethod
-    def validate_strategy_weights(cls, v: Optional[Dict[str, float]]) -> Optional[Dict[str, float]]:
+    def validate_strategy_weights(cls, v: Optional[dict[str, float]]) -> Optional[dict[str, float]]:
         """Validate strategy weights if provided."""
         if v is None:
             return v
@@ -355,11 +355,11 @@ class EnsembleSignal(BaseModel):
         le=1.0,
         description="Agreement level among strategies",
     )
-    strategy_votes: Dict[str, str] = Field(
+    strategy_votes: dict[str, str] = Field(
         ...,
         description="Votes from each strategy",
     )
-    strategy_weights: Dict[str, float] = Field(
+    strategy_weights: dict[str, float] = Field(
         ...,
         description="Weights used for combination",
     )
@@ -367,7 +367,7 @@ class EnsembleSignal(BaseModel):
         default_factory=datetime.utcnow,
         description="Signal generation timestamp",
     )
-    metadata: Dict[str, Any] = Field(
+    metadata: dict[str, Any] = Field(
         default_factory=dict,
         description="Additional signal metadata",
     )
@@ -459,7 +459,7 @@ class StrategyAllocation(BaseModel):
     def needs_rebalance(self) -> bool:
         """Check if allocation needs rebalancing (>5% drift)."""
         config = get_config()
-        threshold = Decimal(str(getattr(config.trading, 'portfolio_rebalance_threshold', 0.05)))
+        threshold = Decimal(str(getattr(config.trading, "portfolio_rebalance_threshold", 0.05)))
         return self.drift > threshold
 
 
@@ -512,11 +512,11 @@ class CombinedPortfolio(BaseModel):
         le=Decimal("1"),
         description="Mean correlation among strategies",
     )
-    allocation: List[StrategyAllocation] = Field(
+    allocation: list[StrategyAllocation] = Field(
         default_factory=list,
         description="Strategy allocations",
     )
-    metrics: Dict[str, Decimal] = Field(
+    metrics: dict[str, Decimal] = Field(
         default_factory=dict,
         description="Additional performance metrics",
     )
@@ -563,7 +563,7 @@ class CorrelationMetrics(BaseModel):
         str_strip_whitespace=True,
     )
 
-    correlation_matrix: Dict[str, Dict[str, Decimal]] = Field(
+    correlation_matrix: dict[str, dict[str, Decimal]] = Field(
         ...,
         description="Correlation matrix as nested dict",
     )
@@ -591,7 +591,7 @@ class CorrelationMetrics(BaseModel):
         le=Decimal("1"),
         description="Minimum correlation value",
     )
-    redundant_pairs: List[tuple] = Field(
+    redundant_pairs: list[tuple] = Field(
         default_factory=list,
         description="List of highly correlated pairs (>0.9)",
     )
@@ -600,7 +600,7 @@ class CorrelationMetrics(BaseModel):
         ge=1.0,
         description="Effective number of independent bets",
     )
-    eigenvalues: List[float] = Field(
+    eigenvalues: list[float] = Field(
         default_factory=list,
         description="Eigenvalues of correlation matrix",
     )

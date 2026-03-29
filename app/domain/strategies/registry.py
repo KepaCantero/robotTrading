@@ -7,7 +7,7 @@ activación y hot-swapping de estrategias.
 
 import logging
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 from .base import BaseStrategy
 from .factory import StrategyFactory
@@ -20,12 +20,12 @@ class StrategyRegistry:
 
     def __init__(self):
         """Inicializar registry con factory y estado vacío."""
-        self.strategies: Dict[str, BaseStrategy] = {}
+        self.strategies: dict[str, BaseStrategy] = {}
         self.factory = StrategyFactory()
         self.active_strategy: Optional[str] = None
         self.created_at = datetime.utcnow()
 
-    def load_strategy(self, name: str, config: Dict[str, Any]) -> BaseStrategy:
+    def load_strategy(self, name: str, config: dict[str, Any]) -> BaseStrategy:
         """
         Cargar estrategia desde configuración.
 
@@ -50,8 +50,8 @@ class StrategyRegistry:
             return strategy
 
         except (FileNotFoundError, ValueError, KeyError, TypeError) as e:
-            logger.error(f"Failed to load strategy '{name}': {str(e)}", exc_info=True)
-            raise ValueError(f"Failed to load strategy '{name}': {str(e)}")
+            logger.error(f"Failed to load strategy '{name}': {e!s}", exc_info=True)
+            raise ValueError(f"Failed to load strategy '{name}': {e!s}") from e
 
     def unload_strategy(self, name: str) -> None:
         """
@@ -123,7 +123,7 @@ class StrategyRegistry:
             return self.strategies.get(self.active_strategy)
         return None
 
-    def list_loaded_strategies(self) -> List[str]:
+    def list_loaded_strategies(self) -> list[str]:
         """
         Listar estrategias cargadas.
 
@@ -132,7 +132,7 @@ class StrategyRegistry:
         """
         return list(self.strategies.keys())
 
-    def list_available_strategies(self) -> List[str]:
+    def list_available_strategies(self) -> list[str]:
         """
         Listar estrategias disponibles para cargar.
 
@@ -141,7 +141,7 @@ class StrategyRegistry:
         """
         return self.factory.list_available_strategies()
 
-    def get_strategy_status(self, name: str) -> Dict[str, Any]:
+    def get_strategy_status(self, name: str) -> dict[str, Any]:
         """
         Obtener estado de una estrategia.
 
@@ -169,7 +169,7 @@ class StrategyRegistry:
             "parameters": strategy.get_parameters(),
         }
 
-    def get_all_strategies_status(self) -> Dict[str, Any]:
+    def get_all_strategies_status(self) -> dict[str, Any]:
         """
         Obtener estado de todas las estrategias.
 
@@ -188,7 +188,7 @@ class StrategyRegistry:
             "total_loaded": len(self.strategies),
         }
 
-    def reload_strategy(self, name: str, config: Dict[str, Any]) -> BaseStrategy:
+    def reload_strategy(self, name: str, config: dict[str, Any]) -> BaseStrategy:
         """
         Recargar estrategia con nueva configuración.
 
@@ -220,8 +220,8 @@ class StrategyRegistry:
             return strategy
 
         except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
-            logger.error(f"Failed to reload strategy '{name}': {str(e)}", exc_info=True)
-            raise ValueError(f"Failed to reload strategy '{name}': {str(e)}")
+            logger.error(f"Failed to reload strategy '{name}': {e!s}", exc_info=True)
+            raise ValueError(f"Failed to reload strategy '{name}': {e!s}") from e
 
     def clear_all_strategies(self) -> None:
         """Limpiar todas las estrategias cargadas."""

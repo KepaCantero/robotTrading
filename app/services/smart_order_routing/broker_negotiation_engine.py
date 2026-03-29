@@ -7,7 +7,7 @@ Implements tiered commission structure: retail → semi_pro → pro → institut
 
 import logging
 from decimal import Decimal
-from typing import Dict
+from typing import ClassVar, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -27,7 +27,7 @@ class BrokerNegotiationEngine:
     """
 
     # Base commission rates for each tier
-    COMMISSION_TIERS = {
+    COMMISSION_TIERS: ClassVar[dict] = {
         "retail": Decimal("0.001"),  # 0.1%
         "semi_pro": Decimal("0.0005"),  # 0.05%
         "pro": Decimal("0.0003"),  # 0.03%
@@ -35,7 +35,7 @@ class BrokerNegotiationEngine:
     }
 
     # Volume thresholds for tier qualification
-    VOLUME_THRESHOLDS = {
+    VOLUME_THRESHOLDS: ClassVar[dict] = {
         "institutional": Decimal("1000000"),  # €1M+
         "pro": Decimal("250000"),  # €250k-€1M
         "semi_pro": Decimal("50000"),  # €50k-€250k
@@ -43,7 +43,7 @@ class BrokerNegotiationEngine:
     }
 
     # Asset-class adjustment multipliers
-    ASSET_CLASS_ADJUSTMENTS = {
+    ASSET_CLASS_ADJUSTMENTS: ClassVar[dict] = {
         "equity": Decimal("1.0"),  # No adjustment
         "crypto": Decimal("1.5"),  # 50% premium (higher risk)
         "forex": Decimal("0.5"),  # 50% discount (higher volume)
@@ -60,7 +60,7 @@ class BrokerNegotiationEngine:
         symbol: str,
         volume_usd: Decimal,
         asset_class: str = "equity",
-        account_tier: str = None,
+        account_tier: Optional[str] = None,
     ) -> Decimal:
         """
         Get negotiated commission rate for a trade.
@@ -81,10 +81,7 @@ class BrokerNegotiationEngine:
         """
 
         # Determine tier
-        if account_tier:
-            tier = account_tier
-        else:
-            tier = self._get_tier_for_volume(volume_usd)
+        tier = account_tier or self._get_tier_for_volume(volume_usd)
 
         logger.debug(f"Volume €{volume_usd:,.0f} → Tier: {tier}")
 
@@ -124,7 +121,7 @@ class BrokerNegotiationEngine:
         else:
             return "retail"
 
-    def get_all_tiers(self) -> Dict[str, Dict]:
+    def get_all_tiers(self) -> dict[str, dict]:
         """
         Get all available commission tiers.
 
@@ -137,7 +134,7 @@ class BrokerNegotiationEngine:
                 "rate": self.COMMISSION_TIERS[tier],
                 "min_volume": self.VOLUME_THRESHOLDS[tier],
             }
-            for tier in self.COMMISSION_TIERS.keys()
+            for tier in self.COMMISSION_TIERS
         }
 
     def estimate_commission_savings(
@@ -145,7 +142,7 @@ class BrokerNegotiationEngine:
         symbol: str,
         volume_usd: Decimal,
         asset_class: str = "equity",
-    ) -> Dict[str, Decimal]:
+    ) -> dict[str, Decimal]:
         """
         Compare commission costs across tiers.
 

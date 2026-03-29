@@ -14,9 +14,8 @@ from __future__ import annotations
 
 import logging
 from collections import defaultdict
-from typing import Any, Optional
+from typing import TYPE_CHECKING, Any
 
-import pandas as pd
 from pydantic import BaseModel, Field
 
 from app.services.momentum_analysis import TechnicalIndicatorCalculator
@@ -30,6 +29,9 @@ from .output import OutputGenerator
 from .scorers import MeanReversionScorer, MomentumScorer, PairsTradingScorer, WCMScoreCalculator
 from .validators import AllocationValidator
 
+if TYPE_CHECKING:
+    import pandas as pd
+
 logger = logging.getLogger(__name__)
 
 
@@ -38,15 +40,15 @@ class StockMetrics(BaseModel):
     """Metrics for a single stock."""
 
     ticker: str
-    strategy: Optional[str] = None
+    strategy: str | None = None
     weight: float = 0.0
     capital: float = 0.0
     sps_score: float = 0.0
-    sortino_ratio: Optional[float] = None
-    h_long: Optional[float] = None
-    h_short: Optional[float] = None
-    half_life_tau: Optional[float] = None
-    garch_volatility: Optional[float] = None
+    sortino_ratio: float | None = None
+    h_long: float | None = None
+    h_short: float | None = None
+    half_life_tau: float | None = None
+    garch_volatility: float | None = None
     decision_log: str = ""
 
 
@@ -57,7 +59,7 @@ class PairMetrics(BaseModel):
     ticker2: str
     cointegration_score: float
     correlation: float
-    half_life_tau: Optional[float] = None
+    half_life_tau: float | None = None
     decision_log: str = ""
 
 
@@ -90,23 +92,23 @@ class StrategyStockAllocator:
 
     def __init__(
         self,
-        config: Optional[StockAllocationSettings] = None,
-        tier: Optional[str] = None,
+        config: StockAllocationSettings | None = None,
+        tier: str | None = None,
         use_yaml: bool = True,
         # Dependencies (injected)
-        stock_filter: Optional[StockFilter] = None,
-        hurst_calculator: Optional[HurstCalculator] = None,
-        half_life_calculator: Optional[HalfLifeCalculator] = None,
-        stationarity_tester: Optional[StationarityTester] = None,
-        regime_classifier: Optional[RegimeClassifier] = None,
-        momentum_scorer: Optional[MomentumScorer] = None,
-        mean_reversion_scorer: Optional[MeanReversionScorer] = None,
-        pairs_scorer: Optional[PairsTradingScorer] = None,
-        wcm_calculator: Optional[WCMScoreCalculator] = None,
-        erc_allocator: Optional[ERCCapitalAllocator] = None,
-        validator: Optional[AllocationValidator] = None,
-        output_generator: Optional[OutputGenerator] = None,
-        technical_indicator_calculator: Optional[Any] = None,
+        stock_filter: StockFilter | None = None,
+        hurst_calculator: HurstCalculator | None = None,
+        half_life_calculator: HalfLifeCalculator | None = None,
+        stationarity_tester: StationarityTester | None = None,
+        regime_classifier: RegimeClassifier | None = None,
+        momentum_scorer: MomentumScorer | None = None,
+        mean_reversion_scorer: MeanReversionScorer | None = None,
+        pairs_scorer: PairsTradingScorer | None = None,
+        wcm_calculator: WCMScoreCalculator | None = None,
+        erc_allocator: ERCCapitalAllocator | None = None,
+        validator: AllocationValidator | None = None,
+        output_generator: OutputGenerator | None = None,
+        technical_indicator_calculator: TechnicalIndicatorCalculator | None = None,
     ) -> None:
         """
         Initialize allocator with dependencies.
@@ -201,7 +203,7 @@ class StrategyStockAllocator:
         self,
         historical_data: dict[str, pd.DataFrame],
         total_capital: float,
-        strategy_allocations: Optional[dict[str, float]] = None,
+        strategy_allocations: dict[str, float] | None = None,
     ) -> AllocationResult:
         """
         Main allocation method: complete pipeline from data to allocation.
@@ -337,9 +339,7 @@ class StrategyStockAllocator:
         if total_assigned >= min_target_tickers:
             return
 
-        unassigned_tickers = [
-            ticker for ticker in all_scores.keys() if ticker not in strategy_assignments
-        ]
+        unassigned_tickers = [ticker for ticker in all_scores if ticker not in strategy_assignments]
 
         if len(unassigned_tickers) == 0:
             return
@@ -421,7 +421,7 @@ class StrategyStockAllocator:
         all_scores: dict[str, dict[str, float]],
         strategy_assignments: dict[str, str],
         total_capital: float,
-        strategy_allocations: Optional[dict[str, float]],
+        strategy_allocations: dict[str, float] | None,
     ) -> dict[str, StockMetrics]:
         """
         Allocate capital using ERC within each strategy group.
@@ -462,7 +462,7 @@ class StrategyStockAllocator:
 
             # Get price data for covariance matrix
             filtered_stocks_prices = {
-                ticker: self.filtered_stocks[ticker]['close'].values
+                ticker: self.filtered_stocks[ticker]["close"].values
                 for ticker in strategy_tickers
                 if ticker in self.filtered_stocks
             }

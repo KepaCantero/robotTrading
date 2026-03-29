@@ -13,7 +13,7 @@ Responsibilities:
 import logging
 from datetime import datetime
 from decimal import Decimal
-from typing import Dict, List, Optional
+from typing import Optional
 
 import numpy as np
 from scipy import stats
@@ -49,7 +49,7 @@ class AdvancedMetrics:
         self.kurtosis = kurtosis  # Tail heaviness
         self.skewness = skewness  # Distribution asymmetry
 
-    def to_dict(self) -> Dict:
+    def to_dict(self) -> dict:
         """Convert metrics to dictionary."""
         return {
             "calmar_ratio": float(self.calmar_ratio),
@@ -83,7 +83,7 @@ class StatisticsReport:
         worst_day_pct: Decimal,
         best_month_pct: Decimal,
         worst_month_pct: Decimal,
-        monthly_return_distribution: Optional[Dict] = None,
+        monthly_return_distribution: Optional[dict] = None,
     ):
         """Initialize statistics report."""
         self.report_date = report_date
@@ -101,7 +101,7 @@ class StatisticsReport:
         self.worst_month_pct = worst_month_pct
         self.monthly_return_distribution = monthly_return_distribution or {}
 
-    def to_dict(self) -> Dict:
+    def to_dict(self) -> dict:
         """Convert report to dictionary."""
         return {
             "report_date": self.report_date.isoformat(),
@@ -146,8 +146,8 @@ class QuantStatsIntegrator:
 
     def calculate_advanced_metrics(
         self,
-        returns: List[Decimal],
-        benchmark_returns: Optional[List[Decimal]] = None,
+        returns: list[Decimal],
+        benchmark_returns: Optional[list[Decimal]] = None,
         max_drawdown_pct: Optional[Decimal] = None,
     ) -> AdvancedMetrics:
         """
@@ -228,14 +228,14 @@ class QuantStatsIntegrator:
 
     def generate_statistics_report(
         self,
-        returns: List[Decimal],
+        returns: list[Decimal],
         annual_return_pct: Decimal,
         annual_volatility_pct: Decimal,
         sharpe_ratio: Decimal,
         max_drawdown_pct: Decimal,
         win_rate_pct: Decimal,
         num_trades: int,
-        benchmark_returns: Optional[List[Decimal]] = None,
+        benchmark_returns: Optional[list[Decimal]] = None,
     ) -> StatisticsReport:
         """
         Generate comprehensive statistics report.
@@ -512,7 +512,7 @@ class QuantStatsIntegrator:
     def _calculate_monthly_distribution(
         self,
         returns: np.ndarray,
-    ) -> Dict[str, float]:
+    ) -> dict[str, float]:
         """
         Calculate monthly return distribution.
 
@@ -542,7 +542,7 @@ class QuantStatsIntegrator:
     # Status & Configuration
     # ========================================================================
 
-    def get_integrator_status(self) -> Dict:
+    def get_integrator_status(self) -> dict:
         """Get integrator operational status."""
         return {
             "reports_generated": self.reports_generated,

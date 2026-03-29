@@ -9,22 +9,20 @@ This module exports DashboardPerformanceMetrics (aliased as PerformanceMetrics f
 """
 
 from app.presentation.dashboard.dashboard_data import (
-    PerformanceMetrics,  # Backward compatibility alias
-)
-from app.presentation.dashboard.dashboard_data import (
     DashboardPerformanceMetrics,
     DashboardSnapshot,
+    PerformanceMetrics,  # Backward compatibility alias
     PositionSummary,
     SystemStatus,
 )
 from app.presentation.dashboard.dashboard_service import DashboardService, get_dashboard_service
 
 __all__ = [
-    "DashboardSnapshot",
-    "PositionSummary",
     "DashboardPerformanceMetrics",
-    "PerformanceMetrics",  # Backward compatibility alias
-    "SystemStatus",
     "DashboardService",
+    "DashboardSnapshot",
+    "PerformanceMetrics",  # Backward compatibility alias
+    "PositionSummary",
+    "SystemStatus",
     "get_dashboard_service",
 ]

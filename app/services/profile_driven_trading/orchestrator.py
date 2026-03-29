@@ -13,7 +13,7 @@ import logging
 import random
 from datetime import datetime, timedelta
 from decimal import Decimal
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 import pandas as pd
 
@@ -69,7 +69,7 @@ class ProfileDrivenTradingOrchestrator:
     - Detailed logging and monitoring
     """
 
-    def __init__(self, config: Optional[OrchestratorConfig] = None):
+    def __init__(self, config: OrchestratorConfig | None = None):
         """
         Initialize the orchestrator.
 
@@ -94,7 +94,7 @@ class ProfileDrivenTradingOrchestrator:
 
         # Execution tracking
         self.execution_count = 0
-        self.last_execution_time: Optional[datetime] = None
+        self.last_execution_time: datetime | None = None
 
         logger.info("✅ ProfileDrivenTradingOrchestrator initialized")
         logger.info(
@@ -244,7 +244,7 @@ class ProfileDrivenTradingOrchestrator:
 
         result = TradingResult(
             success=False,
-            profile_id=getattr(input_profile, 'input_id', 'unknown'),
+            profile_id=getattr(input_profile, "input_id", "unknown"),
             started_at=start_time,
         )
 
@@ -278,7 +278,7 @@ class ProfileDrivenTradingOrchestrator:
             profile_result = pipeline_result.get_stage_by_type(StageType.PROFILE_GENERATION)
             if profile_result and profile_result.success:
                 result.investment_profile = profile_result.data
-                result.profile_id = getattr(profile_result.data, 'profile_id', result.profile_id)
+                result.profile_id = getattr(profile_result.data, "profile_id", result.profile_id)
 
             universe_result = pipeline_result.get_stage_by_type(StageType.UNIVERSE_SELECTION)
             if universe_result and universe_result.success:
@@ -330,13 +330,13 @@ class ProfileDrivenTradingOrchestrator:
 
             # Collect errors from failed stages
             for stage_result in (
-                result.get_failed_stages() if hasattr(result, 'get_failed_stages') else []
+                result.get_failed_stages() if hasattr(result, "get_failed_stages") else []
             ):
                 result.errors.extend(stage_result.errors)
 
         except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.error(f"❌ Fatal error in trading lifecycle: {e}", exc_info=True)
-            result.errors.append(f"Fatal error: {str(e)}")
+            result.errors.append(f"Fatal error: {e!s}")
             result.success = False
 
         result.execution_time_ms = (datetime.utcnow() - start_time).total_seconds() * 1000
@@ -387,7 +387,7 @@ class ProfileDrivenTradingOrchestrator:
 
         # Create profile generation request
         request = ProfileGenerationRequest(
-            input_id=getattr(input_profile, 'input_id', 'unknown'),
+            input_id=getattr(input_profile, "input_id", "unknown"),
             capital_initial=input_profile.capital_initial,
             objective=InvestmentObjective(input_profile.objetivo_inversion.value),
             risk_tolerance=risk_mapping.get(
@@ -418,7 +418,7 @@ class ProfileDrivenTradingOrchestrator:
     # STAGE 2: UNIVERSE SELECTION
     # ============================================================================
 
-    async def stage_2_select_universe(self, profile=None) -> Dict[str, pd.DataFrame]:
+    async def stage_2_select_universe(self, profile=None) -> dict[str, pd.DataFrame]:
         """
         Stage 2: Select stock universe based on profile.
 
@@ -459,12 +459,12 @@ class ProfileDrivenTradingOrchestrator:
     async def stage_2_select_universe_with_real_data(
         self,
         profile=None,
-        symbols: Optional[List[str]] = None,
+        symbols: list[str] | None = None,
         num_symbols: int = 50,
-        start_date: Optional[datetime] = None,
-        end_date: Optional[datetime] = None,
+        start_date: datetime | None = None,
+        end_date: datetime | None = None,
         use_cache: bool = True,
-    ) -> Dict[str, pd.DataFrame]:
+    ) -> dict[str, pd.DataFrame]:
         """
         Stage 2: Select universe using REAL data from Alpha Vantage.
 
@@ -543,7 +543,7 @@ class ProfileDrivenTradingOrchestrator:
             logger.warning("   Falling back to test universe")
             return self._create_test_universe()
 
-    def _create_test_universe(self) -> Dict[str, pd.DataFrame]:
+    def _create_test_universe(self) -> dict[str, pd.DataFrame]:
         """Create test universe for testing when no data available."""
         from datetime import datetime, timedelta
 
@@ -560,11 +560,11 @@ class ProfileDrivenTradingOrchestrator:
 
             filtered_data[symbol] = pd.DataFrame(
                 {
-                    'open': price * (1 + np.random.uniform(-0.01, 0.01, 126)),
-                    'high': price * (1 + np.abs(np.random.uniform(0, 0.02, 126))),
-                    'low': price * (1 - np.abs(np.random.uniform(0, 0.02, 126))),
-                    'close': price,
-                    'volume': np.random.randint(1000000, 10000000, 126),
+                    "open": price * (1 + np.random.uniform(-0.01, 0.01, 126)),
+                    "high": price * (1 + np.abs(np.random.uniform(0, 0.02, 126))),
+                    "low": price * (1 - np.abs(np.random.uniform(0, 0.02, 126))),
+                    "close": price,
+                    "volume": np.random.randint(1000000, 10000000, 126),
                 }
             )
             filtered_data[symbol].index = dates
@@ -575,7 +575,7 @@ class ProfileDrivenTradingOrchestrator:
     # STAGE 3: CAPITAL ALLOCATION
     # ============================================================================
 
-    async def stage_3_allocate_capital(self, profile=None, universe=None) -> Dict[str, Any]:
+    async def stage_3_allocate_capital(self, profile=None, universe=None) -> dict[str, Any]:
         """
         Stage 3: Allocate capital to strategies and stocks.
 
@@ -871,7 +871,7 @@ class ProfileDrivenTradingOrchestrator:
             return RiskValidationResult(
                 passed=False,
                 risk_level="HIGH",
-                violations=[f"Risk validation error: {str(e)}"],
+                violations=[f"Risk validation error: {e!s}"],
             )
 
     # ============================================================================
@@ -1053,7 +1053,7 @@ class ProfileDrivenTradingOrchestrator:
     # UTILITY METHODS
     # ============================================================================
 
-    def get_status(self) -> Dict[str, Any]:
+    def get_status(self) -> dict[str, Any]:
         """Get orchestrator status and statistics."""
         workflow_stats = self.workflow_manager.get_execution_statistics()
 

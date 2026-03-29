@@ -13,7 +13,7 @@ import logging
 from collections import defaultdict
 from datetime import datetime
 from decimal import Decimal
-from typing import Any, Dict, Optional
+from typing import Any, Optional
 
 from app.domain.models.portfolio import Portfolio
 from app.domain.models.signal import Signal
@@ -356,9 +356,9 @@ class CircuitBreaker:
             max_consecutive_stops: Maximum consecutive stops before pause (default 5)
         """
         self.max_consecutive_stops = max_consecutive_stops
-        self.strategy_stops: Dict[str, int] = defaultdict(int)
-        self.strategy_paused: Dict[str, bool] = defaultdict(bool)
-        self.last_reset: Dict[str, datetime] = {}
+        self.strategy_stops: dict[str, int] = defaultdict(int)
+        self.strategy_paused: dict[str, bool] = defaultdict(bool)
+        self.last_reset: dict[str, datetime] = {}
 
     def record_stop_loss(self, strategy_name: str) -> None:
         """
@@ -559,7 +559,7 @@ class AdvancedRiskManager:
         else:
             self.circuit_breaker.reset_stops(strategy_name)
 
-    def get_risk_status(self) -> Dict[str, Any]:
+    def get_risk_status(self) -> dict[str, Any]:
         """Get current risk status."""
         return {
             "drawdown_exceeded": self.drawdown_monitor.is_stopped,

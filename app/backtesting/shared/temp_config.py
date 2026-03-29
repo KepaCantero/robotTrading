@@ -12,9 +12,10 @@ Provides automatic cleanup with context manager pattern.
 """
 
 import logging
+from collections.abc import Generator
 from contextlib import contextmanager
 from pathlib import Path
-from typing import Any, Dict, Generator, Optional
+from typing import Any, Optional
 from uuid import uuid4
 
 import yaml
@@ -35,7 +36,7 @@ class TempConfigManager:
 
     def __init__(
         self,
-        config: Dict[str, Any],
+        config: dict[str, Any],
         output_dir: Path,
         prefix: str = "temp",
         suffix: str = ".yaml",
@@ -94,7 +95,7 @@ class TempConfigManager:
 
 @contextmanager
 def temp_config_file(
-    config: Dict[str, Any],
+    config: dict[str, Any],
     output_dir: Path,
     prefix: str = "temp",
 ) -> Generator[Path, None, None]:
@@ -139,7 +140,7 @@ class TempConfigFactory:
         self.output_dir = Path(output_dir)
 
     def create_backtest_config(
-        self, config: Dict[str, Any], profile_id: Optional[str] = None
+        self, config: dict[str, Any], profile_id: Optional[str] = None
     ) -> TempConfigManager:
         """
         Create temp config for backtest execution.
@@ -155,7 +156,7 @@ class TempConfigFactory:
         return TempConfigManager(config, self.output_dir, prefix=prefix)
 
     def create_optimization_config(
-        self, config: Dict[str, Any], trial_num: Optional[int] = None
+        self, config: dict[str, Any], trial_num: Optional[int] = None
     ) -> TempConfigManager:
         """
         Create temp config for optimization trial.
@@ -171,7 +172,7 @@ class TempConfigFactory:
         return TempConfigManager(config, self.output_dir, prefix=prefix)
 
     def create_validation_config(
-        self, config: Dict[str, Any], validation_type: str
+        self, config: dict[str, Any], validation_type: str
     ) -> TempConfigManager:
         """
         Create temp config for validation (walk-forward, monte-carlo, etc).

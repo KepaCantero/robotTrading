@@ -21,7 +21,7 @@ import logging
 from dataclasses import dataclass
 from datetime import date
 from decimal import Decimal
-from typing import List, Optional, Tuple
+from typing import Optional
 
 import numpy as np
 from scipy import stats
@@ -44,7 +44,7 @@ class ReturnSeries:
     """
 
     symbol: str
-    dates: List[date]
+    dates: list[date]
     returns: np.ndarray
     prices: np.ndarray
 
@@ -80,8 +80,8 @@ class VolatilityCalculator:
 
     def calculate_all_metrics(
         self,
-        price_series: List[Tuple[date, Decimal]],
-        market_series: List[Tuple[date, Decimal]],
+        price_series: list[tuple[date, Decimal]],
+        market_series: list[tuple[date, Decimal]],
         symbol: str,
     ) -> VolatilityMetrics:
         """
@@ -147,7 +147,7 @@ class VolatilityCalculator:
 
     def calculate_historical_volatility(
         self,
-        price_series: List[Tuple[date, Decimal]],
+        price_series: list[tuple[date, Decimal]],
         window: int = 20,
     ) -> Optional[Decimal]:
         """
@@ -249,7 +249,7 @@ class VolatilityCalculator:
 
     def calculate_max_drawdown(
         self,
-        price_series: List[Tuple[date, Decimal]],
+        price_series: list[tuple[date, Decimal]],
     ) -> Optional[Decimal]:
         """
         Calcular máximo drawdown.
@@ -413,7 +413,7 @@ class VolatilityCalculator:
     def calculate_moments(
         self,
         returns: np.ndarray,
-    ) -> Tuple[Optional[Decimal], Optional[Decimal]]:
+    ) -> tuple[Optional[Decimal], Optional[Decimal]]:
         """
         Calcular skewness y kurtosis de retornos.
 
@@ -440,7 +440,7 @@ class VolatilityCalculator:
 
     def _calculate_returns(
         self,
-        price_series: List[Tuple[date, Decimal]],
+        price_series: list[tuple[date, Decimal]],
     ) -> np.ndarray:
         """
         Calcular retornos logarítmicos desde serie de precios.
@@ -465,7 +465,7 @@ class VolatilityCalculator:
         self,
         stock_returns: np.ndarray,
         market_returns: np.ndarray,
-    ) -> Tuple[np.ndarray, np.ndarray]:
+    ) -> tuple[np.ndarray, np.ndarray]:
         """
         Alinear retornos de acción y mercado por fecha.
 
@@ -509,7 +509,7 @@ class VolatilityCalculator:
 
     def calculate_portfolio_volatility(
         self,
-        weights: List[float],
+        weights: list[float],
         returns_matrix: np.ndarray,
     ) -> Decimal:
         """
@@ -540,7 +540,7 @@ class VolatilityCalculator:
         returns_matrix: np.ndarray,
         min_weight: float = 0.0,
         max_weight: float = 1.0,
-    ) -> List[float]:
+    ) -> list[float]:
         """
         Calcular pesos de varianza mínima.
 

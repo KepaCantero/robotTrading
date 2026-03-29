@@ -26,13 +26,15 @@ Date: 2026-01-28
 
 import logging
 from dataclasses import dataclass
-from typing import Dict, List, Optional, Tuple
+from typing import TYPE_CHECKING
 
 import numpy as np
-import pandas as pd
 from scipy.cluster.hierarchy import dendrogram, linkage
 from scipy.optimize import minimize
 from scipy.spatial.distance import squareform
+
+if TYPE_CHECKING:
+    import pandas as pd
 
 # Optional cvxpy dependency
 try:
@@ -63,10 +65,10 @@ class OptimizationResult:
     volatility: float
     sharpe_ratio: float
     method: str
-    risk_contributions: Optional[np.ndarray] = None
-    diversification_ratio: Optional[float] = None
-    turnover: Optional[float] = None
-    metadata: Optional[Dict] = None
+    risk_contributions: np.ndarray | None = None
+    diversification_ratio: float | None = None
+    turnover: float | None = None
+    metadata: dict | None = None
 
 
 class MeanVarianceOptimizer:
@@ -86,7 +88,7 @@ class MeanVarianceOptimizer:
 
     def __init__(self):
         """Initialize Mean-Variance Optimizer."""
-        self.last_result: Optional[OptimizationResult] = None
+        self.last_result: OptimizationResult | None = None
         logger.info("MeanVarianceOptimizer initialized")
 
     def optimize(
@@ -94,8 +96,8 @@ class MeanVarianceOptimizer:
         returns: pd.DataFrame,
         objective: str = "max_sharpe",
         risk_free_rate: float = 0.0,
-        weight_constraints: Optional[Dict[str, float]] = None,
-        sector_constraints: Optional[Dict[str, Tuple[List[int], float]]] = None,
+        weight_constraints: dict[str, float] | None = None,
+        sector_constraints: dict[str, tuple[list[int], float]] | None = None,
     ) -> OptimizationResult:
         """
         Optimize portfolio weights using mean-variance framework.
@@ -121,9 +123,9 @@ class MeanVarianceOptimizer:
 
             # Set default constraints
             constraints = weight_constraints or {}
-            min_weight = constraints.get('min_weight', 0.0)
-            max_weight = constraints.get('max_weight', 1.0)
-            max_positions = constraints.get('max_positions', n_assets)
+            min_weight = constraints.get("min_weight", 0.0)
+            max_weight = constraints.get("max_weight", 1.0)
+            max_positions = constraints.get("max_positions", n_assets)
 
             # Define optimization variables
             w = cp.Variable(n_assets)
@@ -173,7 +175,7 @@ class MeanVarianceOptimizer:
 
             elif objective == "max_return":
                 # Maximize return with risk constraint
-                max_vol = constraints.get('max_volatility', 0.2)
+                max_vol = constraints.get("max_volatility", 0.2)
                 constraint_list.append(portfolio_vol <= max_vol)
                 objective = cp.Maximize(portfolio_return)
 
@@ -217,7 +219,7 @@ class MeanVarianceOptimizer:
                 method=f"mean_variance_{objective}",
                 risk_contributions=risk_contrib,
                 diversification_ratio=div_ratio,
-                metadata={'solver_status': problem.status},
+                metadata={"solver_status": problem.status},
             )
 
             self.last_result = result
@@ -261,14 +263,14 @@ class RiskParityOptimizer:
 
     def __init__(self):
         """Initialize Risk Parity Optimizer."""
-        self.last_result: Optional[OptimizationResult] = None
+        self.last_result: OptimizationResult | None = None
         logger.info("RiskParityOptimizer initialized")
 
     def optimize(
         self,
         returns: pd.DataFrame,
         risk_free_rate: float = 0.0,
-        weight_constraints: Optional[Dict[str, float]] = None,
+        weight_constraints: dict[str, float] | None = None,
         tolerance: float = 1e-8,
         max_iterations: int = 1000,
     ) -> OptimizationResult:
@@ -294,8 +296,8 @@ class RiskParityOptimizer:
 
             # Set constraints
             constraints = weight_constraints or {}
-            min_weight = constraints.get('min_weight', 0.0)
-            max_weight = constraints.get('max_weight', 1.0)
+            min_weight = constraints.get("min_weight", 0.0)
+            max_weight = constraints.get("max_weight", 1.0)
 
             # Initial guess: inverse volatility weights
             inv_vol = 1.0 / np.sqrt(np.diag(sigma))
@@ -344,17 +346,17 @@ class RiskParityOptimizer:
 
             # Constraints: fully invested, bounds
             bounds = [(min_weight, max_weight) for _ in range(n_assets)]
-            constraints_dict = {'type': 'eq', 'fun': lambda w: np.sum(w) - 1.0}
+            constraints_dict = {"type": "eq", "fun": lambda w: np.sum(w) - 1.0}
 
             # Optimize
             result = minimize(
                 _risk_parity_objective,
                 x0,
-                method='SLSQP',
+                method="SLSQP",
                 jac=_risk_parity_gradient,
                 bounds=bounds,
                 constraints=constraints_dict,
-                options={'ftol': tolerance, 'maxiter': max_iterations},
+                options={"ftol": tolerance, "maxiter": max_iterations},
             )
 
             if not result.success:
@@ -384,7 +386,7 @@ class RiskParityOptimizer:
                 sharpe_ratio=sharpe_ratio,
                 method="risk_parity",
                 risk_contributions=risk_contrib,
-                metadata={'risk_parity_score': risk_parity_score},
+                metadata={"risk_parity_score": risk_parity_score},
             )
 
             self.last_result = opt_result
@@ -429,8 +431,8 @@ class HierarchicalRiskParityOptimizer:
 
     def __init__(self):
         """Initialize HRP Optimizer."""
-        self.last_result: Optional[OptimizationResult] = None
-        self.linkage_matrix: Optional[np.ndarray] = None
+        self.last_result: OptimizationResult | None = None
+        self.linkage_matrix: np.ndarray | None = None
         logger.info("HierarchicalRiskParityOptimizer initialized")
 
     def optimize(
@@ -499,8 +501,8 @@ class HierarchicalRiskParityOptimizer:
                 risk_contributions=risk_contrib,
                 diversification_ratio=div_ratio,
                 metadata={
-                    'linkage_method': method,
-                    'distance_metric': metric,
+                    "linkage_method": method,
+                    "distance_metric": metric,
                 },
             )
 
@@ -525,7 +527,7 @@ class HierarchicalRiskParityOptimizer:
                 method="equal_weight_fallback",
             )
 
-    def _get_cluster_order(self, linkage_matrix: np.ndarray, n_items: int) -> List[int]:
+    def _get_cluster_order(self, linkage_matrix: np.ndarray, n_items: int) -> list[int]:
         """
         Get ordered list of items from hierarchical clustering.
 
@@ -540,12 +542,12 @@ class HierarchicalRiskParityOptimizer:
         # scipy.cluster.hierarchy.dendrogram and extract the order
 
         dendro = dendrogram(linkage_matrix, no_plot=True)
-        return dendro['leaves']
+        return dendro["leaves"]
 
     def _hrp_allocation(
         self,
         sigma: np.ndarray,
-        order: List[int],
+        order: list[int],
     ) -> np.ndarray:
         """
         Recursive bisection for HRP weight allocation.
@@ -561,7 +563,7 @@ class HierarchicalRiskParityOptimizer:
         weights = np.ones(n) / n
 
         # Recursive bisection
-        def _bisect_allocation(items: List[int], weights_slice: np.ndarray) -> None:
+        def _bisect_allocation(items: list[int], weights_slice: np.ndarray) -> None:
             """Recursively bisect and allocate weights."""
             if len(items) <= 1:
                 return
@@ -601,7 +603,7 @@ class HierarchicalRiskParityOptimizer:
     def _get_cluster_variance(
         self,
         sigma: np.ndarray,
-        items: List[int],
+        items: list[int],
         weights: np.ndarray,
     ) -> float:
         """Calculate cluster variance."""
@@ -637,14 +639,14 @@ class MaximumDiversificationOptimizer:
 
     def __init__(self):
         """Initialize Maximum Diversification Optimizer."""
-        self.last_result: Optional[OptimizationResult] = None
+        self.last_result: OptimizationResult | None = None
         logger.info("MaximumDiversificationOptimizer initialized")
 
     def optimize(
         self,
         returns: pd.DataFrame,
         risk_free_rate: float = 0.0,
-        weight_constraints: Optional[Dict[str, float]] = None,
+        weight_constraints: dict[str, float] | None = None,
     ) -> OptimizationResult:
         """
         Optimize for maximum diversification ratio.
@@ -666,8 +668,8 @@ class MaximumDiversificationOptimizer:
             n_assets = len(mu)
 
             constraints = weight_constraints or {}
-            min_weight = constraints.get('min_weight', 0.0)
-            max_weight = constraints.get('max_weight', 1.0)
+            min_weight = constraints.get("min_weight", 0.0)
+            max_weight = constraints.get("max_weight", 1.0)
 
             # CVXPY optimization
             w = cp.Variable(n_assets)
@@ -722,8 +724,7 @@ class MaximumDiversificationOptimizer:
             self.last_result = result
 
             logger.info(
-                f"Maximum diversification complete: "
-                f"div_ratio={div_ratio:.4f}, vol={volatility:.4f}"
+                f"Maximum diversification complete: div_ratio={div_ratio:.4f}, vol={volatility:.4f}"
             )
 
             return result
@@ -765,14 +766,14 @@ class CVaROptimizer:
             confidence_level: Confidence level for CVaR (e.g., 0.95 for 95%)
         """
         self.confidence_level = confidence_level
-        self.last_result: Optional[OptimizationResult] = None
+        self.last_result: OptimizationResult | None = None
         logger.info(f"CVaROptimizer initialized: confidence={confidence_level}")
 
     def optimize(
         self,
         returns: pd.DataFrame,
         risk_free_rate: float = 0.0,
-        weight_constraints: Optional[Dict[str, float]] = None,
+        weight_constraints: dict[str, float] | None = None,
     ) -> OptimizationResult:
         """
         Optimize portfolio for CVaR minimization.
@@ -794,8 +795,8 @@ class CVaROptimizer:
             n_scenarios, n_assets = R.shape
 
             constraints = weight_constraints or {}
-            min_weight = constraints.get('min_weight', 0.0)
-            max_weight = constraints.get('max_weight', 1.0)
+            min_weight = constraints.get("min_weight", 0.0)
+            max_weight = constraints.get("max_weight", 1.0)
 
             # CVXPY optimization
             w = cp.Variable(n_assets)
@@ -853,16 +854,16 @@ class CVaROptimizer:
                 sharpe_ratio=sharpe_ratio,
                 method="cvar_optimization",
                 metadata={
-                    'cvar': float(cvar_actual),
-                    'var': float(var),
-                    'confidence_level': self.confidence_level,
+                    "cvar": float(cvar_actual),
+                    "var": float(var),
+                    "confidence_level": self.confidence_level,
                 },
             )
 
             self.last_result = result
 
             logger.info(
-                f"CVaR optimization complete: " f"CVaR(95%)={cvar_actual:.4f}, vol={volatility:.4f}"
+                f"CVaR optimization complete: CVaR(95%)={cvar_actual:.4f}, vol={volatility:.4f}"
             )
 
             return result

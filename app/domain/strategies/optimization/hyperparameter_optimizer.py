@@ -9,7 +9,7 @@ from datetime import datetime
 from decimal import Decimal
 from itertools import product
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 import numpy as np
 import pandas as pd
@@ -62,14 +62,14 @@ class HyperparameterOptimizer:
         self.optimization_method = optimization_method
         self._data_feed_provider = data_feed_provider
 
-        self.results: List[Dict[str, Any]] = []
-        self.best_config: Optional[Dict[str, Any]] = None
-        self.best_score: float = float('-in')
+        self.results: list[dict[str, Any]] = []
+        self.best_config: Optional[dict[str, Any]] = None
+        self.best_score: float = float("-in")
 
         # Espacio de búsqueda de parámetros
         self.parameter_space = self._define_parameter_space()
 
-    def _define_parameter_space(self) -> Dict[str, Any]:
+    def _define_parameter_space(self) -> dict[str, Any]:
         """Definir espacio de búsqueda de parámetros."""
         return {
             # Presets de estrategia
@@ -105,7 +105,7 @@ class HyperparameterOptimizer:
 
     def optimize(
         self, max_iterations: int = 1000, random_seed: Optional[int] = None
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Ejecutar optimización.
 
@@ -139,8 +139,8 @@ class HyperparameterOptimizer:
         # Ejecutar backtests
         for i, config in enumerate(configs):
             try:
-                logger.info(f"\n{'='*80}")
-                logger.info(f"🔄 Iteración {i+1}/{len(configs)}")
+                logger.info(f"\n{'=' * 80}")
+                logger.info(f"🔄 Iteración {i + 1}/{len(configs)}")
                 logger.info(f"   Config: {self._config_summary(config)}")
 
                 result = self._run_backtest(config)
@@ -148,7 +148,7 @@ class HyperparameterOptimizer:
                 if result:
                     score = self._calculate_score(result)
                     self.results.append(
-                        {'iteration': i + 1, 'config': config, 'result': result, 'score': score}
+                        {"iteration": i + 1, "config": config, "result": result, "score": score}
                     )
 
                     # Actualizar mejor resultado
@@ -164,7 +164,7 @@ class HyperparameterOptimizer:
                     )
 
             except (FileNotFoundError, ValueError, KeyError, TypeError) as e:
-                logger.error(f"❌ Error en iteración {i+1}: {e}", exc_info=True)
+                logger.error(f"❌ Error en iteración {i + 1}: {e}", exc_info=True)
                 continue
 
         # Generar reporte
@@ -174,24 +174,24 @@ class HyperparameterOptimizer:
         self._save_results()
 
         return {
-            'best_config': self.best_config,
-            'best_score': self.best_score,
-            'total_iterations': len(self.results),
-            'report': report,
+            "best_config": self.best_config,
+            "best_score": self.best_score,
+            "total_iterations": len(self.results),
+            "report": report,
         }
 
-    def _generate_grid_search_configs(self, max_iterations: int) -> List[Dict[str, Any]]:
+    def _generate_grid_search_configs(self, max_iterations: int) -> list[dict[str, Any]]:
         """Generar configuraciones usando grid search."""
         configs = []
 
         # Parámetros principales (prioridad alta)
         main_params = {
-            'preset': self.parameter_space['preset'],
-            'enable_learning': self.parameter_space['enable_learning'],
-            'learning_engine_type': self.parameter_space['learning_engine_type'],
-            'rsi_buy_threshold': self.parameter_space['rsi_buy_threshold'],
-            'momentum_threshold': self.parameter_space['momentum_threshold'],
-            'volume_threshold': self.parameter_space['volume_threshold'],
+            "preset": self.parameter_space["preset"],
+            "enable_learning": self.parameter_space["enable_learning"],
+            "learning_engine_type": self.parameter_space["learning_engine_type"],
+            "rsi_buy_threshold": self.parameter_space["rsi_buy_threshold"],
+            "momentum_threshold": self.parameter_space["momentum_threshold"],
+            "volume_threshold": self.parameter_space["volume_threshold"],
         }
 
         # Generar combinaciones principales
@@ -201,91 +201,91 @@ class HyperparameterOptimizer:
             config = dict(zip(main_params.keys(), main_combo))
 
             # Añadir parámetros secundarios (valores fijos o aleatorios)
-            config['ema_fast_period'] = random.choice(self.parameter_space['ema_fast_period'])
-            config['ema_slow_period'] = random.choice(self.parameter_space['ema_slow_period'])
-            config['rsi_period'] = random.choice(self.parameter_space['rsi_period'])
-            config['rsi_sell_threshold'] = random.choice(self.parameter_space['rsi_sell_threshold'])
-            config['atr_percentile_threshold'] = random.choice(
-                self.parameter_space['atr_percentile_threshold']
+            config["ema_fast_period"] = random.choice(self.parameter_space["ema_fast_period"])
+            config["ema_slow_period"] = random.choice(self.parameter_space["ema_slow_period"])
+            config["rsi_period"] = random.choice(self.parameter_space["rsi_period"])
+            config["rsi_sell_threshold"] = random.choice(self.parameter_space["rsi_sell_threshold"])
+            config["atr_percentile_threshold"] = random.choice(
+                self.parameter_space["atr_percentile_threshold"]
             )
-            config['max_position_size'] = random.choice(self.parameter_space['max_position_size'])
+            config["max_position_size"] = random.choice(self.parameter_space["max_position_size"])
 
             # Learning algorithm
-            if config['enable_learning'] and config['learning_engine_type']:
-                learning_algos = self.parameter_space['learning_algorithm']
+            if config["enable_learning"] and config["learning_engine_type"]:
+                learning_algos = self.parameter_space["learning_algorithm"]
                 if isinstance(learning_algos, dict):
-                    algorithms = learning_algos.get(config['learning_engine_type'], [])
+                    algorithms = learning_algos.get(config["learning_engine_type"], [])
                 else:
                     algorithms = []
                 if algorithms:
-                    config['learning_algorithm'] = random.choice(algorithms)
-                    config['min_success_probability'] = random.choice(
-                        self.parameter_space['min_success_probability']
+                    config["learning_algorithm"] = random.choice(algorithms)
+                    config["min_success_probability"] = random.choice(
+                        self.parameter_space["min_success_probability"]
                     )
-                    config['rebalance_frequency_days'] = random.choice(
-                        self.parameter_space['rebalance_frequency_days']
+                    config["rebalance_frequency_days"] = random.choice(
+                        self.parameter_space["rebalance_frequency_days"]
                     )
 
             configs.append(config)
 
         return configs[:max_iterations]
 
-    def _generate_random_search_configs(self, max_iterations: int) -> List[Dict[str, Any]]:
+    def _generate_random_search_configs(self, max_iterations: int) -> list[dict[str, Any]]:
         """Generar configuraciones usando random search."""
         configs = []
 
         for _ in range(max_iterations):
             config = {
-                'preset': random.choice(self.parameter_space['preset']),
-                'enable_learning': random.choice(self.parameter_space['enable_learning']),
-                'ema_fast_period': random.choice(self.parameter_space['ema_fast_period']),
-                'ema_slow_period': random.choice(self.parameter_space['ema_slow_period']),
-                'rsi_period': random.choice(self.parameter_space['rsi_period']),
-                'rsi_buy_threshold': random.choice(self.parameter_space['rsi_buy_threshold']),
-                'rsi_sell_threshold': random.choice(self.parameter_space['rsi_sell_threshold']),
-                'stoch_rsi_oversold': random.choice(
-                    self.parameter_space.get('stoch_rsi_oversold', [20])
+                "preset": random.choice(self.parameter_space["preset"]),
+                "enable_learning": random.choice(self.parameter_space["enable_learning"]),
+                "ema_fast_period": random.choice(self.parameter_space["ema_fast_period"]),
+                "ema_slow_period": random.choice(self.parameter_space["ema_slow_period"]),
+                "rsi_period": random.choice(self.parameter_space["rsi_period"]),
+                "rsi_buy_threshold": random.choice(self.parameter_space["rsi_buy_threshold"]),
+                "rsi_sell_threshold": random.choice(self.parameter_space["rsi_sell_threshold"]),
+                "stoch_rsi_oversold": random.choice(
+                    self.parameter_space.get("stoch_rsi_oversold", [20])
                 ),
-                'stoch_rsi_overbought': random.choice(
-                    self.parameter_space.get('stoch_rsi_overbought', [80])
+                "stoch_rsi_overbought": random.choice(
+                    self.parameter_space.get("stoch_rsi_overbought", [80])
                 ),
-                'momentum_threshold': random.choice(self.parameter_space['momentum_threshold']),
-                'volume_threshold': random.choice(self.parameter_space['volume_threshold']),
-                'atr_percentile_threshold': random.choice(
-                    self.parameter_space['atr_percentile_threshold']
+                "momentum_threshold": random.choice(self.parameter_space["momentum_threshold"]),
+                "volume_threshold": random.choice(self.parameter_space["volume_threshold"]),
+                "atr_percentile_threshold": random.choice(
+                    self.parameter_space["atr_percentile_threshold"]
                 ),
-                'max_position_size': random.choice(self.parameter_space['max_position_size']),
-                'stop_loss_pct': random.choice(self.parameter_space['stop_loss_pct']),
-                'take_profit_pct': random.choice(self.parameter_space['take_profit_pct']),
+                "max_position_size": random.choice(self.parameter_space["max_position_size"]),
+                "stop_loss_pct": random.choice(self.parameter_space["stop_loss_pct"]),
+                "take_profit_pct": random.choice(self.parameter_space["take_profit_pct"]),
             }
 
             # Learning engine (si está habilitado)
-            if config['enable_learning']:
-                config['learning_engine_type'] = random.choice(
-                    self.parameter_space['learning_engine_type']
+            if config["enable_learning"]:
+                config["learning_engine_type"] = random.choice(
+                    self.parameter_space["learning_engine_type"]
                 )
-                learning_algos = self.parameter_space.get('learning_algorithm', {})
+                learning_algos = self.parameter_space.get("learning_algorithm", {})
                 if isinstance(learning_algos, dict):
-                    algorithms = learning_algos.get(config['learning_engine_type'], [])
+                    algorithms = learning_algos.get(config["learning_engine_type"], [])
                 else:
                     algorithms = []
                 if algorithms:
-                    config['learning_algorithm'] = random.choice(algorithms)
-                    config['min_success_probability'] = random.choice(
-                        self.parameter_space['min_success_probability']
+                    config["learning_algorithm"] = random.choice(algorithms)
+                    config["min_success_probability"] = random.choice(
+                        self.parameter_space["min_success_probability"]
                     )
-                    config['rebalance_frequency_days'] = random.choice(
-                        self.parameter_space['rebalance_frequency_days']
+                    config["rebalance_frequency_days"] = random.choice(
+                        self.parameter_space["rebalance_frequency_days"]
                     )
             else:
-                config['learning_engine_type'] = None
-                config['learning_algorithm'] = None
+                config["learning_engine_type"] = None
+                config["learning_algorithm"] = None
 
             configs.append(config)
 
         return configs
 
-    def _run_backtest(self, config: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    def _run_backtest(self, config: dict[str, Any]) -> Optional[dict[str, Any]]:
         """Ejecutar backtest con configuración específica."""
         try:
             # Crear configuración de estrategia
@@ -332,11 +332,11 @@ class HyperparameterOptimizer:
             for hist in historical_data:
                 df_data.append(
                     {
-                        'open': float(hist.open),
-                        'high': float(hist.high),
-                        'low': float(hist.low),
-                        'close': float(hist.close),
-                        'volume': float(hist.volume),
+                        "open": float(hist.open),
+                        "high": float(hist.high),
+                        "low": float(hist.low),
+                        "close": float(hist.close),
+                        "volume": float(hist.volume),
                     }
                 )
             df = pd.DataFrame(df_data)
@@ -354,12 +354,12 @@ class HyperparameterOptimizer:
                 quote = Quote(
                     symbol=self.symbol,
                     timestamp=idx if isinstance(idx, datetime) else pd.to_datetime(idx),
-                    bid=Decimal(str(df['close'].iloc[i])),
-                    ask=Decimal(str(df['close'].iloc[i])),
-                    volume=int(df.get('volume', pd.Series([0] * len(df))).iloc[i]),
-                    close=Decimal(str(df['close'].iloc[i])),
-                    high=Decimal(str(df.get('high', df['close']).iloc[i])),
-                    low=Decimal(str(df.get('low', df['close']).iloc[i])),
+                    bid=Decimal(str(df["close"].iloc[i])),
+                    ask=Decimal(str(df["close"].iloc[i])),
+                    volume=int(df.get("volume", pd.Series([0] * len(df))).iloc[i]),
+                    close=Decimal(str(df["close"].iloc[i])),
+                    high=Decimal(str(df.get("high", df["close"]).iloc[i])),
+                    low=Decimal(str(df.get("low", df["close"]).iloc[i])),
                 )
                 quotes.append(quote)
 
@@ -386,19 +386,19 @@ class HyperparameterOptimizer:
 
             # Extraer métricas
             return {
-                'total_pnl': float(result.performance.total_pnl),
-                'total_return': float(result.total_return),
-                'sharpe_ratio': (
+                "total_pnl": float(result.performance.total_pnl),
+                "total_return": float(result.total_return),
+                "sharpe_ratio": (
                     float(result.performance.sharpe_ratio)
                     if result.performance.sharpe_ratio
                     else 0.0
                 ),
-                'win_rate': float(result.performance.win_rate),
-                'max_drawdown': float(result.performance.max_drawdown_percentage),
-                'total_trades': result.performance.total_trades,
-                'final_capital': float(result.final_capital),
-                'annualized_return': (
-                    float(result.annualized_return) if hasattr(result, 'annualized_return') else 0.0
+                "win_rate": float(result.performance.win_rate),
+                "max_drawdown": float(result.performance.max_drawdown_percentage),
+                "total_trades": result.performance.total_trades,
+                "final_capital": float(result.final_capital),
+                "annualized_return": (
+                    float(result.annualized_return) if hasattr(result, "annualized_return") else 0.0
                 ),
             }
 
@@ -406,7 +406,7 @@ class HyperparameterOptimizer:
             logger.error(f"Error ejecutando backtest: {e}", exc_info=True)
             return None
 
-    def _build_strategy_config(self, config: Dict[str, Any]) -> Dict[str, Any]:
+    def _build_strategy_config(self, config: dict[str, Any]) -> dict[str, Any]:
         """Construir configuración completa de estrategia desde parámetros."""
         # Cargar configuración base desde YAML
         from pathlib import Path
@@ -419,113 +419,113 @@ class HyperparameterOptimizer:
             / "strategies"
             / "momentum_modular.yaml"
         )
-        base_config: Dict[str, Any] = {}
+        base_config: dict[str, Any] = {}
         if config_path.exists():
-            with open(config_path, 'r') as f:
+            with open(config_path) as f:
                 base_config = yaml.safe_load(f) or {}
 
         # Aplicar parámetros de optimización
         strategy_config = base_config.copy()
-        strategy_config['preset'] = config.get('preset', 'balanced')
+        strategy_config["preset"] = config.get("preset", "balanced")
 
         # Ajustar parámetros de módulos
-        if 'modules' not in strategy_config:
-            strategy_config['modules'] = {}
+        if "modules" not in strategy_config:
+            strategy_config["modules"] = {}
 
         # EMA Filter
-        if 'ema_filter' in strategy_config['modules']:
-            ema_params = strategy_config['modules']['ema_filter'].get('parameters', {})
-            ema_params['fast_period'] = config.get('ema_fast_period', 12)
-            ema_params['slow_period'] = config.get('ema_slow_period', 26)
+        if "ema_filter" in strategy_config["modules"]:
+            ema_params = strategy_config["modules"]["ema_filter"].get("parameters", {})
+            ema_params["fast_period"] = config.get("ema_fast_period", 12)
+            ema_params["slow_period"] = config.get("ema_slow_period", 26)
 
         # RSI Filter - FIXED: Now using buy_threshold and sell_threshold
-        if 'rsi_filter' in strategy_config['modules']:
-            rsi_params = strategy_config['modules']['rsi_filter'].get('parameters', {})
-            rsi_params['period'] = config.get('rsi_period', 14)
+        if "rsi_filter" in strategy_config["modules"]:
+            rsi_params = strategy_config["modules"]["rsi_filter"].get("parameters", {})
+            rsi_params["period"] = config.get("rsi_period", 14)
             # Update adaptive thresholds with new single-value format
-            thresholds = strategy_config['modules']['rsi_filter'].get('adaptive_thresholds', {})
+            thresholds = strategy_config["modules"]["rsi_filter"].get("adaptive_thresholds", {})
             for context in thresholds:
-                thresholds[context]['buy_threshold'] = config.get('rsi_buy_threshold', 30)
-                thresholds[context]['sell_threshold'] = config.get('rsi_sell_threshold', 70)
+                thresholds[context]["buy_threshold"] = config.get("rsi_buy_threshold", 30)
+                thresholds[context]["sell_threshold"] = config.get("rsi_sell_threshold", 70)
 
         # StochRSI Filter - FIXED: Now using oversold_threshold and overbought_threshold
-        if 'stoch_rsi_filter' in strategy_config['modules']:
-            thresholds = strategy_config['modules']['stoch_rsi_filter'].get('thresholds', {})
-            for preset in ['conservative', 'balanced', 'aggressive']:
+        if "stoch_rsi_filter" in strategy_config["modules"]:
+            thresholds = strategy_config["modules"]["stoch_rsi_filter"].get("thresholds", {})
+            for preset in ["conservative", "balanced", "aggressive"]:
                 if preset in thresholds:
-                    thresholds[preset]['oversold_threshold'] = config.get('stoch_rsi_oversold', 20)
-                    thresholds[preset]['overbought_threshold'] = config.get(
-                        'stoch_rsi_overbought', 80
+                    thresholds[preset]["oversold_threshold"] = config.get("stoch_rsi_oversold", 20)
+                    thresholds[preset]["overbought_threshold"] = config.get(
+                        "stoch_rsi_overbought", 80
                     )
 
         # Momentum Filter
-        if 'momentum_filter' in strategy_config['modules']:
-            mom_params = strategy_config['modules']['momentum_filter'].get('thresholds', {})
-            for preset in ['conservative', 'balanced', 'aggressive']:
+        if "momentum_filter" in strategy_config["modules"]:
+            mom_params = strategy_config["modules"]["momentum_filter"].get("thresholds", {})
+            for preset in ["conservative", "balanced", "aggressive"]:
                 if preset in mom_params:
-                    mom_params[preset]['min_positive_momentum'] = config.get(
-                        'momentum_threshold', 0.015
+                    mom_params[preset]["min_positive_momentum"] = config.get(
+                        "momentum_threshold", 0.015
                     )
 
         # Volume Filter
-        if 'volume_filter' in strategy_config['modules']:
-            vol_params = strategy_config['modules']['volume_filter'].get('parameters', {})
-            vol_params['min_volume_ratio'] = config.get('volume_threshold', 1.1)
+        if "volume_filter" in strategy_config["modules"]:
+            vol_params = strategy_config["modules"]["volume_filter"].get("parameters", {})
+            vol_params["min_volume_ratio"] = config.get("volume_threshold", 1.1)
 
         # ATR Filter
-        if 'atr_filter' in strategy_config['modules']:
-            atr_params = strategy_config['modules']['atr_filter'].get('parameters', {})
-            atr_params['percentile_threshold'] = config.get('atr_percentile_threshold', 60)
+        if "atr_filter" in strategy_config["modules"]:
+            atr_params = strategy_config["modules"]["atr_filter"].get("parameters", {})
+            atr_params["percentile_threshold"] = config.get("atr_percentile_threshold", 60)
 
         # Risk parameters
-        strategy_config['max_position_size'] = config.get('max_position_size', 0.10)
-        strategy_config['stop_loss_pct'] = config.get('stop_loss_pct', 0.025)
-        strategy_config['take_profit_pct'] = config.get('take_profit_pct', 0.08)
+        strategy_config["max_position_size"] = config.get("max_position_size", 0.10)
+        strategy_config["stop_loss_pct"] = config.get("stop_loss_pct", 0.025)
+        strategy_config["take_profit_pct"] = config.get("take_profit_pct", 0.08)
 
         # Learning engine
-        if config.get('enable_learning', False):
-            if 'adaptive_learning' not in strategy_config:
-                strategy_config['adaptive_learning'] = {}
-            strategy_config['adaptive_learning']['enabled'] = True
-            strategy_config['adaptive_learning']['engine_type'] = config.get(
-                'learning_engine_type', 'supervised'
+        if config.get("enable_learning", False):
+            if "adaptive_learning" not in strategy_config:
+                strategy_config["adaptive_learning"] = {}
+            strategy_config["adaptive_learning"]["enabled"] = True
+            strategy_config["adaptive_learning"]["engine_type"] = config.get(
+                "learning_engine_type", "supervised"
             )
-            strategy_config['adaptive_learning']['algorithm'] = config.get(
-                'learning_algorithm', 'random_forest'
+            strategy_config["adaptive_learning"]["algorithm"] = config.get(
+                "learning_algorithm", "random_forest"
             )
-            strategy_config['adaptive_learning']['min_success_probability'] = config.get(
-                'min_success_probability', 0.6
+            strategy_config["adaptive_learning"]["min_success_probability"] = config.get(
+                "min_success_probability", 0.6
             )
-            strategy_config['adaptive_learning']['rebalance_frequency_days'] = config.get(
-                'rebalance_frequency_days', 7
+            strategy_config["adaptive_learning"]["rebalance_frequency_days"] = config.get(
+                "rebalance_frequency_days", 7
             )
 
         return strategy_config
 
-    def _calculate_score(self, result: Dict[str, Any]) -> float:
+    def _calculate_score(self, result: dict[str, Any]) -> float:
         """Calcular score basado en métrica objetivo."""
         if self.optimization_metric == "sharpe_ratio":
-            return result.get('sharpe_ratio', 0.0)
+            return result.get("sharpe_ratio", 0.0)
         elif self.optimization_metric == "total_pnl":
-            return result.get('total_pnl', 0.0)
+            return result.get("total_pnl", 0.0)
         elif self.optimization_metric == "win_rate":
-            return result.get('win_rate', 0.0)
+            return result.get("win_rate", 0.0)
         elif self.optimization_metric == "combined":
             # Score combinado: Sharpe * 0.4 + PnL_norm * 0.3 + WinRate_norm * 0.3
-            sharpe = max(0, result.get('sharpe_ratio', 0.0))
-            pnl_norm = result.get('total_pnl', 0.0) / 10000.0  # Normalizar
-            win_rate_norm = result.get('win_rate', 0.0) / 100.0
+            sharpe = max(0, result.get("sharpe_ratio", 0.0))
+            pnl_norm = result.get("total_pnl", 0.0) / 10000.0  # Normalizar
+            win_rate_norm = result.get("win_rate", 0.0) / 100.0
             return sharpe * 0.4 + pnl_norm * 0.3 + win_rate_norm * 0.3
         else:
-            return result.get('sharpe_ratio', 0.0)
+            return result.get("sharpe_ratio", 0.0)
 
-    def _config_summary(self, config: Dict[str, Any]) -> str:
+    def _config_summary(self, config: dict[str, Any]) -> str:
         """Resumen de configuración para logging."""
         parts = [
             f"preset={config.get('preset')}",
             f"learning={config.get('enable_learning')}",
         ]
-        if config.get('enable_learning'):
+        if config.get("enable_learning"):
             parts.append(f"engine={config.get('learning_engine_type')}")
         parts.extend(
             [
@@ -546,19 +546,19 @@ class HyperparameterOptimizer:
         report_data = []
         for res in self.results:
             row = {
-                'iteration': res['iteration'],
-                'score': res['score'],
-                'total_pnl': res['result'].get('total_pnl', 0),
-                'sharpe_ratio': res['result'].get('sharpe_ratio', 0),
-                'win_rate': res['result'].get('win_rate', 0),
-                'total_trades': res['result'].get('total_trades', 0),
-                'max_drawdown': res['result'].get('max_drawdown', 0),
-                **res['config'],
+                "iteration": res["iteration"],
+                "score": res["score"],
+                "total_pnl": res["result"].get("total_pnl", 0),
+                "sharpe_ratio": res["result"].get("sharpe_ratio", 0),
+                "win_rate": res["result"].get("win_rate", 0),
+                "total_trades": res["result"].get("total_trades", 0),
+                "max_drawdown": res["result"].get("max_drawdown", 0),
+                **res["config"],
             }
             report_data.append(row)
 
         df = pd.DataFrame(report_data)
-        df = df.sort_values('score', ascending=False)
+        df = df.sort_values("score", ascending=False)
 
         return df
 
@@ -572,16 +572,16 @@ class HyperparameterOptimizer:
         # Guardar mejor configuración
         if self.best_config:
             best_config_file = results_dir / f"best_config_{self.symbol}_{timestamp}.json"
-            with open(best_config_file, 'w') as f:
+            with open(best_config_file, "w") as f:
                 json.dump(
                     {
-                        'symbol': self.symbol,
-                        'start_date': self.start_date.isoformat(),
-                        'end_date': self.end_date.isoformat(),
-                        'optimization_metric': self.optimization_metric,
-                        'best_score': self.best_score,
-                        'best_config': self.best_config,
-                        'total_iterations': len(self.results),
+                        "symbol": self.symbol,
+                        "start_date": self.start_date.isoformat(),
+                        "end_date": self.end_date.isoformat(),
+                        "optimization_metric": self.optimization_metric,
+                        "best_score": self.best_score,
+                        "best_config": self.best_config,
+                        "total_iterations": len(self.results),
                     },
                     f,
                     indent=2,
@@ -597,9 +597,9 @@ class HyperparameterOptimizer:
 
             # Guardar resumen
             summary_file = results_dir / f"summary_{self.symbol}_{timestamp}.txt"
-            with open(summary_file, 'w') as f:
+            with open(summary_file, "w") as f:
                 f.write("Optimización de Hiperparámetros\n")
-                f.write(f"{'='*80}\n\n")
+                f.write(f"{'=' * 80}\n\n")
                 f.write(f"Símbolo: {self.symbol}\n")
                 f.write(f"Período: {self.start_date.date()} - {self.end_date.date()}\n")
                 f.write(f"Métrica objetivo: {self.optimization_metric}\n")

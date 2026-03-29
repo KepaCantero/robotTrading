@@ -7,7 +7,7 @@ Servicio para calcular slippage dinámico basado en volatilidad del mercado y li
 
 import logging
 from decimal import Decimal
-from typing import Dict, List, Optional
+from typing import Optional
 
 import numpy as np
 
@@ -36,7 +36,7 @@ class VolatilityCalculator:
         # Load trading thresholds for volatility trend thresholds
         self._tt = get_config().trading_thresholds
 
-    def calculate_volatility(self, price_history: List[Decimal]) -> VolatilityMetrics:
+    def calculate_volatility(self, price_history: list[Decimal]) -> VolatilityMetrics:
         """Calcular métricas de volatilidad."""
         logger.debug(
             "Calculating volatility metrics", extra={"price_history_length": len(price_history)}
@@ -263,7 +263,7 @@ class DynamicSlippageService:
         self.volatility_calculator = VolatilityCalculator(self.params.volatility_lookback_days)
         self.liquidity_calculator = LiquidityCalculator()
         self.order_size_calculator = OrderSizeCalculator()
-        self.slippage_history: Dict[str, SlippageHistory] = {}
+        self.slippage_history: dict[str, SlippageHistory] = {}
         logger.info(
             "DynamicSlippageService initialized",
             extra={"volatility_lookback_days": self.params.volatility_lookback_days},
@@ -276,7 +276,7 @@ class DynamicSlippageService:
         order_side: str,
         order_size: Decimal,
         quote: Quote,
-        price_history: List[Decimal],
+        price_history: list[Decimal],
         volume_24h: Decimal,
         order_book_depth: Decimal,
         market_cap: Decimal,
@@ -348,7 +348,7 @@ class DynamicSlippageService:
         volatility_metrics: VolatilityMetrics,
         liquidity_metrics: LiquidityMetrics,
         order_size_impact: OrderSizeImpact,
-    ) -> List[SlippageComponent]:
+    ) -> list[SlippageComponent]:
         """Calcular componentes individuales de slippage."""
         components = []
 
@@ -377,7 +377,7 @@ class DynamicSlippageService:
         # Get market stress threshold from config
         config = get_config()
         market_stress_threshold = Decimal(
-            str(getattr(config.trading, 'slippage_market_stress_threshold', 0.01))
+            str(getattr(config.trading, "slippage_market_stress_threshold", 0.01))
         )
 
         base_impact = float(order_size_impact.market_cap_ratio) * 100
@@ -428,9 +428,9 @@ class DynamicSlippageService:
         """Calcular ajuste por volatilidad usando config."""
         # Get volatility adjustment factors from config
         config = get_config()
-        adj_extreme = Decimal(str(getattr(config.trading, 'slippage_vol_adjustment_extreme', 2.0)))
-        adj_high = Decimal(str(getattr(config.trading, 'slippage_vol_adjustment_high', 1.0)))
-        adj_normal = Decimal(str(getattr(config.trading, 'slippage_vol_adjustment_normal', 0.2)))
+        adj_extreme = Decimal(str(getattr(config.trading, "slippage_vol_adjustment_extreme", 2.0)))
+        adj_high = Decimal(str(getattr(config.trading, "slippage_vol_adjustment_high", 1.0)))
+        adj_normal = Decimal(str(getattr(config.trading, "slippage_vol_adjustment_normal", 0.2)))
 
         if volatility_metrics.volatility_regime == MarketCondition.EXTREME_EVENTS:
             adjustment = adj_extreme
@@ -447,7 +447,7 @@ class DynamicSlippageService:
             calculation_method="volatility_adjustment_v1",
         )
 
-    def _calculate_total_slippage(self, components: List[SlippageComponent]) -> Decimal:
+    def _calculate_total_slippage(self, components: list[SlippageComponent]) -> Decimal:
         """Calcular slippage total."""
         # Sumar componentes con pesos
         total = Decimal("0")
@@ -485,7 +485,7 @@ class DynamicSlippageService:
         else:
             return MarketCondition.NORMAL
 
-    def _calculate_confidence(self, components: List[SlippageComponent]) -> float:
+    def _calculate_confidence(self, components: list[SlippageComponent]) -> float:
         """Calcular confianza en el cálculo."""
         if not components:
             return 0.5

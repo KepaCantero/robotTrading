@@ -16,10 +16,12 @@ from __future__ import annotations
 import logging
 from dataclasses import dataclass
 from decimal import Decimal
-from typing import Any, Dict, List, Optional, Tuple
+from typing import TYPE_CHECKING, Any
 
 import numpy as np
-import pandas as pd
+
+if TYPE_CHECKING:
+    import pandas as pd
 
 logger = logging.getLogger(__name__)
 
@@ -39,35 +41,35 @@ class OrderBookSnapshot:
 
     symbol: str
     timestamp: pd.Timestamp
-    bids: List[OrderBookLevel]
-    asks: List[OrderBookLevel]
+    bids: list[OrderBookLevel]
+    asks: list[OrderBookLevel]
 
     @property
-    def best_bid(self) -> Optional[Decimal]:
+    def best_bid(self) -> Decimal | None:
         """Best bid price."""
         return self.bids[0].price if self.bids else None
 
     @property
-    def best_ask(self) -> Optional[Decimal]:
+    def best_ask(self) -> Decimal | None:
         """Best ask price."""
         return self.asks[0].price if self.asks else None
 
     @property
-    def mid_price(self) -> Optional[Decimal]:
+    def mid_price(self) -> Decimal | None:
         """Mid price."""
         if self.best_bid and self.best_ask:
             return (self.best_bid + self.best_ask) / 2
         return None
 
     @property
-    def spread(self) -> Optional[Decimal]:
+    def spread(self) -> Decimal | None:
         """Bid-ask spread."""
         if self.best_bid and self.best_ask:
             return self.best_ask - self.best_bid
         return None
 
     @property
-    def spread_bps(self) -> Optional[Decimal]:
+    def spread_bps(self) -> Decimal | None:
         """Spread in basis points."""
         if self.mid_price and self.spread:
             return (self.spread / self.mid_price) * Decimal("10000")
@@ -92,13 +94,13 @@ class BookAnalysisResult:
     depth_imbalance: Decimal
 
     # Effective spreads for different sizes
-    effective_spread_100: Optional[Decimal]  # For 100 shares
-    effective_spread_1000: Optional[Decimal]  # For 1000 shares
-    effective_spread_5000: Optional[Decimal]  # For 5000 shares
+    effective_spread_100: Decimal | None  # For 100 shares
+    effective_spread_1000: Decimal | None  # For 1000 shares
+    effective_spread_5000: Decimal | None  # For 5000 shares
 
     # Slope metrics (price impact per share)
-    bid_slope: Optional[float]
-    ask_slope: Optional[float]
+    bid_slope: float | None
+    ask_slope: float | None
 
     # Liquidity quality
     liquidity_score: float  # 0-100, higher = better
@@ -118,7 +120,7 @@ class OrderBookAnalyzer:
         self,
         min_levels: int = 5,
         max_levels: int = 20,
-        min_liquidity_threshold: Optional[Decimal] = None,
+        min_liquidity_threshold: Decimal | None = None,
     ):
         """
         Initialize analyzer.
@@ -139,7 +141,7 @@ class OrderBookAnalyzer:
     def analyze_order_book(
         self,
         snapshot: OrderBookSnapshot,
-        target_sizes: Optional[List[Decimal]] = None,
+        target_sizes: list[Decimal] | None = None,
     ) -> BookAnalysisResult:
         """
         Analyze order book depth and quality.
@@ -234,7 +236,7 @@ class OrderBookAnalyzer:
         self,
         snapshot: OrderBookSnapshot,
         quantity: Decimal,
-    ) -> Optional[Decimal]:
+    ) -> Decimal | None:
         """
         Calculate effective spread for crossing the book.
 
@@ -281,7 +283,7 @@ class OrderBookAnalyzer:
     def _calculate_slopes(
         self,
         snapshot: OrderBookSnapshot,
-    ) -> Tuple[Optional[float], Optional[float]]:
+    ) -> tuple[float | None, float | None]:
         """
         Calculate order book slopes.
 
@@ -303,20 +305,18 @@ class OrderBookAnalyzer:
             bid_cumsum = np.cumsum(bid_sizes)
 
             # Linear regression of price vs cumulative size
-            if len(bid_cumsum) > 1:
-                bid_slope = -np.polyfit(bid_cumsum, bid_prices, 1)[0]  # Negative slope
-            else:
-                bid_slope = None
+            bid_slope = (
+                -np.polyfit(bid_cumsum, bid_prices, 1)[0] if len(bid_cumsum) > 1 else None
+            )  # Negative slope
 
             # Ask slope: price increase per additional share
             ask_prices = [float(level.price) for level in snapshot.asks[:10]]
             ask_sizes = [float(level.size) for level in snapshot.asks[:10]]
             ask_cumsum = np.cumsum(ask_sizes)
 
-            if len(ask_cumsum) > 1:
-                ask_slope = np.polyfit(ask_cumsum, ask_prices, 1)[0]  # Positive slope
-            else:
-                ask_slope = None
+            ask_slope = (
+                np.polyfit(ask_cumsum, ask_prices, 1)[0] if len(ask_cumsum) > 1 else None
+            )  # Positive slope
 
             return bid_slope, ask_slope
 
@@ -369,9 +369,9 @@ class OrderBookAnalyzer:
 
     def detect_liquidity_regime(
         self,
-        historical_snapshots: List[OrderBookSnapshot],
+        historical_snapshots: list[OrderBookSnapshot],
         window_size: int = 100,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Detect current liquidity regime.
 
@@ -421,7 +421,7 @@ _order_book_analyzer: OrderBookAnalyzer = None
 def get_order_book_analyzer(
     min_levels: int = 5,
     max_levels: int = 20,
-    min_liquidity_threshold: Optional[Decimal] = None,
+    min_liquidity_threshold: Decimal | None = None,
 ) -> OrderBookAnalyzer:
     """Get or create global OrderBookAnalyzer instance."""
     if min_liquidity_threshold is None:

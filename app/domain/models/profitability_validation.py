@@ -9,7 +9,7 @@ import logging
 from datetime import date, datetime
 from decimal import Decimal
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 from pydantic import BaseModel, Field, field_validator
 
@@ -188,9 +188,9 @@ class ProfitabilityValidation(BaseModel):
 
     # Resultado de la validación
     status: ValidationStatus = Field(..., description="Estado de la validación")
-    passed_tests: List[str] = Field(default_factory=list, description="Tests que pasaron")
-    failed_tests: List[str] = Field(default_factory=list, description="Tests que fallaron")
-    warnings: List[str] = Field(default_factory=list, description="Advertencias")
+    passed_tests: list[str] = Field(default_factory=list, description="Tests que pasaron")
+    failed_tests: list[str] = Field(default_factory=list, description="Tests que fallaron")
+    warnings: list[str] = Field(default_factory=list, description="Advertencias")
 
     # Análisis adicional
     is_profitable: bool = Field(..., description="¿Es rentable la estrategia?")
@@ -220,7 +220,7 @@ class ValidationRequest(BaseModel):
     period_start: date = Field(..., description="Inicio del período")
     period_end: date = Field(..., description="Fin del período")
     initial_capital: Decimal = Field(..., description="Capital inicial")
-    trades_data: List[Dict[str, Any]] = Field(..., description="Datos de trades")
+    trades_data: list[dict[str, Any]] = Field(..., description="Datos de trades")
     criteria: Optional[ValidationCriteria] = Field(None, description="Criterios personalizados")
 
     @field_validator("initial_capital")
@@ -235,9 +235,9 @@ class ValidationResponse(BaseModel):
     """Response de validación de rentabilidad."""
 
     validation: ProfitabilityValidation = Field(..., description="Resultado de la validación")
-    summary: Dict[str, Any] = Field(..., description="Resumen de la validación")
-    recommendations: List[str] = Field(..., description="Recomendaciones")
-    next_steps: List[str] = Field(..., description="Próximos pasos")
+    summary: dict[str, Any] = Field(..., description="Resumen de la validación")
+    recommendations: list[str] = Field(..., description="Recomendaciones")
+    next_steps: list[str] = Field(..., description="Próximos pasos")
 
 
 class StrategyComparison(BaseModel):
@@ -246,21 +246,21 @@ class StrategyComparison(BaseModel):
     comparison_date: datetime = Field(
         default_factory=datetime.now, description="Fecha de comparación"
     )
-    strategies: List[ProfitabilityValidation] = Field(
+    strategies: list[ProfitabilityValidation] = Field(
         ..., description="Validaciones de estrategias"
     )
     best_strategy: str = Field(..., description="Mejor estrategia")
     worst_strategy: str = Field(..., description="Peor estrategia")
     average_metrics: ProfitabilityMetrics = Field(..., description="Métricas promedio")
-    ranking: List[Dict[str, Any]] = Field(..., description="Ranking de estrategias")
+    ranking: list[dict[str, Any]] = Field(..., description="Ranking de estrategias")
 
 
 class HistoricalValidation(BaseModel):
     """Validación histórica de una estrategia."""
 
     strategy_name: str = Field(..., description="Nombre de la estrategia")
-    validations: List[ProfitabilityValidation] = Field(..., description="Validaciones históricas")
-    trend_analysis: Dict[str, Any] = Field(..., description="Análisis de tendencias")
+    validations: list[ProfitabilityValidation] = Field(..., description="Validaciones históricas")
+    trend_analysis: dict[str, Any] = Field(..., description="Análisis de tendencias")
     stability_score: Decimal = Field(..., description="Score de estabilidad (0-100)")
     consistency_rating: str = Field(..., description="Rating de consistencia")
 
@@ -269,7 +269,7 @@ class ValidationReport(BaseModel):
     """Reporte completo de validación de rentabilidad."""
 
     report_date: datetime = Field(default_factory=datetime.now, description="Fecha del reporte")
-    strategy_validations: List[ProfitabilityValidation] = Field(
+    strategy_validations: list[ProfitabilityValidation] = Field(
         ..., description="Validaciones de estrategias"
     )
     strategy_comparison: Optional[StrategyComparison] = Field(
@@ -280,4 +280,4 @@ class ValidationReport(BaseModel):
     )
     overall_assessment: str = Field(..., description="Evaluación general")
     risk_assessment: str = Field(..., description="Evaluación de riesgo")
-    recommendations: List[str] = Field(..., description="Recomendaciones generales")
+    recommendations: list[str] = Field(..., description="Recomendaciones generales")

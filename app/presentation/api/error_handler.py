@@ -19,14 +19,15 @@ GAP Fix: API-008
 from __future__ import annotations
 
 import logging
-from typing import Any, Dict, Optional
-
-from fastapi import HTTPException, Request
-from fastapi.exceptions import RequestValidationError
-from pydantic import ValidationError
-from starlette.exceptions import HTTPException as StarletteHTTPException
+from typing import TYPE_CHECKING, Any
 
 from . import get_correlation_id
+
+if TYPE_CHECKING:
+    from fastapi import HTTPException, Request
+    from fastapi.exceptions import RequestValidationError
+    from pydantic import ValidationError
+    from starlette.exceptions import HTTPException as StarletteHTTPException
 
 logger = logging.getLogger(__name__)
 
@@ -35,9 +36,9 @@ def log_exception_context(
     error_type: str,
     error_message: str,
     request: Request,
-    status_code: Optional[int] = None,
-    exc: Optional[Exception] = None,
-    additional_context: Optional[Dict[str, Any]] = None,
+    status_code: int | None = None,
+    exc: Exception | None = None,
+    additional_context: dict[str, Any] | None = None,
 ) -> None:
     """
     Log exception with full context including correlation ID.
@@ -52,7 +53,7 @@ def log_exception_context(
     """
     correlation_id = get_correlation_id()
 
-    log_data: Dict[str, Any] = {
+    log_data: dict[str, Any] = {
         "event_type": "api_exception",
         "correlation_id": correlation_id,
         "error_type": error_type,
@@ -329,7 +330,7 @@ async def key_error_handler(request: Request, exc: KeyError) -> JSONResponse:
     """
     log_exception_context(
         error_type="KeyError",
-        error_message=f"Missing required key: {str(exc)}",
+        error_message=f"Missing required key: {exc!s}",
         request=request,
         status_code=400,
         exc=exc,
@@ -340,7 +341,7 @@ async def key_error_handler(request: Request, exc: KeyError) -> JSONResponse:
         content={
             "error": {
                 "type": "KeyError",
-                "message": f"Missing required field: {str(exc)}",
+                "message": f"Missing required field: {exc!s}",
                 "correlation_id": get_correlation_id(),
             }
         },
@@ -444,15 +445,15 @@ async def index_error_handler(request: Request, exc: IndexError) -> JSONResponse
 from fastapi.responses import JSONResponse
 
 __all__ = [
-    "http_exception_handler",
-    "starlette_http_exception_handler",
-    "validation_exception_handler",
-    "pydantic_validation_exception_handler",
-    "generic_exception_handler",
-    "value_error_handler",
-    "key_error_handler",
-    "type_error_handler",
     "attribute_error_handler",
+    "generic_exception_handler",
+    "http_exception_handler",
     "index_error_handler",
+    "key_error_handler",
     "log_exception_context",
+    "pydantic_validation_exception_handler",
+    "starlette_http_exception_handler",
+    "type_error_handler",
+    "validation_exception_handler",
+    "value_error_handler",
 ]

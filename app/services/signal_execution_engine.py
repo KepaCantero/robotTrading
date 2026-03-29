@@ -9,7 +9,7 @@ import asyncio
 import logging
 from datetime import datetime
 from decimal import Decimal
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Optional
 
 from app.domain.models.order import Order, OrderSide, OrderStatus, OrderType
 from app.domain.models.portfolio import Portfolio
@@ -49,7 +49,7 @@ class SignalExecutionEngine:
         self.total_execution_time_ms = 0.0
 
         # Historial de ejecuciones
-        self.execution_history: List[Dict[str, Any]] = []
+        self.execution_history: list[dict[str, Any]] = []
 
         # Store config for simulated latency
         self._simulated_latency_seconds = tt.simulated_latency_ms / 1000.0
@@ -60,7 +60,7 @@ class SignalExecutionEngine:
         position_size: Decimal,
         portfolio: Portfolio,
         execution_callback: Optional[callable] = None,
-    ) -> Tuple[bool, Dict[str, Any]]:
+    ) -> tuple[bool, dict[str, Any]]:
         """
         Ejecutar una señal de trading.
 
@@ -137,7 +137,7 @@ class SignalExecutionEngine:
 
     def _validate_signal_for_execution(
         self, signal: Signal, position_size: Decimal
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Validar señal antes de ejecutar."""
         validation_errors = []
 
@@ -172,10 +172,7 @@ class SignalExecutionEngine:
         quantity = position_size / signal.price
 
         # Determinar lado de la orden
-        if signal.signal_type == SignalType.BUY:
-            side = OrderSide.BUY
-        else:
-            side = OrderSide.SELL
+        side = OrderSide.BUY if signal.signal_type == SignalType.BUY else OrderSide.SELL
 
         # Crear orden
         order = Order(
@@ -195,7 +192,7 @@ class SignalExecutionEngine:
         order: Order,
         portfolio: Portfolio,
         execution_callback: Optional[callable] = None,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Ejecutar orden."""
         try:
             if execution_callback:
@@ -215,7 +212,7 @@ class SignalExecutionEngine:
                 "order_status": OrderStatus.FAILED,
             }
 
-    async def _simulate_order_execution(self, order: Order, portfolio: Portfolio) -> Dict[str, Any]:
+    async def _simulate_order_execution(self, order: Order, portfolio: Portfolio) -> dict[str, Any]:
         """Simular ejecución de orden - use config for latency."""
         # Simular latencia de ejecución - use config value
         await asyncio.sleep(self._simulated_latency_seconds)
@@ -231,7 +228,7 @@ class SignalExecutionEngine:
             "execution_time": datetime.utcnow(),
         }
 
-    def _add_to_history(self, execution_details: Dict[str, Any]) -> None:
+    def _add_to_history(self, execution_details: dict[str, Any]) -> None:
         """Agregar ejecución al historial."""
         self.execution_history.append(execution_details)
 
@@ -239,7 +236,7 @@ class SignalExecutionEngine:
         if len(self.execution_history) > self.max_history_size:
             self.execution_history = self.execution_history[-self.max_history_size :]
 
-    def get_execution_statistics(self) -> Dict[str, Any]:
+    def get_execution_statistics(self) -> dict[str, Any]:
         """Obtener estadísticas de ejecución."""
         total_executions = self.executions_attempted
         success_rate = (
@@ -261,11 +258,11 @@ class SignalExecutionEngine:
             "max_latency_ms": self.max_latency_ms,
         }
 
-    def get_recent_executions(self, limit: int = 10) -> List[Dict[str, Any]]:
+    def get_recent_executions(self, limit: int = 10) -> list[dict[str, Any]]:
         """Obtener ejecuciones recientes."""
         return self.execution_history[-limit:] if self.execution_history else []
 
-    def get_executions_by_symbol(self, symbol: str) -> List[Dict[str, Any]]:
+    def get_executions_by_symbol(self, symbol: str) -> list[dict[str, Any]]:
         """Obtener ejecuciones por símbolo."""
         return [
             execution for execution in self.execution_history if execution.get("symbol") == symbol

@@ -6,7 +6,7 @@ TA-Lib provides 200+ technical indicators for price and volume analysis.
 
 import logging
 from decimal import Decimal
-from typing import Dict, List, Optional, Tuple
+from typing import Optional
 
 from requests.exceptions import HTTPError, RequestException
 
@@ -28,11 +28,11 @@ class TALibWrapper:
     def __init__(self):
         """Initialize TA-Lib wrapper."""
         self.available_indicators = self._get_available_indicators()
-        self.calculated_indicators: Dict[str, Dict] = {}
+        self.calculated_indicators: dict[str, dict] = {}
         self.connected = False
         logger.info(f"✅ TALibWrapper initialized ({len(self.available_indicators)} indicators)")
 
-    def _get_available_indicators(self) -> Dict[str, List[str]]:
+    def _get_available_indicators(self) -> dict[str, list[str]]:
         """Get list of available indicators by category."""
         return {
             "trend": [
@@ -85,15 +85,15 @@ class TALibWrapper:
             logger.info("✅ Connected to TA-Lib")
             return True
         except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
-            logger.error(f"❌ Failed to connect to TA-Lib: {str(e)}")
+            logger.error(f"❌ Failed to connect to TA-Lib: {e!s}")
             self.connected = False
             return False
 
     async def calculate_sma(
         self,
-        prices: List[Decimal],
+        prices: list[Decimal],
         period: int = 20,
-    ) -> List[Decimal]:
+    ) -> list[Decimal]:
         """
         Calculate Simple Moving Average.
 
@@ -117,9 +117,9 @@ class TALibWrapper:
 
     async def calculate_ema(
         self,
-        prices: List[Decimal],
+        prices: list[Decimal],
         period: int = 20,
-    ) -> List[Decimal]:
+    ) -> list[Decimal]:
         """
         Calculate Exponential Moving Average.
 
@@ -149,9 +149,9 @@ class TALibWrapper:
 
     async def calculate_rsi(
         self,
-        prices: List[Decimal],
+        prices: list[Decimal],
         period: int = 14,
-    ) -> List[Decimal]:
+    ) -> list[Decimal]:
         """
         Calculate Relative Strength Index.
 
@@ -192,11 +192,11 @@ class TALibWrapper:
 
     async def calculate_atr(
         self,
-        highs: List[Decimal],
-        lows: List[Decimal],
-        closes: List[Decimal],
+        highs: list[Decimal],
+        lows: list[Decimal],
+        closes: list[Decimal],
         period: int = 14,
-    ) -> List[Decimal]:
+    ) -> list[Decimal]:
         """
         Calculate Average True Range.
 
@@ -236,11 +236,11 @@ class TALibWrapper:
 
     async def calculate_macd(
         self,
-        prices: List[Decimal],
+        prices: list[Decimal],
         fast_period: int = 12,
         slow_period: int = 26,
         signal_period: int = 9,
-    ) -> Tuple[List[Decimal], List[Decimal], List[Decimal]]:
+    ) -> tuple[list[Decimal], list[Decimal], list[Decimal]]:
         """
         Calculate MACD (Moving Average Convergence Divergence).
 
@@ -279,10 +279,10 @@ class TALibWrapper:
 
     async def calculate_bollinger_bands(
         self,
-        prices: List[Decimal],
+        prices: list[Decimal],
         period: int = 20,
         std_dev_multiplier: float = 2.0,
-    ) -> Tuple[List[Decimal], List[Decimal], List[Decimal]]:
+    ) -> tuple[list[Decimal], list[Decimal], list[Decimal]]:
         """
         Calculate Bollinger Bands.
 
@@ -320,8 +320,8 @@ class TALibWrapper:
 
     async def calculate_all_indicators(
         self,
-        ohlcv_data: Dict,
-    ) -> Dict:
+        ohlcv_data: dict,
+    ) -> dict:
         """
         Calculate all key indicators for symbol.
 
@@ -358,16 +358,16 @@ class TALibWrapper:
             return indicators
 
         except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
-            logger.error(f"❌ Indicator calculation failed: {str(e)}")
+            logger.error(f"❌ Indicator calculation failed: {e!s}")
             return {}
 
-    def get_indicator_list(self, category: Optional[str] = None) -> Dict:
+    def get_indicator_list(self, category: Optional[str] = None) -> dict:
         """Get available indicators."""
         if category:
             return {category: self.available_indicators.get(category, [])}
         return self.available_indicators
 
-    def get_wrapper_status(self) -> Dict:
+    def get_wrapper_status(self) -> dict:
         """Get wrapper status."""
         return {
             "connected": self.connected,

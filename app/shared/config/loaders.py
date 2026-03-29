@@ -10,7 +10,7 @@ TASK-24: SRP Compliance - Separate loaders for different formats
 import json
 import logging
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any, Optional
 
 import yaml
 
@@ -22,7 +22,7 @@ logger = logging.getLogger(__name__)
 class YAMLConfigLoader:
     """YAML configuration file loader."""
 
-    def load(self, config_path: Path) -> Dict[str, Any]:
+    def load(self, config_path: Path) -> dict[str, Any]:
         """
         Load configuration from YAML file.
 
@@ -43,7 +43,7 @@ class YAMLConfigLoader:
             raise FileNotFoundError(f"Configuration file not found: {config_path}")
 
         try:
-            with open(config_path, "r") as f:
+            with open(config_path) as f:
                 config_data = yaml.safe_load(f)
                 logger.info(
                     f"Successfully loaded configuration from {config_path}",
@@ -55,7 +55,7 @@ class YAMLConfigLoader:
                 f"Invalid YAML in {config_path}: {e}",
                 extra={"config_path": str(config_path), "error": str(e)},
             )
-            raise ValueError(f"Invalid YAML in {config_path}: {e}")
+            raise ValueError(f"Invalid YAML in {config_path}: {e}") from e
 
     def supports(self, file_extension: str) -> bool:
         """Check if loader supports YAML files."""
@@ -65,7 +65,7 @@ class YAMLConfigLoader:
 class JSONConfigLoader:
     """JSON configuration file loader."""
 
-    def load(self, config_path: Path) -> Dict[str, Any]:
+    def load(self, config_path: Path) -> dict[str, Any]:
         """
         Load configuration from JSON file.
 
@@ -86,7 +86,7 @@ class JSONConfigLoader:
             raise FileNotFoundError(f"Configuration file not found: {config_path}")
 
         try:
-            with open(config_path, "r") as f:
+            with open(config_path) as f:
                 config_data = json.load(f)
                 logger.info(
                     f"Successfully loaded configuration from {config_path}",
@@ -98,7 +98,7 @@ class JSONConfigLoader:
                 f"Invalid JSON in {config_path}: {e}",
                 extra={"config_path": str(config_path), "error": str(e)},
             )
-            raise ValueError(f"Invalid JSON in {config_path}: {e}")
+            raise ValueError(f"Invalid JSON in {config_path}: {e}") from e
 
     def supports(self, file_extension: str) -> bool:
         """Check if loader supports JSON files."""
@@ -131,7 +131,7 @@ class ConfigLoaderRegistry:
                 return loader
         return None
 
-    def load(self, config_path: Path) -> Dict[str, Any]:
+    def load(self, config_path: Path) -> dict[str, Any]:
         """
         Load configuration using appropriate loader.
 

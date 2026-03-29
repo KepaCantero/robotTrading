@@ -15,19 +15,22 @@ from __future__ import annotations
 
 import logging
 from datetime import datetime
-
-import pandas as pd
+from typing import TYPE_CHECKING
 
 from app.services.hurst_analysis import hurst_calculations as utils
 from app.services.hurst_analysis.models import HurstResult, RegimeChange
-from app.services.hurst_analysis.protocols import (
-    ChangeDetectorProtocol,
-    ConfidenceCalculatorProtocol,
-    HistoricalTrackerProtocol,
-    HurstCalculator,
-    RegimeClassifierProtocol,
-    StrategyRecommenderProtocol,
-)
+
+if TYPE_CHECKING:
+    import pandas as pd
+
+    from app.services.hurst_analysis.protocols import (
+        ChangeDetectorProtocol,
+        ConfidenceCalculatorProtocol,
+        HistoricalTrackerProtocol,
+        HurstCalculator,
+        RegimeClassifierProtocol,
+        StrategyRecommenderProtocol,
+    )
 
 logger = logging.getLogger(__name__)
 

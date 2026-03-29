@@ -5,7 +5,7 @@ Engine for optimizing portfolios with tax efficiency considerations.
 """
 
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -18,7 +18,7 @@ class TaxOptimizationEngine:
     and optimizing portfolio changes for tax efficiency.
     """
 
-    def __init__(self, tax_residence: str = "ES", config: Optional[Dict[str, Any]] = None):
+    def __init__(self, tax_residence: str = "ES", config: Optional[dict[str, Any]] = None):
         """
         Initialize the Tax Optimization Engine.
 
@@ -34,8 +34,8 @@ class TaxOptimizationEngine:
         )
 
     def optimize_for_taxes(
-        self, current_portfolio: Dict[str, Any], proposed_changes: Dict[str, Any], **kwargs
-    ) -> Dict[str, Any]:
+        self, current_portfolio: dict[str, Any], proposed_changes: dict[str, Any], **kwargs
+    ) -> dict[str, Any]:
         """
         Optimize proposed portfolio changes for tax efficiency.
 
@@ -55,7 +55,7 @@ class TaxOptimizationEngine:
             },
         )
 
-        result: Dict[str, Any] = {
+        result: dict[str, Any] = {
             "optimized_changes": proposed_changes,
             "tax_impact": {"estimated_tax": 0.0},
             "tax_residence": self.tax_residence,
@@ -67,9 +67,11 @@ class TaxOptimizationEngine:
         logger.info(
             "Tax optimization completed",
             extra={
-                "optimized_changes_count": len(result["optimized_changes"])
-                if isinstance(result["optimized_changes"], (list, dict))
-                else 0,
+                "optimized_changes_count": (
+                    len(result["optimized_changes"])
+                    if isinstance(result["optimized_changes"], (list, dict))
+                    else 0
+                ),
                 "estimated_tax": estimated_tax,
             },
         )
@@ -77,8 +79,8 @@ class TaxOptimizationEngine:
         return result
 
     def detect_wash_sales(
-        self, trades: List[Dict[str, Any]], lookback_days: int = 30
-    ) -> List[Dict[str, Any]]:
+        self, trades: list[dict[str, Any]], lookback_days: int = 30
+    ) -> list[dict[str, Any]]:
         """
         Detect potential wash sale violations.
 
@@ -94,7 +96,7 @@ class TaxOptimizationEngine:
             extra={"trades_count": len(trades), "lookback_days": lookback_days},
         )
 
-        wash_sales: List[Dict[str, Any]] = []
+        wash_sales: list[dict[str, Any]] = []
 
         logger.debug(
             "Wash sale detection completed",
@@ -104,8 +106,8 @@ class TaxOptimizationEngine:
         return wash_sales
 
     def harvest_tax_losses(
-        self, portfolio: Dict[str, Any], min_loss_threshold: float = 0.0
-    ) -> Dict[str, Any]:
+        self, portfolio: dict[str, Any], min_loss_threshold: float = 0.0
+    ) -> dict[str, Any]:
         """
         Identify opportunities for tax-loss harvesting.
 
@@ -119,14 +121,16 @@ class TaxOptimizationEngine:
         logger.info(
             "Starting tax-loss harvesting analysis",
             extra={
-                "holdings_count": len(portfolio.get("holdings", []))
-                if isinstance(portfolio.get("holdings"), list)
-                else 0,
+                "holdings_count": (
+                    len(portfolio.get("holdings", []))
+                    if isinstance(portfolio.get("holdings"), list)
+                    else 0
+                ),
                 "min_loss_threshold": min_loss_threshold,
             },
         )
 
-        recommendations: Dict[str, Any] = {
+        recommendations: dict[str, Any] = {
             "positions_to_sell": [],
             "estimated_tax_savings": 0.0,
             "total_harvestable_loss": 0.0,

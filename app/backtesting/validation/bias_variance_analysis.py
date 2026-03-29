@@ -22,7 +22,7 @@ import logging
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Callable
 
 import numpy as np
 
@@ -50,9 +50,9 @@ class BiasVarianceResult:
     complexity_level: ModelComplexityLevel
     bias_contribution: float  # % of total error from bias
     variance_contribution: float  # % of total error from variance
-    details: Dict[str, Any] = field(default_factory=dict)
+    details: dict[str, Any] = field(default_factory=dict)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
         return {
             "timestamp": self.timestamp.isoformat(),
@@ -86,16 +86,16 @@ class LearningCurveResult:
 
     timestamp: datetime
     model_name: str
-    curve_points: List[LearningCurvePoint]
+    curve_points: list[LearningCurvePoint]
     is_converged: bool
     convergence_gap: float  # Gap between train and test at max size
     potential_improvement: float  # Estimated improvement with more data
     suffers_high_bias: bool
     suffers_high_variance: bool
     recommended_action: str
-    details: Dict[str, Any] = field(default_factory=dict)
+    details: dict[str, Any] = field(default_factory=dict)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
         return {
             "timestamp": self.timestamp.isoformat(),
@@ -132,9 +132,9 @@ class StabilityTestResult:
     stability_score: float
     performance_variance: float
     coefficient_of_variation: float
-    details: Dict[str, Any] = field(default_factory=dict)
+    details: dict[str, Any] = field(default_factory=dict)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
         return {
             "timestamp": self.timestamp.isoformat(),
@@ -163,7 +163,7 @@ class BiasVarianceAnalyzer:
     5. Bootstrap stability
     """
 
-    def __init__(self, config: Optional[Dict[str, Any]] = None):
+    def __init__(self, config: dict[str, Any] | None = None):
         """
         Initialize bias-variance analyzer.
 
@@ -185,7 +185,7 @@ class BiasVarianceAnalyzer:
         model: object,
         X: np.ndarray,
         y: np.ndarray,
-        n_bootstrap: Optional[int] = None,
+        n_bootstrap: int | None = None,
     ) -> BiasVarianceResult:
         """
         Perform bias-variance decomposition using bootstrap.
@@ -317,9 +317,9 @@ class BiasVarianceAnalyzer:
         model: object,
         X: np.ndarray,
         y: np.ndarray,
-        train_sizes: Optional[np.ndarray] = None,
-        cv: Optional[int] = None,
-        scoring: Optional[Callable] = None,
+        train_sizes: np.ndarray | None = None,
+        cv: int | None = None,
+        scoring: Callable | None = None,
     ) -> LearningCurveResult:
         """
         Analyze learning curve to diagnose bias/variance problems.
@@ -598,8 +598,7 @@ class BiasVarianceAnalyzer:
         )
 
         logger.info(
-            f"Temporal Stability: Stable={is_stable} | "
-            f"CV={cv:.3f} | Score={stability_score:.3f}"
+            f"Temporal Stability: Stable={is_stable} | CV={cv:.3f} | Score={stability_score:.3f}"
         )
 
         return result
@@ -609,7 +608,7 @@ class BiasVarianceAnalyzer:
         model: object,
         X: np.ndarray,
         y: np.ndarray,
-        n_bootstrap: Optional[int] = None,
+        n_bootstrap: int | None = None,
     ) -> StabilityTestResult:
         """
         Test model stability using bootstrap resampling.
@@ -705,8 +704,7 @@ class BiasVarianceAnalyzer:
         )
 
         logger.info(
-            f"Bootstrap Stability: Stable={is_stable} | "
-            f"CV={cv:.3f} | Score={stability_score:.3f}"
+            f"Bootstrap Stability: Stable={is_stable} | CV={cv:.3f} | Score={stability_score:.3f}"
         )
 
         return result
@@ -716,8 +714,8 @@ class BiasVarianceAnalyzer:
         model: object,
         X: np.ndarray,
         y: np.ndarray,
-        timestamps: Optional[np.ndarray] = None,
-    ) -> Dict[str, Any]:
+        timestamps: np.ndarray | None = None,
+    ) -> dict[str, Any]:
         """
         Perform comprehensive bias-variance and stability analysis.
 
@@ -771,8 +769,8 @@ def analyze_bias_variance(
     model: object,
     X: np.ndarray,
     y: np.ndarray,
-    config: Optional[Dict[str, Any]] = None,
-) -> Dict[str, Any]:
+    config: dict[str, Any] | None = None,
+) -> dict[str, Any]:
     """
     Convenience function for bias-variance analysis.
 

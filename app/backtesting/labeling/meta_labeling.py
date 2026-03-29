@@ -24,7 +24,6 @@ from __future__ import annotations
 import logging
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Dict, Optional, Union
 
 import numpy as np
 import pandas as pd
@@ -110,15 +109,15 @@ class MetaLabelingResult:
     bet_sizes: np.ndarray
 
     # Feature importance
-    primary_importance: Dict[str, float] = field(default_factory=dict)
-    meta_importance: Dict[str, float] = field(default_factory=dict)
+    primary_importance: dict[str, float] = field(default_factory=dict)
+    meta_importance: dict[str, float] = field(default_factory=dict)
 
     # Metadata
     n_samples: int = 0
     n_features: int = 0
     timestamp: datetime = field(default_factory=datetime.now)
 
-    def to_dict(self) -> Dict[str, Union[str, int, float, bool, list, Dict[str, float], None]]:
+    def to_dict(self) -> dict[str, str | int | float | bool | list | dict[str, float] | None]:
         """Convert to dictionary."""
         return {
             "primary_predictions": self.primary_predictions.tolist(),
@@ -153,7 +152,7 @@ class MetaLabeling:
         >>> # Use result.bet_sizes for position sizing
     """
 
-    def __init__(self, config: Optional[MetaLabelingConfig] = None):
+    def __init__(self, config: MetaLabelingConfig | None = None):
         """
         Initialize meta-labeling pipeline.
 
@@ -167,10 +166,10 @@ class MetaLabeling:
 
     def fit(
         self,
-        X: Union[pd.DataFrame, np.ndarray],
-        y: Union[pd.Series, np.ndarray],
-        sample_weights: Optional[np.ndarray] = None,
-    ) -> "MetaLabeling":
+        X: pd.DataFrame | np.ndarray,
+        y: pd.Series | np.ndarray,
+        sample_weights: np.ndarray | None = None,
+    ) -> MetaLabeling:
         """
         Fit both primary and meta models.
 
@@ -253,7 +252,7 @@ class MetaLabeling:
 
     def predict(
         self,
-        X: Union[pd.DataFrame, np.ndarray],
+        X: pd.DataFrame | np.ndarray,
     ) -> MetaLabelingResult:
         """
         Generate predictions and bet sizes.
@@ -318,11 +317,11 @@ class MetaLabeling:
 
     def fit_predict(
         self,
-        X_train: Union[pd.DataFrame, np.ndarray],
-        y_train: Union[pd.Series, np.ndarray],
-        X_test: Union[pd.DataFrame, np.ndarray],
-        y_test: Optional[Union[pd.Series, np.ndarray]] = None,
-        sample_weights: Optional[np.ndarray] = None,
+        X_train: pd.DataFrame | np.ndarray,
+        y_train: pd.Series | np.ndarray,
+        X_test: pd.DataFrame | np.ndarray,
+        y_test: pd.Series | np.ndarray | None = None,
+        sample_weights: np.ndarray | None = None,
     ) -> MetaLabelingResult:
         """
         Fit on training data and predict on test data.
@@ -541,11 +540,11 @@ class MetaLabeling:
 
 
 def apply_meta_labeling(
-    X_train: Union[pd.DataFrame, np.ndarray],
-    y_train: Union[pd.Series, np.ndarray],
-    X_test: Union[pd.DataFrame, np.ndarray],
-    y_test: Optional[Union[pd.Series, np.ndarray]] = None,
-    config: Optional[MetaLabelingConfig] = None,
+    X_train: pd.DataFrame | np.ndarray,
+    y_train: pd.Series | np.ndarray,
+    X_test: pd.DataFrame | np.ndarray,
+    y_test: pd.Series | np.ndarray | None = None,
+    config: MetaLabelingConfig | None = None,
 ) -> MetaLabelingResult:
     """
     Convenience function to apply meta-labeling.
@@ -626,7 +625,7 @@ def snv_to_signal(
     return side * meta_labels
 
 
-def get_meta_labeling(config: Optional[MetaLabelingConfig] = None) -> MetaLabeling:
+def get_meta_labeling(config: MetaLabelingConfig | None = None) -> MetaLabeling:
     """
     Get a MetaLabeling instance for López de Prado's meta-labeling approach.
 

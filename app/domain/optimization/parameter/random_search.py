@@ -11,7 +11,7 @@ import logging
 import random
 from datetime import datetime
 from math import exp, log
-from typing import Any, Callable, Dict, List
+from typing import Any, Callable
 
 import numpy as np
 from tqdm import tqdm
@@ -77,11 +77,11 @@ class RandomSearchOptimizer(BaseOptimizer):
             config: Optimization configuration
         """
         super().__init__(config)
-        self._sampled_params: List[Dict[str, Any]] = []
+        self._sampled_params: list[dict[str, Any]] = []
 
     async def optimize(
         self,
-        objective: Callable[[Dict[str, Any]], float],
+        objective: Callable[[dict[str, Any]], float],
         param_grid: ParameterGrid,
     ) -> OptimizationResult:
         """
@@ -192,7 +192,7 @@ class RandomSearchOptimizer(BaseOptimizer):
 
         return result
 
-    def _sample_random_params(self, param_grid: ParameterGrid) -> Dict[str, Any]:
+    def _sample_random_params(self, param_grid: ParameterGrid) -> dict[str, Any]:
         """
         Sample a random parameter combination.
 
@@ -358,7 +358,7 @@ class RandomSearchOptimizer(BaseOptimizer):
 
         return base**log_value
 
-    def get_sampled_params(self) -> List[Dict[str, Any]]:
+    def get_sampled_params(self) -> list[dict[str, Any]]:
         """
         Get all sampled parameter combinations.
 
@@ -408,7 +408,7 @@ class RandomSearchOptimizerCV(RandomSearchOptimizer):
 
     async def optimize(
         self,
-        objective: Callable[[Dict[str, Any]], float],
+        objective: Callable[[dict[str, Any]], float],
         param_grid: ParameterGrid,
     ) -> OptimizationResult:
         """
@@ -428,7 +428,7 @@ class RandomSearchOptimizerCV(RandomSearchOptimizer):
 
     async def optimize_with_cv(
         self,
-        cv_objective: Callable[[Dict[str, Any], int], float],
+        cv_objective: Callable[[dict[str, Any], int], float],
         param_grid: ParameterGrid,
     ) -> OptimizationResult:
         """
@@ -448,7 +448,7 @@ class RandomSearchOptimizerCV(RandomSearchOptimizer):
         self._iteration_count = 0
         self._sampled_params = []
 
-        best_params: Dict[str, Any] = {}
+        best_params: dict[str, Any] = {}
         best_cv_score = float("-inf") if self.config.maximize else float("inf")
 
         # Setup progress bar
@@ -470,7 +470,7 @@ class RandomSearchOptimizerCV(RandomSearchOptimizer):
                 self._sampled_params.append(params)
 
                 # Run CV
-                cv_scores: List[float] = []
+                cv_scores: list[float] = []
                 for fold in range(self.cv_folds):
                     try:
                         score = cv_objective(params, fold)
@@ -531,7 +531,7 @@ class RandomSearchOptimizerCV(RandomSearchOptimizer):
         self._end_time = datetime.now()
         return self._create_result(best_params, best_cv_score)
 
-    def _aggregate_cv_scores(self, cv_scores: List[float]) -> float:
+    def _aggregate_cv_scores(self, cv_scores: list[float]) -> float:
         """Aggregate cross-validation scores."""
         if not cv_scores:
             return float("-inf") if self.config.maximize else float("inf")
@@ -550,7 +550,7 @@ class RandomSearchOptimizerCV(RandomSearchOptimizer):
         else:
             return float(np.mean(cv_scores))
 
-    def _std(self, values: List[float]) -> float:
+    def _std(self, values: list[float]) -> float:
         """Calculate standard deviation."""
         import statistics
 

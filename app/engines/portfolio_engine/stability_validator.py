@@ -22,21 +22,24 @@ from __future__ import annotations
 import logging
 from dataclasses import dataclass, field
 from datetime import datetime
-from pathlib import Path
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple
-
-import numpy as np
+from typing import TYPE_CHECKING, Any
 
 from app.shared.config.centralized_config import get_config
 
 if TYPE_CHECKING:
+    from pathlib import Path
+
+    import numpy as np
+
     from app.backtesting.lopez_de_prado_metrics import PortfolioStabilityMetrics
 
 from app.backtesting.lopez_de_prado_metrics import (
     ConcentrationAnalyzer,
-    PortfolioStabilityValidator as LopeDePradoStabilityValidator,
     SharpeRatioCombinator,
     TurnoverAdjustedCalculator,
+)
+from app.backtesting.lopez_de_prado_metrics import (
+    PortfolioStabilityValidator as LopeDePradoStabilityValidator,
 )
 
 logger = logging.getLogger(__name__)
@@ -80,10 +83,10 @@ class PortfolioValidationResult:
     is_properly_diversified: bool
 
     stability_score: float
-    stability_metrics: Optional[PortfolioStabilityMetrics] = None
+    stability_metrics: PortfolioStabilityMetrics | None = None
 
-    sharpe_adjusted: Optional[float] = None
-    sharpe_raw: Optional[float] = None
+    sharpe_adjusted: float | None = None
+    sharpe_raw: float | None = None
 
     concentration_score: float = 0.0
     concentration_risk: str = "UNKNOWN"  # LOW, MEDIUM, HIGH, CRITICAL
@@ -91,12 +94,12 @@ class PortfolioValidationResult:
     annual_turnover: float = 0.0
     estimated_costs: float = 0.0
 
-    warnings: List[str] = field(default_factory=list)
-    recommendations: List[str] = field(default_factory=list)
+    warnings: list[str] = field(default_factory=list)
+    recommendations: list[str] = field(default_factory=list)
 
     validation_timestamp: datetime = field(default_factory=datetime.now)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for serialization."""
         return {
             "is_valid": self.is_valid,
@@ -132,7 +135,7 @@ class PortfolioStabilityValidator:
 
     def __init__(
         self,
-        config: Optional[StabilityValidationConfig] = None,
+        config: StabilityValidationConfig | None = None,
     ):
         """
         Initialize portfolio stability validator.
@@ -160,16 +163,16 @@ class PortfolioStabilityValidator:
         )
 
         # Historical tracking
-        self.validation_history: List[PortfolioValidationResult] = []
+        self.validation_history: list[PortfolioValidationResult] = []
 
         logger.info("PortfolioStabilityValidator initialized")
 
     def validate_portfolio_allocation(
         self,
         weights: np.ndarray,
-        weights_history: List[np.ndarray],
-        returns_history: Optional[np.ndarray] = None,
-        expected_returns: Optional[np.ndarray] = None,
+        weights_history: list[np.ndarray],
+        returns_history: np.ndarray | None = None,
+        expected_returns: np.ndarray | None = None,
     ) -> PortfolioValidationResult:
         """
         Validate a portfolio allocation for stability and cost-effectiveness.
@@ -295,7 +298,7 @@ class PortfolioStabilityValidator:
 
         except Exception as e:
             logger.error(f"Error validating portfolio allocation: {e}", exc_info=True)
-            warnings.append(f"Validation error: {str(e)}")
+            warnings.append(f"Validation error: {e!s}")
             result.warnings = warnings
             return result
 
@@ -318,16 +321,13 @@ class PortfolioStabilityValidator:
             return False
 
         # If production deployment required, stability must be confirmed
-        if self.config.require_stable_for_production and result.is_stable is not True:
-            return False
-
-        return True
+        return not (self.config.require_stable_for_production and result.is_stable is not True)
 
     def compare_portfolio_stabilities(
         self,
-        portfolios: Dict[str, List[np.ndarray]],
-        returns: Optional[Dict[str, np.ndarray]] = None,
-    ) -> Dict[str, PortfolioValidationResult]:
+        portfolios: dict[str, list[np.ndarray]],
+        returns: dict[str, np.ndarray] | None = None,
+    ) -> dict[str, PortfolioValidationResult]:
         """
         Compare stability of multiple portfolios.
 
@@ -371,7 +371,7 @@ class PortfolioStabilityValidator:
     def get_stability_recommendations(
         self,
         result: PortfolioValidationResult,
-    ) -> List[str]:
+    ) -> list[str]:
         """
         Get actionable recommendations to improve portfolio stability.
 
@@ -491,10 +491,10 @@ class StabilityBasedPortfolioSelector:
 
     def select_most_stable_portfolio(
         self,
-        portfolios: Dict[str, List[np.ndarray]],
-        returns: Optional[Dict[str, np.ndarray]] = None,
+        portfolios: dict[str, list[np.ndarray]],
+        returns: dict[str, np.ndarray] | None = None,
         require_cost_effective: bool = True,
-    ) -> Tuple[str, PortfolioValidationResult]:
+    ) -> tuple[str, PortfolioValidationResult]:
         """
         Select the most stable portfolio from candidates.
 
@@ -553,9 +553,9 @@ class StabilityBasedPortfolioSelector:
 
     def rank_portfolios_by_stability(
         self,
-        portfolios: Dict[str, List[np.ndarray]],
-        returns: Optional[Dict[str, np.ndarray]] = None,
-    ) -> List[Tuple[str, PortfolioValidationResult]]:
+        portfolios: dict[str, list[np.ndarray]],
+        returns: dict[str, np.ndarray] | None = None,
+    ) -> list[tuple[str, PortfolioValidationResult]]:
         """
         Rank portfolios by stability score.
 
@@ -584,7 +584,7 @@ class StabilityBasedPortfolioSelector:
 def create_portfolio_stability_validator(
     min_stability_score: float = 70.0,
     transaction_cost_bps: float = 10.0,
-    risk_free_rate: float = None,
+    risk_free_rate: float | None = None,
 ) -> PortfolioStabilityValidator:
     """
     Create a portfolio stability validator with default configuration.
@@ -613,8 +613,8 @@ def create_portfolio_stability_validator(
 
 def validate_single_portfolio(
     weights: np.ndarray,
-    weights_history: List[np.ndarray],
-    returns: Optional[np.ndarray] = None,
+    weights_history: list[np.ndarray],
+    returns: np.ndarray | None = None,
     **kwargs,
 ) -> PortfolioValidationResult:
     """

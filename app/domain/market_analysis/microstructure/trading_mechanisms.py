@@ -16,6 +16,7 @@ References:
 - Madhavan, A. (1992) "Trading Mechanisms in Securities Markets"
 - Domowitz, I. (1990) "The Structure of Trading Discrete Markets"
 """
+
 from __future__ import annotations
 
 import heapq
@@ -24,7 +25,6 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 from decimal import Decimal
 from enum import Enum
-from typing import Dict, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -94,13 +94,13 @@ class LimitOrder:
     def to_dict(self) -> dict:
         """Convert to dictionary"""
         return {
-            'order_id': self.order_id,
-            'timestamp': self.timestamp.isoformat(),
-            'side': self.side,
-            'price': str(self.price),
-            'size': str(self.size),
-            'is_hidden': self.is_hidden,
-            'participant_id': self.participant_id,
+            "order_id": self.order_id,
+            "timestamp": self.timestamp.isoformat(),
+            "side": self.side,
+            "price": str(self.price),
+            "size": str(self.size),
+            "is_hidden": self.is_hidden,
+            "participant_id": self.participant_id,
         }
 
 
@@ -130,13 +130,13 @@ class AuctionResult:
     def to_dict(self) -> dict:
         """Convert to dictionary"""
         return {
-            'auction_time': self.auction_time.isoformat(),
-            'clearing_price': str(self.clearing_price),
-            'total_volume': str(self.total_volume),
-            'matched_orders': [(b, s, str(v)) for b, s, v in self.matched_orders],
-            'unfilled_buys': len(self.unfilled_buys),
-            'unfilled_sells': len(self.unfilled_sells),
-            'execution_efficiency': self.execution_efficiency,
+            "auction_time": self.auction_time.isoformat(),
+            "clearing_price": str(self.clearing_price),
+            "total_volume": str(self.total_volume),
+            "matched_orders": [(b, s, str(v)) for b, s, v in self.matched_orders],
+            "unfilled_buys": len(self.unfilled_buys),
+            "unfilled_sells": len(self.unfilled_sells),
+            "execution_efficiency": self.execution_efficiency,
         }
 
 
@@ -164,12 +164,12 @@ class DealerInventoryState:
     def to_dict(self) -> dict:
         """Convert to dictionary"""
         return {
-            'timestamp': self.timestamp.isoformat(),
-            'inventory': str(self.inventory),
-            'inventory_value': str(self.inventory_value),
-            'inventory_risk': self.inventory_risk,
-            'optimal_bid': str(self.optimal_quotes[0]),
-            'optimal_ask': str(self.optimal_quotes[1]),
+            "timestamp": self.timestamp.isoformat(),
+            "inventory": str(self.inventory),
+            "inventory_value": str(self.inventory_value),
+            "inventory_risk": self.inventory_risk,
+            "optimal_bid": str(self.optimal_quotes[0]),
+            "optimal_ask": str(self.optimal_quotes[1]),
         }
 
 
@@ -197,12 +197,12 @@ class ExecutionQuality:
     def to_dict(self) -> dict:
         """Convert to dictionary"""
         return {
-            'mechanism': self.mechanism.value,
-            'execution_time_ms': self.execution_time.total_seconds() * 1000,
-            'price_improvement_bps': self.price_improvement,
-            'fill_rate': self.fill_rate,
-            'market_impact_bps': self.market_impact,
-            'quality_score': self.quality_score,
+            "mechanism": self.mechanism.value,
+            "execution_time_ms": self.execution_time.total_seconds() * 1000,
+            "price_improvement_bps": self.price_improvement,
+            "fill_rate": self.fill_rate,
+            "market_impact_bps": self.market_impact,
+            "quality_score": self.quality_score,
         }
 
 
@@ -218,8 +218,8 @@ class CallAuction:
 
     def __init__(
         self,
-        price_tick: Optional[Decimal] = None,
-        min_price_increment: Optional[Decimal] = None,
+        price_tick: Decimal | None = None,
+        min_price_increment: Decimal | None = None,
     ):
         """
         Initialize call auction
@@ -229,9 +229,9 @@ class CallAuction:
             min_price_increment: Minimum price increment for iteration
         """
         if price_tick is None:
-            price_tick = Decimal('0.01')
+            price_tick = Decimal("0.01")
         if min_price_increment is None:
-            min_price_increment = Decimal('0.01')
+            min_price_increment = Decimal("0.01")
         logger.debug(
             "Initializing CallAuction",
             extra={
@@ -261,7 +261,7 @@ class CallAuction:
             Tuple of (clearing_price, executable_volume)
         """
         if not self.buy_orders or not self.sell_orders:
-            return None, Decimal('0')
+            return None, Decimal("0")
 
         # Get sorted unique prices
         buy_prices = sorted({o.price for o in self.buy_orders}, reverse=True)
@@ -273,11 +273,11 @@ class CallAuction:
 
         if min_trade_price > max_trade_price:
             # No overlap
-            return None, Decimal('0')
+            return None, Decimal("0")
 
         # Iterate through price range to find volume-maximizing price
         best_price = None
-        max_volume = Decimal('0')
+        max_volume = Decimal("0")
 
         # Check at each buy price and sell price, plus midpoint
         test_prices = set()
@@ -303,11 +303,11 @@ class CallAuction:
 
     def _calculate_buy_volume_at_price(self, price: Decimal) -> Decimal:
         """Calculate total buy volume at or above price"""
-        return sum((o.size for o in self.buy_orders if o.price >= price), Decimal('0'))
+        return sum((o.size for o in self.buy_orders if o.price >= price), Decimal("0"))
 
     def _calculate_sell_volume_at_price(self, price: Decimal) -> Decimal:
         """Calculate total sell volume at or below price"""
-        return sum((o.size for o in self.sell_orders if o.price <= price), Decimal('0'))
+        return sum((o.size for o in self.sell_orders if o.price <= price), Decimal("0"))
 
     def execute_auction(self) -> AuctionResult:
         """
@@ -335,8 +335,8 @@ class CallAuction:
             )
             return AuctionResult(
                 auction_time=datetime.now(),
-                clearing_price=Decimal('0'),
-                total_volume=Decimal('0'),
+                clearing_price=Decimal("0"),
+                total_volume=Decimal("0"),
                 matched_orders=[],
                 unfilled_buys=self.buy_orders.copy(),
                 unfilled_sells=self.sell_orders.copy(),
@@ -395,7 +395,7 @@ class CallAuction:
 
         # Calculate execution efficiency
         total_order_volume = sum(o.size for o in self.buy_orders + self.sell_orders)
-        efficiency = float(total_volume / max(total_order_volume, Decimal('1'))) * 100
+        efficiency = float(total_volume / max(total_order_volume, Decimal("1"))) * 100
 
         logger.info(
             "Call auction executed",
@@ -431,7 +431,7 @@ class ContinuousDoubleAuction:
 
     def __init__(
         self,
-        price_tick: Optional[Decimal] = None,
+        price_tick: Decimal | None = None,
     ):
         """
         Initialize continuous double auction
@@ -440,7 +440,7 @@ class ContinuousDoubleAuction:
             price_tick: Minimum price variation
         """
         if price_tick is None:
-            price_tick = Decimal('0.01')
+            price_tick = Decimal("0.01")
         logger.debug(
             "Initializing ContinuousDoubleAuction",
             extra={"price_tick": str(price_tick)},
@@ -472,12 +472,12 @@ class ContinuousDoubleAuction:
 
                 trades.append(
                     {
-                        'timestamp': datetime.now(),
-                        'buy_order_id': order.order_id,
-                        'sell_order_id': best_sell.order_id,
-                        'price': trade_price,
-                        'size': match_size,
-                        'side': 'BUY',
+                        "timestamp": datetime.now(),
+                        "buy_order_id": order.order_id,
+                        "sell_order_id": best_sell.order_id,
+                        "price": trade_price,
+                        "size": match_size,
+                        "side": "BUY",
                     }
                 )
 
@@ -502,12 +502,12 @@ class ContinuousDoubleAuction:
 
                 trades.append(
                     {
-                        'timestamp': datetime.now(),
-                        'buy_order_id': best_buy.order_id,
-                        'sell_order_id': order.order_id,
-                        'price': trade_price,
-                        'size': match_size,
-                        'side': 'SELL',
+                        "timestamp": datetime.now(),
+                        "buy_order_id": best_buy.order_id,
+                        "sell_order_id": order.order_id,
+                        "price": trade_price,
+                        "size": match_size,
+                        "side": "SELL",
                     }
                 )
 
@@ -551,12 +551,12 @@ class ContinuousDoubleAuction:
 
                 trades.append(
                     {
-                        'timestamp': datetime.now(),
-                        'buy_order_id': order_id,
-                        'sell_order_id': best_sell.order_id,
-                        'price': best_sell.price,
-                        'size': match_size,
-                        'side': 'BUY',
+                        "timestamp": datetime.now(),
+                        "buy_order_id": order_id,
+                        "sell_order_id": best_sell.order_id,
+                        "price": best_sell.price,
+                        "size": match_size,
+                        "side": "BUY",
                     }
                 )
 
@@ -574,12 +574,12 @@ class ContinuousDoubleAuction:
 
                 trades.append(
                     {
-                        'timestamp': datetime.now(),
-                        'buy_order_id': best_buy.order_id,
-                        'sell_order_id': order_id,
-                        'price': best_buy.price,
-                        'size': match_size,
-                        'side': 'SELL',
+                        "timestamp": datetime.now(),
+                        "buy_order_id": best_buy.order_id,
+                        "sell_order_id": order_id,
+                        "price": best_buy.price,
+                        "size": match_size,
+                        "side": "SELL",
                     }
                 )
 
@@ -606,17 +606,17 @@ class ContinuousDoubleAuction:
         total_ask_depth = sum(o.size for o in self.sell_book)
 
         return {
-            'best_bid': str(best_bid) if best_bid else None,
-            'best_ask': str(best_ask) if best_ask else None,
-            'spread_bps': (
+            "best_bid": str(best_bid) if best_bid else None,
+            "best_ask": str(best_ask) if best_ask else None,
+            "spread_bps": (
                 float((best_ask - best_bid) / ((best_bid + best_ask) / 2) * 10000)
                 if (best_bid and best_ask)
                 else None
             ),
-            'total_bid_depth': str(total_bid_depth),
-            'total_ask_depth': str(total_ask_depth),
-            'buy_orders': len(self.buy_book),
-            'sell_orders': len(self.sell_book),
+            "total_bid_depth": str(total_bid_depth),
+            "total_ask_depth": str(total_ask_depth),
+            "buy_orders": len(self.buy_book),
+            "sell_orders": len(self.sell_book),
         }
 
 
@@ -637,7 +637,7 @@ class DealerMarket:
         self,
         initial_capital: Decimal,
         risk_aversion: float = 0.5,
-        inventory_limit: Optional[Decimal] = None,
+        inventory_limit: Decimal | None = None,
     ):
         """
         Initialize dealer market
@@ -648,7 +648,7 @@ class DealerMarket:
             inventory_limit: Maximum inventory position
         """
         if inventory_limit is None:
-            inventory_limit = Decimal('10000')
+            inventory_limit = Decimal("10000")
         logger.debug(
             "Initializing DealerMarket",
             extra={
@@ -660,8 +660,8 @@ class DealerMarket:
         self.capital = initial_capital
         self.risk_aversion = risk_aversion
         self.inventory_limit = inventory_limit
-        self.inventory = Decimal('0')
-        self.inventory_value = Decimal('0')
+        self.inventory = Decimal("0")
+        self.inventory_value = Decimal("0")
         self.trade_history: list[dict] = []
 
     def calculate_optimal_quotes(
@@ -688,7 +688,7 @@ class DealerMarket:
         """
         # Base spread (order processing cost)
         # Typically 1-2 ticks for liquid stocks
-        base_spread = current_price * Decimal('0.001')  # 10 bps
+        base_spread = current_price * Decimal("0.001")  # 10 bps
 
         # Inventory adjustment
         # If long inventory, lower both quotes to encourage selling
@@ -700,7 +700,7 @@ class DealerMarket:
         # Adverse selection adjustment
         # Widen spread when order flow imbalance suggests informed trading
         adverse_selection_adjustment = (
-            Decimal(str(abs(order_flow_imbalance))) * current_price * Decimal('0.0005')
+            Decimal(str(abs(order_flow_imbalance))) * current_price * Decimal("0.0005")
         )
 
         # Calculate optimal quotes
@@ -710,9 +710,9 @@ class DealerMarket:
         optimal_ask = current_price + half_spread - inventory_adjustment
 
         # Round to ticks
-        tick = Decimal('0.01')
-        optimal_bid = (optimal_bid / tick).quantize(Decimal('1')) * tick
-        optimal_ask = (optimal_ask / tick).quantize(Decimal('1')) * tick
+        tick = Decimal("0.01")
+        optimal_bid = (optimal_bid / tick).quantize(Decimal("1")) * tick
+        optimal_ask = (optimal_ask / tick).quantize(Decimal("1")) * tick
 
         return optimal_bid, optimal_ask
 
@@ -736,10 +736,7 @@ class DealerMarket:
             True if trade executed, False if rejected
         """
         # Check inventory limit
-        if side == "BUY":
-            new_inventory = self.inventory + size
-        else:
-            new_inventory = self.inventory - size
+        new_inventory = self.inventory + size if side == "BUY" else self.inventory - size
 
         if abs(new_inventory) > self.inventory_limit:
             return False  # Would exceed inventory limit
@@ -756,13 +753,13 @@ class DealerMarket:
         # Record trade
         self.trade_history.append(
             {
-                'timestamp': datetime.now(),
-                'side': side,
-                'size': size,
-                'price': price,
-                'counterparty': counterparty,
-                'inventory': self.inventory,
-                'capital': self.capital,
+                "timestamp": datetime.now(),
+                "side": side,
+                "size": size,
+                "price": price,
+                "counterparty": counterparty,
+                "inventory": self.inventory,
+                "capital": self.capital,
             }
         )
 
@@ -814,7 +811,7 @@ class TradingMechanismComparator:
 
     def __init__(self):
         """Initialize comparator"""
-        self.execution_history: Dict[MarketMechanism, list[ExecutionQuality]] = {
+        self.execution_history: dict[MarketMechanism, list[ExecutionQuality]] = {
             mechanism: [] for mechanism in MarketMechanism
         }
 
@@ -856,7 +853,7 @@ class TradingMechanismComparator:
             price_improvement = 0  # Neutral baseline
 
         # Fill rate
-        fill_rate = float(fill_size / max(order_size, Decimal('1')))
+        fill_rate = float(fill_size / max(order_size, Decimal("1")))
 
         # Market impact (O'Hara 3.5)
         # Temporary impact: deviation from midpoint
@@ -911,42 +908,42 @@ class TradingMechanismComparator:
         # Best for: small orders, illiquid stocks
         dealer_score = 70
         dealer_notes = "Good for small orders in illiquid conditions"
-        results['dealer'] = {
-            'quality_score': dealer_score,
-            'expected_cost_bps': 5.0,
-            'expected_time_seconds': 1.0,
-            'notes': dealer_notes,
+        results["dealer"] = {
+            "quality_score": dealer_score,
+            "expected_cost_bps": 5.0,
+            "expected_time_seconds": 1.0,
+            "notes": dealer_notes,
         }
 
         # Single auction
         # Best for: opening/closing, large orders, after halts
         auction_score = 80 if float(order_size) > 10000 else 60
         auction_notes = "Best for large orders at open/close"
-        results['single_auction'] = {
-            'quality_score': auction_score,
-            'expected_cost_bps': 2.0,
-            'expected_time_seconds': 300,
-            'notes': auction_notes,
+        results["single_auction"] = {
+            "quality_score": auction_score,
+            "expected_cost_bps": 2.0,
+            "expected_time_seconds": 300,
+            "notes": auction_notes,
         }
 
         # Continuous double auction
         # Best for: normal trading, immediate execution
         cda_score = 75
         cda_notes = "Standard mechanism for continuous trading"
-        results['continuous_double_auction'] = {
-            'quality_score': cda_score,
-            'expected_cost_bps': 3.0,
-            'expected_time_seconds': 0.5,
-            'notes': cda_notes,
+        results["continuous_double_auction"] = {
+            "quality_score": cda_score,
+            "expected_cost_bps": 3.0,
+            "expected_time_seconds": 0.5,
+            "notes": cda_notes,
         }
 
         # Find best mechanism
-        best_mechanism = max(results.keys(), key=lambda k: results[k]['quality_score'])
+        best_mechanism = max(results.keys(), key=lambda k: results[k]["quality_score"])
 
         return {
-            'comparison': results,
-            'best_mechanism': best_mechanism,
-            'recommendation': self._generate_mechanism_recommendation(
+            "comparison": results,
+            "best_mechanism": best_mechanism,
+            "recommendation": self._generate_mechanism_recommendation(
                 order_size, volatility, results
             ),
         }
@@ -978,11 +975,11 @@ _mechanism_comparator: TradingMechanismComparator | None = None
 
 
 def get_call_auction(
-    price_tick: Optional[Decimal] = None,
+    price_tick: Decimal | None = None,
 ) -> CallAuction:
     """Get or create CallAuction instance"""
     if price_tick is None:
-        price_tick = Decimal('0.01')
+        price_tick = Decimal("0.01")
     global _call_auction
     if _call_auction is None:
         _call_auction = CallAuction(price_tick=price_tick)
@@ -990,11 +987,11 @@ def get_call_auction(
 
 
 def get_continuous_double_auction(
-    price_tick: Optional[Decimal] = None,
+    price_tick: Decimal | None = None,
 ) -> ContinuousDoubleAuction:
     """Get or create ContinuousDoubleAuction instance"""
     if price_tick is None:
-        price_tick = Decimal('0.01')
+        price_tick = Decimal("0.01")
     global _continuous_auction
     if _continuous_auction is None:
         _continuous_auction = ContinuousDoubleAuction(price_tick=price_tick)
@@ -1002,12 +999,12 @@ def get_continuous_double_auction(
 
 
 def get_dealer_market(
-    initial_capital: Optional[Decimal] = None,
+    initial_capital: Decimal | None = None,
     risk_aversion: float = 0.5,
 ) -> DealerMarket:
     """Get or create DealerMarket instance"""
     if initial_capital is None:
-        initial_capital = Decimal('1000000')
+        initial_capital = Decimal("1000000")
     global _dealer_market
     if _dealer_market is None:
         _dealer_market = DealerMarket(
@@ -1026,16 +1023,16 @@ def get_mechanism_comparator() -> TradingMechanismComparator:
 
 
 __all__ = [
-    "MarketMechanism",
-    "AuctionType",
-    "OrderPriority",
-    "LimitOrder",
     "AuctionResult",
-    "DealerInventoryState",
-    "ExecutionQuality",
+    "AuctionType",
     "CallAuction",
     "ContinuousDoubleAuction",
+    "DealerInventoryState",
     "DealerMarket",
+    "ExecutionQuality",
+    "LimitOrder",
+    "MarketMechanism",
+    "OrderPriority",
     "TradingMechanismComparator",
     "get_call_auction",
     "get_continuous_double_auction",

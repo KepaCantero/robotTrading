@@ -9,7 +9,7 @@ Provides:
 """
 
 import logging
-from typing import Any, Dict, Optional
+from typing import Any, Optional
 
 import numpy as np
 import pandas as pd
@@ -133,7 +133,7 @@ class RegimeAnalyzer:
 
     def analyze_regime_performance(
         self, returns: pd.Series, regime_labels: Optional[pd.Series] = None
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Analyze strategy performance for each regime.
 
@@ -194,7 +194,7 @@ class RegimeAnalyzer:
         logger.info(f"Regime performance analysis completed. Regimes: {list(analysis.keys())}")
         return analysis
 
-    def regime_transition_analysis(self, regime_labels: pd.Series) -> Dict[str, Any]:
+    def regime_transition_analysis(self, regime_labels: pd.Series) -> dict[str, Any]:
         """
         Analyze regime transitions and transition probabilities.
 
@@ -269,7 +269,7 @@ class RegimeAnalyzer:
                     "median_duration": float(np.median(durations)),
                     "min_duration": int(np.min(durations)),
                     "max_duration": int(np.max(durations)),
-                    "transitions": int(len(durations)),
+                    "transitions": len(durations),
                 }
 
             analysis = {
@@ -287,8 +287,8 @@ class RegimeAnalyzer:
             return {}
 
     def out_of_sample_regime_robustness(
-        self, returns: pd.Series, test_periods: int = 5, train_window: int = None
-    ) -> Dict[str, Any]:
+        self, returns: pd.Series, test_periods: int = 5, train_window: Optional[int] = None
+    ) -> dict[str, Any]:
         """
         Walk-forward regime detection robustness testing.
 
@@ -387,7 +387,7 @@ class RegimeAnalyzer:
         drawdown = (cumulative - running_max) / running_max
         return float(drawdown.min())
 
-    def get_regime_names(self) -> Dict[int, str]:
+    def get_regime_names(self) -> dict[int, str]:
         """Get mapping of regime indices to names."""
         return {0: "Bear Market", 1: "Neutral Market", 2: "Bull Market"}
 

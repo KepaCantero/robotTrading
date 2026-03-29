@@ -8,15 +8,18 @@ incluyendo carga, activación, métricas y configuración.
 from __future__ import annotations
 
 import logging
-from typing import Any, Dict, List, Optional
+from typing import TYPE_CHECKING, Any
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
 
-from app.domain.strategies.protocols import (
-    StrategyLoggerProto as StrategyLogger,
-    StrategyRegistryProto as StrategyRegistry,
-)
+if TYPE_CHECKING:
+    from app.domain.strategies.protocols import (
+        StrategyLoggerProto as StrategyLogger,
+    )
+    from app.domain.strategies.protocols import (
+        StrategyRegistryProto as StrategyRegistry,
+    )
 
 # Constants
 DEFAULT_VALUE_31 = 31
@@ -28,20 +31,20 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/strategies", tags=["Strategies"])
 
 # Instancias globales (en producción usar dependency injection)
-_strategy_registry: Optional[StrategyRegistry] = None
-_config_loader: Optional[Any] = None
-_execution_engine: Optional[Any] = None
-_strategy_logger: Optional[StrategyLogger] = None
+_strategy_registry: StrategyRegistry | None = None
+_config_loader: object | None = None
+_execution_engine: object | None = None
+_strategy_logger: StrategyLogger | None = None
 
 
-def get_strategy_registry() -> "StrategyRegistry":
+def get_strategy_registry() -> StrategyRegistry:
     """Obtener instancia del registry de estrategias."""
     global _strategy_registry
     if _strategy_registry is None:
         # Lazy import to avoid circular dependencies
-        from app.domain.strategies.strategy_registry import StrategyRegistry as SR
+        from app.domain.strategies.strategy_registry import StrategyRegistry
 
-        _strategy_registry = SR()
+        _strategy_registry = StrategyRegistry()
 
     return _strategy_registry
 
@@ -51,21 +54,21 @@ def get_config_loader():
     global _config_loader
     if _config_loader is None:
         # Lazy import to avoid circular dependencies
-        from app.domain.strategies.config_loader import StrategyConfigLoader as SCL
+        from app.domain.strategies.config_loader import StrategyConfigLoader
 
-        _config_loader = SCL()
+        _config_loader = StrategyConfigLoader()
 
     return _config_loader
 
 
-def get_strategy_logger() -> "StrategyLogger":
+def get_strategy_logger() -> StrategyLogger:
     """Obtener instancia del logger de estrategias."""
     global _strategy_logger
     if _strategy_logger is None:
         # Lazy import to avoid circular dependencies
-        from app.domain.strategies.strategy_logger import StrategyLogger as SL
+        from app.domain.strategies.strategy_logger import StrategyLogger as StrategyLoggerImpl
 
-        _strategy_logger = SL()
+        _strategy_logger = StrategyLoggerImpl()
 
     return _strategy_logger
 
@@ -76,11 +79,11 @@ def get_execution_engine():
 
     if _execution_engine is None:
         # Lazy import to avoid circular dependencies
-        from app.domain.strategies.execution_engine import ExecutionEngine as EE
+        from app.domain.strategies.execution_engine import ExecutionEngine
 
         registry = get_strategy_registry()
         strategy_logger = get_strategy_logger()
-        _execution_engine = EE(registry, strategy_logger)
+        _execution_engine = ExecutionEngine(registry, strategy_logger)
         logging.getLogger(__name__).info("ExecutionEngine singleton initialized")
 
     return _execution_engine
@@ -90,14 +93,14 @@ def get_execution_engine():
 class StrategyConfigRequest(BaseModel):
     """Request para configuración de estrategia."""
 
-    config: Dict[str, Any]
+    config: dict[str, Any]
 
 
 class StrategyLoadRequest(BaseModel):
     """Request para cargar estrategia."""
 
     name: str
-    config: Dict[str, Any]
+    config: dict[str, Any]
 
 
 class StrategyActivateRequest(BaseModel):
@@ -109,7 +112,7 @@ class StrategyActivateRequest(BaseModel):
 class StrategyUpdateRequest(BaseModel):
     """Request para actualizar estrategia."""
 
-    parameters: Dict[str, Any]
+    parameters: dict[str, Any]
 
 
 class StrategyResponse(BaseModel):
@@ -121,7 +124,7 @@ class StrategyResponse(BaseModel):
     version: str
     description: str
     created_at: str
-    parameters: Dict[str, Any]
+    parameters: dict[str, Any]
 
 
 class StrategyMetricsResponse(BaseModel):
@@ -136,8 +139,8 @@ class StrategyMetricsResponse(BaseModel):
     error_count: int
     error_rate: float
     total_logs: int
-    first_log: Optional[str]
-    last_log: Optional[str]
+    first_log: str | None
+    last_log: str | None
 
 
 class ExecutionStatsResponse(BaseModel):
@@ -149,13 +152,13 @@ class ExecutionStatsResponse(BaseModel):
     total_signals_executed: int
     execution_rate: float
     created_at: str
-    active_strategy: Optional[str]
+    active_strategy: str | None
 
 
 # Endpoints
 
 
-@router.get("/", response_model=Dict[str, Any])
+@router.get("/", response_model=dict[str, Any])
 async def get_strategies_overview(
     registry: StrategyRegistry = Depends(get_strategy_registry),
 ):
@@ -166,11 +169,11 @@ async def get_strategies_overview(
         logger.error(f"Error getting strategies overview: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error getting strategies overview: {str(e)}",
-        )
+            detail=f"Error getting strategies overview: {e!s}",
+        ) from e
 
 
-@router.get("/available", response_model=List[str])
+@router.get("/available", response_model=list[str])
 async def get_available_strategies(
     registry: StrategyRegistry = Depends(get_strategy_registry),
 ):
@@ -181,11 +184,11 @@ async def get_available_strategies(
         logger.error(f"Error getting available strategies: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error getting available strategies: {str(e)}",
-        )
+            detail=f"Error getting available strategies: {e!s}",
+        ) from e
 
 
-@router.get("/loaded", response_model=List[str])
+@router.get("/loaded", response_model=list[str])
 async def get_loaded_strategies(
     registry: StrategyRegistry = Depends(get_strategy_registry),
 ):
@@ -196,8 +199,8 @@ async def get_loaded_strategies(
         logger.error(f"Error getting loaded strategies: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error getting loaded strategies: {str(e)}",
-        )
+            detail=f"Error getting loaded strategies: {e!s}",
+        ) from e
 
 
 @router.post("/load", response_model=StrategyResponse)
@@ -221,16 +224,16 @@ async def load_strategy(
             parameters=strategy.get_parameters(),
         )
     except ValueError as e:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e)) from e
     except Exception as e:
         logger.error(f"Error loading strategy {request.name}: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error loading strategy: {str(e)}",
-        )
+            detail=f"Error loading strategy: {e!s}",
+        ) from e
 
 
-@router.post("/activate", response_model=Dict[str, str])
+@router.post("/activate", response_model=dict[str, str])
 async def activate_strategy(
     request: StrategyActivateRequest,
     registry: StrategyRegistry = Depends(get_strategy_registry),
@@ -243,16 +246,16 @@ async def activate_strategy(
 
         return {"message": f"Strategy '{request.name}' activated successfully"}
     except ValueError as e:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e)) from e
     except Exception as e:
         logger.error(f"Error activating strategy {request.name}: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error activating strategy: {str(e)}",
-        )
+            detail=f"Error activating strategy: {e!s}",
+        ) from e
 
 
-@router.post("/deactivate", response_model=Dict[str, str])
+@router.post("/deactivate", response_model=dict[str, str])
 async def deactivate_strategy(
     registry: StrategyRegistry = Depends(get_strategy_registry),
     logger_instance: StrategyLogger = Depends(get_strategy_logger),
@@ -277,11 +280,11 @@ async def deactivate_strategy(
         logger.error(f"Error deactivating strategy: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error deactivating strategy: {str(e)}",
-        )
+            detail=f"Error deactivating strategy: {e!s}",
+        ) from e
 
 
-@router.delete("/unload/{strategy_name}", response_model=Dict[str, str])
+@router.delete("/unload/{strategy_name}", response_model=dict[str, str])
 async def unload_strategy(
     strategy_name: str,
     registry: StrategyRegistry = Depends(get_strategy_registry),
@@ -294,13 +297,13 @@ async def unload_strategy(
 
         return {"message": f"Strategy '{strategy_name}' unloaded successfully"}
     except ValueError as e:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e)) from e
     except Exception as e:
         logger.error(f"Error unloading strategy {strategy_name}: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error unloading strategy: {str(e)}",
-        )
+            detail=f"Error unloading strategy: {e!s}",
+        ) from e
 
 
 @router.get("/{strategy_name}", response_model=StrategyResponse)
@@ -321,16 +324,16 @@ async def get_strategy(
             parameters=status_info["parameters"],
         )
     except ValueError as e:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e)) from e
     except Exception as e:
         logger.error(f"Error getting strategy {strategy_name}: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error getting strategy: {str(e)}",
-        )
+            detail=f"Error getting strategy: {e!s}",
+        ) from e
 
 
-@router.put("/{strategy_name}/parameters", response_model=Dict[str, str])
+@router.put("/{strategy_name}/parameters", response_model=dict[str, str])
 async def update_strategy_parameters(
     strategy_name: str,
     request: StrategyUpdateRequest,
@@ -354,8 +357,8 @@ async def update_strategy_parameters(
         logger.error(f"Error updating strategy parameters {strategy_name}: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error updating parameters: {str(e)}",
-        )
+            detail=f"Error updating parameters: {e!s}",
+        ) from e
 
 
 @router.get("/{strategy_name}/metrics", response_model=StrategyMetricsResponse)
@@ -383,11 +386,11 @@ async def get_strategy_metrics(
         logger.error(f"Error getting strategy metrics {strategy_name}: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error getting metrics: {str(e)}",
-        )
+            detail=f"Error getting metrics: {e!s}",
+        ) from e
 
 
-@router.get("/metrics/all", response_model=Dict[str, Any])
+@router.get("/metrics/all", response_model=dict[str, Any])
 async def get_all_metrics(
     logger_instance: StrategyLogger = Depends(get_strategy_logger),
 ):
@@ -398,8 +401,8 @@ async def get_all_metrics(
         logger.error(f"Error getting all metrics: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error getting metrics: {str(e)}",
-        )
+            detail=f"Error getting metrics: {e!s}",
+        ) from e
 
 
 @router.get("/execution/stats", response_model=ExecutionStatsResponse)
@@ -421,11 +424,11 @@ async def get_execution_stats(engine=Depends(get_execution_engine)):
         logger.error(f"Error getting execution stats: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error getting execution stats: {str(e)}",
-        )
+            detail=f"Error getting execution stats: {e!s}",
+        ) from e
 
 
-@router.post("/execution/start", response_model=Dict[str, str])
+@router.post("/execution/start", response_model=dict[str, str])
 async def start_execution_engine(
     engine=Depends(get_execution_engine),
 ):
@@ -437,11 +440,11 @@ async def start_execution_engine(
         logger.error(f"Error starting execution engine: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error starting execution engine: {str(e)}",
-        )
+            detail=f"Error starting execution engine: {e!s}",
+        ) from e
 
 
-@router.post("/execution/stop", response_model=Dict[str, str])
+@router.post("/execution/stop", response_model=dict[str, str])
 async def stop_execution_engine(
     engine=Depends(get_execution_engine),
 ):
@@ -453,11 +456,11 @@ async def stop_execution_engine(
         logger.error(f"Error stopping execution engine: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error stopping execution engine: {str(e)}",
-        )
+            detail=f"Error stopping execution engine: {e!s}",
+        ) from e
 
 
-@router.post("/execution/reset-stats", response_model=Dict[str, str])
+@router.post("/execution/reset-stats", response_model=dict[str, str])
 async def reset_execution_stats(
     engine=Depends(get_execution_engine),
 ):
@@ -469,5 +472,5 @@ async def reset_execution_stats(
         logger.error(f"Error resetting execution stats: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error resetting stats: {str(e)}",
-        )
+            detail=f"Error resetting stats: {e!s}",
+        ) from e

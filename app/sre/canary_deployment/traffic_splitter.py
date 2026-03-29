@@ -14,7 +14,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from decimal import Decimal
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 import aiosqlite
 
@@ -40,19 +40,19 @@ class TrafficConfig:
     baseline_percentage: Decimal  # 0.0 to 1.0
 
     # Strategy-specific config
-    header_name: Optional[str] = None  # For HEADER strategy
-    cookie_name: Optional[str] = None  # For COOKIE strategy
-    user_id_field: Optional[str] = None  # For USER_ID strategy
+    header_name: str | None = None  # For HEADER strategy
+    cookie_name: str | None = None  # For COOKIE strategy
+    user_id_field: str | None = None  # For USER_ID strategy
 
     # Sticky sessions
     enable_sticky_sessions: bool = True
     sticky_duration_minutes: int = 60
 
     # Whitelist for canary access
-    whitelisted_users: List[str] = field(default_factory=list)
-    whitelisted_ips: List[str] = field(default_factory=list)
+    whitelisted_users: list[str] = field(default_factory=list)
+    whitelisted_ips: list[str] = field(default_factory=list)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
         return {
             "strategy": self.strategy.value,
@@ -77,7 +77,7 @@ class RoutingDecision:
     reason: str
     session_sticky: bool = False
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
         return {
             "canary": self.route_to_canary,
@@ -166,7 +166,7 @@ class TrafficSplitter:
 
     async def route_request(
         self,
-        request_context: Dict[str, Any],
+        request_context: dict[str, Any],
     ) -> RoutingDecision:
         """
         Decide where to route a request.
@@ -216,19 +216,16 @@ class TrafficSplitter:
             reason=f"{self.config.strategy.value} strategy",
         )
 
-    def _is_whitelisted(self, request_context: Dict[str, Any]) -> bool:
+    def _is_whitelisted(self, request_context: dict[str, Any]) -> bool:
         """Check if request is whitelisted for canary."""
         user_id = request_context.get("user_id")
         if user_id and user_id in self.config.whitelisted_users:
             return True
 
         ip = request_context.get("ip")
-        if ip and ip in self.config.whitelisted_ips:
-            return True
+        return bool(ip and ip in self.config.whitelisted_ips)
 
-        return False
-
-    async def _apply_strategy(self, request_context: Dict[str, Any]) -> bool:
+    async def _apply_strategy(self, request_context: dict[str, Any]) -> bool:
         """Apply routing strategy."""
         if self.config.strategy == SplitStrategy.PERCENTAGE:
             return await self._percentage_strategy()
@@ -253,7 +250,7 @@ class TrafficSplitter:
         """Random percentage-based routing."""
         return random.random() < float(self.config.canary_percentage)
 
-    async def _user_id_strategy(self, request_context: Dict[str, Any]) -> bool:
+    async def _user_id_strategy(self, request_context: dict[str, Any]) -> bool:
         """Hash-based routing on user ID."""
         user_id = request_context.get("user_id")
         if not user_id:
@@ -266,7 +263,7 @@ class TrafficSplitter:
 
         return hash_value < canary_threshold
 
-    async def _header_strategy(self, request_context: Dict[str, Any]) -> bool:
+    async def _header_strategy(self, request_context: dict[str, Any]) -> bool:
         """Header-based routing."""
         if not self.config.header_name:
             return await self._percentage_strategy()
@@ -283,7 +280,7 @@ class TrafficSplitter:
 
         return hash_value < canary_threshold
 
-    async def _cookie_strategy(self, request_context: Dict[str, Any]) -> bool:
+    async def _cookie_strategy(self, request_context: dict[str, Any]) -> bool:
         """Cookie-based routing."""
         if not self.config.cookie_name:
             return await self._percentage_strategy()
@@ -300,7 +297,7 @@ class TrafficSplitter:
 
         return hash_value < canary_threshold
 
-    async def _ip_hash_strategy(self, request_context: Dict[str, Any]) -> bool:
+    async def _ip_hash_strategy(self, request_context: dict[str, Any]) -> bool:
         """IP hash-based routing."""
         ip = request_context.get("ip")
         if not ip:
@@ -312,7 +309,7 @@ class TrafficSplitter:
 
         return hash_value < canary_threshold
 
-    async def _get_sticky_decision(self, session_id: str) -> Optional[bool]:
+    async def _get_sticky_decision(self, session_id: str) -> bool | None:
         """Get sticky session decision."""
         try:
             async with aiosqlite.connect(self.db_path) as db:

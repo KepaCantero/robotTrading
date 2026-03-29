@@ -12,11 +12,11 @@ from .models import (
 from .strategy_recommender import StrategyRecommender, get_strategy_recommender
 
 __all__ = [
-    "StrategyRecommender",
-    "get_strategy_recommender",
-    "StrategyRecommendationRequest",
-    "StrategyRecommendation",
-    "StrategyScore",
     "ObjectiveWeights",
     "RecommendationSuggestion",
+    "StrategyRecommendation",
+    "StrategyRecommendationRequest",
+    "StrategyRecommender",
+    "StrategyScore",
+    "get_strategy_recommender",
 ]

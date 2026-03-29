@@ -32,7 +32,7 @@ Usage:
 import logging
 from decimal import Decimal
 from pathlib import Path
-from typing import Dict, List, Optional, Union
+from typing import Optional, Union
 
 logger = logging.getLogger(__name__)
 
@@ -67,9 +67,9 @@ class StrategyConfigLoader:
             config_dir = project_root / "config"
 
         self.config_dir = config_dir
-        self._cache: Dict[str, Dict[str, object]] = {}
+        self._cache: dict[str, dict[str, object]] = {}
 
-    def _load_yaml(self, filename: str) -> Dict[str, object]:
+    def _load_yaml(self, filename: str) -> dict[str, object]:
         """
         Load a YAML configuration file.
 
@@ -94,7 +94,7 @@ class StrategyConfigLoader:
         try:
             import yaml
 
-            with open(config_path, 'r') as f:
+            with open(config_path) as f:
                 config = yaml.safe_load(f) or {}
 
             self._cache[filename] = config
@@ -104,7 +104,9 @@ class StrategyConfigLoader:
             logger.error(f"Error loading config from {config_path}: {e}")
             return {}
 
-    def _get_nested(self, data: Dict[str, object], key_path: str, default: Optional[object] = None) -> Optional[object]:
+    def _get_nested(
+        self, data: dict[str, object], key_path: str, default: Optional[object] = None
+    ) -> Optional[object]:
         """
         Get a nested value from a dictionary using dot notation.
 
@@ -116,7 +118,7 @@ class StrategyConfigLoader:
         Returns:
             Value at key path or default
         """
-        keys = key_path.split('.')
+        keys = key_path.split(".")
         value = data
 
         for key in keys:
@@ -131,7 +133,7 @@ class StrategyConfigLoader:
     # INDICATOR CONFIGURATION
     # ========================================================================
 
-    def get_indicator_config(self) -> Dict[str, object]:
+    def get_indicator_config(self) -> dict[str, object]:
         """Load indicator configuration from indicators.yaml."""
         return self._load_yaml("indicators.yaml")
 
@@ -235,7 +237,7 @@ class StrategyConfigLoader:
     # RISK MANAGEMENT CONFIGURATION
     # ========================================================================
 
-    def get_risk_config(self) -> Dict[str, object]:
+    def get_risk_config(self) -> dict[str, object]:
         """Load risk management configuration from risk_management.yaml."""
         return self._load_yaml("risk_management.yaml")
 
@@ -350,11 +352,11 @@ class StrategyConfigLoader:
     # CAPITAL TIER CONFIGURATION
     # ========================================================================
 
-    def get_tier_config(self) -> Dict[str, object]:
+    def get_tier_config(self) -> dict[str, object]:
         """Load capital tier configuration from capital_tiers.yaml."""
         return self._load_yaml("capital_tiers.yaml")
 
-    def get_tier_thresholds(self) -> Dict[str, int]:
+    def get_tier_thresholds(self) -> dict[str, int]:
         """
         Get capital tier thresholds.
 
@@ -370,14 +372,14 @@ class StrategyConfigLoader:
             15000
         """
         config = self.get_tier_config()
-        thresholds = config.get('thresholds', {})
+        thresholds = config.get("thresholds", {})
 
         return {
-            'micro': 0,
-            'small': thresholds.get('micro_small', 15000),
-            'medium': thresholds.get('small_medium', 50000),
-            'large': thresholds.get('medium_large', 250000),
-            'institutional': thresholds.get('large_institutional', 1000000),
+            "micro": 0,
+            "small": thresholds.get("micro_small", 15000),
+            "medium": thresholds.get("small_medium", 50000),
+            "large": thresholds.get("medium_large", 250000),
+            "institutional": thresholds.get("large_institutional", 1000000),
         }
 
     def get_tier_from_capital(self, capital: Union[int, float, Decimal]) -> str:
@@ -398,28 +400,30 @@ class StrategyConfigLoader:
             'medium'
         """
         capital_decimal = Decimal(str(capital))
-        thresholds = self.get_tier_config().get('tiers', {})
+        thresholds = self.get_tier_config().get("tiers", {})
 
         # Use min_capital thresholds for proper tier determination
-        small_min = Decimal(str(thresholds.get('small', {}).get('min_capital', 15000)))
-        medium_min = Decimal(str(thresholds.get('medium', {}).get('min_capital', 50000)))
-        large_min = Decimal(str(thresholds.get('large', {}).get('min_capital', 250000)))
+        small_min = Decimal(str(thresholds.get("small", {}).get("min_capital", 15000)))
+        medium_min = Decimal(str(thresholds.get("medium", {}).get("min_capital", 50000)))
+        large_min = Decimal(str(thresholds.get("large", {}).get("min_capital", 250000)))
         institutional_min = Decimal(
-            str(thresholds.get('institutional', {}).get('min_capital', 1000000))
+            str(thresholds.get("institutional", {}).get("min_capital", 1000000))
         )
 
         if capital_decimal < small_min:
-            return 'micro'
+            return "micro"
         elif capital_decimal < medium_min:
-            return 'small'
+            return "small"
         elif capital_decimal < large_min:
-            return 'medium'
+            return "medium"
         elif capital_decimal < institutional_min:
-            return 'large'
+            return "large"
         else:
-            return 'institutional'
+            return "institutional"
 
-    def get_tier_config_value(self, tier: str, key_path: str, default: Optional[object] = None) -> Optional[object]:
+    def get_tier_config_value(
+        self, tier: str, key_path: str, default: Optional[object] = None
+    ) -> Optional[object]:
         """
         Get a configuration value for a specific tier.
 
@@ -441,11 +445,11 @@ class StrategyConfigLoader:
 
     def get_max_positions(self, tier: str = "medium") -> int:
         """Get maximum number of positions for a tier."""
-        return self.get_tier_config_value(tier, 'max_positions', 10)
+        return self.get_tier_config_value(tier, "max_positions", 10)
 
-    def get_enabled_strategies(self, tier: str = "medium") -> List[str]:
+    def get_enabled_strategies(self, tier: str = "medium") -> list[str]:
         """Get list of enabled strategies for a tier."""
-        return self.get_tier_config_value(tier, 'enabled_strategies', ['momentum_strategy'])
+        return self.get_tier_config_value(tier, "enabled_strategies", ["momentum_strategy"])
 
     # ========================================================================
     # CONVENIENCE METHODS
@@ -456,7 +460,7 @@ class StrategyConfigLoader:
         self._cache.clear()
         logger.info("Strategy configuration cache cleared")
 
-    def get_all_config(self) -> Dict[str, Dict[str, object]]:
+    def get_all_config(self) -> dict[str, dict[str, object]]:
         """
         Get all configuration as a single dictionary.
 
@@ -464,9 +468,9 @@ class StrategyConfigLoader:
             Combined configuration from all files
         """
         return {
-            'indicators': self.get_indicator_config(),
-            'risk_management': self.get_risk_config(),
-            'capital_tiers': self.get_tier_config(),
+            "indicators": self.get_indicator_config(),
+            "risk_management": self.get_risk_config(),
+            "capital_tiers": self.get_tier_config(),
         }
 
 

@@ -5,7 +5,7 @@ This module implements the calculation of strategy breadth, which measures
 the number of independent betting opportunities per year.
 
 Breadth is a critical component of the Fundamental Law:
-    IR = IC × √BR
+    IR = IC * sqrtBR
 
 Higher breadth allows strategies with lower IC to achieve good IR.
 
@@ -18,12 +18,15 @@ from __future__ import annotations
 
 import logging
 from decimal import Decimal
+from typing import TYPE_CHECKING, ClassVar
 
 import numpy as np
 import pandas as pd
 
-from app.domain.analysis.fundamental_law.models import BreadthMetrics
 from app.shared.utils.decimal_utils import to_decimal
+
+if TYPE_CHECKING:
+    from app.domain.analysis.fundamental_law.models import BreadthMetrics
 
 logger = logging.getLogger(__name__)
 
@@ -59,7 +62,7 @@ class BreadthCalculator:
     """
 
     # Trading periods per year for different rebalancing frequencies
-    PERIODS_PER_YEAR = {
+    PERIODS_PER_YEAR: ClassVar[dict] = {
         "daily": 252,
         "weekly": 52,
         "biweekly": 26,
@@ -76,12 +79,12 @@ class BreadthCalculator:
         n_assets: int,
         rebalance_frequency: str,
         asset_correlation: pd.DataFrame | None = None,
-    ) -> "BreadthMetrics":
+    ) -> BreadthMetrics:
         """
         Calculate annual breadth from trading parameters.
 
         Formula:
-            BR = periods_per_year × n_assets × independence_factor
+            BR = periods_per_year * n_assets * independence_factor
 
         Args:
             n_assets: Number of assets traded
@@ -160,7 +163,7 @@ class BreadthCalculator:
         bets. Highly correlated bets don't count as independent opportunities.
 
         Formula:
-            IF = 1 / (1 + avg_correlation × (n - 1))
+            IF = 1 / (1 + avg_correlation * (n - 1))
 
         Logic:
         - If all assets are perfectly correlated (avg_corr = 1):
@@ -221,7 +224,7 @@ class BreadthCalculator:
         self,
         returns: pd.DataFrame,
         min_position: float = 0.01,
-    ) -> "BreadthMetrics":
+    ) -> BreadthMetrics:
         """
         Calculate breadth from historical returns and positions.
 
@@ -304,8 +307,8 @@ class BreadthCalculator:
         Estimate required breadth for a target Information Ratio.
 
         Rearranging the Fundamental Law:
-            IR = IC × √BR × TC
-            ∴ BR = (IR / (IC × TC))²
+            IR = IC * sqrtBR * TC
+            ∴ BR = (IR / (IC * TC))^2
 
         This tells you how many independent bets you need per year to
         achieve your target IR, given your forecasting skill (IC).
@@ -340,7 +343,7 @@ class BreadthCalculator:
             raise ValueError(f"Transfer Coefficient must be positive, got {transfer_coefficient}")
 
         # Calculate required breadth
-        # BR = (IR / (IC × TC))²
+        # BR = (IR / (IC * TC))^2
         denominator = information_coefficient * transfer_coefficient
         ratio = target_ir / denominator
         required_breadth = ratio**2

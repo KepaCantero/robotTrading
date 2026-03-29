@@ -9,7 +9,7 @@ Sub-components for capacity fade analysis:
 
 import logging
 from decimal import Decimal
-from typing import Dict, Optional
+from typing import Optional
 
 from .models import LiquidityReport
 
@@ -35,7 +35,7 @@ class HistoricalCapacityAnalyzer:
         current_capital_usd: Decimal,
         target_capital_usd: Decimal,
         confidence_level: str = "conservative",
-    ) -> Dict:
+    ) -> dict:
         """
         Analyze capacity impact on alpha using historical data.
 
@@ -77,7 +77,7 @@ class HistoricalCapacityAnalyzer:
             return analysis
 
         except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
-            logger.error(f"❌ Capacity impact analysis failed: {str(e)}")
+            logger.error(f"❌ Capacity impact analysis failed: {e!s}")
             return {"error": str(e)}
 
 
@@ -145,7 +145,7 @@ class LiquidityHeadroom:
             return report
 
         except (ValueError, TypeError, KeyError, AttributeError) as e:
-            logger.error(f"❌ Headroom calculation failed: {str(e)}")
+            logger.error(f"❌ Headroom calculation failed: {e!s}")
             raise
 
 
@@ -173,7 +173,7 @@ class AlphaDecayEstimator:
         target_capital_usd: Decimal,
         fade_model: str = "sqrt",
         liquidity_penalty_pct: Optional[Decimal] = None,
-    ) -> Dict:
+    ) -> dict:
         """
         Estimate alpha at target capital using decay model.
 
@@ -246,7 +246,7 @@ class AlphaDecayEstimator:
             return result
 
         except (ValueError, TypeError, KeyError, AttributeError) as e:
-            logger.error(f"❌ Alpha decay estimation failed: {str(e)}")
+            logger.error(f"❌ Alpha decay estimation failed: {e!s}")
             return {"error": str(e)}
 
     def calculate_required_alpha(
@@ -277,5 +277,5 @@ class AlphaDecayEstimator:
             return required_alpha
 
         except (ValueError, TypeError, KeyError, AttributeError) as e:
-            logger.error(f"❌ Required alpha calculation failed: {str(e)}")
+            logger.error(f"❌ Required alpha calculation failed: {e!s}")
             return Decimal("0")

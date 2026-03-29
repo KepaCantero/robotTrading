@@ -29,26 +29,26 @@ from app.shared.config.params.strategy_config import StockAllocationSettings, St
 from app.shared.config.params.trading_thresholds import TradingThresholds
 
 __all__ = [
-    # Trading
-    "TradingThresholds",
-    # Strategy
-    "StrategyConfig",
-    "StockAllocationSettings",
+    "APIConfig",
     # Backtesting
     "BacktestingConfig",
     "CommissionModel",
-    "FixedCommission",
-    "HybridCommission",
-    "TierBracket",
-    "TieredCommission",
-    # Infrastructure
-    "DatabaseConfig",
-    "RedisConfig",
-    "APIConfig",
-    "LoggingConfig",
-    "MonitoringConfig",
+    "ComplianceConfig",
     # Risk & Compliance
     "CurrencyHedgingConfig",
+    # Infrastructure
+    "DatabaseConfig",
+    "FixedCommission",
+    "HybridCommission",
+    "LoggingConfig",
+    "MonitoringConfig",
+    "RedisConfig",
     "SectorCountryDiversificationConfig",
-    "ComplianceConfig",
+    "StockAllocationSettings",
+    # Strategy
+    "StrategyConfig",
+    "TierBracket",
+    "TieredCommission",
+    # Trading
+    "TradingThresholds",
 ]

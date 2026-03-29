@@ -18,11 +18,12 @@ import logging
 import threading
 import weakref
 from collections import deque
-from typing import TypedDict
+from typing import TYPE_CHECKING, TypedDict
 
 import psutil
 
-from app.backtesting.models import BacktestResult
+if TYPE_CHECKING:
+    from app.backtesting.models import BacktestResult
 
 logger = logging.getLogger(__name__)
 
@@ -110,7 +111,7 @@ class AggressiveMemoryManager:
         """
         state = self.__dict__.copy()
         # Remove unpicklable lock - will be recreated in __setstate__
-        state.pop('_lock', None)
+        state.pop("_lock", None)
         return state
 
     def __setstate__(self, state: dict) -> None:
@@ -238,11 +239,11 @@ class AggressiveMemoryManager:
         """
         try:
             # Clear any dict/list attributes that might hold references
-            if hasattr(obj, '__dict__'):
+            if hasattr(obj, "__dict__"):
                 for attr_name, attr_value in list(obj.__dict__.items()):
                     if isinstance(attr_value, (dict, list, set)):
                         # Clear the container
-                        if hasattr(attr_value, 'clear'):
+                        if hasattr(attr_value, "clear"):
                             attr_value.clear()
                     elif attr_value is not obj:
                         # Set to None to break references
@@ -251,9 +252,9 @@ class AggressiveMemoryManager:
             logger.debug(
                 "Error during deep cleanup",
                 extra={
-                    'object_type': type(obj).__name__,
-                    'error_type': type(e).__name__,
-                    'error_message': str(e),
+                    "object_type": type(obj).__name__,
+                    "error_type": type(e).__name__,
+                    "error_message": str(e),
                 },
                 exc_info=True,
             )
@@ -281,10 +282,10 @@ class AggressiveMemoryManager:
         logger.critical(
             "Emergency cleanup triggered",
             extra={
-                'action': 'emergency_cleanup',
-                'results_before': len(self._results),
-                'backtest_objects_before': len(self._backtest_objects),
-                'memory_threshold_mb': self.memory_threshold,
+                "action": "emergency_cleanup",
+                "results_before": len(self._results),
+                "backtest_objects_before": len(self._backtest_objects),
+                "memory_threshold_mb": self.memory_threshold,
             },
         )
 
@@ -312,9 +313,9 @@ class AggressiveMemoryManager:
             logger.critical(
                 "Emergency cleanup completed",
                 extra={
-                    'results_after': len(self._results),
-                    'backtest_objects_after': len(self._backtest_objects),
-                    'emergency_cleanup_count': self._emergency_cleanup_count,
+                    "results_after": len(self._results),
+                    "backtest_objects_after": len(self._backtest_objects),
+                    "emergency_cleanup_count": self._emergency_cleanup_count,
                 },
             )
 
@@ -342,10 +343,10 @@ class AggressiveMemoryManager:
                 logger.warning(
                     "Memory pressure detected",
                     extra={
-                        'memory_mb': round(memory_mb, 2),
-                        'threshold_mb': self.memory_threshold,
-                        'results_count': len(self._results),
-                        'backtest_objects_count': len(self._backtest_objects),
+                        "memory_mb": round(memory_mb, 2),
+                        "threshold_mb": self.memory_threshold,
+                        "results_count": len(self._results),
+                        "backtest_objects_count": len(self._backtest_objects),
                     },
                 )
                 self._emergency_cleanup()
@@ -356,11 +357,11 @@ class AggressiveMemoryManager:
                 logger.debug(
                     "Memory status check",
                     extra={
-                        'memory_mb': round(memory_mb, 2),
-                        'results_count': len(self._results),
-                        'backtest_objects_count': len(self._backtest_objects),
-                        'weak_refs_count': len(self._backtest_refs),
-                        'threshold_mb': self.memory_threshold,
+                        "memory_mb": round(memory_mb, 2),
+                        "results_count": len(self._results),
+                        "backtest_objects_count": len(self._backtest_objects),
+                        "weak_refs_count": len(self._backtest_refs),
+                        "threshold_mb": self.memory_threshold,
                     },
                 )
 
@@ -370,8 +371,8 @@ class AggressiveMemoryManager:
             logger.error(
                 "Error checking memory pressure",
                 extra={
-                    'error_type': type(e).__name__,
-                    'error_message': str(e),
+                    "error_type": type(e).__name__,
+                    "error_message": str(e),
                 },
                 exc_info=True,
             )
@@ -398,14 +399,14 @@ class AggressiveMemoryManager:
             Dictionary with statistics
         """
         return {
-            'results_count': len(self._results),
-            'backtest_objects_count': len(self._backtest_objects),
-            'weak_refs_count': len(self._backtest_refs),  # FIX: Added tracking
-            'cleanup_count': self._cleanup_count,
-            'emergency_cleanup_count': self._emergency_cleanup_count,
-            'memory_usage_mb': self.get_memory_usage_mb(),
-            'memory_threshold_mb': self.memory_threshold,
-            'auto_monitor_enabled': self.auto_monitor,  # FIX: Added tracking
+            "results_count": len(self._results),
+            "backtest_objects_count": len(self._backtest_objects),
+            "weak_refs_count": len(self._backtest_refs),  # FIX: Added tracking
+            "cleanup_count": self._cleanup_count,
+            "emergency_cleanup_count": self._emergency_cleanup_count,
+            "memory_usage_mb": self.get_memory_usage_mb(),
+            "memory_threshold_mb": self.memory_threshold,
+            "auto_monitor_enabled": self.auto_monitor,  # FIX: Added tracking
         }
 
     def __repr__(self) -> str:

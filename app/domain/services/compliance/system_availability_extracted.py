@@ -3,10 +3,11 @@ System Availability Checks
 Extracted from compliance_engine.py for SRP compliance.
 TASK-24: SRP Refactoring
 """
+
 from __future__ import annotations
 
 import logging
-from typing import Any, Dict
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -25,7 +26,7 @@ class SystemAvailability:
         self.enable_logging = enable_logging
 
         # Second: Initialize tracking dictionary
-        self._systems: Dict[str, bool] = {}
+        self._systems: dict[str, bool] = {}
 
         # Third: Check all systems (may use enable_logging)
         self._check_all_systems()
@@ -239,7 +240,7 @@ class SystemAvailability:
         except ImportError:
             return False
 
-    def get_availability(self) -> Dict[str, bool]:
+    def get_availability(self) -> dict[str, bool]:
         """Get availability of all systems."""
         return self._systems.copy()
 
@@ -247,7 +248,7 @@ class SystemAvailability:
         """Check if a specific system is available."""
         return self._systems.get(system_name, False)
 
-    def get_summary(self) -> Dict[str, Any]:
+    def get_summary(self) -> dict[str, Any]:
         """Get summary of system availability."""
         available = sum(1 for v in self._systems.values() if v)
         total = len(self._systems)

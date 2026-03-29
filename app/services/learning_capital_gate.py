@@ -24,12 +24,9 @@ This gate enforces:
 
 import logging
 from decimal import Decimal
-from typing import TYPE_CHECKING, Dict, Tuple, Optional
+from typing import ClassVar, Optional
 
 from app.shared.config.centralized_config import get_config
-
-if TYPE_CHECKING:
-    pass
 
 logger = logging.getLogger(__name__)
 
@@ -48,7 +45,7 @@ class LearningCapitalGate:
     """
 
     # Alternative cost models for different account sizes
-    LEARNING_COST_SCALE = {
+    LEARNING_COST_SCALE: ClassVar[dict] = {
         # (min_capital, learning_cost_pct_of_capital)
         # For micro: 0.5% = $50 on $10k account = very high
         "micro": Decimal("0.005"),  # 0.5% of capital
@@ -63,7 +60,7 @@ class LearningCapitalGate:
         expected_monthly_alpha: Optional[Decimal] = None,
         monthly_win_rate: Optional[Decimal] = None,  # 55% win rate (achievable)
         learning_enabled: bool = True,
-    ) -> Tuple[bool, Dict]:
+    ) -> tuple[bool, dict]:
         """
         Determine if learning engine should be enabled for this account.
 
@@ -208,7 +205,7 @@ class LearningCapitalGate:
             return "large"  # $250k+
 
     @staticmethod
-    def get_recommended_learning_config(capital: Decimal) -> Dict:
+    def get_recommended_learning_config(capital: Decimal) -> dict:
         """
         Get recommended learning configuration for the given capital tier.
 
@@ -309,8 +306,8 @@ class LearningCapitalGate:
     @staticmethod
     def log_learning_decision(
         capital: Decimal,
-        analysis: Dict,
-        account_id: str = None,
+        analysis: dict,
+        account_id: Optional[str] = None,
     ) -> str:
         """Log learning capital gate decision for audit trail"""
 

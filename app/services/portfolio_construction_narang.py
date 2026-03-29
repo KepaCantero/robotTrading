@@ -24,7 +24,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from decimal import Decimal
 from enum import Enum
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 
 import numpy as np
 import pandas as pd
@@ -72,7 +72,7 @@ class AlphaView:
     alpha_source: str  # Source of alpha
     holding_period: int  # Expected holding period in days
     timestamp: datetime = field(default_factory=datetime.now)
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
@@ -110,7 +110,7 @@ class PortfolioConstraints:
 class PortfolioWeights:
     """Portfolio weights and metadata."""
 
-    weights: Dict[str, Decimal]  # symbol -> weight
+    weights: dict[str, Decimal]  # symbol -> weight
     optimization_method: OptimizationMethod
     timestamp: datetime = field(default_factory=datetime.now)
     expected_return: Decimal = Decimal("0")
@@ -145,7 +145,7 @@ class RebalanceRecommendation:
     should_rebalance: bool
     trigger: RebalanceTrigger
     reason: str
-    trades: List[Tuple[str, Decimal, Decimal]]  # (symbol, old_weight, new_weight)
+    trades: list[tuple[str, Decimal, Decimal]]  # (symbol, old_weight, new_weight)
     estimated_cost: Decimal
     expected_benefit: Decimal
     timestamp: datetime = field(default_factory=datetime.now)
@@ -165,13 +165,13 @@ class PortfolioConstructor:
     "black box" that combines all other models.
     """
 
-    def __init__(self, config: Dict[str, Any]):
+    def __init__(self, config: dict[str, Any]):
         self.config = config
         self.name = config.get("name", self.__class__.__name__)
 
         # Sub-models
-        self.risk_model: Optional[RiskModel] = None
-        self.cost_model: Optional[TransactionCostModel] = None
+        self.risk_model: RiskModel | None = None
+        self.cost_model: TransactionCostModel | None = None
 
         # Optimization settings
         self.optimization_method = OptimizationMethod(
@@ -184,8 +184,8 @@ class PortfolioConstructor:
         self.drift_threshold = Decimal(str(config.get("drift_threshold", 0.05)))
 
         # History
-        self.current_weights: Dict[str, Decimal] = {}
-        self.rebalance_history: List[RebalanceRecommendation] = []
+        self.current_weights: dict[str, Decimal] = {}
+        self.rebalance_history: list[RebalanceRecommendation] = []
 
     def set_risk_model(self, risk_model: RiskModel) -> None:
         """Set the risk model for constraints."""
@@ -199,9 +199,9 @@ class PortfolioConstructor:
 
     def construct_portfolio(
         self,
-        alpha_views: List[AlphaView],
-        current_portfolio: Optional[Dict[str, Decimal]] = None,
-        returns: Optional[pd.DataFrame] = None,
+        alpha_views: list[AlphaView],
+        current_portfolio: dict[str, Decimal] | None = None,
+        returns: pd.DataFrame | None = None,
     ) -> PortfolioWeights:
         """
         Construct optimal portfolio from alpha views.
@@ -266,7 +266,7 @@ class PortfolioConstructor:
             transaction_costs=transaction_costs,
         )
 
-    def _filter_by_constraints(self, alpha_views: List[AlphaView]) -> List[AlphaView]:
+    def _filter_by_constraints(self, alpha_views: list[AlphaView]) -> list[AlphaView]:
         """Filter alpha views by constraints."""
         valid = []
 
@@ -294,13 +294,13 @@ class PortfolioConstructor:
 
         return valid
 
-    def _equal_weight(self, alpha_views: List[AlphaView]) -> Dict[str, Decimal]:
+    def _equal_weight(self, alpha_views: list[AlphaView]) -> dict[str, Decimal]:
         """Equal weight (1/N) portfolio."""
         n = len(alpha_views)
         weight = Decimal("1.0") / Decimal(str(n))
         return {view.symbol: weight for view in alpha_views}
 
-    def _alpha_rank(self, alpha_views: List[AlphaView]) -> Dict[str, Decimal]:
+    def _alpha_rank(self, alpha_views: list[AlphaView]) -> dict[str, Decimal]:
         """Rank-weighted portfolio by alpha."""
         # Sort by expected return * confidence
         sorted_views = sorted(
@@ -323,8 +323,8 @@ class PortfolioConstructor:
         return weights
 
     def _risk_parity(
-        self, alpha_views: List[AlphaView], returns: Optional[pd.DataFrame]
-    ) -> Dict[str, Decimal]:
+        self, alpha_views: list[AlphaView], returns: pd.DataFrame | None
+    ) -> dict[str, Decimal]:
         """
         Risk parity portfolio (equal risk contribution).
 
@@ -360,8 +360,8 @@ class PortfolioConstructor:
         return weights
 
     def _mean_variance(
-        self, alpha_views: List[AlphaView], returns: Optional[pd.DataFrame]
-    ) -> Dict[str, Decimal]:
+        self, alpha_views: list[AlphaView], returns: pd.DataFrame | None
+    ) -> dict[str, Decimal]:
         """
         Mean-variance optimization (Markowitz).
 
@@ -433,8 +433,8 @@ class PortfolioConstructor:
         return weights
 
     def _max_sharpe(
-        self, alpha_views: List[AlphaView], returns: Optional[pd.DataFrame]
-    ) -> Dict[str, Decimal]:
+        self, alpha_views: list[AlphaView], returns: pd.DataFrame | None
+    ) -> dict[str, Decimal]:
         """Maximize Sharpe ratio portfolio."""
         if returns is None or len(returns) < 20:
             return self._alpha_rank(alpha_views)
@@ -502,8 +502,8 @@ class PortfolioConstructor:
         return weights
 
     def _min_variance(
-        self, alpha_views: List[AlphaView], returns: Optional[pd.DataFrame]
-    ) -> Dict[str, Decimal]:
+        self, alpha_views: list[AlphaView], returns: pd.DataFrame | None
+    ) -> dict[str, Decimal]:
         """Minimum variance portfolio."""
         if returns is None or len(returns) < 20:
             return self._equal_weight(alpha_views)
@@ -553,8 +553,8 @@ class PortfolioConstructor:
         return weights
 
     def _apply_risk_constraints(
-        self, weights: Dict[str, Decimal], returns: pd.DataFrame
-    ) -> Dict[str, Decimal]:
+        self, weights: dict[str, Decimal], returns: pd.DataFrame
+    ) -> dict[str, Decimal]:
         """Apply risk model constraints."""
         if not self.risk_model:
             return weights
@@ -576,7 +576,7 @@ class PortfolioConstructor:
 
         return {k: Decimal(str(v)) for k, v in constrained.items()}
 
-    def _apply_position_constraints(self, weights: Dict[str, Decimal]) -> Dict[str, Decimal]:
+    def _apply_position_constraints(self, weights: dict[str, Decimal]) -> dict[str, Decimal]:
         """Apply position-level constraints."""
         constrained = {}
 
@@ -600,9 +600,9 @@ class PortfolioConstructor:
 
     def _estimate_transaction_costs(
         self,
-        current_weights: Dict[str, Decimal],
-        new_weights: Dict[str, Decimal],
-        returns: Optional[pd.DataFrame],
+        current_weights: dict[str, Decimal],
+        new_weights: dict[str, Decimal],
+        returns: pd.DataFrame | None,
     ) -> Decimal:
         """Estimate total transaction costs for rebalancing."""
         if not self.cost_model:
@@ -629,7 +629,7 @@ class PortfolioConstructor:
         return total_cost
 
     def _calculate_expected_return(
-        self, weights: Dict[str, Decimal], alpha_views: List[AlphaView]
+        self, weights: dict[str, Decimal], alpha_views: list[AlphaView]
     ) -> Decimal:
         """Calculate portfolio expected return."""
         total_return = Decimal("0")
@@ -644,7 +644,7 @@ class PortfolioConstructor:
         return total_return
 
     def _calculate_expected_risk(
-        self, weights: Dict[str, Decimal], returns: pd.DataFrame
+        self, weights: dict[str, Decimal], returns: pd.DataFrame
     ) -> Decimal:
         """Calculate portfolio expected risk (volatility)."""
         if returns is None or len(returns) == 0:
@@ -667,8 +667,8 @@ class PortfolioConstructor:
 
     def should_rebalance(
         self,
-        current_weights: Dict[str, Decimal],
-        target_weights: Dict[str, Decimal],
+        current_weights: dict[str, Decimal],
+        target_weights: dict[str, Decimal],
         portfolio_value: Decimal,
     ) -> RebalanceRecommendation:
         """
@@ -722,7 +722,7 @@ class PortfolioConstructor:
         )
 
 
-def get_portfolio_constructor(config: Dict[str, Any]) -> PortfolioConstructor:
+def get_portfolio_constructor(config: dict[str, Any]) -> PortfolioConstructor:
     """
     Factory function to create portfolio constructor.
 
@@ -748,12 +748,12 @@ def get_portfolio_constructor(config: Dict[str, Any]) -> PortfolioConstructor:
 
 
 __all__ = [
-    "OptimizationMethod",
-    "RebalanceTrigger",
     "AlphaView",
+    "OptimizationMethod",
     "PortfolioConstraints",
+    "PortfolioConstructor",
     "PortfolioWeights",
     "RebalanceRecommendation",
-    "PortfolioConstructor",
+    "RebalanceTrigger",
     "get_portfolio_constructor",
 ]

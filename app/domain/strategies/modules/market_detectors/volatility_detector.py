@@ -4,7 +4,7 @@ VolatilityDetector - Módulo independiente para detectar régimen de volatilidad
 
 import bisect
 import logging
-from typing import Dict, List
+from typing import Optional
 
 from .base_detector import BaseMarketDetector
 
@@ -20,7 +20,9 @@ class VolatilityDetector(BaseMarketDetector):
     - std_dev: Desviación estándar de retornos
     """
 
-    def __init__(self, config: Dict = None, tier: str = None, use_yaml: bool = True):
+    def __init__(
+        self, config: Optional[dict] = None, tier: Optional[str] = None, use_yaml: bool = True
+    ):
         """Inicializar detector de volatilidad."""
         super().__init__("volatility_detector", config, tier, use_yaml)
 
@@ -39,7 +41,7 @@ class VolatilityDetector(BaseMarketDetector):
         self.std_dev_low_threshold = std_dev_config.get("low_threshold", 0.005)
         self.std_dev_window = std_dev_config.get("window", 20)
 
-    def detect(self, price_history: List[float], **kwargs) -> Dict:
+    def detect(self, price_history: list[float], **kwargs) -> dict:
         """
         Detectar régimen de volatilidad.
 
@@ -55,7 +57,7 @@ class VolatilityDetector(BaseMarketDetector):
             }
         """
         if not self.enabled:
-            return {'regime': 'normal', 'percentile': 50, 'confidence': 0.5, 'method': self.method}
+            return {"regime": "normal", "percentile": 50, "confidence": 0.5, "method": self.method}
 
         atr_history = kwargs.get("atr_history", [])
 
@@ -67,14 +69,14 @@ class VolatilityDetector(BaseMarketDetector):
             logger.warning(f"Unknown volatility detection method: {self.method}")
             return self._detect_atr_percentile(atr_history)
 
-    def _detect_atr_percentile(self, atr_history: List[float]) -> Dict:
+    def _detect_atr_percentile(self, atr_history: list[float]) -> dict:
         """Detectar volatilidad usando percentil de ATR."""
         if len(atr_history) < self.percentile_window:
             return {
-                'regime': 'normal',
-                'percentile': 50,
-                'confidence': 0.5,
-                'method': 'atr_percentile',
+                "regime": "normal",
+                "percentile": 50,
+                "confidence": 0.5,
+                "method": "atr_percentile",
             }
 
         # Calcular percentil del ATR actual usando bisect para mayor precisión
@@ -87,13 +89,13 @@ class VolatilityDetector(BaseMarketDetector):
         percentile = (pos / len(sorted_atr)) * 100
 
         if percentile >= self.high_vol_threshold:
-            regime = 'high'
+            regime = "high"
             confidence = min(1.0, (percentile - self.high_vol_threshold) / 25)
         elif percentile <= self.low_vol_threshold:
-            regime = 'low'
+            regime = "low"
             confidence = min(1.0, (self.low_vol_threshold - percentile) / 25)
         else:
-            regime = 'normal'
+            regime = "normal"
             # Confianza basada en qué tan cerca del centro
             center = (self.high_vol_threshold + self.low_vol_threshold) / 2
             distance = abs(percentile - center)
@@ -101,17 +103,17 @@ class VolatilityDetector(BaseMarketDetector):
             confidence = 1.0 - (distance / max_distance) * 0.5
 
         return {
-            'regime': regime,
-            'percentile': int(percentile),
-            'confidence': confidence,
-            'method': 'atr_percentile',
-            'metadata': {'current_atr': current_atr, 'atr_history_length': len(atr_history)},
+            "regime": regime,
+            "percentile": int(percentile),
+            "confidence": confidence,
+            "method": "atr_percentile",
+            "metadata": {"current_atr": current_atr, "atr_history_length": len(atr_history)},
         }
 
-    def _detect_std_dev(self, price_history: List[float]) -> Dict:
+    def _detect_std_dev(self, price_history: list[float]) -> dict:
         """Detectar volatilidad usando desviación estándar de retornos."""
         if len(price_history) < self.std_dev_window:
-            return {'regime': 'normal', 'percentile': 50, 'confidence': 0.5, 'method': 'std_dev'}
+            return {"regime": "normal", "percentile": 50, "confidence": 0.5, "method": "std_dev"}
 
         # Calcular retornos
         returns = []
@@ -121,7 +123,7 @@ class VolatilityDetector(BaseMarketDetector):
                 returns.append(ret)
 
         if len(returns) < 2:
-            return {'regime': 'normal', 'percentile': 50, 'confidence': 0.5, 'method': 'std_dev'}
+            return {"regime": "normal", "percentile": 50, "confidence": 0.5, "method": "std_dev"}
 
         import numpy as np
 
@@ -133,19 +135,19 @@ class VolatilityDetector(BaseMarketDetector):
         low_threshold = self.std_dev_low_threshold
 
         if std_dev >= high_threshold:
-            regime = 'high'
+            regime = "high"
             percentile = 75 + min(25, (std_dev - high_threshold) / high_threshold * 25)
         elif std_dev <= low_threshold:
-            regime = 'low'
+            regime = "low"
             percentile = 25 - min(25, (low_threshold - std_dev) / low_threshold * 25)
         else:
-            regime = 'normal'
+            regime = "normal"
             percentile = 50
 
         return {
-            'regime': regime,
-            'percentile': int(percentile),
-            'confidence': 0.7,
-            'method': 'std_dev',
-            'metadata': {'std_dev': float(std_dev)},
+            "regime": regime,
+            "percentile": int(percentile),
+            "confidence": 0.7,
+            "method": "std_dev",
+            "metadata": {"std_dev": float(std_dev)},
         }

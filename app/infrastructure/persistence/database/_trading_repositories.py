@@ -7,10 +7,9 @@ Contains TradeRepository and SignalRepository.
 
 from __future__ import annotations
 
-import uuid
 from datetime import datetime, timedelta
 from decimal import Decimal
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from sqlalchemy import and_
 from sqlalchemy.exc import (
@@ -20,11 +19,15 @@ from sqlalchemy.exc import (
     OperationalError,
     ProgrammingError,
 )
-from sqlalchemy.sql.functions import count as sa_count, sum as sa_sum
+from sqlalchemy.sql.functions import count as sa_count
+from sqlalchemy.sql.functions import sum as sa_sum
 
 from app.infrastructure.persistence.database._base_repository import BaseRepository, logger
 from app.infrastructure.persistence.database.models import Signal, Trade
 from app.shared.exceptions.exceptions import raise_database_error
+
+if TYPE_CHECKING:
+    import uuid
 
 
 class TradeRepository(BaseRepository[Trade]):
@@ -61,7 +64,7 @@ class TradeRepository(BaseRepository[Trade]):
                 error=str(e),
             )
             raise_database_error(
-                f"Failed to get trades by portfolio: {str(e)}",
+                f"Failed to get trades by portfolio: {e!s}",
                 "get_by_portfolio",
                 "trades",
             )
@@ -96,9 +99,7 @@ class TradeRepository(BaseRepository[Trade]):
                 asset_id=str(asset_id),
                 error=str(e),
             )
-            raise_database_error(
-                f"Failed to get trades by asset: {str(e)}", "get_by_asset", "trades"
-            )
+            raise_database_error(f"Failed to get trades by asset: {e!s}", "get_by_asset", "trades")
 
     def get_by_date_range(self, start_date: datetime, end_date: datetime) -> list[Trade]:
         """Get trades within date range."""
@@ -130,7 +131,7 @@ class TradeRepository(BaseRepository[Trade]):
                 error=str(e),
             )
             raise_database_error(
-                f"Failed to get trades by date range: {str(e)}",
+                f"Failed to get trades by date range: {e!s}",
                 "get_by_date_range",
                 "trades",
             )
@@ -173,7 +174,7 @@ class TradeRepository(BaseRepository[Trade]):
                 error=str(e),
             )
             raise_database_error(
-                f"Failed to get trade summary: {str(e)}", "get_trade_summary", "trades"
+                f"Failed to get trade summary: {e!s}", "get_trade_summary", "trades"
             )
 
 
@@ -211,7 +212,7 @@ class SignalRepository(BaseRepository[Signal]):
                 error=str(e),
             )
             raise_database_error(
-                f"Failed to get signals by strategy: {str(e)}",
+                f"Failed to get signals by strategy: {e!s}",
                 "get_by_strategy",
                 "signals",
             )
@@ -247,7 +248,7 @@ class SignalRepository(BaseRepository[Signal]):
                 error=str(e),
             )
             raise_database_error(
-                f"Failed to get signals by asset: {str(e)}", "get_by_asset", "signals"
+                f"Failed to get signals by asset: {e!s}", "get_by_asset", "signals"
             )
 
     def get_recent_signals(self, hours: int = 24) -> list[Signal]:
@@ -279,7 +280,7 @@ class SignalRepository(BaseRepository[Signal]):
                 error=str(e),
             )
             raise_database_error(
-                f"Failed to get recent signals: {str(e)}",
+                f"Failed to get recent signals: {e!s}",
                 "get_recent_signals",
                 "signals",
             )

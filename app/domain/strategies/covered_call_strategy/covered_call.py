@@ -13,7 +13,6 @@ from __future__ import annotations
 import logging
 from dataclasses import dataclass
 from enum import Enum
-from typing import Dict, List, Optional, Tuple
 
 import numpy as np
 
@@ -102,7 +101,7 @@ class CoveredCallPosition:
 class CoveredCallPortfolio:
     """Portfolio of covered call positions."""
 
-    positions: List[CoveredCallPosition]
+    positions: list[CoveredCallPosition]
     total_premium_collected: float
     assigned_positions: int  # Number of positions assigned
     avg_monthly_income: float  # Average monthly income from premiums
@@ -172,9 +171,9 @@ class CoveredCallStrategy:
     def select_optimal_call(
         self,
         stock_price: float,
-        available_calls: List[OptionData],
+        available_calls: list[OptionData],
         stock_quantity: int,
-    ) -> Optional[OptionData]:
+    ) -> OptionData | None:
         """
         Select optimal call option to sell.
 
@@ -230,7 +229,7 @@ class CoveredCallStrategy:
 
         # Find closest strike to target
         best_call = None
-        best_score = -float('inf')
+        best_score = -float("inf")
 
         for call in valid_calls:
             # Check premium threshold
@@ -264,9 +263,9 @@ class CoveredCallStrategy:
 
     def generate_signal(
         self,
-        covered_position: Optional[CoveredCallPosition],
+        covered_position: CoveredCallPosition | None,
         stock_price: float,
-        available_calls: List[OptionData],
+        available_calls: list[OptionData],
     ) -> CallSignal:
         """
         Generate trading signal for covered call position.
@@ -316,9 +315,9 @@ class CoveredCallStrategy:
     def _find_next_month_call(
         self,
         stock_price: float,
-        available_calls: List[OptionData],
+        available_calls: list[OptionData],
         current_strike: float,
-    ) -> Optional[OptionData]:
+    ) -> OptionData | None:
         """Find call option for next month with similar strike."""
         # Filter for later expirations
         future_calls = [
@@ -327,7 +326,7 @@ class CoveredCallStrategy:
 
         # Find closest strike to current
         best_call = None
-        min_strike_diff = float('inf')
+        min_strike_diff = float("inf")
 
         for call in future_calls:
             strike_diff = abs(call.strike - current_strike)
@@ -340,9 +339,9 @@ class CoveredCallStrategy:
     def _find_roll_up_call(
         self,
         stock_price: float,
-        available_calls: List[OptionData],
+        available_calls: list[OptionData],
         current_option: OptionData,
-    ) -> Optional[OptionData]:
+    ) -> OptionData | None:
         """Find call option with higher strike for more premium."""
         # Look for higher strike with similar expiration
         target_strike = stock_price * (
@@ -350,7 +349,7 @@ class CoveredCallStrategy:
         )  # More OTM
 
         best_call = None
-        min_distance = float('inf')
+        min_distance = float("inf")
 
         for call in available_calls:
             # Must be higher strike
@@ -501,7 +500,7 @@ class CoveredCallStrategy:
         position: CoveredCallPosition,
         current_stock_price: float,
         current_date: str,
-    ) -> Tuple[CallSignal, Optional[OptionData]]:
+    ) -> tuple[CallSignal, OptionData | None]:
         """
         Manage existing covered call position.
 
@@ -548,8 +547,8 @@ class CoveredCallStrategy:
 
     def calculate_portfolio_metrics(
         self,
-        positions: List[CoveredCallPosition],
-    ) -> Dict[str, float]:
+        positions: list[CoveredCallPosition],
+    ) -> dict[str, float]:
         """
         Calculate portfolio-level metrics.
 

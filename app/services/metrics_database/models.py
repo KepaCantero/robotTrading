@@ -10,7 +10,7 @@ from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from decimal import Decimal
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Callable, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -74,9 +74,9 @@ class MetricPoint:
     value: Decimal
     symbol: Optional[str] = None
     portfolio_id: Optional[str] = None
-    tags: Dict[str, str] = field(default_factory=dict)
+    tags: dict[str, str] = field(default_factory=dict)
 
-    def to_dict(self) -> Dict:
+    def to_dict(self) -> dict:
         """Convert to dictionary for storage."""
         return {
             "timestamp": self.timestamp.isoformat(),
@@ -99,15 +99,13 @@ class TimeSeriesQuery:
     portfolio_id: Optional[str] = None
     aggregation_type: Optional[AggregationType] = None
     aggregation_interval_minutes: int = 5  # Default: 5-minute candles
-    tags_filter: Optional[Dict[str, str]] = None
+    tags_filter: Optional[dict[str, str]] = None
 
     def validate(self) -> bool:
         """Validate query parameters."""
         if self.start_time >= self.end_time:
             return False
-        if self.aggregation_interval_minutes < 1:
-            return False
-        return True
+        return not self.aggregation_interval_minutes < 1
 
 
 @dataclass
@@ -135,7 +133,7 @@ class AggregatedMetrics:
     stddev_value: Optional[Decimal] = None
     count: int = 0
 
-    def to_dict(self) -> Dict:
+    def to_dict(self) -> dict:
         """Convert to dictionary."""
         return {
             "metric_type": self.metric_type.value,
@@ -167,7 +165,7 @@ class MetricsCollectionResult:
     metrics_collected: int
     metrics_failed: int
     total_duration_ms: float
-    errors: List[str] = field(default_factory=list)
+    errors: list[str] = field(default_factory=list)
 
     @property
     def success_rate(self) -> float:
@@ -190,7 +188,7 @@ class MetricsStorageStats:
     avg_points_per_metric: float
     retention_days: int
 
-    def to_dict(self) -> Dict:
+    def to_dict(self) -> dict:
         """Convert to dictionary."""
         return {
             "total_metrics_stored": self.total_metrics_stored,
@@ -234,7 +232,7 @@ class MetricStatistics:
     change_value: Optional[Decimal] = None
     change_percent: Optional[Decimal] = None
 
-    def to_dict(self) -> Dict:
+    def to_dict(self) -> dict:
         """Convert to dictionary."""
         return {
             "metric_type": self.metric_type.value,
@@ -276,7 +274,7 @@ class CandlePoint:
     close_value: Decimal
     volume: int = 0
 
-    def to_dict(self) -> Dict:
+    def to_dict(self) -> dict:
         """Convert to dictionary."""
         return {
             "timestamp": self.timestamp.isoformat(),
@@ -297,7 +295,7 @@ class CachedResult:
     """Cached query result."""
 
     query_hash: str
-    result: List[Any]
+    result: list[Any]
     timestamp: datetime
     ttl_seconds: int = 300  # 5 minutes default
 
@@ -317,7 +315,7 @@ class CollectorSource:
     priority: int = 0  # Higher priority = collected first
     timeout_seconds: float = 5.0
 
-    async def collect(self) -> List[MetricPoint]:
+    async def collect(self) -> list[MetricPoint]:
         """Execute collection."""
         try:
             logger.debug(
@@ -434,11 +432,9 @@ class QuestDBConfig:
                 "database": self.database,
             },
         )
-        return (
-            f"postgresql://{self.user}:{self.password}@" f"{self.host}:{self.port}/{self.database}"
-        )
+        return f"postgresql://{self.user}:{self.password}@{self.host}:{self.port}/{self.database}"
 
-    def to_dict(self) -> Dict:
+    def to_dict(self) -> dict:
         """Convert to dictionary (safe, without password)."""
         return {
             "host": self.host,
@@ -461,7 +457,7 @@ class MetricsCollectorConfig:
     flush_interval_seconds: int = 30
     max_pending_metrics: int = 10000
 
-    def to_dict(self) -> Dict:
+    def to_dict(self) -> dict:
         """Convert to dictionary."""
         return {
             "enabled": self.enabled,
@@ -482,7 +478,7 @@ class MetricsQueryEngineConfig:
     max_cache_entries: int = 1000
     downsampling_enabled: bool = True
 
-    def to_dict(self) -> Dict:
+    def to_dict(self) -> dict:
         """Convert to dictionary."""
         return {
             "cache_enabled": self.cache_enabled,

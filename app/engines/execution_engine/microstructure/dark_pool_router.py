@@ -20,7 +20,7 @@ import logging
 from dataclasses import dataclass
 from decimal import Decimal
 from enum import Enum
-from typing import Dict, List, Optional
+from typing import ClassVar
 
 logger = logging.getLogger(__name__)
 
@@ -43,14 +43,14 @@ class DarkPoolDecision:
     reason: str
 
     # Venue allocation
-    venue_allocation: Dict[str, Decimal]  # venue -> percentage
+    venue_allocation: dict[str, Decimal]  # venue -> percentage
 
     # Expected costs
     expected_dark_cost_bps: float
     expected_lit_cost_bps: float
 
     # Recommendations
-    dark_pool_names: List[str]
+    dark_pool_names: list[str]
     order_type: str  # ICEBERG, VWAP, etc.
 
 
@@ -70,7 +70,7 @@ class DarkPoolRouter:
     DARK_POOL_IMPROVEMENT_RATE = 0.3  # % of orders with price improvement
 
     # Information leakage risk thresholds
-    INFORMATION_LEAKAGE_THRESHOLDS = {
+    INFORMATION_LEAKAGE_THRESHOLDS: ClassVar[dict] = {
         "HIGH": 0.8,
         "MEDIUM": 0.5,
         "LOW": 0.2,
@@ -78,8 +78,8 @@ class DarkPoolRouter:
 
     def __init__(
         self,
-        min_participation_rate: Optional[Decimal] = None,
-        min_order_size_usd: Optional[Decimal] = None,
+        min_participation_rate: Decimal | None = None,
+        min_order_size_usd: Decimal | None = None,
     ):
         """
         Initialize dark pool router.
@@ -196,13 +196,7 @@ class DarkPoolRouter:
             dark_pools = []
 
         # Order type recommendation
-        if use_dark:
-            if confidence > 0.7:
-                order_type = "ICEBERG"
-            else:
-                order_type = "VWAP"
-        else:
-            order_type = "LIMIT"
+        order_type = ("ICEBERG" if confidence > 0.7 else "VWAP") if use_dark else "LIMIT"
 
         return DarkPoolDecision(
             use_dark_pool=use_dark,
@@ -221,7 +215,7 @@ class DarkPoolRouter:
         adv: Decimal,
         order_value_usd: Decimal,
         participation_rate: Decimal,
-    ) -> Dict[str, any]:
+    ) -> dict[str, any]:
         """Evaluate size factor for dark pool decision."""
         if participation_rate >= self.min_participation_rate:
             return {
@@ -246,7 +240,7 @@ class DarkPoolRouter:
         self,
         risk_level: str,
         participation_rate: Decimal,
-    ) -> Dict[str, any]:
+    ) -> dict[str, any]:
         """Evaluate information leakage risk."""
         threshold = self.INFORMATION_LEAKAGE_THRESHOLDS.get(risk_level, 0.5)
 
@@ -270,7 +264,7 @@ class DarkPoolRouter:
         self,
         spread_bps: float,
         volatility_percentile: float,
-    ) -> Dict[str, any]:
+    ) -> dict[str, any]:
         """Evaluate market conditions for dark pool usage."""
         # Wide spread = dark pool attractive
         spread_factor = min(1.0, spread_bps / 20.0)  # 20 bps = max
@@ -316,7 +310,7 @@ class DarkPoolRouter:
         self,
         order_value_usd: Decimal,
         confidence: float,
-    ) -> Dict[str, Decimal]:
+    ) -> dict[str, Decimal]:
         """Calculate venue allocation percentages."""
         # High confidence: more to dark pools
         dark_allocation = Decimal(str(confidence * 0.8))  # Max 80% to dark
@@ -341,7 +335,7 @@ class DarkPoolRouter:
     def _select_dark_pools(
         self,
         order_value_usd: Decimal,
-    ) -> List[str]:
+    ) -> list[str]:
         """Select suitable dark pools for this order."""
         suitable = []
 
@@ -357,7 +351,7 @@ class DarkPoolRouter:
         adv: Decimal,
         order_value_usd: Decimal,
         current_spread_bps: float = 5.0,
-    ) -> Dict[str, Dict[str, float]]:
+    ) -> dict[str, dict[str, float]]:
         """
         Compare expected execution costs across venues.
 
@@ -404,9 +398,9 @@ class DarkPoolRouter:
     def optimize_dark_pool_split(
         self,
         total_order: Decimal,
-        available_pools: List[str],
+        available_pools: list[str],
         min_fill_rate: float = 0.2,
-    ) -> Dict[str, Decimal]:
+    ) -> dict[str, Decimal]:
         """
         Optimize order split across dark pools.
 
@@ -449,8 +443,8 @@ _dark_pool_router: DarkPoolRouter = None
 
 
 def get_dark_pool_router(
-    min_participation_rate: Optional[Decimal] = None,
-    min_order_size_usd: Optional[Decimal] = None,
+    min_participation_rate: Decimal | None = None,
+    min_order_size_usd: Decimal | None = None,
 ) -> DarkPoolRouter:
     """Get or create global DarkPoolRouter instance."""
     if min_participation_rate is None:

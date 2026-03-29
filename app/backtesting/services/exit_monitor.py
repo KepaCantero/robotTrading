@@ -9,11 +9,14 @@ from __future__ import annotations
 
 import logging
 from decimal import Decimal
-from datetime import datetime
-from typing import Callable, List, Optional
+from typing import TYPE_CHECKING, Callable
 
 from app.backtesting.models import BacktestConfig, Trade, TradeStatus
-from app.backtesting.services.position_manager import PositionManager
+
+if TYPE_CHECKING:
+    from datetime import datetime
+
+    from app.backtesting.services.position_manager import PositionManager
 
 logger = logging.getLogger(__name__)
 
@@ -37,7 +40,7 @@ class ExitConditionMonitor:
         self,
         config: BacktestConfig,
         position_manager: PositionManager,
-        apply_slippage_func: Callable[[Decimal, bool, Optional[Decimal]], Decimal],
+        apply_slippage_func: Callable[[Decimal, bool, Decimal | None], Decimal],
     ):
         """
         Initialize the Exit Condition Monitor.
@@ -54,7 +57,7 @@ class ExitConditionMonitor:
     def check_exit_conditions(
         self,
         market_data: object,
-        trades: List[Trade],
+        trades: list[Trade],
         close_position_func: Callable[[str, datetime, str, Decimal], None],
     ) -> bool:
         """
@@ -165,7 +168,7 @@ class ExitConditionMonitor:
     def check_all_symbols_exit_conditions(
         self,
         market_data: object,
-        trades: List[Trade],
+        trades: list[Trade],
         close_position_func: Callable[[str, datetime, str, Decimal], None],
     ) -> int:
         """
@@ -183,7 +186,7 @@ class ExitConditionMonitor:
         # The main backtest loop will call check_exit_conditions for each symbol
         return 0
 
-    def calculate_stop_loss_price(self, entry_price: Decimal) -> Optional[Decimal]:
+    def calculate_stop_loss_price(self, entry_price: Decimal) -> Decimal | None:
         """
         Calculate stop-loss price from entry price.
 
@@ -198,7 +201,7 @@ class ExitConditionMonitor:
 
         return entry_price * (Decimal("1") - self.config.stop_loss_percentage / Decimal("100"))
 
-    def calculate_take_profit_price(self, entry_price: Decimal) -> Optional[Decimal]:
+    def calculate_take_profit_price(self, entry_price: Decimal) -> Decimal | None:
         """
         Calculate take-profit price from entry price.
 
@@ -215,7 +218,7 @@ class ExitConditionMonitor:
 
     def is_stop_loss_hit(
         self, market_data: object, stop_loss_price: Decimal
-    ) -> tuple[bool, Optional[Decimal]]:
+    ) -> tuple[bool, Decimal | None]:
         """
         Check if stop-loss is hit based on market data.
 
@@ -242,7 +245,7 @@ class ExitConditionMonitor:
 
     def is_take_profit_hit(
         self, market_data: object, take_profit_price: Decimal
-    ) -> tuple[bool, Optional[Decimal]]:
+    ) -> tuple[bool, Decimal | None]:
         """
         Check if take-profit is hit based on market data.
 

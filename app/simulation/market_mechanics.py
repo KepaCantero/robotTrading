@@ -15,6 +15,7 @@ Key concepts implemented:
 Reference:
     Harris, L. (2003). Trading and Exchanges, Chapters 4-5.
 """
+
 # mypy: ignore-errors
 
 import logging
@@ -23,7 +24,7 @@ from dataclasses import dataclass, field
 from datetime import datetime, time
 from decimal import Decimal
 from enum import Enum
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Optional
 
 from .order_book import LimitOrderBook, Order, OrderType, Trade
 
@@ -76,11 +77,11 @@ class AuctionResult:
     total_volume: Decimal
     buy_volume: Decimal
     sell_volume: Decimal
-    matched_orders: List[str]
-    unmatched_orders: List[str]
+    matched_orders: list[str]
+    unmatched_orders: list[str]
     imbalance: Decimal
     timestamp: datetime
-    execution_quality: Dict[str, Decimal] = field(default_factory=dict)
+    execution_quality: dict[str, Decimal] = field(default_factory=dict)
 
     @property
     def is_matched(self) -> bool:
@@ -195,8 +196,8 @@ class AuctionMechanism:
         self.price_tick = price_tick
         self.max_iterations = max_iterations
 
-        self._buy_orders: Dict[Decimal, List[Order]] = {}
-        self._sell_orders: Dict[Decimal, List[Order]] = {}
+        self._buy_orders: dict[Decimal, list[Order]] = {}
+        self._sell_orders: dict[Decimal, list[Order]] = {}
 
         logger.debug(f"Initialized {auction_type.value} auction for {symbol}")
 
@@ -223,7 +224,7 @@ class AuctionMechanism:
             self._sell_orders[order.price].append(order)
 
         logger.debug(
-            f"Submitted {order.side.value} order to auction: " f"{order.quantity} @ {order.price}"
+            f"Submitted {order.side.value} order to auction: {order.quantity} @ {order.price}"
         )
 
     def get_auction_indicative_price(self) -> Optional[Decimal]:
@@ -242,7 +243,7 @@ class AuctionMechanism:
         Returns:
             Indicative executable volume
         """
-        price, volume = self._find_clearing_price()
+        _price, volume = self._find_clearing_price()
         return volume
 
     def get_order_imbalance(self) -> Decimal:
@@ -336,7 +337,7 @@ class AuctionMechanism:
             execution_quality=execution_quality,
         )
 
-    def _find_clearing_price(self) -> Tuple[Optional[Decimal], Decimal]:
+    def _find_clearing_price(self) -> tuple[Optional[Decimal], Decimal]:
         """
         Find the clearing price that maximizes executable volume.
 
@@ -406,7 +407,7 @@ class AuctionMechanism:
                 total += sum(o.remaining_quantity for o in orders)
         return total
 
-    def _match_at_price(self, price: Decimal) -> Tuple[List[str], List[Trade], Decimal, Decimal]:
+    def _match_at_price(self, price: Decimal) -> tuple[list[str], list[Trade], Decimal, Decimal]:
         """
         Match orders at given price.
 
@@ -437,8 +438,8 @@ class AuctionMechanism:
         total_sell_vol = Decimal("0")
 
         while buy_idx < len(eligible_buys) and sell_idx < len(eligible_sells):
-            buy_order, buy_limit = eligible_buys[buy_idx]
-            sell_order, sell_limit = eligible_sells[sell_idx]
+            buy_order, _buy_limit = eligible_buys[buy_idx]
+            sell_order, _sell_limit = eligible_sells[sell_idx]
 
             # Calculate trade quantity
             trade_qty = min(buy_order.remaining_quantity, sell_order.remaining_quantity)
@@ -479,8 +480,8 @@ class AuctionMechanism:
         self,
         price: Decimal,
         volume: Decimal,
-        trades: List[Trade],
-    ) -> Dict[str, Decimal]:
+        trades: list[Trade],
+    ) -> dict[str, Decimal]:
         """Calculate execution quality metrics."""
         if not trades or price is None:
             return {}
@@ -573,7 +574,7 @@ class ContinuousTrading:
         self._is_active = False
         logger.info(f"Stopped continuous trading for {self.order_book.symbol}")
 
-    def submit_order(self, order: Order) -> List[Trade]:
+    def submit_order(self, order: Order) -> list[Trade]:
         """
         Submit an order during continuous trading.
 
@@ -727,7 +728,7 @@ class MarketMechanicsEngine:
 
         # Phase tracking
         self._current_phase = MarketPhase.CLOSED
-        self._phase_history: List[PhaseTransition] = []
+        self._phase_history: list[PhaseTransition] = []
 
         logger.info(f"Initialized MarketMechanicsEngine for {symbol}")
 
@@ -737,7 +738,7 @@ class MarketMechanicsEngine:
         return self._current_phase
 
     @property
-    def phase_history(self) -> List[PhaseTransition]:
+    def phase_history(self) -> list[PhaseTransition]:
         """Get phase transition history."""
         return list(self._phase_history)
 
@@ -771,7 +772,7 @@ class MarketMechanicsEngine:
 
         logger.info(f"Transitioned {self.symbol} to {phase.value} (trigger: {trigger})")
 
-    def submit_order(self, order: Order) -> List[Trade]:
+    def submit_order(self, order: Order) -> list[Trade]:
         """
         Submit an order to the current mechanism.
 
@@ -836,7 +837,7 @@ class MarketMechanicsEngine:
 
         return self._closing_auction.execute_auction()
 
-    def get_market_snapshot(self) -> Dict[str, Any]:
+    def get_market_snapshot(self) -> dict[str, Any]:
         """Get comprehensive market state snapshot."""
         book_snapshot = self.order_book.get_snapshot()
 
@@ -910,8 +911,8 @@ class MarketMechanicsEngine:
 def create_market_mechanics_engine(
     symbol: str,
     tick_size: float = 0.01,
-    open_time: Tuple[int, int] = (9, 30),
-    close_time: Tuple[int, int] = (16, 0),
+    open_time: tuple[int, int] = (9, 30),
+    close_time: tuple[int, int] = (16, 0),
 ) -> MarketMechanicsEngine:
     """
     Factory function to create a MarketMechanicsEngine.

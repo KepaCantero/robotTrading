@@ -9,7 +9,7 @@ import asyncio
 import logging
 from datetime import datetime
 from decimal import Decimal
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 # REQUIRED: No fallbacks - aiohttp is required for async HTTP requests
 import aiohttp
@@ -37,7 +37,7 @@ class OptionsVolatilitySource(BaseDataSource):
     Uses centralized endpoint configuration.
     """
 
-    def __init__(self, config: Dict[str, Any]):
+    def __init__(self, config: dict[str, Any]):
         """
         Inicializar fuente de volatilidad de opciones.
 
@@ -47,21 +47,21 @@ class OptionsVolatilitySource(BaseDataSource):
                 - api_key: API key si es necesario
         """
         super().__init__(config)
-        self.provider = config.get('provider', 'polygon')
-        self.api_key = config.get('api_key')
+        self.provider = config.get("provider", "polygon")
+        self.api_key = config.get("api_key")
         # Use centralized endpoint configuration
         self.base_url = self._get_base_url()
         self.session: Optional[aiohttp.ClientSession] = None
 
     def _get_base_url(self) -> str:
         """Obtener base URL según provider using centralized configuration."""
-        url_map = {'polygon': APIEndpoints.POLYGON, 'ibkr': None}  # Requiere conexión TWS
+        url_map = {"polygon": APIEndpoints.POLYGON, "ibkr": None}  # Requiere conexión TWS
         return url_map.get(self.provider, APIEndpoints.POLYGON)
 
     async def connect(self) -> bool:
         """Conectar a fuente de opciones."""
         try:
-            if self.provider == 'ibkr':
+            if self.provider == "ibkr":
                 # IBKR requiere conexión TWS (similar a IBKRSource)
                 logger.warning("IBKR options source requiere conexión TWS (no implementado aún)")
                 self.is_connected = False
@@ -91,13 +91,11 @@ class OptionsVolatilitySource(BaseDataSource):
 
     async def health_check(self) -> bool:
         """Verificar salud de la conexión."""
-        if not self.is_connected or not self.session:
-            return False
-        return True
+        return not (not self.is_connected or not self.session)
 
     async def get_option_chain(
         self, symbol: str, expiry_date: Optional[datetime] = None
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """
         Obtener cadena de opciones para un símbolo.
 
@@ -113,7 +111,7 @@ class OptionsVolatilitySource(BaseDataSource):
             return []
 
         try:
-            if self.provider == 'polygon':
+            if self.provider == "polygon":
                 return await self._get_polygon_option_chain(symbol, expiry_date)
             else:
                 logger.warning(f"Provider {self.provider} no implementado para option chains")
@@ -125,7 +123,7 @@ class OptionsVolatilitySource(BaseDataSource):
 
     async def _get_polygon_option_chain(
         self, symbol: str, expiry_date: Optional[datetime]
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """Obtener option chain de Polygon."""
         if not self.api_key:
             logger.warning("Polygon API key requerido para option chains")
@@ -134,10 +132,10 @@ class OptionsVolatilitySource(BaseDataSource):
         try:
             # Polygon option chains endpoint
             url = f"{self.base_url}/v3/snapshot/options/{symbol}"
-            params = {'apiKey': self.api_key}
+            params = {"apiKey": self.api_key}
 
             if expiry_date:
-                params['expiration_date'] = expiry_date.strftime('%Y-%m-%d')
+                params["expiration_date"] = expiry_date.strftime("%Y-%m-%d")
 
             async with self.session.get(url, params=params) as response:
                 if response.status != 200:
@@ -146,25 +144,25 @@ class OptionsVolatilitySource(BaseDataSource):
 
                 data = await response.json()
 
-                if data.get('status') != 'OK' or 'results' not in data:
+                if data.get("status") != "OK" or "results" not in data:
                     return []
 
                 options = []
-                for result in data['results']:
+                for result in data["results"]:
                     options.append(
                         {
-                            'contract_type': result.get('contract_type'),  # call/put
-                            'strike_price': Decimal(str(result.get('strike_price', 0))),
-                            'expiry_date': datetime.fromisoformat(result.get('expiration_date')),
-                            'implied_volatility': Decimal(str(result.get('implied_volatility', 0))),
-                            'delta': Decimal(str(result.get('delta', 0))),
-                            'gamma': Decimal(str(result.get('gamma', 0))),
-                            'theta': Decimal(str(result.get('theta', 0))),
-                            'vega': Decimal(str(result.get('vega', 0))),
-                            'bid': Decimal(str(result.get('bid', 0))),
-                            'ask': Decimal(str(result.get('ask', 0))),
-                            'last_price': Decimal(str(result.get('last_quote', {}).get('last', 0))),
-                            'volume': Decimal(str(result.get('day', {}).get('volume', 0))),
+                            "contract_type": result.get("contract_type"),  # call/put
+                            "strike_price": Decimal(str(result.get("strike_price", 0))),
+                            "expiry_date": datetime.fromisoformat(result.get("expiration_date")),
+                            "implied_volatility": Decimal(str(result.get("implied_volatility", 0))),
+                            "delta": Decimal(str(result.get("delta", 0))),
+                            "gamma": Decimal(str(result.get("gamma", 0))),
+                            "theta": Decimal(str(result.get("theta", 0))),
+                            "vega": Decimal(str(result.get("vega", 0))),
+                            "bid": Decimal(str(result.get("bid", 0))),
+                            "ask": Decimal(str(result.get("ask", 0))),
+                            "last_price": Decimal(str(result.get("last_quote", {}).get("last", 0))),
+                            "volume": Decimal(str(result.get("day", {}).get("volume", 0))),
                         }
                     )
 
@@ -175,8 +173,8 @@ class OptionsVolatilitySource(BaseDataSource):
             return []
 
     async def get_volatility_surface(
-        self, symbol: str, expiry_dates: Optional[List[datetime]] = None
-    ) -> Dict[str, Any]:
+        self, symbol: str, expiry_dates: Optional[list[datetime]] = None
+    ) -> dict[str, Any]:
         """
         Obtener volatility surface (IV por strike/expiry).
 
@@ -195,7 +193,7 @@ class OptionsVolatilitySource(BaseDataSource):
         """
         if not self.is_connected:
             logger.error("No conectado a Options Source")
-            return {'expiry_dates': [], 'strikes': [], 'implied_volatility': {}, 'surface_data': []}
+            return {"expiry_dates": [], "strikes": [], "implied_volatility": {}, "surface_data": []}
 
         try:
             # Obtener option chains para múltiples expirations
@@ -203,21 +201,21 @@ class OptionsVolatilitySource(BaseDataSource):
 
             if not option_chains:
                 return {
-                    'expiry_dates': [],
-                    'strikes': [],
-                    'implied_volatility': {},
-                    'surface_data': [],
+                    "expiry_dates": [],
+                    "strikes": [],
+                    "implied_volatility": {},
+                    "surface_data": [],
                 }
 
             # Extraer strikes y expiries únicos
-            strikes = sorted({opt['strike_price'] for opt in option_chains})
-            expiry_dates = sorted({opt['expiry_date'] for opt in option_chains})
+            strikes = sorted({opt["strike_price"] for opt in option_chains})
+            expiry_dates = sorted({opt["expiry_date"] for opt in option_chains})
 
             # Filtrar por expiry_dates si se proporcionan
             if expiry_dates:
-                option_chains = [opt for opt in option_chains if opt['expiry_date'] in expiry_dates]
+                option_chains = [opt for opt in option_chains if opt["expiry_date"] in expiry_dates]
                 expiry_dates = [
-                    ed for ed in expiry_dates if ed in [opt['expiry_date'] for opt in option_chains]
+                    ed for ed in expiry_dates if ed in [opt["expiry_date"] for opt in option_chains]
                 ]
 
             # Construir surface
@@ -226,33 +224,33 @@ class OptionsVolatilitySource(BaseDataSource):
 
             for expiry in expiry_dates:
                 iv_surface[expiry] = {}
-                expiry_options = [opt for opt in option_chains if opt['expiry_date'] == expiry]
+                expiry_options = [opt for opt in option_chains if opt["expiry_date"] == expiry]
 
                 for option in expiry_options:
-                    strike = option['strike_price']
-                    iv = float(option['implied_volatility'])
+                    strike = option["strike_price"]
+                    iv = float(option["implied_volatility"])
                     iv_surface[expiry][strike] = iv
 
                     surface_data.append(
                         {
-                            'expiry_date': expiry,
-                            'strike_price': strike,
-                            'implied_volatility': iv,
-                            'contract_type': option.get('contract_type'),
-                            'delta': float(option.get('delta', 0)),
-                            'gamma': float(option.get('gamma', 0)),
-                            'theta': float(option.get('theta', 0)),
-                            'vega': float(option.get('vega', 0)),
+                            "expiry_date": expiry,
+                            "strike_price": strike,
+                            "implied_volatility": iv,
+                            "contract_type": option.get("contract_type"),
+                            "delta": float(option.get("delta", 0)),
+                            "gamma": float(option.get("gamma", 0)),
+                            "theta": float(option.get("theta", 0)),
+                            "vega": float(option.get("vega", 0)),
                         }
                     )
 
             return {
-                'expiry_dates': expiry_dates,
-                'strikes': strikes,
-                'implied_volatility': iv_surface,
-                'surface_data': surface_data,
+                "expiry_dates": expiry_dates,
+                "strikes": strikes,
+                "implied_volatility": iv_surface,
+                "surface_data": surface_data,
             }
 
         except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
             logger.error(f"Error obteniendo volatility surface para {symbol}: {e}")
-            return {'expiry_dates': [], 'strikes': [], 'implied_volatility': {}, 'surface_data': []}
+            return {"expiry_dates": [], "strikes": [], "implied_volatility": {}, "surface_data": []}

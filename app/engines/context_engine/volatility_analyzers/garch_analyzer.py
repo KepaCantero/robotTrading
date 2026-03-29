@@ -5,7 +5,7 @@ Detecta volatility clustering usando modelos GARCH.
 """
 
 import logging
-from typing import Any, Dict, List
+from typing import Any, Optional
 
 import numpy as np
 
@@ -35,7 +35,7 @@ except ImportError:
         properties (volatility clustering) though it's less sophisticated.
         """
 
-        def __init__(self, returns, vol='Garch', p=1, q=1, dist='normal', o=0):
+        def __init__(self, returns, vol="Garch", p=1, q=1, dist="normal", o=0):
             """
             Initialize simple GARCH-like model.
 
@@ -48,10 +48,10 @@ except ImportError:
                 o: Asymmetric order (ignored in fallback)
             """
             self.returns = np.array(returns)
-            self._params = {'omega': 0.0, 'alpha': 0.0, 'beta': 0.0}
+            self._params = {"omega": 0.0, "alpha": 0.0, "beta": 0.0}
             self._conditional_variance = None
 
-        def fit(self, disp='off'):
+        def fit(self, disp="off"):
             """
             Fit the EWMA model.
 
@@ -85,9 +85,9 @@ except ImportError:
                 # Set parameters that approximate GARCH(1,1)
                 # For EWMA with lambda=0.94: alpha ≈ 0.06, beta ≈ 0.94
                 self._params = {
-                    'omega': 0.0001,  # Small constant
-                    'alpha[1]': 0.06,  # ARCH coefficient
-                    'beta[1]': 0.94,  # GARCH coefficient
+                    "omega": 0.0001,  # Small constant
+                    "alpha[1]": 0.06,  # ARCH coefficient
+                    "beta[1]": 0.94,  # GARCH coefficient
                 }
 
                 return SimpleGARCHFitResult(self._params, self._conditional_variance)
@@ -176,7 +176,7 @@ class GARCHAnalyzer:
     Detecta volatility clustering y predice volatilidad futura.
     """
 
-    def __init__(self, config: Dict[str, Any] = None):
+    def __init__(self, config: Optional[dict[str, Any]] = None):
         """
         Inicializar analizador GARCH.
 
@@ -184,10 +184,10 @@ class GARCHAnalyzer:
             config: Configuración
         """
         config = config or {}
-        self.model_type = config.get('model_type', 'GARCH')  # GARCH, EGARCH, GJR-GARCH
-        self.p = config.get('p', 1)  # ARCH order
-        self.q = config.get('q', 1)  # GARCH order
-        self.dist = config.get('dist', 'normal')  # normal, t, skewt
+        self.model_type = config.get("model_type", "GARCH")  # GARCH, EGARCH, GJR-GARCH
+        self.p = config.get("p", 1)  # ARCH order
+        self.q = config.get("q", 1)  # GARCH order
+        self.dist = config.get("dist", "normal")  # normal, t, skewt
 
         self.model = None
         self.fitted_model = None
@@ -199,7 +199,7 @@ class GARCHAnalyzer:
                 f"Install 'arch' package for full GARCH{self.p},{self.q} support."
             )
 
-    def fit(self, returns: List[float]) -> bool:
+    def fit(self, returns: list[float]) -> bool:
         """
         Entrenar modelo GARCH.
 
@@ -220,32 +220,32 @@ class GARCHAnalyzer:
             if self.using_fallback:
                 # Use fallback EWMA implementation
                 self.model = SimpleGARCHModel(
-                    returns_array, vol='Garch', p=self.p, q=self.q, dist=self.dist
+                    returns_array, vol="Garch", p=self.p, q=self.q, dist=self.dist
                 )
-                self.fitted_model = self.model.fit(disp='off')
+                self.fitted_model = self.model.fit(disp="off")
                 logger.info("Fallback EWMA model trained successfully")
             else:
                 # Use full arch package
-                if self.model_type == 'GARCH':
+                if self.model_type == "GARCH":
                     self.model = arch_model(
-                        returns_array, vol='Garch', p=self.p, q=self.q, dist=self.dist
+                        returns_array, vol="Garch", p=self.p, q=self.q, dist=self.dist
                     )
-                elif self.model_type == 'EGARCH':
+                elif self.model_type == "EGARCH":
                     self.model = arch_model(
-                        returns_array, vol='EGARCH', p=self.p, q=self.q, dist=self.dist
+                        returns_array, vol="EGARCH", p=self.p, q=self.q, dist=self.dist
                     )
-                elif self.model_type == 'GJR-GARCH':
+                elif self.model_type == "GJR-GARCH":
                     self.model = arch_model(
-                        returns_array, vol='GARCH', p=self.p, o=1, q=self.q, dist=self.dist
+                        returns_array, vol="GARCH", p=self.p, o=1, q=self.q, dist=self.dist
                     )
                 else:
                     logger.warning(f"Tipo de modelo desconocido: {self.model_type}, usando GARCH")
                     self.model = arch_model(
-                        returns_array, vol='Garch', p=self.p, q=self.q, dist=self.dist
+                        returns_array, vol="Garch", p=self.p, q=self.q, dist=self.dist
                     )
 
                 # Entrenar
-                self.fitted_model = self.model.fit(disp='off')
+                self.fitted_model = self.model.fit(disp="off")
                 logger.info("GARCH model entrenado exitosamente")
 
             return True
@@ -254,7 +254,7 @@ class GARCHAnalyzer:
             logger.error(f"Error entrenando GARCH: {e}")
             return False
 
-    def predict_volatility(self, horizon: int = 1) -> Dict[str, Any]:
+    def predict_volatility(self, horizon: int = 1) -> dict[str, Any]:
         """
         Predecir volatilidad futura.
 
@@ -265,7 +265,7 @@ class GARCHAnalyzer:
             Dict con predicciones de volatilidad
         """
         if not self.fitted_model:
-            return {'volatility': None, 'forecast': None, 'confidence': 0.0}
+            return {"volatility": None, "forecast": None, "confidence": 0.0}
 
         try:
             forecast = self.fitted_model.forecast(horizon=horizon)
@@ -275,17 +275,17 @@ class GARCHAnalyzer:
             confidence = 0.6 if self.using_fallback else 0.8
 
             return {
-                'volatility': volatility,
-                'forecast': forecast.variance.values.tolist(),
-                'confidence': confidence,
-                'using_fallback': self.using_fallback,
+                "volatility": volatility,
+                "forecast": forecast.variance.values.tolist(),
+                "confidence": confidence,
+                "using_fallback": self.using_fallback,
             }
 
         except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.error(f"Error prediciendo volatilidad: {e}")
-            return {'volatility': None, 'forecast': None, 'confidence': 0.0}
+            return {"volatility": None, "forecast": None, "confidence": 0.0}
 
-    def detect_clustering(self, returns: List[float]) -> Dict[str, Any]:
+    def detect_clustering(self, returns: list[float]) -> dict[str, Any]:
         """
         Detectar volatility clustering.
 
@@ -296,7 +296,7 @@ class GARCHAnalyzer:
             Dict con información de clustering
         """
         if not self.fitted_model and not self.fit(returns):
-            return {'clustering_detected': False, 'persistence': None, 'confidence': 0.0}
+            return {"clustering_detected": False, "persistence": None, "confidence": 0.0}
 
         try:
             # Obtener parámetros del modelo
@@ -304,7 +304,7 @@ class GARCHAnalyzer:
 
             # Calcular persistencia (suma de parámetros ARCH y GARCH)
             # Persistencia alta indica clustering fuerte
-            persistence = float(params.get('alpha[1]', 0) + params.get('beta[1]', 0))
+            persistence = float(params.get("alpha[1]", 0) + params.get("beta[1]", 0))
 
             # Persistencia > 0.9 indica clustering fuerte
             clustering_detected = persistence > 0.9
@@ -314,13 +314,13 @@ class GARCHAnalyzer:
             confidence = base_confidence * 0.75 if self.using_fallback else base_confidence
 
             return {
-                'clustering_detected': clustering_detected,
-                'persistence': persistence,
-                'confidence': confidence,
-                'parameters': params.to_dict(),
-                'using_fallback': self.using_fallback,
+                "clustering_detected": clustering_detected,
+                "persistence": persistence,
+                "confidence": confidence,
+                "parameters": params.to_dict(),
+                "using_fallback": self.using_fallback,
             }
 
         except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.error(f"Error detectando clustering: {e}")
-            return {'clustering_detected': False, 'persistence': None, 'confidence': 0.0}
+            return {"clustering_detected": False, "persistence": None, "confidence": 0.0}

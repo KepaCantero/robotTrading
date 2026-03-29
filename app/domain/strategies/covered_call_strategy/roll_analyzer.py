@@ -21,7 +21,7 @@ SOLID Principles:
 import logging
 from datetime import date, timedelta
 from decimal import Decimal
-from typing import List, Optional, Tuple
+from typing import Optional
 
 from .greeks_calculator import GreeksCalculator
 from .models import (
@@ -64,14 +64,14 @@ class RollAnalyzer:
         self.greeks_calculator = greeks_calculator or GreeksCalculator()
         self.min_premium_benefit = min_premium_benefit
 
-        logger.info(f"RollAnalyzer inicializado: " f"min_premium_benefit={min_premium_benefit:.2%}")
+        logger.info(f"RollAnalyzer inicializado: min_premium_benefit={min_premium_benefit:.2%}")
 
     def analyze_roll_opportunities(
         self,
         position: CoveredCallPosition,
         current_price: Decimal,
-        available_options: List[CallOption],
-    ) -> List[RollOpportunity]:
+        available_options: list[CallOption],
+    ) -> list[RollOpportunity]:
         """
         Analizar oportunidades de rolling para una posición.
 
@@ -119,8 +119,8 @@ class RollAnalyzer:
         self,
         position: CoveredCallPosition,
         current_price: Decimal,
-        available_options: List[CallOption],
-    ) -> List[RollOpportunity]:
+        available_options: list[CallOption],
+    ) -> list[RollOpportunity]:
         """
         Analizar roll up (subir strike).
 
@@ -196,8 +196,8 @@ class RollAnalyzer:
         self,
         position: CoveredCallPosition,
         current_price: Decimal,
-        available_options: List[CallOption],
-    ) -> List[RollOpportunity]:
+        available_options: list[CallOption],
+    ) -> list[RollOpportunity]:
         """
         Analizar roll down (bajar strike).
 
@@ -277,8 +277,8 @@ class RollAnalyzer:
         self,
         position: CoveredCallPosition,
         current_price: Decimal,
-        available_options: List[CallOption],
-    ) -> List[RollOpportunity]:
+        available_options: list[CallOption],
+    ) -> list[RollOpportunity]:
         """
                 Analizar roll out (extenderexpiry).
 
@@ -300,7 +300,7 @@ class RollAnalyzer:
                 Returns:
                     Lista de oportunidades de roll out
         """
-        opportunities: List[RollOpportunity] = []
+        opportunities: list[RollOpportunity] = []
 
         # Días al vencimiento
         dte = position.call_option.days_to_expiry
@@ -358,8 +358,8 @@ class RollAnalyzer:
         self,
         position: CoveredCallPosition,
         current_price: Decimal,
-        opportunities: List[RollOpportunity],
-    ) -> Tuple[bool, Optional[RollOpportunity]]:
+        opportunities: list[RollOpportunity],
+    ) -> tuple[bool, Optional[RollOpportunity]]:
         """
         Determinar si se debe hacer roll y cuál es la mejor oportunidad.
 

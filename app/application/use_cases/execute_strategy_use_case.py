@@ -6,12 +6,14 @@ from __future__ import annotations
 
 import logging
 from datetime import datetime, timezone
-from typing import Any, List, Optional
+from typing import TYPE_CHECKING, Any
 
 from app.domain.entities.order import Order, OrderSide, OrderStatus, OrderType
-from app.domain.models.market_data import Quote
 from app.domain.models.signal import Signal, SignalType
-from app.domain.strategies.base import BaseStrategy
+
+if TYPE_CHECKING:
+    from app.domain.models.market_data import Quote
+    from app.domain.strategies.base import BaseStrategy
 
 logger = logging.getLogger(__name__)
 
@@ -23,19 +25,19 @@ class ExecuteStrategyUseCase:
     This use case orchestrates strategy execution and order generation.
     """
 
-    def __init__(self, strategy: Optional[BaseStrategy] = None) -> None:
+    def __init__(self, strategy: BaseStrategy | None = None) -> None:
         """Initialize use case with optional strategy."""
         self._strategy = strategy
-        self._correlation_id: Optional[str] = None
+        self._correlation_id: str | None = None
         self._max_position_size: float = 1000000.0  # Default max position size
 
     def execute(
         self,
         market_data: Quote,
         strategy_type: str,
-        parameters: Optional[dict[str, Any]] = None,
-        correlation_id: Optional[str] = None,
-    ) -> List[Order]:
+        parameters: dict[str, Any] | None = None,
+        correlation_id: str | None = None,
+    ) -> list[Order]:
         """
         Execute the use case - run strategy and generate orders.
 
@@ -121,9 +123,9 @@ class ExecuteStrategyUseCase:
 
     def _convert_signals_to_orders(
         self,
-        signals: List[Signal],
+        signals: list[Signal],
         strategy_type: str,
-    ) -> List[Order]:
+    ) -> list[Order]:
         """
         Convert trading signals to orders.
 
@@ -188,7 +190,7 @@ class ExecuteStrategyUseCase:
         self,
         signal: Signal,
         strategy_type: str,
-    ) -> Optional[Order]:
+    ) -> Order | None:
         """
         Convert a single signal to an order.
 

@@ -8,7 +8,7 @@ considering capital allocation and maximizing combined Sharpe ratio.
 import logging
 from datetime import datetime, timedelta
 from decimal import Decimal
-from typing import TYPE_CHECKING, Any, Dict, Optional
+from typing import TYPE_CHECKING, Any, Optional
 
 import optuna
 
@@ -83,10 +83,10 @@ class MultiStrategyOptimizer:
 
         logger.info(f"Loaded {len(self.market_data)} market data points")
 
-        self.best_params: Optional[Dict[str, Any]] = None
+        self.best_params: Optional[dict[str, Any]] = None
         self.best_value: Optional[float] = None
 
-    def _suggest_strategy_params(self, trial: optuna.Trial) -> Dict[str, Dict[str, Any]]:
+    def _suggest_strategy_params(self, trial: optuna.Trial) -> dict[str, dict[str, Any]]:
         """
         Suggest parameters for all strategies using Optuna.
 
@@ -106,7 +106,9 @@ class MultiStrategyOptimizer:
         params = {
             "momentum": {
                 "name": "momentum",
-                "rsi_threshold": trial.suggest_float("momentum_rsi_threshold", 30.0, 50.0, step=1.0),
+                "rsi_threshold": trial.suggest_float(
+                    "momentum_rsi_threshold", 30.0, 50.0, step=1.0
+                ),
                 "momentum_threshold": trial.suggest_float(
                     "momentum_momentum_threshold", 0.01, 0.05, step=0.01
                 ),
@@ -119,7 +121,9 @@ class MultiStrategyOptimizer:
             },
             "mean_reversion": {
                 "name": "mean_reversion",
-                "z_score_threshold": trial.suggest_float("mr_z_score_threshold", 0.5, 3.0, step=0.25),
+                "z_score_threshold": trial.suggest_float(
+                    "mr_z_score_threshold", 0.5, 3.0, step=0.25
+                ),
                 "volatility_threshold": trial.suggest_float(
                     "mr_volatility_threshold", 0.01, 0.05, step=0.01
                 ),
@@ -150,7 +154,7 @@ class MultiStrategyOptimizer:
 
         return params
 
-    def _create_strategies(self, params: Dict[str, Dict[str, Any]]) -> Dict[str, Any]:
+    def _create_strategies(self, params: dict[str, dict[str, Any]]) -> dict[str, Any]:
         """
         Create strategy instances with optimized parameters.
 
@@ -209,7 +213,7 @@ class MultiStrategyOptimizer:
         return strategies
 
     def _create_allocation_manager(
-        self, allocation_params: Dict[str, float]
+        self, allocation_params: dict[str, float]
     ) -> "MultiStrategyAllocationManager":
         """
         Create allocation manager with optimized weights.
@@ -355,7 +359,7 @@ class MultiStrategyOptimizer:
 
         return study
 
-    def get_best_config(self) -> Dict[str, Any]:
+    def get_best_config(self) -> dict[str, Any]:
         """
         Get best configuration from optimization.
 
@@ -401,7 +405,7 @@ class MultiStrategyOptimizer:
 
         return best_config
 
-    def run_backtest_with_best_params(self) -> Dict[str, Any]:
+    def run_backtest_with_best_params(self) -> dict[str, Any]:
         """
         Run a final backtest with optimized parameters.
 

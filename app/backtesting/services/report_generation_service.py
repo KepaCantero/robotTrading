@@ -16,14 +16,16 @@ import json
 import logging
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import TYPE_CHECKING, Any
 
 import numpy as np
 import pandas as pd
 from jinja2 import Template
 
-from app.backtesting.services.models import ProfileResult
 from app.domain.models.input_profile import ObjectivoInversion
+
+if TYPE_CHECKING:
+    from app.backtesting.services.models import ProfileResult
 
 logger = logging.getLogger(__name__)
 
@@ -46,7 +48,7 @@ class ReportGenerationService:
         self.output_dir = Path(output_dir)
         self.output_dir.mkdir(parents=True, exist_ok=True)
 
-    def generate_comparison_report(self, results: Dict[str, ProfileResult]) -> str:
+    def generate_comparison_report(self, results: dict[str, ProfileResult]) -> str:
         """
         Generate HTML comparison report.
 
@@ -124,7 +126,7 @@ class ReportGenerationService:
         return html
 
     def generate_batch_summary(
-        self, results: Dict[str, ProfileResult], fallback_metrics: Dict[str, int]
+        self, results: dict[str, ProfileResult], fallback_metrics: dict[str, int]
     ) -> None:
         """
         Generate batch execution summary.
@@ -164,13 +166,15 @@ class ReportGenerationService:
             json.dump(summary, f, indent=2, default=str)
         logger.info(f"Batch summary saved: {summary_path}")
 
-    def export_results(self, results: Dict[str, ProfileResult], format: str = "json") -> Path:
+    def export_results(
+        self, results: dict[str, ProfileResult], output_format: str = "json"
+    ) -> Path:
         """
         Export results to file.
 
         Args:
             results: Dictionary of profile results
-            format: Export format (json, csv, excel)
+            output_format: Export format (json, csv, excel)
 
         Returns:
             Path to exported file
@@ -180,14 +184,14 @@ class ReportGenerationService:
         """
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
 
-        if format == "json":
+        if output_format == "json":
             output_path = self.output_dir / f"profile_batch_results_{timestamp}.json"
             # Convert results to dict
             data = {pid: self._result_to_dict(r) for pid, r in results.items()}
             with open(output_path, "w") as f:
                 json.dump(data, f, indent=2, default=str)
 
-        elif format == "csv":
+        elif output_format == "csv":
             output_path = self.output_dir / f"profile_batch_results_{timestamp}.csv"
             # Flatten results
             rows = []
@@ -208,7 +212,7 @@ class ReportGenerationService:
             df = pd.DataFrame(rows)
             df.to_csv(output_path, index=False)
 
-        elif format == "excel":
+        elif output_format == "excel":
             output_path = self.output_dir / f"profile_batch_results_{timestamp}.xlsx"
             # Create multiple sheets
             with pd.ExcelWriter(output_path, engine="openpyxl") as writer:
@@ -240,12 +244,12 @@ class ReportGenerationService:
                             writer, sheet_name=objective.value[:31], index=False
                         )
         else:
-            raise ValueError(f"Unsupported format: {format}")
+            raise ValueError(f"Unsupported format: {output_format}")
 
         logger.info(f"Results exported to {output_path}")
         return output_path
 
-    def _result_to_dict(self, result: ProfileResult) -> Dict[str, Any]:
+    def _result_to_dict(self, result: ProfileResult) -> dict[str, Any]:
         """Convert ProfileResult to dictionary."""
         return {
             "profile_id": result.profile_id,
@@ -262,7 +266,7 @@ class ReportGenerationService:
             "created_at": result.created_at.isoformat(),
         }
 
-    def _group_best_strategies(self, results_list: List[ProfileResult]) -> List[Dict[str, Any]]:
+    def _group_best_strategies(self, results_list: list[ProfileResult]) -> list[dict[str, Any]]:
         """Group best strategies by objective."""
         best_by_objective = []
 

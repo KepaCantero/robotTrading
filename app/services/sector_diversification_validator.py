@@ -6,7 +6,7 @@ Validates sector concentration constraints and generates rebalancing recommendat
 
 import logging
 from decimal import Decimal
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Optional
 
 from app.domain.models.portfolio import Portfolio, Position
 from app.shared.config.centralized_config import SectorCountryDiversificationConfig
@@ -23,7 +23,7 @@ class SectorDiversificationValidator:
         self.checks_performed = 0
         self.violations_found = 0
 
-    def validate_sector_limits(self, portfolio: Portfolio) -> List[Dict[str, Any]]:
+    def validate_sector_limits(self, portfolio: Portfolio) -> list[dict[str, Any]]:
         """
         Check sector exposure against limits.
 
@@ -79,7 +79,7 @@ class SectorDiversificationValidator:
 
     def validate_new_position_sector(
         self, portfolio: Portfolio, position: Position
-    ) -> Tuple[bool, Optional[str]]:
+    ) -> tuple[bool, Optional[str]]:
         """
         Check if adding position would violate sector limits.
 
@@ -108,7 +108,7 @@ class SectorDiversificationValidator:
 
         return True, None
 
-    def get_sector_rebalancing_suggestions(self, portfolio: Portfolio) -> List[Dict[str, Any]]:
+    def get_sector_rebalancing_suggestions(self, portfolio: Portfolio) -> list[dict[str, Any]]:
         """
         Generate rebalancing suggestions for over-concentrated sectors.
 
@@ -145,7 +145,7 @@ class SectorDiversificationValidator:
         logger.info(f"Generated {len(suggestions)} sector rebalancing suggestions")
         return suggestions
 
-    def get_sector_statistics(self, portfolio: Portfolio) -> Dict[str, Any]:
+    def get_sector_statistics(self, portfolio: Portfolio) -> dict[str, Any]:
         """Return comprehensive sector metrics."""
         sector_exposure = self._calculate_sector_exposure(portfolio)
         total_value = portfolio.total_equity
@@ -184,9 +184,9 @@ class SectorDiversificationValidator:
             "violations_found": self.violations_found,
         }
 
-    def _calculate_sector_exposure(self, portfolio: Portfolio) -> Dict[str, Decimal]:
+    def _calculate_sector_exposure(self, portfolio: Portfolio) -> dict[str, Decimal]:
         """Calculate aggregate exposure per sector."""
-        exposure: Dict[str, Decimal] = {}
+        exposure: dict[str, Decimal] = {}
 
         for position in portfolio.positions:
             if position.sector is None or position.hedging.is_hedge:

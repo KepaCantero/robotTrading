@@ -15,7 +15,7 @@ Uses centralized configuration for all thresholds.
 
 import logging
 from decimal import Decimal
-from typing import Dict
+from typing import Optional
 
 from app.shared.config.centralized_config import get_config
 
@@ -49,8 +49,8 @@ class CapitalViabilityValidator:
         tax_rate: Decimal,
         commission_per_trade: Decimal,
         expected_trades_per_month: int,
-        expected_alpha_per_trade: Decimal = None,
-    ) -> Dict:
+        expected_alpha_per_trade: Optional[Decimal] = None,
+    ) -> dict:
         """
         Calculate if profit goal is viable.
 
@@ -213,7 +213,7 @@ class CapitalViabilityValidator:
         tax_rate: Decimal,
         commission_per_trade: Decimal,
         expected_trades_per_month: int,
-        target_alpha_pct: Decimal = None,
+        target_alpha_pct: Optional[Decimal] = None,
     ) -> Decimal:
         """
         Calculate minimum capital needed to achieve a profit goal viably.
@@ -246,8 +246,8 @@ class CapitalViabilityValidator:
     def log_viability_check(
         capital: Decimal,
         monthly_goal: Decimal,
-        result: Dict,
-        account_id: str = None,
+        result: dict,
+        account_id: Optional[str] = None,
     ):
         """Log viability check for audit trail"""
 

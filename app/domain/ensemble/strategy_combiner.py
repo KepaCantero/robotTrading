@@ -7,7 +7,7 @@ into a portfolio with optimal weight allocations.
 
 import logging
 from decimal import Decimal
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 import numpy as np
 
@@ -38,7 +38,7 @@ class StrategyCombiner:
 
     def __init__(
         self,
-        strategies: List[str],
+        strategies: list[str],
         method: AllocationMethod = AllocationMethod.RISK_PARITY,
         min_weight: float = 0.0,
         max_weight: float = 1.0,
@@ -73,10 +73,10 @@ class StrategyCombiner:
             self.rebalance_threshold = rebalance_threshold
 
             # Track current allocation
-            self.current_allocation: Dict[str, Decimal] = self._initialize_allocation()
+            self.current_allocation: dict[str, Decimal] = self._initialize_allocation()
 
             # Track historical returns for regime detection
-            self.returns_history: Dict[str, List[float]] = {s: [] for s in strategies}
+            self.returns_history: dict[str, list[float]] = {s: [] for s in strategies}
 
         except (TypeError, AttributeError) as e:
             logger.error("StrategyCombiner initialization failed", exc_info=True)
@@ -84,9 +84,9 @@ class StrategyCombiner:
 
     def calculate_allocation(
         self,
-        returns_data: Dict[str, np.ndarray],
+        returns_data: dict[str, np.ndarray],
         regime: Optional[MarketRegime] = None,
-    ) -> List[StrategyAllocation]:
+    ) -> list[StrategyAllocation]:
         """Calculate optimal strategy allocation.
 
         Args:
@@ -146,12 +146,12 @@ class StrategyCombiner:
             logger.error("Allocation calculation failed", exc_info=True)
             raise RuntimeError(f"Allocation calculation failed: {e}") from e
 
-    def _initialize_allocation(self) -> Dict[str, Decimal]:
+    def _initialize_allocation(self) -> dict[str, Decimal]:
         """Initialize equal allocation."""
         weight = Decimal(str(1.0 / len(self.strategies)))
         return dict.fromkeys(self.strategies, weight)
 
-    def _validate_returns_data(self, returns_data: Dict[str, np.ndarray]) -> None:
+    def _validate_returns_data(self, returns_data: dict[str, np.ndarray]) -> None:
         """Validate returns data.
 
         Args:
@@ -173,7 +173,7 @@ class StrategyCombiner:
             if len(returns_data[strategy]) < 2:
                 raise ValueError(f"Insufficient data for {strategy}")
 
-    def _equal_weight_allocation(self) -> Dict[str, float]:
+    def _equal_weight_allocation(self) -> dict[str, float]:
         """Calculate equal weight allocation.
 
         Returns:
@@ -182,7 +182,7 @@ class StrategyCombiner:
         weight = 1.0 / len(self.strategies)
         return dict.fromkeys(self.strategies, weight)
 
-    def _mean_variance_allocation(self, returns_data: Dict[str, np.ndarray]) -> Dict[str, float]:
+    def _mean_variance_allocation(self, returns_data: dict[str, np.ndarray]) -> dict[str, float]:
         """Calculate mean-variance optimal allocation (Markowitz).
 
         Maximizes: w'μ - λ * w'Σw
@@ -231,7 +231,7 @@ class StrategyCombiner:
             logger.error("Mean-variance allocation failed", exc_info=True)
             return self._equal_weight_allocation()
 
-    def _risk_parity_allocation(self, returns_data: Dict[str, np.ndarray]) -> Dict[str, float]:
+    def _risk_parity_allocation(self, returns_data: dict[str, np.ndarray]) -> dict[str, float]:
         """Calculate risk parity allocation.
 
         Risk parity allocates weights such that each strategy contributes
@@ -268,9 +268,9 @@ class StrategyCombiner:
 
     def _regime_dependent_allocation(
         self,
-        returns_data: Dict[str, np.ndarray],
+        returns_data: dict[str, np.ndarray],
         regime: Optional[MarketRegime] = None,
-    ) -> Dict[str, float]:
+    ) -> dict[str, float]:
         """Calculate regime-dependent allocation.
 
         Adjusts strategy allocation based on market regime.
@@ -309,7 +309,7 @@ class StrategyCombiner:
             logger.error("Regime-dependent allocation failed", exc_info=True)
             return self._equal_weight_allocation()
 
-    def _get_regime_adjustments(self, regime: MarketRegime) -> Dict[str, float]:
+    def _get_regime_adjustments(self, regime: MarketRegime) -> dict[str, float]:
         """Get weight adjustments for a given regime.
 
         Args:
@@ -366,8 +366,8 @@ class StrategyCombiner:
         return adjustments
 
     def _hierarchical_risk_parity_allocation(
-        self, returns_data: Dict[str, np.ndarray]
-    ) -> Dict[str, float]:
+        self, returns_data: dict[str, np.ndarray]
+    ) -> dict[str, float]:
         """Calculate hierarchical risk parity (HRP) allocation.
 
         HRP uses hierarchical clustering to allocate capital based on
@@ -400,7 +400,7 @@ class StrategyCombiner:
             logger.error("HRP allocation failed", exc_info=True)
             return self._equal_weight_allocation()
 
-    def _black_litterman_allocation(self, returns_data: Dict[str, np.ndarray]) -> Dict[str, float]:
+    def _black_litterman_allocation(self, returns_data: dict[str, np.ndarray]) -> dict[str, float]:
         """Calculate Black-Litterman allocation.
 
         Combines market equilibrium with investor views to produce
@@ -441,7 +441,7 @@ class StrategyCombiner:
             logger.error("Black-Litterman allocation failed", exc_info=True)
             return self._equal_weight_allocation()
 
-    def _apply_weight_constraints(self, weights: Dict[str, float]) -> Dict[str, float]:
+    def _apply_weight_constraints(self, weights: dict[str, float]) -> dict[str, float]:
         """Apply min/max weight constraints.
 
         Args:
@@ -463,8 +463,8 @@ class StrategyCombiner:
 
     def calculate_portfolio_metrics(
         self,
-        allocation: List[StrategyAllocation],
-        returns_data: Dict[str, np.ndarray],
+        allocation: list[StrategyAllocation],
+        returns_data: dict[str, np.ndarray],
     ) -> CombinedPortfolio:
         """Calculate combined portfolio metrics.
 
@@ -532,8 +532,8 @@ class StrategyCombiner:
 
     def _calculate_diversification_ratio(
         self,
-        allocation: List[StrategyAllocation],
-        returns_data: Dict[str, np.ndarray],
+        allocation: list[StrategyAllocation],
+        returns_data: dict[str, np.ndarray],
     ) -> Decimal:
         """Calculate diversification ratio.
 
@@ -603,7 +603,7 @@ class StrategyCombiner:
 
     def _calculate_mean_correlation(
         self,
-        returns_data: Dict[str, np.ndarray],
+        returns_data: dict[str, np.ndarray],
         weights: np.ndarray,
     ) -> Decimal:
         """Calculate weighted mean correlation.
@@ -642,7 +642,7 @@ class StrategyCombiner:
             logger.error("Mean correlation calculation failed", exc_info=True)
             return Decimal("0")
 
-    def needs_rebalancing(self, allocation: List[StrategyAllocation]) -> bool:
+    def needs_rebalancing(self, allocation: list[StrategyAllocation]) -> bool:
         """Check if portfolio needs rebalancing.
 
         Args:
@@ -655,9 +655,9 @@ class StrategyCombiner:
 
     def rebalance(
         self,
-        current_allocation: List[StrategyAllocation],
-        target_allocation: List[StrategyAllocation],
-    ) -> Dict[str, Decimal]:
+        current_allocation: list[StrategyAllocation],
+        target_allocation: list[StrategyAllocation],
+    ) -> dict[str, Decimal]:
         """Calculate rebalancing trades.
 
         Args:
@@ -679,7 +679,7 @@ class StrategyCombiner:
 
         return trades
 
-    def get_allocation_summary(self, allocation: List[StrategyAllocation]) -> Dict[str, Any]:
+    def get_allocation_summary(self, allocation: list[StrategyAllocation]) -> dict[str, Any]:
         """Get summary of allocation.
 
         Args:

@@ -4,27 +4,27 @@ DeepLearningEngine - Det parte patrones complejos con LSTM, GRU o Transformers.
 
 import logging
 import os
-from typing import Any, Dict, Optional
+from typing import Optional, Union
 
 # ============================================================================
 # CRÍTICO: Configurar variables de entorno ANTES de importar numpy/pandas/PyTorch
 # FORZAR configuración (no solo setdefault) para asegurar que se aplique
 # Esto previene bloqueos de threading con mutex.cc
 # ============================================================================
-os.environ['OMP_NUM_THREADS'] = '1'
-os.environ['OPENBLAS_NUM_THREADS'] = '1'
-os.environ['MKL_NUM_THREADS'] = '1'
-os.environ['NUMEXPR_NUM_THREADS'] = '1'
-os.environ['VECLIB_MAXIMUM_THREADS'] = '1'
-os.environ['MKL_SERVICE_FORCE_INTEL'] = '1'
-os.environ['KMP_DUPLICATE_LIB_OK'] = 'TRUE'
-os.environ['PYTORCH_ENABLE_MPS_FALLBACK'] = '1'
-os.environ['FOR_DISABLE_CONSOLE_CTRL_HANDLER'] = '1'
-os.environ['CUDA_VISIBLE_DEVICES'] = ''  # Deshabilitar CUDA completamente
-os.environ['TORCH_USE_CUDA_DSA'] = '0'
-os.environ['MKL_DYNAMIC'] = 'FALSE'
-os.environ['MKL_INTERFACE_LAYER'] = 'LP64,GNU'
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
+os.environ["OMP_NUM_THREADS"] = "1"
+os.environ["OPENBLAS_NUM_THREADS"] = "1"
+os.environ["MKL_NUM_THREADS"] = "1"
+os.environ["NUMEXPR_NUM_THREADS"] = "1"
+os.environ["VECLIB_MAXIMUM_THREADS"] = "1"
+os.environ["MKL_SERVICE_FORCE_INTEL"] = "1"
+os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
+os.environ["PYTORCH_ENABLE_MPS_FALLBACK"] = "1"
+os.environ["FOR_DISABLE_CONSOLE_CTRL_HANDLER"] = "1"
+os.environ["CUDA_VISIBLE_DEVICES"] = ""  # Deshabilitar CUDA completamente
+os.environ["TORCH_USE_CUDA_DSA"] = "0"
+os.environ["MKL_DYNAMIC"] = "FALSE"
+os.environ["MKL_INTERFACE_LAYER"] = "LP64,GNU"
+os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
 
 # Ahora importar numpy y pandas DESPUÉS de configurar variables
 import numpy as np
@@ -36,11 +36,12 @@ from .base_learning_engine import BaseLearningEngine
 logger = logging.getLogger(__name__)
 
 
+import contextlib
+
 # REQUIRED: PyTorch must be available - NO FALLBACKS
 import torch
 import torch.nn as nn
 import torch.optim as optim
-import contextlib
 
 # Configure threading BEFORE any PyTorch operations
 torch.set_num_threads(1)
@@ -70,9 +71,9 @@ class DeepLearningEngine(BaseLearningEngine):
 
     # Type annotations for instance attributes
     model: Optional[nn.Module]
-    scaler: Optional[Any]
+    scaler: Optional[dict[str, float]]
 
-    def __init__(self, config: Dict, defer_pytorch_init: bool = False):
+    def __init__(self, config: dict, defer_pytorch_init: bool = False):
         """
         Inicializar motor de deep learning.
 
@@ -101,7 +102,7 @@ class DeepLearningEngine(BaseLearningEngine):
             self.epochs = config.get("epochs", 50)
             self.feature_columns = config.get(
                 "feature_columns",
-                ['price', 'volume', 'rsi', 'ema_fast', 'ema_slow', 'momentum', 'atr'],
+                ["price", "volume", "rsi", "ema_fast", "ema_slow", "momentum", "atr"],
             )
             self.scaler = None
             self.model = None
@@ -124,7 +125,7 @@ class DeepLearningEngine(BaseLearningEngine):
 
         # Features
         self.feature_columns = config.get(
-            "feature_columns", ['price', 'volume', 'rsi', 'ema_fast', 'ema_slow', 'momentum', 'atr']
+            "feature_columns", ["price", "volume", "rsi", "ema_fast", "ema_slow", "momentum", "atr"]
         )
 
         # Parámetros específicos para transformer y otras arquitecturas (si se usa)
@@ -136,10 +137,10 @@ class DeepLearningEngine(BaseLearningEngine):
 
     def train(
         self,
-        training_data: Optional[Dict[str, Any]] = None,
-        validation_data: Optional[Dict[str, Any]] = None,
+        training_data: Optional[dict[str, object]] = None,
+        validation_data: Optional[dict[str, object]] = None,
         use_subprocess: bool = False,
-    ) -> Dict[str, float]:
+    ) -> dict[str, float]:
         """
         Entrenar modelo de deep learning.
 
@@ -157,9 +158,9 @@ class DeepLearningEngine(BaseLearningEngine):
             logger.info("No training data provided - marking model as trained (dummy mode)")
             self.is_trained = True
             return {
-                'loss': 0.0,
-                'accuracy': 0.0,
-                'samples': 0,
+                "loss": 0.0,
+                "accuracy": 0.0,
+                "samples": 0,
             }
 
         # Si use_subprocess=True, entrenar en proceso hijo aislado
@@ -169,8 +170,8 @@ class DeepLearningEngine(BaseLearningEngine):
         # PyTorch es REQUIRED - ya importado al inicio del módulo
         # No hay fallbacks
 
-        sequences = training_data['sequences']
-        labels = training_data['labels']
+        sequences = training_data["sequences"]
+        labels = training_data["labels"]
 
         # Normalizar datos
         sequences, labels, scaler = self._normalize_data(sequences, labels)
@@ -188,7 +189,8 @@ class DeepLearningEngine(BaseLearningEngine):
             torch.set_num_interop_threads(1)
 
         # Import Dataset and DataLoader from torch.utils.data
-        from torch.utils.data import DataLoader as _DataLoader, Dataset as _Dataset
+        from torch.utils.data import DataLoader as _DataLoader
+        from torch.utils.data import Dataset as _Dataset
 
         # Definir TimeSeriesDataset lazy dentro de este contexto (después de configurar threading)
         class TimeSeriesDataset(_Dataset):
@@ -237,8 +239,8 @@ class DeepLearningEngine(BaseLearningEngine):
 
         val_loader = None
         if validation_data:
-            val_sequences = validation_data['sequences']
-            val_labels = validation_data['labels']
+            val_sequences = validation_data["sequences"]
+            val_labels = validation_data["labels"]
             val_sequences, val_labels, _ = self._normalize_data(val_sequences, val_labels)
 
             # Use same TimeSeriesDataset class, import again for clarity
@@ -296,7 +298,7 @@ class DeepLearningEngine(BaseLearningEngine):
             """Modelo LSTM para predicción de series de tiempo."""
 
             def __init__(self, input_size, hidden_size, num_layers, output_size, dropout=0.2):
-                super(LSTMModel, self).__init__()
+                super().__init__()
                 self.hidden_size = hidden_size
                 self.num_layers = num_layers
                 self.lstm = nn.LSTM(
@@ -317,7 +319,7 @@ class DeepLearningEngine(BaseLearningEngine):
             """Modelo GRU para predicción de series de tiempo."""
 
             def __init__(self, input_size, hidden_size, num_layers, output_size, dropout=0.2):
-                super(GRUModel, self).__init__()
+                super().__init__()
                 self.hidden_size = hidden_size
                 self.num_layers = num_layers
                 self.gru = nn.GRU(
@@ -337,7 +339,7 @@ class DeepLearningEngine(BaseLearningEngine):
             """LSTM con mecanismo de atención para series de tiempo."""
 
             def __init__(self, input_size, hidden_size, num_layers, output_size, dropout=0.2):
-                super(AttentionLSTMModel, self).__init__()
+                super().__init__()
                 self.hidden_size = hidden_size
                 self.num_layers = num_layers
                 self.lstm = nn.LSTM(
@@ -383,7 +385,7 @@ class DeepLearningEngine(BaseLearningEngine):
                 output_size=1,
                 dropout=0.1,
             ):
-                super(TransformerModel, self).__init__()
+                super().__init__()
                 self.d_model = d_model
 
                 # Proyección de entrada
@@ -398,7 +400,7 @@ class DeepLearningEngine(BaseLearningEngine):
                 )
                 pe[:, 0::2] = torch.sin(position * div_term)
                 pe[:, 1::2] = torch.cos(position * div_term)
-                self.register_buffer('pos_encoder', pe.unsqueeze(0))
+                self.register_buffer("pos_encoder", pe.unsqueeze(0))
 
                 # Transformer encoder
                 encoder_layer = nn.TransformerEncoderLayer(
@@ -474,7 +476,7 @@ class DeepLearningEngine(BaseLearningEngine):
                     )
         except (ValueError, TypeError, KeyError, AttributeError) as e:
             error_msg = str(e).lower()
-            if 'mutex' in error_msg or 'lock' in error_msg:
+            if "mutex" in error_msg or "lock" in error_msg:
                 logger.error(
                     f"❌ Bloqueo de mutex detectado al crear modelo {self.architecture}. "
                     "Esto indica un problema con la instalación de PyTorch/MKL. "
@@ -497,7 +499,7 @@ class DeepLearningEngine(BaseLearningEngine):
         criterion = nn.BCELoss() if output_size == 1 else nn.MSELoss()
         optimizer = optim.Adam(self.model.parameters(), lr=self.learning_rate)
 
-        metrics: Dict[str, list] = {'train_loss': [], 'val_loss': []}
+        metrics: dict[str, list] = {"train_loss": [], "val_loss": []}
 
         for epoch in range(self.epochs):
             # Training
@@ -525,7 +527,7 @@ class DeepLearningEngine(BaseLearningEngine):
                     train_loss += loss.item()
 
             train_loss /= len(train_loader)
-            metrics['train_loss'].append(train_loss)
+            metrics["train_loss"].append(train_loss)
 
             # Validation
             if val_loader:
@@ -544,23 +546,23 @@ class DeepLearningEngine(BaseLearningEngine):
                         val_loss += loss.item()
 
                 val_loss /= len(val_loader)
-                metrics['val_loss'].append(val_loss)
+                metrics["val_loss"].append(val_loss)
 
             if (epoch + 1) % 10 == 0:
                 logger.info(
-                    f"Epoch {epoch+1}/{self.epochs}, Train Loss: {train_loss:.4f}, Val Loss: {val_loss if val_loader else 'N/A'}"
+                    f"Epoch {epoch + 1}/{self.epochs}, Train Loss: {train_loss:.4f}, Val Loss: {val_loss if val_loader else 'N/A'}"
                 )
 
         self.is_trained = True
         return {
-            'final_train_loss': metrics['train_loss'][-1],
-            'final_val_loss': metrics['val_loss'][-1] if metrics['val_loss'] else None,
-            'min_val_loss': min(metrics['val_loss']) if metrics['val_loss'] else None,
+            "final_train_loss": metrics["train_loss"][-1],
+            "final_val_loss": metrics["val_loss"][-1] if metrics["val_loss"] else None,
+            "min_val_loss": min(metrics["val_loss"]) if metrics["val_loss"] else None,
         }
 
     def _train_in_subprocess(
-        self, training_data: Dict[str, Any], validation_data: Optional[Dict[str, Any]] = None
-    ) -> Dict[str, float]:
+        self, training_data: dict[str, object], validation_data: Optional[dict[str, object]] = None
+    ) -> dict[str, float]:
         """
         Entrenar modelo en un proceso hijo aislado para evitar deadlocks globales.
 
@@ -583,14 +585,14 @@ class DeepLearningEngine(BaseLearningEngine):
             """Worker function que se ejecuta en el proceso hijo."""
             try:
                 # Configurar variables de entorno en el proceso hijo
-                os.environ['OMP_NUM_THREADS'] = '1'
-                os.environ['MKL_NUM_THREADS'] = '1'
-                os.environ['NUMEXPR_MAX_THREADS'] = '1'
-                os.environ['OPENBLAS_NUM_THREADS'] = '1'
-                os.environ['VECLIB_MAXIMUM_THREADS'] = '1'
-                os.environ['CUDA_VISIBLE_DEVICES'] = ''
-                os.environ['MKL_SERVICE_FORCE_INTEL'] = '1'
-                os.environ['KMP_DUPLICATE_LIB_OK'] = 'TRUE'
+                os.environ["OMP_NUM_THREADS"] = "1"
+                os.environ["MKL_NUM_THREADS"] = "1"
+                os.environ["NUMEXPR_MAX_THREADS"] = "1"
+                os.environ["OPENBLAS_NUM_THREADS"] = "1"
+                os.environ["VECLIB_MAXIMUM_THREADS"] = "1"
+                os.environ["CUDA_VISIBLE_DEVICES"] = ""
+                os.environ["MKL_SERVICE_FORCE_INTEL"] = "1"
+                os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
 
                 # Reimportar en el proceso hijo (fresh state)
                 from app.domain.strategies.learning.deep_learning_engine import DeepLearningEngine
@@ -612,9 +614,8 @@ class DeepLearningEngine(BaseLearningEngine):
                 # Guardar modelo en archivo temporal
                 import tempfile
 
-                model_file = tempfile.NamedTemporaryFile(delete=False, suffix='.pt')
-                model_path = model_file.name
-                model_file.close()
+                with tempfile.NamedTemporaryFile(delete=False, suffix=".pt") as model_file:
+                    model_path = model_file.name
 
                 # Guardar modelo (solo pesos)
                 import torch
@@ -622,10 +623,10 @@ class DeepLearningEngine(BaseLearningEngine):
                 torch.save(engine.model.state_dict(), model_path)
 
                 # Retornar métricas y ruta del modelo
-                result_queue.put({'success': True, 'metrics': metrics, 'model_path': model_path})
+                result_queue.put({"success": True, "metrics": metrics, "model_path": model_path})
             except OSError as e:
                 result_queue.put(
-                    {'success': False, 'error': str(e), 'error_type': type(e).__name__}
+                    {"success": False, "error": str(e), "error_type": type(e).__name__}
                 )
 
         # Serializar datos para pasar al proceso hijo
@@ -635,16 +636,16 @@ class DeepLearningEngine(BaseLearningEngine):
 
         # Serializar configuración
         config_dict = {
-            'architecture': self.architecture,
-            'backend': self.backend,
-            'sequence_length': self.sequence_length,
-            'hidden_size': self.hidden_size,
-            'num_layers': self.num_layers,
-            'dropout': self.dropout,
-            'learning_rate': self.learning_rate,
-            'batch_size': self.batch_size,
-            'epochs': self.epochs,
-            'feature_columns': self.feature_columns,
+            "architecture": self.architecture,
+            "backend": self.backend,
+            "sequence_length": self.sequence_length,
+            "hidden_size": self.hidden_size,
+            "num_layers": self.num_layers,
+            "dropout": self.dropout,
+            "learning_rate": self.learning_rate,
+            "batch_size": self.batch_size,
+            "epochs": self.epochs,
+            "feature_columns": self.feature_columns,
         }
 
         # Crear queue para comunicación
@@ -668,14 +669,14 @@ class DeepLearningEngine(BaseLearningEngine):
             # Obtener resultado
             if not result_queue.empty():
                 result = result_queue.get()
-                if result['success']:
+                if result["success"]:
                     # Cargar modelo desde archivo temporal
                     # PyTorch is imported at module level (lines 40-42)
 
                     # Recrear modelo con la misma arquitectura
                     # (necesitamos recrear la estructura del modelo)
-                    metrics = result['metrics']
-                    model_path = result['model_path']
+                    metrics = result["metrics"]
+                    model_path = result["model_path"]
 
                     # Cargar pesos (necesitamos crear el modelo primero)
                     # Por ahora, marcamos como entrenado pero no cargamos pesos
@@ -718,14 +719,14 @@ class DeepLearningEngine(BaseLearningEngine):
             label_mean = labels.mean()
             label_std = labels.std() + 1e-8
             labels_norm = (labels - label_mean) / label_std
-            scaler = {'mean': label_mean, 'std': label_std}
+            scaler = {"mean": label_mean, "std": label_std}
         else:
             labels_norm = labels
             scaler = None
 
         return sequences_norm, labels_norm, scaler
 
-    def predict(self, features: Dict[str, Any]) -> Dict[str, Any]:
+    def predict(self, features: dict[str, object]) -> dict[str, object]:
         """
         Predecir movimiento futuro.
 
@@ -746,12 +747,12 @@ class DeepLearningEngine(BaseLearningEngine):
         # Si se usó defer_pytorch_init y no hay modelo, significa que no se ha entrenado aún
         # Retornar predicción neutral sin tocar PyTorch
         if self.model is None:
-            return {'predicted_direction': 0.5, 'predicted_price_change': 0.0, 'confidence': 0.0}
+            return {"predicted_direction": 0.5, "predicted_price_change": 0.0, "confidence": 0.0}
 
         if not self.is_ready():
-            return {'predicted_direction': 0.5, 'predicted_price_change': 0.0, 'confidence': 0.0}
+            return {"predicted_direction": 0.5, "predicted_price_change": 0.0, "confidence": 0.0}
 
-        sequence = features['sequence']
+        sequence = features["sequence"]
 
         # Normalizar
         if self.scaler:
@@ -771,44 +772,45 @@ class DeepLearningEngine(BaseLearningEngine):
             prediction = self.model(sequence_t).item()
 
         # Desnormalizar si es necesario
-        if self.scaler and 'mean' in self.scaler:
-            prediction = prediction * self.scaler['std'] + self.scaler['mean']
+        if self.scaler and "mean" in self.scaler:
+            prediction = prediction * self.scaler["std"] + self.scaler["mean"]
 
         # Generar ajustes de filtros basados en predicción
         filter_adjustments = self._suggest_filter_adjustments(prediction)
 
         return {
-            'predicted_direction': float(prediction),
-            'predicted_price_change': float(prediction - 0.5) * 2,  # Normalizar a -1 a 1
-            'confidence': abs(prediction - 0.5) * 2,
-            'filter_adjustments': filter_adjustments,
+            "predicted_direction": float(prediction),
+            "predicted_price_change": float(prediction - 0.5) * 2,  # Normalizar a -1 a 1
+            "confidence": abs(prediction - 0.5) * 2,
+            "filter_adjustments": filter_adjustments,
         }
 
-    def _suggest_filter_adjustments(self, prediction: float) -> Dict[str, float]:
+    def _suggest_filter_adjustments(self, prediction: float) -> dict[str, float]:
         """Sugerir ajustes de filtros basados en predicción."""
-        adjustments: Dict[str, float] = {}
+        adjustments: dict[str, float] = {}
 
         # Si predicción es muy alcista, relajar filtros de compra
         if prediction > 0.7:
-            adjustments['rsi_buy_min'] = -5.0  # Reducir threshold
-            adjustments['momentum_threshold'] = -0.005  # Reducir
+            adjustments["rsi_buy_min"] = -5.0  # Reducir threshold
+            adjustments["momentum_threshold"] = -0.005  # Reducir
         elif prediction < 0.3:
-            adjustments['rsi_buy_min'] = 5.0  # Aumentar threshold (ser más estricto)
-            adjustments['momentum_threshold'] = 0.005
+            adjustments["rsi_buy_min"] = 5.0  # Aumentar threshold (ser más estricto)
+            adjustments["momentum_threshold"] = 0.005
 
         return adjustments
 
-    def evaluate(self, test_data: Dict[str, Any]) -> Dict[str, float]:
+    def evaluate(self, test_data: dict[str, object]) -> dict[str, float]:
         """Evaluar modelo en datos de prueba."""
-        sequences = test_data['sequences']
-        labels = test_data['labels']
+        sequences = test_data["sequences"]
+        labels = test_data["labels"]
 
         sequences, labels, _ = self._normalize_data(sequences, labels)
 
         # PyTorch es REQUIRED - ya importado al inicio del módulo
 
         # Import Dataset and DataLoader from torch.utils.data
-        from torch.utils.data import DataLoader as _DataLoader, Dataset as _Dataset
+        from torch.utils.data import DataLoader as _DataLoader
+        from torch.utils.data import Dataset as _Dataset
 
         # Definir TimeSeriesDataset lazy
         class TimeSeriesDatasetEval(_Dataset):
@@ -879,6 +881,6 @@ class DeepLearningEngine(BaseLearningEngine):
         if len(np.unique(true_labels)) <= 2:
             pred_binary = (predictions >= 0.5).astype(int)
             accuracy = np.mean(pred_binary == true_labels)
-            return {'rmse': float(rmse), 'accuracy': float(accuracy)}
+            return {"rmse": float(rmse), "accuracy": float(accuracy)}
 
-        return {'rmse': float(rmse)}
+        return {"rmse": float(rmse)}

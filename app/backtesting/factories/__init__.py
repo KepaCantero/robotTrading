@@ -11,7 +11,7 @@ from app.backtesting.factories.strategy_factory import (
 )
 
 __all__ = [
-    'StrategyFactory',
-    'create_strategy_from_config',
-    'get_strategy_metadata',
+    "StrategyFactory",
+    "create_strategy_from_config",
+    "get_strategy_metadata",
 ]

@@ -10,7 +10,7 @@ import logging
 from dataclasses import dataclass, field
 from datetime import datetime
 from decimal import Decimal
-from typing import Dict, List, Optional
+from typing import Optional
 
 import numpy as np
 
@@ -32,7 +32,7 @@ class FactorExposure:
     p_value: Decimal
     significant: bool  # p_value < 0.05
 
-    def to_dict(self) -> Dict:
+    def to_dict(self) -> dict:
         """Convert to dictionary."""
         return {
             "factor_name": self.factor_name,
@@ -49,13 +49,13 @@ class FactorAnalysis:
 
     analysis_date: datetime
     num_periods: int
-    factors: List[FactorExposure] = field(default_factory=list)
+    factors: list[FactorExposure] = field(default_factory=list)
     residual_return_pct: Decimal = Decimal("0")  # Unexplained return (alpha)
     residual_volatility_pct: Decimal = Decimal("0")  # Unexplained volatility
     model_r_squared: Optional[Decimal] = None  # How well factors explain returns
-    factor_contribution_pct: Dict[str, Decimal] = field(default_factory=dict)
+    factor_contribution_pct: dict[str, Decimal] = field(default_factory=dict)
 
-    def to_dict(self) -> Dict:
+    def to_dict(self) -> dict:
         """Convert to dictionary."""
         return {
             "analysis_date": self.analysis_date.isoformat(),
@@ -80,7 +80,7 @@ class PositionConcentration:
     top_5_concentration_pct: Decimal  # % in top 5 positions
     diversification_ratio: Decimal  # Avg position volatility / portfolio volatility
 
-    def to_dict(self) -> Dict:
+    def to_dict(self) -> dict:
         """Convert to dictionary."""
         return {
             "largest_position_pct": float(self.largest_position_pct),
@@ -103,9 +103,9 @@ class CapacityFade:
     fade_ratio: Decimal  # Target return / Backtest return
     projected_feasible: bool  # Is target return above required minimum?
     confidence_level: str  # "high", "medium", "low"
-    constraints: List[str] = field(default_factory=list)  # What limits scalability
+    constraints: list[str] = field(default_factory=list)  # What limits scalability
 
-    def to_dict(self) -> Dict:
+    def to_dict(self) -> dict:
         """Convert to dictionary."""
         return {
             "backtest_period": self.backtest_period,
@@ -155,13 +155,13 @@ class Tearsheet:
     capacity_fade: Optional[CapacityFade] = None
 
     # Monthly returns distribution
-    monthly_returns: Dict[str, Decimal] = field(default_factory=dict)
+    monthly_returns: dict[str, Decimal] = field(default_factory=dict)
 
     # Best/worst days
     best_day_pct: Decimal = Decimal("0")
     worst_day_pct: Optional[Decimal] = None
 
-    def to_dict(self) -> Dict:
+    def to_dict(self) -> dict:
         """Convert to dictionary."""
         return {
             "generation_date": self.generation_date.isoformat(),
@@ -226,9 +226,9 @@ class PyFolioIntegrator:
     def generate_tearsheet(
         self,
         strategy_name: str,
-        returns: List[Decimal],
-        positions: Optional[List[Dict]] = None,
-        transactions: Optional[List[Dict]] = None,
+        returns: list[Decimal],
+        positions: Optional[list[dict]] = None,
+        transactions: Optional[list[dict]] = None,
         period_start: Optional[datetime] = None,
         period_end: Optional[datetime] = None,
         annual_return_pct: Optional[Decimal] = None,
@@ -329,8 +329,8 @@ class PyFolioIntegrator:
 
     def analyze_factor_exposure(
         self,
-        returns: List[Decimal],
-        factor_data: Dict[str, List[float]],
+        returns: list[Decimal],
+        factor_data: dict[str, list[float]],
         confidence_level: float = 0.95,
     ) -> FactorAnalysis:
         """
@@ -340,7 +340,7 @@ class PyFolioIntegrator:
 
         Args:
             returns: Period returns (Decimal)
-            factor_data: Dictionary of factor_name → factor_values
+            factor_data: Dictionary of factor_name -> factor_values
             confidence_level: Confidence level for significance testing
 
         Returns:
@@ -365,7 +365,7 @@ class PyFolioIntegrator:
             intercept_col = np.ones((len(returns_array), 1))
             X = np.column_stack([intercept_col, factor_matrix])
 
-            # Solve linear regression: returns = α + β1*F1 + β2*F2 + ...
+            # Solve linear regression: returns = alpha + beta1*F1 + beta2*F2 + ...
             # Using least squares: (X'X)^-1 X'y
             try:
                 coefficients = np.linalg.lstsq(X, returns_array, rcond=None)[0]
@@ -440,8 +440,8 @@ class PyFolioIntegrator:
 
             self.analysis_completed += 1
             logger.info(
-                f"Factor analysis completed (R²: {r_squared:.3f}, "
-                f"alpha: {alpha*100:.2f}%, factors: {len(factor_names)})"
+                f"Factor analysis completed (R^2: {r_squared:.3f}, "
+                f"alpha: {alpha * 100:.2f}%, factors: {len(factor_names)})"
             )
 
             return analysis
@@ -450,7 +450,7 @@ class PyFolioIntegrator:
             logger.error(f"Factor exposure analysis failed: {e}")
             raise
 
-    def calculate_position_concentration(self, positions: List[Dict]) -> PositionConcentration:
+    def calculate_position_concentration(self, positions: list[dict]) -> PositionConcentration:
         """
         Calculate concentration metrics for portfolio positions.
 
@@ -533,8 +533,8 @@ class PyFolioIntegrator:
 
     def analyze_capacity_fade(
         self,
-        backtest_returns: List[Decimal],
-        live_returns: Optional[List[Decimal]] = None,
+        backtest_returns: list[Decimal],
+        live_returns: Optional[list[Decimal]] = None,
         backtest_capital: Optional[Decimal] = None,
         current_capital: Optional[Decimal] = None,
         target_capital: Optional[Decimal] = None,
@@ -584,10 +584,7 @@ class PyFolioIntegrator:
                 live_return = Decimal(str(np.mean(live_arr) * 252 * 100))
 
             # Calculate fade ratio: live_return / backtest_return
-            if backtest_return > 0:
-                fade_ratio = live_return / backtest_return
-            else:
-                fade_ratio = Decimal("0")
+            fade_ratio = live_return / backtest_return if backtest_return > 0 else Decimal("0")
 
             # Project returns at target capital using sqrt(capacity) decay
             # Formula: target_return = backtest_return * sqrt(current_capital / target_capital) * fade_ratio
@@ -652,7 +649,7 @@ class PyFolioIntegrator:
     # HELPER METHODS
     # ========================================================================
 
-    def _calculate_monthly_returns(self, returns: List[Decimal]) -> Dict[str, Decimal]:
+    def _calculate_monthly_returns(self, returns: list[Decimal]) -> dict[str, Decimal]:
         """Calculate aggregated monthly returns."""
         try:
             if not returns or len(returns) < 20:
@@ -680,11 +677,11 @@ class PyFolioIntegrator:
             logger.warning(f"Monthly return calculation failed: {e}")
             return {}
 
-    def _calculate_position_concentration(self, positions: List[Dict]) -> PositionConcentration:
+    def _calculate_position_concentration(self, positions: list[dict]) -> PositionConcentration:
         """Helper to calculate position concentration."""
         return self.calculate_position_concentration(positions)
 
-    def get_integrator_status(self) -> Dict:
+    def get_integrator_status(self) -> dict:
         """Get integrator operational status."""
         return {
             "status": "operational",

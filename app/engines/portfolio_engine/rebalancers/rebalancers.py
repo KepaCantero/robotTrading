@@ -12,7 +12,7 @@ import logging
 from abc import ABC, abstractmethod
 from datetime import datetime, timedelta
 from decimal import Decimal
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 import numpy as np
 
@@ -22,7 +22,7 @@ logger = logging.getLogger(__name__)
 class BaseRebalancer(ABC):
     """Clase base para rebalanceadores."""
 
-    def __init__(self, config: Dict[str, Any]):
+    def __init__(self, config: dict[str, Any]):
         """
         Inicializar rebalancer.
 
@@ -37,8 +37,8 @@ class BaseRebalancer(ABC):
     @abstractmethod
     def should_rebalance(
         self,
-        current_weights: Dict[str, float],
-        target_weights: Dict[str, float],
+        current_weights: dict[str, float],
+        target_weights: dict[str, float],
         portfolio_value: Decimal,
         **kwargs,
     ) -> bool:
@@ -58,11 +58,11 @@ class BaseRebalancer(ABC):
     @abstractmethod
     def calculate_rebalance_trades(
         self,
-        current_positions: Dict[str, Any],
-        target_weights: Dict[str, float],
+        current_positions: dict[str, Any],
+        target_weights: dict[str, float],
         portfolio_value: Decimal,
-        prices: Dict[str, Decimal],
-    ) -> List[Dict[str, Any]]:
+        prices: dict[str, Decimal],
+    ) -> list[dict[str, Any]]:
         """
         Calcular trades necesarios para rebalancear.
 
@@ -84,16 +84,16 @@ class ThresholdRebalancer(BaseRebalancer):
     Rebalancea cuando los pesos se desvían del objetivo más de un umbral.
     """
 
-    def __init__(self, config: Dict[str, Any]):
+    def __init__(self, config: dict[str, Any]):
         """Inicializar threshold rebalancer."""
         super().__init__(config)
-        self.threshold = config.get('threshold', 0.05)  # 5% por defecto
-        self.min_rebalance_interval = timedelta(days=config.get('min_rebalance_interval_days', 1))
+        self.threshold = config.get("threshold", 0.05)  # 5% por defecto
+        self.min_rebalance_interval = timedelta(days=config.get("min_rebalance_interval_days", 1))
 
     def should_rebalance(
         self,
-        current_weights: Dict[str, float],
-        target_weights: Dict[str, float],
+        current_weights: dict[str, float],
+        target_weights: dict[str, float],
         portfolio_value: Decimal,
         **kwargs,
     ) -> bool:
@@ -123,18 +123,18 @@ class ThresholdRebalancer(BaseRebalancer):
 
     def calculate_rebalance_trades(
         self,
-        current_positions: Dict[str, Any],
-        target_weights: Dict[str, float],
+        current_positions: dict[str, Any],
+        target_weights: dict[str, float],
         portfolio_value: Decimal,
-        prices: Dict[str, Decimal],
-    ) -> List[Dict[str, Any]]:
+        prices: dict[str, Decimal],
+    ) -> list[dict[str, Any]]:
         """Calcular trades para rebalancear."""
         trades = []
 
         for symbol, target_weight in target_weights.items():
             current_position = current_positions.get(symbol, {})
-            current_value = Decimal(str(current_position.get('market_value', 0)))
-            current_quantity = Decimal(str(current_position.get('quantity', 0)))
+            current_value = Decimal(str(current_position.get("market_value", 0)))
+            current_quantity = Decimal(str(current_position.get("quantity", 0)))
 
             target_value = portfolio_value * Decimal(str(target_weight))
             price = prices.get(symbol, Decimal("1"))
@@ -147,15 +147,15 @@ class ThresholdRebalancer(BaseRebalancer):
                 if abs(quantity_diff) > Decimal("0.01"):
                     trades.append(
                         {
-                            'symbol': symbol,
-                            'quantity': float(quantity_diff),
-                            'target_weight': target_weight,
-                            'current_weight': (
+                            "symbol": symbol,
+                            "quantity": float(quantity_diff),
+                            "target_weight": target_weight,
+                            "current_weight": (
                                 float(current_value / portfolio_value)
                                 if portfolio_value > 0
                                 else 0.0
                             ),
-                            'reason': 'threshold_rebalance',
+                            "reason": "threshold_rebalance",
                         }
                     )
 
@@ -169,19 +169,19 @@ class TimeBasedRebalancer(BaseRebalancer):
     Rebalancea en intervalos fijos (diario, semanal, mensual).
     """
 
-    def __init__(self, config: Dict[str, Any]):
+    def __init__(self, config: dict[str, Any]):
         """Inicializar time-based rebalancer."""
         super().__init__(config)
-        self.rebalance_frequency = config.get('frequency', 'daily')  # daily, weekly, monthly
+        self.rebalance_frequency = config.get("frequency", "daily")  # daily, weekly, monthly
         self._set_frequency_interval()
 
     def _set_frequency_interval(self) -> None:
         """Establecer intervalo de rebalanceo basado en frecuencia."""
-        if self.rebalance_frequency == 'daily':
+        if self.rebalance_frequency == "daily":
             self.interval = timedelta(days=1)
-        elif self.rebalance_frequency == 'weekly':
+        elif self.rebalance_frequency == "weekly":
             self.interval = timedelta(weeks=1)
-        elif self.rebalance_frequency == 'monthly':
+        elif self.rebalance_frequency == "monthly":
             self.interval = timedelta(days=30)
         else:
             self.interval = timedelta(days=1)
@@ -191,8 +191,8 @@ class TimeBasedRebalancer(BaseRebalancer):
 
     def should_rebalance(
         self,
-        current_weights: Dict[str, float],
-        target_weights: Dict[str, float],
+        current_weights: dict[str, float],
+        target_weights: dict[str, float],
         portfolio_value: Decimal,
         **kwargs,
     ) -> bool:
@@ -213,18 +213,18 @@ class TimeBasedRebalancer(BaseRebalancer):
 
     def calculate_rebalance_trades(
         self,
-        current_positions: Dict[str, Any],
-        target_weights: Dict[str, float],
+        current_positions: dict[str, Any],
+        target_weights: dict[str, float],
         portfolio_value: Decimal,
-        prices: Dict[str, Decimal],
-    ) -> List[Dict[str, Any]]:
+        prices: dict[str, Decimal],
+    ) -> list[dict[str, Any]]:
         """Calcular trades para rebalancear."""
         trades = []
 
         for symbol, target_weight in target_weights.items():
             current_position = current_positions.get(symbol, {})
-            current_value = Decimal(str(current_position.get('market_value', 0)))
-            current_quantity = Decimal(str(current_position.get('quantity', 0)))
+            current_value = Decimal(str(current_position.get("market_value", 0)))
+            current_quantity = Decimal(str(current_position.get("quantity", 0)))
 
             target_value = portfolio_value * Decimal(str(target_weight))
             price = prices.get(symbol, Decimal("1"))
@@ -236,15 +236,15 @@ class TimeBasedRebalancer(BaseRebalancer):
                 if abs(quantity_diff) > Decimal("0.01"):
                     trades.append(
                         {
-                            'symbol': symbol,
-                            'quantity': float(quantity_diff),
-                            'target_weight': target_weight,
-                            'current_weight': (
+                            "symbol": symbol,
+                            "quantity": float(quantity_diff),
+                            "target_weight": target_weight,
+                            "current_weight": (
                                 float(current_value / portfolio_value)
                                 if portfolio_value > 0
                                 else 0.0
                             ),
-                            'reason': f'time_based_{self.rebalance_frequency}',
+                            "reason": f"time_based_{self.rebalance_frequency}",
                         }
                     )
 
@@ -258,25 +258,25 @@ class VolatilityTargetingRebalancer(BaseRebalancer):
     Rebalancea para mantener volatilidad objetivo del portfolio.
     """
 
-    def __init__(self, config: Dict[str, Any]):
+    def __init__(self, config: dict[str, Any]):
         """Inicializar volatility-targeting rebalancer."""
         super().__init__(config)
-        self.target_volatility = config.get('target_volatility', 0.15)  # 15% por defecto
+        self.target_volatility = config.get("target_volatility", 0.15)  # 15% por defecto
         self.volatility_threshold = getattr(
-            config.trading, 'max_risk_per_trade', 0.02
+            config.trading, "max_risk_per_trade", 0.02
         )  # 2% desviación
         self.cov_matrix = None  # Se actualizará con datos reales
 
     def should_rebalance(
         self,
-        current_weights: Dict[str, float],
-        target_weights: Dict[str, float],
+        current_weights: dict[str, float],
+        target_weights: dict[str, float],
         portfolio_value: Decimal,
         **kwargs,
     ) -> bool:
         """Verificar si se debe rebalancear basado en volatilidad."""
         # Obtener matriz de covarianza
-        cov_matrix = kwargs.get('cov_matrix')
+        cov_matrix = kwargs.get("cov_matrix")
         if cov_matrix is None:
             self.logger.warning("Covariance matrix not provided. Skipping volatility check.")
             return False
@@ -311,19 +311,19 @@ class VolatilityTargetingRebalancer(BaseRebalancer):
 
     def calculate_rebalance_trades(
         self,
-        current_positions: Dict[str, Any],
-        target_weights: Dict[str, float],
+        current_positions: dict[str, Any],
+        target_weights: dict[str, float],
         portfolio_value: Decimal,
-        prices: Dict[str, Decimal],
-    ) -> List[Dict[str, Any]]:
+        prices: dict[str, Decimal],
+    ) -> list[dict[str, Any]]:
         """Calcular trades para rebalancear."""
         # Similar a threshold rebalancer pero con ajuste de volatilidad
         trades = []
 
         for symbol, target_weight in target_weights.items():
             current_position = current_positions.get(symbol, {})
-            current_value = Decimal(str(current_position.get('market_value', 0)))
-            current_quantity = Decimal(str(current_position.get('quantity', 0)))
+            current_value = Decimal(str(current_position.get("market_value", 0)))
+            current_quantity = Decimal(str(current_position.get("quantity", 0)))
 
             target_value = portfolio_value * Decimal(str(target_weight))
             price = prices.get(symbol, Decimal("1"))
@@ -335,15 +335,15 @@ class VolatilityTargetingRebalancer(BaseRebalancer):
                 if abs(quantity_diff) > Decimal("0.01"):
                     trades.append(
                         {
-                            'symbol': symbol,
-                            'quantity': float(quantity_diff),
-                            'target_weight': target_weight,
-                            'current_weight': (
+                            "symbol": symbol,
+                            "quantity": float(quantity_diff),
+                            "target_weight": target_weight,
+                            "current_weight": (
                                 float(current_value / portfolio_value)
                                 if portfolio_value > 0
                                 else 0.0
                             ),
-                            'reason': 'volatility_targeting',
+                            "reason": "volatility_targeting",
                         }
                     )
 
@@ -357,20 +357,20 @@ class TransactionCostAwareRebalancer(BaseRebalancer):
     Rebalancea solo si el beneficio esperado supera los costos de transacción.
     """
 
-    def __init__(self, config: Dict[str, Any]):
+    def __init__(self, config: dict[str, Any]):
         """Inicializar transaction cost-aware rebalancer."""
         super().__init__(config)
-        self.commission_rate = config.get('commission_rate', 0.001)  # 0.1% por defecto
-        self.slippage_rate = config.get('slippage_rate', 0.0005)  # 0.05% por defecto
+        self.commission_rate = config.get("commission_rate", 0.001)  # 0.1% por defecto
+        self.slippage_rate = config.get("slippage_rate", 0.0005)  # 0.05% por defecto
         self.min_benefit_threshold = config.get(
-            'min_benefit_threshold', 0.001
+            "min_benefit_threshold", 0.001
         )  # 0.1% beneficio mínimo
         self.base_rebalancer = ThresholdRebalancer(config)  # Usar threshold como base
 
     def should_rebalance(
         self,
-        current_weights: Dict[str, float],
-        target_weights: Dict[str, float],
+        current_weights: dict[str, float],
+        target_weights: dict[str, float],
         portfolio_value: Decimal,
         **kwargs,
     ) -> bool:
@@ -382,16 +382,16 @@ class TransactionCostAwareRebalancer(BaseRebalancer):
             return False
 
         # Calcular costos de transacción estimados
-        current_positions = kwargs.get('current_positions', {})
-        prices = kwargs.get('prices', {})
+        current_positions = kwargs.get("current_positions", {})
+        prices = kwargs.get("prices", {})
 
         trades = self.base_rebalancer.calculate_rebalance_trades(
             current_positions, target_weights, portfolio_value, prices
         )
 
         total_cost = sum(
-            abs(Decimal(str(trade['quantity'])))
-            * prices.get(trade['symbol'], Decimal("1"))
+            abs(Decimal(str(trade["quantity"])))
+            * prices.get(trade["symbol"], Decimal("1"))
             * Decimal(str(self.commission_rate + self.slippage_rate))
             for trade in trades
         )
@@ -419,11 +419,11 @@ class TransactionCostAwareRebalancer(BaseRebalancer):
 
     def calculate_rebalance_trades(
         self,
-        current_positions: Dict[str, Any],
-        target_weights: Dict[str, float],
+        current_positions: dict[str, Any],
+        target_weights: dict[str, float],
         portfolio_value: Decimal,
-        prices: Dict[str, Decimal],
-    ) -> List[Dict[str, Any]]:
+        prices: dict[str, Decimal],
+    ) -> list[dict[str, Any]]:
         """Calcular trades considerando costos de transacción."""
         # Usar base rebalancer pero añadir información de costos
         trades = self.base_rebalancer.calculate_rebalance_trades(
@@ -432,8 +432,8 @@ class TransactionCostAwareRebalancer(BaseRebalancer):
 
         # Añadir estimación de costos a cada trade
         for trade in trades:
-            symbol = trade['symbol']
-            quantity = abs(Decimal(str(trade['quantity'])))
+            symbol = trade["symbol"]
+            quantity = abs(Decimal(str(trade["quantity"])))
             price = prices.get(symbol, Decimal("1"))
 
             trade_value = quantity * price
@@ -441,9 +441,9 @@ class TransactionCostAwareRebalancer(BaseRebalancer):
             slippage = trade_value * Decimal(str(self.slippage_rate))
             total_cost = commission + slippage
 
-            trade['estimated_commission'] = float(commission)
-            trade['estimated_slippage'] = float(slippage)
-            trade['estimated_total_cost'] = float(total_cost)
+            trade["estimated_commission"] = float(commission)
+            trade["estimated_slippage"] = float(slippage)
+            trade["estimated_total_cost"] = float(total_cost)
 
         return trades
 
@@ -455,43 +455,46 @@ class HybridRebalancer(BaseRebalancer):
     Combina múltiples estrategias de rebalanceo.
     """
 
-    def __init__(self, config: Dict[str, Any]):
+    def __init__(self, config: dict[str, Any]):
         """Inicializar hybrid rebalancer."""
         super().__init__(config)
 
         # Crear rebalanceadores base
         self.rebalancers = []
 
-        if config.get('use_threshold', True):
+        if config.get("use_threshold", True):
             self.rebalancers.append(ThresholdRebalancer(config))
 
-        if config.get('use_time_based', True):
+        if config.get("use_time_based", True):
             self.rebalancers.append(TimeBasedRebalancer(config))
 
-        if config.get('use_volatility_targeting', False):
+        if config.get("use_volatility_targeting", False):
             self.rebalancers.append(VolatilityTargetingRebalancer(config))
 
-        if config.get('use_transaction_cost_aware', True):
+        if config.get("use_transaction_cost_aware", True):
             self.rebalancers.append(TransactionCostAwareRebalancer(config))
 
     def should_rebalance(
         self,
-        current_weights: Dict[str, float],
-        target_weights: Dict[str, float],
+        current_weights: dict[str, float],
+        target_weights: dict[str, float],
         portfolio_value: Decimal,
         **kwargs,
     ) -> bool:
         """Verificar si se debe rebalancear usando estrategia híbrida."""
         # Si cualquier rebalancer recomienda rebalancear, hacerlo
-        return any(rebalancer.should_rebalance(current_weights, target_weights, portfolio_value, **kwargs) for rebalancer in self.rebalancers)
+        return any(
+            rebalancer.should_rebalance(current_weights, target_weights, portfolio_value, **kwargs)
+            for rebalancer in self.rebalancers
+        )
 
     def calculate_rebalance_trades(
         self,
-        current_positions: Dict[str, Any],
-        target_weights: Dict[str, float],
+        current_positions: dict[str, Any],
+        target_weights: dict[str, float],
         portfolio_value: Decimal,
-        prices: Dict[str, Decimal],
-    ) -> List[Dict[str, Any]]:
+        prices: dict[str, Decimal],
+    ) -> list[dict[str, Any]]:
         """Calcular trades usando el primer rebalancer disponible."""
         if self.rebalancers:
             return self.rebalancers[0].calculate_rebalance_trades(

@@ -15,7 +15,7 @@ import json
 import logging
 from datetime import datetime
 from decimal import Decimal
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Callable, Optional
 
 import websockets
 from requests.exceptions import HTTPError
@@ -72,12 +72,12 @@ class AlpacaClient:
         self.stream_socket: Optional[websockets.WebSocketClientProtocol] = None
         self.stream_task: Optional[asyncio.Task] = None
         self.is_streaming = False
-        self.subscribed_symbols: List[str] = []
+        self.subscribed_symbols: list[str] = []
 
         # Event callbacks
-        self.on_quote: Optional[Callable[[Dict[str, Any]], None]] = None
-        self.on_trade: Optional[Callable[[Dict[str, Any]], None]] = None
-        self.on_order_update: Optional[Callable[[Dict[str, Any]], None]] = None
+        self.on_quote: Optional[Callable[[dict[str, Any]], None]] = None
+        self.on_trade: Optional[Callable[[dict[str, Any]], None]] = None
+        self.on_order_update: Optional[Callable[[dict[str, Any]], None]] = None
         self.on_connection_error: Optional[Callable[[Exception], None]] = None
 
     async def authenticate(
@@ -105,9 +105,9 @@ class AlpacaClient:
         try:
             # Import here to avoid hard dependency
             from alpaca_trade_api import REST
-        except ImportError:
+        except ImportError as exc:
             logger.error("alpaca-trade-api not installed. Run: pip install alpaca-trade-api")
-            raise AlpacaClientError("alpaca-trade-api library not available")
+            raise AlpacaClientError("alpaca-trade-api library not available") from exc
 
         try:
             self.base_url = base_url
@@ -139,14 +139,14 @@ class AlpacaClient:
 
             return True
 
-        except asyncio.TimeoutError:
+        except asyncio.TimeoutError as exc:
             logger.error("Alpaca authentication timed out")
-            raise AlpacaClientError("Authentication timed out", timeout=True)
+            raise AlpacaClientError("Authentication timed out", timeout=True) from exc
         except (ConnectionError, TimeoutError, HTTPError, ValueError) as e:
-            logger.error(f"Alpaca authentication failed: {str(e)}")
-            raise AlpacaClientError(f"Authentication failed: {str(e)}")
+            logger.error(f"Alpaca authentication failed: {e!s}")
+            raise AlpacaClientError(f"Authentication failed: {e!s}") from e
 
-    async def get_account(self) -> Dict[str, Any]:
+    async def get_account(self) -> dict[str, Any]:
         """
         Fetch account information from Alpaca with timeout.
 
@@ -182,12 +182,12 @@ class AlpacaClient:
                 "timestamp": datetime.utcnow().isoformat(),
             }
 
-        except asyncio.TimeoutError:
+        except asyncio.TimeoutError as exc:
             logger.error("Get account request timed out")
-            raise AlpacaClientError("get_account timed out", timeout=True)
+            raise AlpacaClientError("get_account timed out", timeout=True) from exc
         except (ValueError, TypeError, KeyError, AttributeError) as e:
-            logger.error(f"Failed to get account: {str(e)}")
-            raise AlpacaClientError(f"get_account failed: {str(e)}")
+            logger.error(f"Failed to get account: {e!s}")
+            raise AlpacaClientError(f"get_account failed: {e!s}") from e
 
     async def submit_order(
         self,
@@ -255,12 +255,12 @@ class AlpacaClient:
             logger.info(f"Order submitted: {order.id} ({symbol} {side} {qty})")
             return order.id
 
-        except asyncio.TimeoutError:
+        except asyncio.TimeoutError as exc:
             logger.error(f"Order submission timed out: {symbol} {side} {qty}")
-            raise AlpacaClientError("submit_order timed out", timeout=True)
+            raise AlpacaClientError("submit_order timed out", timeout=True) from exc
         except (ConnectionError, TimeoutError, HTTPError, ValueError) as e:
-            logger.error(f"Order submission failed: {str(e)}")
-            raise AlpacaClientError(f"submit_order failed: {str(e)}")
+            logger.error(f"Order submission failed: {e!s}")
+            raise AlpacaClientError(f"submit_order failed: {e!s}") from e
 
     async def cancel_order(self, order_id: str) -> bool:
         """
@@ -287,14 +287,14 @@ class AlpacaClient:
             logger.info(f"Order cancelled: {order_id}")
             return True
 
-        except asyncio.TimeoutError:
+        except asyncio.TimeoutError as exc:
             logger.error(f"Order cancellation timed out: {order_id}")
-            raise AlpacaClientError("cancel_order timed out", timeout=True)
+            raise AlpacaClientError("cancel_order timed out", timeout=True) from exc
         except (ConnectionError, TimeoutError, HTTPError, ValueError) as e:
-            logger.error(f"Order cancellation failed: {str(e)}")
-            raise AlpacaClientError(f"cancel_order failed: {str(e)}")
+            logger.error(f"Order cancellation failed: {e!s}")
+            raise AlpacaClientError(f"cancel_order failed: {e!s}") from e
 
-    async def get_order(self, order_id: str) -> Dict[str, Any]:
+    async def get_order(self, order_id: str) -> dict[str, Any]:
         """
         Get order details with timeout.
 
@@ -322,9 +322,9 @@ class AlpacaClient:
                 "symbol": order.symbol,
                 "qty": float(order.qty),
                 "filled_qty": float(order.filled_qty) if order.filled_qty else 0,
-                "filled_avg_price": float(order.filled_avg_price)
-                if order.filled_avg_price
-                else None,
+                "filled_avg_price": (
+                    float(order.filled_avg_price) if order.filled_avg_price else None
+                ),
                 "type": order.order_type,
                 "side": order.side,
                 "status": order.status,
@@ -332,14 +332,14 @@ class AlpacaClient:
                 "updated_at": str(order.updated_at) if order.updated_at else None,
             }
 
-        except asyncio.TimeoutError:
+        except asyncio.TimeoutError as exc:
             logger.error(f"Get order timed out: {order_id}")
-            raise AlpacaClientError("get_order timed out", timeout=True)
+            raise AlpacaClientError("get_order timed out", timeout=True) from exc
         except (ValueError, TypeError, KeyError, AttributeError) as e:
-            logger.error(f"Failed to get order: {str(e)}")
-            raise AlpacaClientError(f"get_order failed: {str(e)}")
+            logger.error(f"Failed to get order: {e!s}")
+            raise AlpacaClientError(f"get_order failed: {e!s}") from e
 
-    async def get_positions(self) -> List[Dict[str, Any]]:
+    async def get_positions(self) -> list[dict[str, Any]]:
         """
         Get all open positions with timeout.
 
@@ -381,14 +381,14 @@ class AlpacaClient:
                 for pos in positions
             ]
 
-        except asyncio.TimeoutError:
+        except asyncio.TimeoutError as exc:
             logger.error("Get positions timed out")
-            raise AlpacaClientError("get_positions timed out", timeout=True)
+            raise AlpacaClientError("get_positions timed out", timeout=True) from exc
         except (ValueError, TypeError, KeyError, AttributeError) as e:
-            logger.error(f"Failed to get positions: {str(e)}")
-            raise AlpacaClientError(f"get_positions failed: {str(e)}")
+            logger.error(f"Failed to get positions: {e!s}")
+            raise AlpacaClientError(f"get_positions failed: {e!s}") from e
 
-    async def get_orders(self, status: str = "open", limit: int = 100) -> List[Dict[str, Any]]:
+    async def get_orders(self, status: str = "open", limit: int = 100) -> list[dict[str, Any]]:
         """
         Get orders from Alpaca with timeout.
 
@@ -426,16 +426,16 @@ class AlpacaClient:
                 for order in orders
             ]
 
-        except asyncio.TimeoutError:
+        except asyncio.TimeoutError as exc:
             logger.error("Get orders timed out")
-            raise AlpacaClientError("get_orders timed out", timeout=True)
+            raise AlpacaClientError("get_orders timed out", timeout=True) from exc
         except (ValueError, TypeError, KeyError, AttributeError) as e:
-            logger.error(f"Failed to get orders: {str(e)}")
-            raise AlpacaClientError(f"get_orders failed: {str(e)}")
+            logger.error(f"Failed to get orders: {e!s}")
+            raise AlpacaClientError(f"get_orders failed: {e!s}") from e
 
     # ==================== WebSocket Methods ====================
 
-    async def start_stream(self, symbols: Optional[List[str]] = None) -> None:
+    async def start_stream(self, symbols: Optional[list[str]] = None) -> None:
         """
         Start WebSocket stream for real-time data.
 
@@ -537,8 +537,8 @@ class AlpacaClient:
                         raise ConnectionError(f"WebSocket auth failed: {auth_data}")
 
                     logger.info("WebSocket authenticated")
-                except asyncio.TimeoutError:
-                    raise asyncio.TimeoutError("WebSocket auth timed out")
+                except asyncio.TimeoutError as exc:
+                    raise asyncio.TimeoutError("WebSocket auth timed out") from exc
 
                 # Subscribe to symbols
                 await self._subscribe_to_symbols(websocket)
@@ -557,7 +557,7 @@ class AlpacaClient:
 
         except websockets.exceptions.ConnectionClosed as e:
             logger.warning(f"WebSocket connection closed: {e}")
-            raise ConnectionError(f"WebSocket closed: {e}")
+            raise ConnectionError(f"WebSocket closed: {e}") from e
         finally:
             self.stream_socket = None
 
@@ -622,21 +622,21 @@ class AlpacaClient:
         except json.JSONDecodeError:
             logger.warning(f"Invalid JSON message: {message}")
         except (ValueError, KeyError, TypeError) as e:
-            logger.error(f"Error processing stream message: {str(e)}")
+            logger.error(f"Error processing stream message: {e!s}")
 
     # ==================== Handler Registration ====================
 
-    def register_quote_handler(self, callback: Callable[[Dict[str, Any]], None]) -> None:
+    def register_quote_handler(self, callback: Callable[[dict[str, Any]], None]) -> None:
         """Register callback for quote updates."""
         self.on_quote = callback
         logger.info("Quote handler registered")
 
-    def register_trade_handler(self, callback: Callable[[Dict[str, Any]], None]) -> None:
+    def register_trade_handler(self, callback: Callable[[dict[str, Any]], None]) -> None:
         """Register callback for trade updates."""
         self.on_trade = callback
         logger.info("Trade handler registered")
 
-    def register_order_handler(self, callback: Callable[[Dict[str, Any]], None]) -> None:
+    def register_order_handler(self, callback: Callable[[dict[str, Any]], None]) -> None:
         """Register callback for order updates."""
         self.on_order_update = callback
         logger.info("Order handler registered")
@@ -680,7 +680,7 @@ class AlpacaClient:
             logger.info("Stream stopped successfully")
 
         except (asyncio.TimeoutError, OSError) as e:
-            logger.error(f"Error stopping stream: {str(e)}")
+            logger.error(f"Error stopping stream: {e!s}")
 
     def __repr__(self) -> str:
         """String representation."""

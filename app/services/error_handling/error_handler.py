@@ -13,13 +13,13 @@ import logging
 from abc import ABC, abstractmethod
 from datetime import datetime
 from functools import wraps
-from typing import Any, Callable, Dict, List, Optional, TypeVar
+from typing import Any, Callable, Optional, TypeVar
 
 from app.shared.config.centralized_config import get_config
 
 logger = logging.getLogger(__name__)
 
-T = TypeVar('T')
+T = TypeVar("T")
 
 
 # =============================================================================
@@ -27,7 +27,7 @@ T = TypeVar('T')
 # =============================================================================
 
 
-class ServiceException(Exception):
+class ServiceError(Exception):
     """Base exception for all service errors."""
 
     def __init__(self, service_name: str, message: str, error_code: str = "UNKNOWN"):
@@ -38,42 +38,42 @@ class ServiceException(Exception):
         super().__init__(f"[{service_name}] {message} (Code: {error_code})")
 
 
-class BacktestException(ServiceException):
+class BacktestError(ServiceError):
     """Exception for backtest orchestration failures."""
 
     def __init__(self, message: str, error_code: str = "BACKTEST_ERROR"):
         super().__init__("BacktestOrchestrator", message, error_code)
 
 
-class ValidationException(ServiceException):
+class ValidationError(ServiceError):
     """Exception for validation engine failures."""
 
     def __init__(self, message: str, error_code: str = "VALIDATION_ERROR"):
         super().__init__("ValidationEngine", message, error_code)
 
 
-class ConfigurationException(ServiceException):
+class ConfigurationError(ServiceError):
     """Exception for configuration persistence failures."""
 
     def __init__(self, message: str, error_code: str = "CONFIG_ERROR"):
         super().__init__("ConfigurationRepository", message, error_code)
 
 
-class ParameterizationException(ServiceException):
+class ParameterizationError(ServiceError):
     """Exception for parametrization failures."""
 
     def __init__(self, message: str, error_code: str = "PARAM_ERROR"):
         super().__init__("ModuleParametrizer", message, error_code)
 
 
-class RecommendationException(ServiceException):
+class RecommendationError(ServiceError):
     """Exception for recommendation engine failures."""
 
     def __init__(self, message: str, error_code: str = "RECOMMENDATION_ERROR"):
         super().__init__("StrategyRecommender", message, error_code)
 
 
-class PortfolioException(ServiceException):
+class PortfolioError(ServiceError):
     """Exception for portfolio construction failures."""
 
     def __init__(self, message: str, error_code: str = "PORTFOLIO_ERROR"):
@@ -89,18 +89,18 @@ class FallbackStrategy(ABC):
     """Abstract base class for fallback strategies."""
 
     @abstractmethod
-    async def execute(self, context: Dict[str, Any]) -> Any:
+    async def execute(self, context: dict[str, Any]) -> Any:
         """Execute fallback strategy."""
 
     @abstractmethod
-    def can_handle(self, exception: ServiceException) -> bool:
+    def can_handle(self, exception: ServiceError) -> bool:
         """Check if this strategy can handle the exception."""
 
 
 class ConservativeBacktestFallback(FallbackStrategy):
     """Fallback strategy for backtest failures: use simplified model."""
 
-    async def execute(self, context: Dict[str, Any]) -> Dict[str, Any]:
+    async def execute(self, context: dict[str, Any]) -> dict[str, Any]:
         """
         Return conservative backtest result.
 
@@ -113,11 +113,11 @@ class ConservativeBacktestFallback(FallbackStrategy):
             config = get_config()
             # Get fallback parameters from config with defaults
             annual_return = float(
-                getattr(config.trading, 'fallback_conservative_annual_return', 0.05)
+                getattr(config.trading, "fallback_conservative_annual_return", 0.05)
             )
-            sharpe_ratio = float(getattr(config.trading, 'fallback_conservative_sharpe_ratio', 0.5))
-            max_drawdown = float(getattr(config.trading, 'fallback_expected_max_drawdown', -0.15))
-            feasibility_ratio = float(getattr(config.trading, 'fallback_feasibility_ratio', 0.8))
+            sharpe_ratio = float(getattr(config.trading, "fallback_conservative_sharpe_ratio", 0.5))
+            max_drawdown = float(getattr(config.trading, "fallback_expected_max_drawdown", -0.15))
+            feasibility_ratio = float(getattr(config.trading, "fallback_feasibility_ratio", 0.8))
         except (AttributeError, ValueError) as e:
             logger.error(f"Error loading fallback config: {e}, using defaults")
             annual_return = 0.05
@@ -138,15 +138,15 @@ class ConservativeBacktestFallback(FallbackStrategy):
             "fallback_reason": "Using conservative backtest model",
         }
 
-    def can_handle(self, exception: ServiceException) -> bool:
+    def can_handle(self, exception: ServiceError) -> bool:
         """Handle backtest exceptions."""
-        return isinstance(exception, BacktestException)
+        return isinstance(exception, BacktestError)
 
 
 class EqualWeightPortfolioFallback(FallbackStrategy):
     """Fallback strategy for portfolio optimization: equal weighting."""
 
-    async def execute(self, context: Dict[str, Any]) -> Dict[str, Any]:
+    async def execute(self, context: dict[str, Any]) -> dict[str, Any]:
         """Return equal-weighted portfolio allocation."""
         logger.warning("🟡 Using equal-weight portfolio fallback strategy")
 
@@ -164,15 +164,15 @@ class EqualWeightPortfolioFallback(FallbackStrategy):
             "fallback_reason": "Using equal-weight allocation",
         }
 
-    def can_handle(self, exception: ServiceException) -> bool:
+    def can_handle(self, exception: ServiceError) -> bool:
         """Handle portfolio exceptions."""
-        return isinstance(exception, PortfolioException)
+        return isinstance(exception, PortfolioError)
 
 
 class ConservativeRecommendationFallback(FallbackStrategy):
     """Fallback strategy for recommendation failures: return conservative recommendation."""
 
-    async def execute(self, context: Dict[str, Any]) -> Dict[str, Any]:
+    async def execute(self, context: dict[str, Any]) -> dict[str, Any]:
         """Return conservative recommendation."""
         logger.warning("🟡 Using conservative recommendation fallback strategy")
 
@@ -185,9 +185,9 @@ class ConservativeRecommendationFallback(FallbackStrategy):
             "fallback_reason": "Recommendation engine failed",
         }
 
-    def can_handle(self, exception: ServiceException) -> bool:
+    def can_handle(self, exception: ServiceError) -> bool:
         """Handle recommendation exceptions."""
-        return isinstance(exception, RecommendationException)
+        return isinstance(exception, RecommendationError)
 
 
 # =============================================================================
@@ -209,13 +209,13 @@ class ErrorHandler:
     def __init__(self):
         """Initialize ErrorHandler."""
         self.logger = logging.getLogger(__name__)
-        self.fallback_strategies: List[FallbackStrategy] = [
+        self.fallback_strategies: list[FallbackStrategy] = [
             ConservativeBacktestFallback(),
             EqualWeightPortfolioFallback(),
             ConservativeRecommendationFallback(),
         ]
         self.error_count = 0
-        self.error_log: List[Dict[str, Any]] = []
+        self.error_log: list[dict[str, Any]] = []
         self.logger.info("✅ ErrorHandler initialized with 3 fallback strategies")
 
     def register_fallback(self, strategy: FallbackStrategy) -> None:
@@ -224,7 +224,7 @@ class ErrorHandler:
         self.logger.info(f"📝 Registered fallback strategy: {strategy.__class__.__name__}")
 
     async def with_fallback(
-        self, async_fn: Callable, *args, fallback_context: Optional[Dict[str, Any]] = None, **kwargs
+        self, async_fn: Callable, *args, fallback_context: Optional[dict[str, Any]] = None, **kwargs
     ) -> Any:
         """
         Execute async function with fallback strategy on exception.
@@ -240,7 +240,7 @@ class ErrorHandler:
         """
         try:
             return await async_fn(*args, **kwargs)
-        except ServiceException as e:
+        except ServiceError as e:
             self.logger.error(f"❌ Service error: {e}")
             self.error_count += 1
 
@@ -335,7 +335,7 @@ class ErrorHandler:
             )
             raise
 
-    def get_error_stats(self) -> Dict[str, Any]:
+    def get_error_stats(self) -> dict[str, Any]:
         """Get error statistics."""
         return {
             "total_errors": self.error_count,
@@ -355,7 +355,7 @@ class ErrorHandler:
 # =============================================================================
 
 
-def service_error_handler(fallback_context: Optional[Dict[str, Any]] = None):
+def service_error_handler(fallback_context: Optional[dict[str, Any]] = None):
     """
     Decorator for wrapping service methods with error handling.
 
@@ -375,15 +375,15 @@ def service_error_handler(fallback_context: Optional[Dict[str, Any]] = None):
 
             try:
                 return await execute()
-            except ServiceException as e:
+            except ServiceError as e:
                 logger.error(f"❌ Service error in {func.__name__}: {e}")
                 # Re-raise to allow caller to handle
                 raise
             except (asyncio.TimeoutError, OSError) as e:
                 logger.error(f"❌ Unexpected error in {func.__name__}: {e}")
-                raise ServiceException(
+                raise ServiceError(
                     service_name=func.__module__, message=str(e), error_code="UNKNOWN_ERROR"
-                )
+                ) from e
 
         return wrapper
 

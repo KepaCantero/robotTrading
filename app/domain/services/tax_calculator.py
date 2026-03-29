@@ -13,11 +13,12 @@ import logging
 from dataclasses import dataclass
 from datetime import datetime
 from decimal import Decimal
-from typing import List
+from typing import TYPE_CHECKING
 
-from app.domain.entities.position import Position
-from app.domain.entities.trade import Trade
-from app.domain.value_objects.tax_residence import TaxResidence
+if TYPE_CHECKING:
+    from app.domain.entities.position import Position
+    from app.domain.entities.trade import Trade
+    from app.domain.value_objects.tax_residence import TaxResidence
 
 # Structured logging for tax calculations (TRD-004, LOG-001)
 logger = logging.getLogger(__name__)
@@ -364,7 +365,7 @@ class TaxCalculator:
 
     def estimate_year_end_tax(
         self,
-        year_trades: List[Trade],
+        year_trades: list[Trade],
         open_positions: list[Position],
         current_prices: dict[str, Decimal],
     ) -> TaxLiability:

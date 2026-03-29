@@ -14,7 +14,7 @@ Capabilities:
 import logging
 from datetime import datetime, timedelta
 from decimal import Decimal
-from typing import Dict, List, Optional
+from typing import Optional
 
 import numpy as np
 
@@ -57,10 +57,10 @@ class RiskScalingMonitor:
             history_retention_days: How long to keep historical data (default 30)
         """
         self.history_retention_days = history_retention_days
-        self.portfolio_states: Dict[str, RiskScalingState] = {}
-        self.portfolio_history: Dict[str, List[RiskScalingSnapshot]] = {}
-        self.alert_subscriptions: Dict[str, AlertSubscription] = {}
-        self.alert_log: List[RiskAlert] = []
+        self.portfolio_states: dict[str, RiskScalingState] = {}
+        self.portfolio_history: dict[str, list[RiskScalingSnapshot]] = {}
+        self.alert_subscriptions: dict[str, AlertSubscription] = {}
+        self.alert_log: list[RiskAlert] = []
 
     async def get_scaling_status(
         self,
@@ -113,7 +113,7 @@ class RiskScalingMonitor:
         self,
         portfolio_id: str,
         days: int = 30,
-    ) -> List[RiskScalingSnapshot]:
+    ) -> list[RiskScalingSnapshot]:
         """
         Get historical scaling snapshots for trend analysis.
 
@@ -133,7 +133,7 @@ class RiskScalingMonitor:
     async def subscribe_to_alerts(
         self,
         portfolio_id: str,
-        alert_types: List[RiskAlertType],
+        alert_types: list[RiskAlertType],
         min_severity: RiskLevel = RiskLevel.WARNING,
     ) -> AlertSubscription:
         """
@@ -193,7 +193,7 @@ class RiskScalingMonitor:
         self,
         portfolio_id: str,
         days: int = 7,
-    ) -> Dict:
+    ) -> dict:
         """
         Analyze scaling trends over time period.
 
@@ -264,7 +264,7 @@ class RiskScalingMonitor:
         alert_type: Optional[RiskAlertType] = None,
         severity: Optional[RiskLevel] = None,
         hours_back: int = 24,
-    ) -> List[RiskAlert]:
+    ) -> list[RiskAlert]:
         """
         Get alert history with optional filtering.
 
@@ -404,7 +404,7 @@ class RiskScalingMonitor:
     async def get_portfolio_dashboard_data(
         self,
         portfolio_id: str,
-    ) -> Dict:
+    ) -> dict:
         """
         Get all dashboard data for a portfolio in one call.
 

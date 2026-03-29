@@ -23,14 +23,16 @@ from dataclasses import dataclass, field
 from datetime import date, datetime
 from decimal import Decimal
 from enum import Enum
-from typing import Dict, List, Optional, Tuple
+from typing import TYPE_CHECKING
 
 import numpy as np
-from numpy.typing import NDArray
 
 # Import canonical Trade and PerformanceMetrics from app.backtesting.models
 from app.backtesting.models import PerformanceMetrics, Trade, TradeStatus
 from app.shared.config.centralized_config import get_config
+
+if TYPE_CHECKING:
+    from numpy.typing import NDArray
 
 
 class OrderSide(str, Enum):
@@ -71,14 +73,14 @@ class BacktestConfig:
     end_date: date
     commission_per_share: Decimal = Decimal("0.005")
     commission_min: Decimal = Decimal("1.0")
-    slippage_model: Optional[str] = "linear"
+    slippage_model: str | None = "linear"
     slippage_rate: float = 0.001  # 0.1% default
     market_impact: bool = True
     dividend_reinvestment: bool = True
     survivorship_bias_correction: bool = True
-    benchmark_symbol: Optional[str] = None
-    max_position_size: Optional[Decimal] = None
-    max_portfolio_exposure: Optional[float] = None
+    benchmark_symbol: str | None = None
+    max_position_size: Decimal | None = None
+    max_portfolio_exposure: float | None = None
 
 
 # NOTE: PerformanceMetrics is now imported from app.backtesting.models
@@ -90,13 +92,13 @@ class BacktestResult:
     """Results from a backtest."""
 
     config: BacktestConfig
-    trades: List[Trade] = field(default_factory=list)
-    equity_curve: List[Tuple[date, Decimal]] = field(default_factory=list)
-    returns: List[float] = field(default_factory=list)
-    positions: Dict[str, Decimal] = field(default_factory=dict)
+    trades: list[Trade] = field(default_factory=list)
+    equity_curve: list[tuple[date, Decimal]] = field(default_factory=list)
+    returns: list[float] = field(default_factory=list)
+    positions: dict[str, Decimal] = field(default_factory=dict)
     cash: Decimal = Decimal("0")
     final_capital: Decimal = Decimal("0")
-    metrics: Optional[PerformanceMetrics] = None
+    metrics: PerformanceMetrics | None = None
 
     @property
     def total_trades(self) -> int:
@@ -129,13 +131,13 @@ class BacktestEngine:
         """
         self._config = config
         self._cash = config.initial_capital
-        self._positions: Dict[str, Decimal] = {}
-        self._trades: List[Trade] = []
-        self._equity_curve: List[Tuple[date, Decimal]] = []
-        self._returns: List[float] = []
-        self._current_date: Optional[date] = None
-        self._prices: Dict[str, Decimal] = {}
-        self._dividends: Dict[str, List[Tuple[date, Decimal]]] = {}
+        self._positions: dict[str, Decimal] = {}
+        self._trades: list[Trade] = []
+        self._equity_curve: list[tuple[date, Decimal]] = []
+        self._returns: list[float] = []
+        self._current_date: date | None = None
+        self._prices: dict[str, Decimal] = {}
+        self._dividends: dict[str, list[tuple[date, Decimal]]] = {}
 
     def reset(self) -> None:
         """Reset the backtest engine to initial state."""
@@ -153,7 +155,7 @@ class BacktestEngine:
         return self._cash
 
     @property
-    def positions(self) -> Dict[str, Decimal]:
+    def positions(self) -> dict[str, Decimal]:
         """Current positions."""
         return self._positions.copy()
 
@@ -172,7 +174,7 @@ class BacktestEngine:
         price = self._prices.get(symbol, Decimal("0"))
         return quantity * price
 
-    def update_prices(self, prices: Dict[str, Decimal], current_date: date) -> None:
+    def update_prices(self, prices: dict[str, Decimal], current_date: date) -> None:
         """
         Update prices for all symbols.
 
@@ -199,8 +201,8 @@ class BacktestEngine:
         side: OrderSide,
         quantity: Decimal,
         order_type: OrderType = OrderType.MARKET,
-        price_limit: Optional[Decimal] = None,
-    ) -> Optional[Trade]:
+        price_limit: Decimal | None = None,
+    ) -> Trade | None:
         """
         Execute an order with realistic costs.
 
@@ -363,7 +365,7 @@ class BacktestEngine:
 
         return dividend
 
-    def close_all_positions(self) -> List[Trade]:
+    def close_all_positions(self) -> list[Trade]:
         """
         Close all positions at current prices.
 
@@ -380,7 +382,7 @@ class BacktestEngine:
         return closing_trades
 
     def calculate_metrics(
-        self, benchmark_returns: Optional[NDArray[np.float64]] = None
+        self, benchmark_returns: NDArray[np.float64] | None = None
     ) -> PerformanceMetrics:
         """
         Calculate performance metrics.
@@ -471,7 +473,7 @@ class BacktestEngine:
             losing_trades = [r for r in trade_returns if r < 0]
 
             profit_factor = (
-                sum(winning_trades) / abs(sum(losing_trades)) if losing_trades else float('inf')
+                sum(winning_trades) / abs(sum(losing_trades)) if losing_trades else float("inf")
             )
             avg_trade_return = float(np.mean(trade_returns))
             best_trade = max(trade_returns)
@@ -538,7 +540,7 @@ class BacktestEngine:
             volatility=to_decimal(volatility),
             annualized_volatility=to_decimal(annualized_volatility),
             win_rate=to_decimal(win_rate * 100),  # Convert to percentage
-            profit_factor=to_decimal(profit_factor) if profit_factor != float('inf') else None,
+            profit_factor=to_decimal(profit_factor) if profit_factor != float("inf") else None,
             avg_trade_return=to_decimal(avg_trade_return),
             total_trades=len(self._trades),
             winning_trades=len([r for r in trade_returns if r > 0]),

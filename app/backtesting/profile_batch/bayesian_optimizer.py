@@ -12,15 +12,18 @@ Responsibilities:
 from __future__ import annotations
 
 import logging
-from pathlib import Path
-from typing import Any, Dict
+from typing import TYPE_CHECKING, Any
 
 import optuna
 
 from app.backtesting.comprehensive_backtest_runner import ComprehensiveBacktestRunner
 from app.backtesting.shared import ParameterMappingService, TempConfigManager, get_empty_metrics
-from app.domain.models.input_profile import InputProfile
-from app.shared.config.profile_config_loader import ProfileConfigLoader
+
+if TYPE_CHECKING:
+    from pathlib import Path
+
+    from app.domain.models.input_profile import InputProfile
+    from app.shared.config.profile_config_loader import ProfileConfigLoader
 
 logger = logging.getLogger(__name__)
 
@@ -36,7 +39,7 @@ class BayesianOptimizer:
     def __init__(
         self,
         output_dir: Path,
-        optimization_config: Dict[str, Any],
+        optimization_config: dict[str, Any],
         profile_config_loader: ProfileConfigLoader | None = None,
     ):
         """
@@ -52,8 +55,8 @@ class BayesianOptimizer:
         self.profile_config_loader = profile_config_loader
 
     def optimize(
-        self, profile: InputProfile, config: Dict[str, Any], multi_strategy: bool = False
-    ) -> Dict[str, Any]:
+        self, profile: InputProfile, config: dict[str, Any], multi_strategy: bool = False
+    ) -> dict[str, Any]:
         """
         Run Bayesian optimization.
 
@@ -152,10 +155,10 @@ class BayesianOptimizer:
     def _run_backtest_with_params(
         self,
         profile: InputProfile,
-        config: Dict[str, Any],
-        params: Dict[str, Any],
+        config: dict[str, Any],
+        params: dict[str, Any],
         multi_strategy: bool = False,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Run backtest with specific parameters.
 
         Uses shared ParameterMappingService for parameter mapping and
@@ -186,6 +189,6 @@ class BayesianOptimizer:
                 return get_empty_metrics(include_pnl=False)
 
     # Delegates to shared MetricsFactory (eliminates duplicate code)
-    def _get_empty_metrics(self) -> Dict[str, Any]:
+    def _get_empty_metrics(self) -> dict[str, Any]:
         """Return empty metrics dict. Delegates to shared MetricsFactory."""
         return get_empty_metrics(include_pnl=False)

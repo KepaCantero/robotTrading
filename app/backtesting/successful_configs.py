@@ -12,7 +12,7 @@ import json
 import logging
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Optional, Union
 
 logger = logging.getLogger(__name__)
 
@@ -40,13 +40,13 @@ class SuccessfulConfigManager:
         self.configs_file = self.storage_dir / "successful_configs.json"
         self._configs = self._load_configs()
 
-    def _load_configs(self) -> List[Dict[str, Any]]:
+    def _load_configs(self) -> list[dict[str, Any]]:
         """Cargar configuraciones guardadas desde disco."""
         if not self.configs_file.exists():
             return []
 
         try:
-            with open(self.configs_file, 'r') as f:
+            with open(self.configs_file) as f:
                 return json.load(f)
         except OSError as e:
             logger.warning(f"Error cargando configuraciones guardadas: {e}")
@@ -55,7 +55,7 @@ class SuccessfulConfigManager:
     def _save_configs(self) -> None:
         """Guardar configuraciones a disco."""
         try:
-            with open(self.configs_file, 'w') as f:
+            with open(self.configs_file, "w") as f:
                 json.dump(self._configs, f, indent=2, default=str)
             logger.info(f"✅ Configuraciones guardadas: {len(self._configs)} configs")
         except (FileNotFoundError, ValueError, KeyError, TypeError) as e:
@@ -64,13 +64,13 @@ class SuccessfulConfigManager:
     def save_config(
         self,
         name: str,
-        config: Dict[str, Any],
-        metrics: Dict[str, Any],
+        config: dict[str, Any],
+        metrics: dict[str, Any],
         description: Optional[str] = None,
-        tags: Optional[List[str]] = None,
-        before_training_metrics: Optional[Dict[str, Any]] = None,
-        after_training_metrics: Optional[Dict[str, Any]] = None,
-        improvement_pct: Optional[Dict[str, float]] = None,
+        tags: Optional[list[str]] = None,
+        before_training_metrics: Optional[dict[str, Any]] = None,
+        after_training_metrics: Optional[dict[str, Any]] = None,
+        improvement_pct: Optional[dict[str, float]] = None,
     ) -> str:
         """
         Guardar una configuración exitosa.
@@ -91,28 +91,28 @@ class SuccessfulConfigManager:
         config_id = f"{name}_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
 
         config_record = {
-            'id': config_id,
-            'name': name,
-            'description': description or "",
-            'tags': tags or [],
-            'timestamp': datetime.now().isoformat(),
-            'config': config,
-            'metrics': metrics,
-            'before_training_metrics': before_training_metrics,
-            'after_training_metrics': after_training_metrics,
-            'improvement_pct': improvement_pct or {},
+            "id": config_id,
+            "name": name,
+            "description": description or "",
+            "tags": tags or [],
+            "timestamp": datetime.now().isoformat(),
+            "config": config,
+            "metrics": metrics,
+            "before_training_metrics": before_training_metrics,
+            "after_training_metrics": after_training_metrics,
+            "improvement_pct": improvement_pct or {},
             # Métricas clave para filtrado/búsqueda
-            'sharpe_ratio': metrics.get('sharpe_ratio'),
-            'return_pct': metrics.get('return_pct'),
-            'win_rate': metrics.get('win_rate'),
-            'max_drawdown': metrics.get('max_drawdown'),
-            'total_pnl': metrics.get('total_pnl'),
+            "sharpe_ratio": metrics.get("sharpe_ratio"),
+            "return_pct": metrics.get("return_pct"),
+            "win_rate": metrics.get("win_rate"),
+            "max_drawdown": metrics.get("max_drawdown"),
+            "total_pnl": metrics.get("total_pnl"),
         }
 
         # Verificar si ya existe una configuración con el mismo nombre
         existing_idx = None
         for i, existing in enumerate(self._configs):
-            if existing.get('name') == name:
+            if existing.get("name") == name:
                 existing_idx = i
                 break
 
@@ -129,14 +129,14 @@ class SuccessfulConfigManager:
 
         # También guardar como archivo individual para fácil acceso
         config_file = self.storage_dir / f"{config_id}.json"
-        with open(config_file, 'w') as f:
+        with open(config_file, "w") as f:
             json.dump(config_record, f, indent=2, default=str)
 
         return config_id
 
     def load_config(
         self, config_id: Optional[str] = None, name: Optional[str] = None
-    ) -> Optional[Dict[str, Any]]:
+    ) -> Optional[dict[str, Any]]:
         """
         Cargar una configuración guardada.
 
@@ -149,11 +149,11 @@ class SuccessfulConfigManager:
         """
         if config_id:
             for config in self._configs:
-                if config.get('id') == config_id:
+                if config.get("id") == config_id:
                     return config
         elif name:
             for config in self._configs:
-                if config.get('name') == name:
+                if config.get("name") == name:
                     return config
 
         logger.warning(f"Configuración no encontrada: id={config_id}, name={name}")
@@ -163,10 +163,10 @@ class SuccessfulConfigManager:
         self,
         min_sharpe: Optional[float] = None,
         min_return: Optional[float] = None,
-        tags: Optional[List[str]] = None,
-        sort_by: str = 'sharpe_ratio',
+        tags: Optional[list[str]] = None,
+        sort_by: str = "sharpe_ratio",
         limit: Optional[int] = None,
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """
         Listar configuraciones guardadas con filtros opcionales.
 
@@ -187,7 +187,7 @@ class SuccessfulConfigManager:
             filtered = [
                 c
                 for c in filtered
-                if c.get('sharpe_ratio') is not None and c.get('sharpe_ratio') >= min_sharpe
+                if c.get("sharpe_ratio") is not None and c.get("sharpe_ratio") >= min_sharpe
             ]
 
         # Filtrar por Return
@@ -195,20 +195,20 @@ class SuccessfulConfigManager:
             filtered = [
                 c
                 for c in filtered
-                if c.get('return_pct') is not None and c.get('return_pct') >= min_return
+                if c.get("return_pct") is not None and c.get("return_pct") >= min_return
             ]
 
         # Filtrar por tags
         if tags:
-            filtered = [c for c in filtered if all(tag in c.get('tags', []) for tag in tags)]
+            filtered = [c for c in filtered if all(tag in c.get("tags", []) for tag in tags)]
 
         # Ordenar
         reverse = True  # Por defecto descendente
-        if sort_by == 'timestamp':
+        if sort_by == "timestamp":
             reverse = False  # Timestamp más reciente primero
 
         filtered.sort(
-            key=lambda x: x.get(sort_by) or (0 if sort_by != 'timestamp' else ''), reverse=reverse
+            key=lambda x: x.get(sort_by) or (0 if sort_by != "timestamp" else ""), reverse=reverse
         )
 
         # Limitar
@@ -230,8 +230,8 @@ class SuccessfulConfigManager:
         """
         removed = False
         for i, config in enumerate(self._configs):
-            if (config_id and config.get('id') == config_id) or (
-                name and config.get('name') == name
+            if (config_id and config.get("id") == config_id) or (
+                name and config.get("name") == name
             ):
                 self._configs.pop(i)
                 removed = True
@@ -254,7 +254,7 @@ class SuccessfulConfigManager:
 
     def get_config_for_runner(
         self, config_id: Optional[str] = None, name: Optional[str] = None
-    ) -> Optional[Dict[str, Any]]:
+    ) -> Optional[dict[str, Any]]:
         """
         Obtener configuración en formato para ComprehensiveBacktestRunner.
 
@@ -270,9 +270,9 @@ class SuccessfulConfigManager:
             return None
 
         # Extraer solo la configuración (sin metadatos)
-        return config_record.get('config')
+        return config_record.get("config")
 
-    def compare_configs(self, config_id1: str, config_id2: str) -> Dict[str, Any]:
+    def compare_configs(self, config_id1: str, config_id2: str) -> dict[str, Any]:
         """
         Comparar dos configuraciones guardadas.
 
@@ -287,25 +287,25 @@ class SuccessfulConfigManager:
         config2 = self.load_config(config_id=config_id2)
 
         if not config1 or not config2:
-            return {'error': 'Una o ambas configuraciones no encontradas'}
+            return {"error": "Una o ambas configuraciones no encontradas"}
 
-        metrics1 = config1.get('metrics', {})
-        metrics2 = config2.get('metrics', {})
+        metrics1 = config1.get("metrics", {})
+        metrics2 = config2.get("metrics", {})
 
         comparison = {
-            'config1': {'name': config1.get('name'), 'id': config1.get('id'), 'metrics': metrics1},
-            'config2': {'name': config2.get('name'), 'id': config2.get('id'), 'metrics': metrics2},
-            'differences': {},
+            "config1": {"name": config1.get("name"), "id": config1.get("id"), "metrics": metrics1},
+            "config2": {"name": config2.get("name"), "id": config2.get("id"), "metrics": metrics2},
+            "differences": {},
         }
 
         # Calcular diferencias para métricas numéricas
         numeric_metrics = [
-            'sharpe_ratio',
-            'return_pct',
-            'win_rate',
-            'max_drawdown',
-            'total_pnl',
-            'sortino_ratio',
+            "sharpe_ratio",
+            "return_pct",
+            "win_rate",
+            "max_drawdown",
+            "total_pnl",
+            "sortino_ratio",
         ]
         for metric in numeric_metrics:
             val1 = metrics1.get(metric)
@@ -313,10 +313,10 @@ class SuccessfulConfigManager:
             if val1 is not None and val2 is not None:
                 diff = val2 - val1
                 diff_pct = (diff / abs(val1) * 100) if val1 != 0 else 0
-                comparison['differences'][metric] = {
-                    'absolute': diff,
-                    'percentage': diff_pct,
-                    'winner': config1.get('name') if diff < 0 else config2.get('name'),
+                comparison["differences"][metric] = {
+                    "absolute": diff,
+                    "percentage": diff_pct,
+                    "winner": config1.get("name") if diff < 0 else config2.get("name"),
                 }
 
         return comparison

@@ -8,7 +8,7 @@ import asyncio
 import logging
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Dict, List, Optional
+from typing import Optional
 
 import numpy as np
 
@@ -22,11 +22,11 @@ class PerformanceReport:
     report_id: str
     strategy_name: str
     generated_at: str
-    summary: Dict
-    metrics: Dict
-    risk_metrics: Dict
-    allocation: Dict[str, float]
-    monthly_returns: List[float]
+    summary: dict
+    metrics: dict
+    risk_metrics: dict
+    allocation: dict[str, float]
+    monthly_returns: list[float]
     html_report: str
     pdf_report: Optional[str] = None
 
@@ -51,10 +51,10 @@ class ReportingGenerator:
     async def generate_report(
         self,
         strategy_name: str,
-        backtest_result: Dict,
-        allocation: Dict[str, float],
-        monthly_returns: List[float],
-        recommendation: Optional[Dict] = None,
+        backtest_result: dict,
+        allocation: dict[str, float],
+        monthly_returns: list[float],
+        recommendation: Optional[dict] = None,
     ) -> PerformanceReport:
         """
         Generate comprehensive performance report.
@@ -100,7 +100,7 @@ class ReportingGenerator:
             self.logger.error(f"❌ Error generating report: {e}")
             raise
 
-    async def _generate_summary(self, strategy_name: str, backtest_result: Dict) -> Dict:
+    async def _generate_summary(self, strategy_name: str, backtest_result: dict) -> dict:
         """Generate summary statistics."""
         return {
             "strategy_name": strategy_name,
@@ -112,7 +112,7 @@ class ReportingGenerator:
             "win_rate": backtest_result.get("win_rate", 0.0),
         }
 
-    async def _extract_metrics(self, backtest_result: Dict) -> Dict:
+    async def _extract_metrics(self, backtest_result: dict) -> dict:
         """Extract performance metrics."""
         return {
             "total_return": self._safe_float(backtest_result.get("total_return", 0.0)),
@@ -126,8 +126,8 @@ class ReportingGenerator:
         }
 
     async def _calculate_risk_metrics(
-        self, backtest_result: Dict, monthly_returns: List[float]
-    ) -> Dict:
+        self, backtest_result: dict, monthly_returns: list[float]
+    ) -> dict:
         """Calculate risk metrics."""
         # Calculate volatility from monthly returns
         if monthly_returns:
@@ -148,7 +148,7 @@ class ReportingGenerator:
             ),
         }
 
-    def _calculate_var(self, returns: List[float], confidence: float = 0.95) -> float:
+    def _calculate_var(self, returns: list[float], confidence: float = 0.95) -> float:
         """Calculate Value at Risk."""
         if not returns:
             return 0.0
@@ -156,7 +156,7 @@ class ReportingGenerator:
         index = int(len(sorted_returns) * (1 - confidence))
         return sorted_returns[index] if index < len(sorted_returns) else 0.0
 
-    def _calculate_cvar(self, returns: List[float], confidence: float = 0.95) -> float:
+    def _calculate_cvar(self, returns: list[float], confidence: float = 0.95) -> float:
         """Calculate Conditional Value at Risk (CVaR)."""
         if not returns:
             return 0.0
@@ -173,10 +173,10 @@ class ReportingGenerator:
     async def _generate_html_report(
         self,
         strategy_name: str,
-        summary: Dict,
-        metrics: Dict,
-        risk_metrics: Dict,
-        allocation: Dict[str, float],
+        summary: dict,
+        metrics: dict,
+        risk_metrics: dict,
+        allocation: dict[str, float],
     ) -> str:
         """Generate HTML report."""
         html = """
@@ -220,7 +220,7 @@ class ReportingGenerator:
         """
 
         for asset, weight in allocation.items():
-            html += f"<tr><td>{asset}</td><td class='metric-value'>{weight*100:.1f}%</td></tr>"
+            html += f"<tr><td>{asset}</td><td class='metric-value'>{weight * 100:.1f}%</td></tr>"
 
         html += """
                 </table>

@@ -28,14 +28,14 @@ from app.infrastructure.persistence.database._user_portfolio_repositories import
 )
 
 __all__ = [
-    "UserRepository",
-    "PortfolioRepository",
     "AssetRepository",
-    "PositionRepository",
-    "TradeRepository",
-    "SignalRepository",
-    "MarketDataRepository",
     "BacktestRepository",
+    "MarketDataRepository",
+    "PortfolioRepository",
+    "PositionRepository",
     "RiskMetricsRepository",
+    "SignalRepository",
     "SystemLogRepository",
+    "TradeRepository",
+    "UserRepository",
 ]

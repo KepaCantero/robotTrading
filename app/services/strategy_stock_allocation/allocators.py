@@ -136,7 +136,7 @@ class ERCCapitalAllocator:
             return variance_risk_contrib
 
         # Constraints: weights sum to 1
-        constraints = [{'type': 'eq', 'fun': lambda w: np.sum(w) - 1.0}]
+        constraints = [{"type": "eq", "fun": lambda w: np.sum(w) - 1.0}]
 
         # Bounds
         max_weight = self.config.MAX_STRATEGY_EXPOSURE
@@ -146,12 +146,12 @@ class ERCCapitalAllocator:
         result = minimize(
             objective,
             initial_weights,
-            method='SLSQP',
+            method="SLSQP",
             bounds=bounds,
             constraints=constraints,
             options={
-                'maxiter': self.config.ERC_MAX_ITERATIONS,
-                'ftol': self.config.ERC_OPTIMIZATION_TOLERANCE,
+                "maxiter": self.config.ERC_MAX_ITERATIONS,
+                "ftol": self.config.ERC_OPTIMIZATION_TOLERANCE,
             },
         )
 
@@ -160,10 +160,7 @@ class ERCCapitalAllocator:
             optimal_weights = np.maximum(optimal_weights, 0)
             weight_sum = np.sum(optimal_weights)
 
-            if weight_sum > 1e-10:
-                optimal_weights = optimal_weights / weight_sum
-            else:
-                optimal_weights = np.ones(n) / n
+            optimal_weights = optimal_weights / weight_sum if weight_sum > 1e-10 else np.ones(n) / n
 
             return optimal_weights
         else:

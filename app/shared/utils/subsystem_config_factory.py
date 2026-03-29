@@ -15,7 +15,7 @@ Usage:
 
 import logging
 from decimal import Decimal
-from typing import TYPE_CHECKING, Any, Dict, Optional
+from typing import TYPE_CHECKING, Any, Optional
 
 if TYPE_CHECKING:
     from app.shared.config.params.backtest_config import BacktestingConfig as BacktestConfig
@@ -100,7 +100,7 @@ class SubsystemConfigFactory:
     # RISK ENGINE CONFIG
     # ==========================================================================
 
-    def get_risk_engine_config(self) -> Dict[str, Any]:
+    def get_risk_engine_config(self) -> dict[str, Any]:
         """
         Get default configuration for RiskEngine.
 
@@ -142,7 +142,7 @@ class SubsystemConfigFactory:
     # PORTFOLIO ENGINE CONFIG
     # ==========================================================================
 
-    def get_portfolio_engine_config(self) -> Dict[str, Any]:
+    def get_portfolio_engine_config(self) -> dict[str, Any]:
         """
         Get default configuration for PortfolioEngine.
 
@@ -173,7 +173,7 @@ class SubsystemConfigFactory:
     # ALPHA MODEL CONFIG (for Narang subsystem)
     # ==========================================================================
 
-    def get_alpha_model_config(self) -> Dict[str, Any]:
+    def get_alpha_model_config(self) -> dict[str, Any]:
         """
         Get default configuration for alpha model.
 
@@ -199,7 +199,7 @@ class SubsystemConfigFactory:
     # PORTFOLIO CONSTRUCTOR CONFIG (for Narang subsystem)
     # ==========================================================================
 
-    def get_portfolio_constructor_config(self) -> Dict[str, Any]:
+    def get_portfolio_constructor_config(self) -> dict[str, Any]:
         """
         Get default configuration for portfolio constructor.
 
@@ -218,7 +218,7 @@ class SubsystemConfigFactory:
     # REGIME DETECTOR CONFIG (for Ernest Chan subsystem)
     # ==========================================================================
 
-    def get_regime_detector_config(self) -> Dict[str, Any]:
+    def get_regime_detector_config(self) -> dict[str, Any]:
         """
         Get default configuration for regime detector.
 
@@ -236,7 +236,7 @@ class SubsystemConfigFactory:
     # EXECUTION ALGORITHM CONFIG (for Ernest Chan subsystem)
     # ==========================================================================
 
-    def get_execution_algorithm_config(self) -> Dict[str, Any]:
+    def get_execution_algorithm_config(self) -> dict[str, Any]:
         """
         Get default configuration for execution algorithms.
 
@@ -258,7 +258,7 @@ class SubsystemConfigFactory:
     # LIVE TRADING CONFIG
     # ==========================================================================
 
-    def get_live_trading_config(self) -> Dict[str, Any]:
+    def get_live_trading_config(self) -> dict[str, Any]:
         """
         Get default configuration for live trading.
 

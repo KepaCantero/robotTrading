@@ -50,7 +50,7 @@ def enforce_numba_available() -> None:
         numba_version = numba.__version__
 
         # Parse version to ensure it's >= 0.59.0
-        version_parts = numba_version.split('.')
+        version_parts = numba_version.split(".")
         major = int(version_parts[0])
         minor = int(version_parts[1]) if len(version_parts) > 1 else 0
 
@@ -122,9 +122,9 @@ def verify_numba_function(func: Callable, *args, **kwargs) -> bool:
     try:
         # Check if function has Numba-specific attributes
         # Numba JIT functions have 'signatures' or '__compiled__' attribute
-        has_signatures = hasattr(func, 'signatures')
-        has_compiled = hasattr(func, '__compiled__')
-        is_dispatcher = hasattr(func, '_is_jitted')
+        has_signatures = hasattr(func, "signatures")
+        has_compiled = hasattr(func, "__compiled__")
+        is_dispatcher = hasattr(func, "_is_jitted")
 
         if not (has_signatures or has_compiled or is_dispatcher):
             error_msg = (
@@ -164,45 +164,45 @@ def detect_performance_critical_code(file_path: str) -> list:
     critical_patterns = []
 
     try:
-        with open(file_path, 'r') as f:
+        with open(file_path) as f:
             content = f.read()
-            lines = content.split('\n')
+            lines = content.split("\n")
 
         # Check for performance-critical patterns
         for i, line in enumerate(lines, 1):
             # NumPy operations without Numba
-            if 'np.' in line and 'def ' in lines[max(0, i - 5) : i]:
+            if "np." in line and "def " in lines[max(0, i - 5) : i]:
                 critical_patterns.append(
-                    {'line': i, 'type': 'numpy_function', 'code': line.strip(), 'severity': 'HIGH'}
+                    {"line": i, "type": "numpy_function", "code": line.strip(), "severity": "HIGH"}
                 )
 
             # Pandas operations in loops
-            if ('.apply(' in line or '.iterrows()' in line) and 'for ' in lines[max(0, i - 3) : i]:
+            if (".apply(" in line or ".iterrows()" in line) and "for " in lines[max(0, i - 3) : i]:
                 critical_patterns.append(
                     {
-                        'line': i,
-                        'type': 'pandas_in_loop',
-                        'code': line.strip(),
-                        'severity': 'CRITICAL',
+                        "line": i,
+                        "type": "pandas_in_loop",
+                        "code": line.strip(),
+                        "severity": "CRITICAL",
                     }
                 )
 
             # Calculation functions without Numba decorator
-            if 'def calculate_' in line or 'def compute_' in line:
+            if "def calculate_" in line or "def compute_" in line:
                 # Check previous lines for @numba.jit
                 has_numba = False
                 for j in range(max(0, i - 10), i):
-                    if '@numba' in lines[j] or '@jit' in lines[j]:
+                    if "@numba" in lines[j] or "@jit" in lines[j]:
                         has_numba = True
                         break
 
                 if not has_numba:
                     critical_patterns.append(
                         {
-                            'line': i,
-                            'type': 'calculation_without_numba',
-                            'code': line.strip(),
-                            'severity': 'CRITICAL',
+                            "line": i,
+                            "type": "calculation_without_numba",
+                            "code": line.strip(),
+                            "severity": "CRITICAL",
                         }
                     )
 
@@ -230,7 +230,7 @@ def _ensure_enforcement():
 
     if not _enforcement_checked:
         # Check if we're in a testing environment
-        if os.environ.get('TESTING') == '1':
+        if os.environ.get("TESTING") == "1":
             logger.debug("Skipping Numba enforcement check in testing environment")
             _enforcement_checked = True
             return
@@ -241,7 +241,7 @@ def _ensure_enforcement():
 
 
 # Auto-enforce on module import (unless in test mode)
-if os.environ.get('TESTING') != '1':
+if os.environ.get("TESTING") != "1":
     _ensure_enforcement()
 
 
@@ -287,11 +287,11 @@ def require_numba(func: Callable) -> Callable:
 # ============================================================================
 
 __all__ = [
-    'enforce_numba_available',
-    'get_numba_version',
-    'verify_numba_function',
-    'detect_performance_critical_code',
-    'require_numba',
+    "detect_performance_critical_code",
+    "enforce_numba_available",
+    "get_numba_version",
+    "require_numba",
+    "verify_numba_function",
 ]
 
 

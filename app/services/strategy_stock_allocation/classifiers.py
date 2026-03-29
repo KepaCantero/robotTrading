@@ -10,12 +10,13 @@ from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING
 
-import numpy as np
-
 if TYPE_CHECKING:
+    import numpy as np
+
     from app.shared.config.params.strategy_config import StockAllocationSettings
 
-from .calculators import HurstCalculator
+    from .calculators import HurstCalculator
+
 
 logger = logging.getLogger(__name__)
 

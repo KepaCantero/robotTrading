@@ -19,8 +19,7 @@ from __future__ import annotations
 import logging
 import math
 from datetime import datetime
-from decimal import Decimal
-from typing import Any, Dict, List, Optional
+from typing import TYPE_CHECKING, Any
 
 import numpy as np
 
@@ -28,9 +27,13 @@ logger = logging.getLogger(__name__)
 
 from app.backtesting.core.error_handling import MutexError, TrainingError, train_with_retry
 from app.backtesting.core.executor import SimpleBacktestExecutor
-from app.backtesting.core.memory_manager import AggressiveMemoryManager
 from app.backtesting.models import BacktestConfig
 from app.domain.strategies.momentum_modular.strategy import ModularMomentumStrategy
+
+if TYPE_CHECKING:
+    from decimal import Decimal
+
+    from app.backtesting.core.memory_manager import AggressiveMemoryManager
 
 
 class BacktestExecutor:
@@ -48,10 +51,10 @@ class BacktestExecutor:
         self,
         backtest_config: BacktestConfig,
         memory_manager: AggressiveMemoryManager,
-        raw_config: Dict[str, Any],
-        quotes: List,
+        raw_config: dict[str, Any],
+        quotes: list,
         parallel_enabled: bool = False,
-        max_workers: Optional[int] = None,
+        max_workers: int | None = None,
     ):
         """
         Initialize BacktestExecutor.
@@ -73,12 +76,12 @@ class BacktestExecutor:
 
     def run_baseline_backtest(
         self,
-        strategy_config: Dict[str, Any],
+        strategy_config: dict[str, Any],
         thresholds_helper,
         strategy_name_helper,
         metrics_helper,
         audit_helper,
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """
         Execute baseline backtest with all modules active.
 
@@ -114,31 +117,31 @@ class BacktestExecutor:
         consistent_metrics = metrics_helper(result, initial_capital)
 
         result_dict = {
-            'test_type': 'baseline',
-            'test_name': 'Baseline - All Modules Active',
-            'modules_active': list(self.raw_config['modules']['filters'].keys()),
-            'learning_engine': None,
-            'thresholds': thresholds_helper(strategy_config),
-            'total_pnl': consistent_metrics['total_pnl'],
-            'return_pct': consistent_metrics['return_pct'],
-            'win_rate': float(result.performance.win_rate),
-            'sharpe_ratio': (
+            "test_type": "baseline",
+            "test_name": "Baseline - All Modules Active",
+            "modules_active": list(self.raw_config["modules"]["filters"].keys()),
+            "learning_engine": None,
+            "thresholds": thresholds_helper(strategy_config),
+            "total_pnl": consistent_metrics["total_pnl"],
+            "return_pct": consistent_metrics["return_pct"],
+            "win_rate": float(result.performance.win_rate),
+            "sharpe_ratio": (
                 float(result.performance.sharpe_ratio) if result.performance.sharpe_ratio else 0.0
             ),
-            'max_drawdown': float(result.performance.max_drawdown_percentage),
-            'total_trades': result.performance.total_trades,
-            'avg_trade_pnl': (
-                consistent_metrics['total_pnl'] / result.performance.total_trades
+            "max_drawdown": float(result.performance.max_drawdown_percentage),
+            "total_trades": result.performance.total_trades,
+            "avg_trade_pnl": (
+                consistent_metrics["total_pnl"] / result.performance.total_trades
                 if result.performance.total_trades > 0
                 else 0.0
             ),
-            'final_capital': consistent_metrics['final_capital'],
+            "final_capital": consistent_metrics["final_capital"],
         }
 
         self.memory_manager.add_result(result_dict)
-        self.memory_manager.add_backtest_object('baseline', result)
+        self.memory_manager.add_backtest_object("baseline", result)
 
-        audit_helper(result_dict, 'baseline', strategy)
+        audit_helper(result_dict, "baseline", strategy)
 
         logger.info(
             f"Baseline complete: PnL=${result_dict['total_pnl']:.2f}, Sharpe={result_dict['sharpe_ratio']:.2f}"
@@ -153,7 +156,7 @@ class BacktestExecutor:
         strategy_name_helper,
         metrics_helper,
         audit_helper,
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """
         Execute backtests for each learning engine individually.
 
@@ -170,7 +173,7 @@ class BacktestExecutor:
         logger.info("Running learning engines backtest...")
 
         results = []
-        learning_engines_config = self.raw_config.get('learning_engines', {})
+        learning_engines_config = self.raw_config.get("learning_engines", {})
 
         # Only test supervised learning engine (others cause mutex blocking)
         logger.info("Learning Engines Policy: Only 'supervised' is supported (scikit-learn)")
@@ -181,10 +184,10 @@ class BacktestExecutor:
             "  - reinforcement: DISABLED (stable-baselines3/gymnasium causes mutex.cc blocking)"
         )
 
-        engine_types = ['supervised']
+        engine_types = ["supervised"]
 
         for engine_type in engine_types:
-            if not learning_engines_config.get(engine_type, {}).get('enabled', False):
+            if not learning_engines_config.get(engine_type, {}).get("enabled", False):
                 logger.info(f"Skipping {engine_type} learning engine (disabled)")
                 continue
 
@@ -213,7 +216,7 @@ class BacktestExecutor:
         strategy_name_helper,
         metrics_helper,
         audit_helper,
-    ) -> Optional[Dict[str, Any]]:
+    ) -> dict[str, Any] | None:
         """
         Test a specific learning engine.
 
@@ -229,34 +232,34 @@ class BacktestExecutor:
             Result dictionary or None if failed
         """
         try:
-            learning_engines_config = self.raw_config.get('learning_engines', {})
+            learning_engines_config = self.raw_config.get("learning_engines", {})
             engine_config = learning_engines_config.get(engine_type, {})
 
             # Build adaptive_learning config with full engine configuration
             adaptive_learning_config = {
-                'enabled': engine_config.get('enabled', True),
-                'engine_type': engine_type,
+                "enabled": engine_config.get("enabled", True),
+                "engine_type": engine_type,
             }
 
             # Add default config for supervised learning engine
-            if engine_type == 'supervised':
+            if engine_type == "supervised":
                 adaptive_learning_config.update(
                     {
-                        'algorithm': 'random_forest',
-                        'feature_columns': [],
-                        'target_column': 'trade_success',
-                        'model_parameters': {},
-                        'optimize_thresholds': False,
-                        'threshold_parameters': {},
+                        "algorithm": "random_forest",
+                        "feature_columns": [],
+                        "target_column": "trade_success",
+                        "model_parameters": {},
+                        "optimize_thresholds": False,
+                        "threshold_parameters": {},
                     }
                 )
 
             # Add any additional config parameters for the specific engine
-            if 'config' in engine_config:
-                adaptive_learning_config.update(engine_config['config'])
+            if "config" in engine_config:
+                adaptive_learning_config.update(engine_config["config"])
 
             strategy_config = create_strategy_config_helper()
-            strategy_config['adaptive_learning'] = adaptive_learning_config
+            strategy_config["adaptive_learning"] = adaptive_learning_config
             strategy = ModularMomentumStrategy(strategy_config)
 
             # Initialize the learning engine (lazy initialization)
@@ -292,33 +295,33 @@ class BacktestExecutor:
             consistent_metrics = metrics_helper(result, initial_capital)
 
             result_dict = {
-                'test_type': f'learning_engine_{engine_type}',
-                'test_name': f'Learning Engine - {engine_type.capitalize()}',
-                'modules_active': list(strategy_config.get('modules', {}).keys()),
-                'learning_engine': engine_type,
-                'thresholds': thresholds_helper(strategy_config),
-                'total_pnl': consistent_metrics['total_pnl'],
-                'return_pct': consistent_metrics['return_pct'],
-                'win_rate': float(result.performance.win_rate),
-                'sharpe_ratio': (
+                "test_type": f"learning_engine_{engine_type}",
+                "test_name": f"Learning Engine - {engine_type.capitalize()}",
+                "modules_active": list(strategy_config.get("modules", {}).keys()),
+                "learning_engine": engine_type,
+                "thresholds": thresholds_helper(strategy_config),
+                "total_pnl": consistent_metrics["total_pnl"],
+                "return_pct": consistent_metrics["return_pct"],
+                "win_rate": float(result.performance.win_rate),
+                "sharpe_ratio": (
                     float(result.performance.sharpe_ratio)
                     if result.performance.sharpe_ratio
                     else 0.0
                 ),
-                'max_drawdown': float(result.performance.max_drawdown_percentage),
-                'total_trades': result.performance.total_trades,
-                'avg_trade_pnl': (
-                    consistent_metrics['total_pnl'] / result.performance.total_trades
+                "max_drawdown": float(result.performance.max_drawdown_percentage),
+                "total_trades": result.performance.total_trades,
+                "avg_trade_pnl": (
+                    consistent_metrics["total_pnl"] / result.performance.total_trades
                     if result.performance.total_trades > 0
                     else 0.0
                 ),
-                'final_capital': consistent_metrics['final_capital'],
+                "final_capital": consistent_metrics["final_capital"],
             }
 
             self.memory_manager.add_result(result_dict)
-            self.memory_manager.add_backtest_object(f'learning_engine_{engine_type}', result)
+            self.memory_manager.add_backtest_object(f"learning_engine_{engine_type}", result)
 
-            audit_helper(result_dict, f'learning_engine_{engine_type}', strategy)
+            audit_helper(result_dict, f"learning_engine_{engine_type}", strategy)
 
             logger.info(
                 f"{engine_type.capitalize()} learning engine complete: "
@@ -343,7 +346,7 @@ class BacktestExecutor:
         create_strategy_config_helper,
         thresholds_helper,
         parallel: bool = False,
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """
         Execute Monte Carlo / Stress Test.
 
@@ -359,9 +362,9 @@ class BacktestExecutor:
         """
         logger.info(f"Running Monte Carlo Backtest ({'parallel' if parallel else 'sequential'})...")
 
-        mc_config = self.raw_config['backtests']['monte_carlo']
-        num_simulations = mc_config.get('num_simulations', 100)
-        volatility_multiplier = mc_config.get('volatility_multiplier', {}).get('default', 1.0)
+        mc_config = self.raw_config["backtests"]["monte_carlo"]
+        num_simulations = mc_config.get("num_simulations", 100)
+        volatility_multiplier = mc_config.get("volatility_multiplier", {}).get("default", 1.0)
 
         results = []
 
@@ -382,14 +385,16 @@ class BacktestExecutor:
         # Execute simulations
         for sim_num in range(num_simulations):
             if sim_num % 10 == 0:
-                logger.info(f"  Simulation {sim_num+1}/{num_simulations}...")
+                logger.info(f"  Simulation {sim_num + 1}/{num_simulations}...")
 
             # Create modified quotes with realistic volatility
             modified_quotes = self._create_monte_carlo_quotes(volatility_multiplier)
 
             # Execute backtest
             result = executor.execute(
-                modified_quotes, base_strategy, strategy_name=f'Monte Carlo Simulation {sim_num+1}'
+                modified_quotes,
+                base_strategy,
+                strategy_name=f"Monte Carlo Simulation {sim_num + 1}",
             )
 
             # Convert to dictionary
@@ -397,35 +402,35 @@ class BacktestExecutor:
             final_capital = float(result.final_capital)
 
             result_dict = {
-                'test_type': 'monte_carlo',
-                'test_name': f'Monte Carlo - Simulation {sim_num+1}',
-                'simulation_num': sim_num + 1,
-                'volatility_multiplier': volatility_multiplier,
-                'modules_active': list(self.raw_config['modules']['filters'].keys()),
-                'learning_engine': None,
-                'thresholds': thresholds_helper(strategy_config),
-                'total_pnl': final_capital - initial_capital,
-                'return_pct': (
+                "test_type": "monte_carlo",
+                "test_name": f"Monte Carlo - Simulation {sim_num + 1}",
+                "simulation_num": sim_num + 1,
+                "volatility_multiplier": volatility_multiplier,
+                "modules_active": list(self.raw_config["modules"]["filters"].keys()),
+                "learning_engine": None,
+                "thresholds": thresholds_helper(strategy_config),
+                "total_pnl": final_capital - initial_capital,
+                "return_pct": (
                     ((final_capital - initial_capital) / initial_capital * 100)
                     if initial_capital > 0
                     else 0.0
                 ),
-                'win_rate': float(result.performance.win_rate) if result.performance else 0.0,
-                'sharpe_ratio': (
+                "win_rate": float(result.performance.win_rate) if result.performance else 0.0,
+                "sharpe_ratio": (
                     float(result.performance.sharpe_ratio)
                     if result.performance and result.performance.sharpe_ratio
                     else 0.0
                 ),
-                'max_drawdown': (
+                "max_drawdown": (
                     float(result.performance.max_drawdown_percentage) if result.performance else 0.0
                 ),
-                'total_trades': result.performance.total_trades if result.performance else 0,
-                'avg_trade_pnl': (
+                "total_trades": result.performance.total_trades if result.performance else 0,
+                "avg_trade_pnl": (
                     (final_capital - initial_capital) / result.performance.total_trades
                     if result.performance and result.performance.total_trades > 0
                     else 0.0
                 ),
-                'final_capital': final_capital,
+                "final_capital": final_capital,
             }
 
             results.append(result_dict)
@@ -435,7 +440,7 @@ class BacktestExecutor:
 
         return results
 
-    def _create_monte_carlo_quotes(self, volatility_multiplier: float) -> List:
+    def _create_monte_carlo_quotes(self, volatility_multiplier: float) -> list:
         """
         Create quotes modified with realistic volatility for Monte Carlo.
 
@@ -453,14 +458,14 @@ class BacktestExecutor:
         if not self.quotes:
             logger.warning("No base quotes available, generating new realistic data")
             gen = RealisticDataGenerator(
-                seed=self.raw_config.get('random_state', 42),
+                seed=self.raw_config.get("random_state", 42),
                 base_price=100.0,
                 base_volume=50_000_000,
             )
 
             start_date = datetime.now()
             return gen.generate_realistic_quotes(
-                symbol='SYNTH',
+                symbol="SYNTH",
                 n_days=252,
                 start_date=start_date,
                 use_regime_switching=True,
@@ -468,7 +473,7 @@ class BacktestExecutor:
 
         # Use realistic generator for Monte Carlo simulations
         gen = RealisticDataGenerator(
-            seed=self.raw_config.get('random_state', 42),
+            seed=self.raw_config.get("random_state", 42),
             base_price=float(self.quotes[0].close),
             base_volume=int(self.quotes[0].volume) if self.quotes[0].volume else 50_000_000,
         )
@@ -476,11 +481,11 @@ class BacktestExecutor:
         start_date = self.quotes[0].timestamp if self.quotes else datetime.now()
 
         modified_quotes = gen.generate_realistic_quotes(
-            symbol=self.quotes[0].symbol if self.quotes else 'SYNTH',
+            symbol=self.quotes[0].symbol if self.quotes else "SYNTH",
             n_days=len(self.quotes),
             start_date=start_date,
             use_regime_switching=True,
-            initial_regime='volatile',  # Use volatile regime for Monte Carlo
+            initial_regime="volatile",  # Use volatile regime for Monte Carlo
         )
 
         logger.info(
@@ -497,7 +502,7 @@ class BacktestExecutor:
         strategy_name_helper,
         metrics_helper,
         audit_helper,
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """
         Execute walk-forward backtest with rolling windows.
 
@@ -516,13 +521,13 @@ class BacktestExecutor:
         """
         logger.info("Running walk-forward backtest...")
 
-        wf_config = self.raw_config.get('backtests', {}).get('walk_forward', {})
+        wf_config = self.raw_config.get("backtests", {}).get("walk_forward", {})
 
         # Window parameters with defaults
-        train_pct = wf_config.get('train_pct', 0.70)
-        test_pct = wf_config.get('test_pct', 0.30)
-        min_train_days = wf_config.get('min_train_days', 100)
-        step_size_days = wf_config.get('step_size_days', 63)
+        train_pct = wf_config.get("train_pct", 0.70)
+        test_pct = wf_config.get("test_pct", 0.30)
+        min_train_days = wf_config.get("min_train_days", 100)
+        step_size_days = wf_config.get("step_size_days", 63)
 
         logger.info(
             f"Walk-forward config: train={train_pct:.0%}, test={test_pct:.0%}, "
@@ -556,7 +561,7 @@ class BacktestExecutor:
             train_size = math.ceil(len(window_quotes) * train_pct)
             if train_size < min_train_days:
                 logger.warning(
-                    f"Window {num_windows+1}: Insufficient training data "
+                    f"Window {num_windows + 1}: Insufficient training data "
                     f"({train_size} < {min_train_days})"
                 )
                 start_idx += step_size_days
@@ -567,13 +572,13 @@ class BacktestExecutor:
 
             windows.append(
                 {
-                    'window_num': num_windows + 1,
-                    'train': train_quotes,
-                    'test': test_quotes,
-                    'train_start': train_quotes[0].timestamp,
-                    'train_end': train_quotes[-1].timestamp,
-                    'test_start': test_quotes[0].timestamp,
-                    'test_end': test_quotes[-1].timestamp,
+                    "window_num": num_windows + 1,
+                    "train": train_quotes,
+                    "test": test_quotes,
+                    "train_start": train_quotes[0].timestamp,
+                    "train_end": train_quotes[-1].timestamp,
+                    "test_start": test_quotes[0].timestamp,
+                    "test_end": test_quotes[-1].timestamp,
                 }
             )
 
@@ -602,8 +607,8 @@ class BacktestExecutor:
                 strategy_config = create_strategy_config_helper()
                 strategy = ModularMomentumStrategy(strategy_config)
 
-                train_quotes = window['train']
-                test_quotes = window['test']
+                train_quotes = window["train"]
+                test_quotes = window["test"]
 
                 # Execute backtest on test period only
                 initial_capital = self.backtest_config.initial_capital
@@ -629,30 +634,30 @@ class BacktestExecutor:
                 consistent_metrics = metrics_helper(result, initial_capital)
 
                 window_result = {
-                    'window_num': window['window_num'],
-                    'train_start': window['train_start'],
-                    'train_end': window['train_end'],
-                    'test_start': window['test_start'],
-                    'test_end': window['test_end'],
-                    'train_size': len(train_quotes),
-                    'test_size': len(test_quotes),
-                    'total_pnl': consistent_metrics['total_pnl'],
-                    'return_pct': consistent_metrics['return_pct'],
-                    'win_rate': float(result.performance.win_rate) if result.performance else 0.0,
-                    'sharpe_ratio': (
+                    "window_num": window["window_num"],
+                    "train_start": window["train_start"],
+                    "train_end": window["train_end"],
+                    "test_start": window["test_start"],
+                    "test_end": window["test_end"],
+                    "train_size": len(train_quotes),
+                    "test_size": len(test_quotes),
+                    "total_pnl": consistent_metrics["total_pnl"],
+                    "return_pct": consistent_metrics["return_pct"],
+                    "win_rate": float(result.performance.win_rate) if result.performance else 0.0,
+                    "sharpe_ratio": (
                         float(result.performance.sharpe_ratio)
                         if result.performance and result.performance.sharpe_ratio
                         else 0.0
                     ),
-                    'max_drawdown': (
+                    "max_drawdown": (
                         float(result.performance.max_drawdown_percentage)
                         if result.performance
                         else 0.0
                     ),
-                    'total_trades': result.performance.total_trades if result.performance else 0,
-                    'final_capital': consistent_metrics['final_capital'],
-                    'avg_trade_pnl': (
-                        consistent_metrics['total_pnl'] / result.performance.total_trades
+                    "total_trades": result.performance.total_trades if result.performance else 0,
+                    "final_capital": consistent_metrics["final_capital"],
+                    "avg_trade_pnl": (
+                        consistent_metrics["total_pnl"] / result.performance.total_trades
                         if result.performance and result.performance.total_trades > 0
                         else 0.0
                     ),
@@ -668,7 +673,7 @@ class BacktestExecutor:
                 )
 
                 self.memory_manager.add_backtest_object(
-                    f'walk_forward_window_{window["window_num"]}', result
+                    f"walk_forward_window_{window['window_num']}", result
                 )
 
             except Exception as e:
@@ -680,9 +685,9 @@ class BacktestExecutor:
             return []
 
         # Aggregate results across windows
-        sharpe_values = [w['sharpe_ratio'] for w in window_results]
-        return_values = [w['return_pct'] for w in window_results]
-        drawdown_values = [w['max_drawdown'] for w in window_results]
+        sharpe_values = [w["sharpe_ratio"] for w in window_results]
+        return_values = [w["return_pct"] for w in window_results]
+        drawdown_values = [w["max_drawdown"] for w in window_results]
 
         avg_sharpe = np.mean(sharpe_values)
         std_sharpe = np.std(sharpe_values)
@@ -695,29 +700,29 @@ class BacktestExecutor:
 
         # Create consolidated result
         consolidated_result = {
-            'test_type': 'walk_forward',
-            'test_name': 'Walk-Forward Validation',
-            'num_windows': num_windows,
-            'window_metrics': window_results,
-            'avg_sharpe': avg_sharpe,
-            'sharpe_std': std_sharpe,
-            'avg_return': avg_return,
-            'return_std': std_return,
-            'avg_max_drawdown': avg_drawdown,
-            'stability_ratio': stability_ratio,
-            'train_pct': train_pct,
-            'test_pct': test_pct,
-            'min_train_days': min_train_days,
-            'step_size_days': step_size_days,
-            'sharpe_min': np.min(sharpe_values),
-            'sharpe_max': np.max(sharpe_values),
-            'return_min': np.min(return_values),
-            'return_max': np.max(return_values),
-            'win_rate': np.mean([w['win_rate'] for w in window_results]),
-            'total_trades': np.sum([w['total_trades'] for w in window_results]),
-            'modules_active': list(self.raw_config['modules']['filters'].keys()),
-            'learning_engine': None,
-            'thresholds': thresholds_helper(create_strategy_config_helper()),
+            "test_type": "walk_forward",
+            "test_name": "Walk-Forward Validation",
+            "num_windows": num_windows,
+            "window_metrics": window_results,
+            "avg_sharpe": avg_sharpe,
+            "sharpe_std": std_sharpe,
+            "avg_return": avg_return,
+            "return_std": std_return,
+            "avg_max_drawdown": avg_drawdown,
+            "stability_ratio": stability_ratio,
+            "train_pct": train_pct,
+            "test_pct": test_pct,
+            "min_train_days": min_train_days,
+            "step_size_days": step_size_days,
+            "sharpe_min": np.min(sharpe_values),
+            "sharpe_max": np.max(sharpe_values),
+            "return_min": np.min(return_values),
+            "return_max": np.max(return_values),
+            "win_rate": np.mean([w["win_rate"] for w in window_results]),
+            "total_trades": np.sum([w["total_trades"] for w in window_results]),
+            "modules_active": list(self.raw_config["modules"]["filters"].keys()),
+            "learning_engine": None,
+            "thresholds": thresholds_helper(create_strategy_config_helper()),
         }
 
         # Log summary
@@ -739,14 +744,14 @@ class BacktestExecutor:
         logger.info("=" * 80)
 
         self.memory_manager.add_result(consolidated_result)
-        audit_helper(consolidated_result, 'walk_forward', strategy)
+        audit_helper(consolidated_result, "walk_forward", strategy)
 
         return [consolidated_result]
 
     def run_backtest_with_quotes(
         self,
         strategy: ModularMomentumStrategy,
-        quotes: List,
+        quotes: list,
         initial_capital: Decimal,
         strategy_name_helper,
     ) -> Any:

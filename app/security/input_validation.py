@@ -24,7 +24,7 @@ import re
 import time
 from collections import defaultdict
 from decimal import Decimal, InvalidOperation
-from typing import Dict, List, Optional, Set, Tuple, Type, TypeVar, Union
+from typing import TypeVar
 from urllib.parse import unquote
 
 from pydantic import BaseModel
@@ -95,7 +95,9 @@ T = TypeVar("T", bound=BaseModel)
 class ValidationError(Exception):
     """Raised when input validation fails."""
 
-    def __init__(self, message: str, field: Optional[str] = None, value: Union[str, int, float, None] = None):
+    def __init__(
+        self, message: str, field: str | None = None, value: str | int | float | None = None
+    ):
         self.message = message
         self.field = field
         self.value = value
@@ -180,7 +182,7 @@ class InputSanitizer:
         return sanitized
 
     @staticmethod
-    def sanitize_html(value: str, allowed_tags: Optional[Set[str]] = None) -> str:
+    def sanitize_html(value: str, allowed_tags: set[str] | None = None) -> str:
         """
         Sanitize HTML input while allowing certain tags.
 
@@ -303,9 +305,9 @@ class NumericValidator:
 
     @staticmethod
     def validate_decimal(
-        value: Union[Decimal, str, int, float],
-        min_value: Optional[Decimal] = None,
-        max_value: Optional[Decimal] = None,
+        value: Decimal | str | int | float,
+        min_value: Decimal | None = None,
+        max_value: Decimal | None = None,
         max_precision: int = 8,
     ) -> Decimal:
         """
@@ -325,10 +327,7 @@ class NumericValidator:
         """
         try:
             # Convert to Decimal
-            if isinstance(value, Decimal):
-                decimal_value = value
-            else:
-                decimal_value = Decimal(str(value))
+            decimal_value = value if isinstance(value, Decimal) else Decimal(str(value))
         except (ValueError, TypeError) as e:
             raise ValidationError(f"Invalid decimal value: {value}") from e
 
@@ -348,9 +347,9 @@ class NumericValidator:
 
     @staticmethod
     def validate_integer(
-        value: Union[int, str, float],
-        min_value: Optional[int] = None,
-        max_value: Optional[int] = None,
+        value: int | str | float,
+        min_value: int | None = None,
+        max_value: int | None = None,
     ) -> int:
         """
         Validate integer input with range constraints.
@@ -380,7 +379,7 @@ class NumericValidator:
         return int_value
 
     @staticmethod
-    def validate_percentage(value: Union[Decimal, str, int, float]) -> Decimal:
+    def validate_percentage(value: Decimal | str | int | float) -> Decimal:
         """
         Validate percentage value (0-100 or 0-1).
 
@@ -421,12 +420,12 @@ class ListValidator:
 
     @staticmethod
     def validate_list(
-        value: List[Union[str, int, float]],
+        value: list[str | int | float],
         min_length: int = 0,
         max_length: int = 1000,
-        element_type: Optional[Type] = None,
+        element_type: type | None = None,
         sanitize_elements: bool = True,
-    ) -> List[Union[str, int, float]]:
+    ) -> list[str | int | float]:
         """
         Validate list input.
 
@@ -470,7 +469,9 @@ class ListValidator:
         return validated
 
     @staticmethod
-    def validate_symbol_list(symbols: Union[List[str], Tuple[str, ...], Set[str]], max_length: int = 100) -> List[str]:
+    def validate_symbol_list(
+        symbols: list[str] | tuple[str, ...] | set[str], max_length: int = 100
+    ) -> list[str]:
         """
         Validate list of trading symbols.
 
@@ -513,7 +514,7 @@ class TradingValidator:
     """
 
     @staticmethod
-    def validate_price(price: Union[Decimal, str, int, float]) -> Decimal:
+    def validate_price(price: Decimal | str | int | float) -> Decimal:
         """
         Validate price input for trading operations.
 
@@ -552,7 +553,7 @@ class TradingValidator:
         return decimal_price
 
     @staticmethod
-    def validate_quantity(quantity: Union[Decimal, str, int, float]) -> Decimal:
+    def validate_quantity(quantity: Decimal | str | int | float) -> Decimal:
         """
         Validate quantity input for trading operations.
 
@@ -626,8 +627,12 @@ class TradingValidator:
 
     @staticmethod
     def validate_order_params(
-        symbol: str, side: str, quantity: Union[Decimal, str, int, float], price: Optional[Union[Decimal, str, int, float]] = None, order_type: str = "market"
-    ) -> Dict[str, Union[str, Decimal, None]]:
+        symbol: str,
+        side: str,
+        quantity: Decimal | str | int | float,
+        price: Decimal | str | int | float | None = None,
+        order_type: str = "market",
+    ) -> dict[str, str | Decimal | None]:
         """
         Validate complete order parameters.
 
@@ -677,7 +682,7 @@ class TradingValidator:
         }
 
     @staticmethod
-    def validate_portfolio_allocation(allocations: Dict[str, float]) -> Dict[str, Decimal]:
+    def validate_portfolio_allocation(allocations: dict[str, float]) -> dict[str, Decimal]:
         """
         Validate portfolio allocation percentages.
 
@@ -740,7 +745,7 @@ class RateLimiter:
 
     def __init__(self):
         """Initialize rate limiter."""
-        self._requests: Dict[str, List[float]] = defaultdict(list)
+        self._requests: dict[str, list[float]] = defaultdict(list)
         self._lock = defaultdict(int)  # For lockout tracking
 
         # Default rate limits (requests per window)
@@ -760,10 +765,10 @@ class RateLimiter:
     def check_rate_limit(
         self,
         identifier: str,
-        limit: Optional[int] = None,
-        window: Optional[int] = None,
+        limit: int | None = None,
+        window: int | None = None,
         category: str = "default",
-    ) -> Tuple[bool, Dict[str, Union[bool, int, float]]]:
+    ) -> tuple[bool, dict[str, bool | int | float]]:
         """
         Check if request is within rate limit.
 
@@ -811,7 +816,7 @@ class RateLimiter:
             self._lock[identifier] = lockout_time
 
             logger.warning(
-                f"Rate limit exceeded for {identifier}: " f"{current_count}/{limit} in {window}s"
+                f"Rate limit exceeded for {identifier}: {current_count}/{limit} in {window}s"
             )
 
             raise ValidationError(
@@ -837,7 +842,7 @@ class RateLimiter:
         self._requests.pop(identifier, None)
         self._lock.pop(identifier, None)
 
-    def get_usage_stats(self, identifier: str, category: str = "default") -> Dict[str, Union[int, float]]:
+    def get_usage_stats(self, identifier: str, category: str = "default") -> dict[str, int | float]:
         """
         Get current usage statistics for an identifier.
 
@@ -888,12 +893,12 @@ class DictValidator:
 
     @staticmethod
     def validate_dict(
-        value: Dict[str, Union[str, int, float]],
+        value: dict[str, str | int | float],
         max_keys: int = 100,
-        key_type: Optional[Type] = None,
-        value_type: Optional[Type] = None,
+        key_type: type | None = None,
+        value_type: type | None = None,
         sanitize_strings: bool = True,
-    ) -> Dict[str, Union[str, int, float]]:
+    ) -> dict[str, str | int | float]:
         """
         Validate dictionary input.
 
@@ -961,8 +966,8 @@ class SecureRequestValidator:
 
     def validate_request_model(
         self,
-        model_class: Type[T],
-        data: Dict[str, Union[str, int, float, bool]],
+        model_class: type[T],
+        data: dict[str, str | int | float | bool],
         sanitize: bool = True,
     ) -> T:
         """
@@ -990,9 +995,11 @@ class SecureRequestValidator:
         try:
             return model_class(**data)
         except Exception as e:
-            raise ValidationError(f"Model validation failed: {str(e)}") from e
+            raise ValidationError(f"Model validation failed: {e!s}") from e
 
-    def _sanitize_dict(self, data: Dict[str, Union[str, int, float, bool, List, Dict]]) -> Dict[str, Union[str, int, float, bool, List, Dict]]:
+    def _sanitize_dict(
+        self, data: dict[str, str | int | float | bool | list | dict]
+    ) -> dict[str, str | int | float | bool | list | dict]:
         """Recursively sanitize dictionary values."""
         sanitized = {}
         for key, value in data.items():
@@ -1006,7 +1013,9 @@ class SecureRequestValidator:
                 sanitized[key] = value
         return sanitized
 
-    def _sanitize_list(self, data: List[Union[str, int, float, bool, Dict, List]]) -> List[Union[str, int, float, bool, Dict, List]]:
+    def _sanitize_list(
+        self, data: list[str | int | float | bool | dict | list]
+    ) -> list[str | int | float | bool | dict | list]:
         """Recursively sanitize list values."""
         sanitized = []
         for item in data:
@@ -1025,7 +1034,11 @@ class SecureRequestValidator:
 validator = SecureRequestValidator()
 
 
-def validate_and_sanitize_input(data: Union[str, int, float, List, Dict], input_type: str = "auto", **constraints: Union[str, int, float, bool, Type]) -> Union[str, int, Decimal, List, Dict]:
+def validate_and_sanitize_input(
+    data: str | int | float | list | dict,
+    input_type: str = "auto",
+    **constraints: str | int | float | bool | type,
+) -> str | int | Decimal | list | dict:
     """
     Convenience function to validate and sanitize any input.
 

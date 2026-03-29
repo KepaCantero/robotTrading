@@ -31,7 +31,7 @@ from abc import abstractmethod
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import Dict, List, Optional, Tuple
+from typing import ClassVar, Optional
 from uuid import UUID, uuid4
 
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -104,7 +104,7 @@ class SymbolMapping:
     created_at: datetime = field(default_factory=datetime.utcnow)
     updated_at: datetime = field(default_factory=datetime.utcnow)
     is_verified: bool = field(default=False)
-    metadata: Dict = field(default_factory=dict)
+    metadata: dict = field(default_factory=dict)
 
     def __post_init__(self):
         """Validate the mapping after initialization"""
@@ -121,20 +121,20 @@ class SymbolMapping:
         self.broker_symbol = self.broker_symbol.upper().strip()
         self.broker_name = self.broker_name.lower().strip()
 
-    def to_dict(self) -> Dict:
+    def to_dict(self) -> dict:
         """Convert mapping to dictionary for serialization"""
         return {
-            'id': str(self.id),
-            'internal_symbol': self.internal_symbol,
-            'broker_symbol': self.broker_symbol,
-            'broker_name': self.broker_name,
-            'broker_type': self.broker_type.value,
-            'asset_class': self.asset_class,
-            'status': self.status.value,
-            'created_at': self.created_at.isoformat(),
-            'updated_at': self.updated_at.isoformat(),
-            'is_verified': self.is_verified,
-            'metadata': self.metadata,
+            "id": str(self.id),
+            "internal_symbol": self.internal_symbol,
+            "broker_symbol": self.broker_symbol,
+            "broker_name": self.broker_name,
+            "broker_type": self.broker_type.value,
+            "asset_class": self.asset_class,
+            "status": self.status.value,
+            "created_at": self.created_at.isoformat(),
+            "updated_at": self.updated_at.isoformat(),
+            "is_verified": self.is_verified,
+            "metadata": self.metadata,
         }
 
 
@@ -152,7 +152,7 @@ class BrokerMappingTables:
     """
 
     # Binance cryptocurrency mappings
-    BINANCE_CRYPTO = {
+    BINANCE_CRYPTO: ClassVar[dict] = {
         # Major cryptocurrencies
         "BTC": "BTCUSDT",
         "ETH": "ETHUSDT",
@@ -180,7 +180,7 @@ class BrokerMappingTables:
     }
 
     # OANDA forex mappings
-    OANDA_FOREX = {
+    OANDA_FOREX: ClassVar[dict] = {
         # Major forex pairs
         "EURUSD": "EUR_USD",
         "GBPUSD": "GBP_USD",
@@ -210,7 +210,7 @@ class BrokerMappingTables:
     }
 
     # Interactive Brokers mappings
-    IBKR_STOCKS_US = {
+    IBKR_STOCKS_US: ClassVar[dict] = {
         # Tech stocks
         "AAPL": "AAPL",
         "MSFT": "MSFT",
@@ -232,7 +232,7 @@ class BrokerMappingTables:
     }
 
     # Degiro mappings
-    DEGIRO_STOCKS_EU = {
+    DEGIRO_STOCKS_EU: ClassVar[dict] = {
         # European stocks
         "ASML": "ASML",
         "SAP": "SAP",
@@ -250,7 +250,7 @@ class BrokerMappingTables:
     }
 
     # Kraken mappings
-    KRAKEN_CRYPTO = {
+    KRAKEN_CRYPTO: ClassVar[dict] = {
         "BTC": "XXBTZUSD",
         "ETH": "XETHZUSD",
         "XRP": "XXRPZUSD",
@@ -261,7 +261,7 @@ class BrokerMappingTables:
     }
 
     # Coinbase mappings
-    COINBASE_CRYPTO = {
+    COINBASE_CRYPTO: ClassVar[dict] = {
         "BTC": "BTC-USD",
         "ETH": "ETH-USD",
         "XRP": "XRP-USD",
@@ -287,12 +287,12 @@ class BrokerMappingTables:
         broker_name = broker_name.lower()
 
         mapping_tables = {
-            'binance': cls.BINANCE_CRYPTO,
-            'oanda': cls.OANDA_FOREX,
-            'ibkr': cls.IBKR_STOCKS_US,
-            'degiro': cls.DEGIRO_STOCKS_EU,
-            'kraken': cls.KRAKEN_CRYPTO,
-            'coinbase': cls.COINBASE_CRYPTO,
+            "binance": cls.BINANCE_CRYPTO,
+            "oanda": cls.OANDA_FOREX,
+            "ibkr": cls.IBKR_STOCKS_US,
+            "degiro": cls.DEGIRO_STOCKS_EU,
+            "kraken": cls.KRAKEN_CRYPTO,
+            "coinbase": cls.COINBASE_CRYPTO,
         }
 
         table = mapping_tables.get(broker_name)
@@ -302,7 +302,7 @@ class BrokerMappingTables:
         return None
 
     @classmethod
-    def get_all_broker_symbols(cls, internal_symbol: str) -> Dict[str, str]:
+    def get_all_broker_symbols(cls, internal_symbol: str) -> dict[str, str]:
         """
         Get all broker symbols for a given internal symbol.
 
@@ -316,12 +316,12 @@ class BrokerMappingTables:
         result = {}
 
         for broker_name, table in [
-            ('binance', cls.BINANCE_CRYPTO),
-            ('oanda', cls.OANDA_FOREX),
-            ('ibkr', cls.IBKR_STOCKS_US),
-            ('degiro', cls.DEGIRO_STOCKS_EU),
-            ('kraken', cls.KRAKEN_CRYPTO),
-            ('coinbase', cls.COINBASE_CRYPTO),
+            ("binance", cls.BINANCE_CRYPTO),
+            ("oanda", cls.OANDA_FOREX),
+            ("ibkr", cls.IBKR_STOCKS_US),
+            ("degiro", cls.DEGIRO_STOCKS_EU),
+            ("kraken", cls.KRAKEN_CRYPTO),
+            ("coinbase", cls.COINBASE_CRYPTO),
         ]:
             if internal_symbol in table:
                 result[broker_name] = table[internal_symbol]
@@ -342,16 +342,16 @@ class SymbolValidator:
     """
 
     # Regex patterns for different symbol formats
-    PATTERNS = {
-        'binance_crypto': r'^[A-Z]{3,10}USDT$',
-        'binance_forex': r'^[A-Z]{6}USDT$',
-        'oanda_forex': r'^[A-Z]{3}_[A-Z]{3}$',
-        'oanda_crypto': r'^[A-Z]{3,10}_USD$',
-        'ibkr_stock': r'^[A-Z]{1,5}$',
-        'ibkr_crypto': r'^IBKR:[A-Z]{3,10}$',
-        'degiro_stock': r'^[A-Z]{4,5}$',
-        'kraken_crypto': r'^X?[A-Z]{3,10}ZUSD$',
-        'coinbase_crypto': r'^[A-Z]{3,10}-USD$',
+    PATTERNS: ClassVar[dict] = {
+        "binance_crypto": r"^[A-Z]{3,10}USDT$",
+        "binance_forex": r"^[A-Z]{6}USDT$",
+        "oanda_forex": r"^[A-Z]{3}_[A-Z]{3}$",
+        "oanda_crypto": r"^[A-Z]{3,10}_USD$",
+        "ibkr_stock": r"^[A-Z]{1,5}$",
+        "ibkr_crypto": r"^IBKR:[A-Z]{3,10}$",
+        "degiro_stock": r"^[A-Z]{4,5}$",
+        "kraken_crypto": r"^X?[A-Z]{3,10}ZUSD$",
+        "coinbase_crypto": r"^[A-Z]{3,10}-USD$",
     }
 
     @classmethod
@@ -376,9 +376,9 @@ class SymbolValidator:
         symbol = symbol.strip()
 
         # Check format - must already be uppercase (no normalization here)
-        if not re.match(r'^[A-Z]{2,10}$', symbol):
+        if not re.match(r"^[A-Z]{2,10}$", symbol):
             raise ValidationError(
-                f"Invalid internal symbol format: {symbol}. " "Must be 2-10 uppercase letters."
+                f"Invalid internal symbol format: {symbol}. Must be 2-10 uppercase letters."
             )
 
         return True
@@ -407,43 +407,44 @@ class SymbolValidator:
         # Broker-specific validation (normalize to uppercase for pattern matching)
         symbol_upper = symbol.upper()
 
-        if broker_name == 'binance':
+        if broker_name == "binance":
             if not (
-                re.match(cls.PATTERNS['binance_crypto'], symbol_upper)
-                or re.match(cls.PATTERNS['binance_forex'], symbol_upper)
+                re.match(cls.PATTERNS["binance_crypto"], symbol_upper)
+                or re.match(cls.PATTERNS["binance_forex"], symbol_upper)
             ):
                 raise ValidationError(
-                    f"Invalid Binance symbol format: {symbol}. "
-                    "Expected format: BTCUSDT or EURUSDT"
+                    f"Invalid Binance symbol format: {symbol}. Expected format: BTCUSDT or EURUSDT"
                 )
 
-        elif broker_name == 'oanda':
+        elif broker_name == "oanda":
             if not (
-                re.match(cls.PATTERNS['oanda_forex'], symbol_upper)
-                or re.match(cls.PATTERNS['oanda_crypto'], symbol_upper)
+                re.match(cls.PATTERNS["oanda_forex"], symbol_upper)
+                or re.match(cls.PATTERNS["oanda_crypto"], symbol_upper)
             ):
                 raise ValidationError(
-                    f"Invalid OANDA symbol format: {symbol}. " "Expected format: EUR_USD or BTC_USD"
+                    f"Invalid OANDA symbol format: {symbol}. Expected format: EUR_USD or BTC_USD"
                 )
 
-        elif broker_name == 'ibkr':
+        elif broker_name == "ibkr":
             if not (
-                re.match(cls.PATTERNS['ibkr_stock'], symbol_upper)
-                or re.match(cls.PATTERNS['ibkr_crypto'], symbol_upper)
+                re.match(cls.PATTERNS["ibkr_stock"], symbol_upper)
+                or re.match(cls.PATTERNS["ibkr_crypto"], symbol_upper)
             ):
                 raise ValidationError(
-                    f"Invalid IBKR symbol format: {symbol}. " "Expected format: AAPL or IBKR:BTC"
+                    f"Invalid IBKR symbol format: {symbol}. Expected format: AAPL or IBKR:BTC"
                 )
 
-        elif broker_name == 'kraken':
-            if not re.match(cls.PATTERNS['kraken_crypto'], symbol_upper):
+        elif broker_name == "kraken":
+            if not re.match(cls.PATTERNS["kraken_crypto"], symbol_upper):
                 raise ValidationError(
-                    f"Invalid Kraken symbol format: {symbol}. " "Expected format: XXBTZUSD"
+                    f"Invalid Kraken symbol format: {symbol}. Expected format: XXBTZUSD"
                 )
 
-        elif broker_name == 'coinbase' and not re.match(cls.PATTERNS['coinbase_crypto'], symbol_upper):
+        elif broker_name == "coinbase" and not re.match(
+            cls.PATTERNS["coinbase_crypto"], symbol_upper
+        ):
             raise ValidationError(
-                f"Invalid Coinbase symbol format: {symbol}. " "Expected format: BTC-USD"
+                f"Invalid Coinbase symbol format: {symbol}. Expected format: BTC-USD"
             )
 
         return True
@@ -467,42 +468,42 @@ class SymbolValidator:
         broker_name = broker_name.lower()
 
         try:
-            if broker_name == 'binance':
+            if broker_name == "binance":
                 # Remove USDT suffix (USDT = 4 characters)
-                if broker_symbol.endswith('USDT'):
+                if broker_symbol.endswith("USDT"):
                     return broker_symbol[:-4]
                 # If no USDT suffix, try to extract base from other patterns
                 return broker_symbol
 
-            elif broker_name == 'oanda':
+            elif broker_name == "oanda":
                 # Remove _USD suffix (for crypto) or extract base from forex pair
-                if '_USD' in broker_symbol:
-                    return broker_symbol.split('_')[0]
+                if "_USD" in broker_symbol:
+                    return broker_symbol.split("_")[0]
                 # Handle forex pairs like EUR_USD -> EURUSD is not a valid internal symbol
                 # Extract the base currency
-                if '_' in broker_symbol:
-                    return broker_symbol.split('_')[0]
+                if "_" in broker_symbol:
+                    return broker_symbol.split("_")[0]
                 return broker_symbol
 
-            elif broker_name == 'ibkr':
+            elif broker_name == "ibkr":
                 # Remove IBKR: prefix
-                if broker_symbol.startswith('IBKR:'):
+                if broker_symbol.startswith("IBKR:"):
                     return broker_symbol[5:]
                 return broker_symbol
 
-            elif broker_name == 'kraken':
+            elif broker_name == "kraken":
                 # Remove X prefix and ZUSD suffix
                 symbol = broker_symbol
-                if symbol.startswith('X'):
+                if symbol.startswith("X"):
                     symbol = symbol[1:]
-                if symbol.endswith('ZUSD'):
+                if symbol.endswith("ZUSD"):
                     symbol = symbol[:-4]
                 # Convert XBT to BTC (Kraken uses XBT for Bitcoin)
-                if symbol == 'XBT':
-                    symbol = 'BTC'
+                if symbol == "XBT":
+                    symbol = "BTC"
                 return symbol
 
-            elif broker_name == 'coinbase' and broker_symbol.endswith('-USD'):
+            elif broker_name == "coinbase" and broker_symbol.endswith("-USD"):
                 # Remove -USD suffix (-USD = 4 characters)
                 return broker_symbol[:-4]
 
@@ -510,7 +511,9 @@ class SymbolValidator:
             return broker_symbol
 
         except (ConnectionError, TimeoutError, ValueError) as e:
-            raise ValidationError(f"Failed to extract internal symbol from {broker_symbol}: {e}")
+            raise ValidationError(
+                f"Failed to extract internal symbol from {broker_symbol}: {e}"
+            ) from e
 
 
 # ============================================================================
@@ -567,8 +570,8 @@ class SymbolMapper:
             db_session: Optional database session. If None, creates new sessions as needed.
         """
         self._db_session = db_session
-        self._cache: Dict[Tuple[str, str], SymbolMapping] = {}
-        self._reverse_cache: Dict[Tuple[str, str], SymbolMapping] = {}
+        self._cache: dict[tuple[str, str], SymbolMapping] = {}
+        self._reverse_cache: dict[tuple[str, str], SymbolMapping] = {}
         self._initialized = False
 
         logger.info("SymbolMapper initialized")
@@ -628,8 +631,7 @@ class SymbolMapper:
 
             if broker_symbol:
                 logger.info(
-                    f"Mapped {internal_symbol} -> {broker_symbol} ({broker_name}) "
-                    f"[default table]"
+                    f"Mapped {internal_symbol} -> {broker_symbol} ({broker_name}) [default table]"
                 )
                 return broker_symbol
 
@@ -730,7 +732,7 @@ class SymbolMapper:
         broker_type: BrokerType,
         asset_class: str = "crypto",
         is_verified: bool = False,
-        metadata: Optional[Dict] = None,
+        metadata: Optional[dict] = None,
     ) -> SymbolMapping:
         """
         Add a new symbol mapping to the database.
@@ -812,9 +814,9 @@ class SymbolMapper:
             logger.error(
                 f"Error adding mapping {internal_symbol} -> {broker_symbol}: {e}", exc_info=True
             )
-            raise SymbolMappingError(f"Failed to add mapping: {e}")
+            raise SymbolMappingError(f"Failed to add mapping: {e}") from e
 
-    def get_all_brokers_for_symbol(self, internal_symbol: str) -> Dict[str, str]:
+    def get_all_brokers_for_symbol(self, internal_symbol: str) -> dict[str, str]:
         """
         Get all broker symbols for a given internal symbol.
 
@@ -862,7 +864,7 @@ class SymbolMapper:
 
     def validate_mapping(
         self, internal_symbol: str, broker_symbol: str, broker_name: str
-    ) -> Tuple[bool, Optional[str]]:
+    ) -> tuple[bool, Optional[str]]:
         """
         Validate that a mapping is correct.
 
@@ -946,14 +948,14 @@ class SymbolMapper:
 
         # Broker-specific construction rules
         return {
-            'binance': f"{internal_symbol}USDT",
-            'oanda': f"{internal_symbol}_USD",
-            'ibkr': f"IBKR:{internal_symbol}",
-            'kraken': f"X{internal_symbol}ZUSD",
-            'coinbase': f"{internal_symbol}-USD",
+            "binance": f"{internal_symbol}USDT",
+            "oanda": f"{internal_symbol}_USD",
+            "ibkr": f"IBKR:{internal_symbol}",
+            "kraken": f"X{internal_symbol}ZUSD",
+            "coinbase": f"{internal_symbol}-USD",
         }.get(broker_name, internal_symbol)
 
-    def get_supported_brokers(self) -> List[str]:
+    def get_supported_brokers(self) -> list[str]:
         """
         Get list of supported brokers.
 
@@ -961,15 +963,15 @@ class SymbolMapper:
             List of broker names
         """
         return [
-            'binance',
-            'oanda',
-            'ibkr',
-            'degiro',
-            'kraken',
-            'coinbase',
+            "binance",
+            "oanda",
+            "ibkr",
+            "degiro",
+            "kraken",
+            "coinbase",
         ]
 
-    def get_statistics(self) -> Dict:
+    def get_statistics(self) -> dict:
         """
         Get statistics about symbol mappings.
 
@@ -977,10 +979,10 @@ class SymbolMapper:
             Dictionary with mapping statistics
         """
         return {
-            'cached_mappings': len(self._cache),
-            'cached_reverse_mappings': len(self._reverse_cache),
-            'supported_brokers': self.get_supported_brokers(),
-            'default_tables_available': len(BrokerMappingTables.BINANCE_CRYPTO) > 0,
+            "cached_mappings": len(self._cache),
+            "cached_reverse_mappings": len(self._reverse_cache),
+            "supported_brokers": self.get_supported_brokers(),
+            "default_tables_available": len(BrokerMappingTables.BINANCE_CRYPTO) > 0,
         }
 
     def clear_cache(self) -> None:
@@ -1047,7 +1049,7 @@ class SymbolMapperMixin:
 
     def validate_symbol_mapping(
         self, internal_symbol: str, broker_symbol: str
-    ) -> Tuple[bool, Optional[str]]:
+    ) -> tuple[bool, Optional[str]]:
         """Validate a symbol mapping."""
         return self.symbol_mapper.validate_mapping(
             internal_symbol, broker_symbol, self.get_broker_name()
@@ -1124,23 +1126,23 @@ async def get_or_create_mapping(
 # ============================================================================
 
 __all__ = [
-    # Main class
-    'SymbolMapper',
-    # Data classes
-    'SymbolMapping',
-    # Enums
-    'MappingStatus',
-    'BrokerType',
-    # Exceptions
-    'SymbolMappingError',
-    'AmbiguousSymbolError',
-    'UnknownSymbolError',
-    'ValidationError',
+    "AmbiguousSymbolError",
     # Utilities
-    'BrokerMappingTables',
-    'SymbolValidator',
-    'SymbolMapperMixin',
+    "BrokerMappingTables",
+    "BrokerType",
+    # Enums
+    "MappingStatus",
+    # Main class
+    "SymbolMapper",
+    "SymbolMapperMixin",
+    # Data classes
+    "SymbolMapping",
+    # Exceptions
+    "SymbolMappingError",
+    "SymbolValidator",
+    "UnknownSymbolError",
+    "ValidationError",
     # Factory functions
-    'create_symbol_mapper',
-    'get_or_create_mapping',
+    "create_symbol_mapper",
+    "get_or_create_mapping",
 ]

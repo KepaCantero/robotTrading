@@ -9,6 +9,6 @@ from .file_backtest_repository import FileBacktestRepository
 from .in_memory_backtest_repository import InMemoryBacktestRepository
 
 __all__ = [
-    'InMemoryBacktestRepository',
-    'FileBacktestRepository',
+    "FileBacktestRepository",
+    "InMemoryBacktestRepository",
 ]

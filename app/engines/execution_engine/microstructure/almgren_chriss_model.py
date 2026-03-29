@@ -18,10 +18,12 @@ import logging
 from dataclasses import dataclass
 from decimal import Decimal
 from enum import Enum
-from typing import Dict, List, Optional, Tuple
+from typing import TYPE_CHECKING, ClassVar
 
 import numpy as np
-import pandas as pd
+
+if TYPE_CHECKING:
+    import pandas as pd
 
 logger = logging.getLogger(__name__)
 
@@ -73,7 +75,7 @@ class OptimalExecutionSchedule:
     n_tranches: int
 
     # Schedule: list of (time_seconds, quantity)
-    schedule: List[Tuple[int, Decimal]]
+    schedule: list[tuple[int, Decimal]]
 
     expected_total_cost_bps: Decimal
     expected_total_cost_usd: Decimal
@@ -89,8 +91,8 @@ class AlmgrenChrissModel:
     - Execution time
 
     Impact = Permanent + Temporary
-    - Permanent: γ * σ * sqrt(participation)
-    - Temporary: η * σ * (size / ADV)
+    - Permanent: gamma * sigma * sqrt(participation)
+    - Temporary: eta * sigma * (size / ADV)
     """
 
     # Default model parameters (calibrated for US equities)
@@ -98,7 +100,7 @@ class AlmgrenChrissModel:
     DEFAULT_ETA = 0.05  # Temporary impact coefficient
 
     # Parameter ranges for different asset classes
-    PARAMETER_RANGES = {
+    PARAMETER_RANGES: ClassVar[dict] = {
         "equity": {
             "gamma": (0.05, 0.2),
             "eta": (0.02, 0.1),
@@ -123,8 +125,8 @@ class AlmgrenChrissModel:
 
     def __init__(
         self,
-        gamma: Optional[float] = None,
-        eta: Optional[float] = None,
+        gamma: float | None = None,
+        eta: float | None = None,
         asset_class: str = "equity",
     ):
         """
@@ -150,7 +152,7 @@ class AlmgrenChrissModel:
         self.asset_class = asset_class
 
         logger.info(
-            f"Almgren-Chriss model initialized: γ={self.gamma:.4f}, η={self.eta:.4f}, "
+            f"Almgren-Chriss model initialized: gamma={self.gamma:.4f}, eta={self.eta:.4f}, "
             f"asset_class={asset_class}"
         )
 
@@ -161,7 +163,7 @@ class AlmgrenChrissModel:
         adv: Decimal,
         volatility: float,
         execution_time_seconds: int = 3600,
-        price: Optional[Decimal] = None,
+        price: Decimal | None = None,
     ) -> MarketImpactEstimate:
         """
         Estimate market impact using Almgren-Chriss model.
@@ -180,11 +182,11 @@ class AlmgrenChrissModel:
         # Calculate participation rate
         participation_rate = float(order_size / adv) if adv > 0 else 0
 
-        # Permanent impact: γ * σ * sqrt(participation)
+        # Permanent impact: gamma * sigma * sqrt(participation)
         # This is the price displacement that persists after execution
         permanent_impact = self.gamma * volatility * np.sqrt(max(participation_rate, 0))
 
-        # Temporary impact: η * σ * (size / ADV) / (1 + execution_time_factor)
+        # Temporary impact: eta * sigma * (size / ADV) / (1 + execution_time_factor)
         # This is the walking the book cost that recovers
         time_factor = np.sqrt(execution_time_seconds / 86400)  # Normalize to day
         temporary_impact = self.eta * volatility * participation_rate / time_factor
@@ -249,7 +251,7 @@ class AlmgrenChrissModel:
         adv: Decimal,
         volatility: float,
         price: Decimal,
-        n_tranches: Optional[int] = None,
+        n_tranches: int | None = None,
     ) -> OptimalExecutionSchedule:
         """
         Calculate optimal execution schedule using Almgren-Chriss.
@@ -312,7 +314,7 @@ class AlmgrenChrissModel:
         adv: Decimal,
         volatility: float,
         price: Decimal,
-    ) -> Dict[str, MarketImpactEstimate]:
+    ) -> dict[str, MarketImpactEstimate]:
         """
         Compare different execution strategies.
 
@@ -349,7 +351,7 @@ class AlmgrenChrissModel:
         adv_col: str = "adv",
         volatility_col: str = "volatility",
         impact_col: str = "impact_bps",
-    ) -> Dict[str, float]:
+    ) -> dict[str, float]:
         """
         Calibrate model parameters from historical execution data.
 
@@ -389,13 +391,13 @@ class AlmgrenChrissModel:
             coefficients, _, _, _ = np.linalg.lstsq(X, y, rcond=None)
 
             # Extract parameters (simplified)
-            # impact = β0 + β1*vol + β2*vol*sqrt(part) + β3*vol*part
-            # We focus on β2 ≈ gamma, β3 ≈ eta
+            # impact = beta0 + beta1*vol + beta2*vol*sqrt(part) + beta3*vol*part
+            # We focus on beta2 ~ gamma, beta3 ~ eta
 
             gamma = max(0.01, abs(float(coefficients[2])))
             eta = max(0.005, abs(float(coefficients[3])))
 
-            logger.info(f"Calibrated parameters: γ={gamma:.4f}, η={eta:.4f}")
+            logger.info(f"Calibrated parameters: gamma={gamma:.4f}, eta={eta:.4f}")
 
             return {
                 "gamma": gamma,
@@ -435,8 +437,8 @@ _almgren_chriss_model: AlmgrenChrissModel = None
 
 
 def get_almgren_chriss_model(
-    gamma: Optional[float] = None,
-    eta: Optional[float] = None,
+    gamma: float | None = None,
+    eta: float | None = None,
     asset_class: str = "equity",
 ) -> AlmgrenChrissModel:
     """Get or create global AlmgrenChrissModel instance."""

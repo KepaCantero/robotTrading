@@ -9,7 +9,7 @@ import logging
 from datetime import date, datetime
 from decimal import Decimal
 from enum import Enum
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Optional, Union
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
@@ -240,11 +240,11 @@ class OptimizationConfig(BaseModel):
 class OptimizationResult(BaseModel):
     """Result of parameter optimization."""
 
-    optimized_parameters: Dict[str, Union[float, int]] = Field(
+    optimized_parameters: dict[str, Union[float, int]] = Field(
         ..., description="Optimized parameter values"
     )
     best_score: float = Field(..., description="Best optimization score")
-    optimization_history: List[Dict[str, Any]] = Field(
+    optimization_history: list[dict[str, Any]] = Field(
         default_factory=list, description="Optimization history"
     )
     convergence_achieved: bool = Field(..., description="Whether convergence was achieved")
@@ -261,7 +261,7 @@ class OutOfSampleTest(BaseModel):
     test_end_date: date = Field(..., description="End date for out-of-sample testing")
     train_start_date: date = Field(..., description="Start date for training data")
     train_end_date: date = Field(..., description="End date for training data")
-    parameters: Dict[str, Union[float, int]] = Field(..., description="Parameters to test")
+    parameters: dict[str, Union[float, int]] = Field(..., description="Parameters to test")
     strategy_name: str = Field(..., description="Name of the strategy to test")
 
     @model_validator(mode="after")
@@ -325,7 +325,7 @@ class ParameterOptimizationRequest(BaseModel):
     """Request model for parameter optimization."""
 
     strategy_name: str = Field(..., description="Name of the strategy to optimize")
-    parameters: List[OptimizationParameter] = Field(
+    parameters: list[OptimizationParameter] = Field(
         ..., min_length=1, description="Parameters to optimize"
     )
     optimization_config: OptimizationConfig = Field(..., description="Optimization configuration")
@@ -378,7 +378,7 @@ class OptimizationArtifact(BaseModel):
 
     artifact_id: str = Field(..., description="Unique artifact identifier")
     optimization_result: OptimizationResult = Field(..., description="Optimization result")
-    out_of_sample_results: List[OutOfSampleResult] = Field(
+    out_of_sample_results: list[OutOfSampleResult] = Field(
         default_factory=list, description="Out-of-sample test results"
     )
     strategy_name: str = Field(..., description="Name of the optimized strategy")
@@ -387,7 +387,7 @@ class OptimizationArtifact(BaseModel):
         description="Optimization date",
     )
     version: str = Field("1.0", description="Artifact version")
-    metadata: Dict[str, Any] = Field(default_factory=dict, description="Additional metadata")
+    metadata: dict[str, Any] = Field(default_factory=dict, description="Additional metadata")
 
     model_config = {
         "json_encoders": {

@@ -32,15 +32,15 @@ from app.backtesting.services.profile_generation_service import ProfileGeneratio
 from app.backtesting.services.report_generation_service import ReportGenerationService
 
 __all__ = [
-    "ConfigurationService",
-    "ProfileGenerationService",
-    "BatchExecutionService",
-    "DatabaseService",
-    "MetricsCalculationService",
-    "FallbackTracker",
-    "ReportGenerationService",
     "BaselineOptimizationComparison",
+    "BatchExecutionService",
+    "ConfigurationService",
+    "DatabaseService",
+    "FallbackTracker",
+    "MetricsCalculationService",
     "OptimizedStrategy",
+    "ProfileGenerationService",
     "ProfileResult",
     "ProfileResultDB",
+    "ReportGenerationService",
 ]

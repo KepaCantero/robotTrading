@@ -14,7 +14,7 @@ Returns ExecutionPlan with optimized tranches and cost budgets.
 
 import logging
 from decimal import Decimal
-from typing import Dict, Optional
+from typing import Optional
 
 from .broker_negotiation_engine import get_broker_negotiation_engine
 from .execution_cost_monitor import get_execution_cost_monitor
@@ -117,8 +117,7 @@ class SmartOrderRouter:
 
         if daily_volume <= 0:
             raise ValueError(
-                "daily_volume must be positive for market impact estimation "
-                f"(got {daily_volume})"
+                f"daily_volume must be positive for market impact estimation (got {daily_volume})"
             )
 
         impact_estimate = await self.market_impact_estimator.estimate(
@@ -150,9 +149,7 @@ class SmartOrderRouter:
 
         commission_cost = total_size * commission_rate
 
-        logger.info(
-            f"{symbol}: Commission rate: {commission_rate:.4%} " f"(€{commission_cost:,.2f})"
-        )
+        logger.info(f"{symbol}: Commission rate: {commission_rate:.4%} (€{commission_cost:,.2f})")
 
         # =====================================================================
         # STEP 3: Calculate total execution cost budget
@@ -164,8 +161,7 @@ class SmartOrderRouter:
         total_cost_bps = (total_cost_budget / total_size) * Decimal("10000")
 
         logger.info(
-            f"{symbol}: Total execution cost: "
-            f"€{total_cost_budget:,.2f} ({total_cost_bps:.2f} bps)"
+            f"{symbol}: Total execution cost: €{total_cost_budget:,.2f} ({total_cost_bps:.2f} bps)"
         )
 
         # =====================================================================
@@ -239,7 +235,7 @@ class SmartOrderRouter:
         daily_volume: Decimal,
         volatility_percentile: int = 50,
         asset_class: str = "equity",
-    ) -> Dict:
+    ) -> dict:
         """
         Get cost forecast across different execution time windows.
 

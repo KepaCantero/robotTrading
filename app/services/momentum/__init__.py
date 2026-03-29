@@ -24,10 +24,10 @@ from app.services.momentum.protocols import (
 )
 
 __all__ = [
-    "get_momentum_analysis_service",
     "IndicatorCalculator",
     "MomentumAnalyzer",
     "SignalGenerator",
-    "StrategyManager",
     "StorageBackend",
+    "StrategyManager",
+    "get_momentum_analysis_service",
 ]

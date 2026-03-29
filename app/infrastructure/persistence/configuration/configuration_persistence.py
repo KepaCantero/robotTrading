@@ -6,7 +6,7 @@ Comprehensive strategy configuration storage with versioning.
 
 import logging
 from datetime import datetime
-from typing import Dict, List, Optional
+from typing import Optional
 from uuid import uuid4
 
 logger = logging.getLogger(__name__)
@@ -32,8 +32,8 @@ class ConfigurationPersistence:
     """
 
     def __init__(self):
-        self._configurations: Dict[str, StrategyConfiguration] = {}
-        self._versioned: Dict[str, List[VersionedConfiguration]] = {}
+        self._configurations: dict[str, StrategyConfiguration] = {}
+        self._versioned: dict[str, list[VersionedConfiguration]] = {}
         logger.debug("ConfigurationPersistence initialized")
 
     def save_configuration(self, request: ConfigurationSaveRequest) -> StrategyConfiguration:
@@ -79,7 +79,9 @@ class ConfigurationPersistence:
 
         # Find configuration by strategy name
         for config in self._configurations.values():
-            if config.strategy_name == request.strategy_name and (request.version is None or config.version == request.version):
+            if config.strategy_name == request.strategy_name and (
+                request.version is None or config.version == request.version
+            ):
                 logger.info(
                     "Configuration loaded successfully",
                     extra={

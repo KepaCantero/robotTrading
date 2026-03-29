@@ -11,14 +11,16 @@ from __future__ import annotations
 
 import logging
 from datetime import datetime
-from decimal import Decimal
-from typing import Any, Dict, List, Optional
+from typing import TYPE_CHECKING, Any
 
-from app.domain.models.market_data import Quote
-from app.domain.models.portfolio import Portfolio
-from app.domain.models.signal import Signal
+if TYPE_CHECKING:
+    from decimal import Decimal
 
-from .protocols import StrategyLoggerProto, StrategyRegistryProto
+    from app.domain.models.market_data import Quote
+    from app.domain.models.portfolio import Portfolio
+    from app.domain.models.signal import Signal
+
+    from .protocols import StrategyLoggerProto, StrategyRegistryProto
 
 logger = logging.getLogger(__name__)
 
@@ -70,7 +72,7 @@ class ExecutionEngine:
         self.is_running = False
         logger.info("Execution engine stopped")
 
-    def run_cycle(self, market_data: Quote, portfolio: Portfolio) -> List[Signal]:
+    def run_cycle(self, market_data: Quote, portfolio: Portfolio) -> list[Signal]:
         """
         Ejecutar ciclo de trading.
 
@@ -85,7 +87,7 @@ class ExecutionEngine:
             logger.warning("Execution engine not running, skipping cycle")
             return []
 
-        signals: List[Signal] = []
+        signals: list[Signal] = []
         self.cycle_count += 1
 
         # Obtener estrategia activa
@@ -130,7 +132,7 @@ class ExecutionEngine:
         logger.debug(f"Cycle {self.cycle_count} completed: {len(signals)} signals validated")
         return signals
 
-    def execute_signal(self, signal: Signal, execution_price: Optional[Decimal] = None) -> bool:
+    def execute_signal(self, signal: Signal, execution_price: Decimal | None = None) -> bool:
         """
         Ejecutar señal de trading.
 
@@ -169,9 +171,9 @@ class ExecutionEngine:
 
     def execute_signals(
         self,
-        signals: List[Signal],
-        execution_prices: Optional[Dict[str, Decimal]] = None,
-    ) -> Dict[str, bool]:
+        signals: list[Signal],
+        execution_prices: dict[str, Decimal] | None = None,
+    ) -> dict[str, bool]:
         """
         Ejecutar múltiples señales.
 
@@ -195,7 +197,7 @@ class ExecutionEngine:
         logger.info(f"Executed {len(signals)} signals: {sum(results.values())} successful")
         return results
 
-    def get_execution_stats(self) -> Dict[str, Any]:
+    def get_execution_stats(self) -> dict[str, Any]:
         """
         Obtener estadísticas de ejecución.
 
@@ -285,7 +287,7 @@ class ExecutionEngine:
             logger.error(f"Portfolio validation error: {e}")
             return False
 
-    def run_cycle_with_validation(self, market_data: Quote, portfolio: Portfolio) -> List[Signal]:
+    def run_cycle_with_validation(self, market_data: Quote, portfolio: Portfolio) -> list[Signal]:
         """
         Ejecutar ciclo con validación completa.
 

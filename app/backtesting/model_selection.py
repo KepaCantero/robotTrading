@@ -25,7 +25,7 @@ import logging
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any
 
 import numpy as np
 import pandas as pd
@@ -71,12 +71,12 @@ class ModelCriterionResult:
     bic: float = 0.0
 
     # Ranking (lower is better for AIC, BIC, Cp)
-    rank: Optional[int] = None
+    rank: int | None = None
 
     # Additional info
-    details: Dict[str, Any] = field(default_factory=dict)
+    details: dict[str, Any] = field(default_factory=dict)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
         return {
             "timestamp": self.timestamp.isoformat(),
@@ -102,16 +102,16 @@ class ModelComparisonResult:
     """Result of comparing multiple models."""
 
     timestamp: datetime
-    models: List[ModelCriterionResult]
+    models: list[ModelCriterionResult]
     best_model_by_aic: str
     best_model_by_bic: str
     best_model_by_adjusted_r2: str
-    best_model_by_cv: Optional[str]
+    best_model_by_cv: str | None
 
     # Summary statistics
     comparison_table: pd.DataFrame
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
         return {
             "timestamp": self.timestamp.isoformat(),
@@ -366,7 +366,7 @@ class MallowCpCalculator:
         n_params_subset: int,
         n_params_full: int,
         n_samples: int,
-    ) -> Tuple[float, float]:
+    ) -> tuple[float, float]:
         """
         Calculate Mallow's Cp.
 
@@ -468,8 +468,8 @@ class ModelSelector:
     def evaluate_model(
         self,
         model: BaseEstimator,
-        X: Union[np.ndarray, pd.DataFrame],
-        y: Union[np.ndarray, pd.Series],
+        X: np.ndarray | pd.DataFrame,
+        y: np.ndarray | pd.Series,
         model_name: str,
     ) -> ModelCriterionResult:
         """
@@ -507,7 +507,7 @@ class ModelSelector:
 
         # Number of parameters (including intercept)
         # For most sklearn models: n_features + intercept
-        if hasattr(model_fitted, 'coef_'):
+        if hasattr(model_fitted, "coef_"):
             n_params = np.sum(model_fitted.coef_ != 0) + 1  # non-zero coef + intercept
         else:
             n_params = n_features + 1
@@ -531,7 +531,7 @@ class ModelSelector:
                 X_array,
                 y_array,
                 cv=self.cv_folds,
-                scoring='neg_mean_squared_error',
+                scoring="neg_mean_squared_error",
             )
             cv_rmse = np.sqrt(-np.mean(cv_scores))
         except Exception as e:
@@ -564,17 +564,16 @@ class ModelSelector:
         )
 
         logger.info(
-            f"Model {model_name}: AIC={aic:.2f}, BIC={bic:.2f}, "
-            f"AdjR²={adj_r2:.4f}, RMSE={rmse:.4f}"
+            f"Model {model_name}: AIC={aic:.2f}, BIC={bic:.2f}, AdjR²={adj_r2:.4f}, RMSE={rmse:.4f}"
         )
 
         return result
 
     def compare_models(
         self,
-        models: Dict[str, BaseEstimator],
-        X: Union[np.ndarray, pd.DataFrame],
-        y: Union[np.ndarray, pd.Series],
+        models: dict[str, BaseEstimator],
+        X: np.ndarray | pd.DataFrame,
+        y: np.ndarray | pd.Series,
     ) -> ModelComparisonResult:
         """
         Compare multiple models using all criteria.
@@ -660,11 +659,11 @@ class ModelSelector:
 
     def select_best_model(
         self,
-        models: Dict[str, BaseEstimator],
-        X: Union[np.ndarray, pd.DataFrame],
-        y: Union[np.ndarray, pd.Series],
+        models: dict[str, BaseEstimator],
+        X: np.ndarray | pd.DataFrame,
+        y: np.ndarray | pd.Series,
         criterion: str = "bic",
-    ) -> Tuple[str, BaseEstimator, ModelCriterionResult]:
+    ) -> tuple[str, BaseEstimator, ModelCriterionResult]:
         """
         Select best model by criterion.
 
@@ -701,7 +700,7 @@ class ModelSelector:
         y_true: np.ndarray,
         y_pred: np.ndarray,
         n_params: int,
-    ) -> Dict[str, float]:
+    ) -> dict[str, float]:
         """
         Compute all information criteria.
 
@@ -724,10 +723,10 @@ class ModelSelector:
 
 
 def select_model_by_aic(
-    models: Dict[str, BaseEstimator],
-    X: Union[np.ndarray, pd.DataFrame],
-    y: Union[np.ndarray, pd.Series],
-) -> Tuple[str, BaseEstimator, ModelCriterionResult]:
+    models: dict[str, BaseEstimator],
+    X: np.ndarray | pd.DataFrame,
+    y: np.ndarray | pd.Series,
+) -> tuple[str, BaseEstimator, ModelCriterionResult]:
     """
     Select model by AIC.
 
@@ -744,10 +743,10 @@ def select_model_by_aic(
 
 
 def select_model_by_bic(
-    models: Dict[str, BaseEstimator],
-    X: Union[np.ndarray, pd.DataFrame],
-    y: Union[np.ndarray, pd.Series],
-) -> Tuple[str, BaseEstimator, ModelCriterionResult]:
+    models: dict[str, BaseEstimator],
+    X: np.ndarray | pd.DataFrame,
+    y: np.ndarray | pd.Series,
+) -> tuple[str, BaseEstimator, ModelCriterionResult]:
     """
     Select model by BIC.
 
@@ -767,7 +766,7 @@ def compute_criteria(
     y_true: np.ndarray,
     y_pred: np.ndarray,
     n_params: int,
-) -> Dict[str, float]:
+) -> dict[str, float]:
     """
     Compute all model selection criteria.
 

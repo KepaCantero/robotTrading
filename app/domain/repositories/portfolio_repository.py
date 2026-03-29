@@ -8,9 +8,10 @@ Implementations are provided by the infrastructure layer.
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import List, Optional
+from typing import TYPE_CHECKING
 
-from ..entities.portfolio import Portfolio
+if TYPE_CHECKING:
+    from ..entities.portfolio import Portfolio
 
 
 class PortfolioRepository(ABC):
@@ -31,7 +32,7 @@ class PortfolioRepository(ABC):
         """
 
     @abstractmethod
-    async def find_by_id(self, portfolio_id: str) -> Optional[Portfolio]:
+    async def find_by_id(self, portfolio_id: str) -> Portfolio | None:
         """
         Find a portfolio by ID.
 
@@ -43,7 +44,7 @@ class PortfolioRepository(ABC):
         """
 
     @abstractmethod
-    async def find_all(self) -> List[Portfolio]:
+    async def find_all(self) -> list[Portfolio]:
         """
         Find all portfolios.
 

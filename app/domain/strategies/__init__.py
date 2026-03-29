@@ -73,32 +73,32 @@ from .multi_factor_strategy import MultiFactorStrategy
 from .portfolio_constructor import FactorPortfolioConstructor
 
 __all__ = [
-    # Main strategy
-    "MultiFactorStrategy",
-    # Calculator
-    "FactorCalculator",
-    "get_default_factor_premiums",
-    # Models
-    "FactorModelManager",
     "CAPMModel",
+    "Carhart4FactorModel",
     "FF3FactorModel",
     "FF5FactorModel",
-    "Carhart4FactorModel",
     "FF6FactorModel",
+    # Calculator
+    "FactorCalculator",
+    # Models
+    "FactorModelManager",
     "FactorModelResult",
+    "FactorOptimizationResult",
+    "FactorPortfolio",
     # Portfolio constructor
     "FactorPortfolioConstructor",
+    "FactorPosition",
+    "FactorProfile",
+    "FactorRebalanceRecommendation",
+    "FactorScores",
     # Data models
     "FactorStrategyConfig",
-    "FactorProfile",
-    "FactorScores",
-    "FactorPortfolio",
-    "FactorPosition",
-    "FactorType",
     "FactorTilt",
     "FactorTiltDirection",
-    "FactorOptimizationResult",
-    "FactorRebalanceRecommendation",
+    "FactorType",
+    # Main strategy
+    "MultiFactorStrategy",
+    "get_default_factor_premiums",
 ]
 
 # Strategy metadata for registry

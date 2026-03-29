@@ -16,7 +16,7 @@ from contextlib import contextmanager
 from datetime import datetime, timedelta
 from enum import Enum
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any, Optional
 
 from fastapi import Request
 
@@ -105,13 +105,13 @@ class AuditLogger:
             self.audit_log,
             maxBytes=AUDIT_LOG_MAX_SIZE_BYTES,
             backupCount=AUDIT_LOG_MAX_BACKUPS,
-            encoding='utf-8',
+            encoding="utf-8",
         )
         handler.setLevel(logging.INFO)
 
         # Use a simple, parseable format for audit logs
         formatter = logging.Formatter(
-            '%(asctime)s | %(levelname)s | %(message)s', datefmt='%Y-%m-%d %H:%M:%S'
+            "%(asctime)s | %(levelname)s | %(message)s", datefmt="%Y-%m-%d %H:%M:%S"
         )
         handler.setFormatter(formatter)
 
@@ -179,7 +179,7 @@ class AuditLogger:
 
         return files_removed
 
-    def get_log_size_info(self) -> Dict[str, Any]:
+    def get_log_size_info(self) -> dict[str, Any]:
         """
         Get information about audit log file sizes.
 
@@ -257,7 +257,7 @@ class AuditLogger:
 
         if not isinstance(value, str):
             raise ValueError(
-                f"Parameter '{param_name}' must be a string or None, " f"got {type(value).__name__}"
+                f"Parameter '{param_name}' must be a string or None, got {type(value).__name__}"
             )
 
         if not allow_empty and not value.strip():
@@ -295,7 +295,7 @@ class AuditLogger:
         # Validate action is not None
         if not isinstance(action, AuditAction):
             raise TypeError(
-                f"Parameter 'action' must be an AuditAction enum, " f"got {type(action).__name__}"
+                f"Parameter 'action' must be an AuditAction enum, got {type(action).__name__}"
             )
 
         # Validate optional string parameters
@@ -325,7 +325,7 @@ class AuditLogger:
         username: Optional[str] = None,
         resource_type: Optional[str] = None,
         resource_id: Optional[str] = None,
-        details: Optional[Dict[str, Any]] = None,
+        details: Optional[dict[str, Any]] = None,
         ip_address: Optional[str] = None,
         user_agent: Optional[str] = None,
         success: bool = True,
@@ -466,7 +466,7 @@ class AuditLogger:
         strategy_name: str,
         decision_id: Optional[str] = None,
         status: Optional[str] = None,
-        scores: Optional[Dict[str, float]] = None,
+        scores: Optional[dict[str, float]] = None,
         user_id: Optional[str] = None,
         username: Optional[str] = None,
         success: bool = True,
@@ -528,7 +528,7 @@ class AuditLogger:
         request: Request,
         resource_type: Optional[str] = None,
         resource_id: Optional[str] = None,
-        details: Optional[Dict[str, Any]] = None,
+        details: Optional[dict[str, Any]] = None,
         success: bool = True,
         error_message: Optional[str] = None,
         user_id: Optional[str] = None,
@@ -588,7 +588,7 @@ def audit_context(
     username: Optional[str] = None,
     resource_type: Optional[str] = None,
     resource_id: Optional[str] = None,
-    details: Optional[Dict[str, Any]] = None,
+    details: Optional[dict[str, Any]] = None,
     auto_log: bool = True,
 ):
     """
@@ -619,13 +619,13 @@ def audit_context(
             self.error = None
             self.extra_details = {}
 
-        def mark_success(self, details: Optional[Dict[str, Any]] = None):
+        def mark_success(self, details: Optional[dict[str, Any]] = None):
             """Mark the operation as successful."""
             self.success = True
             if details:
                 self.extra_details.update(details)
 
-        def mark_failure(self, error_message: str, details: Optional[Dict[str, Any]] = None):
+        def mark_failure(self, error_message: str, details: Optional[dict[str, Any]] = None):
             """Mark the operation as failed."""
             self.success = False
             self.error = error_message
@@ -687,7 +687,7 @@ def log_deployment_decision(
     strategy_name: str,
     decision_id: Optional[str] = None,
     status: Optional[str] = None,
-    scores: Optional[Dict[str, float]] = None,
+    scores: Optional[dict[str, float]] = None,
     user_id: Optional[str] = None,
     username: Optional[str] = None,
     success: bool = True,
@@ -734,7 +734,7 @@ def cleanup_audit_logs(
     return get_audit_logger().cleanup_old_logs(retention_days=retention_days)
 
 
-def get_audit_log_info() -> Dict[str, Any]:
+def get_audit_log_info() -> dict[str, Any]:
     """
     Get information about audit log file sizes.
 

@@ -8,7 +8,7 @@ import asyncio
 import logging
 from datetime import datetime, timedelta
 from decimal import Decimal
-from typing import Dict, List, Optional
+from typing import Optional
 
 from .models import AggregatedMetrics, AggregationType, MetricPoint, MetricType, TimeSeriesQuery
 from .questdb_connector import QuestDBConnector
@@ -37,8 +37,8 @@ class MetricsQueryEngine:
         """
         self.questdb = questdb_connector
         self.cache_enabled = cache_enabled
-        self._query_cache: Dict[str, List] = {}
-        self._cache_timestamps: Dict[str, datetime] = {}
+        self._query_cache: dict[str, list] = {}
+        self._cache_timestamps: dict[str, datetime] = {}
         self._cache_ttl_seconds = 300  # 5 minutes
 
     async def query_metric_range(
@@ -49,7 +49,7 @@ class MetricsQueryEngine:
         symbol: Optional[str] = None,
         portfolio_id: Optional[str] = None,
         limit: int = 10000,
-    ) -> List[MetricPoint]:
+    ) -> list[MetricPoint]:
         """
         Query metrics for a time range.
 
@@ -76,19 +76,23 @@ class MetricsQueryEngine:
 
             # Check cache
             cache_key = self._make_cache_key(query)
-            if self.cache_enabled and cache_key in self._query_cache and self._is_cache_valid(cache_key):
+            if (
+                self.cache_enabled
+                and cache_key in self._query_cache
+                and self._is_cache_valid(cache_key)
+            ):
                 logger.debug(f"Cache hit for query: {cache_key}")
                 return self._query_cache[cache_key]
 
             # Execute query
-            logger.debug(f"Querying {metric_type.value} " f"from {start_time} to {end_time}")
+            logger.debug(f"Querying {metric_type.value} from {start_time} to {end_time}")
 
             results = await self.questdb.query_metrics(query)
 
             # Apply limit
             if len(results) > limit:
                 results = results[:limit]
-                logger.warning(f"Query returned {len(results)} results, " f"limited to {limit}")
+                logger.warning(f"Query returned {len(results)} results, limited to {limit}")
 
             # Cache results
             if self.cache_enabled:
@@ -146,7 +150,7 @@ class MetricsQueryEngine:
         end_time: datetime,
         interval_minutes: int = 5,
         symbol: Optional[str] = None,
-    ) -> List[AggregatedMetrics]:
+    ) -> list[AggregatedMetrics]:
         """
         Query OHLC (candle) data for a metric.
 
@@ -161,7 +165,7 @@ class MetricsQueryEngine:
             List of AggregatedMetrics (candles)
         """
         try:
-            logger.debug(f"Querying OHLC {metric_type.value} " f"interval: {interval_minutes}m")
+            logger.debug(f"Querying OHLC {metric_type.value} interval: {interval_minutes}m")
 
             results = await self.questdb.query_aggregated(
                 metric_type=metric_type,
@@ -184,7 +188,7 @@ class MetricsQueryEngine:
         start_time: datetime,
         end_time: datetime,
         symbol: Optional[str] = None,
-    ) -> Optional[Dict]:
+    ) -> Optional[dict]:
         """
         Get statistics for a metric over a time range.
 
@@ -266,11 +270,11 @@ class MetricsQueryEngine:
 
     async def query_multiple_metrics(
         self,
-        metric_types: List[MetricType],
+        metric_types: list[MetricType],
         start_time: datetime,
         end_time: datetime,
         symbol: Optional[str] = None,
-    ) -> Dict[str, List[MetricPoint]]:
+    ) -> dict[str, list[MetricPoint]]:
         """
         Query multiple metrics at once.
 
@@ -284,7 +288,7 @@ class MetricsQueryEngine:
             Dictionary mapping metric type to list of points
         """
         try:
-            results: Dict[str, List[MetricPoint]] = {}
+            results: dict[str, list[MetricPoint]] = {}
 
             for metric_type in metric_types:
                 points = await self.query_metric_range(
@@ -303,9 +307,9 @@ class MetricsQueryEngine:
 
     async def downsample_results(
         self,
-        metrics: List[MetricPoint],
+        metrics: list[MetricPoint],
         target_points: int = 1000,
-    ) -> List[MetricPoint]:
+    ) -> list[MetricPoint]:
         """
         Downsample large result sets to target number of points.
 
@@ -363,7 +367,7 @@ class MetricsQueryEngine:
         start_time: datetime,
         end_time: datetime,
         symbol: Optional[str] = None,
-    ) -> Dict:
+    ) -> dict:
         """
         Get summary of all metrics for a time range.
 

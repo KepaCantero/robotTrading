@@ -17,9 +17,10 @@ import contextlib
 import logging
 from abc import abstractmethod
 from collections import defaultdict
+from collections.abc import Sequence
 from datetime import datetime
 from decimal import Decimal
-from typing import Any, Dict, List, Optional, Sequence, Tuple
+from typing import Any, Optional
 
 import numpy as np
 
@@ -39,7 +40,7 @@ class BaseStrategyEnsemble(BaseStrategyEngine):
     señales más robustas y diversificadas.
     """
 
-    def __init__(self, config: Dict[str, Any]):
+    def __init__(self, config: dict[str, Any]):
         """
         Inicializar ensemble base.
 
@@ -48,9 +49,9 @@ class BaseStrategyEnsemble(BaseStrategyEngine):
         """
         super().__init__(config)
 
-        self.strategies: Dict[str, BaseStrategyEngine] = {}
-        self.strategy_weights: Dict[str, float] = {}
-        self.performance_history: Dict[str, List[Dict[str, float]]] = defaultdict(list)
+        self.strategies: dict[str, BaseStrategyEngine] = {}
+        self.strategy_weights: dict[str, float] = {}
+        self.performance_history: dict[str, list[dict[str, float]]] = defaultdict(list)
 
         # Configuración de ensemble
         self.min_strategies_for_signal = config.get("min_strategies_for_signal", 1)
@@ -102,7 +103,7 @@ class BaseStrategyEnsemble(BaseStrategyEngine):
         self,
         market_data: Quote,
         historical_data: Optional[Sequence[Quote]] = None,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Extraer features combinados de todas las estrategias.
 
@@ -113,7 +114,7 @@ class BaseStrategyEnsemble(BaseStrategyEngine):
         Returns:
             Features combinados de todas las estrategias
         """
-        features: Dict[str, Any] = {
+        features: dict[str, Any] = {
             "timestamp": getattr(market_data, "timestamp", None),
             "symbol": market_data.symbol,
             "ensemble_type": self.get_strategy_type(),
@@ -132,7 +133,7 @@ class BaseStrategyEnsemble(BaseStrategyEngine):
 
         return features
 
-    def get_required_parameters(self) -> List[str]:
+    def get_required_parameters(self) -> list[str]:
         """
         Obtener parámetros requeridos.
 
@@ -169,7 +170,7 @@ class BaseStrategyEnsemble(BaseStrategyEngine):
 
         return True
 
-    def update_strategy_performance(self, strategy_name: str, metrics: Dict[str, float]) -> None:
+    def update_strategy_performance(self, strategy_name: str, metrics: dict[str, float]) -> None:
         """
         Actualizar historial de performance de una estrategia.
 
@@ -189,8 +190,8 @@ class BaseStrategyEnsemble(BaseStrategyEngine):
 
     @abstractmethod
     def _combine_signals(
-        self, strategy_signals: Dict[str, List[Signal]], market_data: Quote
-    ) -> List[Signal]:
+        self, strategy_signals: dict[str, list[Signal]], market_data: Quote
+    ) -> list[Signal]:
         """
         Combinar señales de múltiples estrategias.
 
@@ -211,7 +212,7 @@ class WeightedEnsemble(BaseStrategyEnsemble):
     ajustan automáticamente basándose en performance histórica.
     """
 
-    def __init__(self, config: Dict[str, Any]):
+    def __init__(self, config: dict[str, Any]):
         """
         Inicializar WeightedEnsemble.
 
@@ -231,7 +232,7 @@ class WeightedEnsemble(BaseStrategyEnsemble):
 
         logger.info(f"WeightedEnsemble initialized with method: {self.weight_method}")
 
-    def _generate_signals_impl(self, market_data: Quote) -> List[Signal]:
+    def _generate_signals_impl(self, market_data: Quote) -> list[Signal]:
         """
         Generar señales combinadas del ensemble.
 
@@ -245,7 +246,7 @@ class WeightedEnsemble(BaseStrategyEnsemble):
             return []
 
         # Recopilar señales de todas las estrategias
-        strategy_signals: Dict[str, List[Signal]] = {}
+        strategy_signals: dict[str, list[Signal]] = {}
 
         for name, strategy in self.strategies.items():
             try:
@@ -264,8 +265,8 @@ class WeightedEnsemble(BaseStrategyEnsemble):
         return self._combine_signals(strategy_signals, market_data)
 
     def _combine_signals(
-        self, strategy_signals: Dict[str, List[Signal]], market_data: Quote
-    ) -> List[Signal]:
+        self, strategy_signals: dict[str, list[Signal]], market_data: Quote
+    ) -> list[Signal]:
         """
         Combinar señales usando pesos ponderados.
 
@@ -277,7 +278,7 @@ class WeightedEnsemble(BaseStrategyEnsemble):
             Lista de señales combinadas
         """
         # Agrupar señales por símbolo y tipo
-        signal_groups: Dict[str, Dict[SignalType, List[Tuple[str, Signal, float]]]] = defaultdict(
+        signal_groups: dict[str, dict[SignalType, list[tuple[str, Signal, float]]]] = defaultdict(
             lambda: defaultdict(list)
         )
 
@@ -288,7 +289,7 @@ class WeightedEnsemble(BaseStrategyEnsemble):
                     (strategy_name, signal, weight)
                 )
 
-        combined_signals: List[Signal] = []
+        combined_signals: list[Signal] = []
 
         for symbol, type_groups in signal_groups.items():
             for signal_type, weighted_signals in type_groups.items():
@@ -401,7 +402,7 @@ class RegimeBasedSelector(BaseStrategyEnsemble):
     REGIME_LOW_VOLATILITY = "low_volatility"
     REGIME_UNKNOWN = "unknown"
 
-    def __init__(self, config: Dict[str, Any]):
+    def __init__(self, config: dict[str, Any]):
         """
         Inicializar RegimeBasedSelector.
 
@@ -411,7 +412,7 @@ class RegimeBasedSelector(BaseStrategyEnsemble):
         super().__init__(config)
 
         # Mapeo de régimen a estrategias preferidas (using correct engine names)
-        self.regime_strategy_map: Dict[str, List[str]] = config.get(
+        self.regime_strategy_map: dict[str, list[str]] = config.get(
             "regime_strategy_map",
             {
                 self.REGIME_TRENDING_UP: ["trend_following", "momentum_engine", "breakout"],
@@ -428,24 +429,25 @@ class RegimeBasedSelector(BaseStrategyEnsemble):
         self.regime_confidence: float = 0.0
 
         # Historial de precios para detección de régimen
-        self.price_history: List[float] = []
+        self.price_history: list[float] = []
         self.regime_lookback = config.get("regime_lookback", 100)  # Increased from 50 to 100
 
         # Umbrales para detección de régimen (improved defaults)
         self.trend_threshold = config.get("trend_threshold", 0.02)  # 2% para tendencia
         self.volatility_threshold = config.get(
-            "volatility_threshold", 0.30  # Increased from 0.025 to 0.30 (30% annualized)
+            "volatility_threshold",
+            0.30,  # Increased from 0.025 to 0.30 (30% annualized)
         )
 
         # Hysteresis for regime changes - require N consecutive detections
-        self.regime_history: List[str] = []
+        self.regime_history: list[str] = []
         self.hysteresis_count = config.get(
             "hysteresis_count", 3
         )  # Require 3 consecutive detections
 
         logger.info("RegimeBasedSelector initialized")
 
-    def _generate_signals_impl(self, market_data: Quote) -> List[Signal]:
+    def _generate_signals_impl(self, market_data: Quote) -> list[Signal]:
         """
         Generar señales seleccionando estrategia por régimen.
 
@@ -472,7 +474,7 @@ class RegimeBasedSelector(BaseStrategyEnsemble):
         selected_strategies = self._select_strategies_for_regime()
 
         # Generar señales de estrategias seleccionadas
-        strategy_signals: Dict[str, List[Signal]] = {}
+        strategy_signals: dict[str, list[Signal]] = {}
         for name in selected_strategies:
             if name in self.strategies:
                 try:
@@ -541,7 +543,7 @@ class RegimeBasedSelector(BaseStrategyEnsemble):
             self.current_regime = detected_regime
             self.regime_confidence = detected_confidence
 
-    def _select_strategies_for_regime(self) -> List[str]:
+    def _select_strategies_for_regime(self) -> list[str]:
         """Seleccionar estrategias apropiadas para el régimen actual."""
         preferred = self.regime_strategy_map.get(self.current_regime, [])
 
@@ -559,8 +561,8 @@ class RegimeBasedSelector(BaseStrategyEnsemble):
         return available
 
     def _combine_signals(
-        self, strategy_signals: Dict[str, List[Signal]], market_data: Quote
-    ) -> List[Signal]:
+        self, strategy_signals: dict[str, list[Signal]], market_data: Quote
+    ) -> list[Signal]:
         """
         Combinar señales de estrategias seleccionadas.
 
@@ -571,7 +573,7 @@ class RegimeBasedSelector(BaseStrategyEnsemble):
         Returns:
             Lista de señales combinadas
         """
-        combined_signals: List[Signal] = []
+        combined_signals: list[Signal] = []
 
         for strategy_name, signals in strategy_signals.items():
             for signal in signals:
@@ -620,7 +622,7 @@ class RegimeBasedSelector(BaseStrategyEnsemble):
 
         return combined_signals
 
-    def get_current_regime(self) -> Tuple[str, float]:
+    def get_current_regime(self) -> tuple[str, float]:
         """
         Obtener régimen actual y confianza.
 
@@ -638,7 +640,7 @@ class VotingEnsemble(BaseStrategyEnsemble):
     en la dirección (compra/venta).
     """
 
-    def __init__(self, config: Dict[str, Any]):
+    def __init__(self, config: dict[str, Any]):
         """
         Inicializar VotingEnsemble.
 
@@ -654,7 +656,7 @@ class VotingEnsemble(BaseStrategyEnsemble):
 
         logger.info(f"VotingEnsemble initialized: min_votes={self.min_votes}")
 
-    def _generate_signals_impl(self, market_data: Quote) -> List[Signal]:
+    def _generate_signals_impl(self, market_data: Quote) -> list[Signal]:
         """
         Generar señales por votación.
 
@@ -668,7 +670,7 @@ class VotingEnsemble(BaseStrategyEnsemble):
             return []
 
         # Recopilar señales de todas las estrategias
-        strategy_signals: Dict[str, List[Signal]] = {}
+        strategy_signals: dict[str, list[Signal]] = {}
 
         for name, strategy in self.strategies.items():
             try:
@@ -681,8 +683,8 @@ class VotingEnsemble(BaseStrategyEnsemble):
         return self._combine_signals(strategy_signals, market_data)
 
     def _combine_signals(
-        self, strategy_signals: Dict[str, List[Signal]], market_data: Quote
-    ) -> List[Signal]:
+        self, strategy_signals: dict[str, list[Signal]], market_data: Quote
+    ) -> list[Signal]:
         """
         Combinar señales por votación mayoritaria.
 
@@ -694,7 +696,7 @@ class VotingEnsemble(BaseStrategyEnsemble):
             Lista de señales votadas
         """
         # Contar votos por símbolo y tipo
-        votes: Dict[str, Dict[SignalType, List[Tuple[str, Signal]]]] = defaultdict(
+        votes: dict[str, dict[SignalType, list[tuple[str, Signal]]]] = defaultdict(
             lambda: defaultdict(list)
         )
 
@@ -702,7 +704,7 @@ class VotingEnsemble(BaseStrategyEnsemble):
             for signal in signals:
                 votes[signal.symbol][signal.signal_type].append((strategy_name, signal))
 
-        combined_signals: List[Signal] = []
+        combined_signals: list[Signal] = []
         total_strategies = len(self.strategies)
 
         for symbol, type_votes in votes.items():

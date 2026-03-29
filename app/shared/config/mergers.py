@@ -9,7 +9,7 @@ TASK-24: SRP Compliance - Separate merger logic
 
 import logging
 from copy import deepcopy
-from typing import Any, Dict
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -20,7 +20,7 @@ class RecursiveConfigMerger:
     Handles nested structures and preserves base values when not overridden.
     """
 
-    def merge(self, base: Dict[str, Any], override: Dict[str, Any]) -> Dict[str, Any]:
+    def merge(self, base: dict[str, Any], override: dict[str, Any]) -> dict[str, Any]:
         """
         Merge two configuration dictionaries recursively.
 
@@ -64,7 +64,7 @@ class ReplaceConfigMerger:
     Does not perform recursive merging.
     """
 
-    def merge(self, base: Dict[str, Any], override: Dict[str, Any]) -> Dict[str, Any]:
+    def merge(self, base: dict[str, Any], override: dict[str, Any]) -> dict[str, Any]:
         """
         Merge by replacing base sections with override sections.
 

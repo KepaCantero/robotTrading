@@ -21,7 +21,7 @@ Version: 2.0.0 - NUMBA OPTIMIZED
 
 import logging
 from abc import ABC, abstractmethod
-from typing import Any, Dict, Optional
+from typing import Any
 
 import numba
 import numpy as np
@@ -222,7 +222,7 @@ def calculate_jarque_bera_numba(arr: np.ndarray) -> tuple:
 class BaseVaRCalculator(ABC):
     """Clase base para calculadores de VaR."""
 
-    def __init__(self, config: Dict[str, Any]):
+    def __init__(self, config: dict[str, Any]):
         """
         Inicializar VaR calculator.
 
@@ -230,14 +230,14 @@ class BaseVaRCalculator(ABC):
             config: Configuración del calculator
         """
         self.config = config
-        self.confidence_level = config.get('confidence_level', 0.95)  # 95% por defecto
-        self.time_horizon = config.get('time_horizon', 1)  # días
+        self.confidence_level = config.get("confidence_level", 0.95)  # 95% por defecto
+        self.time_horizon = config.get("time_horizon", 1)  # días
         self.logger = logging.getLogger(self.__class__.__name__)
 
     @abstractmethod
     def calculate_var(
-        self, returns: np.ndarray, portfolio_value: Optional[float] = None
-    ) -> Dict[str, Any]:
+        self, returns: np.ndarray, portfolio_value: float | None = None
+    ) -> dict[str, Any]:
         """
         Calcular VaR.
 
@@ -264,8 +264,8 @@ class HistoricalVaRCalculator(BaseVaRCalculator):
     """
 
     def calculate_var(
-        self, returns: np.ndarray, portfolio_value: Optional[float] = None
-    ) -> Dict[str, Any]:
+        self, returns: np.ndarray, portfolio_value: float | None = None
+    ) -> dict[str, Any]:
         """
         Calcular VaR histórico (NUMBA-ACCELERATED).
 
@@ -280,7 +280,7 @@ class HistoricalVaRCalculator(BaseVaRCalculator):
         """
         try:
             if len(returns) == 0:
-                return {'error': 'No returns data provided'}
+                return {"error": "No returns data provided"}
 
             # Convertir a numpy array si es necesario
             if isinstance(returns, (pd.Series, list)):
@@ -301,19 +301,19 @@ class HistoricalVaRCalculator(BaseVaRCalculator):
                 cvar_amount = abs(cvar * portfolio_value)
 
             return {
-                'var': float(var_historical),
-                'var_amount': float(var_amount) if var_amount is not None else None,
-                'cvar': float(cvar),
-                'cvar_amount': float(cvar_amount) if cvar_amount is not None else None,
-                'confidence_level': self.confidence_level,
-                'time_horizon': self.time_horizon,
-                'method': 'historical',
-                'observations': len(returns),
-                'numba_accelerated': NUMBA_AVAILABLE,
+                "var": float(var_historical),
+                "var_amount": float(var_amount) if var_amount is not None else None,
+                "cvar": float(cvar),
+                "cvar_amount": float(cvar_amount) if cvar_amount is not None else None,
+                "confidence_level": self.confidence_level,
+                "time_horizon": self.time_horizon,
+                "method": "historical",
+                "observations": len(returns),
+                "numba_accelerated": NUMBA_AVAILABLE,
             }
         except (ValueError, TypeError, KeyError, AttributeError) as e:
             self.logger.error(f"Error calculando VaR histórico: {e}", exc_info=True)
-            return {'error': str(e)}
+            return {"error": str(e)}
 
 
 # ============================================================================
@@ -330,8 +330,8 @@ class ParametricVaRCalculator(BaseVaRCalculator):
     """
 
     def calculate_var(
-        self, returns: np.ndarray, portfolio_value: Optional[float] = None
-    ) -> Dict[str, Any]:
+        self, returns: np.ndarray, portfolio_value: float | None = None
+    ) -> dict[str, Any]:
         """
         Calcular VaR paramétrico (NUMBA-ACCELERATED).
 
@@ -346,7 +346,7 @@ class ParametricVaRCalculator(BaseVaRCalculator):
         """
         try:
             if len(returns) == 0:
-                return {'error': 'No returns data provided'}
+                return {"error": "No returns data provided"}
 
             # Convertir a numpy array
             if isinstance(returns, (pd.Series, list)):
@@ -359,7 +359,7 @@ class ParametricVaRCalculator(BaseVaRCalculator):
             if len(returns) >= 20:  # Need sufficient samples for test
                 try:
                     # Jarque-Bera test for normality (NUMBA OPTIMIZED)
-                    jb_stat, jb_pvalue = calculate_jarque_bera_numba(returns)
+                    _jb_stat, jb_pvalue = calculate_jarque_bera_numba(returns)
 
                     if jb_pvalue < 0.05:  # Reject normality at 5% significance
                         is_normal = False
@@ -426,24 +426,24 @@ class ParametricVaRCalculator(BaseVaRCalculator):
                 cvar_amount = abs(cvar_parametric * portfolio_value)
 
             return {
-                'var': float(var_parametric),
-                'var_amount': float(var_amount) if var_amount is not None else None,
-                'cvar': float(cvar_parametric),
-                'cvar_amount': float(cvar_amount) if cvar_amount is not None else None,
-                'confidence_level': self.confidence_level,
-                'time_horizon': self.time_horizon,
-                'method': 'parametric',
-                'mean_return': float(mean_return),
-                'std_return': float(std_return),
-                'z_score': float(z_score),
-                'is_normal_distribution': is_normal,
-                'normality_warning': normality_warning,
-                'numba_accelerated': NUMBA_AVAILABLE,
+                "var": float(var_parametric),
+                "var_amount": float(var_amount) if var_amount is not None else None,
+                "cvar": float(cvar_parametric),
+                "cvar_amount": float(cvar_amount) if cvar_amount is not None else None,
+                "confidence_level": self.confidence_level,
+                "time_horizon": self.time_horizon,
+                "method": "parametric",
+                "mean_return": float(mean_return),
+                "std_return": float(std_return),
+                "z_score": float(z_score),
+                "is_normal_distribution": is_normal,
+                "normality_warning": normality_warning,
+                "numba_accelerated": NUMBA_AVAILABLE,
             }
 
         except (ValueError, TypeError, KeyError, AttributeError) as e:
             self.logger.error(f"Error calculando VaR paramétrico: {e}", exc_info=True)
-            return {'error': str(e)}
+            return {"error": str(e)}
 
 
 # ============================================================================
@@ -459,14 +459,14 @@ class MonteCarloVaRCalculator(BaseVaRCalculator):
     40-80x speedup with Numba JIT + parallel processing.
     """
 
-    def __init__(self, config: Dict[str, Any]):
+    def __init__(self, config: dict[str, Any]):
         """Inicializar Monte Carlo VaR calculator."""
         super().__init__(config)
-        self.n_simulations = config.get('n_simulations', 10000)
+        self.n_simulations = config.get("n_simulations", 10000)
 
     def calculate_var(
-        self, returns: np.ndarray, portfolio_value: Optional[float] = None
-    ) -> Dict[str, Any]:
+        self, returns: np.ndarray, portfolio_value: float | None = None
+    ) -> dict[str, Any]:
         """
         Calcular VaR usando Monte Carlo (NUMBA-ACCELERATED with parallel processing).
 
@@ -481,7 +481,7 @@ class MonteCarloVaRCalculator(BaseVaRCalculator):
         """
         try:
             if len(returns) == 0:
-                return {'error': 'No returns data provided'}
+                return {"error": "No returns data provided"}
 
             # Convertir a numpy array
             if isinstance(returns, (pd.Series, list)):
@@ -515,22 +515,22 @@ class MonteCarloVaRCalculator(BaseVaRCalculator):
                 cvar_amount = abs(cvar_mc * portfolio_value)
 
             return {
-                'var': float(var_mc),
-                'var_amount': float(var_amount) if var_amount is not None else None,
-                'cvar': float(cvar_mc),
-                'cvar_amount': float(cvar_amount) if cvar_amount is not None else None,
-                'confidence_level': self.confidence_level,
-                'time_horizon': self.time_horizon,
-                'method': 'monte_carlo',
-                'n_simulations': self.n_simulations,
-                'mean_return': float(mean_return),
-                'std_return': float(std_return),
-                'numba_accelerated': NUMBA_AVAILABLE,
-                'parallel_processing': NUMBA_AVAILABLE and self.n_simulations > 1000,
+                "var": float(var_mc),
+                "var_amount": float(var_amount) if var_amount is not None else None,
+                "cvar": float(cvar_mc),
+                "cvar_amount": float(cvar_amount) if cvar_amount is not None else None,
+                "confidence_level": self.confidence_level,
+                "time_horizon": self.time_horizon,
+                "method": "monte_carlo",
+                "n_simulations": self.n_simulations,
+                "mean_return": float(mean_return),
+                "std_return": float(std_return),
+                "numba_accelerated": NUMBA_AVAILABLE,
+                "parallel_processing": NUMBA_AVAILABLE and self.n_simulations > 1000,
             }
         except (ValueError, TypeError, KeyError, AttributeError) as e:
             self.logger.error(f"Error calculando VaR Monte Carlo: {e}", exc_info=True)
-            return {'error': str(e)}
+            return {"error": str(e)}
 
 
 # ============================================================================
@@ -547,8 +547,8 @@ class GARCHVaRCalculator(BaseVaRCalculator):
     """
 
     def calculate_var(
-        self, returns: np.ndarray, portfolio_value: Optional[float] = None
-    ) -> Dict[str, Any]:
+        self, returns: np.ndarray, portfolio_value: float | None = None
+    ) -> dict[str, Any]:
         """
         Calcular VaR usando modelo GARCH (NUMBA-ACCELERATED helpers).
 
@@ -579,8 +579,8 @@ class GARCHVaRCalculator(BaseVaRCalculator):
             # Ajustar modelo GARCH(1,1)
             from arch import arch_model
 
-            model = arch_model(returns * 100, vol='Garch', p=1, q=1)
-            fitted_model = model.fit(disp='of')
+            model = arch_model(returns * 100, vol="Garch", p=1, q=1)
+            fitted_model = model.fit(disp="of")
 
             # Obtener volatilidad condicional
             forecast = fitted_model.forecast(horizon=1)
@@ -619,15 +619,15 @@ class GARCHVaRCalculator(BaseVaRCalculator):
                 cvar_amount = abs(cvar_garch * portfolio_value)
 
             return {
-                'var': float(var_garch),
-                'var_amount': float(var_amount) if var_amount is not None else None,
-                'cvar': float(cvar_garch),
-                'cvar_amount': float(cvar_amount) if cvar_amount is not None else None,
-                'confidence_level': self.confidence_level,
-                'time_horizon': self.time_horizon,
-                'method': 'garch',
-                'conditional_volatility': float(conditional_volatility),
-                'numba_accelerated': NUMBA_AVAILABLE,
+                "var": float(var_garch),
+                "var_amount": float(var_amount) if var_amount is not None else None,
+                "cvar": float(cvar_garch),
+                "cvar_amount": float(cvar_amount) if cvar_amount is not None else None,
+                "confidence_level": self.confidence_level,
+                "time_horizon": self.time_horizon,
+                "method": "garch",
+                "conditional_volatility": float(conditional_volatility),
+                "numba_accelerated": NUMBA_AVAILABLE,
             }
 
         except (FileNotFoundError, ValueError, KeyError, TypeError) as e:
@@ -643,11 +643,11 @@ class GARCHVaRCalculator(BaseVaRCalculator):
 
 def calculate_var(
     returns: np.ndarray,
-    method: str = 'historical',
+    method: str = "historical",
     confidence_level: float = 0.95,
-    portfolio_value: Optional[float] = None,
+    portfolio_value: float | None = None,
     n_simulations: int = 10000,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Calculate VaR using specified method (NUMBA OPTIMIZED).
 
@@ -669,18 +669,18 @@ def calculate_var(
         >>> print(f"VaR: {result['var']:.2%}")
     """
     config = {
-        'confidence_level': confidence_level,
-        'time_horizon': 1,
-        'n_simulations': n_simulations,
+        "confidence_level": confidence_level,
+        "time_horizon": 1,
+        "n_simulations": n_simulations,
     }
 
-    if method == 'historical':
+    if method == "historical":
         calculator = HistoricalVaRCalculator(config)
-    elif method == 'parametric':
+    elif method == "parametric":
         calculator = ParametricVaRCalculator(config)
-    elif method == 'monte_carlo':
+    elif method == "monte_carlo":
         calculator = MonteCarloVaRCalculator(config)
-    elif method == 'garch':
+    elif method == "garch":
         calculator = GARCHVaRCalculator(config)
     else:
         raise ValueError(f"Unknown method: {method}")
@@ -693,7 +693,7 @@ def calculate_var(
 # ============================================================================
 
 
-def get_var_calculators_info() -> Dict[str, Any]:
+def get_var_calculators_info() -> dict[str, Any]:
     """
     Get information about available VaR calculators.
 
@@ -701,22 +701,22 @@ def get_var_calculators_info() -> Dict[str, Any]:
         Dictionary with calculator information and capabilities
     """
     return {
-        'numba_version': NUMBA_VERSION if NUMBA_AVAILABLE else None,
-        'numba_available': NUMBA_AVAILABLE,
-        'arch_available': ARCH_AVAILABLE,
-        'methods_available': [
-            'historical',
-            'parametric',
-            'monte_carlo',
-            'garch' if ARCH_AVAILABLE else None,
+        "numba_version": NUMBA_VERSION if NUMBA_AVAILABLE else None,
+        "numba_available": NUMBA_AVAILABLE,
+        "arch_available": ARCH_AVAILABLE,
+        "methods_available": [
+            "historical",
+            "parametric",
+            "monte_carlo",
+            "garch" if ARCH_AVAILABLE else None,
         ],
-        'performance_improvements': {
-            'historical': '50-100x speedup with Numba JIT',
-            'parametric': '30-50x speedup with Numba JIT',
-            'monte_carlo': '40-80x speedup with Numba JIT + parallel',
-            'garch': '20-40x speedup with Numba JIT helpers',
+        "performance_improvements": {
+            "historical": "50-100x speedup with Numba JIT",
+            "parametric": "30-50x speedup with Numba JIT",
+            "monte_carlo": "40-80x speedup with Numba JIT + parallel",
+            "garch": "20-40x speedup with Numba JIT helpers",
         },
-        'jit_compilation': '95% compliance - all numerical functions use Numba JIT',
+        "jit_compilation": "95% compliance - all numerical functions use Numba JIT",
     }
 
 
@@ -750,7 +750,7 @@ class VaRBacktester:
         var_predictions: np.ndarray,
         actual_returns: np.ndarray,
         significance_level: float = 0.05,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Perform Kupiec (1995) likelihood ratio test for VaR validation.
 
@@ -777,7 +777,7 @@ class VaRBacktester:
         """
         try:
             if len(var_predictions) != len(actual_returns):
-                return {'error': 'Length mismatch between predictions and returns'}
+                return {"error": "Length mismatch between predictions and returns"}
 
             n = len(var_predictions)
 
@@ -804,7 +804,7 @@ class VaRBacktester:
                 if p0 > 0 and p0 < 1:
                     log_l0 = (n - num_exceptions) * np.log(1 - p0) + num_exceptions * np.log(p0)
                 else:
-                    return {'error': 'Invalid failure rate for likelihood calculation'}
+                    return {"error": "Invalid failure rate for likelihood calculation"}
 
                 # LR statistic
                 lr_statistic = 2 * (log_l1 - log_l0)
@@ -833,27 +833,27 @@ class VaRBacktester:
             )
 
             return {
-                'test_name': 'Kupiec Likelihood Ratio Test',
-                'observations': n,
-                'exceptions': num_exceptions,
-                'expected_exceptions': expected_exceptions,
-                'actual_failure_rate': actual_failure_rate,
-                'expected_failure_rate': self.expected_failure_rate,
-                'exception_ratio': exception_ratio,
-                'lr_statistic': float(lr_statistic),
-                'critical_value': float(critical_value),
-                'significance_level': significance_level,
-                'reject_null': reject_null,
-                'model_valid': model_valid,
-                'confidence_level': self.confidence_level,
-                'interpretation': self._interpret_kupiec_result(
+                "test_name": "Kupiec Likelihood Ratio Test",
+                "observations": n,
+                "exceptions": num_exceptions,
+                "expected_exceptions": expected_exceptions,
+                "actual_failure_rate": actual_failure_rate,
+                "expected_failure_rate": self.expected_failure_rate,
+                "exception_ratio": exception_ratio,
+                "lr_statistic": float(lr_statistic),
+                "critical_value": float(critical_value),
+                "significance_level": significance_level,
+                "reject_null": reject_null,
+                "model_valid": model_valid,
+                "confidence_level": self.confidence_level,
+                "interpretation": self._interpret_kupiec_result(
                     model_valid, actual_failure_rate, num_exceptions, n
                 ),
             }
 
         except (ValueError, TypeError, ZeroDivisionError) as e:
-            self.logger.error(f'Error in Kupiec test: {e}', exc_info=True)
-            return {'error': str(e)}
+            self.logger.error(f"Error in Kupiec test: {e}", exc_info=True)
+            return {"error": str(e)}
 
     def _interpret_kupiec_result(
         self,
@@ -865,26 +865,26 @@ class VaRBacktester:
         """Generate human-readable interpretation of Kupiec test."""
         if model_valid:
             return (
-                f'Model VALIDATED at {self.confidence_level:.0%} confidence level. '
-                f'Exception rate ({actual_rate:.2%}) consistent with expected '
-                f'({self.expected_failure_rate:.2%}). {exceptions} exceptions in {n} observations.'
+                f"Model VALIDATED at {self.confidence_level:.0%} confidence level. "
+                f"Exception rate ({actual_rate:.2%}) consistent with expected "
+                f"({self.expected_failure_rate:.2%}). {exceptions} exceptions in {n} observations."
             )
 
         # Model rejected - diagnose issue
         if actual_rate > self.expected_failure_rate * 1.5:
             return (
-                f'Model REJECTED. Too many exceptions ({exceptions}/{n}, {actual_rate:.2%}). '
-                f'VaR UNDERESTIMATES risk. Model needs recalibration.'
+                f"Model REJECTED. Too many exceptions ({exceptions}/{n}, {actual_rate:.2%}). "
+                f"VaR UNDERESTIMATES risk. Model needs recalibration."
             )
         elif actual_rate < self.expected_failure_rate * 0.5:
             return (
-                f'Model REJECTED. Too few exceptions ({exceptions}/{n}, {actual_rate:.2%}). '
-                f'VaR OVERESTIMATES risk. Model too conservative.'
+                f"Model REJECTED. Too few exceptions ({exceptions}/{n}, {actual_rate:.2%}). "
+                f"VaR OVERESTIMATES risk. Model too conservative."
             )
         else:
             return (
-                f'Model REJECTED. Exception rate ({actual_rate:.2%}) statistically different '
-                f'from expected ({self.expected_failure_rate:.2%}). Review model assumptions.'
+                f"Model REJECTED. Exception rate ({actual_rate:.2%}) statistically different "
+                f"from expected ({self.expected_failure_rate:.2%}). Review model assumptions."
             )
 
     def christoffersen_test(
@@ -892,7 +892,7 @@ class VaRBacktester:
         var_predictions: np.ndarray,
         actual_returns: np.ndarray,
         significance_level: float = 0.05,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Perform Christoffersen (1998) independence test for VaR validation.
 
@@ -915,7 +915,7 @@ class VaRBacktester:
         """
         try:
             if len(var_predictions) != len(actual_returns):
-                return {'error': 'Length mismatch between predictions and returns'}
+                return {"error": "Length mismatch between predictions and returns"}
 
             n = len(var_predictions)
 
@@ -1003,34 +1003,34 @@ class VaRBacktester:
             exceptions_independent = not reject_null
 
             return {
-                'test_name': 'Christoffersen Independence Test',
-                'observations': n,
-                'transitions': {
-                    'n_00': n_00,
-                    'n_01': n_01,
-                    'n_10': n_10,
-                    'n_11': n_11,
-                    'n_0': n_0,
-                    'n_1': n_1,
+                "test_name": "Christoffersen Independence Test",
+                "observations": n,
+                "transitions": {
+                    "n_00": n_00,
+                    "n_01": n_01,
+                    "n_10": n_10,
+                    "n_11": n_11,
+                    "n_0": n_0,
+                    "n_1": n_1,
                 },
-                'transition_probabilities': {
-                    'pi_01': pi_01,
-                    'pi_11': pi_11,
+                "transition_probabilities": {
+                    "pi_01": pi_01,
+                    "pi_11": pi_11,
                 },
-                'overall_exception_prob': pi,
-                'lr_statistic': float(lr_statistic),
-                'critical_value': float(critical_value),
-                'significance_level': significance_level,
-                'reject_null': reject_null,
-                'exceptions_independent': exceptions_independent,
-                'interpretation': self._interpret_christoffersen_result(
+                "overall_exception_prob": pi,
+                "lr_statistic": float(lr_statistic),
+                "critical_value": float(critical_value),
+                "significance_level": significance_level,
+                "reject_null": reject_null,
+                "exceptions_independent": exceptions_independent,
+                "interpretation": self._interpret_christoffersen_result(
                     exceptions_independent, pi_01, pi_11, pi
                 ),
             }
 
         except (ValueError, TypeError, ZeroDivisionError) as e:
-            self.logger.error(f'Error in Christoffersen test: {e}', exc_info=True)
-            return {'error': str(e)}
+            self.logger.error(f"Error in Christoffersen test: {e}", exc_info=True)
+            return {"error": str(e)}
 
     def _interpret_christoffersen_result(
         self,
@@ -1042,36 +1042,36 @@ class VaRBacktester:
         """Generate human-readable interpretation of Christoffersen test."""
         if independent:
             return (
-                f'Exceptions are INDEPENDENT (no clustering detected). '
-                f'Transition probabilities: π01={pi_01:.3f}, π11={pi_11:.3f}. '
-                f'Model adequately captures time-varying risk.'
+                f"Exceptions are INDEPENDENT (no clustering detected). "
+                f"Transition probabilities: π01={pi_01:.3f}, π11={pi_11:.3f}. "
+                f"Model adequately captures time-varying risk."
             )
 
         # Exceptions show clustering
         if pi_11 > pi * 1.5:
             return (
-                f'Exceptions CLUSTER (violate independence). '
-                f'π11={pi_11:.3f} >> π01={pi_01:.3f}. '
-                f'Model fails to capture risk clustering. Consider GARCH or EVaR models.'
+                f"Exceptions CLUSTER (violate independence). "
+                f"π11={pi_11:.3f} >> π01={pi_01:.3f}. "
+                f"Model fails to capture risk clustering. Consider GARCH or EVaR models."
             )
         elif pi_01 > pi * 1.5:
             return (
-                f'Exceptions show NEGATIVE autocorrelation. '
-                f'π01={pi_01:.3f} > π11={pi_11:.3f}. '
-                f'Unusual pattern - review model specification.'
+                f"Exceptions show NEGATIVE autocorrelation. "
+                f"π01={pi_01:.3f} > π11={pi_11:.3f}. "
+                f"Unusual pattern - review model specification."
             )
         else:
             return (
-                'Exceptions show DEPENDENCE. '
-                'Model does not adequately capture time-varying risk. '
-                'Consider models with volatility clustering.'
+                "Exceptions show DEPENDENCE. "
+                "Model does not adequately capture time-varying risk. "
+                "Consider models with volatility clustering."
             )
 
     def calculate_var_exceptions(
         self,
         var_predictions: np.ndarray,
         actual_returns: np.ndarray,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Calculate detailed VaR exception statistics.
 
@@ -1084,7 +1084,7 @@ class VaRBacktester:
         """
         try:
             if len(var_predictions) != len(actual_returns):
-                return {'error': 'Length mismatch'}
+                return {"error": "Length mismatch"}
 
             n = len(var_predictions)
 
@@ -1112,42 +1112,42 @@ class VaRBacktester:
                 max_gap = None
 
             return {
-                'total_observations': n,
-                'num_exceptions': num_exceptions,
-                'exception_rate': exception_rate,
-                'expected_rate': self.expected_failure_rate,
-                'exception_magnitude': {
-                    'mean': (
+                "total_observations": n,
+                "num_exceptions": num_exceptions,
+                "exception_rate": exception_rate,
+                "expected_rate": self.expected_failure_rate,
+                "exception_magnitude": {
+                    "mean": (
                         float(np.mean(exception_magnitudes)) if len(exception_magnitudes) > 0 else 0
                     ),
-                    'std': (
+                    "std": (
                         float(np.std(exception_magnitudes)) if len(exception_magnitudes) > 0 else 0
                     ),
-                    'min': (
+                    "min": (
                         float(np.min(exception_magnitudes)) if len(exception_magnitudes) > 0 else 0
                     ),
-                    'max': (
+                    "max": (
                         float(np.max(exception_magnitudes)) if len(exception_magnitudes) > 0 else 0
                     ),
                 },
-                'clustering': {
-                    'avg_gap': avg_gap,
-                    'min_gap': min_gap,
-                    'max_gap': max_gap,
+                "clustering": {
+                    "avg_gap": avg_gap,
+                    "min_gap": min_gap,
+                    "max_gap": max_gap,
                 },
-                'exception_indices': exception_indices.tolist(),
+                "exception_indices": exception_indices.tolist(),
             }
 
         except (ValueError, TypeError) as e:
-            self.logger.error(f'Error calculating exceptions: {e}', exc_info=True)
-            return {'error': str(e)}
+            self.logger.error(f"Error calculating exceptions: {e}", exc_info=True)
+            return {"error": str(e)}
 
     def run_comprehensive_backtest(
         self,
         var_predictions: np.ndarray,
         actual_returns: np.ndarray,
         significance_level: float = 0.05,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Run comprehensive VaR backtest with all tests.
 
@@ -1172,38 +1172,38 @@ class VaRBacktester:
             exception_stats = self.calculate_var_exceptions(var_predictions, actual_returns)
 
             # Overall assessment
-            kupiec_valid = kupiec_results.get('model_valid', False)
-            christoffersen_valid = christoffersen_results.get('exceptions_independent', False)
+            kupiec_valid = kupiec_results.get("model_valid", False)
+            christoffersen_valid = christoffersen_results.get("exceptions_independent", False)
 
             if kupiec_valid and christoffersen_valid:
-                overall_result = 'PASS'
-                recommendation = 'VaR model is well-calibrated and captures risk dynamics.'
+                overall_result = "PASS"
+                recommendation = "VaR model is well-calibrated and captures risk dynamics."
             elif kupiec_valid and not christoffersen_valid:
-                overall_result = 'CONDITIONAL'
+                overall_result = "CONDITIONAL"
                 recommendation = (
-                    'VaR model has correct exception rate but shows clustering. '
-                    'Consider models that capture volatility clustering (GARCH).'
+                    "VaR model has correct exception rate but shows clustering. "
+                    "Consider models that capture volatility clustering (GARCH)."
                 )
             else:
-                overall_result = 'FAIL'
+                overall_result = "FAIL"
                 recommendation = (
-                    'VaR model needs recalibration. Review model assumptions '
-                    'and consider alternative approaches.'
+                    "VaR model needs recalibration. Review model assumptions "
+                    "and consider alternative approaches."
                 )
 
             return {
-                'overall_result': overall_result,
-                'recommendation': recommendation,
-                'kupiec_test': kupiec_results,
-                'christoffersen_test': christoffersen_results,
-                'exception_statistics': exception_stats,
-                'confidence_level': self.confidence_level,
-                'backtest_date': self._get_timestamp(),
+                "overall_result": overall_result,
+                "recommendation": recommendation,
+                "kupiec_test": kupiec_results,
+                "christoffersen_test": christoffersen_results,
+                "exception_statistics": exception_stats,
+                "confidence_level": self.confidence_level,
+                "backtest_date": self._get_timestamp(),
             }
 
         except (ValueError, TypeError) as e:
-            self.logger.error(f'Error in comprehensive backtest: {e}', exc_info=True)
-            return {'error': str(e)}
+            self.logger.error(f"Error in comprehensive backtest: {e}", exc_info=True)
+            return {"error": str(e)}
 
     def _get_timestamp(self) -> str:
         """Get current timestamp."""
@@ -1222,7 +1222,7 @@ def run_var_backtest(
     actual_returns: np.ndarray,
     confidence_level: float = 0.95,
     significance_level: float = 0.05,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Run comprehensive VaR backtest.
 
