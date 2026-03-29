@@ -9,7 +9,7 @@ on:
     types: [published]
 
 env:
-  PYTHON_VERSION: "3.9"
+  PYTHON_VERSION: "3.11"
   NODE_VERSION: "18"
   DOCKER_REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
@@ -34,15 +34,14 @@ jobs:
         uses: actions/cache@v3
         with:
           path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+          key: ${{ runner.os }}-pip-${{ hashFiles('pyproject.toml') }}
           restore-keys: |
             ${{ runner.os }}-pip-
 
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements.txt
-          pip install -r requirements-dev.txt
+          pip install -e ".[dev]"
 
       - name: Run Ruff (Linting)
         run: ruff check .
@@ -75,7 +74,7 @@ jobs:
     needs: code-quality
     strategy:
       matrix:
-        python-version: ["3.9", "3.10", "3.11"]
+        python-version: ["3.9", "3.11"]
         test-group: ["unit", "integration", "performance"]
 
     services:
@@ -116,15 +115,14 @@ jobs:
         uses: actions/cache@v3
         with:
           path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ matrix.python-version }}-${{ hashFiles('**/requirements.txt') }}
+          key: ${{ runner.os }}-pip-${{ matrix.python-version }}-${{ hashFiles('pyproject.toml') }}
           restore-keys: |
             ${{ runner.os }}-pip-${{ matrix.python-version }}-
 
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements.txt
-          pip install -r requirements-dev.txt
+          pip install -e ".[dev]"
 
       - name: Set up test environment
         run: |
@@ -140,7 +138,7 @@ jobs:
       - name: Run database migrations
         run: |
           python -c "
-          from app.database import initialize_database
+          from app.infrastructure.persistence.database import initialize_database
           initialize_database()
           "
 
