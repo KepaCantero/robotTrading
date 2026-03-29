@@ -8,7 +8,7 @@ and bridges PessimisticExecutionEngine with ComplianceEngine.
 import pytest
 from decimal import Decimal
 
-from app.domain.services.execution.execution_adapter import (
+from app.infrastructure.execution.execution_adapter import (
     ExecutionEngineAdapter,
     get_execution_adapter,
 )

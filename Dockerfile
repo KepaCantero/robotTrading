@@ -26,17 +26,15 @@ RUN apt-get update && apt-get install -y \
 # Create and set working directory
 WORKDIR /app
 
-# Copy requirements first for better caching
-COPY requirements.txt requirements-dev.txt ./
+# Copy project definition first for better caching
+COPY pyproject.toml ./
 
-# Install Python dependencies
-RUN pip install --no-cache-dir -r requirements.txt
+# Copy source code (needed for pip install -e)
+COPY app/ app/
+COPY scripts/ scripts/
 
-# Copy source code
-COPY . .
-
-# Install application in development mode
-RUN pip install -e .
+# Install all dependencies from pyproject.toml
+RUN pip install --no-cache-dir -e ".[dev]"
 
 # Production stage
 FROM python:3.11-slim as production
@@ -115,9 +113,6 @@ FROM production as development
 # Switch back to root for development
 USER root
 
-# Install development dependencies
-RUN pip install --no-cache-dir -r requirements-dev.txt
-
 # Install additional development tools
 RUN apt-get update && apt-get install -y \
     vim \
@@ -132,9 +127,6 @@ CMD ["python", "-m", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "
 
 # Testing stage
 FROM builder as testing
-
-# Install testing dependencies
-RUN pip install --no-cache-dir -r requirements-dev.txt
 
 # Set environment for testing
 ENV ENVIRONMENT=testing \

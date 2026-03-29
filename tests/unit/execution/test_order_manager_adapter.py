@@ -8,7 +8,7 @@ import pytest
 from decimal import Decimal
 from unittest.mock import AsyncMock, MagicMock
 
-from app.domain.services.execution.order_manager_adapter import (
+from app.infrastructure.execution.order_manager_adapter import (
     OrderManagerAdapter,
     get_order_manager_adapter,
 )
