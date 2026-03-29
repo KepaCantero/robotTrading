@@ -3,7 +3,7 @@
 # Supports multiple build targets: production, development, testing
 
 # Build stage
-FROM python:3.11-slim as builder
+FROM python:3.14-slim as builder
 
 # Set build arguments
 ARG BUILD_DATE
@@ -37,7 +37,7 @@ COPY scripts/ scripts/
 RUN pip install --no-cache-dir -e ".[dev]"
 
 # Production stage
-FROM python:3.11-slim as production
+FROM python:3.14-slim as production
 
 # Set build arguments
 ARG BUILD_DATE
