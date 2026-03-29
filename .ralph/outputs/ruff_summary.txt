@@ -1,0 +1,4 @@
+Total ruff errors: 37
+Unique error codes: 1
+Top 20 error codes:
+  I001: 37

@@ -46,7 +46,7 @@ event_loop:
 
 cli:
   backend: "claude"
-  model: "glm"  # GLM 5.0
+  model: "glm-5-turbo"  # GLM 5 Turbo
 
 core:
   specs_dir: "./specs/"

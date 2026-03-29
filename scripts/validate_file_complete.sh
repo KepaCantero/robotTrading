@@ -1,7 +1,7 @@
 #!/bin/bash
 # Validación COMPLETA de un solo archivo - Compatible con bash 3.x
 # Uso: scripts/validate_file_complete.sh <archivo>
-# Incluye: black, isort, ruff, flake8, pylint, mypy, bandit, radon cc/mi, syntax, imports
+# Incluye: black, isort, ruff format, safety, ruff, flake8, pylint, mypy, bandit, radon cc/mi, syntax, imports
 
 set -e
 
@@ -27,11 +27,12 @@ PYLINT="$VENV_DIR/bin/pylint"
 MYPY="$VENV_DIR/bin/mypy"
 BANDIT="$VENV_DIR/bin/bandit"
 RADON="$VENV_DIR/bin/radon"
+SAFETY="$VENV_DIR/bin/safety"
 PYTHON="$VENV_DIR/bin/python"
 
 # Verificar que todas las herramientas existan
 MISSING=""
-for tool in "$BLACK" "$ISORT" "$RUFF" "$FLAKE8" "$PYLINT" "$MYPY" "$BANDIT" "$RADON" "$PYTHON"; do
+for tool in "$BLACK" "$ISORT" "$RUFF" "$FLAKE8" "$PYLINT" "$MYPY" "$BANDIT" "$RADON" "$SAFETY" "$PYTHON"; do
     [ ! -f "$tool" ] && MISSING="$MISSING $tool"
 done
 if [ -n "$MISSING" ]; then
@@ -64,6 +65,42 @@ if "$ISORT" --check-only "$FILE" >/dev/null 2>&1; then
     PASSED=$((PASSED + 1))
 else
     ISORT_STATUS="\"status\": \"failed\""
+    FAILED=$((FAILED + 1))
+fi
+TOTAL=$((TOTAL + 1))
+
+# ============================================================================
+# 2b. Ruff Format (formatting consistency)
+# ============================================================================
+if "$RUFF" format --check "$FILE" >/dev/null 2>&1; then
+    RUFF_FMT_STATUS="\"status\": \"passed\""
+    PASSED=$((PASSED + 1))
+else
+    RUFF_FMT_STATUS="\"status\": \"failed\""
+    FAILED=$((FAILED + 1))
+fi
+TOTAL=$((TOTAL + 1))
+
+# ============================================================================
+# 2c. Safety (dependency security audit)
+# ============================================================================
+# Safety scans installed packages; run only if requirements file exists nearby
+REQ_FILE=""
+for candidate in requirements.txt requirements/*.txt pyproject.toml; do
+    if [ -f "$candidate" ]; then
+        REQ_FILE="$candidate"
+        break
+    fi
+done
+if [ -n "$REQ_FILE" ] && "$SAFETY" check --full-report >/dev/null 2>&1; then
+    SAFETY_STATUS="\"status\": \"passed\""
+    PASSED=$((PASSED + 1))
+elif [ -z "$REQ_FILE" ]; then
+    # No requirements file found -- skip gracefully
+    SAFETY_STATUS="\"status\": \"skipped\", \"reason\": \"no requirements file\""
+    PASSED=$((PASSED + 1))
+else
+    SAFETY_STATUS="\"status\": \"failed\""
     FAILED=$((FAILED + 1))
 fi
 TOTAL=$((TOTAL + 1))
@@ -227,6 +264,8 @@ cat <<EOF
   "checks": {
     "black": {$BLACK_STATUS},
     "isort": {$ISORT_STATUS},
+    "ruff_format": {$RUFF_FMT_STATUS},
+    "safety": {$SAFETY_STATUS},
     "ruff": {$RUFF_STATUS},
     "flake8": {$FLAKE8_STATUS},
     "pylint": {$PYLINT_STATUS},

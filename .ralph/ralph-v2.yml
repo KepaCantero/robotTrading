@@ -9,7 +9,8 @@
 # CLI Settings
 cli:
   backend: claude
-  model: glm  # Usar GLM 5.0
+  model: glm  # GLM 5.1 (default)
+  # glm-5-turbo: disponible para tareas rápidas (QA, tests, lint)
 
 # Event Loop Configuration
 event_loop:

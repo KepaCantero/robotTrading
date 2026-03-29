@@ -16,18 +16,18 @@ from datetime import datetime
 import pytest
 
 from app.services.error_handling import (
-    BacktestException,
-    ConfigurationException,
+    BacktestError,
+    ConfigurationError,
     ConservativeBacktestFallback,
     ConservativeRecommendationFallback,
     EqualWeightPortfolioFallback,
     ErrorHandler,
     FallbackStrategy,
-    ParameterizationException,
-    PortfolioException,
-    RecommendationException,
+    ParameterizationError,
+    PortfolioError,
+    RecommendationError,
     ServiceException,
-    ValidationException,
+    ValidationError,
 )
 
 
@@ -66,37 +66,37 @@ class TestCustomExceptions:
         assert exc.timestamp is not None
 
     def test_backtest_exception_creation(self):
-        """Test creating BacktestException."""
-        exc = BacktestException(message="Backtest failed", error_code="BACKTEST_TIMEOUT")
+        """Test creating BacktestError."""
+        exc = BacktestError(message="Backtest failed", error_code="BACKTEST_TIMEOUT")
         assert exc.service_name == "BacktestOrchestrator"
         assert exc.message == "Backtest failed"
         assert exc.error_code == "BACKTEST_TIMEOUT"
 
     def test_validation_exception_creation(self):
-        """Test creating ValidationException."""
-        exc = ValidationException("Validation failed")
+        """Test creating ValidationError."""
+        exc = ValidationError("Validation failed")
         assert exc.service_name == "ValidationEngine"
         assert exc.message == "Validation failed"
 
     def test_configuration_exception_creation(self):
-        """Test creating ConfigurationException."""
-        exc = ConfigurationException("Config save failed")
+        """Test creating ConfigurationError."""
+        exc = ConfigurationError("Config save failed")
         assert exc.service_name == "ConfigurationRepository"
         assert exc.message == "Config save failed"
 
     def test_parametrization_exception_creation(self):
-        """Test creating ParameterizationException."""
-        exc = ParameterizationException("Parametrization failed")
+        """Test creating ParameterizationError."""
+        exc = ParameterizationError("Parametrization failed")
         assert exc.service_name == "ModuleParametrizer"
 
     def test_recommendation_exception_creation(self):
-        """Test creating RecommendationException."""
-        exc = RecommendationException("Recommendation scoring failed")
+        """Test creating RecommendationError."""
+        exc = RecommendationError("Recommendation scoring failed")
         assert exc.service_name == "StrategyRecommender"
 
     def test_portfolio_exception_creation(self):
-        """Test creating PortfolioException."""
-        exc = PortfolioException("Portfolio optimization failed")
+        """Test creating PortfolioError."""
+        exc = PortfolioError("Portfolio optimization failed")
         assert exc.service_name == "PortfolioConstructor"
 
 
@@ -114,10 +114,10 @@ class TestFallbackStrategies:
         strategy = ConservativeBacktestFallback()
 
         # Test can_handle
-        exc = BacktestException("Backtest failed")
+        exc = BacktestError("Backtest failed")
         assert strategy.can_handle(exc) is True
 
-        exc_wrong = ValidationException("Validation failed")
+        exc_wrong = ValidationError("Validation failed")
         assert strategy.can_handle(exc_wrong) is False
 
         # Test execute
@@ -133,7 +133,7 @@ class TestFallbackStrategies:
         strategy = EqualWeightPortfolioFallback()
 
         # Test can_handle
-        exc = PortfolioException("Portfolio optimization failed")
+        exc = PortfolioError("Portfolio optimization failed")
         assert strategy.can_handle(exc) is True
 
         # Test execute
@@ -149,7 +149,7 @@ class TestFallbackStrategies:
         strategy = ConservativeRecommendationFallback()
 
         # Test can_handle
-        exc = RecommendationException("Recommendation failed")
+        exc = RecommendationError("Recommendation failed")
         assert strategy.can_handle(exc) is True
 
         # Test execute
@@ -182,10 +182,10 @@ class TestErrorHandlerWithFallback:
 
     @pytest.mark.asyncio
     async def test_with_fallback_backtest_error(self, error_handler, sample_fallback_context):
-        """Test with_fallback triggers backtest fallback on BacktestException."""
+        """Test with_fallback triggers backtest fallback on BacktestError."""
 
         async def failing_fn():
-            raise BacktestException("Backtest timeout")
+            raise BacktestError("Backtest timeout")
 
         result = await error_handler.with_fallback(
             failing_fn, fallback_context=sample_fallback_context
@@ -195,10 +195,10 @@ class TestErrorHandlerWithFallback:
 
     @pytest.mark.asyncio
     async def test_with_fallback_portfolio_error(self, error_handler, sample_fallback_context):
-        """Test with_fallback triggers portfolio fallback on PortfolioException."""
+        """Test with_fallback triggers portfolio fallback on PortfolioError."""
 
         async def failing_fn():
-            raise PortfolioException("Optimization failed")
+            raise PortfolioError("Optimization failed")
 
         result = await error_handler.with_fallback(
             failing_fn, fallback_context=sample_fallback_context
@@ -211,7 +211,7 @@ class TestErrorHandlerWithFallback:
         """Test with_fallback triggers recommendation fallback."""
 
         async def failing_fn():
-            raise RecommendationException("Scoring failed")
+            raise RecommendationError("Scoring failed")
 
         result = await error_handler.with_fallback(
             failing_fn, fallback_context=sample_fallback_context
@@ -225,7 +225,7 @@ class TestErrorHandlerWithFallback:
         assert error_handler.error_count == 0
 
         async def failing_fn():
-            raise BacktestException("Error 1")
+            raise BacktestError("Error 1")
 
         try:
             await error_handler.with_fallback(failing_fn, fallback_context={})
@@ -239,7 +239,7 @@ class TestErrorHandlerWithFallback:
         """Test error log tracking."""
 
         async def failing_fn():
-            raise BacktestException("Test error", error_code="TEST_CODE")
+            raise BacktestError("Test error", error_code="TEST_CODE")
 
         try:
             await error_handler.with_fallback(failing_fn, fallback_context={})
@@ -371,7 +371,7 @@ class TestErrorStatistics:
         """Test getting stats after errors."""
 
         async def failing_fn():
-            raise BacktestException("Error occurred")
+            raise BacktestError("Error occurred")
 
         for _ in range(3):
             try:
@@ -389,7 +389,7 @@ class TestErrorStatistics:
         """Test clearing error log."""
 
         async def failing_fn():
-            raise BacktestException("Error")
+            raise BacktestError("Error")
 
         try:
             await error_handler.with_fallback(failing_fn, fallback_context={})
@@ -406,7 +406,7 @@ class TestErrorStatistics:
         """Test that recent_errors is limited to last 5."""
 
         async def failing_fn():
-            raise BacktestException("Error")
+            raise BacktestError("Error")
 
         # Create 10 errors
         for _ in range(10):
@@ -436,7 +436,7 @@ class TestFallbackRegistration:
                 return {"custom": "fallback"}
 
             def can_handle(self, exception):
-                return isinstance(exception, ValidationException)
+                return isinstance(exception, ValidationError)
 
         initial_count = len(error_handler.fallback_strategies)
         error_handler.register_fallback(CustomFallback())
@@ -451,12 +451,12 @@ class TestFallbackRegistration:
                 return {"custom": True, "service": "custom_service"}
 
             def can_handle(self, exception):
-                return isinstance(exception, ConfigurationException)
+                return isinstance(exception, ConfigurationError)
 
         error_handler.register_fallback(CustomFallback())
 
         async def failing_fn():
-            raise ConfigurationException("Config failed")
+            raise ConfigurationError("Config failed")
 
         result = await error_handler.with_fallback(failing_fn, fallback_context={})
         assert result["custom"] is True
@@ -476,10 +476,10 @@ class TestErrorHandlingIntegration:
         """Test handling multiple different error types."""
 
         async def backtest_fails():
-            raise BacktestException("Backtest timeout")
+            raise BacktestError("Backtest timeout")
 
         async def recommendation_fails():
-            raise RecommendationException("Scoring failed")
+            raise RecommendationError("Scoring failed")
 
         # First error
         result1 = await error_handler.with_fallback(
@@ -506,12 +506,12 @@ class TestErrorHandlingIntegration:
             call_count += 1
             if call_count <= 2:
                 raise ValueError("Temp error")
-            raise BacktestException("Fatal backtest error")
+            raise BacktestError("Fatal backtest error")
 
         # Use retry first
         try:
             await error_handler.with_retry(sometimes_fails, max_retries=2, initial_delay=0.01)
-        except BacktestException:
+        except BacktestError:
             # Then use fallback
             result = await error_handler.with_fallback(
                 sometimes_fails, fallback_context={"capital": 50000}

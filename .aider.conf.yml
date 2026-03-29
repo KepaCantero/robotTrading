@@ -1,0 +1,88 @@
+# ============================================
+# Aider Configuration - AlgoTrading System
+# ============================================
+# AI pair programming assistant configuration
+# tuned for this Python algorithmic trading project.
+# ============================================
+
+# Model selection
+model: GLM-5.1
+
+# Editor model for smaller edits (faster, cheaper)
+editor-model: GLM-5.1
+
+# Weak model for commit messages and chat
+weak-model: GLM-5.1
+
+# File watching
+watch-files: true
+
+# Auto-commit changes
+auto-commits: true
+
+# Commit message prefix
+commit-prefix: "feat(aider):"
+
+# Linting and formatting commands run after edits
+lint-cmd:
+  - "ruff check --fix {file}"
+  - "ruff format {file}"
+
+# Type checking command
+test-cmd: "pytest tests/ -x -q --tb=short"
+
+# Files to always include in context
+map-tokens: 2048
+
+# Chat language
+chat-language: en
+
+# Git settings
+git: true
+gitignore: true
+
+# Attribute authorship in commits
+attribute-author: true
+attribute-committer: true
+
+# File encoding
+encoding: utf-8
+
+# Python-specific settings
+python:
+  - "**/*.py"
+
+# Files to exclude from context
+exclude:
+  - ".git/**"
+  - "__pycache__/**"
+  - "*.pyc"
+  - ".mypy_cache/**"
+  - ".pytest_cache/**"
+  - ".ruff_cache/**"
+  - "node_modules/**"
+  - ".venv/**"
+  - "venv/**"
+  - "htmlcov/**"
+  - ".benchmarks/**"
+  - "*.egg-info/**"
+  - "dist/**"
+  - "build/**"
+  - "results/**"
+  - ".ralph/**"
+
+# Project-specific file patterns to include
+file-patterns:
+  - "app/**/*.py"
+  - "tests/**/*.py"
+  - "scripts/**/*.py"
+  - "alembic/**/*.py"
+  - "migrations/**/*.py"
+
+# Read-only reference files (for context, not editing)
+read-only:
+  - "pyproject.toml"
+  - "Makefile"
+  - ".github/workflows/*.yml"
+  - "requirements.txt"
+  - "requirements-dev.txt"

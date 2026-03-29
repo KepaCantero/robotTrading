@@ -165,7 +165,7 @@ class MultiStrategyOptimizerV2:
 
         return strategies
 
-    def _run_backtest(self, params: dict[str, Any]) -> dict[str, Any]:
+    def _run_backtest(self, params: dict[str, object]):
         """Run backtest with given parameters."""
         try:
             # Create strategies

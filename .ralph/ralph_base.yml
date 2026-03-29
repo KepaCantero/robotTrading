@@ -26,6 +26,8 @@ event_loop:
 # ============================================================================
 cli:
   backend: "claude"
+  model: "glm"  # GLM 5.1 (default)
+  # Override con "glm-5-turbo" en tareas rápidas (QA, tests, lint)
 
 # ============================================================================
 # CORE - Standardized paths
@@ -67,6 +69,12 @@ validation_instructions: |
   black <file_path>
   isort <file_path>
   ruff check <file_path> --fix
+  ruff format <file_path>
+  ```
+
+  ### Security audit (check pinned dependencies):
+  ```bash
+  safety check --full-report
   ```
 
   ### Re-validate after fixes:
@@ -110,6 +118,8 @@ checkpoint_format: |
       "black_passed": true,
       "isort_passed": true,
       "ruff_passed": true,
+      "ruff_format_passed": true,
+      "safety_passed": true,
       "mypy_passed": true
     },
     "next_task": "<NEXT_TASK_ID>",

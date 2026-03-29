@@ -14,12 +14,45 @@ force_grid_wrap = 0
 use_parentheses = true
 
 [tool.ruff]
-line-length = 150
+line-length = 100
 target-version = "py39"
 
 [tool.ruff.lint]
-select = ["E", "F"]
-ignore = ["E203", "E402", "E501"]
+select = ["E", "F", "W", "I", "N", "UP", "B", "A", "C4", "SIM", "TCH", "RUF"]
+ignore = ["E203", "E402", "E501", "B008"]
+
+[tool.ruff.lint.pep8-naming]
+# Standard mathematical/ML variable names (X for features, T for time, etc.)
+# Also includes external API parameter names (reqId from IBKR) and
+# common class-variable patterns (Session from SQLAlchemy, LogLevel from logging)
+classmethod-decorators = ["classmethod", "validator"]
+ignore-names = ["X", "X_train", "X_test", "X_val", "X_array", "X_scaled", "X_transformed", "X_meta", "X_meta_train", "X_meta_test", "X_permuted", "X_data", "X_t", "X_boot", "X_sample", "X_train_cv", "X_restricted", "X_unrestricted", "X_with_intercept", "X_with_const", "X_window", "X_weighted", "X_val_t", "X_val_df", "X_tsne", "X_train_t", "X_train_fold", "X_train_df", "X_test_fold", "X_single", "X_sequences", "X_pca", "X_other", "X_normalized", "X_no_noise", "X_mean", "X_df", "X_aligned", "X_adf", "X1", "X1_values", "X2", "X2_values", "Y", "Y_mean", "S", "S_", "T", "K", "R", "R1", "R2", "R_S", "R_combined", "R_", "Q", "Q_values", "P", "P_i", "P_rows", "G", "G_", "N", "N_", "N_d1", "N_d2", "N_prime_d1", "V0", "V_low", "V_high", "Sigma", "Sigma0", "Sigma_u", "Omega", "Omega_inv", "tau_Sigma", "tau_Sigma_inv", "Xty", "XtX_inv", "XtX", "dW", "M", "M1", "M2", "M_inv", "M_combined", "W", "STRENGTH_DIVISOR", "MIN_ANNUAL_VOLATILITY", "PI", "reqId", "errorString", "errorCode", "estimatedSpread", "Session", "SessionLocal", "LogService", "LogLevel", "_LogLevel", "ExecutorClass", "ExceptionHandlerType", "RiskManagerClass", "log_RS", "I", "A", "B", "C", "D", "E", "F", "H", "J", "L", "U", "Z"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["app"]
+
+[tool.mypy]
+python_version = "3.9"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = false
+disallow_incomplete_defs = false
+check_untyped_defs = true
+no_implicit_optional = true
+warn_redundant_casts = true
+warn_unused_ignores = false
+warn_no_return = true
+follow_imports = "skip"
+ignore_missing_imports = true
+strict_optional = true
+
+[[tool.mypy.overrides]]
+module = "tests.*"
+ignore_errors = true
+
+[[tool.mypy.overrides]]
+module = "scripts.*"
+ignore_errors = true
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
@@ -30,20 +63,62 @@ addopts = [
     "-v",
     "--strict-markers",
     "--tb=short",
+    "--cov=app",
+    "--cov-branch",
+    "--cov-report=term-missing",
+    "--cov-report=html:htmlcov",
+    "--cov-report=xml:coverage.xml",
+    "--cov-fail-under=80",
+]
+filterwarnings = [
+    "ignore::DeprecationWarning",
+    "ignore::pytest.PytestDeprecationWarning",
+    "ignore::pydantic.warnings.PydanticDeprecatedSince20",
 ]
 markers = [
-    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
-    "integration: marks integration tests",
-    "unit: marks unit tests",
+    "unit: Unit tests (fast, isolated)",
+    "integration: Integration tests (slower, may use external services)",
+    "api: API endpoint tests",
+    "performance: Performance tests",
+    "load: Load and stress tests",
+    "configuration: Configuration tests",
+    "strategy: Strategy tests",
+    "database: Database tests",
+    "error_handling: Error handling tests",
+    "e2e: End-to-end tests",
+    "slow: Slow running tests",
+    "property_based: Property-based tests",
+    "coverage: Coverage tests",
+    "critical: Critical path tests that must always pass",
+    "requires_broker: Tests requiring broker connection",
+    "requires_market_data: Tests requiring market data API",
+    "requires_database: Tests requiring database connection",
+    "overnight: Tests suitable for overnight runs",
 ]
 asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
 
-[tool.pydocstyle]
-# Ignore certain docstring style checks
-# D100 - Missing docstring in public module
-# D107 - Missing docstring in __init__
-# D202 - No blank lines allowed after function docstring
-# D205 - 1 blank line required between summary line and description
-# D212 - Multi-line docstring summary should start at the first line
-# D415 - First line should end with a period
-ignore = ["D100", "D107", "D202", "D205", "D212", "D415"]
+[tool.coverage.run]
+source = ["app"]
+omit = [
+    "tests/*",
+    "scripts/*",
+    "*/migrations/*",
+    "*/alembic/*",
+    "*/__pycache__/*",
+    "*/.venv/*",
+    "*/venv/*",
+    "*/docs/*",
+    "*/config/*",
+]
+branch = true
+
+[tool.coverage.report]
+fail_under = 80
+exclude_lines = [
+    "pragma: no cover",
+    "if TYPE_CHECKING:",
+    "if __name__ == .__main__.:",
+    "pass",
+    "raise NotImplementedError",
+]

@@ -16,6 +16,7 @@ event_loop:
 
 cli:
   backend: "claude"
+  model: "glm-5-turbo"  # Turbo para ejecución rápida de tests
 
 core:
   specs_dir: "./specs/"
