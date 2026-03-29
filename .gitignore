@@ -102,21 +102,13 @@ progress*.txt
 .worktrees/
 
 # === LIMPIEZA 2026-03-08 ===
-# Temp and backup files
-*.bak
-*.backup
-*.old
-temp_*.yaml
-temp_*.json
-__pycache__/
-.pytest_cache/
-
-# Results temp files
-results/profile_batch_backtesting/temp_*.yaml
-results/full_compliance_test/
-
-# Backup directories
-docs_app_backup/
-.gap_backups/
-scripts/archived/
-.drift/
+# Large generated files (never commit these)
+.ralph/outputs/
+.desloppify/
+results/
+docs/BACKTEST_RESULTS/
+docs/OPTIMIZATION_RESULTS/
+coverage.json
+check_all_errors.txt
+*.db
+*.sqlite
