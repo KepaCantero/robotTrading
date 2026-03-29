@@ -1,6 +1,7 @@
 """
 Post-trade analysis protocols (R11, R12, R13)
 """
+
 from decimal import Decimal
 from typing import TYPE_CHECKING, Optional, Protocol
 

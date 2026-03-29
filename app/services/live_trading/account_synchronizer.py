@@ -16,7 +16,7 @@ from collections import deque
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from decimal import Decimal
-from typing import Deque, Dict, List, Optional, Tuple
+from typing import Optional
 
 from fastapi import Depends
 
@@ -46,7 +46,7 @@ class Reconciliation:
 
     timestamp: datetime
     is_balanced: bool
-    discrepancies: List[str] = None
+    discrepancies: list[str] = None
     local_value: Decimal = Decimal("0")
     broker_value: Decimal = Decimal("0")
     difference: Decimal = Decimal("0")
@@ -71,11 +71,11 @@ class AccountSynchronizer:
     def __init__(self, broker: Optional[BrokerConnector] = None):
         """Initialize account synchronizer."""
         self.broker = broker or get_broker_connector()
-        self.local_positions: Dict[str, BrokerPosition] = {}
+        self.local_positions: dict[str, BrokerPosition] = {}
         self.local_cash = Decimal("0")
         # MEMORY: Use deque with maxlen to prevent unbounded growth
-        self.snapshots: Deque[PortfolioSnapshot] = deque(maxlen=1440)  # 24h at 1min intervals
-        self.reconciliation_history: Deque[Reconciliation] = deque(maxlen=1000)
+        self.snapshots: deque[PortfolioSnapshot] = deque(maxlen=1440)  # 24h at 1min intervals
+        self.reconciliation_history: deque[Reconciliation] = deque(maxlen=1000)
         self.last_sync: Optional[datetime] = None
         logger.info("✅ AccountSynchronizer initialized with bounded history")
 
@@ -99,7 +99,7 @@ class AccountSynchronizer:
             return True
 
         except (asyncio.TimeoutError, OSError) as e:
-            logger.error(f"❌ Sync error: {str(e)}")
+            logger.error(f"❌ Sync error: {e!s}")
             return False
 
     async def sync_positions(self) -> bool:
@@ -118,10 +118,10 @@ class AccountSynchronizer:
             return True
 
         except (asyncio.TimeoutError, OSError) as e:
-            logger.error(f"❌ Position sync error: {str(e)}")
+            logger.error(f"❌ Position sync error: {e!s}")
             return False
 
-    async def full_sync(self) -> Tuple[bool, str]:
+    async def full_sync(self) -> tuple[bool, str]:
         """
         Perform complete synchronization.
 
@@ -141,7 +141,7 @@ class AccountSynchronizer:
                 return False, "Partial sync failure"
 
         except (asyncio.TimeoutError, OSError) as e:
-            return False, f"Sync error: {str(e)}"
+            return False, f"Sync error: {e!s}"
 
     async def reconcile_balance(self) -> Reconciliation:
         """
@@ -282,7 +282,7 @@ class AccountSynchronizer:
     async def get_portfolio_history(
         self,
         hours: int = 24,
-    ) -> List[PortfolioSnapshot]:
+    ) -> list[PortfolioSnapshot]:
         """
         Get portfolio history for time period.
 
@@ -320,7 +320,7 @@ class AccountSynchronizer:
 
         return (current_value - opening_value) / opening_value * Decimal("100")
 
-    async def get_margin_status(self) -> Dict:
+    async def get_margin_status(self) -> dict:
         """
         Get margin utilization status.
 
@@ -345,7 +345,7 @@ class AccountSynchronizer:
             "cash_available": account.cash_available,
         }
 
-    def get_sync_status(self) -> Dict:
+    def get_sync_status(self) -> dict:
         """Get synchronization status."""
         return {
             "last_sync": self.last_sync,

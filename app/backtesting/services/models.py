@@ -16,23 +16,24 @@ from __future__ import annotations
 import logging
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Any, Dict, List, Optional, Union
+from typing import TYPE_CHECKING, Any, Union
 
 from sqlalchemy import JSON, Boolean, Column, DateTime, Float, Integer, String
 from sqlalchemy.ext.declarative import declarative_base
 
-from app.domain.models.input_profile import InputProfile
-from app.services.profile_driven_trading.profile_strategy_mapper import StrategyMapping
+if TYPE_CHECKING:
+    from app.domain.models.input_profile import InputProfile
+    from app.services.profile_driven_trading.profile_strategy_mapper import StrategyMapping
 
 logger = logging.getLogger(__name__)
 
 # Type aliases for better type safety
-ConfigDict = Dict[str, Any]
-MetricsDict = Dict[str, Union[float, int, str, bool, None]]
-ParameterDict = Dict[str, Any]
-OptimizationHistoryEntry = Dict[str, Any]
-ValidationResultDict = Dict[str, Any]
-PerStrategyResultsDict = Dict[str, Dict[str, Any]]
+ConfigDict = dict[str, Any]
+MetricsDict = dict[str, Union[float, int, str, bool, None]]
+ParameterDict = dict[str, Any]
+OptimizationHistoryEntry = dict[str, Any]
+ValidationResultDict = dict[str, Any]
+PerStrategyResultsDict = dict[str, dict[str, Any]]
 
 # SQLAlchemy Base
 Base = declarative_base()
@@ -144,7 +145,7 @@ class BaselineOptimizationComparison:
     sharpe_significant: bool
     return_significant: bool
     # Parameter sensitivity
-    parameter_importance: Dict[str, float]
+    parameter_importance: dict[str, float]
     # Recommendation
     recommended: str  # "baseline", "optimized", "inconclusive"
     confidence: float  # 0-1
@@ -165,10 +166,10 @@ class OptimizedStrategy:
     baseline_metrics: MetricsDict
     optimized_metrics: MetricsDict
     best_parameters: ParameterDict
-    optimization_history: List[OptimizationHistoryEntry]
-    walk_forward_results: Optional[ValidationResultDict]
-    monte_carlo_results: Optional[ValidationResultDict]
-    out_of_sample_results: Optional[ValidationResultDict]
+    optimization_history: list[OptimizationHistoryEntry]
+    walk_forward_results: ValidationResultDict | None
+    monte_carlo_results: ValidationResultDict | None
+    out_of_sample_results: ValidationResultDict | None
     comparison: BaselineOptimizationComparison
     ready_for_paper_trading: bool
     recommendation: str
@@ -189,14 +190,14 @@ class ProfileResult:
     baseline_results: MetricsDict
     optimization_results: MetricsDict
     best_parameters: ParameterDict
-    improvement_metrics: Dict[str, float]
+    improvement_metrics: dict[str, float]
     comparison: BaselineOptimizationComparison
     ready_for_paper_trading: bool
     recommendation: str
     created_at: datetime = field(default_factory=datetime.now)
     # Multi-strategy support fields
-    strategy_mapping: Optional[StrategyMapping] = None
-    enabled_strategies: List[str] = field(default_factory=list)
-    learning_engines: List[str] = field(default_factory=list)
+    strategy_mapping: StrategyMapping | None = None
+    enabled_strategies: list[str] = field(default_factory=list)
+    learning_engines: list[str] = field(default_factory=list)
     ensemble_config: ConfigDict = field(default_factory=dict)
     per_strategy_results: PerStrategyResultsDict = field(default_factory=dict)

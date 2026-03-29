@@ -9,7 +9,7 @@ import logging
 from dataclasses import dataclass
 from datetime import datetime
 from decimal import Decimal
-from typing import Dict, List, Optional
+from typing import Optional
 
 logger = logging.getLogger(__name__)
 
@@ -19,9 +19,9 @@ class AllocationSnapshot:
     """Snapshot of portfolio allocation at a point in time."""
 
     timestamp: datetime
-    allocations: Dict[str, Decimal]  # {asset: weight}
+    allocations: dict[str, Decimal]  # {asset: weight}
     total_value: Decimal
-    drift_from_target: Dict[str, Decimal]  # {asset: deviation%}
+    drift_from_target: dict[str, Decimal]  # {asset: deviation%}
 
 
 @dataclass
@@ -59,13 +59,13 @@ class AllocationManager:
         if rebalancing_threshold is None:
             rebalancing_threshold = Decimal("0.05")
         self.rebalancing_threshold = rebalancing_threshold
-        self.current_allocation: Dict[str, Decimal] = {}
-        self.target_allocation: Dict[str, Decimal] = {}
-        self.allocation_history: List[AllocationSnapshot] = []
+        self.current_allocation: dict[str, Decimal] = {}
+        self.target_allocation: dict[str, Decimal] = {}
+        self.allocation_history: list[AllocationSnapshot] = []
         self.total_value: Decimal = Decimal("0")
         logger.info("✅ AllocationManager initialized")
 
-    async def set_target_allocation(self, allocation: Dict[str, Decimal]) -> bool:
+    async def set_target_allocation(self, allocation: dict[str, Decimal]) -> bool:
         """
         Set target portfolio allocation.
 
@@ -90,7 +90,7 @@ class AllocationManager:
 
     async def set_current_allocation(
         self,
-        allocation: Dict[str, Decimal],
+        allocation: dict[str, Decimal],
         total_value: Decimal,
     ) -> bool:
         """
@@ -128,11 +128,11 @@ class AllocationManager:
             logger.error(f"❌ Error setting current allocation: {e}")
             return False
 
-    async def get_drift(self) -> Dict[str, Decimal]:
+    async def get_drift(self) -> dict[str, Decimal]:
         """Get current drift from target allocation."""
         return await self._calculate_drift()
 
-    async def _calculate_drift(self) -> Dict[str, Decimal]:
+    async def _calculate_drift(self) -> dict[str, Decimal]:
         """Calculate deviation from target for each asset."""
         drift = {}
         all_assets = set(self.current_allocation.keys()) | set(self.target_allocation.keys())
@@ -157,8 +157,8 @@ class AllocationManager:
 
     async def get_rebalancing_trades(
         self,
-        current_values: Dict[str, Decimal],
-    ) -> Dict[str, Decimal]:
+        current_values: dict[str, Decimal],
+    ) -> dict[str, Decimal]:
         """
         Calculate trades needed to rebalance to target.
 
@@ -202,8 +202,8 @@ class AllocationManager:
         # Herfindahl index: sum of squared weights
         herfindahl = sum(w * w for w in weights)
 
-        largest_asset = [a for a, w in self.current_allocation.items() if w == largest][0]
-        smallest_asset = [a for a, w in self.current_allocation.items() if w == smallest][0]
+        largest_asset = next(a for a, w in self.current_allocation.items() if w == largest)
+        smallest_asset = next(a for a, w in self.current_allocation.items() if w == smallest)
 
         return AllocationMetrics(
             concentration_ratio=largest,
@@ -218,7 +218,7 @@ class AllocationManager:
     async def get_allocation_history(
         self,
         limit: Optional[int] = None,
-    ) -> List[AllocationSnapshot]:
+    ) -> list[AllocationSnapshot]:
         """
         Get allocation history snapshots.
 
@@ -232,7 +232,7 @@ class AllocationManager:
             return self.allocation_history
         return self.allocation_history[-limit:]
 
-    def get_management_status(self) -> Dict:
+    def get_management_status(self) -> dict:
         """Get allocation management status."""
         return {
             "current_allocation": len(self.current_allocation),

@@ -7,7 +7,7 @@ Convierte timestamps de diferentes formatos y timezones a UTC estándar.
 import contextlib
 import logging
 from datetime import datetime, timezone
-from typing import Any, Dict, Optional, Union
+from typing import Any, Optional, Union
 
 import pytz
 
@@ -21,7 +21,7 @@ class TimestampNormalizer:
     Convierte timestamps a UTC y maneja diferentes formatos y timezones.
     """
 
-    def __init__(self, config: Dict[str, Any] = None):
+    def __init__(self, config: Optional[dict[str, Any]] = None):
         """
         Inicializar normalizador.
 
@@ -29,11 +29,13 @@ class TimestampNormalizer:
             config: Configuración
         """
         config = config or {}
-        self.default_timezone = config.get('default_timezone', 'UTC')
+        self.default_timezone = config.get("default_timezone", "UTC")
         self.output_timezone = pytz.UTC  # Siempre output UTC
-        self.assume_local_if_naive = config.get('assume_local_if_naive', False)
+        self.assume_local_if_naive = config.get("assume_local_if_naive", False)
 
-    def normalize(self, timestamp: Union[datetime, int, float, str], source_timezone: Optional[str] = None) -> datetime:
+    def normalize(
+        self, timestamp: Union[datetime, int, float, str], source_timezone: Optional[str] = None
+    ) -> datetime:
         """
         Normalizar timestamp a UTC.
 
@@ -92,19 +94,19 @@ class TimestampNormalizer:
         """
         # Formato ISO
         with contextlib.suppress(ValueError, TypeError, KeyError, AttributeError):
-            return datetime.fromisoformat(timestamp_str.replace('Z', '+00:00'))
+            return datetime.fromisoformat(timestamp_str.replace("Z", "+00:00"))
 
         # Formato común: YYYY-MM-DD HH:MM:SS
         formats = [
-            '%Y-%m-%d %H:%M:%S',
-            '%Y-%m-%d %H:%M:%S.%',
-            '%Y-%m-%d',
-            '%Y/%m/%d %H:%M:%S',
-            '%Y/%m/%d',
-            '%m/%d/%Y %H:%M:%S',
-            '%m/%d/%Y',
-            '%d/%m/%Y %H:%M:%S',
-            '%d/%m/%Y',
+            "%Y-%m-%d %H:%M:%S",
+            "%Y-%m-%d %H:%M:%S.%",
+            "%Y-%m-%d",
+            "%Y/%m/%d %H:%M:%S",
+            "%Y/%m/%d",
+            "%m/%d/%Y %H:%M:%S",
+            "%m/%d/%Y",
+            "%d/%m/%Y %H:%M:%S",
+            "%d/%m/%Y",
         ]
 
         for fmt in formats:

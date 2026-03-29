@@ -13,7 +13,7 @@ Provides:
 
 import logging
 from pathlib import Path
-from typing import TYPE_CHECKING, Dict, Optional, Tuple
+from typing import TYPE_CHECKING, Optional
 
 import numpy as np
 import pandas as pd
@@ -90,7 +90,7 @@ class AdvancedVisualizer:
         self,
         data: pd.DataFrame,
         threshold: float = 0.3,
-        figsize: Tuple[int, int] = (14, 10),
+        figsize: tuple[int, int] = (14, 10),
         output_file: Optional[str] = None,
     ) -> "Optional[Figure]":
         """
@@ -164,7 +164,7 @@ class AdvancedVisualizer:
             # Draw labels
             nx.draw_networkx_labels(G, pos, font_size=9, font_weight="bold", ax=ax)
 
-            ax.set_title("Correlation Network (threshold={})".format(threshold), fontsize=14)
+            ax.set_title(f"Correlation Network (threshold={threshold})", fontsize=14)
             ax.axis("off")
 
             # Save figure
@@ -342,7 +342,7 @@ class AdvancedVisualizer:
     def plot_underwater_drawdown(
         self,
         equity_curve: pd.Series,
-        figsize: Tuple[int, int] = (14, 6),
+        figsize: tuple[int, int] = (14, 6),
         output_file: Optional[str] = None,
     ) -> "Optional[Figure]":
         """
@@ -411,8 +411,8 @@ class AdvancedVisualizer:
     def plot_rolling_metrics(
         self,
         equity_curve: pd.Series,
-        window: int = None,
-        figsize: Tuple[int, int] = (14, 8),
+        window: Optional[int] = None,
+        figsize: tuple[int, int] = (14, 8),
         output_file: Optional[str] = None,
     ) -> "Optional[Figure]":
         """
@@ -507,8 +507,8 @@ class AdvancedVisualizer:
         self,
         returns: pd.Series,
         regime_labels: pd.Series,
-        regime_names: Optional[Dict[int, str]] = None,
-        figsize: Tuple[int, int] = (12, 6),
+        regime_names: Optional[dict[int, str]] = None,
+        figsize: tuple[int, int] = (12, 6),
         output_file: Optional[str] = None,
     ) -> "Optional[Figure]":
         """
@@ -625,7 +625,7 @@ class AdvancedVisualizer:
     def plot_seasonality_heatmap(
         self,
         returns: pd.Series,
-        figsize: Tuple[int, int] = (14, 8),
+        figsize: tuple[int, int] = (14, 8),
         output_file: Optional[str] = None,
     ) -> "Optional[Figure]":
         """
@@ -779,4 +779,4 @@ class AdvancedVisualizer:
 MATPLOTLIB_AVAILABLE = HAS_MATPLOTLIB
 PLOTLY_AVAILABLE = HAS_PLOTLY
 NETWORKX_AVAILABLE = HAS_NETWORKX
-__all__ = ['AdvancedVisualizer', 'MATPLOTLIB_AVAILABLE', 'PLOTLY_AVAILABLE', 'NETWORKX_AVAILABLE']
+__all__ = ["MATPLOTLIB_AVAILABLE", "NETWORKX_AVAILABLE", "PLOTLY_AVAILABLE", "AdvancedVisualizer"]

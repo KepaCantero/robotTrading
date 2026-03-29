@@ -44,7 +44,7 @@ def _get_secret_key() -> bytes:
         - No hardcoded secrets in code
         - Warns if using weak key
     """
-    secret_key = os.getenv('SECRET_KEY', '')
+    secret_key = os.getenv("SECRET_KEY", "")
     if not secret_key or len(secret_key) < 32:
         logger.warning(
             "SECRET_KEY not set or too short for secure messaging. "
@@ -120,36 +120,36 @@ def _convert_for_msgpack(obj: object) -> object:
     # Handle numpy arrays
     if isinstance(obj, np.ndarray):
         return {
-            '__type__': 'numpy.ndarray',
-            'dtype': str(obj.dtype),
-            'shape': obj.shape,
-            'data': obj.tolist(),  # Convert to nested list
+            "__type__": "numpy.ndarray",
+            "dtype": str(obj.dtype),
+            "shape": obj.shape,
+            "data": obj.tolist(),  # Convert to nested list
         }
 
     # Handle pandas DataFrames
     if isinstance(obj, pd.DataFrame):
         return {
-            '__type__': 'pandas.DataFrame',
-            'columns': obj.columns.tolist(),
-            'index': obj.index.tolist(),
-            'dtypes': [str(dtype) for dtype in obj.dtypes],  # Preserve dtypes
-            'data': obj.values.tolist(),  # Convert to nested list
+            "__type__": "pandas.DataFrame",
+            "columns": obj.columns.tolist(),
+            "index": obj.index.tolist(),
+            "dtypes": [str(dtype) for dtype in obj.dtypes],  # Preserve dtypes
+            "data": obj.values.tolist(),  # Convert to nested list
         }
 
     # Handle pandas Series
     if isinstance(obj, pd.Series):
         return {
-            '__type__': 'pandas.Series',
-            'name': obj.name,
-            'index': obj.index.tolist(),
-            'data': obj.values.tolist(),
+            "__type__": "pandas.Series",
+            "name": obj.name,
+            "index": obj.index.tolist(),
+            "data": obj.values.tolist(),
         }
 
     # Handle Decimal (convert to float)
     if isinstance(obj, Decimal):
         return {
-            '__type__': 'decimal.Decimal',
-            'value': str(obj),  # Preserve as string to avoid precision loss
+            "__type__": "decimal.Decimal",
+            "value": str(obj),  # Preserve as string to avoid precision loss
         }
 
     # Handle dicts recursively
@@ -181,26 +181,26 @@ def _restore_from_msgpack(obj: object) -> object:
         Original Python object
     """
     # Restore numpy arrays
-    if isinstance(obj, dict) and obj.get('__type__') == 'numpy.ndarray':
-        return np.array(obj['data'], dtype=obj['dtype']).reshape(obj['shape'])
+    if isinstance(obj, dict) and obj.get("__type__") == "numpy.ndarray":
+        return np.array(obj["data"], dtype=obj["dtype"]).reshape(obj["shape"])
 
     # Restore pandas DataFrames
-    if isinstance(obj, dict) and obj.get('__type__') == 'pandas.DataFrame':
-        df = pd.DataFrame(data=obj['data'], index=obj['index'], columns=obj['columns'])
+    if isinstance(obj, dict) and obj.get("__type__") == "pandas.DataFrame":
+        df = pd.DataFrame(data=obj["data"], index=obj["index"], columns=obj["columns"])
         # Restore dtypes if available
-        if 'dtypes' in obj:
-            for col, dtype_str in zip(obj['columns'], obj['dtypes']):
+        if "dtypes" in obj:
+            for col, dtype_str in zip(obj["columns"], obj["dtypes"]):
                 with contextlib.suppress(ValueError, TypeError):
                     df[col] = df[col].astype(dtype_str)
         return df
 
     # Restore pandas Series
-    if isinstance(obj, dict) and obj.get('__type__') == 'pandas.Series':
-        return pd.Series(data=obj['data'], index=obj['index'], name=obj['name'])
+    if isinstance(obj, dict) and obj.get("__type__") == "pandas.Series":
+        return pd.Series(data=obj["data"], index=obj["index"], name=obj["name"])
 
     # Restore Decimal
-    if isinstance(obj, dict) and obj.get('__type__') == 'decimal.Decimal':
-        return Decimal(obj['value'])
+    if isinstance(obj, dict) and obj.get("__type__") == "decimal.Decimal":
+        return Decimal(obj["value"])
 
     # Handle dicts recursively
     if isinstance(obj, dict):
@@ -242,19 +242,19 @@ def sign_and_dump(data: object, secret_key: Union[str, bytes, None] = None) -> s
 
     # Convert string key to bytes if needed
     if isinstance(secret_key, str):
-        secret_key = secret_key.encode('utf-8')
+        secret_key = secret_key.encode("utf-8")
 
     try:
         # Try JSON first (faster, more readable, human-friendly)
         if _is_json_serializable(data):
-            serialized = json.dumps(data).encode('utf-8')
-            format_type = b'json'  # 4 bytes
+            serialized = json.dumps(data).encode("utf-8")
+            format_type = b"json"  # 4 bytes
         else:
             # Use msgpack for binary/complex data
             # Convert complex objects (numpy, pandas) to msgpack-compatible format
             converted_data = _convert_for_msgpack(data)
             serialized = msgpack.packb(converted_data, use_bin_type=True)
-            format_type = b'msgp'  # 4 bytes (msgpack prefix)
+            format_type = b"msgp"  # 4 bytes (msgpack prefix)
 
         # Create HMAC-SHA256 signature
         signature = hmac.new(secret_key, serialized, hashlib.sha256).digest()  # 32 bytes
@@ -263,7 +263,7 @@ def sign_and_dump(data: object, secret_key: Union[str, bytes, None] = None) -> s
         combined = format_type + signature + serialized
 
         # Base64 encode for safe transport (ASCII-only)
-        return base64.b64encode(combined).decode('ascii')
+        return base64.b64encode(combined).decode("ascii")
 
     except (ValueError, TypeError) as e:
         logger.error(f"Failed to serialize data: {e}", exc_info=True)
@@ -300,11 +300,11 @@ def verify_and_load(signed_data: str, secret_key: Union[str, bytes, None] = None
 
     # Convert string key to bytes if needed
     if isinstance(secret_key, str):
-        secret_key = secret_key.encode('utf-8')
+        secret_key = secret_key.encode("utf-8")
 
     try:
         # Decode base64
-        combined = base64.b64decode(signed_data.encode('ascii'))
+        combined = base64.b64decode(signed_data.encode("ascii"))
 
         # Extract components
         # Format: [format_type (4 bytes)] [signature (32 bytes)] [data (rest)]
@@ -323,9 +323,9 @@ def verify_and_load(signed_data: str, secret_key: Union[str, bytes, None] = None
             raise ValueError("Invalid signature - data may be tampered")
 
         # Deserialize based on format
-        if format_type == b'json':
-            return json.loads(serialized.decode('utf-8'))
-        elif format_type == b'msgp':
+        if format_type == b"json":
+            return json.loads(serialized.decode("utf-8"))
+        elif format_type == b"msgp":
             # Unpack and restore complex objects (numpy, pandas)
             unpacked = msgpack.unpackb(serialized, raw=False)
             return _restore_from_msgpack(unpacked)

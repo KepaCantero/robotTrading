@@ -9,9 +9,10 @@ import asyncio
 import logging
 import time
 import uuid
+from collections.abc import AsyncGenerator, Awaitable
 from contextlib import asynccontextmanager
 from functools import wraps
-from typing import AsyncGenerator, Awaitable, Callable, Dict, Optional, TypeVar, Union, cast
+from typing import Callable, Optional, TypeVar, Union, cast
 
 from fastapi import HTTPException, Request, Response, status
 from starlette.middleware.base import BaseHTTPMiddleware
@@ -32,9 +33,9 @@ class RateLimiter:
 
     def __init__(self) -> None:
         """Initialize rate limiter with empty buckets."""
-        self._buckets: Dict[str, Dict[str, Union[int, float]]] = {}
+        self._buckets: dict[str, dict[str, Union[int, float]]] = {}
 
-    def _get_bucket(self, key: str) -> Dict[str, Union[int, float]]:
+    def _get_bucket(self, key: str) -> dict[str, Union[int, float]]:
         """Get or create bucket for key."""
         if key not in self._buckets:
             self._buckets[key] = {
@@ -45,7 +46,7 @@ class RateLimiter:
             }
         return self._buckets[key]
 
-    def _refill(self, bucket: Dict[str, Union[int, float]]) -> None:
+    def _refill(self, bucket: dict[str, Union[int, float]]) -> None:
         """Refill tokens based on elapsed time."""
         now = time.time()
         elapsed = now - bucket["last_update"]
@@ -147,8 +148,8 @@ async def timeout_context(seconds: float) -> AsyncGenerator[None, None]:
     """
     try:
         yield
-    except asyncio.TimeoutError:
-        raise asyncio.TimeoutError(f"Operation exceeded {seconds}s timeout")
+    except asyncio.TimeoutError as exc:
+        raise asyncio.TimeoutError(f"Operation exceeded {seconds}s timeout") from exc
 
 
 def with_timeout(
@@ -171,15 +172,15 @@ def with_timeout(
         async def wrapper(*args: object, **kwargs: object) -> T:
             try:
                 return cast(
-                    T,
+                    "T",
                     await asyncio.wait_for(func(*args, **kwargs), timeout=seconds),
                 )
-            except asyncio.TimeoutError:
+            except asyncio.TimeoutError as exc:
                 logger.error(
                     f"Function {func.__name__} exceeded {seconds}s timeout",
                     extra={"correlation_id": get_correlation_id()},
                 )
-                raise asyncio.TimeoutError(f"Operation exceeded {seconds}s timeout")
+                raise asyncio.TimeoutError(f"Operation exceeded {seconds}s timeout") from exc
 
         return wrapper
 
@@ -247,7 +248,7 @@ def with_rate_limit(
                         detail="Rate limit exceeded. Please try again later.",
                     )
 
-            return cast(T, await func(*args, **kwargs))
+            return cast("T", await func(*args, **kwargs))
 
         return wrapper
 
@@ -289,7 +290,7 @@ def log_endpoint_call(
             )
 
             try:
-                result = cast(T, await func(*args, **kwargs))
+                result = cast("T", await func(*args, **kwargs))
                 duration = (time.time() - start_time) * 1000
 
                 logger.info(
@@ -332,7 +333,7 @@ def log_endpoint_call(
 
 def log_error_with_trace(
     error: Exception,
-    context: Dict[str, Union[str, int, float, bool]],
+    context: dict[str, Union[str, int, float, bool]],
     service: str = "api",
 ) -> None:
     """

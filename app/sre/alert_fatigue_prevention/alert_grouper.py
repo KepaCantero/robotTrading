@@ -7,7 +7,7 @@ Part of Alert Fatigue Prevention (SRE Rule 20.11).
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 
 class GroupingStrategy(str, Enum):
@@ -24,11 +24,11 @@ class AlertCluster:
     """A cluster of related alerts."""
 
     cluster_id: str
-    alerts: List[Dict[str, Any]] = field(default_factory=list)
+    alerts: list[dict[str, Any]] = field(default_factory=list)
     created_at: datetime = field(default_factory=datetime.utcnow)
     updated_at: datetime = field(default_factory=datetime.utcnow)
-    representative_alert: Optional[Dict[str, Any]] = None
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    representative_alert: Optional[dict[str, Any]] = None
+    metadata: dict[str, Any] = field(default_factory=dict)
 
 
 class AlertGrouper:
@@ -41,13 +41,13 @@ class AlertGrouper:
     def __init__(self, strategy: GroupingStrategy = GroupingStrategy.SIMILARITY):
         """Initialize the alert grouper."""
         self.strategy = strategy
-        self._clusters: Dict[str, AlertCluster] = {}
+        self._clusters: dict[str, AlertCluster] = {}
 
-    def group_alerts(self, alerts: List[Dict[str, Any]]) -> List[AlertCluster]:
+    def group_alerts(self, alerts: list[dict[str, Any]]) -> list[AlertCluster]:
         """Group alerts into clusters."""
         # Simple implementation - group by service
         clusters = []
-        service_groups: Dict[str, List[Dict[str, Any]]] = {}
+        service_groups: dict[str, list[dict[str, Any]]] = {}
 
         for alert in alerts:
             service = alert.get("service", "unknown")
@@ -65,7 +65,7 @@ class AlertGrouper:
 
         return clusters
 
-    def add_to_cluster(self, alert: Dict[str, Any], cluster_id: str) -> None:
+    def add_to_cluster(self, alert: dict[str, Any], cluster_id: str) -> None:
         """Add an alert to an existing cluster."""
         if cluster_id in self._clusters:
             self._clusters[cluster_id].alerts.append(alert)

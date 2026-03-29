@@ -23,7 +23,7 @@ from collections import deque
 from dataclasses import dataclass, field
 from datetime import datetime
 from decimal import Decimal
-from typing import Deque, Dict, List, Optional
+from typing import Optional
 
 from app.shared.utils.timezone_utils import utc_now
 
@@ -70,7 +70,7 @@ class PatternAlert:
     symbol: str
     timestamp: datetime
     description: str
-    orders_involved: List[str] = field(default_factory=list)
+    orders_involved: list[str] = field(default_factory=list)
 
     def to_dict(self) -> dict:
         """Convert to dictionary."""
@@ -137,11 +137,11 @@ class OrderPatternAnalyzer:
         self.lookback_orders = lookback_orders
 
         # Order history
-        self._orders: Deque[OrderRecord] = deque(maxlen=lookback_orders)
-        self._orders_by_symbol: Dict[str, Deque[OrderRecord]] = {}
+        self._orders: deque[OrderRecord] = deque(maxlen=lookback_orders)
+        self._orders_by_symbol: dict[str, deque[OrderRecord]] = {}
 
         # Alert history
-        self._alerts: List[PatternAlert] = []
+        self._alerts: list[PatternAlert] = []
 
         logger.info("OrderPatternAnalyzer initialized")
 
@@ -152,7 +152,7 @@ class OrderPatternAnalyzer:
         quantity: Decimal,
         price: Decimal,
         order_type: str,
-    ) -> List[str]:
+    ) -> list[str]:
         """
         Analyze order for suspicious patterns.
 
@@ -286,10 +286,7 @@ class OrderPatternAnalyzer:
         Returns:
             Ratio of orders to fills
         """
-        if symbol:
-            orders = list(self._orders_by_symbol.get(symbol, []))
-        else:
-            orders = list(self._orders)
+        orders = list(self._orders_by_symbol.get(symbol, [])) if symbol else list(self._orders)
 
         if not orders:
             return Decimal("0")
@@ -306,7 +303,7 @@ class OrderPatternAnalyzer:
         self,
         pattern_type: Optional[str] = None,
         start_time: Optional[datetime] = None,
-    ) -> List[PatternAlert]:
+    ) -> list[PatternAlert]:
         """
         Get pattern alerts.
 
@@ -386,7 +383,9 @@ class OrderPatternAnalyzer:
 
         # Look for high cancellation rate on large orders
         large_orders = [
-            o for o in symbol_orders if o.quantity > Decimal("100")  # Arbitrary threshold
+            o
+            for o in symbol_orders
+            if o.quantity > Decimal("100")  # Arbitrary threshold
         ]
 
         if not large_orders:

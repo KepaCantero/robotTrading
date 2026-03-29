@@ -22,7 +22,7 @@ from datetime import datetime, timedelta
 from decimal import Decimal
 from enum import Enum
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Callable
 
 import aiosqlite
 
@@ -82,7 +82,7 @@ class BudgetAllowance:
     @classmethod
     def from_slo(
         cls, total_minutes: int, slo_percentage: Decimal, period: BudgetPeriod
-    ) -> "BudgetAllowance":
+    ) -> BudgetAllowance:
         """
         Create budget allowance from SLO target.
 
@@ -118,10 +118,10 @@ class BudgetConsumption:
 
     downtime_minutes: int
     error_count: int
-    last_incident: Optional[datetime] = None
-    incidents: List[Dict[str, Any]] = field(default_factory=list)
+    last_incident: datetime | None = None
+    incidents: list[dict[str, Any]] = field(default_factory=list)
 
-    def add_incident(self, downtime_minutes: int, incident_data: Dict[str, Any]) -> None:
+    def add_incident(self, downtime_minutes: int, incident_data: dict[str, Any]) -> None:
         """Add an incident to consumption."""
         self.downtime_minutes += downtime_minutes
         self.error_count += 1
@@ -145,7 +145,7 @@ class ErrorBudgetState:
     current_window: TimeWindow
     status: BudgetStatus
     calculated_at: datetime
-    burn_rate: Optional[Decimal] = None  # minutes per hour
+    burn_rate: Decimal | None = None  # minutes per hour
 
     @property
     def remaining_minutes(self) -> int:
@@ -177,13 +177,13 @@ class ErrorBudgetState:
         uptime_minutes = self.allowance.total_minutes - self.consumption.downtime_minutes
         return Decimal(uptime_minutes) / Decimal(self.allowance.total_minutes)
 
-    def is_exhausted(self, threshold_pct: Optional[Decimal] = None) -> bool:
+    def is_exhausted(self, threshold_pct: Decimal | None = None) -> bool:
         """Check if budget is exhausted (below threshold)."""
         if threshold_pct is None:
             threshold_pct = Decimal("10")
         return self.remaining_percentage < threshold_pct
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
         return {
             "service_name": self.service_name,
@@ -218,14 +218,14 @@ class ErrorBudgetConfig:
     exhausted_threshold_pct: Decimal = Decimal("10")  # Block at 10% remaining
 
     # Burn rate thresholds
-    high_burn_rate_threshold: Optional[Decimal] = None  # 2x normal rate
+    high_burn_rate_threshold: Decimal | None = None  # 2x normal rate
 
     # Database
     db_path: str = "data/error_budgets.db"
 
     # Callbacks
-    on_budget_exhausted: Optional[Callable[[ErrorBudgetState], None]] = None
-    on_burn_rate_high: Optional[Callable[[ErrorBudgetState], None]] = None
+    on_budget_exhausted: Callable[[ErrorBudgetState], None] | None = None
+    on_burn_rate_high: Callable[[ErrorBudgetState], None] | None = None
 
 
 class ErrorBudgetManager:
@@ -248,7 +248,7 @@ class ErrorBudgetManager:
     def __init__(
         self,
         service_name: str,
-        config: Optional[ErrorBudgetConfig] = None,
+        config: ErrorBudgetConfig | None = None,
     ):
         """
         Initialize error budget manager.
@@ -262,12 +262,12 @@ class ErrorBudgetManager:
         self.logger = logging.getLogger(f"{__name__}.{service_name}")
 
         # State
-        self._current_state: Optional[ErrorBudgetState] = None
-        self._history: List[ErrorBudgetState] = []
+        self._current_state: ErrorBudgetState | None = None
+        self._history: list[ErrorBudgetState] = []
         self._lock = asyncio.Lock()
 
         # Time windows for different periods
-        self._time_windows: Dict[BudgetPeriod, TimeWindow] = {}
+        self._time_windows: dict[BudgetPeriod, TimeWindow] = {}
 
         # Initialize time windows
         self._initialize_time_windows()
@@ -549,7 +549,7 @@ class ErrorBudgetManager:
         downtime_minutes: int,
         error_type: str = "unknown",
         description: str = "",
-        metadata: Optional[Dict[str, Any]] = None,
+        metadata: dict[str, Any] | None = None,
     ) -> ErrorBudgetState:
         """
         Record downtime and update error budget.
@@ -601,7 +601,7 @@ class ErrorBudgetManager:
         downtime_minutes: int,
         error_type: str,
         description: str,
-        metadata: Optional[Dict[str, Any]],
+        metadata: dict[str, Any] | None,
     ) -> None:
         """Save incident to database."""
         try:
@@ -689,8 +689,7 @@ class ErrorBudgetManager:
             and self._current_state.burn_rate > self.config.high_burn_rate_threshold
         ):
             self.logger.warning(
-                f"HIGH BURN RATE: {self.service_name} "
-                f"({self._current_state.burn_rate:.2f} min/hr)"
+                f"HIGH BURN RATE: {self.service_name} ({self._current_state.burn_rate:.2f} min/hr)"
             )
             if self.config.on_burn_rate_high:
                 try:
@@ -698,12 +697,12 @@ class ErrorBudgetManager:
                 except (asyncio.TimeoutError, OSError) as e:
                     self.logger.error(f"Error in burn rate callback: {e}")
 
-    async def get_current_state(self) -> Optional[ErrorBudgetState]:
+    async def get_current_state(self) -> ErrorBudgetState | None:
         """Get current error budget state."""
         async with self._lock:
             return self._current_state
 
-    async def get_budget_summary(self) -> Dict[str, Any]:
+    async def get_budget_summary(self) -> dict[str, Any]:
         """Get comprehensive budget summary."""
         async with self._lock:
             if self._current_state is None:
@@ -720,7 +719,7 @@ class ErrorBudgetManager:
                 },
             }
 
-    async def get_incident_history(self, limit: int = 100) -> List[Dict[str, Any]]:
+    async def get_incident_history(self, limit: int = 100) -> list[dict[str, Any]]:
         """Get incident history."""
         try:
             async with aiosqlite.connect(self.config.db_path) as db:
@@ -783,12 +782,12 @@ class ErrorBudgetManager:
 
 
 # Singleton instances
-_managers: Dict[str, ErrorBudgetManager] = {}
+_managers: dict[str, ErrorBudgetManager] = {}
 
 
 def get_error_budget_manager(
     service_name: str,
-    config: Optional[ErrorBudgetConfig] = None,
+    config: ErrorBudgetConfig | None = None,
 ) -> ErrorBudgetManager:
     """
     Get or create singleton error budget manager for service.

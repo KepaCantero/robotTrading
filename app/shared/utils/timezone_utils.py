@@ -321,10 +321,10 @@ def parse_iso_datetime(iso_string: str) -> datetime:
         True
     """
     try:
-        dt = datetime.fromisoformat(iso_string.replace('Z', '+00:00'))
+        dt = datetime.fromisoformat(iso_string.replace("Z", "+00:00"))
         return to_utc(dt)
     except ValueError as e:
-        raise ValueError(f"Cannot parse ISO datetime '{iso_string}': {e}")
+        raise ValueError(f"Cannot parse ISO datetime '{iso_string}': {e}") from e
 
 
 # ============================================================================

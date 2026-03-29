@@ -8,10 +8,12 @@ Antti Ilmanen's methodology from "Expected Returns" - Rule 12.9.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import date
 from decimal import Decimal
 from enum import Enum
-from typing import Optional
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from datetime import date
 
 
 class FXPair:
@@ -147,9 +149,9 @@ class FXCarryPosition:
     entry_forward: Decimal
     carry_rate: Decimal
     opened_at: date
-    target_carry: Optional[Decimal] = None
-    stop_loss: Optional[Decimal] = None
-    take_profit: Optional[Decimal] = None
+    target_carry: Decimal | None = None
+    stop_loss: Decimal | None = None
+    take_profit: Decimal | None = None
 
     @property
     def is_long(self) -> bool:
@@ -197,10 +199,10 @@ class FXRateQuote:
 
     pair: FXPair
     spot_rate: Decimal
-    forward_3m: Optional[Decimal] = None
-    forward_6m: Optional[Decimal] = None
-    forward_12m: Optional[Decimal] = None
-    timestamp: Optional[date] = None
+    forward_3m: Decimal | None = None
+    forward_6m: Decimal | None = None
+    forward_12m: Decimal | None = None
+    timestamp: date | None = None
 
     @property
     def has_forward_rates(self) -> bool:
@@ -223,11 +225,11 @@ class InterestRateQuote:
     """
 
     currency: str
-    rate_1m: Optional[Decimal] = None
+    rate_1m: Decimal | None = None
     rate_3m: Decimal = Decimal("0")
-    rate_6m: Optional[Decimal] = None
-    rate_12m: Optional[Decimal] = None
-    timestamp: Optional[date] = None
+    rate_6m: Decimal | None = None
+    rate_12m: Decimal | None = None
+    timestamp: date | None = None
 
     @property
     def benchmark_rate(self) -> Decimal:

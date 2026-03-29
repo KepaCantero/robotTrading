@@ -15,12 +15,10 @@ from __future__ import annotations
 import logging
 from concurrent.futures import ProcessPoolExecutor, as_completed
 from pathlib import Path
-from typing import TYPE_CHECKING, Dict, List
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    pass
-
-from app.backtesting.services.models import ProfileResult
+    from app.backtesting.services.models import ProfileResult
 
 logger = logging.getLogger(__name__)
 
@@ -46,11 +44,11 @@ class BatchExecutionService:
 
     def run_all_profiles(
         self,
-        profiles: List,
+        profiles: list,
         backtester_class: type,
         parallel: bool = True,
         max_workers: int = 20,
-    ) -> Dict[str, ProfileResult]:
+    ) -> dict[str, ProfileResult]:
         """
         Run all profiles with optional parallel execution.
 
@@ -75,8 +73,8 @@ class BatchExecutionService:
         return results
 
     def _run_parallel(
-        self, profiles: List, backtester_class: type, max_workers: int
-    ) -> Dict[str, ProfileResult]:
+        self, profiles: list, backtester_class: type, max_workers: int
+    ) -> dict[str, ProfileResult]:
         """
         Run profiles in parallel using ProcessPoolExecutor.
 
@@ -115,7 +113,7 @@ class BatchExecutionService:
 
         return results
 
-    def _run_sequential(self, profiles: List, backtester_class: type) -> Dict[str, ProfileResult]:
+    def _run_sequential(self, profiles: list, backtester_class: type) -> dict[str, ProfileResult]:
         """
         Run profiles sequentially.
 

@@ -12,7 +12,7 @@ because failed companies are systematically excluded from historical data.
 import logging
 from datetime import datetime
 from decimal import Decimal
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -73,7 +73,7 @@ class UniverseManager:
     strategy performance that would have been achievable in real-time.
     """
 
-    def __init__(self, universe_config: Optional[Dict] = None):
+    def __init__(self, universe_config: Optional[dict] = None):
         """
         Initialize universe manager.
 
@@ -90,7 +90,7 @@ class UniverseManager:
         include_delisted: bool = True,
         include_spun_off: bool = True,
         include_penny_stocks: bool = False,
-    ) -> List[str]:
+    ) -> list[str]:
         """
         Get list of symbols that were active during backtesting period.
 
@@ -159,7 +159,11 @@ class UniverseManager:
                     period_end = datetime.strptime(entry[3], "%Y-%m-%d")
 
                     # Check if penny stock period overlaps with backtest period
-                    if period_start <= end_date and period_end >= start_date and symbol not in symbols:  # Avoid duplicates
+                    if (
+                        period_start <= end_date
+                        and period_end >= start_date
+                        and symbol not in symbols
+                    ):  # Avoid duplicates
                         symbols.append(symbol)
                         logger.debug(
                             f"Including penny stock period for {symbol} "
@@ -178,11 +182,11 @@ class UniverseManager:
 
     def filter_by_market_cap(
         self,
-        symbols: List[str],
+        symbols: list[str],
         min_market_cap: Optional[Decimal] = None,
         max_market_cap: Optional[Decimal] = None,
         historical_date: Optional[datetime] = None,
-    ) -> List[str]:
+    ) -> list[str]:
         """
         Filter symbols by market cap.
 
@@ -251,9 +255,9 @@ class UniverseManager:
 
     def calculate_survivorship_bias(
         self,
-        survivor_returns: List[float],
-        full_universe_returns: List[float],
-    ) -> Dict[str, float]:
+        survivor_returns: list[float],
+        full_universe_returns: list[float],
+    ) -> dict[str, float]:
         """
         Quantify the impact of survivorship bias.
 
@@ -298,7 +302,7 @@ class UniverseManager:
 
         return result
 
-    def _calculate_cagr_from_returns(self, returns: List[float]) -> float:
+    def _calculate_cagr_from_returns(self, returns: list[float]) -> float:
         """
         Calculate CAGR from a list of returns.
 
@@ -337,7 +341,7 @@ class UniverseManager:
 
         return cagr
 
-    def get_sector_diversification(self, symbols: List[str]) -> Dict[str, List[str]]:
+    def get_sector_diversification(self, symbols: list[str]) -> dict[str, list[str]]:
         """
         Get sector breakdown for a list of symbols.
 
@@ -374,7 +378,7 @@ class UniverseManager:
 
         return sectors
 
-    def get_universe_statistics(self, start_date: datetime, end_date: datetime) -> Dict[str, Any]:
+    def get_universe_statistics(self, start_date: datetime, end_date: datetime) -> dict[str, Any]:
         """
         Get statistics about the backtesting universe.
 

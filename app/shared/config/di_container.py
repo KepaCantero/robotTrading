@@ -9,7 +9,7 @@ Reference: Rule 05-architecture.md, Rule 11-enterprise-architecture.md
 
 import inspect
 import logging
-from typing import TYPE_CHECKING, Callable, Dict, Optional, Type, TypeVar, Union
+from typing import TYPE_CHECKING, Callable, Optional, TypeVar, Union
 
 logger = logging.getLogger(__name__)
 
@@ -54,11 +54,11 @@ class DIContainer:
 
     def __init__(self) -> None:
         """Initialize empty container."""
-        self._singletons: Dict[Type, object] = {}
-        self._factories: Dict[str, Callable[[DIContainer], object]] = {}
-        self._transient: Dict[Type, Type] = {}
+        self._singletons: dict[type, object] = {}
+        self._factories: dict[str, Callable[[DIContainer], object]] = {}
+        self._transient: dict[type, type] = {}
 
-    def register_singleton(self, interface: Type[T], instance: T) -> None:
+    def register_singleton(self, interface: type[T], instance: T) -> None:
         """
         Register a singleton instance.
 
@@ -72,7 +72,7 @@ class DIContainer:
         )
         self._singletons[interface] = instance
 
-    def register_transient(self, interface: Type[T], implementation: Type[T]) -> None:
+    def register_transient(self, interface: type[T], implementation: type[T]) -> None:
         """
         Register a transient type (new instance each time).
 
@@ -103,7 +103,7 @@ class DIContainer:
         )
         self._factories[name] = factory
 
-    def get(self, key: Union[Type, str]) -> object:
+    def get(self, key: Union[type, str]) -> object:
         """
         Get a dependency by key.
 
@@ -136,7 +136,7 @@ class DIContainer:
         logger.error("dependency_not_found", extra={"key": str(key)})
         raise KeyError(f"Dependency not found: {key}")
 
-    def _create_instance(self, cls: Type[T]) -> T:
+    def _create_instance(self, cls: type[T]) -> T:
         """
         Create instance with automatic dependency injection.
 
@@ -183,7 +183,7 @@ class DIContainer:
         logger.debug("instance_created", extra={"class": cls.__name__})
         return instance
 
-    def get_optional(self, key: Union[Type, str]) -> Optional[object]:
+    def get_optional(self, key: Union[type, str]) -> Optional[object]:
         """
         Get a dependency, returning None if not found.
 

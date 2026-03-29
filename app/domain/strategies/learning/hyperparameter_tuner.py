@@ -9,7 +9,7 @@ Incluye:
 
 import logging
 import time
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Callable, Optional
 
 import numpy as np
 
@@ -39,7 +39,7 @@ class EarlyStoppingAdaptive:
     Early stopping adaptativo que ajusta patience basado en mejoras.
     """
 
-    def __init__(self, config: Dict[str, Any] = None):
+    def __init__(self, config: Optional[dict[str, Any]] = None):
         """
         Inicializar early stopping adaptativo.
 
@@ -47,17 +47,17 @@ class EarlyStoppingAdaptive:
             config: Configuración
         """
         config = config or {}
-        self.patience = config.get('patience', 10)
-        self.min_delta = config.get('min_delta', 1e-4)
-        self.mode = config.get('mode', 'min')  # 'min' o 'max'
-        self.adaptive_patience = config.get('adaptive_patience', True)
+        self.patience = config.get("patience", 10)
+        self.min_delta = config.get("min_delta", 1e-4)
+        self.mode = config.get("mode", "min")  # 'min' o 'max'
+        self.adaptive_patience = config.get("adaptive_patience", True)
 
         self.best_score: Optional[float] = None
         self.best_epoch = 0
         self.current_epoch = 0
         self.wait = 0
         self.stopped_epoch = 0
-        self.improvement_history: List[float] = []
+        self.improvement_history: list[float] = []
 
     def __call__(self, score: float) -> bool:
         """
@@ -78,7 +78,7 @@ class EarlyStoppingAdaptive:
             return False
 
         # Determinar si hay mejora
-        if self.mode == 'min':
+        if self.mode == "min":
             improved = score < (self.best_score - self.min_delta)
         else:
             improved = score > (self.best_score + self.min_delta)
@@ -132,7 +132,7 @@ class ResourceAwareTuner:
     Tuner que considera recursos disponibles (GPU/CPU, memoria, tiempo).
     """
 
-    def __init__(self, config: Dict[str, Any] = None):
+    def __init__(self, config: Optional[dict[str, Any]] = None):
         """
         Inicializar resource-aware tuner.
 
@@ -140,9 +140,9 @@ class ResourceAwareTuner:
             config: Configuración
         """
         config = config or {}
-        self.max_trials = config.get('max_trials', 50)
-        self.max_time_seconds = config.get('max_time_seconds', 3600)  # 1 hora default
-        self.max_memory_gb = config.get('max_memory_gb', 8.0)
+        self.max_trials = config.get("max_trials", 50)
+        self.max_time_seconds = config.get("max_time_seconds", 3600)  # 1 hora default
+        self.max_memory_gb = config.get("max_memory_gb", 8.0)
 
         self.start_time: Optional[float] = None
         self.trials_run = 0
@@ -199,17 +199,17 @@ class ResourceAwareTuner:
         remaining = self.max_time_seconds - elapsed
         return max(0, remaining)
 
-    def get_resource_info(self) -> Dict[str, Any]:
+    def get_resource_info(self) -> dict[str, Any]:
         """Obtener información de recursos."""
         info = {
-            'gpu_available': self.gpu_available,
-            'trials_run': self.trials_run,
-            'max_trials': self.max_trials,
+            "gpu_available": self.gpu_available,
+            "trials_run": self.trials_run,
+            "max_trials": self.max_trials,
         }
 
         if self.start_time is not None:
-            info['elapsed_time'] = time.time() - self.start_time
-            info['remaining_time'] = self.get_remaining_time()
+            info["elapsed_time"] = time.time() - self.start_time
+            info["remaining_time"] = self.get_remaining_time()
 
         return info
 
@@ -219,7 +219,7 @@ class HyperparameterTuner:
     Tuner principal usando Optuna para Bayesian optimization.
     """
 
-    def __init__(self, config: Dict[str, Any]):
+    def __init__(self, config: dict[str, Any]):
         """
         Inicializar hyperparameter tuner.
 
@@ -232,8 +232,8 @@ class HyperparameterTuner:
         self.config = config
 
         # Configuración de Optuna
-        study_name = config.get('study_name', 'hyperparameter_tuning')
-        direction = config.get('direction', 'maximize')  # 'maximize' o 'minimize'
+        study_name = config.get("study_name", "hyperparameter_tuning")
+        direction = config.get("direction", "maximize")  # 'maximize' o 'minimize'
 
         # Crear study
         self.study = optuna.create_study(
@@ -244,10 +244,10 @@ class HyperparameterTuner:
         )
 
         # Early stopping
-        self.early_stopping = EarlyStoppingAdaptive(config.get('early_stopping_config', {}))
+        self.early_stopping = EarlyStoppingAdaptive(config.get("early_stopping_config", {}))
 
         # Resource-aware tuning
-        self.resource_manager = ResourceAwareTuner(config.get('resource_config', {}))
+        self.resource_manager = ResourceAwareTuner(config.get("resource_config", {}))
 
         # Callback para training
         self.training_callback: Optional[Callable[..., float]] = None
@@ -265,8 +265,8 @@ class HyperparameterTuner:
         self,
         n_trials: Optional[int] = None,
         timeout: Optional[float] = None,
-        search_space: Dict[str, Any] = None,
-    ) -> Dict[str, Any]:
+        search_space: Optional[dict[str, Any]] = None,
+    ) -> dict[str, Any]:
         """
         Optimizar hiperparámetros.
 
@@ -292,12 +292,8 @@ class HyperparameterTuner:
             if not self.resource_manager.should_continue():
                 raise optuna.TrialPruned()
 
-            # Obtener hiperparámetros del trial
-            if search_space:
-                params = self._suggest_parameters(trial, search_space)
-            else:
-                # Si no hay search_space, el callback debe sugerir parámetros
-                params = {}
+            # Obtener hiperparámetros del trial (si no hay search_space, el callback debe sugerir parámetros)
+            params = self._suggest_parameters(trial, search_space) if search_space else {}
 
             # Entrenar modelo y obtener score
             try:
@@ -315,7 +311,7 @@ class HyperparameterTuner:
 
             except (RuntimeError, ValueError, TypeError, KeyError) as e:
                 logger.error(f"Error en trial {trial.number}: {e}")
-                raise optuna.TrialPruned()
+                raise optuna.TrialPruned() from e
 
         # Optimizar
         try:
@@ -329,14 +325,14 @@ class HyperparameterTuner:
         best_score = best_trial.value
 
         return {
-            'best_params': best_params,
-            'best_score': best_score,
-            'n_trials': len(self.study.trials),
-            'study_name': self.study.study_name,
-            'resource_info': self.resource_manager.get_resource_info(),
+            "best_params": best_params,
+            "best_score": best_score,
+            "n_trials": len(self.study.trials),
+            "study_name": self.study.study_name,
+            "resource_info": self.resource_manager.get_resource_info(),
         }
 
-    def _suggest_parameters(self, trial, search_space: Dict[str, Any]) -> Dict[str, Any]:
+    def _suggest_parameters(self, trial, search_space: dict[str, Any]) -> dict[str, Any]:
         """
         Sugerir parámetros basado en search_space.
 
@@ -350,45 +346,45 @@ class HyperparameterTuner:
         params = {}
 
         for param_name, param_config in search_space.items():
-            param_type = param_config.get('type', 'float')
+            param_type = param_config.get("type", "float")
 
-            if param_type == 'float':
+            if param_type == "float":
                 params[param_name] = trial.suggest_float(
                     param_name,
-                    param_config['low'],
-                    param_config['high'],
-                    log=param_config.get('log', False),
+                    param_config["low"],
+                    param_config["high"],
+                    log=param_config.get("log", False),
                 )
-            elif param_type == 'int':
+            elif param_type == "int":
                 params[param_name] = trial.suggest_int(
                     param_name,
-                    param_config['low'],
-                    param_config['high'],
-                    log=param_config.get('log', False),
+                    param_config["low"],
+                    param_config["high"],
+                    log=param_config.get("log", False),
                 )
-            elif param_type == 'categorical':
-                params[param_name] = trial.suggest_categorical(param_name, param_config['choices'])
+            elif param_type == "categorical":
+                params[param_name] = trial.suggest_categorical(param_name, param_config["choices"])
             else:
                 logger.warning(f"Tipo de parámetro desconocido: {param_type}")
 
         return params
 
-    def get_best_params(self) -> Dict[str, Any]:
+    def get_best_params(self) -> dict[str, Any]:
         """Obtener mejores parámetros encontrados."""
         if len(self.study.trials) == 0:
             return {}
         return self.study.best_trial.params
 
-    def get_trial_history(self) -> List[Dict[str, Any]]:
+    def get_trial_history(self) -> list[dict[str, Any]]:
         """Obtener historial de trials."""
         history = []
         for trial in self.study.trials:
             history.append(
                 {
-                    'number': trial.number,
-                    'value': trial.value,
-                    'params': trial.params,
-                    'state': trial.state.name,
+                    "number": trial.number,
+                    "value": trial.value,
+                    "params": trial.params,
+                    "state": trial.state.name,
                 }
             )
         return history
@@ -425,8 +421,8 @@ class LearningEngineTuner:
     def __init__(
         self,
         learning_engine_class,
-        engine_config: Dict[str, Any],
-        tuner_config: Dict[str, Any],
+        engine_config: dict[str, Any],
+        tuner_config: dict[str, Any],
     ):
         """
         Inicializar tuner para learning engine.
@@ -443,7 +439,7 @@ class LearningEngineTuner:
         # Configurar callback
         self.tuner.set_training_callback(self._train_and_evaluate)
 
-    def _train_and_evaluate(self, trial: object, params: Dict[str, object]) -> float:
+    def _train_and_evaluate(self, trial: object, params: dict[str, object]) -> float:
         """
         Entrenar y evaluar modelo con parámetros dados.
 
@@ -462,8 +458,8 @@ class LearningEngineTuner:
         engine = self.learning_engine_class(updated_config)
 
         # Obtener datos de entrenamiento (debe estar en config o pasado de otra forma)
-        training_data = self.engine_config.get('training_data')
-        validation_data = self.engine_config.get('validation_data')
+        training_data = self.engine_config.get("training_data")
+        validation_data = self.engine_config.get("validation_data")
 
         if training_data is None:
             raise ValueError("training_data debe estar en engine_config")
@@ -473,27 +469,27 @@ class LearningEngineTuner:
             metrics = engine.train(training_data, validation_data)
 
             # Retornar métrica a optimizar (ej: accuracy, f1_score, o neg_sharpe)
-            metric_name = self.tuner.config.get('optimize_metric', 'accuracy')
+            metric_name = self.tuner.config.get("optimize_metric", "accuracy")
             score = metrics.get(metric_name, 0.0)
 
             # Si direction es 'maximize', retornar score tal cual
             # Si es 'minimize', retornar negativo
-            if self.tuner.config.get('direction') == 'minimize':
+            if self.tuner.config.get("direction") == "minimize":
                 score = -score
 
             return score
 
         except (FileNotFoundError, ValueError, KeyError, TypeError) as e:
             logger.error(f"Error entrenando en trial {trial.number}: {e}")
-            raise optuna.TrialPruned()
+            raise optuna.TrialPruned() from e
 
     def tune(
         self,
-        training_data: Dict[str, Any],
-        validation_data: Optional[Dict[str, Any]] = None,
-        search_space: Dict[str, Any] = None,
+        training_data: dict[str, Any],
+        validation_data: Optional[dict[str, Any]] = None,
+        search_space: Optional[dict[str, Any]] = None,
         n_trials: Optional[int] = None,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Tunear learning engine.
 
@@ -507,8 +503,8 @@ class LearningEngineTuner:
             Mejores parámetros y métricas
         """
         # Guardar datos en config para callback
-        self.engine_config['training_data'] = training_data
-        self.engine_config['validation_data'] = validation_data
+        self.engine_config["training_data"] = training_data
+        self.engine_config["validation_data"] = validation_data
 
         # Optimizar
         results = self.tuner.optimize(search_space=search_space, n_trials=n_trials)

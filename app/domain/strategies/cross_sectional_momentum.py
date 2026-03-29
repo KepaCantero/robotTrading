@@ -15,7 +15,6 @@ from __future__ import annotations
 import logging
 from dataclasses import dataclass
 from enum import Enum
-from typing import Dict
 
 import numpy as np
 import pandas as pd
@@ -46,8 +45,8 @@ class MomentumAsset:
 class MomentumPortfolio:
     """Momentum-based portfolio allocation."""
 
-    long_positions: Dict[str, float]  # Symbol -> weight
-    short_positions: Dict[str, float]  # Symbol -> weight (if allowed)
+    long_positions: dict[str, float]  # Symbol -> weight
+    short_positions: dict[str, float]  # Symbol -> weight (if allowed)
     cash_weight: float  # Weight in cash
     rebalance_date: pd.Timestamp  # When portfolio was constructed
 
@@ -63,7 +62,7 @@ class MomentumPortfolio:
         """Get gross market exposure."""
         return sum(self.long_positions.values()) + sum(self.short_positions.values())
 
-    def get_weights_dict(self) -> Dict[str, float]:
+    def get_weights_dict(self) -> dict[str, float]:
         """Get all positions as dictionary."""
         weights = self.long_positions.copy()
         for symbol, weight in self.short_positions.items():
@@ -116,7 +115,7 @@ class CrossSectionalMomentum:
     def calculate_momentum_scores(
         self,
         returns: pd.DataFrame,  # symbols x dates
-    ) -> Dict[str, MomentumAsset]:
+    ) -> dict[str, MomentumAsset]:
         """
         Calculate momentum scores for all assets.
 
@@ -218,8 +217,8 @@ class CrossSectionalMomentum:
 
     def construct_portfolio(
         self,
-        momentum_assets: Dict[str, MomentumAsset],
-        current_prices: Dict[str, float],
+        momentum_assets: dict[str, MomentumAsset],
+        current_prices: dict[str, float],
         total_capital: float,
     ) -> MomentumPortfolio:
         """

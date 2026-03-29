@@ -19,13 +19,13 @@ import logging
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Dict, List, Optional, Union
+from typing import Optional, Union
 
 import numpy as np
 import yaml
 
 # Type alias for nested JSON-like configuration and result dictionaries
-JsonDict = Dict[
+JsonDict = dict[
     str,
     Union[
         int,
@@ -34,7 +34,7 @@ JsonDict = Dict[
         bool,
         None,
         "JsonDict",
-        List[Union[int, float, str, bool, None, "JsonDict"]],
+        list[Union[int, float, str, bool, None, "JsonDict"]],
     ],
 ]
 
@@ -116,8 +116,8 @@ class ScenarioGenerationParams:
 class WalkForwardValidationParams:
     """Parameters for walk-forward strategy validation."""
 
-    quotes: List[Quote]
-    signals: List[object]
+    quotes: list[Quote]
+    signals: list[object]
     config: BacktestConfig
     start_date: datetime
     end_date: datetime
@@ -127,8 +127,8 @@ class WalkForwardValidationParams:
 class CrossValidationParams:
     """Parameters for temporal cross-validation."""
 
-    quotes: List[Quote]
-    signals: List[object]
+    quotes: list[Quote]
+    signals: list[object]
     config: BacktestConfig
     start_date: datetime
     end_date: datetime
@@ -140,8 +140,8 @@ class FullValidationParams:
 
     strategy: object
     strategy_name: str
-    quotes: List[Quote]
-    signals: List[object]
+    quotes: list[Quote]
+    signals: list[object]
     backtest_config: BacktestConfig
     start_date: datetime
     end_date: datetime
@@ -159,7 +159,7 @@ def load_validation_config(config_path: str = "config/validation.yaml") -> JsonD
         logger.warning(f"Validation config not found at {config_path}, using defaults")
         return get_default_config()
 
-    with open(path, "r") as f:
+    with open(path) as f:
         return yaml.safe_load(f)
 
 
@@ -378,7 +378,7 @@ class SyntheticDataGenerator:
     def generate_gbm_prices(
         self,
         params: DataGenerationParams,
-    ) -> List[Quote]:
+    ) -> list[Quote]:
         """
         Generate prices using realistic models (replaces simplistic GBM).
 
@@ -417,7 +417,7 @@ class SyntheticDataGenerator:
     def generate_ou_prices(
         self,
         params: DataGenerationParams,
-    ) -> List[Quote]:
+    ) -> list[Quote]:
         """
         Generate mean-reverting prices (replaces simplistic OU).
 
@@ -436,7 +436,7 @@ class SyntheticDataGenerator:
         symbol = params.symbol
 
         logger.info(
-            f"Generating {n_days} days of realistic sideways data " f"(replacing simplistic OU)"
+            f"Generating {n_days} days of realistic sideways data (replacing simplistic OU)"
         )
 
         return self.realistic_generator.generate_realistic_quotes(
@@ -450,7 +450,7 @@ class SyntheticDataGenerator:
     def generate_jump_diffusion_prices(
         self,
         params: JumpDiffusionParams,
-    ) -> List[Quote]:
+    ) -> list[Quote]:
         """
         Generate prices with jumps (replaces simplistic jump-diffusion).
 
@@ -491,7 +491,7 @@ class SyntheticDataGenerator:
     def generate_flash_crash_scenario(
         self,
         params: FlashCrashParams,
-    ) -> List[Quote]:
+    ) -> list[Quote]:
         """
         Generate a flash crash scenario.
 
@@ -516,8 +516,7 @@ class SyntheticDataGenerator:
         symbol = params.symbol
 
         logger.info(
-            f"Generating {n_days} days of flash crash scenario "
-            f"(bear regime with high volatility)"
+            f"Generating {n_days} days of flash crash scenario (bear regime with high volatility)"
         )
 
         return self.realistic_generator.generate_realistic_quotes(
@@ -534,7 +533,7 @@ class SyntheticDataGenerator:
         start_date: datetime,
         symbol: str = "SYNTH",
         volatility_multiplier: float = 3.0,
-    ) -> List[Quote]:
+    ) -> list[Quote]:
         """
         Generate high volatility scenario.
 
@@ -547,7 +546,7 @@ class SyntheticDataGenerator:
         Returns:
             List of Quote objects with high volatility
         """
-        logger.info(f"Generating {n_days} days of high volatility scenario " f"(volatile regime)")
+        logger.info(f"Generating {n_days} days of high volatility scenario (volatile regime)")
 
         return self.realistic_generator.generate_realistic_quotes(
             symbol=symbol,
@@ -563,7 +562,7 @@ class SyntheticDataGenerator:
         start_date: datetime,
         symbol: str = "SYNTH",
         daily_drift: float = 0.002,
-    ) -> List[Quote]:
+    ) -> list[Quote]:
         """
         Generate trending market scenario.
 
@@ -576,7 +575,7 @@ class SyntheticDataGenerator:
         Returns:
             List of Quote objects with uptrend
         """
-        logger.info(f"Generating {n_days} days of trending scenario " f"(bull regime)")
+        logger.info(f"Generating {n_days} days of trending scenario (bull regime)")
 
         return self.realistic_generator.generate_realistic_quotes(
             symbol=symbol,
@@ -589,7 +588,7 @@ class SyntheticDataGenerator:
     def generate_gap_scenario(
         self,
         params: GapScenarioParams,
-    ) -> List[Quote]:
+    ) -> list[Quote]:
         """
         Generate scenario with overnight gaps.
 
@@ -608,8 +607,7 @@ class SyntheticDataGenerator:
         symbol = params.symbol
 
         logger.info(
-            f"Generating {n_days} days with realistic gaps "
-            f"(using volatile regime for more gaps)"
+            f"Generating {n_days} days with realistic gaps (using volatile regime for more gaps)"
         )
 
         return self.realistic_generator.generate_realistic_quotes(
@@ -622,10 +620,10 @@ class SyntheticDataGenerator:
 
     def _prices_to_quotes(
         self,
-        prices: List[float],
+        prices: list[float],
         start_date: datetime,
         symbol: str,
-    ) -> List[Quote]:
+    ) -> list[Quote]:
         """
         DEPRECATED: This method is kept for backward compatibility.
 
@@ -694,7 +692,7 @@ class WalkForwardValidator:
 
         # COMPLIANCE: Inicializar validador de compliance
         self.backtesting_compliance = create_backtesting_compliance()
-        self.compliance_results: List[BacktestingComplianceResult] = []
+        self.compliance_results: list[BacktestingComplianceResult] = []
         logger.info(
             "WalkForwardValidator initialized with BacktestingCompliance (R5, R6, R7, DATA-001)"
         )
@@ -703,7 +701,7 @@ class WalkForwardValidator:
         self,
         start_date: datetime,
         end_date: datetime,
-    ) -> List[Dict[str, datetime]]:
+    ) -> list[dict[str, datetime]]:
         """Create walk-forward windows."""
         windows = []
         current_start = start_date
@@ -765,17 +763,17 @@ class WalkForwardValidator:
             return {
                 "passed": False,
                 "reason": (
-                    f"Insufficient windows for robust validation: " f"{len(windows)} < {min_cycles}"
+                    f"Insufficient windows for robust validation: {len(windows)} < {min_cycles}"
                 ),
                 "windows": [],
                 "is_oos_analysis": None,
             }
 
-        results: List[ValidationWindow] = []
+        results: list[ValidationWindow] = []
 
         for i, window in enumerate(windows):
             logger.info(
-                f"Walk-forward window {i+1}/{len(windows)}: "
+                f"Walk-forward window {i + 1}/{len(windows)}: "
                 f"Train {window['train_start'].strftime('%Y-%m-%d')} to "
                 f"{window['train_end'].strftime('%Y-%m-%d')} | "
                 f"Validate {window['validate_start'].strftime('%Y-%m-%d')} to "
@@ -789,7 +787,7 @@ class WalkForwardValidator:
             train_signals = [
                 s
                 for s in signals
-                if hasattr(s, 'timestamp')
+                if hasattr(s, "timestamp")
                 and window["train_start"] <= s.timestamp <= window["train_end"]
             ]
 
@@ -802,12 +800,12 @@ class WalkForwardValidator:
             validate_signals = [
                 s
                 for s in signals
-                if hasattr(s, 'timestamp')
+                if hasattr(s, "timestamp")
                 and window["validate_start"] <= s.timestamp <= window["validate_end"]
             ]
 
             if not validate_quotes or not validate_signals:
-                logger.warning(f"Window {i+1}: Insufficient OOS data, skipping")
+                logger.warning(f"Window {i + 1}: Insufficient OOS data, skipping")
                 continue
 
             # Run backtest on training period (IS metrics)
@@ -837,7 +835,7 @@ class WalkForwardValidator:
                         "win_rate": float(train_result.performance.win_rate),
                     }
                 except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
-                    logger.warning(f"Window {i+1}: IS backtest failed: {e}")
+                    logger.warning(f"Window {i + 1}: IS backtest failed: {e}")
 
             # Run backtest on validation period (OOS metrics)
             backtester = SimpleBacktester(config)
@@ -1034,7 +1032,7 @@ class WalkForwardValidator:
 
     def validate_compliance(
         self,
-        walk_forward_results: List[JsonDict],
+        walk_forward_results: list[JsonDict],
         n_parameters: int = 10,
         n_observations: int = 1000,
     ) -> BacktestingComplianceResult:
@@ -1059,15 +1057,15 @@ class WalkForwardValidator:
         # Preparar datos para R5 (Walk-Forward)
         windows = []
         for r in walk_forward_results:
-            is_metrics = r.get('is_metrics', {})
-            oos_metrics = r.get('oos_metrics', {})
+            is_metrics = r.get("is_metrics", {})
+            oos_metrics = r.get("oos_metrics", {})
             windows.append(
                 {
-                    'is_return': is_metrics.get('total_return', 0),
-                    'oos_return': oos_metrics.get('total_return', 0),
-                    'is_sharpe': is_metrics.get('sharpe_ratio', 0),
-                    'oos_sharpe': oos_metrics.get('sharpe_ratio', 0),
-                    'trades': oos_metrics.get('total_trades', 0),
+                    "is_return": is_metrics.get("total_return", 0),
+                    "oos_return": oos_metrics.get("total_return", 0),
+                    "is_sharpe": is_metrics.get("sharpe_ratio", 0),
+                    "oos_sharpe": oos_metrics.get("sharpe_ratio", 0),
+                    "trades": oos_metrics.get("total_trades", 0),
                 }
             )
 
@@ -1128,7 +1126,7 @@ class CrossValidationTemporal:
         self,
         start_date: datetime,
         end_date: datetime,
-    ) -> List[Dict[str, datetime]]:
+    ) -> list[dict[str, datetime]]:
         """Create temporal folds for cross-validation."""
         total_days = (end_date - start_date).days
         fold_days = total_days // self.n_folds
@@ -1184,7 +1182,7 @@ class CrossValidationTemporal:
             fold_signals = [
                 s
                 for s in signals
-                if hasattr(s, 'timestamp') and fold["start"] <= s.timestamp <= fold["end"]
+                if hasattr(s, "timestamp") and fold["start"] <= s.timestamp <= fold["end"]
             ]
 
             if not fold_quotes or not fold_signals:
@@ -1298,7 +1296,7 @@ class StressTester:
     def _generate_scenario(
         self,
         params: ScenarioGenerationParams,
-    ) -> List[Quote]:
+    ) -> list[Quote]:
         """Generate synthetic data for a specific scenario type."""
         scenario_type = params.scenario_type
         scenario_config = params.scenario_config
@@ -1392,7 +1390,7 @@ class StressTester:
         start_date = datetime(2020, 1, 1)
         scenario_counts = self._calculate_scenario_distribution()
 
-        results: List[StressScenarioResult] = []
+        results: list[StressScenarioResult] = []
         for scenario_type, count in scenario_counts.items():
             scenario_results = self._run_scenario_batch(
                 strategy, backtest_config, scenario_type, count, n_days, start_date, symbol
@@ -1404,7 +1402,7 @@ class StressTester:
 
         return self._build_stress_test_report(results)
 
-    def _calculate_scenario_distribution(self) -> Dict[str, int]:
+    def _calculate_scenario_distribution(self) -> dict[str, int]:
         """Calculate the number of scenarios to run per type."""
         enabled_scenarios = {
             k: v for k, v in self.scenarios_config.items() if v.get("enabled", True)
@@ -1424,7 +1422,7 @@ class StressTester:
         n_days: int,
         start_date: datetime,
         symbol: str,
-    ) -> List[StressScenarioResult]:
+    ) -> list[StressScenarioResult]:
         """Run a batch of scenarios of the same type."""
         scenario_config = self.scenarios_config.get(scenario_type, {})
         logger.info(f"Running {count} {scenario_type} scenarios...")
@@ -1445,7 +1443,7 @@ class StressTester:
                 if result:
                     results.append(result)
             except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
-                logger.warning(f"Error in {scenario_type} scenario {i+1}: {e}")
+                logger.warning(f"Error in {scenario_type} scenario {i + 1}: {e}")
 
         return results
 
@@ -1488,7 +1486,7 @@ class StressTester:
             trades_executed=result.performance.total_trades,
         )
 
-    def _generate_strategy_signals(self, strategy, quotes: List) -> List:
+    def _generate_strategy_signals(self, strategy, quotes: list) -> list:
         """Generate signals from strategy for a list of quotes."""
         signals = []
         for quote in quotes:
@@ -1500,7 +1498,7 @@ class StressTester:
                 pass
         return signals
 
-    def _build_stress_test_report(self, results: List[StressScenarioResult]) -> JsonDict:
+    def _build_stress_test_report(self, results: list[StressScenarioResult]) -> JsonDict:
         """Build the final stress test report from results."""
         total_scenarios = len(results)
         survivors = sum(1 for r in results if r.survived)
@@ -1539,7 +1537,7 @@ class StressTester:
 
     def _evaluate_stress_thresholds(
         self, survival_rate: float, recovery_rate: float, avg_return: float
-    ) -> tuple[bool, List[str]]:
+    ) -> tuple[bool, list[str]]:
         """Evaluate stress test results against thresholds."""
         passed = True
         failures = []
@@ -1562,9 +1560,9 @@ class StressTester:
 
         return passed, failures
 
-    def _group_results_by_type(self, results: List[StressScenarioResult]) -> Dict[str, List[Dict]]:
+    def _group_results_by_type(self, results: list[StressScenarioResult]) -> dict[str, list[dict]]:
         """Group scenario results by type."""
-        by_scenario: Dict[str, List[Dict]] = {}
+        by_scenario: dict[str, list[dict]] = {}
         for r in results:
             if r.scenario_type not in by_scenario:
                 by_scenario[r.scenario_type] = []
@@ -1613,7 +1611,7 @@ class MonteCarloSimulator:
 
     def run_simulation(
         self,
-        historical_returns: List[float],
+        historical_returns: list[float],
         initial_capital: float = 100000.0,
         n_periods: int = 252,
     ) -> JsonDict:
@@ -1641,7 +1639,7 @@ class MonteCarloSimulator:
 
     def _run_all_simulations(
         self, returns_array: np.ndarray, initial_capital: float, n_periods: int
-    ) -> List[JsonDict]:
+    ) -> list[JsonDict]:
         """Run all Monte Carlo simulations."""
         simulation_results = []
 
@@ -1671,7 +1669,7 @@ class MonteCarloSimulator:
             "max_drawdown": max_drawdown,
         }
 
-    def _build_simulation_report(self, returns: List[float], drawdowns: List[float]) -> JsonDict:
+    def _build_simulation_report(self, returns: list[float], drawdowns: list[float]) -> JsonDict:
         """Build the simulation report from aggregated results."""
         var_results, cvar_results = self._calculate_risk_metrics(returns)
 
@@ -1702,8 +1700,8 @@ class MonteCarloSimulator:
         }
 
     def _calculate_risk_metrics(
-        self, returns: List[float]
-    ) -> tuple[Dict[str, float], Dict[str, float]]:
+        self, returns: list[float]
+    ) -> tuple[dict[str, float], dict[str, float]]:
         """Calculate VaR and CVaR for all confidence levels."""
         var_results = {}
         cvar_results = {}
@@ -1731,7 +1729,7 @@ class MonteCarloSimulator:
 
         return sampled[:n_periods]
 
-    def _calculate_max_drawdown(self, equity: List[float]) -> float:
+    def _calculate_max_drawdown(self, equity: list[float]) -> float:
         """Calculate maximum drawdown from equity curve."""
         peak = equity[0]
         max_dd = 0
@@ -1866,7 +1864,7 @@ class ComprehensiveValidator:
 
         return report
 
-    def _extract_returns(self, quotes: List[Quote]) -> List[float]:
+    def _extract_returns(self, quotes: list[Quote]) -> list[float]:
         """Extract daily returns from quotes."""
         if len(quotes) < 2:
             return []

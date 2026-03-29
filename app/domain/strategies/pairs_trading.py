@@ -13,7 +13,6 @@ from __future__ import annotations
 import logging
 from dataclasses import dataclass
 from enum import Enum
-from typing import Dict, List, Optional
 
 import numpy as np
 
@@ -57,8 +56,8 @@ class PairPosition:
     spread: float  # Current spread
     z_score: float  # Z-score of spread
     entry_spread: float  # Spread at entry
-    stop_loss_spread: Optional[float] = None  # Stop loss based on spread
-    take_profit_spread: Optional[float] = None  # Take profit based on spread
+    stop_loss_spread: float | None = None  # Stop loss based on spread
+    take_profit_spread: float | None = None  # Take profit based on spread
 
     @property
     def net_exposure(self) -> float:
@@ -147,8 +146,8 @@ class PairsTrading:
 
     def find_cointegrated_pairs(
         self,
-        price_data: Dict[str, np.ndarray],
-    ) -> List[TradingPair]:
+        price_data: dict[str, np.ndarray],
+    ) -> list[TradingPair]:
         """
         Find cointegrated pairs from price data.
 
@@ -219,7 +218,7 @@ class PairsTrading:
                     p_value=1.0,
                     critical_value=0.0,
                     hedge_ratio=1.0,
-                    half_life=float('inf'),
+                    half_life=float("inf"),
                     confidence=0.0,
                 )
 
@@ -238,7 +237,7 @@ class PairsTrading:
                     p_value=1.0,
                     critical_value=0.0,
                     hedge_ratio=1.0,
-                    half_life=float('inf'),
+                    half_life=float("inf"),
                     confidence=0.0,
                 )
 
@@ -289,7 +288,7 @@ class PairsTrading:
                 adf_result = adfuller(spread, maxlag=1)
                 test_statistic = float(adf_result[0])
                 p_value = float(adf_result[1])
-                critical_value = float(adf_result[4]['5%'])
+                critical_value = float(adf_result[4]["5%"])
 
                 # Validate results
                 if not (
@@ -307,7 +306,7 @@ class PairsTrading:
 
                 # Validate half-life
                 if not np.isfinite(half_life) or half_life <= 0:
-                    half_life = float('inf')
+                    half_life = float("inf")
 
                 # Confidence based on p-value
                 confidence = max(0.0, min(1.0, 1.0 - p_value))
@@ -353,7 +352,7 @@ class PairsTrading:
                 p_value=1.0,
                 critical_value=0.7,
                 hedge_ratio=1.0,
-                half_life=float('inf'),
+                half_life=float("inf"),
                 confidence=0.0,
             )
 
@@ -382,7 +381,7 @@ class PairsTrading:
                 p_value=1.0,
                 critical_value=0.7,
                 hedge_ratio=1.0,
-                half_life=float('inf'),
+                half_life=float("inf"),
                 confidence=0.0,
             )
 
@@ -398,7 +397,7 @@ class PairsTrading:
                 p_value=1.0,
                 critical_value=0.7,
                 hedge_ratio=1.0,
-                half_life=float('inf'),
+                half_life=float("inf"),
                 confidence=0.0,
             )
 
@@ -410,7 +409,7 @@ class PairsTrading:
                 p_value=1.0,
                 critical_value=0.7,
                 hedge_ratio=1.0,
-                half_life=float('inf'),
+                half_life=float("inf"),
                 confidence=0.0,
             )
 
@@ -446,7 +445,7 @@ class PairsTrading:
 
         # Validate half_life
         if not np.isfinite(half_life) or half_life <= 0:
-            half_life = float('inf')
+            half_life = float("inf")
 
         # Simple cointegration criterion
         is_cointegrated = (
@@ -493,7 +492,7 @@ class PairsTrading:
         theta = -slope
 
         if theta <= 0:
-            return float('inf')
+            return float("inf")
 
         half_life = np.log(2) / theta
 
@@ -546,7 +545,7 @@ class PairsTrading:
         trading_pair: TradingPair,
         prices_a: np.ndarray,
         prices_b: np.ndarray,
-        current_position: Optional[PairPosition] = None,
+        current_position: PairPosition | None = None,
     ) -> PairSignal:
         """
         Generate trading signal for a pair.
@@ -579,9 +578,13 @@ class PairsTrading:
                 return PairSignal.CLOSE_SHORT_LONG
 
             # Check stop loss / take profit
-            if current_position.stop_loss_spread and current_position.take_profit_spread and (
-                spread >= current_position.take_profit_spread
-                or spread <= current_position.stop_loss_spread
+            if (
+                current_position.stop_loss_spread
+                and current_position.take_profit_spread
+                and (
+                    spread >= current_position.take_profit_spread
+                    or spread <= current_position.stop_loss_spread
+                )
             ):
                 if current_position.is_long_short():
                     return PairSignal.CLOSE_LONG_SHORT

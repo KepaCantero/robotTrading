@@ -8,5 +8,5 @@ services and APIs.
 from .backtest_presenter_impl import BacktestPresenterImpl
 
 __all__ = [
-    'BacktestPresenterImpl',
+    "BacktestPresenterImpl",
 ]

@@ -20,11 +20,9 @@ import logging
 from collections import deque
 from datetime import datetime, time
 from decimal import Decimal
-from typing import Any, Dict, List, Optional
+from typing import TYPE_CHECKING, Any
 
 from app.application.scheduling.market_scheduler import MarketScheduler, MarketType
-from app.domain.models.market_data import Quote
-from app.domain.models.portfolio import Portfolio
 from app.domain.models.signal import Signal, SignalSource, SignalStrength, SignalType
 from app.domain.services.analysis.momentum import TechnicalIndicatorCalculator
 from app.shared.config.centralized_config import (
@@ -34,6 +32,10 @@ from app.shared.config.centralized_config import (
 )
 
 from .base import BaseStrategy
+
+if TYPE_CHECKING:
+    from app.domain.models.market_data import Quote
+    from app.domain.models.portfolio import Portfolio
 
 logger = logging.getLogger(__name__)
 
@@ -49,7 +51,7 @@ class CarverRobustRulesStrategy(BaseStrategy):
     - Applies decay factors for smooth position transitions
     """
 
-    def __init__(self, config: Dict[str, Any]):
+    def __init__(self, config: dict[str, Any]):
         """
         Initialize Carver Robust Rules strategy.
 
@@ -118,12 +120,12 @@ class CarverRobustRulesStrategy(BaseStrategy):
         self.indicator_calculator = TechnicalIndicatorCalculator()
 
         # Market scheduler for fixed timestamp execution
-        self.market_scheduler: Optional[MarketScheduler] = None
+        self.market_scheduler: MarketScheduler | None = None
         self.market_type = MarketType.STOCKS_US  # Default
 
         # Last execution time tracking
-        self.last_execution_time: Optional[time] = None
-        self.last_execution_date: Optional[datetime] = None
+        self.last_execution_time: time | None = None
+        self.last_execution_date: datetime | None = None
 
         logger.info(f"CarverRobustRulesStrategy initialized: {self.name}")
 
@@ -139,7 +141,7 @@ class CarverRobustRulesStrategy(BaseStrategy):
         self.market_type = market_type
         logger.info(f"Market scheduler set for {market_type.value}")
 
-    def get_required_parameters(self) -> List[str]:
+    def get_required_parameters(self) -> list[str]:
         """
         Get required parameters for the strategy.
 
@@ -155,7 +157,7 @@ class CarverRobustRulesStrategy(BaseStrategy):
             "max_position_size",
         ]
 
-    def generate_signals(self, market_data: Quote) -> List[Signal]:
+    def generate_signals(self, market_data: Quote) -> list[Signal]:
         """
         Generate trading signals using Carver's robust rules.
 
@@ -290,7 +292,7 @@ class CarverRobustRulesStrategy(BaseStrategy):
 
         return False
 
-    def _calculate_volatility(self, prices_list: List[float]) -> float:
+    def _calculate_volatility(self, prices_list: list[float]) -> float:
         """
         Calculate volatility for position sizing (Carver's methodology).
 
@@ -357,7 +359,7 @@ class CarverRobustRulesStrategy(BaseStrategy):
 
         return max(0.0, min(weight, 1.0))
 
-    def _apply_decay_factor(self, current_weight: float, previous_weight: Optional[float]) -> float:
+    def _apply_decay_factor(self, current_weight: float, previous_weight: float | None) -> float:
         """
         Apply decay factor for smooth transitions (Carver's methodology).
 
@@ -480,15 +482,13 @@ class CarverRobustRulesStrategy(BaseStrategy):
                 position_size = self.get_position_size(signal, portfolio)
                 if position_size <= 0:
                     logger.info(
-                        f"CARVER risk_check REJECTED SELL {signal.symbol}: "
-                        f"Position size too small"
+                        f"CARVER risk_check REJECTED SELL {signal.symbol}: Position size too small"
                     )
                     return False
 
                 if existing_position.quantity < position_size:
                     logger.info(
-                        f"CARVER risk_check REJECTED SELL {signal.symbol}: "
-                        f"Insufficient position"
+                        f"CARVER risk_check REJECTED SELL {signal.symbol}: Insufficient position"
                     )
                     return False
 
@@ -496,15 +496,14 @@ class CarverRobustRulesStrategy(BaseStrategy):
                 position_size = self.get_position_size(signal, portfolio)
                 if position_size <= 0:
                     logger.info(
-                        f"CARVER risk_check REJECTED BUY {signal.symbol}: "
-                        f"Position size too small"
+                        f"CARVER risk_check REJECTED BUY {signal.symbol}: Position size too small"
                     )
                     return False
 
                 required_cash = signal.price * position_size
                 if required_cash > portfolio.cash:
                     logger.info(
-                        f"CARVER risk_check REJECTED BUY {signal.symbol}: " f"Insufficient cash"
+                        f"CARVER risk_check REJECTED BUY {signal.symbol}: Insufficient cash"
                     )
                     return False
 

@@ -20,4 +20,4 @@ def get_signal_scoring_engine() -> SignalScoringEngineProtocol:
     return _get_engine()
 
 
-__all__ = ["get_signal_scoring_engine", "SignalScoringEngineProtocol"]
+__all__ = ["SignalScoringEngineProtocol", "get_signal_scoring_engine"]

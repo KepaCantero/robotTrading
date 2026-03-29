@@ -10,7 +10,7 @@ from .responses import HealthResponse, PortfolioResponse, StrategyResponse
 __all__ = [
     "CreatePortfolioRequest",
     "ExecuteStrategyRequest",
+    "HealthResponse",
     "PortfolioResponse",
     "StrategyResponse",
-    "HealthResponse",
 ]

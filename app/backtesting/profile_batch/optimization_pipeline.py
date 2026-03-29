@@ -13,17 +13,19 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass
-from pathlib import Path
-from typing import Any, Dict
+from typing import TYPE_CHECKING, Any
 
 import numpy as np
 import pandas as pd
 
-from app.domain.models.input_profile import InputProfile
-from app.shared.config.profile_config_loader import ProfileConfigLoader
-
 from .bayesian_optimizer import BayesianOptimizer
 from .optimization_validators import MonteCarloSimulator, OutOfSampleValidator, WalkForwardValidator
+
+if TYPE_CHECKING:
+    from pathlib import Path
+
+    from app.domain.models.input_profile import InputProfile
+    from app.shared.config.profile_config_loader import ProfileConfigLoader
 
 logger = logging.getLogger(__name__)
 
@@ -38,7 +40,7 @@ class BaselineOptimizationComparison:
     win_rate_improvement: float
     sharpe_significant: bool
     return_significant: bool
-    parameter_importance: Dict[str, float]
+    parameter_importance: dict[str, float]
     recommended: str
     confidence: float
     reason: str
@@ -49,13 +51,13 @@ class OptimizedStrategy:
     """Result of optimization pipeline."""
 
     profile_id: str
-    baseline_metrics: Dict[str, Any]
-    optimized_metrics: Dict[str, Any]
-    best_parameters: Dict[str, Any]
-    optimization_history: list[Dict[str, Any]]
-    walk_forward_results: Dict[str, Any] | None
-    monte_carlo_results: Dict[str, Any] | None
-    out_of_sample_results: Dict[str, Any] | None
+    baseline_metrics: dict[str, Any]
+    optimized_metrics: dict[str, Any]
+    best_parameters: dict[str, Any]
+    optimization_history: list[dict[str, Any]]
+    walk_forward_results: dict[str, Any] | None
+    monte_carlo_results: dict[str, Any] | None
+    out_of_sample_results: dict[str, Any] | None
     comparison: BaselineOptimizationComparison
     ready_for_paper_trading: bool
     recommendation: str
@@ -76,9 +78,9 @@ class OptimizationPipeline:
     def __init__(
         self,
         output_dir: Path,
-        optimization_config: Dict[str, Any],
-        validation_config: Dict[str, Any],
-        acceptance_criteria: Dict[str, Any],
+        optimization_config: dict[str, Any],
+        validation_config: dict[str, Any],
+        acceptance_criteria: dict[str, Any],
         profile_config_loader: ProfileConfigLoader | None = None,
     ):
         """
@@ -111,8 +113,8 @@ class OptimizationPipeline:
     def run_optimization_pipeline(
         self,
         profile: InputProfile,
-        config: Dict[str, Any],
-        baseline_metrics: Dict[str, Any],
+        config: dict[str, Any],
+        baseline_metrics: dict[str, Any],
         multi_strategy: bool = False,
     ) -> OptimizedStrategy:
         """
@@ -186,7 +188,7 @@ class OptimizationPipeline:
         )
 
     def _generate_comparison(
-        self, baseline: Dict[str, Any], optimized: Dict[str, Any], optuna_results: Dict[str, Any]
+        self, baseline: dict[str, Any], optimized: dict[str, Any], optuna_results: dict[str, Any]
     ) -> BaselineOptimizationComparison:
         """Generate baseline vs optimization comparison."""
         significance_threshold = self.acceptance_criteria.get("significance_threshold", 5)
@@ -241,7 +243,7 @@ class OptimizationPipeline:
             reason=reason,
         )
 
-    def _calculate_parameter_importance(self, history: list[Dict[str, Any]]) -> Dict[str, float]:
+    def _calculate_parameter_importance(self, history: list[dict[str, Any]]) -> dict[str, float]:
         """Calculate parameter importance from optimization history."""
         if not history:
             return {}

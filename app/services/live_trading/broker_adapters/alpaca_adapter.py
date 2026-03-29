@@ -14,7 +14,7 @@ import asyncio
 import logging
 from datetime import datetime
 from decimal import Decimal
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Callable
 
 from app.domain.services.trading_validators import TradingValidator
 from app.services.live_trading.broker_connector import (
@@ -44,9 +44,9 @@ class AlpacaAdapter:
     def __init__(self):
         """Initialize Alpaca adapter with error recovery."""
         self.client = AlpacaClient()
-        self.account: Optional[BrokerAccount] = None
-        self.positions: Dict[str, BrokerPosition] = {}
-        self.orders: Dict[str, BrokerOrder] = {}
+        self.account: BrokerAccount | None = None
+        self.positions: dict[str, BrokerPosition] = {}
+        self.orders: dict[str, BrokerOrder] = {}
         self.is_connected = False
 
         # Error recovery and resilience
@@ -58,14 +58,14 @@ class AlpacaAdapter:
         self.validator = TradingValidator()
 
         # Recovery callbacks
-        self.on_circuit_break: Optional[Callable[[], None]] = None
-        self.on_sync_error: Optional[Callable[[Exception], None]] = None
+        self.on_circuit_break: Callable[[], None] | None = None
+        self.on_sync_error: Callable[[Exception], None] | None = None
 
     async def connect(
         self,
-        api_key: Optional[str] = None,
-        api_secret: Optional[str] = None,
-        account_id: Optional[str] = None,
+        api_key: str | None = None,
+        api_secret: str | None = None,
+        account_id: str | None = None,
         paper_trading: bool = True,
         base_url: str = "https://paper-api.alpaca.markets",
         **kwargs,
@@ -121,10 +121,10 @@ class AlpacaAdapter:
             return True
 
         except AlpacaClientError as e:
-            logger.error(f"❌ Alpaca connection failed: {str(e)}")
+            logger.error(f"❌ Alpaca connection failed: {e!s}")
             return False
         except (OSError, ValueError) as e:
-            logger.error(f"❌ Unexpected error during connection: {str(e)}")
+            logger.error(f"❌ Unexpected error during connection: {e!s}")
             return False
 
     async def disconnect(self) -> bool:
@@ -139,7 +139,7 @@ class AlpacaAdapter:
             logger.info("✅ Disconnected from Alpaca")
             return True
         except (asyncio.TimeoutError, OSError) as e:
-            logger.error(f"❌ Error during disconnect: {str(e)}")
+            logger.error(f"❌ Error during disconnect: {e!s}")
             return False
 
     async def place_order(
@@ -148,9 +148,9 @@ class AlpacaAdapter:
         side: OrderSide,
         quantity: Decimal,
         order_type: OrderType = OrderType.MARKET,
-        price: Optional[Decimal] = None,
-        stop_price: Optional[Decimal] = None,
-        client_order_id: Optional[str] = None,
+        price: Decimal | None = None,
+        stop_price: Decimal | None = None,
+        client_order_id: str | None = None,
     ) -> str:
         """Place an order on Alpaca.
 
@@ -206,7 +206,7 @@ class AlpacaAdapter:
                 )
             except ValueError as e:
                 logger.error(f"Position size validation failed: {e}")
-                raise ValueError(f"Position size validation failed: {e}")
+                raise ValueError(f"Position size validation failed: {e}") from e
 
         # Validate stop-loss if provided
         if stop_price:
@@ -216,11 +216,11 @@ class AlpacaAdapter:
                 self.validator.validate_stop_loss(
                     entry_price=estimated_price,
                     stop_loss=stop_price,
-                    side='long' if side == OrderSide.BUY else 'short',
+                    side="long" if side == OrderSide.BUY else "short",
                 )
             except ValueError as e:
                 logger.error(f"Stop-loss validation failed: {e}")
-                raise ValueError(f"Stop-loss validation failed: {e}")
+                raise ValueError(f"Stop-loss validation failed: {e}") from e
         else:
             # Log warning but don't fail (some strategies may not use SL)
             logger.warning(
@@ -262,10 +262,10 @@ class AlpacaAdapter:
             return order.order_id
 
         except AlpacaClientError as e:
-            logger.error(f"❌ Order placement failed: {str(e)}")
+            logger.error(f"❌ Order placement failed: {e!s}")
             raise
         except (ValueError, TypeError, KeyError, AttributeError) as e:
-            logger.error(f"❌ Unexpected error placing order: {str(e)}")
+            logger.error(f"❌ Unexpected error placing order: {e!s}")
             raise
 
     async def cancel_order(self, order_id: str) -> bool:
@@ -291,7 +291,7 @@ class AlpacaAdapter:
             return True
 
         except AlpacaClientError as e:
-            logger.error(f"❌ Order cancellation failed: {str(e)}")
+            logger.error(f"❌ Order cancellation failed: {e!s}")
             return False
 
     async def get_order_status(self, order_id: str) -> OrderStatus:
@@ -311,13 +311,13 @@ class AlpacaAdapter:
             return self._map_order_status(order_data["status"])
 
         except AlpacaClientError as e:
-            logger.warning(f"⚠️  Failed to get order status: {str(e)}")
+            logger.warning(f"⚠️  Failed to get order status: {e!s}")
             # Return cached status if available
             if order_id in self.orders:
                 return self.orders[order_id].status
             return OrderStatus.PENDING
 
-    async def get_account_info(self) -> Optional[BrokerAccount]:
+    async def get_account_info(self) -> BrokerAccount | None:
         """Get account information from Alpaca.
 
         Returns:
@@ -332,11 +332,11 @@ class AlpacaAdapter:
             return self.account
 
         except (asyncio.TimeoutError, OSError) as e:
-            logger.warning(f"⚠️  Failed to get account info: {str(e)}")
+            logger.warning(f"⚠️  Failed to get account info: {e!s}")
             # Return cached account on error (as test expects)
             return self.account
 
-    async def get_positions(self) -> List[BrokerPosition]:
+    async def get_positions(self) -> list[BrokerPosition]:
         """Get all open positions from Alpaca.
 
         Returns:
@@ -355,10 +355,10 @@ class AlpacaAdapter:
             return list(self.positions.values())
 
         except (OSError, ValueError) as e:
-            logger.warning(f"⚠️  Failed to get positions: {str(e)}")
+            logger.warning(f"⚠️  Failed to get positions: {e!s}")
             return list(self.positions.values())
 
-    async def get_position(self, symbol: str) -> Optional[BrokerPosition]:
+    async def get_position(self, symbol: str) -> BrokerPosition | None:
         """Get a specific position.
 
         Args:
@@ -373,7 +373,7 @@ class AlpacaAdapter:
                 return pos
         return None
 
-    async def update_positions(self) -> Dict[str, BrokerPosition]:
+    async def update_positions(self) -> dict[str, BrokerPosition]:
         """Update all positions (alias for get_positions).
 
         Returns:
@@ -393,10 +393,10 @@ class AlpacaAdapter:
             self.account = self._transform_account(account_data)
             return True
         except AlpacaClientError as e:
-            logger.warning(f"⚠️  Failed to sync account balance: {str(e)}")
+            logger.warning(f"⚠️  Failed to sync account balance: {e!s}")
             return False
 
-    async def calculate_portfolio_value(self) -> Optional[Decimal]:
+    async def calculate_portfolio_value(self) -> Decimal | None:
         """Calculate current portfolio value.
 
         Returns:
@@ -407,7 +407,7 @@ class AlpacaAdapter:
 
     # ==================== Data Transformation Methods ====================
 
-    def _transform_account(self, alpaca_account: Dict[str, Any]) -> BrokerAccount:
+    def _transform_account(self, alpaca_account: dict[str, Any]) -> BrokerAccount:
         """Transform Alpaca account data to BrokerAccount.
 
         Args:
@@ -430,7 +430,7 @@ class AlpacaAdapter:
             multiplier=Decimal(str(alpaca_account["multiplier"])),
         )
 
-    def _transform_position(self, alpaca_pos: Dict[str, Any]) -> BrokerPosition:
+    def _transform_position(self, alpaca_pos: dict[str, Any]) -> BrokerPosition:
         """Transform Alpaca position data to BrokerPosition.
 
         Args:
@@ -466,10 +466,10 @@ class AlpacaAdapter:
 
     def _transform_order(
         self,
-        alpaca_order: Dict[str, Any],
+        alpaca_order: dict[str, Any],
         symbol: str,
         side: OrderSide,
-        client_order_id: Optional[str] = None,
+        client_order_id: str | None = None,
     ) -> BrokerOrder:
         """Transform Alpaca order data to BrokerOrder.
 
@@ -552,7 +552,7 @@ class AlpacaAdapter:
 
     # ==================== WebSocket Event Handlers ====================
 
-    def _on_quote_update(self, quote_data: Dict[str, Any]) -> None:
+    def _on_quote_update(self, quote_data: dict[str, Any]) -> None:
         """Handle real-time quote update from WebSocket.
 
         Updates cached position prices and calculates P&L.
@@ -585,9 +585,9 @@ class AlpacaAdapter:
                 )
 
         except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
-            logger.error(f"❌ Error processing quote update: {str(e)}")
+            logger.error(f"❌ Error processing quote update: {e!s}")
 
-    def _on_trade_update(self, trade_data: Dict[str, Any]) -> None:
+    def _on_trade_update(self, trade_data: dict[str, Any]) -> None:
         """Handle real-time trade/execution update from WebSocket.
 
         Updates order status and position on execution.
@@ -606,9 +606,9 @@ class AlpacaAdapter:
             # For now, just log the event
 
         except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
-            logger.error(f"❌ Error processing trade update: {str(e)}")
+            logger.error(f"❌ Error processing trade update: {e!s}")
 
-    def _on_order_update(self, order_data: Dict[str, Any]) -> None:
+    def _on_order_update(self, order_data: dict[str, Any]) -> None:
         """Handle real-time order status update from WebSocket.
 
         Updates cached order status immediately.
@@ -635,7 +635,7 @@ class AlpacaAdapter:
                 logger.info(f"📋 Order {order_id}: {old_status.value} → {new_status.value}")
 
         except (ValueError, TypeError, KeyError, AttributeError) as e:
-            logger.error(f"❌ Error processing order update: {str(e)}")
+            logger.error(f"❌ Error processing order update: {e!s}")
 
     def _on_stream_error(self, error: Exception) -> None:
         """Handle WebSocket stream connection error.
@@ -643,7 +643,7 @@ class AlpacaAdapter:
         Args:
             error: Exception from WebSocket connection
         """
-        logger.error(f"❌ WebSocket stream error: {str(error)}")
+        logger.error(f"❌ WebSocket stream error: {error!s}")
         # Could emit alerts or trigger reconnection strategy here
 
     # ==================== Error Recovery & Retry Methods ====================
@@ -690,7 +690,7 @@ class AlpacaAdapter:
 
                 # Check if retryable
                 if strategy != ErrorRecoveryStrategy.RETRY:
-                    logger.error(f"❌ {operation_name} failed with non-retryable error: {str(e)}")
+                    logger.error(f"❌ {operation_name} failed with non-retryable error: {e!s}")
                     raise
 
                 # Calculate backoff delay
@@ -704,9 +704,9 @@ class AlpacaAdapter:
 
         # All retries exhausted
         logger.error(f"❌ {operation_name} failed after {self.retry_config.max_attempts} attempts")
-        raise AlpacaClientError(f"{operation_name} failed: {str(last_error)}")
+        raise AlpacaClientError(f"{operation_name} failed: {last_error!s}")
 
-    async def _sync_positions_with_recovery(self) -> Dict[str, BrokerPosition]:
+    async def _sync_positions_with_recovery(self) -> dict[str, BrokerPosition]:
         """Sync positions with error recovery.
 
         Uses position sync recovery to handle partial failures gracefully.
@@ -732,13 +732,13 @@ class AlpacaAdapter:
                 raise
 
             # Return cached positions if available
-            logger.warning(f"⚠️  Position sync failed, using cached data: {str(e)}")
+            logger.warning(f"⚠️  Position sync failed, using cached data: {e!s}")
             return self.positions
 
     def register_error_callbacks(
         self,
-        on_circuit_break: Optional[Callable[[], None]] = None,
-        on_sync_error: Optional[Callable[[Exception], None]] = None,
+        on_circuit_break: Callable[[], None] | None = None,
+        on_sync_error: Callable[[Exception], None] | None = None,
     ) -> None:
         """Register error recovery callbacks.
 
@@ -752,7 +752,7 @@ class AlpacaAdapter:
         self.error_manager.on_sync_needed = self._sync_positions_with_recovery
         logger.info("Error recovery callbacks registered")
 
-    def get_error_recovery_status(self) -> Dict[str, Any]:
+    def get_error_recovery_status(self) -> dict[str, Any]:
         """Get current error recovery status.
 
         Returns:
@@ -798,11 +798,11 @@ class AlpacaAdapter:
         side: OrderSide,
         quantity: Decimal,
         order_type: OrderType = OrderType.MARKET,
-        price: Optional[Decimal] = None,
-        stop_price: Optional[Decimal] = None,
-        stop_loss_pct: Optional[Decimal] = None,
-        take_profit_pct: Optional[Decimal] = None,
-    ) -> Dict[str, Any]:
+        price: Decimal | None = None,
+        stop_price: Decimal | None = None,
+        stop_loss_pct: Decimal | None = None,
+        take_profit_pct: Decimal | None = None,
+    ) -> dict[str, Any]:
         """
         Execute a complete trade with risk management.
 

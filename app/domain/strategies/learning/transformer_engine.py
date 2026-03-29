@@ -4,27 +4,27 @@ TransformerEngine - Usa Transformers para optimización de parámetros y predicc
 
 import logging
 import os
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Optional
 
 # ============================================================================
 # CRÍTICO: Configurar variables de entorno ANTES de importar numpy/pandas/PyTorch
 # FORZAR configuración (no solo setdefault) para asegurar que se aplique
 # Esto previene bloqueos de threading con mutex.cc
 # ============================================================================
-os.environ['OMP_NUM_THREADS'] = '1'
-os.environ['OPENBLAS_NUM_THREADS'] = '1'
-os.environ['MKL_NUM_THREADS'] = '1'
-os.environ['NUMEXPR_NUM_THREADS'] = '1'
-os.environ['VECLIB_MAXIMUM_THREADS'] = '1'
-os.environ['MKL_SERVICE_FORCE_INTEL'] = '1'
-os.environ['KMP_DUPLICATE_LIB_OK'] = 'TRUE'
-os.environ['PYTORCH_ENABLE_MPS_FALLBACK'] = '1'
-os.environ['FOR_DISABLE_CONSOLE_CTRL_HANDLER'] = '1'
-os.environ['CUDA_VISIBLE_DEVICES'] = ''  # Deshabilitar CUDA completamente
-os.environ['TORCH_USE_CUDA_DSA'] = '0'
-os.environ['MKL_DYNAMIC'] = 'FALSE'
-os.environ['MKL_INTERFACE_LAYER'] = 'LP64,GNU'
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
+os.environ["OMP_NUM_THREADS"] = "1"
+os.environ["OPENBLAS_NUM_THREADS"] = "1"
+os.environ["MKL_NUM_THREADS"] = "1"
+os.environ["NUMEXPR_NUM_THREADS"] = "1"
+os.environ["VECLIB_MAXIMUM_THREADS"] = "1"
+os.environ["MKL_SERVICE_FORCE_INTEL"] = "1"
+os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
+os.environ["PYTORCH_ENABLE_MPS_FALLBACK"] = "1"
+os.environ["FOR_DISABLE_CONSOLE_CTRL_HANDLER"] = "1"
+os.environ["CUDA_VISIBLE_DEVICES"] = ""  # Deshabilitar CUDA completamente
+os.environ["TORCH_USE_CUDA_DSA"] = "0"
+os.environ["MKL_DYNAMIC"] = "FALSE"
+os.environ["MKL_INTERFACE_LAYER"] = "LP64,GNU"
+os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
 
 # Ahora importar numpy y pandas DESPUÉS de configurar variables
 import numpy as np
@@ -33,11 +33,12 @@ from .base_learning_engine import BaseLearningEngine
 
 logger = logging.getLogger(__name__)
 
+import contextlib
+
 # REQUIRED: PyTorch is REQUIRED - NO FALLBACKS
 import torch
 import torch.nn as nn
 import torch.optim as optim
-import contextlib
 
 # Configure threading BEFORE any PyTorch operations
 torch.set_num_threads(1)
@@ -61,7 +62,7 @@ class TransformerEngine(BaseLearningEngine):
     - Detección de patrones complejos en series de tiempo
     """
 
-    def __init__(self, config: Dict, defer_pytorch_init: bool = False):
+    def __init__(self, config: dict, defer_pytorch_init: bool = False):
         """
         Inicializar TransformerEngine.
 
@@ -117,8 +118,8 @@ class TransformerEngine(BaseLearningEngine):
             torch.set_num_interop_threads(1)
 
     def _prepare_sequences(
-        self, data: List[Dict[str, Any]], sequence_length: int = 30, target_key: str = "target"
-    ) -> Tuple[np.ndarray, Optional[np.ndarray]]:
+        self, data: list[dict[str, object]], sequence_length: int = 30, target_key: str = "target"
+    ) -> tuple[np.ndarray, Optional[np.ndarray]]:
         """
         Preparar sequences de tiempo desde datos históricos.
 
@@ -173,9 +174,9 @@ class TransformerEngine(BaseLearningEngine):
 
     def train(
         self,
-        training_data: Optional[Dict[str, Any]] = None,
-        validation_data: Optional[Dict[str, Any]] = None,
-    ) -> Dict[str, Any]:
+        training_data: Optional[dict[str, object]] = None,
+        validation_data: Optional[dict[str, object]] = None,
+    ) -> dict[str, object]:
         """
         Entrenar el modelo Transformer.
 
@@ -195,9 +196,9 @@ class TransformerEngine(BaseLearningEngine):
             logger.info("No training data provided - marking model as trained (dummy mode)")
             self.is_trained = True
             return {
-                'loss': 0.0,
-                'accuracy': 0.0,
-                'samples': 0,
+                "loss": 0.0,
+                "accuracy": 0.0,
+                "samples": 0,
             }
 
         # PyTorch es REQUIRED - ya importado al inicio del módulo
@@ -205,25 +206,25 @@ class TransformerEngine(BaseLearningEngine):
         try:
             # Preparar datos
             if isinstance(training_data, dict):
-                if 'sequences' in training_data and 'labels' in training_data:
-                    sequences = np.array(training_data['sequences'])
-                    labels = np.array(training_data['labels'])
-                elif 'features' in training_data:
+                if "sequences" in training_data and "labels" in training_data:
+                    sequences = np.array(training_data["sequences"])
+                    labels = np.array(training_data["labels"])
+                elif "features" in training_data:
                     # Convertir features a sequences
                     sequences, labels = self._prepare_sequences(
-                        training_data.get('features', []), sequence_length=30
+                        training_data.get("features", []), sequence_length=30
                     )
                 else:
                     # Intentar como lista de dicts
                     sequences, labels = self._prepare_sequences(
-                        training_data.get('data', []), sequence_length=30
+                        training_data.get("data", []), sequence_length=30
                     )
             else:
                 sequences, labels = self._prepare_sequences(training_data, sequence_length=30)
 
             if len(sequences) == 0:
                 logger.warning("No hay sequences válidas para entrenar")
-                return {'loss': float('inf'), 'error': 'no_data'}
+                return {"loss": float("inf"), "error": "no_data"}
 
             # Inicializar modelo si no existe
             if self.model is None:
@@ -253,7 +254,7 @@ class TransformerEngine(BaseLearningEngine):
                         output_size=1,
                         max_len=1000,
                     ):
-                        super(TransformerModel, self).__init__()
+                        super().__init__()
                         self.d_model = d_model
 
                         # Proyección de entrada
@@ -268,7 +269,7 @@ class TransformerEngine(BaseLearningEngine):
                         )
                         pe[:, 0::2] = torch.sin(position * div_term)
                         pe[:, 1::2] = torch.cos(position * div_term)
-                        self.register_buffer('pos_encoder', pe.unsqueeze(0))
+                        self.register_buffer("pos_encoder", pe.unsqueeze(0))
 
                         # Transformer encoder
                         encoder_layer = nn.TransformerEncoderLayer(
@@ -321,7 +322,7 @@ class TransformerEngine(BaseLearningEngine):
                         self.model = self.model.to(self.device, non_blocking=False)
                 except (ValueError, TypeError, KeyError, AttributeError) as e:
                     error_msg = str(e).lower()
-                    if 'mutex' in error_msg or 'lock' in error_msg:
+                    if "mutex" in error_msg or "lock" in error_msg:
                         logger.error(
                             "❌ Bloqueo de mutex detectado al crear TransformerModel. "
                             "Intenta: export MKL_SERVICE_FORCE_INTEL=1 && export KMP_DUPLICATE_LIB_OK=TRUE"
@@ -333,7 +334,8 @@ class TransformerEngine(BaseLearningEngine):
 
             # PyTorch is imported at module level (lines 37-39)
             # Import Dataset and DataLoader from torch.utils.data
-            from torch.utils.data import DataLoader as _DataLoader, Dataset as _Dataset
+            from torch.utils.data import DataLoader as _DataLoader
+            from torch.utils.data import Dataset as _Dataset
 
             # Type guard - model should exist at this point
             assert self.model is not None
@@ -393,7 +395,6 @@ class TransformerEngine(BaseLearningEngine):
             train_losses = []
 
             for epoch in range(self.epochs):
-
                 batch_losses = []
                 for batch_sequences, batch_labels in train_loader:
                     batch_sequences = batch_sequences.to(self.device)
@@ -411,17 +412,20 @@ class TransformerEngine(BaseLearningEngine):
                 train_losses.append(avg_loss)
 
                 if (epoch + 1) % 10 == 0:
-                    logger.debug(f"Transformer Epoch {epoch+1}/{self.epochs}, Loss: {avg_loss:.6f}")
+                    logger.debug(
+                        f"Transformer Epoch {epoch + 1}/{self.epochs}, Loss: {avg_loss:.6f}"
+                    )
 
             # Validación si está disponible
             val_loss = None
             if validation_data is not None:
                 val_sequences, val_labels = self._prepare_sequences(
-                    validation_data.get('data', validation_data), sequence_length=30
+                    validation_data.get("data", validation_data), sequence_length=30
                 )
                 if len(val_sequences) > 0:
                     # Import Dataset and DataLoader again for this context
-                    from torch.utils.data import DataLoader as _DataLoader, Dataset as _Dataset
+                    from torch.utils.data import DataLoader as _DataLoader
+                    from torch.utils.data import Dataset as _Dataset
 
                     class TransformerDatasetVal(_Dataset):
                         """Dataset para sequences de tiempo para Transformer."""
@@ -485,11 +489,11 @@ class TransformerEngine(BaseLearningEngine):
             self.is_trained = True
 
             metrics = {
-                'loss': final_loss,
-                'train_losses': train_losses,
+                "loss": final_loss,
+                "train_losses": train_losses,
             }
             if val_loss is not None:
-                metrics['val_loss'] = val_loss
+                metrics["val_loss"] = val_loss
 
             logger.info(
                 f"TransformerEngine entrenado: Loss={final_loss:.6f}"
@@ -500,9 +504,9 @@ class TransformerEngine(BaseLearningEngine):
 
         except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.error(f"Error entrenando TransformerEngine: {e}", exc_info=True)
-            return {'error': str(e), 'loss': float('inf')}
+            return {"error": str(e), "loss": float("inf")}
 
-    def predict(self, features: Dict[str, Any]) -> Dict[str, Any]:
+    def predict(self, features: dict[str, object]) -> dict[str, object]:
         """
         Generar predicción usando el modelo Transformer.
 
@@ -514,21 +518,21 @@ class TransformerEngine(BaseLearningEngine):
         """
         if not self.is_ready():
             logger.warning("TransformerEngine no está entrenado")
-            return {'prediction': 0.0, 'confidence': 0.0, 'ready': False}
+            return {"prediction": 0.0, "confidence": 0.0, "ready": False}
 
         try:
             # Convertir features a sequence
-            if 'sequence' in features:
-                sequence = np.array(features['sequence'])
-            elif 'features' in features:
+            if "sequence" in features:
+                sequence = np.array(features["sequence"])
+            elif "features" in features:
                 # Usar features como sequence
                 feature_list = [
-                    v for v in features['features'].values() if isinstance(v, (int, float))
+                    v for v in features["features"].values() if isinstance(v, (int, float))
                 ]
                 sequence = np.array(feature_list[-30:])  # Últimos 30 valores
             else:
                 logger.warning("No se encontró sequence en features")
-                return {'prediction': 0.0, 'confidence': 0.0}
+                return {"prediction": 0.0, "confidence": 0.0}
 
             # Reshape: (1, seq_len, features)
             if sequence.ndim == 1:
@@ -537,7 +541,7 @@ class TransformerEngine(BaseLearningEngine):
                 sequence = sequence.reshape((1, sequence.shape[0], sequence.shape[1]))
             else:
                 # Already in correct shape, just add batch dimension
-                sequence = sequence.reshape((1,) + sequence.shape)
+                sequence = sequence.reshape((1, *sequence.shape))
 
             # Predecir
             assert self.model is not None  # Type guard
@@ -548,16 +552,16 @@ class TransformerEngine(BaseLearningEngine):
                 prediction = output.cpu().numpy()[0, 0]
 
             return {
-                'prediction': float(prediction),
-                'confidence': min(1.0, abs(prediction)),
-                'ready': True,
+                "prediction": float(prediction),
+                "confidence": min(1.0, abs(prediction)),
+                "ready": True,
             }
 
         except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.error(f"Error en predicción Transformer: {e}", exc_info=True)
-            return {'prediction': 0.0, 'confidence': 0.0, 'error': str(e)}
+            return {"prediction": 0.0, "confidence": 0.0, "error": str(e)}
 
-    def evaluate(self, test_data: Dict[str, Any]) -> Dict[str, Any]:
+    def evaluate(self, test_data: dict[str, object]) -> dict[str, object]:
         """
         Evaluar el modelo con datos de prueba.
 
@@ -568,18 +572,19 @@ class TransformerEngine(BaseLearningEngine):
             Dict con métricas de evaluación
         """
         if not self.is_ready():
-            return {'error': 'model_not_trained'}
+            return {"error": "model_not_trained"}
 
         try:
             sequences, labels = self._prepare_sequences(
-                test_data.get('data', test_data), sequence_length=30
+                test_data.get("data", test_data), sequence_length=30
             )
 
             if len(sequences) == 0:
-                return {'error': 'no_data'}
+                return {"error": "no_data"}
 
             # Import Dataset and DataLoader for this context
-            from torch.utils.data import DataLoader as _DataLoader, Dataset as _Dataset
+            from torch.utils.data import DataLoader as _DataLoader
+            from torch.utils.data import Dataset as _Dataset
 
             # Definir TransformerDatasetEval aquí también
             class TransformerDatasetEval(_Dataset):
@@ -654,8 +659,8 @@ class TransformerEngine(BaseLearningEngine):
             mae = np.mean(np.abs(predictions - targets))
             rmse = np.sqrt(np.mean((predictions - targets) ** 2))
 
-            return {'loss': avg_loss, 'mae': float(mae), 'rmse': float(rmse)}
+            return {"loss": avg_loss, "mae": float(mae), "rmse": float(rmse)}
 
         except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.error(f"Error evaluando TransformerEngine: {e}", exc_info=True)
-            return {'error': str(e)}
+            return {"error": str(e)}

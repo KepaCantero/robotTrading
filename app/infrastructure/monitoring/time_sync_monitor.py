@@ -12,13 +12,13 @@ Phase 2.7: Time Sync Monitor Implementation
 """
 
 import asyncio
+import contextlib
 import logging
 from dataclasses import dataclass
 from datetime import datetime, timezone
-from typing import TYPE_CHECKING, Callable, Dict, Optional, Union
+from typing import TYPE_CHECKING, Callable, Optional, Union
 
 from app.shared.utils.timezone_utils import utc_now
-import contextlib
 
 logger = logging.getLogger(__name__)
 
@@ -371,7 +371,7 @@ class TimeSyncMonitor:
             logger.error(f"Error syncing clock: {e}")
             return False
 
-    async def force_check(self) -> Dict[str, Union[str, int, float, bool, None]]:
+    async def force_check(self) -> dict[str, Union[str, int, float, bool, None]]:
         """
         Force an immediate time sync check.
 
@@ -393,6 +393,7 @@ class TimeSyncMonitor:
 
 # Singleton instance
 _monitor: Optional[TimeSyncMonitor] = None
+_stop_task: Optional[asyncio.Task] = None
 
 
 def get_time_sync_monitor(config: Optional[TimeSyncConfig] = None) -> TimeSyncMonitor:
@@ -414,13 +415,13 @@ def get_time_sync_monitor(config: Optional[TimeSyncConfig] = None) -> TimeSyncMo
 
 def reset_time_sync_monitor() -> None:
     """Reset the singleton TimeSyncMonitor (mainly for testing)."""
-    global _monitor
+    global _monitor, _stop_task
     if _monitor is not None and _monitor._is_monitoring:
         # Stop monitoring if running
         try:
             loop = asyncio.get_event_loop()
             if loop.is_running():
-                loop.create_task(_monitor.stop())
+                _stop_task = loop.create_task(_monitor.stop())
             else:
                 loop.run_until_complete(_monitor.stop())
         except (asyncio.TimeoutError, OSError) as e:

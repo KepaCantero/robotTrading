@@ -12,7 +12,6 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass
-from typing import Dict, List, Optional, Tuple
 
 import numpy as np
 from scipy.optimize import minimize
@@ -38,7 +37,7 @@ DEFAULT_RISK_FREE_RATE = 0.02  # Annual risk-free rate
 class View:
     """Investor view on asset returns."""
 
-    symbols: List[str]  # Assets involved in view
+    symbols: list[str]  # Assets involved in view
     pick: np.ndarray  # View weights (sums to 0 for relative views)
     confidence: float  # View confidence (0-1)
     expected_return: float  # Expected return of view (annualized)
@@ -50,8 +49,7 @@ class View:
 
         if len(self.pick) != len(self.symbols):
             raise ValueError(
-                f"Pick vector length {len(self.pick)} must match "
-                f"symbols length {len(self.symbols)}"
+                f"Pick vector length {len(self.pick)} must match symbols length {len(self.symbols)}"
             )
 
 
@@ -62,7 +60,7 @@ class BlackLittermanResult:
     equilibrium_returns: np.ndarray  # Implied equilibrium returns (daily)
     blended_returns: np.ndarray  # BL blended returns (daily)
     weights: np.ndarray  # Optimal weights
-    symbols: List[str]  # Asset symbols
+    symbols: list[str]  # Asset symbols
     view_adjustment: np.ndarray  # Adjustment from views (daily)
 
     # Optimization metrics (annualized)
@@ -72,7 +70,7 @@ class BlackLittermanResult:
     converged: bool
 
     @property
-    def weights_dict(self) -> Dict[str, float]:
+    def weights_dict(self) -> dict[str, float]:
         """Get weights as dictionary."""
         return {symbol: float(w) for symbol, w in zip(self.symbols, self.weights)}
 
@@ -121,9 +119,9 @@ class BlackLittermanOptimizer:
     def optimize(
         self,
         cov_matrix: np.ndarray,
-        market_cap_weights: Optional[np.ndarray] = None,
-        views: Optional[List[View]] = None,
-        symbols: Optional[List[str]] = None,
+        market_cap_weights: np.ndarray | None = None,
+        views: list[View] | None = None,
+        symbols: list[str] | None = None,
     ) -> BlackLittermanResult:
         """
         Compute Black-Litterman optimal portfolio.
@@ -180,7 +178,7 @@ class BlackLittermanOptimizer:
                 e,
                 {"n_assets": n_assets, "method": "BL equilibrium returns"},
             )
-            raise ValueError(f"Failed to calculate implied returns: {e}")
+            raise ValueError(f"Failed to calculate implied returns: {e}") from e
 
         # Step 2: Combine with views
         if views is None or len(views) == 0:
@@ -271,9 +269,9 @@ class BlackLittermanOptimizer:
         self,
         cov_matrix: np.ndarray,
         implied_returns: np.ndarray,
-        views: List[View],
-        symbols: List[str],
-    ) -> Tuple[np.ndarray, np.ndarray]:
+        views: list[View],
+        symbols: list[str],
+    ) -> tuple[np.ndarray, np.ndarray]:
         """
         Combine equilibrium returns with investor views.
 
@@ -365,7 +363,7 @@ class BlackLittermanOptimizer:
         self,
         cov_matrix: np.ndarray,
         expected_returns: np.ndarray,
-        symbols: List[str],
+        symbols: list[str],
     ) -> OptimizationResult:
         """
         Optimize using expected returns.
@@ -429,7 +427,7 @@ class BlackLittermanOptimizer:
 
 
 def create_relative_view(
-    symbols: List[str],
+    symbols: list[str],
     outperform: str,
     underperform: str,
     confidence: float,

@@ -28,19 +28,19 @@ from app.services.position_management.trailing_stop_manager import (
 )
 
 __all__ = [
+    # Partial Take Profit (R12)
+    "PartialTakeProfit",
+    "PositionState",
+    # Main Implementation
+    "PostTradeAnalyzerImpl",
+    "ProfitTarget",
+    "PyramidingAddition",
+    # Pyramiding (R13)
+    "PyramidingManager",
+    "PyramidingResult",
+    "TakeProfitAction",
+    "TradeSignal",
     # Trailing Stop (R11)
     "TrailingStopManager",
     "TrailingStopResult",
-    # Partial Take Profit (R12)
-    "PartialTakeProfit",
-    "ProfitTarget",
-    "TakeProfitAction",
-    # Pyramiding (R13)
-    "PyramidingManager",
-    "PyramidingAddition",
-    "PyramidingResult",
-    # Main Implementation
-    "PostTradeAnalyzerImpl",
-    "PositionState",
-    "TradeSignal",
 ]

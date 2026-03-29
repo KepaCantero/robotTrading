@@ -8,7 +8,7 @@ DEPRECATED: Import from app.services.momentum instead.
 """
 
 import logging
-from typing import Dict, List, Optional
+from typing import Optional
 
 from app.domain.models.momentum import (
     MomentumAnalysis,
@@ -24,8 +24,8 @@ logger = logging.getLogger(__name__)
 
 # Export main classes for backward compatibility
 __all__ = [
-    "TechnicalIndicatorCalculator",
     "MomentumAnalysisService",
+    "TechnicalIndicatorCalculator",
     "get_momentum_analysis_service",
 ]
 
@@ -44,8 +44,8 @@ class MomentumAnalysisService:
         """Initialize backward compatibility wrapper."""
         self._service = get_momentum_analysis_service()
         self.asset_service = None  # Removed in SOLID refactor
-        self.strategies: Dict[str, MomentumStrategy] = {}
-        self.analyses: Dict[str, MomentumAnalysis] = {}
+        self.strategies: dict[str, MomentumStrategy] = {}
+        self.analyses: dict[str, MomentumAnalysis] = {}
         self.indicator_calculator = TechnicalIndicatorCalculator()
 
         # Initialize default strategies for backward compatibility
@@ -69,15 +69,15 @@ class MomentumAnalysisService:
 
     async def get_momentum_signals(
         self, filter_criteria: Optional[MomentumFilter] = None
-    ) -> List[MomentumSignal]:
+    ) -> list[MomentumSignal]:
         """Get momentum signals based on filter criteria."""
         return await self._service.get_momentum_signals(filter_criteria)
 
-    async def get_strategy_signals(self, strategy_name: str) -> List[MomentumSignal]:
+    async def get_strategy_signals(self, strategy_name: str) -> list[MomentumSignal]:
         """Get signals for a specific strategy."""
         return await self._service.get_strategy_signals(strategy_name)
 
-    async def get_top_momentum_assets(self, limit: int = 10) -> List[Dict]:
+    async def get_top_momentum_assets(self, limit: int = 10) -> list[dict]:
         """Get top momentum assets."""
         return await self._service.get_top_momentum_assets(limit)
 
@@ -93,7 +93,7 @@ class MomentumAnalysisService:
         return await self._service.get_strategy(strategy_name)
 
     async def update_strategy(
-        self, strategy_name: str, updated_fields: Dict
+        self, strategy_name: str, updated_fields: dict
     ) -> Optional[MomentumStrategy]:
         """Update a momentum strategy."""
         updated_strategy = await self._service.update_strategy(strategy_name, updated_fields)
@@ -110,7 +110,7 @@ class MomentumAnalysisService:
             del self.strategies[strategy_name]
         return result
 
-    async def get_analyses(self) -> List[MomentumAnalysis]:
+    async def get_analyses(self) -> list[MomentumAnalysis]:
         """Get all momentum analyses."""
         return await self._service.get_analyses()
 

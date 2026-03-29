@@ -3,6 +3,7 @@ User Configuration Manager
 
 Manages loading, saving, and accessing user configuration.
 """
+
 import logging
 from decimal import Decimal
 from pathlib import Path
@@ -49,7 +50,7 @@ class UserConfigManager:
             logger.info("Creating default config...")
             return self._create_default_config()
 
-        with open(self.config_path, "r") as f:
+        with open(self.config_path) as f:
             config_data = yaml.safe_load(f)
 
         try:

@@ -12,13 +12,15 @@ from __future__ import annotations
 import logging
 from dataclasses import dataclass
 from decimal import Decimal
-from typing import Dict, List, Optional
+from typing import TYPE_CHECKING
 
 import numpy as np
 
-from app.domain.entities.portfolio import Portfolio
-from app.domain.entities.position import Position
 from app.shared.config.centralized_config import get_config
+
+if TYPE_CHECKING:
+    from app.domain.entities.portfolio import Portfolio
+    from app.domain.entities.position import Position
 
 logger = logging.getLogger(__name__)
 
@@ -57,7 +59,7 @@ class RiskCalculator:
     Provides pure risk calculation logic without external dependencies.
     """
 
-    def __init__(self, risk_free_rate: Decimal = None):
+    def __init__(self, risk_free_rate: Decimal | None = None):
         """
         Initialize risk calculator.
 
@@ -160,7 +162,7 @@ class RiskCalculator:
         self,
         position: Position,
         portfolio_value: Decimal,
-    ) -> Dict[str, Decimal]:
+    ) -> dict[str, Decimal]:
         """
         Calculate risk metrics for a single position.
 
@@ -192,7 +194,7 @@ class RiskCalculator:
 
     def calculate_sharpe_ratio(
         self,
-        returns: List[Decimal],
+        returns: list[Decimal],
         annualized: bool = True,
     ) -> Decimal:
         """
@@ -229,8 +231,8 @@ class RiskCalculator:
 
     def calculate_sortino_ratio(
         self,
-        returns: List[Decimal],
-        target_return: Optional[Decimal] = None,
+        returns: list[Decimal],
+        target_return: Decimal | None = None,
         annualized: bool = True,
     ) -> Decimal:
         """
@@ -277,8 +279,8 @@ class RiskCalculator:
 
     def calculate_beta(
         self,
-        asset_returns: List[Decimal],
-        market_returns: List[Decimal],
+        asset_returns: list[Decimal],
+        market_returns: list[Decimal],
     ) -> Decimal:
         """
         Calculate beta (asset sensitivity to market).
@@ -312,7 +314,7 @@ class RiskCalculator:
 
     @staticmethod
     def _safe_divide(
-        numerator: Decimal, denominator: Decimal, default: Optional[Decimal] = None
+        numerator: Decimal, denominator: Decimal, default: Decimal | None = None
     ) -> Decimal:
         """
         Perform safe division with zero-division protection.
@@ -339,7 +341,7 @@ class RiskCalculator:
         if not portfolio.get_open_positions():
             return Decimal("0")
 
-        max_symbol, max_conc = portfolio.get_max_concentration()
+        _max_symbol, max_conc = portfolio.get_max_concentration()
         return max_conc
 
     def _calculate_herfindahl(self, portfolio: Portfolio) -> Decimal:
@@ -367,8 +369,8 @@ class RiskCalculator:
 
     def _estimate_portfolio_volatility(
         self,
-        weights: List[Decimal],
-        values: List[Decimal],
+        weights: list[Decimal],
+        values: list[Decimal],
     ) -> Decimal:
         """
         Estimate portfolio volatility from weights and values.
@@ -413,7 +415,7 @@ class RiskCalculator:
         """
         return portfolio_value * volatility * z_score
 
-    def _estimate_max_drawdown(self, weights: List[Decimal]) -> Decimal:
+    def _estimate_max_drawdown(self, weights: list[Decimal]) -> Decimal:
         """
         Estimate maximum drawdown from position weights.
 
@@ -438,7 +440,7 @@ class RiskCalculator:
         utilisation = self._safe_divide(current_exposure * Decimal("100"), max_exposure)
         return min(utilisation, Decimal("100"))  # Cap at 100%
 
-    def get_risk_summary(self, metrics: RiskMetrics) -> Dict[str, str]:
+    def get_risk_summary(self, metrics: RiskMetrics) -> dict[str, str]:
         """
         Get human-readable risk summary.
 

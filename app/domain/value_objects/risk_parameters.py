@@ -24,9 +24,9 @@ class RiskParameters:
     max_portfolio_exposure: Decimal
     stop_loss_pct: Decimal
     take_profit_pct: Decimal
-    risk_reward_ratio: Decimal = Decimal('2')
-    max_daily_loss_pct: Decimal = Decimal('0.05')
-    max_drawdown_pct: Decimal = Decimal('0.15')
+    risk_reward_ratio: Decimal = Decimal("2")
+    max_daily_loss_pct: Decimal = Decimal("0.05")
+    max_drawdown_pct: Decimal = Decimal("0.15")
 
     def __post_init__(self):
         """Validate risk parameter invariants."""
@@ -119,36 +119,36 @@ class RiskParameters:
         # Tier-specific risk parameters
         if tier == "micro":
             return cls(
-                max_position_size=Decimal('0.20'),  # 20% max per position
-                max_portfolio_exposure=Decimal('1.0'),  # 100% max exposure
-                stop_loss_pct=Decimal('0.05'),  # 5% stop loss
-                take_profit_pct=Decimal('0.10'),  # 10% take profit
+                max_position_size=Decimal("0.20"),  # 20% max per position
+                max_portfolio_exposure=Decimal("1.0"),  # 100% max exposure
+                stop_loss_pct=Decimal("0.05"),  # 5% stop loss
+                take_profit_pct=Decimal("0.10"),  # 10% take profit
             )
         elif tier == "small":
             return cls(
-                max_position_size=Decimal('0.15'),
-                max_portfolio_exposure=Decimal('1.2'),
-                stop_loss_pct=Decimal('0.04'),
-                take_profit_pct=Decimal('0.08'),
+                max_position_size=Decimal("0.15"),
+                max_portfolio_exposure=Decimal("1.2"),
+                stop_loss_pct=Decimal("0.04"),
+                take_profit_pct=Decimal("0.08"),
             )
         elif tier == "medium":
             return cls(
-                max_position_size=Decimal('0.10'),
-                max_portfolio_exposure=Decimal('1.5'),
-                stop_loss_pct=Decimal('0.03'),
-                take_profit_pct=Decimal('0.06'),
+                max_position_size=Decimal("0.10"),
+                max_portfolio_exposure=Decimal("1.5"),
+                stop_loss_pct=Decimal("0.03"),
+                take_profit_pct=Decimal("0.06"),
             )
         elif tier == "large":
             return cls(
-                max_position_size=Decimal('0.08'),
-                max_portfolio_exposure=Decimal('1.8'),
-                stop_loss_pct=Decimal('0.02'),  # 2% stop loss for large tier
-                take_profit_pct=Decimal('0.05'),
+                max_position_size=Decimal("0.08"),
+                max_portfolio_exposure=Decimal("1.8"),
+                stop_loss_pct=Decimal("0.02"),  # 2% stop loss for large tier
+                take_profit_pct=Decimal("0.05"),
             )
         else:  # institutional
             return cls(
-                max_position_size=Decimal('0.05'),
-                max_portfolio_exposure=Decimal('2.0'),
-                stop_loss_pct=Decimal('0.02'),  # 2% stop loss for institutional
-                take_profit_pct=Decimal('0.04'),
+                max_position_size=Decimal("0.05"),
+                max_portfolio_exposure=Decimal("2.0"),
+                stop_loss_pct=Decimal("0.02"),  # 2% stop loss for institutional
+                take_profit_pct=Decimal("0.04"),
             )

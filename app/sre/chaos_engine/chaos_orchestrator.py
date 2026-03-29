@@ -32,14 +32,16 @@ from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from decimal import Decimal
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import TYPE_CHECKING, Any
 
 import aiosqlite
 
 from app.shared.utils.safe_parse import safe_parse
 
-from .blast_radius import BlastRadiusController
 from .hypothesis import ChaosHypothesis, HypothesisStatus, HypothesisValidator, ValidationResult
+
+if TYPE_CHECKING:
+    from .blast_radius import BlastRadiusController
 
 logger = logging.getLogger(__name__)
 
@@ -68,19 +70,19 @@ class ChaosExperiment:
     name: str
     hypothesis: str
     description: str
-    injectors: List[str]
+    injectors: list[str]
     duration_minutes: int
     status: ExperimentStatus
     created_at: datetime
-    started_at: Optional[datetime] = None
-    completed_at: Optional[datetime] = None
-    blast_radius_config: Optional[Dict[str, Any]] = None
-    validation_result: Optional[ValidationResult] = None
-    metrics: Dict[str, Any] = field(default_factory=dict)
-    incidents: List[Dict[str, Any]] = field(default_factory=list)
-    rollback_actions: List[str] = field(default_factory=list)
+    started_at: datetime | None = None
+    completed_at: datetime | None = None
+    blast_radius_config: dict[str, Any] | None = None
+    validation_result: ValidationResult | None = None
+    metrics: dict[str, Any] = field(default_factory=dict)
+    incidents: list[dict[str, Any]] = field(default_factory=list)
+    rollback_actions: list[str] = field(default_factory=list)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
         return {
             "id": self.id,
@@ -148,11 +150,11 @@ class ChaosOrchestrator:
     def __init__(
         self,
         service_name: str,
-        failure_injectors: Dict[str, Any],
+        failure_injectors: dict[str, Any],
         blast_radius_controller: BlastRadiusController,
         hypothesis_validator: HypothesisValidator,
-        metrics_collector: Optional[Any] = None,
-        config: Optional[ChaosConfig] = None,
+        metrics_collector: object | None = None,
+        config: ChaosConfig | None = None,
     ):
         """
         Initialize chaos orchestrator.
@@ -174,12 +176,12 @@ class ChaosOrchestrator:
         self.logger = logging.getLogger(f"{__name__}.{service_name}")
 
         # State
-        self._active_experiments: Dict[str, ChaosExperiment] = {}
-        self._experiment_history: List[ChaosExperiment] = []
+        self._active_experiments: dict[str, ChaosExperiment] = {}
+        self._experiment_history: list[ChaosExperiment] = []
         self._lock = asyncio.Lock()
 
         # Approval tracking
-        self._approved_experiments: Dict[str, datetime] = {}
+        self._approved_experiments: dict[str, datetime] = {}
 
         self.logger.info(f"ChaosOrchestrator initialized for {service_name}")
 
@@ -285,11 +287,11 @@ class ChaosOrchestrator:
         self,
         name: str,
         hypothesis: str,
-        injectors: List[str],
+        injectors: list[str],
         duration_minutes: int = 30,
         description: str = "",
-        blast_radius_config: Optional[Dict[str, Any]] = None,
-        approved_by: Optional[str] = None,
+        blast_radius_config: dict[str, Any] | None = None,
+        approved_by: str | None = None,
     ) -> ChaosExperiment:
         """
         Run a chaos experiment.
@@ -344,9 +346,9 @@ class ChaosOrchestrator:
 
     async def _validate_experiment_request(
         self,
-        injectors: List[str],
+        injectors: list[str],
         duration_minutes: int,
-        approved_by: Optional[str],
+        approved_by: str | None,
     ) -> None:
         """Validate experiment request."""
         # Check time window
@@ -453,7 +455,7 @@ class ChaosOrchestrator:
             await self._save_experiment(experiment)
             raise
 
-    async def _collect_baseline_metrics(self) -> Dict[str, Any]:
+    async def _collect_baseline_metrics(self) -> dict[str, Any]:
         """Collect baseline metrics before chaos."""
         if not self.metrics_collector:
             return {}
@@ -550,7 +552,7 @@ class ChaosOrchestrator:
     async def _validate_hypothesis(
         self,
         experiment: ChaosExperiment,
-        baseline_metrics: Dict[str, Any],
+        baseline_metrics: dict[str, Any],
     ) -> ValidationResult:
         """Validate experiment hypothesis."""
         try:
@@ -644,11 +646,11 @@ class ChaosOrchestrator:
         except (aiosqlite.Error, asyncio.TimeoutError, OSError) as e:
             self.logger.error(f"Error saving experiment: {e}")
 
-    async def get_active_experiments(self) -> List[ChaosExperiment]:
+    async def get_active_experiments(self) -> list[ChaosExperiment]:
         """Get active experiments."""
         return list(self._active_experiments.values())
 
-    async def get_experiment_history(self, limit: int = 100) -> List[ChaosExperiment]:
+    async def get_experiment_history(self, limit: int = 100) -> list[ChaosExperiment]:
         """Get experiment history."""
         return self._experiment_history[-limit:]
 
@@ -675,7 +677,7 @@ class ChaosOrchestrator:
         self.logger.info(f"Cancelled experiment: {experiment.name}")
         return True
 
-    async def get_summary(self) -> Dict[str, Any]:
+    async def get_summary(self) -> dict[str, Any]:
         """Get chaos orchestrator summary."""
         active = list(self._active_experiments.values())
 

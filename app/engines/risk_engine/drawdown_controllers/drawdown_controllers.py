@@ -20,7 +20,7 @@ import logging
 from abc import ABC, abstractmethod
 from datetime import datetime, timedelta
 from decimal import Decimal
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 import numba
 import numpy as np
@@ -218,7 +218,7 @@ def calculate_rolling_avg_drawdown_numba(values: np.ndarray, window: int) -> flo
 
 
 @jit(nopython=True, cache=True)
-def convert_decimal_array_to_float(values: List) -> np.ndarray:
+def convert_decimal_array_to_float(values: list) -> np.ndarray:
     """
     Convert list of Decimal values to numpy float array (NUMBA helper).
 
@@ -247,7 +247,7 @@ def convert_decimal_array_to_float(values: List) -> np.ndarray:
 class BaseDrawdownController(ABC):
     """Clase base para drawdown controllers."""
 
-    def __init__(self, config: Dict[str, Any]):
+    def __init__(self, config: dict[str, Any]):
         """
         Inicializar drawdown controller.
 
@@ -258,7 +258,7 @@ class BaseDrawdownController(ABC):
         self.logger = logging.getLogger(self.__class__.__name__)
 
     @abstractmethod
-    def assess_drawdown(self, portfolio: Portfolio, **kwargs) -> Dict[str, Any]:
+    def assess_drawdown(self, portfolio: Portfolio, **kwargs) -> dict[str, Any]:
         """
         Evaluar drawdown del portfolio.
 
@@ -284,12 +284,12 @@ class CircuitBreakerController(BaseDrawdownController):
     are exceeded, implementing emergency circuit breakers.
     """
 
-    def __init__(self, config: Dict[str, Any]):
+    def __init__(self, config: dict[str, Any]):
         """Initialize circuit breaker controller."""
         super().__init__(config)
 
         # Circuit breaker configuration
-        self.circuit_breaker_threshold = config.get('circuit_breaker_threshold', 0.15)  # 15%
+        self.circuit_breaker_threshold = config.get("circuit_breaker_threshold", 0.15)  # 15%
         self.circuit_breaker_active = False
         self.circuit_breaker_timestamp: Optional[datetime] = None
         self.circuit_breaker_count = 0
@@ -297,9 +297,9 @@ class CircuitBreakerController(BaseDrawdownController):
     def assess_drawdown(
         self,
         portfolio: Portfolio,
-        strategy_performance: Optional[Dict[str, Dict[str, Any]]] = None,
+        strategy_performance: Optional[dict[str, dict[str, Any]]] = None,
         **kwargs,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Assess drawdown and trigger circuit breaker if needed.
 
@@ -311,7 +311,7 @@ class CircuitBreakerController(BaseDrawdownController):
         Returns:
             Circuit breaker status
         """
-        current_drawdown = kwargs.get('current_drawdown', 0.0)
+        current_drawdown = kwargs.get("current_drawdown", 0.0)
 
         # Check if circuit breaker should be triggered
         if current_drawdown > self.circuit_breaker_threshold and not self.circuit_breaker_active:
@@ -328,11 +328,11 @@ class CircuitBreakerController(BaseDrawdownController):
             self.logger.info("✅ Circuit breaker reset: drawdown recovered")
 
         return {
-            'circuit_breaker_active': self.circuit_breaker_active,
-            'circuit_breaker_threshold': self.circuit_breaker_threshold,
-            'current_drawdown': current_drawdown,
-            'circuit_breaker_count': self.circuit_breaker_count,
-            'circuit_breaker_timestamp': (
+            "circuit_breaker_active": self.circuit_breaker_active,
+            "circuit_breaker_threshold": self.circuit_breaker_threshold,
+            "current_drawdown": current_drawdown,
+            "circuit_breaker_count": self.circuit_breaker_count,
+            "circuit_breaker_timestamp": (
                 self.circuit_breaker_timestamp.isoformat()
                 if self.circuit_breaker_timestamp
                 else None
@@ -347,20 +347,20 @@ class PeakDrawdownController(BaseDrawdownController):
     Monitors and tracks the peak (maximum) drawdown experienced by the portfolio.
     """
 
-    def __init__(self, config: Dict[str, Any]):
+    def __init__(self, config: dict[str, Any]):
         """Initialize peak drawdown controller."""
         super().__init__(config)
 
         self.peak_drawdown = 0.0
         self.peak_drawdown_date: Optional[datetime] = None
-        self.drawdown_history: List[Dict[str, Any]] = []
+        self.drawdown_history: list[dict[str, Any]] = []
 
     def assess_drawdown(
         self,
         portfolio: Portfolio,
-        strategy_performance: Optional[Dict[str, Dict[str, Any]]] = None,
+        strategy_performance: Optional[dict[str, dict[str, Any]]] = None,
         **kwargs,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Assess and update peak drawdown.
 
@@ -372,7 +372,7 @@ class PeakDrawdownController(BaseDrawdownController):
         Returns:
             Peak drawdown status
         """
-        current_drawdown = kwargs.get('current_drawdown', 0.0)
+        current_drawdown = kwargs.get("current_drawdown", 0.0)
 
         # Update peak drawdown
         if current_drawdown > self.peak_drawdown:
@@ -383,9 +383,9 @@ class PeakDrawdownController(BaseDrawdownController):
         # Record in history
         self.drawdown_history.append(
             {
-                'timestamp': datetime.utcnow().isoformat(),
-                'current_drawdown': current_drawdown,
-                'peak_drawdown': self.peak_drawdown,
+                "timestamp": datetime.utcnow().isoformat(),
+                "current_drawdown": current_drawdown,
+                "peak_drawdown": self.peak_drawdown,
             }
         )
 
@@ -394,12 +394,12 @@ class PeakDrawdownController(BaseDrawdownController):
             self.drawdown_history = self.drawdown_history[-1000:]
 
         return {
-            'peak_drawdown': self.peak_drawdown,
-            'peak_drawdown_date': (
+            "peak_drawdown": self.peak_drawdown,
+            "peak_drawdown_date": (
                 self.peak_drawdown_date.isoformat() if self.peak_drawdown_date else None
             ),
-            'current_drawdown': current_drawdown,
-            'history_size': len(self.drawdown_history),
+            "current_drawdown": current_drawdown,
+            "history_size": len(self.drawdown_history),
         }
 
 
@@ -416,35 +416,35 @@ class DrawdownController(BaseDrawdownController):
     50-100x speedup with Numba JIT for numerical calculations.
     """
 
-    def __init__(self, config: Dict[str, Any]):
+    def __init__(self, config: dict[str, Any]):
         """Inicializar drawdown controller."""
         super().__init__(config)
 
         # Configuración de circuit breakers
-        self.max_drawdown_limit = config.get('max_drawdown_limit', 0.20)  # 20% por defecto
+        self.max_drawdown_limit = config.get("max_drawdown_limit", 0.20)  # 20% por defecto
         self.strategy_max_drawdown_limit = config.get(
-            'strategy_max_drawdown_limit', 0.25
+            "strategy_max_drawdown_limit", 0.25
         )  # 25% por estrategia
-        self.recovery_threshold = config.get('recovery_threshold', 0.05)  # 5% recovery
+        self.recovery_threshold = config.get("recovery_threshold", 0.05)  # 5% recovery
 
         # Historial de valores
-        self.portfolio_value_history: List[Dict[str, Any]] = []
-        self.strategy_value_history: Dict[str, List[Dict[str, Any]]] = {}
+        self.portfolio_value_history: list[dict[str, Any]] = []
+        self.strategy_value_history: dict[str, list[dict[str, Any]]] = {}
 
         # Estado de circuit breakers
         self.circuit_breaker_active = False
         self.circuit_breaker_reason = None
         self.circuit_breaker_timestamp: Optional[datetime] = None
 
-        self.strategy_circuit_breakers: Dict[str, bool] = {}
+        self.strategy_circuit_breakers: dict[str, bool] = {}
 
         # Estado de recovery
         self.recovery_mode = False
         self.recovery_start_value: Optional[Decimal] = None
 
         # Configuración de tracking
-        self.lookback_period = config.get('lookback_period', 252)  # 1 año de trading
-        self.rolling_window = config.get('rolling_window', 20)  # 20 días
+        self.lookback_period = config.get("lookback_period", 252)  # 1 año de trading
+        self.rolling_window = config.get("rolling_window", 20)  # 20 días
 
         logger.info(
             f"DrawdownController initialized with Numba JIT: "
@@ -455,9 +455,9 @@ class DrawdownController(BaseDrawdownController):
     def assess_drawdown(
         self,
         portfolio: Portfolio,
-        strategy_performance: Optional[Dict[str, Dict[str, Any]]] = None,
+        strategy_performance: Optional[dict[str, dict[str, Any]]] = None,
         **kwargs,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Evaluar drawdown completo del portfolio (NUMBA OPTIMIZED).
 
@@ -493,25 +493,25 @@ class DrawdownController(BaseDrawdownController):
             recovery_status = self._assess_recovery(portfolio_drawdown)
 
             return {
-                'portfolio_drawdown': portfolio_drawdown,
-                'rolling_drawdown': rolling_drawdown,
-                'strategy_drawdowns': strategy_drawdowns,
-                'circuit_breaker_status': circuit_breaker_status,
-                'recovery_status': recovery_status,
-                'timestamp': datetime.utcnow().isoformat(),
-                'numba_accelerated': NUMBA_AVAILABLE,
+                "portfolio_drawdown": portfolio_drawdown,
+                "rolling_drawdown": rolling_drawdown,
+                "strategy_drawdowns": strategy_drawdowns,
+                "circuit_breaker_status": circuit_breaker_status,
+                "recovery_status": recovery_status,
+                "timestamp": datetime.utcnow().isoformat(),
+                "numba_accelerated": NUMBA_AVAILABLE,
             }
         except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
             self.logger.error(f"Error evaluando drawdown: {e}", exc_info=True)
-            return {'error': str(e)}
+            return {"error": str(e)}
 
     def _update_portfolio_history(self, portfolio: Portfolio) -> None:
         """Actualizar historial de valores del portfolio."""
         entry = {
-            'timestamp': datetime.utcnow(),
-            'portfolio_value': portfolio.total_equity,
-            'cash': portfolio.cash,
-            'positions_value': portfolio.total_equity - portfolio.cash,
+            "timestamp": datetime.utcnow(),
+            "portfolio_value": portfolio.total_equity,
+            "cash": portfolio.cash,
+            "positions_value": portfolio.total_equity - portfolio.cash,
         }
 
         self.portfolio_value_history.append(entry)
@@ -519,10 +519,10 @@ class DrawdownController(BaseDrawdownController):
         # Mantener solo lookback_period días
         cutoff = datetime.utcnow() - timedelta(days=self.lookback_period)
         self.portfolio_value_history = [
-            entry for entry in self.portfolio_value_history if entry['timestamp'] > cutoff
+            entry for entry in self.portfolio_value_history if entry["timestamp"] > cutoff
         ]
 
-    def _calculate_portfolio_drawdown(self) -> Dict[str, Any]:
+    def _calculate_portfolio_drawdown(self) -> dict[str, Any]:
         """
         Calcular drawdown del portfolio (NUMBA OPTIMIZED).
 
@@ -530,15 +530,15 @@ class DrawdownController(BaseDrawdownController):
         """
         if len(self.portfolio_value_history) < 2:
             return {
-                'current_drawdown': 0.0,
-                'max_drawdown': 0.0,
-                'max_drawdown_duration': 0,
-                'underwater_curve': [],
+                "current_drawdown": 0.0,
+                "max_drawdown": 0.0,
+                "max_drawdown_duration": 0,
+                "underwater_curve": [],
             }
 
         # Convertir a numpy array (NUMBA OPTIMIZED)
         values = np.array(
-            [float(entry['portfolio_value']) for entry in self.portfolio_value_history]
+            [float(entry["portfolio_value"]) for entry in self.portfolio_value_history]
         )
 
         # Calcular máximo acumulado (peak) usando NUMBA
@@ -557,27 +557,27 @@ class DrawdownController(BaseDrawdownController):
         max_drawdown_duration = calculate_drawdown_duration_numba(drawdowns)
 
         return {
-            'current_drawdown': current_drawdown,
-            'max_drawdown': max_drawdown,
-            'max_drawdown_duration': max_drawdown_duration,
-            'peak_value': float(peaks[-1]) if len(peaks) > 0 else 0.0,
-            'current_value': float(values[-1]) if len(values) > 0 else 0.0,
-            'underwater_curve': drawdowns.tolist(),
+            "current_drawdown": current_drawdown,
+            "max_drawdown": max_drawdown,
+            "max_drawdown_duration": max_drawdown_duration,
+            "peak_value": float(peaks[-1]) if len(peaks) > 0 else 0.0,
+            "current_value": float(values[-1]) if len(values) > 0 else 0.0,
+            "underwater_curve": drawdowns.tolist(),
         }
 
-    def _calculate_rolling_drawdown(self) -> Dict[str, Any]:
+    def _calculate_rolling_drawdown(self) -> dict[str, Any]:
         """
         Calcular drawdown rolling (NUMBA OPTIMIZED).
 
         PERFORMANCE: 50-100x speedup with Numba JIT
         """
         if len(self.portfolio_value_history) < self.rolling_window:
-            return {'rolling_max_drawdown': 0.0, 'rolling_avg_drawdown': 0.0}
+            return {"rolling_max_drawdown": 0.0, "rolling_avg_drawdown": 0.0}
 
         # Convertir a numpy array
         recent_values = np.array(
             [
-                float(entry['portfolio_value'])
+                float(entry["portfolio_value"])
                 for entry in self.portfolio_value_history[-self.rolling_window :]
             ]
         )
@@ -593,13 +593,13 @@ class DrawdownController(BaseDrawdownController):
         )
 
         return {
-            'rolling_max_drawdown': float(rolling_max_drawdown),
-            'rolling_avg_drawdown': float(rolling_avg_drawdown),
-            'window_size': self.rolling_window,
+            "rolling_max_drawdown": float(rolling_max_drawdown),
+            "rolling_avg_drawdown": float(rolling_avg_drawdown),
+            "window_size": self.rolling_window,
         }
 
     def _calculate_drawdown_duration(
-        self, drawdowns: List[float], timestamps: List[datetime]
+        self, drawdowns: list[float], timestamps: list[datetime]
     ) -> int:
         """
         Calcular duración del máximo drawdown en días (NUMBA OPTIMIZED).
@@ -619,15 +619,15 @@ class DrawdownController(BaseDrawdownController):
         return duration_bars
 
     def _assess_strategy_drawdowns(
-        self, strategy_performance: Dict[str, Dict[str, Any]]
-    ) -> Dict[str, Dict[str, Any]]:
+        self, strategy_performance: dict[str, dict[str, Any]]
+    ) -> dict[str, dict[str, Any]]:
         """Evaluar drawdowns por estrategia."""
         strategy_drawdowns = {}
 
         for strategy, performance in strategy_performance.items():
             # Obtener drawdown de performance
-            max_drawdown = performance.get('max_drawdown', 0.0)
-            current_drawdown = performance.get('current_drawdown', 0.0)
+            max_drawdown = performance.get("max_drawdown", 0.0)
+            current_drawdown = performance.get("current_drawdown", 0.0)
 
             # Verificar circuit breaker por estrategia
             circuit_breaker_active = False
@@ -642,20 +642,20 @@ class DrawdownController(BaseDrawdownController):
                 self.strategy_circuit_breakers[strategy] = False
 
             strategy_drawdowns[strategy] = {
-                'current_drawdown': current_drawdown,
-                'max_drawdown': max_drawdown,
-                'circuit_breaker_active': circuit_breaker_active,
-                'limit': self.strategy_max_drawdown_limit,
+                "current_drawdown": current_drawdown,
+                "max_drawdown": max_drawdown,
+                "circuit_breaker_active": circuit_breaker_active,
+                "limit": self.strategy_max_drawdown_limit,
             }
 
         return strategy_drawdowns
 
     def _check_circuit_breakers(
-        self, portfolio_drawdown: Dict[str, Any], strategy_drawdowns: Dict[str, Dict[str, Any]]
-    ) -> Dict[str, Any]:
+        self, portfolio_drawdown: dict[str, Any], strategy_drawdowns: dict[str, dict[str, Any]]
+    ) -> dict[str, Any]:
         """Verificar y activar circuit breakers."""
-        current_drawdown = portfolio_drawdown.get('current_drawdown', 0.0)
-        portfolio_drawdown.get('max_drawdown', 0.0)
+        current_drawdown = portfolio_drawdown.get("current_drawdown", 0.0)
+        portfolio_drawdown.get("max_drawdown", 0.0)
 
         # Verificar circuit breaker global
         if current_drawdown > self.max_drawdown_limit and not self.circuit_breaker_active:
@@ -676,24 +676,24 @@ class DrawdownController(BaseDrawdownController):
         active_strategy_breakers = sum(1 for cb in self.strategy_circuit_breakers.values() if cb)
 
         return {
-            'global_circuit_breaker_active': self.circuit_breaker_active,
-            'global_circuit_breaker_reason': self.circuit_breaker_reason,
-            'global_circuit_breaker_timestamp': (
+            "global_circuit_breaker_active": self.circuit_breaker_active,
+            "global_circuit_breaker_reason": self.circuit_breaker_reason,
+            "global_circuit_breaker_timestamp": (
                 self.circuit_breaker_timestamp.isoformat()
                 if self.circuit_breaker_timestamp
                 else None
             ),
-            'strategy_circuit_breakers_active': active_strategy_breakers,
-            'strategy_circuit_breakers': dict(self.strategy_circuit_breakers),
-            'max_drawdown_limit': self.max_drawdown_limit,
-            'current_drawdown': current_drawdown,
+            "strategy_circuit_breakers_active": active_strategy_breakers,
+            "strategy_circuit_breakers": dict(self.strategy_circuit_breakers),
+            "max_drawdown_limit": self.max_drawdown_limit,
+            "current_drawdown": current_drawdown,
         }
 
-    def _assess_recovery(self, portfolio_drawdown: Dict[str, Any]) -> Dict[str, Any]:
+    def _assess_recovery(self, portfolio_drawdown: dict[str, Any]) -> dict[str, Any]:
         """Evaluar estado de recovery después de drawdown."""
-        current_drawdown = portfolio_drawdown.get('current_drawdown', 0.0)
-        portfolio_drawdown.get('peak_value', 0.0)
-        current_value = portfolio_drawdown.get('current_value', 0.0)
+        current_drawdown = portfolio_drawdown.get("current_drawdown", 0.0)
+        portfolio_drawdown.get("peak_value", 0.0)
+        current_value = portfolio_drawdown.get("current_value", 0.0)
 
         # Entrar en recovery mode si drawdown es significativo
         if current_drawdown > self.recovery_threshold and not self.recovery_mode:
@@ -720,14 +720,14 @@ class DrawdownController(BaseDrawdownController):
                 )
 
         return {
-            'recovery_mode_active': self.recovery_mode,
-            'recovery_complete': recovery_complete,
-            'recovery_percentage': recovery_percentage,
-            'recovery_start_value': (
+            "recovery_mode_active": self.recovery_mode,
+            "recovery_complete": recovery_complete,
+            "recovery_percentage": recovery_percentage,
+            "recovery_start_value": (
                 float(self.recovery_start_value) if self.recovery_start_value else None
             ),
-            'current_drawdown': current_drawdown,
-            'recovery_threshold': self.recovery_threshold,
+            "current_drawdown": current_drawdown,
+            "recovery_threshold": self.recovery_threshold,
         }
 
     def reset_circuit_breaker(self, strategy: Optional[str] = None) -> bool:
@@ -754,16 +754,16 @@ class DrawdownController(BaseDrawdownController):
 
         return False
 
-    def get_status(self) -> Dict[str, Any]:
+    def get_status(self) -> dict[str, Any]:
         """Obtener estado del controller."""
         return {
-            'circuit_breaker_active': self.circuit_breaker_active,
-            'strategy_circuit_breakers': dict(self.strategy_circuit_breakers),
-            'recovery_mode': self.recovery_mode,
-            'history_size': len(self.portfolio_value_history),
-            'max_drawdown_limit': self.max_drawdown_limit,
-            'strategy_max_drawdown_limit': self.strategy_max_drawdown_limit,
-            'numba_accelerated': NUMBA_AVAILABLE,
+            "circuit_breaker_active": self.circuit_breaker_active,
+            "strategy_circuit_breakers": dict(self.strategy_circuit_breakers),
+            "recovery_mode": self.recovery_mode,
+            "history_size": len(self.portfolio_value_history),
+            "max_drawdown_limit": self.max_drawdown_limit,
+            "strategy_max_drawdown_limit": self.strategy_max_drawdown_limit,
+            "numba_accelerated": NUMBA_AVAILABLE,
         }
 
 
@@ -772,7 +772,7 @@ class DrawdownController(BaseDrawdownController):
 # ============================================================================
 
 
-def calculate_drawdown(values: np.ndarray, method: str = 'peak') -> Dict[str, Any]:
+def calculate_drawdown(values: np.ndarray, method: str = "peak") -> dict[str, Any]:
     """
     Calculate drawdown metrics (NUMBA OPTIMIZED).
 
@@ -791,7 +791,7 @@ def calculate_drawdown(values: np.ndarray, method: str = 'peak') -> Dict[str, An
         >>> print(f"Max DD: {result['max_drawdown']:.2%}")
     """
     if len(values) == 0:
-        return {'error': 'No data provided'}
+        return {"error": "No data provided"}
 
     # Calculate peaks using NUMBA
     peaks = calculate_running_peak_numba(values)
@@ -805,17 +805,17 @@ def calculate_drawdown(values: np.ndarray, method: str = 'peak') -> Dict[str, An
     duration = calculate_drawdown_duration_numba(drawdowns)
 
     return {
-        'current_drawdown': current_drawdown,
-        'max_drawdown': float(max_drawdown),
-        'max_drawdown_duration': duration,
-        'peak_value': float(peaks[-1]) if len(peaks) > 0 else 0.0,
-        'current_value': float(values[-1]) if len(values) > 0 else 0.0,
-        'underwater_curve': drawdowns.tolist(),
-        'numba_accelerated': NUMBA_AVAILABLE,
+        "current_drawdown": current_drawdown,
+        "max_drawdown": float(max_drawdown),
+        "max_drawdown_duration": duration,
+        "peak_value": float(peaks[-1]) if len(peaks) > 0 else 0.0,
+        "current_value": float(values[-1]) if len(values) > 0 else 0.0,
+        "underwater_curve": drawdowns.tolist(),
+        "numba_accelerated": NUMBA_AVAILABLE,
     }
 
 
-def get_drawdown_controller_info() -> Dict[str, Any]:
+def get_drawdown_controller_info() -> dict[str, Any]:
     """
     Get information about drawdown controller capabilities.
 
@@ -823,16 +823,16 @@ def get_drawdown_controller_info() -> Dict[str, Any]:
         Dictionary with controller information
     """
     return {
-        'numba_version': NUMBA_VERSION if NUMBA_AVAILABLE else None,
-        'numba_available': NUMBA_AVAILABLE,
-        'performance_improvements': {
-            'peak_calculation': '10-25x speedup with Numba JIT',
-            'drawdown_calculation': '10-40x speedup with Numba JIT',
-            'max_drawdown': '10-20x speedup with Numba JIT',
-            'duration_calculation': '15-30x speedup with Numba JIT',
-            'rolling_drawdown': '10-25x speedup with Numba JIT',
+        "numba_version": NUMBA_VERSION if NUMBA_AVAILABLE else None,
+        "numba_available": NUMBA_AVAILABLE,
+        "performance_improvements": {
+            "peak_calculation": "10-25x speedup with Numba JIT",
+            "drawdown_calculation": "10-40x speedup with Numba JIT",
+            "max_drawdown": "10-20x speedup with Numba JIT",
+            "duration_calculation": "15-30x speedup with Numba JIT",
+            "rolling_drawdown": "10-25x speedup with Numba JIT",
         },
-        'jit_compilation': '95% compliance - all numerical functions use Numba JIT',
+        "jit_compilation": "95% compliance - all numerical functions use Numba JIT",
     }
 
 

@@ -10,7 +10,7 @@ Provides:
 
 import logging
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 import numpy as np
 
@@ -27,7 +27,7 @@ class InsightGenerator:
     actionable insights without LLM/NLP (deterministic, traceable output).
     """
 
-    def __init__(self, risk_free_rate: float = None):
+    def __init__(self, risk_free_rate: Optional[float] = None):
         """
         Initialize InsightGenerator.
 
@@ -39,13 +39,13 @@ class InsightGenerator:
             if risk_free_rate is not None
             else float(get_config().backtesting.default_risk_free_rate)
         )
-        self.insights: List[str] = []
-        self.warnings: List[Dict[str, Any]] = []
-        self.recommendations: List[Dict[str, Any]] = []
+        self.insights: list[str] = []
+        self.warnings: list[dict[str, Any]] = []
+        self.recommendations: list[dict[str, Any]] = []
 
         logger.info(f"InsightGenerator initialized: risk_free_rate={risk_free_rate}")
 
-    def generate_statistical_insights(self, metrics: Dict[str, float]) -> List[str]:
+    def generate_statistical_insights(self, metrics: dict[str, float]) -> list[str]:
         """
         Generate key statistical insights from performance metrics.
 
@@ -65,13 +65,13 @@ class InsightGenerator:
             # Return insight
             total_return = metrics.get("return_pct", 0)
             if total_return > 0.2:
-                self.insights.append(f"✅ Excellent returns: +{total_return*100:.1f}% (>20%)")
+                self.insights.append(f"✅ Excellent returns: +{total_return * 100:.1f}% (>20%)")
             elif total_return > 0.1:
-                self.insights.append(f"✅ Good returns: +{total_return*100:.1f}% (10-20%)")
+                self.insights.append(f"✅ Good returns: +{total_return * 100:.1f}% (10-20%)")
             elif total_return > 0:
-                self.insights.append(f"⚠️ Positive returns: +{total_return*100:.1f}% (0-10%)")
+                self.insights.append(f"⚠️ Positive returns: +{total_return * 100:.1f}% (0-10%)")
             else:
-                self.insights.append(f"❌ Negative returns: {total_return*100:.1f}%")
+                self.insights.append(f"❌ Negative returns: {total_return * 100:.1f}%")
 
             # Sharpe ratio insight
             sharpe = metrics.get("sharpe_ratio", 0)
@@ -89,35 +89,35 @@ class InsightGenerator:
             # Drawdown insight
             max_dd = metrics.get("max_drawdown", 0)
             if max_dd > -0.1:
-                self.insights.append(f"✅ Minimal drawdown: {max_dd*100:.1f}% (<10%)")
+                self.insights.append(f"✅ Minimal drawdown: {max_dd * 100:.1f}% (<10%)")
             elif max_dd > -0.2:
-                self.insights.append(f"⚠️ Moderate drawdown: {max_dd*100:.1f}% (10-20%)")
+                self.insights.append(f"⚠️ Moderate drawdown: {max_dd * 100:.1f}% (10-20%)")
             elif max_dd > -0.5:
-                self.insights.append(f"⚠️ Significant drawdown: {max_dd*100:.1f}% (20-50%)")
+                self.insights.append(f"⚠️ Significant drawdown: {max_dd * 100:.1f}% (20-50%)")
             else:
-                self.insights.append(f"❌ Severe drawdown: {max_dd*100:.1f}% (>50%)")
+                self.insights.append(f"❌ Severe drawdown: {max_dd * 100:.1f}% (>50%)")
 
             # Win rate insight
             win_rate = metrics.get("win_rate", 0)
             if win_rate > 0.6:
-                self.insights.append(f"✅ Strong win rate: {win_rate*100:.1f}% (>60%)")
+                self.insights.append(f"✅ Strong win rate: {win_rate * 100:.1f}% (>60%)")
             elif win_rate > 0.55:
-                self.insights.append(f"✅ Positive win rate: {win_rate*100:.1f}% (55-60%)")
+                self.insights.append(f"✅ Positive win rate: {win_rate * 100:.1f}% (55-60%)")
             elif win_rate > 0.5:
-                self.insights.append(f"⚠️ Marginal win rate: {win_rate*100:.1f}% (50-55%)")
+                self.insights.append(f"⚠️ Marginal win rate: {win_rate * 100:.1f}% (50-55%)")
             else:
-                self.insights.append(f"❌ Poor win rate: {win_rate*100:.1f}% (<50%)")
+                self.insights.append(f"❌ Poor win rate: {win_rate * 100:.1f}% (<50%)")
 
             # Volatility insight
             volatility = metrics.get("volatility", 0)
             if volatility < 0.1:
-                self.insights.append(f"✅ Low volatility: {volatility*100:.1f}% (<10%)")
+                self.insights.append(f"✅ Low volatility: {volatility * 100:.1f}% (<10%)")
             elif volatility < 0.2:
-                self.insights.append(f"✅ Moderate volatility: {volatility*100:.1f}%")
+                self.insights.append(f"✅ Moderate volatility: {volatility * 100:.1f}%")
             elif volatility < 0.3:
-                self.insights.append(f"⚠️ Elevated volatility: {volatility*100:.1f}%")
+                self.insights.append(f"⚠️ Elevated volatility: {volatility * 100:.1f}%")
             else:
-                self.insights.append(f"⚠️ High volatility: {volatility*100:.1f}%")
+                self.insights.append(f"⚠️ High volatility: {volatility * 100:.1f}%")
 
             # Profit factor insight
             profit_factor = metrics.get("profit_factor", 0)
@@ -137,7 +137,7 @@ class InsightGenerator:
             logger.error(f"Error generating statistical insights: {e}", exc_info=True)
             return self.insights
 
-    def generate_risk_warnings(self, metrics: Dict[str, float]) -> List[Dict[str, Any]]:
+    def generate_risk_warnings(self, metrics: dict[str, float]) -> list[dict[str, Any]]:
         """
         Generate risk warnings based on metric thresholds.
 
@@ -161,7 +161,7 @@ class InsightGenerator:
                         "level": "CRITICAL",
                         "metric": "max_drawdown",
                         "value": max_dd,
-                        "message": f"CRITICAL: Catastrophic drawdown {max_dd*100:.1f}% - Strategy at severe risk",
+                        "message": f"CRITICAL: Catastrophic drawdown {max_dd * 100:.1f}% - Strategy at severe risk",
                     }
                 )
             elif max_dd < -0.3:
@@ -170,7 +170,7 @@ class InsightGenerator:
                         "level": "WARNING",
                         "metric": "max_drawdown",
                         "value": max_dd,
-                        "message": f"WARNING: Significant drawdown {max_dd*100:.1f}% - Consider risk reduction",
+                        "message": f"WARNING: Significant drawdown {max_dd * 100:.1f}% - Consider risk reduction",
                     }
                 )
             elif max_dd < -0.2:
@@ -179,7 +179,7 @@ class InsightGenerator:
                         "level": "INFO",
                         "metric": "max_drawdown",
                         "value": max_dd,
-                        "message": f"INFO: Moderate drawdown {max_dd*100:.1f}% - Monitor closely",
+                        "message": f"INFO: Moderate drawdown {max_dd * 100:.1f}% - Monitor closely",
                     }
                 )
 
@@ -212,7 +212,7 @@ class InsightGenerator:
                         "level": "WARNING",
                         "metric": "volatility",
                         "value": volatility,
-                        "message": f"WARNING: Extremely high volatility {volatility*100:.1f}% - Risk management recommended",
+                        "message": f"WARNING: Extremely high volatility {volatility * 100:.1f}% - Risk management recommended",
                     }
                 )
 
@@ -224,7 +224,7 @@ class InsightGenerator:
                         "level": "WARNING",
                         "metric": "win_rate",
                         "value": win_rate,
-                        "message": f"WARNING: Low win rate {win_rate*100:.1f}% - Losing more trades than winning",
+                        "message": f"WARNING: Low win rate {win_rate * 100:.1f}% - Losing more trades than winning",
                     }
                 )
 
@@ -257,7 +257,7 @@ class InsightGenerator:
                         "level": "WARNING",
                         "metric": "return_pct",
                         "value": returns,
-                        "message": f"WARNING: Negative returns {returns*100:.1f}% - Strategy underperforming",
+                        "message": f"WARNING: Negative returns {returns * 100:.1f}% - Strategy underperforming",
                     }
                 )
 
@@ -269,8 +269,8 @@ class InsightGenerator:
             return self.warnings
 
     def generate_recommendations(
-        self, metrics: Dict[str, float], regimes: Optional[Dict[str, Any]] = None
-    ) -> List[Dict[str, Any]]:
+        self, metrics: dict[str, float], regimes: Optional[dict[str, Any]] = None
+    ) -> list[dict[str, Any]]:
         """
         Generate actionable recommendations based on analysis.
 
@@ -299,7 +299,7 @@ class InsightGenerator:
                     {
                         "priority": "HIGH",
                         "action": "Implement Stop-Loss",
-                        "rationale": f"Maximum drawdown {max_dd*100:.1f}% exceeds threshold. Add position-level stop-losses.",
+                        "rationale": f"Maximum drawdown {max_dd * 100:.1f}% exceeds threshold. Add position-level stop-losses.",
                     }
                 )
 
@@ -308,7 +308,7 @@ class InsightGenerator:
                     {
                         "priority": "HIGH",
                         "action": "Reduce Position Size",
-                        "rationale": f"Volatility {volatility*100:.1f}% is elevated. Reduce leverage or position sizing.",
+                        "rationale": f"Volatility {volatility * 100:.1f}% is elevated. Reduce leverage or position sizing.",
                     }
                 )
 
@@ -327,7 +327,7 @@ class InsightGenerator:
                     {
                         "priority": "MEDIUM",
                         "action": "Improve Entry Timing",
-                        "rationale": f"Win rate {win_rate*100:.1f}% is low. Refine entry criteria and timing.",
+                        "rationale": f"Win rate {win_rate * 100:.1f}% is low. Refine entry criteria and timing.",
                     }
                 )
 
@@ -381,7 +381,7 @@ class InsightGenerator:
                     {
                         "priority": "LOW",
                         "action": "Increase Leverage (Cautiously)",
-                        "rationale": f"Good risk metrics (DD: {max_dd*100:.1f}%, Vol: {volatility*100:.1f}%). Consider modest leverage.",
+                        "rationale": f"Good risk metrics (DD: {max_dd * 100:.1f}%, Vol: {volatility * 100:.1f}%). Consider modest leverage.",
                     }
                 )
 
@@ -395,8 +395,8 @@ class InsightGenerator:
     def format_markdown_report(
         self,
         strategy_name: str,
-        metrics: Dict[str, float],
-        regimes: Optional[Dict[str, Any]] = None,
+        metrics: dict[str, float],
+        regimes: Optional[dict[str, Any]] = None,
         include_warnings: bool = True,
         include_recommendations: bool = True,
     ) -> str:
@@ -442,7 +442,7 @@ class InsightGenerator:
                 if key in metrics:
                     value = metrics[key]
                     if fmt == ".1%":
-                        formatted = f"{value*100:.1f}%"
+                        formatted = f"{value * 100:.1f}%"
                     elif fmt == ".2":
                         formatted = f"{value:.2f}"
                     elif fmt == "d":
@@ -507,11 +507,11 @@ class InsightGenerator:
                             f"- Time in regime: {regime_data.get('pct_time', 0):.1f}%"
                         )
                         report_lines.append(
-                            f"- Return: {regime_data.get('total_return', 0)*100:.2f}%"
+                            f"- Return: {regime_data.get('total_return', 0) * 100:.2f}%"
                         )
                         report_lines.append(f"- Sharpe: {regime_data.get('sharpe_ratio', 0):.2f}")
                         report_lines.append(
-                            f"- Max DD: {regime_data.get('max_drawdown', 0)*100:.1f}%"
+                            f"- Max DD: {regime_data.get('max_drawdown', 0) * 100:.1f}%"
                         )
                         report_lines.append("")
 
@@ -525,16 +525,16 @@ class InsightGenerator:
 
         except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.error(f"Error formatting markdown report: {e}", exc_info=True)
-            return f"# Error Generating Report\n\n{str(e)}"
+            return f"# Error Generating Report\n\n{e!s}"
 
-    def get_insights(self) -> List[str]:
+    def get_insights(self) -> list[str]:
         """Get last generated insights."""
         return self.insights
 
-    def get_warnings(self) -> List[Dict[str, Any]]:
+    def get_warnings(self) -> list[dict[str, Any]]:
         """Get last generated warnings."""
         return self.warnings
 
-    def get_recommendations(self) -> List[Dict[str, Any]]:
+    def get_recommendations(self) -> list[dict[str, Any]]:
         """Get last generated recommendations."""
         return self.recommendations

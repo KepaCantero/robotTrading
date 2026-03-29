@@ -9,7 +9,7 @@ Following SOLID principles:
 
 import logging
 from decimal import Decimal
-from typing import Any, Dict, List, Optional, Protocol, Tuple
+from typing import Any, Optional, Protocol
 
 logger = logging.getLogger(__name__)
 
@@ -31,64 +31,64 @@ class IndicatorCalculator(Protocol):
     Interface Segregation: Focused on indicator calculations only
     """
 
-    def calculate_rsi(self, prices: List[float], period: int = 14) -> Optional[float]:
+    def calculate_rsi(self, prices: list[float], period: int = 14) -> Optional[float]:
         """Calculate Relative Strength Index."""
         ...
 
-    def calculate_ema(self, prices: List[float], period: int = 9) -> Optional[float]:
+    def calculate_ema(self, prices: list[float], period: int = 9) -> Optional[float]:
         """Calculate Exponential Moving Average."""
         ...
 
     def calculate_macd(
         self,
-        prices: List[float],
+        prices: list[float],
         fast_period: int = 12,
         slow_period: int = 26,
         signal_period: int = 9,
-    ) -> Tuple[Optional[float], Optional[float], Optional[float]]:
+    ) -> tuple[Optional[float], Optional[float], Optional[float]]:
         """Calculate MACD indicator."""
         ...
 
-    def calculate_roc(self, prices: List[float], period: int = 12) -> Optional[float]:
+    def calculate_roc(self, prices: list[float], period: int = 12) -> Optional[float]:
         """Calculate Rate of Change."""
         ...
 
     def calculate_stochastic_rsi(
-        self, rsi_values: List[float], period: int = 14, smooth_k: int = 3
-    ) -> Tuple[Optional[float], Optional[float]]:
+        self, rsi_values: list[float], period: int = 14, smooth_k: int = 3
+    ) -> tuple[Optional[float], Optional[float]]:
         """Calculate Stochastic RSI."""
         ...
 
     def calculate_atr(
-        self, highs: List[float], lows: List[float], closes: List[float], period: int = 14
+        self, highs: list[float], lows: list[float], closes: list[float], period: int = 14
     ) -> Optional[float]:
         """Calculate Average True Range."""
         ...
 
     def calculate_adx(
-        self, highs: List[float], lows: List[float], closes: List[float], period: int = 14
+        self, highs: list[float], lows: list[float], closes: list[float], period: int = 14
     ) -> Optional[float]:
         """Calculate Average Directional Index."""
         ...
 
-    def calculate_volume_sma(self, volumes: List[Decimal], period: int = 20) -> Optional[Decimal]:
+    def calculate_volume_sma(self, volumes: list[Decimal], period: int = 20) -> Optional[Decimal]:
         """Calculate Volume Simple Moving Average."""
         ...
 
     def calculate_vwap(
-        self, prices: List[float], volumes: List[float], period: Optional[int] = None
+        self, prices: list[float], volumes: list[float], period: Optional[int] = None
     ) -> Optional[float]:
         """Calculate Volume-Weighted Average Price."""
         ...
 
     def calculate_zscore(
-        self, prices: List[float], period: int = 30, std: float = 1.0
+        self, prices: list[float], period: int = 30, std: float = 1.0
     ) -> Optional[float]:
         """Calculate Z-score."""
         ...
 
     def calculate_volatility(
-        self, prices: List[float], tf: str = "days", returns: bool = False, log: bool = False
+        self, prices: list[float], tf: str = "days", returns: bool = False, log: bool = False
     ) -> Optional[float]:
         """Calculate volatility."""
         ...
@@ -104,13 +104,13 @@ class IndicatorCalculator(Protocol):
         ...
 
     def detect_macd_divergence(
-        self, prices: List[float], macd_histograms: List[float], lookback: int = 5
+        self, prices: list[float], macd_histograms: list[float], lookback: int = 5
     ) -> Optional[str]:
         """Detect MACD divergence patterns."""
         ...
 
     def calculate_all_indicators(
-        self, prices: List[float], highs: List[float], lows: List[float], volumes: List[Decimal]
+        self, prices: list[float], highs: list[float], lows: list[float], volumes: list[Decimal]
     ) -> TechnicalIndicators:
         """Calculate all technical indicators at once."""
         ...
@@ -130,7 +130,7 @@ class MomentumAnalyzer(Protocol):
         """Analyze momentum for a specific asset."""
         ...
 
-    def calculate_overall_momentum(self, signals: List[MomentumSignal]) -> float:
+    def calculate_overall_momentum(self, signals: list[MomentumSignal]) -> float:
         """Calculate overall momentum score from signals."""
         ...
 
@@ -139,7 +139,7 @@ class MomentumAnalyzer(Protocol):
         ...
 
     def assess_risk_level(
-        self, indicators: TechnicalIndicators, signals: List[MomentumSignal]
+        self, indicators: TechnicalIndicators, signals: list[MomentumSignal]
     ) -> str:
         """Assess risk level."""
         ...
@@ -159,7 +159,7 @@ class SignalGenerator(Protocol):
 
     async def generate_signals(
         self, symbol: str, indicators: TechnicalIndicators, timeframe: Timeframe
-    ) -> List[MomentumSignal]:
+    ) -> list[MomentumSignal]:
         """Generate momentum signals from indicators."""
         ...
 
@@ -180,14 +180,14 @@ class SignalGenerator(Protocol):
         symbol: str,
         indicators: TechnicalIndicators,
         timeframe: Timeframe,
-        existing_signals: List[MomentumSignal],
+        existing_signals: list[MomentumSignal],
     ) -> Optional[MomentumSignal]:
         """Create combined momentum signal."""
         ...
 
     def filter_signals(
-        self, signals: List[MomentumSignal], filter_criteria: Optional[MomentumFilter]
-    ) -> List[MomentumSignal]:
+        self, signals: list[MomentumSignal], filter_criteria: Optional[MomentumFilter]
+    ) -> list[MomentumSignal]:
         """Filter signals based on criteria."""
         ...
 
@@ -213,7 +213,7 @@ class StrategyManager(Protocol):
         ...
 
     async def update_strategy(
-        self, strategy_name: str, updated_fields: Dict[str, Any]
+        self, strategy_name: str, updated_fields: dict[str, Any]
     ) -> Optional[MomentumStrategy]:
         """Update a momentum strategy."""
         ...
@@ -222,11 +222,11 @@ class StrategyManager(Protocol):
         """Delete a momentum strategy."""
         ...
 
-    async def get_strategy_signals(self, strategy_name: str) -> List[MomentumSignal]:
+    async def get_strategy_signals(self, strategy_name: str) -> list[MomentumSignal]:
         """Get signals for a specific strategy."""
         ...
 
-    async def get_top_momentum_assets(self, limit: int = 10) -> List[Dict[str, Any]]:
+    async def get_top_momentum_assets(self, limit: int = 10) -> list[dict[str, Any]]:
         """Get top momentum assets."""
         ...
 
@@ -248,7 +248,7 @@ class StorageBackend(Protocol):
         """Get momentum analysis by ID."""
         ...
 
-    async def get_all_analyses(self) -> List[MomentumAnalysis]:
+    async def get_all_analyses(self) -> list[MomentumAnalysis]:
         """Get all momentum analyses."""
         ...
 
@@ -260,7 +260,7 @@ class StorageBackend(Protocol):
         """Save momentum strategy."""
         ...
 
-    async def load_strategies(self) -> Dict[str, MomentumStrategy]:
+    async def load_strategies(self) -> dict[str, MomentumStrategy]:
         """Load all momentum strategies."""
         ...
 
@@ -273,10 +273,10 @@ class PriceDataProvider(Protocol):
     Interface Segregation: Focused on data retrieval
     """
 
-    async def get_price_data(self, symbol: str, timeframe: Timeframe) -> Dict[str, List[float]]:
+    async def get_price_data(self, symbol: str, timeframe: Timeframe) -> dict[str, list[float]]:
         """Get price data for a symbol."""
         ...
 
-    async def generate_mock_data(self, symbol: str, timeframe: Timeframe) -> Dict[str, List[float]]:
+    async def generate_mock_data(self, symbol: str, timeframe: Timeframe) -> dict[str, list[float]]:
         """Generate mock price data for testing."""
         ...

@@ -10,7 +10,7 @@ import logging
 from datetime import datetime, timedelta
 from decimal import Decimal
 from enum import Enum
-from typing import List, Optional
+from typing import Optional
 
 from pydantic import BaseModel, Field, field_validator
 
@@ -122,7 +122,7 @@ class DynamicSlippageAnalysis(BaseModel):
     order_size_impact: OrderSizeImpact
 
     # Componentes de slippage
-    slippage_components: List[SlippageComponent] = Field(default_factory=list)
+    slippage_components: list[SlippageComponent] = Field(default_factory=list)
 
     # Resultados
     total_slippage: Decimal = Field(..., ge=0, description="Slippage total calculado")
@@ -234,7 +234,7 @@ class SlippageHistory(BaseModel):
     """Historial de análisis de slippage."""
 
     asset_symbol: str
-    analyses: List[DynamicSlippageAnalysis] = Field(default_factory=list)
+    analyses: list[DynamicSlippageAnalysis] = Field(default_factory=list)
     created_at: datetime = Field(default_factory=datetime.now)
     updated_at: datetime = Field(default_factory=datetime.now)
 

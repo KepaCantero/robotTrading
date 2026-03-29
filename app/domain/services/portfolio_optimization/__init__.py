@@ -20,35 +20,35 @@ from .nco import NCOResult, NestedClusteredOptimizer, get_nco_with_multiple_n
 from .risk_parity import RiskParityOptimizer, RiskParityResult
 
 __all__ = [
-    # Covariance
-    "CovarianceCalculator",
-    "CovarianceResult",
-    # Mean-Variance
-    "MeanVarianceOptimizer",
-    "OptimizationResult",
-    "EfficientFrontier",
-    # De-noising
-    "CorrelationDenoiser",
-    "DenoisedResult",
-    # Hierarchical methods
-    "HierarchicalRiskParity",
-    "HRPResult",
-    "inverse_variance_weights",
-    # NCO
-    "NestedClusteredOptimizer",
-    "NCOResult",
-    "get_nco_with_multiple_n",
-    # Risk Parity
-    "RiskParityOptimizer",
-    "RiskParityResult",
     # Black-Litterman
     "BlackLittermanOptimizer",
     "BlackLittermanResult",
-    "View",
-    "create_relative_view",
+    "CornerPortfolio",
+    # De-noising
+    "CorrelationDenoiser",
+    # Covariance
+    "CovarianceCalculator",
+    "CovarianceResult",
     # CLA
     "CriticalLineAlgorithm",
-    "CornerPortfolio",
+    "DenoisedResult",
+    "EfficientFrontier",
     "EfficientFrontierCLA",
+    "HRPResult",
+    # Hierarchical methods
+    "HierarchicalRiskParity",
+    # Mean-Variance
+    "MeanVarianceOptimizer",
+    "NCOResult",
+    # NCO
+    "NestedClusteredOptimizer",
+    "OptimizationResult",
+    # Risk Parity
+    "RiskParityOptimizer",
+    "RiskParityResult",
+    "View",
     "compute_turnover",
+    "create_relative_view",
+    "get_nco_with_multiple_n",
+    "inverse_variance_weights",
 ]

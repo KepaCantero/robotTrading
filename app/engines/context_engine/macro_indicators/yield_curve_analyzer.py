@@ -3,7 +3,7 @@ YieldCurveAnalyzer - Analizador de yield curve (simplificado).
 """
 
 import logging
-from typing import Any, Dict
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -11,6 +11,6 @@ logger = logging.getLogger(__name__)
 class YieldCurveAnalyzer:
     """Analizador de yield curve (simplificado)."""
 
-    def get_yield_curve(self) -> Dict[str, Any]:
+    def get_yield_curve(self) -> dict[str, Any]:
         """Obtener yield curve (placeholder)."""
-        return {'yield_curve': None, 'note': 'Requiere integración con API de Treasury'}
+        return {"yield_curve": None, "note": "Requiere integración con API de Treasury"}

@@ -9,16 +9,16 @@ The Almgren-Chriss model decomposes market impact into:
 2. Temporary impact: Price movement during execution that recovers
 
 Key equations:
-- Permanent impact: γ * (X / ADV)
-- Temporary impact: η * σ * sqrt(X / ADV)
+- Permanent impact: gamma * (X / ADV)
+- Temporary impact: eta * sigma * sqrt(X / ADV)
 - Total impact: permanent + temporary
 
 Where:
-- γ: Permanent impact coefficient
-- η: Temporary impact coefficient
+- gamma: Permanent impact coefficient
+- eta: Temporary impact coefficient
 - X: Order size
 - ADV: Average daily volume
-- σ: Volatility
+- sigma: Volatility
 
 Reference:
     Almgren, R., & Chriss, N. (2001). "Optimal Execution of
@@ -32,7 +32,7 @@ import math
 from dataclasses import dataclass
 from decimal import Decimal
 from enum import Enum
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -53,16 +53,16 @@ class AlmgrenChrissConfig:
     These coefficients are typically calibrated from historical execution data.
 
     Attributes:
-        permanent_coef: Permanent impact coefficient (γ)
-        temporary_coef: Temporary impact coefficient (η)
+        permanent_coef: Permanent impact coefficient (gamma)
+        temporary_coef: Temporary impact coefficient (eta)
         volatility_exponent: Exponent for volatility (default 0.5 = sqrt)
         adv_exponent: Exponent for order size vs ADV (default 0.5 = sqrt)
         max_impact_bps: Maximum impact to apply (safety limit)
     """
 
     # Impact coefficients (calibrated from historical data)
-    permanent_coef: Decimal = Decimal("0.05")  # γ: 5 bps per 1% ADV
-    temporary_coef: Decimal = Decimal("0.1")  # η: 10 bps per sqrt(1% ADV)
+    permanent_coef: Decimal = Decimal("0.05")  # gamma: 5 bps per 1% ADV
+    temporary_coef: Decimal = Decimal("0.1")  # eta: 10 bps per sqrt(1% ADV)
 
     # Exponents
     volatility_exponent: Decimal = Decimal("0.5")  # Square root
@@ -110,7 +110,7 @@ class MarketImpact:
         """Total impact as decimal adjustment."""
         return self.total_impact_bps / Decimal("10000")
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for serialization."""
         return {
             "temporary_impact_bps": float(self.temporary_impact_bps),
@@ -154,10 +154,10 @@ class MarketImpactModel:
     Represents the permanent price shift due to information content
     of the trade. It persists after execution completes.
 
-    Formula: permanent_impact = γ * (order_size / ADV)
+    Formula: permanent_impact = gamma * (order_size / ADV)
 
     Where:
-    - γ (gamma): Permanent impact coefficient (typically 1-10 bps per %ADV)
+    - gamma (gamma): Permanent impact coefficient (typically 1-10 bps per %ADV)
     - order_size: Size of the order in dollars
     - ADV: Average daily volume in dollars
 
@@ -165,11 +165,11 @@ class MarketImpactModel:
     Represents the price movement during execution that recovers
     after the order is completed. It's caused by liquidity demand.
 
-    Formula: temporary_impact = η * σ * sqrt(order_size / ADV)
+    Formula: temporary_impact = eta * sigma * sqrt(order_size / ADV)
 
     Where:
-    - η (eta): Temporary impact coefficient (typically 5-50 bps)
-    - σ (sigma): Volatility (annualized)
+    - eta (eta): Temporary impact coefficient (typically 5-50 bps)
+    - sigma (sigma): Volatility (annualized)
     - order_size/ADV: Order size as fraction of daily volume
 
     **Total Impact:**
@@ -199,7 +199,7 @@ class MarketImpactModel:
     # For Almgren-Chriss: daily_vol = annual_vol / sqrt(252)
     ANNUAL_TO_DAILY_VOL_FACTOR = Decimal("1") / (Decimal("252").sqrt())
 
-    def __init__(self, config: Optional[ImpactConfig] = None):
+    def __init__(self, config: ImpactConfig | None = None):
         """
         Initialize market impact model.
 
@@ -221,7 +221,7 @@ class MarketImpactModel:
         Permanent impact is the price shift that persists after execution.
         It represents the information content of the trade.
 
-        Formula: impact = γ * (order_size / ADV)
+        Formula: impact = gamma * (order_size / ADV)
 
         Args:
             order_size: Size of the order in dollars (must be > 0)
@@ -247,7 +247,7 @@ class MarketImpactModel:
         # Calculate order size as fraction of ADV
         order_fraction = order_size / adv
 
-        # Apply permanent impact formula: γ * (order_size / ADV)
+        # Apply permanent impact formula: gamma * (order_size / ADV)
         # Result is in decimal, convert to bps
         impact_decimal = self.ac_config.permanent_coef * order_fraction
         impact_bps = impact_decimal * Decimal("10000")
@@ -267,9 +267,9 @@ class MarketImpactModel:
         Temporary impact is the price movement during execution that
         recovers after completion. It's caused by liquidity demand.
 
-        Formula: impact = η * σ_daily * sqrt(order_size / ADV)
+        Formula: impact = eta * sigma_daily * sqrt(order_size / ADV)
 
-        Where σ_daily is daily volatility (annual vol / sqrt(252)).
+        Where sigma_daily is daily volatility (annual vol / sqrt(252)).
 
         Args:
             order_size: Size of the order in dollars (must be > 0)
@@ -304,7 +304,7 @@ class MarketImpactModel:
         order_fraction = order_size / adv
 
         # Apply temporary impact formula with square root
-        # impact = η * σ * sqrt(order_size / ADV)
+        # impact = eta * sigma * sqrt(order_size / ADV)
         sqrt_fraction = order_fraction**self.ac_config.adv_exponent
         impact_decimal = self.ac_config.temporary_coef * daily_vol * sqrt_fraction
 
@@ -319,7 +319,7 @@ class MarketImpactModel:
         adv: Decimal,
         volatility: Decimal,
         side: str,
-        base_price: Optional[Decimal] = None,
+        base_price: Decimal | None = None,
     ) -> MarketImpact:
         """
         Calculate total market impact using Almgren-Chriss model.
@@ -388,18 +388,18 @@ class MarketImpactModel:
 
     def calibrate_coefficients(
         self,
-        historical_impacts: List[Dict[str, Any]],
+        historical_impacts: list[dict[str, Any]],
     ) -> AlmgrenChrissConfig:
         """
         Calibrate impact coefficients from historical execution data using
         ordinary least squares regression.
 
         The Almgren-Chriss model decomposes market impact into:
-        observed_impact = γ * (order_size/adv) + η * σ * sqrt(order_size/adv)
+        observed_impact = gamma * (order_size/adv) + eta * sigma * sqrt(order_size/adv)
 
         We perform linear regression to estimate:
-        - γ (gamma): Permanent impact coefficient
-        - η (eta): Temporary impact coefficient
+        - gamma (gamma): Permanent impact coefficient
+        - eta (eta): Temporary impact coefficient
 
         Args:
             historical_impacts: List of dicts with keys:
@@ -475,7 +475,7 @@ class MarketImpactModel:
             # OLS regression: (X^T X)^-1 X^T y
             try:
                 # Use np.linalg.lstsq for numerical stability
-                coefficients, residuals, rank, singular_values = np.linalg.lstsq(
+                coefficients, _residuals, _rank, _singular_values = np.linalg.lstsq(
                     X_with_intercept, y, rcond=None
                 )
 
@@ -493,7 +493,7 @@ class MarketImpactModel:
 
                 logger.info(
                     f"Market impact calibration complete: "
-                    f"γ={gamma:.6f}, η={eta:.6f}, R²={r_squared:.4f} "
+                    f"gamma={gamma:.6f}, eta={eta:.6f}, R^2={r_squared:.4f} "
                     f"(from {len(X1_values)} data points)"
                 )
 
@@ -530,8 +530,8 @@ class MarketImpactModel:
         adv_max: Decimal,
         volatility: Decimal,
         side: str,
-        base_price: Optional[Decimal] = None,
-    ) -> Tuple[MarketImpact, MarketImpact]:
+        base_price: Decimal | None = None,
+    ) -> tuple[MarketImpact, MarketImpact]:
         """
         Estimate impact range for ADV uncertainty.
 
@@ -565,7 +565,7 @@ class MarketImpactModel:
         Given a maximum acceptable impact, calculate the maximum
         order size as a percentage of ADV.
 
-        Solves for X in: max_impact = γ * X + η * σ * sqrt(X)
+        Solves for X in: max_impact = gamma * X + eta * sigma * sqrt(X)
 
         Args:
             max_impact_bps: Maximum acceptable impact in bps
@@ -583,9 +583,9 @@ class MarketImpactModel:
         daily_vol = volatility * self.ANNUAL_TO_DAILY_VOL_FACTOR if volatility > 0 else Decimal("0")
 
         # Approximate: ignore permanent impact for initial estimate
-        # max_impact ≈ η * σ * sqrt(X)
-        # sqrt(X) ≈ max_impact / (η * σ)
-        # X ≈ (max_impact / (η * σ))^2
+        # max_impact ~ eta * sigma * sqrt(X)
+        # sqrt(X) ~ max_impact / (eta * sigma)
+        # X ~ (max_impact / (eta * sigma))^2
 
         if daily_vol > 0 and self.ac_config.temporary_coef > 0:
             sqrt_x = max_impact_decimal / (self.ac_config.temporary_coef * daily_vol)

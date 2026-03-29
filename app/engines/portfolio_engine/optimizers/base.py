@@ -8,12 +8,14 @@ from __future__ import annotations
 
 import logging
 from abc import ABC, abstractmethod
-from typing import Any, Dict, Optional, Union
+from typing import TYPE_CHECKING, Any
 
 import numpy as np
-from numpy.typing import NDArray
 
 from app.shared.config.centralized_config import get_config
+
+if TYPE_CHECKING:
+    from numpy.typing import NDArray
 
 logger = logging.getLogger(__name__)
 
@@ -26,7 +28,7 @@ class BaseOptimizer(ABC):
     the optimize method.
     """
 
-    def __init__(self, config: Optional[Dict[str, Any]] = None):
+    def __init__(self, config: dict[str, Any] | None = None):
         """
         Initialize the optimizer.
 
@@ -39,9 +41,9 @@ class BaseOptimizer(ABC):
     @abstractmethod
     def optimize(
         self,
-        returns: Optional[NDArray[np.floating]] = None,
+        returns: NDArray[np.floating] | None = None,
         **kwargs,
-    ) -> Union[NDArray[np.floating], Dict[str, Any]]:
+    ) -> NDArray[np.floating] | dict[str, Any]:
         """
         Optimize portfolio weights.
 
@@ -72,16 +74,13 @@ class BaseOptimizer(ABC):
             return False
 
         # Check no negative weights (for long-only)
-        if np.any(weights < -1e-8):
-            return False
+        return not np.any(weights < -1e-08)
 
-        return True
-
-    def get_status(self) -> Dict[str, Any]:
+    def get_status(self) -> dict[str, Any]:
         """Get optimizer status."""
         return {
-            'optimizer_type': self.__class__.__name__,
-            'config': self.config,
+            "optimizer_type": self.__class__.__name__,
+            "config": self.config,
         }
 
 
@@ -92,14 +91,14 @@ class MarkowitzOptimizer(BaseOptimizer):
     Implements classical mean-variance optimization for portfolio allocation.
     """
 
-    def __init__(self, config: Optional[Dict[str, Any]] = None):
+    def __init__(self, config: dict[str, Any] | None = None):
         """Initialize Markowitz optimizer."""
         super().__init__(config)
         self.risk_free_rate = float(get_config().backtesting.default_risk_free_rate)
 
     def optimize(
         self,
-        returns: Optional[NDArray[np.floating]] = None,
+        returns: NDArray[np.floating] | None = None,
         **kwargs,
     ) -> NDArray[np.floating]:
         """
@@ -128,7 +127,7 @@ class RiskParityOptimizer(BaseOptimizer):
 
     def optimize(
         self,
-        returns: Optional[NDArray[np.floating]] = None,
+        returns: NDArray[np.floating] | None = None,
         **kwargs,
     ) -> NDArray[np.floating]:
         """
@@ -162,7 +161,7 @@ class BlackLittermanOptimizer(BaseOptimizer):
 
     def optimize(
         self,
-        returns: Optional[NDArray[np.floating]] = None,
+        returns: NDArray[np.floating] | None = None,
         **kwargs,
     ) -> NDArray[np.floating]:
         """
@@ -190,7 +189,7 @@ class KellyCriterionOptimizer(BaseOptimizer):
 
     def optimize(
         self,
-        returns: Optional[NDArray[np.floating]] = None,
+        returns: NDArray[np.floating] | None = None,
         **kwargs,
     ) -> NDArray[np.floating]:
         """

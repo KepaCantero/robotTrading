@@ -8,7 +8,7 @@ import logging
 from dataclasses import dataclass, field
 from datetime import datetime
 from decimal import Decimal
-from typing import Dict, List, Optional
+from typing import Optional
 
 logger = logging.getLogger(__name__)
 
@@ -40,8 +40,8 @@ class BacktestResult:
     max_drawdown: Decimal = Decimal("0")
     win_rate: Decimal = Decimal("0")
     num_trades: int = 0
-    trades: List[Dict] = field(default_factory=list)
-    equity_curve: List[Decimal] = field(default_factory=list)
+    trades: list[dict] = field(default_factory=list)
+    equity_curve: list[Decimal] = field(default_factory=list)
     executed_at: datetime = field(default_factory=datetime.now)
     status: str = "completed"
 
@@ -72,9 +72,9 @@ class ZiplineIntegrator:
 
     def __init__(self):
         """Initialize Zipline integrator."""
-        self.backtests: Dict[str, BacktestResult] = {}
+        self.backtests: dict[str, BacktestResult] = {}
         self.active_backtest: Optional[str] = None
-        self.orders: Dict[str, List[ZiplineOrder]] = {}
+        self.orders: dict[str, list[ZiplineOrder]] = {}
         logger.info("✅ ZiplineIntegrator initialized")
 
     async def create_backtest(
@@ -171,7 +171,7 @@ class ZiplineIntegrator:
         """Get backtest result."""
         return self.backtests.get(backtest_id)
 
-    async def get_backtest_trades(self, backtest_id: str) -> List[Dict]:
+    async def get_backtest_trades(self, backtest_id: str) -> list[dict]:
         """Get trades from backtest."""
         orders = self.orders.get(backtest_id, [])
         return [
@@ -184,7 +184,7 @@ class ZiplineIntegrator:
             for o in orders
         ]
 
-    async def analyze_backtest(self, backtest_id: str) -> Dict:
+    async def analyze_backtest(self, backtest_id: str) -> dict:
         """Analyze backtest performance."""
         if backtest_id not in self.backtests:
             return {}
@@ -204,9 +204,9 @@ class ZiplineIntegrator:
 
     async def compare_backtests(
         self,
-        backtest_ids: List[str],
+        backtest_ids: list[str],
         metric: str = "sharpe_ratio",
-    ) -> List[BacktestResult]:
+    ) -> list[BacktestResult]:
         """Compare backtests by metric."""
         results = [self.backtests[bid] for bid in backtest_ids if bid in self.backtests]
 
@@ -221,9 +221,9 @@ class ZiplineIntegrator:
 
     async def optimize_parameters(
         self,
-        param_grid: Dict[str, List],
+        param_grid: dict[str, list],
         strategy_func,
-    ) -> Dict:
+    ) -> dict:
         """
         Grid search over parameters.
 
@@ -241,7 +241,7 @@ class ZiplineIntegrator:
             "iterations": 10,
         }
 
-    def get_integration_status(self) -> Dict:
+    def get_integration_status(self) -> dict:
         """Get integration status."""
         return {
             "backtests": len(self.backtests),

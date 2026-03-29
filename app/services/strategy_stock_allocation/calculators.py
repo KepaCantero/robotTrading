@@ -11,28 +11,29 @@ import logging
 from typing import TYPE_CHECKING, Any
 
 import numpy as np
-import pandas as pd
 
 if TYPE_CHECKING:
+    import pandas as pd
+
     from app.shared.config.params.strategy_config import StockAllocationSettings
 
 logger = logging.getLogger(__name__)
 
 # Optional dependencies
 try:
-    from statsmodels.regression.linear_model import OLS as sm_OLS
+    from statsmodels.regression.linear_model import OLS as SM_OLS
     from statsmodels.tsa.stattools import adfuller, kpss
 
     STATSMODELS_AVAILABLE = True
 
-    def OLS(*args, **kwargs):
-        return sm_OLS(*args, **kwargs)
+    def ols(*args, **kwargs):
+        return SM_OLS(*args, **kwargs)
 
 except ImportError:
     STATSMODELS_AVAILABLE = False
     _warnings_module = __import__("warnings")
 
-    def OLS(*_args, **_kwargs):
+    def ols(*_args, **_kwargs):
         """Fallback OLS when statsmodels is not available."""
         _warnings_module.warn(
             "statsmodels not installed - OLS regression not available. "
@@ -80,7 +81,7 @@ class HurstCalculator:
     The Hurst exponent measures the long-term memory of a time series:
     - H > 0.55: Momentum/trending behavior
     - H < 0.45: Mean reverting behavior
-    - H ≈ 0.5: Random walk
+    - H ~ 0.5: Random walk
     """
 
     def __init__(self, config: StockAllocationSettings) -> None:
@@ -193,7 +194,7 @@ class HurstCalculator:
             log_rs = log_rs[valid_mask]
 
             # Linear regression
-            slope, intercept = np.polyfit(log_lags, log_rs, 1)
+            slope, _intercept = np.polyfit(log_lags, log_rs, 1)
 
             # Hurst exponent is the slope
             hurst = float(slope)
@@ -230,7 +231,7 @@ class HalfLifeCalculator:
 
     def calculate(self, spread: pd.Series) -> float | None:
         """
-        Calculate half-life (τ) from Ornstein-Uhlenbeck model.
+        Calculate half-life (tau) from Ornstein-Uhlenbeck model.
 
         Args:
             spread: Spread series (e.g., price1 - beta * price2)
@@ -248,7 +249,7 @@ class HalfLifeCalculator:
             if len(clean_spread) < 20:
                 return None
 
-            # O-U model: dy(t) = -θ * (y(t) - μ) * dt + σ * dW(t)
+            # O-U model: dy(t) = -theta * (y(t) - mu) * dt + sigma * dW(t)
             # Estimate using linear regression
 
             y = clean_spread.values
@@ -263,20 +264,20 @@ class HalfLifeCalculator:
             y_lag = y_lag[valid_mask]
             y_diff = y_diff[valid_mask]
 
-            # Estimate mean (μ)
+            # Estimate mean (mu)
             mu = np.mean(y_lag)
 
             # Calculate deviation from mean
             y_deviation = y_lag - mu
 
-            # Linear regression: y_diff = -θ * y_deviation + ε
+            # Linear regression: y_diff = -theta * y_deviation + epsilon
             if np.std(y_deviation) > 0:
                 coeffs = np.polyfit(y_deviation, y_diff, 1)
                 theta = -float(coeffs[0])
             else:
                 return None
 
-            # Half-life: τ = -ln(2) / θ
+            # Half-life: tau = -ln(2) / theta
             if theta > 1e-10:
                 half_life = -np.log(2) / theta
                 half_life = float(half_life)
@@ -355,14 +356,14 @@ class StationarityTester:
                 return result
 
             # ADF Test (null hypothesis: non-stationary)
-            adf_result = adfuller(clean_series, autolag='AIC')
+            adf_result = adfuller(clean_series, autolag="AIC")
             adf_pvalue = adf_result[1]
             result["adf_pvalue"] = float(adf_pvalue)
             result["adf_stationary"] = adf_pvalue < self.config.ADF_P_VALUE_THRESHOLD
 
             # KPSS Test (null hypothesis: stationary)
             try:
-                kpss_result = kpss(clean_series, regression='ct', nlags='auto')
+                kpss_result = kpss(clean_series, regression="ct", nlags="auto")
                 kpss_pvalue = kpss_result[1]
                 result["kpss_pvalue"] = float(kpss_pvalue)
                 result["kpss_stationary"] = kpss_pvalue > self.config.KPSS_P_VALUE_THRESHOLD

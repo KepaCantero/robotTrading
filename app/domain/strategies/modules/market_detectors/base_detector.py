@@ -4,7 +4,7 @@ BaseMarketDetector - Clase base abstracta para detectores de régimen de mercado
 
 import logging
 from abc import ABC, abstractmethod
-from typing import Dict, List, Optional
+from typing import Optional
 
 logger = logging.getLogger(__name__)
 
@@ -22,7 +22,7 @@ class BaseMarketDetector(ABC):
     def __init__(
         self,
         name: str,
-        config: Optional[Dict] = None,
+        config: Optional[dict] = None,
         tier: Optional[str] = None,
         use_yaml: bool = True,
     ):
@@ -53,7 +53,7 @@ class BaseMarketDetector(ABC):
         self.enabled = self.config.get("enabled", True)
 
     @abstractmethod
-    def detect(self, price_history: List[float], **kwargs) -> Dict:
+    def detect(self, price_history: list[float], **kwargs) -> dict:
         """
         Detectar régimen específico.
 

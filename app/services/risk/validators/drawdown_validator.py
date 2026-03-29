@@ -3,6 +3,7 @@ Drawdown Validator (R2)
 
 Valida que el drawdown no exceda 15% (kill switch)
 """
+
 import logging
 from dataclasses import dataclass
 from datetime import datetime
@@ -119,9 +120,11 @@ class DrawdownValidator:
                     "max_drawdown_pct": str(self.MAX_DRAWDOWN_PCT * 100),
                     "peak_equity": str(self._peak_equity),
                     "current_equity": str(current_equity),
-                    "kill_switch_activated_at": self._kill_switch_activated_at.isoformat()
-                    if self._kill_switch_activated_at
-                    else None,
+                    "kill_switch_activated_at": (
+                        self._kill_switch_activated_at.isoformat()
+                        if self._kill_switch_activated_at
+                        else None
+                    ),
                 },
             )
 
@@ -176,9 +179,11 @@ class DrawdownValidator:
                 "component": "drawdown_validator",
                 "operation": "activate_kill_switch",
                 "reason": reason,
-                "activated_at": self._kill_switch_activated_at.isoformat()
-                if self._kill_switch_activated_at
-                else None,
+                "activated_at": (
+                    self._kill_switch_activated_at.isoformat()
+                    if self._kill_switch_activated_at
+                    else None
+                ),
             },
         )
 

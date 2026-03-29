@@ -9,7 +9,6 @@ from __future__ import annotations
 
 import logging
 from decimal import Decimal
-from typing import List, Optional, Tuple
 
 import numpy as np
 
@@ -46,10 +45,10 @@ class StockClassifier:
 
     def classify(
         self,
-        hurst_long: Optional[float],
-        hurst_short: Optional[float],
-        half_life: Optional[float],
-        adf_pvalue: Optional[float],
+        hurst_long: float | None,
+        hurst_short: float | None,
+        half_life: float | None,
+        adf_pvalue: float | None,
     ) -> StockCategory:
         """
         Classify a stock based on statistical metrics.
@@ -70,11 +69,15 @@ class StockClassifier:
         # Check for mean reversion
         # Criteria: H < 0.5, low half-life, significant ADF test
         if (
-            hurst_short
-            and hurst_short < self.hurst_threshold
-            and half_life
-            and half_life < self.half_life_threshold
-        ) and adf_pvalue and adf_pvalue < self.adf_confidence:
+            (
+                hurst_short
+                and hurst_short < self.hurst_threshold
+                and half_life
+                and half_life < self.half_life_threshold
+            )
+            and adf_pvalue
+            and adf_pvalue < self.adf_confidence
+        ):
             return StockCategory.MEAN_REVERTING
 
         # Default to random walk
@@ -90,10 +93,10 @@ class MomentumScorer:
 
     def __init__(
         self,
-        lookback_periods: List[int] = None,
-        volatility_weight: Optional[Decimal] = None,
-        trend_weight: Optional[Decimal] = None,
-        volume_weight: Optional[Decimal] = None,
+        lookback_periods: list[int] | None = None,
+        volatility_weight: Decimal | None = None,
+        trend_weight: Decimal | None = None,
+        volume_weight: Decimal | None = None,
     ):
         """
         Initialize momentum scorer.
@@ -105,11 +108,11 @@ class MomentumScorer:
             volume_weight: Weight for volume component
         """
         if volatility_weight is None:
-            volatility_weight = Decimal('0.3')
+            volatility_weight = Decimal("0.3")
         if trend_weight is None:
-            trend_weight = Decimal('0.5')
+            trend_weight = Decimal("0.5")
         if volume_weight is None:
-            volume_weight = Decimal('0.2')
+            volume_weight = Decimal("0.2")
         self.lookback_periods = lookback_periods or [20, 60, 120]
         self.volatility_weight = volatility_weight
         self.trend_weight = trend_weight
@@ -118,7 +121,7 @@ class MomentumScorer:
     def score(
         self,
         returns: np.ndarray,
-        volumes: Optional[np.ndarray] = None,
+        volumes: np.ndarray | None = None,
     ) -> Decimal:
         """
         Calculate momentum score for a stock.
@@ -131,12 +134,12 @@ class MomentumScorer:
             Momentum score (higher is better)
         """
         if len(returns) < max(self.lookback_periods):
-            return Decimal('0')
+            return Decimal("0")
 
-        score = Decimal('0')
+        score = Decimal("0")
 
         # Trend component (cumulative returns)
-        trend_score = Decimal('0')
+        trend_score = Decimal("0")
         for period in self.lookback_periods:
             if len(returns) >= period:
                 period_return = Decimal(str(returns[-period:].sum()))
@@ -148,7 +151,7 @@ class MomentumScorer:
         if len(returns) >= 20:
             volatility = Decimal(str(np.std(returns[-20:])))
             # Normalize: lower volatility = higher score
-            vol_score = Decimal('1') / (Decimal('1') + volatility)
+            vol_score = Decimal("1") / (Decimal("1") + volatility)
             score += vol_score * self.volatility_weight
 
         # Volume component (volume trend)
@@ -158,7 +161,7 @@ class MomentumScorer:
             if historical_volume > 0:
                 volume_ratio = recent_volume / historical_volume
                 # Higher volume trend = higher score
-                vol_trend_score = min(volume_ratio, Decimal('2')) / Decimal('2')
+                vol_trend_score = min(volume_ratio, Decimal("2")) / Decimal("2")
                 score += vol_trend_score * self.volume_weight
 
         return score
@@ -173,9 +176,9 @@ class MeanReversionScorer:
 
     def __init__(
         self,
-        half_life_weight: Optional[Decimal] = None,
-        deviation_weight: Optional[Decimal] = None,
-        volatility_weight: Optional[Decimal] = None,
+        half_life_weight: Decimal | None = None,
+        deviation_weight: Decimal | None = None,
+        volatility_weight: Decimal | None = None,
     ):
         """
         Initialize mean reversion scorer.
@@ -186,11 +189,11 @@ class MeanReversionScorer:
             volatility_weight: Weight for volatility component
         """
         if half_life_weight is None:
-            half_life_weight = Decimal('0.4')
+            half_life_weight = Decimal("0.4")
         if deviation_weight is None:
-            deviation_weight = Decimal('0.4')
+            deviation_weight = Decimal("0.4")
         if volatility_weight is None:
-            volatility_weight = Decimal('0.2')
+            volatility_weight = Decimal("0.2")
         self.half_life_weight = half_life_weight
         self.deviation_weight = deviation_weight
         self.volatility_weight = volatility_weight
@@ -198,7 +201,7 @@ class MeanReversionScorer:
     def score(
         self,
         price: np.ndarray,
-        half_life: Optional[float] = None,
+        half_life: float | None = None,
     ) -> Decimal:
         """
         Calculate mean reversion score for a stock.
@@ -211,9 +214,9 @@ class MeanReversionScorer:
             Mean reversion score (higher is better)
         """
         if len(price) < 20:
-            return Decimal('0')
+            return Decimal("0")
 
-        score = Decimal('0')
+        score = Decimal("0")
 
         # Current deviation from mean
         current_price = Decimal(str(price[-1]))
@@ -223,26 +226,26 @@ class MeanReversionScorer:
         if std_price > 0:
             z_score = abs(current_price - mean_price) / std_price
             # Higher deviation = higher score (trade the reversion)
-            deviation_score = min(z_score, Decimal('3')) / Decimal('3')
+            deviation_score = min(z_score, Decimal("3")) / Decimal("3")
             score += deviation_score * self.deviation_weight
 
         # Half-life component (shorter half-life = higher score)
         if half_life:
             half_life_dec = Decimal(str(half_life))
             # Normalize: shorter half-life = higher score
-            hl_score = Decimal('1') / (Decimal('1') + half_life_dec / Decimal('10'))
+            hl_score = Decimal("1") / (Decimal("1") + half_life_dec / Decimal("10"))
             score += hl_score * self.half_life_weight
 
         # Volatility component (moderate volatility is best)
         volatility = Decimal(str(np.std(np.diff(np.log(price[-20:])))))
         # Too low volatility = no opportunity, too high = risky
-        if volatility < Decimal('0.01'):
-            vol_score = volatility / Decimal('0.01')
-        elif volatility > Decimal('0.05'):
-            vol_score = Decimal('1') - (volatility - Decimal('0.05')) / Decimal('0.05')
-            vol_score = max(vol_score, Decimal('0'))
+        if volatility < Decimal("0.01"):
+            vol_score = volatility / Decimal("0.01")
+        elif volatility > Decimal("0.05"):
+            vol_score = Decimal("1") - (volatility - Decimal("0.05")) / Decimal("0.05")
+            vol_score = max(vol_score, Decimal("0"))
         else:
-            vol_score = Decimal('1')
+            vol_score = Decimal("1")
         score += vol_score * self.volatility_weight
 
         return score
@@ -279,8 +282,8 @@ class PairsTradingScorer:
         price2: np.ndarray,
         cointegration_pvalue: float,
         correlation: float,
-        half_life: Optional[float] = None,
-    ) -> Tuple[Decimal, str]:
+        half_life: float | None = None,
+    ) -> tuple[Decimal, str]:
         """
         Score a trading pair.
 
@@ -295,39 +298,39 @@ class PairsTradingScorer:
             Tuple of (score, decision_log)
         """
         decision_log_parts = []
-        score = Decimal('0')
+        score = Decimal("0")
 
         # Check cointegration
         if cointegration_pvalue > self.cointegration_threshold:
             decision_log_parts.append(f"Failed cointegration test (p={cointegration_pvalue:.4f})")
-            return Decimal('0'), "; ".join(decision_log_parts)
+            return Decimal("0"), "; ".join(decision_log_parts)
 
         decision_log_parts.append(f"Passed cointegration test (p={cointegration_pvalue:.4f})")
 
         # Check correlation
         if correlation < self.min_correlation:
             decision_log_parts.append(f"Low correlation (r={correlation:.2f})")
-            return Decimal('0'), "; ".join(decision_log_parts)
+            return Decimal("0"), "; ".join(decision_log_parts)
 
         decision_log_parts.append(f"Good correlation (r={correlation:.2f})")
 
         # Score based on cointegration strength
         cointegration_score = Decimal(str(1 - cointegration_pvalue))
-        score += cointegration_score * Decimal('0.5')
+        score += cointegration_score * Decimal("0.5")
 
         # Score based on correlation
         correlation_score = Decimal(str(correlation))
-        score += correlation_score * Decimal('0.3')
+        score += correlation_score * Decimal("0.3")
 
         # Score based on half-life
         if half_life:
             if half_life > self.max_half_life:
                 decision_log_parts.append(f"Half-life too long ({half_life:.1f} days)")
-                return Decimal('0'), "; ".join(decision_log_parts)
+                return Decimal("0"), "; ".join(decision_log_parts)
 
             half_life_dec = Decimal(str(half_life))
-            hl_score = Decimal('1') / (Decimal('1') + half_life_dec / Decimal('10'))
-            score += hl_score * Decimal('0.2')
+            hl_score = Decimal("1") / (Decimal("1") + half_life_dec / Decimal("10"))
+            score += hl_score * Decimal("0.2")
             decision_log_parts.append(f"Good half-life ({half_life:.1f} days)")
 
         return score, "; ".join(decision_log_parts)

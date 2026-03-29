@@ -11,7 +11,7 @@ import logging
 from collections import deque
 from decimal import Decimal
 from threading import Lock
-from typing import TYPE_CHECKING, Dict, List, Optional, Union
+from typing import TYPE_CHECKING, Optional, Union
 
 import numpy as np
 
@@ -27,7 +27,7 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 # Type alias for backtest results (can be BacktestResult or dict)
-BacktestResultItem = Union[BacktestResult, Dict[str, Union[int, float, str, bool]]]
+BacktestResultItem = Union[BacktestResult, dict[str, Union[int, float, str, bool]]]
 
 
 def _get_backtesting_config():
@@ -47,37 +47,37 @@ class BacktestDefaults:
     """
 
     @property
-    def COMMISSION(self) -> Decimal:
+    def commission(self) -> Decimal:
         """Default commission per trade."""
         return _get_backtesting_config().default_commission_fixed
 
     @property
-    def SLIPPAGE(self) -> Decimal:
+    def slippage(self) -> Decimal:
         """Default slippage percentage."""
         return _get_backtesting_config().base_slippage_bps / Decimal("100")  # bps to %
 
     @property
-    def INITIAL_CAPITAL(self) -> Decimal:
+    def initial_capital(self) -> Decimal:
         """Default initial capital."""
         return Decimal("100000")
 
     @property
-    def MAX_POSITION_SIZE(self) -> Decimal:
+    def max_position_size(self) -> Decimal:
         """Default max position size as % of capital."""
         return _get_backtesting_config().default_max_position_size
 
     @property
-    def RISK_FREE_RATE(self) -> Decimal:
+    def risk_free_rate(self) -> Decimal:
         """Default risk-free rate."""
         return _get_backtesting_config().risk_free_rate
 
     @property
-    def STOP_LOSS_PERCENTAGE(self) -> Decimal:
+    def stop_loss_percentage(self) -> Decimal:
         """Default stop loss percentage."""
         return _get_backtesting_config().default_stop_loss_pct * Decimal("100")  # Convert to %
 
     @property
-    def TAKE_PROFIT_PERCENTAGE(self) -> Decimal:
+    def take_profit_percentage(self) -> Decimal:
         """Default take profit percentage."""
         return _get_backtesting_config().default_take_profit_pct * Decimal("100")  # Convert to %
 
@@ -114,7 +114,7 @@ class BoundedResults:
         self._lock = Lock()
         self._maxlen = maxlen
 
-    def add(self, result: Dict[str, Union[int, float, str, bool]]) -> None:
+    def add(self, result: dict[str, Union[int, float, str, bool]]) -> None:
         """
         Add result thread-safely.
 
@@ -125,7 +125,7 @@ class BoundedResults:
             self._results.append(result)
             self._cleanup_if_needed()
 
-    def extend(self, results: List[Dict[str, Union[int, float, str, bool]]]) -> None:
+    def extend(self, results: list[dict[str, Union[int, float, str, bool]]]) -> None:
         """
         Extend results thread-safely.
 
@@ -136,7 +136,7 @@ class BoundedResults:
             self._results.extend(results)
             self._cleanup_if_needed()
 
-    def get_all(self) -> List[Dict[str, Union[int, float, str, bool]]]:
+    def get_all(self) -> list[dict[str, Union[int, float, str, bool]]]:
         """
         Get all results.
 
@@ -146,7 +146,7 @@ class BoundedResults:
         with self._lock:
             return list(self._results)
 
-    def get_latest(self, n: int) -> List[Dict[str, Union[int, float, str, bool]]]:
+    def get_latest(self, n: int) -> list[dict[str, Union[int, float, str, bool]]]:
         """
         Get latest n results.
 
@@ -190,7 +190,7 @@ class OrchestrationResult:
     providing summary statistics and access to individual results.
     """
 
-    def __init__(self, results: List[BacktestResultItem], config: Optional[BacktestConfig] = None):
+    def __init__(self, results: list[BacktestResultItem], config: Optional[BacktestConfig] = None):
         """
         Initialize orchestration result.
 
@@ -204,28 +204,28 @@ class OrchestrationResult:
         self._summary = None
 
     @property
-    def summary(self) -> Dict[str, Union[int, float, str, bool]]:
+    def summary(self) -> dict[str, Union[int, float, str, bool]]:
         """Get summary statistics."""
         if self._summary is None:
             self._summary = self._calculate_summary()
         return self._summary
 
-    def _calculate_summary(self) -> Dict[str, Union[int, float, str, bool]]:
+    def _calculate_summary(self) -> dict[str, Union[int, float, str, bool]]:
         """Calculate summary statistics from results."""
         if not self.results:
             return {
-                'total': 0,
-                'successful': 0,
-                'failed': 0,
+                "total": 0,
+                "successful": 0,
+                "failed": 0,
             }
 
         successful = [r for r in self.results if self._is_successful(r)]
         failed = self.total - len(successful)
 
         summary = {
-            'total': self.total,
-            'successful': len(successful),
-            'failed': failed,
+            "total": self.total,
+            "successful": len(successful),
+            "failed": failed,
         }
 
         # Add metric statistics if we have BacktestResult objects
@@ -240,17 +240,17 @@ class OrchestrationResult:
             if total_returns:
                 summary.update(
                     {
-                        'avg_return': np.mean(total_returns),
-                        'best_return': max(total_returns),
-                        'worst_return': min(total_returns),
+                        "avg_return": np.mean(total_returns),
+                        "best_return": max(total_returns),
+                        "worst_return": min(total_returns),
                     }
                 )
 
             if sharpe_ratios:
                 summary.update(
                     {
-                        'avg_sharpe': np.mean(sharpe_ratios),
-                        'best_sharpe': max(sharpe_ratios),
+                        "avg_sharpe": np.mean(sharpe_ratios),
+                        "best_sharpe": max(sharpe_ratios),
                     }
                 )
 
@@ -262,13 +262,13 @@ class OrchestrationResult:
         # For dictionaries, any result is considered successful
         # unless explicitly marked as failed
         if isinstance(result, dict):
-            return result.get('final_capital', 0) > 0
+            return result.get("final_capital", 0) > 0
         # For BacktestResult objects, check if capital is positive
         if isinstance(result, BacktestResult):
             return result.final_capital > 0
         return False
 
-    def get_best_result(self, metric: str = 'sharpe_ratio') -> Optional[BacktestResultItem]:
+    def get_best_result(self, metric: str = "sharpe_ratio") -> Optional[BacktestResultItem]:
         """
         Get best result by metric.
 
@@ -283,7 +283,7 @@ class OrchestrationResult:
 
         def get_metric(r: BacktestResultItem) -> float:
             if isinstance(r, BacktestResult):
-                if metric == 'total_return':
+                if metric == "total_return":
                     return float(r.total_return)
                 elif r.performance and hasattr(r.performance, metric):
                     value = getattr(r.performance, metric)
@@ -294,7 +294,7 @@ class OrchestrationResult:
 
         return max(self.results, key=get_metric)
 
-    def filter_results(self, **criteria) -> List[BacktestResultItem]:
+    def filter_results(self, **criteria) -> list[BacktestResultItem]:
         """
         Filter results by criteria.
 
@@ -324,7 +324,7 @@ class BacktestOrchestrator:
     def __init__(
         self,
         config: BacktestConfig,
-        executor: Optional['BacktestExecutor'] = None,
+        executor: Optional["BacktestExecutor"] = None,
         max_results: int = 1000,
     ):
         """
@@ -351,7 +351,9 @@ class BacktestOrchestrator:
             },
         )
 
-    def run_all(self, quotes: List[object], strategies: List[object], **kwargs) -> OrchestrationResult:
+    def run_all(
+        self, quotes: list[object], strategies: list[object], **kwargs
+    ) -> OrchestrationResult:
         """
         Run all backtests with given quotes and strategies.
 
@@ -388,7 +390,7 @@ class BacktestOrchestrator:
                     "Error executing backtest",
                     extra={
                         "operation": "run_single",
-                        "strategy_name": getattr(strategy, 'name', 'unknown'),
+                        "strategy_name": getattr(strategy, "name", "unknown"),
                         "strategy_class": type(strategy).__name__,
                         "error_type": type(e).__name__,
                         "error_message": str(e),
@@ -408,9 +410,9 @@ class BacktestOrchestrator:
 
         return OrchestrationResult(results=all_results, config=self.config)
 
-    def _run_single(self, quotes: List[object], strategy: object, **kwargs) -> BacktestResult:
+    def _run_single(self, quotes: list[object], strategy: object, **kwargs) -> BacktestResult:
         """Run single backtest."""
-        strategy_name = getattr(strategy, 'name', 'unknown')
+        strategy_name = getattr(strategy, "name", "unknown")
 
         logger.debug(
             "Executing single backtest",
@@ -444,23 +446,23 @@ class BacktestOrchestrator:
         return result
 
     @staticmethod
-    def _result_to_dict(result: BacktestResult) -> Dict[str, Union[int, float, str, bool]]:
+    def _result_to_dict(result: BacktestResult) -> dict[str, Union[int, float, str, bool]]:
         """Convert BacktestResult to dictionary."""
         if not isinstance(result, BacktestResult):
             return result if isinstance(result, dict) else {}
 
         return {
-            'strategy_name': result.strategy_name,
-            'final_capital': float(result.final_capital),
-            'total_return': float(result.total_return),
-            'total_trades': result.performance.total_trades if result.performance else 0,
-            'win_rate': float(result.performance.win_rate) if result.performance else 0.0,
-            'sharpe_ratio': (
+            "strategy_name": result.strategy_name,
+            "final_capital": float(result.final_capital),
+            "total_return": float(result.total_return),
+            "total_trades": result.performance.total_trades if result.performance else 0,
+            "win_rate": float(result.performance.win_rate) if result.performance else 0.0,
+            "sharpe_ratio": (
                 float(result.performance.sharpe_ratio)
                 if result.performance and result.performance.sharpe_ratio
                 else 0.0
             ),
-            'max_drawdown': (
+            "max_drawdown": (
                 float(result.performance.max_drawdown_percentage) if result.performance else 0.0
             ),
         }

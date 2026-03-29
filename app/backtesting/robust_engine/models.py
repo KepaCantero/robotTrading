@@ -12,7 +12,7 @@ from dataclasses import dataclass, field
 from datetime import date, datetime
 from decimal import Decimal
 from enum import Enum
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 from uuid import UUID, uuid4
 
 try:
@@ -73,10 +73,10 @@ class CorporateAction:
     action_type: CorporateActionType = field(default=CorporateActionType.STOCK_SPLIT)
     declaration_date: date = field(default_factory=date.today)
     ex_date: date = field(default_factory=date.today)
-    record_date: Optional[date] = field(default=None)
-    payment_date: Optional[date] = field(default=None)
+    record_date: date | None = field(default=None)
+    payment_date: date | None = field(default=None)
     description: str = field(default="")
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
@@ -114,7 +114,7 @@ class Merger(CorporateAction):
     target_symbol: str = field(default="")
     acquirer_symbol: str = field(default="")
     exchange_ratio: Decimal = field(default=Decimal("1"))
-    cash_consideration: Optional[Decimal] = field(default=None)
+    cash_consideration: Decimal | None = field(default=None)
 
     def __post_init__(self):
         """Set action type based on symbols."""
@@ -182,9 +182,9 @@ class DelistedStock:
     reason: DelistingReason = field(default=DelistingReason.DELISTING)
     last_price: Decimal = field(default=Decimal("0"))
     recovery_rate: Decimal = field(default=Decimal("0.1"))
-    returns_daily: List[Tuple[date, Decimal]] = field(default_factory=list)
-    market_cap: Optional[Decimal] = field(default=None)
-    volatility: Optional[float] = field(default=None)
+    returns_daily: list[tuple[date, Decimal]] = field(default_factory=list)
+    market_cap: Decimal | None = field(default=None)
+    volatility: float | None = field(default=None)
 
 
 @dataclass
@@ -205,7 +205,7 @@ class DelistedReturnData:
     """
 
     symbol: str = field(default="")
-    return_series: Dict[date, Decimal] = field(default_factory=dict)
+    return_series: dict[date, Decimal] = field(default_factory=dict)
     listing_date: date = field(default_factory=date.today)
     delisting_date: date = field(default_factory=date.today)
     total_return: Decimal = field(default=Decimal("0"))
@@ -236,13 +236,13 @@ class BacktestCheckpoint:
     timestamp: datetime = field(default_factory=datetime.utcnow)
     current_date: date = field(default_factory=date.today)
     capital: Decimal = field(default=Decimal("0"))
-    positions: Dict[str, Decimal] = field(default_factory=dict)
-    cost_basis: Dict[str, Decimal] = field(default_factory=dict)
+    positions: dict[str, Decimal] = field(default_factory=dict)
+    cost_basis: dict[str, Decimal] = field(default_factory=dict)
     year: int = field(default=1)
     progress: float = field(default=0.0)
-    metrics_snapshot: Dict[str, Any] = field(default_factory=dict)
+    metrics_snapshot: dict[str, Any] = field(default_factory=dict)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert checkpoint to dictionary for serialization."""
         return {
             "checkpoint_id": str(self.checkpoint_id),
@@ -257,7 +257,7 @@ class BacktestCheckpoint:
         }
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> "BacktestCheckpoint":
+    def from_dict(cls, data: dict[str, Any]) -> BacktestCheckpoint:
         """Create checkpoint from dictionary."""
         return cls(
             checkpoint_id=UUID(data["checkpoint_id"]),
@@ -297,7 +297,7 @@ class ProgressUpdate:
     return_pct: Decimal = field(default=Decimal("0"))
     estimated_time_remaining: float = field(default=0.0)
     trades_executed: int = field(default=0)
-    messages: List[str] = field(default_factory=list)
+    messages: list[str] = field(default_factory=list)
 
     def progress_percentage(self) -> float:
         """Calculate progress percentage."""
@@ -306,7 +306,7 @@ class ProgressUpdate:
         days_completed = (self.current_year - 1) * 252
         return (days_completed / self.total_days) * 100
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for JSON serialization."""
         return {
             "current_year": self.current_year,
@@ -344,8 +344,8 @@ class DividendAction:
     shares: Decimal = field(default=Decimal("0"))
     total_amount: Decimal = field(default=Decimal("0"))
     reinvested: bool = field(default=False)
-    reinvestment_price: Optional[Decimal] = field(default=None)
-    reinvestment_shares: Optional[Decimal] = field(default=None)
+    reinvestment_price: Decimal | None = field(default=None)
+    reinvestment_shares: Decimal | None = field(default=None)
 
 
 @dataclass
@@ -367,7 +367,7 @@ class DividendTracker:
     dividend_yield: Decimal = field(default=Decimal("0"))
     dividend_count: int = field(default=0)
     yield_on_cost: Decimal = field(default=Decimal("0"))
-    dividend_history: List[DividendAction] = field(default_factory=list)
+    dividend_history: list[DividendAction] = field(default_factory=list)
     _original_investment: Decimal = field(default=Decimal("0"))
 
     def add_dividend(self, action: DividendAction) -> None:

@@ -16,7 +16,7 @@ SOLID Principles:
 import logging
 from datetime import date, timedelta
 from decimal import Decimal
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 from .greeks_calculator import GreeksCalculator
 from .models import (
@@ -64,8 +64,8 @@ class PositionManager:
         self.greeks_calculator = greeks_calculator or GreeksCalculator()
 
         # Almacenamiento de posiciones
-        self.positions: Dict[str, CoveredCallPosition] = {}
-        self.closed_positions: List[CoveredCallPosition] = []
+        self.positions: dict[str, CoveredCallPosition] = {}
+        self.closed_positions: list[CoveredCallPosition] = []
 
         # Estadísticas
         self.total_premium_collected = Decimal("0")
@@ -382,15 +382,15 @@ class PositionManager:
         key = f"{symbol}_{expiry_date}_{strike}"
         return self.positions.get(key)
 
-    def get_all_positions(self) -> List[CoveredCallPosition]:
+    def get_all_positions(self) -> list[CoveredCallPosition]:
         """Obtener todas las posiciones activas."""
         return list(self.positions.values())
 
-    def get_positions_by_symbol(self, symbol: str) -> List[CoveredCallPosition]:
+    def get_positions_by_symbol(self, symbol: str) -> list[CoveredCallPosition]:
         """Obtener posiciones por símbolo."""
         return [pos for pos in self.positions.values() if pos.symbol == symbol]
 
-    def get_expiring_positions(self, days: int = 7) -> List[CoveredCallPosition]:
+    def get_expiring_positions(self, days: int = 7) -> list[CoveredCallPosition]:
         """
         Obtener posiciones que vencen pronto.
 
@@ -404,7 +404,7 @@ class PositionManager:
 
         return [pos for pos in self.positions.values() if pos.call_option.expiry_date <= threshold]
 
-    def get_itm_positions(self, current_prices: Dict[str, Decimal]) -> List[CoveredCallPosition]:
+    def get_itm_positions(self, current_prices: dict[str, Decimal]) -> list[CoveredCallPosition]:
         """
         Obtener posiciones ITM.
 
@@ -428,7 +428,7 @@ class PositionManager:
 
         return itm_positions
 
-    def calculate_portfolio_pnl(self, current_prices: Dict[str, Decimal]) -> Dict[str, Any]:
+    def calculate_portfolio_pnl(self, current_prices: dict[str, Decimal]) -> dict[str, Any]:
         """
         Calcular P&L del portfolio.
 
@@ -461,7 +461,7 @@ class PositionManager:
             ),
         }
 
-    def get_position_metrics(self) -> Dict[str, Any]:
+    def get_position_metrics(self) -> dict[str, Any]:
         """
         Obtener métricas agregadas del portfolio.
 
@@ -558,5 +558,5 @@ class PositionManager:
         self.total_assignments += 1
 
         logger.warning(
-            f"🔔 Assignment registrado: {position.symbol} " f"strike=${position.call_option.strike}"
+            f"🔔 Assignment registrado: {position.symbol} strike=${position.call_option.strike}"
         )

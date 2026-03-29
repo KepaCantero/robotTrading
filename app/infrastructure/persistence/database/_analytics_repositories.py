@@ -7,9 +7,8 @@ Contains MarketDataRepository, BacktestRepository, RiskMetricsRepository, System
 
 from __future__ import annotations
 
-import uuid
 from datetime import datetime, timedelta
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from sqlalchemy import and_
 from sqlalchemy.exc import (
@@ -28,6 +27,9 @@ from app.infrastructure.persistence.database.models import (
     SystemLog,
 )
 from app.shared.exceptions.exceptions import raise_database_error
+
+if TYPE_CHECKING:
+    import uuid
 
 
 class MarketDataRepository(BaseRepository[MarketData]):
@@ -73,7 +75,7 @@ class MarketDataRepository(BaseRepository[MarketData]):
                 error=str(e),
             )
             raise_database_error(
-                f"Failed to get market data by asset and date range: {str(e)}",
+                f"Failed to get market data by asset and date range: {e!s}",
                 "get_by_asset_and_date_range",
                 "market_data",
             )
@@ -106,7 +108,7 @@ class MarketDataRepository(BaseRepository[MarketData]):
                 error=str(e),
             )
             raise_database_error(
-                f"Failed to get latest price: {str(e)}",
+                f"Failed to get latest price: {e!s}",
                 "get_latest_price",
                 "market_data",
             )
@@ -135,7 +137,7 @@ class MarketDataRepository(BaseRepository[MarketData]):
                 error=str(e),
             )
             raise_database_error(
-                f"Failed to bulk insert market data: {str(e)}",
+                f"Failed to bulk insert market data: {e!s}",
                 "bulk_insert",
                 "market_data",
             )
@@ -172,7 +174,7 @@ class BacktestRepository(BaseRepository[Backtest]):
                 error=str(e),
             )
             raise_database_error(
-                f"Failed to get backtests by portfolio: {str(e)}",
+                f"Failed to get backtests by portfolio: {e!s}",
                 "get_by_portfolio",
                 "backtests",
             )
@@ -205,7 +207,7 @@ class BacktestRepository(BaseRepository[Backtest]):
                 error=str(e),
             )
             raise_database_error(
-                f"Failed to get backtests by strategy: {str(e)}",
+                f"Failed to get backtests by strategy: {e!s}",
                 "get_by_strategy",
                 "backtests",
             )
@@ -236,7 +238,7 @@ class BacktestRepository(BaseRepository[Backtest]):
                 error=str(e),
             )
             raise_database_error(
-                f"Failed to get completed backtests: {str(e)}",
+                f"Failed to get completed backtests: {e!s}",
                 "get_completed_backtests",
                 "backtests",
             )
@@ -273,7 +275,7 @@ class RiskMetricsRepository(BaseRepository[RiskMetrics]):
                 error=str(e),
             )
             raise_database_error(
-                f"Failed to get latest risk metrics: {str(e)}",
+                f"Failed to get latest risk metrics: {e!s}",
                 "get_latest_by_portfolio",
                 "risk_metrics",
             )
@@ -318,7 +320,7 @@ class RiskMetricsRepository(BaseRepository[RiskMetrics]):
                 error=str(e),
             )
             raise_database_error(
-                f"Failed to get risk metrics by date range: {str(e)}",
+                f"Failed to get risk metrics by date range: {e!s}",
                 "get_by_date_range",
                 "risk_metrics",
             )
@@ -358,7 +360,7 @@ class SystemLogRepository(BaseRepository[SystemLog]):
                 error=str(e),
             )
             raise_database_error(
-                f"Failed to get logs by level: {str(e)}", "get_by_level", "system_logs"
+                f"Failed to get logs by level: {e!s}", "get_by_level", "system_logs"
             )
 
     def get_by_service(self, service: str, limit: int | None = None) -> list[SystemLog]:
@@ -392,7 +394,7 @@ class SystemLogRepository(BaseRepository[SystemLog]):
                 error=str(e),
             )
             raise_database_error(
-                f"Failed to get logs by service: {str(e)}",
+                f"Failed to get logs by service: {e!s}",
                 "get_by_service",
                 "system_logs",
             )
@@ -429,5 +431,5 @@ class SystemLogRepository(BaseRepository[SystemLog]):
                 error=str(e),
             )
             raise_database_error(
-                f"Failed to get recent logs: {str(e)}", "get_recent_logs", "system_logs"
+                f"Failed to get recent logs: {e!s}", "get_recent_logs", "system_logs"
             )

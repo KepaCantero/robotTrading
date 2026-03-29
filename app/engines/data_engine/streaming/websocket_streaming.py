@@ -9,15 +9,15 @@ Proporciona:
 """
 
 import asyncio
+import contextlib
 import json
 import logging
 from datetime import datetime
-from typing import Any, Dict, List, Set
+from typing import Any, Optional
 
 from fastapi import WebSocket, WebSocketDisconnect
 from fastapi.routing import APIRouter
 from requests.exceptions import HTTPError, RequestException
-import contextlib
 
 logger = logging.getLogger(__name__)
 
@@ -29,7 +29,7 @@ class WebSocketStreamingManager:
     Gestiona conexiones WebSocket y broadcasting de datos.
     """
 
-    def __init__(self, config: Dict[str, Any] = None):
+    def __init__(self, config: Optional[dict[str, Any]] = None):
         """
         Inicializar streaming manager.
 
@@ -45,24 +45,24 @@ class WebSocketStreamingManager:
         self.config = config
 
         # Todos los valores deben venir de config, NO hardcodeados
-        if 'heartbeat_interval' not in config:
+        if "heartbeat_interval" not in config:
             raise ValueError("heartbeat_interval debe estar en config (cargado desde YAML)")
-        if 'max_connections' not in config:
+        if "max_connections" not in config:
             raise ValueError("max_connections debe estar en config (cargado desde YAML)")
 
-        self.heartbeat_interval = config['heartbeat_interval']
-        self.max_connections = config['max_connections']
-        self.websocket_path = config.get('websocket_path', '/ws/data/{client_id}')
-        self.max_connection_code = config.get('max_connection_code', 1008)
+        self.heartbeat_interval = config["heartbeat_interval"]
+        self.max_connections = config["max_connections"]
+        self.websocket_path = config.get("websocket_path", "/ws/data/{client_id}")
+        self.max_connection_code = config.get("max_connection_code", 1008)
         self.connection_reason_max_reached = config.get(
-            'connection_reason_max_reached', 'Maximum connections reached'
+            "connection_reason_max_reached", "Maximum connections reached"
         )
 
         # Conexiones activas: {websocket_id: {websocket, subscriptions: Set[str]}}
-        self.active_connections: Dict[str, Dict[str, Any]] = {}
+        self.active_connections: dict[str, dict[str, Any]] = {}
 
         # Suscripciones por símbolo: {symbol: Set[websocket_id]}
-        self.symbol_subscriptions: Dict[str, Set[str]] = {}
+        self.symbol_subscriptions: dict[str, set[str]] = {}
 
         # Router para endpoints WebSocket
         self.router = APIRouter()
@@ -129,9 +129,9 @@ class WebSocketStreamingManager:
         await websocket.accept()
 
         self.active_connections[client_id] = {
-            'websocket': websocket,
-            'subscriptions': set(),
-            'connected_at': datetime.utcnow(),
+            "websocket": websocket,
+            "subscriptions": set(),
+            "connected_at": datetime.utcnow(),
         }
 
         logger.info(f"Cliente {client_id} conectado vía WebSocket")
@@ -141,9 +141,9 @@ class WebSocketStreamingManager:
             await self._send_message(
                 client_id,
                 {
-                    'type': 'connected',
-                    'client_id': client_id,
-                    'timestamp': datetime.utcnow().isoformat(),
+                    "type": "connected",
+                    "client_id": client_id,
+                    "timestamp": datetime.utcnow().isoformat(),
                 },
             )
 
@@ -169,19 +169,19 @@ class WebSocketStreamingManager:
         """
         try:
             data = json.loads(message)
-            msg_type = data.get('type')
+            msg_type = data.get("type")
 
-            if msg_type == 'subscribe':
-                symbols = data.get('symbols', [])
+            if msg_type == "subscribe":
+                symbols = data.get("symbols", [])
                 await self.subscribe(client_id, symbols)
 
-            elif msg_type == 'unsubscribe':
-                symbols = data.get('symbols', [])
+            elif msg_type == "unsubscribe":
+                symbols = data.get("symbols", [])
                 await self.unsubscribe(client_id, symbols)
 
-            elif msg_type == 'ping':
+            elif msg_type == "ping":
                 await self._send_message(
-                    client_id, {'type': 'pong', 'timestamp': datetime.utcnow().isoformat()}
+                    client_id, {"type": "pong", "timestamp": datetime.utcnow().isoformat()}
                 )
 
             else:
@@ -192,7 +192,7 @@ class WebSocketStreamingManager:
         except (FileNotFoundError, ValueError, KeyError, TypeError) as e:
             logger.error(f"Error procesando mensaje de {client_id}: {e}")
 
-    async def subscribe(self, client_id: str, symbols: List[str]) -> bool:
+    async def subscribe(self, client_id: str, symbols: list[str]) -> bool:
         """
         Suscribir cliente a símbolos.
 
@@ -209,7 +209,7 @@ class WebSocketStreamingManager:
         connection = self.active_connections[client_id]
 
         for symbol in symbols:
-            connection['subscriptions'].add(symbol)
+            connection["subscriptions"].add(symbol)
 
             if symbol not in self.symbol_subscriptions:
                 self.symbol_subscriptions[symbol] = set()
@@ -218,13 +218,13 @@ class WebSocketStreamingManager:
         # Confirmar suscripción
         await self._send_message(
             client_id,
-            {'type': 'subscribed', 'symbols': symbols, 'timestamp': datetime.utcnow().isoformat()},
+            {"type": "subscribed", "symbols": symbols, "timestamp": datetime.utcnow().isoformat()},
         )
 
         logger.info(f"Cliente {client_id} suscrito a {len(symbols)} símbolos")
         return True
 
-    async def unsubscribe(self, client_id: str, symbols: List[str]) -> bool:
+    async def unsubscribe(self, client_id: str, symbols: list[str]) -> bool:
         """
         Desuscribir cliente de símbolos.
 
@@ -241,7 +241,7 @@ class WebSocketStreamingManager:
         connection = self.active_connections[client_id]
 
         for symbol in symbols:
-            connection['subscriptions'].discard(symbol)
+            connection["subscriptions"].discard(symbol)
 
             if symbol in self.symbol_subscriptions:
                 self.symbol_subscriptions[symbol].discard(client_id)
@@ -252,9 +252,9 @@ class WebSocketStreamingManager:
         await self._send_message(
             client_id,
             {
-                'type': 'unsubscribed',
-                'symbols': symbols,
-                'timestamp': datetime.utcnow().isoformat(),
+                "type": "unsubscribed",
+                "symbols": symbols,
+                "timestamp": datetime.utcnow().isoformat(),
             },
         )
 
@@ -274,7 +274,7 @@ class WebSocketStreamingManager:
         connection = self.active_connections[client_id]
 
         # Desuscribir de todos los símbolos
-        for symbol in list(connection['subscriptions']):
+        for symbol in list(connection["subscriptions"]):
             if symbol in self.symbol_subscriptions:
                 self.symbol_subscriptions[symbol].discard(client_id)
                 if not self.symbol_subscriptions[symbol]:
@@ -282,14 +282,14 @@ class WebSocketStreamingManager:
 
         # Cerrar WebSocket
         try:
-            await connection['websocket'].close()
+            await connection["websocket"].close()
         except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
             logger.warning(f"Error cerrando WebSocket de {client_id}: {e}")
 
         del self.active_connections[client_id]
         logger.info(f"Cliente {client_id} desconectado")
 
-    async def broadcast_quote(self, symbol: str, quote_data: Dict[str, Any]) -> int:
+    async def broadcast_quote(self, symbol: str, quote_data: dict[str, Any]) -> int:
         """
         Broadcast quote a todos los suscriptores.
 
@@ -304,10 +304,10 @@ class WebSocketStreamingManager:
             return 0
 
         message = {
-            'type': 'quote',
-            'symbol': symbol,
-            'data': quote_data,
-            'timestamp': datetime.utcnow().isoformat(),
+            "type": "quote",
+            "symbol": symbol,
+            "data": quote_data,
+            "timestamp": datetime.utcnow().isoformat(),
         }
 
         count = 0
@@ -325,7 +325,7 @@ class WebSocketStreamingManager:
 
         return count
 
-    async def broadcast_ohlcv(self, symbol: str, ohlcv_data: List[Dict[str, Any]]) -> int:
+    async def broadcast_ohlcv(self, symbol: str, ohlcv_data: list[dict[str, Any]]) -> int:
         """
         Broadcast OHLCV data a todos los suscriptores.
 
@@ -340,10 +340,10 @@ class WebSocketStreamingManager:
             return 0
 
         message = {
-            'type': 'ohlcv',
-            'symbol': symbol,
-            'data': ohlcv_data,
-            'timestamp': datetime.utcnow().isoformat(),
+            "type": "ohlcv",
+            "symbol": symbol,
+            "data": ohlcv_data,
+            "timestamp": datetime.utcnow().isoformat(),
         }
 
         count = 0
@@ -361,7 +361,7 @@ class WebSocketStreamingManager:
 
         return count
 
-    async def _send_message(self, client_id: str, message: Dict[str, Any]) -> bool:
+    async def _send_message(self, client_id: str, message: dict[str, Any]) -> bool:
         """
         Enviar mensaje a cliente.
 
@@ -376,7 +376,7 @@ class WebSocketStreamingManager:
             return False
 
         try:
-            websocket = self.active_connections[client_id]['websocket']
+            websocket = self.active_connections[client_id]["websocket"]
             await websocket.send_json(message)
             return True
         except (asyncio.TimeoutError, OSError) as e:
@@ -392,7 +392,7 @@ class WebSocketStreamingManager:
                 # Enviar heartbeat a todas las conexiones
                 for client_id in list(self.active_connections.keys()):
                     await self._send_message(
-                        client_id, {'type': 'heartbeat', 'timestamp': datetime.utcnow().isoformat()}
+                        client_id, {"type": "heartbeat", "timestamp": datetime.utcnow().isoformat()}
                     )
 
             except asyncio.CancelledError:
@@ -400,12 +400,12 @@ class WebSocketStreamingManager:
             except (asyncio.TimeoutError, OSError) as e:
                 logger.error(f"Error en heartbeat loop: {e}")
 
-    def get_status(self) -> Dict[str, Any]:
+    def get_status(self) -> dict[str, Any]:
         """Obtener estado del streaming manager."""
         return {
-            'active_connections': len(self.active_connections),
-            'total_subscriptions': sum(len(subs) for subs in self.symbol_subscriptions.values()),
-            'symbols_subscribed': len(self.symbol_subscriptions),
-            'max_connections': self.max_connections,
-            'running': self._running,
+            "active_connections": len(self.active_connections),
+            "total_subscriptions": sum(len(subs) for subs in self.symbol_subscriptions.values()),
+            "symbols_subscribed": len(self.symbol_subscriptions),
+            "max_connections": self.max_connections,
+            "running": self._running,
         }

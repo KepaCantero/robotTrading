@@ -7,7 +7,7 @@ Provides allocation recommendations based on risk profile, objectives, and marke
 import logging
 from dataclasses import dataclass
 from decimal import Decimal
-from typing import Dict, List, Optional
+from typing import Optional
 
 logger = logging.getLogger(__name__)
 
@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 class AllocationRecommendation:
     """Smart allocation recommendation."""
 
-    allocation: Dict[str, Decimal]  # {asset: weight}
+    allocation: dict[str, Decimal]  # {asset: weight}
     reasoning: str  # Explanation for recommendation
     confidence: str  # high, medium, low
     expected_return: Decimal
@@ -40,13 +40,13 @@ class AllocationRecommender:
 
     def __init__(self):
         """Initialize allocation recommender."""
-        self.recommendation_history: List[AllocationRecommendation] = []
+        self.recommendation_history: list[AllocationRecommendation] = []
         logger.info("✅ AllocationRecommender initialized")
 
     async def recommend_by_risk_profile(
         self,
         risk_profile: str,  # "conservative", "moderate", "aggressive"
-        available_assets: List[str],
+        available_assets: list[str],
     ) -> AllocationRecommendation:
         """
         Recommend allocation by risk profile.
@@ -103,7 +103,7 @@ class AllocationRecommender:
     async def recommend_by_objective(
         self,
         objective: str,  # "growth", "income", "preservation", "balanced"
-        available_assets: List[str],
+        available_assets: list[str],
     ) -> AllocationRecommendation:
         """
         Recommend allocation by investment objective.
@@ -156,7 +156,7 @@ class AllocationRecommender:
     async def recommend_by_capital_tier(
         self,
         capital: Decimal,
-        available_assets: List[str],
+        available_assets: list[str],
     ) -> AllocationRecommendation:
         """
         Recommend allocation by capital tier.
@@ -207,7 +207,7 @@ class AllocationRecommender:
         return recommendation
 
     # Allocation templates
-    async def _conservative_allocation(self, assets: List[str]) -> Dict[str, Decimal]:
+    async def _conservative_allocation(self, assets: list[str]) -> dict[str, Decimal]:
         """Conservative: 40% stocks, 50% bonds, 10% alternatives."""
         allocation = {}
         for i, asset in enumerate(assets):
@@ -221,7 +221,7 @@ class AllocationRecommender:
         total = sum(allocation.values())
         return {a: (w / total) for a, w in allocation.items()}
 
-    async def _moderate_allocation(self, assets: List[str]) -> Dict[str, Decimal]:
+    async def _moderate_allocation(self, assets: list[str]) -> dict[str, Decimal]:
         """Moderate: 60% stocks, 30% bonds, 10% alternatives."""
         allocation = {}
         for i, asset in enumerate(assets):
@@ -234,7 +234,7 @@ class AllocationRecommender:
         total = sum(allocation.values())
         return {a: (w / total) for a, w in allocation.items()}
 
-    async def _aggressive_allocation(self, assets: List[str]) -> Dict[str, Decimal]:
+    async def _aggressive_allocation(self, assets: list[str]) -> dict[str, Decimal]:
         """Aggressive: 80% stocks, 10% bonds, 10% alternatives."""
         allocation = {}
         for i, asset in enumerate(assets):
@@ -247,11 +247,11 @@ class AllocationRecommender:
         total = sum(allocation.values())
         return {a: (w / total) for a, w in allocation.items()}
 
-    async def _growth_allocation(self, assets: List[str]) -> Dict[str, Decimal]:
+    async def _growth_allocation(self, assets: list[str]) -> dict[str, Decimal]:
         """Growth: Heavy equity allocation."""
         return {asset: Decimal("1.0") / Decimal(len(assets)) for asset in assets}
 
-    async def _income_allocation(self, assets: List[str]) -> Dict[str, Decimal]:
+    async def _income_allocation(self, assets: list[str]) -> dict[str, Decimal]:
         """Income: Higher weighting for yield assets."""
         allocation = {}
         for _i, asset in enumerate(assets):
@@ -262,7 +262,7 @@ class AllocationRecommender:
         total = sum(allocation.values())
         return {a: (w / total) for a, w in allocation.items()}
 
-    async def _preservation_allocation(self, assets: List[str]) -> Dict[str, Decimal]:
+    async def _preservation_allocation(self, assets: list[str]) -> dict[str, Decimal]:
         """Preservation: Focus on stable assets."""
         allocation = {}
         for _i, asset in enumerate(assets):
@@ -273,22 +273,22 @@ class AllocationRecommender:
         total = sum(allocation.values())
         return {a: (w / total) for a, w in allocation.items()}
 
-    async def _balanced_allocation(self, assets: List[str]) -> Dict[str, Decimal]:
+    async def _balanced_allocation(self, assets: list[str]) -> dict[str, Decimal]:
         """Balanced: Equal-weight."""
         return {asset: Decimal("1.0") / Decimal(len(assets)) for asset in assets}
 
-    async def _equal_allocation(self, assets: List[str]) -> Dict[str, Decimal]:
+    async def _equal_allocation(self, assets: list[str]) -> dict[str, Decimal]:
         """Equal weight."""
         return {asset: Decimal("1.0") / Decimal(len(assets)) for asset in assets}
 
-    async def _sophisticated_allocation(self, assets: List[str]) -> Dict[str, Decimal]:
+    async def _sophisticated_allocation(self, assets: list[str]) -> dict[str, Decimal]:
         """Sophisticated: Optimized equal-weight with caps."""
         n = len(assets)
         base_weight = Decimal("1.0") / Decimal(n)
         # Cap at 15% max per asset
         cap = Decimal("0.15")
         if base_weight > cap:
-            allocation = dict.fromkeys(assets[:int(1 / 0.15)], cap)
+            allocation = dict.fromkeys(assets[: int(1 / 0.15)], cap)
             remaining = len(assets) - len(allocation)
             if remaining > 0:
                 remaining_weight = (Decimal("1.0") - Decimal(len(allocation)) * cap) / Decimal(
@@ -300,7 +300,7 @@ class AllocationRecommender:
             allocation = dict.fromkeys(assets, base_weight)
         return allocation
 
-    async def _calculate_diversification_score(self, allocation: Dict[str, Decimal]) -> Decimal:
+    async def _calculate_diversification_score(self, allocation: dict[str, Decimal]) -> Decimal:
         """Calculate diversification score (0-100)."""
         if not allocation:
             return Decimal("0")
@@ -313,7 +313,7 @@ class AllocationRecommender:
         score = (Decimal("1") - herfindahl) * Decimal("100")
         return max(Decimal("0"), min(Decimal("100"), score))
 
-    async def _assess_concentration_risk(self, allocation: Dict[str, Decimal]) -> str:
+    async def _assess_concentration_risk(self, allocation: dict[str, Decimal]) -> str:
         """Assess concentration risk level."""
         if not allocation:
             return "low"
@@ -329,13 +329,13 @@ class AllocationRecommender:
     async def get_recommendation_history(
         self,
         limit: Optional[int] = None,
-    ) -> List[AllocationRecommendation]:
+    ) -> list[AllocationRecommendation]:
         """Get recommendation history."""
         if limit is None:
             return self.recommendation_history
         return self.recommendation_history[-limit:]
 
-    def get_recommender_status(self) -> Dict:
+    def get_recommender_status(self) -> dict:
         """Get recommender status."""
         return {
             "total_recommendations": len(self.recommendation_history),

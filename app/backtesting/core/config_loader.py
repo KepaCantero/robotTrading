@@ -8,7 +8,7 @@ with support for backtest configuration, strategy parameters, and execution sett
 import logging
 from decimal import Decimal
 from pathlib import Path
-from typing import Dict, Optional, Union
+from typing import Optional, Union
 
 import yaml
 
@@ -41,7 +41,7 @@ class BacktestConfigLoader:
             FileNotFoundError: If config file doesn't exist
         """
         self.config_path = Path(config_path)
-        self._raw_config: Dict[str, Union[str, int, float, bool, Dict, list]] = {}
+        self._raw_config: dict[str, Union[str, int, float, bool, dict, list]] = {}
         self._load()
 
     def _load(self) -> None:
@@ -49,7 +49,7 @@ class BacktestConfigLoader:
         if not self.config_path.exists():
             raise FileNotFoundError(f"Config not found: {self.config_path}")
 
-        with open(self.config_path, 'r') as f:
+        with open(self.config_path) as f:
             self._raw_config = yaml.safe_load(f) or {}
 
         logger.debug(f"Loaded configuration from {self.config_path}")
@@ -114,15 +114,15 @@ class BacktestConfigLoader:
     @property
     def raw_config(
         self,
-    ) -> Dict[str, Union[str, int, float, bool, Dict, list]]:
+    ) -> dict[str, Union[str, int, float, bool, dict, list]]:
         """Get raw configuration dictionary."""
         return self._raw_config
 
     def get_section(
         self,
         section: str,
-        default: Optional[Dict[str, Union[str, int, float, bool, Dict, list]]] = None,
-    ) -> Dict[str, Union[str, int, float, bool, Dict, list]]:
+        default: Optional[dict[str, Union[str, int, float, bool, dict, list]]] = None,
+    ) -> dict[str, Union[str, int, float, bool, dict, list]]:
         """
         Get configuration section.
 
@@ -145,12 +145,12 @@ class BacktestConfigLoader:
         Raises:
             ConfigValidationError: If required configuration is missing or invalid
         """
-        config = self._raw_config.get('backtest', {})
-        input_config = self._raw_config.get('input', {})
+        config = self._raw_config.get("backtest", {})
+        input_config = self._raw_config.get("input", {})
 
         # Get initial capital from input section if not in backtest section
-        initial_capital_raw = config.get('initial_capital') or input_config.get(
-            'initial_capital', 100000
+        initial_capital_raw = config.get("initial_capital") or input_config.get(
+            "initial_capital", 100000
         )
 
         # Validate all configuration parameters
@@ -159,23 +159,25 @@ class BacktestConfigLoader:
         )
 
         commission_per_trade = self._validate_positive_decimal(
-            config.get('commission_per_trade', 1.0),
+            config.get("commission_per_trade", 1.0),
             "commission_per_trade",
             allow_zero=True,  # Zero commission is allowed
         )
 
         slippage_percentage = self._validate_percentage(
-            config.get('slippage', 0.1), "slippage", max_value=Decimal("100")  # Up to 100%
+            config.get("slippage", 0.1),
+            "slippage",
+            max_value=Decimal("100"),  # Up to 100%
         )
 
         max_position_size = self._validate_percentage(
-            config.get('max_position_size', 0.20),
+            config.get("max_position_size", 0.20),
             "max_position_size",
             max_value=Decimal("1"),  # 0-100% as decimal (0.0 to 1.0)
         )
 
         # Optional stop loss - support both stop_loss and stop_loss_pct keys
-        stop_loss_raw = config.get('stop_loss') or config.get('stop_loss_pct')
+        stop_loss_raw = config.get("stop_loss") or config.get("stop_loss_pct")
         stop_loss_percentage = None
         if stop_loss_raw is not None:
             stop_loss_percentage = self._validate_percentage(
@@ -183,7 +185,7 @@ class BacktestConfigLoader:
             )
 
         # Optional take profit - support both take_profit and take_profit_pct keys
-        take_profit_raw = config.get('take_profit') or config.get('take_profit_pct')
+        take_profit_raw = config.get("take_profit") or config.get("take_profit_pct")
         take_profit_percentage = None
         if take_profit_raw is not None:
             take_profit_percentage = self._validate_positive_decimal(
@@ -193,7 +195,7 @@ class BacktestConfigLoader:
 
         # Risk free rate (can be 0 or negative for some markets)
         risk_free_rate_raw = config.get(
-            'risk_free_rate', float(get_config().backtesting.default_risk_free_rate)
+            "risk_free_rate", float(get_config().backtesting.default_risk_free_rate)
         )
         try:
             risk_free_rate = Decimal(str(risk_free_rate_raw))
@@ -203,7 +205,7 @@ class BacktestConfigLoader:
             ) from e
 
         return BacktestConfig(
-            strategy_name=config.get('strategy_name', 'default'),
+            strategy_name=config.get("strategy_name", "default"),
             initial_capital=initial_capital,
             commission_per_trade=commission_per_trade,
             slippage_percentage=slippage_percentage,
@@ -215,102 +217,102 @@ class BacktestConfigLoader:
 
     def get_strategy_config(
         self,
-    ) -> Dict[str, Union[str, int, float, bool, Dict, list]]:
+    ) -> dict[str, Union[str, int, float, bool, dict, list]]:
         """
         Get strategy configuration section.
 
         Returns:
             Strategy configuration dictionary
         """
-        return self.get_section('strategy')
+        return self.get_section("strategy")
 
     def get_execution_config(
         self,
-    ) -> Dict[str, Union[str, int, float, bool, Dict, list]]:
+    ) -> dict[str, Union[str, int, float, bool, dict, list]]:
         """
         Get execution configuration section.
 
         Returns:
             Execution configuration dictionary
         """
-        return self.get_section('execution')
+        return self.get_section("execution")
 
     def get_modules_config(
         self,
-    ) -> Dict[str, Union[str, int, float, bool, Dict, list]]:
+    ) -> dict[str, Union[str, int, float, bool, dict, list]]:
         """
         Get modules configuration section.
 
         Returns:
             Modules configuration dictionary
         """
-        return self.get_section('modules')
+        return self.get_section("modules")
 
     def get_learning_engines_config(
         self,
-    ) -> Dict[str, Union[str, int, float, bool, Dict, list]]:
+    ) -> dict[str, Union[str, int, float, bool, dict, list]]:
         """
         Get learning engines configuration section.
 
         Returns:
             Learning engines configuration dictionary
         """
-        return self.get_section('learning_engines')
+        return self.get_section("learning_engines")
 
     def get_parallelization_config(
         self,
-    ) -> Dict[str, Union[str, int, float, bool, Dict, list]]:
+    ) -> dict[str, Union[str, int, float, bool, dict, list]]:
         """
         Get parallelization configuration section.
 
         Returns:
             Parallelization configuration dictionary
         """
-        return self.get_section('parallelization')
+        return self.get_section("parallelization")
 
     def get_reporting_config(
         self,
-    ) -> Dict[str, Union[str, int, float, bool, Dict, list]]:
+    ) -> dict[str, Union[str, int, float, bool, dict, list]]:
         """
         Get reporting configuration section.
 
         Returns:
             Reporting configuration dictionary
         """
-        return self.get_section('reporting')
+        return self.get_section("reporting")
 
     def get_meta_analysis_config(
         self,
-    ) -> Dict[str, Union[str, int, float, bool, Dict, list]]:
+    ) -> dict[str, Union[str, int, float, bool, dict, list]]:
         """
         Get meta-analysis configuration section.
 
         Returns:
             Meta-analysis configuration dictionary
         """
-        return self.get_section('meta_analysis')
+        return self.get_section("meta_analysis")
 
     def get_input_config(
         self,
-    ) -> Dict[str, Union[str, int, float, bool, Dict, list]]:
+    ) -> dict[str, Union[str, int, float, bool, dict, list]]:
         """
         Get input configuration section.
 
         Returns:
             Input configuration dictionary
         """
-        return self.get_section('input')
+        return self.get_section("input")
 
     def get_backtests_config(
         self,
-    ) -> Dict[str, Union[str, int, float, bool, Dict, list]]:
+    ) -> dict[str, Union[str, int, float, bool, dict, list]]:
         """
         Get backtests configuration section.
 
         Returns:
             Backtests configuration dictionary
         """
-        return self.get_section('backtests')
+        return self.get_section("backtests")
 
     def reload(self) -> None:
         """Reload configuration from file."""

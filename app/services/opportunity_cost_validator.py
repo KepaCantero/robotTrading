@@ -13,7 +13,7 @@ then the optimal action is to HOLD CASH, not trade.
 
 import logging
 from decimal import Decimal
-from typing import Dict, Tuple, Optional
+from typing import Optional
 
 logger = logging.getLogger(__name__)
 
@@ -36,12 +36,12 @@ class OpportunityCostValidator:
     @staticmethod
     def is_active_trading_worthwhile(
         capital: Decimal,
-        monthly_risk_free_rate: Decimal = None,
+        monthly_risk_free_rate: Optional[Decimal] = None,
         expected_monthly_alpha: Optional[Decimal] = None,
         expected_trades_per_month: int = 10,
         commission_per_trade: Optional[Decimal] = None,
-        cost_of_capital_pct: Decimal = None,
-    ) -> Tuple[bool, Dict]:
+        cost_of_capital_pct: Optional[Decimal] = None,
+    ) -> tuple[bool, dict]:
         """
         Compare passive (risk-free) return vs active trading return.
 
@@ -162,7 +162,7 @@ class OpportunityCostValidator:
     @staticmethod
     def get_minimum_alpha_for_trading(
         capital: Decimal,
-        monthly_risk_free_rate: Decimal = None,
+        monthly_risk_free_rate: Optional[Decimal] = None,
         expected_trades_per_month: int = 10,
         commission_per_trade: Optional[Decimal] = None,
     ) -> Decimal:
@@ -197,7 +197,7 @@ class OpportunityCostValidator:
 
     @staticmethod
     def capital_inflection_point(
-        monthly_risk_free_rate: Decimal = None,
+        monthly_risk_free_rate: Optional[Decimal] = None,
         expected_trades_per_month: int = 10,
         commission_per_trade: Optional[Decimal] = None,
         target_alpha_pct_monthly: Optional[Decimal] = None,  # 2% monthly
@@ -248,7 +248,7 @@ class OpportunityCostValidator:
         capital: Decimal,
         expected_trades_per_month: int = 10,
         commission_per_trade: Optional[Decimal] = None,
-    ) -> Dict:
+    ) -> dict:
         """
         Analyze viability of trading for a given capital tier.
 
@@ -304,8 +304,8 @@ class OpportunityCostValidator:
     @staticmethod
     def log_opportunity_cost_decision(
         capital: Decimal,
-        analysis: Dict,
-        account_id: str = None,
+        analysis: dict,
+        account_id: Optional[str] = None,
     ):
         """Log opportunity cost analysis for audit trail"""
 

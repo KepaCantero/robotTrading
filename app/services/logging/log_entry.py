@@ -3,11 +3,12 @@ Log Entry - Inmutable append-only log entry
 
 Cada entrada es inmutable y se anade al log append-only.
 """
+
 import logging
 import uuid
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Any, Dict, Optional
+from typing import Any, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -28,8 +29,8 @@ class LogEntry:
     correlation_id: str
     timestamp: str
     event_type: str
-    data: Dict[str, Any]
-    metadata: Dict[str, Any]
+    data: dict[str, Any]
+    metadata: dict[str, Any]
 
     @classmethod
     def create(cls, event_type: str, data: dict, metadata: Optional[dict] = None) -> "LogEntry":

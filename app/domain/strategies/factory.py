@@ -6,7 +6,7 @@ permitiendo registro y creación de estrategias sin modificar código.
 """
 
 import logging
-from typing import Any, Dict, List, Type
+from typing import Any
 
 from .base import BaseStrategy
 
@@ -18,10 +18,10 @@ class StrategyFactory:
 
     def __init__(self):
         """Inicializar factory con registro vacío."""
-        self.strategy_registry: Dict[str, Type[BaseStrategy]] = {}
+        self.strategy_registry: dict[str, type[BaseStrategy]] = {}
         self._register_default_strategies()
 
-    def register_strategy(self, name: str, strategy_class: Type[BaseStrategy]) -> None:
+    def register_strategy(self, name: str, strategy_class: type[BaseStrategy]) -> None:
         """
         Registrar nueva estrategia en el factory.
 
@@ -38,7 +38,7 @@ class StrategyFactory:
         self.strategy_registry[name] = strategy_class
         logger.info(f"Registered strategy: {name} -> {strategy_class.__name__}")
 
-    def create_strategy(self, name: str, config: Dict[str, Any]) -> BaseStrategy:
+    def create_strategy(self, name: str, config: dict[str, Any]) -> BaseStrategy:
         """
         Crear instancia de estrategia.
 
@@ -73,9 +73,9 @@ class StrategyFactory:
 
         except (FileNotFoundError, ValueError, KeyError, TypeError) as e:
             logger.error(f"Failed to create strategy '{name}': {e}", exc_info=True)
-            raise ValueError(f"Failed to create strategy '{name}': {str(e)}")
+            raise ValueError(f"Failed to create strategy '{name}': {e!s}") from e
 
-    def list_available_strategies(self) -> List[str]:
+    def list_available_strategies(self) -> list[str]:
         """
         Listar estrategias disponibles para crear.
 
@@ -84,7 +84,7 @@ class StrategyFactory:
         """
         return list(self.strategy_registry.keys())
 
-    def get_strategy_info(self, name: str) -> Dict[str, Any]:
+    def get_strategy_info(self, name: str) -> dict[str, Any]:
         """
         Obtener información de una estrategia registrada.
 
@@ -213,8 +213,8 @@ class StrategyFactory:
     def create_ensemble(
         self,
         ensemble_type: str,
-        ensemble_config: Dict[str, Any],
-        strategies_config: List[Dict[str, Any]],
+        ensemble_config: dict[str, Any],
+        strategies_config: list[dict[str, Any]],
     ) -> BaseStrategy:
         """
         Crear ensemble con sub-estrategias.

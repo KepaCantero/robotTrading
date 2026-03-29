@@ -19,9 +19,10 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from decimal import Decimal
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import TYPE_CHECKING, Any
 
-from .error_budget_manager import ErrorBudgetState
+if TYPE_CHECKING:
+    from .error_budget_manager import ErrorBudgetState
 
 logger = logging.getLogger(__name__)
 
@@ -49,10 +50,10 @@ class AlertChannel(str, Enum):
 class AlertRecipients:
     """Alert notification recipients."""
 
-    emails: List[str] = field(default_factory=list)
-    slack_channels: List[str] = field(default_factory=list)
-    pagerduty_services: List[str] = field(default_factory=list)
-    webhook_urls: List[str] = field(default_factory=list)
+    emails: list[str] = field(default_factory=list)
+    slack_channels: list[str] = field(default_factory=list)
+    pagerduty_services: list[str] = field(default_factory=list)
+    webhook_urls: list[str] = field(default_factory=list)
 
 
 @dataclass
@@ -66,13 +67,13 @@ class BudgetAlert:
     message: str
     budget_state: ErrorBudgetState
     timestamp: datetime
-    channels: List[AlertChannel]
+    channels: list[AlertChannel]
     recipients: AlertRecipients
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
     acknowledged: bool = False
     resolved: bool = False
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
         return {
             "alert_id": self.alert_id,
@@ -109,13 +110,13 @@ class BudgetAlertConfig:
     recipients: AlertRecipients = field(default_factory=AlertRecipients)
 
     # Channels to use (by severity)
-    warning_channels: List[AlertChannel] = field(
+    warning_channels: list[AlertChannel] = field(
         default_factory=lambda: [AlertChannel.EMAIL, AlertChannel.SLACK]
     )
-    critical_channels: List[AlertChannel] = field(
+    critical_channels: list[AlertChannel] = field(
         default_factory=lambda: [AlertChannel.EMAIL, AlertChannel.SLACK, AlertChannel.PAGERDUTY]
     )
-    emergency_channels: List[AlertChannel] = field(
+    emergency_channels: list[AlertChannel] = field(
         default_factory=lambda: [AlertChannel.PAGERDUTY, AlertChannel.SLACK]
     )
 
@@ -151,7 +152,7 @@ class BudgetAlertManager:
     def __init__(
         self,
         service_name: str,
-        config: Optional[BudgetAlertConfig] = None,
+        config: BudgetAlertConfig | None = None,
     ):
         """
         Initialize budget alert manager.
@@ -165,14 +166,14 @@ class BudgetAlertManager:
         self.logger = logging.getLogger(f"{__name__}.{service_name}")
 
         # Alert history
-        self._alert_history: List[BudgetAlert] = []
-        self._last_alert_time: Dict[str, datetime] = {}
+        self._alert_history: list[BudgetAlert] = []
+        self._last_alert_time: dict[str, datetime] = {}
 
         # Lock
         self._lock = asyncio.Lock()
 
         # HTTP session for webhooks
-        self._session: Optional[Any] = None
+        self._session: object | None = None
 
         self.logger.info(f"BudgetAlertManager initialized for {service_name}")
 
@@ -182,7 +183,7 @@ class BudgetAlertManager:
     async def check_and_alert(
         self,
         budget_state: ErrorBudgetState,
-    ) -> List[BudgetAlert]:
+    ) -> list[BudgetAlert]:
         """
         Check budget state and trigger alerts if needed.
 
@@ -278,8 +279,8 @@ class BudgetAlertManager:
         severity: AlertSeverity,
         title: str,
         message: str,
-        channels: List[AlertChannel],
-    ) -> Optional[BudgetAlert]:
+        channels: list[AlertChannel],
+    ) -> BudgetAlert | None:
         """Trigger an alert."""
         try:
             # Check cooldown
@@ -463,8 +464,8 @@ class BudgetAlertManager:
     async def get_alert_history(
         self,
         limit: int = 100,
-        severity: Optional[AlertSeverity] = None,
-    ) -> List[BudgetAlert]:
+        severity: AlertSeverity | None = None,
+    ) -> list[BudgetAlert]:
         """
         Get alert history.
 
@@ -482,11 +483,11 @@ class BudgetAlertManager:
 
         return alerts[-limit:]
 
-    async def get_active_alerts(self) -> List[BudgetAlert]:
+    async def get_active_alerts(self) -> list[BudgetAlert]:
         """Get list of active (unresolved) alerts."""
         return [a for a in self._alert_history if not a.resolved]
 
-    async def get_alert_summary(self) -> Dict[str, Any]:
+    async def get_alert_summary(self) -> dict[str, Any]:
         """Get alert summary statistics."""
         total = len(self._alert_history)
         active = await self.get_active_alerts()

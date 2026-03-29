@@ -7,7 +7,7 @@ import logging
 import os
 import tempfile
 from pathlib import Path
-from typing import Dict, Optional
+from typing import Optional
 
 from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings
@@ -67,8 +67,8 @@ class TestConfigManager:
     """Manages test configuration and environment isolation."""
 
     def __init__(self):
-        self._temp_dirs: Dict[str, Path] = {}
-        self._original_env: Dict[str, Optional[str]] = {}
+        self._temp_dirs: dict[str, Path] = {}
+        self._original_env: dict[str, Optional[str]] = {}
         self._test_config: Optional[TestEnvironmentConfig] = None
 
     def setup_test_environment(self) -> TestEnvironmentConfig:
@@ -200,7 +200,7 @@ class TestConfigManager:
         return self._test_config
 
     @property
-    def temp_dirs(self) -> Dict[str, Path]:
+    def temp_dirs(self) -> dict[str, Path]:
         """Get temporary directories."""
         return self._temp_dirs.copy()
 

@@ -19,7 +19,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from decimal import Decimal
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any, ClassVar, Optional
 
 from app.shared.utils.decimal_utils import calculate_percentage
 
@@ -69,7 +69,7 @@ class HedgeInstrument:
     symbol: Optional[str] = None
     tick_size: Optional[Decimal] = None
     tick_value: Optional[Decimal] = None
-    tenor_options: List[int] = field(default_factory=lambda: [1, 3, 6, 12])
+    tenor_options: list[int] = field(default_factory=lambda: [1, 3, 6, 12])
     is_exchange_traded: bool = False
 
     def to_dict(self) -> dict:
@@ -208,7 +208,7 @@ class HedgingEngine:
     """
 
     # Default hedge instruments
-    DEFAULT_INSTRUMENTS = {
+    DEFAULT_INSTRUMENTS: ClassVar[dict] = {
         "USD": [
             HedgeInstrument(
                 type=HedgeInstrumentType.FORWARD,
@@ -256,7 +256,7 @@ class HedgingEngine:
     }
 
     # Default correlations with EUR (for hedge ratio calculation)
-    DEFAULT_CORRELATIONS = {
+    DEFAULT_CORRELATIONS: ClassVar[dict] = {
         "USD": Decimal("0.95"),  # EUR/USD highly correlated with US stocks
         "GBP": Decimal("0.85"),
         "JPY": Decimal("0.70"),
@@ -266,7 +266,7 @@ class HedgingEngine:
     }
 
     # Relative volatilities (for minimum variance hedge ratio)
-    DEFAULT_VOLATILITIES = {
+    DEFAULT_VOLATILITIES: ClassVar[dict] = {
         "EUR": Decimal("0.08"),  # EUR volatility
         "USD": Decimal("0.10"),  # USD volatility
         "GBP": Decimal("0.12"),
@@ -292,7 +292,7 @@ class HedgingEngine:
         self.base_currency = base_currency.upper()
 
         # Historical hedge effectiveness tracking
-        self._effectiveness_history: Dict[str, List[HedgeEffectiveness]] = {}
+        self._effectiveness_history: dict[str, list[HedgeEffectiveness]] = {}
 
         logger.info(f"HedgingEngine initialized with base currency {base_currency}")
 
@@ -559,8 +559,7 @@ class HedgingEngine:
         self._effectiveness_history[currency].append(effectiveness_obj)
 
         logger.info(
-            f"Tracked hedge effectiveness for {currency}: "
-            f"{effectiveness:.1%} variance reduction"
+            f"Tracked hedge effectiveness for {currency}: {effectiveness:.1%} variance reduction"
         )
 
         return effectiveness_obj
@@ -569,7 +568,7 @@ class HedgingEngine:
         self,
         currency: str,
         limit: int = 10,
-    ) -> List[HedgeEffectiveness]:
+    ) -> list[HedgeEffectiveness]:
         """
         Get historical hedge effectiveness for a currency.
 

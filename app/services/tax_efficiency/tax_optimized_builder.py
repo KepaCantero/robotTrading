@@ -8,7 +8,7 @@ tax-efficient portfolio allocations.
 import logging
 from dataclasses import dataclass
 from decimal import Decimal
-from typing import Dict, List, Optional
+from typing import Optional
 
 from .capital_gain_tracker import get_capital_gain_tracker
 from .tax_loss_harvester import get_tax_loss_harvester
@@ -21,12 +21,12 @@ logger = logging.getLogger(__name__)
 class TaxOptimizedAllocation:
     """Tax-optimized portfolio allocation."""
 
-    base_allocation: Dict[str, Decimal]  # symbol → weight
-    tax_adjusted_allocation: Dict[str, Decimal]  # symbol → adjusted weight
-    harvesting_opportunities: List[str]  # symbols to harvest
+    base_allocation: dict[str, Decimal]  # symbol → weight
+    tax_adjusted_allocation: dict[str, Decimal]  # symbol → adjusted weight
+    harvesting_opportunities: list[str]  # symbols to harvest
     tax_benefit_estimated: Decimal  # €
     after_tax_return_pct: Decimal  # %
-    adjustments_made: List[str]  # list of changes
+    adjustments_made: list[str]  # list of changes
 
 
 class TaxOptimizedPortfolioBuilder:
@@ -49,11 +49,11 @@ class TaxOptimizedPortfolioBuilder:
 
     async def optimize_for_taxes(
         self,
-        base_allocation: Dict[str, Decimal],  # symbol → target weight
-        current_positions: Dict[str, Decimal],  # symbol → current value
-        cost_basis: Dict[str, Decimal],  # symbol → total cost
-        quantities: Dict[str, Decimal],  # symbol → shares owned
-        current_prices: Dict[str, Decimal],  # symbol → price per share
+        base_allocation: dict[str, Decimal],  # symbol → target weight
+        current_positions: dict[str, Decimal],  # symbol → current value
+        cost_basis: dict[str, Decimal],  # symbol → total cost
+        quantities: dict[str, Decimal],  # symbol → shares owned
+        current_prices: dict[str, Decimal],  # symbol → price per share
         marginal_tax_rate: Optional[Decimal] = None,
         capital: Optional[Decimal] = None,
     ) -> TaxOptimizedAllocation:
@@ -200,7 +200,7 @@ class TaxOptimizedPortfolioBuilder:
 
         return max(after_tax, Decimal("0"))
 
-    def get_tax_report(self) -> Dict:
+    def get_tax_report(self) -> dict:
         """
         Get comprehensive tax report for the portfolio.
 

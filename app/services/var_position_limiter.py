@@ -15,7 +15,7 @@ import logging
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from decimal import Decimal
-from typing import TYPE_CHECKING, Dict, List, Optional, Tuple
+from typing import TYPE_CHECKING, Optional
 
 import numpy as np
 
@@ -23,6 +23,7 @@ from app.shared.config.centralized_config import get_config
 from app.shared.utils.decimal_utils import safe_decimal_sqrt, to_decimal, validate_price
 
 if TYPE_CHECKING:
+    from app.domain.models.portfolio import Portfolio
     from app.engines.risk_engine.correlation_analyzers.correlation_analyzers import (
         CorrelationAnalyzer,
     )
@@ -34,17 +35,17 @@ logger = logging.getLogger(__name__)
 class VaRConfig:
     """Configuration for VaR-based position limits using centralized config."""
 
-    def __init__(self, custom_config: Optional[Dict] = None):
+    def __init__(self, custom_config: Optional[dict] = None):
         """Initialize config with centralized values."""
         tt = get_config().trading
 
         # Get VaR configuration from centralized config
-        self.max_var_limit_pct = Decimal(str(getattr(tt, 'var_max_limit_pct', 0.02)))
-        self.confidence_level = getattr(tt, 'var_confidence_level', 0.95)
-        self.lookback_days = getattr(tt, 'var_lookback_days', 60)
-        self.warning_threshold_pct = Decimal(str(getattr(tt, 'var_warning_threshold_pct', 0.8)))
+        self.max_var_limit_pct = Decimal(str(getattr(tt, "var_max_limit_pct", 0.02)))
+        self.confidence_level = getattr(tt, "var_confidence_level", 0.95)
+        self.lookback_days = getattr(tt, "var_lookback_days", 60)
+        self.warning_threshold_pct = Decimal(str(getattr(tt, "var_warning_threshold_pct", 0.8)))
         self.use_real_correlation = True  # Always use real correlation
-        self.default_volatility = getattr(tt, 'var_default_volatility', 0.2)
+        self.default_volatility = getattr(tt, "var_default_volatility", 0.2)
 
         # Apply any custom overrides
         if custom_config:
@@ -64,7 +65,7 @@ class ValidationResult:
     var_limit: Decimal
     excess_var: Optional[Decimal] = None
     utilization_pct: Decimal = Decimal("0")
-    warnings: List[str] = None
+    warnings: list[str] = None
 
     def __post_init__(self):
         if self.warnings is None:
@@ -112,15 +113,14 @@ class VaRPositionLimiter:
             correlation_analyzer: Correlation matrix analyzer
             config: VaR configuration
         """
-        from app.domain.models.portfolio import Portfolio
 
         self.portfolio: Portfolio = portfolio
         self.correlation_analyzer = correlation_analyzer
         self.config = config or VaRConfig()
 
         # Cache for volatilities and prices
-        self._volatility_cache: Dict[str, float] = {}
-        self._price_cache: Dict[str, Decimal] = {}
+        self._volatility_cache: dict[str, float] = {}
+        self._price_cache: dict[str, Decimal] = {}
 
         logger.info(
             "VaRPositionLimiter initialized with "
@@ -220,7 +220,7 @@ class VaRPositionLimiter:
             logger.error(f"Error validating position with VaR: {e}", exc_info=True)
             return ValidationResult(
                 passed=False,
-                message=f"VaR validation error: {str(e)}",
+                message=f"VaR validation error: {e!s}",
                 current_var=Decimal("0"),
                 projected_var=Decimal("0"),
                 var_limit=Decimal("0"),
@@ -239,8 +239,8 @@ class VaRPositionLimiter:
         Formula:
         VaR = portfolio_value * sqrt(portfolio_variance) * z_score
 
-        where portfolio_variance = w' * Σ * w
-        (w = weights, Σ = covariance matrix)
+        where portfolio_variance = w' * Sigma * w
+        (w = weights, Sigma = covariance matrix)
 
         Args:
             confidence_level: Confidence level (e.g., 0.95 for 95%)
@@ -353,10 +353,9 @@ class VaRPositionLimiter:
             weight_new = float(position_value / portfolio_value)
 
             # Incremental variance contribution (simplified)
-            # σ²_new = w_new² * σ²_new + 2 * w_new * w_avg * σ_new * σ_avg * ρ
+            # sigma^2_new = w_new^2 * sigma^2_new + 2 * w_new * w_avg * sigma_new * sigma_avg * rho
             incremental_variance = (
-                weight_new**2 * volatility**2
-                + 2 * weight_new * avg_correlation * volatility * 0.2
+                weight_new**2 * volatility**2 + 2 * weight_new * avg_correlation * volatility * 0.2
             )  # Assuming 20% avg portfolio vol
 
             # Incremental VaR = portfolio_value * sqrt(incremental_variance) * z_score
@@ -390,8 +389,8 @@ class VaRPositionLimiter:
         """
         Calculate portfolio variance using correlation matrix.
 
-        Formula: w' * Σ * w
-        where w = weights, Σ = covariance matrix
+        Formula: w' * Sigma * w
+        where w = weights, Sigma = covariance matrix
 
         Args:
             positions: List of position objects
@@ -414,7 +413,7 @@ class VaRPositionLimiter:
 
         for position in positions:
             # Use market_price for current value
-            price = getattr(position, 'market_price', getattr(position, 'current_price', None))
+            price = getattr(position, "market_price", getattr(position, "current_price", None))
             if price is None:
                 continue
 
@@ -446,7 +445,11 @@ class VaRPositionLimiter:
             correlation = np.eye(n)
             for i, pos1 in enumerate(positions):
                 for j, pos2 in enumerate(positions):
-                    if i != j and pos1.symbol in corr_matrix and pos2.symbol in corr_matrix[pos1.symbol]:
+                    if (
+                        i != j
+                        and pos1.symbol in corr_matrix
+                        and pos2.symbol in corr_matrix[pos1.symbol]
+                    ):
                         corr = corr_matrix[pos1.symbol][pos2.symbol]
                         if corr is not None:
                             correlation[i][j] = corr
@@ -454,11 +457,11 @@ class VaRPositionLimiter:
             # Use identity matrix (uncorrelated assets)
             correlation = np.eye(n)
 
-        # Build covariance matrix: Σ = diag(σ) * Corr * diag(σ)
+        # Build covariance matrix: Sigma = diag(sigma) * Corr * diag(sigma)
         vol_array = np.array(volatilities)
         covariance = np.outer(vol_array, vol_array) * correlation
 
-        # Calculate portfolio variance: w' * Σ * w
+        # Calculate portfolio variance: w' * Sigma * w
         weight_array = np.array(weights)
         portfolio_var = float(weight_array.T @ covariance @ weight_array)
 
@@ -493,7 +496,7 @@ class VaRPositionLimiter:
             total_value = Decimal("0")
             for p in positions:
                 # Use market_price primarily, fall back to current_price
-                price = getattr(p, 'market_price', getattr(p, 'current_price', None))
+                price = getattr(p, "market_price", getattr(p, "current_price", None))
                 if price is not None and hasattr(p, "quantity"):
                     total_value += abs(p.quantity * price)
 
@@ -502,7 +505,7 @@ class VaRPositionLimiter:
             logger.error(f"Error getting portfolio value: {e}")
             return Decimal("0")
 
-    def get_var_utilization(self) -> Tuple[Decimal, Decimal]:
+    def get_var_utilization(self) -> tuple[Decimal, Decimal]:
         """
         Get current VaR utilization.
 
@@ -584,7 +587,7 @@ class VaRPositionLimiter:
 
             # Calculate position value from allowable VaR
             # This is a simplified calculation
-            # VaR ≈ position_value * volatility * z_score
+            # VaR ~ position_value * volatility * z_score
             from scipy.stats import norm
 
             z_score = norm.ppf(self.config.confidence_level)
@@ -609,7 +612,7 @@ class VaRPositionLimiter:
             logger.error(f"Error calculating max position size: {e}", exc_info=True)
             return Decimal("0")
 
-    def update_volatility_cache(self, volatilities: Dict[str, float]) -> None:
+    def update_volatility_cache(self, volatilities: dict[str, float]) -> None:
         """
         Update the volatility cache with new values.
 

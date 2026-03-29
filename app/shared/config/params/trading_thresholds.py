@@ -10,7 +10,6 @@ TASK-24: SRP Refactoring
 
 import logging
 from decimal import Decimal
-from typing import Dict
 
 from pydantic import BaseModel, Field, field_validator
 
@@ -158,7 +157,7 @@ class TradingThresholds(BaseModel):
     signal_cooldown_minutes: int = Field(
         default=10, description="Signal cooldown period in minutes"
     )
-    signal_compound_weights: Dict[str, float] = Field(
+    signal_compound_weights: dict[str, float] = Field(
         default_factory=lambda: {
             "confidence": 0.30,
             "volume_ratio": 0.25,
@@ -357,7 +356,7 @@ class TradingThresholds(BaseModel):
     multi_factor_history_length: int = Field(
         default=252, description="History length for multi-factor strategy calculations"
     )
-    dividend: Dict[str, float] = Field(
+    dividend: dict[str, float] = Field(
         default_factory=lambda: {
             "min_yield": 0.02,
             "max_yield": 0.08,

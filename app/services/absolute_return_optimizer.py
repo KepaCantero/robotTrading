@@ -30,7 +30,7 @@ Integration Points:
 import logging
 from dataclasses import dataclass, field
 from decimal import Decimal
-from typing import List, Optional, Tuple
+from typing import ClassVar, Optional
 
 from app.services.account_configuration import AccountConfiguration, AccountTier
 from app.services.capital_tier_strategy_selector import RiskProfile
@@ -65,7 +65,7 @@ class AlphaTarget:
     confidence_score: Decimal  # 0-100
     reasoning: str = ""
 
-    def validate(self) -> Tuple[bool, str]:
+    def validate(self) -> tuple[bool, str]:
         """Validate alpha target parameters"""
         if self.monthly_profit_goal <= Decimal("0"):
             return False, "monthly_profit_goal must be > 0"
@@ -104,7 +104,7 @@ class CapacityFadeEstimate:
     alpha_at_5x_capital: Decimal
     reasoning: str = ""
 
-    def validate(self) -> Tuple[bool, str]:
+    def validate(self) -> tuple[bool, str]:
         """Validate capacity fade estimate"""
         if self.base_monthly_alpha <= Decimal("0"):
             return False, "base_monthly_alpha must be > 0"
@@ -146,10 +146,10 @@ class OptimizedParameters:
     feasibility_score: Decimal  # 0-100
     confidence_level: str  # high/medium/low
     risk_level: str  # conservative/balanced/aggressive
-    constraints: List[str] = field(default_factory=list)
-    recommendations: List[str] = field(default_factory=list)
+    constraints: list[str] = field(default_factory=list)
+    recommendations: list[str] = field(default_factory=list)
 
-    def validate(self) -> Tuple[bool, str]:
+    def validate(self) -> tuple[bool, str]:
         """Validate optimized parameters"""
         if self.position_size_pct <= Decimal("0"):
             return False, "position_size_pct must be > 0"
@@ -186,7 +186,7 @@ class MonthlyProfitForecast:
     """
 
     expected_monthly_profit: Decimal
-    profit_confidence_interval: Tuple[Decimal, Decimal]
+    profit_confidence_interval: tuple[Decimal, Decimal]
     expected_monthly_trades: int
     expected_win_rate: Decimal
     expected_sharpe_ratio: Decimal
@@ -195,7 +195,7 @@ class MonthlyProfitForecast:
     percentile_5: Decimal
     percentile_95: Decimal
 
-    def validate(self) -> Tuple[bool, str]:
+    def validate(self) -> tuple[bool, str]:
         """Validate profit forecast"""
         if self.expected_monthly_trades < 0:
             return False, "expected_monthly_trades must be >= 0"
@@ -233,8 +233,8 @@ class FeasibilityReport:
     available_alpha: Decimal
     gap: Decimal
     tier: str
-    constraints: List[str]
-    recommendations: List[str]
+    constraints: list[str]
+    recommendations: list[str]
     deployment_status: str  # APPROVED / RESTRICTED / REJECTED
 
 
@@ -346,7 +346,7 @@ class CapacityFadeAnalyzer:
     """
 
     # Empirical decay rates by tier and strategy type
-    DECAY_RATE_BY_TIER = {
+    DECAY_RATE_BY_TIER: ClassVar[dict] = {
         AccountTier.MICRO: Decimal("0.05"),  # 5% per 10x (minimal impact at small scale)
         AccountTier.SMALL: Decimal("0.08"),  # 8% per 10x
         AccountTier.MEDIUM: Decimal("0.12"),  # 12% per 10x
@@ -531,9 +531,9 @@ class ReturnDistributionValidator:
     def validate_achievability(
         target_monthly_return: Decimal,
         expected_monthly_alpha: Decimal,
-        historical_mean: Decimal = None,
-        historical_std: Decimal = None,
-    ) -> Tuple[bool, str]:
+        historical_mean: Optional[Decimal] = None,
+        historical_std: Optional[Decimal] = None,
+    ) -> tuple[bool, str]:
         """
         Check if target is statistically reasonable.
 
@@ -660,7 +660,7 @@ class AbsoluteReturnOptimizer:
         )
     """
 
-    def __init__(self, capital: Decimal, account_id: str = None):
+    def __init__(self, capital: Decimal, account_id: Optional[str] = None):
         """
         Initialize Absolute Return Optimizer.
 
@@ -690,7 +690,7 @@ class AbsoluteReturnOptimizer:
         risk_profile: Optional[RiskProfile] = None,
         tax_rate: Optional[Decimal] = None,
         commission_per_trade: Optional[Decimal] = None,
-    ) -> Tuple[OptimizedParameters, FeasibilityReport]:
+    ) -> tuple[OptimizedParameters, FeasibilityReport]:
         """
         Optimize parameters to achieve monthly profit goal.
 
@@ -723,7 +723,7 @@ class AbsoluteReturnOptimizer:
                 max_position_size=config.get("position_size_pct", Decimal("0.05")),
                 max_concurrent_trades=config.get("max_concurrent_trades", 2),
                 max_daily_loss_pct=Decimal(
-                    str(getattr(get_config().trading, 'max_daily_loss_pct', 0.02))
+                    str(getattr(get_config().trading, "max_daily_loss_pct", 0.02))
                 ),  # Use centralized config
                 max_drawdown_pct=Decimal("0.10"),
                 leverage_allowed=Decimal("1.5"),
@@ -761,7 +761,7 @@ class AbsoluteReturnOptimizer:
         monthly_target_return = monthly_profit_goal / self.capital
 
         # Step 4: Validate feasibility
-        is_feasible, reason = ReturnDistributionValidator.validate_achievability(
+        is_feasible, _reason = ReturnDistributionValidator.validate_achievability(
             target_monthly_return=alpha_target.monthly_alpha_needed / self.capital,
             expected_monthly_alpha=capacity_fade.adjusted_alpha,
         )

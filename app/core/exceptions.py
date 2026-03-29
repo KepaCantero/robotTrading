@@ -5,7 +5,7 @@ This module provides centralized exception definitions for the application.
 """
 
 import logging
-from typing import Any, Dict, Optional
+from typing import Any, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -17,7 +17,7 @@ class AlgoTradingError(Exception):
         self,
         message: str,
         error_code: Optional[str] = None,
-        details: Optional[Dict[str, Any]] = None,
+        details: Optional[dict[str, Any]] = None,
     ):
         super().__init__(message)
         self.message = message
@@ -125,13 +125,13 @@ class RateLimitError(AlgoTradingError):
     pass
 
 
-class TimeoutError(AlgoTradingError):
+class TradingTimeoutError(AlgoTradingError):
     """Exception raised for timeout errors."""
 
     pass
 
 
-class ConnectionError(AlgoTradingError):
+class TradingConnectionError(AlgoTradingError):
     """Exception raised for connection errors."""
 
     pass

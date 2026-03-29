@@ -7,10 +7,11 @@ Implements:
 - MOD720-001: Modelo 720 reporting > €50k foreign assets
 - LOSS-CF-001: Loss carryforward max 4 years
 """
+
 import logging
 from datetime import datetime
 from decimal import Decimal
-from typing import Optional
+from typing import ClassVar, Optional
 
 from app.shared.protocols.i_spain_tax_engine import ISpainTaxEngine
 
@@ -26,14 +27,14 @@ class SpainTaxEngineImpl(ISpainTaxEngine):
     """
 
     # IRPF Brackets 2026
-    BRACKETS = [
+    BRACKETS: ClassVar[list] = [
         {"min": 0, "max": 6000, "rate": Decimal("0.19")},
         {"min": 6000, "max": 50000, "rate": Decimal("0.21")},
         {"min": 50000, "max": 999999999, "rate": Decimal("0.23")},
     ]
 
     # EU Countries for dividend tax (DIV-001)
-    EU_COUNTRIES = {
+    EU_COUNTRIES: ClassVar[dict] = {
         "AT",
         "BE",
         "BG",

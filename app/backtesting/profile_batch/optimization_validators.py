@@ -16,8 +16,7 @@ from __future__ import annotations
 
 import logging
 import uuid
-from pathlib import Path
-from typing import Any, Dict
+from typing import TYPE_CHECKING, Any
 
 import numpy as np
 import pandas as pd
@@ -25,14 +24,18 @@ import yaml
 
 from app.backtesting.comprehensive_backtest_runner import ComprehensiveBacktestRunner
 from app.backtesting.shared import MetricsDict, get_empty_metrics
-from app.domain.models.input_profile import InputProfile
-from app.shared.config.profile_config_loader import ProfileConfigLoader
+
+if TYPE_CHECKING:
+    from pathlib import Path
+
+    from app.domain.models.input_profile import InputProfile
+    from app.shared.config.profile_config_loader import ProfileConfigLoader
 
 logger = logging.getLogger(__name__)
 
 # Type aliases (additional ones not in shared module)
-ConfigDict = Dict[str, Any]
-ValidationResultDict = Dict[str, Any]  # Contains 'passed' bool and validation metrics
+ConfigDict = dict[str, Any]
+ValidationResultDict = dict[str, Any]  # Contains 'passed' bool and validation metrics
 
 
 class WalkForwardValidator:
@@ -50,7 +53,7 @@ class WalkForwardValidator:
     def __init__(
         self,
         output_dir: Path,
-        validation_config: Dict[str, Any],
+        validation_config: dict[str, Any],
         profile_config_loader: ProfileConfigLoader | None = None,
     ):
         """
@@ -66,7 +69,7 @@ class WalkForwardValidator:
         self.profile_config_loader = profile_config_loader
 
     def validate(
-        self, profile: InputProfile, config: ConfigDict, params: Dict[str, Any]
+        self, profile: InputProfile, config: ConfigDict, params: dict[str, Any]
     ) -> ValidationResultDict:
         """
         Run walk-forward validation.
@@ -152,7 +155,7 @@ class WalkForwardValidator:
         }
 
     def _run_backtest_with_params(
-        self, profile: InputProfile, config: ConfigDict, params: Dict[str, Any]
+        self, profile: InputProfile, config: ConfigDict, params: dict[str, Any]
     ) -> MetricsDict:
         """Run backtest with specific parameters."""
         updated_config = config.copy()
@@ -194,7 +197,7 @@ class MonteCarloSimulator:
     def __init__(
         self,
         output_dir: Path,
-        validation_config: Dict[str, Any],
+        validation_config: dict[str, Any],
         profile_config_loader: ProfileConfigLoader | None = None,
     ):
         """
@@ -210,7 +213,7 @@ class MonteCarloSimulator:
         self.profile_config_loader = profile_config_loader
 
     def simulate(
-        self, profile: InputProfile, config: ConfigDict, params: Dict[str, Any]
+        self, profile: InputProfile, config: ConfigDict, params: dict[str, Any]
     ) -> ValidationResultDict:
         """
         Run Monte Carlo simulation.
@@ -270,7 +273,7 @@ class MonteCarloSimulator:
         }
 
     def _run_backtest_with_params(
-        self, profile: InputProfile, config: ConfigDict, params: Dict[str, Any]
+        self, profile: InputProfile, config: ConfigDict, params: dict[str, Any]
     ) -> MetricsDict:
         """Run backtest with specific parameters."""
         updated_config = config.copy()
@@ -308,7 +311,7 @@ class OutOfSampleValidator:
     def __init__(
         self,
         output_dir: Path,
-        validation_config: Dict[str, Any],
+        validation_config: dict[str, Any],
         profile_config_loader: ProfileConfigLoader | None = None,
     ):
         """
@@ -324,7 +327,7 @@ class OutOfSampleValidator:
         self.profile_config_loader = profile_config_loader
 
     def validate(
-        self, profile: InputProfile, config: ConfigDict, params: Dict[str, Any]
+        self, profile: InputProfile, config: ConfigDict, params: dict[str, Any]
     ) -> ValidationResultDict:
         """
         Run out-of-sample validation.
@@ -386,7 +389,7 @@ class OutOfSampleValidator:
             return {"passed": False, "error": str(e)}
 
     def _run_backtest_with_params(
-        self, profile: InputProfile, config: ConfigDict, params: Dict[str, Any]
+        self, profile: InputProfile, config: ConfigDict, params: dict[str, Any]
     ) -> MetricsDict:
         """Run backtest with specific parameters."""
         updated_config = config.copy()

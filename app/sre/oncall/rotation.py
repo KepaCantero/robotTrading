@@ -25,7 +25,7 @@ from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Callable
 
 import aiosqlite
 
@@ -70,7 +70,7 @@ class TimeSlot:
         """Duration in days."""
         return self.duration_hours / 24
 
-    def overlaps(self, other: "TimeSlot") -> bool:
+    def overlaps(self, other: TimeSlot) -> bool:
         """Check if this slot overlaps with another."""
         return not (self.end <= other.start or self.start >= other.end)
 
@@ -96,15 +96,15 @@ class OncallEngineer:
     status: OncallStatus = OncallStatus.AVAILABLE
     is_primary: bool = True  # Can be primary on-call
     is_backup: bool = True  # Can be backup on-call
-    skills: List[str] = field(default_factory=list)
-    preferred_days: List[int] = field(default_factory=list)  # 0=Monday, 6=Sunday
-    unavailable_periods: List[TimeSlot] = field(default_factory=list)
+    skills: list[str] = field(default_factory=list)
+    preferred_days: list[int] = field(default_factory=list)  # 0=Monday, 6=Sunday
+    unavailable_periods: list[TimeSlot] = field(default_factory=list)
 
     # Statistics
     oncall_count: int = 0
     backup_count: int = 0
     total_oncall_hours: float = 0.0
-    last_oncall_date: Optional[datetime] = None
+    last_oncall_date: datetime | None = None
 
     # Constraints
     max_consecutive_weeks: int = 4
@@ -199,7 +199,7 @@ class OncallEngineer:
         self.total_oncall_hours += slot.duration_hours
         self.last_oncall_date = slot.start
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
         return {
             "engineer_id": self.engineer_id,
@@ -228,11 +228,11 @@ class RotationSlot:
     slot_id: str
     time_slot: TimeSlot
     primary_engineer_id: str
-    backup_engineer_id: Optional[str] = None
+    backup_engineer_id: str | None = None
     rotation_type: RotationType = RotationType.WEEKLY
     is_active: bool = True
     created_at: datetime = field(default_factory=datetime.utcnow)
-    notes: Optional[str] = None
+    notes: str | None = None
 
     def __post_init__(self):
         """Validate slot invariants."""
@@ -241,7 +241,7 @@ class RotationSlot:
         if self.time_slot.end <= self.time_slot.start:
             raise ValueError("Invalid time slot")
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
         return {
             "slot_id": self.slot_id,
@@ -283,8 +283,8 @@ class RotationConfig:
     db_path: str = "data/oncall_rotation.db"
 
     # Callbacks
-    on_rotation_assigned: Optional[Callable[[RotationSlot], None]] = None
-    on_engineer_unavailable: Optional[Callable[[str, TimeSlot], None]] = None
+    on_rotation_assigned: Callable[[RotationSlot], None] | None = None
+    on_engineer_unavailable: Callable[[str, TimeSlot], None] | None = None
 
 
 class OncallRotation:
@@ -307,8 +307,8 @@ class OncallRotation:
 
     def __init__(
         self,
-        engineers: List[OncallEngineer],
-        config: Optional[RotationConfig] = None,
+        engineers: list[OncallEngineer],
+        config: RotationConfig | None = None,
     ):
         """
         Initialize rotation manager.
@@ -322,7 +322,7 @@ class OncallRotation:
         self.logger = logging.getLogger(f"{__name__}")
 
         # State
-        self._slots: List[RotationSlot] = []
+        self._slots: list[RotationSlot] = []
         self._lock = asyncio.Lock()
 
         self.logger.info(
@@ -552,7 +552,7 @@ class OncallRotation:
         self,
         start_date: datetime,
         num_weeks: int = 12,
-    ) -> List[RotationSlot]:
+    ) -> list[RotationSlot]:
         """
         Generate rotation schedule for specified period.
 
@@ -638,7 +638,7 @@ class OncallRotation:
                 self.logger.error(f"Error generating schedule: {e}")
                 raise
 
-    async def _assign_primary(self, slot: TimeSlot) -> Optional[str]:
+    async def _assign_primary(self, slot: TimeSlot) -> str | None:
         """Assign primary on-call for slot."""
         # Get eligible engineers
         eligible = [
@@ -673,7 +673,7 @@ class OncallRotation:
         self,
         slot: TimeSlot,
         primary_id: str,
-    ) -> Optional[str]:
+    ) -> str | None:
         """Assign backup on-call for slot."""
         # Get eligible engineers (excluding primary)
         eligible = [
@@ -718,7 +718,7 @@ class OncallRotation:
         except (aiosqlite.Error, asyncio.TimeoutError, OSError) as e:
             self.logger.error(f"Error saving slot: {e}")
 
-    async def get_current_oncall(self) -> Optional[Dict[str, Any]]:
+    async def get_current_oncall(self) -> dict[str, Any] | None:
         """
         Get current on-call assignment.
 
@@ -761,7 +761,7 @@ class OncallRotation:
         engineer_id: str,
         start: datetime,
         end: datetime,
-        reason: Optional[str] = None,
+        reason: str | None = None,
     ) -> bool:
         """
         Add unavailable period for engineer.
@@ -819,12 +819,14 @@ class OncallRotation:
             if not slot.is_active:
                 continue
 
-            if (slot.primary_engineer_id == engineer_id or slot.backup_engineer_id == engineer_id) and unavailable_slot.overlaps(slot.time_slot):
+            if (
+                slot.primary_engineer_id == engineer_id or slot.backup_engineer_id == engineer_id
+            ) and unavailable_slot.overlaps(slot.time_slot):
                 conflicts.append(slot)
 
         if conflicts:
             self.logger.warning(
-                f"Found {len(conflicts)} conflicts for {engineer_id}. " f"May need reassignment."
+                f"Found {len(conflicts)} conflicts for {engineer_id}. May need reassignment."
             )
 
             # Notify callback
@@ -835,7 +837,7 @@ class OncallRotation:
                 except Exception as e:
                     self.logger.error(f"Error in unavailable callback: {e}")
 
-    async def get_engineer_burden_stats(self) -> Dict[str, Dict[str, Any]]:
+    async def get_engineer_burden_stats(self) -> dict[str, dict[str, Any]]:
         """
         Get burden statistics for all engineers.
 
@@ -871,7 +873,7 @@ class OncallRotation:
     async def get_upcoming_schedule(
         self,
         weeks: int = 4,
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """
         Get upcoming rotation schedule.
 

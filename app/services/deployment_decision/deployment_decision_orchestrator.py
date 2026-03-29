@@ -9,7 +9,7 @@ import logging
 from dataclasses import dataclass, field
 from datetime import datetime
 from decimal import Decimal
-from typing import Dict, List, Optional, Tuple
+from typing import Optional
 
 from app.shared.config.centralized_config import get_config
 
@@ -21,8 +21,8 @@ class DeploymentAnalysis:
     """Analysis components contributing to deployment decision."""
 
     validation_passed: bool
-    validation_failures: List[str]
-    validation_warnings: List[str]
+    validation_failures: list[str]
+    validation_warnings: list[str]
 
     feasibility_ratio: Decimal
     feasibility_assessment: str  # VIABLE, MARGINAL, NOT_VIABLE
@@ -48,15 +48,15 @@ class DeploymentDecision:
     confidence_level: str  # high, medium, low
 
     primary_reason: str
-    supporting_reasons: List[str]
-    risk_warnings: List[str]
+    supporting_reasons: list[str]
+    risk_warnings: list[str]
 
     # Detailed metrics
     analysis: DeploymentAnalysis
 
     # Recommendations if CONDITIONAL or REJECTED
-    remediation_steps: List[str]
-    alternative_strategies: List[str]
+    remediation_steps: list[str]
+    alternative_strategies: list[str]
 
     # Decision timestamp and ID
     decision_timestamp: datetime = field(default_factory=datetime.utcnow)
@@ -87,14 +87,14 @@ class DeploymentDecisionOrchestrator:
 
     def __init__(self):
         """Initialize deployment decision orchestrator with config."""
-        self.decision_history: List[DeploymentDecision] = []
-        self.decision_metrics: Dict[str, Dict] = {}
+        self.decision_history: list[DeploymentDecision] = []
+        self.decision_metrics: dict[str, dict] = {}
 
         # Load threshold values from centralized config
         config = get_config()
-        self._drawdown_threshold = Decimal(str(getattr(config.trading, 'max_drawdown_limit', 0.15)))
+        self._drawdown_threshold = Decimal(str(getattr(config.trading, "max_drawdown_limit", 0.15)))
         self._capital_loss_threshold = Decimal(
-            str(getattr(config.trading, 'capital_loss_threshold', 0.40))
+            str(getattr(config.trading, "capital_loss_threshold", 0.40))
         )
 
         logger.info("✅ DeploymentDecisionOrchestrator initialized")
@@ -103,8 +103,8 @@ class DeploymentDecisionOrchestrator:
         self,
         # Validation inputs
         validation_passed: bool,
-        validation_failures: List[str],
-        validation_warnings: List[str],
+        validation_failures: list[str],
+        validation_warnings: list[str],
         # Backtest inputs
         feasibility_ratio: Decimal,
         backtest_return: Decimal,
@@ -113,7 +113,7 @@ class DeploymentDecisionOrchestrator:
         # Recommendation inputs
         recommendation_score: Decimal,
         recommendation_confidence: str,
-        recommendation_alternatives: List[str],
+        recommendation_alternatives: list[str],
         # Portfolio inputs
         portfolio_quality: Decimal,
         portfolio_diversification_score: Decimal,
@@ -254,8 +254,8 @@ class DeploymentDecisionOrchestrator:
         return decision
 
     async def _assess_validation(
-        self, passed: bool, failures: List[str], warnings: List[str]
-    ) -> Dict:
+        self, passed: bool, failures: list[str], warnings: list[str]
+    ) -> dict:
         """Assess validation status."""
         return {
             "passed": passed,
@@ -264,7 +264,7 @@ class DeploymentDecisionOrchestrator:
             "assessment": "PASSED" if passed else "FAILED",
         }
 
-    async def _assess_feasibility(self, ratio: Decimal) -> Dict:
+    async def _assess_feasibility(self, ratio: Decimal) -> dict:
         """Assess feasibility ratio."""
         if ratio >= Decimal("1.0"):
             assessment = "VIABLE"
@@ -278,7 +278,7 @@ class DeploymentDecisionOrchestrator:
 
         return {"ratio": ratio, "assessment": assessment, "level": level}
 
-    async def _assess_recommendation(self, score: Decimal, confidence: str) -> Dict:
+    async def _assess_recommendation(self, score: Decimal, confidence: str) -> dict:
         """Assess recommendation quality."""
         score_level = (
             "strong"
@@ -306,7 +306,7 @@ class DeploymentDecisionOrchestrator:
         concentration: Decimal,
         num_assets: int,
         risk_level: str,
-    ) -> Dict:
+    ) -> dict:
         """Assess portfolio quality."""
         quality_level = (
             "excellent"
@@ -348,7 +348,7 @@ class DeploymentDecisionOrchestrator:
         portfolio_risk_level: str,
         user_risk_profile: str,
         initial_capital: Decimal,
-    ) -> Dict:
+    ) -> dict:
         """Assess risk compatibility."""
         warnings = []
 
@@ -384,13 +384,13 @@ class DeploymentDecisionOrchestrator:
 
     async def _determine_decision_status(
         self,
-        validation: Dict,
-        feasibility: Dict,
-        recommendation: Dict,
-        portfolio: Dict,
-        risk: Dict,
+        validation: dict,
+        feasibility: dict,
+        recommendation: dict,
+        portfolio: dict,
+        risk: dict,
         sharpe_ratio: Decimal,
-    ) -> Tuple[str, str]:
+    ) -> tuple[str, str]:
         """Determine final decision status."""
 
         # Hard gate: validation failure = REJECTED
@@ -447,11 +447,11 @@ class DeploymentDecisionOrchestrator:
     async def _generate_reasoning(
         self,
         decision: str,
-        validation: Dict,
-        feasibility: Dict,
-        recommendation: Dict,
-        portfolio: Dict,
-    ) -> Tuple[str, List[str]]:
+        validation: dict,
+        feasibility: dict,
+        recommendation: dict,
+        portfolio: dict,
+    ) -> tuple[str, list[str]]:
         """Generate reasoning for decision."""
         supporting = []
 
@@ -488,8 +488,8 @@ class DeploymentDecisionOrchestrator:
         return primary, supporting
 
     async def _generate_remediation(
-        self, decision: str, validation_failures: List[str], feasibility: Dict, recommendation: Dict
-    ) -> List[str]:
+        self, decision: str, validation_failures: list[str], feasibility: dict, recommendation: dict
+    ) -> list[str]:
         """Generate remediation steps if needed."""
         steps = []
 
@@ -550,7 +550,7 @@ class DeploymentDecisionOrchestrator:
 
     async def get_decision_history(
         self, limit: Optional[int] = None, status_filter: Optional[str] = None
-    ) -> List[DeploymentDecision]:
+    ) -> list[DeploymentDecision]:
         """
         Get decision history with optional filtering.
 
@@ -571,7 +571,7 @@ class DeploymentDecisionOrchestrator:
 
         return decisions
 
-    async def get_deployment_statistics(self) -> Dict:
+    async def get_deployment_statistics(self) -> dict:
         """Get deployment decision statistics."""
         if not self.decision_history:
             return {
@@ -605,7 +605,7 @@ class DeploymentDecisionOrchestrator:
         total_feasibility = sum(d.analysis.feasibility_ratio for d in self.decision_history)
         return total_feasibility / Decimal(len(self.decision_history))
 
-    def get_orchestrator_status(self) -> Dict:
+    def get_orchestrator_status(self) -> dict:
         """Get orchestrator operational status."""
         return {
             "total_decisions_processed": len(self.decision_history),

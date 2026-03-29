@@ -11,7 +11,6 @@ SOLID Principles:
 
 import logging
 from decimal import Decimal
-from typing import Dict, List
 
 from app.domain.models.momentum import Timeframe
 
@@ -35,7 +34,7 @@ class MockPriceDataProvider:
     - Substitutable with any PriceDataProvider implementation
     """
 
-    async def get_price_data(self, symbol: str, timeframe: Timeframe) -> Dict[str, List[float]]:
+    async def get_price_data(self, symbol: str, timeframe: Timeframe) -> dict[str, list[float]]:
         """
         Get price data for a symbol.
 
@@ -48,7 +47,7 @@ class MockPriceDataProvider:
         """
         return await self.generate_mock_data(symbol, timeframe)
 
-    async def generate_mock_data(self, symbol: str, timeframe: Timeframe) -> Dict[str, List[float]]:
+    async def generate_mock_data(self, symbol: str, timeframe: Timeframe) -> dict[str, list[float]]:
         """
         Generate mock price data for demonstration.
 

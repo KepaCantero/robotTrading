@@ -7,7 +7,7 @@ comprehensive risk management for the trading pipeline.
 
 import logging
 from decimal import Decimal
-from typing import Dict, Optional
+from typing import Optional
 
 from app.services.risk_scaling.limit_adjuster import get_limit_adjuster
 from app.services.risk_scaling.risk_adjustment_calculator import get_risk_adjustment_calculator
@@ -43,7 +43,7 @@ class RiskScalingApplication:
         average_volatility: Decimal,
         current_drawdown_pct: Decimal,
         market_volatility_state: str = "normal",
-    ) -> Dict:
+    ) -> dict:
         """
         Apply comprehensive risk scaling to a position.
 
@@ -128,7 +128,7 @@ class RiskScalingApplication:
     async def validate_order_against_limits(
         self,
         order_size: Decimal,
-        account_limits: Dict,
+        account_limits: dict,
         current_capital_deployed: Decimal,
         capital: Decimal,
     ) -> tuple:
@@ -179,7 +179,7 @@ class RiskScalingApplication:
         current_capital_deployed: Decimal,
         current_drawdown_pct: Decimal,
         capital_tier: str,
-    ) -> Dict:
+    ) -> dict:
         """
         Get current risk status summary.
 

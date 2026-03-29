@@ -3,7 +3,7 @@ ATRFilter - Filtro de volatilidad usando Average True Range.
 """
 
 import logging
-from typing import Dict
+from typing import Optional
 
 from ..base_filter import BaseFilter
 
@@ -18,7 +18,11 @@ class ATRFilter(BaseFilter):
     """
 
     def __init__(
-        self, config: Dict = None, preset: str = "balanced", tier: str = None, use_yaml: bool = True
+        self,
+        config: Optional[dict] = None,
+        preset: str = "balanced",
+        tier: Optional[str] = None,
+        use_yaml: bool = True,
     ):
         """Inicializar filtro ATR."""
         super().__init__("atr_filter", config, preset, tier, use_yaml)
@@ -38,11 +42,12 @@ class ATRFilter(BaseFilter):
         # Thresholds del preset (usar thresholds cargados desde YAML)
         # FIX: Lowered thresholds - 60th percentile is too restrictive
         self.min_atr_percentile = self.thresholds.get(
-            "min_percentile", self.thresholds.get("min_atr_percentile", 40)  # Lowered from 60
+            "min_percentile",
+            self.thresholds.get("min_atr_percentile", 40),  # Lowered from 60
         )
         self.min_relative_atr = self.thresholds.get("min_relative_atr", 0.004)  # Lowered from 0.006
 
-    def _get_thresholds_for_volatility(self, market_context: Dict) -> Dict:
+    def _get_thresholds_for_volatility(self, market_context: dict) -> dict:
         """Obtener thresholds según régimen de volatilidad."""
         vol_regime = market_context.get("volatility_regime", "normal")
 
@@ -53,7 +58,7 @@ class ATRFilter(BaseFilter):
         else:
             return self.normal_vol_thresholds or self.thresholds
 
-    def _apply_filter_logic(self, indicators: Dict, market_context: Dict, signal_type: str) -> Dict:
+    def _apply_filter_logic(self, indicators: dict, market_context: dict, signal_type: str) -> dict:
         """Aplicar lógica del filtro ATR."""
         # Obtener thresholds según volatilidad
         thresholds = self._get_thresholds_for_volatility(market_context)
@@ -74,10 +79,10 @@ class ATRFilter(BaseFilter):
             # FIX: Use OR logic instead of AND - either condition passing is sufficient
             if atr_percentile is None or relative_atr is None:
                 return {
-                    'passed': False,
-                    'confidence': 0.0,
-                    'reason': 'ATR percentile or relative ATR missing',
-                    'metadata': {},
+                    "passed": False,
+                    "confidence": 0.0,
+                    "reason": "ATR percentile or relative ATR missing",
+                    "metadata": {},
                 }
 
             percentile_pass = atr_percentile >= min_atr_percentile
@@ -96,57 +101,57 @@ class ATRFilter(BaseFilter):
 
                 passed_type = []
                 if percentile_pass:
-                    passed_type.append(f'percentile {atr_percentile:.1f}>={min_atr_percentile}')
+                    passed_type.append(f"percentile {atr_percentile:.1f}>={min_atr_percentile}")
                 if relative_pass:
-                    passed_type.append(f'relative {relative_atr:.4f}>={min_relative_atr:.4f}')
+                    passed_type.append(f"relative {relative_atr:.4f}>={min_relative_atr:.4f}")
 
                 return {
-                    'passed': True,
-                    'confidence': min(1.0, confidence),
-                    'reason': f'ATR passed: {" OR ".join(passed_type)}',
-                    'metadata': {
-                        'atr_percentile': atr_percentile,
-                        'relative_atr': relative_atr,
-                        'volatility_regime': market_context.get('volatility_regime'),
+                    "passed": True,
+                    "confidence": min(1.0, confidence),
+                    "reason": f"ATR passed: {' OR '.join(passed_type)}",
+                    "metadata": {
+                        "atr_percentile": atr_percentile,
+                        "relative_atr": relative_atr,
+                        "volatility_regime": market_context.get("volatility_regime"),
                     },
                 }
             else:
                 return {
-                    'passed': False,
-                    'confidence': 0.0,
-                    'reason': f'ATR conditions not met: percentile {atr_percentile:.1f} < {min_atr_percentile} AND relative {relative_atr:.4f} < {min_relative_atr:.4f}',
-                    'metadata': {'atr_percentile': atr_percentile, 'relative_atr': relative_atr},
+                    "passed": False,
+                    "confidence": 0.0,
+                    "reason": f"ATR conditions not met: percentile {atr_percentile:.1f} < {min_atr_percentile} AND relative {relative_atr:.4f} < {min_relative_atr:.4f}",
+                    "metadata": {"atr_percentile": atr_percentile, "relative_atr": relative_atr},
                 }
 
         elif self.method == "relative":
             # Solo requiere ATR relativo
             if relative_atr is None:
                 return {
-                    'passed': False,
-                    'confidence': 0.0,
-                    'reason': 'Relative ATR missing',
-                    'metadata': {},
+                    "passed": False,
+                    "confidence": 0.0,
+                    "reason": "Relative ATR missing",
+                    "metadata": {},
                 }
 
             if relative_atr >= min_relative_atr:
                 confidence = min(1.0, (relative_atr / min_relative_atr) * 0.8)
                 return {
-                    'passed': True,
-                    'confidence': confidence,
-                    'reason': f'Relative ATR {relative_atr:.4f} >= {min_relative_atr:.4f}',
-                    'metadata': {'relative_atr': relative_atr},
+                    "passed": True,
+                    "confidence": confidence,
+                    "reason": f"Relative ATR {relative_atr:.4f} >= {min_relative_atr:.4f}",
+                    "metadata": {"relative_atr": relative_atr},
                 }
             else:
                 return {
-                    'passed': False,
-                    'confidence': 0.0,
-                    'reason': f'Relative ATR {relative_atr:.4f} below threshold',
-                    'metadata': {'relative_atr': relative_atr},
+                    "passed": False,
+                    "confidence": 0.0,
+                    "reason": f"Relative ATR {relative_atr:.4f} below threshold",
+                    "metadata": {"relative_atr": relative_atr},
                 }
 
         return {
-            'passed': False,
-            'confidence': 0.0,
-            'reason': f'Unknown ATR method: {self.method}',
-            'metadata': {},
+            "passed": False,
+            "confidence": 0.0,
+            "reason": f"Unknown ATR method: {self.method}",
+            "metadata": {},
         }

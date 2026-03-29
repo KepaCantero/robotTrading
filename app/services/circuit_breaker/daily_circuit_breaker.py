@@ -17,13 +17,15 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass, field
-from datetime import date, datetime
 from decimal import Decimal
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import TYPE_CHECKING, Any
 
 from app.shared.config.centralized_config import get_config
 from app.shared.utils.timezone_utils import utc_now
+
+if TYPE_CHECKING:
+    from datetime import date, datetime
 
 logger = logging.getLogger(__name__)
 
@@ -58,10 +60,10 @@ class DailyBreakerEvent:
     threshold_pct: Decimal
     equity_before: Decimal
     equity_after: Decimal
-    trigger_symbol: Optional[str] = None
+    trigger_symbol: str | None = None
     reason: str = ""
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for serialization."""
         return {
             "timestamp": self.timestamp.isoformat(),
@@ -99,7 +101,7 @@ class DailyBreakerState:
     daily_pnl: Decimal
     daily_pnl_pct: Decimal
     threshold_pct: Decimal
-    last_event: Optional[DailyBreakerEvent] = None
+    last_event: DailyBreakerEvent | None = None
     last_update: datetime = field(default_factory=utc_now)
 
     @property
@@ -107,7 +109,7 @@ class DailyBreakerState:
         """Check if trading is currently halted."""
         return self.status == DailyBreakerStatus.TRIGGERED
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for serialization."""
         return {
             "trading_date": self.trading_date.isoformat(),
@@ -149,7 +151,7 @@ class DailyCircuitBreaker:
 
     def __init__(
         self,
-        threshold_pct: Optional[Decimal] = None,
+        threshold_pct: Decimal | None = None,
         auto_reset_on_new_day: bool = True,
     ):
         """
@@ -166,8 +168,8 @@ class DailyCircuitBreaker:
 
         self.threshold_pct = threshold_pct
         self.auto_reset_on_new_day = auto_reset_on_new_day
-        self._state: Optional[DailyBreakerState] = None
-        self._event_history: List[DailyBreakerEvent] = []
+        self._state: DailyBreakerState | None = None
+        self._event_history: list[DailyBreakerEvent] = []
 
         # Store config reference for other values
         self._tt = get_config().trading_thresholds
@@ -175,7 +177,7 @@ class DailyCircuitBreaker:
     def reset_for_trading_day(
         self,
         starting_equity: Decimal,
-        trading_date: Optional[date] = None,
+        trading_date: date | None = None,
     ) -> DailyBreakerState:
         """
         Reset the circuit breaker for a new trading day.
@@ -222,7 +224,7 @@ class DailyCircuitBreaker:
     def update_pnl(
         self,
         current_equity: Decimal,
-        trigger_symbol: Optional[str] = None,
+        trigger_symbol: str | None = None,
     ) -> DailyBreakerState:
         """
         Update daily P&L and check if breaker should trigger.
@@ -272,7 +274,7 @@ class DailyCircuitBreaker:
 
         return self._state
 
-    def _trigger_breaker(self, trigger_symbol: Optional[str] = None) -> None:
+    def _trigger_breaker(self, trigger_symbol: str | None = None) -> None:
         """
         Trigger the circuit breaker and halt trading.
 
@@ -322,7 +324,7 @@ class DailyCircuitBreaker:
             return False
         return self._state.is_trading_halted
 
-    def get_state(self) -> Optional[DailyBreakerState]:
+    def get_state(self) -> DailyBreakerState | None:
         """
         Get current breaker state.
 
@@ -331,7 +333,7 @@ class DailyCircuitBreaker:
         """
         return self._state
 
-    def get_event_history(self) -> List[DailyBreakerEvent]:
+    def get_event_history(self) -> list[DailyBreakerEvent]:
         """
         Get history of all breaker events.
 

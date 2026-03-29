@@ -1,10 +1,11 @@
 import logging
 from decimal import Decimal
-from typing import List, Optional
+from typing import TYPE_CHECKING, Optional
 
 from pydantic import BaseModel, Field
 
-from app.services.portfolio_constructor import AllocationWeight, PortfolioAllocation
+if TYPE_CHECKING:
+    from app.services.portfolio_constructor import AllocationWeight, PortfolioAllocation
 
 logger = logging.getLogger(__name__)
 
@@ -52,10 +53,10 @@ class RiskAdjustedPortfolio(BaseModel):
     max_acceptable_drawdown_pct: Decimal
 
     # Original allocations
-    original_allocations: List["AllocationWeight"] = Field(default_factory=list)
+    original_allocations: list["AllocationWeight"] = Field(default_factory=list)
 
     # Adjusted allocations (if scaling applied)
-    adjusted_allocations: Optional[List[AdjustedAllocationWeight]] = None
+    adjusted_allocations: Optional[list[AdjustedAllocationWeight]] = None
 
     adjustment_rationale: str = ""
     expected_return_adjustment_pct: Decimal = Decimal("0")  # Impact on expected return

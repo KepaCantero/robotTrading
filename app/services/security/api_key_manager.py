@@ -16,7 +16,7 @@ import uuid
 from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
-from typing import Dict, List, Optional
+from typing import Optional
 
 from cryptography.fernet import Fernet
 
@@ -85,7 +85,7 @@ class ApiKeyManager:
             encryption_key = key.encode()
 
         self._fernet = Fernet(encryption_key)
-        self._keys: Dict[str, ApiKey] = {}
+        self._keys: dict[str, ApiKey] = {}
 
     def _encrypt_key(self, api_key: str) -> str:
         """Encrypt an API key."""
@@ -111,9 +111,7 @@ class ApiKeyManager:
         if len(api_key) < 16:
             return False
         # Key should not contain whitespace
-        if any(c.isspace() for c in api_key):
-            return False
-        return True
+        return not any(c.isspace() for c in api_key)
 
     def add_key(
         self,
@@ -238,7 +236,7 @@ class ApiKeyManager:
         logger.info(f"Revoked API key '{key.key_name}' with ID {key_id}")
         return True
 
-    def list_keys(self) -> List[ApiKey]:
+    def list_keys(self) -> list[ApiKey]:
         """
         List all API keys.
 
@@ -258,7 +256,7 @@ class ApiKeyManager:
         if key:
             key.last_used = datetime.utcnow()
 
-    def check_expiration(self) -> List[str]:
+    def check_expiration(self) -> list[str]:
         """
         Check for expired keys.
 

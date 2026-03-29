@@ -7,7 +7,7 @@ to load environment variables from .env files and provide type-safe configuratio
 
 import logging
 import os
-from typing import List, Optional
+from typing import Optional
 
 from pydantic import ConfigDict, Field, ValidationInfo, field_validator
 from pydantic_settings import BaseSettings
@@ -81,7 +81,7 @@ class Settings(BaseSettings):
     )
     celery_task_serializer: str = Field(default="json", description="Celery task serializer")
     celery_result_serializer: str = Field(default="json", description="Celery result serializer")
-    celery_accept_content: List[str] = Field(
+    celery_accept_content: list[str] = Field(
         default=["json"], description="Celery accepted content types"
     )
 
@@ -137,10 +137,10 @@ class Settings(BaseSettings):
     log_file: Optional[str] = Field(default=None, description="Log file path (optional)")
 
     # CORS Settings
-    cors_origins: List[str] = Field(default=["*"], description="CORS allowed origins")
+    cors_origins: list[str] = Field(default=["*"], description="CORS allowed origins")
     cors_allow_credentials: bool = Field(default=True, description="CORS allow credentials")
-    cors_allow_methods: List[str] = Field(default=["*"], description="CORS allowed methods")
-    cors_allow_headers: List[str] = Field(default=["*"], description="CORS allowed headers")
+    cors_allow_methods: list[str] = Field(default=["*"], description="CORS allowed methods")
+    cors_allow_headers: list[str] = Field(default=["*"], description="CORS allowed headers")
 
     # Security Settings
     password_min_length: int = Field(default=8, description="Minimum password length")
@@ -197,24 +197,24 @@ class Settings(BaseSettings):
 
         # Check for known weak keys
         weak_keys = [
-            'your_secret_key_change_this_in_production',
-            'dev',
-            'test',
-            'secret',
-            'changeme',
-            'password',
-            '0123456789abcdef0123456789abcdef',  # Common hex pattern
-            'secret',
-            'SECRET',
-            'key',
-            'KEY',
-            'change-this-secret-key-in-production-min-32-chars',
-            '12345678901234567890123456789012',
+            "your_secret_key_change_this_in_production",
+            "dev",
+            "test",
+            "secret",
+            "changeme",
+            "password",
+            "0123456789abcdef0123456789abcdef",  # Common hex pattern
+            "secret",
+            "SECRET",
+            "key",
+            "KEY",
+            "change-this-secret-key-in-production-min-32-chars",
+            "12345678901234567890123456789012",
         ]
 
         if v and v.lower() in [k.lower() for k in weak_keys]:
             # Only allow weak keys with explicit override
-            allow_weak = os.getenv('ALLOW_WEAK_SECRET_KEY', '').lower() == 'true'
+            allow_weak = os.getenv("ALLOW_WEAK_SECRET_KEY", "").lower() == "true"
             if not allow_weak:
                 raise ValueError(
                     f"Weak SECRET_KEY detected ('{v[:10]}...'). "

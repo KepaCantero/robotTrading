@@ -26,7 +26,6 @@ from __future__ import annotations
 import logging
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Dict, List, Optional, Tuple, Union
 
 import numpy as np
 import pandas as pd
@@ -98,23 +97,23 @@ class FinancialMLResult:
     # Features
     X_original: np.ndarray
     X_transformed: np.ndarray
-    feature_names: List[str]
+    feature_names: list[str]
 
     # Labels
     y_original: np.ndarray
     y_triple_barrier: np.ndarray
-    y_meta: Optional[np.ndarray] = None
+    y_meta: np.ndarray | None = None
 
     # Predictions
-    primary_predictions: Optional[np.ndarray] = None
-    meta_predictions: Optional[np.ndarray] = None
-    bet_sizes: Optional[np.ndarray] = None
+    primary_predictions: np.ndarray | None = None
+    meta_predictions: np.ndarray | None = None
+    bet_sizes: np.ndarray | None = None
 
     # Feature Importance
-    importance: Optional[ImportanceResult] = None
+    importance: ImportanceResult | None = None
 
     # Cross-validation scores
-    cv_scores: Dict[str, List[float]] = field(default_factory=dict)
+    cv_scores: dict[str, list[float]] = field(default_factory=dict)
 
     # Metrics
     primary_accuracy: float = 0.0
@@ -126,7 +125,7 @@ class FinancialMLResult:
     n_features: int = 0
     timestamp: datetime = field(default_factory=datetime.now)
 
-    def to_dict(self) -> Dict:
+    def to_dict(self) -> dict:
         """Convert to dictionary."""
         return {
             "n_samples": self.n_samples,
@@ -158,7 +157,7 @@ class FinancialMLPipeline:
         >>> print(f"Meta accuracy: {result.meta_accuracy:.2%}")
     """
 
-    def __init__(self, config: Optional[FinancialMLConfig] = None):
+    def __init__(self, config: FinancialMLConfig | None = None):
         """
         Initialize Financial ML pipeline.
 
@@ -202,10 +201,10 @@ class FinancialMLPipeline:
 
     def fit(
         self,
-        X: Union[pd.DataFrame, np.ndarray],
-        prices: Union[pd.Series, np.ndarray],
-        y: Optional[Union[pd.Series, np.ndarray]] = None,
-    ) -> "FinancialMLPipeline":
+        X: pd.DataFrame | np.ndarray,
+        prices: pd.Series | np.ndarray,
+        y: pd.Series | np.ndarray | None = None,
+    ) -> FinancialMLPipeline:
         """
         Fit the Financial ML pipeline.
 
@@ -254,10 +253,7 @@ class FinancialMLPipeline:
             labels_df = self.triple_barrier.fit_transform(prices_series, events)
             y_triple_barrier = labels_df["label"].values
         else:
-            if isinstance(y, pd.Series):
-                y_triple_barrier = y.values
-            else:
-                y_triple_barrier = y
+            y_triple_barrier = y.values if isinstance(y, pd.Series) else y
 
         self.y_triple_barrier_ = y_triple_barrier
 
@@ -312,8 +308,8 @@ class FinancialMLPipeline:
 
     def predict(
         self,
-        X: Union[pd.DataFrame, np.ndarray],
-        prices: Optional[Union[pd.Series, np.ndarray]] = None,
+        X: pd.DataFrame | np.ndarray,
+        prices: pd.Series | np.ndarray | None = None,
     ) -> FinancialMLResult:
         """
         Generate predictions with bet sizes.
@@ -380,11 +376,11 @@ class FinancialMLPipeline:
 
     def fit_predict(
         self,
-        X_train: Union[pd.DataFrame, np.ndarray],
-        prices_train: Union[pd.Series, np.ndarray],
-        X_test: Union[pd.DataFrame, np.ndarray],
-        prices_test: Optional[Union[pd.Series, np.ndarray]] = None,
-        y_test: Optional[Union[pd.Series, np.ndarray]] = None,
+        X_train: pd.DataFrame | np.ndarray,
+        prices_train: pd.Series | np.ndarray,
+        X_test: pd.DataFrame | np.ndarray,
+        prices_test: pd.Series | np.ndarray | None = None,
+        y_test: pd.Series | np.ndarray | None = None,
     ) -> FinancialMLResult:
         """
         Fit on training data and predict on test data.
@@ -450,10 +446,10 @@ class FinancialMLPipeline:
 
     def cross_validate(
         self,
-        X: Union[pd.DataFrame, np.ndarray],
-        prices: Union[pd.Series, np.ndarray],
-        y: Optional[Union[pd.Series, np.ndarray]] = None,
-    ) -> Dict[str, List[float]]:
+        X: pd.DataFrame | np.ndarray,
+        prices: pd.Series | np.ndarray,
+        y: pd.Series | np.ndarray | None = None,
+    ) -> dict[str, list[float]]:
         """
         Perform purged K-fold cross-validation.
 
@@ -568,12 +564,12 @@ class FinancialMLPipeline:
 
 # Convenience functions
 def apply_financial_ml(
-    X_train: Union[pd.DataFrame, np.ndarray],
-    prices_train: Union[pd.Series, np.ndarray],
-    X_test: Union[pd.DataFrame, np.ndarray],
-    prices_test: Union[pd.Series, np.ndarray],
-    y_test: Optional[Union[pd.Series, np.ndarray]] = None,
-    config: Optional[FinancialMLConfig] = None,
+    X_train: pd.DataFrame | np.ndarray,
+    prices_train: pd.Series | np.ndarray,
+    X_test: pd.DataFrame | np.ndarray,
+    prices_test: pd.Series | np.ndarray,
+    y_test: pd.Series | np.ndarray | None = None,
+    config: FinancialMLConfig | None = None,
 ) -> FinancialMLResult:
     """
     Convenience function to apply complete Financial ML pipeline.
@@ -600,9 +596,9 @@ def apply_financial_ml(
 
 def calculate_lopez_de_prado_features(
     prices: pd.Series,
-    features: Optional[pd.DataFrame] = None,
-    config: Optional[FinancialMLConfig] = None,
-) -> Tuple[pd.DataFrame, pd.Series]:
+    features: pd.DataFrame | None = None,
+    config: FinancialMLConfig | None = None,
+) -> tuple[pd.DataFrame, pd.Series]:
     """
     Calculate López de Prado features and labels.
 

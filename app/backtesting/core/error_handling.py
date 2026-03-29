@@ -63,7 +63,7 @@ class StrategyProtocol(Protocol):
         ...
 
 
-T = TypeVar('T')
+T = TypeVar("T")
 
 
 class MutexError(Exception):
@@ -122,23 +122,23 @@ def _train_process_worker(
         logger.info(
             "Training in subprocess",
             extra={
-                'engine_type': engine_type,
-                'process': 'subprocess',
+                "engine_type": engine_type,
+                "process": "subprocess",
             },
         )
 
         # The strategy should be reconstructible from the data
         # For now, we'll use a simpler approach - just return success
         # The actual training will need to be done differently
-        queue.put((True, 'Training completed successfully'))
+        queue.put((True, "Training completed successfully"))
 
     except (ValueError, TypeError, KeyError, AttributeError) as e:
         logger.error(
             "Subprocess training error",
             extra={
-                'engine_type': engine_type,
-                'error_type': type(e).__name__,
-                'error_message': str(e),
+                "engine_type": engine_type,
+                "error_type": type(e).__name__,
+                "error_message": str(e),
             },
             exc_info=True,
         )
@@ -194,16 +194,16 @@ def is_mutex_error(exception: Exception) -> bool:
 
     # Keywords that indicate mutex/locking issues
     mutex_keywords = [
-        'mutex',
-        'lock',
-        'blocking',
-        'thread',
-        'concurrent',
-        'omp',  # OpenMP
-        'mkl',  # Intel MKL
-        'openblas',
-        'blas',
-        'torch',
+        "mutex",
+        "lock",
+        "blocking",
+        "thread",
+        "concurrent",
+        "omp",  # OpenMP
+        "mkl",  # Intel MKL
+        "openblas",
+        "blas",
+        "torch",
     ]
 
     # Check error message
@@ -257,8 +257,8 @@ def train_with_retry(
             logger.warning(
                 "Learning engine not initialized",
                 extra={
-                    'engine_type': engine_type,
-                    'strategy_module': strategy.__module__,
+                    "engine_type": engine_type,
+                    "strategy_module": strategy.__module__,
                 },
             )
             return False
@@ -267,8 +267,8 @@ def train_with_retry(
         logger.info(
             "Training learning engine in-process",
             extra={
-                'engine_type': engine_type,
-                'training_mode': 'in_process',
+                "engine_type": engine_type,
+                "training_mode": "in_process",
             },
         )
         strategy.learning_engine.train()
@@ -281,9 +281,9 @@ def train_with_retry(
         logger.error(
             "Training failed",
             extra={
-                'engine_type': engine_type,
-                'error_type': type(e).__name__,
-                'error_message': str(e),
+                "engine_type": engine_type,
+                "error_type": type(e).__name__,
+                "error_message": str(e),
             },
             exc_info=True,
         )
@@ -319,15 +319,15 @@ def _train_in_subprocess(
     logger.info(
         "Training in isolated subprocess",
         extra={
-            'engine_type': engine_type,
-            'timeout_seconds': timeout,
-            'training_mode': 'subprocess',
+            "engine_type": engine_type,
+            "timeout_seconds": timeout,
+            "training_mode": "subprocess",
         },
     )
 
     # Use multiprocessing for safe subprocess spawning
     # 'spawn' context creates fresh Python process
-    ctx = multiprocessing.get_context('spawn')
+    ctx = multiprocessing.get_context("spawn")
     result_queue = ctx.Queue()
 
     # Start training process with module-level function (pickle-able)
@@ -344,8 +344,8 @@ def _train_in_subprocess(
             logger.error(
                 "Training timeout - terminating process",
                 extra={
-                    'engine_type': engine_type,
-                    'timeout_seconds': timeout,
+                    "engine_type": engine_type,
+                    "timeout_seconds": timeout,
                 },
                 exc_info=True,
             )
@@ -363,8 +363,8 @@ def _train_in_subprocess(
                 logger.info(
                     "Subprocess training succeeded",
                     extra={
-                        'engine_type': engine_type,
-                        'message': message,
+                        "engine_type": engine_type,
+                        "message": message,
                     },
                 )
                 return True
@@ -372,8 +372,8 @@ def _train_in_subprocess(
                 logger.error(
                     "Subprocess training failed",
                     extra={
-                        'engine_type': engine_type,
-                        'error_message': message,
+                        "engine_type": engine_type,
+                        "error_message": message,
                     },
                     exc_info=True,
                 )
@@ -382,7 +382,7 @@ def _train_in_subprocess(
             logger.error(
                 "Subprocess training failed: no result in queue",
                 extra={
-                    'engine_type': engine_type,
+                    "engine_type": engine_type,
                 },
                 exc_info=True,
             )
@@ -393,8 +393,8 @@ def _train_in_subprocess(
         logger.warning(
             "Subprocess training timed out",
             extra={
-                'engine_type': engine_type,
-                'timeout_seconds': e.timeout if hasattr(e, 'timeout') else 'unknown',
+                "engine_type": engine_type,
+                "timeout_seconds": e.timeout if hasattr(e, "timeout") else "unknown",
             },
         )
         raise
@@ -402,9 +402,9 @@ def _train_in_subprocess(
         logger.error(
             "Subprocess training exception",
             extra={
-                'engine_type': engine_type,
-                'error_type': type(e).__name__,
-                'error_message': str(e),
+                "engine_type": engine_type,
+                "error_type": type(e).__name__,
+                "error_message": str(e),
             },
             exc_info=True,
         )
@@ -451,9 +451,9 @@ def safe_execute(
             logger.error(
                 "Error executing function",
                 extra={
-                    'function_name': func.__name__,
-                    'error_type': type(e).__name__,
-                    'error_message': str(e),
+                    "function_name": func.__name__,
+                    "error_type": type(e).__name__,
+                    "error_message": str(e),
                 },
                 exc_info=True,
             )
@@ -487,9 +487,9 @@ def log_and_suppress(
                 logger.warning(
                     message,
                     extra={
-                        'function_name': func.__name__,
-                        'error_type': type(e).__name__,
-                        'error_message': str(e),
+                        "function_name": func.__name__,
+                        "error_type": type(e).__name__,
+                        "error_message": str(e),
                     },
                 )
                 return default_return

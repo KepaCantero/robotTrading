@@ -4,7 +4,7 @@ Independent exception definitions to avoid circular imports
 """
 
 import logging
-from typing import Any, Dict, NoReturn, Optional
+from typing import Any, NoReturn, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -16,7 +16,7 @@ class AlgoTradingError(Exception):
         self,
         message: str,
         error_code: Optional[str] = None,
-        details: Optional[Dict[str, Any]] = None,
+        details: Optional[dict[str, Any]] = None,
     ):
         super().__init__(message)
         self.message = message
@@ -75,7 +75,7 @@ class AuthenticationError(AlgoTradingError):
 def raise_configuration_error(
     message: str,
     error_code: Optional[str] = None,
-    details: Optional[Dict[str, Any]] = None,
+    details: Optional[dict[str, Any]] = None,
 ) -> NoReturn:
     """Helper function to raise configuration errors."""
     logger.debug(
@@ -94,7 +94,7 @@ def raise_configuration_error(
 def raise_validation_error(
     message: str,
     error_code: Optional[str] = None,
-    details: Optional[Dict[str, Any]] = None,
+    details: Optional[dict[str, Any]] = None,
 ) -> NoReturn:
     """Helper function to raise validation errors."""
     logger.debug("Raising validation error", extra={"message": message, "error_code": error_code})
@@ -111,7 +111,7 @@ def raise_validation_error(
 def raise_business_logic_error(
     message: str,
     error_code: Optional[str] = None,
-    details: Optional[Dict[str, Any]] = None,
+    details: Optional[dict[str, Any]] = None,
 ) -> NoReturn:
     """Helper function to raise business logic errors."""
     logger.debug(
@@ -130,7 +130,7 @@ def raise_business_logic_error(
 def raise_market_data_error(
     message: str,
     error_code: Optional[str] = None,
-    details: Optional[Dict[str, Any]] = None,
+    details: Optional[dict[str, Any]] = None,
 ) -> NoReturn:
     """Helper function to raise market data errors."""
     logger.debug("Raising market data error", extra={"message": message, "error_code": error_code})
@@ -147,7 +147,7 @@ def raise_market_data_error(
 def raise_trading_error(
     message: str,
     error_code: Optional[str] = None,
-    details: Optional[Dict[str, Any]] = None,
+    details: Optional[dict[str, Any]] = None,
 ) -> NoReturn:
     """Helper function to raise trading errors."""
     logger.debug("Raising trading error", extra={"message": message, "error_code": error_code})
@@ -164,7 +164,7 @@ def raise_trading_error(
 def raise_database_error(
     message: str,
     error_code: Optional[str] = None,
-    details: Optional[Dict[str, Any]] = None,
+    details: Optional[dict[str, Any]] = None,
 ) -> NoReturn:
     """Helper function to raise database errors."""
     logger.debug("Raising database error", extra={"message": message, "error_code": error_code})
@@ -181,7 +181,7 @@ def raise_database_error(
 def raise_authentication_error(
     message: str,
     error_code: Optional[str] = None,
-    details: Optional[Dict[str, Any]] = None,
+    details: Optional[dict[str, Any]] = None,
 ) -> NoReturn:
     """Helper function to raise authentication errors."""
     logger.debug(

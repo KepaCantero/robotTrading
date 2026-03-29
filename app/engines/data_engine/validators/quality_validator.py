@@ -12,7 +12,7 @@ import hashlib
 import logging
 from datetime import datetime
 from decimal import Decimal
-from typing import Any, Dict, List
+from typing import Any, Optional
 
 import numpy as np
 
@@ -26,7 +26,7 @@ class QualityValidator:
     Verifica integridad, consistencia y calidad de datos de mercado.
     """
 
-    def __init__(self, config: Dict[str, Any] = None):
+    def __init__(self, config: Optional[dict[str, Any]] = None):
         """
         Inicializar validador.
 
@@ -34,13 +34,13 @@ class QualityValidator:
             config: Configuración
         """
         config = config or {}
-        self.min_price = Decimal(str(config.get('min_price', 0.01)))
-        self.max_price = Decimal(str(config.get('max_price', 1000000)))
-        self.min_volume = Decimal(str(config.get('min_volume', 0)))
-        self.max_volume = Decimal(str(config.get('max_volume', 10000000000)))  # 10B
-        self.validate_ohlc_consistency = config.get('validate_ohlc_consistency', True)
+        self.min_price = Decimal(str(config.get("min_price", 0.01)))
+        self.max_price = Decimal(str(config.get("max_price", 1000000)))
+        self.min_volume = Decimal(str(config.get("min_volume", 0)))
+        self.max_volume = Decimal(str(config.get("max_volume", 10000000000)))  # 10B
+        self.validate_ohlc_consistency = config.get("validate_ohlc_consistency", True)
 
-    def validate(self, data: Dict[str, Any], data_type: str = 'ohlcv') -> Dict[str, Any]:
+    def validate(self, data: dict[str, Any], data_type: str = "ohlcv") -> dict[str, Any]:
         """
         Validar datos individuales.
 
@@ -57,7 +57,7 @@ class QualityValidator:
         errors = []
         warnings = []
 
-        if data_type == 'ohlcv':
+        if data_type == "ohlcv":
             # Validar OHLCV
             errors.extend(self._validate_ohlc(data))
             errors.extend(self._validate_price_ranges(data))
@@ -66,17 +66,17 @@ class QualityValidator:
             if self.validate_ohlc_consistency:
                 errors.extend(self._validate_ohlc_consistency(data))
 
-        elif data_type == 'quote':
+        elif data_type == "quote":
             # Validar quote
             errors.extend(self._validate_quote(data))
 
-        return {'is_valid': len(errors) == 0, 'errors': errors, 'warnings': warnings}
+        return {"is_valid": len(errors) == 0, "errors": errors, "warnings": warnings}
 
-    def _validate_ohlc(self, data: Dict[str, Any]) -> List[str]:
+    def _validate_ohlc(self, data: dict[str, Any]) -> list[str]:
         """Validar campos OHLC."""
         errors = []
 
-        required_fields = ['open', 'high', 'low', 'close']
+        required_fields = ["open", "high", "low", "close"]
         for field in required_fields:
             if field not in data:
                 errors.append(f"Campo requerido faltante: {field}")
@@ -89,11 +89,11 @@ class QualityValidator:
 
         return errors
 
-    def _validate_price_ranges(self, data: Dict[str, Any]) -> List[str]:
+    def _validate_price_ranges(self, data: dict[str, Any]) -> list[str]:
         """Validar que precios están en rangos válidos."""
         errors = []
 
-        price_fields = ['open', 'high', 'low', 'close', 'bid', 'ask', 'last']
+        price_fields = ["open", "high", "low", "close", "bid", "ask", "last"]
         for field in price_fields:
             if field in data and data[field] is not None:
                 value = Decimal(str(data[field]))
@@ -106,12 +106,12 @@ class QualityValidator:
 
         return errors
 
-    def _validate_volume(self, data: Dict[str, Any]) -> List[str]:
+    def _validate_volume(self, data: dict[str, Any]) -> list[str]:
         """Validar volumen."""
         errors = []
 
-        if 'volume' in data and data['volume'] is not None:
-            volume = Decimal(str(data['volume']))
+        if "volume" in data and data["volume"] is not None:
+            volume = Decimal(str(data["volume"]))
             if volume < self.min_volume:
                 errors.append(f"Volume ({volume}) está por debajo del mínimo ({self.min_volume})")
             if volume > self.max_volume:
@@ -119,15 +119,15 @@ class QualityValidator:
 
         return errors
 
-    def _validate_ohlc_consistency(self, data: Dict[str, Any]) -> List[str]:
+    def _validate_ohlc_consistency(self, data: dict[str, Any]) -> list[str]:
         """Validar consistencia OHLC."""
         errors = []
 
         try:
-            high = Decimal(str(data.get('high', 0)))
-            low = Decimal(str(data.get('low', 0)))
-            open_price = Decimal(str(data.get('open', 0)))
-            close_price = Decimal(str(data.get('close', 0)))
+            high = Decimal(str(data.get("high", 0)))
+            low = Decimal(str(data.get("low", 0)))
+            open_price = Decimal(str(data.get("open", 0)))
+            close_price = Decimal(str(data.get("close", 0)))
 
             if high < low:
                 errors.append(f"High ({high}) < Low ({low})")
@@ -143,21 +143,21 @@ class QualityValidator:
 
         return errors
 
-    def _validate_quote(self, data: Dict[str, Any]) -> List[str]:
+    def _validate_quote(self, data: dict[str, Any]) -> list[str]:
         """Validar quote."""
         errors = []
 
         # Validar bid/ask
-        if 'bid' in data and 'ask' in data:
-            bid = Decimal(str(data['bid']))
-            ask = Decimal(str(data['ask']))
+        if "bid" in data and "ask" in data:
+            bid = Decimal(str(data["bid"]))
+            ask = Decimal(str(data["ask"]))
 
             if bid > ask:
                 errors.append(f"Bid ({bid}) > Ask ({ask})")
 
         return errors
 
-    def calculate_checksum(self, data: List[Dict[str, Any]]) -> str:
+    def calculate_checksum(self, data: list[dict[str, Any]]) -> str:
         """
         Calcular checksum de datos.
 
@@ -176,8 +176,8 @@ class QualityValidator:
             return ""
 
     def validate_batch(
-        self, data_list: List[Dict[str, Any]], data_type: str = 'ohlcv'
-    ) -> Dict[str, Any]:
+        self, data_list: list[dict[str, Any]], data_type: str = "ohlcv"
+    ) -> dict[str, Any]:
         """
         Validar múltiples datos.
 
@@ -200,24 +200,24 @@ class QualityValidator:
 
         for i, data in enumerate(data_list):
             result = self.validate(data, data_type)
-            if result['is_valid']:
+            if result["is_valid"]:
                 valid_count += 1
             else:
                 invalid_count += 1
-                errors_by_record[i] = result['errors']
+                errors_by_record[i] = result["errors"]
 
         checksum = self.calculate_checksum(data_list)
 
         return {
-            'total': total,
-            'valid': valid_count,
-            'invalid': invalid_count,
-            'error_rate': float(invalid_count / total) if total > 0 else 0.0,
-            'errors_by_record': errors_by_record,
-            'checksum': checksum,
+            "total": total,
+            "valid": valid_count,
+            "invalid": invalid_count,
+            "error_rate": float(invalid_count / total) if total > 0 else 0.0,
+            "errors_by_record": errors_by_record,
+            "checksum": checksum,
         }
 
-    def get_quality_metrics(self, data_list: List[Dict[str, Any]]) -> Dict[str, Any]:
+    def get_quality_metrics(self, data_list: list[dict[str, Any]]) -> dict[str, Any]:
         """
         Calcular métricas de calidad.
 
@@ -232,12 +232,12 @@ class QualityValidator:
                 - timeliness: float (0-1)
         """
         if not data_list:
-            return {'completeness': 0.0, 'consistency': 0.0, 'accuracy': 0.0, 'timeliness': 0.0}
+            return {"completeness": 0.0, "consistency": 0.0, "accuracy": 0.0, "timeliness": 0.0}
 
         total = len(data_list)
 
         # Completeness: % de campos no-null
-        required_fields = ['open', 'high', 'low', 'close', 'volume']
+        required_fields = ["open", "high", "low", "close", "volume"]
         completeness_scores = []
         for data in data_list:
             complete_fields = sum(1 for field in required_fields if data.get(field) is not None)
@@ -247,8 +247,8 @@ class QualityValidator:
         # Consistency: % de registros con OHLC consistente
         consistent_count = 0
         for data in data_list:
-            result = self.validate(data, 'ohlcv')
-            if result['is_valid']:
+            result = self.validate(data, "ohlcv")
+            if result["is_valid"]:
                 consistent_count += 1
         consistency = consistent_count / total if total > 0 else 0.0
 
@@ -257,7 +257,7 @@ class QualityValidator:
 
         # Timeliness: Basado en timestamps (simplificado)
         # Verificar que timestamps están en orden y no hay gaps grandes
-        timestamps = [data.get('timestamp') for data in data_list if data.get('timestamp')]
+        timestamps = [data.get("timestamp") for data in data_list if data.get("timestamp")]
         if timestamps and len(timestamps) > 1:
             sorted_timestamps = sorted([ts for ts in timestamps if isinstance(ts, datetime)])
             if len(sorted_timestamps) > 1:
@@ -276,9 +276,9 @@ class QualityValidator:
             timeliness = 0.0
 
         return {
-            'completeness': float(completeness),
-            'consistency': float(consistency),
-            'accuracy': float(accuracy),
-            'timeliness': float(timeliness),
-            'overall_score': float((completeness + consistency + accuracy + timeliness) / 4),
+            "completeness": float(completeness),
+            "consistency": float(consistency),
+            "accuracy": float(accuracy),
+            "timeliness": float(timeliness),
+            "overall_score": float((completeness + consistency + accuracy + timeliness) / 4),
         }

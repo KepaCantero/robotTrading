@@ -26,7 +26,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Callable
 
 import aiosqlite
 
@@ -60,19 +60,19 @@ class GameDayScenario:
     description: str
     hypothesis: str
     failure_injector: str  # Name of failure injector to use
-    injector_config: Dict[str, Any]
+    injector_config: dict[str, Any]
     duration_minutes: int
-    success_criteria: List[str]
+    success_criteria: list[str]
     rollback_procedure: str
 
     # Results
     status: ScenarioStatus = ScenarioStatus.PENDING
-    started_at: Optional[datetime] = None
-    completed_at: Optional[datetime] = None
-    results: Dict[str, Any] = field(default_factory=dict)
-    lessons_learned: List[str] = field(default_factory=list)
+    started_at: datetime | None = None
+    completed_at: datetime | None = None
+    results: dict[str, Any] = field(default_factory=dict)
+    lessons_learned: list[str] = field(default_factory=list)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
         return {
             "name": self.name,
@@ -97,8 +97,8 @@ class GameDayReport:
 
     game_day_name: str
     date: datetime
-    participants: List[str]
-    scenarios: List[GameDayScenario]
+    participants: list[str]
+    scenarios: list[GameDayScenario]
     overall_status: GameDayStatus
 
     # Metrics
@@ -108,16 +108,16 @@ class GameDayReport:
     skipped_scenarios: int
 
     # Observations
-    key_findings: List[str]
-    improvement_areas: List[str]
-    action_items: List[str]
+    key_findings: list[str]
+    improvement_areas: list[str]
+    action_items: list[str]
 
     # Timing
-    started_at: Optional[datetime] = None
-    completed_at: Optional[datetime] = None
-    total_duration_minutes: Optional[int] = None
+    started_at: datetime | None = None
+    completed_at: datetime | None = None
+    total_duration_minutes: int | None = None
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
         return {
             "game_day_name": self.game_day_name,
@@ -152,13 +152,13 @@ class GameDayConfig:
     name: str
     description: str
     scheduled_date: datetime
-    participants: List[str]
-    scenarios: List[GameDayScenario]
+    participants: list[str]
+    scenarios: list[GameDayScenario]
 
     # Options
     auto_rollback_on_failure: bool = True
     require_approval: bool = True
-    approved_by: Optional[str] = None
+    approved_by: str | None = None
 
     # Documentation
     pre_event_summary: str = ""
@@ -167,7 +167,7 @@ class GameDayConfig:
     # Database
     db_path: str = "data/game_days.db"
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
         return {
             "name": self.name,
@@ -208,7 +208,7 @@ class GameDay:
     def __init__(
         self,
         config: GameDayConfig,
-        failure_injectors: Optional[Dict[str, Any]] = None,
+        failure_injectors: dict[str, Any] | None = None,
     ):
         """
         Initialize game day.
@@ -223,12 +223,12 @@ class GameDay:
 
         # State
         self._status = GameDayStatus.PLANNED
-        self._started_at: Optional[datetime] = None
-        self._completed_at: Optional[datetime] = None
+        self._started_at: datetime | None = None
+        self._completed_at: datetime | None = None
 
         # Callbacks
-        self._on_scenario_complete: Optional[Callable] = None
-        self._on_scenario_fail: Optional[Callable] = None
+        self._on_scenario_complete: Callable | None = None
+        self._on_scenario_fail: Callable | None = None
 
     async def initialize(self) -> None:
         """Initialize game day."""

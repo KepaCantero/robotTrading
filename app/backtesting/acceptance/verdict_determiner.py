@@ -16,7 +16,6 @@ providing fail-safe behavior for backtest validation.
 """
 
 from dataclasses import dataclass
-from typing import List, Tuple
 
 from app.backtesting.acceptance.models import CriterionResult, VerdictStatus
 
@@ -43,7 +42,7 @@ class VerdictDeterminer:
 
     MIN_REVISION_SCORE: float = 60.0
 
-    def _check_rejection_criteria(self, rejection: List[CriterionResult]) -> Tuple[bool, List[str]]:
+    def _check_rejection_criteria(self, rejection: list[CriterionResult]) -> tuple[bool, list[str]]:
         """
         Check if any rejection criteria have failed.
 
@@ -59,7 +58,7 @@ class VerdictDeterminer:
             - is_rejected: True if any rejection criterion failed
             - warning_messages: List of warning messages for failed criteria
         """
-        warnings: List[str] = []
+        warnings: list[str] = []
         is_rejected = False
 
         for criterion in rejection:
@@ -69,7 +68,7 @@ class VerdictDeterminer:
 
         return is_rejected, warnings
 
-    def _get_failed_criteria_names(self, criteria: List[CriterionResult]) -> List[str]:
+    def _get_failed_criteria_names(self, criteria: list[CriterionResult]) -> list[str]:
         """
         Extract names of all failed criteria.
 
@@ -83,9 +82,9 @@ class VerdictDeterminer:
 
     def _determine_non_rejected_verdict(
         self,
-        criteria: List[CriterionResult],
+        criteria: list[CriterionResult],
         score: float,
-    ) -> Tuple[VerdictStatus, List[str], List[str]]:
+    ) -> tuple[VerdictStatus, list[str], list[str]]:
         """
         Determine verdict when no rejection criteria have failed.
 
@@ -101,8 +100,8 @@ class VerdictDeterminer:
         Returns:
             Tuple of (verdict, warnings, recommendations)
         """
-        warnings: List[str] = []
-        recommendations: List[str] = []
+        warnings: list[str] = []
+        recommendations: list[str] = []
         all_passed = all(c.passed for c in criteria)
 
         if all_passed:
@@ -116,8 +115,8 @@ class VerdictDeterminer:
         return self._create_low_score_rejected_verdict(warnings, recommendations, failed_names)
 
     def _create_approved_verdict(
-        self, recommendations: List[str]
-    ) -> Tuple[VerdictStatus, List[str], List[str]]:
+        self, recommendations: list[str]
+    ) -> tuple[VerdictStatus, list[str], list[str]]:
         """
         Create an APPROVED verdict with appropriate recommendations.
 
@@ -132,10 +131,10 @@ class VerdictDeterminer:
 
     def _create_revision_verdict(
         self,
-        warnings: List[str],
-        recommendations: List[str],
-        failed_names: List[str],
-    ) -> Tuple[VerdictStatus, List[str], List[str]]:
+        warnings: list[str],
+        recommendations: list[str],
+        failed_names: list[str],
+    ) -> tuple[VerdictStatus, list[str], list[str]]:
         """
         Create a REVISION verdict with improvement suggestions.
 
@@ -153,10 +152,10 @@ class VerdictDeterminer:
 
     def _create_low_score_rejected_verdict(
         self,
-        warnings: List[str],
-        recommendations: List[str],
-        failed_names: List[str],
-    ) -> Tuple[VerdictStatus, List[str], List[str]]:
+        warnings: list[str],
+        recommendations: list[str],
+        failed_names: list[str],
+    ) -> tuple[VerdictStatus, list[str], list[str]]:
         """
         Create a REJECTED verdict for low-scoring strategies.
 
@@ -174,10 +173,10 @@ class VerdictDeterminer:
 
     def determine_verdict(
         self,
-        criteria: List[CriterionResult],
-        rejection: List[CriterionResult],
+        criteria: list[CriterionResult],
+        rejection: list[CriterionResult],
         score: float,
-    ) -> Tuple[VerdictStatus, List[str], List[str]]:
+    ) -> tuple[VerdictStatus, list[str], list[str]]:
         """
         Determine verdict based on criteria and rejection factors.
 

@@ -19,7 +19,7 @@ Version: 3.0.0 - NUMBA OPTIMIZED
 """
 
 import warnings
-from typing import Dict, List, Tuple, Union
+from typing import Optional, Union
 
 import numpy as np
 import pandas as pd
@@ -46,7 +46,7 @@ from numba import jit, njit
 NUMBA_AVAILABLE = True
 NUMBA_VERSION = numba.__version__
 
-warnings.filterwarnings('ignore')
+warnings.filterwarnings("ignore")
 
 
 # ============================================================================
@@ -260,7 +260,7 @@ class FractionalDifferentiation:
         self,
         threshold: float = 1e-3,
         adfuller_alpha: float = 0.05,
-        max_lookback: int = None,
+        max_lookback: Optional[int] = None,
         use_parallel: bool = False,
         numba_enabled: bool = True,
     ):
@@ -279,14 +279,14 @@ class FractionalDifferentiation:
         self.max_lookback = max_lookback
         self.use_parallel = use_parallel
         self.numba_enabled = numba_enabled and NUMBA_AVAILABLE
-        self._weights_cache: Dict[float, np.ndarray] = {}
+        self._weights_cache: dict[float, np.ndarray] = {}
 
         if not NUMBA_AVAILABLE:
             import logging
 
             logging.warning("Numba not available. Fractional differentiation will be slow.")
 
-    def get_weights(self, d: float, threshold: float = None) -> np.ndarray:
+    def get_weights(self, d: float, threshold: Optional[float] = None) -> np.ndarray:
         """
         Calculate weights for fractional differentiation (NUMBA-ACCELERATED).
 
@@ -346,7 +346,7 @@ class FractionalDifferentiation:
         return weights_array
 
     def fractional_diff(
-        self, series: Union[pd.Series, np.ndarray], d: float, threshold: float = None
+        self, series: Union[pd.Series, np.ndarray], d: float, threshold: Optional[float] = None
     ) -> pd.Series:
         """
         Apply fractional differentiation to a series (NUMBA-ACCELERATED).
@@ -406,7 +406,7 @@ class FractionalDifferentiation:
         return pd.Series(result, index=series.index)
 
     def fractional_diff_ffd(
-        self, series: Union[pd.Series, np.ndarray], d: float, threshold: float = None
+        self, series: Union[pd.Series, np.ndarray], d: float, threshold: Optional[float] = None
     ) -> pd.Series:
         """
         Apply Fractionally Fitted Differentiation (FFD) - NUMBA OPTIMIZED.
@@ -459,9 +459,9 @@ class FractionalDifferentiation:
         min_d: float = 0.0,
         max_d: float = 1.0,
         step: float = 0.05,
-        adfuller_alpha: float = None,
-        method: str = 'binary',
-    ) -> Tuple[float, float, Dict]:
+        adfuller_alpha: Optional[float] = None,
+        method: str = "binary",
+    ) -> tuple[float, float, dict]:
         """
         Find minimum d that achieves stationarity (OPTIMIZED with Numba helpers).
 
@@ -501,27 +501,26 @@ class FractionalDifferentiation:
 
         if len(series_clean) < 100:
             warnings.warn(
-                f"Series length ({len(series_clean)}) < 100. "
-                "ADF test results may be unreliable.",
+                f"Series length ({len(series_clean)}) < 100. ADF test results may be unreliable.",
                 stacklevel=2,
             )
 
         # Test different d values
-        if method == 'binary':
+        if method == "binary":
             return self._binary_search_d(series_clean, min_d, max_d, adfuller_alpha)
         else:
             return self._grid_search_d(series_clean, min_d, max_d, step, adfuller_alpha)
 
     def _binary_search_d(
         self, series: pd.Series, min_d: float, max_d: float, alpha: float
-    ) -> Tuple[float, float, Dict]:
+    ) -> tuple[float, float, dict]:
         """Binary search for optimal d (more efficient) - NUMBA OPTIMIZED."""
         metadata = {
-            'method': 'binary_search',
-            'iterations': 0,
-            'test_history': [],
-            'numba_accelerated': self.numba_enabled,
-            'using_fallback': not STATSMODELS_AVAILABLE,
+            "method": "binary_search",
+            "iterations": 0,
+            "test_history": [],
+            "numba_accelerated": self.numba_enabled,
+            "using_fallback": not STATSMODELS_AVAILABLE,
         }
 
         # First, check if max_d achieves stationarity
@@ -537,8 +536,8 @@ class FractionalDifferentiation:
         except Exception:
             p_value_max = 1.0
 
-        metadata['test_history'].append(
-            {'d': max_d, 'p_value': p_value_max, 'stationary': p_value_max < alpha}
+        metadata["test_history"].append(
+            {"d": max_d, "p_value": p_value_max, "stationary": p_value_max < alpha}
         )
 
         # If even d=1 doesn't achieve stationarity, return max_d
@@ -550,7 +549,7 @@ class FractionalDifferentiation:
         best_d, best_p = max_d, p_value_max
 
         while high - low > 0.01:
-            metadata['iterations'] += 1
+            metadata["iterations"] += 1
             mid = (low + high) / 2
 
             diff_mid = self.fractional_diff(series, d=mid)
@@ -562,8 +561,8 @@ class FractionalDifferentiation:
             except (ValueError, TypeError, np.linalg.LinAlgError):
                 p_value = 1.0
 
-            metadata['test_history'].append(
-                {'d': mid, 'p_value': p_value, 'stationary': p_value < alpha}
+            metadata["test_history"].append(
+                {"d": mid, "p_value": p_value, "stationary": p_value < alpha}
             )
 
             if p_value < alpha:
@@ -572,25 +571,25 @@ class FractionalDifferentiation:
             else:
                 low = mid
 
-            if metadata['iterations'] > 50:
+            if metadata["iterations"] > 50:
                 break
 
         return best_d, best_p, metadata
 
     def _grid_search_d(
         self, series: pd.Series, min_d: float, max_d: float, step: float, alpha: float
-    ) -> Tuple[float, float, Dict]:
+    ) -> tuple[float, float, dict]:
         """Grid search for optimal d (more thorough) - NUMBA OPTIMIZED."""
         metadata = {
-            'method': 'grid_search',
-            'test_values': np.arange(min_d, max_d + step, step),
-            'test_history': [],
-            'numba_accelerated': self.numba_enabled,
+            "method": "grid_search",
+            "test_values": np.arange(min_d, max_d + step, step),
+            "test_history": [],
+            "numba_accelerated": self.numba_enabled,
         }
 
         best_d, best_p = max_d, 1.0
 
-        for d in metadata['test_values']:
+        for d in metadata["test_values"]:
             diff_series = self.fractional_diff(series, d=d)
             diff_clean = diff_series.dropna()
 
@@ -603,8 +602,8 @@ class FractionalDifferentiation:
             except (ValueError, TypeError, np.linalg.LinAlgError):
                 p_value = 1.0
 
-            metadata['test_history'].append(
-                {'d': d, 'p_value': p_value, 'stationary': p_value < alpha}
+            metadata["test_history"].append(
+                {"d": d, "p_value": p_value, "stationary": p_value < alpha}
             )
 
             # Update best if stationary and smaller d
@@ -615,7 +614,7 @@ class FractionalDifferentiation:
 
     def calculate_memory_loss(
         self, original: pd.Series, frac_diff: pd.Series, lags: int = 20
-    ) -> Dict[str, float]:
+    ) -> dict[str, float]:
         """
         Calculate memory loss after fractional differentiation (VECTORIZED).
 
@@ -650,13 +649,15 @@ class FractionalDifferentiation:
         memory_preservation = diff_acf_mean / (orig_acf_mean + 1e-10)
 
         return {
-            'original_acf_mean': orig_acf_mean,
-            'diff_acf_mean': diff_acf_mean,
-            'memory_preservation_ratio': memory_preservation,
-            'memory_loss_pct': (1 - memory_preservation) * 100,
+            "original_acf_mean": orig_acf_mean,
+            "diff_acf_mean": diff_acf_mean,
+            "memory_preservation_ratio": memory_preservation,
+            "memory_loss_pct": (1 - memory_preservation) * 100,
         }
 
-    def compare_d_values(self, series: pd.Series, d_values: List[float] = None) -> pd.DataFrame:
+    def compare_d_values(
+        self, series: pd.Series, d_values: Optional[list[float]] = None
+    ) -> pd.DataFrame:
         """
         Compare different d values on the same series (NUMBA OPTIMIZED).
 
@@ -673,11 +674,8 @@ class FractionalDifferentiation:
         results = []
 
         for d in d_values:
-            if d == 0.0:
-                diff_series = series
-            else:
-                # Uses NUMBA-ACCELERATED fractional_diff
-                diff_series = self.fractional_diff(series, d=d)
+            # Uses NUMBA-ACCELERATED fractional_diff
+            diff_series = series if d == 0.0 else self.fractional_diff(series, d=d)
 
             diff_clean = diff_series.dropna()
 
@@ -695,13 +693,13 @@ class FractionalDifferentiation:
 
             results.append(
                 {
-                    'd': d,
-                    'adf_statistic': adf_stat,
-                    'p_value': p_value,
-                    'is_stationary': p_value < self.adfuller_alpha,
-                    'memory_preservation': memory_metrics['memory_preservation_ratio'],
-                    'memory_loss_pct': memory_metrics['memory_loss_pct'],
-                    'n_obs': len(diff_clean),
+                    "d": d,
+                    "adf_statistic": adf_stat,
+                    "p_value": p_value,
+                    "is_stationary": p_value < self.adfuller_alpha,
+                    "memory_preservation": memory_metrics["memory_preservation_ratio"],
+                    "memory_loss_pct": memory_metrics["memory_loss_pct"],
+                    "n_obs": len(diff_clean),
                 }
             )
 
@@ -854,7 +852,7 @@ class FractionalDiffTransformer:
 def apply_frac_diff_to_dataframe(
     df: pd.DataFrame,
     d: float = 0.5,
-    columns: List[str] = None,
+    columns: Optional[list[str]] = None,
     threshold: float = 1e-5,
     use_parallel: bool = False,
 ) -> pd.DataFrame:
@@ -883,7 +881,7 @@ def apply_frac_diff_to_dataframe(
 
     for col in columns:
         if col in df.columns:
-            result[f'{col}_fracdiff'] = fd.fractional_diff(df[col], d=d)
+            result[f"{col}_fracdiff"] = fd.fractional_diff(df[col], d=d)
 
     return result
 
@@ -909,7 +907,7 @@ def find_optimal_d(
     max_d: float = 1.0,
     step: float = 0.05,
     adfuller_alpha: float = 0.05,
-) -> Tuple[float, float]:
+) -> tuple[float, float]:
     """Find optimal d for stationarity (NUMBA OPTIMIZED)."""
     fd = FractionalDifferentiation(adfuller_alpha=adfuller_alpha)
     optimal_d, p_value, _ = fd.find_optimal_d(series, min_d, max_d, step, adfuller_alpha)

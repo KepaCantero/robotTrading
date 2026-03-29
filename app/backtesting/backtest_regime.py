@@ -17,7 +17,7 @@ Architecture:
 from __future__ import annotations
 
 import logging
-from typing import Any, Dict, List
+from typing import TYPE_CHECKING, Any
 
 import numpy as np
 import pandas as pd
@@ -25,9 +25,11 @@ import pandas as pd
 logger = logging.getLogger(__name__)
 
 from app.backtesting.core.executor import SimpleBacktestExecutor
-from app.backtesting.core.memory_manager import AggressiveMemoryManager
 from app.backtesting.models import BacktestConfig
 from app.domain.strategies.momentum_modular.strategy import ModularMomentumStrategy
+
+if TYPE_CHECKING:
+    from app.backtesting.core.memory_manager import AggressiveMemoryManager
 
 
 class BacktestRegimeAnalyzer:
@@ -45,8 +47,8 @@ class BacktestRegimeAnalyzer:
         self,
         backtest_config: BacktestConfig,
         memory_manager: AggressiveMemoryManager,
-        raw_config: Dict[str, Any],
-        quotes: List,
+        raw_config: dict[str, Any],
+        quotes: list,
     ):
         """
         Initialize BacktestRegimeAnalyzer.
@@ -69,7 +71,7 @@ class BacktestRegimeAnalyzer:
         metrics_helper,
         audit_helper,
         thresholds_helper,
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """
         Execute regime-based backtest to analyze strategy performance across market regimes.
 
@@ -95,11 +97,11 @@ class BacktestRegimeAnalyzer:
 
         try:
             # Step 1: Load configuration and prepare data
-            regime_config = self.raw_config.get('backtests', {}).get('regime_test', {})
+            regime_config = self.raw_config.get("backtests", {}).get("regime_test", {})
 
-            detection_method = regime_config.get('detection_method', 'hmm')
-            n_regimes = regime_config.get('n_regimes', 3)
-            min_regime_samples = regime_config.get('min_regime_samples', 50)
+            detection_method = regime_config.get("detection_method", "hmm")
+            n_regimes = regime_config.get("n_regimes", 3)
+            min_regime_samples = regime_config.get("min_regime_samples", 50)
 
             logger.info("Regime detection configuration:")
             logger.info(f"  Method: {detection_method}")
@@ -140,14 +142,14 @@ class BacktestRegimeAnalyzer:
             regime_detector_info = {}
 
             # Method 1: HMM Regime Detection
-            if detection_method in ['hmm', 'ensemble']:
+            if detection_method in ["hmm", "ensemble"]:
                 try:
                     from app.engines.context_engine.regime_detectors.hmm_regime_detector import (
                         HMMRegimeDetector,
                     )
 
                     hmm_detector = HMMRegimeDetector(
-                        config={'n_regimes': n_regimes, 'window_size': 100}
+                        config={"n_regimes": n_regimes, "window_size": 100}
                     )
 
                     hmm_success = hmm_detector.fit(prices.tolist())
@@ -157,35 +159,35 @@ class BacktestRegimeAnalyzer:
                         for i in range(len(prices)):
                             window_prices = prices[max(0, i - 100) : i + 1]
                             pred = hmm_detector.detect(window_prices.tolist())
-                            regime_predictions.append(pred.get('state', 1))
+                            regime_predictions.append(pred.get("state", 1))
 
                         regime_labels = np.array(regime_predictions)
                         transition_matrix = hmm_detector.get_transition_matrix()
                         regime_means = hmm_detector.get_regime_means()
 
-                        regime_detector_info['hmm'] = {
-                            'used': True,
-                            'transition_matrix': (
+                        regime_detector_info["hmm"] = {
+                            "used": True,
+                            "transition_matrix": (
                                 transition_matrix.tolist()
                                 if transition_matrix is not None
                                 else None
                             ),
-                            'regime_means': (
+                            "regime_means": (
                                 regime_means.tolist() if regime_means is not None else None
                             ),
                         }
                         logger.info("HMM regime detection completed successfully")
                     else:
                         logger.warning("HMM training failed, falling back to clustering")
-                        detection_method = 'clustering'
+                        detection_method = "clustering"
 
                 except ImportError as e:
-                    logger.error(f'HMM detector not available: {e}')
-                    logger.info('Falling back to clustering regime detection')
-                    detection_method = 'clustering'
+                    logger.error(f"HMM detector not available: {e}")
+                    logger.info("Falling back to clustering regime detection")
+                    detection_method = "clustering"
 
             # Method 2: Clustering Regime Detection
-            if detection_method in ['clustering', 'ensemble'] and regime_labels is None:
+            if detection_method in ["clustering", "ensemble"] and regime_labels is None:
                 try:
                     from app.engines.context_engine.regime_detectors.clustering_regime_detector import (
                         ClusteringRegimeDetector,
@@ -193,9 +195,9 @@ class BacktestRegimeAnalyzer:
 
                     cluster_detector = ClusteringRegimeDetector(
                         config={
-                            'method': 'kmeans',
-                            'n_clusters': n_regimes,
-                            'window_size': 100,
+                            "method": "kmeans",
+                            "n_clusters": n_regimes,
+                            "window_size": 100,
                         }
                     )
 
@@ -206,10 +208,10 @@ class BacktestRegimeAnalyzer:
                         for i in range(len(prices)):
                             window_prices = prices[max(0, i - 100) : i + 1]
                             pred = cluster_detector.detect(window_prices.tolist())
-                            regime_predictions.append(pred.get('cluster', 1))
+                            regime_predictions.append(pred.get("cluster", 1))
 
                         regime_labels = np.array(regime_predictions)
-                        regime_detector_info['clustering'] = {'used': True}
+                        regime_detector_info["clustering"] = {"used": True}
                         logger.info("Clustering regime detection completed successfully")
                     else:
                         logger.warning("Clustering training failed, using fallback")
@@ -223,7 +225,7 @@ class BacktestRegimeAnalyzer:
             if regime_labels is None:
                 logger.info("Using simple regime detection based on returns")
                 regime_labels = self._detect_simple_regimes(returns)
-                regime_detector_info['simple'] = {'used': True}
+                regime_detector_info["simple"] = {"used": True}
 
             # Align regime labels with returns
             regime_labels_returns = regime_labels[1:]
@@ -251,14 +253,14 @@ class BacktestRegimeAnalyzer:
 
             logger.info("Regime transition probabilities:")
             for from_regime, transitions in transition_analysis.get(
-                'transition_probabilities', {}
+                "transition_probabilities", {}
             ).items():
                 logger.info(f"  From {from_regime}:")
                 for to_regime, prob in transitions.items():
                     logger.info(f"    -> {to_regime}: {prob:.3f}")
 
             logger.info("Regime duration statistics:")
-            for regime_name, stats in transition_analysis.get('duration_statistics', {}).items():
+            for regime_name, stats in transition_analysis.get("duration_statistics", {}).items():
                 logger.info(f"  {regime_name}:")
                 logger.info(f"    Mean duration: {stats['mean_duration']:.1f} periods")
                 logger.info(f"    Median duration: {stats['median_duration']:.1f} periods")
@@ -318,42 +320,42 @@ class BacktestRegimeAnalyzer:
                     regime_mean_return = float(regime_return_series.mean() * 252)
 
                     regime_result = {
-                        'regime': regime_idx,
-                        'regime_name': regime_name,
-                        'num_quotes': len(regime_quotes),
-                        'pct_total': len(regime_quotes) / len(sorted_quotes) * 100,
-                        'total_pnl': consistent_metrics['total_pnl'],
-                        'return_pct': consistent_metrics['return_pct'],
-                        'sharpe_ratio': (
+                        "regime": regime_idx,
+                        "regime_name": regime_name,
+                        "num_quotes": len(regime_quotes),
+                        "pct_total": len(regime_quotes) / len(sorted_quotes) * 100,
+                        "total_pnl": consistent_metrics["total_pnl"],
+                        "return_pct": consistent_metrics["return_pct"],
+                        "sharpe_ratio": (
                             float(result.performance.sharpe_ratio)
                             if result.performance and result.performance.sharpe_ratio
                             else 0.0
                         ),
-                        'sortino_ratio': (
+                        "sortino_ratio": (
                             float(result.performance.sortino_ratio)
-                            if result.performance and hasattr(result.performance, 'sortino_ratio')
+                            if result.performance and hasattr(result.performance, "sortino_ratio")
                             else 0.0
                         ),
-                        'win_rate': (
+                        "win_rate": (
                             float(result.performance.win_rate) if result.performance else 0.0
                         ),
-                        'max_drawdown': (
+                        "max_drawdown": (
                             float(result.performance.max_drawdown_percentage)
                             if result.performance
                             else 0.0
                         ),
-                        'total_trades': (
+                        "total_trades": (
                             result.performance.total_trades if result.performance else 0
                         ),
-                        'avg_trade_pnl': (
-                            consistent_metrics['total_pnl'] / result.performance.total_trades
+                        "avg_trade_pnl": (
+                            consistent_metrics["total_pnl"] / result.performance.total_trades
                             if result.performance and result.performance.total_trades > 0
                             else 0.0
                         ),
-                        'final_capital': consistent_metrics['final_capital'],
-                        'regime_volatility': regime_volatility,
-                        'regime_annualized_return': regime_mean_return,
-                        'regime_sharpe': (
+                        "final_capital": consistent_metrics["final_capital"],
+                        "regime_volatility": regime_volatility,
+                        "regime_annualized_return": regime_mean_return,
+                        "regime_sharpe": (
                             regime_mean_return / regime_volatility if regime_volatility > 0 else 0.0
                         ),
                     }
@@ -368,7 +370,7 @@ class BacktestRegimeAnalyzer:
                         f"Max DD={regime_result['max_drawdown']:.2f}%"
                     )
 
-                    self.memory_manager.add_backtest_object(f'regime_{regime_name}', result)
+                    self.memory_manager.add_backtest_object(f"regime_{regime_name}", result)
 
                 except Exception as e:
                     logger.error(f"Error backtesting regime {regime_name}: {e}", exc_info=True)
@@ -383,8 +385,8 @@ class BacktestRegimeAnalyzer:
             logger.info("REGIME ANALYSIS SUMMARY")
             logger.info("-" * 80)
 
-            best_regime = max(regime_results, key=lambda x: x['sharpe_ratio'])
-            worst_regime = min(regime_results, key=lambda x: x['sharpe_ratio'])
+            best_regime = max(regime_results, key=lambda x: x["sharpe_ratio"])
+            worst_regime = min(regime_results, key=lambda x: x["sharpe_ratio"])
 
             logger.info(f"Best performing regime: {best_regime['regime_name']}")
             logger.info(f"  Sharpe: {best_regime['sharpe_ratio']:.3f}")
@@ -396,8 +398,8 @@ class BacktestRegimeAnalyzer:
             logger.info(f"  Return: {worst_regime['return_pct']:.2f}%")
             logger.info(f"  Win Rate: {worst_regime['win_rate']:.2%}")
 
-            sharpe_values = [r['sharpe_ratio'] for r in regime_results]
-            return_values = [r['return_pct'] for r in regime_results]
+            sharpe_values = [r["sharpe_ratio"] for r in regime_results]
+            return_values = [r["return_pct"] for r in regime_results]
 
             sharpe_std = np.std(sharpe_values)
             sharpe_range = max(sharpe_values) - min(sharpe_values)
@@ -413,53 +415,53 @@ class BacktestRegimeAnalyzer:
 
             # Step 7: Compile comprehensive results
             result_dict = {
-                'test_type': 'regime_test',
-                'test_name': 'Regime-Based Performance Analysis',
-                'detection_method': detection_method,
-                'n_regimes': n_regimes,
-                'min_regime_samples': min_regime_samples,
-                'regime_detector_info': regime_detector_info,
-                'regime_names': regime_names,
-                'regime_results': regime_results,
-                'num_regimes_tested': len(regime_results),
-                'best_regime': {
-                    'name': best_regime['regime_name'],
-                    'sharpe_ratio': float(best_regime['sharpe_ratio']),
-                    'return_pct': float(best_regime['return_pct']),
-                    'win_rate': float(best_regime['win_rate']),
+                "test_type": "regime_test",
+                "test_name": "Regime-Based Performance Analysis",
+                "detection_method": detection_method,
+                "n_regimes": n_regimes,
+                "min_regime_samples": min_regime_samples,
+                "regime_detector_info": regime_detector_info,
+                "regime_names": regime_names,
+                "regime_results": regime_results,
+                "num_regimes_tested": len(regime_results),
+                "best_regime": {
+                    "name": best_regime["regime_name"],
+                    "sharpe_ratio": float(best_regime["sharpe_ratio"]),
+                    "return_pct": float(best_regime["return_pct"]),
+                    "win_rate": float(best_regime["win_rate"]),
                 },
-                'worst_regime': {
-                    'name': worst_regime['regime_name'],
-                    'sharpe_ratio': float(worst_regime['sharpe_ratio']),
-                    'return_pct': float(worst_regime['return_pct']),
-                    'win_rate': float(worst_regime['win_rate']),
+                "worst_regime": {
+                    "name": worst_regime["regime_name"],
+                    "sharpe_ratio": float(worst_regime["sharpe_ratio"]),
+                    "return_pct": float(worst_regime["return_pct"]),
+                    "win_rate": float(worst_regime["win_rate"]),
                 },
-                'transition_analysis': transition_analysis,
-                'robustness_metrics': {
-                    'sharpe_std': float(sharpe_std),
-                    'sharpe_range': float(sharpe_range),
-                    'return_std': float(return_std),
-                    'robustness_score': float(robustness_score),
-                    'is_robust': robustness_score > 0.5,
+                "transition_analysis": transition_analysis,
+                "robustness_metrics": {
+                    "sharpe_std": float(sharpe_std),
+                    "sharpe_range": float(sharpe_range),
+                    "return_std": float(return_std),
+                    "robustness_score": float(robustness_score),
+                    "is_robust": robustness_score > 0.5,
                 },
-                'performance_summary': {
-                    'avg_sharpe': float(np.mean(sharpe_values)),
-                    'avg_return': float(np.mean(return_values)),
-                    'avg_win_rate': float(np.mean([r['win_rate'] for r in regime_results])),
-                    'avg_max_drawdown': float(np.mean([r['max_drawdown'] for r in regime_results])),
-                    'total_trades': int(sum(r['total_trades'] for r in regime_results)),
+                "performance_summary": {
+                    "avg_sharpe": float(np.mean(sharpe_values)),
+                    "avg_return": float(np.mean(return_values)),
+                    "avg_win_rate": float(np.mean([r["win_rate"] for r in regime_results])),
+                    "avg_max_drawdown": float(np.mean([r["max_drawdown"] for r in regime_results])),
+                    "total_trades": int(sum(r["total_trades"] for r in regime_results)),
                 },
-                'modules_active': (
-                    list(self.raw_config['modules']['filters'].keys())
-                    if 'modules' in self.raw_config
+                "modules_active": (
+                    list(self.raw_config["modules"]["filters"].keys())
+                    if "modules" in self.raw_config
                     else []
                 ),
-                'learning_engine': None,
-                'thresholds': thresholds_helper(strategy_config),
+                "learning_engine": None,
+                "thresholds": thresholds_helper(strategy_config),
             }
 
             self.memory_manager.add_result(result_dict)
-            audit_helper(result_dict, 'regime_test', strategy)
+            audit_helper(result_dict, "regime_test", strategy)
 
             logger.info("\n" + "=" * 80)
             logger.info("REGIME TEST BACKTEST COMPLETE")
@@ -520,7 +522,7 @@ class BacktestRegimeAnalyzer:
 
     def _get_regime_name_mapping(
         self, regime_labels: np.ndarray, returns: pd.Series
-    ) -> Dict[int, str]:
+    ) -> dict[int, str]:
         """
         Map regime indices to descriptive names based on characteristics.
 
@@ -539,32 +541,32 @@ class BacktestRegimeAnalyzer:
             regime_returns = returns[mask]
 
             regime_stats[regime] = {
-                'mean_return': float(regime_returns.mean()),
-                'volatility': float(regime_returns.std()),
+                "mean_return": float(regime_returns.mean()),
+                "volatility": float(regime_returns.std()),
             }
 
-        sorted_regimes = sorted(regime_stats.items(), key=lambda x: x[1]['mean_return'])
+        sorted_regimes = sorted(regime_stats.items(), key=lambda x: x[1]["mean_return"])
 
         regime_names = {}
         if len(sorted_regimes) == 3:
-            regime_names[sorted_regimes[0][0]] = 'Bear Market'
-            regime_names[sorted_regimes[1][0]] = 'Neutral Market'
-            regime_names[sorted_regimes[2][0]] = 'Bull Market'
+            regime_names[sorted_regimes[0][0]] = "Bear Market"
+            regime_names[sorted_regimes[1][0]] = "Neutral Market"
+            regime_names[sorted_regimes[2][0]] = "Bull Market"
         elif len(sorted_regimes) == 2:
-            regime_names[sorted_regimes[0][0]] = 'Bear Market'
-            regime_names[sorted_regimes[1][0]] = 'Bull Market'
+            regime_names[sorted_regimes[0][0]] = "Bear Market"
+            regime_names[sorted_regimes[1][0]] = "Bull Market"
         else:
             for regime, stats in sorted_regimes:
-                if stats['mean_return'] > 0:
-                    regime_names[regime] = f'Positive_Regime_{regime}'
+                if stats["mean_return"] > 0:
+                    regime_names[regime] = f"Positive_Regime_{regime}"
                 else:
-                    regime_names[regime] = f'Negative_Regime_{regime}'
+                    regime_names[regime] = f"Negative_Regime_{regime}"
 
         return regime_names
 
     def _analyze_regime_transitions(
-        self, regime_labels: np.ndarray, regime_names: Dict[int, str]
-    ) -> Dict[str, Any]:
+        self, regime_labels: np.ndarray, regime_names: dict[int, str]
+    ) -> dict[str, Any]:
         """
         Analyze regime transitions and build transition probability matrix.
 
@@ -630,16 +632,16 @@ class BacktestRegimeAnalyzer:
         for regime_name, durations in regime_durations.items():
             if durations:
                 duration_stats[regime_name] = {
-                    'mean_duration': float(np.mean(durations)),
-                    'median_duration': float(np.median(durations)),
-                    'min_duration': int(np.min(durations)),
-                    'max_duration': int(np.max(durations)),
-                    'std_duration': float(np.std(durations)),
-                    'transitions': int(len(durations)),
+                    "mean_duration": float(np.mean(durations)),
+                    "median_duration": float(np.median(durations)),
+                    "min_duration": int(np.min(durations)),
+                    "max_duration": int(np.max(durations)),
+                    "std_duration": float(np.std(durations)),
+                    "transitions": len(durations),
                 }
 
         return {
-            'transition_matrix': transition_matrix.tolist(),
-            'transition_probabilities': named_transition_probs,
-            'duration_statistics': duration_stats,
+            "transition_matrix": transition_matrix.tolist(),
+            "transition_probabilities": named_transition_probs,
+            "duration_statistics": duration_stats,
         }

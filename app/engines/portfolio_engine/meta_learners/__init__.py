@@ -13,7 +13,7 @@ from .meta_learners import (
 
 __all__ = [
     "BaseMetaLearner",
+    "EnsembleMetaLearner",
     "HistoricalPerformanceLearner",
     "ReinforcementLearningLearner",
-    "EnsembleMetaLearner",
 ]

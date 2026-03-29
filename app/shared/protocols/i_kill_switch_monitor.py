@@ -1,6 +1,7 @@
 """
 Risk monitoring protocols (R2)
 """
+
 from typing import Protocol
 
 

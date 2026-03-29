@@ -20,7 +20,7 @@ from collections import deque
 from dataclasses import dataclass
 from datetime import date, timedelta
 from decimal import Decimal
-from typing import Deque, Dict, List, Optional, Tuple
+from typing import ClassVar, Optional
 
 from app.services.compliance.pdt_tracker import Country
 
@@ -109,7 +109,7 @@ class WashSaleTracker:
     """
 
     WASH_SALE_WINDOW_DAYS = 30
-    SUBSTANTIALLY_IDENTICAL = {
+    SUBSTANTIALLY_IDENTICAL: ClassVar[dict] = {
         # Same symbol
         # Different classes (e.g., BRK.A vs BRK.B)
         # ETFs tracking same index
@@ -125,11 +125,11 @@ class WashSaleTracker:
         self.country = country
 
         # Trade history
-        self._positions: Deque[PositionRecord] = deque(maxlen=10000)
-        self._wash_sales: List[WashSale] = []
+        self._positions: deque[PositionRecord] = deque(maxlen=10000)
+        self._wash_sales: list[WashSale] = []
 
         # Index by symbol for fast lookup
-        self._positions_by_symbol: Dict[str, Deque[PositionRecord]] = {}
+        self._positions_by_symbol: dict[str, deque[PositionRecord]] = {}
 
         logger.info(f"WashSaleTracker initialized for {country.value}")
 
@@ -222,7 +222,11 @@ class WashSaleTracker:
         self._positions_by_symbol[symbol].append(position)
 
         # Check if this is a wash sale
-        if side == "SELL" and self.country == Country.US and self._check_and_record_wash_sale(position):
+        if (
+            side == "SELL"
+            and self.country == Country.US
+            and self._check_and_record_wash_sale(position)
+        ):
             logger.warning(f"Wash sale detected: {symbol} sold on {trade_date}")
 
     def check_wash_sale_impact(
@@ -231,7 +235,7 @@ class WashSaleTracker:
         sale_date: date,
         sale_price: Decimal,
         cost_basis: Decimal,
-    ) -> Tuple[bool, Decimal, Decimal]:
+    ) -> tuple[bool, Decimal, Decimal]:
         """
         Calculate wash sale impact on a potential sale.
 
@@ -274,7 +278,7 @@ class WashSaleTracker:
 
         return True, disallowed_loss, deductible_loss
 
-    def get_wash_sales(self, start_date: Optional[date] = None) -> List[WashSale]:
+    def get_wash_sales(self, start_date: Optional[date] = None) -> list[WashSale]:
         """
         Get list of wash sales.
 
@@ -289,7 +293,7 @@ class WashSaleTracker:
 
         return [ws for ws in self._wash_sales if ws.sale_date >= start_date]
 
-    def get_wash_sale_summary(self) -> Dict:
+    def get_wash_sale_summary(self) -> dict:
         """
         Get summary of wash sales.
 
@@ -341,7 +345,11 @@ class WashSaleTracker:
         window_start = position.trade_date - timedelta(days=self.WASH_SALE_WINDOW_DAYS)
 
         for prev_position in self._positions_by_symbol.get(position.symbol, []):
-            if prev_position.side == "BUY" and prev_position != position and window_start <= prev_position.trade_date <= position.trade_date:
+            if (
+                prev_position.side == "BUY"
+                and prev_position != position
+                and window_start <= prev_position.trade_date <= position.trade_date
+            ):
                 # This is a wash sale
                 loss = (prev_position.price - position.price) * position.quantity
 

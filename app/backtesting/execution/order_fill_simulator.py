@@ -19,7 +19,6 @@ from __future__ import annotations
 import logging
 from dataclasses import dataclass, field
 from decimal import Decimal
-from typing import Dict, List, Optional
 
 # SINGLE SOURCE OF TRUTH: Import CentralizedConfig
 from app.shared.config.centralized_config import get_config
@@ -140,10 +139,10 @@ class OrderFillSimulator:
 
     def __init__(
         self,
-        cost_calculator: Optional[TransactionCostCalculator] = None,
-        slippage_model: Optional[SlippageModel] = None,
-        impact_model: Optional[MarketImpactModel] = None,
-        config: Optional[SimulatorConfig] = None,
+        cost_calculator: TransactionCostCalculator | None = None,
+        slippage_model: SlippageModel | None = None,
+        impact_model: MarketImpactModel | None = None,
+        config: SimulatorConfig | None = None,
     ):
         """
         Initialize order fill simulator.
@@ -211,13 +210,13 @@ class OrderFillSimulator:
             return self._create_rejected_result(
                 order,
                 FillReason.EXCEEDS_ADV,
-                f"Order size ({participation_rate*100:.1f}% of ADV) exceeds rejection threshold",
+                f"Order size ({participation_rate * 100:.1f}% of ADV) exceeds rejection threshold",
             )
 
         # Liquidity warning
         warnings = []
         if participation_rate > self.config.liquidity_warning_threshold:
-            warnings.append(f"Large order: {participation_rate*100:.1f}% of ADV")
+            warnings.append(f"Large order: {participation_rate * 100:.1f}% of ADV")
 
         # 1. Calculate transaction costs
         transaction_cost = self.cost_calculator.calculate_cost(
@@ -298,7 +297,7 @@ class OrderFillSimulator:
             filled_shares = int(order.quantity * float(scale_factor))
             is_partial_fill = True
             warnings.append(
-                f"Partial fill: scaled down to {self.config.fill_constraints.max_participation_rate*100:.1f}% of ADV"
+                f"Partial fill: scaled down to {self.config.fill_constraints.max_participation_rate * 100:.1f}% of ADV"
             )
 
         # Check minimum fill constraint
@@ -308,7 +307,7 @@ class OrderFillSimulator:
                 return self._create_rejected_result(
                     order,
                     FillReason.INSUFFICIENT_LIQUIDITY,
-                    f"Cannot meet minimum fill requirement ({self.config.fill_constraints.min_fill_pct*100:.0f}%)",
+                    f"Cannot meet minimum fill requirement ({self.config.fill_constraints.min_fill_pct * 100:.0f}%)",
                 )
 
         # Scale costs for partial fill
@@ -382,8 +381,8 @@ class OrderFillSimulator:
     def simulate_fill_sequence(
         self,
         order: Order,
-        market_snapshots: List[MarketSnapshot],
-    ) -> List[FillResult]:
+        market_snapshots: list[MarketSnapshot],
+    ) -> list[FillResult]:
         """
         Simulate order fill across multiple time periods.
 
@@ -461,7 +460,7 @@ class OrderFillSimulator:
         self,
         order: Order,
         market_snapshot: MarketSnapshot,
-    ) -> Dict[str, Decimal]:
+    ) -> dict[str, Decimal]:
         """
         Get detailed cost breakdown without simulating fill.
 

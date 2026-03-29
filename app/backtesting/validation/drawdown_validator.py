@@ -4,9 +4,10 @@ Drawdown Validator for backtesting results.
 Validates drawdown calculations to ensure accuracy
 and detect potential issues in risk metrics.
 """
+
 import logging
 from decimal import Decimal
-from typing import Dict, List, Optional, Tuple
+from typing import Optional
 
 import numpy as np
 
@@ -18,7 +19,7 @@ logger = logging.getLogger(__name__)
 class DrawdownValidationError(Exception):
     """Exception raised when drawdown validation fails."""
 
-    def __init__(self, message: str, details: Optional[Dict] = None):
+    def __init__(self, message: str, details: Optional[dict] = None):
         super().__init__(message)
         self.details = details or {}
 
@@ -55,9 +56,9 @@ class DrawdownValidator:
 
     def calculate_equity_curve(
         self,
-        trades: List[Trade],
+        trades: list[Trade],
         initial_capital: Decimal,
-    ) -> List[Tuple[str, Decimal]]:
+    ) -> list[tuple[str, Decimal]]:
         """
         Calculate equity curve from trades.
 
@@ -86,8 +87,8 @@ class DrawdownValidator:
 
     def calculate_drawdown(
         self,
-        equity_curve: List[Tuple[str, Decimal]],
-    ) -> Tuple[List[Tuple[str, Decimal]], Decimal]:
+        equity_curve: list[tuple[str, Decimal]],
+    ) -> tuple[list[tuple[str, Decimal]], Decimal]:
         """
         Calculate drawdown series and max drawdown.
 
@@ -119,8 +120,8 @@ class DrawdownValidator:
     def validate_max_drawdown(
         self,
         reported_max_dd: Decimal,
-        equity_curve: Optional[List[Tuple[str, Decimal]]] = None,
-        trades: Optional[List[Trade]] = None,
+        equity_curve: Optional[list[tuple[str, Decimal]]] = None,
+        trades: Optional[list[Trade]] = None,
         initial_capital: Optional[Decimal] = None,
     ) -> bool:
         """
@@ -189,7 +190,7 @@ class DrawdownValidator:
 
         if drawdown_pct < -self.max_drawdown_pct:
             raise DrawdownValidationError(
-                f"Drawdown exceeds maximum: {drawdown_pct}% " f"(max: {-self.max_drawdown_pct}%)",
+                f"Drawdown exceeds maximum: {drawdown_pct}% (max: {-self.max_drawdown_pct}%)",
                 details={
                     "drawdown_pct": float(drawdown_pct),
                     "max_allowed": float(-self.max_drawdown_pct),
@@ -200,7 +201,7 @@ class DrawdownValidator:
 
     def validate_drawdown_recovery(
         self,
-        equity_curve: List[Tuple[str, Decimal]],
+        equity_curve: list[tuple[str, Decimal]],
     ) -> bool:
         """
         Validate drawdown recovery is tracked correctly.
@@ -235,7 +236,7 @@ class DrawdownValidator:
             for i in range(1, len(peaks)):
                 if peaks[i][1] < peaks[i - 1][1]:
                     raise DrawdownValidationError(
-                        f"Peak decreased without tracking: " f"{peaks[i-1][1]} -> {peaks[i][1]}",
+                        f"Peak decreased without tracking: {peaks[i - 1][1]} -> {peaks[i][1]}",
                         details={
                             "previous_peak": float(peaks[i - 1][1]),
                             "current_peak": float(peaks[i][1]),
@@ -246,9 +247,9 @@ class DrawdownValidator:
 
     def get_drawdown_statistics(
         self,
-        trades: List[Trade],
+        trades: list[Trade],
         initial_capital: Decimal,
-    ) -> Dict[str, any]:
+    ) -> dict[str, any]:
         """
         Get comprehensive drawdown statistics.
 

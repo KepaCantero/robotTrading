@@ -16,7 +16,7 @@ Reference: Hull, Options, Futures, and Other Derivatives, Chapter 20
 """
 
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 import numpy as np
 
@@ -32,7 +32,7 @@ class PortfolioVarianceStressTester:
     Tests how portfolio variance changes under various stress scenarios.
     """
 
-    def __init__(self, config: Optional[Dict[str, Any]] = None):
+    def __init__(self, config: Optional[dict[str, Any]] = None):
         """
         Initialize portfolio variance stress tester.
 
@@ -46,91 +46,91 @@ class PortfolioVarianceStressTester:
         # Stress scenarios
         self.scenarios = self._initialize_scenarios()
 
-    def _initialize_scenarios(self) -> Dict[str, Dict[str, Any]]:
+    def _initialize_scenarios(self) -> dict[str, dict[str, Any]]:
         """Initialize comprehensive stress scenarios."""
         return {
-            'baseline': {
-                'name': 'Baseline (Current Market)',
-                'description': 'Current market conditions',
-                'volatility_multiplier': 1.0,
-                'correlation_multiplier': 1.0,
-                'volatility_floor': 0.0,
-                'correlation_target': None,
+            "baseline": {
+                "name": "Baseline (Current Market)",
+                "description": "Current market conditions",
+                "volatility_multiplier": 1.0,
+                "correlation_multiplier": 1.0,
+                "volatility_floor": 0.0,
+                "correlation_target": None,
             },
-            'volatility_spike_2x': {
-                'name': 'Volatility Spike (2x)',
-                'description': 'All volatilities double',
-                'volatility_multiplier': 2.0,
-                'correlation_multiplier': 1.0,
-                'volatility_floor': 0.0,
-                'correlation_target': None,
+            "volatility_spike_2x": {
+                "name": "Volatility Spike (2x)",
+                "description": "All volatilities double",
+                "volatility_multiplier": 2.0,
+                "correlation_multiplier": 1.0,
+                "volatility_floor": 0.0,
+                "correlation_target": None,
             },
-            'volatility_spike_3x': {
-                'name': 'Volatility Spike (3x)',
-                'description': 'All volatilities triple',
-                'volatility_multiplier': 3.0,
-                'correlation_multiplier': 1.0,
-                'volatility_floor': 0.0,
-                'correlation_target': None,
+            "volatility_spike_3x": {
+                "name": "Volatility Spike (3x)",
+                "description": "All volatilities triple",
+                "volatility_multiplier": 3.0,
+                "correlation_multiplier": 1.0,
+                "volatility_floor": 0.0,
+                "correlation_target": None,
             },
-            'correlation_breakdown_80': {
-                'name': 'Correlation Breakdown to 0.8',
-                'description': 'All correlations move to 0.8',
-                'volatility_multiplier': 1.0,
-                'correlation_multiplier': 0.0,  # Not used
-                'volatility_floor': 0.0,
-                'correlation_target': 0.8,
+            "correlation_breakdown_80": {
+                "name": "Correlation Breakdown to 0.8",
+                "description": "All correlations move to 0.8",
+                "volatility_multiplier": 1.0,
+                "correlation_multiplier": 0.0,  # Not used
+                "volatility_floor": 0.0,
+                "correlation_target": 0.8,
             },
-            'correlation_breakdown_90': {
-                'name': 'Correlation Breakdown to 0.9',
-                'description': 'All correlations move to 0.9',
-                'volatility_multiplier': 1.0,
-                'correlation_multiplier': 0.0,
-                'volatility_floor': 0.0,
-                'correlation_target': 0.9,
+            "correlation_breakdown_90": {
+                "name": "Correlation Breakdown to 0.9",
+                "description": "All correlations move to 0.9",
+                "volatility_multiplier": 1.0,
+                "correlation_multiplier": 0.0,
+                "volatility_floor": 0.0,
+                "correlation_target": 0.9,
             },
-            'correlation_breakdown_perfect': {
-                'name': 'Perfect Correlation (1.0)',
-                'description': 'All correlations move to 1.0 (worst case)',
-                'volatility_multiplier': 1.0,
-                'correlation_multiplier': 0.0,
-                'volatility_floor': 0.0,
-                'correlation_target': 1.0,
+            "correlation_breakdown_perfect": {
+                "name": "Perfect Correlation (1.0)",
+                "description": "All correlations move to 1.0 (worst case)",
+                "volatility_multiplier": 1.0,
+                "correlation_multiplier": 0.0,
+                "volatility_floor": 0.0,
+                "correlation_target": 1.0,
             },
-            'volatility_correlation_combo': {
-                'name': 'Volatility + Correlation Stress',
-                'description': '2x volatility + 0.9 correlation',
-                'volatility_multiplier': 2.0,
-                'correlation_multiplier': 0.0,
-                'volatility_floor': 0.0,
-                'correlation_target': 0.9,
+            "volatility_correlation_combo": {
+                "name": "Volatility + Correlation Stress",
+                "description": "2x volatility + 0.9 correlation",
+                "volatility_multiplier": 2.0,
+                "correlation_multiplier": 0.0,
+                "volatility_floor": 0.0,
+                "correlation_target": 0.9,
             },
-            'extreme_stress': {
-                'name': 'Extreme Stress (3x vol + perfect corr)',
-                'description': 'Worst case: 3x volatility + perfect correlation',
-                'volatility_multiplier': 3.0,
-                'correlation_multiplier': 0.0,
-                'volatility_floor': 0.0,
-                'correlation_target': 1.0,
+            "extreme_stress": {
+                "name": "Extreme Stress (3x vol + perfect corr)",
+                "description": "Worst case: 3x volatility + perfect correlation",
+                "volatility_multiplier": 3.0,
+                "correlation_multiplier": 0.0,
+                "volatility_floor": 0.0,
+                "correlation_target": 1.0,
             },
-            'asymmetric_volatility': {
-                'name': 'Asymmetric Volatility Spike',
-                'description': 'Volatility increases only for losing positions',
-                'volatility_multiplier': 2.5,
-                'correlation_multiplier': 1.0,
-                'volatility_floor': 0.0,
-                'correlation_target': None,
-                'asymmetric': True,
+            "asymmetric_volatility": {
+                "name": "Asymmetric Volatility Spike",
+                "description": "Volatility increases only for losing positions",
+                "volatility_multiplier": 2.5,
+                "correlation_multiplier": 1.0,
+                "volatility_floor": 0.0,
+                "correlation_target": None,
+                "asymmetric": True,
             },
         }
 
     def run_variance_stress_tests(
         self,
         portfolio: Portfolio,
-        current_correlations: Dict[str, Dict[str, float]],
-        current_volatilities: Dict[str, float],
-        scenario_names: Optional[List[str]] = None,
-    ) -> Dict[str, Any]:
+        current_correlations: dict[str, dict[str, float]],
+        current_volatilities: dict[str, float],
+        scenario_names: Optional[list[str]] = None,
+    ) -> dict[str, Any]:
         """
         Run comprehensive variance stress tests.
 
@@ -157,7 +157,7 @@ class PortfolioVarianceStressTester:
 
             for scenario_name in scenario_names:
                 if scenario_name not in self.scenarios:
-                    self.logger.warning(f'Unknown scenario: {scenario_name}')
+                    self.logger.warning(f"Unknown scenario: {scenario_name}")
                     continue
 
                 scenario = self.scenarios[scenario_name]
@@ -176,21 +176,21 @@ class PortfolioVarianceStressTester:
                 )
 
                 results[scenario_name] = {
-                    'scenario': scenario['name'],
-                    'description': scenario['description'],
-                    'baseline_variance': baseline_variance,
-                    'stressed_variance': stressed_variance,
-                    'variance_increase': variance_increase,
-                    'variance_increase_pct': variance_increase_pct,
-                    'volatility_multiplier': scenario['volatility_multiplier'],
-                    'correlation_target': scenario.get('correlation_target'),
-                    'risk_assessment': self._assess_variance_increase(variance_increase_pct),
+                    "scenario": scenario["name"],
+                    "description": scenario["description"],
+                    "baseline_variance": baseline_variance,
+                    "stressed_variance": stressed_variance,
+                    "variance_increase": variance_increase,
+                    "variance_increase_pct": variance_increase_pct,
+                    "volatility_multiplier": scenario["volatility_multiplier"],
+                    "correlation_target": scenario.get("correlation_target"),
+                    "risk_assessment": self._assess_variance_increase(variance_increase_pct),
                 }
 
                 variance_increases.append(
                     {
-                        'scenario': scenario_name,
-                        'increase_pct': variance_increase_pct,
+                        "scenario": scenario_name,
+                        "increase_pct": variance_increase_pct,
                     }
                 )
 
@@ -198,21 +198,21 @@ class PortfolioVarianceStressTester:
             summary = self._generate_variance_stress_summary(results, variance_increases)
 
             return {
-                'scenarios': results,
-                'summary': summary,
-                'baseline_variance': baseline_variance,
-                'timestamp': self._get_timestamp(),
+                "scenarios": results,
+                "summary": summary,
+                "baseline_variance": baseline_variance,
+                "timestamp": self._get_timestamp(),
             }
 
         except (ValueError, TypeError, KeyError, AttributeError) as e:
-            self.logger.error(f'Error running variance stress tests: {e}', exc_info=True)
-            return {'error': str(e)}
+            self.logger.error(f"Error running variance stress tests: {e}", exc_info=True)
+            return {"error": str(e)}
 
     def _calculate_portfolio_variance(
         self,
         portfolio: Portfolio,
-        correlations: Dict[str, Dict[str, float]],
-        volatilities: Dict[str, float],
+        correlations: dict[str, dict[str, float]],
+        volatilities: dict[str, float],
     ) -> float:
         """
         Calculate portfolio variance.
@@ -252,19 +252,19 @@ class PortfolioVarianceStressTester:
     def _apply_stress_scenario(
         self,
         portfolio: Portfolio,
-        current_correlations: Dict[str, Dict[str, float]],
-        current_volatilities: Dict[str, float],
-        scenario: Dict[str, Any],
+        current_correlations: dict[str, dict[str, float]],
+        current_volatilities: dict[str, float],
+        scenario: dict[str, Any],
     ) -> float:
         """Apply a stress scenario to calculate stressed variance."""
         # Stress volatilities
         stressed_volatilities = {}
         for symbol, vol in current_volatilities.items():
-            stressed_vol = vol * scenario['volatility_multiplier']
+            stressed_vol = vol * scenario["volatility_multiplier"]
 
             # Apply volatility floor
-            if 'volatility_floor' in scenario:
-                stressed_vol = max(stressed_vol, scenario['volatility_floor'])
+            if "volatility_floor" in scenario:
+                stressed_vol = max(stressed_vol, scenario["volatility_floor"])
 
             stressed_volatilities[symbol] = stressed_vol
 
@@ -282,10 +282,10 @@ class PortfolioVarianceStressTester:
 
     def _stress_correlations(
         self,
-        current_correlations: Dict[str, Dict[str, float]],
+        current_correlations: dict[str, dict[str, float]],
         portfolio: Portfolio,
-        scenario: Dict[str, Any],
-    ) -> Dict[str, Dict[str, float]]:
+        scenario: dict[str, Any],
+    ) -> dict[str, dict[str, float]]:
         """Apply correlation stress to correlation matrix."""
         portfolio_symbols = [pos.symbol for pos in portfolio.positions]
         stressed_matrix = {}
@@ -300,7 +300,7 @@ class PortfolioVarianceStressTester:
                     stressed_matrix[symbol1][symbol2] = None
 
         # Apply correlation target if specified
-        correlation_target = scenario.get('correlation_target')
+        correlation_target = scenario.get("correlation_target")
         if correlation_target is not None:
             for symbol1 in portfolio_symbols:
                 for symbol2 in portfolio_symbols:
@@ -318,121 +318,121 @@ class PortfolioVarianceStressTester:
 
         return stressed_matrix
 
-    def _assess_variance_increase(self, variance_increase_pct: float) -> Dict[str, Any]:
+    def _assess_variance_increase(self, variance_increase_pct: float) -> dict[str, Any]:
         """Assess the severity of variance increase."""
         if variance_increase_pct > 200:
             return {
-                'severity': 'CRITICAL',
-                'action': 'IMMEDIATE position reduction required',
-                'variance_increase_pct': variance_increase_pct,
+                "severity": "CRITICAL",
+                "action": "IMMEDIATE position reduction required",
+                "variance_increase_pct": variance_increase_pct,
             }
         elif variance_increase_pct > 100:
             return {
-                'severity': 'HIGH',
-                'action': 'Significant de-risking recommended',
-                'variance_increase_pct': variance_increase_pct,
+                "severity": "HIGH",
+                "action": "Significant de-risking recommended",
+                "variance_increase_pct": variance_increase_pct,
             }
         elif variance_increase_pct > 50:
             return {
-                'severity': 'MODERATE',
-                'action': 'Consider reducing exposure',
-                'variance_increase_pct': variance_increase_pct,
+                "severity": "MODERATE",
+                "action": "Consider reducing exposure",
+                "variance_increase_pct": variance_increase_pct,
             }
         elif variance_increase_pct > 20:
             return {
-                'severity': 'ELEVATED',
-                'action': 'Increased monitoring required',
-                'variance_increase_pct': variance_increase_pct,
+                "severity": "ELEVATED",
+                "action": "Increased monitoring required",
+                "variance_increase_pct": variance_increase_pct,
             }
         else:
             return {
-                'severity': 'LOW',
-                'action': 'Normal monitoring sufficient',
-                'variance_increase_pct': variance_increase_pct,
+                "severity": "LOW",
+                "action": "Normal monitoring sufficient",
+                "variance_increase_pct": variance_increase_pct,
             }
 
     def _generate_variance_stress_summary(
         self,
-        results: Dict[str, Dict[str, Any]],
-        variance_increases: List[Dict[str, Any]],
-    ) -> Dict[str, Any]:
+        results: dict[str, dict[str, Any]],
+        variance_increases: list[dict[str, Any]],
+    ) -> dict[str, Any]:
         """Generate summary of variance stress test results."""
         if not variance_increases:
-            return {'error': 'No valid results'}
+            return {"error": "No valid results"}
 
         # Find worst and best scenarios
-        worst = max(variance_increases, key=lambda x: x['increase_pct'])
-        best = min(variance_increases, key=lambda x: x['increase_pct'])
+        worst = max(variance_increases, key=lambda x: x["increase_pct"])
+        best = min(variance_increases, key=lambda x: x["increase_pct"])
 
         # Calculate statistics
-        increase_values = [v['increase_pct'] for v in variance_increases]
+        increase_values = [v["increase_pct"] for v in variance_increases]
 
         summary = {
-            'worst_scenario': {
-                'name': worst['scenario'],
-                'variance_increase_pct': worst['increase_pct'],
-                'details': results.get(worst['scenario'], {}),
+            "worst_scenario": {
+                "name": worst["scenario"],
+                "variance_increase_pct": worst["increase_pct"],
+                "details": results.get(worst["scenario"], {}),
             },
-            'best_scenario': {
-                'name': best['scenario'],
-                'variance_increase_pct': best['increase_pct'],
-                'details': results.get(best['scenario'], {}),
+            "best_scenario": {
+                "name": best["scenario"],
+                "variance_increase_pct": best["increase_pct"],
+                "details": results.get(best["scenario"], {}),
             },
-            'statistics': {
-                'mean_increase_pct': float(np.mean(increase_values)),
-                'median_increase_pct': float(np.median(increase_values)),
-                'max_increase_pct': float(np.max(increase_values)),
-                'min_increase_pct': float(np.min(increase_values)),
-                'std_increase_pct': float(np.std(increase_values)),
+            "statistics": {
+                "mean_increase_pct": float(np.mean(increase_values)),
+                "median_increase_pct": float(np.median(increase_values)),
+                "max_increase_pct": float(np.max(increase_values)),
+                "min_increase_pct": float(np.min(increase_values)),
+                "std_increase_pct": float(np.std(increase_values)),
             },
-            'overall_assessment': self._generate_overall_assessment(increase_values),
+            "overall_assessment": self._generate_overall_assessment(increase_values),
         }
 
         return summary
 
-    def _generate_overall_assessment(self, increase_values: List[float]) -> Dict[str, Any]:
+    def _generate_overall_assessment(self, increase_values: list[float]) -> dict[str, Any]:
         """Generate overall risk assessment based on all scenarios."""
         max_increase = max(increase_values)
         mean_increase = np.mean(increase_values)
 
         if max_increase > 200:
-            risk_level = 'CRITICAL'
+            risk_level = "CRITICAL"
             recommendation = (
-                'Portfolio is highly vulnerable to stress scenarios. '
-                'Significant de-risking required immediately.'
+                "Portfolio is highly vulnerable to stress scenarios. "
+                "Significant de-risking required immediately."
             )
         elif max_increase > 100:
-            risk_level = 'HIGH'
+            risk_level = "HIGH"
             recommendation = (
-                'Portfolio shows significant stress vulnerability. '
-                'Consider reducing exposure and improving diversification.'
+                "Portfolio shows significant stress vulnerability. "
+                "Consider reducing exposure and improving diversification."
             )
         elif max_increase > 50:
-            risk_level = 'MODERATE'
+            risk_level = "MODERATE"
             recommendation = (
-                'Portfolio has moderate stress vulnerability. '
-                'Monitor closely and consider selective de-risking.'
+                "Portfolio has moderate stress vulnerability. "
+                "Monitor closely and consider selective de-risking."
             )
         else:
-            risk_level = 'ACCEPTABLE'
+            risk_level = "ACCEPTABLE"
             recommendation = (
-                'Portfolio shows reasonable resilience to stress scenarios. '
-                'Continue normal monitoring.'
+                "Portfolio shows reasonable resilience to stress scenarios. "
+                "Continue normal monitoring."
             )
 
         return {
-            'risk_level': risk_level,
-            'recommendation': recommendation,
-            'max_variance_increase_pct': max_increase,
-            'mean_variance_increase_pct': mean_increase,
+            "risk_level": risk_level,
+            "recommendation": recommendation,
+            "max_variance_increase_pct": max_increase,
+            "mean_variance_increase_pct": mean_increase,
         }
 
     def decompose_portfolio_variance(
         self,
         portfolio: Portfolio,
-        correlations: Dict[str, Dict[str, float]],
-        volatilities: Dict[str, float],
-    ) -> Dict[str, Any]:
+        correlations: dict[str, dict[str, float]],
+        volatilities: dict[str, float],
+    ) -> dict[str, Any]:
         """
         Decompose portfolio variance into components.
 
@@ -451,7 +451,7 @@ class PortfolioVarianceStressTester:
         """
         try:
             if portfolio.total_equity == 0:
-                return {'error': 'Portfolio value is zero'}
+                return {"error": "Portfolio value is zero"}
 
             # Calculate weights
             weights = {}
@@ -489,11 +489,11 @@ class PortfolioVarianceStressTester:
 
                 # Position contribution (simplified)
                 position_contributions[symbol] = {
-                    'weight': w,
-                    'volatility': sigma,
-                    'diagonal_risk': diagonal,
-                    'covariance_risk': off_diag,
-                    'total_contribution': diagonal + off_diag,
+                    "weight": w,
+                    "volatility": sigma,
+                    "diagonal_risk": diagonal,
+                    "covariance_risk": off_diag,
+                    "total_contribution": diagonal + off_diag,
                 }
 
             total_variance = diagonal_variance + off_diagonal_covariance
@@ -502,8 +502,8 @@ class PortfolioVarianceStressTester:
             for symbol in position_contributions:
                 contrib = position_contributions[symbol]
                 if total_variance > 0:
-                    contrib['contribution_pct'] = (
-                        contrib['total_contribution'] / total_variance * 100
+                    contrib["contribution_pct"] = (
+                        contrib["total_contribution"] / total_variance * 100
                     )
 
             # Diversification ratio
@@ -513,27 +513,27 @@ class PortfolioVarianceStressTester:
             diversification_ratio = weighted_avg_vol / portfolio_vol if portfolio_vol > 0 else 1.0
 
             return {
-                'total_variance': total_variance,
-                'portfolio_volatility': portfolio_vol,
-                'diagonal_variance': diagonal_variance,
-                'off_diagonal_covariance': off_diagonal_covariance,
-                'diagonal_pct': (
+                "total_variance": total_variance,
+                "portfolio_volatility": portfolio_vol,
+                "diagonal_variance": diagonal_variance,
+                "off_diagonal_covariance": off_diagonal_covariance,
+                "diagonal_pct": (
                     diagonal_variance / total_variance * 100 if total_variance > 0 else 0
                 ),
-                'off_diagonal_pct': (
+                "off_diagonal_pct": (
                     off_diagonal_covariance / total_variance * 100 if total_variance > 0 else 0
                 ),
-                'position_contributions': position_contributions,
-                'diversification_ratio': diversification_ratio,
-                'diversification_benefit': diversification_ratio - 1.0,
-                'interpretation': self._interpret_variance_decomposition(
+                "position_contributions": position_contributions,
+                "diversification_ratio": diversification_ratio,
+                "diversification_benefit": diversification_ratio - 1.0,
+                "interpretation": self._interpret_variance_decomposition(
                     diagonal_variance, off_diagonal_covariance, total_variance
                 ),
             }
 
         except (ValueError, TypeError, KeyError, AttributeError) as e:
-            self.logger.error(f'Error decomposing variance: {e}', exc_info=True)
-            return {'error': str(e)}
+            self.logger.error(f"Error decomposing variance: {e}", exc_info=True)
+            return {"error": str(e)}
 
     def _interpret_variance_decomposition(
         self,
@@ -543,32 +543,32 @@ class PortfolioVarianceStressTester:
     ) -> str:
         """Interpret variance decomposition."""
         if total_variance == 0:
-            return 'No variance to decompose'
+            return "No variance to decompose"
 
         diag_pct = diagonal_variance / total_variance * 100
 
         if diag_pct > 80:
             return (
-                f'High idiosyncratic risk ({diag_pct:.1f}% from diagonal). '
-                f'Limited diversification benefits. Consider adding uncorrelated assets.'
+                f"High idiosyncratic risk ({diag_pct:.1f}% from diagonal). "
+                f"Limited diversification benefits. Consider adding uncorrelated assets."
             )
         elif diag_pct > 60:
             return (
-                f'Moderate idiosyncratic risk ({diag_pct:.1f}% from diagonal). '
-                f'Some diversification benefits present.'
+                f"Moderate idiosyncratic risk ({diag_pct:.1f}% from diagonal). "
+                f"Some diversification benefits present."
             )
         else:
             return (
-                f'Good diversification ({diag_pct:.1f}% from diagonal). '
-                f'Portfolio benefits from correlation structure.'
+                f"Good diversification ({diag_pct:.1f}% from diagonal). "
+                f"Portfolio benefits from correlation structure."
             )
 
     def calculate_concentration_stress(
         self,
         portfolio: Portfolio,
-        volatilities: Dict[str, float],
+        volatilities: dict[str, float],
         concentration_threshold: float = 0.30,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Calculate variance stress from concentration risk.
 
@@ -584,7 +584,7 @@ class PortfolioVarianceStressTester:
         """
         try:
             if portfolio.total_equity == 0:
-                return {'error': 'Portfolio value is zero'}
+                return {"error": "Portfolio value is zero"}
 
             # Find largest position
             positions_by_value = sorted(
@@ -594,7 +594,7 @@ class PortfolioVarianceStressTester:
             )
 
             if not positions_by_value:
-                return {'error': 'No positions in portfolio'}
+                return {"error": "No positions in portfolio"}
 
             largest_position = positions_by_value[0]
             largest_weight = float(largest_position.market_value / portfolio.total_equity)
@@ -604,8 +604,8 @@ class PortfolioVarianceStressTester:
 
             if not remaining_positions:
                 return {
-                    'error': 'Portfolio has only one position',
-                    'largest_weight': largest_weight,
+                    "error": "Portfolio has only one position",
+                    "largest_weight": largest_weight,
                 }
 
             # Simulate stress: largest position drops by 3 sigma
@@ -622,35 +622,35 @@ class PortfolioVarianceStressTester:
             is_concentrated = largest_weight > concentration_threshold
 
             if is_concentrated:
-                severity = 'HIGH' if largest_weight > 0.50 else 'MODERATE'
+                severity = "HIGH" if largest_weight > 0.50 else "MODERATE"
                 recommendation = (
-                    f'Position {largest_position.symbol} is {largest_weight:.1%} of portfolio. '
-                    f'Consider reducing concentration or implementing hedging.'
+                    f"Position {largest_position.symbol} is {largest_weight:.1%} of portfolio. "
+                    f"Consider reducing concentration or implementing hedging."
                 )
             else:
-                severity = 'LOW'
-                recommendation = 'Concentration within acceptable limits'
+                severity = "LOW"
+                recommendation = "Concentration within acceptable limits"
 
             return {
-                'largest_position': largest_position.symbol,
-                'largest_weight': largest_weight,
-                'largest_volatility': largest_vol,
-                'is_concentrated': is_concentrated,
-                'concentration_threshold': concentration_threshold,
-                'stress_scenario': {
-                    'shock': '3-sigma adverse move',
-                    'expected_return': stress_return,
-                    'portfolio_loss': portfolio_loss,
-                    'loss_pct': portfolio_loss * 100,
+                "largest_position": largest_position.symbol,
+                "largest_weight": largest_weight,
+                "largest_volatility": largest_vol,
+                "is_concentrated": is_concentrated,
+                "concentration_threshold": concentration_threshold,
+                "stress_scenario": {
+                    "shock": "3-sigma adverse move",
+                    "expected_return": stress_return,
+                    "portfolio_loss": portfolio_loss,
+                    "loss_pct": portfolio_loss * 100,
                 },
-                'variance_contribution': variance_contribution,
-                'severity': severity,
-                'recommendation': recommendation,
+                "variance_contribution": variance_contribution,
+                "severity": severity,
+                "recommendation": recommendation,
             }
 
         except (ValueError, TypeError, AttributeError) as e:
-            self.logger.error(f'Error calculating concentration stress: {e}', exc_info=True)
-            return {'error': str(e)}
+            self.logger.error(f"Error calculating concentration stress: {e}", exc_info=True)
+            return {"error": str(e)}
 
     def _get_timestamp(self) -> str:
         """Get current timestamp."""

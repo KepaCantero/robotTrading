@@ -9,7 +9,7 @@ portfolio exposure while locking in losses.
 import logging
 from dataclasses import dataclass
 from decimal import Decimal
-from typing import Dict, List, Optional
+from typing import Optional
 
 logger = logging.getLogger(__name__)
 
@@ -23,7 +23,7 @@ class HarvestablePosition:
     purchase_price: Decimal
     current_price: Decimal
     unrealized_loss: Decimal  # Negative value
-    tax_benefit: Decimal  # Loss × marginal tax rate
+    tax_benefit: Decimal  # Loss * marginal tax rate
     hold_period_days: int
 
 
@@ -53,7 +53,7 @@ class TaxLossHarvester:
 
     Features:
     - Position-level loss identification
-    - Tax benefit calculation (loss × marginal_tax_rate)
+    - Tax benefit calculation (loss * marginal_tax_rate)
     - Replacement position suggestion (wash-sale compliant)
     - Annual tax benefit aggregation
     - Integration with portfolio rebalancing
@@ -71,12 +71,12 @@ class TaxLossHarvester:
 
     def identify_harvestable_positions(
         self,
-        positions: Dict[str, Decimal],  # symbol → current_value
-        cost_basis: Dict[str, Decimal],  # symbol → total_cost
-        quantities: Dict[str, Decimal],  # symbol → quantity
-        current_prices: Dict[str, Decimal],  # symbol → price
+        positions: dict[str, Decimal],  # symbol -> current_value
+        cost_basis: dict[str, Decimal],  # symbol -> total_cost
+        quantities: dict[str, Decimal],  # symbol -> quantity
+        current_prices: dict[str, Decimal],  # symbol -> price
         min_loss_threshold: Optional[Decimal] = None,  # Minimum loss to consider
-    ) -> List[HarvestablePosition]:
+    ) -> list[HarvestablePosition]:
         """
         Identify positions with unrealized losses eligible for harvesting.
 
@@ -132,7 +132,7 @@ class TaxLossHarvester:
         """
         Calculate tax benefit from harvesting a loss.
 
-        Formula: Tax Benefit = |Loss| × Marginal Tax Rate
+        Formula: Tax Benefit = |Loss| * Marginal Tax Rate
 
         Args:
             unrealized_loss: Negative value representing the loss
@@ -159,8 +159,8 @@ class TaxLossHarvester:
 
         Strategy: Replace with highly correlated but not identical security
         Examples:
-        - AAPL → MSFT, SPY, QQQ (tech-heavy)
-        - BND → AGG (broad bonds)
+        - AAPL -> MSFT, SPY, QQQ (tech-heavy)
+        - BND -> AGG (broad bonds)
 
         Args:
             harvested_symbol: Symbol being harvested
@@ -198,10 +198,10 @@ class TaxLossHarvester:
 
     def estimate_annual_tax_benefit(
         self,
-        harvestable_positions: List[HarvestablePosition],
+        harvestable_positions: list[HarvestablePosition],
         marginal_tax_rate: Decimal,
         capital_losses_carryforward: Optional[Decimal] = None,
-    ) -> Dict:
+    ) -> dict:
         """
         Estimate total annual tax benefit from all harvestable positions.
 

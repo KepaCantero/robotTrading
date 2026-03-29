@@ -9,7 +9,7 @@ import logging
 import statistics
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Optional
 
 import pandas as pd
 
@@ -18,14 +18,14 @@ logger = logging.getLogger(__name__)
 
 def save_backtest_result(
     result_key: str,
-    result: Dict,
+    result: dict,
     module: str,
     config: str,
     symbol: str,
     start_date: datetime,
     end_date: datetime,
     project_root: Path,
-) -> Dict[str, Path]:
+) -> dict[str, Path]:
     """
     Save backtest result to /docs directory structure.
 
@@ -93,7 +93,7 @@ def generate_report_markdown(
     symbol: str,
     start_date: datetime,
     end_date: datetime,
-    result: Dict,
+    result: dict,
 ) -> str:
     """Generate markdown report for backtest result."""
 
@@ -107,7 +107,7 @@ def generate_report_markdown(
 **Configuration:** {config}
 **Symbol:** {symbol}
 **Period:** {start_date.date()} to {end_date.date()}
-**Execution Date:** {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
+**Execution Date:** {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
 
 ### Performance Overview
 
@@ -115,12 +115,12 @@ def generate_report_markdown(
 
 ## Key Metrics
 
-- **Total Trades:** {metrics.get('total_trades', 0)}
-- **Win Rate:** {float(metrics.get('win_rate', 0)):.2f}%
-- **Total PnL:** ${float(metrics.get('total_pnl', 0)):,.2f}
-- **Sharpe Ratio:** {metrics.get('sharpe_ratio', 'N/A')}
-- **Max Drawdown:** {float(metrics.get('max_drawdown_percentage', 0)):.2f}%
-- **Final Capital:** ${float(metrics.get('final_capital', 100000)):,.2f}
+- **Total Trades:** {metrics.get("total_trades", 0)}
+- **Win Rate:** {float(metrics.get("win_rate", 0)):.2f}%
+- **Total PnL:** ${float(metrics.get("total_pnl", 0)):,.2f}
+- **Sharpe Ratio:** {metrics.get("sharpe_ratio", "N/A")}
+- **Max Drawdown:** {float(metrics.get("max_drawdown_percentage", 0)):.2f}%
+- **Final Capital:** ${float(metrics.get("final_capital", 100000)):,.2f}
 
 ## Behavioral Analysis
 
@@ -148,14 +148,18 @@ def generate_report_markdown(
     return report
 
 
-def _generate_performance_summary(metrics: Dict) -> str:
+def _generate_performance_summary(metrics: dict) -> str:
     """Generate textual performance summary."""
 
-    float(metrics.get('win_rate', 0))
-    sharpe = metrics.get('sharpe_ratio', 0)
-    float(metrics.get('max_drawdown_percentage', 0))
+    float(metrics.get("win_rate", 0))
+    sharpe = metrics.get("sharpe_ratio", 0)
+    float(metrics.get("max_drawdown_percentage", 0))
 
-    if sharpe and float(sharpe) > 2 or sharpe and float(sharpe) > 1 or sharpe and float(sharpe) > 0:
+    if (
+        (sharpe and float(sharpe) > 2)
+        or (sharpe and float(sharpe) > 1)
+        or (sharpe and float(sharpe) > 0)
+    ):
         pass
     else:
         pass
@@ -169,7 +173,7 @@ with a Sharpe ratio of {sharpe or 'N/A'} and maximum drawdown of {drawdown:.2f}%
     return summary
 
 
-def _generate_decision_analysis(result: Dict) -> str:
+def _generate_decision_analysis(result: dict) -> str:
     """Generate decision pattern analysis."""
 
     if not result.get("trades"):
@@ -186,7 +190,7 @@ def _generate_decision_analysis(result: Dict) -> str:
 """
 
 
-def _generate_market_analysis(result: Dict) -> str:
+def _generate_market_analysis(result: dict) -> str:
     """Generate market condition analysis."""
 
     return """
@@ -202,7 +206,7 @@ def update_summary_index(
     module: str,
     config: str,
     period: str,
-    metrics: Dict,
+    metrics: dict,
     project_root: Path,
 ):
     """Update the summary_index.md with new backtest result."""
@@ -212,18 +216,18 @@ def update_summary_index(
 
     # Read current index
     if index_file.exists():
-        with open(index_file, "r") as f:
+        with open(index_file) as f:
             content = f.read()
     else:
         content = ""
 
     # Extract table lines
-    lines = content.split('\n')
+    lines = content.split("\n")
     insert_index = len(lines)
 
     # Find table start
     for i, line in enumerate(lines):
-        if line.startswith('| Módulo') or line.startswith('| Module'):
+        if line.startswith("| Módulo") or line.startswith("| Module"):
             insert_index = i + 2  # After header and separator
             break
 
@@ -245,7 +249,7 @@ def update_summary_index(
 
     # Write back
     with open(index_file, "w") as f:
-        f.write('\n'.join(lines))
+        f.write("\n".join(lines))
 
     logger.info(
         "Summary index updated",
@@ -254,7 +258,7 @@ def update_summary_index(
 
 
 def generate_backend_test_summary(
-    all_results: List[Dict],
+    all_results: list[dict],
     strategy: str,
     preset: str,
     symbol: str,
@@ -262,7 +266,7 @@ def generate_backend_test_summary(
     end_date: datetime,
     initial_capital: float,
     project_root: Path,
-    multi_strategy_results: Optional[Dict] = None,
+    multi_strategy_results: Optional[dict] = None,
 ) -> Path:
     """
     Generate professional Backend Test Result Summary.
@@ -354,7 +358,7 @@ def generate_backend_test_summary(
     return summary_file
 
 
-def _aggregate_metrics(all_results: List[Dict]) -> Dict:
+def _aggregate_metrics(all_results: list[dict]) -> dict:
     """Aggregate metrics from all module results."""
     logger.debug("Aggregating metrics", extra={"results_count": len(all_results)})
     if not all_results:
@@ -389,23 +393,21 @@ def _aggregate_metrics(all_results: List[Dict]) -> Dict:
 
 
 def _generate_comprehensive_backend_report(
-    metrics: Dict,
+    metrics: dict,
     strategy: str,
     preset: str,
     symbol: str,
     start_date: datetime,
     end_date: datetime,
     initial_capital: float,
-    all_results: List[Dict],
-    multi_strategy_results: Optional[Dict] = None,
+    all_results: list[dict],
+    multi_strategy_results: Optional[dict] = None,
 ) -> str:
     """Generate comprehensive backend test report."""
     logger.debug(
         "Generating comprehensive backend report",
         extra={"strategy": strategy, "preset": preset, "symbol": symbol},
     )
-
-    (end_date - start_date).days
 
     # Section 1: Context
     context = """# 🧩 Backend Test Result Summary
@@ -465,7 +467,7 @@ The backtest evaluated the following system modules:
 
         allocation = multi_strategy_results.get("allocation", {})
         for name, alloc_data in allocation.items():
-            context += f"- **{name}**: ${alloc_data.get('capital', 0):,.2f} ({alloc_data.get('weight', 0)*100:.1f}%)\n"
+            context += f"- **{name}**: ${alloc_data.get('capital', 0):,.2f} ({alloc_data.get('weight', 0) * 100:.1f}%)\n"
 
     # Section 2: Results
     avg_win_rate = metrics.get("avg_win_rate", 0)
@@ -635,14 +637,14 @@ def _calculate_calmar_estimate(ret: float, drawdown: float) -> float:
     return annual_return / abs(drawdown) if drawdown != 0 else 0.0
 
 
-def _calculate_cvar(metrics: Dict) -> float:
+def _calculate_cvar(metrics: dict) -> float:
     """Calculate Conditional Value at Risk (CVaR / Expected Shortfall)."""
     max_dd = metrics.get("avg_total_return", 0) * 0.3  # Estimate from max drawdown
     # CVaR is typically worse than VaR
     return abs(max_dd * 1.3)
 
 
-def _calculate_alpha_beta(avg_return: float, market_return: float = 10.0) -> Dict[str, float]:
+def _calculate_alpha_beta(avg_return: float, market_return: float = 10.0) -> dict[str, float]:
     """Calculate alpha and beta vs benchmark (SPY)."""
     # Simple estimates
     alpha = avg_return - market_return  # Excess return
@@ -682,7 +684,7 @@ def _estimate_risk_reward(win_rate: float) -> float:
         return win_rate / 50
 
 
-def _generate_multi_strategy_section(multi_strategy_results: Optional[Dict]) -> str:
+def _generate_multi_strategy_section(multi_strategy_results: Optional[dict]) -> str:
     """Generate multi-strategy analysis section."""
     if not multi_strategy_results:
         return ""
@@ -723,7 +725,7 @@ def _generate_multi_strategy_section(multi_strategy_results: Optional[Dict]) -> 
     return section
 
 
-def _generate_module_analysis(all_results: List[Dict]) -> str:
+def _generate_module_analysis(all_results: list[dict]) -> str:
     """Generate module-specific analysis."""
     logger.debug("Generating module analysis", extra={"modules_count": len(all_results)})
     analysis = """
@@ -752,7 +754,7 @@ def _generate_module_analysis(all_results: List[Dict]) -> str:
     return analysis
 
 
-def _analyze_module_behavior(module_name: str, result: Dict) -> str:
+def _analyze_module_behavior(module_name: str, result: dict) -> str:
     """Analyze module behavior."""
     trades = result.get("total_trades", 0)
     win_rate = result.get("win_rate", 0)
@@ -772,7 +774,7 @@ def _analyze_module_behavior(module_name: str, result: Dict) -> str:
     return analysis
 
 
-def _generate_behavior_analysis(all_results: List[Dict], strategy: str) -> str:
+def _generate_behavior_analysis(all_results: list[dict], strategy: str) -> str:
     """Generate behavior analysis section."""
     sum(r.get("total_trades", 0) for r in all_results)
     (
@@ -837,7 +839,7 @@ def _assess_win_rate_detailed(win_rate: float) -> str:
         return "is below expectation - strategy needs optimization"
 
 
-def _generate_reliability_assessment(all_results: List[Dict]) -> str:
+def _generate_reliability_assessment(all_results: list[dict]) -> str:
     """Generate reliability assessment."""
     return """
 ## 5. 🧠 Evaluación de Fiabilidad
@@ -879,7 +881,7 @@ def _generate_reliability_assessment(all_results: List[Dict]) -> str:
 
 
 def _generate_findings_and_recommendations(
-    metrics: Dict, all_results: List[Dict], preset: str
+    metrics: dict, all_results: list[dict], preset: str
 ) -> str:
     """Generate findings and recommendations."""
     logger.debug("Generating findings and recommendations", extra={"preset": preset})
@@ -972,14 +974,14 @@ def _generate_findings_and_recommendations(
     return findings
 
 
-def _generate_conclusion(metrics: Dict, avg_return: float, avg_win_rate: float) -> str:
+def _generate_conclusion(metrics: dict, avg_return: float, avg_win_rate: float) -> str:
     """Generate final conclusion."""
     logger.debug(
         "Generating conclusion", extra={"avg_return": avg_return, "avg_win_rate": avg_win_rate}
     )
 
     # Determine status
-    if avg_return > 10 and avg_win_rate > 55 or avg_return > 0 and avg_win_rate > 40:
+    if (avg_return > 10 and avg_win_rate > 55) or (avg_return > 0 and avg_win_rate > 40):
         pass
     else:
         pass

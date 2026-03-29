@@ -8,7 +8,7 @@ TASK-24: OCP Compliance - Protocol interfaces for configuration
 """
 
 from pathlib import Path
-from typing import Dict, List, Optional, Protocol, runtime_checkable
+from typing import Optional, Protocol, runtime_checkable
 
 
 @runtime_checkable
@@ -32,7 +32,7 @@ class ConfigProvider(Protocol):
 class FileConfigLoader(Protocol):
     """Protocol for configuration file loaders."""
 
-    def load(self, config_path: Path) -> Dict[str, object]:
+    def load(self, config_path: Path) -> dict[str, object]:
         """Load configuration from file."""
         ...
 
@@ -45,11 +45,11 @@ class FileConfigLoader(Protocol):
 class ConfigValidator(Protocol):
     """Protocol for configuration validators."""
 
-    def validate(self, config: Dict[str, object]) -> bool:
+    def validate(self, config: dict[str, object]) -> bool:
         """Validate configuration dictionary."""
         ...
 
-    def get_errors(self) -> List[str]:
+    def get_errors(self) -> list[str]:
         """Get validation errors."""
         ...
 
@@ -58,7 +58,7 @@ class ConfigValidator(Protocol):
 class ConfigMerger(Protocol):
     """Protocol for configuration mergers."""
 
-    def merge(self, base: Dict[str, object], override: Dict[str, object]) -> Dict[str, object]:
+    def merge(self, base: dict[str, object], override: dict[str, object]) -> dict[str, object]:
         """Merge two configurations."""
         ...
 
@@ -67,11 +67,11 @@ class ConfigMerger(Protocol):
 class ConfigCache(Protocol):
     """Protocol for configuration caching."""
 
-    def get_cached(self, config_path: Path) -> Optional[Dict[str, object]]:
+    def get_cached(self, config_path: Path) -> Optional[dict[str, object]]:
         """Get cached configuration if available and valid."""
         ...
 
-    def set_cached(self, config_path: Path, config: Dict[str, object]) -> None:
+    def set_cached(self, config_path: Path, config: dict[str, object]) -> None:
         """Cache configuration."""
         ...
 

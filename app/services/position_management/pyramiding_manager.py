@@ -15,7 +15,7 @@ from __future__ import annotations
 import logging
 from dataclasses import dataclass
 from decimal import Decimal
-from typing import List, Optional
+from typing import ClassVar
 
 logger = logging.getLogger(__name__)
 
@@ -36,7 +36,7 @@ class PyramidingResult:
     """Resultado de evaluar pyramiding."""
 
     can_add: bool
-    size_to_add: Optional[Decimal]
+    size_to_add: Decimal | None
     reason: str
     additions_remaining: int
 
@@ -57,7 +57,7 @@ class PyramidingManager:
         additions: Lista de porcentajes de adición
     """
 
-    DEFAULT_ADDITIONS = [
+    DEFAULT_ADDITIONS: ClassVar[list] = [
         Decimal("0.5"),  # 50% del tamaño inicial
         Decimal("0.25"),  # 25% del tamaño inicial
     ]
@@ -66,8 +66,8 @@ class PyramidingManager:
         self,
         initial_size: Decimal,
         max_additions: int = 2,
-        first_addition_pct: Optional[Decimal] = None,
-        second_addition_pct: Optional[Decimal] = None,
+        first_addition_pct: Decimal | None = None,
+        second_addition_pct: Decimal | None = None,
     ):
         """
         Inicializar PyramidingManager.
@@ -93,7 +93,7 @@ class PyramidingManager:
             self.additions = self.DEFAULT_ADDITIONS[:max_additions]
 
         self.current_additions = 0
-        self.addition_history: List[PyramidingAddition] = []
+        self.addition_history: list[PyramidingAddition] = []
 
     def can_add_position(self, current_pnl: Decimal) -> PyramidingResult:
         """
@@ -136,7 +136,7 @@ class PyramidingManager:
             additions_remaining=self.max_additions - self.current_additions - 1,
         )
 
-    def get_addition_size(self) -> Optional[Decimal]:
+    def get_addition_size(self) -> Decimal | None:
         """
         Calcular tamaño de siguiente adición.
 
@@ -186,7 +186,7 @@ class PyramidingManager:
 
         return result
 
-    def get_addition_history(self) -> List[PyramidingAddition]:
+    def get_addition_history(self) -> list[PyramidingAddition]:
         """Obtener historial de adiciones."""
         return self.addition_history.copy()
 
@@ -225,7 +225,7 @@ class PyramidingManager:
         }
 
     @classmethod
-    def from_dict(cls, data: dict) -> "PyramidingManager":
+    def from_dict(cls, data: dict) -> PyramidingManager:
         """Crear instancia desde diccionario."""
         initial_size = Decimal(data["initial_size"])
         max_additions = data["max_additions"]

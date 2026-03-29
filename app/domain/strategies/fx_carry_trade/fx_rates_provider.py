@@ -18,7 +18,7 @@ from abc import abstractmethod
 from dataclasses import dataclass, field
 from datetime import date
 from decimal import Decimal
-from typing import Optional, Protocol
+from typing import Protocol
 
 from app.domain.strategies.fx_carry_trade.models import FXPair, FXRateQuote, InterestRateQuote
 from app.shared.config.centralized_config import get_config
@@ -299,8 +299,7 @@ class InMemoryFXRateProvider:
         if self._auto_load_data:
             self._load_default_data()
             logger.info(
-                f"InMemoryFXRateProvider initialized with "
-                f"{len(self.get_available_pairs())} pairs"
+                f"InMemoryFXRateProvider initialized with {len(self.get_available_pairs())} pairs"
             )
 
     def add_spot_rate(self, pair: FXPair | str, rate: Decimal, as_of: date) -> None:
@@ -458,7 +457,7 @@ class InMemoryFXRateProvider:
             # Try to find the most recent rate before as_of
             available_dates = [
                 d
-                for (b, q, d) in self._spot_rates.keys()
+                for (b, q, d) in self._spot_rates
                 if b == pair.base_currency and q == pair.quote_currency and d <= as_of
             ]
             if available_dates:
@@ -494,7 +493,7 @@ class InMemoryFXRateProvider:
             # Try to find the most recent rate before as_of
             available_dates = [
                 d
-                for (b, q, d, m) in self._forward_rates.keys()
+                for (b, q, d, m) in self._forward_rates
                 if b == pair.base_currency
                 and q == pair.quote_currency
                 and m == months
@@ -504,7 +503,7 @@ class InMemoryFXRateProvider:
                 most_recent = max(available_dates)
                 key = (pair.base_currency, pair.quote_currency, most_recent, months)
                 logger.debug(
-                    f"Using forward rate from {most_recent} for {pair} " f"({months}M) on {as_of}"
+                    f"Using forward rate from {most_recent} for {pair} ({months}M) on {as_of}"
                 )
             else:
                 raise ValueError(f"Forward rate not found for {pair} ({months}M) on {as_of}")
@@ -536,20 +535,17 @@ class InMemoryFXRateProvider:
             # Try to find the most recent rate before as_of
             available_dates = [
                 d
-                for (c, d, m) in self._interest_rates.keys()
+                for (c, d, m) in self._interest_rates
                 if c == currency and m == months and d <= as_of
             ]
             if available_dates:
                 most_recent = max(available_dates)
                 key = (currency, most_recent, months)
                 logger.debug(
-                    f"Using interest rate from {most_recent} for {currency} "
-                    f"({months}M) on {as_of}"
+                    f"Using interest rate from {most_recent} for {currency} ({months}M) on {as_of}"
                 )
             else:
-                raise ValueError(
-                    f"Interest rate not found for {currency} ({months}M) " f"on {as_of}"
-                )
+                raise ValueError(f"Interest rate not found for {currency} ({months}M) on {as_of}")
 
         return self._interest_rates[key]
 
@@ -560,7 +556,7 @@ class InMemoryFXRateProvider:
         Returns:
             List of FXPair objects with spot rate data
         """
-        pairs_set = {FXPair(base, quote) for (base, quote, _) in self._spot_rates.keys()}
+        pairs_set = {FXPair(base, quote) for (base, quote, _) in self._spot_rates}
         return sorted(pairs_set, key=lambda p: (p.base_currency, p.quote_currency))
 
     def get_available_currencies(self) -> list[str]:
@@ -573,12 +569,12 @@ class InMemoryFXRateProvider:
         currencies_set = set()
 
         # Add currencies from spot rates
-        for base, quote, _ in self._spot_rates.keys():
+        for base, quote, _ in self._spot_rates:
             currencies_set.add(base)
             currencies_set.add(quote)
 
         # Add currencies from interest rates
-        for currency, _, _ in self._interest_rates.keys():
+        for currency, _, _ in self._interest_rates:
             currencies_set.add(currency)
 
         return sorted(currencies_set)
@@ -745,7 +741,7 @@ class InMemoryFXRateProvider:
         """Return string representation of provider."""
         num_pairs = len(self.get_available_pairs())
         num_currencies = len(self.get_available_currencies())
-        return f"InMemoryFXRateProvider(" f"pairs={num_pairs}, " f"currencies={num_currencies})"
+        return f"InMemoryFXRateProvider(pairs={num_pairs}, currencies={num_currencies})"
 
     def __repr__(self) -> str:
         """Return detailed representation of provider."""
@@ -1050,7 +1046,7 @@ class CachedFXRateProvider:
         >>> rate = cached.get_spot_rate(FXPair("EUR", "USD"), date.today())
     """
 
-    def __init__(self, underlying: Optional[FXRateProvider] = None, cache_ttl: int = 3600) -> None:
+    def __init__(self, underlying: FXRateProvider | None = None, cache_ttl: int = 3600) -> None:
         """
         Initialize cached provider.
 

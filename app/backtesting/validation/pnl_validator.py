@@ -4,9 +4,10 @@ P&L Validator for backtesting results.
 Validates profit and loss calculations to ensure accuracy
 and detect potential issues in backtesting results.
 """
+
 import logging
 from decimal import Decimal
-from typing import Dict, List, Optional, Tuple
+from typing import Optional
 
 from app.backtesting.models import Trade, TradeStatus
 
@@ -16,7 +17,7 @@ logger = logging.getLogger(__name__)
 class PnLValidationError(Exception):
     """Exception raised when P&L validation fails."""
 
-    def __init__(self, message: str, details: Optional[Dict] = None):
+    def __init__(self, message: str, details: Optional[dict] = None):
         super().__init__(message)
         self.details = details or {}
 
@@ -110,7 +111,7 @@ class PnLValidator:
 
         return True
 
-    def validate_trades_pnl(self, trades: List[Trade]) -> Tuple[bool, List[str]]:
+    def validate_trades_pnl(self, trades: list[Trade]) -> tuple[bool, list[str]]:
         """
         Validate P&L for all trades.
 
@@ -132,7 +133,7 @@ class PnLValidator:
 
     def validate_total_pnl(
         self,
-        trades: List[Trade],
+        trades: list[Trade],
         reported_total: Decimal,
     ) -> bool:
         """
@@ -197,8 +198,7 @@ class PnLValidator:
 
         if commission_pct > self.max_commission_pct:
             raise PnLValidationError(
-                f"Commission too high: {commission} on {trade_value} "
-                f"({commission_pct * 100:.2f}%)",
+                f"Commission too high: {commission} on {trade_value} ({commission_pct * 100:.2f}%)",
                 details={
                     "trade_value": float(trade_value),
                     "commission": float(commission),
@@ -210,7 +210,7 @@ class PnLValidator:
 
     def validate_pnl_consistency(
         self,
-        trades: List[Trade],
+        trades: list[Trade],
         initial_capital: Decimal,
         final_capital: Decimal,
     ) -> bool:

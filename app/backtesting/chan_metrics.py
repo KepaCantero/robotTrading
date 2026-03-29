@@ -21,13 +21,15 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass
-from datetime import datetime
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import TYPE_CHECKING, Any
 
 import numpy as np
 import pandas as pd
 
 from app.shared.config.centralized_config import get_config
+
+if TYPE_CHECKING:
+    from datetime import datetime
 
 logger = logging.getLogger(__name__)
 
@@ -56,8 +58,8 @@ class DrawdownResult:
     max_drawdown_duration_days: int
     average_drawdown: float
     recovery_factor: float
-    drawdown_distribution: Dict[str, float]
-    drawdown_periods: List[Dict[str, Any]]
+    drawdown_distribution: dict[str, float]
+    drawdown_periods: list[dict[str, Any]]
 
 
 @dataclass
@@ -117,7 +119,7 @@ class ChanSharpeRatioCalculator:
     def __init__(
         self,
         risk_free_rate: float = DEFAULT_RISK_FREE_RATE,
-        trading_days: int = None,
+        trading_days: int | None = None,
     ):
         """
         Initialize Sharpe ratio calculator.
@@ -135,7 +137,7 @@ class ChanSharpeRatioCalculator:
 
     def calculate_sharpe_ratio(
         self,
-        returns: Union[pd.Series, np.ndarray, List[float]],
+        returns: pd.Series | np.ndarray | list[float],
         confidence_level: float = 0.95,
     ) -> SharpeRatioResult:
         """
@@ -200,7 +202,7 @@ class ChanSharpeRatioCalculator:
 
     def _convert_and_clean_returns(
         self,
-        returns: Union[pd.Series, np.ndarray, List[float]],
+        returns: pd.Series | np.ndarray | list[float],
     ) -> np.ndarray:
         """Convert returns to numpy array and remove NaN values."""
         if isinstance(returns, (list, pd.Series)):
@@ -209,7 +211,7 @@ class ChanSharpeRatioCalculator:
             returns_array = returns.astype(np.float64)
         return returns_array[~np.isnan(returns_array)]
 
-    def _calculate_daily_statistics(self, returns_array: np.ndarray) -> Tuple[float, float]:
+    def _calculate_daily_statistics(self, returns_array: np.ndarray) -> tuple[float, float]:
         """Calculate daily mean and standard deviation."""
         daily_mean = float(np.mean(returns_array))
         daily_std = float(np.std(returns_array, ddof=1))
@@ -219,14 +221,11 @@ class ChanSharpeRatioCalculator:
         self,
         daily_mean: float,
         daily_std: float,
-    ) -> Tuple[float, float]:
+    ) -> tuple[float, float]:
         """Calculate daily and annualized Sharpe ratios."""
         daily_rf = self.risk_free_rate / self.trading_days
 
-        if daily_std == 0:
-            daily_sharpe = 0.0
-        else:
-            daily_sharpe = (daily_mean - daily_rf) / daily_std
+        daily_sharpe = 0.0 if daily_std == 0 else (daily_mean - daily_rf) / daily_std
 
         annualized_sharpe = daily_sharpe * np.sqrt(self.trading_days)
         return daily_sharpe, annualized_sharpe
@@ -274,7 +273,7 @@ class ChanSharpeRatioCalculator:
         sharpe: float,
         n_obs: int,
         confidence_level: float,
-    ) -> Tuple[float, float]:
+    ) -> tuple[float, float]:
         """
         Calculate confidence interval for Sharpe ratio.
 
@@ -354,8 +353,8 @@ class ChanDrawdownAnalyzer:
 
     def analyze_drawdown(
         self,
-        equity_curve: Union[pd.Series, np.ndarray, List[float]],
-        dates: Optional[Union[pd.DatetimeIndex, List[datetime]]] = None,
+        equity_curve: pd.Series | np.ndarray | list[float],
+        dates: pd.DatetimeIndex | list[datetime] | None = None,
     ) -> DrawdownResult:
         """
         Analyze drawdown characteristics.
@@ -412,7 +411,7 @@ class ChanDrawdownAnalyzer:
 
     def _convert_and_clean_equity(
         self,
-        equity_curve: Union[pd.Series, np.ndarray, List[float]],
+        equity_curve: pd.Series | np.ndarray | list[float],
     ) -> np.ndarray:
         """Convert equity curve to numpy array and remove NaN values."""
         if isinstance(equity_curve, (list, pd.Series)):
@@ -424,7 +423,7 @@ class ChanDrawdownAnalyzer:
     def _calculate_drawdown_from_peak(
         self,
         equity_array: np.ndarray,
-    ) -> Tuple[np.ndarray, np.ndarray]:
+    ) -> tuple[np.ndarray, np.ndarray]:
         """Calculate drawdown from running peak."""
         running_peak = np.maximum.accumulate(equity_array)
         drawdown = (equity_array - running_peak) / running_peak
@@ -434,7 +433,7 @@ class ChanDrawdownAnalyzer:
         self,
         drawdown: np.ndarray,
         equity_array: np.ndarray,
-    ) -> Tuple[float, float, int, int]:
+    ) -> tuple[float, float, int, int]:
         """Find maximum drawdown and its location."""
         max_dd = float(drawdown.min())
         max_dd_pct = max_dd * 100
@@ -444,7 +443,7 @@ class ChanDrawdownAnalyzer:
 
     def _calculate_drawdown_duration(
         self,
-        dates: Optional[Union[pd.DatetimeIndex, List[datetime]]],
+        dates: pd.DatetimeIndex | list[datetime] | None,
         max_dd_idx: int,
         peak_idx: int,
     ) -> int:
@@ -478,7 +477,7 @@ class ChanDrawdownAnalyzer:
             return (final_value - peak_value) / abs(max_dd)
         return 0.0
 
-    def _calculate_drawdown_distribution(self, drawdown: np.ndarray) -> Dict[str, float]:
+    def _calculate_drawdown_distribution(self, drawdown: np.ndarray) -> dict[str, float]:
         """Calculate distribution of drawdowns."""
         try:
             negative_dd = drawdown[drawdown < 0]
@@ -506,8 +505,8 @@ class ChanDrawdownAnalyzer:
     def _identify_drawdown_periods(
         self,
         drawdown: np.ndarray,
-        dates: Optional[pd.DatetimeIndex] = None,
-    ) -> List[Dict[str, Any]]:
+        dates: pd.DatetimeIndex | None = None,
+    ) -> list[dict[str, Any]]:
         """Identify significant drawdown periods."""
         try:
             periods = []
@@ -544,7 +543,7 @@ class ChanDrawdownAnalyzer:
 
     def _calculate_period_duration(
         self,
-        dates: Optional[pd.DatetimeIndex],
+        dates: pd.DatetimeIndex | None,
         peak_idx: int,
         trough_idx: int,
         start_idx: int,
@@ -583,7 +582,7 @@ class ChanCalmarRatioCalculator:
     Higher is better. Good strategies have Calmar > 1.
     """
 
-    def __init__(self, trading_days: int = None):
+    def __init__(self, trading_days: int | None = None):
         """
         Initialize Calmar ratio calculator.
 
@@ -598,8 +597,8 @@ class ChanCalmarRatioCalculator:
 
     def calculate_calmar_ratio(
         self,
-        returns: Union[pd.Series, np.ndarray, List[float]],
-        equity_curve: Optional[Union[pd.Series, np.ndarray, List[float]]] = None,
+        returns: pd.Series | np.ndarray | list[float],
+        equity_curve: pd.Series | np.ndarray | list[float] | None = None,
     ) -> CalmarRatioResult:
         """
         Calculate Calmar ratio.
@@ -645,7 +644,7 @@ class ChanCalmarRatioCalculator:
 
     def _convert_and_clean_returns(
         self,
-        returns: Union[pd.Series, np.ndarray, List[float]],
+        returns: pd.Series | np.ndarray | list[float],
     ) -> np.ndarray:
         """Convert returns to numpy array and remove NaN values."""
         if isinstance(returns, (list, pd.Series)):
@@ -662,7 +661,7 @@ class ChanCalmarRatioCalculator:
     def _calculate_max_drawdown(
         self,
         returns_array: np.ndarray,
-        equity_curve: Optional[Union[pd.Series, np.ndarray, List[float]]],
+        equity_curve: pd.Series | np.ndarray | list[float] | None,
     ) -> float:
         """Calculate maximum drawdown from equity curve or returns."""
         if equity_curve is not None:
@@ -678,7 +677,7 @@ class ChanCalmarRatioCalculator:
 
     def _convert_equity_array(
         self,
-        equity_curve: Union[pd.Series, np.ndarray, List[float]],
+        equity_curve: pd.Series | np.ndarray | list[float],
     ) -> np.ndarray:
         """Convert equity curve to numpy array."""
         if isinstance(equity_curve, (list, pd.Series)):
@@ -728,8 +727,8 @@ class ChanReturnDistributionAnalyzer:
 
     def analyze_return_distribution(
         self,
-        returns: Union[pd.Series, np.ndarray, List[float]],
-        benchmark_returns: Optional[Union[pd.Series, np.ndarray, List[float]]] = None,
+        returns: pd.Series | np.ndarray | list[float],
+        benchmark_returns: pd.Series | np.ndarray | list[float] | None = None,
     ) -> ReturnDistributionMetrics:
         """
         Analyze return distribution characteristics.
@@ -775,7 +774,7 @@ class ChanReturnDistributionAnalyzer:
 
     def _convert_and_clean_returns(
         self,
-        returns: Union[pd.Series, np.ndarray, List[float]],
+        returns: pd.Series | np.ndarray | list[float],
     ) -> np.ndarray:
         """Convert returns to numpy array and remove NaN values."""
         if isinstance(returns, (list, pd.Series)):
@@ -787,7 +786,7 @@ class ChanReturnDistributionAnalyzer:
     def _calculate_basic_statistics(
         self,
         returns_array: np.ndarray,
-    ) -> Tuple[float, float, float]:
+    ) -> tuple[float, float, float]:
         """Calculate basic return statistics."""
         mean_return = float(np.mean(returns_array))
         median_return = float(np.median(returns_array))
@@ -797,7 +796,7 @@ class ChanReturnDistributionAnalyzer:
     def _calculate_win_loss_ratios(
         self,
         returns_array: np.ndarray,
-    ) -> Tuple[float, float]:
+    ) -> tuple[float, float]:
         """Calculate win/loss ratios."""
         positive_returns = returns_array[returns_array > 0]
         negative_returns = returns_array[returns_array < 0]
@@ -809,7 +808,7 @@ class ChanReturnDistributionAnalyzer:
     def _calculate_extreme_returns(
         self,
         returns_array: np.ndarray,
-    ) -> Tuple[float, float]:
+    ) -> tuple[float, float]:
         """Calculate best and worst day returns."""
         best_day = float(returns_array.max())
         worst_day = float(returns_array.min())
@@ -818,8 +817,8 @@ class ChanReturnDistributionAnalyzer:
     def _calculate_capture_ratios(
         self,
         returns_array: np.ndarray,
-        benchmark_returns: Optional[Union[pd.Series, np.ndarray, List[float]]],
-    ) -> Tuple[float, float]:
+        benchmark_returns: pd.Series | np.ndarray | list[float] | None,
+    ) -> tuple[float, float]:
         """Calculate up/down capture ratios."""
         up_capture = 0.0
         down_capture = 0.0
@@ -836,8 +835,8 @@ class ChanReturnDistributionAnalyzer:
     def _align_benchmark_returns(
         self,
         returns_array: np.ndarray,
-        benchmark_returns: Union[pd.Series, np.ndarray, List[float]],
-    ) -> Tuple[np.ndarray, np.ndarray]:
+        benchmark_returns: pd.Series | np.ndarray | list[float],
+    ) -> tuple[np.ndarray, np.ndarray]:
         """Align returns with benchmark returns."""
         if isinstance(benchmark_returns, (list, pd.Series)):
             bench_array = np.array(benchmark_returns, dtype=np.float64)
@@ -904,8 +903,8 @@ class ChanStrategyComparator:
 
     def compare_strategies(
         self,
-        returns1: Union[pd.Series, np.ndarray, List[float]],
-        returns2: Union[pd.Series, np.ndarray, List[float]],
+        returns1: pd.Series | np.ndarray | list[float],
+        returns2: pd.Series | np.ndarray | list[float],
         confidence_level: float = 0.95,
     ) -> StrategyComparisonResult:
         """
@@ -953,9 +952,9 @@ class ChanStrategyComparator:
 
     def _calculate_strategy_sharpe(
         self,
-        returns1: Union[pd.Series, np.ndarray, List[float]],
-        returns2: Union[pd.Series, np.ndarray, List[float]],
-    ) -> Tuple[float, float]:
+        returns1: pd.Series | np.ndarray | list[float],
+        returns2: pd.Series | np.ndarray | list[float],
+    ) -> tuple[float, float]:
         """Calculate Sharpe ratios for both strategies."""
         sharpe_calc = ChanSharpeRatioCalculator()
 
@@ -1046,8 +1045,8 @@ class ChanStrategyComparator:
 
 # Convenience functions
 def calculate_sharpe_ratio(
-    returns: Union[pd.Series, np.ndarray, List[float]],
-    risk_free_rate: float = None,
+    returns: pd.Series | np.ndarray | list[float],
+    risk_free_rate: float | None = None,
 ) -> float:
     """Convenience function to calculate Sharpe ratio."""
     rf = (
@@ -1061,7 +1060,7 @@ def calculate_sharpe_ratio(
 
 
 def calculate_max_drawdown(
-    equity_curve: Union[pd.Series, np.ndarray, List[float]],
+    equity_curve: pd.Series | np.ndarray | list[float],
 ) -> float:
     """Convenience function to calculate maximum drawdown."""
     analyzer = ChanDrawdownAnalyzer()
@@ -1070,7 +1069,7 @@ def calculate_max_drawdown(
 
 
 def calculate_calmar_ratio(
-    returns: Union[pd.Series, np.ndarray, List[float]],
+    returns: pd.Series | np.ndarray | list[float],
 ) -> float:
     """Convenience function to calculate Calmar ratio."""
     calc = ChanCalmarRatioCalculator()

@@ -9,7 +9,7 @@ TODO: Complete implementation in PHASE 4
 
 from datetime import datetime
 from decimal import Decimal
-from typing import List, Optional
+from typing import Optional
 
 from pydantic import BaseModel, Field
 
@@ -31,10 +31,10 @@ class DeploymentInput(BaseModel):
 
     # From validation engine
     validation_passed: bool = Field(..., description="Validation gates passed")
-    validation_failures: List[str] = Field(
+    validation_failures: list[str] = Field(
         default_factory=list, description="Validation failure reasons"
     )
-    validation_warnings: List[str] = Field(default_factory=list, description="Validation warnings")
+    validation_warnings: list[str] = Field(default_factory=list, description="Validation warnings")
 
     # From strategy recommender
     recommendation_score: Decimal = Field(..., description="Recommendation score (0-100)")

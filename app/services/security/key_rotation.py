@@ -15,7 +15,7 @@ import logging
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Dict, List, Optional
+from typing import Optional
 
 logger = logging.getLogger(__name__)
 
@@ -83,8 +83,8 @@ class KeyRotationManager:
 
     def __init__(self):
         """Initialize the key rotation manager."""
-        self._schedules: Dict[str, RotationSchedule] = {}
-        self._rotation_history: List[RotationResult] = []
+        self._schedules: dict[str, RotationSchedule] = {}
+        self._rotation_history: list[RotationResult] = []
 
     def schedule_rotation(
         self,
@@ -133,7 +133,7 @@ class KeyRotationManager:
 
         return schedule
 
-    def check_rotations_due(self) -> List[str]:
+    def check_rotations_due(self) -> list[str]:
         """
         Check for keys due for rotation.
 
@@ -244,9 +244,7 @@ class KeyRotationManager:
                 status=RotationStatus.COMPLETED,
             )
 
-            logger.info(
-                f"Successfully rotated key {key_id} " f"(old: {old_key_id}, new: {new_key_id})"
-            )
+            logger.info(f"Successfully rotated key {key_id} (old: {old_key_id}, new: {new_key_id})")
 
         except Exception as e:
             if schedule:
@@ -312,7 +310,7 @@ class KeyRotationManager:
         """
         return self._schedules.get(key_id)
 
-    def list_schedules(self) -> List[RotationSchedule]:
+    def list_schedules(self) -> list[RotationSchedule]:
         """
         List all rotation schedules.
 
@@ -321,7 +319,7 @@ class KeyRotationManager:
         """
         return list(self._schedules.values())
 
-    def get_rotation_history(self, key_id: Optional[str] = None) -> List[RotationResult]:
+    def get_rotation_history(self, key_id: Optional[str] = None) -> list[RotationResult]:
         """
         Get rotation history.
 

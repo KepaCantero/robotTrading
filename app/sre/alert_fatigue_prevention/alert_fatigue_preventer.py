@@ -15,7 +15,7 @@ from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 import aiosqlite
 
@@ -49,7 +49,7 @@ class ProcessedAlert:
     """A processed alert with fatigue prevention applied."""
 
     alert_id: str
-    original_alert: Dict[str, Any]
+    original_alert: dict[str, Any]
     severity: AlertSeverity
     category: AlertCategory
     timestamp: datetime
@@ -59,12 +59,12 @@ class ProcessedAlert:
     reason: str
     fingerprint: str
     similarity_hash: str
-    group_id: Optional[str] = None
-    priority_score: Optional[float] = None
+    group_id: str | None = None
+    priority_score: float | None = None
     suppressed: bool = False
-    delayed_until: Optional[datetime] = None
+    delayed_until: datetime | None = None
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
         return {
             "alert_id": self.alert_id,
@@ -88,13 +88,13 @@ class AlertGroup:
     group_id: str
     name: str
     description: str
-    alerts: List[ProcessedAlert]
+    alerts: list[ProcessedAlert]
     created_at: datetime
     last_updated: datetime
 
     # Group stats
     alert_count: int = 0
-    severity_counts: Dict[str, int] = field(default_factory=dict)
+    severity_counts: dict[str, int] = field(default_factory=dict)
 
     def add_alert(self, alert: ProcessedAlert) -> None:
         """Add alert to group."""
@@ -118,13 +118,13 @@ class AlertStats:
     total_grouped: int = 0
 
     # By category
-    by_category: Dict[str, int] = field(default_factory=dict)
+    by_category: dict[str, int] = field(default_factory=dict)
 
     # By severity
-    by_severity: Dict[str, int] = field(default_factory=dict)
+    by_severity: dict[str, int] = field(default_factory=dict)
 
     # Time-based
-    last_alert_time: Optional[datetime] = None
+    last_alert_time: datetime | None = None
     alerts_last_hour: int = 0
     alerts_last_day: int = 0
 
@@ -132,7 +132,7 @@ class AlertStats:
     fatigue_score: float = 0.0  # 0.0 = no fatigue, 1.0 = maximum fatigue
     false_positive_rate: float = 0.0
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
         return {
             "total_received": self.total_received,
@@ -179,7 +179,7 @@ class AlertFatigueConfig:
     false_positive_threshold: int = 5  # Mark as false positive after N suppressions
 
     # Categories to always send
-    always_send_categories: List[str] = field(
+    always_send_categories: list[str] = field(
         default_factory=lambda: [
             AlertCategory.CRITICAL.value,
             AlertCategory.SECURITY.value,
@@ -189,7 +189,7 @@ class AlertFatigueConfig:
     # Database
     db_path: str = "data/alert_fatigue.db"
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
         return {
             "max_alerts_per_minute": self.max_alerts_per_minute,
@@ -232,7 +232,7 @@ class AlertFatiguePreventer:
     def __init__(
         self,
         service_name: str,
-        config: Optional[AlertFatigueConfig] = None,
+        config: AlertFatigueConfig | None = None,
     ):
         """
         Initialize alert fatigue preventer.
@@ -246,13 +246,13 @@ class AlertFatiguePreventer:
         self.logger = logging.getLogger(f"{__name__}.{service_name}")
 
         # State
-        self._alert_history: List[ProcessedAlert] = []
-        self._active_groups: Dict[str, AlertGroup] = {}
-        self._suppression_cache: Dict[str, datetime] = {}
-        self._false_positive_cache: Dict[str, int] = {}
+        self._alert_history: list[ProcessedAlert] = []
+        self._active_groups: dict[str, AlertGroup] = {}
+        self._suppression_cache: dict[str, datetime] = {}
+        self._false_positive_cache: dict[str, int] = {}
 
         # Rate limiting
-        self._alert_counts: Dict[str, List[datetime]] = defaultdict(list)
+        self._alert_counts: dict[str, list[datetime]] = defaultdict(list)
 
         # Statistics
         self._stats = AlertStats()
@@ -434,8 +434,8 @@ class AlertFatiguePreventer:
 
     async def process_alerts(
         self,
-        raw_alerts: List[Dict[str, Any]],
-    ) -> List[ProcessedAlert]:
+        raw_alerts: list[dict[str, Any]],
+    ) -> list[ProcessedAlert]:
         """
         Process alerts with fatigue prevention.
 
@@ -485,7 +485,7 @@ class AlertFatiguePreventer:
 
     async def _process_single_alert(
         self,
-        raw_alert: Dict[str, Any],
+        raw_alert: dict[str, Any],
     ) -> ProcessedAlert:
         """Process a single alert."""
         # Extract basic info
@@ -584,7 +584,7 @@ class AlertFatiguePreventer:
             suppressed=False,
         )
 
-    def _generate_fingerprint(self, alert: Dict[str, Any]) -> str:
+    def _generate_fingerprint(self, alert: dict[str, Any]) -> str:
         """Generate unique fingerprint for alert."""
         # Use alert type, source, and key fields
         key_fields = [
@@ -597,7 +597,7 @@ class AlertFatiguePreventer:
         fingerprint_str = ":".join(str(f) for f in key_fields)
         return hashlib.sha256(fingerprint_str.encode()).hexdigest()[:16]
 
-    def _generate_similarity_hash(self, alert: Dict[str, Any]) -> str:
+    def _generate_similarity_hash(self, alert: dict[str, Any]) -> str:
         """Generate similarity hash for grouping."""
         # Use fewer fields for similarity grouping
         similar_fields = [
@@ -686,17 +686,21 @@ class AlertFatiguePreventer:
 
     async def _find_or_create_group(
         self,
-        alert: Dict[str, Any],
+        alert: dict[str, Any],
         fingerprint: str,
-    ) -> Optional[str]:
+    ) -> str | None:
         """Find existing group or create new one."""
         similarity_hash = self._generate_similarity_hash(alert)
 
         # Look for existing group
         for group_id, group in self._active_groups.items():
-            if len(group.alerts) < self.config.max_group_size and datetime.utcnow() - group.last_updated < timedelta(
-                seconds=self.config.group_window_seconds
-            ) and group.alerts and group.alerts[0].similarity_hash == similarity_hash:
+            if (
+                len(group.alerts) < self.config.max_group_size
+                and datetime.utcnow() - group.last_updated
+                < timedelta(seconds=self.config.group_window_seconds)
+                and group.alerts
+                and group.alerts[0].similarity_hash == similarity_hash
+            ):
                 # Check if recent
                 # Check similarity
                 group_id = group.group_id
@@ -709,7 +713,7 @@ class AlertFatiguePreventer:
 
     async def _calculate_priority(
         self,
-        alert: Dict[str, Any],
+        alert: dict[str, Any],
         severity: AlertSeverity,
         category: AlertCategory,
     ) -> float:
@@ -831,7 +835,7 @@ class AlertFatiguePreventer:
 
         return self._stats
 
-    def get_summary(self) -> Dict[str, Any]:
+    def get_summary(self) -> dict[str, Any]:
         """Get alert fatigue preventer summary."""
         return {
             "service": self.service_name,

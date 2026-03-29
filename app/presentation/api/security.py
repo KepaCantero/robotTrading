@@ -19,13 +19,15 @@ import traceback
 from collections import defaultdict
 from datetime import datetime
 from functools import wraps
-from typing import Any, Callable, Dict, List, Optional, Tuple, Union
+from typing import TYPE_CHECKING, Any, Callable
 
 from fastapi import HTTPException, Request, Response, status
 from starlette.middleware.base import BaseHTTPMiddleware
-from starlette.types import ASGIApp
 
 from . import audit_logger, get_correlation_id
+
+if TYPE_CHECKING:
+    from starlette.types import ASGIApp
 
 logger = logging.getLogger(__name__)
 
@@ -57,13 +59,13 @@ class RateLimiter:
         self.default_window_seconds = default_window_seconds
 
         # Store request timestamps by key: {key: [timestamp1, timestamp2, ...]}
-        self._requests: Dict[str, List[float]] = defaultdict(list)
+        self._requests: dict[str, list[float]] = defaultdict(list)
 
         # Lock for thread-safe operations
         self._lock = asyncio.Lock()
 
         # Cleanup task
-        self._cleanup_task: Optional[asyncio.Task] = None
+        self._cleanup_task: asyncio.Task | None = None
 
     def _get_client_key(self, request: Request) -> str:
         """
@@ -99,9 +101,9 @@ class RateLimiter:
     async def is_allowed(
         self,
         key: str,
-        max_requests: Optional[int] = None,
-        window_seconds: Optional[int] = None,
-    ) -> Tuple[bool, Dict[str, Any]]:
+        max_requests: int | None = None,
+        window_seconds: int | None = None,
+    ) -> tuple[bool, dict[str, Any]]:
         """
         Check if a request is allowed under rate limiting rules.
 
@@ -175,7 +177,7 @@ class RateLimiter:
 
 
 # Global rate limiter instance
-_global_rate_limiter: Optional[RateLimiter] = None
+_global_rate_limiter: RateLimiter | None = None
 
 
 def get_rate_limiter() -> RateLimiter:
@@ -189,7 +191,7 @@ def get_rate_limiter() -> RateLimiter:
 def rate_limit(
     max_requests: int = 100,
     window_seconds: int = 60,
-    key_func: Optional[Callable[[Request], str]] = None,
+    key_func: Callable[[Request], str] | None = None,
 ):
     """
     Decorator to apply rate limiting to an endpoint.
@@ -211,15 +213,19 @@ def rate_limit(
 
     def decorator(func: Callable) -> Callable:
         @wraps(func)
-        async def wrapper(*args: object, **kwargs: Union[str, int, float, bool]) -> Union[str, int, float, bool]:
+        async def wrapper(
+            *args: object, **kwargs: object
+        ) -> object:
             # Try to extract Request from kwargs
-            request: Optional[Request] = None
+            request: Request | None = None
             for arg in args:
                 if isinstance(arg, Request):
                     request = arg
                     break
             if not request:
-                request = kwargs.get("request")
+                request_candidate = kwargs.get("request")
+                if isinstance(request_candidate, Request):
+                    request = request_candidate
 
             if not request:
                 # No request object, skip rate limiting
@@ -228,18 +234,14 @@ def rate_limit(
             rate_limiter = get_rate_limiter()
 
             # Get rate limit key
-            if key_func:
-                key = key_func(request)
-            else:
-                key = rate_limiter._get_client_key(request)
+            key = key_func(request) if key_func else rate_limiter._get_client_key(request)
 
             # Check if allowed
             is_allowed, info = await rate_limiter.is_allowed(key, max_requests, window_seconds)
 
             # Set rate limit headers
             # Note: These will be attached to the response if possible
-            if hasattr(request.state, "rate_limit_info"):
-                request.state.rate_limit_info = info
+            request.state.rate_limit_info = info
 
             if not is_allowed:
                 correlation_id = get_correlation_id()
@@ -289,7 +291,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         app: ASGIApp,
         max_requests: int = 100,
         window_seconds: int = 60,
-        exclude_paths: Optional[List[str]] = None,
+        exclude_paths: list[str] | None = None,
     ) -> None:
         """
         Initialize the rate limit middleware.
@@ -384,7 +386,7 @@ class SecurityConfig:
     ADMIN_ROLE_REQUIRED = False
 
 
-def get_user_from_request(request: Request) -> Optional[Dict[str, Any]]:
+def get_user_from_request(request: Request) -> dict[str, Any] | None:
     """
     Extract user information from the request.
 
@@ -419,7 +421,7 @@ def get_user_from_request(request: Request) -> Optional[Dict[str, Any]]:
 
 def require_auth(
     allow_api_key: bool = True,
-    roles: Optional[List[str]] = None,
+    roles: list[str] | None = None,
     require_verified: bool = False,
 ):
     """
@@ -444,15 +446,19 @@ def require_auth(
 
     def decorator(func: Callable) -> Callable:
         @wraps(func)
-        async def wrapper(*args: object, **kwargs: Union[str, int, float, bool]) -> Union[str, int, float, bool]:
+        async def wrapper(
+            *args: object, **kwargs: object
+        ) -> object:
             # Extract Request from args or kwargs
-            request: Optional[Request] = None
+            request: Request | None = None
             for arg in args:
                 if isinstance(arg, Request):
                     request = arg
                     break
             if not request:
-                request = kwargs.get("request")
+                request_candidate = kwargs.get("request")
+                if isinstance(request_candidate, Request):
+                    request = request_candidate
 
             if not request:
                 logger.warning("Authentication check failed: No request object")
@@ -570,7 +576,7 @@ def audit_log(
     operation: str,
     log_args: bool = False,
     log_result: bool = False,
-    sensitive_params: Optional[List[str]] = None,
+    sensitive_params: list[str] | None = None,
 ):
     """
     Decorator to add comprehensive audit logging to an endpoint.
@@ -593,18 +599,22 @@ def audit_log(
 
     def decorator(func: Callable) -> Callable:
         @wraps(func)
-        async def wrapper(*args: object, **kwargs: Union[str, int, float, bool]) -> Union[str, int, float, bool]:
+        async def wrapper(
+            *args: object, **kwargs: object
+        ) -> object:
             correlation_id = get_correlation_id()
             start_time = time.time()
 
             # Extract request for context
-            request: Optional[Request] = None
+            request: Request | None = None
             for arg in args:
                 if isinstance(arg, Request):
                     request = arg
                     break
             if not request:
-                request = kwargs.get("request")
+                request_candidate = kwargs.get("request")
+                if isinstance(request_candidate, Request):
+                    request = request_candidate
 
             # Prepare audit log data
             audit_data = {
@@ -752,7 +762,7 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
 # ============================================================================
 
 
-def get_cors_config() -> Dict[str, Any]:
+def get_cors_config() -> dict[str, Any]:
     """
     Get CORS configuration for FastAPI.
 
@@ -788,20 +798,20 @@ def get_cors_config() -> Dict[str, Any]:
 
 
 __all__ = [
+    "RateLimitMiddleware",
     # Rate limiting
     "RateLimiter",
-    "get_rate_limiter",
-    "rate_limit",
-    "RateLimitMiddleware",
-    # Authentication
-    "require_auth",
-    "require_admin",
-    "get_user_from_request",
     "SecurityConfig",
-    # Audit logging
-    "audit_log",
     # Security headers
     "SecurityHeadersMiddleware",
+    # Audit logging
+    "audit_log",
     # CORS
     "get_cors_config",
+    "get_rate_limiter",
+    "get_user_from_request",
+    "rate_limit",
+    "require_admin",
+    # Authentication
+    "require_auth",
 ]

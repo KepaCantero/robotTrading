@@ -15,7 +15,7 @@ Tiers:
 import logging
 from decimal import Decimal
 from enum import Enum
-from typing import Dict
+from typing import ClassVar, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -38,7 +38,7 @@ class AccountConfiguration:
     """
 
     # Tier definitions with capital ranges
-    TIER_BOUNDARIES = {
+    TIER_BOUNDARIES: ClassVar[dict] = {
         AccountTier.MICRO: (Decimal("0"), Decimal("15000")),
         AccountTier.SMALL: (Decimal("15000"), Decimal("50000")),
         AccountTier.MEDIUM: (Decimal("50000"), Decimal("250000")),
@@ -46,7 +46,7 @@ class AccountConfiguration:
     }
 
     # Recommended configurations per tier
-    TIER_CONFIGS = {
+    TIER_CONFIGS: ClassVar[dict] = {
         AccountTier.MICRO: {
             "position_size_pct": Decimal("0.02"),  # 2% per position
             "max_concurrent_trades": 1,
@@ -110,7 +110,7 @@ class AccountConfiguration:
         return AccountTier.LARGE
 
     @staticmethod
-    def get_configuration(capital: Decimal) -> Dict:
+    def get_configuration(capital: Decimal) -> dict:
         """
         Get recommended configuration for the given capital amount.
 
@@ -128,7 +128,7 @@ class AccountConfiguration:
         return config
 
     @staticmethod
-    def get_all_tier_recommendations() -> Dict[str, Dict]:
+    def get_all_tier_recommendations() -> dict[str, dict]:
         """Get recommendations for all tiers"""
         recommendations = {}
         for tier in AccountTier:
@@ -164,7 +164,7 @@ class AccountConfiguration:
         return True, f"Position size ${position_size:,.0f} acceptable for {tier.value} tier"
 
     @staticmethod
-    def get_tier_upgrade_capital(current_capital: Decimal) -> Dict[str, object]:
+    def get_tier_upgrade_capital(current_capital: Decimal) -> dict[str, object]:
         """
         Calculate what capital is needed to upgrade to the next tier.
 
@@ -202,7 +202,7 @@ class AccountConfiguration:
         }
 
     @staticmethod
-    def get_safe_trading_limits(capital: Decimal) -> Dict:
+    def get_safe_trading_limits(capital: Decimal) -> dict:
         """
         Get maximum safe trading parameters for this capital level.
 
@@ -248,7 +248,7 @@ class AccountConfiguration:
         return feature_map.get(feature, False)
 
     @staticmethod
-    def log_configuration(capital: Decimal, account_id: str = None) -> str:
+    def log_configuration(capital: Decimal, account_id: Optional[str] = None) -> str:
         """Log account configuration recommendation"""
         tier = AccountConfiguration.get_tier(capital)
         config = AccountConfiguration.TIER_CONFIGS[tier]

@@ -19,7 +19,7 @@ import contextlib
 import logging
 from datetime import datetime, timedelta
 from decimal import Decimal, InvalidOperation
-from typing import TYPE_CHECKING, Dict, List, Optional, Tuple, Union
+from typing import TYPE_CHECKING, Union
 from uuid import uuid4
 
 import pandas as pd
@@ -81,10 +81,10 @@ class StandardBacktestEngine(BaseBacktestEngine[BacktestConfig, BacktestResult])
         diagnostic_logger=None,
         strategy=None,
         enable_risk_envelope: bool = True,
-        compliance_engine: Optional[ComplianceEngine] = None,
+        compliance_engine: ComplianceEngine | None = None,
         strategy_name: str = "unknown",
-        total_portfolio_capital: Optional[Decimal] = None,
-        reallocation_engine: Optional["DynamicCapitalReallocationEngine"] = None,
+        total_portfolio_capital: Decimal | None = None,
+        reallocation_engine: DynamicCapitalReallocationEngine | None = None,
     ):
         """
         Initialize the standard backtest engine.
@@ -111,7 +111,7 @@ class StandardBacktestEngine(BaseBacktestEngine[BacktestConfig, BacktestResult])
         self.reallocation_engine = reallocation_engine
 
         # Store market_data for compliance engine price_history
-        self._market_data_list: List[MarketDataPoint] = []
+        self._market_data_list: list[MarketDataPoint] = []
 
         # Initialize service classes
         self._initialize_services(compliance_engine)
@@ -129,7 +129,7 @@ class StandardBacktestEngine(BaseBacktestEngine[BacktestConfig, BacktestResult])
             f"StandardBacktestEngine initialized for {strategy_name} with COMPLIANCE ENGINE"
         )
 
-    def _initialize_services(self, compliance_engine: Optional[ComplianceEngine]) -> None:
+    def _initialize_services(self, compliance_engine: ComplianceEngine | None) -> None:
         """Initialize all service classes."""
         # PositionManager - pure state holder for positions
         self.position_manager = PositionManager()
@@ -187,10 +187,10 @@ class StandardBacktestEngine(BaseBacktestEngine[BacktestConfig, BacktestResult])
 
     def run_backtest(
         self,
-        market_data: List[MarketDataPoint],
-        signals: List[Signal],
-        start_date: Optional[datetime] = None,
-        end_date: Optional[datetime] = None,
+        market_data: list[MarketDataPoint],
+        signals: list[Signal],
+        start_date: datetime | None = None,
+        end_date: datetime | None = None,
         **kwargs,
     ) -> BacktestResult:
         """
@@ -231,7 +231,7 @@ class StandardBacktestEngine(BaseBacktestEngine[BacktestConfig, BacktestResult])
         signals_processed = 0
         signals_matched = 0
         signals_skipped = 0
-        strategy_stats: Dict[str, Dict[str, int]] = {}
+        strategy_stats: dict[str, dict[str, int]] = {}
 
         for md in market_data:
             # Track the current price for this symbol BEFORE updating equity curve
@@ -322,8 +322,8 @@ class StandardBacktestEngine(BaseBacktestEngine[BacktestConfig, BacktestResult])
     def _create_result(
         self,
         performance: PerformanceMetrics,
-        trades: List[Trade],
-        equity_curve: List[Tuple[datetime, Decimal]],
+        trades: list[Trade],
+        equity_curve: list[tuple[datetime, Decimal]],
         start_date: datetime,
         end_date: datetime,
         final_capital: Decimal,
@@ -358,13 +358,13 @@ class StandardBacktestEngine(BaseBacktestEngine[BacktestConfig, BacktestResult])
     def _process_signals_at_timestamp(
         self,
         market_data: MarketDataPoint,
-        signals: List[Signal],
+        signals: list[Signal],
         signal_index: int,
         signals_processed: int,
         signals_matched: int,
         signals_skipped: int,
-        strategy_stats: Dict[str, Dict[str, int]],
-    ) -> Tuple[int, int, int, int, Dict[str, Dict[str, int]]]:
+        strategy_stats: dict[str, dict[str, int]],
+    ) -> tuple[int, int, int, int, dict[str, dict[str, int]]]:
         """Process all signals at the current timestamp."""
         while signal_index < len(signals):
             signal = signals[signal_index]
@@ -618,7 +618,7 @@ class StandardBacktestEngine(BaseBacktestEngine[BacktestConfig, BacktestResult])
 
         return True
 
-    def _get_strategy_commission(self, signal: Signal, strategy_name: str) -> Optional[Decimal]:
+    def _get_strategy_commission(self, signal: Signal, strategy_name: str) -> Decimal | None:
         """Get commission percentage for strategy."""
         if signal.metadata and "commission_per_trade_pct" in signal.metadata:
             with contextlib.suppress(ValueError, TypeError, InvalidOperation):
@@ -631,7 +631,7 @@ class StandardBacktestEngine(BaseBacktestEngine[BacktestConfig, BacktestResult])
 
     def _build_price_history(
         self, symbol: str, current_timestamp: datetime, lookback_days: int = 252
-    ) -> Optional[pd.DataFrame]:
+    ) -> pd.DataFrame | None:
         """Build a price history DataFrame for compliance engine validation."""
         if not self._market_data_list:
             return None
@@ -723,7 +723,7 @@ class StandardBacktestEngine(BaseBacktestEngine[BacktestConfig, BacktestResult])
         )
 
     def _close_position(
-        self, symbol: str, timestamp: datetime, reason: str, current_price: Decimal = None
+        self, symbol: str, timestamp: datetime, reason: str, current_price: Decimal | None = None
     ) -> None:
         """Close a position completely."""
         current_position = self.position_manager.get_position(symbol)
@@ -784,7 +784,7 @@ class StandardBacktestEngine(BaseBacktestEngine[BacktestConfig, BacktestResult])
         self.position_manager.close_position(symbol)
 
     def _close_all_positions(
-        self, final_market_data: MarketDataPoint, price_map: Optional[Dict[str, Decimal]] = None
+        self, final_market_data: MarketDataPoint, price_map: dict[str, Decimal] | None = None
     ) -> None:
         """Close all remaining positions at the end of backtest."""
         for symbol in self.position_manager.get_symbols_with_positions():
@@ -805,7 +805,7 @@ class StandardBacktestEngine(BaseBacktestEngine[BacktestConfig, BacktestResult])
             )
 
     def _execute_learning_retraining(
-        self, market_data: MarketDataPoint, all_market_data: List[MarketDataPoint]
+        self, market_data: MarketDataPoint, all_market_data: list[MarketDataPoint]
     ) -> None:
         """Execute learning engine retraining if necessary."""
         if not (
@@ -896,7 +896,7 @@ class StandardBacktestEngine(BaseBacktestEngine[BacktestConfig, BacktestResult])
         self,
         performance: PerformanceMetrics,
         total_return: Decimal,
-        market_data: List[MarketDataPoint],
+        market_data: list[MarketDataPoint],
     ) -> None:
         """Update reallocation engine with strategy performance after backtest."""
         if not (self.reallocation_engine and performance):
@@ -920,7 +920,7 @@ class StandardBacktestEngine(BaseBacktestEngine[BacktestConfig, BacktestResult])
     # PICKLE SUPPORT
     # =========================================================================
 
-    def __getstate__(self) -> Dict[str, object]:
+    def __getstate__(self) -> dict[str, object]:
         """Get state for pickling."""
         state = super().__getstate__()
         state.update(
@@ -930,7 +930,7 @@ class StandardBacktestEngine(BaseBacktestEngine[BacktestConfig, BacktestResult])
         )
         return state
 
-    def __setstate__(self, state: Dict[str, object]) -> None:
+    def __setstate__(self, state: dict[str, object]) -> None:
         """Restore state from pickling."""
         super().__setstate__(state)
         self.total_portfolio_capital = Decimal(str(state.get("total_portfolio_capital", "100000")))

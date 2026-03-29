@@ -42,7 +42,7 @@ import logging
 from dataclasses import dataclass, field
 from decimal import Decimal
 from enum import Enum
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 
 import numpy as np
 from numpy.typing import NDArray
@@ -99,16 +99,16 @@ class PortfolioOptimizationResult:
     success: bool
     message: str
     method: OptimizationMethod
-    symbols: List[str] = field(default_factory=list)
+    symbols: list[str] = field(default_factory=list)
 
     @property
-    def weights_dict(self) -> Dict[str, float]:
+    def weights_dict(self) -> dict[str, float]:
         """Convert weights array to dictionary format."""
         if self.symbols:
             return {sym: float(w) for sym, w in zip(self.symbols, self.weights)}
         return {f"asset_{i}": float(w) for i, w in enumerate(self.weights)}
 
-    def get_allocation(self, total_capital: Decimal) -> Dict[str, Decimal]:
+    def get_allocation(self, total_capital: Decimal) -> dict[str, Decimal]:
         """
         Get dollar allocation for each asset.
 
@@ -138,7 +138,7 @@ class EfficientFrontierPoint:
 class EfficientFrontier:
     """Efficient frontier with multiple optimal portfolios."""
 
-    points: List[EfficientFrontierPoint]
+    points: list[EfficientFrontierPoint]
     max_sharpe_index: int
     min_variance_index: int
 
@@ -152,7 +152,7 @@ class EfficientFrontier:
         """Get the minimum variance portfolio."""
         return self.points[self.min_variance_index]
 
-    def to_arrays(self) -> Tuple[NDArray[np.float64], NDArray[np.float64], NDArray[np.float64]]:
+    def to_arrays(self) -> tuple[NDArray[np.float64], NDArray[np.float64], NDArray[np.float64]]:
         """Convert frontier points to arrays for plotting."""
         returns = np.array([p.portfolio_return for p in self.points])
         risks = np.array([p.portfolio_risk for p in self.points])
@@ -166,7 +166,7 @@ class CovarianceResult:
 
     covariance_matrix: NDArray[np.float64]
     means: NDArray[np.float64]
-    symbols: List[str]
+    symbols: list[str]
 
 
 class InputValidationError(ValueError):
@@ -208,10 +208,10 @@ class MeanVarianceOptimizer(BaseOptimizer[NDArray[np.float64]]):
 
     def __init__(
         self,
-        config: Optional[OptimizationConfig] = None,
+        config: OptimizationConfig | None = None,
         lookback_days: int = 252,
         max_position: float = 0.20,
-        risk_free_rate: float = None,
+        risk_free_rate: float | None = None,
         regularization_gamma: float = 0.01,
         sum_tolerance: float = 1e-6,
         allow_short: bool = False,
@@ -259,8 +259,8 @@ class MeanVarianceOptimizer(BaseOptimizer[NDArray[np.float64]]):
         self._min_weight = -1.0 if allow_short else 0.0
 
         # Results storage
-        self._last_result: Optional[PortfolioOptimizationResult] = None
-        self._symbols: List[str] = []
+        self._last_result: PortfolioOptimizationResult | None = None
+        self._symbols: list[str] = []
 
         logger.info(
             f"Initialized MeanVarianceOptimizer: lookback={lookback_days}, "
@@ -307,13 +307,13 @@ class MeanVarianceOptimizer(BaseOptimizer[NDArray[np.float64]]):
         """Get the type of this optimizer."""
         return OptimizerType.MEAN_VARIANCE
 
-    def get_best_params(self) -> Dict[str, Any]:
+    def get_best_params(self) -> dict[str, Any]:
         """Get the best parameters found (optimal weights)."""
         if self._last_result is not None:
             return self._last_result.weights_dict
         return {}
 
-    def get_history(self) -> List[TrialResult]:
+    def get_history(self) -> list[TrialResult]:
         """Get optimization history."""
         return self._history
 
@@ -379,8 +379,8 @@ class MeanVarianceOptimizer(BaseOptimizer[NDArray[np.float64]]):
         method: OptimizationMethod = OptimizationMethod.MAX_SHARPE,
         use_shrinkage: bool = True,
         shrinkage_method: ShrinkageMethod = ShrinkageMethod.LEDOIT_WOLF,
-        target_return: Optional[float] = None,
-        symbols: Optional[List[str]] = None,
+        target_return: float | None = None,
+        symbols: list[str] | None = None,
     ) -> PortfolioOptimizationResult:
         """
         Main entry point for portfolio optimization.
@@ -465,7 +465,7 @@ class MeanVarianceOptimizer(BaseOptimizer[NDArray[np.float64]]):
                 expected_risk=0.0,
                 sharpe_ratio=0.0,
                 success=False,
-                message=f"Optimization failed: {str(e)}",
+                message=f"Optimization failed: {e!s}",
                 method=method,
                 symbols=symbols or [f"asset_{i}" for i in range(n_assets)],
             )
@@ -596,8 +596,7 @@ class MeanVarianceOptimizer(BaseOptimizer[NDArray[np.float64]]):
         # Validate covariance matrix is positive semi-definite
         if not self._is_positive_semi_definite(cov_matrix):
             logger.warning(
-                "Covariance matrix is not positive semi-definite. "
-                "Applying nearest PSD correction."
+                "Covariance matrix is not positive semi-definite. Applying nearest PSD correction."
             )
             cov_matrix = self._nearest_positive_semi_definite(cov_matrix)
 
@@ -959,7 +958,7 @@ class MeanVarianceOptimizer(BaseOptimizer[NDArray[np.float64]]):
 
         target_returns = np.linspace(min_target, max_target, n_points)
 
-        points: List[EfficientFrontierPoint] = []
+        points: list[EfficientFrontierPoint] = []
 
         for target in target_returns:
             try:
@@ -1006,7 +1005,7 @@ class MeanVarianceOptimizer(BaseOptimizer[NDArray[np.float64]]):
         self,
         cov_matrix: NDArray[np.float64],
         threshold: float = 0.85,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Detect false diversification.
 
@@ -1028,7 +1027,7 @@ class MeanVarianceOptimizer(BaseOptimizer[NDArray[np.float64]]):
         mask = ~np.eye(correlation_matrix.shape[0], dtype=bool)
         avg_correlation = float(correlation_matrix[mask].mean())
 
-        result: Dict[str, Any] = {
+        result: dict[str, Any] = {
             "false_diversification": False,
             "avg_correlation": avg_correlation,
             "threshold": threshold,
@@ -1056,7 +1055,7 @@ class MeanVarianceOptimizer(BaseOptimizer[NDArray[np.float64]]):
         current_weights: NDArray[np.float64],
         target_weights: NDArray[np.float64],
         threshold: float = 0.20,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Check if rebalancing is needed due to drift.
 

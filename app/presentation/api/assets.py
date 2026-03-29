@@ -15,7 +15,7 @@ import asyncio
 import logging
 import traceback
 from datetime import datetime
-from typing import Any, Dict, Optional
+from typing import Any, Optional
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query, Request
 from requests.exceptions import HTTPError, RequestException
@@ -65,7 +65,7 @@ def _apply_rate_limit(endpoint_func):
     return endpoint_func
 
 
-@router.get("/", response_model=Dict[str, Any])
+@router.get("/", response_model=dict[str, Any])
 async def get_assets_overview(
     http_request: Request,
     service: AssetIdentificationService = Depends(get_asset_identification_service),
@@ -111,7 +111,9 @@ async def get_assets_overview(
             error_message=str(e),
             stack_trace=traceback.format_exc(),
         )
-        raise HTTPException(status_code=504, detail=f"Timeout getting assets overview: {str(e)}")
+        raise HTTPException(
+            status_code=504, detail=f"Timeout getting assets overview: {e!s}"
+        ) from e
     except OSError as e:
         logger.error(
             "Error fetching assets overview",
@@ -129,10 +131,10 @@ async def get_assets_overview(
             error_message=str(e),
             stack_trace=traceback.format_exc(),
         )
-        raise HTTPException(status_code=500, detail=f"Error getting assets overview: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error getting assets overview: {e!s}") from e
 
 
-@router.get("/liquid/{asset_class}", response_model=Dict[str, Any])
+@router.get("/liquid/{asset_class}", response_model=dict[str, Any])
 async def get_liquid_assets(
     asset_class: AssetClass,
     limit: int = Query(20, ge=1, le=100, description="Number of assets to return"),
@@ -195,7 +197,7 @@ async def get_liquid_assets(
             error_message=str(e),
             stack_trace=traceback.format_exc(),
         )
-        raise HTTPException(status_code=504, detail=f"Timeout getting liquid assets: {str(e)}")
+        raise HTTPException(status_code=504, detail=f"Timeout getting liquid assets: {e!s}") from e
     except OSError as e:
         logger.error(
             "Error fetching liquid assets",
@@ -213,10 +215,10 @@ async def get_liquid_assets(
             error_message=str(e),
             stack_trace=traceback.format_exc(),
         )
-        raise HTTPException(status_code=500, detail=f"Error getting liquid assets: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error getting liquid assets: {e!s}") from e
 
 
-@router.get("/rankings/{asset_class}", response_model=Dict[str, Any])
+@router.get("/rankings/{asset_class}", response_model=dict[str, Any])
 async def get_asset_rankings_by_class(
     asset_class: AssetClass,
     http_request: Request = Request,
@@ -263,7 +265,7 @@ async def get_asset_rankings_by_class(
             error_message=str(e),
             stack_trace=traceback.format_exc(),
         )
-        raise HTTPException(status_code=504, detail=f"Timeout getting asset rankings: {str(e)}")
+        raise HTTPException(status_code=504, detail=f"Timeout getting asset rankings: {e!s}") from e
     except OSError as e:
         logger.error(
             "Error fetching asset rankings",
@@ -281,10 +283,10 @@ async def get_asset_rankings_by_class(
             error_message=str(e),
             stack_trace=traceback.format_exc(),
         )
-        raise HTTPException(status_code=500, detail=f"Error getting asset rankings: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error getting asset rankings: {e!s}") from e
 
 
-@router.get("/{symbol}", response_model=Dict[str, Any])
+@router.get("/{symbol}", response_model=dict[str, Any])
 async def get_asset_details(
     symbol: str,
     http_request: Request = Request,
@@ -353,7 +355,7 @@ async def get_asset_details(
             error_message=str(e),
             stack_trace=traceback.format_exc(),
         )
-        raise HTTPException(status_code=504, detail=f"Timeout getting asset details: {str(e)}")
+        raise HTTPException(status_code=504, detail=f"Timeout getting asset details: {e!s}") from e
     except (ValueError, TypeError, KeyError, AttributeError) as e:
         logger.error(
             "Error fetching asset details",
@@ -372,10 +374,10 @@ async def get_asset_details(
             error_message=str(e),
             stack_trace=traceback.format_exc(),
         )
-        raise HTTPException(status_code=500, detail=f"Error getting asset details: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error getting asset details: {e!s}") from e
 
 
-@router.get("/{symbol}/liquidity", response_model=Dict[str, Any])
+@router.get("/{symbol}/liquidity", response_model=dict[str, Any])
 async def get_liquidity_metrics(
     symbol: str,
     http_request: Request = Request,
@@ -440,7 +442,9 @@ async def get_liquidity_metrics(
             error_message=str(e),
             stack_trace=traceback.format_exc(),
         )
-        raise HTTPException(status_code=504, detail=f"Timeout getting liquidity metrics: {str(e)}")
+        raise HTTPException(
+            status_code=504, detail=f"Timeout getting liquidity metrics: {e!s}"
+        ) from e
     except (ValueError, TypeError, KeyError, AttributeError) as e:
         logger.error(
             "Error fetching liquidity metrics",
@@ -459,10 +463,12 @@ async def get_liquidity_metrics(
             error_message=str(e),
             stack_trace=traceback.format_exc(),
         )
-        raise HTTPException(status_code=500, detail=f"Error getting liquidity metrics: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Error getting liquidity metrics: {e!s}"
+        ) from e
 
 
-@router.get("/rankings", response_model=Dict[str, Any])
+@router.get("/rankings", response_model=dict[str, Any])
 async def get_asset_rankings(
     asset_class: Optional[AssetClass] = Query(None, description="Filter by asset class"),
     http_request: Request = Request,
@@ -510,7 +516,7 @@ async def get_asset_rankings(
             error_message=str(e),
             stack_trace=traceback.format_exc(),
         )
-        raise HTTPException(status_code=504, detail=f"Timeout getting asset rankings: {str(e)}")
+        raise HTTPException(status_code=504, detail=f"Timeout getting asset rankings: {e!s}") from e
     except OSError as e:
         logger.error(
             "Error fetching asset rankings",
@@ -528,10 +534,10 @@ async def get_asset_rankings(
             error_message=str(e),
             stack_trace=traceback.format_exc(),
         )
-        raise HTTPException(status_code=500, detail=f"Error getting asset rankings: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error getting asset rankings: {e!s}") from e
 
 
-@router.post("/filter", response_model=Dict[str, Any])
+@router.post("/filter", response_model=dict[str, Any])
 async def filter_assets(
     filter_criteria: AssetFilter,
     http_request: Request = Request,
@@ -545,7 +551,7 @@ async def filter_assets(
             "correlation_id": correlation_id,
             "filter_criteria": (
                 filter_criteria.model_dump()
-                if hasattr(filter_criteria, 'model_dump')
+                if hasattr(filter_criteria, "model_dump")
                 else str(filter_criteria)
             ),
         },
@@ -601,7 +607,7 @@ async def filter_assets(
             error_message=str(e),
             stack_trace=traceback.format_exc(),
         )
-        raise HTTPException(status_code=504, detail=f"Timeout filtering assets: {str(e)}")
+        raise HTTPException(status_code=504, detail=f"Timeout filtering assets: {e!s}") from e
     except OSError as e:
         logger.error(
             "Error filtering assets",
@@ -619,10 +625,10 @@ async def filter_assets(
             error_message=str(e),
             stack_trace=traceback.format_exc(),
         )
-        raise HTTPException(status_code=500, detail=f"Error filtering assets: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error filtering assets: {e!s}") from e
 
 
-@router.post("/refresh-liquidity", response_model=Dict[str, Any])
+@router.post("/refresh-liquidity", response_model=dict[str, Any])
 @_apply_rate_limit  # API-008: Rate limiting decorator
 async def refresh_liquidity_data(
     http_request: Request,
@@ -683,10 +689,12 @@ async def refresh_liquidity_data(
             error_message=str(e),
             stack_trace=traceback.format_exc(),
         )
-        raise HTTPException(status_code=500, detail=f"Error refreshing liquidity data: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Error refreshing liquidity data: {e!s}"
+        ) from e
 
 
-@router.get("/universe", response_model=Dict[str, Any])
+@router.get("/universe", response_model=dict[str, Any])
 async def get_asset_universe(
     asset_class: Optional[AssetClass] = Query(None, description="Filter by asset class"),
     http_request: Request = Request,
@@ -734,7 +742,7 @@ async def get_asset_universe(
             error_message=str(e),
             stack_trace=traceback.format_exc(),
         )
-        raise HTTPException(status_code=504, detail=f"Timeout getting asset universe: {str(e)}")
+        raise HTTPException(status_code=504, detail=f"Timeout getting asset universe: {e!s}") from e
     except OSError as e:
         logger.error(
             "Error fetching asset universe",
@@ -752,10 +760,10 @@ async def get_asset_universe(
             error_message=str(e),
             stack_trace=traceback.format_exc(),
         )
-        raise HTTPException(status_code=500, detail=f"Error getting asset universe: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error getting asset universe: {e!s}") from e
 
 
-@router.post("/identify/{asset_class}", response_model=Dict[str, Any])
+@router.post("/identify/{asset_class}", response_model=dict[str, Any])
 @_apply_rate_limit  # API-008: Rate limiting decorator
 async def identify_liquid_assets(
     asset_class: AssetClass,
@@ -836,7 +844,9 @@ async def identify_liquid_assets(
             error_message=str(e),
             stack_trace=traceback.format_exc(),
         )
-        raise HTTPException(status_code=504, detail=f"Timeout identifying liquid assets: {str(e)}")
+        raise HTTPException(
+            status_code=504, detail=f"Timeout identifying liquid assets: {e!s}"
+        ) from e
     except (ValueError, TypeError, KeyError, AttributeError) as e:
         logger.error(
             "Error identifying liquid assets",
@@ -855,10 +865,12 @@ async def identify_liquid_assets(
             error_message=str(e),
             stack_trace=traceback.format_exc(),
         )
-        raise HTTPException(status_code=500, detail=f"Error identifying liquid assets: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Error identifying liquid assets: {e!s}"
+        ) from e
 
 
-@router.post("/filter/{asset_class}", response_model=Dict[str, Any])
+@router.post("/filter/{asset_class}", response_model=dict[str, Any])
 async def filter_assets_by_class(
     asset_class: AssetClass,
     filter_criteria: AssetFilter,
@@ -927,7 +939,7 @@ async def filter_assets_by_class(
             error_message=str(e),
             stack_trace=traceback.format_exc(),
         )
-        raise HTTPException(status_code=504, detail=f"Timeout filtering assets: {str(e)}")
+        raise HTTPException(status_code=504, detail=f"Timeout filtering assets: {e!s}") from e
     except OSError as e:
         logger.error(
             "Error filtering assets by class",
@@ -946,10 +958,10 @@ async def filter_assets_by_class(
             error_message=str(e),
             stack_trace=traceback.format_exc(),
         )
-        raise HTTPException(status_code=500, detail=f"Error filtering assets: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error filtering assets: {e!s}") from e
 
 
-@router.get("/universe/{asset_class}", response_model=Dict[str, Any])
+@router.get("/universe/{asset_class}", response_model=dict[str, Any])
 async def get_universe_summary(
     asset_class: AssetClass,
     http_request: Request = Request,
@@ -993,7 +1005,9 @@ async def get_universe_summary(
             error_message=str(e),
             stack_trace=traceback.format_exc(),
         )
-        raise HTTPException(status_code=504, detail=f"Timeout getting universe summary: {str(e)}")
+        raise HTTPException(
+            status_code=504, detail=f"Timeout getting universe summary: {e!s}"
+        ) from e
     except OSError as e:
         logger.error(
             "Error fetching universe summary",
@@ -1012,10 +1026,10 @@ async def get_universe_summary(
             error_message=str(e),
             stack_trace=traceback.format_exc(),
         )
-        raise HTTPException(status_code=500, detail=f"Error getting universe summary: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error getting universe summary: {e!s}") from e
 
 
-@router.get("/classes", response_model=Dict[str, Any])
+@router.get("/classes", response_model=dict[str, Any])
 async def get_asset_classes(
     http_request: Request = Request,
 ):
@@ -1036,10 +1050,10 @@ async def get_asset_classes(
         }
 
     except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
-        raise HTTPException(status_code=500, detail=f"Error getting asset classes: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error getting asset classes: {e!s}") from e
 
 
-@router.get("/exchanges", response_model=Dict[str, Any])
+@router.get("/exchanges", response_model=dict[str, Any])
 async def get_exchanges(
     http_request: Request = Request,
 ):
@@ -1060,10 +1074,10 @@ async def get_exchanges(
         }
 
     except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
-        raise HTTPException(status_code=500, detail=f"Error getting exchanges: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error getting exchanges: {e!s}") from e
 
 
-@router.get("/health", response_model=Dict[str, Any])
+@router.get("/health", response_model=dict[str, Any])
 async def health_check(
     http_request: Request = Request,
 ):
@@ -1077,10 +1091,10 @@ async def health_check(
         }
 
     except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
-        raise HTTPException(status_code=500, detail=f"Health check failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Health check failed: {e!s}") from e
 
 
-@router.get("/stats", response_model=Dict[str, Any])
+@router.get("/stats", response_model=dict[str, Any])
 async def get_asset_stats(
     http_request: Request = Request,
     service: AssetIdentificationService = Depends(get_asset_identification_service),
@@ -1092,7 +1106,7 @@ async def get_asset_stats(
         extra={"correlation_id": correlation_id},
     )
     try:
-        stats: Dict[str, Any] = {
+        stats: dict[str, Any] = {
             "total_asset_classes": len(AssetClass),
             "total_exchanges": len(Exchange),
             "universes": {},
@@ -1146,7 +1160,7 @@ async def get_asset_stats(
             error_message=str(e),
             stack_trace=traceback.format_exc(),
         )
-        raise HTTPException(status_code=504, detail=f"Timeout getting asset stats: {str(e)}")
+        raise HTTPException(status_code=504, detail=f"Timeout getting asset stats: {e!s}") from e
     except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
         logger.error(
             "Error fetching asset stats",
@@ -1164,4 +1178,4 @@ async def get_asset_stats(
             error_message=str(e),
             stack_trace=traceback.format_exc(),
         )
-        raise HTTPException(status_code=500, detail=f"Error getting asset stats: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error getting asset stats: {e!s}") from e

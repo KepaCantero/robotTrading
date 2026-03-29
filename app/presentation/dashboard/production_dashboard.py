@@ -15,7 +15,7 @@ import asyncio
 import logging
 from datetime import datetime, timedelta, timezone
 from decimal import Decimal
-from typing import Any, Dict, List, Optional
+from typing import Any, ClassVar, Optional
 
 from fastapi import WebSocket, WebSocketDisconnect
 from pydantic import BaseModel, Field
@@ -65,7 +65,7 @@ class DashboardMetrics(BaseModel):
     timestamp: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
 
     class Config:
-        json_encoders = {
+        json_encoders: ClassVar[dict] = {
             Decimal: str,
         }
 
@@ -83,7 +83,7 @@ class PositionMetric(BaseModel):
     currency: str = Field(default="USD", description="Position currency")
 
     class Config:
-        json_encoders = {
+        json_encoders: ClassVar[dict] = {
             Decimal: str,
         }
 
@@ -109,7 +109,7 @@ class HistoricalDataPoint(BaseModel):
     drawdown_pct: Decimal = Field(..., description="Drawdown percentage")
 
     class Config:
-        json_encoders = {
+        json_encoders: ClassVar[dict] = {
             Decimal: str,
         }
 
@@ -154,14 +154,14 @@ class ProductionDashboard:
         self.alerting_orchestrator = alerting_orchestrator
 
         # WebSocket connections
-        self._websocket_connections: List[WebSocket] = []
+        self._websocket_connections: list[WebSocket] = []
 
         # Metrics cache
         self._metrics_cache: Optional[DashboardMetrics] = None
         self._last_update: Optional[datetime] = None
 
         # Historical data cache
-        self._historical_cache: Dict[str, List[HistoricalDataPoint]] = {
+        self._historical_cache: dict[str, list[HistoricalDataPoint]] = {
             "7d": [],
             "30d": [],
         }
@@ -243,7 +243,7 @@ class ProductionDashboard:
                 return self._metrics_cache
             return DashboardMetrics()
 
-    async def get_positions(self) -> List[PositionMetric]:
+    async def get_positions(self) -> list[PositionMetric]:
         """
         Get current position metrics.
 
@@ -279,7 +279,7 @@ class ProductionDashboard:
             logger.error(f"Error getting positions: {e}", exc_info=True)
             return []
 
-    async def get_alert_history(self, hours: int = 24) -> List[AlertHistoryItem]:
+    async def get_alert_history(self, hours: int = 24) -> list[AlertHistoryItem]:
         """
         Get alert history.
 
@@ -318,7 +318,7 @@ class ProductionDashboard:
             logger.error(f"Error getting alert history: {e}", exc_info=True)
             return []
 
-    async def get_historical_data(self, period: str = "7d") -> List[HistoricalDataPoint]:
+    async def get_historical_data(self, period: str = "7d") -> list[HistoricalDataPoint]:
         """
         Get historical performance data.
 
@@ -330,7 +330,7 @@ class ProductionDashboard:
         """
         try:
             # Return cached data
-            if period in self._historical_cache and self._historical_cache[period]:
+            if self._historical_cache.get(period):
                 return self._historical_cache[period]
 
             # Generate mock historical data for now
@@ -397,7 +397,7 @@ class ProductionDashboard:
         try:
             if self.position_monitor:
                 positions = self.position_monitor.get_monitored_positions()
-                return len([p for p in positions if getattr(p, 'status', None) == "active"])
+                return len([p for p in positions if getattr(p, "status", None) == "active"])
             elif self.portfolio_service:
                 portfolio = await self.portfolio_service.get_portfolio()
                 if portfolio:
@@ -551,7 +551,7 @@ class ProductionDashboard:
             if websocket in self._websocket_connections:
                 self._websocket_connections.remove(websocket)
 
-    async def broadcast_update(self, data: Dict[str, Any]) -> None:
+    async def broadcast_update(self, data: dict[str, Any]) -> None:
         """
         Broadcast update to all connected WebSocket clients.
 
@@ -608,7 +608,7 @@ class ProductionDashboard:
             logger.error(f"Error resolving alert: {e}", exc_info=True)
         return False
 
-    def get_health_status(self) -> Dict[str, Any]:
+    def get_health_status(self) -> dict[str, Any]:
         """
         Get overall health status of the dashboard.
 

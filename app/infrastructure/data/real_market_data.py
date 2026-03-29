@@ -22,7 +22,7 @@ import logging
 import os
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Optional
 
 import aiohttp
 import pandas as pd
@@ -147,7 +147,7 @@ class RealMarketDataFetcher:
         self.rate_limit_period = rate_limit_period
 
         # Rate limiting tracking
-        self.call_timestamps: List[datetime] = []
+        self.call_timestamps: list[datetime] = []
 
         # Session for HTTP requests
         self.session: Optional[aiohttp.ClientSession] = None
@@ -232,7 +232,7 @@ class RealMarketDataFetcher:
                 # Clean up old timestamps after waiting
                 self.call_timestamps = []
 
-    async def _fetch_from_alpha_vantage(self, symbol: str) -> Optional[Dict]:
+    async def _fetch_from_alpha_vantage(self, symbol: str) -> Optional[dict]:
         """
         Fetch daily time series data from Alpha Vantage.
 
@@ -270,14 +270,14 @@ class RealMarketDataFetcher:
                     if "Error Message" in data:
                         logger.error(
                             f"Alpha Vantage API error for {symbol}: {data['Error Message']}",
-                            extra={"symbol": symbol, "api_error": data['Error Message']},
+                            extra={"symbol": symbol, "api_error": data["Error Message"]},
                         )
                         return None
 
                     if "Note" in data:
                         logger.warning(
                             f"Alpha Vantage rate limit note for {symbol}: {data['Note']}",
-                            extra={"symbol": symbol, "rate_limit_note": data['Note']},
+                            extra={"symbol": symbol, "rate_limit_note": data["Note"]},
                         )
                         return None
 
@@ -329,7 +329,7 @@ class RealMarketDataFetcher:
 
         if cache_path.exists():
             try:
-                with open(cache_path, 'r') as f:
+                with open(cache_path) as f:
                     data = json.load(f)
 
                 # Check if cache is recent (less than 1 day old)
@@ -354,9 +354,9 @@ class RealMarketDataFetcher:
                     f"Loading {symbol} from CSV cache",
                     extra={"symbol": symbol, "cache_type": "csv"},
                 )
-                df = pd.read_csv(csv_path, parse_dates=['date'], index_col='date')
+                df = pd.read_csv(csv_path, parse_dates=["date"], index_col="date")
                 # Ensure we have the right columns
-                required_cols = ['open', 'high', 'low', 'close', 'volume']
+                required_cols = ["open", "high", "low", "close", "volume"]
                 if all(col in df.columns for col in required_cols):
                     logger.info(
                         f"Loaded {symbol} from CSV cache ({len(df)} rows)",
@@ -372,7 +372,7 @@ class RealMarketDataFetcher:
 
         return None
 
-    def _save_to_cache(self, symbol: str, data: Dict):
+    def _save_to_cache(self, symbol: str, data: dict):
         """
         Save fetched data to cache.
 
@@ -383,7 +383,7 @@ class RealMarketDataFetcher:
         cache_path = self._get_cache_path(symbol)
 
         try:
-            with open(cache_path, 'w') as f:
+            with open(cache_path, "w") as f:
                 json.dump(data, f, indent=2)
             logger.debug(
                 f"Cached data for {symbol}", extra={"symbol": symbol, "cache_path": str(cache_path)}
@@ -394,7 +394,7 @@ class RealMarketDataFetcher:
                 extra={"symbol": symbol, "error_type": type(e).__name__},
             )
 
-    def _parse_alpha_vantage_data(self, data: Dict, symbol: str) -> Optional[pd.DataFrame]:
+    def _parse_alpha_vantage_data(self, data: dict, symbol: str) -> Optional[pd.DataFrame]:
         """
         Parse Alpha Vantage time series data into DataFrame.
 
@@ -411,7 +411,7 @@ class RealMarketDataFetcher:
         try:
             # Find the time series key
             time_series_key = None
-            for key in data.keys():
+            for key in data:
                 if "Time Series" in key:
                     time_series_key = key
                     break
@@ -538,12 +538,12 @@ class RealMarketDataFetcher:
 
     async def fetch_multiple_symbols(
         self,
-        symbols: List[str],
+        symbols: list[str],
         start_date: Optional[datetime] = None,
         end_date: Optional[datetime] = None,
         use_cache: bool = True,
         show_progress: bool = True,
-    ) -> Dict[str, pd.DataFrame]:
+    ) -> dict[str, pd.DataFrame]:
         """
         Fetch historical data for multiple symbols.
 
@@ -577,10 +577,10 @@ class RealMarketDataFetcher:
         for i, symbol in enumerate(symbols):
             if show_progress:
                 logger.info(
-                    f"[{i+1}/{len(symbols)}] Fetching {symbol}...",
+                    f"[{i + 1}/{len(symbols)}] Fetching {symbol}...",
                     extra={
                         "symbol": symbol,
-                        "progress": f"{i+1}/{len(symbols)}",
+                        "progress": f"{i + 1}/{len(symbols)}",
                         "progress_pct": round((i + 1) / len(symbols) * 100, 1),
                     },
                 )
@@ -614,7 +614,7 @@ class RealMarketDataFetcher:
         start_date: Optional[datetime] = None,
         end_date: Optional[datetime] = None,
         use_cache: bool = True,
-    ) -> Dict[str, pd.DataFrame]:
+    ) -> dict[str, pd.DataFrame]:
         """
         Fetch historical data for top N S&P 500 stocks.
 
@@ -637,7 +637,7 @@ class RealMarketDataFetcher:
             use_cache=use_cache,
         )
 
-    def get_cache_stats(self) -> Dict[str, int]:
+    def get_cache_stats(self) -> dict[str, int]:
         """
         Get statistics about cached data.
 
@@ -685,7 +685,7 @@ class RealMarketDataFetcher:
             )
 
 
-def get_default_symbols(count: int = 50) -> List[str]:
+def get_default_symbols(count: int = 50) -> list[str]:
     """
     Get default list of S&P 500 top symbols.
 

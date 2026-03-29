@@ -13,7 +13,7 @@ import json
 import logging
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, ClassVar, Optional
 
 import numpy as np
 import pandas as pd
@@ -32,12 +32,12 @@ class ResultAggregator:
     """
 
     # Default output formats
-    DEFAULT_OUTPUT_FORMATS = ['csv', 'json']
+    DEFAULT_OUTPUT_FORMATS: ClassVar[list] = ["csv", "json"]
 
     def __init__(
         self,
         output_dir: Path,
-        output_formats: Optional[List[str]] = None,
+        output_formats: Optional[list[str]] = None,
     ):
         """
         Initialize result aggregator.
@@ -52,9 +52,9 @@ class ResultAggregator:
 
     def save_results(
         self,
-        results: List[Dict[str, Any]],
+        results: list[dict[str, Any]],
         prefix: str = "backtest_results",
-    ) -> Dict[str, Path]:
+    ) -> dict[str, Path]:
         """
         Guardar resultados a archivos.
 
@@ -73,24 +73,24 @@ class ResultAggregator:
         saved_files = {}
 
         # Guardar CSV
-        if 'csv' in self.output_formats:
+        if "csv" in self.output_formats:
             csv_path = self.output_dir / f"{prefix}_{timestamp}.csv"
             try:
                 df = pd.DataFrame(results)
                 df.to_csv(csv_path, index=False)
                 logger.info(f"Results saved to CSV: {csv_path}")
-                saved_files['csv'] = csv_path
+                saved_files["csv"] = csv_path
             except Exception as e:
                 logger.error(f"Failed to save CSV: {e}")
 
         # Guardar JSON
-        if 'json' in self.output_formats:
+        if "json" in self.output_formats:
             json_path = self.output_dir / f"{prefix}_{timestamp}.json"
             try:
-                with open(json_path, 'w') as f:
+                with open(json_path, "w") as f:
                     json.dump(results, f, indent=2, default=str)
                 logger.info(f"Results saved to JSON: {json_path}")
-                saved_files['json'] = json_path
+                saved_files["json"] = json_path
             except Exception as e:
                 logger.error(f"Failed to save JSON: {e}")
 
@@ -98,8 +98,8 @@ class ResultAggregator:
 
     def aggregate_statistics(
         self,
-        results: List[Dict[str, Any]],
-    ) -> Dict[str, Any]:
+        results: list[dict[str, Any]],
+    ) -> dict[str, Any]:
         """
         Calculate aggregated statistics across multiple backtest results.
 
@@ -115,9 +115,9 @@ class ResultAggregator:
         # Extract numeric metrics
         all_metrics = {}
         for result in results:
-            metrics = result.get('metrics', result)
+            metrics = result.get("metrics", result)
             for key, value in metrics.items():
-                if isinstance(value, (int, float)) and not key.startswith('_'):
+                if isinstance(value, (int, float)) and not key.startswith("_"):
                     if key not in all_metrics:
                         all_metrics[key] = []
                     all_metrics[key].append(value)
@@ -128,28 +128,28 @@ class ResultAggregator:
             if values:
                 values_array = np.array(values)
                 aggregated[metric_name] = {
-                    'mean': float(np.mean(values_array)),
-                    'std': float(np.std(values_array)),
-                    'min': float(np.min(values_array)),
-                    'max': float(np.max(values_array)),
-                    'median': float(np.median(values_array)),
-                    'count': len(values),
+                    "mean": float(np.mean(values_array)),
+                    "std": float(np.std(values_array)),
+                    "min": float(np.min(values_array)),
+                    "max": float(np.max(values_array)),
+                    "median": float(np.median(values_array)),
+                    "count": len(values),
                 }
 
         # Add summary counts
-        aggregated['_summary'] = {
-            'total_backtests': len(results),
-            'backtest_types': list({r.get('test_type', 'unknown') for r in results}),
+        aggregated["_summary"] = {
+            "total_backtests": len(results),
+            "backtest_types": list({r.get("test_type", "unknown") for r in results}),
         }
 
         return aggregated
 
     def extract_best_results(
         self,
-        results: List[Dict[str, Any]],
-        metric: str = 'sharpe_ratio',
+        results: list[dict[str, Any]],
+        metric: str = "sharpe_ratio",
         top_n: int = 5,
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """
         Extract top N results by a specific metric.
 
@@ -166,7 +166,7 @@ class ResultAggregator:
 
         # Sort by metric
         def get_metric(result):
-            metrics = result.get('metrics', result)
+            metrics = result.get("metrics", result)
             value = metrics.get(metric, 0)
             return value if isinstance(value, (int, float)) else 0
 
@@ -175,7 +175,7 @@ class ResultAggregator:
 
     def generate_summary_report(
         self,
-        results: List[Dict[str, Any]],
+        results: list[dict[str, Any]],
     ) -> str:
         """
         Generate a human-readable summary report.
@@ -190,8 +190,8 @@ class ResultAggregator:
             return "# Backtest Results Summary\n\nNo results to report."
 
         aggregated = self.aggregate_statistics(results)
-        best_sharpe = self.extract_best_results(results, 'sharpe_ratio', 3)
-        best_return = self.extract_best_results(results, 'total_return', 3)
+        best_sharpe = self.extract_best_results(results, "sharpe_ratio", 3)
+        best_return = self.extract_best_results(results, "total_return", 3)
 
         report = []
         report.append("# Backtest Results Summary")
@@ -201,7 +201,7 @@ class ResultAggregator:
         # Summary by type
         types = {}
         for r in results:
-            t = r.get('test_type', 'unknown')
+            t = r.get("test_type", "unknown")
             types[t] = types.get(t, 0) + 1
 
         report.append("\n## Backtests by Type")
@@ -211,7 +211,7 @@ class ResultAggregator:
         # Key metrics
         report.append("\n## Key Metrics (Aggregated)")
         for metric, stats in aggregated.items():
-            if metric.startswith('_'):
+            if metric.startswith("_"):
                 continue
             report.append(f"\n### {metric}")
             report.append(f"- Mean: {stats['mean']:.4f}")
@@ -222,7 +222,7 @@ class ResultAggregator:
         # Top performers by Sharpe
         report.append("\n## Top 3 by Sharpe Ratio")
         for i, r in enumerate(best_sharpe, 1):
-            metrics = r.get('metrics', r)
+            metrics = r.get("metrics", r)
             report.append(
                 f"{i}. {r.get('test_name', 'unknown')}: Sharpe={metrics.get('sharpe_ratio', 0):.2f}"
             )
@@ -230,7 +230,7 @@ class ResultAggregator:
         # Top performers by Return
         report.append("\n## Top 3 by Total Return")
         for i, r in enumerate(best_return, 1):
-            metrics = r.get('metrics', r)
+            metrics = r.get("metrics", r)
             report.append(
                 f"{i}. {r.get('test_name', 'unknown')}: Return={metrics.get('total_return', 0):.2%}"
             )
@@ -240,16 +240,16 @@ class ResultAggregator:
 
 # Module-level convenience functions
 def save_results(
-    results: List[Dict[str, Any]],
+    results: list[dict[str, Any]],
     output_dir: Path,
     prefix: str = "backtest_results",
-) -> Dict[str, Path]:
+) -> dict[str, Path]:
     """Convenience function for saving results."""
     aggregator = ResultAggregator(output_dir)
     return aggregator.save_results(results, prefix)
 
 
-def aggregate_results(results: List[Dict[str, Any]]) -> Dict[str, Any]:
+def aggregate_results(results: list[dict[str, Any]]) -> dict[str, Any]:
     """Convenience function for aggregating statistics."""
     aggregator = ResultAggregator(Path("."))
     return aggregator.aggregate_statistics(results)

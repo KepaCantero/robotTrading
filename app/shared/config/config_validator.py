@@ -39,7 +39,7 @@ import os
 import re
 import sys
 from pathlib import Path
-from typing import Dict, List, Optional, Union
+from typing import ClassVar, Optional, Union
 
 import yaml
 from pydantic import BaseModel, Field, ValidationError, field_validator
@@ -160,11 +160,11 @@ class BatchBacktestConfigValidator(BaseModel):
     output_dir: str = Field(default="results/profile_batch_backtesting")
 
     # Profile generation
-    capital_tiers: Dict[str, int] = Field(default_factory=dict)
-    investment_horizons: Dict[str, int] = Field(default_factory=dict)
+    capital_tiers: dict[str, int] = Field(default_factory=dict)
+    investment_horizons: dict[str, int] = Field(default_factory=dict)
 
     # Backtest
-    symbols: List[str] = Field(default_factory=list)
+    symbols: list[str] = Field(default_factory=list)
     backtest_start_date: str = Field(description="Backtest start date (YYYY-MM-DD)")
     backtest_end_date: str = Field(description="Backtest end date (YYYY-MM-DD)")
 
@@ -198,14 +198,14 @@ class BatchBacktestConfigValidator(BaseModel):
 
     @field_validator("capital_tiers", "investment_horizons")
     @classmethod
-    def validate_non_empty_dict(cls, v: Dict[str, object]) -> Dict[str, object]:
+    def validate_non_empty_dict(cls, v: dict[str, object]) -> dict[str, object]:
         if not v:
             raise ValueError("Must define at least one capital tier or investment horizon")
         return v
 
     @field_validator("symbols")
     @classmethod
-    def validate_symbols(cls, v: List[str]) -> List[str]:
+    def validate_symbols(cls, v: list[str]) -> list[str]:
         if not v:
             raise ValueError("symbols list cannot be empty")
         if len(v) > 100:
@@ -217,8 +217,8 @@ class BatchBacktestConfigValidator(BaseModel):
     def validate_date_format(cls, v: str) -> str:
         try:
             datetime.datetime.strptime(v, "%Y-%m-%d")
-        except ValueError:
-            raise ValueError("Date must be in YYYY-MM-DD format")
+        except ValueError as exc:
+            raise ValueError("Date must be in YYYY-MM-DD format") from exc
         return v
 
     @field_validator("optimization_n_trials")
@@ -272,10 +272,10 @@ class ValidationResult(BaseModel):
     """
 
     is_valid: bool = Field(default=True, description="Whether configuration is valid")
-    errors: List[ValidationErrorDetail] = Field(
+    errors: list[ValidationErrorDetail] = Field(
         default_factory=list, description="List of validation errors"
     )
-    warnings: List[ValidationErrorDetail] = Field(
+    warnings: list[ValidationErrorDetail] = Field(
         default_factory=list, description="List of validation warnings"
     )
 
@@ -466,7 +466,7 @@ class ConfigValidator:
     """
 
     # Placeholders that should not be in production config
-    PLACEHOLDER_PATTERNS = [
+    PLACEHOLDER_PATTERNS: ClassVar[list] = [
         r"your_.*_here",
         r"CHANGE.*THIS",
         r"https://example\.com",
@@ -475,7 +475,7 @@ class ConfigValidator:
     ]
 
     # Required sections for production config
-    REQUIRED_SECTIONS = [
+    REQUIRED_SECTIONS: ClassVar[list] = [
         "environment",
         "database",
         "brokers",
@@ -516,7 +516,7 @@ class ConfigValidator:
             No exceptions raised - errors are added to self.result
         """
         try:
-            with open(file_path, "r") as f:
+            with open(file_path) as f:
                 yaml.safe_load(f)
             return True
         except yaml.YAMLError as e:
@@ -528,7 +528,7 @@ class ConfigValidator:
             self.result.is_valid = False
             return False
 
-    def validate_environment_value(self, config: Dict[str, object]) -> bool:
+    def validate_environment_value(self, config: dict[str, object]) -> bool:
         """
         Validate environment configuration value.
 
@@ -557,7 +557,7 @@ class ConfigValidator:
 
         return True
 
-    def validate_debug_mode(self, config: Dict[str, object]) -> bool:
+    def validate_debug_mode(self, config: dict[str, object]) -> bool:
         """
         Validate debug mode setting for environment.
 
@@ -579,7 +579,7 @@ class ConfigValidator:
 
         return True
 
-    def validate_required_sections(self, config: Dict[str, object]) -> bool:
+    def validate_required_sections(self, config: dict[str, object]) -> bool:
         """
         Validate that required sections exist in configuration.
 
@@ -606,7 +606,7 @@ class ConfigValidator:
 
         return True
 
-    def validate_placeholders(self, config: Dict[str, object]) -> bool:
+    def validate_placeholders(self, config: dict[str, object]) -> bool:
         """
         Check for placeholder values that should be replaced.
 
@@ -622,7 +622,7 @@ class ConfigValidator:
         """
         found_placeholders = []
 
-        def check_dict(d: Dict[str, object], prefix: str = "") -> None:
+        def check_dict(d: dict[str, object], prefix: str = "") -> None:
             """Recursively check dictionary for placeholders."""
             for key, value in d.items():
                 full_key = f"{prefix}.{key}" if prefix else key
@@ -648,7 +648,7 @@ class ConfigValidator:
         return True
 
     def validate_environment_variables(
-        self, config: Dict[str, object], env_file: Optional[Path] = None
+        self, config: dict[str, object], env_file: Optional[Path] = None
     ) -> bool:
         """
         Validate that referenced environment variables are defined.
@@ -691,7 +691,7 @@ class ConfigValidator:
 
         return True
 
-    def validate_database_config(self, config: Dict[str, object]) -> bool:
+    def validate_database_config(self, config: dict[str, object]) -> bool:
         """
         Validate database configuration section.
 
@@ -714,7 +714,7 @@ class ConfigValidator:
             self._process_validation_errors(e, "database")
             return False
 
-    def validate_risk_config(self, config: Dict[str, object]) -> bool:
+    def validate_risk_config(self, config: dict[str, object]) -> bool:
         """
         Validate risk management configuration section.
 
@@ -737,7 +737,7 @@ class ConfigValidator:
             self._process_validation_errors(e, "risk")
             return False
 
-    def validate_circuit_breaker_config(self, config: Dict[str, object]) -> bool:
+    def validate_circuit_breaker_config(self, config: dict[str, object]) -> bool:
         """
         Validate circuit breaker configuration section.
 
@@ -808,7 +808,7 @@ class ConfigValidator:
 
         # Load configuration
         try:
-            with open(prod_config_path, "r") as f:
+            with open(prod_config_path) as f:
                 config = yaml.safe_load(f)
         except OSError as e:
             self.result.add_error("load", f"Failed to load configuration: {e}")
@@ -848,7 +848,9 @@ class ConfigValidator:
 
         return self.result
 
-    def _extract_env_references(self, config: Union[Dict[str, object], List[object], str, int, float, bool]) -> List[str]:
+    def _extract_env_references(
+        self, config: Union[dict[str, object], list[object], str, int, float, bool]
+    ) -> list[str]:
         """
         Extract environment variable references from configuration.
 
@@ -876,7 +878,7 @@ class ConfigValidator:
         extract(config)
         return refs
 
-    def _load_env_file(self, env_file: Path) -> Dict[str, str]:
+    def _load_env_file(self, env_file: Path) -> dict[str, str]:
         """
         Load environment variables from a .env file.
 
@@ -891,7 +893,7 @@ class ConfigValidator:
         """
         env_vars = {}
         try:
-            with open(env_file, "r") as f:
+            with open(env_file) as f:
                 for line in f:
                     line = line.strip()
                     if line and not line.startswith("#") and "=" in line:
@@ -940,7 +942,7 @@ class ConfigValidator:
 
         # Load configuration
         try:
-            with open(config_path, "r") as f:
+            with open(config_path) as f:
                 config = yaml.safe_load(f)
         except OSError as e:
             self.result.add_error("load", f"Failed to load configuration: {e}")
@@ -1009,7 +1011,7 @@ class ConfigValidator:
 
         return self.result
 
-    def _validate_threshold_ranges(self, threshold_config: Dict[str, object]) -> None:
+    def _validate_threshold_ranges(self, threshold_config: dict[str, object]) -> None:
         """
         Validate threshold optimization ranges.
 
@@ -1036,7 +1038,7 @@ class ConfigValidator:
                                 f"min ({min_val}) must be less than max ({max_val})",
                             )
 
-    def _validate_profile_overrides(self, profiles: Dict[str, object]) -> None:
+    def _validate_profile_overrides(self, profiles: dict[str, object]) -> None:
         """
         Validate profile-specific overrides.
 
@@ -1063,7 +1065,7 @@ class ConfigValidator:
                     f"Unknown profile: {profile_name}. Valid profiles: {valid_profiles}",
                 )
 
-    def _validate_tier_overrides(self, tiers: Dict[str, object]) -> None:
+    def _validate_tier_overrides(self, tiers: dict[str, object]) -> None:
         """
         Validate tier-specific overrides.
 
@@ -1123,7 +1125,7 @@ class ConfigValidator:
 
         # Load configuration
         try:
-            with open(config_path, "r") as f:
+            with open(config_path) as f:
                 config = yaml.safe_load(f)
         except OSError as e:
             self.result.add_error("load", f"Failed to load configuration: {e}")
@@ -1220,7 +1222,7 @@ class ConfigValidator:
 
         return self.result
 
-    def _validate_cross_config_references(self, batch_config: Dict[str, object]) -> None:
+    def _validate_cross_config_references(self, batch_config: dict[str, object]) -> None:
         """
         Validate that references to profile_optimization.yaml are valid.
 

@@ -8,7 +8,7 @@ Implements multi-timeframe confirmation to validate signals across different tim
 import logging
 from collections import defaultdict
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 from app.domain.models.signal import Signal, SignalType
 
@@ -37,7 +37,7 @@ class MultiTimeframeConfirmation:
     - Reduces false positives
     """
 
-    def __init__(self, timeframes: List[str], min_confirmations: int = 2):
+    def __init__(self, timeframes: list[str], min_confirmations: int = 2):
         """
         Initialize multi-timeframe confirmation.
 
@@ -47,8 +47,8 @@ class MultiTimeframeConfirmation:
         """
         self.timeframes = timeframes
         self.min_confirmations = min_confirmations
-        self.signal_history: Dict[str, List[TimeframeSignal]] = defaultdict(list)
-        self.confirmed_signals: List[Dict[str, Any]] = []
+        self.signal_history: dict[str, list[TimeframeSignal]] = defaultdict(list)
+        self.confirmed_signals: list[dict[str, Any]] = []
 
     def add_signal(self, signal: Signal, timeframe: str) -> bool:
         """
@@ -119,7 +119,7 @@ class MultiTimeframeConfirmation:
 
     def get_confirmed_signals(
         self, symbol: Optional[str] = None, recent_only: bool = True
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """
         Get confirmed signals.
 
@@ -150,7 +150,7 @@ class MultiTimeframeConfirmation:
 
         return signals
 
-    def get_confirmation_stats(self) -> Dict[str, Any]:
+    def get_confirmation_stats(self) -> dict[str, Any]:
         """Get statistics about confirmations."""
         return {
             "total_confirmations": len(self.confirmed_signals),

@@ -22,7 +22,7 @@ from __future__ import annotations
 
 import logging
 from decimal import Decimal
-from typing import Callable, Dict, List, Optional, Tuple, Union
+from typing import Callable
 
 import numpy as np
 import pandas as pd
@@ -72,8 +72,8 @@ class WalkForwardValidator:
 
     def __init__(
         self,
-        config: Optional[WalkForwardConfig] = None,
-        optimizer: Optional[object] = None,
+        config: WalkForwardConfig | None = None,
+        optimizer: object | None = None,
     ):
         """
         Initialize walk-forward validator.
@@ -87,11 +87,11 @@ class WalkForwardValidator:
 
     def validate(
         self,
-        strategy_factory: Callable[[Dict[str, Union[int, float, str, bool]]], object],
-        param_grid: Dict[str, List[Union[int, float, str, bool]]],
+        strategy_factory: Callable[[dict[str, int | float | str | bool]], object],
+        param_grid: dict[str, list[int | float | str | bool]],
         data: pd.DataFrame,
-        optimizer: Optional[object] = None,
-        progress_callback: Optional[Callable[[int, int], None]] = None,
+        optimizer: object | None = None,
+        progress_callback: Callable[[int, int], None] | None = None,
     ) -> WalkForwardResult:
         """
         Perform walk-forward validation.
@@ -133,8 +133,8 @@ class WalkForwardValidator:
         logger.info(f"Generated {len(windows)} rolling windows for validation")
 
         # Validate each window
-        is_results: List[PeriodResult] = []
-        os_results: List[PeriodResult] = []
+        is_results: list[PeriodResult] = []
+        os_results: list[PeriodResult] = []
 
         for i, (train_data, test_data) in enumerate(windows):
             try:
@@ -182,7 +182,7 @@ class WalkForwardValidator:
 
     def _generate_rolling_windows(
         self, data: pd.DataFrame
-    ) -> List[Tuple[pd.DataFrame, pd.DataFrame]]:
+    ) -> list[tuple[pd.DataFrame, pd.DataFrame]]:
         """
         Generate rolling train/test windows from data.
 
@@ -237,8 +237,8 @@ class WalkForwardValidator:
 
     def _test_period(
         self,
-        strategy_factory: Callable[[Dict[str, Union[int, float, str, bool]]], object],
-        params: Dict[str, Union[int, float, str, bool]],
+        strategy_factory: Callable[[dict[str, int | float | str | bool]], object],
+        params: dict[str, int | float | str | bool],
         data: pd.DataFrame,
         is_in_sample: bool,
         period_id: int,
@@ -279,8 +279,8 @@ class WalkForwardValidator:
 
     def _aggregate_results(
         self,
-        is_results: List[PeriodResult],
-        os_results: List[PeriodResult],
+        is_results: list[PeriodResult],
+        os_results: list[PeriodResult],
     ) -> WalkForwardResult:
         """
         Aggregate results across all periods.
@@ -311,7 +311,9 @@ class WalkForwardValidator:
 
         return result
 
-    def _calculate_aggregate_metrics(self, results: List[PeriodResult]) -> Dict[str, Union[int, float, List[float], List[int]]]:
+    def _calculate_aggregate_metrics(
+        self, results: list[PeriodResult]
+    ) -> dict[str, int | float | list[float] | list[int]]:
         """
         Calculate aggregate performance metrics from period results.
 
@@ -391,7 +393,7 @@ class WalkForwardValidator:
             return os_sharpe / is_sharpe
         return Decimal("0")
 
-    def _calculate_consistency_score(self, os_results: List[PeriodResult]) -> Decimal:
+    def _calculate_consistency_score(self, os_results: list[PeriodResult]) -> Decimal:
         """
         Calculate consistency score across OS periods.
 
@@ -422,7 +424,7 @@ class WalkForwardValidator:
 
         return Decimal(str(consistency))
 
-    def _generate_recommendations(self, result: WalkForwardResult) -> List[str]:
+    def _generate_recommendations(self, result: WalkForwardResult) -> list[str]:
         """
         Generate actionable recommendations based on validation results.
 
@@ -450,8 +452,7 @@ class WalkForwardValidator:
             )
         elif sharpe_degradation < Decimal("0.85"):
             recommendations.append(
-                "MILD: OS Sharpe is less than 85% of IS Sharpe. "
-                "Minor overfitting. Monitor closely."
+                "MILD: OS Sharpe is less than 85% of IS Sharpe. Minor overfitting. Monitor closely."
             )
 
         # Check consistency
@@ -515,10 +516,10 @@ class RollingWindowOptimizer:
 
     def optimize(
         self,
-        strategy_factory: Callable[[Dict[str, Union[int, float, str, bool]]], object],
-        param_grid: Dict[str, List[Union[int, float, str, bool]]],
+        strategy_factory: Callable[[dict[str, int | float | str | bool]], object],
+        param_grid: dict[str, list[int | float | str | bool]],
         data: pd.DataFrame,
-    ) -> Dict[str, Union[int, float, str, bool]]:
+    ) -> dict[str, int | float | str | bool]:
         """
         Optimize strategy parameters on in-sample data.
 
@@ -533,8 +534,8 @@ class RollingWindowOptimizer:
         # Generate all parameter combinations
         param_combinations = self._generate_param_combinations(param_grid)
 
-        best_score: Optional[float] = None
-        best_params: Optional[Dict[str, Union[int, float, str, bool]]] = None
+        best_score: float | None = None
+        best_params: dict[str, int | float | str | bool] | None = None
 
         for params in param_combinations:
             try:
@@ -566,8 +567,8 @@ class RollingWindowOptimizer:
         return best_params
 
     def _generate_param_combinations(
-        self, param_grid: Dict[str, List[Union[int, float, str, bool]]]
-    ) -> List[Dict[str, Union[int, float, str, bool]]]:
+        self, param_grid: dict[str, list[int | float | str | bool]]
+    ) -> list[dict[str, int | float | str | bool]]:
         """
         Generate all combinations of parameters from grid.
 
@@ -618,7 +619,7 @@ def calculate_degradation(is_value: float, os_value: float) -> float:
     return os_value / is_value
 
 
-def calculate_consistency_score(values: List[float]) -> float:
+def calculate_consistency_score(values: list[float]) -> float:
     """
     Calculate consistency score for a list of values.
 

@@ -13,7 +13,7 @@ import logging
 from concurrent.futures import ProcessPoolExecutor, as_completed
 from datetime import datetime
 from itertools import product
-from typing import Any, Callable, Dict, List, Optional, Tuple
+from typing import Any, Callable, Optional
 
 import numpy as np
 from tqdm import tqdm
@@ -79,7 +79,7 @@ class GridSearchOptimizer(BaseOptimizer):
 
     async def optimize(
         self,
-        objective: Callable[[Dict[str, Any]], float],
+        objective: Callable[[dict[str, Any]], float],
         param_grid: ParameterGrid,
     ) -> OptimizationResult:
         """
@@ -145,7 +145,7 @@ class GridSearchOptimizer(BaseOptimizer):
 
         return result
 
-    def _generate_combinations(self, param_grid: ParameterGrid) -> List[Dict[str, Any]]:
+    def _generate_combinations(self, param_grid: ParameterGrid) -> list[dict[str, Any]]:
         """
         Generate all parameter combinations.
 
@@ -171,9 +171,9 @@ class GridSearchOptimizer(BaseOptimizer):
 
     async def _evaluate_combinations(
         self,
-        combinations: List[Dict[str, Any]],
-        objective: Callable[[Dict[str, Any]], float],
-    ) -> Tuple[Dict[str, Any], float]:
+        combinations: list[dict[str, Any]],
+        objective: Callable[[dict[str, Any]], float],
+    ) -> tuple[dict[str, Any], float]:
         """
         Evaluate all parameter combinations.
 
@@ -269,9 +269,9 @@ class GridSearchOptimizer(BaseOptimizer):
 
     async def _evaluate_parallel_async(
         self,
-        combinations: List[Dict[str, Any]],
-        objective: Callable[[Dict[str, Any]], float],
-    ) -> List[TrialResult]:
+        combinations: list[dict[str, Any]],
+        objective: Callable[[dict[str, Any]], float],
+    ) -> list[TrialResult]:
         """
         Evaluate combinations in parallel asynchronously.
 
@@ -323,9 +323,9 @@ class GridSearchOptimizer(BaseOptimizer):
 
     def _evaluate_sequential(
         self,
-        combinations: List[Dict[str, Any]],
-        objective: Callable[[Dict[str, Any]], float],
-    ) -> Tuple[Dict[str, Any], float, List[TrialResult]]:
+        combinations: list[dict[str, Any]],
+        objective: Callable[[dict[str, Any]], float],
+    ) -> tuple[dict[str, Any], float, list[TrialResult]]:
         """
         Evaluate combinations sequentially (synchronous version).
 
@@ -370,9 +370,9 @@ class GridSearchOptimizer(BaseOptimizer):
 
     def _evaluate_parallel(
         self,
-        combinations: List[Dict[str, Any]],
-        objective: Callable[[Dict[str, Any]], float],
-    ) -> Tuple[Dict[str, Any], float, List[TrialResult]]:
+        combinations: list[dict[str, Any]],
+        objective: Callable[[dict[str, Any]], float],
+    ) -> tuple[dict[str, Any], float, list[TrialResult]]:
         """
         Evaluate combinations in parallel (synchronous version).
 
@@ -484,7 +484,7 @@ class GridSearchOptimizerCV(GridSearchOptimizer):
 
     async def optimize(
         self,
-        objective: Callable[[Dict[str, Any], int], float],
+        objective: Callable[[dict[str, Any], int], float],
         param_grid: ParameterGrid,
     ) -> OptimizationResult:
         """
@@ -576,7 +576,7 @@ class GridSearchOptimizerCV(GridSearchOptimizer):
         self._end_time = datetime.now()
         return self._create_result(best_params, best_cv_score)
 
-    def _std(self, values: List[float]) -> float:
+    def _std(self, values: list[float]) -> float:
         """Calculate standard deviation."""
         import statistics
 

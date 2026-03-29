@@ -10,7 +10,6 @@ from __future__ import annotations
 import logging
 from dataclasses import dataclass
 from decimal import Decimal
-from typing import Optional
 
 from app.services.position_management.partial_take_profit import PartialTakeProfit
 from app.services.position_management.pyramiding_manager import PyramidingManager
@@ -27,7 +26,7 @@ class PositionState:
     position_id: str
     trailing_stop_manager: TrailingStopManager
     partial_take_profit: PartialTakeProfit
-    pyramiding_manager: Optional[PyramidingManager] = None
+    pyramiding_manager: PyramidingManager | None = None
     entry_price: Decimal = Decimal("0")
     initial_stop: Decimal = Decimal("0")
     quantity: Decimal = Decimal("0")
@@ -39,8 +38,8 @@ class TradeSignal:
 
     signal_type: str  # "exit", "partial_exit", "add", "none"
     reason: str
-    size: Optional[Decimal] = None
-    price: Optional[Decimal] = None
+    size: Decimal | None = None
+    price: Decimal | None = None
 
 
 class PostTradeAnalyzerImpl(IPostTradeAnalyzer):
@@ -61,7 +60,7 @@ class PostTradeAnalyzerImpl(IPostTradeAnalyzer):
 
     async def update_trailing_stop(
         self, position_id: str, current_price: Decimal
-    ) -> Optional[Decimal]:
+    ) -> Decimal | None:
         """
         R11: Trailing Stop Dinámico.
 
@@ -166,7 +165,7 @@ class PostTradeAnalyzerImpl(IPostTradeAnalyzer):
         logger.warning("calculate_position_metrics requires Position entity - not implemented")
         return {}
 
-    async def generate_exit_signal(self, position_id: str) -> Optional[TradeSignal]:
+    async def generate_exit_signal(self, position_id: str) -> TradeSignal | None:
         """
         Generar señal de salida.
 
@@ -237,7 +236,7 @@ class PostTradeAnalyzerImpl(IPostTradeAnalyzer):
             del self.positions[position_id]
             logger.info(f"Position {position_id} unregistered from post-trade management")
 
-    def get_position_state(self, position_id: str) -> Optional[PositionState]:
+    def get_position_state(self, position_id: str) -> PositionState | None:
         """
         Obtener el estado de gestión de una posición.
 

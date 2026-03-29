@@ -20,17 +20,20 @@ References:
 - Kyle, A.S. (1985) "Continuous Auctions and Insider Trading"
 - Madhavan, A., Richardson, M., & Roomans, M. (1997) "Why Do Stock Prices Move?"
 """
+
 from __future__ import annotations
 
 import logging
 from dataclasses import dataclass
 from datetime import datetime
-from decimal import Decimal
 from enum import Enum
-from typing import Tuple
+from typing import TYPE_CHECKING
 
 import numpy as np
 import pandas as pd
+
+if TYPE_CHECKING:
+    from decimal import Decimal
 
 logger = logging.getLogger(__name__)
 
@@ -75,11 +78,11 @@ class ModelParameters:
     def to_dict(self) -> dict:
         """Convert to dictionary"""
         return {
-            'alpha': self.alpha,
-            'delta': self.delta,
-            'mu': self.mu,
-            'epsilon': self.epsilon,
-            'sigma': self.sigma,
+            "alpha": self.alpha,
+            "delta": self.delta,
+            "mu": self.mu,
+            "epsilon": self.epsilon,
+            "sigma": self.sigma,
         }
 
 
@@ -110,12 +113,12 @@ class GlostenMilgromResult:
     def to_dict(self) -> dict:
         """Convert to dictionary"""
         return {
-            'timestamp': self.timestamp.isoformat(),
-            'bid_price': str(self.bid_price),
-            'ask_price': str(self.ask_price),
-            'spread_bps': self.spread_bps,
-            'adverse_selection_component_pct': self.adverse_selection_component * 100,
-            'informed_trading_probability_pct': self.informed_trading_probability * 100,
+            "timestamp": self.timestamp.isoformat(),
+            "bid_price": str(self.bid_price),
+            "ask_price": str(self.ask_price),
+            "spread_bps": self.spread_bps,
+            "adverse_selection_component_pct": self.adverse_selection_component * 100,
+            "informed_trading_probability_pct": self.informed_trading_probability * 100,
         }
 
 
@@ -146,12 +149,12 @@ class KyleModelResult:
     def to_dict(self) -> dict:
         """Convert to dictionary"""
         return {
-            'timestamp': self.timestamp.isoformat(),
-            'market_depth_lambda': self.market_depth_lambda,
-            'expected_informed_profit': self.expected_informed_profit,
-            'optimal_order_size': self.optimal_order_size,
-            'price_impact': self.price_impact,
-            'information_revelation_pct': self.information_revelation * 100,
+            "timestamp": self.timestamp.isoformat(),
+            "market_depth_lambda": self.market_depth_lambda,
+            "expected_informed_profit": self.expected_informed_profit,
+            "optimal_order_size": self.optimal_order_size,
+            "price_impact": self.price_impact,
+            "information_revelation_pct": self.information_revelation * 100,
         }
 
 
@@ -182,12 +185,12 @@ class OrderFlowImpactResult:
     def to_dict(self) -> dict:
         """Convert to dictionary"""
         return {
-            'timestamp': self.timestamp.isoformat(),
-            'immediate_impact_bps': self.immediate_impact,
-            'permanent_impact_bps': self.permanent_impact,
-            'impact_decay_rate': self.impact_decay,
-            'information_content': self.information_content,
-            'adjustment_speed': self.adjustment_speed,
+            "timestamp": self.timestamp.isoformat(),
+            "immediate_impact_bps": self.immediate_impact,
+            "permanent_impact_bps": self.permanent_impact,
+            "impact_decay_rate": self.impact_decay,
+            "information_content": self.information_content,
+            "adjustment_speed": self.adjustment_speed,
         }
 
 
@@ -216,11 +219,11 @@ class RollSpreadResult:
     def to_dict(self) -> dict:
         """Convert to dictionary"""
         return {
-            'timestamp': self.timestamp.isoformat(),
-            'estimated_spread_bps': self.estimated_spread_bps,
-            'covariance': self.covariance,
-            'spread_std_error': self.spread_std_error,
-            'is_significant': self.is_significant,
+            "timestamp": self.timestamp.isoformat(),
+            "estimated_spread_bps": self.estimated_spread_bps,
+            "covariance": self.covariance,
+            "spread_std_error": self.spread_std_error,
+            "is_significant": self.is_significant,
         }
 
 
@@ -251,12 +254,12 @@ class StollDecompositionResult:
     def to_dict(self) -> dict:
         """Convert to dictionary"""
         return {
-            'timestamp': self.timestamp.isoformat(),
-            'total_spread_bps': self.total_spread_bps,
-            'order_processing_bps': self.order_processing_bps,
-            'inventory_holding_bps': self.inventory_holding_bps,
-            'adverse_selection_bps': self.adverse_selection_bps,
-            'component_weights': self.component_weights,
+            "timestamp": self.timestamp.isoformat(),
+            "total_spread_bps": self.total_spread_bps,
+            "order_processing_bps": self.order_processing_bps,
+            "inventory_holding_bps": self.inventory_holding_bps,
+            "adverse_selection_bps": self.adverse_selection_bps,
+            "component_weights": self.component_weights,
         }
 
 
@@ -311,7 +314,7 @@ class GlostenMilgromModel:
         self.epsilon = epsilon
         self.current_value = initial_value
 
-    def calculate_equilibrium_spread(self) -> Tuple[float, float]:
+    def calculate_equilibrium_spread(self) -> tuple[float, float]:
         """
         Calculate equilibrium bid and ask prices
 
@@ -337,8 +340,8 @@ class GlostenMilgromModel:
         V_high = 2 * V0  # Value with good news (assumes symmetric)
 
         # Calculate unconditional value
-        # E[V] = (1-α)*V₀ + α*δ*V_low + α*(1-δ)*V_high
-        #      = (1-α)*V₀ + α*(1-δ)*2*V₀
+        # E[V] = (1-alpha)*V₀ + alpha*delta*V_low + alpha*(1-delta)*V_high
+        #      = (1-alpha)*V₀ + alpha*(1-delta)*2*V₀
         (1 - self.alpha) * V0 + self.alpha * (1 - self.delta) * 2 * V0
 
         # Probability sell is informed
@@ -357,10 +360,7 @@ class GlostenMilgromModel:
         uninformed_buy_rate = (1 - self.alpha) * self.epsilon
         total_buy_rate = informed_buy_rate + uninformed_buy_rate
 
-        if total_buy_rate > 0:
-            prob_informed_given_buy = informed_buy_rate / total_buy_rate
-        else:
-            prob_informed_given_buy = 0
+        prob_informed_given_buy = informed_buy_rate / total_buy_rate if total_buy_rate > 0 else 0
 
         # Expected value conditional on trade
         # E[V | sell] = prob_informed_given_sell * V_low + (1 - prob_informed_given_sell) * V₀
@@ -432,38 +432,38 @@ class GlostenMilgromModel:
             if rand < prob_informed:
                 # Informed trader
                 if true_value > current_bid:
-                    side = 'BUY'
+                    side = "BUY"
                 elif true_value < current_ask:
-                    side = 'SELL'
+                    side = "SELL"
                 else:
-                    side = np.random.choice(['BUY', 'SELL'])
-                trader_type = 'INFORMED'
+                    side = np.random.choice(["BUY", "SELL"])
+                trader_type = "INFORMED"
             elif rand < prob_informed + prob_uninformed_buy:
-                side = 'BUY'
-                trader_type = 'UNINFORMED'
+                side = "BUY"
+                trader_type = "UNINFORMED"
             else:
-                side = 'SELL'
-                trader_type = 'UNINFORMED'
+                side = "SELL"
+                trader_type = "UNINFORMED"
 
             # Execute trade at mid
             execution_price = (current_bid + current_ask) / 2
 
             trades.append(
                 {
-                    'trade_num': i + 1,
-                    'side': side,
-                    'trader_type': trader_type,
-                    'price': execution_price,
-                    'bid': current_bid,
-                    'ask': current_ask,
-                    'spread': current_ask - current_bid,
-                    'true_value': true_value,
-                    'information_event': information_event.value,
+                    "trade_num": i + 1,
+                    "side": side,
+                    "trader_type": trader_type,
+                    "price": execution_price,
+                    "bid": current_bid,
+                    "ask": current_ask,
+                    "spread": current_ask - current_bid,
+                    "true_value": true_value,
+                    "information_event": information_event.value,
                 }
             )
 
             # Update quotes
-            if side == 'BUY':
+            if side == "BUY":
                 # Buy signal: increase quotes
                 current_bid = min(current_bid * 1.01, true_value)
                 current_ask = min(current_ask * 1.01, true_value)
@@ -492,17 +492,17 @@ class GlostenMilgromModel:
         # Calculate percentages
         if total_spread > 0:
             return {
-                'total_spread': total_spread,
-                'adverse_selection_pct': 100.0,
-                'order_processing_pct': 0.0,
-                'inventory_holding_pct': 0.0,
+                "total_spread": total_spread,
+                "adverse_selection_pct": 100.0,
+                "order_processing_pct": 0.0,
+                "inventory_holding_pct": 0.0,
             }
         else:
             return {
-                'total_spread': 0.0,
-                'adverse_selection_pct': 0.0,
-                'order_processing_pct': 0.0,
-                'inventory_holding_pct': 0.0,
+                "total_spread": 0.0,
+                "adverse_selection_pct": 0.0,
+                "order_processing_pct": 0.0,
+                "inventory_holding_pct": 0.0,
             }
 
 
@@ -516,11 +516,11 @@ class KyleModel:
     3. Ultimately all information is revealed in price
 
     Model structure:
-    - Informed trader observes true value v ~ N(V₀, Σ₀)
+    - Informed trader observes true value v ~ N(V₀, Sigma₀)
     - Submits order x = X(v)
-    - Noise traders submit random order u ~ N(0, σᵤ²)
+    - Noise traders submit random order u ~ N(0, sigmaᵤ^2)
     - Market maker observes total flow y = x + u
-    - Sets price p = E[v | y] = V₀ + λy
+    - Sets price p = E[v | y] = V₀ + lambday
     """
 
     def __init__(
@@ -550,7 +550,7 @@ class KyleModel:
         self.Sigma_u = Sigma_u
 
         # Calculate equilibrium lambda (market depth parameter)
-        # λ = σᵥ / σᵤ where σᵥ² = Σ₀
+        # lambda = sigmaᵥ / sigmaᵤ where sigmaᵥ^2 = Sigma₀
         self.lambda_kyle = np.sqrt(Sigma0) / np.sqrt(Sigma_u)
         logger.info(
             "Kyle model initialized",
@@ -605,7 +605,7 @@ class KyleModel:
         price_impact = self.lambda_kyle * optimal_order
 
         # Information revelation (how much of signal gets into price)
-        # In equilibrium, λ = σᵥ/(2σᵤ) for partial revelation
+        # In equilibrium, lambda = sigmaᵥ/(2sigmaᵤ) for partial revelation
         # All information revealed in final price
         information_revelation = 1.0  # Complete revelation in Kyle model
 
@@ -656,14 +656,14 @@ class KyleModel:
 
             results.append(
                 {
-                    'period': t + 1,
-                    'true_value': true_value,
-                    'informed_order': informed_order,
-                    'noise_order': noise_order,
-                    'total_flow': total_flow,
-                    'transaction_price': transaction_price,
-                    'price_error': transaction_price - true_value,
-                    'informed_profit': informed_profit,
+                    "period": t + 1,
+                    "true_value": true_value,
+                    "informed_order": informed_order,
+                    "noise_order": noise_order,
+                    "total_flow": total_flow,
+                    "transaction_price": transaction_price,
+                    "price_error": transaction_price - true_value,
+                    "informed_profit": informed_profit,
                 }
             )
 
@@ -725,7 +725,7 @@ class MadhavanRichardsonModel:
             )
 
         # Regress price changes on order flow
-        # Δp = γ * flow + ε
+        # Deltap = gamma * flow + epsilon
         try:
             flow = flow.reshape(-1, 1)
             gamma, _, _, _ = np.linalg.lstsq(flow, changes, rcond=None)
@@ -758,7 +758,7 @@ class RollSpreadEstimator:
     based on bid-ask bounce
 
     Key insight:
-    Cov(Δp, Δp-1) = -s²/4
+    Cov(Deltap, Deltap-1) = -s^2/4
     where s is the effective spread
     """
 
@@ -791,16 +791,10 @@ class RollSpreadEstimator:
         returns = price_series.pct_change().dropna()
 
         # Calculate first-order serial covariance
-        if len(returns) >= 2:
-            covariance = returns.iloc[1:].cov(returns.iloc[:-1])
-        else:
-            covariance = 0.0
+        covariance = returns.iloc[1:].cov(returns.iloc[:-1]) if len(returns) >= 2 else 0.0
 
         # Estimate spread: s = 2*sqrt(-cov)
-        if covariance < 0:
-            estimated_spread = 2 * np.sqrt(-covariance)
-        else:
-            estimated_spread = 0.0
+        estimated_spread = 2 * np.sqrt(-covariance) if covariance < 0 else 0.0
 
         # Standard error (simplified)
         std_error = abs(covariance) / np.sqrt(len(returns))
@@ -882,15 +876,15 @@ class StollSpreadDecomposer:
         # Calculate weights
         if observed_spread_bps > 0:
             weights: dict[str, float] = {
-                'order_processing': order_processing / observed_spread_bps,
-                'inventory_holding': inventory_holding / observed_spread_bps,
-                'adverse_selection': adverse_selection / observed_spread_bps,
+                "order_processing": order_processing / observed_spread_bps,
+                "inventory_holding": inventory_holding / observed_spread_bps,
+                "adverse_selection": adverse_selection / observed_spread_bps,
             }
         else:
             weights = {
-                'order_processing': 0.0,
-                'inventory_holding': 0.0,
-                'adverse_selection': 0.0,
+                "order_processing": 0.0,
+                "inventory_holding": 0.0,
+                "adverse_selection": 0.0,
             }
 
         return StollDecompositionResult(
@@ -940,42 +934,42 @@ class MicrostructureModelComparator:
         results = {}
 
         # Roll spread estimate
-        roll_result = self.roll_estimator.estimate_spread(price_history['close'])
-        results['roll'] = roll_result.to_dict()
+        roll_result = self.roll_estimator.estimate_spread(price_history["close"])
+        results["roll"] = roll_result.to_dict()
 
         # Glosten-Milgrom equilibrium spread
         bid, ask = self.gm_model.calculate_equilibrium_spread()
         spread_bps = (ask - bid) / ((bid + ask) / 2) * 10000
-        results['glosten_milgrom'] = {
-            'bid': bid,
-            'ask': ask,
-            'spread_bps': spread_bps,
-            'spread_components': self.gm_model.calculate_spread_components(),
+        results["glosten_milgrom"] = {
+            "bid": bid,
+            "ask": ask,
+            "spread_bps": spread_bps,
+            "spread_components": self.gm_model.calculate_spread_components(),
         }
 
         logger.info(
             "Market analysis completed",
             extra={
-                "roll_spread_bps": results['roll']['estimated_spread_bps'],
-                "glosten_milgrom_spread_bps": results['glosten_milgrom']['spread_components'],
-                "kyle_market_depth_lambda": results['kyle']['market_depth_lambda'],
-                "interpretation": results['kyle']['interpretation'],
+                "roll_spread_bps": results["roll"]["estimated_spread_bps"],
+                "glosten_milgrom_spread_bps": results["glosten_milgrom"]["spread_components"],
+                "kyle_market_depth_lambda": results["kyle"]["market_depth_lambda"],
+                "interpretation": results["kyle"]["interpretation"],
             },
         )  # Kyle market depth
         lambda_kyle = self.kyle_model.calculate_market_depth()
-        results['kyle'] = {
-            'market_depth_lambda': lambda_kyle,
-            'interpretation': 'Higher values = less depth = more impact',
+        results["kyle"] = {
+            "market_depth_lambda": lambda_kyle,
+            "interpretation": "Higher values = less depth = more impact",
         }
 
         # Stoll decomposition
         if len(price_history) >= 20:
-            returns = price_history['close'].pct_change().dropna()
+            returns = price_history["close"].pct_change().dropna()
             volatility = returns.tail(20).std()
             variance = returns.tail(20).var()
             volume = (
-                price_history['volume'].tail(20).mean()
-                if 'volume' in price_history.columns
+                price_history["volume"].tail(20).mean()
+                if "volume" in price_history.columns
                 else 1000000
             )
 
@@ -990,7 +984,7 @@ class MicrostructureModelComparator:
                 volume=volume,
                 volatility=volatility,
             )
-            results['stoll'] = stoll_result.to_dict()
+            results["stoll"] = stoll_result.to_dict()
 
         return results
 
@@ -1075,24 +1069,24 @@ def get_model_comparator() -> MicrostructureModelComparator:
 
 
 __all__ = [
-    "ModelType",
-    "InformationEvent",
-    "ModelParameters",
+    "GlostenMilgromModel",
     "GlostenMilgromResult",
+    "InformationEvent",
+    "KyleModel",
     "KyleModelResult",
+    "MadhavanRichardsonModel",
+    "MicrostructureModelComparator",
+    "ModelParameters",
+    "ModelType",
     "OrderFlowImpactResult",
+    "RollSpreadEstimator",
     "RollSpreadResult",
     "StollDecompositionResult",
-    "GlostenMilgromModel",
-    "KyleModel",
-    "MadhavanRichardsonModel",
-    "RollSpreadEstimator",
     "StollSpreadDecomposer",
-    "MicrostructureModelComparator",
     "get_glosten_milgrom_model",
     "get_kyle_model",
     "get_madhavanh_richardson_model",
+    "get_model_comparator",
     "get_roll_estimator",
     "get_stoll_decomposer",
-    "get_model_comparator",
 ]

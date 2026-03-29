@@ -25,7 +25,7 @@ Date: 2026-01-28
 import logging
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from typing import Dict, List, Optional
+from typing import Optional
 
 import numpy as np
 
@@ -43,7 +43,7 @@ class ExecutionPlan:
     symbol: str
     side: str  # 'buy' or 'sell'
     total_quantity: float
-    execution_slices: List['ExecutionSlice']
+    execution_slices: list["ExecutionSlice"]
     algorithm: str
     urgency: float  # 0 to 1, where 1 is most urgent
     expected_market_impact: float
@@ -110,7 +110,7 @@ class VWAPExecutor:
 
     def __init__(
         self,
-        typical_volume_profile: Optional[Dict[str, float]] = None,
+        typical_volume_profile: Optional[dict[str, float]] = None,
     ):
         """
         Initialize VWAP Executor.
@@ -141,7 +141,7 @@ class VWAPExecutor:
         end_time: Optional[datetime] = None,
         max_slices: int = 20,
         min_slice_pct: float = _DEFAULT_MIN_SLICE_PCT,  # Minimum 2% per slice
-        custom_volume_profile: Optional[Dict[str, float]] = None,
+        custom_volume_profile: Optional[dict[str, float]] = None,
     ) -> ExecutionPlan:
         """
         Create VWAP execution plan.

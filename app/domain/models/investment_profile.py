@@ -13,16 +13,11 @@ Capabilities:
 import logging
 from decimal import Decimal
 from enum import Enum
-from typing import Dict, List
 from uuid import uuid4
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
-from app.domain.models.input_profile import (
-    InputProfile,
-    ObjectivoInversion,
-    RiskTolerance,
-)
+from app.domain.models.input_profile import InputProfile, ObjectivoInversion, RiskTolerance
 
 logger = logging.getLogger(__name__)
 
@@ -79,7 +74,7 @@ class InvestmentProfile(BaseModel):
     investment_horizon: int = Field(..., ge=1, le=600, description="Investment horizon in months")
 
     # Module Activation
-    enabled_modules: List[str] = Field(
+    enabled_modules: list[str] = Field(
         ..., description="Which strategy modules to activate based on capital tier & objective"
     )
 
@@ -123,11 +118,11 @@ class InvestmentProfile(BaseModel):
 
     # Metadata
     created_at: str = Field(
-        default_factory=lambda: __import__('datetime').datetime.now().isoformat(),
+        default_factory=lambda: __import__("datetime").datetime.now().isoformat(),
         description="Timestamp of profile generation",
     )
 
-    @field_validator('capital_tier', mode='before')
+    @field_validator("capital_tier", mode="before")
     @classmethod
     def validate_capital_tier(cls, v):
         """Validate capital tier is in enum."""
@@ -136,12 +131,14 @@ class InvestmentProfile(BaseModel):
         if isinstance(v, str):
             try:
                 return CapitalTier(v.lower())
-            except ValueError:
+            except ValueError as exc:
                 valid = [e.value for e in CapitalTier]
-                raise ValueError(f"Invalid capital tier: {v}. Must be one of: {', '.join(valid)}")
+                raise ValueError(
+                    f"Invalid capital tier: {v}. Must be one of: {', '.join(valid)}"
+                ) from exc
         return v
 
-    @field_validator('objetivo_inversion', mode='before')
+    @field_validator("objetivo_inversion", mode="before")
     @classmethod
     def validate_objetivo(cls, v):
         """Validate objective is in enum."""
@@ -150,12 +147,14 @@ class InvestmentProfile(BaseModel):
         if isinstance(v, str):
             try:
                 return ObjectivoInversion(v.lower().strip())
-            except ValueError:
+            except ValueError as exc:
                 valid = [e.value for e in ObjectivoInversion]
-                raise ValueError(f"Invalid objetivo: {v}. Must be one of: {', '.join(valid)}")
+                raise ValueError(
+                    f"Invalid objetivo: {v}. Must be one of: {', '.join(valid)}"
+                ) from exc
         return v
 
-    @field_validator('risk_tolerance', mode='before')
+    @field_validator("risk_tolerance", mode="before")
     @classmethod
     def validate_risk_tolerance(cls, v):
         """Validate risk tolerance is in enum."""
@@ -164,9 +163,11 @@ class InvestmentProfile(BaseModel):
         if isinstance(v, str):
             try:
                 return RiskTolerance(v.lower().strip())
-            except ValueError:
+            except ValueError as exc:
                 valid = [e.value for e in RiskTolerance]
-                raise ValueError(f"Invalid risk_tolerance: {v}. Must be one of: {', '.join(valid)}")
+                raise ValueError(
+                    f"Invalid risk_tolerance: {v}. Must be one of: {', '.join(valid)}"
+                ) from exc
         return v
 
     def to_dict(self) -> dict:
@@ -200,7 +201,7 @@ class ProfileGenerator:
     - Capital & Objective → Module Activation
     """
 
-    def __init__(self, config: Dict):
+    def __init__(self, config: dict):
         """
         Initialize ProfileGenerator with config.
 
@@ -208,7 +209,7 @@ class ProfileGenerator:
             config: Investment profiles configuration (either raw dict or dict with 'profiles' key)
         """
         # Handle both formats: raw profiles dict or dict with 'profiles' key
-        self.config = config.get('profiles', config)
+        self.config = config.get("profiles", config)
         logger.info("ProfileGenerator initialized with configuration")
 
     @staticmethod
@@ -265,7 +266,7 @@ class ProfileGenerator:
 
             # 5. Create InvestmentProfile
             investment_profile = InvestmentProfile(
-                profile_id=str(__import__('uuid').uuid4()),
+                profile_id=str(__import__("uuid").uuid4()),
                 input_id=input_profile.input_id,
                 capital_initial=input_profile.capital_initial,
                 capital_tier=capital_tier,

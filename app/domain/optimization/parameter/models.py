@@ -8,7 +8,7 @@ import logging
 from dataclasses import dataclass, field
 from decimal import Decimal
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional, Union
+from typing import Any, Callable, Optional, Union
 
 from pydantic import BaseModel, ConfigDict, field_validator
 
@@ -16,8 +16,8 @@ logger = logging.getLogger(__name__)
 
 # Type aliases for parameter values
 ParameterValue = Union[str, int, float, bool, Decimal]
-ParameterDict = Dict[str, ParameterValue]
-ParameterValuesList = List[ParameterValue]
+ParameterDict = dict[str, ParameterValue]
+ParameterValuesList = list[ParameterValue]
 
 
 class ParameterType(str, Enum):
@@ -330,7 +330,7 @@ class ParameterRange:
 
         return []
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary representation."""
         return {
             "name": self.name,
@@ -429,8 +429,8 @@ class ParameterGrid:
         ```
     """
 
-    parameters: List[ParameterRange]
-    constraints: List[ParameterConstraint] = field(default_factory=list)
+    parameters: list[ParameterRange]
+    constraints: list[ParameterConstraint] = field(default_factory=list)
 
     def __post_init__(self):
         """Validate parameter grid."""
@@ -455,7 +455,7 @@ class ParameterGrid:
             },
         )
 
-    def generate_combinations(self) -> List[ParameterDict]:
+    def generate_combinations(self) -> list[ParameterDict]:
         """
         Generate all parameter combinations for grid search.
 
@@ -534,7 +534,7 @@ class ParameterGrid:
             total *= len(p.get_grid_values())
         return total
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary representation."""
         return {
             "parameters": [p.to_dict() for p in self.parameters],
@@ -576,6 +576,6 @@ class PydanticParameterGrid(BaseModel):
 
     model_config = ConfigDict(use_enum_values=True)
 
-    parameters: List[PydanticParameterRange]
-    constraints: List[Dict[str, Any]] = []
+    parameters: list[PydanticParameterRange]
+    constraints: list[dict[str, Any]] = []
     total_combinations: int = 0

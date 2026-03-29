@@ -7,7 +7,7 @@ import logging
 import os
 from enum import Enum
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings
@@ -175,9 +175,9 @@ class APIConfig(BaseSettings):
     refresh_token_expire_days: int = Field(default=7, env="REFRESH_TOKEN_EXPIRE_DAYS")
 
     # CORS
-    cors_origins: List[str] = Field(default=["*"])
-    cors_methods: List[str] = Field(default=["*"])
-    cors_headers: List[str] = Field(default=["*"])
+    cors_origins: list[str] = Field(default=["*"])
+    cors_methods: list[str] = Field(default=["*"])
+    cors_headers: list[str] = Field(default=["*"])
 
     # Rate limiting
     rate_limit_requests: int = Field(default=100, env="RATE_LIMIT_REQUESTS")
@@ -440,11 +440,9 @@ class CentralizedConfig(BaseSettings):
                     "Configuration validation failed with unexpected error",
                     extra={"error_type": type(e).__name__, "error_message": str(e)},
                 )
-                raise_configuration_error(
-                    f"Configuration validation failed: {str(e)}", "validation"
-                )
+                raise_configuration_error(f"Configuration validation failed: {e!s}", "validation")
 
-    def get_config_dict(self) -> Dict[str, Any]:
+    def get_config_dict(self) -> dict[str, Any]:
         """Get configuration as dictionary."""
         return {
             "environment": self.environment.value,

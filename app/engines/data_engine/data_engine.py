@@ -15,15 +15,13 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import TYPE_CHECKING, Any
 
 import numpy as np
 
 from .cache.distributed_cache import DistributedCache
 from .config_loader import DataEngineConfigLoader
 from .normalizers.unified_normalizer import UnifiedNormalizer
-from .sources.base_source import BaseDataSource
 from .sources.fundamental_sources import AlphaVantageFundamentalSource, FinancialModelingPrepSource
 from .sources.ohlcv_sources import AlpacaSource, BinanceSource, IBKRSource, PolygonSource
 from .sources.options_sources import OptionsVolatilitySource
@@ -38,6 +36,11 @@ from .versioning.data_lineage import DataLineageTracker
 from .versioning.schema_versioner import SchemaVersioner
 from .versioning.version_manager import DataVersionManager
 
+if TYPE_CHECKING:
+    from datetime import datetime
+
+    from .sources.base_source import BaseDataSource
+
 logger = logging.getLogger(__name__)
 
 
@@ -48,7 +51,7 @@ class DataEngine:
     Coordina todas las fuentes, normalizadores, validadores y versionado.
     """
 
-    def __init__(self, config: Dict[str, Any] = None):
+    def __init__(self, config: dict[str, Any] | None = None):
         """
         Inicializar Data Engine.
 
@@ -60,101 +63,101 @@ class DataEngine:
 
         # Cargar configuración desde YAML
         self.config_loader = DataEngineConfigLoader(
-            config.get('config_path', 'config/data_engine.yaml')
+            config.get("config_path", "config/data_engine.yaml")
         )
 
         # Obtener configuración de entorno si está disponible
         import os
 
-        env_redis_url = os.getenv('REDIS_URL') or os.getenv('DATA_ENGINE_CACHE_REDIS_URL')
-        env_postgres_url = os.getenv('DATABASE_URL') or os.getenv('DATA_ENGINE_CACHE_POSTGRES_URL')
+        env_redis_url = os.getenv("REDIS_URL") or os.getenv("DATA_ENGINE_CACHE_REDIS_URL")
+        env_postgres_url = os.getenv("DATABASE_URL") or os.getenv("DATA_ENGINE_CACHE_POSTGRES_URL")
 
         # Inicializar componentes
-        self.sources: Dict[str, BaseDataSource] = {}
+        self.sources: dict[str, BaseDataSource] = {}
         self.normalizer = UnifiedNormalizer(self.config_loader.get_normalization_config())
         self.cleaning_pipeline = DataCleaningPipeline(self.config_loader.get_cleaning_config())
 
         versioning_config = self.config_loader.get_versioning_config()
         self.schema_versioner = SchemaVersioner(
-            {'schema_version': versioning_config.get('schema_version', '1.0.0')}
+            {"schema_version": versioning_config.get("schema_version", "1.0.0")}
         )
         self.lineage_tracker = DataLineageTracker(
-            {'enabled': versioning_config.get('data_lineage_enabled', True)}
+            {"enabled": versioning_config.get("data_lineage_enabled", True)}
         )
         self.version_manager = DataVersionManager(
-            {'enabled': versioning_config.get('enabled', True)}
+            {"enabled": versioning_config.get("enabled", True)}
         )
 
         # Cache distribuido (Redis + PostgreSQL con fallback a memoria)
         cache_config = self.config_loader.get_cache_config(env_redis_url, env_postgres_url)
         # Merge con config externo si existe
-        if 'cache_config' in config:
-            cache_config.update(config['cache_config'])
+        if "cache_config" in config:
+            cache_config.update(config["cache_config"])
         self.cache = DistributedCache(cache_config)
 
         # Streaming manager (WebSocket)
         streaming_config = self.config_loader.get_streaming_config()
         # Merge con config externo si existe
-        if 'streaming_config' in config:
-            streaming_config.update(config['streaming_config'])
+        if "streaming_config" in config:
+            streaming_config.update(config["streaming_config"])
         self.streaming_manager = WebSocketStreamingManager(streaming_config)
-        self.streaming_enabled = streaming_config.get('enabled', False)
+        self.streaming_enabled = streaming_config.get("enabled", False)
 
         # Inicializar fuentes configuradas
-        sources_config = config.get('sources', {})
+        sources_config = config.get("sources", {})
         self._initialize_sources(sources_config)
 
-    def _initialize_sources(self, sources_config: Dict[str, Any]) -> None:
+    def _initialize_sources(self, sources_config: dict[str, Any]) -> None:
         """Inicializar fuentes de datos configuradas."""
         # Fuentes OHLCV
-        ohlcv_sources = sources_config.get('ohlcv', {})
+        ohlcv_sources = sources_config.get("ohlcv", {})
 
-        if 'ibkr' in ohlcv_sources:
-            self.sources['ibkr'] = IBKRSource(ohlcv_sources['ibkr'])
+        if "ibkr" in ohlcv_sources:
+            self.sources["ibkr"] = IBKRSource(ohlcv_sources["ibkr"])
 
-        if 'binance' in ohlcv_sources:
-            self.sources['binance'] = BinanceSource(ohlcv_sources['binance'])
+        if "binance" in ohlcv_sources:
+            self.sources["binance"] = BinanceSource(ohlcv_sources["binance"])
 
-        if 'alpaca' in ohlcv_sources:
-            self.sources['alpaca'] = AlpacaSource(ohlcv_sources['alpaca'])
+        if "alpaca" in ohlcv_sources:
+            self.sources["alpaca"] = AlpacaSource(ohlcv_sources["alpaca"])
 
-        if 'polygon' in ohlcv_sources:
-            self.sources['polygon'] = PolygonSource(ohlcv_sources['polygon'])
+        if "polygon" in ohlcv_sources:
+            self.sources["polygon"] = PolygonSource(ohlcv_sources["polygon"])
 
         # Fuentes fundamentales
-        fundamental_sources = sources_config.get('fundamental', {})
+        fundamental_sources = sources_config.get("fundamental", {})
 
-        if 'fmp' in fundamental_sources:
-            self.sources['fmp'] = FinancialModelingPrepSource(fundamental_sources['fmp'])
+        if "fmp" in fundamental_sources:
+            self.sources["fmp"] = FinancialModelingPrepSource(fundamental_sources["fmp"])
 
-        if 'alpha_vantage_fundamental' in fundamental_sources:
-            self.sources['alpha_vantage_fundamental'] = AlphaVantageFundamentalSource(
-                fundamental_sources['alpha_vantage_fundamental']
+        if "alpha_vantage_fundamental" in fundamental_sources:
+            self.sources["alpha_vantage_fundamental"] = AlphaVantageFundamentalSource(
+                fundamental_sources["alpha_vantage_fundamental"]
             )
 
         # Fuentes de sentimiento
-        sentiment_sources = sources_config.get('sentiment', {})
+        sentiment_sources = sources_config.get("sentiment", {})
 
-        if 'twitter' in sentiment_sources:
-            self.sources['twitter'] = TwitterSentimentSource(sentiment_sources['twitter'])
+        if "twitter" in sentiment_sources:
+            self.sources["twitter"] = TwitterSentimentSource(sentiment_sources["twitter"])
 
-        if 'reddit' in sentiment_sources:
-            self.sources['reddit'] = RedditSentimentSource(sentiment_sources['reddit'])
+        if "reddit" in sentiment_sources:
+            self.sources["reddit"] = RedditSentimentSource(sentiment_sources["reddit"])
 
-        if 'news' in sentiment_sources:
-            self.sources['news'] = NewsSentimentSource(sentiment_sources['news'])
+        if "news" in sentiment_sources:
+            self.sources["news"] = NewsSentimentSource(sentiment_sources["news"])
 
         # Fuentes de opciones
-        options_sources = sources_config.get('options', {})
+        options_sources = sources_config.get("options", {})
 
-        if 'volatility' in options_sources:
-            self.sources['options_volatility'] = OptionsVolatilitySource(
-                options_sources['volatility']
+        if "volatility" in options_sources:
+            self.sources["options_volatility"] = OptionsVolatilitySource(
+                options_sources["volatility"]
             )
 
         logger.info(f"DataEngine inicializado con {len(self.sources)} fuentes")
 
-    async def connect_all(self) -> Dict[str, bool]:
+    async def connect_all(self) -> dict[str, bool]:
         """
         Conectar a todas las fuentes configuradas.
 
@@ -191,12 +194,12 @@ class DataEngine:
         symbol: str,
         start_date: datetime,
         end_date: datetime,
-        source: Optional[str] = None,
-        frequency: str = '1d',
+        source: str | None = None,
+        frequency: str = "1d",
         normalize: bool = True,
         clean: bool = True,
         use_cache: bool = True,
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """
         Obtener datos OHLCV.
 
@@ -216,7 +219,7 @@ class DataEngine:
         # Verificar cache
         if use_cache:
             cache_key = self.cache._make_key(
-                'ohlcv',
+                "ohlcv",
                 symbol,
                 start_date=start_date.isoformat(),
                 end_date=end_date.isoformat(),
@@ -234,7 +237,7 @@ class DataEngine:
             ohlcv_source = self.sources.get(source)
         else:
             # Buscar primera fuente OHLCV disponible
-            for name in ['polygon', 'alpaca', 'binance', 'ibkr']:
+            for name in ["polygon", "alpaca", "binance", "ibkr"]:
                 if name in self.sources:
                     ohlcv_source = self.sources[name]
                     break
@@ -249,7 +252,7 @@ class DataEngine:
 
         # Obtener datos
         try:
-            if hasattr(ohlcv_source, 'get_ohlcv'):
+            if hasattr(ohlcv_source, "get_ohlcv"):
                 raw_data = await ohlcv_source.get_ohlcv(symbol, start_date, end_date)
             else:
                 logger.error(f"Fuente {ohlcv_source.name} no implementa get_ohlcv")
@@ -269,8 +272,8 @@ class DataEngine:
 
         # Limpiar
         if clean:
-            cleaning_result = self.cleaning_pipeline.clean(raw_data, symbol, 'ohlcv')
-            raw_data = cleaning_result['cleaned_data']
+            cleaning_result = self.cleaning_pipeline.clean(raw_data, symbol, "ohlcv")
+            raw_data = cleaning_result["cleaned_data"]
 
         # Guardar en cache
         if use_cache:
@@ -278,10 +281,10 @@ class DataEngine:
                 cache_key,
                 raw_data,
                 metadata={
-                    'symbol': symbol,
-                    'source': ohlcv_source.name,
-                    'data_type': 'ohlcv',
-                    'frequency': frequency,
+                    "symbol": symbol,
+                    "source": ohlcv_source.name,
+                    "data_type": "ohlcv",
+                    "frequency": frequency,
                 },
             )
 
@@ -294,10 +297,10 @@ class DataEngine:
     async def get_fundamentals(
         self,
         symbol: str,
-        source: Optional[str] = None,
-        data_type: str = 'profile',  # profile, metrics, statements
+        source: str | None = None,
+        data_type: str = "profile",  # profile, metrics, statements
         use_cache: bool = True,
-    ) -> Optional[Dict[str, Any]]:
+    ) -> dict[str, Any] | None:
         """
         Obtener datos fundamentales.
 
@@ -313,7 +316,7 @@ class DataEngine:
         # Verificar cache
         if use_cache:
             cache_key = self.cache._make_key(
-                'fundamentals', symbol, data_type=data_type, source=source
+                "fundamentals", symbol, data_type=data_type, source=source
             )
             cached_data = await self.cache.get(cache_key)
             if cached_data:
@@ -326,7 +329,7 @@ class DataEngine:
             fundamental_source = self.sources.get(source)
         else:
             # Buscar primera fuente fundamental disponible
-            for name in ['fmp', 'alpha_vantage_fundamental']:
+            for name in ["fmp", "alpha_vantage_fundamental"]:
                 if name in self.sources:
                     fundamental_source = self.sources[name]
                     break
@@ -345,27 +348,27 @@ class DataEngine:
         result = None
         try:
             if isinstance(fundamental_source, FinancialModelingPrepSource):
-                if data_type == 'profile':
+                if data_type == "profile":
                     result = await fundamental_source.get_company_profile(symbol)
-                elif data_type == 'metrics':
-                    result = {'metrics': await fundamental_source.get_key_metrics(symbol)}
-                elif data_type == 'statements':
+                elif data_type == "metrics":
+                    result = {"metrics": await fundamental_source.get_key_metrics(symbol)}
+                elif data_type == "statements":
                     result = {
-                        'income': await fundamental_source.get_financial_statements(
-                            symbol, 'income-statement'
+                        "income": await fundamental_source.get_financial_statements(
+                            symbol, "income-statement"
                         ),
-                        'balance': await fundamental_source.get_financial_statements(
-                            symbol, 'balance-sheet-statement'
+                        "balance": await fundamental_source.get_financial_statements(
+                            symbol, "balance-sheet-statement"
                         ),
-                        'cashflow': await fundamental_source.get_financial_statements(
-                            symbol, 'cash-flow-statement'
+                        "cashflow": await fundamental_source.get_financial_statements(
+                            symbol, "cash-flow-statement"
                         ),
                     }
 
             elif isinstance(fundamental_source, AlphaVantageFundamentalSource):
-                if data_type == 'profile':
+                if data_type == "profile":
                     result = await fundamental_source.get_company_overview(symbol)
-                elif data_type == 'earnings':
+                elif data_type == "earnings":
                     result = await fundamental_source.get_earnings(symbol)
 
         except (asyncio.TimeoutError, OSError) as e:
@@ -378,17 +381,17 @@ class DataEngine:
                 cache_key,
                 result,
                 metadata={
-                    'symbol': symbol,
-                    'source': fundamental_source.name,
-                    'data_type': f'fundamentals_{data_type}',
+                    "symbol": symbol,
+                    "source": fundamental_source.name,
+                    "data_type": f"fundamentals_{data_type}",
                 },
             )
 
         return result
 
     async def get_sentiment(
-        self, symbol: str, source: Optional[str] = None, max_results: Optional[int] = None
-    ) -> Dict[str, Any]:
+        self, symbol: str, source: str | None = None, max_results: int | None = None
+    ) -> dict[str, Any]:
         """
         Obtener sentimiento para un símbolo.
 
@@ -403,7 +406,7 @@ class DataEngine:
         # Obtener max_results desde config si no se especifica
         if max_results is None:
             sentiment_config = self.config_loader.get_sentiment_config()
-            max_results = sentiment_config.get('default_max_results', 100)
+            max_results = sentiment_config.get("default_max_results", 100)
 
         sentiment_sources_to_use = []
 
@@ -413,16 +416,16 @@ class DataEngine:
         else:
             # Usar todas las fuentes disponibles
             sentiment_sources_to_use = [
-                name for name in ['twitter', 'reddit', 'news'] if name in self.sources
+                name for name in ["twitter", "reddit", "news"] if name in self.sources
             ]
 
         if not sentiment_sources_to_use:
             logger.warning("No hay fuente de sentimiento disponible")
             sentiment_config = self.config_loader.get_sentiment_config()
             return {
-                'sentiment_score': sentiment_config.get('default_score', 0.0),
-                'total_sources': sentiment_config.get('default_counts', {}).get('total', 0),
-                'sources': {},
+                "sentiment_score": sentiment_config.get("default_score", 0.0),
+                "total_sources": sentiment_config.get("default_counts", {}).get("total", 0),
+                "sources": {},
             }
 
         # Obtener sentimiento de cada fuente
@@ -435,7 +438,7 @@ class DataEngine:
                 await sentiment_source.connect()
 
             try:
-                if hasattr(sentiment_source, 'get_sentiment'):
+                if hasattr(sentiment_source, "get_sentiment"):
                     result = await sentiment_source.get_sentiment(symbol, max_results=max_results)
                     sentiment_results[source_name] = result
                 else:
@@ -445,23 +448,23 @@ class DataEngine:
 
         # Agregar sentimientos
         sentiment_config = self.config_loader.get_sentiment_config()
-        default_score = sentiment_config.get('default_score', 0.0)
+        default_score = sentiment_config.get("default_score", 0.0)
 
         if sentiment_results:
-            scores = [r.get('sentiment_score', default_score) for r in sentiment_results.values()]
+            scores = [r.get("sentiment_score", default_score) for r in sentiment_results.values()]
             avg_score = np.mean(scores) if scores else default_score
         else:
             avg_score = default_score
 
         return {
-            'sentiment_score': float(avg_score),
-            'total_sources': len(sentiment_results),
-            'sources': sentiment_results,
+            "sentiment_score": float(avg_score),
+            "total_sources": len(sentiment_results),
+            "sources": sentiment_results,
         }
 
     async def get_options_chain(
-        self, symbol: str, expiry_date: Optional[datetime] = None
-    ) -> List[Dict[str, Any]]:
+        self, symbol: str, expiry_date: datetime | None = None
+    ) -> list[dict[str, Any]]:
         """
         Obtener cadena de opciones.
 
@@ -472,17 +475,17 @@ class DataEngine:
         Returns:
             Lista de opciones
         """
-        if 'options_volatility' not in self.sources:
+        if "options_volatility" not in self.sources:
             logger.error("Fuente de opciones no disponible")
             return []
 
-        source = self.sources['options_volatility']
+        source = self.sources["options_volatility"]
 
         if not source.is_connected:
             await source.connect()
 
         try:
-            if hasattr(source, 'get_option_chain'):
+            if hasattr(source, "get_option_chain"):
                 return await source.get_option_chain(symbol, expiry_date)
         except (asyncio.TimeoutError, OSError) as e:
             logger.error(f"Error obteniendo option chain: {e}")
@@ -490,8 +493,8 @@ class DataEngine:
         return []
 
     async def get_volatility_surface(
-        self, symbol: str, expiry_dates: Optional[List[datetime]] = None
-    ) -> Dict[str, Any]:
+        self, symbol: str, expiry_dates: list[datetime] | None = None
+    ) -> dict[str, Any]:
         """
         Obtener volatility surface.
 
@@ -502,22 +505,22 @@ class DataEngine:
         Returns:
             Dict con volatility surface
         """
-        if 'options_volatility' not in self.sources:
+        if "options_volatility" not in self.sources:
             logger.error("Fuente de opciones no disponible")
-            return {'expiry_dates': [], 'strikes': [], 'implied_volatility': {}, 'surface_data': []}
+            return {"expiry_dates": [], "strikes": [], "implied_volatility": {}, "surface_data": []}
 
-        source = self.sources['options_volatility']
+        source = self.sources["options_volatility"]
 
         if not source.is_connected:
             await source.connect()
 
         try:
-            if hasattr(source, 'get_volatility_surface'):
+            if hasattr(source, "get_volatility_surface"):
                 return await source.get_volatility_surface(symbol, expiry_dates)
         except (asyncio.TimeoutError, OSError) as e:
             logger.error(f"Error obteniendo volatility surface: {e}")
 
-        return {'expiry_dates': [], 'strikes': [], 'implied_volatility': {}, 'surface_data': []}
+        return {"expiry_dates": [], "strikes": [], "implied_volatility": {}, "surface_data": []}
 
     async def initialize(self) -> None:
         """Inicializar Data Engine (conectar fuentes, iniciar streaming)."""
@@ -536,18 +539,18 @@ class DataEngine:
         if self.cache:
             await self.cache.close()
 
-    def get_status(self) -> Dict[str, Any]:
+    def get_status(self) -> dict[str, Any]:
         """Obtener estado del Data Engine."""
         status = {
-            'sources': {
-                name: {'is_connected': source.is_connected, 'status': source.get_status()}
+            "sources": {
+                name: {"is_connected": source.is_connected, "status": source.get_status()}
                 for name, source in self.sources.items()
             },
-            'cache': self.cache.get_status() if self.cache else None,
-            'streaming': self.streaming_manager.get_status() if self.streaming_manager else None,
-            'streaming_enabled': self.streaming_enabled,
-            'normalizer_enabled': self.normalizer is not None,
-            'cleaning_enabled': self.cleaning_pipeline is not None,
-            'versioning_enabled': self.version_manager is not None,
+            "cache": self.cache.get_status() if self.cache else None,
+            "streaming": self.streaming_manager.get_status() if self.streaming_manager else None,
+            "streaming_enabled": self.streaming_enabled,
+            "normalizer_enabled": self.normalizer is not None,
+            "cleaning_enabled": self.cleaning_pipeline is not None,
+            "versioning_enabled": self.version_manager is not None,
         }
         return status

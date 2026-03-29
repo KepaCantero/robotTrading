@@ -60,7 +60,7 @@ import logging
 from datetime import datetime
 from decimal import Decimal
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Optional, Union
 
 from pydantic import BaseModel, Field
 
@@ -84,24 +84,24 @@ class TestMetadata(BaseModel):
     )
     test_id: Optional[str] = Field(None, description="Unique test identifier")
     author: Optional[str] = Field(None, description="Test author")
-    tags: List[str] = Field(default_factory=list, description="Test tags")
+    tags: list[str] = Field(default_factory=list, description="Test tags")
     created_at: datetime = Field(default_factory=datetime.now, description="Creation timestamp")
 
 
 class InputDataSummary(BaseModel):
     """Summary of input data used in the test."""
 
-    symbols: List[str] = Field(..., description="Trading symbols tested")
-    date_range: Tuple[datetime, datetime] = Field(..., description="Date range (start, end)")
+    symbols: list[str] = Field(..., description="Trading symbols tested")
+    date_range: tuple[datetime, datetime] = Field(..., description="Date range (start, end)")
     data_points: int = Field(..., ge=0, description="Number of data points")
     market_regime: str = Field(..., description="Market regime description")
     data_source: str = Field(..., description="Data source description")
-    price_range: Optional[Tuple[Decimal, Decimal]] = Field(
+    price_range: Optional[tuple[Decimal, Decimal]] = Field(
         None, description="Price range (min, max)"
     )
-    volume_stats: Optional[Dict[str, Decimal]] = Field(None, description="Volume statistics")
+    volume_stats: Optional[dict[str, Decimal]] = Field(None, description="Volume statistics")
     volatility: Optional[Decimal] = Field(None, description="Volatility measure")
-    notes: List[str] = Field(default_factory=list, description="Additional notes about data")
+    notes: list[str] = Field(default_factory=list, description="Additional notes about data")
 
 
 class TestConfig(BaseModel):
@@ -111,11 +111,11 @@ class TestConfig(BaseModel):
     commission: Decimal = Field(..., ge=0, description="Commission per trade")
     slippage: Decimal = Field(..., ge=0, description="Slippage percentage")
     strategy: str = Field(..., description="Strategy name")
-    strategy_params: Dict[str, Any] = Field(default_factory=dict, description="Strategy parameters")
-    risk_management: Optional[Dict[str, Decimal]] = Field(
+    strategy_params: dict[str, Any] = Field(default_factory=dict, description="Strategy parameters")
+    risk_management: Optional[dict[str, Decimal]] = Field(
         None, description="Risk management settings"
     )
-    additional_params: Dict[str, Any] = Field(
+    additional_params: dict[str, Any] = Field(
         default_factory=dict, description="Additional parameters"
     )
 
@@ -147,7 +147,7 @@ class OutputMetrics(BaseModel):
     expectancy: Optional[Decimal] = Field(None, description="Expectancy per trade")
 
     # Additional metrics
-    additional_metrics: Dict[str, Union[Decimal, float, int, str]] = Field(
+    additional_metrics: dict[str, Union[Decimal, float, int, str]] = Field(
         default_factory=dict, description="Additional metrics"
     )
 
@@ -179,7 +179,7 @@ class TestSummaryReport(BaseModel):
     output: OutputMetrics = Field(..., description="Output metrics")
 
     # Validation results
-    validation_criteria: List[ValidationCriteria] = Field(
+    validation_criteria: list[ValidationCriteria] = Field(
         default_factory=list, description="Validation criteria results"
     )
 
@@ -188,8 +188,8 @@ class TestSummaryReport(BaseModel):
     pass_reason: Optional[str] = Field(None, description="Reason for pass/fail")
 
     # Warnings and anomalies
-    warnings: List[str] = Field(default_factory=list, description="Warnings generated during test")
-    anomalies: List[str] = Field(default_factory=list, description="Anomalies detected")
+    warnings: list[str] = Field(default_factory=list, description="Warnings generated during test")
+    anomalies: list[str] = Field(default_factory=list, description="Anomalies detected")
 
     # Timing information
     start_time: datetime = Field(default_factory=datetime.now, description="Test start time")
@@ -197,8 +197,8 @@ class TestSummaryReport(BaseModel):
     duration_seconds: Optional[float] = Field(None, description="Test duration in seconds")
 
     # Additional information
-    notes: List[str] = Field(default_factory=list, description="Additional notes")
-    attachments: List[str] = Field(
+    notes: list[str] = Field(default_factory=list, description="Additional notes")
+    attachments: list[str] = Field(
         default_factory=list, description="Paths to attachments (charts, etc)"
     )
 
@@ -253,11 +253,11 @@ class TestSummaryReporter:
         self.input_data: Optional[InputDataSummary] = None
         self.config: Optional[TestConfig] = None
         self.output: Optional[OutputMetrics] = None
-        self.validation_criteria: List[ValidationCriteria] = []
-        self.warnings: List[str] = []
-        self.anomalies: List[str] = []
-        self.notes: List[str] = []
-        self.attachments: List[str] = []
+        self.validation_criteria: list[ValidationCriteria] = []
+        self.warnings: list[str] = []
+        self.anomalies: list[str] = []
+        self.notes: list[str] = []
+        self.attachments: list[str] = []
 
         # Timing
         self.start_time = datetime.now()
@@ -267,15 +267,15 @@ class TestSummaryReporter:
 
     def add_input_data(
         self,
-        symbols: List[str],
-        date_range: Tuple[datetime, datetime],
+        symbols: list[str],
+        date_range: tuple[datetime, datetime],
         data_points: int,
         market_regime: str,
         data_source: str,
-        price_range: Optional[Tuple[Decimal, Decimal]] = None,
-        volume_stats: Optional[Dict[str, Decimal]] = None,
+        price_range: Optional[tuple[Decimal, Decimal]] = None,
+        volume_stats: Optional[dict[str, Decimal]] = None,
         volatility: Optional[Decimal] = None,
-        notes: Optional[List[str]] = None,
+        notes: Optional[list[str]] = None,
     ) -> None:
         """
         Add input data summary.
@@ -310,8 +310,8 @@ class TestSummaryReporter:
         commission: Decimal,
         slippage: Decimal,
         strategy: str,
-        strategy_params: Optional[Dict[str, Any]] = None,
-        risk_management: Optional[Dict[str, Decimal]] = None,
+        strategy_params: Optional[dict[str, Any]] = None,
+        risk_management: Optional[dict[str, Decimal]] = None,
         **kwargs,
     ) -> None:
         """
@@ -500,7 +500,7 @@ class TestSummaryReporter:
             attachments=self.attachments,
         )
 
-    def save_reports(self) -> Tuple[Path, Path]:
+    def save_reports(self) -> tuple[Path, Path]:
         """
         Save reports in both JSON and human-readable formats.
 
@@ -805,8 +805,8 @@ class TestSummaryReporter:
 
 def create_backtest_summary(
     test_name: str,
-    symbols: List[str],
-    date_range: Tuple[datetime, datetime],
+    symbols: list[str],
+    date_range: tuple[datetime, datetime],
     initial_capital: Decimal,
     final_capital: Decimal,
     total_pnl: Decimal,

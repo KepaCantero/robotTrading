@@ -259,7 +259,7 @@ def test_auth_attempt_tracker_module():
         should_lock = tracker.record_failed_attempt(test_id, "api_key")
         assert should_lock is False
         attempts = tracker.get_failed_attempts(test_id)
-        print(f"  - Failed attempt {i+1}: {attempts} attempts, locked={should_lock}")
+        print(f"  - Failed attempt {i + 1}: {attempts} attempts, locked={should_lock}")
 
     print("✓ Failed attempts recorded")
 
@@ -343,8 +343,8 @@ def test_backward_compatibility():
     print("✓ All public API exports are available")
 
     # Check that classes are the correct types
-    from app.security.user import User as DirectUser
     from app.security.auth import User as AuthUser
+    from app.security.user import User as DirectUser
 
     assert AuthUser is DirectUser
     print("✓ User class is correctly re-exported")
@@ -372,11 +372,7 @@ def test_dependency_injection():
     print("✓ UserStore dependency injection works")
 
     # Test token manager
-    from app.security.jwt_token_manager import (
-        JWTTokenManager,
-        get_token_manager,
-        set_token_manager,
-    )
+    from app.security.jwt_token_manager import JWTTokenManager, get_token_manager, set_token_manager
 
     try:
         custom_manager = JWTTokenManager()
@@ -413,9 +409,7 @@ def test_solid_principles():
     print("TEST 8: SOLID Principles Verification")
     print("=" * 70)
 
-    from app.security.interfaces import (
-        UserStoreProtocol,
-    )
+    from app.security.interfaces import UserStoreProtocol
 
     # SRP: Single Responsibility Principle
     print("✓ SRP: Each module has a single responsibility")
@@ -504,14 +498,10 @@ def test_metrics():
     print("  After refactoring: 1-2 classes per file (follows SRP)")
 
     print("\nComplexity Reduction:")
-    with open(files['auth.py (refactored)']) as f:
+    with open(files["auth.py (refactored)"]) as f:
         refactored_loc = len(f.readlines())
-    print(
-        f"  auth.py reduced from {original_loc} to {refactored_loc} lines"
-    )
-    print(
-        f"  Reduction: {((original_loc - refactored_loc) / original_loc * 100):.1f}%"
-    )
+    print(f"  auth.py reduced from {original_loc} to {refactored_loc} lines")
+    print(f"  Reduction: {((original_loc - refactored_loc) / original_loc * 100):.1f}%")
 
     print("\n✓ Refactoring metrics calculated!")
 

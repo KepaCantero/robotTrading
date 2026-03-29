@@ -4,7 +4,7 @@ Profile Generation Service
 Handles generation of investor profile combinations for batch testing.
 
 Responsibilities:
-- Generate all profile combinations (objectives × risk × tier × horizon)
+- Generate all profile combinations (objectives * risk * tier * horizon)
 - Map capital tiers to configuration keys
 - Handle profile creation logic
 """
@@ -13,14 +13,13 @@ from __future__ import annotations
 
 import logging
 from decimal import Decimal
-from typing import Dict, List
 
 from app.domain.models.input_profile import InputProfile, ObjectivoInversion, RiskTolerance
 from app.shared.utils.tier_mapper import map_profile_tier_to_config
 
 logger = logging.getLogger(__name__)
 
-ConfigDict = Dict
+ConfigDict = dict
 
 
 class ProfileGenerationService:
@@ -41,7 +40,7 @@ class ProfileGenerationService:
         """
         self.capital_tiers = capital_tiers
 
-    def generate_all_profiles(self, investment_horizons: List[int]) -> List[InputProfile]:
+    def generate_all_profiles(self, investment_horizons: list[int]) -> list[InputProfile]:
         """
         Generate all profile combinations.
 
@@ -85,8 +84,8 @@ class ProfileGenerationService:
         )
         logger.info(
             f"Generated {len(profiles)} profile combinations "
-            f"({len(objectives)} objectives × {len(risk_tolerances)} risk levels × "
-            f"{len(capital_tiers)} tiers × {len(investment_horizons)} horizons = {expected_count})"
+            f"({len(objectives)} objectives * {len(risk_tolerances)} risk levels * "
+            f"{len(capital_tiers)} tiers * {len(investment_horizons)} horizons = {expected_count})"
         )
         return profiles
 

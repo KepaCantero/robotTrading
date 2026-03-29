@@ -3,18 +3,20 @@ System Bus Orchestration
 Extracted from compliance_engine.py for SRP compliance.
 TASK-24: SRP Refactoring
 """
+
 from __future__ import annotations
 
 import logging
 from datetime import datetime
 from decimal import Decimal
-from typing import TYPE_CHECKING, List, Optional
+from typing import TYPE_CHECKING
 
 import empyrical
 import pandas as pd
 
+from app.domain.entities.pre_trade_analysis import PreTradeAnalysis
+
 if TYPE_CHECKING:
-    from app.domain.entities.pre_trade_analysis import PreTradeAnalysis
     from app.domain.services.compliance.compliance_engine import ComplianceEngine
 
 logger = logging.getLogger(__name__)
@@ -33,12 +35,12 @@ class SystemBus:
                 martin_arch
     """
 
-    def __init__(self, engine: 'ComplianceEngine'):
+    def __init__(self, engine: ComplianceEngine):
         """Initialize SystemBus with reference to parent engine."""
         self.engine = engine
         self._execution_order = self._determine_execution_order()
 
-    def _determine_execution_order(self) -> List[str]:
+    def _determine_execution_order(self) -> list[str]:
         """
         Determine optimal execution order for all systems.
 
@@ -92,9 +94,9 @@ class SystemBus:
         side: str,
         quantity: Decimal,
         price: Decimal,
-        price_history: Optional[pd.DataFrame],
+        price_history: pd.DataFrame | None,
         urgency: float,
-        signal_time: Optional[datetime],
+        signal_time: datetime | None,
     ) -> PreTradeAnalysis:
         """
         Execute pre-trade analysis through ALL systems in optimal order.
@@ -181,9 +183,9 @@ class SystemBus:
         side: str,
         quantity: Decimal,
         price: Decimal,
-        price_history: Optional[pd.DataFrame],
+        price_history: pd.DataFrame | None,
         urgency: float,
-        signal_time: Optional[datetime],
+        signal_time: datetime | None,
     ) -> bool:
         """Execute a single system and update result."""
         subsystem = self.engine._get_subsystem(system_name)
@@ -285,9 +287,9 @@ class SystemBus:
 
                 # Calculate data freshness from most recent timestamp
                 # Assuming price_history has a DatetimeIndex or timestamp column
-                if hasattr(price_history.index, 'max'):
+                if hasattr(price_history.index, "max"):
                     most_recent_time = price_history.index.max()
-                    if hasattr(most_recent_time, 'to_pydatetime'):
+                    if hasattr(most_recent_time, "to_pydatetime"):
                         most_recent_time = most_recent_time.to_pydatetime()
                     # Calculate freshness in milliseconds
                     time_diff = datetime.now() - most_recent_time
@@ -346,16 +348,16 @@ class SystemBus:
 
             config = get_compliance_config()
 
-            if price_history is not None and 'close' in price_history.columns:
+            if price_history is not None and "close" in price_history.columns:
                 # Extract prices as list for ContextEngine
-                prices = price_history['close'].tolist()
+                prices = price_history["close"].tolist()
 
                 # Get current regime using ensemble method (combines HMM, clustering, correlation)
-                regime_result = subsystem.get_current_regime(prices, method='ensemble')
+                regime_result = subsystem.get_current_regime(prices, method="ensemble")
 
-                if regime_result and 'regime' in regime_result:
-                    detected_regime = regime_result['regime']
-                    regime_conf = regime_result.get('confidence', config.DEFAULT_REGIME_CONFIDENCE)
+                if regime_result and "regime" in regime_result:
+                    detected_regime = regime_result["regime"]
+                    regime_conf = regime_result.get("confidence", config.DEFAULT_REGIME_CONFIDENCE)
 
                     # Only set market_regime if not already set by Chan (Chan takes precedence)
                     if not result.market_regime:
@@ -373,8 +375,8 @@ class SystemBus:
                 # Also get volatility regime for additional context
                 vol_result = subsystem.get_volatility_regime(prices)
                 if vol_result:
-                    result.volatility_regime = vol_result.get('regime', 'NORMAL')
-                    vol_percentile = vol_result.get('percentile', 50)
+                    result.volatility_regime = vol_result.get("regime", "NORMAL")
+                    vol_percentile = vol_result.get("percentile", 50)
 
                     # Adjust confidence for extreme volatility (using config threshold)
                     if vol_percentile > config.HIGH_VOLATILITY_PERCENTILE:
@@ -508,7 +510,7 @@ class SystemBus:
             except Exception:
                 # Estimate from current positions
                 gross_exposure = position_value + sum(
-                    pos.get('quantity', 0) * pos.get('current_price', float(price))
+                    pos.get("quantity", 0) * pos.get("current_price", float(price))
                     for pos in current_positions.values()
                 )
                 leverage_ratio = gross_exposure / portfolio_value if portfolio_value > 0 else 0.0
@@ -533,8 +535,8 @@ class SystemBus:
                 has_nan = price_history.isnull().any().any()
 
                 # Use configured max data age (addresses GAP-CFG-002)
-                if 'timestamp' in price_history.columns:
-                    last_timestamp = pd.to_datetime(price_history['timestamp'].iloc[-1])
+                if "timestamp" in price_history.columns:
+                    last_timestamp = pd.to_datetime(price_history["timestamp"].iloc[-1])
                     data_age = (
                         datetime.now() - last_timestamp
                     ).total_seconds() / config.SECONDS_PER_DAY
@@ -596,7 +598,7 @@ class SystemBus:
         except Exception as e:
             logger.warning(f"Risk engine validation failed: {e}")
             result.can_execute = False
-            result.reasons.append(f"Risk engine error: {str(e)}")
+            result.reasons.append(f"Risk engine error: {e!s}")
             return False
 
     def _handle_hull(
@@ -622,14 +624,14 @@ class SystemBus:
 
                 # Calculate VaR at multiple levels using the calculate_var factory function
                 var_result_95 = subsystem(
-                    returns.to_numpy(), method='historical', confidence_level=0.95
+                    returns.to_numpy(), method="historical", confidence_level=0.95
                 )
                 var_result_99 = subsystem(
-                    returns.to_numpy(), method='historical', confidence_level=0.99
+                    returns.to_numpy(), method="historical", confidence_level=0.99
                 )
 
-                result.hull_var_1d_95 = float(var_result_95['var'])
-                result.hull_var_1d_99 = float(var_result_99['var'])
+                result.hull_var_1d_95 = float(var_result_95["var"])
+                result.hull_var_1d_99 = float(var_result_99["var"])
 
                 # Greeks for options
                 # result.hull_greeks_delta = ...
@@ -742,7 +744,7 @@ class SystemBus:
                 )
 
                 # Check if alpha_signal is valid before accessing attributes
-                if alpha_signal is not None and hasattr(alpha_signal, 'confidence'):
+                if alpha_signal is not None and hasattr(alpha_signal, "confidence"):
                     result.narang_alpha_signal = float(alpha_signal.confidence)
 
                     # Quality assessment using config thresholds
@@ -789,10 +791,10 @@ class SystemBus:
             config = get_compliance_config()
 
             # Check if meta-labeling model is fitted
-            if hasattr(subsystem, '_is_fitted') and subsystem._is_fitted:
+            if hasattr(subsystem, "_is_fitted") and subsystem._is_fitted:
                 # Model is fitted, we could make predictions if we have features
                 # For now, use the meta accuracy as signal strength
-                if hasattr(subsystem, 'meta_model'):
+                if hasattr(subsystem, "meta_model"):
                     # Meta-model accuracy indicates how well we can predict primary model correctness
                     result.meta_labeling_signal = config.FITTED_MODEL_SIGNAL_STRENGTH
             else:
@@ -804,7 +806,7 @@ class SystemBus:
             result.mcc_metric = config.DEFAULT_MCC_METRIC
 
             # Sample weights availability - check if purged CV is configured
-            if hasattr(subsystem, 'config') and subsystem.config.use_purged_cv:
+            if hasattr(subsystem, "config") and subsystem.config.use_purged_cv:
                 result.sample_weights_available = True
             else:
                 result.sample_weights_available = False
@@ -940,19 +942,19 @@ class SystemBus:
                 if harris_check.liquidity_sufficient
                 else config.LIQUIDITY_SCORE_INSUFFICIENT
             )
-            result.harris_vpin = getattr(harris_check, 'vpin', 0.0)
-            result.harris_pin = getattr(harris_check, 'pin', 0.0)
+            result.harris_vpin = getattr(harris_check, "vpin", 0.0)
+            result.harris_pin = getattr(harris_check, "pin", 0.0)
             # PreTradeCheckResult has estimated_cost_bps, not separate market_impact/timing_cost
             # Use estimated_cost_bps as market_impact_bps for now
-            result.market_impact_bps = getattr(harris_check, 'estimated_cost_bps', 0.0)
+            result.market_impact_bps = getattr(harris_check, "estimated_cost_bps", 0.0)
             # timing_cost_bps not available in PreTradeCheckResult, estimate as portion of cost
             result.timing_cost_bps = (
-                getattr(harris_check, 'estimated_cost_bps', 0.0) * config.TIMING_COST_MULTIPLIER
+                getattr(harris_check, "estimated_cost_bps", 0.0) * config.TIMING_COST_MULTIPLIER
             )
             # Map venue names
-            result.venue = getattr(harris_check, 'recommended_venue', 'lit_exchange')
-            result.algorithm = getattr(harris_check, 'recommended_order_type', 'LIMIT')
-            result.limit_price = getattr(harris_check, 'recommended_limit_price', None)
+            result.venue = getattr(harris_check, "recommended_venue", "lit_exchange")
+            result.algorithm = getattr(harris_check, "recommended_order_type", "LIMIT")
+            result.limit_price = getattr(harris_check, "recommended_limit_price", None)
 
             if not harris_check.can_execute:
                 result.can_execute = False
@@ -1096,26 +1098,26 @@ class SystemBus:
 
             config = get_strategy_stock_allocator_config()
             # Config is a dict from YAML, use proper dict access
-            exposure_config = config.get('exposure', {})
-            max_strategy_exposure = exposure_config.get('max_strategy_exposure', 0.50)
-            exposure_config.get('max_pair_exposure', 0.15)
-            max_assets_per_pair = exposure_config.get('max_assets_per_pair', 2)
+            exposure_config = config.get("exposure", {})
+            max_strategy_exposure = exposure_config.get("max_strategy_exposure", 0.50)
+            exposure_config.get("max_pair_exposure", 0.15)
+            max_assets_per_pair = exposure_config.get("max_assets_per_pair", 2)
             # Default correlation risk since it's not in config
             max_correlation_risk = 1.0
 
             # Try to get current portfolio from cache
-            if hasattr(subsystem, 'current_portfolio') and subsystem.current_portfolio:
+            if hasattr(subsystem, "current_portfolio") and subsystem.current_portfolio:
                 portfolio = subsystem.current_portfolio
 
                 # Calculate current exposure (total positions / equity)
                 total_exposure = 0.0
                 position_count = 0
                 for position in portfolio.positions:
-                    if hasattr(position, 'market_value'):
+                    if hasattr(position, "market_value"):
                         total_exposure += abs(float(position.market_value))
                         position_count += 1
 
-                if hasattr(portfolio, 'total_equity') and portfolio.total_equity > 0:
+                if hasattr(portfolio, "total_equity") and portfolio.total_equity > 0:
                     result.current_exposure = total_exposure / float(portfolio.total_equity)
 
                     # Check against max_strategy_exposure limit
@@ -1185,13 +1187,13 @@ class SystemBus:
             compliance_config = get_compliance_config()
 
             # Config is a dict from YAML, use proper dict access
-            data_validation = alloc_config.get('data_validation', {})
-            garch_config = alloc_config.get('garch', {})
-            risk_metrics = alloc_config.get('risk_metrics', {})
+            data_validation = alloc_config.get("data_validation", {})
+            garch_config = alloc_config.get("garch", {})
+            risk_metrics = alloc_config.get("risk_metrics", {})
 
-            lookback_max_days = data_validation.get('lookback_max_days', 126)
-            slope_window_min = garch_config.get('slope_window_min', 30)
-            min_sortino_ratio = risk_metrics.get('min_sortino_ratio', 0.5)
+            lookback_max_days = data_validation.get("lookback_max_days", 126)
+            slope_window_min = garch_config.get("slope_window_min", 30)
+            min_sortino_ratio = risk_metrics.get("min_sortino_ratio", 0.5)
 
             if price_history is not None and len(price_history) >= lookback_max_days:
                 # Calculate historical return metrics
@@ -1259,7 +1261,7 @@ class SystemBus:
             trading_config = get_config().trading
             config = get_compliance_config()
 
-            if subsystem and hasattr(subsystem, 'estimate_execution_probability'):
+            if subsystem and hasattr(subsystem, "estimate_execution_probability"):
                 # Get execution probability from microstructure engine
                 exec_prob = subsystem.estimate_execution_probability(
                     symbol=symbol,
@@ -1321,7 +1323,7 @@ class SystemBus:
             config = get_compliance_config()
 
             # Architecture score - check if subsystem indicates compliance
-            if isinstance(subsystem, dict) and subsystem.get('architecture_compliant'):
+            if isinstance(subsystem, dict) and subsystem.get("architecture_compliant"):
                 result.tomasini_architecture_score = config.TOMASINI_ARCHITECTURE_SCORE_COMPLIANT
             else:
                 result.tomasini_architecture_score = config.TOMASINI_ARCHITECTURE_SCORE_DEFAULT
@@ -1356,14 +1358,14 @@ class SystemBus:
         Timeout handling is delegated to the BrokerConnector subsystem.
         """
         try:
-            if subsystem and hasattr(subsystem, 'get_account_info'):
+            if subsystem and hasattr(subsystem, "get_account_info"):
                 # Get actual account status from broker
                 account_info = subsystem.get_account_info()
 
-                result.account_balance_ok = account_info.get('balance_ok', True)
-                result.buying_power_ok = account_info.get('buying_power_ok', True)
-                result.day_trading_count = account_info.get('day_trading_count', 0)
-                result.pattern_day_trader_ok = account_info.get('pattern_day_trader', True)
+                result.account_balance_ok = account_info.get("balance_ok", True)
+                result.buying_power_ok = account_info.get("buying_power_ok", True)
+                result.day_trading_count = account_info.get("day_trading_count", 0)
+                result.pattern_day_trader_ok = account_info.get("pattern_day_trader", True)
 
                 # Adjust confidence if account issues
                 if not result.account_balance_ok:
@@ -1440,7 +1442,7 @@ class SystemBus:
             config = get_compliance_config()
 
             # Architecture pattern compliance
-            if isinstance(subsystem, dict) and subsystem.get('architecture_compliant'):
+            if isinstance(subsystem, dict) and subsystem.get("architecture_compliant"):
                 result.architecture_pattern_compliance = (
                     config.PERCIVAL_ARCHITECTURE_COMPLIANT_SCORE
                 )
@@ -1481,16 +1483,16 @@ class SystemBus:
             config = get_compliance_config()
 
             # Get golden signals from SRE monitor
-            if subsystem and hasattr(subsystem, 'get_golden_signals'):
+            if subsystem and hasattr(subsystem, "get_golden_signals"):
                 signals = subsystem.get_golden_signals()
-                result.slo_compliance = signals.get('slo_compliance', True)
+                result.slo_compliance = signals.get("slo_compliance", True)
                 result.error_budget_remaining = signals.get(
-                    'error_budget_remaining', config.SLO_DEFAULT_ERROR_BUDGET
+                    "error_budget_remaining", config.SLO_DEFAULT_ERROR_BUDGET
                 )
                 result.latency_p95_ms = signals.get(
-                    'latency_p95_ms', config.SLO_DEFAULT_LATENCY_P95_MS
+                    "latency_p95_ms", config.SLO_DEFAULT_LATENCY_P95_MS
                 )
-                result.golden_signals_health = signals.get('health', config.SLO_DEFAULT_HEALTH)
+                result.golden_signals_health = signals.get("health", config.SLO_DEFAULT_HEALTH)
 
                 # Check SLO compliance
                 if not result.slo_compliance:
@@ -1532,7 +1534,7 @@ class SystemBus:
             config = get_compliance_config()
 
             # TDD compliance metrics
-            if isinstance(subsystem, dict) and subsystem.get('tdd_compliant'):
+            if isinstance(subsystem, dict) and subsystem.get("tdd_compliant"):
                 result.test_coverage = config.TDD_COMPLIANT_COVERAGE
                 result.tests_passing = True
                 result.tdd_compliance = config.TDD_COMPLIANT_TDD_SCORE
@@ -1571,7 +1573,7 @@ class SystemBus:
             config = get_compliance_config()
 
             # Clean architecture metrics
-            if isinstance(subsystem, dict) and subsystem.get('clean_arch_compliant'):
+            if isinstance(subsystem, dict) and subsystem.get("clean_arch_compliant"):
                 result.martin_layer_separation = config.MARTIN_COMPLIANT_SCORE
                 result.martin_dependency_rule = config.MARTIN_COMPLIANT_SCORE
                 result.martin_interface_health = config.MARTIN_COMPLIANT_SCORE

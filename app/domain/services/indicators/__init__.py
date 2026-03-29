@@ -30,13 +30,13 @@ from app.domain.services.indicators.factory import (
 from app.domain.services.indicators.technical_indicators import IndicatorResult, TechnicalIndicators
 
 __all__ = [
+    "IndicatorBackend",
+    "IndicatorResult",
     # Main classes
     "TechnicalIndicators",
-    "IndicatorResult",
+    "get_available_backends",
     # Factory functions
     "get_indicator_calculator",
-    "get_available_backends",
-    "IndicatorBackend",
 ]
 
 # Version

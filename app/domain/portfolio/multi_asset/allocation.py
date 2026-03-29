@@ -11,15 +11,17 @@ import logging
 from dataclasses import dataclass, field
 from decimal import Decimal
 from enum import Enum
-from typing import Any, Dict, Optional
+from typing import TYPE_CHECKING, Any
 
 import numpy as np
-import pandas as pd
 
 from app.shared.config.centralized_config import get_config
 
 from .asset_class import AssetClass, AssetClassType
 from .models import AllocationStrategy, RiskTolerance
+
+if TYPE_CHECKING:
+    import pandas as pd
 
 logger = logging.getLogger(__name__)
 
@@ -54,8 +56,8 @@ class StrategicAllocationParams:
     income_need: Decimal = Decimal("0.04")  # 4% annual withdrawal
     liquidity_need: Decimal = Decimal("0.10")  # 10% liquid assets
     inflation_protection: Decimal = Decimal("0.50")  # 50% inflation protected
-    target_return: Optional[Decimal] = None
-    max_volatility: Optional[Decimal] = None
+    target_return: Decimal | None = None
+    max_volatility: Decimal | None = None
 
 
 @dataclass
@@ -73,9 +75,9 @@ class TacticalAllocationParams:
         valuation_threshold: Valuation signal threshold
     """
 
-    strategic_weights: Dict[str, Decimal]
-    market_conditions: Dict[str, MarketRegime]
-    signals: Dict[str, float]
+    strategic_weights: dict[str, Decimal]
+    market_conditions: dict[str, MarketRegime]
+    signals: dict[str, float]
     max_tilt: Decimal = Decimal("0.20")  # 20% max tilt
     lookback_period: int = 252  # 1 year of daily data
     momentum_threshold: float = 0.02  # 2% momentum threshold
@@ -98,7 +100,7 @@ class RiskParityAllocationParams:
 
     asset_class_returns: pd.DataFrame
     risk_free_rate: float = float(get_config().backtesting.default_risk_free_rate)
-    target_volatility: Optional[float] = None
+    target_volatility: float | None = None
     min_weight: float = 0.0
     max_weight: float = 1.0
     risk_measure: str = "volatility"
@@ -119,13 +121,13 @@ class AllocationResult:
         metadata: Additional metadata
     """
 
-    weights: Dict[str, Decimal]
+    weights: dict[str, Decimal]
     expected_return: Decimal
     expected_volatility: Decimal
-    sharpe_ratio: Optional[Decimal]
-    risk_contributions: Optional[Dict[str, Decimal]]
+    sharpe_ratio: Decimal | None
+    risk_contributions: dict[str, Decimal] | None
     method: AllocationStrategy
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
 
 class MultiAssetAllocator:
@@ -154,7 +156,7 @@ class MultiAssetAllocator:
         >>> result = allocator.tactical_allocation(tactical_params)
     """
 
-    def __init__(self, asset_classes: Dict[str, AssetClass]):
+    def __init__(self, asset_classes: dict[str, AssetClass]):
         """
         Initialize allocator.
 
@@ -238,7 +240,7 @@ class MultiAssetAllocator:
         - Forex: carry trade returns, momentum, purchasing power parity
         - Commodities: momentum, inventory levels, demand indicators
 
-        Max tilt: ±max_tilt from strategic weight
+        Max tilt: +/-max_tilt from strategic weight
 
         Args:
             params: Tactical allocation parameters
@@ -247,7 +249,7 @@ class MultiAssetAllocator:
             AllocationResult with tactically adjusted weights
         """
         weights = params.strategic_weights.copy()
-        tilts: Dict[str, Decimal] = {}
+        tilts: dict[str, Decimal] = {}
 
         # Calculate tilts based on signals
         for asset_class, signal in params.signals.items():
@@ -301,10 +303,10 @@ class MultiAssetAllocator:
         Risk parity allocates so that each asset class contributes equal risk
         to the portfolio. For a simple implementation using volatility:
 
-        w_i ∝ 1/σ_i
+        w_i ∝ 1/sigma_i
 
         For more sophisticated versions, we use the risk budgeting equation:
-        w_i * (Σw)_i = w_j * (Σw)_j  for all i, j
+        w_i * (Sigmaw)_i = w_j * (Sigmaw)_j  for all i, j
 
         This requires solving a system of equations iteratively.
 
@@ -323,7 +325,7 @@ class MultiAssetAllocator:
                 volatilities[asset_class] = Decimal(str(vol))
 
         # Simple inverse volatility weighting
-        # w_i = 1/σ_i / Σ(1/σ_j)
+        # w_i = 1/sigma_i / Sigma(1/sigma_j)
         inv_vols = {}
         for asset_class, vol in volatilities.items():
             if vol > 0:
@@ -371,7 +373,7 @@ class MultiAssetAllocator:
         self,
         lookback_returns: pd.DataFrame,
         lookback_period: int = 126,  # 6 months
-        top_n: Optional[int] = None,
+        top_n: int | None = None,
     ) -> AllocationResult:
         """
         Allocate based on momentum.
@@ -467,7 +469,7 @@ class MultiAssetAllocator:
             metadata={"n_asset_classes": n},
         )
 
-    def _get_base_strategic_weights(self, risk_tolerance: RiskTolerance) -> Dict[str, Decimal]:
+    def _get_base_strategic_weights(self, risk_tolerance: RiskTolerance) -> dict[str, Decimal]:
         """Get base strategic weights by risk tolerance."""
         # Map common asset class types to weights
         # This is a simplified version - real implementation would be more sophisticated
@@ -559,8 +561,8 @@ class MultiAssetAllocator:
         return adjusted
 
     def _adjust_for_liquidity(
-        self, weights: Dict[str, Decimal], liquidity_need: Decimal
-    ) -> Dict[str, Decimal]:
+        self, weights: dict[str, Decimal], liquidity_need: Decimal
+    ) -> dict[str, Decimal]:
         """Adjust weights for liquidity need."""
         # Ensure minimum cash allocation
         current_cash = weights.get(AssetClassType.CASH, Decimal("0"))
@@ -575,7 +577,7 @@ class MultiAssetAllocator:
         if total_reduce == 0:
             return weights
 
-        adjusted: Dict[str, Decimal] = {}
+        adjusted: dict[str, Decimal] = {}
         for asset_class, weight in weights.items():
             if asset_class == AssetClassType.CASH:
                 adjusted[asset_class] = liquidity_need
@@ -616,7 +618,7 @@ class MultiAssetAllocator:
         }
         return multipliers.get(regime, 1.0)
 
-    def _apply_asset_class_constraints(self, weights: Dict[str, Decimal]) -> Dict[str, Decimal]:
+    def _apply_asset_class_constraints(self, weights: dict[str, Decimal]) -> dict[str, Decimal]:
         """Apply asset class min/max weight constraints."""
         constrained = {}
 
@@ -641,10 +643,10 @@ class MultiAssetAllocator:
 
     def _apply_weight_bounds(
         self,
-        weights: Dict[str, Decimal],
+        weights: dict[str, Decimal],
         min_weight: Decimal,
         max_weight: Decimal,
-    ) -> Dict[str, Decimal]:
+    ) -> dict[str, Decimal]:
         """Apply min/max weight bounds."""
         bounded = {k: max(min_weight, min(max_weight, v)) for k, v in weights.items()}
 
@@ -657,9 +659,9 @@ class MultiAssetAllocator:
 
     def _calculate_risk_contributions(
         self,
-        weights: Dict[str, Decimal],
+        weights: dict[str, Decimal],
         returns: pd.DataFrame,
-    ) -> Dict[str, Decimal]:
+    ) -> dict[str, Decimal]:
         """Calculate risk contributions for allocation."""
         try:
             # Get weights as array
@@ -697,9 +699,9 @@ class MultiAssetAllocator:
 
     def _calculate_portfolio_metrics(
         self,
-        weights: Dict[str, Decimal],
-        returns: Optional[pd.DataFrame] = None,
-    ) -> Dict[str, Any]:
+        weights: dict[str, Decimal],
+        returns: pd.DataFrame | None = None,
+    ) -> dict[str, Any]:
         """Calculate portfolio metrics."""
         # Expected return
         expected_return = Decimal("0")

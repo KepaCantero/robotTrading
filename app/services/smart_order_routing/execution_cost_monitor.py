@@ -13,7 +13,7 @@ Tracks:
 import logging
 from datetime import datetime
 from decimal import Decimal
-from typing import Dict, List, Tuple, Optional
+from typing import Optional
 
 import numpy as np
 
@@ -40,8 +40,8 @@ class ExecutionCostMonitor:
 
     def __init__(self):
         """Initialize cost monitor."""
-        self.executions: Dict[str, ExecutionMonitoring] = {}
-        self.tranche_costs: Dict[str, List[Dict]] = {}
+        self.executions: dict[str, ExecutionMonitoring] = {}
+        self.tranche_costs: dict[str, list[dict]] = {}
         logger.info("ExecutionCostMonitor initialized")
 
     def start_monitoring(
@@ -91,7 +91,7 @@ class ExecutionCostMonitor:
         target_price: Decimal,
         executed_price: Decimal,
         commission_cost: Optional[Decimal] = None,
-    ) -> Tuple[Decimal, Dict]:
+    ) -> tuple[Decimal, dict]:
         """
         Record execution of a single tranche.
 
@@ -120,7 +120,7 @@ class ExecutionCostMonitor:
 
         monitoring = self.executions[execution_id]
 
-        # Calculate slippage cost (price difference × size)
+        # Calculate slippage cost (price difference * size)
         slippage_cost = abs(executed_price - target_price) * executed_size
 
         # Total cost for this tranche
@@ -153,7 +153,7 @@ class ExecutionCostMonitor:
         self.tranche_costs[execution_id].append(cost_record)
 
         logger.info(
-            f"Execution {execution_id}: Tranche {tranche_id} → "
+            f"Execution {execution_id}: Tranche {tranche_id} -> "
             f"Cost €{total_cost:,.2f} ({slippage_bps:.2f} bps slippage + "
             f"€{commission_cost:,.2f} commission)"
         )
@@ -220,7 +220,7 @@ class ExecutionCostMonitor:
     def get_cost_breakdown(
         self,
         execution_id: str,
-    ) -> Dict:
+    ) -> dict:
         """
         Get detailed cost breakdown for an execution.
 
@@ -267,7 +267,7 @@ class ExecutionCostMonitor:
         execution_id: str,
         estimated_slippage_bps: Decimal,
         estimated_slippage_usd: Decimal,
-    ) -> Dict:
+    ) -> dict:
         """
         Compare actual execution to original estimate.
 
@@ -342,7 +342,7 @@ class ExecutionCostMonitor:
     def estimate_remaining_budget(
         self,
         execution_id: str,
-    ) -> Tuple[Decimal, Decimal]:
+    ) -> tuple[Decimal, Decimal]:
         """
         Calculate remaining budget and run rate.
 
@@ -373,7 +373,7 @@ class ExecutionCostMonitor:
     def should_abort_execution(
         self,
         execution_id: str,
-    ) -> Tuple[bool, str]:
+    ) -> tuple[bool, str]:
         """
         Determine if execution should be aborted due to cost overrun.
 
@@ -398,12 +398,12 @@ class ExecutionCostMonitor:
 
         # Estimate total cost and compare to budget
         if monitoring.tranches_completed > 0 and monitoring.tranches_total > 0:
-            remaining, estimated_total = self.estimate_remaining_budget(execution_id)
+            _remaining, estimated_total = self.estimate_remaining_budget(execution_id)
 
             if estimated_total > monitoring.planned_cost * Decimal("1.15"):
                 # Estimated total >15% over budget
                 return True, (
-                    f"Estimated total cost exceeds budget by {(estimated_total/monitoring.planned_cost - 1)*100:.1f}%"
+                    f"Estimated total cost exceeds budget by {(estimated_total / monitoring.planned_cost - 1) * 100:.1f}%"
                 )
 
         return False, "Within acceptable cost limits"

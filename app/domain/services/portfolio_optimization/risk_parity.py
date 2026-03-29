@@ -12,7 +12,6 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass
-from typing import Dict, List, Optional
 
 import numpy as np
 from scipy.optimize import minimize
@@ -43,11 +42,11 @@ class RiskParityResult:
     weights: np.ndarray  # Risk parity weights
     risk_contributions: np.ndarray  # Risk contribution of each asset
     risk_budget: np.ndarray  # Target risk budget (usually equal)
-    symbols: List[str]  # Asset symbols
+    symbols: list[str]  # Asset symbols
     converged: bool  # Whether optimization converged
 
     @property
-    def weights_dict(self) -> Dict[str, float]:
+    def weights_dict(self) -> dict[str, float]:
         """Get weights as dictionary."""
         return {symbol: float(weight) for symbol, weight in zip(self.symbols, self.weights)}
 
@@ -64,7 +63,7 @@ class RiskParityOptimizer:
     Risk Parity allocates weights such that each asset contributes
     equal risk to the portfolio:
 
-    RC_i = w_i * (Σw)_i / σ_p = constant
+    RC_i = w_i * (Sigmaw)_i / sigma_p = constant
 
     Methods:
     - Risk Parity (equal risk contribution)
@@ -104,8 +103,8 @@ class RiskParityOptimizer:
     def optimize(
         self,
         cov_matrix: np.ndarray,
-        symbols: Optional[List[str]] = None,
-        risk_budget: Optional[np.ndarray] = None,
+        symbols: list[str] | None = None,
+        risk_budget: np.ndarray | None = None,
     ) -> RiskParityResult:
         """
         Compute Risk Parity weights.
@@ -232,7 +231,7 @@ class RiskParityOptimizer:
     def inverse_volatility(
         self,
         cov_matrix: np.ndarray,
-        symbols: Optional[List[str]] = None,
+        symbols: list[str] | None = None,
     ) -> RiskParityResult:
         """
         Compute inverse volatility weights (simple risk parity).
@@ -291,7 +290,7 @@ class RiskParityOptimizer:
     def equal_weight(
         self,
         cov_matrix: np.ndarray,
-        symbols: Optional[List[str]] = None,
+        symbols: list[str] | None = None,
     ) -> RiskParityResult:
         """
         Compute equal weights (benchmark).
@@ -332,7 +331,7 @@ class RiskParityOptimizer:
     def diversified_risk_parity(
         self,
         cov_matrix: np.ndarray,
-        symbols: Optional[List[str]] = None,
+        symbols: list[str] | None = None,
         kappa: float = DEFAULT_DIVERSE_RISK_PARITY_KAPPA,
     ) -> RiskParityResult:
         """
@@ -449,7 +448,7 @@ class RiskParityOptimizer:
         """
         Calculate diversification ratio.
 
-        DR = (Σ w_i σ_i) / σ_p
+        DR = (Sigma w_i sigma_i) / sigma_p
 
         Where DR > 1 indicates diversification benefit.
 
@@ -476,7 +475,7 @@ class RiskParityOptimizer:
 def cluster_based_risk_parity(
     cov_matrix: np.ndarray,
     cluster_labels: np.ndarray,
-    symbols: Optional[List[str]] = None,
+    symbols: list[str] | None = None,
 ) -> np.ndarray:
     """
     Compute Cluster-Based Risk Parity (CBRP) weights.
@@ -504,7 +503,7 @@ def cluster_based_risk_parity(
 
     if len(cluster_labels) != n_assets:
         raise ValueError(
-            f"Cluster labels length {len(cluster_labels)} " f"must match n_assets {n_assets}"
+            f"Cluster labels length {len(cluster_labels)} must match n_assets {n_assets}"
         )
 
     symbols = symbols or [f"Asset_{i}" for i in range(n_assets)]

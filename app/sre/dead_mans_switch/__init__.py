@@ -27,12 +27,12 @@ from .dead_mans_switch import (
 from .external_monitor import AlertChannel, ExternalMonitor, MonitorConfig
 
 __all__ = [
+    "AlertChannel",
     "DeadMansSwitch",
-    "SwitchStatus",
+    "ExternalMonitor",
     "HealthCheckConfig",
     "HeartbeatRecord",
     "IncidentRecord",
-    "ExternalMonitor",
     "MonitorConfig",
-    "AlertChannel",
+    "SwitchStatus",
 ]

@@ -14,7 +14,7 @@ from __future__ import annotations
 import logging
 from dataclasses import dataclass
 from decimal import Decimal
-from typing import List, Optional
+from typing import ClassVar
 
 logger = logging.getLogger(__name__)
 
@@ -62,7 +62,7 @@ class PartialTakeProfit:
         targets: Lista de objetivos de beneficio
     """
 
-    DEFAULT_TARGETS = [
+    DEFAULT_TARGETS: ClassVar[list] = [
         ProfitTarget(r_multiple=2.0, close_pct=0.50, action="move_to_breakeven"),
         ProfitTarget(r_multiple=3.0, close_pct=0.25, action="trailing_stop"),
         ProfitTarget(r_multiple=5.0, close_pct=0.25, action="none"),
@@ -72,7 +72,7 @@ class PartialTakeProfit:
         self,
         entry_price: Decimal,
         initial_stop: Decimal,
-        targets: Optional[List[ProfitTarget]] = None,
+        targets: list[ProfitTarget] | None = None,
     ):
         """
         Inicializar PartialTakeProfit.
@@ -102,7 +102,7 @@ class PartialTakeProfit:
 
     def check_targets(
         self, current_price: Decimal, position_size: Decimal
-    ) -> Optional[TakeProfitAction]:
+    ) -> TakeProfitAction | None:
         """
         Verificar si se alcanzó algún objetivo.
 
@@ -156,11 +156,11 @@ class PartialTakeProfit:
         self.initial_stop = initial_stop
         self.executed_targets.clear()
 
-    def get_executed_targets(self) -> List[float]:
+    def get_executed_targets(self) -> list[float]:
         """Obtener lista de targets ya ejecutados."""
         return sorted(self.executed_targets)
 
-    def get_remaining_targets(self) -> List[ProfitTarget]:
+    def get_remaining_targets(self) -> list[ProfitTarget]:
         """Obtener lista de targets pendientes."""
         return [t for t in self.targets if t.r_multiple not in self.executed_targets]
 
@@ -185,7 +185,7 @@ class PartialTakeProfit:
         }
 
     @classmethod
-    def from_dict(cls, data: dict) -> "PartialTakeProfit":
+    def from_dict(cls, data: dict) -> PartialTakeProfit:
         """Crear instancia desde diccionario."""
         targets = [
             ProfitTarget(

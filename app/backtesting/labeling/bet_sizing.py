@@ -27,7 +27,6 @@ from __future__ import annotations
 import logging
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Dict, Optional
 
 import numpy as np
 
@@ -100,12 +99,12 @@ class BetSizingResult:
     kelly_fractions: np.ndarray
     """Kelly criterion fractions"""
 
-    metadata: Dict = field(default_factory=dict)
+    metadata: dict = field(default_factory=dict)
     """Additional metadata"""
 
     timestamp: datetime = field(default_factory=datetime.now)
 
-    def to_dict(self) -> Dict:
+    def to_dict(self) -> dict:
         """Convert to dictionary."""
         return {
             "bet_sizes": self.bet_sizes.tolist(),
@@ -134,7 +133,7 @@ class BetSizing:
         >>> print(f"Average bet size: {result.bet_sizes.mean():.2%}")
     """
 
-    def __init__(self, config: Optional[BetSizingConfig] = None):
+    def __init__(self, config: BetSizingConfig | None = None):
         """
         Initialize bet sizing calculator.
 
@@ -146,10 +145,10 @@ class BetSizing:
     def calculate_sizes(
         self,
         predictions: np.ndarray,
-        probabilities: Optional[np.ndarray] = None,
-        expected_returns: Optional[np.ndarray] = None,
-        volatilities: Optional[np.ndarray] = None,
-        correlation_matrix: Optional[np.ndarray] = None,
+        probabilities: np.ndarray | None = None,
+        expected_returns: np.ndarray | None = None,
+        volatilities: np.ndarray | None = None,
+        correlation_matrix: np.ndarray | None = None,
         current_capital: float = 1_000_000.0,
         current_drawdown: float = 0.0,
     ) -> BetSizingResult:
@@ -282,10 +281,9 @@ class BetSizing:
             # Use expected return as odds
             if exp_ret != 0:
                 # b = expected_return / expected_loss
-                if exp_ret > 0:
-                    b = exp_ret / abs(exp_ret * 0.5)  # Assume 50% loss if wrong
-                else:
-                    b = abs(exp_ret * 0.5) / exp_ret  # Assume 50% gain if wrong
+                b = (
+                    exp_ret / abs(exp_ret * 0.5) if exp_ret > 0 else abs(exp_ret * 0.5) / exp_ret
+                )  # Assume 50% loss/gain if wrong
             else:
                 b = 1.0  # Even odds
 
@@ -359,8 +357,8 @@ class BetSizing:
     def _risk_parity_sizing(
         self,
         predictions: np.ndarray,
-        volatilities: Optional[np.ndarray],
-        correlation_matrix: Optional[np.ndarray],
+        volatilities: np.ndarray | None,
+        correlation_matrix: np.ndarray | None,
     ) -> np.ndarray:
         """
         Calculate bet sizes using risk parity.
@@ -385,10 +383,7 @@ class BetSizing:
             return bet_sizes
 
         # Default volatilities if not provided
-        if volatilities is None:
-            volatilities = np.ones(n_active)
-        else:
-            volatilities = volatilities[active_mask]
+        volatilities = np.ones(n_active) if volatilities is None else volatilities[active_mask]
 
         # Risk parity: weight proportional to 1/volatility
         inv_vol = 1.0 / (volatilities + 1e-10)
@@ -527,8 +522,8 @@ class BetSizing:
     def _calculate_risk_contribution(
         self,
         bet_sizes: np.ndarray,
-        volatilities: Optional[np.ndarray],
-        correlation_matrix: Optional[np.ndarray],
+        volatilities: np.ndarray | None,
+        correlation_matrix: np.ndarray | None,
     ) -> np.ndarray:
         """
         Calculate risk contribution of each position.
@@ -601,7 +596,7 @@ class BetSizing:
 
 def calculate_bet_sizes(
     predictions: np.ndarray,
-    probabilities: Optional[np.ndarray] = None,
+    probabilities: np.ndarray | None = None,
     method: str = "kelly",
     **kwargs,
 ) -> np.ndarray:
@@ -641,7 +636,7 @@ def calculate_bet_sizes(
 def calculate_bet_sizes_ml(
     meta_proba: np.ndarray,
     primary_predictions: np.ndarray,
-    expected_returns: Optional[np.ndarray] = None,
+    expected_returns: np.ndarray | None = None,
     method: str = "meta_kelly",
     confidence_threshold: float = 0.5,
     max_bet_size: float = 1.0,
@@ -1033,7 +1028,7 @@ def calculate_bet_sizes_with_meta_model(
     meta_model: object,
     X: np.ndarray,
     primary_predictions: np.ndarray,
-    expected_returns: Optional[np.ndarray] = None,
+    expected_returns: np.ndarray | None = None,
     method: str = "kelly",
     confidence_threshold: float = 0.5,
 ) -> np.ndarray:

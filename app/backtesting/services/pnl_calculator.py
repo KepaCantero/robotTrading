@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import logging
 from decimal import Decimal
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 import numpy as np
 
@@ -43,12 +43,12 @@ class ProfitAndLossCalculator:
 
     def calculate_sell_pnl(
         self,
-        trades: List[Trade],
+        trades: list[Trade],
         symbol: str,
         sell_quantity: Decimal,
         execution_price: Decimal,
         commission: Decimal,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Calculate P&L for a sell trade.
 
@@ -97,7 +97,7 @@ class ProfitAndLossCalculator:
                 f"total_cost={total_cost:.2f}, pnl={pnl:.2f}"
             )
         else:
-            logger.warning(f"SELL {symbol}: NO buy_trades found! " f"PnL will be 0.")
+            logger.warning(f"SELL {symbol}: NO buy_trades found! PnL will be 0.")
 
         # Calculate P&L percentage (handle zero quantity)
         pnl_percentage = (
@@ -119,8 +119,8 @@ class ProfitAndLossCalculator:
         symbol: str,
         quantity: Decimal,
         exit_price: Decimal,
-        trades: List[Trade],
-    ) -> Dict[str, Any]:
+        trades: list[Trade],
+    ) -> dict[str, Any]:
         """
         Calculate P&L when closing a position (stop-loss, take-profit, etc.).
 
@@ -209,7 +209,7 @@ class ProfitAndLossCalculator:
             "entry_time": entry_time,
         }
 
-    def calculate_average_entry_price(self, trades: List[Trade], symbol: str) -> Optional[Decimal]:
+    def calculate_average_entry_price(self, trades: list[Trade], symbol: str) -> Decimal | None:
         """
         Calculate average entry price for a symbol's open positions.
 
@@ -237,7 +237,7 @@ class ProfitAndLossCalculator:
 
         return total_cost / total_quantity
 
-    def calculate_round_trip_commission(self, trades: List[Trade], symbol: str) -> Decimal:
+    def calculate_round_trip_commission(self, trades: list[Trade], symbol: str) -> Decimal:
         """
         Calculate round-trip commission for a symbol.
 
@@ -252,7 +252,7 @@ class ProfitAndLossCalculator:
         return sum(t.commission for t in symbol_trades)
 
     def calculate_commission_ratio(
-        self, position_value: Decimal, trades: List[Trade], symbol: str
+        self, position_value: Decimal, trades: list[Trade], symbol: str
     ) -> Decimal:
         """
         Calculate commission ratio as percentage of position value.

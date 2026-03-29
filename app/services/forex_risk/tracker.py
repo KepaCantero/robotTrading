@@ -17,7 +17,7 @@ import logging
 from dataclasses import dataclass
 from datetime import datetime
 from decimal import Decimal
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, ClassVar, Optional
 
 from app.domain.models.portfolio import Portfolio, Position
 from app.shared.utils.decimal_utils import calculate_percentage, safe_decimal_divide, to_decimal
@@ -104,8 +104,8 @@ class ForexExposureReport:
     total_unhedged_eur: Decimal
     overall_hedge_ratio: Decimal
     fx_pnl_eur: Decimal
-    by_currency: Dict[str, CurrencyExposure]
-    hedging_recommendations: List[dict]
+    by_currency: dict[str, CurrencyExposure]
+    hedging_recommendations: list[dict]
     risk_level: str
 
     def to_dict(self) -> dict:
@@ -144,7 +144,7 @@ class ForexRiskTracker:
     """
 
     # Currency symbol suffixes for auto-detection
-    CURRENCY_SUFFIXES = {
+    CURRENCY_SUFFIXES: ClassVar[dict] = {
         "EUR": [".MC", ".PA", ".AS", ".DE", ".MI"],  # European exchanges
         "GBP": [".L"],  # London
         "CAD": [".TO"],
@@ -158,7 +158,7 @@ class ForexRiskTracker:
     }
 
     # Risk level thresholds for unhedged exposure
-    RISK_THRESHOLDS = {
+    RISK_THRESHOLDS: ClassVar[dict] = {
         "low": Decimal("0.05"),  # < 5% of portfolio
         "medium": Decimal("0.10"),  # 5-10% of portfolio
         "high": Decimal("0.20"),  # 10-20% of portfolio
@@ -186,7 +186,7 @@ class ForexRiskTracker:
         self.min_hedge_threshold = min_hedge_threshold
 
         # State
-        self._fx_rates: Dict[str, Tuple[Decimal, datetime]] = {}
+        self._fx_rates: dict[str, tuple[Decimal, datetime]] = {}
         self._rate_cache_duration_seconds = 3600  # 1 hour
 
         logger.info(
@@ -238,7 +238,7 @@ class ForexRiskTracker:
     async def calculate_fx_exposure(
         self,
         portfolio: Portfolio,
-    ) -> Dict[str, CurrencyExposure]:
+    ) -> dict[str, CurrencyExposure]:
         """
         Calculate exposure by currency.
 
@@ -256,7 +256,7 @@ class ForexRiskTracker:
         await self._update_fx_rates()
 
         # Group positions by currency
-        exposure_data: Dict[str, Dict[str, Any]] = {}
+        exposure_data: dict[str, dict[str, Any]] = {}
 
         for position in portfolio.positions:
             # Skip hedge positions
@@ -294,7 +294,7 @@ class ForexRiskTracker:
                 exposure_data[currency]["hedge_eur"] += hedge_eur
 
         # Create CurrencyExposure objects
-        result: Dict[str, CurrencyExposure] = {}
+        result: dict[str, CurrencyExposure] = {}
         for currency, data in exposure_data.items():
             exposure_eur = data["exposure_eur"]
             hedge_eur = data["hedge_eur"]
@@ -321,7 +321,7 @@ class ForexRiskTracker:
 
     def calculate_unhedged_exposure(
         self,
-        exposures: Dict[str, CurrencyExposure],
+        exposures: dict[str, CurrencyExposure],
     ) -> Decimal:
         """
         Calculate unhedged FX risk.
@@ -342,8 +342,8 @@ class ForexRiskTracker:
 
     async def get_hedging_recommendation(
         self,
-        exposures: Dict[str, CurrencyExposure],
-    ) -> List[dict]:
+        exposures: dict[str, CurrencyExposure],
+    ) -> list[dict]:
         """
         Get currency hedging recommendations.
 
@@ -409,7 +409,7 @@ class ForexRiskTracker:
         currency: str,
         amount_eur: Decimal,
         months: int = 3,
-    ) -> Tuple[Decimal, Decimal]:
+    ) -> tuple[Decimal, Decimal]:
         """
         Calculate forward contract cost for hedging.
 
@@ -482,7 +482,7 @@ class ForexRiskTracker:
             ISO currency code
         """
         # First check explicit currency field
-        if hasattr(position, 'currency') and position.currency:
+        if hasattr(position, "currency") and position.currency:
             return position.currency.upper()
 
         # Detect from symbol suffix
@@ -602,7 +602,7 @@ class ForexRiskTracker:
 
     def _calculate_overall_hedge_ratio(
         self,
-        exposures: Dict[str, CurrencyExposure],
+        exposures: dict[str, CurrencyExposure],
         total_exposure_eur: Decimal,
     ) -> Decimal:
         """

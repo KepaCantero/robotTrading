@@ -7,7 +7,7 @@ with sensible ranges per indicator (TASK-PARAM-3).
 
 import logging
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 import yaml
 
@@ -25,7 +25,7 @@ class ParameterPresetManager:
 
     def __init__(self, config_path: str = "config/parameter_presets.yaml"):
         self.config_path = Path(config_path)
-        self.config: Dict[str, Any] = {}
+        self.config: dict[str, Any] = {}
         self._load_config()
 
     def _load_config(self) -> None:
@@ -35,13 +35,13 @@ class ParameterPresetManager:
             return
 
         try:
-            with open(self.config_path, 'r') as f:
+            with open(self.config_path) as f:
                 self.config = yaml.safe_load(f)
             logger.info(f"Loaded parameter presets from {self.config_path}")
         except OSError as e:
             logger.error(f"Error loading preset config: {e}")
 
-    def get_preset(self, preset_name: str) -> Optional[Dict[str, Any]]:
+    def get_preset(self, preset_name: str) -> Optional[dict[str, Any]]:
         """
         Get configuration for a specific preset.
 
@@ -54,7 +54,7 @@ class ParameterPresetManager:
         presets = self.config.get("presets", {})
         return presets.get(preset_name.lower())
 
-    def get_strategy_params(self, preset_name: str, strategy_name: str) -> Dict[str, Any]:
+    def get_strategy_params(self, preset_name: str, strategy_name: str) -> dict[str, Any]:
         """
         Get parameters for a specific strategy within a preset.
 
@@ -71,7 +71,7 @@ class ParameterPresetManager:
 
         return preset.get(strategy_name, {})
 
-    def get_indicator_range(self, indicator_name: str) -> Dict[str, Any]:
+    def get_indicator_range(self, indicator_name: str) -> dict[str, Any]:
         """
         Get sensible range for an indicator - TASK-PARAM-3.
 
@@ -84,7 +84,7 @@ class ParameterPresetManager:
         ranges = self.config.get("indicator_ranges", {})
         return ranges.get(indicator_name, {})
 
-    def get_all_presets(self) -> List[str]:
+    def get_all_presets(self) -> list[str]:
         """Get list of available preset names."""
         presets = self.config.get("presets", {})
         return list(presets.keys())

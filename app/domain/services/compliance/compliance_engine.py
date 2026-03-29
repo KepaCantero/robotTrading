@@ -44,11 +44,12 @@ from __future__ import annotations
 
 import logging
 import sys
-from dataclasses import dataclass, field as dataclass_field
+from dataclasses import dataclass
+from dataclasses import field as dataclass_field
 from datetime import datetime
 from decimal import Decimal
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional, Tuple
+from typing import TYPE_CHECKING, Any, Callable
 
 import empyrical  # Financial metrics library (annual_volatility, sharpe_ratio, etc.)
 import numpy as np
@@ -77,7 +78,7 @@ class TradeResult:
     spain_tax: Decimal
     net_pnl: Decimal
     correlation_id: str
-    error: Optional[str] = None
+    error: str | None = None
 
 
 @dataclass
@@ -90,8 +91,8 @@ class CycleResult:
     failed_signals: int
     total_value: Decimal
     execution_time_seconds: float
-    errors: List[str] = dataclass_field(default_factory=list)
-    order_ids: List[str] = dataclass_field(default_factory=list)
+    errors: list[str] = dataclass_field(default_factory=list)
+    order_ids: list[str] = dataclass_field(default_factory=list)
 
 
 # Add project root to path
@@ -235,7 +236,7 @@ class SystemAvailability:
         self.enable_logging = enable_logging
 
         # Second: Initialize tracking dictionary
-        self._systems: Dict[str, bool] = {}
+        self._systems: dict[str, bool] = {}
 
         # Third: Check all systems (may use enable_logging)
         self._check_all_systems()
@@ -449,7 +450,7 @@ class SystemAvailability:
         except ImportError:
             return False
 
-    def get_availability(self) -> Dict[str, bool]:
+    def get_availability(self) -> dict[str, bool]:
         """Get availability of all systems."""
         return self._systems.copy()
 
@@ -457,7 +458,7 @@ class SystemAvailability:
         """Check if a specific system is available."""
         return self._systems.get(system_name, False)
 
-    def get_summary(self) -> Dict[str, Any]:
+    def get_summary(self) -> dict[str, Any]:
         """Get summary of system availability."""
         available = sum(1 for v in self._systems.values() if v)
         total = len(self._systems)
@@ -487,12 +488,12 @@ class SystemBus:
                 martin_arch
     """
 
-    def __init__(self, engine: 'ComplianceEngine'):
+    def __init__(self, engine: ComplianceEngine):
         """Initialize SystemBus with reference to parent engine."""
         self.engine = engine
         self._execution_order = self._determine_execution_order()
 
-    def _determine_execution_order(self) -> List[str]:
+    def _determine_execution_order(self) -> list[str]:
         """
         Determine optimal execution order for all systems.
 
@@ -546,9 +547,9 @@ class SystemBus:
         side: str,
         quantity: Decimal,
         price: Decimal,
-        price_history: Optional[pd.DataFrame],
+        price_history: pd.DataFrame | None,
         urgency: float,
-        signal_time: Optional[datetime],
+        signal_time: datetime | None,
     ) -> PreTradeAnalysis:
         """
         Execute pre-trade analysis through ALL systems in optimal order.
@@ -638,9 +639,9 @@ class SystemBus:
         side: str,
         quantity: Decimal,
         price: Decimal,
-        price_history: Optional[pd.DataFrame],
+        price_history: pd.DataFrame | None,
         urgency: float,
-        signal_time: Optional[datetime],
+        signal_time: datetime | None,
     ) -> bool:
         """Execute a single system and update result."""
         subsystem = self.engine._get_subsystem(system_name)
@@ -742,9 +743,9 @@ class SystemBus:
 
                 # Calculate data freshness from most recent timestamp
                 # Assuming price_history has a DatetimeIndex or timestamp column
-                if hasattr(price_history.index, 'max'):
+                if hasattr(price_history.index, "max"):
                     most_recent_time = price_history.index.max()
-                    if hasattr(most_recent_time, 'to_pydatetime'):
+                    if hasattr(most_recent_time, "to_pydatetime"):
                         most_recent_time = most_recent_time.to_pydatetime()
                     # Calculate freshness in milliseconds
                     time_diff = datetime.now() - most_recent_time
@@ -803,16 +804,16 @@ class SystemBus:
 
             config = get_compliance_config()
 
-            if price_history is not None and 'close' in price_history.columns:
+            if price_history is not None and "close" in price_history.columns:
                 # Extract prices as list for ContextEngine
-                prices = price_history['close'].tolist()
+                prices = price_history["close"].tolist()
 
                 # Get current regime using ensemble method (combines HMM, clustering, correlation)
-                regime_result = subsystem.get_current_regime(prices, method='ensemble')
+                regime_result = subsystem.get_current_regime(prices, method="ensemble")
 
-                if regime_result and 'regime' in regime_result:
-                    detected_regime = regime_result['regime']
-                    regime_conf = regime_result.get('confidence', config.DEFAULT_REGIME_CONFIDENCE)
+                if regime_result and "regime" in regime_result:
+                    detected_regime = regime_result["regime"]
+                    regime_conf = regime_result.get("confidence", config.DEFAULT_REGIME_CONFIDENCE)
 
                     # Only set market_regime if not already set by Chan (Chan takes precedence)
                     if not result.market_regime:
@@ -830,8 +831,8 @@ class SystemBus:
                 # Also get volatility regime for additional context
                 vol_result = subsystem.get_volatility_regime(prices)
                 if vol_result:
-                    result.volatility_regime = vol_result.get('regime', 'NORMAL')
-                    vol_percentile = vol_result.get('percentile', 50)
+                    result.volatility_regime = vol_result.get("regime", "NORMAL")
+                    vol_percentile = vol_result.get("percentile", 50)
 
                     # Adjust confidence for extreme volatility (using config threshold)
                     if vol_percentile > config.HIGH_VOLATILITY_PERCENTILE:
@@ -965,7 +966,7 @@ class SystemBus:
             except Exception:
                 # Estimate from current positions
                 gross_exposure = position_value + sum(
-                    pos.get('quantity', 0) * pos.get('current_price', float(price))
+                    pos.get("quantity", 0) * pos.get("current_price", float(price))
                     for pos in current_positions.values()
                 )
                 leverage_ratio = gross_exposure / portfolio_value if portfolio_value > 0 else 0.0
@@ -990,8 +991,8 @@ class SystemBus:
                 has_nan = price_history.isnull().any().any()
 
                 # Use configured max data age (addresses GAP-CFG-002)
-                if 'timestamp' in price_history.columns:
-                    last_timestamp = pd.to_datetime(price_history['timestamp'].iloc[-1])
+                if "timestamp" in price_history.columns:
+                    last_timestamp = pd.to_datetime(price_history["timestamp"].iloc[-1])
                     data_age = (
                         datetime.now() - last_timestamp
                     ).total_seconds() / config.SECONDS_PER_DAY
@@ -1053,7 +1054,7 @@ class SystemBus:
         except Exception as e:
             logger.warning("Risk engine validation failed: %s", e)
             result.can_execute = False
-            result.reasons.append(f"Risk engine error: {str(e)}")
+            result.reasons.append(f"Risk engine error: {e!s}")
             return False
 
     def _handle_hull(
@@ -1079,14 +1080,14 @@ class SystemBus:
 
                 # Calculate VaR at multiple levels using the calculate_var factory function
                 var_result_95 = subsystem(
-                    returns.to_numpy(), method='historical', confidence_level=0.95
+                    returns.to_numpy(), method="historical", confidence_level=0.95
                 )
                 var_result_99 = subsystem(
-                    returns.to_numpy(), method='historical', confidence_level=0.99
+                    returns.to_numpy(), method="historical", confidence_level=0.99
                 )
 
-                result.hull_var_1d_95 = float(var_result_95['var'])
-                result.hull_var_1d_99 = float(var_result_99['var'])
+                result.hull_var_1d_95 = float(var_result_95["var"])
+                result.hull_var_1d_99 = float(var_result_99["var"])
 
                 # Greeks for options
                 # result.hull_greeks_delta = ...
@@ -1199,7 +1200,7 @@ class SystemBus:
                 )
 
                 # Check if alpha_signal is valid before accessing attributes
-                if alpha_signal is not None and hasattr(alpha_signal, 'confidence'):
+                if alpha_signal is not None and hasattr(alpha_signal, "confidence"):
                     result.narang_alpha_signal = float(alpha_signal.confidence)
 
                     # Quality assessment using config thresholds
@@ -1246,10 +1247,10 @@ class SystemBus:
             config = get_compliance_config()
 
             # Check if meta-labeling model is fitted
-            if hasattr(subsystem, '_is_fitted') and subsystem._is_fitted:
+            if hasattr(subsystem, "_is_fitted") and subsystem._is_fitted:
                 # Model is fitted, we could make predictions if we have features
                 # For now, use the meta accuracy as signal strength
-                if hasattr(subsystem, 'meta_model'):
+                if hasattr(subsystem, "meta_model"):
                     # Meta-model accuracy indicates how well we can predict primary model correctness
                     result.meta_labeling_signal = config.FITTED_MODEL_SIGNAL_STRENGTH
             else:
@@ -1261,7 +1262,7 @@ class SystemBus:
             result.mcc_metric = config.DEFAULT_MCC_METRIC
 
             # Sample weights availability - check if purged CV is configured
-            if hasattr(subsystem, 'config') and subsystem.config.use_purged_cv:
+            if hasattr(subsystem, "config") and subsystem.config.use_purged_cv:
                 result.sample_weights_available = True
             else:
                 result.sample_weights_available = False
@@ -1397,19 +1398,19 @@ class SystemBus:
                 if harris_check.liquidity_sufficient
                 else config.LIQUIDITY_SCORE_INSUFFICIENT
             )
-            result.harris_vpin = getattr(harris_check, 'vpin', 0.0)
-            result.harris_pin = getattr(harris_check, 'pin', 0.0)
+            result.harris_vpin = getattr(harris_check, "vpin", 0.0)
+            result.harris_pin = getattr(harris_check, "pin", 0.0)
             # PreTradeCheckResult has estimated_cost_bps, not separate market_impact/timing_cost
             # Use estimated_cost_bps as market_impact_bps for now
-            result.market_impact_bps = getattr(harris_check, 'estimated_cost_bps', 0.0)
+            result.market_impact_bps = getattr(harris_check, "estimated_cost_bps", 0.0)
             # timing_cost_bps not available in PreTradeCheckResult, estimate as portion of cost
             result.timing_cost_bps = (
-                getattr(harris_check, 'estimated_cost_bps', 0.0) * config.TIMING_COST_MULTIPLIER
+                getattr(harris_check, "estimated_cost_bps", 0.0) * config.TIMING_COST_MULTIPLIER
             )
             # Map venue names
-            result.venue = getattr(harris_check, 'recommended_venue', 'lit_exchange')
-            result.algorithm = getattr(harris_check, 'recommended_order_type', 'LIMIT')
-            result.limit_price = getattr(harris_check, 'recommended_limit_price', None)
+            result.venue = getattr(harris_check, "recommended_venue", "lit_exchange")
+            result.algorithm = getattr(harris_check, "recommended_order_type", "LIMIT")
+            result.limit_price = getattr(harris_check, "recommended_limit_price", None)
 
             if not harris_check.can_execute:
                 result.can_execute = False
@@ -1553,26 +1554,26 @@ class SystemBus:
 
             config = get_strategy_stock_allocator_config()
             # Config is a dict from YAML, use proper dict access
-            exposure_config = config.get('exposure', {})
-            max_strategy_exposure = exposure_config.get('max_strategy_exposure', 0.50)
-            exposure_config.get('max_pair_exposure', 0.15)
-            max_assets_per_pair = exposure_config.get('max_assets_per_pair', 2)
+            exposure_config = config.get("exposure", {})
+            max_strategy_exposure = exposure_config.get("max_strategy_exposure", 0.50)
+            exposure_config.get("max_pair_exposure", 0.15)
+            max_assets_per_pair = exposure_config.get("max_assets_per_pair", 2)
             # Default correlation risk since it's not in config
             max_correlation_risk = 1.0
 
             # Try to get current portfolio from cache
-            if hasattr(subsystem, 'current_portfolio') and subsystem.current_portfolio:
+            if hasattr(subsystem, "current_portfolio") and subsystem.current_portfolio:
                 portfolio = subsystem.current_portfolio
 
                 # Calculate current exposure (total positions / equity)
                 total_exposure = 0.0
                 position_count = 0
                 for position in portfolio.positions:
-                    if hasattr(position, 'market_value'):
+                    if hasattr(position, "market_value"):
                         total_exposure += abs(float(position.market_value))
                         position_count += 1
 
-                if hasattr(portfolio, 'total_equity') and portfolio.total_equity > 0:
+                if hasattr(portfolio, "total_equity") and portfolio.total_equity > 0:
                     result.current_exposure = total_exposure / float(portfolio.total_equity)
 
                     # Check against max_strategy_exposure limit
@@ -1642,13 +1643,13 @@ class SystemBus:
             compliance_config = get_compliance_config()
 
             # Config is a dict from YAML, use proper dict access
-            data_validation = alloc_config.get('data_validation', {})
-            garch_config = alloc_config.get('garch', {})
-            risk_metrics = alloc_config.get('risk_metrics', {})
+            data_validation = alloc_config.get("data_validation", {})
+            garch_config = alloc_config.get("garch", {})
+            risk_metrics = alloc_config.get("risk_metrics", {})
 
-            lookback_max_days = data_validation.get('lookback_max_days', 126)
-            slope_window_min = garch_config.get('slope_window_min', 30)
-            min_sortino_ratio = risk_metrics.get('min_sortino_ratio', 0.5)
+            lookback_max_days = data_validation.get("lookback_max_days", 126)
+            slope_window_min = garch_config.get("slope_window_min", 30)
+            min_sortino_ratio = risk_metrics.get("min_sortino_ratio", 0.5)
 
             if price_history is not None and len(price_history) >= lookback_max_days:
                 # Calculate historical return metrics
@@ -1716,7 +1717,7 @@ class SystemBus:
             trading_config = get_config().trading
             config = get_compliance_config()
 
-            if subsystem and hasattr(subsystem, 'estimate_execution_probability'):
+            if subsystem and hasattr(subsystem, "estimate_execution_probability"):
                 # Get execution probability from microstructure engine
                 exec_prob = subsystem.estimate_execution_probability(
                     symbol=symbol,
@@ -1778,7 +1779,7 @@ class SystemBus:
             config = get_compliance_config()
 
             # Architecture score - check if subsystem indicates compliance
-            if isinstance(subsystem, dict) and subsystem.get('architecture_compliant'):
+            if isinstance(subsystem, dict) and subsystem.get("architecture_compliant"):
                 result.tomasini_architecture_score = config.TOMASINI_ARCHITECTURE_SCORE_COMPLIANT
             else:
                 result.tomasini_architecture_score = config.TOMASINI_ARCHITECTURE_SCORE_DEFAULT
@@ -1813,14 +1814,14 @@ class SystemBus:
         Timeout handling is delegated to the BrokerConnector subsystem.
         """
         try:
-            if subsystem and hasattr(subsystem, 'get_account_info'):
+            if subsystem and hasattr(subsystem, "get_account_info"):
                 # Get actual account status from broker
                 account_info = subsystem.get_account_info()
 
-                result.account_balance_ok = account_info.get('balance_ok', True)
-                result.buying_power_ok = account_info.get('buying_power_ok', True)
-                result.day_trading_count = account_info.get('day_trading_count', 0)
-                result.pattern_day_trader_ok = account_info.get('pattern_day_trader', True)
+                result.account_balance_ok = account_info.get("balance_ok", True)
+                result.buying_power_ok = account_info.get("buying_power_ok", True)
+                result.day_trading_count = account_info.get("day_trading_count", 0)
+                result.pattern_day_trader_ok = account_info.get("pattern_day_trader", True)
 
                 # Adjust confidence if account issues
                 if not result.account_balance_ok:
@@ -1897,7 +1898,7 @@ class SystemBus:
             config = get_compliance_config()
 
             # Architecture pattern compliance
-            if isinstance(subsystem, dict) and subsystem.get('architecture_compliant'):
+            if isinstance(subsystem, dict) and subsystem.get("architecture_compliant"):
                 result.architecture_pattern_compliance = (
                     config.PERCIVAL_ARCHITECTURE_COMPLIANT_SCORE
                 )
@@ -1938,16 +1939,16 @@ class SystemBus:
             config = get_compliance_config()
 
             # Get golden signals from SRE monitor
-            if subsystem and hasattr(subsystem, 'get_golden_signals'):
+            if subsystem and hasattr(subsystem, "get_golden_signals"):
                 signals = subsystem.get_golden_signals()
-                result.slo_compliance = signals.get('slo_compliance', True)
+                result.slo_compliance = signals.get("slo_compliance", True)
                 result.error_budget_remaining = signals.get(
-                    'error_budget_remaining', config.SLO_DEFAULT_ERROR_BUDGET
+                    "error_budget_remaining", config.SLO_DEFAULT_ERROR_BUDGET
                 )
                 result.latency_p95_ms = signals.get(
-                    'latency_p95_ms', config.SLO_DEFAULT_LATENCY_P95_MS
+                    "latency_p95_ms", config.SLO_DEFAULT_LATENCY_P95_MS
                 )
-                result.golden_signals_health = signals.get('health', config.SLO_DEFAULT_HEALTH)
+                result.golden_signals_health = signals.get("health", config.SLO_DEFAULT_HEALTH)
 
                 # Check SLO compliance
                 if not result.slo_compliance:
@@ -1989,7 +1990,7 @@ class SystemBus:
             config = get_compliance_config()
 
             # TDD compliance metrics
-            if isinstance(subsystem, dict) and subsystem.get('tdd_compliant'):
+            if isinstance(subsystem, dict) and subsystem.get("tdd_compliant"):
                 result.test_coverage = config.TDD_COMPLIANT_COVERAGE
                 result.tests_passing = True
                 result.tdd_compliance = config.TDD_COMPLIANT_TDD_SCORE
@@ -2028,7 +2029,7 @@ class SystemBus:
             config = get_compliance_config()
 
             # Clean architecture metrics
-            if isinstance(subsystem, dict) and subsystem.get('clean_arch_compliant'):
+            if isinstance(subsystem, dict) and subsystem.get("clean_arch_compliant"):
                 result.martin_layer_separation = config.MARTIN_COMPLIANT_SCORE
                 result.martin_dependency_rule = config.MARTIN_COMPLIANT_SCORE
                 result.martin_interface_health = config.MARTIN_COMPLIANT_SCORE
@@ -2056,7 +2057,7 @@ class ComplianceEngine:
     Integrates ALL existing functionality + ALL 12 compliance systems.
     """
 
-    _instance: Optional['ComplianceEngine'] = None
+    _instance: ComplianceEngine | None = None
 
     def __new__(cls, *args, **kwargs):
         """Singleton pattern - only one engine instance."""
@@ -2069,7 +2070,7 @@ class ComplianceEngine:
         asset_class: str = "equity",
         strict_mode: bool = False,
         enable_logging: bool = True,
-        config: Optional[ComplianceConfig] = None,
+        config: ComplianceConfig | None = None,
     ):
         """
         Initialize THE Compliance Engine.
@@ -2081,7 +2082,7 @@ class ComplianceEngine:
             config: Optional configuration object for thresholds and limits
         """
         # Avoid re-initialization
-        if hasattr(self, '_initialized'):
+        if hasattr(self, "_initialized"):
             return
 
         # First: Set simple attributes (asset_class, enable_logging, strict_mode)
@@ -2096,18 +2097,18 @@ class ComplianceEngine:
         self.availability = SystemAvailability(enable_logging=self.enable_logging)
 
         # Initialize subsystems lazily
-        self._subsystems: Dict[str, Any] = {}
+        self._subsystems: dict[str, Any] = {}
 
         # Initialize SystemBus for orchestrating all 17 systems
         self._system_bus = SystemBus(self)
 
         # Trade tracking for SLO
-        self._active_orders: Dict[str, Dict[str, Any]] = {}
-        self._completed_trades: List[Dict[str, Any]] = []
+        self._active_orders: dict[str, dict[str, Any]] = {}
+        self._completed_trades: list[dict[str, Any]] = []
         self._alert_hashes: set[str] = set()
 
         # Kill Switch tracking (Hull Rule 13.1)
-        self._daily_pnl_tracking: List[Dict[str, Any]] = []
+        self._daily_pnl_tracking: list[dict[str, Any]] = []
         # Use ComplianceConfig for default starting capital
         from app.shared.config.centralized_config import get_compliance_config
 
@@ -2127,11 +2128,11 @@ class ComplianceEngine:
 
         summary = self.availability.get_summary()
         logger.info(
-            "Systems Available: %d/%d", summary['available_systems'], summary['total_systems']
+            "Systems Available: %d/%d", summary["available_systems"], summary["total_systems"]
         )
-        logger.info("Availability: %.0f%%", summary['availability_percentage'])
+        logger.info("Availability: %.0f%%", summary["availability_percentage"])
 
-        for system, available in summary['systems'].items():
+        for system, available in summary["systems"].items():
             status = "✅" if available else "❌"
             logger.info("  %s %s", status, system)
 
@@ -2141,7 +2142,7 @@ class ComplianceEngine:
     # PICKLE SUPPORT (for multiprocessing)
     # ==========================================================================
 
-    def __getstate__(self) -> Dict[str, Any]:
+    def __getstate__(self) -> dict[str, Any]:
         """
         Get state for pickling (excludes unpicklable objects).
 
@@ -2154,19 +2155,19 @@ class ComplianceEngine:
         """
         # Extract only the essential configuration
         state = {
-            'asset_class': self.asset_class,
-            'strict_mode': self.strict_mode,
-            'enable_logging': False,  # Disable logging in worker processes
-            'config': self.config,
-            '_starting_capital': self._starting_capital,
+            "asset_class": self.asset_class,
+            "strict_mode": self.strict_mode,
+            "enable_logging": False,  # Disable logging in worker processes
+            "config": self.config,
+            "_starting_capital": self._starting_capital,
             # Clear trade tracking state - each worker has its own trades
-            '_active_orders': {},
-            '_completed_trades': [],
-            '_daily_pnl_tracking': [],
+            "_active_orders": {},
+            "_completed_trades": [],
+            "_daily_pnl_tracking": [],
         }
         return state
 
-    def __setstate__(self, state: Dict[str, Any]) -> None:
+    def __setstate__(self, state: dict[str, Any]) -> None:
         """
         Restore state from pickling (reinitializes engine in worker process).
 
@@ -2199,7 +2200,7 @@ class ComplianceEngine:
         if not self._daily_pnl_tracking:
             return False
 
-        total_pnl = sum(t.get('pnl', 0) for t in self._daily_pnl_tracking)
+        total_pnl = sum(t.get("pnl", 0) for t in self._daily_pnl_tracking)
         daily_return_pct = total_pnl / self._starting_capital if self._starting_capital > 0 else 0
 
         # Use configured threshold (addresses GAP-CFG-002)
@@ -2223,8 +2224,8 @@ class ComplianceEngine:
         side: str,
         quantity: Decimal,
         entry_price: Decimal,
-        exit_price: Optional[Decimal] = None,
-        realized_pnl: Optional[float] = None,
+        exit_price: Decimal | None = None,
+        realized_pnl: float | None = None,
     ) -> None:
         """
         Track daily P&L for kill switch monitoring (Hull Rule 13.1).
@@ -2250,18 +2251,18 @@ class ComplianceEngine:
 
         self._daily_pnl_tracking.append(
             {
-                'timestamp': datetime.now(),
-                'symbol': symbol,
-                'side': side,
-                'quantity': quantity,
-                'entry_price': entry_price,
-                'exit_price': exit_price,
-                'pnl': pnl,
+                "timestamp": datetime.now(),
+                "symbol": symbol,
+                "side": side,
+                "quantity": quantity,
+                "entry_price": entry_price,
+                "exit_price": exit_price,
+                "pnl": pnl,
             }
         )
 
         if self.enable_logging:
-            total_pnl = sum(t.get('pnl', 0) for t in self._daily_pnl_tracking)
+            total_pnl = sum(t.get("pnl", 0) for t in self._daily_pnl_tracking)
             daily_return_pct = (
                 total_pnl / self._starting_capital if self._starting_capital > 0 else 0
             )
@@ -2274,7 +2275,7 @@ class ComplianceEngine:
                 daily_return_pct * 100,
             )
 
-    def reset_daily_tracking(self, new_starting_capital: Optional[float] = None) -> None:
+    def reset_daily_tracking(self, new_starting_capital: float | None = None) -> None:
         """
         Reset daily tracking at start of new trading day (Hull Rule 13.1).
 
@@ -2282,7 +2283,7 @@ class ComplianceEngine:
             new_starting_capital: Optional new starting capital for the day
         """
         if self.enable_logging and self._daily_pnl_tracking:
-            total_pnl = sum(t.get('pnl', 0) for t in self._daily_pnl_tracking)
+            total_pnl = sum(t.get("pnl", 0) for t in self._daily_pnl_tracking)
             daily_return_pct = (
                 total_pnl / self._starting_capital if self._starting_capital > 0 else 0
             )
@@ -2314,7 +2315,7 @@ class ComplianceEngine:
         if self.enable_logging:
             logger.info("Starting capital updated: $%.2f -> $%.2f", old_capital, capital)
 
-    def get_daily_pnl_summary(self) -> Dict[str, Any]:
+    def get_daily_pnl_summary(self) -> dict[str, Any]:
         """
         Get summary of daily P&L for kill switch monitoring (Hull Rule 13.1).
 
@@ -2331,12 +2332,12 @@ class ComplianceEngine:
                 "trades": [],
             }
 
-        total_pnl = sum(t.get('pnl', 0) for t in self._daily_pnl_tracking)
+        total_pnl = sum(t.get("pnl", 0) for t in self._daily_pnl_tracking)
         daily_return_pct = total_pnl / self._starting_capital if self._starting_capital > 0 else 0
 
         # Calculate statistics
-        winning_trades = [t for t in self._daily_pnl_tracking if t.get('pnl', 0) > 0]
-        losing_trades = [t for t in self._daily_pnl_tracking if t.get('pnl', 0) <= 0]
+        winning_trades = [t for t in self._daily_pnl_tracking if t.get("pnl", 0) > 0]
+        losing_trades = [t for t in self._daily_pnl_tracking if t.get("pnl", 0) <= 0]
 
         return {
             "total_trades": len(self._daily_pnl_tracking),
@@ -2352,10 +2353,10 @@ class ComplianceEngine:
                 else 0.0
             ),
             "avg_win": (
-                np.mean([t.get('pnl', 0) for t in winning_trades]) if winning_trades else 0.0
+                np.mean([t.get("pnl", 0) for t in winning_trades]) if winning_trades else 0.0
             ),
             "avg_loss": (
-                np.mean([t.get('pnl', 0) for t in losing_trades]) if losing_trades else 0.0
+                np.mean([t.get("pnl", 0) for t in losing_trades]) if losing_trades else 0.0
             ),
             "trades": [
                 {
@@ -2372,7 +2373,7 @@ class ComplianceEngine:
     # SUBSYSTEM GETTERS (Lazy Initialization)
     # ==========================================================================
 
-    def _get_subsystem(self, name: str) -> Optional[Any]:
+    def _get_subsystem(self, name: str) -> Any | None:
         """Get subsystem with lazy initialization."""
         if name in self._subsystems:
             return self._subsystems[name]
@@ -2384,7 +2385,7 @@ class ComplianceEngine:
 
         return subsystem
 
-    def _load_subsystem(self, name: str) -> Optional[Any]:
+    def _load_subsystem(self, name: str) -> Any | None:
         """
         Load a specific subsystem from ALL 17 systems.
 
@@ -2413,7 +2414,7 @@ class ComplianceEngine:
                 logger.warning("Error loading subsystem %s: %s", name, e)
             return None
 
-    def _get_subsystem_loaders(self) -> Dict[str, Callable[[], Any]]:
+    def _get_subsystem_loaders(self) -> dict[str, Callable[[], Any]]:
         """
         Get dictionary of subsystem loader functions.
 
@@ -2576,7 +2577,7 @@ class ComplianceEngine:
         price: Decimal,
         capital: Decimal,
         confidence: float = 100.0,
-        max_position_ratio: Optional[float] = None,
+        max_position_ratio: float | None = None,
     ) -> Decimal:
         """
         Calculate recommended position size for a trade.
@@ -2652,14 +2653,14 @@ class ComplianceEngine:
         symbol: str,
         trade_value: Decimal,
         strategy_name: str,
-        current_portfolio: Dict[str, Decimal],
-        strategy_positions: Dict[str, Decimal],
+        current_portfolio: dict[str, Decimal],
+        strategy_positions: dict[str, Decimal],
         total_capital: Decimal,
         strategy_capital: Decimal,
-        max_symbol_exposure_pct: Optional[Decimal] = None,  # Increased from 20% to 30%
-        max_strategy_exposure_pct: Optional[Decimal] = None,  # Increased from 70% to 80%
-        max_portfolio_exposure_pct: Optional[Decimal] = None,
-    ) -> Tuple[bool, str]:
+        max_symbol_exposure_pct: Decimal | None = None,  # Increased from 20% to 30%
+        max_strategy_exposure_pct: Decimal | None = None,  # Increased from 70% to 80%
+        max_portfolio_exposure_pct: Decimal | None = None,
+    ) -> tuple[bool, str]:
         """
         Validate if a trade would exceed risk envelope constraints.
 
@@ -2756,11 +2757,11 @@ class ComplianceEngine:
 
     def get_risk_envelope_exposures(
         self,
-        current_portfolio: Dict[str, Decimal],
-        strategy_positions: Dict[str, Decimal],
+        current_portfolio: dict[str, Decimal],
+        strategy_positions: dict[str, Decimal],
         total_capital: Decimal,
         strategy_capital: Decimal,
-    ) -> Dict[str, float]:
+    ) -> dict[str, float]:
         """
         Get current exposure metrics for risk envelope.
 
@@ -2800,9 +2801,9 @@ class ComplianceEngine:
         side: str,
         quantity: Decimal,
         price: Decimal,
-        price_history: Optional[pd.DataFrame] = None,
-        urgency: Optional[float] = None,
-        signal_time: Optional[datetime] = None,
+        price_history: pd.DataFrame | None = None,
+        urgency: float | None = None,
+        signal_time: datetime | None = None,
     ) -> PreTradeAnalysis:
         """
         THE main pre-trade analysis method.
@@ -2828,8 +2829,7 @@ class ComplianceEngine:
             threshold_pct = abs(self.config.kill_switch_threshold)
             if self.enable_logging:
                 logger.critical(
-                    "TRADE BLOCKED by kill switch: %s %s %s. "
-                    "Daily loss exceeded %.1f%% threshold.",
+                    "TRADE BLOCKED by kill switch: %s %s %s. Daily loss exceeded %.1f%% threshold.",
                     symbol,
                     side,
                     quantity,
@@ -2872,11 +2872,11 @@ class ComplianceEngine:
         side: str,
         quantity: Decimal,
         execution_price: Decimal,
-        signal_price: Optional[Decimal],
-        signal_time: Optional[datetime],
+        signal_price: Decimal | None,
+        signal_time: datetime | None,
         submission_time: datetime,
         execution_time: datetime,
-        nbbo: Optional[Tuple[Decimal, Decimal]] = None,
+        nbbo: tuple[Decimal, Decimal] | None = None,
     ) -> PostTradeAnalysis:
         """
         THE main post-trade analysis method.
@@ -2961,9 +2961,9 @@ class ComplianceEngine:
 
     def optimize_portfolio(
         self,
-        symbols: List[str],
+        symbols: list[str],
         returns: pd.DataFrame,
-        _current_prices: Dict[str, Decimal],
+        _current_prices: dict[str, Decimal],
     ) -> PortfolioOptimization:
         """
         THE ONLY portfolio optimization method.
@@ -3053,7 +3053,7 @@ class ComplianceEngine:
         order_id: str,
         execution_price: Decimal,
         execution_time: datetime,
-        filled_quantity: Optional[Decimal] = None,
+        filled_quantity: Decimal | None = None,
     ) -> None:
         """Track order completion for SLO monitoring."""
         from app.shared.config.centralized_config import get_compliance_config
@@ -3094,7 +3094,7 @@ class ComplianceEngine:
         if not slo_met and self.enable_logging:
             logger.warning("SLO VIOLATION: %s latency %.0fms", order_id, latency_ms)
 
-    def get_slo_metrics(self) -> Dict[str, Any]:
+    def get_slo_metrics(self) -> dict[str, Any]:
         """Get current SLO metrics."""
         completed = self._completed_trades
 
@@ -3121,7 +3121,7 @@ class ComplianceEngine:
     # COORDINATOR METHODS - Protocol Implementations (Task 09)
     # ==========================================================================
 
-    async def process_alert(self, alert: dict) -> Optional["TradeSignal"]:
+    async def process_alert(self, alert: dict) -> TradeSignal | None:
         """
         Process alert and generate trading signal (IAlertProcessor protocol).
 
@@ -3233,13 +3233,13 @@ class ComplianceEngine:
 
     async def execute_trade(
         self,
-        signal: "TradeSignal",
-        portfolio_value: Optional[Decimal] = None,
-        _price_history: Optional[pd.DataFrame] = None,
-        decision_logger: Optional[Any] = None,
-        tax_engine: Optional[Any] = None,
-        broker_connector: Optional[Any] = None,
-    ) -> "TradeResult":
+        signal: TradeSignal,
+        portfolio_value: Decimal | None = None,
+        _price_history: pd.DataFrame | None = None,
+        decision_logger: object | None = None,
+        tax_engine: object | None = None,
+        broker_connector: object | None = None,
+    ) -> TradeResult:
         """
         Execute trade with full compliance validation (ITradeExecutor protocol).
 
@@ -3427,7 +3427,7 @@ class ComplianceEngine:
             )
 
         except Exception as e:
-            error_msg = f"Trade execution failed: {str(e)}"
+            error_msg = f"Trade execution failed: {e!s}"
             if self.enable_logging:
                 logger.error("%s for %s", error_msg, signal.symbol)
 
@@ -3498,9 +3498,9 @@ class ComplianceEngine:
 
     async def run_cycle(
         self,
-        signals: list["TradeSignal"],
-        _portfolio_value: Optional[Decimal] = None,
-    ) -> "CycleResult":
+        signals: list[TradeSignal],
+        _portfolio_value: Decimal | None = None,
+    ) -> CycleResult:
         """
         Run complete strategy cycle (IStrategyCycleRunner protocol).
 
@@ -3559,7 +3559,7 @@ class ComplianceEngine:
 
             except Exception as e:
                 failed += 1
-                errors.append(f"Error processing {signal.symbol}: {str(e)}")
+                errors.append(f"Error processing {signal.symbol}: {e!s}")
                 await self.handle_cycle_error(e)
 
         execution_time = (datetime.now() - start_time).total_seconds()
@@ -3668,7 +3668,7 @@ class ComplianceEngine:
 
         return is_dup
 
-    async def _submit_to_broker(self, _broker, _signal: "TradeSignal") -> str:
+    async def _submit_to_broker(self, _broker, _signal: TradeSignal) -> str:
         """Submit order to broker."""
         # Convert TradeSignal to broker format
 
@@ -3680,10 +3680,10 @@ class ComplianceEngine:
 
     def _create_failed_result(
         self,
-        signal: "TradeSignal",
+        signal: TradeSignal,
         error_msg: str,
-        correlation_id: Optional[str] = None,
-    ) -> "TradeResult":
+        correlation_id: str | None = None,
+    ) -> TradeResult:
         """
         Create failed trade result.
 
@@ -3714,7 +3714,7 @@ class ComplianceEngine:
     # HELPERS
     # ==========================================================================
 
-    def _estimate_adv(self, price_history: Optional[pd.DataFrame]) -> Decimal:
+    def _estimate_adv(self, price_history: pd.DataFrame | None) -> Decimal:
         """Estimate average daily volume."""
         import math
 
@@ -3733,7 +3733,7 @@ class ComplianceEngine:
         config = get_compliance_config()
         return Decimal(str(config.ESTIMATED_VOLUME))
 
-    def get_system_status(self) -> Dict[str, Any]:
+    def get_system_status(self) -> dict[str, Any]:
         """Get status of ALL systems."""
         return {
             "availability": self.availability.get_summary(),
@@ -3753,7 +3753,7 @@ def get_compliance_engine(
     asset_class: str = "equity",
     strict_mode: bool = False,
     enable_logging: bool = True,
-    config: Optional[ComplianceConfig] = None,
+    config: ComplianceConfig | None = None,
 ) -> ComplianceEngine:
     """
     Get THE ONLY Compliance Engine instance.
@@ -3807,7 +3807,7 @@ def quick_check(
     side: str,
     quantity: Decimal,
     price: Decimal,
-) -> Tuple[bool, str]:
+) -> tuple[bool, str]:
     """Quick pre-trade check."""
     engine = get_compliance_engine()
     analysis = engine.analyze_pre_trade(
@@ -3827,7 +3827,7 @@ def get_execution_plan(
     symbol: str,
     quantity: Decimal,
     price: Decimal,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Get execution plan."""
     engine = get_compliance_engine()
     analysis = engine.analyze_pre_trade(

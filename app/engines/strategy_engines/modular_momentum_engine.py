@@ -11,9 +11,10 @@ Refactorización de ModularMomentumStrategy como Strategy Engine con:
 
 import logging
 from collections import deque
+from collections.abc import Sequence
 from datetime import datetime
 from decimal import Decimal
-from typing import Any, Dict, List, Optional, Sequence
+from typing import Any, Optional
 
 import numpy as np
 
@@ -48,7 +49,7 @@ class ModularMomentumStrategyEngine(BaseStrategyEngine):
     - Ajuste dinámico de thresholds basado en predicciones
     """
 
-    def __init__(self, config: Dict[str, Any]):
+    def __init__(self, config: dict[str, Any]):
         """
         Inicializar modular momentum strategy engine.
 
@@ -138,7 +139,7 @@ class ModularMomentumStrategyEngine(BaseStrategyEngine):
 
     def extract_features(
         self, market_data: Quote, historical_data: Optional[Sequence[Quote]] = None
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Extraer features estandarizados para Learning Engine.
 
@@ -177,12 +178,12 @@ class ModularMomentumStrategyEngine(BaseStrategyEngine):
 
         # Preparar metadata
         metadata = {
-            'timestamp': (
-                market_data.timestamp if hasattr(market_data, 'timestamp') else datetime.now()
+            "timestamp": (
+                market_data.timestamp if hasattr(market_data, "timestamp") else datetime.now()
             ),
-            'symbol': market_data.symbol,
-            'recent_trades': list(self.recent_trades),
-            'recent_win_rate': self._calculate_recent_win_rate(),
+            "symbol": market_data.symbol,
+            "recent_trades": list(self.recent_trades),
+            "recent_win_rate": self._calculate_recent_win_rate(),
         }
 
         # Usar FeatureExtractor para extraer features completos
@@ -198,13 +199,13 @@ class ModularMomentumStrategyEngine(BaseStrategyEngine):
             logger.warning(f"Error extrayendo features: {e}")
             # Fallback: features básicos
             return {
-                'indicators': indicators,
-                'filter_results': filter_results,
-                'market_context': market_context,
-                'metadata': metadata,
+                "indicators": indicators,
+                "filter_results": filter_results,
+                "market_context": market_context,
+                "metadata": metadata,
             }
 
-    def _generate_signals_impl(self, market_data: Quote) -> List[Signal]:
+    def _generate_signals_impl(self, market_data: Quote) -> list[Signal]:
         """
         Implementación específica de generación de señales para modular momentum.
 
@@ -273,18 +274,18 @@ class ModularMomentumStrategyEngine(BaseStrategyEngine):
             if (
                 strength in [SignalStrength.STRONG, SignalStrength.VERY_STRONG]
                 and confidence < 70.0
-            ) or strength == SignalStrength.WEAK and confidence > 80.0:
+            ) or (strength == SignalStrength.WEAK and confidence > 80.0):
                 strength = SignalStrength.MODERATE
 
             # Calcular liquidity_score
-            volume_ratio = indicators.get('volume_ratio', 1.0)
+            volume_ratio = indicators.get("volume_ratio", 1.0)
             liquidity_score = min(100.0, max(0.0, (volume_ratio - 0.5) * 50.0))
 
             # Calcular priority_score
             priority_score = (confidence * 0.7) + (liquidity_score * 0.3)
 
             # Obtener volume
-            volume = Decimal(str(getattr(market_data, 'volume', 0)))
+            volume = Decimal(str(getattr(market_data, "volume", 0)))
             if volume == 0:
                 volume = Decimal("0.01")
 
@@ -294,7 +295,7 @@ class ModularMomentumStrategyEngine(BaseStrategyEngine):
                 strength=strength,
                 price=Decimal(str(current_price)),
                 timestamp=(
-                    market_data.timestamp if hasattr(market_data, 'timestamp') else datetime.now()
+                    market_data.timestamp if hasattr(market_data, "timestamp") else datetime.now()
                 ),
                 confidence=confidence,
                 liquidity_score=liquidity_score,
@@ -302,14 +303,14 @@ class ModularMomentumStrategyEngine(BaseStrategyEngine):
                 source=SignalSource.MOMENTUM,
                 volume=volume,
                 metadata={
-                    'strategy': self.name,
-                    'indicators': indicators,
-                    'market_context': market_context,
-                    'filter_results': {
-                        name: {'passed': res.get('passed'), 'confidence': res.get('confidence')}
+                    "strategy": self.name,
+                    "indicators": indicators,
+                    "market_context": market_context,
+                    "filter_results": {
+                        name: {"passed": res.get("passed"), "confidence": res.get("confidence")}
                         for name, res in filter_results.items()
                     },
-                    'preset': self.preset,
+                    "preset": self.preset,
                 },
             )
 
@@ -324,7 +325,7 @@ class ModularMomentumStrategyEngine(BaseStrategyEngine):
 
     # ===== Métodos helper =====
 
-    def _get_market_context(self, market_data: Quote) -> Dict[str, Any]:
+    def _get_market_context(self, market_data: Quote) -> dict[str, Any]:
         """
         Obtener contexto de mercado usando ContextEngine si está disponible, sino MarketAnalyzer.
 
@@ -343,24 +344,24 @@ class ModularMomentumStrategyEngine(BaseStrategyEngine):
                 context_result = self.get_context_analysis(price_list)
                 if context_result:
                     # Convertir resultado de ContextEngine a formato compatible con MarketAnalyzer
-                    regime = context_result.get('regime', 'unknown')
+                    regime = context_result.get("regime", "unknown")
                     volatility_result = self.get_volatility_regime(price_list)
 
                     market_context = {
-                        'type': regime,
-                        'confidence': context_result.get('confidence', 0.5),
-                        'volatility_regime': (
-                            volatility_result.get('regime', 'normal')
+                        "type": regime,
+                        "confidence": context_result.get("confidence", 0.5),
+                        "volatility_regime": (
+                            volatility_result.get("regime", "normal")
                             if volatility_result
-                            else 'normal'
+                            else "normal"
                         ),
-                        'trend_strength': context_result.get('regime_probabilities', {}).get(
-                            'bull', 0.0
+                        "trend_strength": context_result.get("regime_probabilities", {}).get(
+                            "bull", 0.0
                         ),
-                        'volatility_percentile': (
-                            volatility_result.get('percentile', 50) if volatility_result else 50
+                        "volatility_percentile": (
+                            volatility_result.get("percentile", 50) if volatility_result else 50
                         ),
-                        'in_range': False,  # ContextEngine no proporciona esto directamente
+                        "in_range": False,  # ContextEngine no proporciona esto directamente
                     }
                     return market_context
             except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
@@ -374,15 +375,15 @@ class ModularMomentumStrategyEngine(BaseStrategyEngine):
         else:
             # Fallback mínimo si no hay ningún analyzer
             return {
-                'type': 'unknown',
-                'confidence': 0.5,
-                'volatility_regime': 'normal',
-                'trend_strength': 0.0,
-                'volatility_percentile': 50,
-                'in_range': False,
+                "type": "unknown",
+                "confidence": 0.5,
+                "volatility_regime": "normal",
+                "trend_strength": 0.0,
+                "volatility_percentile": 50,
+                "in_range": False,
             }
 
-    def _calculate_indicators(self) -> Dict[str, Any]:
+    def _calculate_indicators(self) -> dict[str, Any]:
         """Calcular todos los indicadores técnicos necesarios."""
         if len(self.price_history) < 26:
             return {}
@@ -396,37 +397,37 @@ class ModularMomentumStrategyEngine(BaseStrategyEngine):
 
         # RSI
         rsi = self.indicator_calculator.calculate_rsi(prices, period=14)
-        indicators['rsi'] = rsi if rsi is not None else 50.0
+        indicators["rsi"] = rsi if rsi is not None else 50.0
 
         # EMAs
         ema_fast = self.indicator_calculator.calculate_ema(prices, period=12)
         ema_slow = self.indicator_calculator.calculate_ema(prices, period=26)
-        indicators['ema_fast'] = ema_fast if ema_fast is not None else 0.0
-        indicators['ema_slow'] = ema_slow if ema_slow is not None else 0.0
+        indicators["ema_fast"] = ema_fast if ema_fast is not None else 0.0
+        indicators["ema_slow"] = ema_slow if ema_slow is not None else 0.0
 
         # Momentum / ROC
         momentum = self.indicator_calculator.calculate_roc(prices, period=14)
-        indicators['momentum_roc'] = momentum if momentum is not None else 0.0
+        indicators["momentum_roc"] = momentum if momentum is not None else 0.0
 
         # Volume
         if len(volumes) >= 20:
             avg_volume = sum(volumes[-20:]) / 20
             current_volume = volumes[-1] if volumes else 0
-            indicators['volume_ratio'] = current_volume / avg_volume if avg_volume > 0 else 1.0
-            indicators['volume'] = current_volume
-            indicators['avg_volume'] = avg_volume
+            indicators["volume_ratio"] = current_volume / avg_volume if avg_volume > 0 else 1.0
+            indicators["volume"] = current_volume
+            indicators["avg_volume"] = avg_volume
         else:
-            indicators['volume_ratio'] = 1.0
-            indicators['volume'] = volumes[-1] if volumes else 0
-            indicators['avg_volume'] = 0
+            indicators["volume_ratio"] = 1.0
+            indicators["volume"] = volumes[-1] if volumes else 0
+            indicators["avg_volume"] = 0
 
         # ATR
         atr = self.indicator_calculator.calculate_atr(highs, lows, prices, period=14)
         if atr is not None:
             self.atr_history.append(atr)
-            indicators['atr'] = atr
+            indicators["atr"] = atr
             current_price = prices[-1]
-            indicators['relative_atr'] = (atr / current_price * 100) if current_price > 0 else 0
+            indicators["relative_atr"] = (atr / current_price * 100) if current_price > 0 else 0
 
             # ATR percentile
             if len(self.atr_history) >= 30:
@@ -435,37 +436,37 @@ class ModularMomentumStrategyEngine(BaseStrategyEngine):
                 percentile = (
                     (sorted_atr.index(atr) / len(sorted_atr)) * 100 if atr in sorted_atr else 50
                 )
-                indicators['atr_percentile'] = percentile
+                indicators["atr_percentile"] = percentile
             else:
-                indicators['atr_percentile'] = 50
+                indicators["atr_percentile"] = 50
         else:
-            indicators['atr'] = 0.0
-            indicators['relative_atr'] = 0.0
-            indicators['atr_percentile'] = 50.0
+            indicators["atr"] = 0.0
+            indicators["relative_atr"] = 0.0
+            indicators["atr_percentile"] = 50.0
 
         # StochRSI (simplificado)
-        indicators['stoch_rsi_k'] = 50.0
-        indicators['stoch_rsi_d'] = 50.0
+        indicators["stoch_rsi_k"] = 50.0
+        indicators["stoch_rsi_d"] = 50.0
 
         # Precio actual
-        indicators['price'] = prices[-1]
+        indicators["price"] = prices[-1]
 
         return indicators
 
     def _evaluate_filters(
-        self, indicators: Dict[str, Any], market_context: Dict[str, Any]
-    ) -> Dict[str, Dict[str, Any]]:
+        self, indicators: dict[str, Any], market_context: dict[str, Any]
+    ) -> dict[str, dict[str, Any]]:
         """Evaluar todos los filtros activos."""
         filter_results = {}
 
         for filter_instance in self.filters:
             try:
                 # Evaluar para compra (BUY)
-                result_buy = filter_instance.evaluate(indicators, market_context, 'BUY')
+                result_buy = filter_instance.evaluate(indicators, market_context, "BUY")
                 filter_results[f"{filter_instance.name}_buy"] = result_buy
 
                 # Evaluar para venta (SELL)
-                result_sell = filter_instance.evaluate(indicators, market_context, 'SELL')
+                result_sell = filter_instance.evaluate(indicators, market_context, "SELL")
                 filter_results[f"{filter_instance.name}_sell"] = result_sell
 
                 # Resultado general (usar BUY para simplificar)
@@ -474,15 +475,15 @@ class ModularMomentumStrategyEngine(BaseStrategyEngine):
             except (ValueError, TypeError, KeyError, AttributeError) as e:
                 logger.error(f"Error evaluando filtro {filter_instance.name}: {e}")
                 filter_results[filter_instance.name] = {
-                    'passed': False,
-                    'confidence': 0.0,
-                    'reason': f"Error: {str(e)}",
+                    "passed": False,
+                    "confidence": 0.0,
+                    "reason": f"Error: {e!s}",
                 }
 
         return filter_results
 
     def _determine_signal_type(
-        self, filter_results: Dict[str, Dict[str, Any]], market_context: Dict[str, Any]
+        self, filter_results: dict[str, dict[str, Any]], market_context: dict[str, Any]
     ) -> Optional[SignalType]:
         """Determinar tipo de señal basado en resultados de filtros."""
 
@@ -495,7 +496,7 @@ class ModularMomentumStrategyEngine(BaseStrategyEngine):
         passed_filters = [
             filter_name
             for filter_name in filter_names
-            if filter_name in filter_results and filter_results[filter_name].get('passed', False)
+            if filter_name in filter_results and filter_results[filter_name].get("passed", False)
         ]
 
         total_filters = len(self.filters)
@@ -529,18 +530,18 @@ class ModularMomentumStrategyEngine(BaseStrategyEngine):
 
     def _calculate_signal_confidence(
         self,
-        filter_results: Dict[str, Dict[str, Any]],
-        learning_prediction: Optional[Dict[str, Any]],
+        filter_results: dict[str, dict[str, Any]],
+        learning_prediction: Optional[dict[str, Any]],
     ) -> float:
         """Calcular confianza de la señal."""
         # Confianza base desde filtros
-        confidences = [res.get('confidence', 0.0) for res in filter_results.values()]
+        confidences = [res.get("confidence", 0.0) for res in filter_results.values()]
         base_confidence = np.mean(confidences) if confidences else 0.5
 
         # Ajustar con predicción de learning engine (si está disponible)
         if learning_prediction:
             learning_confidence = learning_prediction.get(
-                'confidence', learning_prediction.get('success_probability', 0.5)
+                "confidence", learning_prediction.get("success_probability", 0.5)
             )
             # Combinar: 60% filtros, 40% learning
             combined = base_confidence * 0.6 + learning_confidence * 0.4
@@ -553,10 +554,10 @@ class ModularMomentumStrategyEngine(BaseStrategyEngine):
         if not self.recent_trades:
             return 0.5  # Default neutral
 
-        winning_trades = sum(1 for trade in self.recent_trades if getattr(trade, 'pnl', 0) > 0)
+        winning_trades = sum(1 for trade in self.recent_trades if getattr(trade, "pnl", 0) > 0)
         return winning_trades / len(self.recent_trades) if len(self.recent_trades) > 0 else 0.5
 
-    def get_required_parameters(self) -> List[str]:
+    def get_required_parameters(self) -> list[str]:
         """Obtener parámetros requeridos."""
         return [
             "preset",
@@ -584,10 +585,15 @@ class ModularMomentumStrategyEngine(BaseStrategyEngine):
             return False
 
         # Verificar learning engine (si está disponible y entrenado)
-        if self.learning_enabled and self.learning_engine and hasattr(self.learning_engine, 'is_ready') and self.learning_engine.is_ready():
+        if (
+            self.learning_enabled
+            and self.learning_engine
+            and hasattr(self.learning_engine, "is_ready")
+            and self.learning_engine.is_ready()
+        ):
             # Si el learning engine sugiere HOLD, rechazar señal
-            prediction = self.get_learning_prediction(signal.metadata.get('quote'))
-            if prediction and prediction.get('recommended_action') == 'HOLD':
+            prediction = self.get_learning_prediction(signal.metadata.get("quote"))
+            if prediction and prediction.get("recommended_action") == "HOLD":
                 logger.debug("Risk check fallido: learning engine recomienda HOLD")
                 return False
 
@@ -595,7 +601,7 @@ class ModularMomentumStrategyEngine(BaseStrategyEngine):
 
     # ===== Override apply_learning_adjustments para ModularMomentum =====
 
-    def apply_learning_adjustments(self, prediction: Dict[str, Any], signal: Signal) -> Signal:
+    def apply_learning_adjustments(self, prediction: dict[str, Any], signal: Signal) -> Signal:
         """
         Aplicar ajustes sugeridos por Learning Engine a una señal.
 
@@ -615,7 +621,7 @@ class ModularMomentumStrategyEngine(BaseStrategyEngine):
         signal = super().apply_learning_adjustments(prediction, signal)
 
         # Ajustes específicos de ModularMomentum
-        filter_adjustments = prediction.get('filter_adjustments', {})
+        filter_adjustments = prediction.get("filter_adjustments", {})
         if filter_adjustments:
             # Aplicar ajustes a filtros dinámicamente
             for filter_name, adjustments in filter_adjustments.items():

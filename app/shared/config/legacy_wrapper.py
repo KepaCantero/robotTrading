@@ -8,7 +8,7 @@ TASK-24: SRP Compliance - Legacy wrapper for backward compatibility
 """
 
 import logging
-from typing import Dict, List, Optional
+from typing import Optional
 
 logger = logging.getLogger(__name__)
 
@@ -30,7 +30,7 @@ class Configuration:
         2.0
     """
 
-    def __init__(self, config_dict: Dict[str, object]):
+    def __init__(self, config_dict: dict[str, object]):
         self._config = config_dict if config_dict is not None else {}
         self._lock = None  # For thread safety
 
@@ -118,7 +118,7 @@ class Configuration:
         """
         self.set(f"risk_management.atr_multipliers.{multiplier_name}", value)
 
-    def get_risk_config(self) -> Dict[str, object]:
+    def get_risk_config(self) -> dict[str, object]:
         """
         Get risk management configuration section.
 
@@ -131,7 +131,7 @@ class Configuration:
         """
         return self.get("risk_management", {})
 
-    def get_trading_symbols(self) -> List[str]:
+    def get_trading_symbols(self) -> list[str]:
         """
         Get trading symbols list.
 
@@ -145,7 +145,7 @@ class Configuration:
         """
         return self.get("trading.symbols", [])
 
-    def get_backtest_dates(self) -> Dict[str, str]:
+    def get_backtest_dates(self) -> dict[str, str]:
         """
         Get backtesting date range.
 

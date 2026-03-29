@@ -12,7 +12,7 @@ Implements:
 import logging
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Callable, Optional
+from typing import Callable, ClassVar, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -56,7 +56,7 @@ class AlpacaErrorClassifier:
     """Classify Alpaca errors and determine recovery strategy."""
 
     # Map error patterns to error types
-    ERROR_PATTERNS = {
+    ERROR_PATTERNS: ClassVar[dict] = {
         # Network errors
         r"(?i)(connection|timeout|dns|network|unreachable)": ErrorType.NETWORK_ERROR,
         # Rate limiting
@@ -75,7 +75,7 @@ class AlpacaErrorClassifier:
     }
 
     # Recovery strategy for each error type
-    RECOVERY_STRATEGIES = {
+    RECOVERY_STRATEGIES: ClassVar[dict] = {
         ErrorType.NETWORK_ERROR: ErrorRecoveryStrategy.RETRY,
         ErrorType.RATE_LIMIT: ErrorRecoveryStrategy.RETRY,
         ErrorType.TEMPORARY_SERVICE_ERROR: ErrorRecoveryStrategy.RETRY,
@@ -371,9 +371,7 @@ class ErrorRecoveryManager:
         error_type = self.classifier.classify(error)
         strategy = self.classifier.get_strategy(error_type)
 
-        logger.warning(
-            f"⚠️  API error [{error_type.value}]: {str(error)} " f"→ Strategy: {strategy.value}"
-        )
+        logger.warning(f"⚠️  API error [{error_type.value}]: {error!s} → Strategy: {strategy.value}")
 
         if strategy == ErrorRecoveryStrategy.ALERT and self.on_manual_intervention is not None:
             self.on_manual_intervention(str(error))

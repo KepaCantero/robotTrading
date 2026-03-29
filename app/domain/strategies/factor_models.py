@@ -19,7 +19,7 @@ SOLID Principles:
 
 import logging
 from dataclasses import dataclass
-from typing import Dict, Optional, Tuple
+from typing import Optional
 
 import numpy as np
 
@@ -76,7 +76,7 @@ class BaseFactorModel:
     def fit(
         self,
         returns: np.ndarray,
-        factor_returns: Dict[str, np.ndarray],
+        factor_returns: dict[str, np.ndarray],
     ) -> FactorModelResult:
         """
         Fit factor model to return series.
@@ -92,8 +92,8 @@ class BaseFactorModel:
 
     def predict(
         self,
-        factor_returns: Dict[str, np.ndarray],
-        coefficients: Dict[str, float],
+        factor_returns: dict[str, np.ndarray],
+        coefficients: dict[str, float],
         alpha: float = 0,
     ) -> np.ndarray:
         """
@@ -129,7 +129,7 @@ class CAPMModel(BaseFactorModel):
     def fit(
         self,
         returns: np.ndarray,
-        factor_returns: Dict[str, np.ndarray],
+        factor_returns: dict[str, np.ndarray],
     ) -> FactorModelResult:
         """Fit CAPM model."""
         if "market" not in factor_returns:
@@ -174,7 +174,7 @@ class FF3FactorModel(BaseFactorModel):
     def fit(
         self,
         returns: np.ndarray,
-        factor_returns: Dict[str, np.ndarray],
+        factor_returns: dict[str, np.ndarray],
     ) -> FactorModelResult:
         """Fit FF3 model."""
         required_factors = ["market", "size", "value"]
@@ -231,7 +231,7 @@ class FF5FactorModel(BaseFactorModel):
     def fit(
         self,
         returns: np.ndarray,
-        factor_returns: Dict[str, np.ndarray],
+        factor_returns: dict[str, np.ndarray],
     ) -> FactorModelResult:
         """Fit FF5 model."""
         required_factors = ["market", "size", "value", "profitability", "investment"]
@@ -287,7 +287,7 @@ class Carhart4FactorModel(BaseFactorModel):
     def fit(
         self,
         returns: np.ndarray,
-        factor_returns: Dict[str, np.ndarray],
+        factor_returns: dict[str, np.ndarray],
     ) -> FactorModelResult:
         """Fit Carhart 4-factor model."""
         required_factors = ["market", "size", "value", "momentum"]
@@ -341,7 +341,7 @@ class FF6FactorModel(BaseFactorModel):
     def fit(
         self,
         returns: np.ndarray,
-        factor_returns: Dict[str, np.ndarray],
+        factor_returns: dict[str, np.ndarray],
     ) -> FactorModelResult:
         """Fit 6-factor model."""
         required_factors = ["market", "size", "value", "profitability", "investment", "momentum"]
@@ -454,7 +454,7 @@ class FactorModelManager:
         self,
         model_name: str,
         returns: np.ndarray,
-        factor_returns: Dict[str, np.ndarray],
+        factor_returns: dict[str, np.ndarray],
     ) -> FactorModelResult:
         """
         Fit a specific factor model.
@@ -476,8 +476,8 @@ class FactorModelManager:
     def compare_models(
         self,
         returns: np.ndarray,
-        factor_returns: Dict[str, np.ndarray],
-    ) -> Dict[str, FactorModelResult]:
+        factor_returns: dict[str, np.ndarray],
+    ) -> dict[str, FactorModelResult]:
         """
         Compare all applicable factor models.
 
@@ -514,9 +514,9 @@ class FactorModelManager:
 
     def get_best_model(
         self,
-        results: Dict[str, FactorModelResult],
+        results: dict[str, FactorModelResult],
         metric: str = "r_squared",
-    ) -> Tuple[str, FactorModelResult]:
+    ) -> tuple[str, FactorModelResult]:
         """
         Get best model based on specified metric.
 
@@ -545,7 +545,7 @@ class FactorModelManager:
         self,
         factor_scores: FactorScores,
         method: str = "z_score",
-    ) -> Dict[str, float]:
+    ) -> dict[str, float]:
         """
         Calculate factor exposures from factor scores.
 

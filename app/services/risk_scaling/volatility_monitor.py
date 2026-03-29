@@ -2,8 +2,8 @@
 PHASE 3: Volatility Monitor - ATR-Based Position Scaling
 
 Monitors Average True Range (ATR) to scale positions based on volatility.
-Lower volatility → larger positions (up to 1.5x)
-Higher volatility → smaller positions (down to 0.5x)
+Lower volatility -> larger positions (up to 1.5x)
+Higher volatility -> smaller positions (down to 0.5x)
 
 Formula:
 - ATR = Average of True Range over 14 periods
@@ -18,7 +18,7 @@ import statistics
 from dataclasses import dataclass
 from datetime import datetime
 from decimal import ROUND_HALF_UP, Decimal
-from typing import Dict, List, Optional
+from typing import Optional
 
 from app.shared.config.centralized_config import get_config
 
@@ -53,9 +53,9 @@ class VolatilityMonitor:
     Monitors ATR (Average True Range) for volatility-based position scaling.
 
     Logic:
-    - Low ATR (< 14-day avg) → scale UP to 1.5x (lower risk environment)
-    - Normal ATR → scale = 1.0x (baseline)
-    - High ATR (> 14-day avg) → scale DOWN to 0.5x (higher risk environment)
+    - Low ATR (< 14-day avg) -> scale UP to 1.5x (lower risk environment)
+    - Normal ATR -> scale = 1.0x (baseline)
+    - High ATR (> 14-day avg) -> scale DOWN to 0.5x (higher risk environment)
 
     Usage:
         monitor = VolatilityMonitor()
@@ -76,12 +76,12 @@ class VolatilityMonitor:
             tt = get_config().trading_thresholds
             atr_period = tt.volatility_atr_period
         self.atr_period = atr_period
-        self.atr_history: Dict[str, List[Decimal]] = {}  # symbol -> list of ATRs
-        self.volatility_spikes: Dict[str, List[datetime]] = {}  # symbol -> spike times
+        self.atr_history: dict[str, list[Decimal]] = {}  # symbol -> list of ATRs
+        self.volatility_spikes: dict[str, list[datetime]] = {}  # symbol -> spike times
 
     def calculate_atr(
         self,
-        prices: List[PriceData],
+        prices: list[PriceData],
         period: Optional[int] = None,
     ) -> Decimal:
         """
@@ -100,13 +100,10 @@ class VolatilityMonitor:
         if len(prices) < period:
             raise ValueError(f"Need at least {period} price points, got {len(prices)}")
 
-        true_ranges: List[Decimal] = []
+        true_ranges: list[Decimal] = []
 
         for i, price in enumerate(prices):
-            if i == 0:
-                prev_close = price.close
-            else:
-                prev_close = prices[i - 1].close
+            prev_close = price.close if i == 0 else prices[i - 1].close
 
             tr = price.true_range(prev_close)
             true_ranges.append(tr)
@@ -119,7 +116,7 @@ class VolatilityMonitor:
     def calculate_average_atr(
         self,
         symbol: str,
-        prices: Optional[List[PriceData]] = None,
+        prices: Optional[list[PriceData]] = None,
         lookback_periods: Optional[int] = None,
     ) -> Decimal:
         """
@@ -142,7 +139,7 @@ class VolatilityMonitor:
                 raise ValueError(f"No ATR history for {symbol} and no prices provided")
 
             # Calculate ATR for each period in lookback window
-            atrs: List[Decimal] = []
+            atrs: list[Decimal] = []
             for i in range(self.atr_period, len(prices)):
                 atr = self.calculate_atr(
                     prices[i - self.atr_period : i + 1], period=self.atr_period
@@ -210,8 +207,8 @@ class VolatilityMonitor:
         atr_ratio = max(atr_ratio, min_ratio)
 
         # Scale = base / ratio
-        # If ratio < 1: scale > base (low vol → larger positions)
-        # If ratio > 1: scale < base (high vol → smaller positions)
+        # If ratio < 1: scale > base (low vol -> larger positions)
+        # If ratio > 1: scale < base (high vol -> smaller positions)
         scale = base_scale / atr_ratio
 
         # Enforce bounds from centralized config
@@ -235,7 +232,7 @@ class VolatilityMonitor:
         threshold_multiplier: Optional[Decimal] = None,
     ) -> bool:
         """
-        Check if ATR > mean + nσ (volatility spike).
+        Check if ATR > mean + nsigma (volatility spike).
 
         A spike indicates extreme volatility requiring position reduction.
 
@@ -315,7 +312,7 @@ class VolatilityMonitor:
         self,
         symbol: str,
         lookback_minutes: Optional[int] = None,
-    ) -> List[datetime]:
+    ) -> list[datetime]:
         """
         Get recent volatility spikes for symbol.
 

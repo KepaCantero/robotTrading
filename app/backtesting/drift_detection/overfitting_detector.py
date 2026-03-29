@@ -10,11 +10,12 @@ from __future__ import annotations
 import logging
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import TYPE_CHECKING, Any
 
 import numpy as np
 
-from app.domain.value_objects.backtest_result import BacktestResultValue
+if TYPE_CHECKING:
+    from app.domain.value_objects.backtest_result import BacktestResultValue
 
 logger = logging.getLogger(__name__)
 
@@ -27,7 +28,7 @@ class DegradationParams:
     oos_result: BacktestResultValue
     severity: str
     is_overfitting: bool
-    details: Dict[str, Any]
+    details: dict[str, Any]
 
 
 @dataclass
@@ -55,10 +56,10 @@ class OverfittingResult:
 
     is_overfitting: bool
     severity: str  # 'none', 'mild', 'moderate', 'severe'
-    train_val_gap: Optional[float] = None
+    train_val_gap: float | None = None
     confidence: float = 0.0
     timestamp: datetime = None
-    details: Dict[str, Any] = None
+    details: dict[str, Any] = None
 
     def __post_init__(self):
         if self.timestamp is None:
@@ -100,7 +101,7 @@ class OverfittingDetector:
         self,
         train_result: BacktestResultValue,
         val_result: BacktestResultValue,
-        oos_result: Optional[BacktestResultValue] = None,
+        oos_result: BacktestResultValue | None = None,
     ) -> OverfittingResult:
         """
         Detect overfitting from backtest results.
@@ -188,20 +189,20 @@ class OverfittingDetector:
             Tuple of (severity, is_overfitting, confidence)
         """
         if gap > self.max_acceptable_gap * 2:
-            return 'severe', True, 0.95
+            return "severe", True, 0.95
         elif gap > self.max_acceptable_gap:
-            return 'moderate', True, 0.80
+            return "moderate", True, 0.80
         elif gap > self.max_acceptable_gap * 0.5:
-            return 'mild', True, 0.60
+            return "mild", True, 0.60
         else:
-            return 'none', False, 0.90
+            return "none", False, 0.90
 
     def _build_detection_details(
         self,
         train_return: float,
         val_return: float,
         gap: float,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Build details dictionary for detection result.
 
@@ -214,13 +215,13 @@ class OverfittingDetector:
             Details dictionary
         """
         return {
-            'train_return': train_return,
-            'val_return': val_return,
-            'gap': gap,
-            'gap_threshold': self.max_acceptable_gap,
+            "train_return": train_return,
+            "val_return": val_return,
+            "gap": gap,
+            "gap_threshold": self.max_acceptable_gap,
         }
 
-    def _apply_oos_degradation(self, params: DegradationParams) -> tuple[str, bool, Dict[str, Any]]:
+    def _apply_oos_degradation(self, params: DegradationParams) -> tuple[str, bool, dict[str, Any]]:
         """
         Apply out-of-sample degradation to severity assessment.
 
@@ -240,13 +241,13 @@ class OverfittingDetector:
         if oos_degradation > self.oos_threshold:
             severity = max(
                 severity,
-                'moderate',
-                key=lambda x: ['none', 'mild', 'moderate', 'severe'].index(x),
+                "moderate",
+                key=lambda x: ["none", "mild", "moderate", "severe"].index(x),
             )
             is_overfitting = True
 
-        details['oos_return'] = oos_return
-        details['oos_degradation'] = oos_degradation
+        details["oos_return"] = oos_return
+        details["oos_degradation"] = oos_degradation
 
         return severity, is_overfitting, details
 
@@ -285,12 +286,12 @@ class OverfittingDetector:
                     "val_return": params.val_return,
                     "gap": params.gap,
                     "gap_threshold": self.max_acceptable_gap,
-                    "oos_degradation": params.result.details.get('oos_degradation'),
+                    "oos_degradation": params.result.details.get("oos_degradation"),
                 },
             )
 
     def detect_from_cv_scores(
-        self, cv_scores: List[float], train_scores: Optional[List[float]] = None
+        self, cv_scores: list[float], train_scores: list[float] | None = None
     ) -> OverfittingResult:
         """
         Detect overfitting from cross-validation scores.
@@ -313,15 +314,15 @@ class OverfittingDetector:
             )
             return OverfittingResult(
                 is_overfitting=False,
-                severity='none',
+                severity="none",
                 confidence=0.0,
-                details={'error': 'No CV scores provided'},
+                details={"error": "No CV scores provided"},
             )
 
         # Calculate CV stability
         cv_mean = np.mean(cv_scores)
         cv_std = np.std(cv_scores)
-        cv_cv = cv_std / cv_mean if cv_mean != 0 else float('inf')
+        cv_cv = cv_std / cv_mean if cv_mean != 0 else float("inf")
 
         # Check if CV is too unstable
         is_unstable = cv_cv > self.cv_threshold
@@ -338,16 +339,16 @@ class OverfittingDetector:
         # Determine severity
         if is_overfitting:
             if gap and gap > self.max_acceptable_gap * 2:
-                severity = 'severe'
+                severity = "severe"
                 confidence = 0.90
             elif is_unstable:
-                severity = 'moderate'
+                severity = "moderate"
                 confidence = 0.80
             else:
-                severity = 'mild'
+                severity = "mild"
                 confidence = 0.70
         else:
-            severity = 'none'
+            severity = "none"
             confidence = 0.85
 
         result = OverfittingResult(
@@ -356,10 +357,10 @@ class OverfittingDetector:
             train_val_gap=gap,
             confidence=confidence,
             details={
-                'cv_mean': cv_mean,
-                'cv_std': cv_std,
-                'cv_cv': cv_cv,
-                'is_unstable': is_unstable,
+                "cv_mean": cv_mean,
+                "cv_std": cv_std,
+                "cv_cv": cv_cv,
+                "is_unstable": is_unstable,
             },
         )
 
@@ -401,8 +402,8 @@ class OverfittingDetector:
         return result
 
     def calculate_learning_curve_gap(
-        self, train_sizes: List[int], train_scores: List[float], val_scores: List[float]
-    ) -> Dict[str, Any]:
+        self, train_sizes: list[int], train_scores: list[float], val_scores: list[float]
+    ) -> dict[str, Any]:
         """
         Analyze learning curve for overfitting patterns.
 
@@ -424,7 +425,7 @@ class OverfittingDetector:
                     "data_points": len(train_sizes),
                 },
             )
-            return {'error': 'Insufficient data points for learning curve'}
+            return {"error": "Insufficient data points for learning curve"}
 
         # Calculate average gaps
         gaps = [train_scores[i] - val_scores[i] for i in range(len(train_sizes))]
@@ -441,14 +442,14 @@ class OverfittingDetector:
         is_high_variance = train_score_std > self.cv_threshold or val_score_std > self.cv_threshold
 
         result = {
-            'avg_gap': avg_gap,
-            'final_gap': final_gap,
-            'is_converged': is_converged,
-            'is_high_variance': is_high_variance,
-            'val_score_range': val_score_range,
-            'train_score_std': train_score_std,
-            'val_score_std': val_score_std,
-            'overfitting_indicated': avg_gap > self.max_acceptable_gap or not is_converged,
+            "avg_gap": avg_gap,
+            "final_gap": final_gap,
+            "is_converged": is_converged,
+            "is_high_variance": is_high_variance,
+            "val_score_range": val_score_range,
+            "train_score_std": train_score_std,
+            "val_score_std": val_score_std,
+            "overfitting_indicated": avg_gap > self.max_acceptable_gap or not is_converged,
         }
 
         # Structured logging for learning curve analysis (LOG-001)
@@ -464,14 +465,14 @@ class OverfittingDetector:
                 "val_score_range": float(val_score_range),
                 "train_score_std": float(train_score_std),
                 "val_score_std": float(val_score_std),
-                "overfitting_indicated": result['overfitting_indicated'],
+                "overfitting_indicated": result["overfitting_indicated"],
                 "n_data_points": len(train_sizes),
                 "cv_threshold": self.cv_threshold,
                 "max_acceptable_gap": self.max_acceptable_gap,
             },
         )
 
-        if result['overfitting_indicated']:
+        if result["overfitting_indicated"]:
             logger.warning(
                 "overfitting_indicated_in_learning_curve",
                 extra={

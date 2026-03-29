@@ -6,7 +6,7 @@ Integrates templates, metrics, and portfolio data to generate comprehensive repo
 
 import logging
 from datetime import datetime
-from typing import Dict, Optional
+from typing import Optional
 
 import numpy as np
 import pandas as pd
@@ -37,11 +37,11 @@ class ReportingOrchestrator:
     async def generate_comprehensive_report(
         self,
         strategy_name: str,
-        backtest_result: Dict,
-        portfolio_allocation: Dict[str, float],
+        backtest_result: dict,
+        portfolio_allocation: dict[str, float],
         returns: Optional[pd.Series] = None,
-        recommendation: Optional[Dict] = None,
-    ) -> Dict:
+        recommendation: Optional[dict] = None,
+    ) -> dict:
         """
         Generate complete performance report.
 
@@ -117,7 +117,7 @@ class ReportingOrchestrator:
             logger.error(f"❌ Error generating report: {e}")
             raise
 
-    async def _calculate_risk_metrics(self, backtest_result: Dict) -> Dict:
+    async def _calculate_risk_metrics(self, backtest_result: dict) -> dict:
         """Calculate risk metrics from backtest result."""
         return {
             "volatility": backtest_result.get("volatility", 0),

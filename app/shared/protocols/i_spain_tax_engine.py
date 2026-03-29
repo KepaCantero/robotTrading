@@ -1,6 +1,7 @@
 """
 Spain tax protocols (IRPF, Dividendos, Modelo 720)
 """
+
 from decimal import Decimal
 from typing import Protocol
 

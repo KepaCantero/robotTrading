@@ -11,7 +11,7 @@ Implementa diferentes métodos de optimización de portfolio:
 
 import logging
 from abc import ABC, abstractmethod
-from typing import Any, Callable, Dict, Optional, Type, Union
+from typing import Any, Callable, Optional, Union
 
 import numpy as np
 
@@ -24,8 +24,8 @@ try:
     HANDCRAFTED_AVAILABLE = True
 except ImportError:
     HANDCRAFTED_AVAILABLE = False
-    HandcraftedWeightsOptimizer: Optional[Type[Any]] = None
-    create_handcrafted_weights: Optional[Callable[..., Dict[str, float]]] = None
+    HandcraftedWeightsOptimizer: Optional[type[Any]] = None
+    create_handcrafted_weights: Optional[Callable[..., dict[str, float]]] = None
 
 # Import HRP optimizer from separate file
 try:
@@ -40,13 +40,12 @@ try:
     logger.info("Hierarchical Risk Parity (HRP) optimizer is available")
 except ImportError:
     HRP_AVAILABLE = False
-    HierarchicalRiskParity: Optional[Type[Any]] = None
-    HRPOptimizer: Optional[Type[Any]] = None
+    HierarchicalRiskParity: Optional[type[Any]] = None
+    HRPOptimizer: Optional[type[Any]] = None
     compute_hrp_weights: Optional[Callable[..., np.ndarray]] = None
     plot_hrp_dendrogram: Optional[Callable[..., Any]] = None
     logger.warning(
-        "Hierarchical Risk Parity (HRP) optimizer could not be imported. "
-        "Check scipy installation."
+        "Hierarchical Risk Parity (HRP) optimizer could not be imported. Check scipy installation."
     )
 
 # cvxpy import with fallback - provides convex optimization
@@ -70,7 +69,7 @@ try:
     PYPFOPT_AVAILABLE = True
     logger.info("PyPortfolioOpt is available for efficient frontier optimization")
 except ImportError:
-    EfficientFrontier: Optional[Type[Any]] = None
+    EfficientFrontier: Optional[type[Any]] = None
     PYPFOPT_AVAILABLE = False
     logger.warning(
         "PyPortfolioOpt is not installed. Portfolio optimization will use basic methods. "
@@ -95,7 +94,7 @@ except ImportError:
 class BaseOptimizer(ABC):
     """Clase base para optimizadores de portfolio."""
 
-    def __init__(self, config: Dict[str, Any]):
+    def __init__(self, config: dict[str, Any]):
         """
         Inicializar optimizer.
 
@@ -110,8 +109,8 @@ class BaseOptimizer(ABC):
         self,
         expected_returns: np.ndarray,
         cov_matrix: np.ndarray,
-        constraints: Optional[Dict[str, Any]] = None,
-    ) -> Dict[str, Any]:
+        constraints: Optional[dict[str, Any]] = None,
+    ) -> dict[str, Any]:
         """
         Optimizar asignación de capital.
 
@@ -136,8 +135,8 @@ class MarkowitzOptimizer(BaseOptimizer):
         self,
         expected_returns: np.ndarray,
         cov_matrix: np.ndarray,
-        constraints: Optional[Dict[str, Any]] = None,
-    ) -> Dict[str, Any]:
+        constraints: Optional[dict[str, Any]] = None,
+    ) -> dict[str, Any]:
         """
         Optimizar usando teoría de Markowitz.
 
@@ -175,16 +174,16 @@ class MarkowitzOptimizer(BaseOptimizer):
             return self._equal_weight_fallback(len(expected_returns))
 
     def _optimize_pypfopt(
-        self, expected_returns: np.ndarray, cov_matrix: np.ndarray, constraints: Dict[str, Any]
-    ) -> Dict[str, Any]:
+        self, expected_returns: np.ndarray, cov_matrix: np.ndarray, constraints: dict[str, Any]
+    ) -> dict[str, Any]:
         """Optimizar usando PyPortfolioOpt."""
         try:
             # Crear EfficientFrontier
             ef = EfficientFrontier(expected_returns, cov_matrix)
 
             # Aplicar restricciones
-            constraints.get('max_weight', 1.0)
-            constraints.get('min_weight', 0.0)
+            constraints.get("max_weight", 1.0)
+            constraints.get("min_weight", 0.0)
 
             # Maximizar Sharpe ratio
             ef.max_sharpe()
@@ -199,19 +198,19 @@ class MarkowitzOptimizer(BaseOptimizer):
             performance = ef.portfolio_performance(verbose=False)
 
             return {
-                'weights': weights_dict,
-                'expected_return': float(performance[0]),
-                'volatility': float(performance[1]),
-                'sharpe_ratio': float(performance[2]),
-                'method': 'markowitz_pypfopt',
+                "weights": weights_dict,
+                "expected_return": float(performance[0]),
+                "volatility": float(performance[1]),
+                "sharpe_ratio": float(performance[2]),
+                "method": "markowitz_pypfopt",
             }
         except (ValueError, TypeError, KeyError, AttributeError) as e:
             self.logger.warning(f"PyPortfolioOpt falló: {e}. Usando método básico.")
             return self._optimize_basic(expected_returns, cov_matrix, constraints)
 
     def _optimize_cvxpy(
-        self, expected_returns: np.ndarray, cov_matrix: np.ndarray, constraints: Dict[str, Any]
-    ) -> Dict[str, Any]:
+        self, expected_returns: np.ndarray, cov_matrix: np.ndarray, constraints: dict[str, Any]
+    ) -> dict[str, Any]:
         """Optimizar usando cvxpy."""
         if not CVXPY_AVAILABLE or cp is None:
             raise ImportError("cvxpy is not available")
@@ -228,7 +227,7 @@ class MarkowitzOptimizer(BaseOptimizer):
         Sigma.value = cov_matrix
 
         # Objetivo: Maximizar retorno esperado - riesgo (penalizado)
-        risk_aversion = self.config.get('risk_aversion', 0.5)
+        risk_aversion = self.config.get("risk_aversion", 0.5)
         portfolio_return = mu.T @ w
         portfolio_risk = cp.quad_form(w, Sigma)
         objective = cp.Maximize(portfolio_return - risk_aversion * portfolio_risk)
@@ -237,8 +236,8 @@ class MarkowitzOptimizer(BaseOptimizer):
         constraint_list = [cp.sum(w) == 1, w >= 0]  # Long only
 
         # Restricciones adicionales
-        max_weight = constraints.get('max_weight', 1.0)
-        min_weight = constraints.get('min_weight', 0.0)
+        max_weight = constraints.get("max_weight", 1.0)
+        min_weight = constraints.get("min_weight", 0.0)
         constraint_list.append(w <= max_weight)
         constraint_list.append(w >= min_weight)
 
@@ -246,7 +245,7 @@ class MarkowitzOptimizer(BaseOptimizer):
         problem = cp.Problem(objective, constraint_list)
         problem.solve()
 
-        if problem.status == 'optimal':
+        if problem.status == "optimal":
             weights = w.value
             weights = np.maximum(weights, 0)  # Asegurar no negativos
             weights = weights / weights.sum()  # Normalizar
@@ -257,19 +256,19 @@ class MarkowitzOptimizer(BaseOptimizer):
             sharpe_ratio = expected_return / volatility if volatility > 0 else 0.0
 
             return {
-                'weights': {f'asset_{i}': float(w) for i, w in enumerate(weights)},
-                'expected_return': expected_return,
-                'volatility': volatility,
-                'sharpe_ratio': sharpe_ratio,
-                'method': 'markowitz_cvxpy',
+                "weights": {f"asset_{i}": float(w) for i, w in enumerate(weights)},
+                "expected_return": expected_return,
+                "volatility": volatility,
+                "sharpe_ratio": sharpe_ratio,
+                "method": "markowitz_cvxpy",
             }
         else:
             self.logger.warning(f"Optimización cvxpy no convergió: {problem.status}")
             return self._equal_weight_fallback(n)
 
     def _optimize_scipy(
-        self, expected_returns: np.ndarray, cov_matrix: np.ndarray, constraints: Dict[str, Any]
-    ) -> Dict[str, Any]:
+        self, expected_returns: np.ndarray, cov_matrix: np.ndarray, constraints: dict[str, Any]
+    ) -> dict[str, Any]:
         """
         Optimización usando scipy.optimize.minimize.
 
@@ -282,8 +281,8 @@ class MarkowitzOptimizer(BaseOptimizer):
         n = len(expected_returns)
 
         # Obtener restricciones
-        max_weight = constraints.get('max_weight', 1.0)
-        min_weight = constraints.get('min_weight', 0.0)
+        max_weight = constraints.get("max_weight", 1.0)
+        min_weight = constraints.get("min_weight", 0.0)
 
         # Punto inicial: pesos inversos a volatilidad
         variances = np.diag(cov_matrix)
@@ -328,20 +327,20 @@ class MarkowitzOptimizer(BaseOptimizer):
 
         # Restricciones
         bounds = [(min_weight, max_weight) for _ in range(n)]
-        constraints_dict = {'type': 'eq', 'fun': lambda w: np.sum(w) - 1.0}
+        constraints_dict = {"type": "eq", "fun": lambda w: np.sum(w) - 1.0}
 
         # Optimizar usando SLSQP (método robusto para problemas con restricciones)
         result = minimize(
             _negative_sharpe,
             x0,
-            method='SLSQP',
+            method="SLSQP",
             bounds=bounds,
             constraints=constraints_dict,
             jac=_negative_sharpe_gradient,
             options={
-                'ftol': 1e-12,
-                'maxiter': 1000,
-                'disp': False,
+                "ftol": 1e-12,
+                "maxiter": 1000,
+                "disp": False,
             },
         )
 
@@ -356,19 +355,19 @@ class MarkowitzOptimizer(BaseOptimizer):
             sharpe_ratio = expected_return / volatility if volatility > 0 else 0.0
 
             return {
-                'weights': {f'asset_{i}': float(w) for i, w in enumerate(weights)},
-                'expected_return': expected_return,
-                'volatility': volatility,
-                'sharpe_ratio': sharpe_ratio,
-                'method': 'markowitz_scipy',
+                "weights": {f"asset_{i}": float(w) for i, w in enumerate(weights)},
+                "expected_return": expected_return,
+                "volatility": volatility,
+                "sharpe_ratio": sharpe_ratio,
+                "method": "markowitz_scipy",
             }
         else:
             self.logger.warning(f"Optimización scipy no convergió: {result.message}")
             return self._optimize_basic(expected_returns, cov_matrix, constraints)
 
     def _optimize_basic(
-        self, expected_returns: np.ndarray, cov_matrix: np.ndarray, constraints: Dict[str, Any]
-    ) -> Dict[str, Any]:
+        self, expected_returns: np.ndarray, cov_matrix: np.ndarray, constraints: dict[str, Any]
+    ) -> dict[str, Any]:
         """Optimización básica sin dependencias externas."""
         len(expected_returns)
 
@@ -378,8 +377,8 @@ class MarkowitzOptimizer(BaseOptimizer):
         weights = inv_vol / inv_vol.sum()
 
         # Aplicar restricciones
-        max_weight = constraints.get('max_weight', 1.0)
-        min_weight = constraints.get('min_weight', 0.0)
+        max_weight = constraints.get("max_weight", 1.0)
+        min_weight = constraints.get("min_weight", 0.0)
         weights = np.clip(weights, min_weight, max_weight)
         weights = weights / weights.sum()  # Re-normalizar
 
@@ -389,22 +388,22 @@ class MarkowitzOptimizer(BaseOptimizer):
         sharpe_ratio = expected_return / volatility if volatility > 0 else 0.0
 
         return {
-            'weights': {f'asset_{i}': float(w) for i, w in enumerate(weights)},
-            'expected_return': expected_return,
-            'volatility': volatility,
-            'sharpe_ratio': sharpe_ratio,
-            'method': 'markowitz_basic',
+            "weights": {f"asset_{i}": float(w) for i, w in enumerate(weights)},
+            "expected_return": expected_return,
+            "volatility": volatility,
+            "sharpe_ratio": sharpe_ratio,
+            "method": "markowitz_basic",
         }
 
-    def _equal_weight_fallback(self, n: int) -> Dict[str, Any]:
+    def _equal_weight_fallback(self, n: int) -> dict[str, Any]:
         """Fallback a pesos iguales."""
         weight = 1.0 / n
         return {
-            'weights': {f'asset_{i}': weight for i in range(n)},
-            'expected_return': 0.0,
-            'volatility': 0.0,
-            'sharpe_ratio': 0.0,
-            'method': 'equal_weight_fallback',
+            "weights": {f"asset_{i}": weight for i in range(n)},
+            "expected_return": 0.0,
+            "volatility": 0.0,
+            "sharpe_ratio": 0.0,
+            "method": "equal_weight_fallback",
         }
 
 
@@ -420,8 +419,8 @@ class RiskParityOptimizer(BaseOptimizer):
         self,
         expected_returns: np.ndarray,
         cov_matrix: np.ndarray,
-        constraints: Optional[Dict[str, Any]] = None,
-    ) -> Dict[str, Any]:
+        constraints: Optional[dict[str, Any]] = None,
+    ) -> dict[str, Any]:
         """
         Optimizar usando Risk Parity.
 
@@ -442,8 +441,8 @@ class RiskParityOptimizer(BaseOptimizer):
             weights = self._optimize_risk_parity_iterative(cov_matrix, constraints)
 
             # Aplicar restricciones
-            max_weight = constraints.get('max_weight', 1.0)
-            min_weight = constraints.get('min_weight', 0.0)
+            max_weight = constraints.get("max_weight", 1.0)
+            min_weight = constraints.get("min_weight", 0.0)
             weights = np.clip(weights, min_weight, max_weight)
             weights = weights / weights.sum()
 
@@ -456,21 +455,21 @@ class RiskParityOptimizer(BaseOptimizer):
             risk_contributions = self._calculate_risk_contributions(weights, cov_matrix)
 
             return {
-                'weights': {f'asset_{i}': float(w) for i, w in enumerate(weights)},
-                'expected_return': expected_return,
-                'volatility': volatility,
-                'sharpe_ratio': sharpe_ratio,
-                'risk_contributions': {
-                    f'asset_{i}': float(rc) for i, rc in enumerate(risk_contributions)
+                "weights": {f"asset_{i}": float(w) for i, w in enumerate(weights)},
+                "expected_return": expected_return,
+                "volatility": volatility,
+                "sharpe_ratio": sharpe_ratio,
+                "risk_contributions": {
+                    f"asset_{i}": float(rc) for i, rc in enumerate(risk_contributions)
                 },
-                'method': 'risk_parity_iterative',
+                "method": "risk_parity_iterative",
             }
         except (ValueError, TypeError, KeyError, AttributeError) as e:
             self.logger.error(f"Error en optimización Risk Parity: {e}", exc_info=True)
             return self._equal_weight_fallback(len(cov_matrix))
 
     def _optimize_risk_parity_iterative(
-        self, cov_matrix: np.ndarray, constraints: Dict[str, Any]
+        self, cov_matrix: np.ndarray, constraints: dict[str, Any]
     ) -> np.ndarray:
         """
         Optimización Risk Parity usando scipy.optimize.minimize.
@@ -541,14 +540,14 @@ class RiskParityOptimizer(BaseOptimizer):
             result = minimize(
                 _risk_parity_objective,
                 x0,
-                method='SLSQP',
+                method="SLSQP",
                 jac=_risk_parity_gradient,
                 bounds=[(1e-10, 1.0) for _ in range(n)],
-                constraints={'type': 'eq', 'fun': lambda w: np.sum(w) - 1.0},
+                constraints={"type": "eq", "fun": lambda w: np.sum(w) - 1.0},
                 options={
-                    'ftol': 1e-12,
-                    'maxiter': constraints.get('max_iterations', 500),
-                    'disp': False,
+                    "ftol": 1e-12,
+                    "maxiter": constraints.get("max_iterations", 500),
+                    "disp": False,
                 },
             )
 
@@ -582,11 +581,11 @@ class RiskParityOptimizer(BaseOptimizer):
         cov_matrix: np.ndarray,
         weights: np.ndarray,
         target_risk: float,
-        constraints: Dict[str, Any],
+        constraints: dict[str, Any],
     ) -> np.ndarray:
         """Fallback iterative method when scipy is not available."""
-        max_iter = constraints.get('max_iterations', 100)
-        tolerance = constraints.get('tolerance', 1e-8)
+        max_iter = constraints.get("max_iterations", 100)
+        tolerance = constraints.get("tolerance", 1e-8)
 
         for iteration in range(max_iter):
             portfolio_var = weights @ cov_matrix @ weights
@@ -629,15 +628,15 @@ class RiskParityOptimizer(BaseOptimizer):
             return risk_contributions / total
         return risk_contributions
 
-    def _equal_weight_fallback(self, n: int) -> Dict[str, Any]:
+    def _equal_weight_fallback(self, n: int) -> dict[str, Any]:
         """Fallback a pesos iguales."""
         weight = 1.0 / n
         return {
-            'weights': {f'asset_{i}': weight for i in range(n)},
-            'expected_return': 0.0,
-            'volatility': 0.0,
-            'sharpe_ratio': 0.0,
-            'method': 'equal_weight_fallback',
+            "weights": {f"asset_{i}": weight for i in range(n)},
+            "expected_return": 0.0,
+            "volatility": 0.0,
+            "sharpe_ratio": 0.0,
+            "method": "equal_weight_fallback",
         }
 
 
@@ -657,8 +656,8 @@ class BlackLittermanOptimizer(BaseOptimizer):
         self,
         expected_returns: np.ndarray,
         cov_matrix: np.ndarray,
-        constraints: Optional[Dict[str, Any]] = None,
-    ) -> Dict[str, Any]:
+        constraints: Optional[dict[str, Any]] = None,
+    ) -> dict[str, Any]:
         """
         Optimizar usando modelo Black-Litterman.
 
@@ -680,15 +679,15 @@ class BlackLittermanOptimizer(BaseOptimizer):
             n = len(expected_returns)
 
             # Get views configuration
-            views = constraints.get('views', {})
-            view_confidences = constraints.get('view_confidences', {})
+            views = constraints.get("views", {})
+            view_confidences = constraints.get("view_confidences", {})
             tau = 0.05  # Black-Litterman tau parameter, typically 0.025 to 0.05
 
             # If no views, use implied equilibrium returns with Markowitz
             if not views:
                 markowitz = MarkowitzOptimizer(self.config)
                 result = markowitz.optimize(expected_returns, cov_matrix, constraints)
-                result['method'] = 'black_litterman_equilibrium'
+                result["method"] = "black_litterman_equilibrium"
                 return result
 
             # Build views matrices
@@ -698,7 +697,7 @@ class BlackLittermanOptimizer(BaseOptimizer):
                 # No valid views, use equilibrium
                 markowitz = MarkowitzOptimizer(self.config)
                 result = markowitz.optimize(expected_returns, cov_matrix, constraints)
-                result['method'] = 'black_litterman_equilibrium'
+                result["method"] = "black_litterman_equilibrium"
                 return result
 
             # Prior: equilibrium returns (PI)
@@ -730,10 +729,10 @@ class BlackLittermanOptimizer(BaseOptimizer):
             # Optimize with BL returns
             markowitz = MarkowitzOptimizer(self.config)
             result = markowitz.optimize(bl_returns, cov_matrix, constraints)
-            result['method'] = 'black_litterman'
-            result['bl_returns'] = {f'asset_{i}': float(r) for i, r in enumerate(bl_returns)}
-            result['equilibrium_returns'] = {f'asset_{i}': float(r) for i, r in enumerate(PI)}
-            result['views_applied'] = len(views)
+            result["method"] = "black_litterman"
+            result["bl_returns"] = {f"asset_{i}": float(r) for i, r in enumerate(bl_returns)}
+            result["equilibrium_returns"] = {f"asset_{i}": float(r) for i, r in enumerate(PI)}
+            result["views_applied"] = len(views)
 
             return result
 
@@ -744,8 +743,8 @@ class BlackLittermanOptimizer(BaseOptimizer):
     def _build_views_system(
         self,
         n: int,
-        views: Dict[str, Any],
-        view_confidences: Dict[str, float],
+        views: dict[str, Any],
+        view_confidences: dict[str, float],
         cov_matrix: np.ndarray,
         tau: float,
     ) -> tuple:
@@ -772,9 +771,9 @@ class BlackLittermanOptimizer(BaseOptimizer):
                 row = np.zeros(n)
 
                 # Parse view key
-                if ' - ' in str(view_key):
+                if " - " in str(view_key):
                     # Relative view: 'asset_i - asset_j'
-                    parts = str(view_key).split(' - ')
+                    parts = str(view_key).split(" - ")
                     idx1 = self._parse_asset_index(parts[0], n)
                     idx2 = self._parse_asset_index(parts[1], n)
                     if idx1 is not None and idx2 is not None:
@@ -825,8 +824,8 @@ class BlackLittermanOptimizer(BaseOptimizer):
                 return key if 0 <= key < n else None
 
             key_str = str(key).strip()
-            if key_str.startswith('asset_'):
-                idx = int(key_str.replace('asset_', ''))
+            if key_str.startswith("asset_"):
+                idx = int(key_str.replace("asset_", ""))
                 return idx if 0 <= idx < n else None
 
             # Try direct integer parsing
@@ -836,15 +835,15 @@ class BlackLittermanOptimizer(BaseOptimizer):
         except (ValueError, TypeError):
             return None
 
-    def _equal_weight_fallback(self, n: int) -> Dict[str, Any]:
+    def _equal_weight_fallback(self, n: int) -> dict[str, Any]:
         """Fallback a pesos iguales."""
         weight = 1.0 / n
         return {
-            'weights': {f'asset_{i}': weight for i in range(n)},
-            'expected_return': 0.0,
-            'volatility': 0.0,
-            'sharpe_ratio': 0.0,
-            'method': 'equal_weight_fallback',
+            "weights": {f"asset_{i}": weight for i in range(n)},
+            "expected_return": 0.0,
+            "volatility": 0.0,
+            "sharpe_ratio": 0.0,
+            "method": "equal_weight_fallback",
         }
 
 
@@ -859,8 +858,8 @@ class KellyCriterionOptimizer(BaseOptimizer):
         self,
         expected_returns: np.ndarray,
         cov_matrix: np.ndarray,
-        constraints: Optional[Dict[str, Any]] = None,
-    ) -> Dict[str, Any]:
+        constraints: Optional[dict[str, Any]] = None,
+    ) -> dict[str, Any]:
         """
         Optimizar usando Kelly Criterion adaptativo.
 
@@ -878,9 +877,9 @@ class KellyCriterionOptimizer(BaseOptimizer):
             n = len(expected_returns)
 
             # Obtener probabilidades de éxito y retornos por trade
-            win_probabilities = constraints.get('win_probabilities', np.ones(n) * 0.5)
-            win_returns = constraints.get('win_returns', expected_returns)
-            loss_returns = constraints.get('loss_returns', -expected_returns * 0.5)
+            win_probabilities = constraints.get("win_probabilities", np.ones(n) * 0.5)
+            win_returns = constraints.get("win_returns", expected_returns)
+            loss_returns = constraints.get("loss_returns", -expected_returns * 0.5)
 
             # Kelly fraction para cada activo: f = (p*b - q) / b
             # donde p=probabilidad ganar, q=probabilidad perder, b=ratio ganancia/pérdida
@@ -910,8 +909,8 @@ class KellyCriterionOptimizer(BaseOptimizer):
                 weights = np.ones(n) / n  # Fallback a pesos iguales
 
             # Aplicar restricciones
-            max_weight = constraints.get('max_weight', 1.0)
-            min_weight = constraints.get('min_weight', 0.0)
+            max_weight = constraints.get("max_weight", 1.0)
+            min_weight = constraints.get("min_weight", 0.0)
             weights = np.clip(weights, min_weight, max_weight)
             weights = weights / weights.sum()
 
@@ -921,32 +920,32 @@ class KellyCriterionOptimizer(BaseOptimizer):
             sharpe_ratio = expected_return / volatility if volatility > 0 else 0.0
 
             return {
-                'weights': {f'asset_{i}': float(w) for i, w in enumerate(weights)},
-                'expected_return': expected_return,
-                'volatility': volatility,
-                'sharpe_ratio': sharpe_ratio,
-                'method': 'kelly_criterion',
-                'kelly_fractions': {
-                    f'asset_{i}': float(kf) for i, kf in enumerate(kelly_fractions)
+                "weights": {f"asset_{i}": float(w) for i, w in enumerate(weights)},
+                "expected_return": expected_return,
+                "volatility": volatility,
+                "sharpe_ratio": sharpe_ratio,
+                "method": "kelly_criterion",
+                "kelly_fractions": {
+                    f"asset_{i}": float(kf) for i, kf in enumerate(kelly_fractions)
                 },
             }
         except (ValueError, TypeError, KeyError, AttributeError) as e:
             self.logger.error(f"Error en optimización Kelly Criterion: {e}", exc_info=True)
             return self._equal_weight_fallback(len(expected_returns))
 
-    def _equal_weight_fallback(self, n: int) -> Dict[str, Any]:
+    def _equal_weight_fallback(self, n: int) -> dict[str, Any]:
         """Fallback a pesos iguales."""
         weight = 1.0 / n
         return {
-            'weights': {f'asset_{i}': weight for i in range(n)},
-            'expected_return': 0.0,
-            'volatility': 0.0,
-            'sharpe_ratio': 0.0,
-            'method': 'equal_weight_fallback',
+            "weights": {f"asset_{i}": weight for i in range(n)},
+            "expected_return": 0.0,
+            "volatility": 0.0,
+            "sharpe_ratio": 0.0,
+            "method": "equal_weight_fallback",
         }
 
 
-def get_optimization_capabilities() -> Dict[str, bool]:
+def get_optimization_capabilities() -> dict[str, bool]:
     """
     Get available optimization capabilities.
 
@@ -961,11 +960,11 @@ def get_optimization_capabilities() -> Dict[str, bool]:
         - hrp: True if HRP optimizer is available
     """
     return {
-        'cvxpy': CVXPY_AVAILABLE,
-        'pypfopt': PYPFOPT_AVAILABLE,
-        'scipy': SCIPY_AVAILABLE,
-        'handcrafted': HANDCRAFTED_AVAILABLE,
-        'hrp': HRP_AVAILABLE,
+        "cvxpy": CVXPY_AVAILABLE,
+        "pypfopt": PYPFOPT_AVAILABLE,
+        "scipy": SCIPY_AVAILABLE,
+        "handcrafted": HANDCRAFTED_AVAILABLE,
+        "hrp": HRP_AVAILABLE,
     }
 
 
@@ -977,32 +976,32 @@ def get_optimization_method() -> str:
         str: The recommended optimization method
     """
     if PYPFOPT_AVAILABLE:
-        return 'pypfopt'
+        return "pypfopt"
     elif CVXPY_AVAILABLE:
-        return 'cvxpy'
+        return "cvxpy"
     elif SCIPY_AVAILABLE:
-        return 'scipy'
+        return "scipy"
     else:
-        return 'basic'
+        return "basic"
 
 
 __all__ = [
-    'BaseOptimizer',
-    'MarkowitzOptimizer',
-    'RiskParityOptimizer',
-    'BlackLittermanOptimizer',
-    'KellyCriterionOptimizer',
-    'HandcraftedWeightsOptimizer',
-    'create_handcrafted_weights',
-    'HierarchicalRiskParity',
-    'HRPOptimizer',
-    'compute_hrp_weights',
-    'plot_hrp_dendrogram',
-    'get_optimization_capabilities',
-    'get_optimization_method',
-    'CVXPY_AVAILABLE',
-    'PYPFOPT_AVAILABLE',
-    'SCIPY_AVAILABLE',
-    'HANDCRAFTED_AVAILABLE',
-    'HRP_AVAILABLE',
+    "CVXPY_AVAILABLE",
+    "HANDCRAFTED_AVAILABLE",
+    "HRP_AVAILABLE",
+    "PYPFOPT_AVAILABLE",
+    "SCIPY_AVAILABLE",
+    "BaseOptimizer",
+    "BlackLittermanOptimizer",
+    "HRPOptimizer",
+    "HandcraftedWeightsOptimizer",
+    "HierarchicalRiskParity",
+    "KellyCriterionOptimizer",
+    "MarkowitzOptimizer",
+    "RiskParityOptimizer",
+    "compute_hrp_weights",
+    "create_handcrafted_weights",
+    "get_optimization_capabilities",
+    "get_optimization_method",
+    "plot_hrp_dendrogram",
 ]

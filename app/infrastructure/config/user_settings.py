@@ -3,10 +3,11 @@ User Settings Model
 
 Defines the user-specific configuration model.
 """
+
 import logging
 from decimal import Decimal
 from enum import Enum
-from typing import List, Optional
+from typing import Optional
 
 from pydantic import BaseModel, Field, field_validator
 
@@ -122,7 +123,7 @@ class RiskLimits(BaseModel):
 class SymbolUniverse(BaseModel):
     """User's tradable symbol universe."""
 
-    allowed_symbols: List[str] = Field(
+    allowed_symbols: list[str] = Field(
         default_factory=lambda: ["AAPL", "MSFT", "GOOGL", "AMZN", "TSLA"],
         description="Allowed trading symbols",
     )
@@ -179,7 +180,7 @@ class UserSettings(BaseModel):
         logger.debug("Log level validated", extra={"log_level": v.upper()})
         return v.upper()
 
-    def get_allowed_symbols(self) -> List[str]:
+    def get_allowed_symbols(self) -> list[str]:
         """Get list of allowed trading symbols."""
         symbols = self.symbol_universe.allowed_symbols
         logger.debug(

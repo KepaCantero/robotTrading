@@ -9,7 +9,7 @@ import logging
 from datetime import datetime
 from decimal import Decimal
 from enum import Enum
-from typing import Dict, List, Optional, Union
+from typing import Optional, Union
 from uuid import UUID, uuid4
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 
 # Type alias for metadata values
 MetadataValue = Union[str, int, float, bool]
-MetadataDict = Dict[str, MetadataValue]
+MetadataDict = dict[str, MetadataValue]
 
 
 class DataFeedType(str, Enum):
@@ -423,10 +423,10 @@ class DataFeedConfig(BaseModel):
     rate_limit: int = Field(default=60, ge=1, le=3600, description="Rate limit per minute")
 
     # Data configuration
-    supported_symbols: List[str] = Field(
+    supported_symbols: list[str] = Field(
         default_factory=list, description="Supported trading symbols"
     )
-    supported_frequencies: List[DataFrequency] = Field(
+    supported_frequencies: list[DataFrequency] = Field(
         default_factory=list, description="Supported data frequencies"
     )
     max_history_days: int = Field(
@@ -489,7 +489,7 @@ class MarketDataCache(BaseModel):
     data_type: str = Field(..., description="Type of cached data (quote, historical)")
 
     # Cache data
-    data: Union[MetadataDict, List[MetadataDict]] = Field(
+    data: Union[MetadataDict, list[MetadataDict]] = Field(
         ..., description="Cached market data (dict or list of dicts)"
     )
     timestamp: datetime = Field(default_factory=datetime.utcnow, description="Cache timestamp")

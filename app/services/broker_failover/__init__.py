@@ -50,7 +50,6 @@ Example:
     )
 """
 
-
 from .manager import BrokerConfig, BrokerFailoverManager, BrokerHealth, BrokerState
 
 __all__ = [

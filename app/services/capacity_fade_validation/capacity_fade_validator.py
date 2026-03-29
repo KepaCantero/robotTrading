@@ -239,7 +239,7 @@ class CapacityFadeValidator:
             return response
 
         except (ValueError, TypeError, KeyError, AttributeError) as e:
-            logger.error(f"❌ Capacity validation failed: {str(e)}")
+            logger.error(f"❌ Capacity validation failed: {e!s}")
             return CapacityFadeResponse(
                 success=False,
                 feasibility_gate=FeasibilityGate(
@@ -255,7 +255,7 @@ class CapacityFadeValidator:
                         alpha_sufficient=False,
                         liquidity_constrained=True,
                     ),
-                    validation_message=f"Validation error: {str(e)}",
+                    validation_message=f"Validation error: {e!s}",
                 ),
                 analysis=CapacityFadeAnalysis(
                     base_alpha_pct=request.base_alpha_pct,

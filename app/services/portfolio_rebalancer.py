@@ -9,7 +9,7 @@ Implements:
 import logging
 from datetime import datetime
 from decimal import Decimal
-from typing import Any, Dict, Optional
+from typing import Any, Optional
 
 from app.shared.config.centralized_config import get_config
 
@@ -152,10 +152,7 @@ class DynamicCapitalAdjuster:
             return True
 
         # Reduce if very poor recent performance - use config threshold
-        if recent_performance < Decimal(str(self._tt.poor_performance_threshold)):
-            return True
-
-        return False
+        return recent_performance < Decimal(str(self._tt.poor_performance_threshold))
 
 
 class PortfolioRebalancer:
@@ -181,7 +178,7 @@ class PortfolioRebalancer:
         tt = get_config().trading_thresholds
         self.rebalance_frequency_days = rebalance_frequency_days or tt.rebalance_frequency_days
         self.drift_threshold = drift_threshold or Decimal(str(tt.rebalance_drift_threshold))
-        self.rebalancing_targets: Dict[str, RebalancingTarget] = {}
+        self.rebalancing_targets: dict[str, RebalancingTarget] = {}
         self.capital_adjuster = DynamicCapitalAdjuster()
 
     def set_target_allocation(self, strategy_name: str, target_weight: Decimal) -> None:
@@ -197,9 +194,9 @@ class PortfolioRebalancer:
 
     def calculate_rebalance_needs(
         self,
-        current_allocations: Dict[str, Decimal],
+        current_allocations: dict[str, Decimal],
         portfolio_value: Decimal,
-    ) -> Dict[str, Decimal]:
+    ) -> dict[str, Decimal]:
         """
         Calculate rebalancing needs.
 
@@ -231,10 +228,10 @@ class PortfolioRebalancer:
 
     def apply_rebalancing(
         self,
-        current_allocations: Dict[str, Decimal],
+        current_allocations: dict[str, Decimal],
         portfolio_value: Decimal,
-        strategy_performance: Dict[str, Dict[str, Any]],
-    ) -> Dict[str, Decimal]:
+        strategy_performance: dict[str, dict[str, Any]],
+    ) -> dict[str, Decimal]:
         """
         Apply rebalancing with dynamic capital adjustments.
 
@@ -282,7 +279,7 @@ class PortfolioRebalancer:
 
         return adjusted_allocations
 
-    def get_rebalance_status(self) -> Dict[str, Any]:
+    def get_rebalance_status(self) -> dict[str, Any]:
         """
         Get current rebalancing status.
 

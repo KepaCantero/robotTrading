@@ -18,9 +18,8 @@ SOLID Principles:
 """
 
 import logging
-from datetime import date
 from decimal import Decimal
-from typing import Dict, List, Optional, Union
+from typing import TYPE_CHECKING, Optional, Union
 
 from app.domain.models.market_data import Quote
 from app.domain.models.portfolio import Portfolio
@@ -39,6 +38,9 @@ from .models import (
 from .option_screener import OptionScreener, OptionScreeningCriteria
 from .position_manager import PositionManager
 from .roll_analyzer import RollAnalyzer
+
+if TYPE_CHECKING:
+    from datetime import date
 
 logger = logging.getLogger(__name__)
 
@@ -65,7 +67,7 @@ class CoveredCallStrategy(BaseStrategy):
         greeks_calculator: Calculador de Greeks
     """
 
-    def __init__(self, config: Dict[str, Union[str, int, float, Decimal, bool]]):
+    def __init__(self, config: dict[str, Union[str, int, float, Decimal, bool]]):
         """
         Inicializar estrategia de covered calls.
 
@@ -83,10 +85,10 @@ class CoveredCallStrategy(BaseStrategy):
         # Usar configuración centralizada para multiplicadores de moneyness
         centralized_config = get_config()
         min_moneyness_multiplier = Decimal(
-            str(getattr(centralized_config.trading, 'covered_call_min_moneyness_multiplier', 0.5))
+            str(getattr(centralized_config.trading, "covered_call_min_moneyness_multiplier", 0.5))
         )
         max_moneyness_multiplier = Decimal(
-            str(getattr(centralized_config.trading, 'covered_call_max_moneyness_multiplier', 2.0))
+            str(getattr(centralized_config.trading, "covered_call_max_moneyness_multiplier", 2.0))
         )
 
         screening_criteria = OptionScreeningCriteria(
@@ -112,7 +114,7 @@ class CoveredCallStrategy(BaseStrategy):
         )
 
         # Estado interno
-        self.available_options: Dict[str, List[CallOption]] = {}
+        self.available_options: dict[str, list[CallOption]] = {}
         self.last_scan_date: Optional[date] = None
 
         # Métricas de rendimiento
@@ -129,7 +131,7 @@ class CoveredCallStrategy(BaseStrategy):
         )
 
     def _parse_config(
-        self, raw_config: Dict[str, Union[str, int, float, Decimal, bool]]
+        self, raw_config: dict[str, Union[str, int, float, Decimal, bool]]
     ) -> CoveredCallConfig:
         """
         Parsear configuración desde dict.
@@ -149,26 +151,26 @@ class CoveredCallStrategy(BaseStrategy):
                 "description": "Estrategia de covered calls",
                 "version": "1.0.0",
                 "max_position_size": Decimal(
-                    str(getattr(centralized_config.trading, 'covered_call_max_position_size', 0.10))
+                    str(getattr(centralized_config.trading, "covered_call_max_position_size", 0.10))
                 ),
                 "max_contracts_per_position": 10,
                 "min_shares_required": 100,
                 "target_dte": 30,
                 "target_otm_pct": Decimal(
-                    str(getattr(centralized_config.trading, 'covered_call_target_otm_pct', 0.03))
+                    str(getattr(centralized_config.trading, "covered_call_target_otm_pct", 0.03))
                 ),
                 "min_premium_pct": Decimal(
-                    str(getattr(centralized_config.trading, 'covered_call_min_premium_pct', 0.01))
+                    str(getattr(centralized_config.trading, "covered_call_min_premium_pct", 0.01))
                 ),
                 "roll_threshold_days": 7,
                 "roll_threshold_itm": Decimal(
                     str(
-                        getattr(centralized_config.trading, 'covered_call_roll_threshold_itm', 0.02)
+                        getattr(centralized_config.trading, "covered_call_roll_threshold_itm", 0.02)
                     )
                 ),
                 "roll_threshold_otm": Decimal(
                     str(
-                        getattr(centralized_config.trading, 'covered_call_roll_threshold_otm', 0.05)
+                        getattr(centralized_config.trading, "covered_call_roll_threshold_otm", 0.05)
                     )
                 ),
                 "assignment_probability_threshold": AssignmentProbability.HIGH,
@@ -187,7 +189,11 @@ class CoveredCallStrategy(BaseStrategy):
                 "roll_threshold_itm",
                 "roll_threshold_otm",
             ]:
-                if key in merged and merged[key] is not None and not isinstance(merged[key], Decimal):
+                if (
+                    key in merged
+                    and merged[key] is not None
+                    and not isinstance(merged[key], Decimal)
+                ):
                     merged[key] = Decimal(str(merged[key]))
 
             return CoveredCallConfig(**merged)
@@ -196,7 +202,7 @@ class CoveredCallStrategy(BaseStrategy):
             logger.error(f"Error parseando config: {e}")
             return CoveredCallConfig()
 
-    def generate_signals(self, market_data: Quote) -> List[Signal]:
+    def generate_signals(self, market_data: Quote) -> list[Signal]:
         """
         Generar señales de trading basadas en covered calls.
 
@@ -218,7 +224,7 @@ class CoveredCallStrategy(BaseStrategy):
         symbol = market_data.symbol
 
         # Obtener precio
-        current_price = market_data.close if hasattr(market_data, 'close') else market_data.price
+        current_price = market_data.close if hasattr(market_data, "close") else market_data.price
 
         signals = []
 
@@ -284,7 +290,7 @@ class CoveredCallStrategy(BaseStrategy):
             return None  # No hay opciones disponibles
 
         # Screening de opciones
-        current_price = market_data.close if hasattr(market_data, 'close') else market_data.price
+        current_price = market_data.close if hasattr(market_data, "close") else market_data.price
 
         best_options = self.screener.get_best_option(
             options=options,
@@ -308,7 +314,7 @@ class CoveredCallStrategy(BaseStrategy):
             priority_score=65.0,
             source=SignalSource.FUNDAMENTAL,
             price=current_price,
-            volume=market_data.volume if hasattr(market_data, 'volume') else Decimal("1000000"),
+            volume=market_data.volume if hasattr(market_data, "volume") else Decimal("1000000"),
             metadata={
                 "reason": "covered_call_opportunity",
                 "strategy": "covered_calls",
@@ -322,10 +328,10 @@ class CoveredCallStrategy(BaseStrategy):
                     else None
                 ),
                 "delta": (
-                    best_option.metadata.get('delta') if hasattr(best_option, 'metadata') else None
+                    best_option.metadata.get("delta") if hasattr(best_option, "metadata") else None
                 ),
                 "theta": (
-                    best_option.metadata.get('theta') if hasattr(best_option, 'metadata') else None
+                    best_option.metadata.get("theta") if hasattr(best_option, "metadata") else None
                 ),
             },
         )
@@ -354,7 +360,7 @@ class CoveredCallStrategy(BaseStrategy):
         Returns:
             Señal de rolling
         """
-        current_price = market_data.close if hasattr(market_data, 'close') else market_data.price
+        current_price = market_data.close if hasattr(market_data, "close") else market_data.price
 
         # El rolling se implementa como:
         # 1. BUY to close (cerrar opción corta)
@@ -370,7 +376,7 @@ class CoveredCallStrategy(BaseStrategy):
             priority_score=float(roll_decision.confidence) * 0.8,
             source=SignalSource.FUNDAMENTAL,
             price=current_price,
-            volume=market_data.volume if hasattr(market_data, 'volume') else Decimal("1000000"),
+            volume=market_data.volume if hasattr(market_data, "volume") else Decimal("1000000"),
             metadata={
                 "reason": "roll_covered_call",
                 "strategy": "covered_calls",
@@ -410,7 +416,7 @@ class CoveredCallStrategy(BaseStrategy):
         Returns:
             Señal de cierre
         """
-        current_price = market_data.close if hasattr(market_data, 'close') else market_data.price
+        current_price = market_data.close if hasattr(market_data, "close") else market_data.price
 
         signal = Signal(
             symbol=position.symbol,
@@ -421,7 +427,7 @@ class CoveredCallStrategy(BaseStrategy):
             priority_score=85.0,
             source=SignalSource.FUNDAMENTAL,
             price=current_price,
-            volume=market_data.volume if hasattr(market_data, 'volume') else Decimal("1000000"),
+            volume=market_data.volume if hasattr(market_data, "volume") else Decimal("1000000"),
             metadata={
                 "reason": reason,
                 "strategy": "covered_calls",
@@ -449,7 +455,7 @@ class CoveredCallStrategy(BaseStrategy):
         # Verificar exposición total - usar configuración centralizada
         centralized_config = get_config()
         max_total_exposure = Decimal(
-            str(getattr(centralized_config.trading, 'covered_call_max_total_exposure', 0.30))
+            str(getattr(centralized_config.trading, "covered_call_max_total_exposure", 0.30))
         )
 
         # Calcular exposición actual
@@ -470,7 +476,7 @@ class CoveredCallStrategy(BaseStrategy):
 
         return True
 
-    def get_required_parameters(self) -> List[str]:
+    def get_required_parameters(self) -> list[str]:
         """
         Obtener parámetros requeridos para la estrategia.
 
@@ -502,10 +508,10 @@ class CoveredCallStrategy(BaseStrategy):
 
             # Validar OTM
             min_otm = Decimal(
-                str(getattr(centralized_config.trading, 'covered_call_min_otm_pct', 0.01))
+                str(getattr(centralized_config.trading, "covered_call_min_otm_pct", 0.01))
             )
             max_otm = Decimal(
-                str(getattr(centralized_config.trading, 'covered_call_max_otm_pct', 0.20))
+                str(getattr(centralized_config.trading, "covered_call_max_otm_pct", 0.20))
             )
             if not (min_otm <= self.strategy_config.target_otm_pct <= max_otm):
                 logger.error(f"target_otm_pct debe estar entre {min_otm:.1%} y {max_otm:.1%}")
@@ -513,10 +519,10 @@ class CoveredCallStrategy(BaseStrategy):
 
             # Validar prima mínima
             min_premium = Decimal(
-                str(getattr(centralized_config.trading, 'covered_call_min_premium_lower', 0.005))
+                str(getattr(centralized_config.trading, "covered_call_min_premium_lower", 0.005))
             )
             max_premium = Decimal(
-                str(getattr(centralized_config.trading, 'covered_call_min_premium_upper', 0.10))
+                str(getattr(centralized_config.trading, "covered_call_min_premium_upper", 0.10))
             )
             if not (min_premium <= self.strategy_config.min_premium_pct <= max_premium):
                 logger.error(
@@ -526,10 +532,10 @@ class CoveredCallStrategy(BaseStrategy):
 
             # Validar tamaño de posición
             min_pos = Decimal(
-                str(getattr(centralized_config.trading, 'covered_call_min_position_size', 0.01))
+                str(getattr(centralized_config.trading, "covered_call_min_position_size", 0.01))
             )
             max_pos = Decimal(
-                str(getattr(centralized_config.trading, 'covered_call_max_position_upper', 0.50))
+                str(getattr(centralized_config.trading, "covered_call_max_position_upper", 0.50))
             )
             if not (min_pos <= self.strategy_config.max_position_size <= max_pos):
                 logger.error(f"max_position_size debe estar entre {min_pos:.1%} y {max_pos:.1%}")
@@ -545,7 +551,7 @@ class CoveredCallStrategy(BaseStrategy):
     # MÉTODOS DE GESTIÓN DE OPCIONES Y POSICIONES
     # ========================================================================
 
-    def set_available_options(self, options: List[CallOption]) -> None:
+    def set_available_options(self, options: list[CallOption]) -> None:
         """
         Establecer opciones disponibles para un símbolo.
 
@@ -590,10 +596,7 @@ class CoveredCallStrategy(BaseStrategy):
             return None
 
         # Filtrar por DTE si se especifica
-        if dte is not None:
-            target_dte = dte
-        else:
-            target_dte = self.strategy_config.target_dte
+        target_dte = dte if dte is not None else self.strategy_config.target_dte
 
         # Filtrar opciones
         filtered_options = [opt for opt in options if abs(opt.days_to_expiry - target_dte) <= 15]
@@ -607,7 +610,7 @@ class CoveredCallStrategy(BaseStrategy):
             # Usar configuración centralizada para tolerancia de strike
             centralized_config = get_config()
             strike_tolerance = Decimal(
-                str(getattr(centralized_config.trading, 'covered_call_strike_tolerance', 0.02))
+                str(getattr(centralized_config.trading, "covered_call_strike_tolerance", 0.02))
             )
             filtered_options = [
                 opt
@@ -665,7 +668,7 @@ class CoveredCallStrategy(BaseStrategy):
             logger.error(f"Error creando posición: {e}")
             return None
 
-    def get_position_summary(self) -> Dict[str, Union[int, float, List[str], Dict[str, float]]]:
+    def get_position_summary(self) -> dict[str, Union[int, float, list[str], dict[str, float]]]:
         """
         Obtener resumen de posiciones.
 
@@ -688,8 +691,8 @@ class CoveredCallStrategy(BaseStrategy):
         self,
         symbol: str,
         current_price: Decimal,
-    ) -> List[
-        Dict[str, Union[str, int, bool, List[Dict[str, Union[str, float, int, None]]], None]]
+    ) -> list[
+        dict[str, Union[str, int, bool, list[dict[str, Union[str, float, int, None]]], None]]
     ]:
         """
         Analizar oportunidades de rolling para un símbolo.

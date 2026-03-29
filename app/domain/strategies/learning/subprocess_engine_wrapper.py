@@ -23,7 +23,7 @@ import platform
 import traceback
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any, Dict, Optional
+from typing import Any, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -50,9 +50,9 @@ class SubprocessRequest:
 
     operation: EngineOperation
     engine_type: str
-    config: Dict[str, Any]
-    data: Optional[Dict[str, Any]] = None
-    features: Optional[Dict[str, Any]] = None
+    config: dict[str, Any]
+    data: Optional[dict[str, Any]] = None
+    features: Optional[dict[str, Any]] = None
     model_path: Optional[str] = None
 
 
@@ -69,7 +69,7 @@ def _worker_process(
     request_queue: mp.Queue,
     response_queue: mp.Queue,
     engine_type: str,
-    config: Dict[str, Any],
+    config: dict[str, Any],
 ):
     """
     Worker process that handles learning engine operations.
@@ -134,9 +134,9 @@ def _worker_process(
                 if request.operation == EngineOperation.TRAIN:
                     result = engine.train(
                         training_data=request.data,
-                        validation_data=request.data.get("validation_data")
-                        if request.data
-                        else None,
+                        validation_data=(
+                            request.data.get("validation_data") if request.data else None
+                        ),
                     )
                     response_queue.put(SubprocessResponse(success=True, result=result))
 
@@ -177,7 +177,7 @@ class SubprocessLearningEngineWrapper:
     def __init__(
         self,
         engine_type: str,
-        config: Dict[str, Any],
+        config: dict[str, Any],
     ):
         """
         Initialize the subprocess wrapper.
@@ -220,12 +220,9 @@ class SubprocessLearningEngineWrapper:
             return False
 
         # Only use subprocess on macOS for PyTorch engines
-        if platform.system() == "Darwin" and self.engine_type in PYTORCH_ENGINES:
-            return True
+        return bool(platform.system() == "Darwin" and self.engine_type in PYTORCH_ENGINES)
 
-        return False
-
-    def _sanitize_config(self, config: Dict[str, Any]) -> Dict[str, Any]:
+    def _sanitize_config(self, config: dict[str, Any]) -> dict[str, Any]:
         """
         Sanitize config for subprocess serialization.
 
@@ -242,10 +239,10 @@ class SubprocessLearningEngineWrapper:
             except (TypeError, pickle.PicklingError, AttributeError):
                 return False
 
-        sanitized: Dict[str, Any] = {}
+        sanitized: dict[str, Any] = {}
         for key, value in config.items():
             # Skip keys that typically contain unpicklable objects
-            if key in ('connection', 'session', 'db', 'database', 'engine', 'pool'):
+            if key in ("connection", "session", "db", "database", "engine", "pool"):
                 continue
 
             # Check if value is picklable
@@ -448,9 +445,9 @@ class SubprocessLearningEngineWrapper:
 
     def train(
         self,
-        training_data: Optional[Dict[str, Any]] = None,
-        validation_data: Optional[Dict[str, Any]] = None,
-    ) -> Dict[str, Any]:
+        training_data: Optional[dict[str, Any]] = None,
+        validation_data: Optional[dict[str, Any]] = None,
+    ) -> dict[str, Any]:
         """
         Train the model.
 
@@ -481,7 +478,7 @@ class SubprocessLearningEngineWrapper:
         logger.error(f"Training failed: {response.error}")
         return {"error": response.error or "Unknown error"}
 
-    def predict(self, features: Dict[str, Any]) -> Dict[str, Any]:
+    def predict(self, features: dict[str, Any]) -> dict[str, Any]:
         """
         Generate predictions.
 
@@ -515,7 +512,7 @@ class SubprocessLearningEngineWrapper:
             "error": response.error,
         }
 
-    def evaluate(self, test_data: Dict[str, Any]) -> Dict[str, Any]:
+    def evaluate(self, test_data: dict[str, Any]) -> dict[str, Any]:
         """
         Evaluate the model.
 
@@ -588,7 +585,7 @@ class SubprocessLearningEngineWrapper:
         """Check if the engine is ready to use."""
         return self.enabled and self.is_trained
 
-    def explain(self, features: Dict[str, Any], prediction: Optional[Dict[str, Any]] = None) -> str:
+    def explain(self, features: dict[str, Any], prediction: Optional[dict[str, Any]] = None) -> str:
         """Generate explanation for prediction."""
         if prediction is None:
             prediction = self.predict(features)
@@ -607,7 +604,11 @@ class SubprocessLearningEngineWrapper:
     def shutdown(self):
         """Shutdown the subprocess."""
         try:
-            if self._process is not None and self._process.is_alive() and self._request_queue is not None:
+            if (
+                self._process is not None
+                and self._process.is_alive()
+                and self._request_queue is not None
+            ):
                 self._request_queue.put(None)
                 self._process.join(timeout=5)
             self._cleanup_subprocess()

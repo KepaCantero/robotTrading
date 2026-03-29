@@ -21,7 +21,7 @@ def verify_file_exists(filepath: str) -> bool:
 def verify_python_syntax(filepath: str) -> bool:
     """Verify a Python file has valid syntax."""
     try:
-        with open(filepath, 'r') as f:
+        with open(filepath) as f:
             ast.parse(f.read())
         return True
     except SyntaxError as e:
@@ -31,7 +31,7 @@ def verify_python_syntax(filepath: str) -> bool:
 
 def count_classes(filepath: str) -> int:
     """Count the number of classes in a file."""
-    with open(filepath, 'r') as f:
+    with open(filepath) as f:
         tree = ast.parse(f.read())
 
     classes = [node for node in ast.walk(tree) if isinstance(node, ast.ClassDef)]
@@ -40,22 +40,24 @@ def count_classes(filepath: str) -> int:
 
 def count_lines(filepath: str) -> int:
     """Count the number of lines in a file."""
-    with open(filepath, 'r') as f:
+    with open(filepath) as f:
         return len(f.readlines())
 
 
 def extract_exports(filepath: str) -> list[str]:
     """Extract __all__ exports from a module."""
-    with open(filepath, 'r') as f:
+    with open(filepath) as f:
         tree = ast.parse(f.read())
 
     for node in ast.walk(tree):
         if isinstance(node, ast.Assign):
             for target in node.targets:
-                if isinstance(target, ast.Name) and target.id == '__all__' and isinstance(node.value, ast.List):
-                    return [
-                        elt.value for elt in node.value.elts if isinstance(elt, ast.Constant)
-                    ]
+                if (
+                    isinstance(target, ast.Name)
+                    and target.id == "__all__"
+                    and isinstance(node.value, ast.List)
+                ):
+                    return [elt.value for elt in node.value.elts if isinstance(elt, ast.Constant)]
     return []
 
 
@@ -131,7 +133,7 @@ def main():
     print("-" * 70)
 
     interface_file = f"{base_path}/interfaces.py"
-    with open(interface_file, 'r') as f:
+    with open(interface_file) as f:
         content = f.read()
 
     protocols = ["UserStoreProtocol", "JWTTokenManagerProtocol", "AuthAttemptTrackerProtocol"]
@@ -152,19 +154,19 @@ def main():
     jwt_manager = f"{base_path}/jwt_token_manager.py"
     attempt_tracker = f"{base_path}/auth_attempt_tracker.py"
 
-    with open(user_store, 'r') as f:
+    with open(user_store) as f:
         if "def set_user_store" in f.read():
             print("  ✓ UserStore supports dependency injection (set_user_store)")
         else:
             print("  ✗ UserStore missing DI support")
 
-    with open(jwt_manager, 'r') as f:
+    with open(jwt_manager) as f:
         if "def set_token_manager" in f.read():
             print("  ✓ JWTTokenManager supports dependency injection")
         else:
             print("  ✗ JWTTokenManager missing DI support")
 
-    with open(attempt_tracker, 'r') as f:
+    with open(attempt_tracker) as f:
         if "def set_attempt_tracker" in f.read():
             print("  ✓ AuthAttemptTracker supports dependency injection")
         else:
@@ -172,7 +174,7 @@ def main():
 
     # Check auth.py uses protocols
     auth_file = f"{base_path}/auth.py"
-    with open(auth_file, 'r') as f:
+    with open(auth_file) as f:
         content = f.read()
         if "UserStoreProtocol" in content and "JWTTokenManagerProtocol" in content:
             print("  ✓ auth.py depends on abstractions (Protocols)")
@@ -237,7 +239,7 @@ def main():
     separation_pct = (total_lines - auth_lines) / total_lines * 100
 
     print(f"\n  Code separation: {separation_pct:.1f}% moved to dedicated modules")
-    print(f"  Main auth.py: {auth_lines} lines ({auth_lines/total_lines*100:.1f}% of total)")
+    print(f"  Main auth.py: {auth_lines} lines ({auth_lines / total_lines * 100:.1f}% of total)")
 
     print("\n8. FILE ORGANIZATION")
     print("-" * 70)

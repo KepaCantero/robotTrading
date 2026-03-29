@@ -17,13 +17,15 @@ from __future__ import annotations
 
 import logging
 import uuid
-from typing import Callable, Optional, Set
+from typing import TYPE_CHECKING, Callable, ClassVar
 
 from fastapi import HTTPException, Request, Response, status
 from starlette.middleware.base import BaseHTTPMiddleware
-from starlette.types import ASGIApp
 
 from app.shared.config.config import get_settings
+
+if TYPE_CHECKING:
+    from starlette.types import ASGIApp
 
 logger = logging.getLogger(__name__)
 
@@ -47,18 +49,18 @@ class AuthMiddleware(BaseHTTPMiddleware):
     """
 
     # Paths that require authentication for write operations
-    WRITE_OPERATION_PATHS: Set[str] = {
+    WRITE_OPERATION_PATHS: ClassVar[set[str]] = {
         "/strategies",
         "/optimization",
     }
 
     # Paths that require authentication for all operations
-    ALWAYS_AUTHENTICATE: Set[str] = {
+    ALWAYS_AUTHENTICATE: ClassVar[set[str]] = {
         "/deployment",
     }
 
     # Write HTTP methods
-    WRITE_METHODS: Set[str] = {"POST", "PUT", "DELETE", "PATCH"}
+    WRITE_METHODS: ClassVar[set[str]] = {"POST", "PUT", "DELETE", "PATCH"}
 
     def __init__(
         self,
@@ -78,10 +80,10 @@ class AuthMiddleware(BaseHTTPMiddleware):
         self.require_auth = require_auth
         self.debug_mode = debug_mode
         self.settings = get_settings()
-        self._valid_api_keys: Optional[Set[str]] = None
+        self._valid_api_keys: set[str] | None = None
 
     @property
-    def valid_api_keys(self) -> Set[str]:
+    def valid_api_keys(self) -> set[str]:
         """
         Get valid API keys from settings.
 
@@ -402,6 +404,6 @@ class RequestLoggingMiddleware(BaseHTTPMiddleware):
 __all__ = [
     "AuthMiddleware",
     "CorrelationIdMiddleware",
-    "SecurityHeadersMiddleware",
     "RequestLoggingMiddleware",
+    "SecurityHeadersMiddleware",
 ]

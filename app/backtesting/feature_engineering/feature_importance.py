@@ -33,7 +33,6 @@ from __future__ import annotations
 import logging
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Dict, List, Optional, Union
 
 import numpy as np
 import pandas as pd
@@ -66,7 +65,7 @@ class FeatureImportanceConfig:
 
     # General settings
     max_samples: int = 10000  # Subsample for large datasets
-    feature_names: Optional[List[str]] = None
+    feature_names: list[str] | None = None
 
     def __post_init__(self):
         """Validate configuration."""
@@ -79,27 +78,27 @@ class FeatureImportanceConfig:
 class ImportanceResult:
     """Result of feature importance calculation."""
 
-    feature_names: List[str]
-    mdi_importance: Dict[str, float] = field(default_factory=dict)
-    mda_importance: Dict[str, float] = field(default_factory=dict)
-    sfi_importance: Dict[str, float] = field(default_factory=dict)
+    feature_names: list[str]
+    mdi_importance: dict[str, float] = field(default_factory=dict)
+    mda_importance: dict[str, float] = field(default_factory=dict)
+    sfi_importance: dict[str, float] = field(default_factory=dict)
 
     # Rankings
-    mdi_rank: Dict[str, int] = field(default_factory=dict)
-    mda_rank: Dict[str, int] = field(default_factory=dict)
-    sfi_rank: Dict[str, int] = field(default_factory=dict)
+    mdi_rank: dict[str, int] = field(default_factory=dict)
+    mda_rank: dict[str, int] = field(default_factory=dict)
+    sfi_rank: dict[str, int] = field(default_factory=dict)
 
     # Combined
-    combined_importance: Dict[str, float] = field(default_factory=dict)
-    combined_rank: Dict[str, int] = field(default_factory=dict)
+    combined_importance: dict[str, float] = field(default_factory=dict)
+    combined_rank: dict[str, int] = field(default_factory=dict)
 
     # Metadata
     n_features: int = 0
     n_samples: int = 0
-    methods_used: List[str] = field(default_factory=list)
+    methods_used: list[str] = field(default_factory=list)
     timestamp: datetime = field(default_factory=datetime.now)
 
-    def to_dict(self) -> Dict:
+    def to_dict(self) -> dict:
         """Convert to dictionary."""
         return {
             "feature_names": self.feature_names,
@@ -117,7 +116,7 @@ class ImportanceResult:
             "timestamp": self.timestamp.isoformat(),
         }
 
-    def get_top_features(self, method: str = "combined", n: int = 10) -> List[str]:
+    def get_top_features(self, method: str = "combined", n: int = 10) -> list[str]:
         """Get top N features by importance method."""
         if method == "mdi":
             importance = self.mdi_importance
@@ -133,7 +132,7 @@ class ImportanceResult:
 
     def get_low_importance_features(
         self, method: str = "combined", threshold: float = 0.01
-    ) -> List[str]:
+    ) -> list[str]:
         """Get features below importance threshold."""
         if method == "mdi":
             importance = self.mdi_importance
@@ -173,8 +172,8 @@ class FeatureImportanceMDI:
     def calculate(
         self,
         model: object,
-        feature_names: Optional[List[str]] = None,
-    ) -> Dict[str, float]:
+        feature_names: list[str] | None = None,
+    ) -> dict[str, float]:
         """
         Calculate MDI importance from trained model.
 
@@ -238,10 +237,10 @@ class FeatureImportanceMDA:
     def calculate(
         self,
         model: object,
-        X: Union[pd.DataFrame, np.ndarray],
-        y: Union[pd.Series, np.ndarray],
-        feature_names: Optional[List[str]] = None,
-    ) -> Dict[str, float]:
+        X: pd.DataFrame | np.ndarray,
+        y: pd.Series | np.ndarray,
+        feature_names: list[str] | None = None,
+    ) -> dict[str, float]:
         """
         Calculate MDA importance via permutation.
 
@@ -369,11 +368,11 @@ class FeatureImportanceSFI:
 
     def calculate(
         self,
-        X: Union[pd.DataFrame, np.ndarray],
-        y: Union[pd.Series, np.ndarray],
-        feature_names: Optional[List[str]] = None,
-        model_type: Optional[object] = None,
-    ) -> Dict[str, float]:
+        X: pd.DataFrame | np.ndarray,
+        y: pd.Series | np.ndarray,
+        feature_names: list[str] | None = None,
+        model_type: object | None = None,
+    ) -> dict[str, float]:
         """
         Calculate SFI importance for each feature.
 
@@ -460,7 +459,7 @@ class FinancialMLFeatureImportance:
         >>> print(result.get_top_features(n=10))
     """
 
-    def __init__(self, config: Optional[FeatureImportanceConfig] = None):
+    def __init__(self, config: FeatureImportanceConfig | None = None):
         """
         Initialize feature importance calculator.
 
@@ -477,9 +476,9 @@ class FinancialMLFeatureImportance:
     def calculate_importance(
         self,
         model: object,
-        X: Union[pd.DataFrame, np.ndarray],
-        y: Union[pd.Series, np.ndarray],
-        feature_names: Optional[List[str]] = None,
+        X: pd.DataFrame | np.ndarray,
+        y: pd.Series | np.ndarray,
+        feature_names: list[str] | None = None,
     ) -> ImportanceResult:
         """
         Calculate feature importance using multiple methods.
@@ -505,10 +504,7 @@ class FinancialMLFeatureImportance:
             X_array = X
             feature_names = feature_names or [f"feature_{i}" for i in range(X.shape[1])]
 
-        if isinstance(y, pd.Series):
-            y_array = y.values
-        else:
-            y_array = y
+        y_array = y.values if isinstance(y, pd.Series) else y
 
         n_features = X_array.shape[1]
         n_samples = X_array.shape[0]
@@ -566,7 +562,7 @@ class FinancialMLFeatureImportance:
             methods_used=methods_used,
         )
 
-    def _create_ranking(self, importance: Dict[str, float]) -> Dict[str, int]:
+    def _create_ranking(self, importance: dict[str, float]) -> dict[str, int]:
         """Create feature ranking from importance scores."""
         if not importance:
             return {}
@@ -576,10 +572,10 @@ class FinancialMLFeatureImportance:
 
     def _combine_importances(
         self,
-        mdi: Dict[str, float],
-        mda: Dict[str, float],
-        sfi: Dict[str, float],
-    ) -> Dict[str, float]:
+        mdi: dict[str, float],
+        mda: dict[str, float],
+        sfi: dict[str, float],
+    ) -> dict[str, float]:
         """Combine importance scores from multiple methods."""
         # Collect all importances
         all_importances = {}
@@ -614,11 +610,11 @@ class FinancialMLFeatureImportance:
 
 def calculate_feature_importance(
     model: object,
-    X: Union[pd.DataFrame, np.ndarray],
-    y: Union[pd.Series, np.ndarray],
+    X: pd.DataFrame | np.ndarray,
+    y: pd.Series | np.ndarray,
     method: str = "combined",
     **kwargs,
-) -> Dict[str, float]:
+) -> dict[str, float]:
     """
     Convenience function to calculate feature importance.
 

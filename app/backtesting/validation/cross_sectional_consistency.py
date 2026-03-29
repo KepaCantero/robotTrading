@@ -22,7 +22,7 @@ import logging
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any
 
 import numpy as np
 import pandas as pd
@@ -52,9 +52,9 @@ class CrossSectionalResult:
     rank_ic: float
     sample_size: int
     assets_tested: int
-    details: Dict[str, Any] = field(default_factory=dict)
+    details: dict[str, Any] = field(default_factory=dict)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
         return {
             "timestamp": self.timestamp.isoformat(),
@@ -75,16 +75,16 @@ class DecileAnalysisResult:
 
     timestamp: datetime
     signal_name: str
-    decile_returns: Dict[int, float]
+    decile_returns: dict[int, float]
     long_short_return: float
     monotonicity_score: float
     sharpe_ratio: float
     max_drawdown: float
     hit_rate: float
     is_monotonic: bool
-    details: Dict[str, Any] = field(default_factory=dict)
+    details: dict[str, Any] = field(default_factory=dict)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
         return {
             "timestamp": self.timestamp.isoformat(),
@@ -118,7 +118,7 @@ class CrossSectionalConsistencyChecker:
 
     def __init__(
         self,
-        config: Optional[Dict[str, Any]] = None,
+        config: dict[str, Any] | None = None,
     ):
         """
         Initialize cross-sectional consistency checker.
@@ -134,13 +134,13 @@ class CrossSectionalConsistencyChecker:
         self.n_deciles = self.config.get("n_deciles", 10)
 
         # History storage
-        self._history: List[CrossSectionalResult] = []
+        self._history: list[CrossSectionalResult] = []
 
     def validate_ic_consistency(
         self,
         signals: pd.DataFrame,
         returns: pd.DataFrame,
-        periods: Optional[List[str]] = None,
+        periods: list[str] | None = None,
     ) -> CrossSectionalResult:
         """
         Validate Information Coefficient (IC) consistency.
@@ -260,7 +260,7 @@ class CrossSectionalConsistencyChecker:
         self,
         signals: pd.Series,
         returns: pd.Series,
-        n_deciles: Optional[int] = None,
+        n_deciles: int | None = None,
     ) -> DecileAnalysisResult:
         """
         Validate signal monotonicity across deciles.
@@ -359,7 +359,7 @@ class CrossSectionalConsistencyChecker:
         returns: pd.Series,
         sectors: pd.Series,
         min_sectors: int = 3,
-    ) -> Dict[str, CrossSectionalResult]:
+    ) -> dict[str, CrossSectionalResult]:
         """
         Validate signal consistency across sectors.
 
@@ -456,7 +456,7 @@ class CrossSectionalConsistencyChecker:
         returns: pd.DataFrame,
         window: int = 252,  # 1 year of daily data
         min_periods: int = 20,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Validate time stability of cross-sectional relationships.
 
@@ -545,16 +545,16 @@ class CrossSectionalConsistencyChecker:
         }
 
         logger.info(
-            f"Time Stability: Mean IC={mean_ic:.4f} | Std IC={std_ic:.4f} | " f"Stable={is_stable}"
+            f"Time Stability: Mean IC={mean_ic:.4f} | Std IC={std_ic:.4f} | Stable={is_stable}"
         )
 
         return result
 
     def _align_data(
         self,
-        signals: Union[pd.DataFrame, pd.Series],
-        returns: Union[pd.DataFrame, pd.Series],
-    ) -> Tuple[pd.DataFrame, pd.DataFrame]:
+        signals: pd.DataFrame | pd.Series,
+        returns: pd.DataFrame | pd.Series,
+    ) -> tuple[pd.DataFrame, pd.DataFrame]:
         """Align signals and returns data."""
         if isinstance(signals, pd.Series):
             signals = signals.to_frame()
@@ -568,7 +568,7 @@ class CrossSectionalConsistencyChecker:
 
         return signals_aligned, returns_aligned
 
-    def _calculate_monotonicity_score(self, returns: List[float]) -> float:
+    def _calculate_monotonicity_score(self, returns: list[float]) -> float:
         """
         Calculate monotonicity score for decile returns.
 
@@ -595,7 +595,7 @@ class CrossSectionalConsistencyChecker:
 
         return monotonicity
 
-    def get_history(self) -> List[CrossSectionalResult]:
+    def get_history(self) -> list[CrossSectionalResult]:
         """Get analysis history."""
         return self._history.copy()
 
@@ -605,11 +605,11 @@ class CrossSectionalConsistencyChecker:
 
 
 def validate_cross_sectional_consistency(
-    signals: Union[pd.DataFrame, pd.Series],
-    returns: Union[pd.DataFrame, pd.Series],
-    sectors: Optional[pd.Series] = None,
-    config: Optional[Dict[str, Any]] = None,
-) -> Dict[str, Any]:
+    signals: pd.DataFrame | pd.Series,
+    returns: pd.DataFrame | pd.Series,
+    sectors: pd.Series | None = None,
+    config: dict[str, Any] | None = None,
+) -> dict[str, Any]:
     """
     Convenience function for comprehensive cross-sectional validation.
 

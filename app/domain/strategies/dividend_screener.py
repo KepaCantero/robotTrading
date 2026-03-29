@@ -18,7 +18,6 @@ SOLID Principles:
 import logging
 import time
 from decimal import Decimal
-from typing import Dict, List
 
 from app.shared.config.centralized_config import get_config
 
@@ -83,7 +82,7 @@ class DividendScreener:
 
     def screen(
         self,
-        profiles: List[DividendProfile],
+        profiles: list[DividendProfile],
     ) -> DividendScreeningResult:
         """
         Aplicar screening a lista de perfiles.
@@ -96,8 +95,8 @@ class DividendScreener:
         """
         start_time = time.time()
 
-        passed: List[DividendStockResult] = []
-        failed: Dict[str, List[str]] = {}
+        passed: list[DividendStockResult] = []
+        failed: dict[str, list[str]] = {}
         total_evaluated = len(profiles)
 
         logger.info(
@@ -132,7 +131,7 @@ class DividendScreener:
 
         return result
 
-    def _evaluate_profile(self, profile: DividendProfile) -> List[str]:
+    def _evaluate_profile(self, profile: DividendProfile) -> list[str]:
         """
         Evaluar si un perfil pasa todos los filtros.
 
@@ -142,7 +141,7 @@ class DividendScreener:
         Returns:
             Lista de razones por las que falló (vacía si pasó)
         """
-        failures: List[str] = []
+        failures: list[str] = []
 
         # 0. Dividend trap check (más importante - va primero)
         if profile.is_dividend_trap:
@@ -158,7 +157,10 @@ class DividendScreener:
             failures.append(f"Yield muy alto: {dividend_yield:.2f}% > {self.criteria.max_yield}%")
 
         # 2. Payout ratio check
-        if profile.dividend_data.payout_ratio is not None and profile.dividend_data.payout_ratio > self.criteria.max_payout:
+        if (
+            profile.dividend_data.payout_ratio is not None
+            and profile.dividend_data.payout_ratio > self.criteria.max_payout
+        ):
             failures.append(
                 f"Payout ratio excedido: "
                 f"{profile.dividend_data.payout_ratio:.1f}% > {self.criteria.max_payout}%"
@@ -169,7 +171,7 @@ class DividendScreener:
             growth_3y = profile.dividend_data.dividend_growth_rate_3y
             if growth_3y is not None and growth_3y < self.criteria.min_growth:
                 failures.append(
-                    f"Crecimiento insuficiente: " f"{growth_3y:.1f}% < {self.criteria.min_growth}%"
+                    f"Crecimiento insuficiente: {growth_3y:.1f}% < {self.criteria.min_growth}%"
                 )
 
         # 4. Consecutive years check
@@ -180,7 +182,11 @@ class DividendScreener:
             )
 
         # 5. Market cap check
-        if self.criteria.min_market_cap is not None and profile.market_cap is not None and profile.market_cap < self.criteria.min_market_cap:
+        if (
+            self.criteria.min_market_cap is not None
+            and profile.market_cap is not None
+            and profile.market_cap < self.criteria.min_market_cap
+        ):
             failures.append(
                 f"Market cap muy bajo: "
                 f"${profile.market_cap:.0f}M < ${self.criteria.min_market_cap:.0f}M"
@@ -189,12 +195,14 @@ class DividendScreener:
         # 6. Quality score check
         if profile.quality_score is not None and profile.quality_score < self.criteria.min_quality:
             failures.append(
-                f"Quality score bajo: "
-                f"{profile.quality_score:.1f} < {self.criteria.min_quality}"
+                f"Quality score bajo: {profile.quality_score:.1f} < {self.criteria.min_quality}"
             )
 
         # 7. Sustainability score check
-        if profile.sustainability_score is not None and profile.sustainability_score < self.criteria.min_sustainability:
+        if (
+            profile.sustainability_score is not None
+            and profile.sustainability_score < self.criteria.min_sustainability
+        ):
             failures.append(
                 f"Sustainability score bajo: "
                 f"{profile.sustainability_score:.1f} < {self.criteria.min_sustainability}"
@@ -229,18 +237,26 @@ class DividendScreener:
             failures.append(f"Sector excluido: {profile.sector}")
 
         # 12. Valuation checks (optional)
-        if self.config.max_pe_ratio is not None and profile.pe_ratio is not None and profile.pe_ratio > self.config.max_pe_ratio:
-            failures.append(
-                f"P/E muy alto: {profile.pe_ratio:.1f} > {self.config.max_pe_ratio}"
-            )
+        if (
+            self.config.max_pe_ratio is not None
+            and profile.pe_ratio is not None
+            and profile.pe_ratio > self.config.max_pe_ratio
+        ):
+            failures.append(f"P/E muy alto: {profile.pe_ratio:.1f} > {self.config.max_pe_ratio}")
 
-        if self.config.max_pb_ratio is not None and profile.pb_ratio is not None and profile.pb_ratio > self.config.max_pb_ratio:
-            failures.append(
-                f"P/B muy alto: {profile.pb_ratio:.1f} > {self.config.max_pb_ratio}"
-            )
+        if (
+            self.config.max_pb_ratio is not None
+            and profile.pb_ratio is not None
+            and profile.pb_ratio > self.config.max_pb_ratio
+        ):
+            failures.append(f"P/B muy alto: {profile.pb_ratio:.1f} > {self.config.max_pb_ratio}")
 
         # 13. Risk check (beta)
-        if self.config.max_beta is not None and profile.beta is not None and profile.beta > self.config.max_beta:
+        if (
+            self.config.max_beta is not None
+            and profile.beta is not None
+            and profile.beta > self.config.max_beta
+        ):
             failures.append(f"Beta muy alto: {profile.beta:.2f} > {self.config.max_beta}")
 
         return failures
@@ -292,7 +308,7 @@ class DividendScreener:
             "value": float(self.config.value_weight),
         }
 
-        weighted_score = sum(scores[k] * weights[k] for k in scores.keys())
+        weighted_score = sum(scores[k] * weights[k] for k in scores)
 
         return min(100.0, max(0.0, weighted_score))
 

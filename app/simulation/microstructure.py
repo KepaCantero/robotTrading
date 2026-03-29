@@ -15,6 +15,7 @@ Key concepts implemented:
 Reference:
     Harris, L. (2003). Trading and Exchanges, Chapters 10-11.
 """
+
 # mypy: ignore-errors
 
 import logging
@@ -23,7 +24,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from decimal import Decimal
 from enum import Enum
-from typing import Dict, Optional, Tuple
+from typing import Optional
 
 import numpy as np
 
@@ -126,7 +127,7 @@ class PriceImpactFunction:
         order_size: float,
         participation_rate: float,
         time_horizon: float = 0,
-    ) -> Tuple[float, float]:
+    ) -> tuple[float, float]:
         """
         Calculate price impact for an order.
 
@@ -181,8 +182,8 @@ class MarketMicrostructureMetrics:
     timestamp: datetime
     order_imbalance: OrderImbalance
     liquidity_regime: LiquidityRegime
-    market_depth: Dict[str, float]
-    spread_metrics: Dict[str, float]
+    market_depth: dict[str, float]
+    spread_metrics: dict[str, float]
     flow_toxicity: float
     price_discovery: float
     volatility_ratio: float
@@ -425,7 +426,7 @@ class MarketDepthAnalyzer:
 
         logger.debug(f"Initialized MarketDepthAnalyzer for {order_book.symbol}")
 
-    def analyze_depth(self) -> Dict[str, float]:
+    def analyze_depth(self) -> dict[str, float]:
         """
         Analyze current market depth.
 
@@ -532,10 +533,7 @@ class MarketDepthAnalyzer:
             avg_price = total_cost / (order_size - remaining_size)
             mid = float(snapshot.mid_price) if snapshot.mid_price else avg_price
 
-            if side == OrderSide.BUY:
-                impact = (avg_price - mid) / mid
-            else:
-                impact = (mid - avg_price) / mid
+            impact = (avg_price - mid) / mid if side == OrderSide.BUY else (mid - avg_price) / mid
 
             return max(0, impact)
 
@@ -668,17 +666,14 @@ class LiquidityProvider:
             return False
 
         # Don't provide liquidity if position is at max
-        if abs(self._position) >= self.max_position:
-            return False
-
-        return True
+        return not abs(self._position) >= self.max_position
 
     def calculate_quotes(
         self,
         mid_price: Decimal,
         volatility: float,
         order_imbalance: Optional[float] = None,
-    ) -> Tuple[Optional[Decimal], Optional[Decimal], Decimal]:
+    ) -> tuple[Optional[Decimal], Optional[Decimal], Decimal]:
         """
         Calculate bid and ask quotes.
 
@@ -762,9 +757,7 @@ class LiquidityProvider:
             self._position -= quantity
 
         # P&L will be realized when position is closed
-        logger.debug(
-            f"LP trade: {side.value} {quantity} @ {price}, " f"new position: {self._position}"
-        )
+        logger.debug(f"LP trade: {side.value} {quantity} @ {price}, new position: {self._position}")
 
     def mark_to_market(self, current_mid: Decimal) -> Decimal:
         """
@@ -776,11 +769,8 @@ class LiquidityProvider:
         Returns:
             Unrealized P&L
         """
-        if self._position == 0:
-            unrealized_pnl = Decimal("0")
-        else:
-            # Simple mark-to-market
-            unrealized_pnl = self._position * current_mid
+        # Simple mark-to-market
+        unrealized_pnl = Decimal("0") if self._position == 0 else self._position * current_mid
 
         return self._pnl + unrealized_pnl
 

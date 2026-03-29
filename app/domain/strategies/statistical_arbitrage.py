@@ -13,7 +13,6 @@ from __future__ import annotations
 import logging
 from dataclasses import dataclass
 from enum import Enum
-from typing import Dict, List, Optional, Tuple
 
 import numpy as np
 
@@ -38,8 +37,8 @@ class ZScoreSignal:
     state: ReversionState
     confidence: float  # 0-1
     expected_reversion_target: float  # Expected price after reversion
-    stop_loss: Optional[float] = None  # Stop loss price
-    take_profit: Optional[float] = None  # Take profit price
+    stop_loss: float | None = None  # Stop loss price
+    take_profit: float | None = None  # Take profit price
 
     @property
     def is_long(self) -> bool:
@@ -370,7 +369,7 @@ class StatisticalArbitrage:
 
         if theta <= 0:
             # No mean reversion (random walk or explosive)
-            return float('inf')
+            return float("inf")
 
         # Half-life = ln(2) / theta
         half_life = np.log(2) / theta
@@ -380,7 +379,7 @@ class StatisticalArbitrage:
     def test_stationarity(
         self,
         prices: np.ndarray,
-    ) -> Tuple[bool, float]:
+    ) -> tuple[bool, float]:
         """
         Test if price series is stationary using Augmented Dickey-Fuller test.
 
@@ -406,7 +405,7 @@ class StatisticalArbitrage:
             result[1]
 
             # Critical values at 5% level
-            critical_value = result[4]['5%']
+            critical_value = result[4]["5%"]
 
             # Stationary if test_statistic < critical_value
             is_stationary = test_statistic < critical_value
@@ -452,7 +451,7 @@ class StatisticalArbitrage:
         is_stationary, adf_stat = self.test_stationarity(prices)
 
         # Mean reversion speed (normalized)
-        if half_life > 0 and half_life < float('inf'):
+        if half_life > 0 and half_life < float("inf"):
             mean_reversion_speed = 1.0 / (1.0 + half_life / 10.0)
         else:
             mean_reversion_speed = 0.0
@@ -504,10 +503,7 @@ class StatisticalArbitrage:
             return False
 
         # Check reversion speed
-        if metrics.mean_reversion_speed < 0.2:
-            return False
-
-        return True
+        return not metrics.mean_reversion_speed < 0.2
 
     def calculate_position_size(
         self,
@@ -555,8 +551,8 @@ class StatisticalArbitrage:
 
     def generate_portfolio_signals(
         self,
-        price_data: Dict[str, np.ndarray],
-    ) -> List[ZScoreSignal]:
+        price_data: dict[str, np.ndarray],
+    ) -> list[ZScoreSignal]:
         """
         Generate signals for multiple assets.
 

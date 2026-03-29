@@ -10,7 +10,7 @@ from .volatility_detector import VolatilityDetector
 
 __all__ = [
     "BaseMarketDetector",
+    "RangeDetector",
     "TrendDetector",
     "VolatilityDetector",
-    "RangeDetector",
 ]

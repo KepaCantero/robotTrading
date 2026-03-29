@@ -16,7 +16,6 @@ from __future__ import annotations
 import logging
 from dataclasses import dataclass
 from enum import Enum
-from typing import Dict, List, Tuple
 
 import numpy as np
 
@@ -170,7 +169,7 @@ class DividendMetrics:
 class DividendPortfolio:
     """Portfolio constructed using dividend strategy."""
 
-    positions: Dict[str, float]  # Symbol -> weight
+    positions: dict[str, float]  # Symbol -> weight
     portfolio_yield: float  # Weighted average dividend yield
     portfolio_growth_rate: float  # Weighted average dividend growth
     portfolio_payout_ratio: float  # Weighted average payout ratio
@@ -225,7 +224,7 @@ class DividendInvesting:
         if min_yield is None:
             try:
                 config = get_config()
-                min_yield = float(getattr(config.trading, 'dividend_min_yield', 0.02))
+                min_yield = float(getattr(config.trading, "dividend_min_yield", 0.02))
             except (AttributeError, ValueError, TypeError) as e:
                 logger.warning(f"Error getting dividend_min_yield config: {e}, using default 0.02")
                 min_yield = 0.02
@@ -244,8 +243,8 @@ class DividendInvesting:
 
     def screen_dividend_stocks(
         self,
-        dividend_metrics: Dict[str, DividendMetrics],
-    ) -> List[str]:
+        dividend_metrics: dict[str, DividendMetrics],
+    ) -> list[str]:
         """
         Screen dividend stocks based on criteria.
 
@@ -296,15 +295,12 @@ class DividendInvesting:
             return False
 
         # Growth rate (if specified)
-        if self._min_growth > 0 and metrics.dividend_growth_rate < self._min_growth:
-            return False
-
-        return True
+        return not (self._min_growth > 0 and metrics.dividend_growth_rate < self._min_growth)
 
     def rank_dividend_stocks(
         self,
-        dividend_metrics: Dict[str, DividendMetrics],
-    ) -> List[Tuple[str, float]]:
+        dividend_metrics: dict[str, DividendMetrics],
+    ) -> list[tuple[str, float]]:
         """
         Rank dividend stocks by attractiveness.
 
@@ -357,7 +353,7 @@ class DividendInvesting:
 
     def construct_portfolio(
         self,
-        dividend_metrics: Dict[str, DividendMetrics],
+        dividend_metrics: dict[str, DividendMetrics],
         capital: float,
         max_positions: int = 30,
         min_weight: float | None = None,
@@ -380,7 +376,7 @@ class DividendInvesting:
         if min_weight is None:
             try:
                 config = get_config()
-                min_weight = float(getattr(config.trading, 'dividend_min_weight', 0.02))
+                min_weight = float(getattr(config.trading, "dividend_min_weight", 0.02))
             except (AttributeError, ValueError, TypeError) as e:
                 logger.warning(f"Error getting dividend_min_weight config: {e}, using default 0.02")
                 min_weight = 0.02
@@ -441,10 +437,10 @@ class DividendInvesting:
 
     def _apply_weight_constraints(
         self,
-        weights: Dict[str, float],
+        weights: dict[str, float],
         min_weight: float,
         max_weight: float,
-    ) -> Dict[str, float]:
+    ) -> dict[str, float]:
         """Apply min/max weight constraints."""
         # Cap at max_weight
         weights = {s: min(w, max_weight) for s, w in weights.items()}
@@ -457,7 +453,7 @@ class DividendInvesting:
     def rebalance_portfolio(
         self,
         current_portfolio: DividendPortfolio,
-        dividend_metrics: Dict[str, DividendMetrics],
+        dividend_metrics: dict[str, DividendMetrics],
         capital: float,
         rebalance_threshold: float = 0.05,  # 5% deviation
     ) -> DividendPortfolio:

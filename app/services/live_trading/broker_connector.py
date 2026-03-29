@@ -14,7 +14,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from decimal import Decimal
 from enum import Enum
-from typing import Dict, Optional, Union
+from typing import Optional, Union
 
 from app.infrastructure.resilience.reconnection_manager import (
     ReconnectionConfig,
@@ -159,12 +159,12 @@ class BrokerConnector:
         return self.adapter.account
 
     @property
-    def positions(self) -> Dict[str, BrokerPosition]:
+    def positions(self) -> dict[str, BrokerPosition]:
         """Get positions."""
         return self.adapter.positions
 
     @property
-    def orders(self) -> Dict[str, BrokerOrder]:
+    def orders(self) -> dict[str, BrokerOrder]:
         """Get orders."""
         return self.adapter.orders
 
@@ -276,7 +276,7 @@ class BrokerConnector:
         result = await self.reconnection_manager.connect_with_backoff(_connect)
         return result is not False
 
-    def get_connection_stats(self) -> Dict[str, Union[str, int, float, bool]]:
+    def get_connection_stats(self) -> dict[str, Union[str, int, float, bool]]:
         return self.reconnection_manager.get_stats()
 
     async def disconnect(self) -> bool:
@@ -297,7 +297,7 @@ class BrokerConnector:
         """
         return await self.adapter.get_account_info()
 
-    async def get_positions(self) -> Dict[str, BrokerPosition]:
+    async def get_positions(self) -> dict[str, BrokerPosition]:
         """
         Get all open positions from broker.
 
@@ -402,7 +402,7 @@ class BrokerConnector:
                 # Try to find existing order by client_order_id
                 for order in self.adapter.orders.values():
                     if (
-                        hasattr(order, 'client_order_id')
+                        hasattr(order, "client_order_id")
                         and order.client_order_id == client_order_id
                     ):
                         return order
@@ -433,7 +433,7 @@ class BrokerConnector:
         """
         return await self.adapter.get_order_status(order_id)
 
-    async def update_positions(self) -> Dict[str, BrokerPosition]:
+    async def update_positions(self) -> dict[str, BrokerPosition]:
         """
         Update positions from broker.
 

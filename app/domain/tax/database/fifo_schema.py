@@ -26,19 +26,21 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 from decimal import Decimal
 from enum import Enum
-from typing import Dict, List, Optional
+from typing import Optional
 from uuid import UUID, uuid4
 
 logger = logging.getLogger(__name__)
 
 import sqlalchemy as sa
-from sqlalchemy.dialects.postgresql import JSONB, UUID as PGUUID
+from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy.dialects.postgresql import UUID as PGUUID
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import DeclarativeBase
 
 
 class Base(DeclarativeBase):
     """SQLAlchemy declarative base with proper type support."""
+
     pass
 
 
@@ -140,7 +142,7 @@ class Account(Base):
     closed_at: Optional[datetime] = sa.Column(sa.TIMESTAMP(timezone=True), nullable=True)
 
     # JSONB for extra fields
-    meta_data: Dict = sa.Column(JSONB, default=dict)
+    meta_data: dict = sa.Column(JSONB, default=dict)
 
     # Relationships
     transactions = sa.orm.relationship(
@@ -155,8 +157,8 @@ class Account(Base):
     )
 
     __table_args__ = (
-        sa.Index('idx_accounts_user_active', 'user_id', 'is_active'),
-        sa.Index('idx_accounts_exchange_currency', 'exchange_name', 'currency'),
+        sa.Index("idx_accounts_user_active", "user_id", "is_active"),
+        sa.Index("idx_accounts_exchange_currency", "exchange_name", "currency"),
     )
 
 
@@ -179,7 +181,7 @@ class Transaction(Base):
     )  # Raw TX hash for crypto
 
     # Account
-    account_id: UUID = sa.Column(PGUUID(as_uuid=True), sa.ForeignKey('accounts.id'), nullable=False)
+    account_id: UUID = sa.Column(PGUUID(as_uuid=True), sa.ForeignKey("accounts.id"), nullable=False)
     account = sa.orm.relationship(
         "Account", back_populates="transactions", foreign_keys="Transaction.account_id"
     )
@@ -219,7 +221,7 @@ class Transaction(Base):
 
     # FIFO linking
     lot_id: Optional[UUID] = sa.Column(
-        PGUUID(as_uuid=True), sa.ForeignKey('lots.id'), nullable=True
+        PGUUID(as_uuid=True), sa.ForeignKey("lots.id"), nullable=True
     )
     lot = sa.orm.relationship(
         "Lot", back_populates="transactions", foreign_keys="Transaction.lot_id"
@@ -233,17 +235,17 @@ class Transaction(Base):
 
     # Counterparty (for transfers)
     from_account_id: Optional[UUID] = sa.Column(
-        PGUUID(as_uuid=True), sa.ForeignKey('accounts.id'), nullable=True
+        PGUUID(as_uuid=True), sa.ForeignKey("accounts.id"), nullable=True
     )
     to_account_id: Optional[UUID] = sa.Column(
-        PGUUID(as_uuid=True), sa.ForeignKey('accounts.id'), nullable=True
+        PGUUID(as_uuid=True), sa.ForeignKey("accounts.id"), nullable=True
     )
     from_address: Optional[str] = sa.Column(sa.String(255), nullable=True)  # Crypto address
     to_address: Optional[str] = sa.Column(sa.String(255), nullable=True)  # Crypto address
 
     # Metadata
     notes: Optional[str] = sa.Column(sa.Text, nullable=True)
-    meta_data: Dict = sa.Column(JSONB, default=dict)
+    meta_data: dict = sa.Column(JSONB, default=dict)
 
     # Audit fields
     created_at: datetime = sa.Column(
@@ -257,10 +259,10 @@ class Transaction(Base):
     is_verified: bool = sa.Column(sa.Boolean, default=False)  # Verified against exchange API
 
     __table_args__ = (
-        sa.UniqueConstraint('external_id', 'account_id', name='uq_tx_external_account'),
-        sa.Index('idx_transactions_symbol_type', 'symbol', 'tx_type'),
-        sa.Index('idx_transactions_occurred', 'occurred_at'),
-        sa.Index('idx_transactions_tax_year', 'tax_year'),
+        sa.UniqueConstraint("external_id", "account_id", name="uq_tx_external_account"),
+        sa.Index("idx_transactions_symbol_type", "symbol", "tx_type"),
+        sa.Index("idx_transactions_occurred", "occurred_at"),
+        sa.Index("idx_transactions_tax_year", "tax_year"),
     )
 
     @hybrid_property
@@ -276,7 +278,7 @@ class Transaction(Base):
         elif self.tx_type == TransactionType.SELL:
             # Cost basis comes from closed lots
             # This is calculated during lot closure
-            return self.meta_data.get('cost_basis_from_lots', Decimal("0"))
+            return self.meta_data.get("cost_basis_from_lots", Decimal("0"))
         else:
             return Decimal("0")
 
@@ -295,7 +297,7 @@ class Lot(Base):
     id: UUID = sa.Column(PGUUID(as_uuid=True), primary_key=True, default=uuid4)
 
     # Account
-    account_id: UUID = sa.Column(PGUUID(as_uuid=True), sa.ForeignKey('accounts.id'), nullable=False)
+    account_id: UUID = sa.Column(PGUUID(as_uuid=True), sa.ForeignKey("accounts.id"), nullable=False)
     account = sa.orm.relationship("Account", back_populates="lots")
 
     # Asset
@@ -304,7 +306,7 @@ class Lot(Base):
 
     # Original purchase (cost basis)
     opening_transaction_id: UUID = sa.Column(
-        PGUUID(as_uuid=True), sa.ForeignKey('transactions.id'), nullable=False
+        PGUUID(as_uuid=True), sa.ForeignKey("transactions.id"), nullable=False
     )
     quantity_opened: Decimal = sa.Column(sa.Numeric(36, 18), nullable=False)
     cost_basis_open: Decimal = sa.Column(
@@ -335,14 +337,14 @@ class Lot(Base):
     )
 
     # Metadata
-    meta_data: Dict = sa.Column(JSONB, default=dict)
+    meta_data: dict = sa.Column(JSONB, default=dict)
 
     __table_args__ = (
-        sa.Index('idx_lots_symbol_status', 'symbol', 'status'),
-        sa.Index('idx_lots_opened', 'opened_at'),
-        sa.CheckConstraint('quantity_remaining >= 0', name='ck_lot_remaining_positive'),
+        sa.Index("idx_lots_symbol_status", "symbol", "status"),
+        sa.Index("idx_lots_opened", "opened_at"),
+        sa.CheckConstraint("quantity_remaining >= 0", name="ck_lot_remaining_positive"),
         sa.CheckConstraint(
-            'quantity_remaining <= quantity_opened', name='ck_lot_remaining_le_opened'
+            "quantity_remaining <= quantity_opened", name="ck_lot_remaining_le_opened"
         ),
     )
 
@@ -367,7 +369,7 @@ class BalanceSnapshot(Base):
     id: UUID = sa.Column(PGUUID(as_uuid=True), primary_key=True, default=uuid4)
 
     # Account
-    account_id: UUID = sa.Column(PGUUID(as_uuid=True), sa.ForeignKey('accounts.id'), nullable=False)
+    account_id: UUID = sa.Column(PGUUID(as_uuid=True), sa.ForeignKey("accounts.id"), nullable=False)
     account = sa.orm.relationship("Account", back_populates="balances")
 
     # Snapshot details
@@ -385,8 +387,8 @@ class BalanceSnapshot(Base):
     source: str = sa.Column(sa.String(50), nullable=False)  # "api", "manual", "estimated"
 
     __table_args__ = (
-        sa.Index('idx_balances_account_captured', 'account_id', 'captured_at'),
-        sa.Index('idx_balances_annual', 'account_id', sa.text("date_trunc('year', captured_at)")),
+        sa.Index("idx_balances_account_captured", "account_id", "captured_at"),
+        sa.Index("idx_balances_annual", "account_id", sa.text("date_trunc('year', captured_at)")),
     )
 
 
@@ -410,7 +412,7 @@ class TaxReport(Base):
     tax_year: int = sa.Column(sa.Integer, nullable=False)
 
     # Report data (JSONB for flexibility)
-    report_data: Dict = sa.Column(JSONB, nullable=False)
+    report_data: dict = sa.Column(JSONB, nullable=False)
 
     # Summary fields (for easy querying)
     total_holdings_eur: Decimal = sa.Column(sa.Numeric(36, 18), nullable=False)
@@ -434,13 +436,13 @@ class TaxReport(Base):
 
     __table_args__ = (
         sa.UniqueConstraint(
-            'user_id',
-            'report_type',
-            'tax_year',
-            'is_amended',
-            name='uq_tax_report_user_type_year_amended',
+            "user_id",
+            "report_type",
+            "tax_year",
+            "is_amended",
+            name="uq_tax_report_user_type_year_amended",
         ),
-        sa.Index('idx_tax_reports_user_year', 'user_id', 'tax_year'),
+        sa.Index("idx_tax_reports_user_year", "user_id", "tax_year"),
     )
 
 
@@ -463,7 +465,7 @@ class FIFOCalculation:
     symbol: str
     sell_transaction_id: UUID
     quantity_sold: Decimal
-    lots_closed: List[UUID]  # Lot IDs closed
+    lots_closed: list[UUID]  # Lot IDs closed
     cost_basis: Decimal
     proceeds: Decimal
     gain: Decimal
@@ -637,11 +639,11 @@ class FIFOProcessor:
         )
 
         # Link transaction to lots
-        transaction.meta_data['fifo_calculation'] = {
-            'lots_closed': lots_closed,
-            'cost_basis': str(total_cost_basis),
-            'gain': str(gain),
-            'loss': str(loss),
+        transaction.meta_data["fifo_calculation"] = {
+            "lots_closed": lots_closed,
+            "cost_basis": str(total_cost_basis),
+            "gain": str(gain),
+            "loss": str(loss),
         }
 
         logger.debug(
@@ -758,7 +760,7 @@ class Modelo721Generator:
                 self.session.query(BalanceSnapshot)
                 .filter(
                     BalanceSnapshot.account_id == account.id,
-                    sa.extract('year', BalanceSnapshot.captured_at) == year,
+                    sa.extract("year", BalanceSnapshot.captured_at) == year,
                 )
                 .order_by(sa.desc(BalanceSnapshot.captured_at))
                 .first()

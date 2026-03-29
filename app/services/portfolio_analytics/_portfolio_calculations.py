@@ -6,7 +6,7 @@ including concentration metrics, diversification scores, and allocation analysis
 """
 
 from decimal import Decimal
-from typing import TYPE_CHECKING, List
+from typing import TYPE_CHECKING, Optional
 
 if TYPE_CHECKING:
     from app.domain.models.portfolio import Portfolio
@@ -135,7 +135,7 @@ class PortfolioCalculations:
 
         return (portfolio.cash_balance / total_value) * 100
 
-    def get_top_holdings(self, portfolio: "Portfolio", limit: int = 10) -> List[dict]:
+    def get_top_holdings(self, portfolio: "Portfolio", limit: int = 10) -> list[dict]:
         """
         Get top holdings by market value.
 
@@ -227,7 +227,7 @@ class PortfolioCalculations:
         return min(cash_ratio * 100, Decimal("100"))
 
     def calculate_diversification_score(
-        self, portfolio: "Portfolio", well_diversified_threshold: Decimal = None
+        self, portfolio: "Portfolio", well_diversified_threshold: Optional[Decimal] = None
     ) -> Decimal:
         """
         Calculate diversification score (0-100).

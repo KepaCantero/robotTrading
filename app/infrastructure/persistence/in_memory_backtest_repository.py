@@ -8,7 +8,6 @@ and development. Production implementations would use databases.
 from __future__ import annotations
 
 import logging
-from typing import Dict, List, Optional
 
 from ...domain.entities.backtest import Backtest, BacktestStatus, BacktestType
 from ...domain.repositories.backtest_repository import BacktestRepository
@@ -26,7 +25,7 @@ class InMemoryBacktestRepository(BacktestRepository):
 
     def __init__(self):
         """Initialize in-memory repository."""
-        self._backtests: Dict[str, Backtest] = {}
+        self._backtests: dict[str, Backtest] = {}
 
     def save(self, backtest: Backtest) -> None:
         """
@@ -38,7 +37,7 @@ class InMemoryBacktestRepository(BacktestRepository):
         self._backtests[backtest.backtest_id] = backtest
         logger.debug(f"Saved backtest: {backtest.backtest_id}")
 
-    def find_by_id(self, backtest_id: str) -> Optional[Backtest]:
+    def find_by_id(self, backtest_id: str) -> Backtest | None:
         """
         Find a backtest by ID.
 
@@ -50,7 +49,7 @@ class InMemoryBacktestRepository(BacktestRepository):
         """
         return self._backtests.get(backtest_id)
 
-    def find_by_status(self, status: BacktestStatus) -> List[Backtest]:
+    def find_by_status(self, status: BacktestStatus) -> list[Backtest]:
         """
         Find backtests by status.
 
@@ -62,7 +61,7 @@ class InMemoryBacktestRepository(BacktestRepository):
         """
         return [bt for bt in self._backtests.values() if bt.status == status]
 
-    def find_by_type(self, backtest_type: BacktestType) -> List[Backtest]:
+    def find_by_type(self, backtest_type: BacktestType) -> list[Backtest]:
         """
         Find backtests by type.
 
@@ -74,7 +73,7 @@ class InMemoryBacktestRepository(BacktestRepository):
         """
         return [bt for bt in self._backtests.values() if bt.config.backtest_type == backtest_type]
 
-    def find_all(self, limit: int = 100, offset: int = 0) -> List[Backtest]:
+    def find_all(self, limit: int = 100, offset: int = 0) -> list[Backtest]:
         """
         Find all backtests with pagination.
 
@@ -118,7 +117,7 @@ class InMemoryBacktestRepository(BacktestRepository):
         """
         return sum(1 for bt in self._backtests.values() if bt.status == status)
 
-    def get_recent_completed(self, limit: int = 10) -> List[Backtest]:
+    def get_recent_completed(self, limit: int = 10) -> list[Backtest]:
         """
         Get recently completed backtests.
 

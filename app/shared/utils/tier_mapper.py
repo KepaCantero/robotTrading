@@ -38,7 +38,7 @@ Usage:
 import logging
 from decimal import Decimal
 from enum import Enum
-from typing import Dict, Optional, Tuple
+from typing import ClassVar, Optional
 
 # Import centralized configuration (REQUIRED - no fallbacks)
 from app.shared.config.strategy_config_loader import get_strategy_config
@@ -69,7 +69,7 @@ class TierMapper:
 
     # Capital thresholds (EUR) - loaded from config or using defaults
     # These will be updated on first access if config is available
-    THRESHOLDS: Dict[str, Decimal] = {
+    THRESHOLDS: ClassVar[dict[str, Decimal]] = {
         "micro": Decimal("0"),  # Not used for micro, but defined for completeness
         "small": Decimal("15000"),  # €15k - €50k
         "medium": Decimal("50000"),  # €50k - €250k
@@ -86,9 +86,9 @@ class TierMapper:
                 if thresholds:
                     cls.THRESHOLDS = {
                         "micro": Decimal("0"),
-                        "small": Decimal(str(thresholds.get('small', 15000))),
-                        "medium": Decimal(str(thresholds.get('medium', 50000))),
-                        "large": Decimal(str(thresholds.get('large', 250000))),
+                        "small": Decimal(str(thresholds.get("small", 15000))),
+                        "medium": Decimal(str(thresholds.get("medium", 50000))),
+                        "large": Decimal(str(thresholds.get("large", 250000))),
                         "loaded": Decimal("1"),  # Mark as loaded
                     }
                     logger.info(f"Tier thresholds loaded from config: {cls.THRESHOLDS}")
@@ -97,14 +97,14 @@ class TierMapper:
                 raise
 
     @classmethod
-    def get_thresholds(cls) -> Dict[str, Decimal]:
+    def get_thresholds(cls) -> dict[str, Decimal]:
         """Get thresholds, loading from config if needed."""
         cls._load_thresholds_from_config()
         return {k: v for k, v in cls.THRESHOLDS.items() if k != "loaded"}
 
     # Mapping from capital_flag (3-tier) to YAML (4-tier)
     # Since capital_flag doesn't have "micro", we map based on capital ranges
-    CAPITAL_FLAG_TO_YAML: Dict[str, str] = {
+    CAPITAL_FLAG_TO_YAML: ClassVar[dict[str, str]] = {
         "small": "small",  # €0-€50k in capital_flag maps to small in YAML (€15k-€50k)
         # Note: This misses the micro tier (<€15k)
         "medium": "medium",  # €50k-€250k
@@ -112,7 +112,7 @@ class TierMapper:
     }
 
     # Mapping from YAML (4-tier) to Spanish (3-tier)
-    YAML_TO_SPANISH: Dict[str, str] = {
+    YAML_TO_SPANISH: ClassVar[dict[str, str]] = {
         "micro": "bajo",  # <€15k -> bajo
         "small": "bajo",  # €15k-€50k -> bajo
         "medium": "medio",  # €50k-€250k -> medio
@@ -121,28 +121,28 @@ class TierMapper:
 
     # Mapping from Spanish (3-tier) to YAML (4-tier)
     # Use the more specific tier in the range
-    SPANISH_TO_YAML: Dict[str, str] = {
+    SPANISH_TO_YAML: ClassVar[dict[str, str]] = {
         "bajo": "small",  # bajo -> small (medium tier in bajo range)
         "medio": "medium",  # medio -> medium
         "alto": "large",  # alto -> large
     }
 
     # Mapping from capital_flag (3-tier) to Spanish (3-tier)
-    CAPITAL_FLAG_TO_SPANISH: Dict[str, str] = {
+    CAPITAL_FLAG_TO_SPANISH: ClassVar[dict[str, str]] = {
         "small": "bajo",
         "medium": "medio",
         "large": "alto",
     }
 
     # Reverse mapping for validation
-    SPANISH_TO_CAPITAL_FLAG: Dict[str, str] = {
+    SPANISH_TO_CAPITAL_FLAG: ClassVar[dict[str, str]] = {
         "bajo": "small",
         "medio": "medium",
         "alto": "large",
     }
 
     # All valid tier names by system
-    VALID_TIERS: Dict[TierSystem, Tuple[str, ...]] = {
+    VALID_TIERS: ClassVar[dict[TierSystem, tuple[str, ...]]] = {
         TierSystem.CAPITAL_FLAG: ("small", "medium", "large"),
         TierSystem.YAML: ("micro", "small", "medium", "large"),
         TierSystem.SPANISH: ("bajo", "medio", "alto"),
@@ -376,8 +376,7 @@ class TierMapper:
                 return system
 
         raise ValueError(
-            f"Tier '{tier}' not recognized in any system. "
-            f"Valid tiers: {cls.list_all_valid_tiers()}"
+            f"Tier '{tier}' not recognized in any system. Valid tiers: {cls.list_all_valid_tiers()}"
         )
 
     @classmethod
@@ -404,7 +403,7 @@ class TierMapper:
         return tier in cls.VALID_TIERS.get(system, ())
 
     @classmethod
-    def list_all_valid_tiers(cls) -> Dict[str, Tuple[str, ...]]:
+    def list_all_valid_tiers(cls) -> dict[str, tuple[str, ...]]:
         """
         List all valid tier names by system.
 
@@ -422,7 +421,7 @@ class TierMapper:
         return {system.value: tiers for system, tiers in cls.VALID_TIERS.items()}
 
     @classmethod
-    def validate_consistency(cls) -> Tuple[bool, list[str]]:
+    def validate_consistency(cls) -> tuple[bool, list[str]]:
         """
         Validate tier mapping consistency across all systems.
 
@@ -452,7 +451,11 @@ class TierMapper:
 
         # Check YAML to Spanish mappings
         for yaml_tier, spanish_tier in cls.YAML_TO_SPANISH.items():
-            if spanish_tier in cls.SPANISH_TO_YAML and cls.SPANISH_TO_YAML[spanish_tier] != yaml_tier and not (yaml_tier == "micro" and spanish_tier == "bajo"):
+            if (
+                spanish_tier in cls.SPANISH_TO_YAML
+                and cls.SPANISH_TO_YAML[spanish_tier] != yaml_tier
+                and not (yaml_tier == "micro" and spanish_tier == "bajo")
+            ):
                 # This is expected for bajo -> small (not micro)
                 warnings.append(
                     f"YAML-Spanish mapping inconsistency: "
@@ -466,7 +469,7 @@ class TierMapper:
             if threshold_values[i] >= threshold_values[i + 1]:
                 warnings.append(
                     f"Capital thresholds not in order: "
-                    f"{threshold_values[i]} >= {threshold_values[i+1]}"
+                    f"{threshold_values[i]} >= {threshold_values[i + 1]}"
                 )
 
         is_valid = len(warnings) == 0
@@ -569,7 +572,7 @@ def map_profile_tier_to_config(capital_flag: str, target_format: str = "yaml") -
         return capital_flag
 
 
-def validate_tier_mapping() -> Tuple[bool, list[str]]:
+def validate_tier_mapping() -> tuple[bool, list[str]]:
     """
     Validate tier mapping consistency and log warnings.
 

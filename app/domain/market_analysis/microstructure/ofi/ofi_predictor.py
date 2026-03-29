@@ -11,11 +11,11 @@ price movements, following the methodology in:
 - Aldridge, I. (2013) "High-Frequency Trading"
 
 The predictor implements multiple approaches:
-1. Linear regression: OFI → future returns
-2. Logistic regression: OFI → direction (up/down)
-3. Threshold-based: OFI > threshold → signal
-4. Momentum-based: OFI momentum → direction
-5. Mean reversion: Extreme OFI → reversal
+1. Linear regression: OFI -> future returns
+2. Logistic regression: OFI -> direction (up/down)
+3. Threshold-based: OFI > threshold -> signal
+4. Momentum-based: OFI momentum -> direction
+5. Mean reversion: Extreme OFI -> reversal
 """
 
 import logging
@@ -56,9 +56,9 @@ class OFIPredictor:
     to generate directional predictions with confidence scores.
 
     Key relationships:
-    - Positive OFI → Price increase (buying pressure)
-    - Negative OFI → Price decrease (selling pressure)
-    - OFI magnitude → Strength of prediction (confidence)
+    - Positive OFI -> Price increase (buying pressure)
+    - Negative OFI -> Price decrease (selling pressure)
+    - OFI magnitude -> Strength of prediction (confidence)
 
     Example:
         >>> predictor = OFIPredictor(config=OFIConfig())
@@ -387,7 +387,7 @@ class OFIPredictor:
         Train OFI prediction model.
 
         Simple linear regression:
-            returns[t] = α + β × OFI[t] + ε
+            returns[t] = alpha + beta * OFI[t] + epsilon
 
         Args:
             ofi_history: Historical OFI values

@@ -9,10 +9,16 @@ from __future__ import annotations
 
 import logging
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query
-from requests.exceptions import ConnectionError, HTTPError, RequestException
+from requests.exceptions import (
+    ConnectionError as RequestsConnectionError,
+)
+from requests.exceptions import (
+    HTTPError,
+    RequestException,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -40,7 +46,7 @@ MAX_50 = 50
 router = APIRouter(prefix="/momentum", tags=["momentum"])
 
 
-@router.get("/", response_model=Dict[str, Any])
+@router.get("/", response_model=dict[str, Any])
 async def get_momentum_overview(
     service: MomentumAnalysisService = Depends(get_momentum_analysis_service),
 ):
@@ -68,19 +74,19 @@ async def get_momentum_overview(
             "timestamp": datetime.utcnow(),
         }
 
-    except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
+    except (RequestsConnectionError, TimeoutError, HTTPError, RequestException) as e:
         logger.error(
             "Error getting momentum overview",
             extra={"error": str(e), "error_type": type(e).__name__},
         )
         raise HTTPException(
-            status_code=DEFAULT_VALUE_500, detail=f"Error getting momentum overview: {str(e)}"
-        )
+            status_code=DEFAULT_VALUE_500, detail=f"Error getting momentum overview: {e!s}"
+        ) from e
 
 
-@router.post("/analyze", response_model=Dict[str, Any])
+@router.post("/analyze", response_model=dict[str, Any])
 async def analyze_asset_momentum_post(
-    request_data: Dict[str, Any],
+    request_data: dict[str, Any],
     service: MomentumAnalysisService = Depends(get_momentum_analysis_service),
 ):
     """Analyze momentum for a specific asset via POST request."""
@@ -174,17 +180,17 @@ async def analyze_asset_momentum_post(
             "timestamp": datetime.utcnow(),
         }
 
-    except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
+    except (RequestsConnectionError, TimeoutError, HTTPError, RequestException) as e:
         logger.error(
             "Error analyzing asset momentum",
             extra={"error": str(e), "error_type": type(e).__name__},
         )
         raise HTTPException(
-            status_code=DEFAULT_VALUE_500, detail=f"Error analyzing momentum for {symbol}: {str(e)}"
-        )
+            status_code=DEFAULT_VALUE_500, detail=f"Error analyzing momentum for {symbol}: {e!s}"
+        ) from e
 
 
-@router.get("/analyze/{symbol}", response_model=Dict[str, Any])
+@router.get("/analyze/{symbol}", response_model=dict[str, Any])
 async def analyze_asset_momentum(
     symbol: str,
     timeframe: Timeframe = Query(Timeframe.DAILY, description="Analysis timeframe"),
@@ -245,17 +251,17 @@ async def analyze_asset_momentum(
             "timestamp": datetime.utcnow(),
         }
 
-    except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
+    except (RequestsConnectionError, TimeoutError, HTTPError, RequestException) as e:
         logger.error(
             "Error analyzing asset momentum",
             extra={"symbol": symbol, "error": str(e), "error_type": type(e).__name__},
         )
         raise HTTPException(
-            status_code=DEFAULT_VALUE_500, detail=f"Error analyzing momentum for {symbol}: {str(e)}"
-        )
+            status_code=DEFAULT_VALUE_500, detail=f"Error analyzing momentum for {symbol}: {e!s}"
+        ) from e
 
 
-@router.get("/signals/{symbol}", response_model=Dict[str, Any])
+@router.get("/signals/{symbol}", response_model=dict[str, Any])
 async def get_momentum_signals_for_symbol(
     symbol: str,
     service: MomentumAnalysisService = Depends(get_momentum_analysis_service),
@@ -264,15 +270,15 @@ async def get_momentum_signals_for_symbol(
     logger.debug("Getting momentum signals for symbol", extra={"symbol": symbol})
     try:
         signals = await service.get_momentum_signals_for_symbol(symbol.upper())
-    except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
+    except (RequestsConnectionError, TimeoutError, HTTPError, RequestException) as e:
         logger.error(
             "Error getting momentum signals",
             extra={"symbol": symbol, "error": str(e), "error_type": type(e).__name__},
         )
         raise HTTPException(
             status_code=DEFAULT_VALUE_500,
-            detail=f"Error getting momentum signals for {symbol}: {str(e)}",
-        )
+            detail=f"Error getting momentum signals for {symbol}: {e!s}",
+        ) from e
 
     if not signals:
         logger.warning("No momentum signals found for symbol", extra={"symbol": symbol})
@@ -310,12 +316,10 @@ async def get_momentum_signals_for_symbol(
     }
 
 
-@router.get("/signals", response_model=Dict[str, Any])
+@router.get("/signals", response_model=dict[str, Any])
 async def get_momentum_signals(
-    momentum_types: Optional[List[MomentumType]] = Query(
-        None, description="Filter by momentum types"
-    ),
-    timeframes: Optional[List[Timeframe]] = Query(None, description="Filter by timeframes"),
+    momentum_types: list[MomentumType] | None = Query(None, description="Filter by momentum types"),
+    timeframes: list[Timeframe] | None = Query(None, description="Filter by timeframes"),
     min_strength: float = Query(50.0, ge=0, le=100, description="Minimum signal strength"),
     min_confidence: float = Query(60.0, ge=0, le=100, description="Minimum signal confidence"),
     active_only: bool = Query(True, description="Only active signals"),
@@ -383,13 +387,13 @@ async def get_momentum_signals(
             "timestamp": datetime.utcnow(),
         }
 
-    except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
+    except (RequestsConnectionError, TimeoutError, HTTPError, RequestException) as e:
         raise HTTPException(
-            status_code=DEFAULT_VALUE_500, detail=f"Error getting momentum signals: {str(e)}"
-        )
+            status_code=DEFAULT_VALUE_500, detail=f"Error getting momentum signals: {e!s}"
+        ) from e
 
 
-@router.get("/signals/top", response_model=Dict[str, Any])
+@router.get("/signals/top", response_model=dict[str, Any])
 async def get_top_momentum_signals(
     limit: int = Query(10, ge=1, le=MAX_50, description="Number of top signals to return"),
     service: MomentumAnalysisService = Depends(get_momentum_analysis_service),
@@ -406,15 +410,15 @@ async def get_top_momentum_signals(
             "timestamp": datetime.utcnow(),
         }
 
-    except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
+    except (RequestsConnectionError, TimeoutError, HTTPError, RequestException) as e:
         raise HTTPException(
-            status_code=DEFAULT_VALUE_500, detail=f"Error getting top momentum signals: {str(e)}"
-        )
+            status_code=DEFAULT_VALUE_500, detail=f"Error getting top momentum signals: {e!s}"
+        ) from e
 
 
-@router.post("/strategies", response_model=Dict[str, Any])
+@router.post("/strategies", response_model=dict[str, Any])
 async def create_momentum_strategy(
-    strategy_data: Dict[str, Any],
+    strategy_data: dict[str, Any],
     service: MomentumAnalysisService = Depends(get_momentum_analysis_service),
 ):
     """Create a new momentum strategy."""
@@ -534,17 +538,17 @@ async def create_momentum_strategy(
             "timestamp": datetime.utcnow(),
         }
 
-    except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
+    except (RequestsConnectionError, TimeoutError, HTTPError, RequestException) as e:
         logger.error(
             "Error creating momentum strategy",
             extra={"error": str(e), "error_type": type(e).__name__},
         )
         raise HTTPException(
-            status_code=DEFAULT_VALUE_500, detail=f"Error creating momentum strategy: {str(e)}"
-        )
+            status_code=DEFAULT_VALUE_500, detail=f"Error creating momentum strategy: {e!s}"
+        ) from e
 
 
-@router.get("/strategies/{strategy_name}", response_model=Dict[str, Any])
+@router.get("/strategies/{strategy_name}", response_model=dict[str, Any])
 async def get_momentum_strategy(
     strategy_name: str,
     service: MomentumAnalysisService = Depends(get_momentum_analysis_service),
@@ -584,16 +588,16 @@ async def get_momentum_strategy(
             "timestamp": datetime.utcnow(),
         }
 
-    except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
+    except (RequestsConnectionError, TimeoutError, HTTPError, RequestException) as e:
         raise HTTPException(
-            status_code=DEFAULT_VALUE_500, detail=f"Error getting momentum strategy: {str(e)}"
-        )
+            status_code=DEFAULT_VALUE_500, detail=f"Error getting momentum strategy: {e!s}"
+        ) from e
 
 
-@router.put("/strategies/{strategy_name}", response_model=Dict[str, Any])
+@router.put("/strategies/{strategy_name}", response_model=dict[str, Any])
 async def update_momentum_strategy(
     strategy_name: str,
-    strategy_data: Dict[str, Any],
+    strategy_data: dict[str, Any],
     service: MomentumAnalysisService = Depends(get_momentum_analysis_service),
 ):
     """Update a momentum strategy."""
@@ -655,13 +659,13 @@ async def update_momentum_strategy(
             "timestamp": datetime.utcnow(),
         }
 
-    except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
+    except (RequestsConnectionError, TimeoutError, HTTPError, RequestException) as e:
         raise HTTPException(
-            status_code=DEFAULT_VALUE_500, detail=f"Error updating momentum strategy: {str(e)}"
-        )
+            status_code=DEFAULT_VALUE_500, detail=f"Error updating momentum strategy: {e!s}"
+        ) from e
 
 
-@router.delete("/strategies/{strategy_name}", response_model=Dict[str, Any])
+@router.delete("/strategies/{strategy_name}", response_model=dict[str, Any])
 async def delete_momentum_strategy(
     strategy_name: str,
     service: MomentumAnalysisService = Depends(get_momentum_analysis_service),
@@ -692,17 +696,17 @@ async def delete_momentum_strategy(
             "timestamp": datetime.utcnow(),
         }
 
-    except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
+    except (RequestsConnectionError, TimeoutError, HTTPError, RequestException) as e:
         logger.error(
             "Error deleting momentum strategy",
             extra={"strategy_name": strategy_name, "error": str(e), "error_type": type(e).__name__},
         )
         raise HTTPException(
-            status_code=DEFAULT_VALUE_500, detail=f"Error deleting momentum strategy: {str(e)}"
-        )
+            status_code=DEFAULT_VALUE_500, detail=f"Error deleting momentum strategy: {e!s}"
+        ) from e
 
 
-@router.get("/strategies", response_model=Dict[str, Any])
+@router.get("/strategies", response_model=dict[str, Any])
 async def get_momentum_strategies(
     service: MomentumAnalysisService = Depends(get_momentum_analysis_service),
 ):
@@ -742,13 +746,13 @@ async def get_momentum_strategies(
             "timestamp": datetime.utcnow(),
         }
 
-    except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
+    except (RequestsConnectionError, TimeoutError, HTTPError, RequestException) as e:
         raise HTTPException(
-            status_code=DEFAULT_VALUE_500, detail=f"Error getting momentum strategies: {str(e)}"
-        )
+            status_code=DEFAULT_VALUE_500, detail=f"Error getting momentum strategies: {e!s}"
+        ) from e
 
 
-@router.get("/strategies/{strategy_name}/signals", response_model=Dict[str, Any])
+@router.get("/strategies/{strategy_name}/signals", response_model=dict[str, Any])
 async def get_strategy_signals(
     strategy_name: str,
     service: MomentumAnalysisService = Depends(get_momentum_analysis_service),
@@ -792,16 +796,16 @@ async def get_strategy_signals(
             "timestamp": datetime.utcnow(),
         }
 
-    except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
+    except (RequestsConnectionError, TimeoutError, HTTPError, RequestException) as e:
         raise HTTPException(
             status_code=DEFAULT_VALUE_500,
-            detail=f"Error getting signals for strategy {strategy_name}: {str(e)}",
-        )
+            detail=f"Error getting signals for strategy {strategy_name}: {e!s}",
+        ) from e
 
 
-@router.post("/analyze/batch", response_model=Dict[str, Any])
+@router.post("/analyze/batch", response_model=dict[str, Any])
 async def analyze_multiple_assets(
-    symbols: List[str],
+    symbols: list[str],
     background_tasks: BackgroundTasks,
     timeframe: Timeframe = Query(Timeframe.DAILY, description="Analysis timeframe"),
     service: MomentumAnalysisService = Depends(get_momentum_analysis_service),
@@ -835,7 +839,7 @@ async def analyze_multiple_assets(
                         "volatility_level": analysis.volatility_level,
                     }
                 )
-            except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
+            except (RequestsConnectionError, TimeoutError, HTTPError, RequestException) as e:
                 errors.append({"symbol": symbol, "error": str(e)})
 
         logger.info(
@@ -857,17 +861,17 @@ async def analyze_multiple_assets(
             "timestamp": datetime.utcnow(),
         }
 
-    except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
+    except (RequestsConnectionError, TimeoutError, HTTPError, RequestException) as e:
         logger.error(
             "Error analyzing multiple assets",
             extra={"error": str(e), "error_type": type(e).__name__},
         )
         raise HTTPException(
-            status_code=DEFAULT_VALUE_500, detail=f"Error analyzing multiple assets: {str(e)}"
-        )
+            status_code=DEFAULT_VALUE_500, detail=f"Error analyzing multiple assets: {e!s}"
+        ) from e
 
 
-@router.get("/indicators/{symbol}", response_model=Dict[str, Any])
+@router.get("/indicators/{symbol}", response_model=dict[str, Any])
 async def get_technical_indicators(
     symbol: str,
     timeframe: Timeframe = Query(Timeframe.DAILY, description="Indicator timeframe"),
@@ -876,11 +880,11 @@ async def get_technical_indicators(
     """Get technical indicators for a specific asset."""
     try:
         analysis = await service.analyze_asset_momentum(symbol.upper(), timeframe)
-    except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
+    except (RequestsConnectionError, TimeoutError, HTTPError, RequestException) as e:
         raise HTTPException(
             status_code=DEFAULT_VALUE_500,
-            detail=f"Error getting technical indicators for {symbol}: {str(e)}",
-        )
+            detail=f"Error getting technical indicators for {symbol}: {e!s}",
+        ) from e
 
     if not analysis:
         raise HTTPException(
@@ -915,7 +919,7 @@ async def get_technical_indicators(
     }
 
 
-@router.get("/health", response_model=Dict[str, Any])
+@router.get("/health", response_model=dict[str, Any])
 async def momentum_health_check():
     """Health check endpoint for momentum service."""
     logger.debug("Health check requested")
@@ -927,14 +931,14 @@ async def momentum_health_check():
             "timestamp": datetime.utcnow(),
         }
 
-    except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
+    except (RequestsConnectionError, TimeoutError, HTTPError, RequestException) as e:
         logger.error("Momentum health check failed", extra={"error": str(e)})
         raise HTTPException(
-            status_code=DEFAULT_VALUE_500, detail=f"Momentum health check failed: {str(e)}"
-        )
+            status_code=DEFAULT_VALUE_500, detail=f"Momentum health check failed: {e!s}"
+        ) from e
 
 
-@router.get("/stats", response_model=Dict[str, Any])
+@router.get("/stats", response_model=dict[str, Any])
 async def get_momentum_stats(
     service: MomentumAnalysisService = Depends(get_momentum_analysis_service),
 ):
@@ -949,7 +953,7 @@ async def get_momentum_stats(
         expired_signals = total_signals - active_signals
 
         # Signal type distribution
-        signal_types: Dict[str, int] = {}
+        signal_types: dict[str, int] = {}
         for signal in all_signals:
             signal_type = signal.signal_type.value
             signal_types[signal_type] = signal_types.get(signal_type, 0) + 1
@@ -991,13 +995,13 @@ async def get_momentum_stats(
             "timestamp": datetime.utcnow(),
         }
 
-    except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
+    except (RequestsConnectionError, TimeoutError, HTTPError, RequestException) as e:
         raise HTTPException(
-            status_code=DEFAULT_VALUE_500, detail=f"Error getting momentum stats: {str(e)}"
-        )
+            status_code=DEFAULT_VALUE_500, detail=f"Error getting momentum stats: {e!s}"
+        ) from e
 
 
-@router.get("/analyses", response_model=Dict[str, Any])
+@router.get("/analyses", response_model=dict[str, Any])
 async def get_momentum_analyses(
     service: MomentumAnalysisService = Depends(get_momentum_analysis_service),
 ):
@@ -1058,13 +1062,13 @@ async def get_momentum_analyses(
             "timestamp": datetime.utcnow(),
         }
 
-    except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
+    except (RequestsConnectionError, TimeoutError, HTTPError, RequestException) as e:
         raise HTTPException(
-            status_code=DEFAULT_VALUE_500, detail=f"Error getting momentum analyses: {str(e)}"
-        )
+            status_code=DEFAULT_VALUE_500, detail=f"Error getting momentum analyses: {e!s}"
+        ) from e
 
 
-@router.get("/analyses/{analysis_id}", response_model=Dict[str, Any])
+@router.get("/analyses/{analysis_id}", response_model=dict[str, Any])
 async def get_momentum_analysis(
     analysis_id: str,
     service: MomentumAnalysisService = Depends(get_momentum_analysis_service),
@@ -1124,13 +1128,13 @@ async def get_momentum_analysis(
             "timestamp": datetime.utcnow(),
         }
 
-    except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
+    except (RequestsConnectionError, TimeoutError, HTTPError, RequestException) as e:
         raise HTTPException(
-            status_code=DEFAULT_VALUE_500, detail=f"Error getting momentum analysis: {str(e)}"
-        )
+            status_code=DEFAULT_VALUE_500, detail=f"Error getting momentum analysis: {e!s}"
+        ) from e
 
 
-@router.delete("/analyses/{analysis_id}", response_model=Dict[str, Any])
+@router.delete("/analyses/{analysis_id}", response_model=dict[str, Any])
 async def delete_momentum_analysis(
     analysis_id: str,
     service: MomentumAnalysisService = Depends(get_momentum_analysis_service),
@@ -1158,7 +1162,7 @@ async def delete_momentum_analysis(
             "timestamp": datetime.utcnow(),
         }
 
-    except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
+    except (RequestsConnectionError, TimeoutError, HTTPError, RequestException) as e:
         raise HTTPException(
-            status_code=DEFAULT_VALUE_500, detail=f"Error deleting momentum analysis: {str(e)}"
-        )
+            status_code=DEFAULT_VALUE_500, detail=f"Error deleting momentum analysis: {e!s}"
+        ) from e

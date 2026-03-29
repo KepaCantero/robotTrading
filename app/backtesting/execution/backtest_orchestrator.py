@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import logging
 from decimal import Decimal
-from typing import Any, Dict, List
+from typing import Any, ClassVar
 
 from ...domain.value_objects.backtest_config import BacktestConfigValue
 from ...domain.value_objects.backtest_result import BacktestResultValue
@@ -26,18 +26,18 @@ class BacktestOrchestrator:
     """
 
     # Strategy name mapping from YAML to factory names
-    STRATEGY_NAME_MAP = {
-        'momentum_modular': 'modular_momentum',
-        'mean_reversion_modular': 'mean_reversion',
-        'pairs_trading_modular': 'pairs_trading',
-        'dividend_screener': 'modular_momentum',
-        'portfolio_optimization': 'modular_momentum',
-        'dividend_predictor': 'modular_momentum',
-        'sector_rotation': 'momentum',
-        'ml_ensemble': 'modular_momentum',
+    STRATEGY_NAME_MAP: ClassVar[dict] = {
+        "momentum_modular": "modular_momentum",
+        "mean_reversion_modular": "mean_reversion",
+        "pairs_trading_modular": "pairs_trading",
+        "dividend_screener": "modular_momentum",
+        "portfolio_optimization": "modular_momentum",
+        "dividend_predictor": "modular_momentum",
+        "sector_rotation": "momentum",
+        "ml_ensemble": "modular_momentum",
     }
 
-    def __init__(self, config: Dict[str, Any]):
+    def __init__(self, config: dict[str, Any]):
         """
         Initialize orchestrator with configuration.
 
@@ -46,9 +46,9 @@ class BacktestOrchestrator:
         """
         self.config = config
         self.backtest_config = self._load_backtest_config(config)
-        self.output_dir = config.get('output_directory', 'results')
-        self.parallel_enabled = config.get('parallelization', {}).get('enabled', True)
-        self.max_workers = config.get('parallelization', {}).get("max_workers")
+        self.output_dir = config.get("output_directory", "results")
+        self.parallel_enabled = config.get("parallelization", {}).get("enabled", True)
+        self.max_workers = config.get("parallelization", {}).get("max_workers")
 
     def run_baseline_backtest(self) -> BacktestResultValue:
         """
@@ -75,14 +75,14 @@ class BacktestOrchestrator:
 
             # Create engine config
             engine_config = EngineBacktestConfig(
-                initial_capital=Decimal(str(getattr(config, 'initial_capital', 100000))),
-                commission=float(getattr(config, 'commission', 0.001)),
-                slippage=float(getattr(config, 'slippage', 0.0001)),
+                initial_capital=Decimal(str(getattr(config, "initial_capital", 100000))),
+                commission=float(getattr(config, "commission", 0.001)),
+                slippage=float(getattr(config, "slippage", 0.0001)),
             )
 
             # Create executor
             BacktestExecutorFactory.create_executor(
-                executor_type='simple' if not self.parallel_enabled else 'parallel',
+                executor_type="simple" if not self.parallel_enabled else "parallel",
                 config=engine_config,
             )
 
@@ -109,7 +109,7 @@ class BacktestOrchestrator:
             logger.error(f"Baseline backtest failed: {e}", exc_info=True)
             raise RuntimeError(f"Baseline backtest execution failed: {e}") from e
 
-    def run_learning_engine_backtests(self) -> List[BacktestResultValue]:
+    def run_learning_engine_backtests(self) -> list[BacktestResultValue]:
         """
         Run backtests for each learning engine individually.
 
@@ -124,7 +124,7 @@ class BacktestOrchestrator:
         try:
             # Get learning engines from config
             learning_engines = self.backtest_config.get(
-                'learning_engines', ['supervised', 'reinforcement', 'transformer']
+                "learning_engines", ["supervised", "reinforcement", "transformer"]
             )
 
             results = []
@@ -133,7 +133,7 @@ class BacktestOrchestrator:
 
                 # Create engine-specific config
                 engine_config = self.backtest_config.copy()
-                engine_config['learning_engine'] = engine_name
+                engine_config["learning_engine"] = engine_name
 
                 # Create result for this engine
                 result = BacktestResultValue(
@@ -172,8 +172,8 @@ class BacktestOrchestrator:
 
         try:
             # Get walk-forward parameters from config
-            train_size = self.backtest_config.get('walk_forward', {}).get('train_size', 0.7)
-            step_size = self.backtest_config.get('walk_forward', {}).get('step_size', 0.1)
+            train_size = self.backtest_config.get("walk_forward", {}).get("train_size", 0.7)
+            step_size = self.backtest_config.get("walk_forward", {}).get("step_size", 0.1)
 
             logger.info(f"Walk-forward parameters: train_size={train_size}, step_size={step_size}")
 
@@ -199,7 +199,7 @@ class BacktestOrchestrator:
             logger.error(f"Walk-forward validation failed: {e}", exc_info=True)
             raise RuntimeError(f"Walk-forward execution failed: {e}") from e
 
-    def run_monte_carlo_simulation(self, num_simulations: int = 1000) -> List[BacktestResultValue]:
+    def run_monte_carlo_simulation(self, num_simulations: int = 1000) -> list[BacktestResultValue]:
         """
         Run Monte Carlo simulation stress test.
 
@@ -243,7 +243,7 @@ class BacktestOrchestrator:
             logger.error(f"Monte Carlo simulation failed: {e}", exc_info=True)
             raise RuntimeError(f"Monte Carlo execution failed: {e}") from e
 
-    def run_ablation_study(self) -> Dict[str, BacktestResultValue]:
+    def run_ablation_study(self) -> dict[str, BacktestResultValue]:
         """
         Run ablation study to test impact of each module.
 
@@ -258,7 +258,7 @@ class BacktestOrchestrator:
         try:
             # Get modules to test from config
             modules = self.backtest_config.get(
-                'modules', ['signal_generation', 'risk_management', 'position_sizing']
+                "modules", ["signal_generation", "risk_management", "position_sizing"]
             )
 
             results = {}
@@ -303,7 +303,7 @@ class BacktestOrchestrator:
             logger.error(f"Ablation study failed: {e}", exc_info=True)
             raise RuntimeError(f"Ablation study execution failed: {e}") from e
 
-    def run_grid_search(self, param_grid: Dict[str, List[Any]]) -> BacktestResultValue:
+    def run_grid_search(self, param_grid: dict[str, list[Any]]) -> BacktestResultValue:
         """
         Run grid search for parameter optimization.
 
@@ -364,7 +364,7 @@ class BacktestOrchestrator:
 
         try:
             # Get OOS parameters from config
-            oos_ratio = self.backtest_config.get('oos_validation', {}).get('ratio', 0.2)
+            oos_ratio = self.backtest_config.get("oos_validation", {}).get("ratio", 0.2)
 
             logger.info(f"Out-of-sample validation ratio: {oos_ratio}")
 
@@ -389,7 +389,7 @@ class BacktestOrchestrator:
             logger.error(f"Out-of-sample validation failed: {e}", exc_info=True)
             raise RuntimeError(f"OOS validation execution failed: {e}") from e
 
-    def run_multi_strategy_backtest(self) -> List[BacktestResultValue]:
+    def run_multi_strategy_backtest(self) -> list[BacktestResultValue]:
         """
         Run backtest with multiple strategies simultaneously.
 
@@ -404,7 +404,7 @@ class BacktestOrchestrator:
         try:
             # Get strategies from config
             strategies = self.backtest_config.get(
-                'strategies', ['momentum', 'mean_reversion', 'pairs_trading']
+                "strategies", ["momentum", "mean_reversion", "pairs_trading"]
             )
 
             results = []
@@ -433,7 +433,7 @@ class BacktestOrchestrator:
             logger.error(f"Multi-strategy backtest failed: {e}", exc_info=True)
             raise RuntimeError(f"Multi-strategy execution failed: {e}") from e
 
-    def run_regime_analysis(self) -> Dict[str, BacktestResultValue]:
+    def run_regime_analysis(self) -> dict[str, BacktestResultValue]:
         """
         Analyze performance by market regime.
 
@@ -447,7 +447,7 @@ class BacktestOrchestrator:
 
         try:
             # Get regimes from config
-            regimes = self.backtest_config.get('regimes', ['bull', 'bear', 'sideways'])
+            regimes = self.backtest_config.get("regimes", ["bull", "bear", "sideways"])
 
             results = {}
             for regime in regimes:
@@ -475,7 +475,7 @@ class BacktestOrchestrator:
             logger.error(f"Regime analysis failed: {e}", exc_info=True)
             raise RuntimeError(f"Regime analysis execution failed: {e}") from e
 
-    def _load_backtest_config(self, config: Dict[str, Any]) -> Dict[str, Any]:
+    def _load_backtest_config(self, config: dict[str, Any]) -> dict[str, Any]:
         """
         Load and validate backtest configuration.
 

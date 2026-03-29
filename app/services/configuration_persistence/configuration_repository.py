@@ -12,7 +12,7 @@ Database layer for persisting:
 import logging
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Dict, List, Optional
+from typing import Optional
 
 logger = logging.getLogger(__name__)
 
@@ -25,8 +25,8 @@ class StoredConfiguration:
     config_type: str  # backtest_config, investment_profile, deployment_decision
     created_at: str
     updated_at: str
-    data: Dict
-    metadata: Dict
+    data: dict
+    metadata: dict
 
 
 class ConfigurationRepository:
@@ -39,14 +39,14 @@ class ConfigurationRepository:
     def __init__(self):
         """Initialize repository with in-memory storage."""
         self.logger = logging.getLogger(__name__)
-        self._storage: Dict[str, StoredConfiguration] = {}
+        self._storage: dict[str, StoredConfiguration] = {}
         self.logger.info("✅ ConfigurationRepository initialized")
 
     async def save_investment_profile(
         self,
         profile_id: str,
-        profile_data: Dict,
-        metadata: Optional[Dict] = None,
+        profile_data: dict,
+        metadata: Optional[dict] = None,
     ) -> str:
         """Save investment profile."""
         return await self._save_config(
@@ -59,8 +59,8 @@ class ConfigurationRepository:
     async def save_backtest_config(
         self,
         config_id: str,
-        config_data: Dict,
-        metadata: Optional[Dict] = None,
+        config_data: dict,
+        metadata: Optional[dict] = None,
     ) -> str:
         """Save backtest configuration."""
         return await self._save_config(
@@ -73,8 +73,8 @@ class ConfigurationRepository:
     async def save_backtest_result(
         self,
         result_id: str,
-        result_data: Dict,
-        metadata: Optional[Dict] = None,
+        result_data: dict,
+        metadata: Optional[dict] = None,
     ) -> str:
         """Save backtest result with feasibility metrics."""
         return await self._save_config(
@@ -87,8 +87,8 @@ class ConfigurationRepository:
     async def save_validation_report(
         self,
         report_id: str,
-        report_data: Dict,
-        metadata: Optional[Dict] = None,
+        report_data: dict,
+        metadata: Optional[dict] = None,
     ) -> str:
         """Save validation report from T5.1."""
         return await self._save_config(
@@ -101,8 +101,8 @@ class ConfigurationRepository:
     async def save_deployment_decision(
         self,
         decision_id: str,
-        decision_data: Dict,
-        metadata: Optional[Dict] = None,
+        decision_data: dict,
+        metadata: Optional[dict] = None,
     ) -> str:
         """Save deployment decision from T10.1."""
         return await self._save_config(
@@ -125,7 +125,7 @@ class ConfigurationRepository:
             self.logger.error(f"❌ Error loading configuration: {e}")
             raise ValueError(f"Failed to load configuration: {e}") from e
 
-    async def load_by_type(self, config_type: str) -> List[StoredConfiguration]:
+    async def load_by_type(self, config_type: str) -> list[StoredConfiguration]:
         """Load all configurations of a specific type."""
         try:
             results = [
@@ -137,7 +137,7 @@ class ConfigurationRepository:
             self.logger.error(f"❌ Error loading configurations: {e}")
             raise ValueError(f"Failed to load configurations: {e}") from e
 
-    async def list_all(self) -> List[StoredConfiguration]:
+    async def list_all(self) -> list[StoredConfiguration]:
         """List all stored configurations."""
         return list(self._storage.values())
 
@@ -159,8 +159,8 @@ class ConfigurationRepository:
         self,
         config_id: str,
         config_type: str,
-        data: Dict,
-        metadata: Dict,
+        data: dict,
+        metadata: dict,
     ) -> str:
         """Internal method to save configuration."""
         try:
@@ -190,7 +190,7 @@ class ConfigurationRepository:
             self.logger.error(f"❌ Error saving configuration: {e}")
             raise ValueError(f"Failed to save configuration: {e}") from e
 
-    def get_storage_stats(self) -> Dict:
+    def get_storage_stats(self) -> dict:
         """Get storage statistics."""
         config_types = {}
         for config in self._storage.values():

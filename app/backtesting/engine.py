@@ -11,10 +11,13 @@ import contextlib
 import logging
 from datetime import datetime
 from decimal import Decimal, InvalidOperation
-from typing import TYPE_CHECKING, Dict, List, Optional
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from app.backtesting.base_engine import SlippageParams
+    from app.domain.models.market_data import Quote
+    from app.domain.models.signal import Signal
+    from app.services.dynamic_capital_reallocation import DynamicCapitalReallocationEngine
 
 from uuid import uuid4
 
@@ -38,13 +41,10 @@ from app.backtesting.services.trade_executor import TradeExecutor
 from app.backtesting.shared.slippage_utils import apply_slippage as shared_apply_slippage
 from app.backtesting.shared.trade_utils import build_trade_reason as shared_build_trade_reason
 from app.domain.models.portfolio import AssetClass, Portfolio, Position
-from app.domain.models.market_data import Quote
-from app.domain.models.signal import Signal
 
 # COMPLIANCE: Import compliance_engine - "THE ONLY ENGINE" that must be used
 from app.domain.services.compliance.compliance_engine import ComplianceEngine
 from app.domain.services.trading_validators import TradingValidator
-from app.services.dynamic_capital_reallocation import DynamicCapitalReallocationEngine
 from app.shared.config.centralized_config import get_config
 
 logger = logging.getLogger(__name__)
@@ -57,10 +57,10 @@ _backtest_config = _config.backtesting
 def get_price(md) -> Decimal:
     """Get closing price from MarketData or Quote object."""
     # Try Quote first (has 'close' attribute)
-    if hasattr(md, 'close'):
+    if hasattr(md, "close"):
         return md.close
     # Try MarketData (has 'close_price' attribute)
-    elif hasattr(md, 'close_price'):
+    elif hasattr(md, "close_price"):
         return md.close_price
     else:
         raise AttributeError(
@@ -82,10 +82,10 @@ class BacktestEngine:
         diagnostic_logger=None,
         strategy=None,
         enable_risk_envelope: bool = True,
-        compliance_engine: Optional[ComplianceEngine] = None,
+        compliance_engine: ComplianceEngine | None = None,
         strategy_name: str = "unknown",
-        total_portfolio_capital: Optional[Decimal] = None,
-        reallocation_engine: Optional[DynamicCapitalReallocationEngine] = None,
+        total_portfolio_capital: Decimal | None = None,
+        reallocation_engine: DynamicCapitalReallocationEngine | None = None,
     ):
         """
         Initialize the backtesting engine.
@@ -109,10 +109,10 @@ class BacktestEngine:
         self.reallocation_engine = reallocation_engine
 
         # Track last known price for each symbol for accurate equity curve calculation
-        self.last_known_prices: Dict[str, Decimal] = {}
+        self.last_known_prices: dict[str, Decimal] = {}
 
         # Store market_data for building price_history for compliance engine
-        self._market_data_list: List[Quote] = []
+        self._market_data_list: list[Quote] = []
 
         # Initialize service classes
         # PositionManager - pure state holder for positions
@@ -158,7 +158,7 @@ class BacktestEngine:
         self.performance_calculator = PerformanceMetricsCalculator(config)
 
         # Keep trade list for P&L calculations
-        self.trades: List[Trade] = []
+        self.trades: list[Trade] = []
 
         # Initialize validators (keep for backward compatibility)
         self.trading_validator = TradingValidator()
@@ -184,7 +184,7 @@ class BacktestEngine:
     # PICKLE SUPPORT (for multiprocessing)
     # ==========================================================================
 
-    def __getstate__(self) -> Dict[str, object]:
+    def __getstate__(self) -> dict[str, object]:
         """
         Get state for pickling (excludes unpicklable objects).
 
@@ -193,18 +193,18 @@ class BacktestEngine:
         we extract the essential configuration and let each worker create
         a fresh engine instance.
         """
-        state: Dict[str, object] = {
-            'config': self.config,
-            'strategy_name': self.strategy_name,
-            'total_portfolio_capital': self.total_portfolio_capital,
+        state: dict[str, object] = {
+            "config": self.config,
+            "strategy_name": self.strategy_name,
+            "total_portfolio_capital": self.total_portfolio_capital,
             # Reset runtime state for worker processes
-            'capital': self.config.initial_capital,
-            'last_known_prices': {},
-            'trades': [],
+            "capital": self.config.initial_capital,
+            "last_known_prices": {},
+            "trades": [],
         }
         return state
 
-    def __setstate__(self, state: Dict[str, object]) -> None:
+    def __setstate__(self, state: dict[str, object]) -> None:
         """
         Restore state from pickling (reinitializes engine in worker process).
 
@@ -257,10 +257,10 @@ class BacktestEngine:
 
     def run_backtest(
         self,
-        market_data: List[Quote],
-        signals: List[Signal],
-        start_date: Optional[datetime] = None,
-        end_date: Optional[datetime] = None,
+        market_data: list[Quote],
+        signals: list[Signal],
+        start_date: datetime | None = None,
+        end_date: datetime | None = None,
     ) -> BacktestResult:
         """
         Run a complete backtest simulation.
@@ -313,7 +313,7 @@ class BacktestEngine:
         signals_matched = 0
         signals_skipped = 0
         # Track matching stats by strategy
-        strategy_stats: Dict[str, Dict[str, int]] = {}
+        strategy_stats: dict[str, dict[str, int]] = {}
 
         for md in market_data:
             # Track the current price for this symbol BEFORE updating equity curve
@@ -436,12 +436,12 @@ class BacktestEngine:
             if md.symbol == symbol and lookback_timestamp <= md.timestamp <= current_timestamp:
                 # Extract OHLCV data
                 row = {
-                    'timestamp': md.timestamp,
-                    'open': getattr(md, 'open', None) or getattr(md, 'open_price', None),
-                    'high': getattr(md, 'high', None) or getattr(md, 'high_price', None),
-                    'low': getattr(md, 'low', None) or getattr(md, 'low_price', None),
-                    'close': get_price(md),
-                    'volume': getattr(md, 'volume', 0),
+                    "timestamp": md.timestamp,
+                    "open": getattr(md, "open", None) or getattr(md, "open_price", None),
+                    "high": getattr(md, "high", None) or getattr(md, "high_price", None),
+                    "low": getattr(md, "low", None) or getattr(md, "low_price", None),
+                    "close": get_price(md),
+                    "volume": getattr(md, "volume", 0),
                 }
                 historical_data.append(row)
 
@@ -450,14 +450,14 @@ class BacktestEngine:
 
         # Build DataFrame with DatetimeIndex
         df = pd.DataFrame(historical_data)
-        df['timestamp'] = pd.to_datetime(df['timestamp'])
-        df.set_index('timestamp', inplace=True)
+        df["timestamp"] = pd.to_datetime(df["timestamp"])
+        df.set_index("timestamp", inplace=True)
         df.sort_index(inplace=True)
 
         # Convert Decimal to float for pandas compatibility
-        for col in ['open', 'high', 'low', 'close']:
+        for col in ["open", "high", "low", "close"]:
             if col in df.columns:
-                df[col] = df[col].apply(lambda x: float(x) if hasattr(x, '__float__') else x)
+                df[col] = df[col].apply(lambda x: float(x) if hasattr(x, "__float__") else x)
 
         return df
 
@@ -470,7 +470,7 @@ class BacktestEngine:
         self.last_known_prices.clear()
 
     def _execute_learning_retraining(
-        self, market_data: Quote, all_market_data: List[Quote]
+        self, market_data: Quote, all_market_data: list[Quote]
     ) -> None:
         """
         Execute learning engine retraining if necessary.
@@ -481,26 +481,26 @@ class BacktestEngine:
         """
         if not (
             self.strategy
-            and hasattr(self.strategy, 'learning_engine')
+            and hasattr(self.strategy, "learning_engine")
             and self.strategy.learning_engine
         ):
             return
 
         from app.domain.strategies.learning.learning_updater import LearningEngineUpdater
 
-        if not hasattr(self.strategy, '_learning_updater'):
+        if not hasattr(self.strategy, "_learning_updater"):
             self.strategy._learning_updater = LearningEngineUpdater(
                 learning_engine=self.strategy.learning_engine, rebalance_frequency_days=7
             )
 
         # Add market data to history
-        if hasattr(market_data, 'close') or hasattr(market_data, 'bid'):
+        if hasattr(market_data, "close") or hasattr(market_data, "bid"):
             price = float(get_price(market_data))
             self.strategy._learning_updater.add_market_data(
                 market_data={
-                    'price': price,
-                    'volume': float(getattr(market_data, 'volume', 0)),
-                    'symbol': market_data.symbol,
+                    "price": price,
+                    "volume": float(getattr(market_data, "volume", 0)),
+                    "symbol": market_data.symbol,
                 },
                 timestamp=market_data.timestamp,
             )
@@ -519,13 +519,13 @@ class BacktestEngine:
     def _process_signals_at_timestamp(
         self,
         market_data: Quote,
-        signals: List[Signal],
+        signals: list[Signal],
         signal_index: int,
         signals_processed: int,
         signals_matched: int,
         signals_skipped: int,
-        strategy_stats: Dict[str, Dict[str, int]],
-    ) -> tuple[int, int, int, int, Dict[str, Dict[str, int]]]:
+        strategy_stats: dict[str, dict[str, int]],
+    ) -> tuple[int, int, int, int, dict[str, dict[str, int]]]:
         """
         Process all signals at the current timestamp.
 
@@ -644,7 +644,7 @@ class BacktestEngine:
                     signal.symbol,
                     "kill_switch_active",
                     "Kill switch triggered - trading halted",
-                    signal.metadata if hasattr(signal, 'metadata') else {},
+                    signal.metadata if hasattr(signal, "metadata") else {},
                 )
             return  # Do NOT process this signal
 
@@ -668,7 +668,7 @@ class BacktestEngine:
                 symbol=signal.symbol,
                 price=current_price,
                 capital=self.capital,
-                confidence=signal.confidence if hasattr(signal, 'confidence') else 100.0,
+                confidence=signal.confidence if hasattr(signal, "confidence") else 100.0,
             )
 
             # Build price history for compliance engine validation
@@ -700,7 +700,7 @@ class BacktestEngine:
                         signal.symbol,
                         "pre_trade_compliance",
                         f"Pre-trade analysis rejected: {pre_trade_analysis.reasons}",
-                        signal.metadata if hasattr(signal, 'metadata') else {},
+                        signal.metadata if hasattr(signal, "metadata") else {},
                     )
                 return  # Do NOT execute this trade
 
@@ -779,7 +779,7 @@ class BacktestEngine:
                         signal.symbol,
                         "pre_trade_compliance",
                         f"Pre-trade analysis rejected: {pre_trade_analysis.reasons}",
-                        signal.metadata if hasattr(signal, 'metadata') else {},
+                        signal.metadata if hasattr(signal, "metadata") else {},
                     )
                 return  # Do NOT execute this trade
 
@@ -894,7 +894,7 @@ class BacktestEngine:
                         signal.symbol,
                         "commission_ratio_exceeded",
                         f"Commission ratio {commission_ratio:.2%} > 1%",
-                        signal.metadata if hasattr(signal, 'metadata') else {},
+                        signal.metadata if hasattr(signal, "metadata") else {},
                     )
                 return False
 
@@ -917,7 +917,7 @@ class BacktestEngine:
                     signal.symbol,
                     "profitability_check_failed",
                     f"Expected profit ${expected_profit:.2f} < 5x commission ${min_required_profit:.2f}",
-                    signal.metadata if hasattr(signal, 'metadata') else {},
+                    signal.metadata if hasattr(signal, "metadata") else {},
                 )
             return False
 
@@ -927,7 +927,7 @@ class BacktestEngine:
         )
         return True
 
-    def _get_strategy_commission(self, signal: Signal, strategy_name: str) -> Optional[Decimal]:
+    def _get_strategy_commission(self, signal: Signal, strategy_name: str) -> Decimal | None:
         """
         Get commission percentage for strategy.
 
@@ -948,7 +948,7 @@ class BacktestEngine:
         # 3. Return None to use fixed commission from config
         return None
 
-    def _get_strategy_slippage(self, signal: Signal) -> Optional[Decimal]:
+    def _get_strategy_slippage(self, signal: Signal) -> Decimal | None:
         """
         Get slippage percentage for strategy.
 
@@ -969,7 +969,7 @@ class BacktestEngine:
         # 3. Return None to use global config default
         return None
 
-    def _apply_slippage(self, params: "SlippageParams") -> Decimal:
+    def _apply_slippage(self, params: SlippageParams) -> Decimal:
         """
         Apply slippage to execution price.
 
@@ -1083,7 +1083,7 @@ class BacktestEngine:
         return portfolio
 
     def _close_position(
-        self, symbol: str, timestamp: datetime, reason: str, current_price: Decimal = None
+        self, symbol: str, timestamp: datetime, reason: str, current_price: Decimal | None = None
     ) -> None:
         """
         Close a position completely.
@@ -1159,7 +1159,7 @@ class BacktestEngine:
         self.position_manager.close_position(symbol)
 
     def _close_all_positions(
-        self, final_market_data: Quote, price_map: Optional[Dict[str, Decimal]] = None
+        self, final_market_data: Quote, price_map: dict[str, Decimal] | None = None
     ) -> None:
         """
         Close all remaining positions at the end of backtest.
@@ -1191,7 +1191,7 @@ class BacktestEngine:
                 symbol, final_market_data.timestamp, "end_of_backtest", closing_price
             )
 
-    def _build_price_map(self, market_data: List[Quote]) -> Dict[str, Decimal]:
+    def _build_price_map(self, market_data: list[Quote]) -> dict[str, Decimal]:
         """
         Build a price map from market data for accurate position closing.
 
@@ -1213,29 +1213,29 @@ class BacktestEngine:
         """Register a buy trade for the learning engine."""
         if not (
             self.strategy
-            and hasattr(self.strategy, 'learning_engine')
+            and hasattr(self.strategy, "learning_engine")
             and self.strategy.learning_engine
         ):
             return
 
-        if hasattr(self.strategy, '_learning_updater'):
+        if hasattr(self.strategy, "_learning_updater"):
             self.strategy._learning_updater.add_trade_result(
                 trade={
-                    'symbol': signal.symbol,
-                    'entry_time': trade.entry_time,
-                    'entry_price': float(trade.entry_price),
-                    'quantity': float(trade.quantity),
-                    'side': 'buy',
+                    "symbol": signal.symbol,
+                    "entry_time": trade.entry_time,
+                    "entry_price": float(trade.entry_price),
+                    "quantity": float(trade.quantity),
+                    "side": "buy",
                 },
                 timestamp=market_data.timestamp,
             )
 
-            if hasattr(self.strategy, 'add_trade_result'):
+            if hasattr(self.strategy, "add_trade_result"):
                 self.strategy.add_trade_result(
                     {
-                        'pnl': 0,
-                        'entry_time': trade.entry_time,
-                        'symbol': signal.symbol,
+                        "pnl": 0,
+                        "entry_time": trade.entry_time,
+                        "symbol": signal.symbol,
                     }
                 )
 
@@ -1245,38 +1245,38 @@ class BacktestEngine:
         """Register a sell trade result for the learning engine."""
         if not (
             self.strategy
-            and hasattr(self.strategy, 'learning_engine')
+            and hasattr(self.strategy, "learning_engine")
             and self.strategy.learning_engine
         ):
             return
 
-        if hasattr(self.strategy, '_learning_updater'):
+        if hasattr(self.strategy, "_learning_updater"):
             self.strategy._learning_updater.add_trade_result(
                 trade={
-                    'symbol': signal.symbol,
-                    'entry_time': trade.entry_time,
-                    'exit_time': trade.exit_time,
-                    'entry_price': float(trade.entry_price),
-                    'exit_price': float(trade.exit_price),
-                    'quantity': float(trade.quantity),
-                    'pnl': float(trade.pnl) if trade.pnl else 0,
-                    'side': 'sell',
+                    "symbol": signal.symbol,
+                    "entry_time": trade.entry_time,
+                    "exit_time": trade.exit_time,
+                    "entry_price": float(trade.entry_price),
+                    "exit_price": float(trade.exit_price),
+                    "quantity": float(trade.quantity),
+                    "pnl": float(trade.pnl) if trade.pnl else 0,
+                    "side": "sell",
                 },
                 timestamp=market_data.timestamp,
             )
 
-            if hasattr(self.strategy, 'add_trade_result'):
+            if hasattr(self.strategy, "add_trade_result"):
                 self.strategy.add_trade_result(
                     {
-                        'pnl': float(trade.pnl) if trade.pnl else 0,
-                        'entry_time': trade.entry_time,
-                        'exit_time': trade.exit_time,
-                        'symbol': signal.symbol,
+                        "pnl": float(trade.pnl) if trade.pnl else 0,
+                        "entry_time": trade.entry_time,
+                        "exit_time": trade.exit_time,
+                        "symbol": signal.symbol,
                     }
                 )
 
     def _update_reallocation_engine(
-        self, performance: PerformanceMetrics, total_return: Decimal, market_data: List[Quote]
+        self, performance: PerformanceMetrics, total_return: Decimal, market_data: list[Quote]
     ) -> None:
         """Update reallocation engine with strategy performance after backtest."""
         if not (self.reallocation_engine and performance):

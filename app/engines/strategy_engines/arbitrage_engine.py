@@ -16,8 +16,9 @@ Caracteristicas principales:
 
 import logging
 from collections import defaultdict, deque
+from collections.abc import Sequence
 from decimal import Decimal
-from typing import Any, Dict, List, Optional, Sequence
+from typing import Any, Optional
 
 import numpy as np
 
@@ -50,7 +51,7 @@ class ArbitrageStrategyEngine(BaseStrategyEngine):
     ARBITRAGE_TYPE_SPREAD = "spread"
     ARBITRAGE_TYPE_CARRY = "carry"
 
-    def __init__(self, config: Dict[str, Any]):
+    def __init__(self, config: dict[str, Any]):
         """
         Inicializar ArbitrageStrategyEngine.
 
@@ -160,7 +161,11 @@ class ArbitrageStrategyEngine(BaseStrategyEngine):
 
         # Arbitrage pairs configuration
         arbitrage_pairs_raw = config.get("arbitrage_pairs")
-        if arbitrage_pairs_raw is None and strategy_config and hasattr(strategy_config, 'parameters'):
+        if (
+            arbitrage_pairs_raw is None
+            and strategy_config
+            and hasattr(strategy_config, "parameters")
+        ):
             arbitrage_pairs_raw = strategy_config.parameters.get("arbitrage_pairs")
 
         if arbitrage_pairs_raw is None:
@@ -171,21 +176,21 @@ class ArbitrageStrategyEngine(BaseStrategyEngine):
                 ["QQQ", "TQQQ"],  # Nasdaq ETF/leveraged
             ]
 
-        self.arbitrage_pairs: List[List[str]] = arbitrage_pairs_raw
+        self.arbitrage_pairs: list[list[str]] = arbitrage_pairs_raw
 
         # Price history for each symbol
-        self.price_history: Dict[str, deque] = defaultdict(lambda: deque(maxlen=300))
-        self.volume_history: Dict[str, deque] = defaultdict(lambda: deque(maxlen=300))
+        self.price_history: dict[str, deque] = defaultdict(lambda: deque(maxlen=300))
+        self.volume_history: dict[str, deque] = defaultdict(lambda: deque(maxlen=300))
 
         # Spread tracking for each pair
-        self.spread_history: Dict[str, deque] = defaultdict(lambda: deque(maxlen=300))
+        self.spread_history: dict[str, deque] = defaultdict(lambda: deque(maxlen=300))
 
         # Carry trade data (yield/funding rates)
-        self.yield_data: Dict[str, float] = {}
-        self.funding_rates: Dict[str, float] = {}
+        self.yield_data: dict[str, float] = {}
+        self.funding_rates: dict[str, float] = {}
 
         # Active positions tracking
-        self.active_arbitrage_positions: Dict[str, Dict[str, Any]] = {}
+        self.active_arbitrage_positions: dict[str, dict[str, Any]] = {}
 
         # Technical indicator calculator
         self.indicator_calculator = TechnicalIndicatorCalculator()
@@ -228,7 +233,7 @@ class ArbitrageStrategyEngine(BaseStrategyEngine):
         self,
         market_data: Quote,
         historical_data: Optional[Sequence[Quote]] = None,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Extraer features estandarizados para Learning Engine.
 
@@ -246,7 +251,7 @@ class ArbitrageStrategyEngine(BaseStrategyEngine):
         Returns:
             Diccionario con features estandarizados
         """
-        features: Dict[str, Any] = {
+        features: dict[str, Any] = {
             "timestamp": getattr(market_data, "timestamp", None),
             "symbol": market_data.symbol,
             "price": float(market_data.close or market_data.bid or market_data.last or 0),
@@ -275,7 +280,7 @@ class ArbitrageStrategyEngine(BaseStrategyEngine):
         prices_other = list(self.price_history.get(other_symbol, []))
 
         # Add current price
-        prices_current_with_current = prices_current + [features["price"]]
+        prices_current_with_current = [*prices_current, features["price"]]
 
         if (
             len(prices_current_with_current) >= self.lookback_period
@@ -366,7 +371,7 @@ class ArbitrageStrategyEngine(BaseStrategyEngine):
 
         return features
 
-    def _estimate_half_life(self, spreads: List[float]) -> Optional[float]:
+    def _estimate_half_life(self, spreads: list[float]) -> Optional[float]:
         """
         Estimar half-life de la reversion a la media del spread.
 
@@ -404,7 +409,7 @@ class ArbitrageStrategyEngine(BaseStrategyEngine):
         except (ValueError, KeyError, AttributeError, IndexError, TypeError):
             return None
 
-    def _generate_signals_impl(self, market_data: Quote) -> List[Signal]:
+    def _generate_signals_impl(self, market_data: Quote) -> list[Signal]:
         """
         Implementacion especifica de generacion de senales para arbitraje.
 
@@ -414,7 +419,7 @@ class ArbitrageStrategyEngine(BaseStrategyEngine):
         Returns:
             Lista de senales generadas
         """
-        signals: List[Signal] = []
+        signals: list[Signal] = []
 
         try:
             current_price = float(market_data.close or market_data.bid or market_data.last or 0)
@@ -466,10 +471,7 @@ class ArbitrageStrategyEngine(BaseStrategyEngine):
             spread_z_score = (current_spread - spread_mean) / spread_std if spread_std > 0 else 0.0
 
             # Calculate spread percentage
-            if p2[-1] > 0:
-                spread_pct = abs(current_spread / p2[-1])
-            else:
-                spread_pct = 0.0
+            spread_pct = abs(current_spread / p2[-1]) if p2[-1] > 0 else 0.0
 
             # Calculate correlation
             if len(p1) >= 20 and len(p2) >= 20:
@@ -524,7 +526,7 @@ class ArbitrageStrategyEngine(BaseStrategyEngine):
                 "Error generando senal en ArbitrageStrategyEngine",
                 extra={
                     "strategy": "arbitrage",
-                    "symbol": getattr(market_data, 'symbol', None),
+                    "symbol": getattr(market_data, "symbol", None),
                     "arbitrage_type": self.arbitrage_type,
                     "error_type": type(e).__name__,
                 },
@@ -543,14 +545,14 @@ class ArbitrageStrategyEngine(BaseStrategyEngine):
         spread_pct: float,
         correlation: float,
         current_price: float,
-    ) -> List[Signal]:
+    ) -> list[Signal]:
         """
         Generar senales de arbitraje estadistico basado en z-score del spread.
 
         Entry: Cuando spread z-score > entry_z_score (short spread) o < -entry_z_score (long spread)
         Exit: Cuando spread z-score cruza exit_z_score hacia cero
         """
-        signals: List[Signal] = []
+        signals: list[Signal] = []
 
         # Check correlation threshold
         if abs(correlation) < float(self.min_correlation):
@@ -627,13 +629,13 @@ class ArbitrageStrategyEngine(BaseStrategyEngine):
         spread_pct: float,
         correlation: float,
         current_price: float,
-    ) -> List[Signal]:
+    ) -> list[Signal]:
         """
         Generar senales de arbitraje de spread puro.
 
         Entry cuando el spread porcentual excede un umbral minimo.
         """
-        signals: List[Signal] = []
+        signals: list[Signal] = []
 
         # Check correlation threshold
         if abs(correlation) < float(self.min_correlation):
@@ -690,13 +692,13 @@ class ArbitrageStrategyEngine(BaseStrategyEngine):
         other_symbol: str,
         pair_key: str,
         current_price: float,
-    ) -> List[Signal]:
+    ) -> list[Signal]:
         """
         Generar senales de carry trade basadas en diferenciales de rendimiento.
 
         Buy asset with higher yield, sell asset with lower yield.
         """
-        signals: List[Signal] = []
+        signals: list[Signal] = []
 
         # Get yield data
         yield_current = self.yield_data.get(current_symbol, 0.0)
@@ -880,7 +882,7 @@ class ArbitrageStrategyEngine(BaseStrategyEngine):
             },
         )
 
-    def get_required_parameters(self) -> List[str]:
+    def get_required_parameters(self) -> list[str]:
         """Obtener parametros requeridos."""
         return [
             "arbitrage_type",
@@ -966,11 +968,11 @@ class ArbitrageStrategyEngine(BaseStrategyEngine):
 
         return float(symbol_value / total_value)
 
-    def get_active_arbitrage_positions(self) -> Dict[str, Dict[str, Any]]:
+    def get_active_arbitrage_positions(self) -> dict[str, dict[str, Any]]:
         """Obtener posiciones de arbitraje activas."""
         return self.active_arbitrage_positions.copy()
 
-    def get_spread_statistics(self, pair_key: str) -> Optional[Dict[str, float]]:
+    def get_spread_statistics(self, pair_key: str) -> Optional[dict[str, float]]:
         """
         Obtener estadisticas del spread para un par.
 

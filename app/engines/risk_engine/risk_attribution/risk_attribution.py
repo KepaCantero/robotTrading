@@ -9,7 +9,7 @@ Implementa risk attribution:
 import logging
 from abc import ABC, abstractmethod
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 import numpy as np
 
@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
 class BaseRiskAttributor(ABC):
     """Clase base para risk attributors."""
 
-    def __init__(self, config: Dict[str, Any]):
+    def __init__(self, config: dict[str, Any]):
         """
         Inicializar risk attributor.
 
@@ -32,7 +32,7 @@ class BaseRiskAttributor(ABC):
         self.logger = logging.getLogger(self.__class__.__name__)
 
     @abstractmethod
-    def attribute_risk(self, portfolio: Portfolio, **kwargs) -> Dict[str, Any]:
+    def attribute_risk(self, portfolio: Portfolio, **kwargs) -> dict[str, Any]:
         """
         Atribuir riesgo del portfolio.
 
@@ -52,26 +52,26 @@ class RiskAttributor(BaseRiskAttributor):
     Descompone riesgo por múltiples fuentes.
     """
 
-    def __init__(self, config: Dict[str, Any]):
+    def __init__(self, config: dict[str, Any]):
         """Inicializar risk attributor."""
         super().__init__(config)
 
         # Configuración de modelos
-        self.use_factor_models = config.get('use_factor_models', True)
-        self.use_strategy_attribution = config.get('use_strategy_attribution', True)
-        self.use_asset_attribution = config.get('use_asset_attribution', True)
+        self.use_factor_models = config.get("use_factor_models", True)
+        self.use_strategy_attribution = config.get("use_strategy_attribution", True)
+        self.use_asset_attribution = config.get("use_asset_attribution", True)
 
         # Factores para modelo Fama-French (simplificado)
-        self.factors = ['market', 'size', 'value', 'momentum']
+        self.factors = ["market", "size", "value", "momentum"]
 
     def attribute_risk(
         self,
         portfolio: Portfolio,
-        returns_history: Optional[Dict[str, List[float]]] = None,
-        strategy_allocations: Optional[Dict[str, List[str]]] = None,
-        factor_data: Optional[Dict[str, List[float]]] = None,
+        returns_history: Optional[dict[str, list[float]]] = None,
+        strategy_allocations: Optional[dict[str, list[str]]] = None,
+        factor_data: Optional[dict[str, list[float]]] = None,
         **kwargs,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Atribuir riesgo completo del portfolio.
 
@@ -91,37 +91,37 @@ class RiskAttributor(BaseRiskAttributor):
             # Atribución por activo
             if self.use_asset_attribution:
                 asset_attribution = self._attribute_by_asset(portfolio, returns_history)
-                attribution['by_asset'] = asset_attribution
+                attribution["by_asset"] = asset_attribution
 
             # Atribución por estrategia
             if self.use_strategy_attribution and strategy_allocations:
                 strategy_attribution = self._attribute_by_strategy(
                     portfolio, strategy_allocations, returns_history
                 )
-                attribution['by_strategy'] = strategy_attribution
+                attribution["by_strategy"] = strategy_attribution
 
             # Atribución por factores
             if self.use_factor_models:
                 factor_attribution = self._attribute_by_factors(
                     portfolio, returns_history, factor_data
                 )
-                attribution['by_factor'] = factor_attribution
+                attribution["by_factor"] = factor_attribution
 
             # Resumen
-            attribution['summary'] = self._generate_summary(attribution)
-            attribution['timestamp'] = datetime.utcnow().isoformat()
+            attribution["summary"] = self._generate_summary(attribution)
+            attribution["timestamp"] = datetime.utcnow().isoformat()
 
             return attribution
         except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
             self.logger.error(f"Error atribuyendo riesgo: {e}", exc_info=True)
-            return {'error': str(e)}
+            return {"error": str(e)}
 
     def _attribute_by_asset(
-        self, portfolio: Portfolio, returns_history: Optional[Dict[str, List[float]]]
-    ) -> Dict[str, Any]:
+        self, portfolio: Portfolio, returns_history: Optional[dict[str, list[float]]]
+    ) -> dict[str, Any]:
         """Atribuir riesgo por activo."""
         if portfolio.total_equity == 0:
-            return {'attributions': {}, 'total_risk': 0.0}
+            return {"attributions": {}, "total_risk": 0.0}
 
         attributions = {}
         total_risk = 0.0
@@ -142,10 +142,10 @@ class RiskAttributor(BaseRiskAttributor):
             risk_contribution = weight * asset_risk
 
             attributions[position.symbol] = {
-                'weight': weight,
-                'asset_risk': asset_risk,
-                'risk_contribution': risk_contribution,
-                'risk_percentage': 0.0,  # Se calculará después
+                "weight": weight,
+                "asset_risk": asset_risk,
+                "risk_contribution": risk_contribution,
+                "risk_percentage": 0.0,  # Se calculará después
             }
 
             total_risk += risk_contribution
@@ -153,21 +153,21 @@ class RiskAttributor(BaseRiskAttributor):
         # Calcular porcentajes
         if total_risk > 0:
             for symbol in attributions:
-                attributions[symbol]['risk_percentage'] = (
-                    attributions[symbol]['risk_contribution'] / total_risk * 100
+                attributions[symbol]["risk_percentage"] = (
+                    attributions[symbol]["risk_contribution"] / total_risk * 100
                 )
 
-        return {'attributions': attributions, 'total_risk': total_risk}
+        return {"attributions": attributions, "total_risk": total_risk}
 
     def _attribute_by_strategy(
         self,
         portfolio: Portfolio,
-        strategy_allocations: Dict[str, List[str]],
-        returns_history: Optional[Dict[str, List[float]]],
-    ) -> Dict[str, Any]:
+        strategy_allocations: dict[str, list[str]],
+        returns_history: Optional[dict[str, list[float]]],
+    ) -> dict[str, Any]:
         """Atribuir riesgo por estrategia."""
         if portfolio.total_equity == 0:
-            return {'attributions': {}, 'total_risk': 0.0}
+            return {"attributions": {}, "total_risk": 0.0}
 
         attributions = {}
         total_risk = 0.0
@@ -181,7 +181,7 @@ class RiskAttributor(BaseRiskAttributor):
         # Agrupar por estrategia
         strategy_positions = {}
         for position in portfolio.positions:
-            strategy = symbol_to_strategy.get(position.symbol, 'unknown')
+            strategy = symbol_to_strategy.get(position.symbol, "unknown")
             if strategy not in strategy_positions:
                 strategy_positions[strategy] = []
             strategy_positions[strategy].append(position)
@@ -207,11 +207,11 @@ class RiskAttributor(BaseRiskAttributor):
             risk_contribution = weight * strategy_risk
 
             attributions[strategy] = {
-                'weight': weight,
-                'strategy_risk': strategy_risk,
-                'risk_contribution': risk_contribution,
-                'n_positions': len(positions),
-                'risk_percentage': 0.0,  # Se calculará después
+                "weight": weight,
+                "strategy_risk": strategy_risk,
+                "risk_contribution": risk_contribution,
+                "n_positions": len(positions),
+                "risk_percentage": 0.0,  # Se calculará después
             }
 
             total_risk += risk_contribution
@@ -219,24 +219,24 @@ class RiskAttributor(BaseRiskAttributor):
         # Calcular porcentajes
         if total_risk > 0:
             for strategy in attributions:
-                attributions[strategy]['risk_percentage'] = (
-                    attributions[strategy]['risk_contribution'] / total_risk * 100
+                attributions[strategy]["risk_percentage"] = (
+                    attributions[strategy]["risk_contribution"] / total_risk * 100
                 )
 
-        return {'attributions': attributions, 'total_risk': total_risk}
+        return {"attributions": attributions, "total_risk": total_risk}
 
     def _attribute_by_factors(
         self,
         portfolio: Portfolio,
-        returns_history: Optional[Dict[str, List[float]]],
-        factor_data: Optional[Dict[str, List[float]]],
-    ) -> Dict[str, Any]:
+        returns_history: Optional[dict[str, list[float]]],
+        factor_data: Optional[dict[str, list[float]]],
+    ) -> dict[str, Any]:
         """Atribuir riesgo por factores (Fama-French simplificado)."""
         if not factor_data or not returns_history:
             return {
-                'attributions': {},
-                'total_risk': 0.0,
-                'note': 'Factor data not available, using simplified model',
+                "attributions": {},
+                "total_risk": 0.0,
+                "note": "Factor data not available, using simplified model",
             }
 
         try:
@@ -245,9 +245,9 @@ class RiskAttributor(BaseRiskAttributor):
 
             if len(portfolio_returns) < 10:
                 return {
-                    'attributions': {},
-                    'total_risk': 0.0,
-                    'note': 'Insufficient data for factor analysis',
+                    "attributions": {},
+                    "total_risk": 0.0,
+                    "note": "Insufficient data for factor analysis",
                 }
 
             # Regresión de factores (simplificada)
@@ -271,33 +271,33 @@ class RiskAttributor(BaseRiskAttributor):
                         factor_risk = abs(beta * np.std(factor_vals))
 
                         factor_attributions[factor_name] = {
-                            'beta': float(beta),
-                            'correlation': float(correlation),
-                            'factor_risk': float(factor_risk),
-                            'risk_percentage': 0.0,  # Se calculará después
+                            "beta": float(beta),
+                            "correlation": float(correlation),
+                            "factor_risk": float(factor_risk),
+                            "risk_percentage": 0.0,  # Se calculará después
                         }
 
             # Calcular porcentajes
-            total_factor_risk = sum(attr['factor_risk'] for attr in factor_attributions.values())
+            total_factor_risk = sum(attr["factor_risk"] for attr in factor_attributions.values())
 
             if total_factor_risk > 0:
                 for factor_name in factor_attributions:
-                    factor_attributions[factor_name]['risk_percentage'] = (
-                        factor_attributions[factor_name]['factor_risk'] / total_factor_risk * 100
+                    factor_attributions[factor_name]["risk_percentage"] = (
+                        factor_attributions[factor_name]["factor_risk"] / total_factor_risk * 100
                     )
 
             return {
-                'attributions': factor_attributions,
-                'total_risk': float(total_factor_risk),
-                'method': 'fama_french_simplified',
+                "attributions": factor_attributions,
+                "total_risk": float(total_factor_risk),
+                "method": "fama_french_simplified",
             }
         except (ValueError, TypeError, KeyError, AttributeError) as e:
             self.logger.warning(f"Error en factor attribution: {e}")
-            return {'attributions': {}, 'total_risk': 0.0, 'error': str(e)}
+            return {"attributions": {}, "total_risk": 0.0, "error": str(e)}
 
     def _calculate_portfolio_returns(
-        self, portfolio: Portfolio, returns_history: Dict[str, List[float]]
-    ) -> List[float]:
+        self, portfolio: Portfolio, returns_history: dict[str, list[float]]
+    ) -> list[float]:
         """Calcular retornos del portfolio."""
         if not returns_history:
             return []
@@ -330,43 +330,43 @@ class RiskAttributor(BaseRiskAttributor):
 
         return portfolio_returns
 
-    def _generate_summary(self, attribution: Dict[str, Any]) -> Dict[str, Any]:
+    def _generate_summary(self, attribution: dict[str, Any]) -> dict[str, Any]:
         """Generar resumen de risk attribution."""
-        summary = {'top_risk_sources': [], 'total_risk_decomposed': 0.0}
+        summary = {"top_risk_sources": [], "total_risk_decomposed": 0.0}
 
         # Top fuentes de riesgo por activo
-        if 'by_asset' in attribution:
-            asset_attrib = attribution['by_asset']['attributions']
+        if "by_asset" in attribution:
+            asset_attrib = attribution["by_asset"]["attributions"]
             top_assets = sorted(
-                asset_attrib.items(), key=lambda x: x[1]['risk_contribution'], reverse=True
+                asset_attrib.items(), key=lambda x: x[1]["risk_contribution"], reverse=True
             )[:5]
 
-            summary['top_risk_sources'].extend(
+            summary["top_risk_sources"].extend(
                 [
                     {
-                        'type': 'asset',
-                        'source': symbol,
-                        'risk_contribution': info['risk_contribution'],
-                        'risk_percentage': info['risk_percentage'],
+                        "type": "asset",
+                        "source": symbol,
+                        "risk_contribution": info["risk_contribution"],
+                        "risk_percentage": info["risk_percentage"],
                     }
                     for symbol, info in top_assets
                 ]
             )
 
         # Top fuentes de riesgo por estrategia
-        if 'by_strategy' in attribution:
-            strategy_attrib = attribution['by_strategy']['attributions']
+        if "by_strategy" in attribution:
+            strategy_attrib = attribution["by_strategy"]["attributions"]
             top_strategies = sorted(
-                strategy_attrib.items(), key=lambda x: x[1]['risk_contribution'], reverse=True
+                strategy_attrib.items(), key=lambda x: x[1]["risk_contribution"], reverse=True
             )[:5]
 
-            summary['top_risk_sources'].extend(
+            summary["top_risk_sources"].extend(
                 [
                     {
-                        'type': 'strategy',
-                        'source': strategy,
-                        'risk_contribution': info['risk_contribution'],
-                        'risk_percentage': info['risk_percentage'],
+                        "type": "strategy",
+                        "source": strategy,
+                        "risk_contribution": info["risk_contribution"],
+                        "risk_percentage": info["risk_percentage"],
                     }
                     for strategy, info in top_strategies
                 ]

@@ -28,7 +28,7 @@ from datetime import datetime, timezone
 from decimal import Decimal
 from enum import Enum
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 import aiofiles
 import aiosqlite
@@ -64,26 +64,26 @@ class OrderLog:
     price: Optional[Decimal] = None
     error: Optional[str] = None
     broker_order_id: Optional[str] = None
-    metadata: Optional[Dict[str, Any]] = None
+    metadata: Optional[dict[str, Any]] = None
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for JSON serialization."""
         data = asdict(self)
-        data['timestamp'] = self.timestamp.isoformat()
-        data['state'] = self.state.value
-        data['quantity'] = str(self.quantity)
+        data["timestamp"] = self.timestamp.isoformat()
+        data["state"] = self.state.value
+        data["quantity"] = str(self.quantity)
         if self.price:
-            data['price'] = str(self.price)
+            data["price"] = str(self.price)
         return data
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'OrderLog':
+    def from_dict(cls, data: dict[str, Any]) -> "OrderLog":
         """Create from dictionary."""
-        data['timestamp'] = datetime.fromisoformat(data['timestamp'])
-        data['state'] = OrderState(data['state'])
-        data['quantity'] = Decimal(data['quantity'])
-        if data.get('price'):
-            data['price'] = Decimal(data['price'])
+        data["timestamp"] = datetime.fromisoformat(data["timestamp"])
+        data["state"] = OrderState(data["state"])
+        data["quantity"] = Decimal(data["quantity"])
+        if data.get("price"):
+            data["price"] = Decimal(data["price"])
         return cls(**data)
 
 
@@ -199,11 +199,11 @@ class OrderStateMachine:
 
     async def _write_to_file(self, log: OrderLog):
         """Append to file WAL for redundancy."""
-        log_line = json.dumps(log.to_dict()) + '\n'
-        async with aiofiles.open(self.wal_path, mode='a') as f:
+        log_line = json.dumps(log.to_dict()) + "\n"
+        async with aiofiles.open(self.wal_path, mode="a") as f:
             await f.write(log_line)
 
-    async def get_order_history(self, order_id: str) -> List[OrderLog]:
+    async def get_order_history(self, order_id: str) -> list[OrderLog]:
         """Get all state transitions for an order."""
         async with aiosqlite.connect(self.db_path) as db:
             cursor = await db.execute(
@@ -234,7 +234,7 @@ class OrderStateMachine:
                 for row in rows
             ]
 
-    async def get_orders_in_state(self, state: OrderState) -> List[OrderLog]:
+    async def get_orders_in_state(self, state: OrderState) -> list[OrderLog]:
         """Get all orders currently in a specific state."""
         async with aiosqlite.connect(self.db_path) as db:
             cursor = await db.execute(
@@ -265,7 +265,7 @@ class OrderStateMachine:
                 for row in rows
             ]
 
-    async def get_pending_orders(self) -> List[OrderLog]:
+    async def get_pending_orders(self) -> list[OrderLog]:
         """Get orders in SUBMITTING or SUBMITTED state (may be orphaned)."""
         pending_states = [OrderState.SUBMITTING, OrderState.SUBMITTED, OrderState.ACK_RECEIVED]
         results = []
@@ -314,7 +314,7 @@ class WALOrderManager:
         quantity: Decimal,
         price: Optional[Decimal] = None,
         order_type: str = "MARKET",
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Submit order with WAL protection.
 
@@ -365,28 +365,28 @@ class WALOrderManager:
 
             # STEP 3: Save ACK state
             log.state = OrderState.ACK_RECEIVED
-            log.broker_order_id = result.get('order_id')
+            log.broker_order_id = result.get("order_id")
             log.timestamp = datetime.now(timezone.utc)
             await self.state_machine.write_state(log)
 
             # STEP 4: Save final state
-            if result.get('status') == 'FILLED':
+            if result.get("status") == "FILLED":
                 log.state = OrderState.FILLED
-            elif result.get('status') == 'OPEN':
+            elif result.get("status") == "OPEN":
                 log.state = OrderState.OPEN
-            elif result.get('status') == 'REJECTED':
+            elif result.get("status") == "REJECTED":
                 log.state = OrderState.REJECTED
-                log.error = result.get('error')
+                log.error = result.get("error")
 
             log.timestamp = datetime.now(timezone.utc)
             await self.state_machine.write_state(log)
 
             logger.info(f"Order {order_id} completed with state {log.state.value}")
             return {
-                'order_id': order_id,
-                'broker_order_id': log.broker_order_id,
-                'state': log.state.value,
-                'result': result,
+                "order_id": order_id,
+                "broker_order_id": log.broker_order_id,
+                "state": log.state.value,
+                "result": result,
             }
 
         except (OSError, ValueError) as e:
@@ -399,7 +399,7 @@ class WALOrderManager:
             logger.error(f"Order {order_id} failed: {e}")
             raise
 
-    async def recover_orphaned_orders(self) -> List[Dict[str, Any]]:
+    async def recover_orphaned_orders(self) -> list[dict[str, Any]]:
         """
         Detect and report orphaned orders for recovery.
 
@@ -417,22 +417,22 @@ class WALOrderManager:
             try:
                 broker_status = await self.broker.get_order_status(log.broker_order_id)
 
-                if broker_status and broker_status['status'] in ['OPEN', 'PARTIAL_FILLED']:
+                if broker_status and broker_status["status"] in ["OPEN", "PARTIAL_FILLED"]:
                     # Orphaned position! Broker has it, we don't
                     orphaned.append(
                         {
-                            'order_id': log.order_id,
-                            'broker_order_id': log.broker_order_id,
-                            'symbol': log.symbol,
-                            'side': log.side,
-                            'quantity': log.quantity,
-                            'state': broker_status['status'],
-                            'recovery_action': 'SET_STOP_LOSS',  # Critical!
+                            "order_id": log.order_id,
+                            "broker_order_id": log.broker_order_id,
+                            "symbol": log.symbol,
+                            "side": log.side,
+                            "quantity": log.quantity,
+                            "state": broker_status["status"],
+                            "recovery_action": "SET_STOP_LOSS",  # Critical!
                         }
                     )
 
                     logger.critical(
-                        f"ORPHANED POSITION DETECTED: {log.symbol} " f"{log.side} {log.quantity}"
+                        f"ORPHANED POSITION DETECTED: {log.symbol} {log.side} {log.quantity}"
                     )
 
             except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:

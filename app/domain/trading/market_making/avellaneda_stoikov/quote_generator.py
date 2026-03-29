@@ -8,14 +8,16 @@ from __future__ import annotations
 
 import logging
 from decimal import Decimal
-from typing import Optional
+from typing import TYPE_CHECKING
 
 from app.domain.trading.market_making.avellaneda_stoikov.as_model import AvellanedaStoikovModel
-from app.domain.trading.market_making.avellaneda_stoikov.models import (
-    ASConfig,
-    ASQuote,
-    ASQuoteParams,
-)
+
+if TYPE_CHECKING:
+    from app.domain.trading.market_making.avellaneda_stoikov.models import (
+        ASConfig,
+        ASQuote,
+        ASQuoteParams,
+    )
 
 logger = logging.getLogger(__name__)
 
@@ -65,8 +67,8 @@ class ASQuoteGenerator:
         mid_price: float | Decimal | str,
         inventory: int,
         current_timestamp,
-        volatility_override: Optional[float | Decimal | str] = None,
-        time_remaining: Optional[float | Decimal | str] = None,
+        volatility_override: float | Decimal | str | None = None,
+        time_remaining: float | Decimal | str | None = None,
     ) -> ASQuote:
         """
         Generate real-time market making quotes.
@@ -185,14 +187,14 @@ class ASQuoteGenerator:
             quote.is_bid_enabled = False
             # Widen ask to encourage selling
             quote.optimal_ask = quote.reservation_price
-            logger.debug(f"At max long inventory ({current_inventory}), " "disabled bid quote")
+            logger.debug(f"At max long inventory ({current_inventory}), disabled bid quote")
 
         if is_max_short:
             # At max short: discourage selling more
             quote.is_ask_enabled = False
             # Widen bid to encourage buying
             quote.optimal_bid = quote.reservation_price
-            logger.debug(f"At max short inventory ({current_inventory}), " "disabled ask quote")
+            logger.debug(f"At max short inventory ({current_inventory}), disabled ask quote")
 
         # Near limits: adjust quotes to encourage closing
         inventory_utilization = abs(current_inventory) / max_inv if max_inv > 0 else 0

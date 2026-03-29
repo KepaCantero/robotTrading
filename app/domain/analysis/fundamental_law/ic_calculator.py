@@ -75,7 +75,7 @@ class ICCalculator:
         forecasts: pd.Series,
         returns: pd.Series,
         method: str = "pearson",
-    ) -> "ICMetrics":
+    ) -> ICMetrics:
         """
         Calculate Information Coefficient and related metrics.
 
@@ -106,8 +106,7 @@ class ICCalculator:
         # Validate inputs
         if len(forecasts) != len(returns):
             raise ValueError(
-                f"Forecasts and returns must have same length: "
-                f"{len(forecasts)} != {len(returns)}"
+                f"Forecasts and returns must have same length: {len(forecasts)} != {len(returns)}"
             )
 
         if len(forecasts) < self.min_observations:
@@ -138,9 +137,7 @@ class ICCalculator:
         elif method == "spearman":
             ic_value, p_value = stats.spearmanr(forecasts_clean.values, returns_clean.values)
         else:
-            raise ValueError(
-                f"Invalid correlation method: {method}. " f"Use 'pearson' or 'spearman'"
-            )
+            raise ValueError(f"Invalid correlation method: {method}. Use 'pearson' or 'spearman'")
 
         # Handle NaN from scipy (can happen with constant values)
         if np.isnan(ic_value):
@@ -408,9 +405,7 @@ class ICCalculator:
             raise ValueError("Forecasts and returns must have same length")
 
         if len(forecasts) < window:
-            raise ValueError(
-                f"Insufficient data for rolling window: " f"{len(forecasts)} < {window}"
-            )
+            raise ValueError(f"Insufficient data for rolling window: {len(forecasts)} < {window}")
 
         rolling_ic_values = []
 
@@ -429,7 +424,7 @@ class ICCalculator:
         index = forecasts.index[window - 1 :]
         return pd.Series(rolling_ic_values, index=index)
 
-    def _get_zero_ic_metrics(self) -> "ICMetrics":
+    def _get_zero_ic_metrics(self) -> ICMetrics:
         """
         Return zero IC metrics for edge cases.
 

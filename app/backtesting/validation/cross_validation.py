@@ -23,11 +23,14 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass
-from typing import Dict, Generator, List, Optional, Tuple, Union
+from typing import TYPE_CHECKING
 
 import numpy as np
 import pandas as pd
 from sklearn.model_selection import KFold
+
+if TYPE_CHECKING:
+    from collections.abc import Generator
 
 logger = logging.getLogger(__name__)
 
@@ -51,7 +54,7 @@ class PurgedCVConfig:
     min_test_samples: int = 20
     """Minimum number of test samples required."""
 
-    random_state: Optional[int] = None
+    random_state: int | None = None
     """Random state for reproducibility."""
 
     def __post_init__(self):
@@ -127,7 +130,7 @@ class PurgedKFold:
         purge_pct: float = 0.05,
         min_train_samples: int = 252,
         min_test_samples: int = 20,
-        random_state: Optional[int] = None,
+        random_state: int | None = None,
     ):
         """
         Initialize PurgedKFold cross-validator.
@@ -155,15 +158,15 @@ class PurgedKFold:
             random_state=random_state,
         )
 
-        self.split_results: List[PurgedSplitResult] = []
+        self.split_results: list[PurgedSplitResult] = []
 
     def split(
         self,
-        X: Union[pd.DataFrame, pd.Series, np.ndarray],
-        y: Optional[Union[pd.Series, np.ndarray]] = None,
-        groups: Optional[Union[pd.Series, np.ndarray]] = None,
-        events: Optional[pd.DataFrame] = None,
-    ) -> Generator[Tuple[np.ndarray, np.ndarray], None, None]:
+        X: pd.DataFrame | pd.Series | np.ndarray,
+        y: pd.Series | np.ndarray | None = None,
+        groups: pd.Series | np.ndarray | None = None,
+        events: pd.DataFrame | None = None,
+    ) -> Generator[tuple[np.ndarray, np.ndarray], None, None]:
         """
         Generate purged train/test splits.
 
@@ -191,10 +194,7 @@ class PurgedKFold:
         # Convert to array for indexing
         if isinstance(X, (pd.DataFrame, pd.Series)):
             n_samples = len(X)
-            if isinstance(X, pd.DataFrame):
-                index = X.index
-            else:
-                index = X.index
+            index = X.index
         else:
             n_samples = X.shape[0]
             index = pd.RangeIndex(n_samples)
@@ -208,7 +208,7 @@ class PurgedKFold:
             )
 
         # Process events if provided
-        if events is not None and 't1' not in events.columns:
+        if events is not None and "t1" not in events.columns:
             logger.warning(
                 "Events DataFrame provided but no 't1' column found. "
                 "Using percentage-based embargo instead."
@@ -253,7 +253,7 @@ class PurgedKFold:
             train_idx_purged = train_before_test[~purged_mask]
 
             # Calculate embargo based on events or percentage
-            if events is not None and 't1' in events.columns:
+            if events is not None and "t1" in events.columns:
                 # Event-based embargo: use t1 exit times
                 embargo_indices = self._calculate_event_embargo(test_idx_sorted, events, index)
             else:
@@ -343,7 +343,7 @@ class PurgedKFold:
 
         for idx in test_indices:
             if idx < len(events):
-                t1 = events.iloc[idx]['t1']
+                t1 = events.iloc[idx]["t1"]
                 test_t1_values.append(t1)
 
         if not test_t1_values:
@@ -394,13 +394,13 @@ class PurgedKFold:
         for split in self.split_results:
             summary_data.append(
                 {
-                    'fold': split.fold,
-                    'train_size': split.train_size_after,
-                    'test_size': len(split.test_indices),
-                    'n_purged': split.n_purged,
-                    'n_embargoed': split.n_embargoed,
-                    'embargo_size': split.n_embargoed,
-                    'purge_pct': (
+                    "fold": split.fold,
+                    "train_size": split.train_size_after,
+                    "test_size": len(split.test_indices),
+                    "n_purged": split.n_purged,
+                    "n_embargoed": split.n_embargoed,
+                    "embargo_size": split.n_embargoed,
+                    "purge_pct": (
                         split.n_purged / split.train_size_before
                         if split.train_size_before > 0
                         else 0
@@ -410,7 +410,7 @@ class PurgedKFold:
 
         return pd.DataFrame(summary_data)
 
-    def validate_no_leakage(self, X: Union[pd.DataFrame, pd.Series, np.ndarray]) -> bool:
+    def validate_no_leakage(self, X: pd.DataFrame | pd.Series | np.ndarray) -> bool:
         """
         Validate that there is no information leakage between train and test sets.
 
@@ -466,8 +466,8 @@ class PurgedTimeSeriesSplit:
         n_splits: int = 5,
         embargo_pct: float = 0.01,
         purge_pct: float = 0.05,
-        max_train_size: Optional[int] = None,
-        test_size: Optional[int] = None,
+        max_train_size: int | None = None,
+        test_size: int | None = None,
     ):
         """
         Initialize PurgedTimeSeriesSplit.
@@ -485,15 +485,15 @@ class PurgedTimeSeriesSplit:
         self.max_train_size = max_train_size
         self.test_size = test_size
 
-        self.split_results: List[PurgedSplitResult] = []
+        self.split_results: list[PurgedSplitResult] = []
 
     def split(
         self,
-        X: Union[pd.DataFrame, pd.Series, np.ndarray],
-        y: Optional[Union[pd.Series, np.ndarray]] = None,
-        groups: Optional[Union[pd.Series, np.ndarray]] = None,
-        events: Optional[pd.DataFrame] = None,
-    ) -> Generator[Tuple[np.ndarray, np.ndarray], None, None]:
+        X: pd.DataFrame | pd.Series | np.ndarray,
+        y: pd.Series | np.ndarray | None = None,
+        groups: pd.Series | np.ndarray | None = None,
+        events: pd.DataFrame | None = None,
+    ) -> Generator[tuple[np.ndarray, np.ndarray], None, None]:
         """
         Generate time series splits with purging.
 
@@ -506,10 +506,7 @@ class PurgedTimeSeriesSplit:
         Yields:
             (train_indices, test_indices) tuples
         """
-        if isinstance(X, (pd.DataFrame, pd.Series)):
-            n_samples = len(X)
-        else:
-            n_samples = X.shape[0]
+        n_samples = len(X) if isinstance(X, (pd.DataFrame, pd.Series)) else X.shape[0]
 
         # Calculate test size
         if self.test_size is None:
@@ -540,7 +537,7 @@ class PurgedTimeSeriesSplit:
             train_indices = train_indices[~np.isin(train_indices, purged_indices)]
 
             # Apply embargo
-            if events is not None and 't1' in events.columns:
+            if events is not None and "t1" in events.columns:
                 # Event-based embargo
                 purged_kfold = PurgedKFold(
                     n_splits=2,
@@ -589,14 +586,14 @@ class PurgedTimeSeriesSplit:
 
 def cv_score(
     estimator: object,
-    X: Union[pd.DataFrame, np.ndarray],
-    y: Union[pd.Series, np.ndarray],
-    events: Optional[pd.DataFrame] = None,
+    X: pd.DataFrame | np.ndarray,
+    y: pd.Series | np.ndarray,
+    events: pd.DataFrame | None = None,
     n_splits: int = 5,
     embargo_pct: float = 0.01,
     purge_pct: float = 0.05,
-    scoring: Optional[callable] = None,
-) -> Dict[str, float]:
+    scoring: callable | None = None,
+) -> dict[str, float]:
     """
     Cross-validate an estimator using purged K-Fold splits.
 
@@ -661,9 +658,9 @@ def cv_score(
         logger.debug(f"Fold {fold}: score = {score:.4f}")
 
     return {
-        'mean_score': np.mean(fold_scores),
-        'std_score': np.std(fold_scores),
-        'fold_scores': fold_scores,
+        "mean_score": np.mean(fold_scores),
+        "std_score": np.std(fold_scores),
+        "fold_scores": fold_scores,
     }
 
 
@@ -672,7 +669,7 @@ def cv_score(
 PurgedCV = PurgedKFold
 
 
-def get_purged_cv(config: Optional[PurgedCVConfig] = None) -> PurgedCV:
+def get_purged_cv(config: PurgedCVConfig | None = None) -> PurgedCV:
     """
     Get a PurgedCV instance for López de Prado's purged cross-validation.
 

@@ -9,7 +9,7 @@ from abc import ABC, abstractmethod
 from concurrent.futures import ProcessPoolExecutor, as_completed
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Any, Callable, Dict, List, Optional, Tuple
+from typing import Any, Callable, Optional
 
 import numpy as np
 
@@ -91,7 +91,7 @@ class OptimizationConfig:
             return os.cpu_count() or 1
         return max(1, self.n_jobs)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary representation."""
         return {
             "max_iterations": self.max_iterations,
@@ -120,16 +120,16 @@ class OptimizationResult:
     Contains best parameters, all trial history, and metadata.
     """
 
-    best_params: Dict[str, Any]
+    best_params: dict[str, Any]
     best_score: float
-    all_trials: List[TrialResult]
+    all_trials: list[TrialResult]
     optimization_time: float
     n_iterations: int
     converged: bool
     convergence_iteration: Optional[int] = None
     config: Optional[OptimizationConfig] = None
-    best_metrics: Dict[str, float] = field(default_factory=dict)
-    additional_info: Dict[str, Any] = field(default_factory=dict)
+    best_metrics: dict[str, float] = field(default_factory=dict)
+    additional_info: dict[str, Any] = field(default_factory=dict)
 
     @property
     def best_trial(self) -> Optional[TrialResult]:
@@ -166,7 +166,7 @@ class OptimizationResult:
             return 0.0
         return statistics.stdev(t.objective_value for t in successful)
 
-    def get_score_ranking(self) -> List[Tuple[int, Dict[str, Any], float]]:
+    def get_score_ranking(self) -> list[tuple[int, dict[str, Any], float]]:
         """
         Get trials ranked by score.
 
@@ -180,7 +180,7 @@ class OptimizationResult:
         )
         return [(i + 1, params, score) for i, (params, score) in enumerate(ranked)]
 
-    def get_top_n(self, n: int = 10) -> List[Dict[str, Any]]:
+    def get_top_n(self, n: int = 10) -> list[dict[str, Any]]:
         """
         Get top N parameter sets.
 
@@ -193,7 +193,7 @@ class OptimizationResult:
         ranked = self.get_score_ranking()
         return [params for _, params, _ in ranked[:n]]
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary representation."""
         return {
             "best_params": self.best_params,
@@ -224,7 +224,7 @@ class OptimizationResult:
         """Load result from file."""
         import json
 
-        with open(filepath, "r") as f:
+        with open(filepath) as f:
             data = json.load(f)
 
         # Reconstruct trial results
@@ -282,7 +282,7 @@ class BaseOptimizer(ABC):
     @abstractmethod
     async def optimize(
         self,
-        objective: Callable[[Dict[str, Any]], float],
+        objective: Callable[[dict[str, Any]], float],
         param_grid: ParameterGrid,
     ) -> OptimizationResult:
         """
@@ -298,8 +298,8 @@ class BaseOptimizer(ABC):
 
     def _evaluate_params(
         self,
-        params: Dict[str, Any],
-        objective: Callable[[Dict[str, Any]], float],
+        params: dict[str, Any],
+        objective: Callable[[dict[str, Any]], float],
         iteration: int = 0,
     ) -> TrialResult:
         """
@@ -327,8 +327,8 @@ class BaseOptimizer(ABC):
 
     async def _evaluate_params_async(
         self,
-        params: Dict[str, Any],
-        objective: Callable[[Dict[str, Any]], float],
+        params: dict[str, Any],
+        objective: Callable[[dict[str, Any]], float],
         iteration: int = 0,
     ) -> TrialResult:
         """
@@ -387,9 +387,9 @@ class BaseOptimizer(ABC):
 
     def _evaluate_parallel(
         self,
-        param_list: List[Dict[str, Any]],
-        objective: Callable[[Dict[str, Any]], float],
-    ) -> List[TrialResult]:
+        param_list: list[dict[str, Any]],
+        objective: Callable[[dict[str, Any]], float],
+    ) -> list[TrialResult]:
         """
         Evaluate multiple parameter sets in parallel.
 
@@ -466,7 +466,7 @@ class BaseOptimizer(ABC):
         elapsed = (datetime.now() - self._start_time).total_seconds()
         return elapsed >= self.config.timeout_seconds
 
-    def _log_progress(self, iteration: int, score: float, params: Dict[str, Any]) -> None:
+    def _log_progress(self, iteration: int, score: float, params: dict[str, Any]) -> None:
         """Log optimization progress."""
         if self.config.verbose == 0:
             return
@@ -478,7 +478,7 @@ class BaseOptimizer(ABC):
 
     def _create_result(
         self,
-        best_params: Dict[str, Any],
+        best_params: dict[str, Any],
         best_score: float,
     ) -> OptimizationResult:
         """
@@ -561,7 +561,7 @@ class BaseOptimizer(ABC):
         try:
             import json
 
-            with open(self.config.checkpoint_path, "r") as f:
+            with open(self.config.checkpoint_path) as f:
                 checkpoint_data = json.load(f)
 
             self.history = TrialHistory.load(

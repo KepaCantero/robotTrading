@@ -9,7 +9,7 @@ import logging
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from decimal import Decimal
-from typing import Dict, List, Optional, Tuple
+from typing import Optional
 from uuid import uuid4
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
@@ -116,7 +116,7 @@ class ExecutionPlan(BaseModel):
     total_size: Decimal = Field(
         ..., gt=Decimal("0"), description="Total order size in currency units (€)"
     )
-    tranches: List[OrderTranche] = Field(
+    tranches: list[OrderTranche] = Field(
         ..., description="List of execution tranches (empty for dynamic strategies like POI)"
     )
     strategy: str = Field(
@@ -131,7 +131,7 @@ class ExecutionPlan(BaseModel):
     estimated_avg_price: Optional[Decimal] = Field(
         None, gt=Decimal("0"), description="Estimated average fill price"
     )
-    constraints: Dict[str, Decimal] = Field(
+    constraints: dict[str, Decimal] = Field(
         default_factory=dict, description="Execution constraints (max_per_tranche, max_spread, etc)"
     )
     created_at: datetime = Field(
@@ -163,7 +163,7 @@ class ExecutionPlan(BaseModel):
                 )
         return self
 
-    def validate(self) -> Tuple[bool, str]:
+    def validate(self) -> tuple[bool, str]:
         """
         Comprehensive validation of execution plan.
 
@@ -290,7 +290,7 @@ class ExecutionMonitoring(BaseModel):
             return None
         return self.completed_at - self.started_at
 
-    def validate(self) -> Tuple[bool, str]:
+    def validate(self) -> tuple[bool, str]:
         """Validate monitoring data consistency."""
         if self.tranches_completed > self.tranches_total:
             return False, "tranches_completed exceeds tranches_total"

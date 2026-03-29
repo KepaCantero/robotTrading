@@ -34,7 +34,7 @@ import secrets
 import time
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Dict, List, Optional, Set
+from typing import ClassVar, Optional
 
 import numpy as np
 
@@ -92,7 +92,7 @@ class SecretNotConfiguredError(Exception):
 
 
 # Secret definitions following Rule 28
-SECRET_DEFINITIONS: List[SecretDefinition] = [
+SECRET_DEFINITIONS: list[SecretDefinition] = [
     # Security Secrets
     SecretDefinition(
         name="SECRET_KEY",
@@ -180,12 +180,12 @@ class SecretValidationReport:
     """Report from secret validation."""
 
     is_valid: bool
-    missing_secrets: List[str] = field(default_factory=list)
-    weak_secrets: List[str] = field(default_factory=list)
-    warnings: List[str] = field(default_factory=list)
+    missing_secrets: list[str] = field(default_factory=list)
+    weak_secrets: list[str] = field(default_factory=list)
+    warnings: list[str] = field(default_factory=list)
     compliance_score: float = 0.0
-    rotation_required: List[str] = field(default_factory=list)
-    strength_scores: Dict[str, int] = field(default_factory=dict)
+    rotation_required: list[str] = field(default_factory=list)
+    strength_scores: dict[str, int] = field(default_factory=dict)
 
     def __str__(self) -> str:
         """Format validation report."""
@@ -247,7 +247,7 @@ class SecretManager:
     """
 
     # Common weak patterns to detect
-    WEAK_PATTERNS = [
+    WEAK_PATTERNS: ClassVar[list] = [
         r"password",
         r"secret",
         r"changeme",
@@ -263,10 +263,10 @@ class SecretManager:
     ]
 
     def __init__(self):
-        self._cache: Dict[str, str] = {}
-        self._masked_values: Set[str] = set()
+        self._cache: dict[str, str] = {}
+        self._masked_values: set[str] = set()
         self._is_production = self._detect_production()
-        self._metadata: Dict[str, SecretMetadata] = {}
+        self._metadata: dict[str, SecretMetadata] = {}
         self._load_metadata()
 
     def _load_metadata(self):
@@ -578,7 +578,7 @@ class SecretManager:
                                 )
 
             except SecretValidationError as e:
-                report.missing_secrets.append(f"{definition.name}: {str(e)}")
+                report.missing_secrets.append(f"{definition.name}: {e!s}")
                 report.is_valid = False
 
         # Calculate compliance
@@ -644,9 +644,9 @@ class SecretManager:
         if not charset:
             raise ValueError("At least one character type must be selected")
 
-        return ''.join(secrets.choice(charset) for _ in range(length))
+        return "".join(secrets.choice(charset) for _ in range(length))
 
-    def check_rotation_needed(self, secret_name: str, rotation_days: int = None) -> bool:
+    def check_rotation_needed(self, secret_name: str, rotation_days: Optional[int] = None) -> bool:
         """
         Check if a secret needs rotation.
 
@@ -862,18 +862,18 @@ def generate_secure_secret(length: int = 32, use_special_chars: bool = True) -> 
 
 
 __all__ = [
+    "SecretCategory",
+    "SecretDefinition",
+    "SecretManager",
+    "SecretMetadata",
+    "SecretNotConfiguredError",
+    "SecretValidationError",
+    "SecretValidationReport",
+    "generate_secure_secret",
+    "get_connection_string",
     "get_secret",
+    "is_production",
+    "mask_secret",
     "require_secret",
     "validate_secrets_configured",
-    "get_connection_string",
-    "mask_secret",
-    "is_production",
-    "generate_secure_secret",
-    "SecretManager",
-    "SecretValidationError",
-    "SecretNotConfiguredError",
-    "SecretValidationReport",
-    "SecretDefinition",
-    "SecretMetadata",
-    "SecretCategory",
 ]

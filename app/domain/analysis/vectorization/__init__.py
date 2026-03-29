@@ -23,10 +23,10 @@ from app.domain.analysis.vectorization.patterns import VectorizationPatterns
 from app.domain.analysis.vectorization.vectorization_auditor import VectorizationAuditor
 
 __all__ = [
+    "BenchmarkResult",
     "VectorizationAuditor",
     "VectorizationBenchmark",
     "VectorizationIssue",
-    "VectorizationReport",
     "VectorizationPatterns",
-    "BenchmarkResult",
+    "VectorizationReport",
 ]

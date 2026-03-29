@@ -18,7 +18,6 @@ import asyncio
 import logging
 import traceback
 from datetime import date, datetime
-from typing import List, Optional
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Request
 from fastapi.responses import JSONResponse
@@ -152,7 +151,7 @@ async def optimize_parameters(
             error_message=str(e),
             stack_trace=traceback.format_exc(),
         )
-        raise HTTPException(status_code=504, detail=f"Optimization timeout: {str(e)}")
+        raise HTTPException(status_code=504, detail=f"Optimization timeout: {e!s}") from e
     except ValueError as e:
         logger.warning(
             "Validation error during optimization",
@@ -162,7 +161,7 @@ async def optimize_parameters(
                 "error": str(e),
             },
         )
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
     except RuntimeError as e:
         logger.error(
             "Runtime error during optimization",
@@ -180,7 +179,7 @@ async def optimize_parameters(
             error_message=str(e),
             stack_trace=traceback.format_exc(),
         )
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
     except (TypeError, KeyError, AttributeError) as e:
         logger.error(
             "Unexpected error during optimization",
@@ -199,7 +198,7 @@ async def optimize_parameters(
             error_message=str(e),
             stack_trace=traceback.format_exc(),
         )
-        raise HTTPException(status_code=500, detail=f"Unexpected error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Unexpected error: {e!s}") from e
 
 
 @router.post("/out-of-sample-test", response_model=OutOfSampleResult)
@@ -228,16 +227,16 @@ async def perform_out_of_sample_test(
         return result
 
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
     except RuntimeError as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
     except (TypeError, KeyError, AttributeError) as e:
-        raise HTTPException(status_code=500, detail=f"Unexpected error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Unexpected error: {e!s}") from e
 
 
-@router.get("/artifacts", response_model=List[OptimizationArtifact])
+@router.get("/artifacts", response_model=list[OptimizationArtifact])
 async def get_optimization_artifacts(
-    strategy_name: Optional[str] = None,
+    strategy_name: str | None = None,
     service: ParameterOptimizationService = Depends(get_optimization_service),
 ):
     """
@@ -255,7 +254,7 @@ async def get_optimization_artifacts(
         return artifacts
 
     except (asyncio.TimeoutError, OSError) as e:
-        raise HTTPException(status_code=500, detail=f"Unexpected error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Unexpected error: {e!s}") from e
 
 
 @router.get("/artifacts/{artifact_id}", response_model=OptimizationArtifact)
@@ -286,7 +285,7 @@ async def get_optimization_artifact(
         return artifact
 
     except (asyncio.TimeoutError, OSError) as e:
-        raise HTTPException(status_code=500, detail=f"Unexpected error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Unexpected error: {e!s}") from e
 
 
 @router.get("/summary", response_model=OptimizationSummary)
@@ -307,7 +306,7 @@ async def get_optimization_summary(
         return summary
 
     except (asyncio.TimeoutError, OSError) as e:
-        raise HTTPException(status_code=500, detail=f"Unexpected error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Unexpected error: {e!s}") from e
 
 
 @router.get("/artifacts/{artifact_id}/metrics", response_model=OptimizationMetrics)
@@ -339,10 +338,10 @@ async def get_optimization_metrics(
         return metrics
 
     except (asyncio.TimeoutError, OSError) as e:
-        raise HTTPException(status_code=500, detail=f"Unexpected error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Unexpected error: {e!s}") from e
 
 
-@router.get("/methods", response_model=List[str])
+@router.get("/methods", response_model=list[str])
 async def get_optimization_methods():
     """
     Get available optimization methods.
@@ -353,7 +352,7 @@ async def get_optimization_methods():
     return [method.value for method in OptimizationMethod]
 
 
-@router.get("/parameter-types", response_model=List[str])
+@router.get("/parameter-types", response_model=list[str])
 async def get_parameter_types():
     """
     Get available parameter types.
@@ -411,7 +410,7 @@ async def validate_optimization_config(
     except (TypeError, KeyError, AttributeError) as e:
         return JSONResponse(
             status_code=500,
-            content={"message": f"Unexpected error: {str(e)}", "valid": False},
+            content={"message": f"Unexpected error: {e!s}", "valid": False},
         )
 
 
@@ -454,7 +453,7 @@ async def get_best_parameters(
         }
 
     except (asyncio.TimeoutError, OSError) as e:
-        raise HTTPException(status_code=500, detail=f"Unexpected error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Unexpected error: {e!s}") from e
 
 
 @router.delete("/artifacts/{artifact_id}")
@@ -491,7 +490,7 @@ async def delete_optimization_artifact(
             raise HTTPException(status_code=404, detail="Artifact not found")
 
     except (IntegrityError, OperationalError, DatabaseError, DataError, ProgrammingError) as e:
-        raise HTTPException(status_code=500, detail=f"Unexpected error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Unexpected error: {e!s}") from e
 
 
 @router.get("/health")
@@ -525,4 +524,4 @@ async def _store_optimization_result(
         pass
     except (IntegrityError, OperationalError, DatabaseError, DataError, ProgrammingError) as e:
         # Log error but don't raise exception in background task
-        logger.error(f"Error storing optimization result: {str(e)}")
+        logger.error(f"Error storing optimization result: {e!s}")

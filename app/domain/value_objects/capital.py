@@ -36,7 +36,7 @@ class Capital:
     amount: Decimal
     tier: CapitalTier
     currency: str = "USD"
-    max_leverage: Decimal = Decimal('1')
+    max_leverage: Decimal = Decimal("1")
     max_positions: int = 10
     enabled_strategies: tuple[Any, ...] = ()
 
@@ -85,23 +85,23 @@ class Capital:
         if amount < 15000:
             tier = CapitalTier.MICRO
             max_positions = 5
-            max_leverage = Decimal('1')
+            max_leverage = Decimal("1")
         elif amount < 50000:
             tier = CapitalTier.SMALL
             max_positions = 8
-            max_leverage = Decimal('1.5')
+            max_leverage = Decimal("1.5")
         elif amount < 250000:
             tier = CapitalTier.MEDIUM
             max_positions = 15
-            max_leverage = Decimal('2')
+            max_leverage = Decimal("2")
         elif amount < 1000000:
             tier = CapitalTier.LARGE
             max_positions = 20
-            max_leverage = Decimal('2.5')
+            max_leverage = Decimal("2.5")
         else:
             tier = CapitalTier.INSTITUTIONAL
             max_positions = 50
-            max_leverage = Decimal('3')
+            max_leverage = Decimal("3")
 
         return cls(
             amount=amount,

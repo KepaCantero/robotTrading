@@ -42,7 +42,7 @@ import asyncio
 import logging
 from datetime import datetime
 from itertools import product
-from typing import Any, Awaitable, Callable, Dict, List, Optional, Tuple, Union
+from typing import TYPE_CHECKING, Any, Callable
 
 import numpy as np
 
@@ -55,6 +55,9 @@ from .base_optimizer import (
     TrialResult,
 )
 from .bayesian_optimizer import ParameterType, SearchSpace
+
+if TYPE_CHECKING:
+    from collections.abc import Awaitable
 
 logger = logging.getLogger(__name__)
 
@@ -102,27 +105,27 @@ class GridSearchOptimizer(BaseOptimizer[SearchSpace]):
             config: Optimization configuration
         """
         super().__init__(config)
-        self._total_combinations: Optional[int] = None
+        self._total_combinations: int | None = None
         self._evaluated_combinations: int = 0
-        self._search_space: Optional[SearchSpace] = None
-        self._best_params: Dict[str, Any] = {}
+        self._search_space: SearchSpace | None = None
+        self._best_params: dict[str, Any] = {}
 
     @classmethod
     def get_optimizer_type(cls) -> OptimizerType:
         """Get the type of this optimizer."""
         return OptimizerType.GRID_SEARCH
 
-    def get_best_params(self) -> Dict[str, Any]:
+    def get_best_params(self) -> dict[str, Any]:
         """Get the best parameters found."""
         return self._best_params
 
-    def get_history(self) -> List[TrialResult]:
+    def get_history(self) -> list[TrialResult]:
         """Get optimization history."""
         return self._history
 
     async def optimize(
         self,
-        objective: Callable[[Dict[str, Any]], Union[float, "Awaitable[float]"]],
+        objective: Callable[[dict[str, Any]], float | Awaitable[float]],
         search_space: SearchSpace,
     ) -> OptimizationResult:
         """
@@ -143,7 +146,7 @@ class GridSearchOptimizer(BaseOptimizer[SearchSpace]):
             OptimizationResult with best parameters and all trials
         """
         self._start_time = datetime.now()
-        self._history: List[TrialResult] = []
+        self._history: list[TrialResult] = []
         self._iteration_count = 0
         self._search_space = search_space
 
@@ -188,7 +191,7 @@ class GridSearchOptimizer(BaseOptimizer[SearchSpace]):
 
         return result
 
-    def _generate_combinations(self, search_space: SearchSpace) -> List[Dict[str, Any]]:
+    def _generate_combinations(self, search_space: SearchSpace) -> list[dict[str, Any]]:
         """
         Generate all parameter combinations.
 
@@ -247,9 +250,9 @@ class GridSearchOptimizer(BaseOptimizer[SearchSpace]):
 
     async def _evaluate_combinations(
         self,
-        combinations: List[Dict[str, Any]],
-        objective: Callable[[Dict[str, Any]], Union[float, "Awaitable[float]"]],
-    ) -> Tuple[Dict[str, Any], float]:
+        combinations: list[dict[str, Any]],
+        objective: Callable[[dict[str, Any]], float | Awaitable[float]],
+    ) -> tuple[dict[str, Any], float]:
         """
         Evaluate all parameter combinations.
 
@@ -260,7 +263,7 @@ class GridSearchOptimizer(BaseOptimizer[SearchSpace]):
         Returns:
             Tuple of (best_params, best_score)
         """
-        best_params: Dict[str, Any] = {}
+        best_params: dict[str, Any] = {}
         best_score = float("-inf") if self.config.maximize else float("inf")
 
         # Setup progress bar
@@ -342,8 +345,8 @@ class GridSearchOptimizer(BaseOptimizer[SearchSpace]):
 
     async def _evaluate_single(
         self,
-        params: Dict[str, Any],
-        objective: Callable[[Dict[str, Any]], Union[float, "Awaitable[float]"]],
+        params: dict[str, Any],
+        objective: Callable[[dict[str, Any]], float | Awaitable[float]],
         iteration: int,
     ) -> TrialResult:
         """
@@ -395,9 +398,9 @@ class GridSearchOptimizer(BaseOptimizer[SearchSpace]):
 
     async def _evaluate_parallel_async(
         self,
-        combinations: List[Dict[str, Any]],
-        objective: Callable[[Dict[str, Any]], Union[float, "Awaitable[float]"]],
-    ) -> List[TrialResult]:
+        combinations: list[dict[str, Any]],
+        objective: Callable[[dict[str, Any]], float | Awaitable[float]],
+    ) -> list[TrialResult]:
         """
         Evaluate combinations in parallel asynchronously.
 
@@ -415,7 +418,7 @@ class GridSearchOptimizer(BaseOptimizer[SearchSpace]):
 
         # Execute in parallel batches
         batch_size = self.config.n_parallel_jobs
-        results: List[TrialResult] = []
+        results: list[TrialResult] = []
 
         for i in range(0, len(tasks), batch_size):
             batch = tasks[i : i + batch_size]
@@ -504,7 +507,7 @@ class GridSearchOptimizerCV(GridSearchOptimizer):
 
     async def optimize_cv(
         self,
-        cv_objective: Callable[[Dict[str, Any], int], Union[float, "Awaitable[float]"]],
+        cv_objective: Callable[[dict[str, Any], int], float | Awaitable[float]],
         search_space: SearchSpace,
     ) -> OptimizationResult:
         """
@@ -530,7 +533,7 @@ class GridSearchOptimizerCV(GridSearchOptimizer):
             logger.info(f"Starting grid search with {self.cv_folds}-fold CV")
             logger.info(f"Total evaluations: {len(combinations) * self.cv_folds}")
 
-        best_params: Dict[str, Any] = {}
+        best_params: dict[str, Any] = {}
         best_cv_score = float("-inf") if self.config.maximize else float("inf")
 
         for i, params in enumerate(combinations):
@@ -611,7 +614,7 @@ class GridSearchOptimizerCV(GridSearchOptimizer):
 
     async def optimize(
         self,
-        objective: Callable[[Dict[str, Any]], Union[float, "Awaitable[float]"]],
+        objective: Callable[[dict[str, Any]], float | Awaitable[float]],
         search_space: SearchSpace,
     ) -> OptimizationResult:
         """

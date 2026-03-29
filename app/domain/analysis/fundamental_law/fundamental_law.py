@@ -5,7 +5,7 @@ This module implements the Fundamental Law of Active Management, which
 decomposes the Information Ratio into skill (IC) and breadth (BR) components.
 
 The Fundamental Law:
-    IR = IC × √BR × TC
+    IR = IC * sqrtBR * TC
 
 Where:
     IR = Information Ratio (risk-adjusted excess return)
@@ -22,14 +22,20 @@ from __future__ import annotations
 
 import logging
 from decimal import Decimal
+from typing import TYPE_CHECKING
 
 import numpy as np
 import pandas as pd
 
 from app.domain.analysis.fundamental_law.breadth_calculator import BreadthCalculator
 from app.domain.analysis.fundamental_law.ic_calculator import ICCalculator
-from app.domain.analysis.fundamental_law.models import FundamentalLawComponents, StrategyAnalysis
 from app.shared.config.centralized_config import get_config
+
+if TYPE_CHECKING:
+    from app.domain.analysis.fundamental_law.models import (
+        FundamentalLawComponents,
+        StrategyAnalysis,
+    )
 
 logger = logging.getLogger(__name__)
 
@@ -42,7 +48,7 @@ class FundamentalLawCalculator:
 
     The Fundamental Law decomposes the Information Ratio into:
     1. Skill component (IC): How good are your forecasts?
-    2. Breadth component (√BR): How many opportunities do you have?
+    2. Breadth component (sqrtBR): How many opportunities do you have?
     3. Transfer component (TC): How well are forecasts implemented?
 
     This calculator helps identify which component is limiting performance
@@ -75,12 +81,12 @@ class FundamentalLawCalculator:
         information_coefficient: Decimal,
         breadth: Decimal,
         transfer_coefficient: Decimal = _DEFAULT_TRANSFER_COEFFICIENT,
-    ) -> "FundamentalLawComponents":
+    ) -> FundamentalLawComponents:
         """
         Calculate Fundamental Law components from known values.
 
         This verifies that the components satisfy the Fundamental Law:
-            IR = IC × √BR × TC
+            IR = IC * sqrtBR * TC
 
         Args:
             information_ratio: The observed Information Ratio
@@ -98,7 +104,7 @@ class FundamentalLawCalculator:
 
         Examples:
             >>> calculator = FundamentalLawCalculator()
-            >>> # IR = 0.05 × √400 × 1.0 = 0.05 × 20 × 1.0 = 1.0
+            >>> # IR = 0.05 * sqrt400 * 1.0 = 0.05 * 20 * 1.0 = 1.0
             >>> components = calculator.calculate_fundamental_law(
             ...     information_ratio=Decimal("1.0"),
             ...     information_coefficient=Decimal("0.05"),
@@ -144,7 +150,7 @@ class FundamentalLawCalculator:
         forecasts: pd.Series,
         benchmark_returns: pd.Series,
         rebalance_frequency: str = "monthly",
-    ) -> "FundamentalLawComponents":
+    ) -> FundamentalLawComponents:
         """
         Decompose Information Ratio into IC and BR components.
 
@@ -156,7 +162,7 @@ class FundamentalLawCalculator:
         2. Calculate IC = correlation(forecasts, returns)
         3. Calculate BR from trading frequency and asset independence
         4. Estimate TC from efficiency of implementation
-        5. Verify: IR ≈ IC × √BR × TC
+        5. Verify: IR ~ IC * sqrtBR * TC
 
         Args:
             returns: Portfolio returns (aligned with forecasts)
@@ -207,7 +213,7 @@ class FundamentalLawCalculator:
         breadth = annual_breadth * independence_factor
 
         # Step 4: Calculate Transfer Coefficient
-        # TC = IR / (IC × √BR)
+        # TC = IR / (IC * sqrtBR)
         breadth_sqrt = self._calculate_breadth_sqrt(breadth)
 
         # Handle negative IR (underperforming strategy)
@@ -234,9 +240,9 @@ class FundamentalLawCalculator:
 
     def analyze_strategy(
         self,
-        components: "FundamentalLawComponents",
+        components: FundamentalLawComponents,
         strategy_name: str,
-    ) -> "StrategyAnalysis":
+    ) -> StrategyAnalysis:
         """
         Analyze strategy performance using the Fundamental Law.
 
@@ -298,7 +304,7 @@ class FundamentalLawCalculator:
 
     def compare_strategies(
         self,
-        strategies: dict[str, "FundamentalLawComponents"],
+        strategies: dict[str, FundamentalLawComponents],
     ) -> pd.DataFrame:
         """
         Compare multiple strategies using the Fundamental Law.
@@ -332,7 +338,7 @@ class FundamentalLawCalculator:
                     "IR": float(components.information_ratio),
                     "IC": float(components.information_coefficient),
                     "BR": float(components.breadth),
-                    "√BR": float(components.breadth_sqrt),
+                    "sqrtBR": float(components.breadth_sqrt),
                     "TC": float(components.transfer_coefficient),
                     "Theoretical IR": float(components.get_theoretical_ir()),
                     "Efficiency Gap": float(components.get_efficiency_gap()),
@@ -351,8 +357,8 @@ class FundamentalLawCalculator:
         Calculate required IC for a target Information Ratio.
 
         Rearranging the Fundamental Law:
-            IR = IC × √BR × TC
-            ∴ IC = IR / (√BR × TC)
+            IR = IC * sqrtBR * TC
+            ∴ IC = IR / (sqrtBR * TC)
 
         Args:
             target_ir: Desired Information Ratio
@@ -429,7 +435,7 @@ class FundamentalLawCalculator:
 
         # Annualize (using configured trading days per year)
         config = get_config()
-        trading_days = getattr(config.trading, 'fundamental_law_trading_days_per_year', 252)
+        trading_days = getattr(config.trading, "fundamental_law_trading_days_per_year", 252)
         daily_ir = mean_active / std_active
         annual_ir = daily_ir * Decimal(str(np.sqrt(trading_days)))
 
@@ -438,7 +444,7 @@ class FundamentalLawCalculator:
     def _estimate_periods_per_year(self, returns: pd.Series) -> float:
         """Estimate number of trading periods per year from index."""
         config = get_config()
-        default_trading_days = getattr(config.trading, 'fundamental_law_trading_days_per_year', 252)
+        default_trading_days = getattr(config.trading, "fundamental_law_trading_days_per_year", 252)
 
         if not isinstance(returns.index, pd.DatetimeIndex):
             # Assume daily if not DatetimeIndex
@@ -458,9 +464,9 @@ class FundamentalLawCalculator:
     def _assess_skill_level(self, ic: Decimal) -> str:
         """Assess forecasting skill based on IC using config thresholds."""
         config = get_config()
-        ic_excellent = Decimal(str(getattr(config.trading, 'fundamental_law_ic_excellent', 0.05)))
-        ic_good = Decimal(str(getattr(config.trading, 'fundamental_law_ic_good', 0.03)))
-        ic_fair = Decimal(str(getattr(config.trading, 'fundamental_law_ic_fair', 0.01)))
+        ic_excellent = Decimal(str(getattr(config.trading, "fundamental_law_ic_excellent", 0.05)))
+        ic_good = Decimal(str(getattr(config.trading, "fundamental_law_ic_good", 0.03)))
+        ic_fair = Decimal(str(getattr(config.trading, "fundamental_law_ic_fair", 0.01)))
 
         if ic >= ic_excellent:
             return "excellent"
@@ -479,8 +485,8 @@ class FundamentalLawCalculator:
         """
         config = get_config()
         # Get breadth thresholds from config (use defaults if not available)
-        breadth_high = getattr(config.trading, 'breadth_high_threshold', Decimal("1000"))
-        breadth_medium = getattr(config.trading, 'breadth_medium_threshold', Decimal("100"))
+        breadth_high = getattr(config.trading, "breadth_high_threshold", Decimal("1000"))
+        breadth_medium = getattr(config.trading, "breadth_medium_threshold", Decimal("100"))
 
         if breadth >= breadth_high:
             return "high"
@@ -492,9 +498,9 @@ class FundamentalLawCalculator:
     def _assess_ir(self, ir: Decimal) -> str:
         """Assess Information Ratio quality using config thresholds."""
         config = get_config()
-        ir_excellent = Decimal(str(getattr(config.trading, 'fundamental_law_ir_excellent', 1.0)))
-        ir_good = Decimal(str(getattr(config.trading, 'fundamental_law_ir_good', 0.5)))
-        ir_fair = Decimal(str(getattr(config.trading, 'fundamental_law_ir_fair', 0.25)))
+        ir_excellent = Decimal(str(getattr(config.trading, "fundamental_law_ir_excellent", 1.0)))
+        ir_good = Decimal(str(getattr(config.trading, "fundamental_law_ir_good", 0.5)))
+        ir_fair = Decimal(str(getattr(config.trading, "fundamental_law_ir_fair", 0.25)))
 
         if ir >= ir_excellent:
             return "excellent"
@@ -508,9 +514,9 @@ class FundamentalLawCalculator:
     def _assess_tc(self, tc: Decimal) -> str:
         """Assess Transfer Coefficient using config thresholds."""
         config = get_config()
-        tc_excellent = Decimal(str(getattr(config.trading, 'fundamental_law_tc_excellent', 0.8)))
-        tc_good = Decimal(str(getattr(config.trading, 'fundamental_law_tc_good', 0.6)))
-        tc_fair = Decimal(str(getattr(config.trading, 'fundamental_law_tc_fair', 0.4)))
+        tc_excellent = Decimal(str(getattr(config.trading, "fundamental_law_tc_excellent", 0.8)))
+        tc_good = Decimal(str(getattr(config.trading, "fundamental_law_tc_good", 0.6)))
+        tc_fair = Decimal(str(getattr(config.trading, "fundamental_law_tc_fair", 0.4)))
 
         if tc >= tc_excellent:
             return "excellent"
@@ -523,7 +529,7 @@ class FundamentalLawCalculator:
 
     def _generate_suggestions(
         self,
-        components: "FundamentalLawComponents",
+        components: FundamentalLawComponents,
         skill_level: str,
         breadth_assessment: str,
         ir_assessment: str,

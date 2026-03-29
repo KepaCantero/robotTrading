@@ -15,7 +15,7 @@ import logging
 from dataclasses import asdict, dataclass
 from datetime import datetime
 from decimal import Decimal
-from typing import TYPE_CHECKING, Any, Dict, List, Optional
+from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from app.services.live_trading.alert_to_trade_mapper import TradeSignal
@@ -45,11 +45,11 @@ class TradeResultData:
     commission: Decimal
     slippage_bps: Decimal
     signal_price: Decimal
-    error: Optional[str] = None
+    error: str | None = None
 
 
 # Type alias for protocol compatibility (dict is expected by ITradeExecutor)
-TradeResult = Dict[str, Any]
+TradeResult = dict[str, Any]
 
 
 class OrderManagerAdapter(ITradeExecutor):
@@ -74,7 +74,7 @@ class OrderManagerAdapter(ITradeExecutor):
 
     def __init__(
         self,
-        order_manager: Optional["OrderManager"] = None,
+        order_manager: OrderManager | None = None,
         enable_logging: bool = False,
     ):
         """
@@ -87,9 +87,9 @@ class OrderManagerAdapter(ITradeExecutor):
         """
         self.order_manager = order_manager  # Don't create here to avoid circular deps
         self.enable_logging = enable_logging
-        self._signal_to_order_map: Dict[str, str] = {}  # signal_id -> order_id
+        self._signal_to_order_map: dict[str, str] = {}  # signal_id -> order_id
 
-    def _get_manager(self) -> "OrderManager":
+    def _get_manager(self) -> OrderManager:
         """Get OrderManager instance (lazy initialization)."""
         if self.order_manager is None:
             # Late import to avoid domain layer depending on services layer
@@ -100,8 +100,8 @@ class OrderManagerAdapter(ITradeExecutor):
 
     async def execute_order(
         self,
-        signal: "TradeSignal",
-    ) -> "TradeResult":
+        signal: TradeSignal,
+    ) -> TradeResult:
         """
         Execute order using OrderManager with risk gates validation.
 
@@ -409,7 +409,7 @@ class OrderManagerAdapter(ITradeExecutor):
             logger.error(f"OrderManagerAdapter.get_order_status failed for {order_id}: {e}")
             return "UNKNOWN"
 
-    async def get_open_orders(self) -> List["TradeSignal"]:
+    async def get_open_orders(self) -> list[TradeSignal]:
         """
         Get open orders.
 
@@ -454,7 +454,7 @@ class OrderManagerAdapter(ITradeExecutor):
     # Additional methods for enhanced functionality
     # -------------------------------------------------------------------------
 
-    def get_order_id_for_signal(self, signal_id: str) -> Optional[str]:
+    def get_order_id_for_signal(self, signal_id: str) -> str | None:
         """
         Get order ID for a given signal ID.
 
@@ -489,7 +489,7 @@ class OrderManagerAdapter(ITradeExecutor):
             logger.error(f"OrderManagerAdapter.cancel_all_orders failed: {e}")
             return 0
 
-    def get_mapping_stats(self) -> Dict[str, Any]:
+    def get_mapping_stats(self) -> dict[str, Any]:
         """
         Get signal-to-order mapping statistics.
 

@@ -27,10 +27,10 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 from decimal import Decimal
 from enum import Enum
-from typing import Dict, List, Optional, Union
+from typing import Optional, Union
 
 # Position dictionaries contain heterogeneous values from broker/DB
-PositionDict = Dict[str, Union[str, int, float, Decimal, None]]
+PositionDict = dict[str, Union[str, int, float, Decimal, None]]
 
 import aiosqlite
 from requests.exceptions import HTTPError
@@ -71,7 +71,9 @@ class BootReconciler:
     No trading should occur until reconciliation completes successfully.
     """
 
-    def __init__(self, broker_client: object, db_path: str, emergency_handler: Optional[object] = None):
+    def __init__(
+        self, broker_client: object, db_path: str, emergency_handler: Optional[object] = None
+    ):
         """
         Initialize reconciler.
 
@@ -84,7 +86,7 @@ class BootReconciler:
         self.db_path = db_path
         self.emergency_handler = emergency_handler
 
-    async def reconcile_on_startup(self) -> Dict[str, Union[str, int, List[PositionDict]]]:
+    async def reconcile_on_startup(self) -> dict[str, Union[str, int, list[PositionDict]]]:
         """
         Perform full reconciliation on system startup.
 
@@ -107,26 +109,26 @@ class BootReconciler:
         logger.info("=" * 80)
 
         report = {
-            'timestamp': datetime.now(timezone.utc).isoformat(),
-            'broker_positions_count': 0,
-            'local_positions_count': 0,
-            'orphaned_positions': [],
-            'phantom_positions': [],
-            'actions_taken': [],
-            'status': 'SUCCESS',
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "broker_positions_count": 0,
+            "local_positions_count": 0,
+            "orphaned_positions": [],
+            "phantom_positions": [],
+            "actions_taken": [],
+            "status": "SUCCESS",
         }
 
         try:
             # STEP 1: Get broker's reality
             logger.info("STEP 1: Fetching positions from broker...")
             broker_positions = await self._get_broker_positions()
-            report['broker_positions_count'] = len(broker_positions)
+            report["broker_positions_count"] = len(broker_positions)
             logger.info(f"Broker reports {len(broker_positions)} open positions")
 
             # STEP 2: Get local database state
             logger.info("STEP 2: Fetching positions from local database...")
             local_positions = await self._get_local_positions()
-            report['local_positions_count'] = len(local_positions)
+            report["local_positions_count"] = len(local_positions)
             logger.info(f"Local database reports {len(local_positions)} open positions")
 
             # STEP 3: Identify discrepancies
@@ -135,8 +137,8 @@ class BootReconciler:
                 broker_positions, local_positions
             )
 
-            report['orphaned_positions'] = orphaned
-            report['phantom_positions'] = phantom
+            report["orphaned_positions"] = orphaned
+            report["phantom_positions"] = phantom
 
             if orphaned:
                 logger.critical(
@@ -162,12 +164,12 @@ class BootReconciler:
             if orphaned:
                 logger.info("STEP 4a: Protecting orphaned positions...")
                 actions_orphaned = await self._protect_orphaned_positions(orphaned)
-                report['actions_taken'].extend(actions_orphaned)
+                report["actions_taken"].extend(actions_orphaned)
 
             if phantom:
                 logger.info("STEP 4b: Resolving phantom positions...")
                 actions_phantom = await self._resolve_phantom_positions(phantom)
-                report['actions_taken'].extend(actions_phantom)
+                report["actions_taken"].extend(actions_phantom)
 
             # STEP 5: Sync database to broker reality
             logger.info("STEP 5: Synchronizing database with broker reality...")
@@ -193,11 +195,11 @@ class BootReconciler:
 
         except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
             logger.critical(f"RECONCILIATION FAILED: {e}")
-            report['status'] = 'FAILED'
-            report['error'] = str(e)
+            report["status"] = "FAILED"
+            report["error"] = str(e)
             raise
 
-    async def _get_broker_positions(self) -> List[PositionDict]:
+    async def _get_broker_positions(self) -> list[PositionDict]:
         """Fetch all open positions from broker."""
         try:
             positions = await self.broker.get_all_open_positions()
@@ -206,7 +208,7 @@ class BootReconciler:
             logger.error(f"Failed to fetch broker positions: {e}")
             raise
 
-    async def _get_local_positions(self) -> List[PositionDict]:
+    async def _get_local_positions(self) -> list[PositionDict]:
         """Fetch all open positions from local database."""
         try:
             async with aiosqlite.connect(self.db_path) as db:
@@ -225,17 +227,17 @@ class BootReconciler:
 
                 return [
                     {
-                        'id': row[0],
-                        'symbol': row[1],
-                        'side': row[2],
-                        'quantity': Decimal(row[3]),
-                        'entry_price': Decimal(row[4]) if row[4] else None,
-                        'current_price': Decimal(row[5]) if row[5] else None,
-                        'stop_loss_price': Decimal(row[6]) if row[6] else None,
-                        'take_profit_price': Decimal(row[7]) if row[7] else None,
-                        'broker_order_id': row[8],
-                        'created_at': row[9],
-                        'source': 'LOCAL',
+                        "id": row[0],
+                        "symbol": row[1],
+                        "side": row[2],
+                        "quantity": Decimal(row[3]),
+                        "entry_price": Decimal(row[4]) if row[4] else None,
+                        "current_price": Decimal(row[5]) if row[5] else None,
+                        "stop_loss_price": Decimal(row[6]) if row[6] else None,
+                        "take_profit_price": Decimal(row[7]) if row[7] else None,
+                        "broker_order_id": row[8],
+                        "created_at": row[9],
+                        "source": "LOCAL",
                     }
                     for row in rows
                 ]
@@ -244,8 +246,8 @@ class BootReconciler:
             raise
 
     async def _identify_discrepancies(
-        self, broker_positions: List[PositionDict], local_positions: List[PositionDict]
-    ) -> tuple[List[PositionDict], List[PositionDict]]:
+        self, broker_positions: list[PositionDict], local_positions: list[PositionDict]
+    ) -> tuple[list[PositionDict], list[PositionDict]]:
         """
         Identify orphaned and phantom positions.
 
@@ -260,8 +262,8 @@ class BootReconciler:
             Tuple of (orphaned_positions, phantom_positions)
         """
         # Create lookup dictionaries
-        broker_lookup = {(p['symbol'], p['side']): p for p in broker_positions}
-        local_lookup = {(p['symbol'], p['side']): p for p in local_positions}
+        broker_lookup = {(p["symbol"], p["side"]): p for p in broker_positions}
+        local_lookup = {(p["symbol"], p["side"]): p for p in local_positions}
 
         # Find orphaned (in broker but not local)
         orphaned = []
@@ -270,9 +272,9 @@ class BootReconciler:
                 orphaned.append(
                     {
                         **broker_pos,
-                        'discrepancy_type': 'ORPHANED',
-                        'action': 'EMERGENCY_PROTECT',
-                        'reason': 'Broker has position open, system unaware',
+                        "discrepancy_type": "ORPHANED",
+                        "action": "EMERGENCY_PROTECT",
+                        "reason": "Broker has position open, system unaware",
                     }
                 )
 
@@ -283,17 +285,15 @@ class BootReconciler:
                 phantom.append(
                     {
                         **local_pos,
-                        'discrepancy_type': 'PHANTOM',
-                        'action': 'MARK_PHANTOM_CLOSED',
-                        'reason': 'System thinks open, broker reports closed',
+                        "discrepancy_type": "PHANTOM",
+                        "action": "MARK_PHANTOM_CLOSED",
+                        "reason": "System thinks open, broker reports closed",
                     }
                 )
 
         return orphaned, phantom
 
-    async def _protect_orphaned_positions(
-        self, orphaned: List[PositionDict]
-    ) -> List[PositionDict]:
+    async def _protect_orphaned_positions(self, orphaned: list[PositionDict]) -> list[PositionDict]:
         """
         Take immediate action to protect orphaned positions.
 
@@ -316,11 +316,11 @@ class BootReconciler:
         for pos in orphaned:
             try:
                 # Calculate emergency stop-loss
-                entry_price = Decimal(pos.get('entry_price', pos.get('avg_price', 0)))
-                Decimal(pos.get('current_price', 0))
+                entry_price = Decimal(pos.get("entry_price", pos.get("avg_price", 0)))
+                Decimal(pos.get("current_price", 0))
 
                 # Default 10% stop-loss for long positions, 10% for short
-                if pos['side'] == 'LONG':
+                if pos["side"] == "LONG":
                     stop_price = entry_price * Decimal("0.90")
                 else:
                     stop_price = entry_price * Decimal("1.10")
@@ -335,25 +335,25 @@ class BootReconciler:
                 try:
                     # Try to set stop-loss with broker
                     stop_order = await self.broker.set_stop_loss(
-                        symbol=pos['symbol'],
-                        quantity=float(pos['quantity']),
+                        symbol=pos["symbol"],
+                        quantity=float(pos["quantity"]),
                         stop_price=float(stop_price),
                     )
 
                     actions.append(
                         {
-                            'action': 'EMERGENCY_STOP_LOSS_SET',
-                            'symbol': pos['symbol'],
-                            'side': pos['side'],
-                            'quantity': str(pos['quantity']),
-                            'stop_price': str(stop_price),
-                            'broker_order_id': stop_order.get('order_id'),
-                            'status': 'SUCCESS',
+                            "action": "EMERGENCY_STOP_LOSS_SET",
+                            "symbol": pos["symbol"],
+                            "side": pos["side"],
+                            "quantity": str(pos["quantity"]),
+                            "stop_price": str(stop_price),
+                            "broker_order_id": stop_order.get("order_id"),
+                            "status": "SUCCESS",
                         }
                     )
 
                     logger.critical(
-                        f"Emergency stop-loss set for {pos['symbol']}: " f"stop at {stop_price}"
+                        f"Emergency stop-loss set for {pos['symbol']}: stop at {stop_price}"
                     )
 
                 except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
@@ -364,11 +364,11 @@ class BootReconciler:
                     )
                     actions.append(
                         {
-                            'action': 'EMERGENCY_STOP_LOSS_FAILED',
-                            'symbol': pos['symbol'],
-                            'error': str(e),
-                            'status': 'FAILED',
-                            'requires_manual_intervention': True,
+                            "action": "EMERGENCY_STOP_LOSS_FAILED",
+                            "symbol": pos["symbol"],
+                            "error": str(e),
+                            "status": "FAILED",
+                            "requires_manual_intervention": True,
                         }
                     )
 
@@ -379,18 +379,16 @@ class BootReconciler:
                 logger.error(f"Error protecting orphaned position: {e}")
                 actions.append(
                     {
-                        'action': 'PROTECT_FAILED',
-                        'symbol': pos.get('symbol'),
-                        'error': str(e),
-                        'status': 'FAILED',
+                        "action": "PROTECT_FAILED",
+                        "symbol": pos.get("symbol"),
+                        "error": str(e),
+                        "status": "FAILED",
                     }
                 )
 
         return actions
 
-    async def _resolve_phantom_positions(
-        self, phantom: List[PositionDict]
-    ) -> List[PositionDict]:
+    async def _resolve_phantom_positions(self, phantom: list[PositionDict]) -> list[PositionDict]:
         """
         Resolve phantom positions (local thinks open, broker says closed).
 
@@ -419,17 +417,17 @@ class BootReconciler:
                             close_reason = 'RECONCILIATION: Phantom position'
                         WHERE id = ?
                     """,
-                        (datetime.now(timezone.utc).isoformat(), pos['id']),
+                        (datetime.now(timezone.utc).isoformat(), pos["id"]),
                     )
                     await db.commit()
 
                 actions.append(
                     {
-                        'action': 'MARKED_CLOSED',
-                        'symbol': pos['symbol'],
-                        'position_id': pos['id'],
-                        'reason': 'Phantom position - broker reports closed',
-                        'status': 'SUCCESS',
+                        "action": "MARKED_CLOSED",
+                        "symbol": pos["symbol"],
+                        "position_id": pos["id"],
+                        "reason": "Phantom position - broker reports closed",
+                        "status": "SUCCESS",
                     }
                 )
 
@@ -446,10 +444,10 @@ class BootReconciler:
                 logger.error(f"Error resolving phantom position: {e}")
                 actions.append(
                     {
-                        'action': 'RESOLVE_FAILED',
-                        'symbol': pos.get('symbol'),
-                        'error': str(e),
-                        'status': 'FAILED',
+                        "action": "RESOLVE_FAILED",
+                        "symbol": pos.get("symbol"),
+                        "error": str(e),
+                        "status": "FAILED",
                     }
                 )
 
@@ -467,13 +465,13 @@ class BootReconciler:
                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                     (
-                        pos['symbol'],
-                        pos['side'],
-                        str(pos['quantity']),
-                        str(pos.get('entry_price', pos.get('avg_price', 0))),
-                        str(pos.get('current_price', 0)),
-                        'OPEN',
-                        pos.get('broker_order_id'),
+                        pos["symbol"],
+                        pos["side"],
+                        str(pos["quantity"]),
+                        str(pos.get("entry_price", pos.get("avg_price", 0))),
+                        str(pos.get("current_price", 0)),
+                        "OPEN",
+                        pos.get("broker_order_id"),
                         datetime.now(timezone.utc).isoformat(),
                         1,  # is_orphaned = True
                     ),
@@ -485,7 +483,7 @@ class BootReconciler:
         except (aiosqlite.Error, asyncio.TimeoutError, OSError) as e:
             logger.error(f"Failed to add orphaned position to DB: {e}")
 
-    async def _sync_database_to_broker(self, broker_positions: List[PositionDict]):
+    async def _sync_database_to_broker(self, broker_positions: list[PositionDict]):
         """
         Sync local database to match broker reality.
 

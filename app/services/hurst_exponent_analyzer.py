@@ -41,7 +41,7 @@ import logging
 from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
-from typing import Dict, List, Optional, Tuple, Union
+from typing import Optional, Union
 
 import numba
 import numpy as np
@@ -109,8 +109,8 @@ class HurstResult:
     method: str
     std_error: Optional[float] = None
     p_value: Optional[float] = None
-    rs_values: Optional[List[float]] = None
-    window_sizes: Optional[List[int]] = None
+    rs_values: Optional[list[float]] = None
+    window_sizes: Optional[list[int]] = None
 
 
 @dataclass
@@ -249,7 +249,7 @@ def calculate_hurst_rs_numba(
     min_window: int = 10,
     max_window: Optional[int] = None,
     num_windows: int = 20,
-) -> Tuple[float, np.ndarray, np.ndarray]:
+) -> tuple[float, np.ndarray, np.ndarray]:
     """
     Calculate Hurst Exponent using R/S (Rescaled Range) analysis with Numba JIT.
 
@@ -349,10 +349,7 @@ def calculate_hurst_rs_numba(
         variance += diff_window * diff_window
 
     # Calculate slope (Hurst exponent)
-    if variance > 0:
-        hurst = covariance / variance
-    else:
-        hurst = 0.5  # Default to random walk
+    hurst = covariance / variance if variance > 0 else 0.5  # Default to random walk
 
     # Clip to reasonable bounds [0, 1]
     if hurst < 0:
@@ -673,7 +670,7 @@ class HurstExponentAnalyzer:
         self.use_returns = use_returns
 
         # Store historical Hurst values for regime change detection
-        self._historical_hurst: Dict[str, List[Tuple[datetime, float]]] = {}
+        self._historical_hurst: dict[str, list[tuple[datetime, float]]] = {}
 
         logger.info(
             f"HurstExponentAnalyzer initialized: method={method}, "
@@ -684,7 +681,7 @@ class HurstExponentAnalyzer:
 
     def analyze(
         self,
-        series: Union[pd.Series, np.ndarray, List[float]],
+        series: Union[pd.Series, np.ndarray, list[float]],
         symbol: Optional[str] = None,
         timestamp: Optional[datetime] = None,
     ) -> HurstResult:
@@ -840,7 +837,7 @@ class HurstExponentAnalyzer:
 
         # Get current and previous Hurst values
         current_ts, current_hurst = history[-1]
-        previous_ts, previous_hurst = history[-lookback_periods - 1]
+        _previous_ts, previous_hurst = history[-lookback_periods - 1]
 
         # Calculate difference
         hurst_diff = abs(current_hurst - previous_hurst)
@@ -878,8 +875,8 @@ class HurstExponentAnalyzer:
         return change
 
     def monitor_multiple_symbols(
-        self, data: Dict[str, pd.Series], detect_changes: bool = True
-    ) -> Dict[str, HurstResult]:
+        self, data: dict[str, pd.Series], detect_changes: bool = True
+    ) -> dict[str, HurstResult]:
         """
         Analyze Hurst exponent for multiple symbols.
 
@@ -1077,7 +1074,7 @@ class HurstExponentAnalyzer:
             method=self.method,
         )
 
-    def get_historical_hurst(self, symbol: str) -> List[Tuple[datetime, float]]:
+    def get_historical_hurst(self, symbol: str) -> list[tuple[datetime, float]]:
         """
         Get historical Hurst values for a symbol.
 
@@ -1092,7 +1089,7 @@ class HurstExponentAnalyzer:
     # Public methods for test compatibility
     def calculate_hurst_exponent(
         self,
-        series: Union[pd.Series, np.ndarray, List[float]],
+        series: Union[pd.Series, np.ndarray, list[float]],
         calculate_confidence: bool = False,
         calculate_std_error: bool = False,
     ) -> HurstResult:
@@ -1143,10 +1140,10 @@ class HurstExponentAnalyzer:
 
     def calculate_rolling_hurst(
         self,
-        series: Union[pd.Series, np.ndarray, List[float]],
+        series: Union[pd.Series, np.ndarray, list[float]],
         window: int = 250,
         step: int = 50,
-    ) -> List[HurstResult]:
+    ) -> list[HurstResult]:
         """
         Calculate rolling Hurst exponent over a time series.
 
@@ -1176,10 +1173,10 @@ class HurstExponentAnalyzer:
 
     def detect_regime_changes(
         self,
-        series: Union[pd.Series, np.ndarray, List[float]],
+        series: Union[pd.Series, np.ndarray, list[float]],
         window: int = 250,
         step: int = 50,
-    ) -> List[RegimeChange]:
+    ) -> list[RegimeChange]:
         """
         Detect regime changes in a time series.
 
@@ -1218,7 +1215,7 @@ class HurstExponentAnalyzer:
 
 
 def calculate_hurst_exponent(
-    series: Union[pd.Series, np.ndarray, List[float]], method: str = "rs", use_returns: bool = True
+    series: Union[pd.Series, np.ndarray, list[float]], method: str = "rs", use_returns: bool = True
 ) -> float:
     """
     Quick calculation of Hurst exponent (returns only the value).

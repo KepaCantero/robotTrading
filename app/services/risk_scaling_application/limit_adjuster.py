@@ -13,7 +13,7 @@ Responsibilities:
 import logging
 from dataclasses import dataclass
 from decimal import Decimal
-from typing import Dict, List, Optional, Tuple
+from typing import Optional
 
 from app.services.portfolio_constructor import AllocationWeight
 
@@ -86,10 +86,10 @@ class LimitAdjuster:
 
     def adjust_position_limits(
         self,
-        original_allocations: List[AllocationWeight],
+        original_allocations: list[AllocationWeight],
         scaling_factor: Decimal,
         portfolio_value: Decimal,
-    ) -> List[AdjustedLimit]:
+    ) -> list[AdjustedLimit]:
         """
         Adjust position limits based on scaling factor.
 
@@ -147,9 +147,9 @@ class LimitAdjuster:
 
     def detect_limit_breaches(
         self,
-        current_positions: Dict[str, Decimal],  # module_name → position value
-        adjusted_limits: List[AdjustedLimit],
-    ) -> List[LimitBreach]:
+        current_positions: dict[str, Decimal],  # module_name -> position value
+        adjusted_limits: list[AdjustedLimit],
+    ) -> list[LimitBreach]:
         """
         Detect position limit breaches.
 
@@ -172,10 +172,10 @@ class LimitAdjuster:
                 # Determine severity
                 if excess_pct > Decimal("25"):
                     severity = "critical"
-                    recommendation = f"⚠️ CRITICAL: Reduce {limit.module_name} by €{excess:,.0f} ({excess_pct:.1f}%)"
+                    recommendation = f"⚠ CRITICAL: Reduce {limit.module_name} by €{excess:,.0f} ({excess_pct:.1f}%)"
                 else:
                     severity = "warning"
-                    recommendation = f"⚠️ WARNING: Reduce {limit.module_name} by €{excess:,.0f} ({excess_pct:.1f}%)"
+                    recommendation = f"⚠ WARNING: Reduce {limit.module_name} by €{excess:,.0f} ({excess_pct:.1f}%)"
 
                 breach = LimitBreach(
                     module_name=limit.module_name,
@@ -189,7 +189,7 @@ class LimitAdjuster:
                 limit.breached = True
 
         if breaches:
-            logger.warning(f"⚠️ Detected {len(breaches)} position limit breaches")
+            logger.warning(f"⚠ Detected {len(breaches)} position limit breaches")
         return breaches
 
     # ========================================================================
@@ -201,7 +201,7 @@ class LimitAdjuster:
         base_leverage: Decimal,
         scaling_factor: Decimal,
         market_condition: str = "normal",
-    ) -> Tuple[Decimal, str]:
+    ) -> tuple[Decimal, str]:
         """
         Adjust leverage based on scaling and market conditions.
 
@@ -233,9 +233,9 @@ class LimitAdjuster:
         # Enforce hard floor
         adjusted_leverage = max(adjusted_leverage, Decimal("1.0"))
 
-        rationale = f"Base: {base_leverage:.2f}x × Scaling: {scaling_factor:.2f}x = {adjusted_leverage:.2f}x. {condition_reason}"
+        rationale = f"Base: {base_leverage:.2f}x * Scaling: {scaling_factor:.2f}x = {adjusted_leverage:.2f}x. {condition_reason}"
 
-        logger.info(f"✅ Leverage adjusted: {base_leverage:.2f}x → {adjusted_leverage:.2f}x")
+        logger.info(f"✅ Leverage adjusted: {base_leverage:.2f}x -> {adjusted_leverage:.2f}x")
         return adjusted_leverage, rationale
 
     # ========================================================================
@@ -246,8 +246,8 @@ class LimitAdjuster:
         self,
         module_name: str,
         proposed_position: Decimal,
-        adjusted_limits: List[AdjustedLimit],
-    ) -> Tuple[bool, str]:
+        adjusted_limits: list[AdjustedLimit],
+    ) -> tuple[bool, str]:
         """
         Validate if proposed position is within adjusted limits.
 
@@ -280,7 +280,7 @@ class LimitAdjuster:
         self,
         current_leverage: Decimal,
         max_leverage: Optional[Decimal] = None,
-    ) -> Tuple[bool, str]:
+    ) -> tuple[bool, str]:
         """
         Validate if current leverage is within limits.
 
@@ -306,9 +306,9 @@ class LimitAdjuster:
 
     def enforce_hard_stops(
         self,
-        breaches: List[LimitBreach],
+        breaches: list[LimitBreach],
         critical_action: str = "reduce",
-    ) -> Tuple[bool, Dict]:
+    ) -> tuple[bool, dict]:
         """
         Enforce hard stops on critical breaches.
 
@@ -327,7 +327,7 @@ class LimitAdjuster:
         if critical_action == "halt":
             return False, {
                 "action": "halt",
-                "message": f"⚠️ HALT: {len(critical_breaches)} critical breaches detected",
+                "message": f"⚠ HALT: {len(critical_breaches)} critical breaches detected",
                 "breaches": [
                     {
                         "module": b.module_name,
@@ -354,14 +354,14 @@ class LimitAdjuster:
 
             return True, {
                 "action": "reduce",
-                "message": f"⚠️ REDUCE: {len(critical_breaches)} positions require reduction",
+                "message": f"⚠ REDUCE: {len(critical_breaches)} positions require reduction",
                 "reductions": reductions,
             }
 
         # freeze action
         return True, {
             "action": "freeze",
-            "message": f"⚠️ FREEZE: {len(critical_breaches)} positions frozen pending review",
+            "message": f"⚠ FREEZE: {len(critical_breaches)} positions frozen pending review",
             "frozen_modules": [b.module_name for b in critical_breaches],
         }
 

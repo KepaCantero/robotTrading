@@ -9,7 +9,7 @@ import logging
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 import numpy as np
 
@@ -58,7 +58,7 @@ class OrchestratorConfig:
     max_volatility: float = 0.15
 
     # Strategy allocation (default distribution)
-    strategy_allocations: Dict[str, float] = field(
+    strategy_allocations: dict[str, float] = field(
         default_factory=lambda: {
             "momentum": 0.50,
             "mean_reversion": 0.35,
@@ -117,9 +117,9 @@ class StageResult:
     data: Optional[Any] = None
     message: str = ""
     duration_ms: float = 0.0
-    errors: List[str] = field(default_factory=list)
-    warnings: List[str] = field(default_factory=list)
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    errors: list[str] = field(default_factory=list)
+    warnings: list[str] = field(default_factory=list)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
     def __post_init__(self):
         """Log stage result creation."""
@@ -137,7 +137,7 @@ class StageResult:
             },
         )
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for serialization."""
         return {
             "stage_type": self.stage_type.value,
@@ -159,14 +159,14 @@ class SignalSet:
     Combines signals from RL, momentum, mean reversion, and other strategies.
     """
 
-    signals: Dict[str, str] = field(default_factory=dict)  # symbol -> "BUY"/"SELL"/"HOLD"
+    signals: dict[str, str] = field(default_factory=dict)  # symbol -> "BUY"/"SELL"/"HOLD"
     buy_count: int = 0
     sell_count: int = 0
     hold_count: int = 0
-    rl_signals: Dict[str, str] = field(default_factory=dict)
-    momentum_signals: Dict[str, str] = field(default_factory=dict)
-    mean_reversion_signals: Dict[str, str] = field(default_factory=dict)
-    confidence_scores: Dict[str, float] = field(default_factory=dict)  # symbol -> confidence
+    rl_signals: dict[str, str] = field(default_factory=dict)
+    momentum_signals: dict[str, str] = field(default_factory=dict)
+    mean_reversion_signals: dict[str, str] = field(default_factory=dict)
+    confidence_scores: dict[str, float] = field(default_factory=dict)  # symbol -> confidence
     generated_at: datetime = field(default_factory=datetime.utcnow)
 
     def add_signal(
@@ -201,7 +201,7 @@ class SignalSet:
         elif source == "mean_reversion":
             self.mean_reversion_signals[symbol] = action
 
-    def get_summary(self) -> Dict[str, Any]:
+    def get_summary(self) -> dict[str, Any]:
         """Get summary statistics of the signal set."""
         total = len(self.signals)
         summary = {
@@ -237,9 +237,9 @@ class RiskValidationResult:
 
     passed: bool
     risk_level: str = "LOW"  # LOW, MEDIUM, HIGH, CRITICAL
-    violations: List[str] = field(default_factory=list)
-    warnings: List[str] = field(default_factory=list)
-    metrics: Dict[str, float] = field(default_factory=dict)
+    violations: list[str] = field(default_factory=list)
+    warnings: list[str] = field(default_factory=list)
+    metrics: dict[str, float] = field(default_factory=dict)
     validation_timestamp: datetime = field(default_factory=datetime.utcnow)
 
     def __post_init__(self):
@@ -257,7 +257,7 @@ class RiskValidationResult:
             },
         )
 
-    def get_summary(self) -> Dict[str, Any]:
+    def get_summary(self) -> dict[str, Any]:
         """Get summary of risk validation."""
         return {
             "passed": self.passed,
@@ -287,8 +287,8 @@ class ExecutionResult:
     orders_failed: int = 0
     total_value_eur: float = 0.0
     execution_time_ms: float = 0.0
-    order_details: List[Dict[str, Any]] = field(default_factory=list)
-    errors: List[str] = field(default_factory=list)
+    order_details: list[dict[str, Any]] = field(default_factory=list)
+    errors: list[str] = field(default_factory=list)
 
     def __post_init__(self):
         """Log execution result."""
@@ -305,7 +305,7 @@ class ExecutionResult:
             },
         )
 
-    def get_summary(self) -> Dict[str, Any]:
+    def get_summary(self) -> dict[str, Any]:
         """Get summary of execution result."""
         return {
             "executed": self.executed,
@@ -330,19 +330,19 @@ class TradingResult:
 
     success: bool
     profile_id: str = ""
-    allocation: Optional[Dict[str, Any]] = None
+    allocation: Optional[dict[str, Any]] = None
     signals: Optional[SignalSet] = None
     execution_result: Optional[ExecutionResult] = None
-    stage_results: List[StageResult] = field(default_factory=list)
-    errors: List[str] = field(default_factory=list)
-    warnings: List[str] = field(default_factory=list)
+    stage_results: list[StageResult] = field(default_factory=list)
+    errors: list[str] = field(default_factory=list)
+    warnings: list[str] = field(default_factory=list)
     execution_time_ms: float = 0.0
     started_at: datetime = field(default_factory=datetime.utcnow)
     completed_at: Optional[datetime] = None
 
     # Optional intermediate results
     investment_profile: Optional[Any] = None
-    universe_data: Optional[Dict[str, Any]] = None
+    universe_data: Optional[dict[str, Any]] = None
     tax_optimized_allocation: Optional[Any] = None
     risk_validation: Optional[RiskValidationResult] = None
     backtest_result: Optional[Any] = None
@@ -380,7 +380,7 @@ class TradingResult:
         )
         return None
 
-    def get_successful_stages(self) -> List[StageResult]:
+    def get_successful_stages(self) -> list[StageResult]:
         """Get all successfully completed stages."""
         successful = [r for r in self.stage_results if r.success]
         logger.debug(
@@ -389,7 +389,7 @@ class TradingResult:
         )
         return successful
 
-    def get_failed_stages(self) -> List[StageResult]:
+    def get_failed_stages(self) -> list[StageResult]:
         """Get all failed stages."""
         failed = [r for r in self.stage_results if not r.success]
         if failed:
@@ -403,7 +403,7 @@ class TradingResult:
             )
         return failed
 
-    def get_summary(self) -> Dict[str, Any]:
+    def get_summary(self) -> dict[str, Any]:
         """Get comprehensive summary of the trading result."""
         successful_stages = self.get_successful_stages()
         failed_stages = self.get_failed_stages()
@@ -437,7 +437,7 @@ class TradingResult:
         )
         return summary
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for serialization."""
         return {
             "success": self.success,

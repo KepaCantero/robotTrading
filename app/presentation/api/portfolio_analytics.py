@@ -15,10 +15,9 @@ import logging
 import traceback
 from datetime import datetime
 from decimal import Decimal
-from typing import Annotated, Any, Dict, List, Optional
-from uuid import UUID
+from typing import TYPE_CHECKING, Annotated, Any
 
-from fastapi import APIRouter, Request, Depends, Query
+from fastapi import APIRouter, Depends, Query, Request
 from pydantic import BaseModel, Field
 
 from app.domain.models.portfolio_analytics import (
@@ -39,6 +38,9 @@ from app.services.portfolio_analytics import (
 from . import audit_logger, get_correlation_id
 from .security import audit_log, rate_limit, require_auth
 
+if TYPE_CHECKING:
+    from uuid import UUID
+
 router = APIRouter(prefix="/portfolio-analytics", tags=["Portfolio Analytics"])
 logger = logging.getLogger(__name__)
 
@@ -51,53 +53,53 @@ class PerformanceMetricsRequest(BaseModel):
     period: PerformancePeriod = Field(
         default=PerformancePeriod.MONTHLY, description="Performance period"
     )
-    start_date: Optional[datetime] = Field(None, description="Start date for calculation")
-    end_date: Optional[datetime] = Field(None, description="End date for calculation")
+    start_date: datetime | None = Field(None, description="Start date for calculation")
+    end_date: datetime | None = Field(None, description="End date for calculation")
 
 
 class PerformanceMetricsResponse(BaseModel):
     """Response model for performance metrics."""
 
     success: bool = Field(..., description="Success status")
-    data: Optional[PerformanceMetrics] = Field(None, description="Performance metrics data")
-    error: Optional[str] = Field(None, description="Error message if any")
+    data: PerformanceMetrics | None = Field(None, description="Performance metrics data")
+    error: str | None = Field(None, description="Error message if any")
 
 
 class RiskMetricsResponse(BaseModel):
     """Response model for risk metrics."""
 
     success: bool = Field(..., description="Success status")
-    data: Optional[RiskMetrics] = Field(None, description="Risk metrics data")
-    error: Optional[str] = Field(None, description="Error message if any")
+    data: RiskMetrics | None = Field(None, description="Risk metrics data")
+    error: str | None = Field(None, description="Error message if any")
 
 
 class PortfolioAnalyticsResponse(BaseModel):
     """Response model for portfolio analytics."""
 
     success: bool = Field(..., description="Success status")
-    data: Optional[PortfolioAnalytics] = Field(None, description="Portfolio analytics data")
-    error: Optional[str] = Field(None, description="Error message if any")
+    data: PortfolioAnalytics | None = Field(None, description="Portfolio analytics data")
+    error: str | None = Field(None, description="Error message if any")
 
 
 class PortfolioAllocationResponse(BaseModel):
     """Response model for portfolio allocation."""
 
     success: bool = Field(..., description="Success status")
-    data: Optional[PortfolioAllocation] = Field(None, description="Portfolio allocation data")
-    error: Optional[str] = Field(None, description="Error message if any")
+    data: PortfolioAllocation | None = Field(None, description="Portfolio allocation data")
+    error: str | None = Field(None, description="Error message if any")
 
 
 class RebalanceRequest(BaseModel):
     """Request model for rebalancing recommendations."""
 
     portfolio_id: UUID = Field(..., description="Portfolio ID")
-    target_equity_allocation: Optional[Decimal] = Field(
+    target_equity_allocation: Decimal | None = Field(
         None, description="Target equity allocation percentage"
     )
-    target_cash_allocation: Optional[Decimal] = Field(
+    target_cash_allocation: Decimal | None = Field(
         None, description="Target cash allocation percentage"
     )
-    rebalance_threshold: Optional[Decimal] = Field(
+    rebalance_threshold: Decimal | None = Field(
         None, description="Rebalancing threshold percentage"
     )
 
@@ -106,30 +108,30 @@ class RebalanceResponse(BaseModel):
     """Response model for rebalancing recommendations."""
 
     success: bool = Field(..., description="Success status")
-    data: Optional[PortfolioRebalance] = Field(None, description="Rebalancing recommendations")
-    error: Optional[str] = Field(None, description="Error message if any")
+    data: PortfolioRebalance | None = Field(None, description="Rebalancing recommendations")
+    error: str | None = Field(None, description="Error message if any")
 
 
 class PortfolioComparisonRequest(BaseModel):
     """Request model for portfolio comparison."""
 
-    portfolio_ids: List[UUID] = Field(..., description="Portfolio IDs to compare")
+    portfolio_ids: list[UUID] = Field(..., description="Portfolio IDs to compare")
 
 
 class PortfolioComparisonResponse(BaseModel):
     """Response model for portfolio comparison."""
 
     success: bool = Field(..., description="Success status")
-    data: Optional[PortfolioComparison] = Field(None, description="Portfolio comparison data")
-    error: Optional[str] = Field(None, description="Error message if any")
+    data: PortfolioComparison | None = Field(None, description="Portfolio comparison data")
+    error: str | None = Field(None, description="Error message if any")
 
 
 class AnalyticsSummaryResponse(BaseModel):
     """Response model for analytics summary."""
 
     success: bool = Field(..., description="Success status")
-    data: Optional[Dict[str, Any]] = Field(None, description="Analytics summary data")
-    error: Optional[str] = Field(None, description="Error message if any")
+    data: dict[str, Any] | None = Field(None, description="Analytics summary data")
+    error: str | None = Field(None, description="Error message if any")
 
 
 # Mock portfolio data for demonstration
@@ -202,7 +204,9 @@ def _get_mock_portfolio(portfolio_id: UUID) -> ExtendedPortfolio:
 async def calculate_performance_metrics(
     request: PerformanceMetricsRequest,
     http_request: Request,
-    analytics_service: Annotated[PortfolioAnalyticsService, Depends(get_portfolio_analytics_service)],
+    analytics_service: Annotated[
+        PortfolioAnalyticsService, Depends(get_portfolio_analytics_service)
+    ],
 ):
     """Calculate performance metrics for a portfolio."""
     correlation_id = get_correlation_id()
@@ -256,7 +260,7 @@ async def calculate_performance_metrics(
             stack_trace=traceback.format_exc(),
         )
         return PerformanceMetricsResponse(
-            success=False, error=f"Timeout calculating performance metrics: {str(e)}"
+            success=False, error=f"Timeout calculating performance metrics: {e!s}"
         )
     except OSError as e:
         logger.error(
@@ -276,7 +280,7 @@ async def calculate_performance_metrics(
             stack_trace=traceback.format_exc(),
         )
         return PerformanceMetricsResponse(
-            success=False, error=f"Failed to calculate performance metrics: {str(e)}"
+            success=False, error=f"Failed to calculate performance metrics: {e!s}"
         )
     except Exception as e:
         logger.error(
@@ -295,16 +299,18 @@ async def calculate_performance_metrics(
             error_message=str(e),
             stack_trace=traceback.format_exc(),
         )
-        return PerformanceMetricsResponse(success=False, error=f"Unexpected error: {str(e)}")
+        return PerformanceMetricsResponse(success=False, error=f"Unexpected error: {e!s}")
 
 
 @router.get("/performance-metrics/{portfolio_id}", response_model=PerformanceMetricsResponse)
 async def get_performance_metrics(
     portfolio_id: UUID,
     period: Annotated[PerformancePeriod, Query(default=PerformancePeriod.MONTHLY)],
-    start_date: Annotated[Optional[datetime], Query(None)],
-    end_date: Annotated[Optional[datetime], Query(None)],
-    analytics_service: Annotated[PortfolioAnalyticsService, Depends(get_portfolio_analytics_service)],
+    start_date: Annotated[datetime | None, Query(None)],
+    end_date: Annotated[datetime | None, Query(None)],
+    analytics_service: Annotated[
+        PortfolioAnalyticsService, Depends(get_portfolio_analytics_service)
+    ],
 ):
     """Get performance metrics for a portfolio."""
     try:
@@ -320,14 +326,16 @@ async def get_performance_metrics(
 
     except (asyncio.TimeoutError, OSError) as e:
         return PerformanceMetricsResponse(
-            success=False, error=f"Failed to get performance metrics: {str(e)}"
+            success=False, error=f"Failed to get performance metrics: {e!s}"
         )
 
 
 @router.get("/risk-metrics/{portfolio_id}", response_model=RiskMetricsResponse)
 async def get_risk_metrics(
     portfolio_id: UUID,
-    analytics_service: Annotated[PortfolioAnalyticsService, Depends(get_portfolio_analytics_service)],
+    analytics_service: Annotated[
+        PortfolioAnalyticsService, Depends(get_portfolio_analytics_service)
+    ],
 ):
     """Get risk metrics for a portfolio."""
     try:
@@ -340,13 +348,15 @@ async def get_risk_metrics(
         return RiskMetricsResponse(success=True, data=metrics)
 
     except (asyncio.TimeoutError, OSError) as e:
-        return RiskMetricsResponse(success=False, error=f"Failed to get risk metrics: {str(e)}")
+        return RiskMetricsResponse(success=False, error=f"Failed to get risk metrics: {e!s}")
 
 
 @router.get("/analytics/{portfolio_id}", response_model=PortfolioAnalyticsResponse)
 async def get_portfolio_analytics(
     portfolio_id: UUID,
-    analytics_service: Annotated[PortfolioAnalyticsService, Depends(get_portfolio_analytics_service)],
+    analytics_service: Annotated[
+        PortfolioAnalyticsService, Depends(get_portfolio_analytics_service)
+    ],
 ):
     """Get comprehensive portfolio analytics."""
     try:
@@ -360,14 +370,16 @@ async def get_portfolio_analytics(
 
     except (asyncio.TimeoutError, OSError) as e:
         return PortfolioAnalyticsResponse(
-            success=False, error=f"Failed to get portfolio analytics: {str(e)}"
+            success=False, error=f"Failed to get portfolio analytics: {e!s}"
         )
 
 
 @router.get("/allocation/{portfolio_id}", response_model=PortfolioAllocationResponse)
 async def get_portfolio_allocation(
     portfolio_id: UUID,
-    analytics_service: Annotated[PortfolioAnalyticsService, Depends(get_portfolio_analytics_service)],
+    analytics_service: Annotated[
+        PortfolioAnalyticsService, Depends(get_portfolio_analytics_service)
+    ],
 ):
     """Get portfolio allocation analysis."""
     try:
@@ -381,7 +393,7 @@ async def get_portfolio_allocation(
 
     except (asyncio.TimeoutError, OSError) as e:
         return PortfolioAllocationResponse(
-            success=False, error=f"Failed to get portfolio allocation: {str(e)}"
+            success=False, error=f"Failed to get portfolio allocation: {e!s}"
         )
 
 
@@ -391,7 +403,9 @@ async def get_portfolio_allocation(
 @audit_log("rebalance_recommendation_generated", log_args=True)
 async def get_rebalance_recommendation(
     request: RebalanceRequest,
-    analytics_service: Annotated[PortfolioAnalyticsService, Depends(get_portfolio_analytics_service)],
+    analytics_service: Annotated[
+        PortfolioAnalyticsService, Depends(get_portfolio_analytics_service)
+    ],
 ):
     """Get portfolio rebalancing recommendations."""
     try:
@@ -428,14 +442,16 @@ async def get_rebalance_recommendation(
 
     except (asyncio.TimeoutError, OSError) as e:
         return RebalanceResponse(
-            success=False, error=f"Failed to get rebalance recommendation: {str(e)}"
+            success=False, error=f"Failed to get rebalance recommendation: {e!s}"
         )
 
 
 @router.post("/compare", response_model=PortfolioComparisonResponse)
 async def compare_portfolios(
     request: PortfolioComparisonRequest,
-    analytics_service: Annotated[PortfolioAnalyticsService, Depends(get_portfolio_analytics_service)],
+    analytics_service: Annotated[
+        PortfolioAnalyticsService, Depends(get_portfolio_analytics_service)
+    ],
 ):
     """Compare multiple portfolios."""
     try:
@@ -446,14 +462,16 @@ async def compare_portfolios(
 
     except (asyncio.TimeoutError, OSError) as e:
         return PortfolioComparisonResponse(
-            success=False, error=f"Failed to compare portfolios: {str(e)}"
+            success=False, error=f"Failed to compare portfolios: {e!s}"
         )
 
 
 @router.get("/summary/{portfolio_id}", response_model=AnalyticsSummaryResponse)
 async def get_analytics_summary(
     portfolio_id: UUID,
-    analytics_service: Annotated[PortfolioAnalyticsService, Depends(get_portfolio_analytics_service)],
+    analytics_service: Annotated[
+        PortfolioAnalyticsService, Depends(get_portfolio_analytics_service)
+    ],
 ):
     """Get portfolio analytics summary."""
     try:
@@ -488,7 +506,7 @@ async def get_analytics_summary(
 
     except (ValueError, TypeError, KeyError, AttributeError) as e:
         return AnalyticsSummaryResponse(
-            success=False, error=f"Failed to get analytics summary: {str(e)}"
+            success=False, error=f"Failed to get analytics summary: {e!s}"
         )
 
 

@@ -45,13 +45,13 @@ class DiscrepancyDetector:
         config = get_config()
         # Get tolerances from config with defaults
         self.QUANTITY_TOLERANCE = Decimal(
-            str(getattr(config.trading, 'reconciliation_quantity_tolerance', 1))
+            str(getattr(config.trading, "reconciliation_quantity_tolerance", 1))
         )
         self.PRICE_TOLERANCE_PCT = Decimal(
-            str(getattr(config.trading, 'reconciliation_price_tolerance_pct', 0.001))
+            str(getattr(config.trading, "reconciliation_price_tolerance_pct", 0.001))
         )
         self.VALUE_TOLERANCE_PCT = Decimal(
-            str(getattr(config.trading, 'reconciliation_value_tolerance_pct', 0.005))
+            str(getattr(config.trading, "reconciliation_value_tolerance_pct", 0.005))
         )
 
         logger.info(

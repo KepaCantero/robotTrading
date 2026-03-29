@@ -23,10 +23,9 @@ from __future__ import annotations
 
 import logging
 from decimal import Decimal
-from typing import Any, Dict, List, Optional, Tuple
+from typing import TYPE_CHECKING, Any
 
 import numpy as np
-import pandas as pd
 
 from app.backtesting.validation.models import (
     OverfittingLevel,
@@ -35,6 +34,9 @@ from app.backtesting.validation.models import (
     PeriodResult,
     StabilityLevel,
 )
+
+if TYPE_CHECKING:
+    import pandas as pd
 
 logger = logging.getLogger(__name__)
 
@@ -88,19 +90,19 @@ class OverfittingDetector:
 
     def detect(
         self,
-        is_results: List[PeriodResult],
-        os_results: List[PeriodResult],
+        is_results: list[PeriodResult],
+        os_results: list[PeriodResult],
         n_params: int = 0,
-        parameter_history: Optional[List[Dict[str, Any]]] = None,
+        parameter_history: list[dict[str, Any]] | None = None,
     ) -> OverfittingMetrics:
         """
         Detect overfitting using multiple methods.
 
         Rules:
-        - Severe: OS Sharpe < 0.5 × IS Sharpe
-        - Moderate: OS Sharpe < 0.7 × IS Sharpe
-        - Mild: OS Sharpe < 0.85 × IS Sharpe
-        - None: OS Sharpe >= 0.85 × IS Sharpe
+        - Severe: OS Sharpe < 0.5 * IS Sharpe
+        - Moderate: OS Sharpe < 0.7 * IS Sharpe
+        - Mild: OS Sharpe < 0.85 * IS Sharpe
+        - None: OS Sharpe >= 0.85 * IS Sharpe
 
         Args:
             is_results: List of in-sample period results
@@ -185,7 +187,7 @@ class OverfittingDetector:
             return 0.0
         return os_value / is_value
 
-    def _aggregate_period_metrics(self, results: List[PeriodResult]) -> Dict[str, Decimal]:
+    def _aggregate_period_metrics(self, results: list[PeriodResult]) -> dict[str, Decimal]:
         """
         Aggregate metrics across periods.
 
@@ -296,7 +298,7 @@ class OverfittingDetector:
         degradation_ratio: float,
         return_degradation: float,
         n_params: int,
-    ) -> List[str]:
+    ) -> list[str]:
         """
         Generate actionable recommendations.
 
@@ -317,7 +319,7 @@ class OverfittingDetector:
                     "CRITICAL: Severe overfitting detected.",
                     "Strategy should NOT be used in production.",
                     "Consider: Simplifying strategy logic",
-                    "Consider: Reducing number of parameters from " f"{n_params} to fewer than 5",
+                    f"Consider: Reducing number of parameters from {n_params} to fewer than 5",
                     "Consider: Adding stronger regularization",
                     "Consider: Using ensemble methods to reduce variance",
                 ]
@@ -365,7 +367,7 @@ class OverfittingDetector:
         returns: pd.Series,
         null_returns: pd.Series,
         n_bootstrap: int = 1000,
-    ) -> Tuple[float, bool]:
+    ) -> tuple[float, bool]:
         """
         Perform White's reality check for data snooping.
 
@@ -402,10 +404,10 @@ class OverfittingDetector:
 
     def mcs_test(
         self,
-        strategies_returns: List[pd.Series],
-        benchmark_returns: Optional[pd.Series] = None,
+        strategies_returns: list[pd.Series],
+        benchmark_returns: pd.Series | None = None,
         alpha: float = 0.05,
-    ) -> Tuple[float, bool]:
+    ) -> tuple[float, bool]:
         """
         Perform Model Confidence Set (MCS) test.
 
@@ -455,9 +457,9 @@ class OverfittingDetector:
 
 
 def analyze_parameter_stability(
-    is_params: List[Dict[str, Any]],
-    os_params: List[Dict[str, Any]],
-) -> List[ParameterStabilityResult]:
+    is_params: list[dict[str, Any]],
+    os_params: list[dict[str, Any]],
+) -> list[ParameterStabilityResult]:
     """
     Analyze parameter stability across walk-forward windows.
 
@@ -537,7 +539,7 @@ def calculate_stability_score(is_std: Decimal, is_mean: Decimal) -> Decimal:
     """
     Calculate stability score (0-100).
 
-    Score = 100 × (1 - coefficient_of_variation)
+    Score = 100 * (1 - coefficient_of_variation)
     CV = std / mean
 
     Args:
@@ -574,7 +576,7 @@ def classify_stability(stability_score: Decimal) -> StabilityLevel:
         return StabilityLevel.UNSTABLE
 
 
-def detect_parameter_drift(param_values: List[float]) -> bool:
+def detect_parameter_drift(param_values: list[float]) -> bool:
     """
     Detect parameter drift using Mann-Kendall trend test.
 
@@ -606,7 +608,7 @@ def detect_parameter_drift(param_values: List[float]) -> bool:
         z = (s - np.sign(s)) / np.sqrt(var_s)
 
         # Test for significance (p < 0.05, two-tailed)
-        # Critical value is approximately ±1.96
+        # Critical value is approximately +/-1.96
         return abs(z) > 1.96
 
     return False

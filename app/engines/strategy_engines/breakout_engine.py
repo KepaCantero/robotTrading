@@ -14,8 +14,9 @@ Características principales:
 
 import logging
 from collections import deque
+from collections.abc import Sequence
 from decimal import Decimal
-from typing import Any, Dict, List, Optional, Sequence
+from typing import Any, Optional
 
 from app.domain.models.market_data import Quote
 from app.domain.models.portfolio import Portfolio
@@ -41,7 +42,7 @@ class BreakoutStrategyEngine(BaseStrategyEngine):
     - Requiere confirmación por volumen (volume_ratio >= min_volume_ratio).
     """
 
-    def __init__(self, config: Dict[str, Any]):
+    def __init__(self, config: dict[str, Any]):
         """
         Inicializar BreakoutStrategyEngine.
 
@@ -141,7 +142,7 @@ class BreakoutStrategyEngine(BaseStrategyEngine):
         self,
         market_data: Quote,
         historical_data: Optional[Sequence[Quote]] = None,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Extraer features estandarizados para Learning Engine.
 
@@ -152,7 +153,7 @@ class BreakoutStrategyEngine(BaseStrategyEngine):
         - volume_ratio
         - atr / relative_atr (si hay suficiente histórico)
         """
-        features: Dict[str, Any] = {
+        features: dict[str, Any] = {
             "timestamp": getattr(market_data, "timestamp", None),
             "symbol": market_data.symbol,
             "price": float(market_data.close or market_data.bid or market_data.last or 0),
@@ -241,7 +242,7 @@ class BreakoutStrategyEngine(BaseStrategyEngine):
 
         return features
 
-    def _generate_signals_impl(self, market_data: Quote) -> List[Signal]:
+    def _generate_signals_impl(self, market_data: Quote) -> list[Signal]:
         """
         Implementación específica de generación de señales para breakout.
 
@@ -251,7 +252,7 @@ class BreakoutStrategyEngine(BaseStrategyEngine):
         Returns:
             Lista de señales generadas.
         """
-        signals: List[Signal] = []
+        signals: list[Signal] = []
 
         try:
             current_price = float(market_data.close or market_data.bid or market_data.last or 0)
@@ -409,7 +410,7 @@ class BreakoutStrategyEngine(BaseStrategyEngine):
                 "Error generando señal en BreakoutStrategyEngine",
                 extra={
                     "strategy": "breakout",
-                    "symbol": getattr(market_data, 'symbol', None),
+                    "symbol": getattr(market_data, "symbol", None),
                     "error_type": type(e).__name__,
                 },
                 exc_info=True,
@@ -446,13 +447,13 @@ class BreakoutStrategyEngine(BaseStrategyEngine):
 
             # Contribución por distancia (hasta +25)
             distance_high_threshold = float(
-                getattr(config.trading, 'breakout_distance_high_threshold', 0.05)
+                getattr(config.trading, "breakout_distance_high_threshold", 0.05)
             )
             distance_medium_threshold = float(
-                getattr(config.trading, 'breakout_distance_medium_threshold', 0.02)
+                getattr(config.trading, "breakout_distance_medium_threshold", 0.02)
             )
             distance_low_threshold = float(
-                getattr(config.trading, 'breakout_distance_low_threshold', 0.01)
+                getattr(config.trading, "breakout_distance_low_threshold", 0.01)
             )
 
             if distance_ratio > distance_high_threshold:
@@ -464,10 +465,10 @@ class BreakoutStrategyEngine(BaseStrategyEngine):
 
             # Contribución por volumen (hasta +25)
             volume_high_threshold = float(
-                getattr(config.trading, 'breakout_volume_ratio_high_threshold', 3.0)
+                getattr(config.trading, "breakout_volume_ratio_high_threshold", 3.0)
             )
             volume_medium_threshold = float(
-                getattr(config.trading, 'breakout_volume_ratio_medium_threshold', 2.0)
+                getattr(config.trading, "breakout_volume_ratio_medium_threshold", 2.0)
             )
             min_volume_threshold = float(self.min_volume_ratio)
 
@@ -524,7 +525,7 @@ class BreakoutStrategyEngine(BaseStrategyEngine):
             return SignalStrength.MODERATE
         return SignalStrength.WEAK
 
-    def get_required_parameters(self) -> List[str]:
+    def get_required_parameters(self) -> list[str]:
         """Obtener parámetros requeridos."""
         return [
             "lookback_period",

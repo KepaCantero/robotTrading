@@ -24,11 +24,13 @@ from __future__ import annotations
 import logging
 from dataclasses import dataclass
 from datetime import datetime
-from decimal import Decimal
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import TYPE_CHECKING, Any
 
 import pandas as pd
+
+if TYPE_CHECKING:
+    from decimal import Decimal
 
 logger = logging.getLogger(__name__)
 
@@ -39,10 +41,10 @@ class HistoricalConstituent:
 
     symbol: str
     entry_date: datetime
-    exit_date: Optional[datetime]
-    exit_reason: Optional[str]  # 'delisted', 'merged', 'still_trading'
-    market_cap: Optional[Decimal]
-    sector: Optional[str]
+    exit_date: datetime | None
+    exit_reason: str | None  # 'delisted', 'merged', 'still_trading'
+    market_cap: Decimal | None
+    sector: str | None
 
 
 @dataclass(frozen=True)
@@ -50,9 +52,9 @@ class PITDataSnapshot:
     """Point-in-time snapshot of market data."""
 
     as_of_date: datetime
-    available_symbols: List[str]
+    available_symbols: list[str]
     total_universe_size: int
-    data_coverage: Dict[str, int]  # symbol -> days of history available
+    data_coverage: dict[str, int]  # symbol -> days of history available
 
 
 @dataclass(frozen=True)
@@ -62,7 +64,7 @@ class CorporateAction:
     symbol: str
     action_type: str  # 'split', 'dividend', 'merger', 'spinoff'
     ex_date: datetime
-    action_details: Dict[str, Any]
+    action_details: dict[str, Any]
     adjustment_factor: Decimal
 
 
@@ -76,7 +78,7 @@ class PointInTimeDatabase:
 
     def __init__(
         self,
-        pit_data_path: Optional[Path] = None,
+        pit_data_path: Path | None = None,
         cache_size_mb: int = 100,
     ):
         """
@@ -90,13 +92,13 @@ class PointInTimeDatabase:
         self.cache_size_mb = cache_size_mb
 
         # In-memory cache for historical snapshots
-        self._snapshot_cache: Dict[datetime, PITDataSnapshot] = {}
+        self._snapshot_cache: dict[datetime, PITDataSnapshot] = {}
 
         # Corporate actions database
-        self._corporate_actions: Dict[str, List[CorporateAction]] = {}
+        self._corporate_actions: dict[str, list[CorporateAction]] = {}
 
         # Historical constituents database
-        self._historical_constituents: Dict[datetime, List[HistoricalConstituent]] = {}
+        self._historical_constituents: dict[datetime, list[HistoricalConstituent]] = {}
 
         logger.info(
             f"PointInTimeDatabase initialized with cache size: {cache_size_mb}MB, "
@@ -106,10 +108,10 @@ class PointInTimeDatabase:
     def get_universe_at_date(
         self,
         query_date: datetime,
-        min_market_cap: Optional[Decimal] = None,
-        sectors: Optional[List[str]] = None,
-        max_universe_size: Optional[int] = None,
-    ) -> List[str]:
+        min_market_cap: Decimal | None = None,
+        sectors: list[str] | None = None,
+        max_universe_size: int | None = None,
+    ) -> list[str]:
         """
         Get the trading universe as of a specific historical date.
 
@@ -163,7 +165,7 @@ class PointInTimeDatabase:
         symbol: str,
         query_date: datetime,
         lookback_days: int = 252,
-    ) -> Optional[pd.DataFrame]:
+    ) -> pd.DataFrame | None:
         """
         Get historical data as of a specific date.
 
@@ -261,8 +263,8 @@ class PointInTimeDatabase:
     def create_pit_snapshot(
         self,
         as_of_date: datetime,
-        current_symbols: List[str],
-        data_sources: Dict[str, pd.DataFrame],
+        current_symbols: list[str],
+        data_sources: dict[str, pd.DataFrame],
     ) -> PITDataSnapshot:
         """
         Create a point-in-time snapshot of market data.
@@ -347,7 +349,7 @@ class PointInTimeDatabase:
             logger.error(f"Error validating look-ahead bias: {e}")
             return False
 
-    def _load_universe_for_date(self, query_date: datetime) -> List[str]:
+    def _load_universe_for_date(self, query_date: datetime) -> list[str]:
         """Load the trading universe for a specific date."""
         # In production, load from actual PIT database
         # For now, simulate based on historical growth rates
@@ -373,11 +375,11 @@ class PointInTimeDatabase:
 
     def _apply_filters(
         self,
-        universe: List[str],
+        universe: list[str],
         query_date: datetime,
-        min_market_cap: Optional[Decimal],
-        sectors: Optional[List[str]],
-    ) -> List[str]:
+        min_market_cap: Decimal | None,
+        sectors: list[str] | None,
+    ) -> list[str]:
         """Apply filters to universe."""
         filtered = universe.copy()
 
@@ -386,8 +388,8 @@ class PointInTimeDatabase:
         return filtered
 
     def _select_top_by_market_cap(
-        self, universe: List[str], query_date: datetime, n: int
-    ) -> List[str]:
+        self, universe: list[str], query_date: datetime, n: int
+    ) -> list[str]:
         """Select top N stocks by market cap."""
         # In production, sort by actual market cap data
         # For now, return first N
@@ -395,7 +397,7 @@ class PointInTimeDatabase:
 
     def _load_historical_data(
         self, symbol: str, query_date: datetime, lookback_days: int
-    ) -> Optional[pd.DataFrame]:
+    ) -> pd.DataFrame | None:
         """Load historical data for a symbol."""
         # In production, load from PIT database
         # For now, return empty DataFrame to avoid pylint None assignment warning
@@ -444,7 +446,7 @@ class PointInTimeDatabase:
 
 def create_pit_database_from_csv(
     data_path: Path,
-    pit_output_path: Optional[Path] = None,
+    pit_output_path: Path | None = None,
 ) -> PointInTimeDatabase:
     """
     Create a point-in-time database from CSV files.

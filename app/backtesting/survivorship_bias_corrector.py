@@ -26,10 +26,12 @@ import logging
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from decimal import Decimal
-from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import TYPE_CHECKING
 
 import pandas as pd
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
@@ -56,7 +58,7 @@ class SurvivorshipAdjustment:
     survivorship_bias_factor: float  # Multiplier to adjust returns
     bankruptcy_adjustment: float
     acquisition_adjustment: float
-    average_delisting_date: Optional[datetime]
+    average_delisting_date: datetime | None
 
 
 class SurvivorshipBiasCorrector:
@@ -83,8 +85,8 @@ class SurvivorshipBiasCorrector:
 
     def __init__(
         self,
-        delisting_data_path: Optional[Path] = None,
-        custom_delisting_rates: Optional[Dict[str, float]] = None,
+        delisting_data_path: Path | None = None,
+        custom_delisting_rates: dict[str, float] | None = None,
     ):
         """
         Initialize the survivorship bias corrector.
@@ -101,11 +103,11 @@ class SurvivorshipBiasCorrector:
         }
 
         # Cache for delisting data
-        self._delisting_cache: Optional[pd.DataFrame] = None
+        self._delisting_cache: pd.DataFrame | None = None
 
     def calculate_survivorship_bias(
         self,
-        current_universe: List[str],
+        current_universe: list[str],
         backtest_start: datetime,
         backtest_end: datetime,
     ) -> SurvivorshipAdjustment:
@@ -232,10 +234,10 @@ class SurvivorshipBiasCorrector:
 
     def simulate_delisted_stocks(
         self,
-        current_symbols: List[str],
+        current_symbols: list[str],
         backtest_dates: pd.DatetimeIndex,
-        delisted_data: Optional[List[DelistedStockInfo]] = None,
-    ) -> Dict[datetime, List[str]]:
+        delisted_data: list[DelistedStockInfo] | None = None,
+    ) -> dict[datetime, list[str]]:
         """
         Simulate the inclusion of delisted stocks in historical universe.
 
@@ -332,7 +334,7 @@ class SurvivorshipBiasCorrector:
         premium_impact = self.ACQUISITION_PREMIUM * acquisitions / delisted_count
         return 1.0 + premium_impact
 
-    def load_delisting_data(self, filepath: Path) -> List[DelistedStockInfo]:
+    def load_delisting_data(self, filepath: Path) -> list[DelistedStockInfo]:
         """
         Load actual delisting data from CSV file.
 
@@ -376,11 +378,11 @@ class SurvivorshipBiasCorrector:
 
     def create_point_in_time_universe(
         self,
-        current_symbols: List[str],
+        current_symbols: list[str],
         backtest_start: datetime,
         backtest_end: datetime,
         frequency: str = "M",
-    ) -> Dict[datetime, List[str]]:
+    ) -> dict[datetime, list[str]]:
         """
         Create a point-in-time universe for backtesting.
 
@@ -433,11 +435,11 @@ class SurvivorshipBiasCorrector:
 
 def adjust_backtest_for_survivorship(
     returns: pd.Series,
-    current_universe: List[str],
+    current_universe: list[str],
     backtest_start: datetime,
     backtest_end: datetime,
-    corrector: Optional[SurvivorshipBiasCorrector] = None,
-) -> Tuple[pd.Series, SurvivorshipAdjustment]:
+    corrector: SurvivorshipBiasCorrector | None = None,
+) -> tuple[pd.Series, SurvivorshipAdjustment]:
     """
     Convenience function to adjust backtest returns for survivorship bias.
 

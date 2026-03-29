@@ -27,7 +27,7 @@ import logging
 import random
 import time
 from collections import OrderedDict
-from typing import Dict, List, Optional, Union
+from typing import ClassVar, Optional, Union
 
 # REQUIRED: yfinance is REQUIRED - NO FALLBACKS
 
@@ -68,7 +68,7 @@ async def retry_with_backoff(
     func,
     retry_config: Optional[RetryConfig] = None,
     operation_name: str = "operation",
-) -> Union[str, int, float, bool, Dict, List, None]:
+) -> Union[str, int, float, bool, dict, list, None]:
     """
     Execute function with retry and exponential backoff.
 
@@ -94,8 +94,7 @@ async def retry_with_backoff(
 
             if attempt == config.max_attempts - 1:
                 logger.error(
-                    f"{operation_name}: All {config.max_attempts} attempts failed. "
-                    f"Final error: {e}"
+                    f"{operation_name}: All {config.max_attempts} attempts failed. Final error: {e}"
                 )
                 raise
 
@@ -225,11 +224,11 @@ class LRUCache:
         self.default_ttl_seconds = default_ttl_seconds
 
         self._cache: OrderedDict = OrderedDict()
-        self._timestamps: Dict[str, float] = {}
+        self._timestamps: dict[str, float] = {}
         self._hits = 0
         self._misses = 0
 
-    def get(self, key: str) -> Optional[Union[str, int, float, bool, Dict, List]]:
+    def get(self, key: str) -> Optional[Union[str, int, float, bool, dict, list]]:
         """Get value from cache."""
         if key not in self._cache:
             self._misses += 1
@@ -246,7 +245,12 @@ class LRUCache:
         self._hits += 1
         return self._cache[key]
 
-    def put(self, key: str, value: Union[str, int, float, bool, Dict, List], ttl_seconds: Optional[float] = None):
+    def put(
+        self,
+        key: str,
+        value: Union[str, int, float, bool, dict, list],
+        ttl_seconds: Optional[float] = None,
+    ):
         """Put value in cache."""
         # Remove if exists
         if key in self._cache:
@@ -286,7 +290,7 @@ class LRUCache:
         self._cache.pop(key, None)
         self._timestamps.pop(key, None)
 
-    def get_stats(self) -> Dict[str, Union[str, int, float, bool]]:
+    def get_stats(self) -> dict[str, Union[str, int, float, bool]]:
         """Get cache statistics."""
         total = self._hits + self._misses
         hit_rate = self._hits / total if total > 0 else 0
@@ -317,7 +321,7 @@ class MarketUniverseLoader:
 
     # Known ticker lists from Wikipedia/YFinance
     # These serve as fallbacks if API fetch fails
-    SP500_FALLBACK = [
+    SP500_FALLBACK: ClassVar[list] = [
         "AAPL",
         "MSFT",
         "GOOGL",
@@ -394,7 +398,7 @@ class MarketUniverseLoader:
         "INTC",
     ]
 
-    NASDAQ100_FALLBACK = [
+    NASDAQ100_FALLBACK: ClassVar[list] = [
         "AAPL",
         "MSFT",
         "GOOGL",
@@ -418,7 +422,7 @@ class MarketUniverseLoader:
         "COST",
     ]
 
-    IBEX35_FALLBACK = [
+    IBEX35_FALLBACK: ClassVar[list] = [
         "SAN.MC",
         "REP.MC",
         "FER.MC",
@@ -451,7 +455,7 @@ class MarketUniverseLoader:
         "CABK.MC",
     ]
 
-    CRYPTO_TOP20 = [
+    CRYPTO_TOP20: ClassVar[list] = [
         "BTC-USD",
         "ETH-USD",
         "BNB-USD",

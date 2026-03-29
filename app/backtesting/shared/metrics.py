@@ -8,7 +8,7 @@ Eliminates 6+ duplicate implementations of _get_empty_metrics across:
 - optimization_validators.py (3 copies in same file!)
 """
 
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 from app.backtesting.shared.types import MetricKeys
 
@@ -22,7 +22,7 @@ class MetricsFactory:
     """
 
     @staticmethod
-    def get_empty_metrics(include_pnl: bool = True) -> Dict[str, Any]:
+    def get_empty_metrics(include_pnl: bool = True) -> dict[str, Any]:
         """
         Return empty metrics dict with all standard fields.
 
@@ -53,7 +53,7 @@ class MetricsFactory:
         return metrics
 
     @staticmethod
-    def get_empty_optimization_result() -> Dict[str, Any]:
+    def get_empty_optimization_result() -> dict[str, Any]:
         """
         Return empty optimization result structure.
 
@@ -69,7 +69,7 @@ class MetricsFactory:
         }
 
     @staticmethod
-    def get_empty_validation_result() -> Dict[str, Any]:
+    def get_empty_validation_result() -> dict[str, Any]:
         """
         Return empty validation result structure.
 
@@ -85,7 +85,7 @@ class MetricsFactory:
 
     @staticmethod
     def calculate_improvement(
-        baseline: Dict[str, float], optimized: Dict[str, float], metric_key: str
+        baseline: dict[str, float], optimized: dict[str, float], metric_key: str
     ) -> float:
         """
         Calculate improvement percentage between baseline and optimized.
@@ -122,8 +122,8 @@ class MetricsFactory:
 
     @staticmethod
     def safe_extract_first(
-        results: Optional[List[Dict[str, Any]]], context: str = "unknown"
-    ) -> Dict[str, Any]:
+        results: Optional[list[dict[str, Any]]], context: str = "unknown"
+    ) -> dict[str, Any]:
         """
         Safely extract first result from results list.
 
@@ -143,7 +143,7 @@ class MetricsFactory:
         return results[0]
 
     @staticmethod
-    def aggregate_metrics(metrics_list: List[Dict[str, Any]]) -> Dict[str, Any]:
+    def aggregate_metrics(metrics_list: list[dict[str, Any]]) -> dict[str, Any]:
         """
         Aggregate multiple metrics dicts into a single summary.
 
@@ -179,7 +179,7 @@ class MetricsFactory:
 
 
 # Convenience function for backward compatibility
-def get_empty_metrics(include_pnl: bool = True) -> Dict[str, Any]:
+def get_empty_metrics(include_pnl: bool = True) -> dict[str, Any]:
     """
     Convenience function for backward compatibility.
 

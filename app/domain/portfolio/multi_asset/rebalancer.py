@@ -12,7 +12,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from decimal import Decimal
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from app.backtesting.models import Trade
 from app.shared.config.centralized_config import get_config
@@ -54,7 +54,7 @@ class CostEstimate:
     total_cost: Decimal
     cost_as_percentage: Decimal
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
         return {
             "commission": float(self.commission),
@@ -137,12 +137,12 @@ class RebalancePlan:
         priority: Overall plan priority
     """
 
-    trades: List[RebalanceTrade]
+    trades: list[RebalanceTrade]
     total_cost: CostEstimate
     pre_rebalance_portfolio: MultiAssetPortfolio
     post_rebalance_portfolio: MultiAssetPortfolio
-    deviations: Dict[str, Decimal]
-    warnings: List[str]
+    deviations: dict[str, Decimal]
+    warnings: list[str]
     created_at: datetime
     priority: RebalancePriority = RebalancePriority.MEDIUM
 
@@ -157,12 +157,12 @@ class RebalancePlan:
         return Decimal(sum(abs(t.quantity * t.current_price) for t in self.trades))
 
     @property
-    def buys(self) -> List[RebalanceTrade]:
+    def buys(self) -> list[RebalanceTrade]:
         """Get all buy trades."""
         return [t for t in self.trades if t.is_buy]
 
     @property
-    def sells(self) -> List[RebalanceTrade]:
+    def sells(self) -> list[RebalanceTrade]:
         """Get all sell trades."""
         return [t for t in self.trades if t.is_sell]
 
@@ -211,9 +211,9 @@ class MultiAssetRebalancer:
 
     def __init__(
         self,
-        trading_cost_bps: Optional[Decimal] = None,
-        rebalance_threshold: Optional[Decimal] = None,
-        min_trade_size: Optional[Decimal] = None,
+        trading_cost_bps: Decimal | None = None,
+        rebalance_threshold: Decimal | None = None,
+        min_trade_size: Decimal | None = None,
     ):
         """
         Initialize rebalancer.
@@ -247,10 +247,10 @@ class MultiAssetRebalancer:
     def create_rebalance_plan(
         self,
         current_portfolio: MultiAssetPortfolio,
-        target_weights: Dict[str, Decimal],
-        current_prices: Dict[str, Decimal],
+        target_weights: dict[str, Decimal],
+        current_prices: dict[str, Decimal],
         portfolio_value: Decimal,
-        asset_classes: Dict[str, AssetClass],
+        asset_classes: dict[str, AssetClass],
     ) -> RebalancePlan:
         """
         Create comprehensive rebalancing plan.
@@ -265,22 +265,19 @@ class MultiAssetRebalancer:
         Returns:
             RebalancePlan with all necessary trades
         """
-        warnings: List[str] = []
-        deviations: Dict[str, Decimal] = {}
+        warnings: list[str] = []
+        deviations: dict[str, Decimal] = {}
 
         # Detect deviations
         for class_name, target_weight in target_weights.items():
             current_weight = current_portfolio.allocations.get(class_name)
-            if current_weight is None:
-                current_alloc = Decimal("0")
-            else:
-                current_alloc = current_weight.weight
+            current_alloc = Decimal("0") if current_weight is None else current_weight.weight
 
             deviation = target_weight - current_alloc
             deviations[class_name] = deviation
 
         # Calculate trades for each asset class
-        trades: List[RebalanceTrade] = []
+        trades: list[RebalanceTrade] = []
 
         for class_name, target_weight in target_weights.items():
             class_trades = self._calculate_asset_class_trades(
@@ -318,7 +315,7 @@ class MultiAssetRebalancer:
             priority=plan_priority,
         )
 
-    def prioritize_trades(self, trades: List[RebalanceTrade]) -> List[RebalanceTrade]:
+    def prioritize_trades(self, trades: list[RebalanceTrade]) -> list[RebalanceTrade]:
         """
         Prioritize trades for execution.
 
@@ -370,7 +367,7 @@ class MultiAssetRebalancer:
         return prioritized
 
     def estimate_costs(
-        self, trades: List[RebalanceTrade], portfolio_value: Decimal
+        self, trades: list[RebalanceTrade], portfolio_value: Decimal
     ) -> CostEstimate:
         """
         Calculate anticipated trading costs by asset class.
@@ -460,12 +457,12 @@ class MultiAssetRebalancer:
         class_name: str,
         target_weight: Decimal,
         current_portfolio: MultiAssetPortfolio,
-        current_prices: Dict[str, Decimal],
+        current_prices: dict[str, Decimal],
         portfolio_value: Decimal,
-        asset_classes: Dict[str, AssetClass],
-    ) -> List[RebalanceTrade]:
+        asset_classes: dict[str, AssetClass],
+    ) -> list[RebalanceTrade]:
         """Calculate trades to rebalance a single asset class."""
-        trades: List[RebalanceTrade] = []
+        trades: list[RebalanceTrade] = []
 
         # Get current allocation
         current_alloc = current_portfolio.allocations.get(class_name)
@@ -588,7 +585,7 @@ class MultiAssetRebalancer:
         tt = config.trading
 
         # Default rate from config
-        default_rate = Decimal(str(getattr(tt, 'tx_cost_equity', 0.0005)))
+        default_rate = Decimal(str(getattr(tt, "tx_cost_equity", 0.0005)))
 
         # Try to convert to AssetClassType
         try:
@@ -599,12 +596,12 @@ class MultiAssetRebalancer:
 
         # Get spread rates from config
         spread_rates = {
-            AssetClassType.EQUITY: Decimal(str(getattr(tt, 'tx_cost_equity', 0.0005))),
-            AssetClassType.CRYPTO: Decimal(str(getattr(tt, 'tx_cost_crypto', 0.001))),
-            AssetClassType.FOREX: Decimal(str(getattr(tt, 'tx_cost_forex', 0.0001))),
-            AssetClassType.FIXED_INCOME: Decimal(str(getattr(tt, 'tx_cost_fixed_income', 0.001))),
-            AssetClassType.COMMODITY: Decimal(str(getattr(tt, 'tx_cost_commodity', 0.0005))),
-            AssetClassType.REAL_ESTATE: Decimal(str(getattr(tt, 'tx_cost_real_estate', 0.001))),
+            AssetClassType.EQUITY: Decimal(str(getattr(tt, "tx_cost_equity", 0.0005))),
+            AssetClassType.CRYPTO: Decimal(str(getattr(tt, "tx_cost_crypto", 0.001))),
+            AssetClassType.FOREX: Decimal(str(getattr(tt, "tx_cost_forex", 0.0001))),
+            AssetClassType.FIXED_INCOME: Decimal(str(getattr(tt, "tx_cost_fixed_income", 0.001))),
+            AssetClassType.COMMODITY: Decimal(str(getattr(tt, "tx_cost_commodity", 0.0005))),
+            AssetClassType.REAL_ESTATE: Decimal(str(getattr(tt, "tx_cost_real_estate", 0.001))),
             AssetClassType.CASH: Decimal("0"),
         }
         return spread_rates.get(asset_type, default_rate)
@@ -633,13 +630,13 @@ class MultiAssetRebalancer:
 
         # Simplified - use same rate for all (short-term capital gains)
         # Could be made asset-class specific in the future
-        return Decimal(str(getattr(tt, 'portfolio_tax_rate', 0.25)))
+        return Decimal(str(getattr(tt, "portfolio_tax_rate", 0.25)))
 
     def _create_target_portfolio(
         self,
         current_portfolio: MultiAssetPortfolio,
-        target_weights: Dict[str, Decimal],
-        asset_classes: Dict[str, AssetClass],
+        target_weights: dict[str, Decimal],
+        asset_classes: dict[str, AssetClass],
     ) -> MultiAssetPortfolio:
         """Create target portfolio representation."""
         # Create new allocations with target weights
@@ -678,7 +675,7 @@ class MultiAssetRebalancer:
         )
 
     def _determine_plan_priority(
-        self, deviations: Dict[str, Decimal], cost_estimate: CostEstimate
+        self, deviations: dict[str, Decimal], cost_estimate: CostEstimate
     ) -> RebalancePriority:
         """Determine overall priority for rebalancing plan."""
         # Calculate maximum deviation
@@ -686,17 +683,17 @@ class MultiAssetRebalancer:
 
         # Get config for cost efficiency threshold
         cfg = get_config()
-        cost_threshold = Decimal(str(getattr(cfg.trading, 'max_cost_impact_ratio', 0.30)))
+        cost_threshold = Decimal(str(getattr(cfg.trading, "max_cost_impact_ratio", 0.30)))
 
         # Check cost efficiency
         cost_too_high = cost_estimate.cost_as_percentage > cost_threshold
 
         # Get rebalance thresholds from config
         rebalance_threshold_high = Decimal(
-            str(getattr(cfg.trading, 'portfolio_max_deviation_high', 0.10))
+            str(getattr(cfg.trading, "portfolio_max_deviation_high", 0.10))
         )
         rebalance_threshold_medium = Decimal(
-            str(getattr(cfg.trading, 'portfolio_max_deviation_moderate', 0.05))
+            str(getattr(cfg.trading, "portfolio_max_deviation_moderate", 0.05))
         )
 
         if max_deviation > Decimal("0.15"):
@@ -719,9 +716,9 @@ class MultiAssetRebalancer:
         self,
         current_portfolio: MultiAssetPortfolio,
         target_portfolio: MultiAssetPortfolio,
-        current_prices: Dict[str, Decimal],
+        current_prices: dict[str, Decimal],
         portfolio_value: Decimal,
-    ) -> List[Trade]:
+    ) -> list[Trade]:
         """
         Calculate trades needed to rebalance.
 
@@ -739,7 +736,7 @@ class MultiAssetRebalancer:
         Returns:
             List of Trade objects
         """
-        trades: List[Trade] = []
+        trades: list[Trade] = []
 
         # Get target weights
         target_weights = target_portfolio.get_asset_class_weights()

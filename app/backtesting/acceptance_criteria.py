@@ -16,7 +16,7 @@ REJECTION CRITERIA:
 
 import logging
 from datetime import datetime
-from typing import List, Optional
+from typing import Optional
 
 from app.backtesting.acceptance import (
     BenchmarkComparisonValidator,
@@ -38,9 +38,9 @@ logger = logging.getLogger(__name__)
 # Re-export models for backward compatibility
 __all__ = [
     "AcceptanceCriteria",
-    "VerdictStatus",
-    "CriterionResult",
     "AcceptanceReport",
+    "CriterionResult",
+    "VerdictStatus",
 ]
 
 
@@ -114,7 +114,7 @@ class AcceptanceCriteria:
         monte_carlo_p5_return: Optional[float] = None,
         commission_impact: Optional[float] = None,
         failed_regimes: Optional[int] = None,
-        equity_curve_last_years: Optional[List[float]] = None,
+        equity_curve_last_years: Optional[list[float]] = None,
     ) -> AcceptanceReport:
         """
         Validate strategy against all acceptance criteria (Req #17).
@@ -173,7 +173,7 @@ class AcceptanceCriteria:
         monte_carlo_p5_return: Optional[float],
         commission_impact: Optional[float],
         failed_regimes: Optional[int],
-        equity_curve_last_years: Optional[List[float]],
+        equity_curve_last_years: Optional[list[float]],
     ) -> dict:
         """Perform all validation steps."""
         criteria_results = self._validate_basic_criteria(
@@ -245,7 +245,7 @@ class AcceptanceCriteria:
         monte_carlo_p5_return: Optional[float],
         strategy_return: float,
         benchmark_return: float,
-    ) -> List[CriterionResult]:
+    ) -> list[CriterionResult]:
         """
         Validate all basic criteria using validator services.
 
@@ -260,7 +260,7 @@ class AcceptanceCriteria:
         Returns:
             List of CriterionResult for all basic criteria
         """
-        results: List[CriterionResult] = []
+        results: list[CriterionResult] = []
 
         # Validate Sharpe Ratio
         results.append(self._sharpe_validator.validate(sharpe))

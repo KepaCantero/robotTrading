@@ -18,10 +18,11 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from decimal import Decimal
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import TYPE_CHECKING, Any
 
-from .error_budget_manager import ErrorBudgetManager
-from .slo_tracker import SLOTracker
+if TYPE_CHECKING:
+    from .error_budget_manager import ErrorBudgetManager
+    from .slo_tracker import SLOTracker
 
 logger = logging.getLogger(__name__)
 
@@ -50,12 +51,12 @@ class GateDecision:
     gate_type: GateType
     status: GateStatus
     message: str
-    details: Dict[str, Any]
+    details: dict[str, Any]
     timestamp: datetime
     can_override: bool = False
-    override_reason: Optional[str] = None
+    override_reason: str | None = None
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
         return {
             "gate_type": self.gate_type.value,
@@ -74,12 +75,12 @@ class DeploymentBlocker:
 
     block_reason: str
     blocking_gate: GateType
-    budget_remaining_pct: Optional[Decimal] = None
-    active_violations: List[str] = field(default_factory=list)
+    budget_remaining_pct: Decimal | None = None
+    active_violations: list[str] = field(default_factory=list)
     blocked_at: datetime = field(default_factory=datetime.utcnow)
-    estimated_recovery: Optional[datetime] = None
+    estimated_recovery: datetime | None = None
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
         return {
             "block_reason": self.block_reason,
@@ -113,7 +114,7 @@ class DevelopmentGateConfig:
     # Override settings
     allow_override: bool = True
     override_require_approval: bool = True
-    override_approvers: List[str] = field(default_factory=list)
+    override_approvers: list[str] = field(default_factory=list)
 
     # Gate timeout (auto-recover after N minutes if conditions improve)
     gate_timeout_minutes: int = 60
@@ -136,8 +137,8 @@ class DevelopmentGate:
         self,
         service_name: str,
         error_budget_manager: ErrorBudgetManager,
-        slo_tracker: Optional[SLOTracker] = None,
-        config: Optional[DevelopmentGateConfig] = None,
+        slo_tracker: SLOTracker | None = None,
+        config: DevelopmentGateConfig | None = None,
     ):
         """
         Initialize development gate.
@@ -155,13 +156,13 @@ class DevelopmentGate:
         self.logger = logging.getLogger(f"{__name__}.{service_name}")
 
         # Current block state
-        self._current_blocker: Optional[DeploymentBlocker] = None
+        self._current_blocker: DeploymentBlocker | None = None
 
         # Decision history
-        self._decision_history: List[GateDecision] = []
+        self._decision_history: list[GateDecision] = []
 
         # Override tracking
-        self._active_overrides: Dict[str, datetime] = {}
+        self._active_overrides: dict[str, datetime] = {}
 
         # Lock
         self._lock = asyncio.Lock()
@@ -170,9 +171,9 @@ class DevelopmentGate:
 
     async def check_deployment_allowed(
         self,
-        requesting_user: Optional[str] = None,
-        reason: Optional[str] = None,
-    ) -> tuple[bool, List[GateDecision], Optional[DeploymentBlocker]]:
+        requesting_user: str | None = None,
+        reason: str | None = None,
+    ) -> tuple[bool, list[GateDecision], DeploymentBlocker | None]:
         """
         Check if deployment is allowed.
 
@@ -295,7 +296,7 @@ class DevelopmentGate:
             return GateDecision(
                 gate_type=GateType.ERROR_BUDGET,
                 status=GateStatus.WARN,
-                message=f"Error checking budget: {str(e)}",
+                message=f"Error checking budget: {e!s}",
                 details={},
                 timestamp=datetime.utcnow(),
             )
@@ -365,7 +366,7 @@ class DevelopmentGate:
             return GateDecision(
                 gate_type=GateType.SLO_COMPLIANCE,
                 status=GateStatus.WARN,
-                message=f"Error checking SLOs: {str(e)}",
+                message=f"Error checking SLOs: {e!s}",
                 details={},
                 timestamp=datetime.utcnow(),
             )
@@ -417,7 +418,7 @@ class DevelopmentGate:
             return GateDecision(
                 gate_type=GateType.ACTIVE_VIOLATIONS,
                 status=GateStatus.WARN,
-                message=f"Error checking violations: {str(e)}",
+                message=f"Error checking violations: {e!s}",
                 details={},
                 timestamp=datetime.utcnow(),
             )
@@ -464,12 +465,12 @@ class DevelopmentGate:
             return GateDecision(
                 gate_type=GateType.BURN_RATE,
                 status=GateStatus.WARN,
-                message=f"Error checking burn rate: {str(e)}",
+                message=f"Error checking burn rate: {e!s}",
                 details={},
                 timestamp=datetime.utcnow(),
             )
 
-    async def _create_blocker(self, decisions: List[GateDecision]) -> DeploymentBlocker:
+    async def _create_blocker(self, decisions: list[GateDecision]) -> DeploymentBlocker:
         """Create deployment blocker from failed decisions."""
         failed_decisions = [d for d in decisions if d.status == GateStatus.FAIL]
 
@@ -502,8 +503,8 @@ class DevelopmentGate:
 
     async def _check_override(
         self,
-        requesting_user: Optional[str],
-        reason: Optional[str],
+        requesting_user: str | None,
+        reason: str | None,
     ) -> bool:
         """Check if override is allowed and approved."""
         if not self.config.allow_override:
@@ -513,7 +514,10 @@ class DevelopmentGate:
             return False
 
         # Check if user is approved
-        if self.config.override_require_approval and requesting_user not in self.config.override_approvers:
+        if (
+            self.config.override_require_approval
+            and requesting_user not in self.config.override_approvers
+        ):
             self.logger.warning(f"Override requested by non-approved user: {requesting_user}")
             return False
 
@@ -536,7 +540,7 @@ class DevelopmentGate:
 
     async def _record_decision(
         self,
-        decisions: List[GateDecision],
+        decisions: list[GateDecision],
         allowed: bool,
     ) -> None:
         """Record gate decision in history."""
@@ -547,18 +551,18 @@ class DevelopmentGate:
         if len(self._decision_history) > 1000:
             self._decision_history = self._decision_history[-500:]
 
-    async def get_current_blocker(self) -> Optional[DeploymentBlocker]:
+    async def get_current_blocker(self) -> DeploymentBlocker | None:
         """Get current deployment blocker."""
         return self._current_blocker
 
     async def get_decision_history(
         self,
         limit: int = 100,
-    ) -> List[GateDecision]:
+    ) -> list[GateDecision]:
         """Get gate decision history."""
         return self._decision_history[-limit:]
 
-    async def get_gate_summary(self) -> Dict[str, Any]:
+    async def get_gate_summary(self) -> dict[str, Any]:
         """Get gate summary."""
         blocker = await self.get_current_blocker()
 

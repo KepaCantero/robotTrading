@@ -20,7 +20,7 @@ Reference:
 import logging
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Optional
 
 import numpy as np
 from scipy import stats
@@ -37,15 +37,15 @@ class SharpeCombinationResult:
 
     combined_sharpe: float
     method: str
-    individual_sharpes: List[float] = field(default_factory=list)
+    individual_sharpes: list[float] = field(default_factory=list)
     weights: Optional[np.ndarray] = None
     improvement_pct: float = 0.0
     is_statistically_significant: bool = False
     p_value: float = 1.0
-    confidence_interval: Optional[Tuple[float, float]] = None
+    confidence_interval: Optional[tuple[float, float]] = None
     timestamp: datetime = field(default_factory=datetime.now)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for serialization."""
         return {
             "combined_sharpe": self.combined_sharpe,
@@ -77,7 +77,7 @@ class PortfolioStabilityMetrics:
     stability_threshold: float = 70.0
     timestamp: datetime = field(default_factory=datetime.now)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for serialization."""
         return {
             "is_stable": self.is_stable,
@@ -108,7 +108,7 @@ class TurnoverAdjustedMetrics:
     net_sharpe: float
     timestamp: datetime = field(default_factory=datetime.now)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for serialization."""
         return {
             "raw_sharpe": self.raw_sharpe,
@@ -137,7 +137,7 @@ class ConcentrationMetrics:
     concentration_score: float  # 0-100, higher = more concentrated
     timestamp: datetime = field(default_factory=datetime.now)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for serialization."""
         return {
             "herfindahl_index": self.herfindahl_index,
@@ -163,7 +163,7 @@ class SharpeRatioCombinator:
     - Hierarchical combination methods
     """
 
-    def __init__(self, risk_free_rate: float = None):
+    def __init__(self, risk_free_rate: Optional[float] = None):
         """
         Initialize Sharpe ratio combinator.
 
@@ -307,7 +307,7 @@ class SharpeRatioCombinator:
             logger.error(f"Error in hierarchical Sharpe combination: {e}")
             return self._average_combination(sharpes)
 
-    def _get_quasi_diag(self, linkage: np.ndarray) -> List[int]:
+    def _get_quasi_diag(self, linkage: np.ndarray) -> list[int]:
         """
         Recover quasi-diagonal order from hierarchical clustering.
 
@@ -462,7 +462,7 @@ class SharpeRatioCombinator:
         sharpe2: float,
         returns1: np.ndarray,
         returns2: np.ndarray,
-    ) -> Tuple[bool, float]:
+    ) -> tuple[bool, float]:
         """
         Test if two Sharpe ratios are significantly different.
 
@@ -536,7 +536,7 @@ class PortfolioStabilityValidator:
 
     def validate_stability(
         self,
-        weights_history: List[np.ndarray],
+        weights_history: list[np.ndarray],
         period_length_days: int = 30,
     ) -> PortfolioStabilityMetrics:
         """
@@ -651,7 +651,7 @@ class PortfolioStabilityValidator:
 
     def _calculate_weights_autocorrelation(
         self,
-        weights_history: List[np.ndarray],
+        weights_history: list[np.ndarray],
     ) -> float:
         """
         Calculate autocorrelation of portfolio weights across periods.
@@ -677,8 +677,8 @@ class PortfolioStabilityValidator:
 
     def _calculate_allocation_drift(
         self,
-        weights_history: List[np.ndarray],
-    ) -> Tuple[float, float]:
+        weights_history: list[np.ndarray],
+    ) -> tuple[float, float]:
         """
         Calculate allocation drift statistics.
 
@@ -696,7 +696,7 @@ class PortfolioStabilityValidator:
 
     def _calculate_cross_period_correlation(
         self,
-        weights_history: List[np.ndarray],
+        weights_history: list[np.ndarray],
     ) -> float:
         """
         Calculate average correlation between consecutive period weights.
@@ -755,7 +755,7 @@ class TurnoverAdjustedCalculator:
     def __init__(
         self,
         transaction_cost_bps: float = 10.0,  # 10 bps per trade
-        risk_free_rate: float = None,
+        risk_free_rate: Optional[float] = None,
     ):
         """
         Initialize turnover-adjusted calculator.
@@ -774,7 +774,7 @@ class TurnoverAdjustedCalculator:
     def calculate_turnover_adjusted_sharpe(
         self,
         returns: np.ndarray,
-        weights_history: List[np.ndarray],
+        weights_history: list[np.ndarray],
         period_length_days: int = 30,
     ) -> TurnoverAdjustedMetrics:
         """
@@ -1010,10 +1010,10 @@ class ConcentrationAnalyzer:
 
 # Factory function for easy instantiation
 def create_lopez_de_prado_suite(
-    risk_free_rate: float = None,
+    risk_free_rate: Optional[float] = None,
     stability_threshold: float = 70.0,
     transaction_cost_bps: float = 10.0,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Create a complete Lopez de Prado metrics suite.
 

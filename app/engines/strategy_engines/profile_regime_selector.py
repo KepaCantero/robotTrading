@@ -21,15 +21,19 @@ import logging
 from dataclasses import dataclass
 from decimal import Decimal
 from enum import Enum
-from typing import Any, Dict, List, Optional, Sequence, Tuple
+from typing import TYPE_CHECKING, Any, ClassVar
 
 import numpy as np
 from numpy.linalg import LinAlgError
 
-from app.domain.models.market_data import Quote
 from app.domain.models.signal import Signal
 
 from .base import BaseStrategyEngine
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
+
+    from app.domain.models.market_data import Quote
 
 logger = logging.getLogger(__name__)
 
@@ -70,7 +74,7 @@ class ProfileConfig:
     target_volatility: Decimal  # volatilidad objetivo anualizada
 
     # Estrategias habilitadas
-    strategies_enabled: List[str]
+    strategies_enabled: list[str]
 
     # Stop loss y take profit
     default_stop_loss: Decimal
@@ -78,7 +82,7 @@ class ProfileConfig:
 
 
 # Configuraciones por perfil (from realistic-retail-trading-rules.md)
-PROFILE_CONFIGS: Dict[InvestorProfile, ProfileConfig] = {
+PROFILE_CONFIGS: dict[InvestorProfile, ProfileConfig] = {
     InvestorProfile.SURVIVAL: ProfileConfig(
         min_capital=Decimal("1000"),
         max_capital=Decimal("10000"),
@@ -140,7 +144,7 @@ class ProfileBasedRegimeSelector(BaseStrategyEngine):
     """
 
     # Ventanas de momentum (Gray & Vogel)
-    MOMENTUM_WINDOWS = [21, 63, 126, 252]  # 1m, 3m, 6m, 12m
+    MOMENTUM_WINDOWS: ClassVar[list] = [21, 63, 126, 252]  # 1m, 3m, 6m, 12m
     SKIP_MONTH_DAYS = 21  # Skip ultimo mes para momentum
 
     # Umbrales de deteccion
@@ -150,7 +154,7 @@ class ProfileBasedRegimeSelector(BaseStrategyEngine):
     VOLATILITY_HIGH_THRESHOLD = 0.30  # 30% anualizado = alta volatilidad
     VOLATILITY_LOW_THRESHOLD = 0.12  # 12% anualizado = baja volatilidad
 
-    def __init__(self, config: Dict[str, Any]):
+    def __init__(self, config: dict[str, Any]):
         """
         Inicializar ProfileBasedRegimeSelector.
 
@@ -168,25 +172,25 @@ class ProfileBasedRegimeSelector(BaseStrategyEngine):
         self.profile_config = PROFILE_CONFIGS[self.profile]
 
         # Estrategias disponibles
-        self.strategies: Dict[str, BaseStrategyEngine] = {}
+        self.strategies: dict[str, BaseStrategyEngine] = {}
 
         # Estado del regimen
         self.current_regime = MarketRegime.UNKNOWN
         self.regime_confidence = 0.0
-        self.hurst_exponent: Optional[float] = None
-        self.half_life: Optional[float] = None
+        self.hurst_exponent: float | None = None
+        self.half_life: float | None = None
 
         # Historial de precios
-        self.price_history: List[float] = []
-        self.return_history: List[float] = []
+        self.price_history: list[float] = []
+        self.return_history: list[float] = []
         self.regime_lookback = config.get("regime_lookback", 252)  # 1 ano
 
         # Hysteresis para estabilidad
-        self.regime_history: List[str] = []
+        self.regime_history: list[str] = []
         self.hysteresis_count = config.get("hysteresis_count", 3)
 
         # Mapeo de regimen a estrategias
-        self.regime_strategy_map: Dict[MarketRegime, List[str]] = {
+        self.regime_strategy_map: dict[MarketRegime, list[str]] = {
             MarketRegime.TRENDING_UP: ["trend_following", "momentum_engine", "breakout"],
             MarketRegime.TRENDING_DOWN: ["trend_following", "momentum_engine"],
             MarketRegime.MEAN_REVERTING: ["mean_reversion_engine"],
@@ -196,7 +200,7 @@ class ProfileBasedRegimeSelector(BaseStrategyEngine):
         }
 
         # Performance tracking
-        self.trade_history: List[Dict[str, Any]] = []
+        self.trade_history: list[dict[str, Any]] = []
         self.win_rate = 0.0
         self.avg_win = Decimal("0")
         self.avg_loss = Decimal("0")
@@ -208,7 +212,7 @@ class ProfileBasedRegimeSelector(BaseStrategyEngine):
             f"max_risk={self.profile_config.max_risk_per_trade}"
         )
 
-    def _determine_profile(self, override: Optional[str] = None) -> InvestorProfile:
+    def _determine_profile(self, override: str | None = None) -> InvestorProfile:
         """Determinar perfil de inversor basado en capital."""
         if override:
             try:
@@ -242,8 +246,8 @@ class ProfileBasedRegimeSelector(BaseStrategyEngine):
     def extract_features(
         self,
         market_data: Quote,
-        historical_data: Optional[Sequence[Quote]] = None,
-    ) -> Dict[str, Any]:
+        historical_data: Sequence[Quote] | None = None,
+    ) -> dict[str, Any]:
         """Extraer features para el selector."""
         return {
             "timestamp": getattr(market_data, "timestamp", None),
@@ -257,11 +261,11 @@ class ProfileBasedRegimeSelector(BaseStrategyEngine):
             "max_risk_per_trade": float(self.profile_config.max_risk_per_trade),
         }
 
-    def get_required_parameters(self) -> List[str]:
+    def get_required_parameters(self) -> list[str]:
         """Parametros requeridos."""
         return []
 
-    def _generate_signals_impl(self, market_data: Quote) -> List[Signal]:
+    def _generate_signals_impl(self, market_data: Quote) -> list[Signal]:
         """Generar senales basadas en perfil y regimen."""
         if not self.strategies:
             return []
@@ -370,7 +374,7 @@ class ProfileBasedRegimeSelector(BaseStrategyEngine):
             self.current_regime = detected_regime
             self.regime_confidence = detected_confidence
 
-    def _calculate_hurst_exponent(self, prices: np.ndarray) -> Optional[float]:
+    def _calculate_hurst_exponent(self, prices: np.ndarray) -> float | None:
         """
         Calcular Hurst exponent para detectar trending vs mean reversion.
 
@@ -405,7 +409,7 @@ class ProfileBasedRegimeSelector(BaseStrategyEngine):
             logger.debug(f"Error calculating Hurst exponent: {e}")
             return None
 
-    def _calculate_half_life(self, prices: np.ndarray) -> Optional[float]:
+    def _calculate_half_life(self, prices: np.ndarray) -> float | None:
         """
         Calcular half-life de mean reversion usando AR(1).
 
@@ -505,12 +509,12 @@ class ProfileBasedRegimeSelector(BaseStrategyEngine):
             return True
 
         # Para trending, preferimos momentum positivo
-        if self.current_regime in [MarketRegime.TRENDING_UP, MarketRegime.TRENDING_DOWN] and momentum_score < -0.5:
-            return False
+        return not (
+            self.current_regime in [MarketRegime.TRENDING_UP, MarketRegime.TRENDING_DOWN]
+            and momentum_score < -0.5
+        )
 
-        return True
-
-    def _select_strategies(self) -> List[str]:
+    def _select_strategies(self) -> list[str]:
         """Seleccionar estrategias basadas en regimen y perfil."""
         # Obtener estrategias preferidas para el regimen
         preferred = self.regime_strategy_map.get(self.current_regime, [])
@@ -639,8 +643,7 @@ class ProfileBasedRegimeSelector(BaseStrategyEngine):
         position_size = signal.metadata.get("position_size", 0.10)
         if position_size > float(self.profile_config.max_position_size):
             logger.debug(
-                f"Position size {position_size} exceeds max "
-                f"{self.profile_config.max_position_size}"
+                f"Position size {position_size} exceeds max {self.profile_config.max_position_size}"
             )
             return False
 
@@ -662,7 +665,7 @@ class ProfileBasedRegimeSelector(BaseStrategyEngine):
 
         return True
 
-    def update_trade_result(self, trade_result: Dict[str, Any]) -> None:
+    def update_trade_result(self, trade_result: dict[str, Any]) -> None:
         """Actualizar historial de trades para Kelly Criterion."""
         self.trade_history.append(trade_result)
 
@@ -681,7 +684,7 @@ class ProfileBasedRegimeSelector(BaseStrategyEngine):
             if losses:
                 self.avg_loss = Decimal(str(abs(np.mean([t["pnl"] for t in losses]))))
 
-    def get_current_regime(self) -> Tuple[MarketRegime, float]:
+    def get_current_regime(self) -> tuple[MarketRegime, float]:
         """Obtener regimen actual y confianza."""
         return self.current_regime, self.regime_confidence
 
@@ -689,6 +692,6 @@ class ProfileBasedRegimeSelector(BaseStrategyEngine):
         """Obtener configuracion del perfil actual."""
         return self.profile_config
 
-    def get_strategy_weights(self) -> Dict[str, float]:
+    def get_strategy_weights(self) -> dict[str, float]:
         """Obtener pesos de estrategias (para compatibilidad con BaseStrategyEnsemble)."""
         return dict.fromkeys(self.strategies, 1.0)

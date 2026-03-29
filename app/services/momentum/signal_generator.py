@@ -12,7 +12,7 @@ SOLID Principles:
 import logging
 from datetime import datetime, timedelta
 from decimal import Decimal
-from typing import List, Optional
+from typing import Optional
 
 from app.domain.models.momentum import (
     MomentumFilter,
@@ -41,7 +41,7 @@ class SignalGenerator:
 
     async def generate_signals(
         self, symbol: str, indicators: TechnicalIndicators, timeframe: Timeframe
-    ) -> List[MomentumSignal]:
+    ) -> list[MomentumSignal]:
         """
         Generate momentum signals from indicators.
 
@@ -195,7 +195,7 @@ class SignalGenerator:
         symbol: str,
         indicators: TechnicalIndicators,
         timeframe: Timeframe,
-        existing_signals: List[MomentumSignal],
+        existing_signals: list[MomentumSignal],
     ) -> Optional[MomentumSignal]:
         """
         Create combined momentum signal.
@@ -257,8 +257,8 @@ class SignalGenerator:
         )
 
     def filter_signals(
-        self, signals: List[MomentumSignal], filter_criteria: Optional[MomentumFilter]
-    ) -> List[MomentumSignal]:
+        self, signals: list[MomentumSignal], filter_criteria: Optional[MomentumFilter]
+    ) -> list[MomentumSignal]:
         """
         Filter signals based on criteria.
 

@@ -84,31 +84,31 @@ from app.domain.portfolio_optimization.nested_clustered_optimization import (
 )
 
 __all__ = [
-    # Mean-Variance Optimizer
-    "MeanVarianceOptimizer",
-    "OptimizationResult",
-    "EfficientFrontier",
-    "EfficientFrontierPoint",
-    # Nested Clustered Optimization
-    "NestedClusteredOptimization",
-    "NCOResult",
-    "NCOConfig",
-    "ClusteringMethod",
-    "compute_nco_weights",
+    "BlackLittermanConfig",
     # Black-Litterman Optimizer
     "BlackLittermanOptimizer",
     "BlackLittermanResult",
-    "BlackLittermanConfig",
-    "InvestorView",
-    "ViewType",
+    "ClusteringMethod",
+    "EfficientFrontier",
+    "EfficientFrontierPoint",
     "EquilibriumReturns",
-    "compute_black_litterman_weights",
-    # Enums
-    "OptimizationMethod",
-    "ShrinkageMethod",
     # Exceptions
     "InputValidationError",
+    "InvestorView",
+    # Mean-Variance Optimizer
+    "MeanVarianceOptimizer",
+    "NCOConfig",
+    "NCOResult",
+    # Nested Clustered Optimization
+    "NestedClusteredOptimization",
     "OptimizationError",
+    # Enums
+    "OptimizationMethod",
+    "OptimizationResult",
+    "ShrinkageMethod",
+    "ViewType",
+    "compute_black_litterman_weights",
+    "compute_nco_weights",
 ]
 
 __version__ = "2.0.0"

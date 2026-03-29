@@ -16,12 +16,14 @@ interpretable than complex optimization methods."
 from __future__ import annotations
 
 import logging
-from typing import Any, Dict, Optional, Union
+from typing import TYPE_CHECKING, Any
 
 import numpy as np
-from numpy.typing import NDArray
 
 from .base import BaseOptimizer
+
+if TYPE_CHECKING:
+    from numpy.typing import NDArray
 
 logger = logging.getLogger(__name__)
 
@@ -40,7 +42,7 @@ class HandcraftedWeightsOptimizer(BaseOptimizer):
     This is Carver's preferred method for systematic trading portfolios.
     """
 
-    def __init__(self, config: Dict[str, Any]):
+    def __init__(self, config: dict[str, Any]):
         """
         Initialize handcrafted weights optimizer.
 
@@ -69,9 +71,9 @@ class HandcraftedWeightsOptimizer(BaseOptimizer):
 
     def optimize(
         self,
-        returns: Optional[NDArray[np.floating]] = None,
+        returns: NDArray[np.floating] | None = None,
         **kwargs,
-    ) -> Union[NDArray[np.floating], Dict[str, Any]]:
+    ) -> NDArray[np.floating] | dict[str, Any]:
         """
         Optimize using handcrafted weights (Carver's methodology).
 
@@ -180,7 +182,7 @@ class HandcraftedWeightsOptimizer(BaseOptimizer):
         """
         Calculate inverse volatility weights (Carver's preferred method).
 
-        Formula: w_i = (1/σ_i) / Σ(1/σ_j)
+        Formula: w_i = (1/sigma_i) / Sigma(1/sigma_j)
 
         This gives lower weight to more volatile instruments, which is
         Carver's recommended approach for handcrafted portfolios.
@@ -255,7 +257,7 @@ class HandcraftedWeightsOptimizer(BaseOptimizer):
 
         Scale weights so portfolio volatility matches target volatility.
 
-        Formula: w_scaled = w * (σ_target / σ_portfolio)
+        Formula: w_scaled = w * (sigma_target / sigma_portfolio)
 
         Args:
             weights: Current weights
@@ -320,7 +322,7 @@ class HandcraftedWeightsOptimizer(BaseOptimizer):
         """
         Calculate diversification ratio (Carver's metric).
 
-        DR = (Σ w_i * σ_i) / σ_portfolio
+        DR = (Sigma w_i * sigma_i) / sigma_portfolio
 
         Values > 1 indicate diversification benefits.
 
@@ -342,7 +344,7 @@ class HandcraftedWeightsOptimizer(BaseOptimizer):
 
         return float(weighted_avg_vol / portfolio_vol)
 
-    def _equal_weight_fallback(self, n: int) -> Dict[str, Any]:
+    def _equal_weight_fallback(self, n: int) -> dict[str, Any]:
         """
         Fallback to equal weights.
 
@@ -363,10 +365,10 @@ class HandcraftedWeightsOptimizer(BaseOptimizer):
 
 
 def create_handcrafted_weights(
-    volatilities: Dict[str, float],
+    volatilities: dict[str, float],
     target_volatility: float = 0.15,
     max_weight: float = 0.40,
-) -> Dict[str, float]:
+) -> dict[str, float]:
     """
     Convenience function to create handcrafted weights from volatilities.
 

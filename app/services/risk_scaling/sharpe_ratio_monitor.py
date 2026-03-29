@@ -17,11 +17,13 @@ Uses centralized configuration for trading calendar constants.
 import logging
 import math
 import statistics
-from datetime import datetime
 from decimal import ROUND_HALF_UP, Decimal
-from typing import Dict, List, Optional, Tuple
+from typing import TYPE_CHECKING, Optional
 
 from app.shared.config.centralized_config import get_config
+
+if TYPE_CHECKING:
+    from datetime import datetime
 
 logger = logging.getLogger(__name__)
 
@@ -42,7 +44,7 @@ class SharpeRatioMonitor:
         scale = monitor.calculate_sharpe_scale(sharpe)
     """
 
-    def __init__(self, risk_free_rate: Decimal = None):
+    def __init__(self, risk_free_rate: Optional[Decimal] = None):
         """
         Initialize Sharpe ratio monitor.
 
@@ -59,11 +61,11 @@ class SharpeRatioMonitor:
 
         self.risk_free_rate = risk_free_rate
         self.daily_risk_free_rate = risk_free_rate / Decimal(str(annual_trading_days))
-        self.sharpe_history: Dict[str, List[Tuple[datetime, Decimal]]] = {}
+        self.sharpe_history: dict[str, list[tuple[datetime, Decimal]]] = {}
 
     async def calculate_rolling_sharpe(
         self,
-        daily_returns: List[Decimal],
+        daily_returns: list[Decimal],
         window_days: int = 30,
         risk_free_rate: Optional[Decimal] = None,
     ) -> Decimal:
@@ -172,9 +174,9 @@ class SharpeRatioMonitor:
         self,
         current_sharpe: Decimal,
         previous_sharpe: Optional[Decimal] = None,
-        history: Optional[List[Decimal]] = None,
+        history: Optional[list[Decimal]] = None,
         window: int = 5,
-    ) -> Tuple[bool, str]:
+    ) -> tuple[bool, str]:
         """
         Check if Sharpe ratio is trending down.
 
@@ -232,8 +234,8 @@ class SharpeRatioMonitor:
 
     def calculate_information_ratio(
         self,
-        portfolio_returns: List[Decimal],
-        benchmark_returns: List[Decimal],
+        portfolio_returns: list[Decimal],
+        benchmark_returns: list[Decimal],
         risk_free_rate: Optional[Decimal] = None,
     ) -> Decimal:
         """
@@ -273,9 +275,9 @@ class SharpeRatioMonitor:
 
     def detect_performance_regime_shift(
         self,
-        history: List[Decimal],
+        history: list[Decimal],
         window: int = 10,
-    ) -> Tuple[bool, str]:
+    ) -> tuple[bool, str]:
         """
         Detect significant changes in performance regime.
 
@@ -314,7 +316,7 @@ class SharpeRatioMonitor:
         current_sharpe: Decimal,
         previous_sharpe: Optional[Decimal] = None,
         current_allocation: Optional[Decimal] = None,
-    ) -> Tuple[Decimal, str]:
+    ) -> tuple[Decimal, str]:
         """
         Suggest capital adjustment based on Sharpe trend.
 

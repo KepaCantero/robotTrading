@@ -12,7 +12,6 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass
-from typing import List, Optional, Tuple
 
 import numpy as np
 
@@ -41,10 +40,10 @@ class DenoisedResult:
 
     original_corr: np.ndarray  # Original correlation matrix (N, N)
     denoised_corr: np.ndarray  # De-noised correlation matrix (N, N)
-    denoised_cov: Optional[np.ndarray]  # De-noised covariance matrix (N, N)
+    denoised_cov: np.ndarray | None  # De-noised covariance matrix (N, N)
     eigenvalues: np.ndarray  # Eigenvalues of original matrix (N,)
     denoised_eigenvalues: np.ndarray  # Eigenvalues after de-noising (N,)
-    symbols: List[str]  # Asset symbols/tickers
+    symbols: list[str]  # Asset symbols/tickers
 
     @property
     def noise_ratio(self) -> float:
@@ -117,7 +116,7 @@ class CorrelationDenoiser:
         self,
         corr_matrix: np.ndarray,
         n_observations: int,
-        symbols: Optional[List[str]] = None,
+        symbols: list[str] | None = None,
     ) -> DenoisedResult:
         """
         De-noise correlation matrix using RMT.
@@ -160,7 +159,7 @@ class CorrelationDenoiser:
                 e,
                 {"n_assets": n_assets, "n_observations": n_observations},
             )
-            raise ValueError(f"Eigenvalue decomposition failed: {e}")
+            raise ValueError(f"Eigenvalue decomposition failed: {e}") from e
 
         # Check for complex eigenvalues (should not happen for symmetric matrix)
         if np.any(np.abs(eigenvalues.imag) > 1e-10):
@@ -214,7 +213,7 @@ class CorrelationDenoiser:
         self,
         cov_matrix: np.ndarray,
         n_observations: int,
-        symbols: Optional[List[str]] = None,
+        symbols: list[str] | None = None,
     ) -> DenoisedResult:
         """
         De-noise covariance matrix.
@@ -304,7 +303,7 @@ class CorrelationDenoiser:
     def fit_kde(
         self,
         eigenvalues: np.ndarray,
-    ) -> Tuple[np.ndarray, np.ndarray]:
+    ) -> tuple[np.ndarray, np.ndarray]:
         """
         Fit Kernel Density Estimation to eigenvalues.
 
@@ -321,8 +320,8 @@ class CorrelationDenoiser:
         """
         try:
             from scipy.stats import gaussian_kde
-        except ImportError:
-            raise ImportError("scipy is required for KDE fitting")
+        except ImportError as exc:
+            raise ImportError("scipy is required for KDE fitting") from exc
 
         if len(eigenvalues) < 2:
             raise ValueError(f"Need at least 2 eigenvalues for KDE, got {len(eigenvalues)}")
@@ -369,7 +368,7 @@ class CorrelationDenoiser:
     def shrink_to_constant_correlation(
         self,
         corr_matrix: np.ndarray,
-        shrinkage: Optional[float] = None,
+        shrinkage: float | None = None,
     ) -> np.ndarray:
         """
         Shrink correlation matrix to constant correlation model.

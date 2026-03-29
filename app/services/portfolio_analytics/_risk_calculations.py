@@ -6,13 +6,13 @@ including downside risk, tail risk, and volatility metrics.
 """
 
 from decimal import Decimal
-from typing import List
+from typing import Optional
 
 
 class RiskCalculations:
     """Risk calculation utilities for portfolio analytics."""
 
-    def calculate_downside_deviation(self, returns: List[Decimal], volatility_func) -> Decimal:
+    def calculate_downside_deviation(self, returns: list[Decimal], volatility_func) -> Decimal:
         """
         Calculate downside deviation (volatility of negative returns only).
 
@@ -29,7 +29,7 @@ class RiskCalculations:
 
         return volatility_func(negative_returns)
 
-    def calculate_semi_variance(self, returns: List[Decimal]) -> Decimal:
+    def calculate_semi_variance(self, returns: list[Decimal]) -> Decimal:
         """
         Calculate semi-variance (variance of returns below mean).
 
@@ -48,7 +48,7 @@ class RiskCalculations:
         return sum(negative_deviations) / len(negative_deviations)
 
     def calculate_lower_partial_moment(
-        self, returns: List[Decimal], target_return: Decimal = None
+        self, returns: list[Decimal], target_return: Optional[Decimal] = None
     ) -> Decimal:
         """
         Calculate lower partial moment (squared deviations below target).
@@ -70,7 +70,7 @@ class RiskCalculations:
 
         return sum(negative_deviations) / len(negative_deviations)
 
-    def calculate_skewness(self, returns: List[Decimal], volatility_func) -> Decimal:
+    def calculate_skewness(self, returns: list[Decimal], volatility_func) -> Decimal:
         """
         Calculate skewness of return distribution.
 
@@ -93,7 +93,7 @@ class RiskCalculations:
         skewness = sum(((r - mean_return) / std_dev) ** 3 for r in returns) / len(returns)
         return Decimal(str(skewness))
 
-    def calculate_kurtosis(self, returns: List[Decimal], volatility_func) -> Decimal:
+    def calculate_kurtosis(self, returns: list[Decimal], volatility_func) -> Decimal:
         """
         Calculate kurtosis of return distribution.
 
@@ -116,7 +116,7 @@ class RiskCalculations:
         kurtosis = sum(((r - mean_return) / std_dev) ** 4 for r in returns) / len(returns)
         return Decimal(str(kurtosis))
 
-    def calculate_tail_ratio(self, returns: List[Decimal]) -> Decimal:
+    def calculate_tail_ratio(self, returns: list[Decimal]) -> Decimal:
         """
         Calculate tail ratio (upper tail / lower tail).
 

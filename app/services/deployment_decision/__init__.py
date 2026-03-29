@@ -12,8 +12,8 @@ from .deployment_decision_orchestrator import (
 )
 
 __all__ = [
-    "DeploymentDecisionOrchestrator",
-    "DeploymentDecision",
     "DeploymentAnalysis",
+    "DeploymentDecision",
+    "DeploymentDecisionOrchestrator",
     "get_deployment_decision_orchestrator",
 ]

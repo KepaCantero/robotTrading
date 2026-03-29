@@ -20,7 +20,7 @@ import logging
 from dataclasses import dataclass
 from decimal import Decimal
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -51,16 +51,16 @@ class ValidationResult:
     """
 
     is_valid: bool
-    sharpe_ratio: Optional[Decimal]
-    max_drawdown: Optional[Decimal]
+    sharpe_ratio: Decimal | None
+    max_drawdown: Decimal | None
     sharpe_passes: bool
     drawdown_passes: bool
     validation_level: ValidationLevel
-    warnings: List[str]
-    errors: List[str]
-    metadata: Dict[str, Any]
+    warnings: list[str]
+    errors: list[str]
+    metadata: dict[str, Any]
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for serialization."""
         return {
             "is_valid": self.is_valid,
@@ -107,8 +107,8 @@ class StrategyValidator:
 
     def __init__(
         self,
-        min_sharpe: Optional[Decimal] = None,
-        max_drawdown: Optional[Decimal] = None,
+        min_sharpe: Decimal | None = None,
+        max_drawdown: Decimal | None = None,
     ):
         """
         Initialize the strategy validator.
@@ -159,8 +159,8 @@ class StrategyValidator:
 
     def validate(
         self,
-        sharpe_ratio: Optional[Decimal] = None,
-        max_drawdown: Optional[Decimal] = None,
+        sharpe_ratio: Decimal | None = None,
+        max_drawdown: Decimal | None = None,
         **metadata,
     ) -> ValidationResult:
         """
@@ -183,8 +183,8 @@ class StrategyValidator:
         if sharpe_ratio is None and max_drawdown is None:
             raise ValueError("At least one metric (sharpe_ratio or max_drawdown) must be provided")
 
-        warnings: List[str] = []
-        errors: List[str] = []
+        warnings: list[str] = []
+        errors: list[str] = []
 
         # Validate Sharpe ratio
         sharpe_passes = True
@@ -249,7 +249,7 @@ class StrategyValidator:
             metadata=result_metadata,
         )
 
-    def validate_backtest_result(self, backtest_result: Dict[str, Any]) -> ValidationResult:
+    def validate_backtest_result(self, backtest_result: dict[str, Any]) -> ValidationResult:
         """
         Validate a backtest result dictionary.
 
@@ -280,8 +280,8 @@ class StrategyValidator:
 
 # Convenience function for quick validation
 def validate_strategy(
-    sharpe_ratio: Optional[Decimal] = None,
-    max_drawdown: Optional[Decimal] = None,
+    sharpe_ratio: Decimal | None = None,
+    max_drawdown: Decimal | None = None,
 ) -> ValidationResult:
     """
     Quick validation function for strategy metrics.

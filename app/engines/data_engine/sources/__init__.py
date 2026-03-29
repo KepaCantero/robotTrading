@@ -15,15 +15,15 @@ from .options_sources import OptionsVolatilitySource
 from .sentiment_sources import NewsSentimentSource, RedditSentimentSource, TwitterSentimentSource
 
 __all__ = [
-    "BaseDataSource",
-    "IBKRSource",
-    "BinanceSource",
     "AlpacaSource",
-    "PolygonSource",
-    "FinancialModelingPrepSource",
     "AlphaVantageFundamentalSource",
-    "TwitterSentimentSource",
-    "RedditSentimentSource",
+    "BaseDataSource",
+    "BinanceSource",
+    "FinancialModelingPrepSource",
+    "IBKRSource",
     "NewsSentimentSource",
     "OptionsVolatilitySource",
+    "PolygonSource",
+    "RedditSentimentSource",
+    "TwitterSentimentSource",
 ]

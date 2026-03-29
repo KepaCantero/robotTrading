@@ -9,7 +9,7 @@ import logging
 from datetime import datetime
 from decimal import Decimal
 from enum import Enum
-from typing import List, Optional
+from typing import Optional
 
 from pydantic import BaseModel, Field
 
@@ -76,7 +76,7 @@ class FeasibilityGate(BaseModel):
     validation_message: str
 
     # Recommendations
-    recommendations: List[str] = Field(default_factory=list)
+    recommendations: list[str] = Field(default_factory=list)
 
     # Timestamp
     created_at: datetime = Field(default_factory=datetime.now)

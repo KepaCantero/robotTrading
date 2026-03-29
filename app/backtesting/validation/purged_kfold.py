@@ -18,7 +18,6 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass
-from typing import Dict, List, Optional, Tuple, Union
 
 import numpy as np
 import pandas as pd
@@ -49,7 +48,7 @@ class PurgedKFoldConfig:
     shuffle: bool = False
     """Whether to shuffle data (default: False for time series)."""
 
-    random_state: Optional[int] = None
+    random_state: int | None = None
     """Random state for reproducibility."""
 
     def __post_init__(self):
@@ -123,7 +122,7 @@ class PurgedKFold:
         min_train_samples: int = 252,
         min_test_samples: int = 20,
         shuffle: bool = False,
-        random_state: Optional[int] = None,
+        random_state: int | None = None,
     ):
         """
         Initialize PurgedKFold cross-validator.
@@ -155,14 +154,14 @@ class PurgedKFold:
         )
 
         # Store split details for analysis
-        self.split_details: List[PurgedSplit] = []
+        self.split_details: list[PurgedSplit] = []
 
     def split(
         self,
-        X: Union[pd.DataFrame, pd.Series, np.ndarray],
-        y: Optional[Union[pd.Series, np.ndarray]] = None,
-        groups: Optional[Union[pd.Series, np.ndarray]] = None,
-    ) -> List[Tuple[np.ndarray, np.ndarray]]:
+        X: pd.DataFrame | pd.Series | np.ndarray,
+        y: pd.Series | np.ndarray | None = None,
+        groups: pd.Series | np.ndarray | None = None,
+    ) -> list[tuple[np.ndarray, np.ndarray]]:
         """
         Generate purged train/test splits.
 
@@ -187,10 +186,7 @@ class PurgedKFold:
             >>> splits = purged_cv.split(X)
         """
         # Convert to numpy array for indexing
-        if isinstance(X, (pd.DataFrame, pd.Series)):
-            X_array = X.values
-        else:
-            X_array = np.array(X)
+        X_array = X.values if isinstance(X, (pd.DataFrame, pd.Series)) else np.array(X)
 
         n_samples = len(X_array)
 
@@ -314,8 +310,7 @@ class PurgedKFold:
             )
 
         logger.info(
-            f"Generated {len(purged_splits)} purged splits "
-            f"(from {self.config.n_splits} requested)"
+            f"Generated {len(purged_splits)} purged splits (from {self.config.n_splits} requested)"
         )
 
         return purged_splits
@@ -324,7 +319,7 @@ class PurgedKFold:
         """Returns the number of splits."""
         return self.config.n_splits
 
-    def validate_no_leakage(self, X: Union[pd.DataFrame, pd.Series, np.ndarray]) -> bool:
+    def validate_no_leakage(self, X: pd.DataFrame | pd.Series | np.ndarray) -> bool:
         """
         Validate that there is no information leakage between train and test sets.
 
@@ -386,12 +381,12 @@ class PurgedKFold:
         for split in self.split_details:
             summary_data.append(
                 {
-                    'fold': split.fold,
-                    'train_size': split.train_size_after_purge,
-                    'test_size': len(split.test_indices),
-                    'purged_count': len(split.purged_indices),
-                    'embargo_size': split.embargo_size,
-                    'purge_pct': split.purge_pct_actual * 100,
+                    "fold": split.fold,
+                    "train_size": split.train_size_after_purge,
+                    "test_size": len(split.test_indices),
+                    "purged_count": len(split.purged_indices),
+                    "embargo_size": split.embargo_size,
+                    "purge_pct": split.purge_pct_actual * 100,
                 }
             )
 
@@ -402,7 +397,7 @@ def get_purge_indices(
     train_indices: np.ndarray,
     test_indices: np.ndarray,
     purge_pct: float = 0.05,
-    n_samples: Optional[int] = None,
+    n_samples: int | None = None,
 ) -> np.ndarray:
     """
     Calculate which training indices should be purged.
@@ -448,7 +443,7 @@ def get_purge_indices(
 def get_embargo_indices(
     test_indices: np.ndarray,
     embargo_pct: float = 0.02,
-    n_samples: Optional[int] = None,
+    n_samples: int | None = None,
 ) -> np.ndarray:
     """
     Calculate embargo buffer indices after test set.
@@ -485,8 +480,8 @@ def apply_embargo(
     train_indices: np.ndarray,
     test_indices: np.ndarray,
     embargo_pct: float = 0.02,
-    n_samples: Optional[int] = None,
-) -> Tuple[np.ndarray, np.ndarray]:
+    n_samples: int | None = None,
+) -> tuple[np.ndarray, np.ndarray]:
     """
     Apply embargo to training set.
 
@@ -511,13 +506,13 @@ def apply_embargo(
 
 
 def purged_kfold_splits(
-    X: Union[pd.DataFrame, pd.Series, np.ndarray],
+    X: pd.DataFrame | pd.Series | np.ndarray,
     n_splits: int = 5,
     purge_pct: float = 0.05,
     embargo_pct: float = 0.02,
     min_train_samples: int = 252,
     min_test_samples: int = 20,
-) -> List[Tuple[np.ndarray, np.ndarray]]:
+) -> list[tuple[np.ndarray, np.ndarray]]:
     """
     Convenience function to generate purged K-Fold splits.
 
@@ -553,14 +548,14 @@ def purged_kfold_splits(
 
 def cross_validate_with_purging(
     estimator: object,
-    X: Union[pd.DataFrame, np.ndarray],
-    y: Union[pd.Series, np.ndarray],
+    X: pd.DataFrame | np.ndarray,
+    y: pd.Series | np.ndarray,
     n_splits: int = 5,
     purge_pct: float = 0.05,
     embargo_pct: float = 0.02,
-    scoring: Optional[callable] = None,
-    fit_params: Optional[Dict] = None,
-) -> Dict[str, List[float]]:
+    scoring: callable | None = None,
+    fit_params: dict | None = None,
+) -> dict[str, list[float]]:
     """
     Cross-validate an estimator using purged K-Fold splits.
 
@@ -633,7 +628,7 @@ def cross_validate_with_purging(
             # Default scoring: accuracy for classification, R² for regression
             from sklearn.metrics import accuracy_score, r2_score
 
-            if hasattr(estimator, 'classes_'):
+            if hasattr(estimator, "classes_"):
                 score = accuracy_score(y_test, y_pred)
             else:
                 score = r2_score(y_test, y_pred)
@@ -643,11 +638,9 @@ def cross_validate_with_purging(
         test_scores.append(score)
         logger.debug(f"Fold {fold}: score = {score:.4f}")
 
-    logger.info(
-        f"Cross-validation: mean={np.mean(test_scores):.4f}, " f"std={np.std(test_scores):.4f}"
-    )
+    logger.info(f"Cross-validation: mean={np.mean(test_scores):.4f}, std={np.std(test_scores):.4f}")
 
-    return {'test_score': test_scores}
+    return {"test_score": test_scores}
 
 
 class PurgedTimeSeriesSplit:
@@ -668,8 +661,8 @@ class PurgedTimeSeriesSplit:
         n_splits: int = 5,
         purge_pct: float = 0.05,
         embargo_pct: float = 0.02,
-        max_train_size: Optional[int] = None,
-        test_size: Optional[int] = None,
+        max_train_size: int | None = None,
+        test_size: int | None = None,
     ):
         """
         Initialize PurgedTimeSeriesSplit.
@@ -687,14 +680,14 @@ class PurgedTimeSeriesSplit:
         self.max_train_size = max_train_size
         self.test_size = test_size
 
-        self.split_details: List[PurgedSplit] = []
+        self.split_details: list[PurgedSplit] = []
 
     def split(
         self,
-        X: Union[pd.DataFrame, pd.Series, np.ndarray],
-        y: Optional[Union[pd.Series, np.ndarray]] = None,
-        groups: Optional[Union[pd.Series, np.ndarray]] = None,
-    ) -> List[Tuple[np.ndarray, np.ndarray]]:
+        X: pd.DataFrame | pd.Series | np.ndarray,
+        y: pd.Series | np.ndarray | None = None,
+        groups: pd.Series | np.ndarray | None = None,
+    ) -> list[tuple[np.ndarray, np.ndarray]]:
         """
         Generate time series splits with purging.
 
@@ -706,16 +699,10 @@ class PurgedTimeSeriesSplit:
         Returns:
             List of (train_indices, test_indices) tuples
         """
-        if isinstance(X, (pd.DataFrame, pd.Series)):
-            n_samples = len(X)
-        else:
-            n_samples = X.shape[0]
+        n_samples = len(X) if isinstance(X, (pd.DataFrame, pd.Series)) else X.shape[0]
 
         # Calculate test size
-        if self.test_size is None:
-            test_size = n_samples // (self.n_splits + 1)
-        else:
-            test_size = self.test_size
+        test_size = n_samples // (self.n_splits + 1) if self.test_size is None else self.test_size
 
         splits = []
         self.split_details = []

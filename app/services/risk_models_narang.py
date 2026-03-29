@@ -24,7 +24,7 @@ import logging
 from dataclasses import dataclass
 from decimal import Decimal
 from enum import Enum
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 
 import numpy as np
 import pandas as pd
@@ -62,7 +62,7 @@ class RiskFactor:
 
     name: str
     factor_type: RiskFactorType
-    exposures: Dict[str, float]  # symbol -> factor exposure
+    exposures: dict[str, float]  # symbol -> factor exposure
     returns: pd.Series  # Historical factor returns
 
 
@@ -84,7 +84,7 @@ class RiskMetrics:
     total_risk: Decimal  # Portfolio volatility or VaR
     systematic_risk: Decimal  # Risk from factors
     idiosyncratic_risk: Decimal  # Stock-specific risk
-    factor_exposures: Dict[str, Decimal]
+    factor_exposures: dict[str, Decimal]
     var_95: Decimal  # Value at Risk at 95% confidence
     cvar_95: Decimal  # Conditional VaR at 95% confidence
     max_drawdown: Decimal
@@ -98,9 +98,9 @@ class RiskConstraint:
 
     name: str
     constraint_type: str  # "max_exposure", "min_diversification", "max_beta", etc.
-    factor: Optional[str] = None  # Factor this constraint applies to
-    max_value: Optional[Decimal] = None
-    min_value: Optional[Decimal] = None
+    factor: str | None = None  # Factor this constraint applies to
+    max_value: Decimal | None = None
+    min_value: Decimal | None = None
     penalty_weight: Decimal = Decimal("1.0")  # For constraint violation
 
 
@@ -114,12 +114,12 @@ class RiskModel:
     3. Manage risk by applying constraints
     """
 
-    def __init__(self, config: Dict[str, Any]):
+    def __init__(self, config: dict[str, Any]):
         self.config = config
         self.name = config.get("name", self.__class__.__name__)
-        self.risk_factors: Dict[str, RiskFactor] = {}
-        self.risk_constraints: List[RiskConstraint] = []
-        self.covariance_matrix: Optional[pd.DataFrame] = None
+        self.risk_factors: dict[str, RiskFactor] = {}
+        self.risk_constraints: list[RiskConstraint] = []
+        self.covariance_matrix: pd.DataFrame | None = None
         self.lookup_days = config.get("lookup_days", 252)  # 1 year
 
     def add_risk_factor(self, factor: RiskFactor) -> None:
@@ -173,8 +173,8 @@ class RiskModel:
             raise ValueError(f"Unknown covariance estimation method: {method}")
 
     def calculate_factor_exposures(
-        self, weights: Dict[str, float], factor_loadings: pd.DataFrame
-    ) -> Dict[str, float]:
+        self, weights: dict[str, float], factor_loadings: pd.DataFrame
+    ) -> dict[str, float]:
         """
         Calculate portfolio exposure to each risk factor.
 
@@ -199,7 +199,7 @@ class RiskModel:
 
         return exposures
 
-    def forecast_risk(self, weights: Dict[str, float], returns: pd.DataFrame) -> RiskMetrics:
+    def forecast_risk(self, weights: dict[str, float], returns: pd.DataFrame) -> RiskMetrics:
         """
         Forecast portfolio risk.
 
@@ -267,7 +267,7 @@ class RiskModel:
         self,
         weights: pd.Series,
         factor_loadings: pd.DataFrame,
-        constraints: Optional[List[RiskConstraint]] = None,
+        constraints: list[RiskConstraint] | None = None,
     ) -> pd.Series:
         """
         Apply risk constraints to portfolio weights.
@@ -317,12 +317,8 @@ class RiskModel:
                         constraint.factor, pd.Series(0, index=weights.index)
                     )
 
-                    if factor_exposure > 0:
-                        # Reduce long positions in this factor
-                        mask = factor_values > 0
-                    else:
-                        # Reduce short positions in this factor
-                        mask = factor_values < 0
+                    # Reduce positions in this factor based on exposure direction
+                    mask = factor_values > 0 if factor_exposure > 0 else factor_values < 0
 
                     # Apply scaling only to contributing assets
                     constrained_weights[mask] *= scale_factor
@@ -382,8 +378,8 @@ class RiskModel:
         return constrained_weights
 
     def calculate_risk_budget(
-        self, weights: Dict[str, float], factor_loadings: pd.DataFrame
-    ) -> List[RiskBudget]:
+        self, weights: dict[str, float], factor_loadings: pd.DataFrame
+    ) -> list[RiskBudget]:
         """
         Calculate risk budget for each factor.
 
@@ -427,8 +423,8 @@ class RiskModel:
         return budgets
 
     def validate_portfolio_risk(
-        self, weights: Dict[str, float], returns: pd.DataFrame
-    ) -> Tuple[bool, List[str]]:
+        self, weights: dict[str, float], returns: pd.DataFrame
+    ) -> tuple[bool, list[str]]:
         """
         Validate that portfolio meets risk criteria.
 
@@ -461,10 +457,14 @@ class RiskModel:
             issues.append(f"Beta {risk_metrics.beta:.2f} outside range [{min_beta}, {max_beta}]")
 
         # Check factor constraints
-        if hasattr(returns, 'columns'):
+        if hasattr(returns, "columns"):
             # Use returns as proxy for factor loadings if none provided
             for constraint in self.risk_constraints:
-                if constraint.constraint_type == "max_beta" and constraint.max_value and risk_metrics.beta > constraint.max_value:
+                if (
+                    constraint.constraint_type == "max_beta"
+                    and constraint.max_value
+                    and risk_metrics.beta > constraint.max_value
+                ):
                     issues.append(f"Beta exceeds constraint: {constraint.name}")
 
         return len(issues) == 0, issues
@@ -480,15 +480,15 @@ class FactorRiskModel(RiskModel):
     2. Idiosyncratic risk (asset-specific)
     """
 
-    def __init__(self, config: Dict[str, Any]):
+    def __init__(self, config: dict[str, Any]):
         super().__init__(config)
         self.model_type = RiskModelType.FACTOR_MODEL
-        self.factor_returns: Dict[str, pd.Series] = {}
-        self.specific_risk: Dict[str, float] = {}
+        self.factor_returns: dict[str, pd.Series] = {}
+        self.specific_risk: dict[str, float] = {}
 
     def estimate_factor_returns(
         self, asset_returns: pd.DataFrame, factor_loadings: pd.DataFrame
-    ) -> Dict[str, float]:
+    ) -> dict[str, float]:
         """
         Estimate factor returns using cross-sectional regression.
 
@@ -528,7 +528,7 @@ class FactorRiskModel(RiskModel):
 
     def calculate_specific_risk(
         self, asset_returns: pd.DataFrame, factor_loadings: pd.DataFrame
-    ) -> Dict[str, float]:
+    ) -> dict[str, float]:
         """
         Calculate idiosyncratic (specific) risk for each asset.
 
@@ -558,11 +558,11 @@ class CovarianceRiskModel(RiskModel):
     risk sources. Useful for smaller portfolios.
     """
 
-    def __init__(self, config: Dict[str, Any]):
+    def __init__(self, config: dict[str, Any]):
         super().__init__(config)
         self.model_type = RiskModelType.COVARIANCE_MATRIX
 
-    def forecast_risk(self, weights: Dict[str, float], returns: pd.DataFrame) -> RiskMetrics:
+    def forecast_risk(self, weights: dict[str, float], returns: pd.DataFrame) -> RiskMetrics:
         """Calculate risk using covariance matrix."""
         # Estimate covariance matrix
         cov_matrix = self.estimate_covariance_matrix(returns, method="shrinkage")
@@ -580,7 +580,7 @@ class CovarianceRiskModel(RiskModel):
         return super().forecast_risk(weights, returns)
 
 
-def get_risk_model(config: Dict[str, Any]) -> RiskModel:
+def get_risk_model(config: dict[str, Any]) -> RiskModel:
     """
     Factory function to create risk models.
 
@@ -601,14 +601,14 @@ def get_risk_model(config: Dict[str, Any]) -> RiskModel:
 
 
 __all__ = [
-    "RiskFactorType",
-    "RiskModelType",
-    "RiskFactor",
-    "RiskBudget",
-    "RiskMetrics",
-    "RiskConstraint",
-    "RiskModel",
-    "FactorRiskModel",
     "CovarianceRiskModel",
+    "FactorRiskModel",
+    "RiskBudget",
+    "RiskConstraint",
+    "RiskFactor",
+    "RiskFactorType",
+    "RiskMetrics",
+    "RiskModel",
+    "RiskModelType",
     "get_risk_model",
 ]

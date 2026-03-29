@@ -10,7 +10,7 @@ Dynamically selects strategy configuration based on available capital:
 
 import logging
 from decimal import Decimal
-from typing import Optional
+from typing import ClassVar, Optional
 
 from .models import CapitalTier, CapitalTierResult, RiskProfile, StrategyFeatures
 
@@ -23,14 +23,14 @@ class CapitalTierSelector:
     Maps capital amount to tier and determines tier-specific parameters.
     """
 
-    THRESHOLDS = {
+    THRESHOLDS: ClassVar[dict] = {
         CapitalTier.MICRO: (Decimal("0"), Decimal("15000")),
         CapitalTier.SMALL: (Decimal("15000"), Decimal("50000")),
         CapitalTier.MEDIUM: (Decimal("50000"), Decimal("250000")),
         CapitalTier.LARGE: (Decimal("250000"), Decimal("999999999")),
     }
 
-    TIER_CONFIGS = {
+    TIER_CONFIGS: ClassVar[dict] = {
         CapitalTier.MICRO: {
             "strategy_type": "CONSERVATIVE",
             "expected_alpha_range": (Decimal("2"), Decimal("5")),

@@ -9,7 +9,7 @@ import logging
 import traceback
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 import numpy as np
 
@@ -28,17 +28,17 @@ class TrialResult:
     """
 
     trial_id: str
-    params: Dict[str, Any]
+    params: dict[str, Any]
     objective_value: float
     status: TrialStatus = TrialStatus.COMPLETED
-    metrics: Dict[str, float] = field(default_factory=dict)
+    metrics: dict[str, float] = field(default_factory=dict)
     start_time: Optional[datetime] = None
     end_time: Optional[datetime] = None
     duration_seconds: float = 0.0
     error_message: Optional[str] = None
     traceback: Optional[str] = None
     iteration: int = 0
-    additional_info: Dict[str, Any] = field(default_factory=dict)
+    additional_info: dict[str, Any] = field(default_factory=dict)
 
     def __post_init__(self):
         """Calculate duration if timestamps are available."""
@@ -66,7 +66,7 @@ class TrialResult:
         """Check if trial was pruned."""
         return self.status == TrialStatus.PRUNED
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary representation."""
         return {
             "trial_id": self.trial_id,
@@ -83,7 +83,7 @@ class TrialResult:
         }
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> "TrialResult":
+    def from_dict(cls, data: dict[str, Any]) -> "TrialResult":
         """Create TrialResult from dictionary."""
         return cls(
             trial_id=data["trial_id"],
@@ -110,7 +110,7 @@ class TrialHistory:
     Tracks all trials, provides statistics, and manages convergence tracking.
     """
 
-    trials: List[TrialResult] = field(default_factory=list)
+    trials: list[TrialResult] = field(default_factory=list)
     start_time: Optional[datetime] = None
     end_time: Optional[datetime] = None
 
@@ -169,7 +169,7 @@ class TrialHistory:
         )
         return best
 
-    def get_best_params(self) -> Optional[Dict[str, Any]]:
+    def get_best_params(self) -> Optional[dict[str, Any]]:
         """
         Get best parameters from all trials.
 
@@ -320,7 +320,7 @@ class TrialHistory:
 
         return max(t.objective_value for t in successful_trials)
 
-    def get_improvement_trend(self, window: int = 10) -> List[float]:
+    def get_improvement_trend(self, window: int = 10) -> list[float]:
         """
         Get trend of best scores over time.
 
@@ -345,7 +345,7 @@ class TrialHistory:
 
         return trend
 
-    def get_execution_times(self) -> List[float]:
+    def get_execution_times(self) -> list[float]:
         """Get list of execution times for all trials."""
         return [t.duration_seconds for t in self.trials]
 
@@ -378,7 +378,7 @@ class TrialHistory:
             },
         )
 
-    def get_summary(self) -> Dict[str, Any]:
+    def get_summary(self) -> dict[str, Any]:
         """
         Get summary statistics.
 
@@ -404,7 +404,7 @@ class TrialHistory:
             "end_time": self.end_time.isoformat() if self.end_time else None,
         }
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary representation."""
         return {
             "trials": [t.to_dict() for t in self.trials],
@@ -456,7 +456,7 @@ class TrialHistory:
             extra={"filepath": filepath},
         )
 
-        with open(filepath, "r") as f:
+        with open(filepath) as f:
             data = json.load(f)
 
         trials = [TrialResult.from_dict(t) for t in data["trials"]]
@@ -495,7 +495,7 @@ class TrialContext:
     def __init__(
         self,
         trial_id: str,
-        params: Dict[str, Any],
+        params: dict[str, Any],
         iteration: int = 0,
     ):
         self.trial_id = trial_id
@@ -549,9 +549,9 @@ class TrialContext:
                 extra={
                     "trial_id": self.trial_id,
                     "iteration": self.iteration,
-                    "duration_seconds": (self.end_time - self.start_time).total_seconds()
-                    if self.start_time
-                    else 0,
+                    "duration_seconds": (
+                        (self.end_time - self.start_time).total_seconds() if self.start_time else 0
+                    ),
                 },
             )
 
@@ -561,8 +561,8 @@ class TrialContext:
     def create_result(
         self,
         objective_value: float,
-        metrics: Optional[Dict[str, float]] = None,
-        additional_info: Optional[Dict[str, Any]] = None,
+        metrics: Optional[dict[str, float]] = None,
+        additional_info: Optional[dict[str, Any]] = None,
     ) -> TrialResult:
         """
         Create TrialResult from this context.

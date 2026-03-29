@@ -12,7 +12,7 @@ import logging
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Any, Dict, Optional
+from typing import Any, Optional
 
 from app.shared.config.centralized_config import get_config
 from app.shared.utils.timezone_utils import utc_now
@@ -94,7 +94,7 @@ class CircuitBreaker:
         self.last_success_time = None
         logger.info(f"Circuit {self.name} reset")
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for serialization."""
         return {
             "name": self.name,
@@ -131,7 +131,7 @@ class CircuitBreakerManager:
         self.recovery_timeout = tt.circuit_breaker_recovery_timeout
 
         # Initialize default circuit breakers
-        self.circuit_breakers: Dict[str, CircuitBreaker] = {
+        self.circuit_breakers: dict[str, CircuitBreaker] = {
             CircuitBreakerType.API_ERRORS: CircuitBreaker(
                 name=CircuitBreakerType.API_ERRORS,
                 failure_threshold=self.failure_threshold,
@@ -199,7 +199,7 @@ class CircuitBreakerManager:
         if error_message:
             logger.debug(f"Circuit breaker error ({breaker_name}): {error_message}")
 
-    def get_all_breaker_statuses(self) -> Dict[str, Dict[str, Any]]:
+    def get_all_breaker_statuses(self) -> dict[str, dict[str, Any]]:
         """Get status of all circuit breakers."""
         return {name: breaker.to_dict() for name, breaker in self.circuit_breakers.items()}
 
@@ -222,7 +222,7 @@ class CircuitBreakerManager:
         self.circuit_breakers.clear()
         logger.info("Circuit breaker history cleared")
 
-    def get_manager_statistics(self) -> Dict[str, Any]:
+    def get_manager_statistics(self) -> dict[str, Any]:
         """Get manager statistics."""
         return {
             "total_operations": self.total_operations,

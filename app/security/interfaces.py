@@ -11,8 +11,10 @@ SOLID Principles:
 
 from __future__ import annotations
 
-from datetime import timedelta
-from typing import Any, Protocol, runtime_checkable
+from typing import TYPE_CHECKING, Any, Protocol, runtime_checkable
+
+if TYPE_CHECKING:
+    from datetime import timedelta
 
 
 @runtime_checkable

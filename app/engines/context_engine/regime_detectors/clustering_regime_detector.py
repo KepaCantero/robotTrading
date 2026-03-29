@@ -5,7 +5,7 @@ Usa KMeans y DBSCAN para identificar regímenes basados en features de mercado.
 """
 
 import logging
-from typing import Any, Dict, List
+from typing import Any, Optional
 
 import numpy as np
 
@@ -24,7 +24,7 @@ class ClusteringRegimeDetector:
     Usa KMeans o DBSCAN para identificar regímenes basados en features de mercado.
     """
 
-    def __init__(self, config: Dict[str, Any] = None):
+    def __init__(self, config: Optional[dict[str, Any]] = None):
         """
         Inicializar detector de clustering.
 
@@ -32,23 +32,23 @@ class ClusteringRegimeDetector:
             config: Configuración
         """
         config = config or {}
-        self.method = config.get('method', 'kmeans')  # kmeans, dbscan
-        self.n_clusters = config.get('n_clusters', 3)
-        self.window_size = config.get('window_size', 100)
-        self.min_samples = config.get('min_samples', 50)
-        self.use_pca = config.get('use_pca', False)
-        self.n_components_pca = config.get('n_components_pca', 2)
+        self.method = config.get("method", "kmeans")  # kmeans, dbscan
+        self.n_clusters = config.get("n_clusters", 3)
+        self.window_size = config.get("window_size", 100)
+        self.min_samples = config.get("min_samples", 50)
+        self.use_pca = config.get("use_pca", False)
+        self.n_components_pca = config.get("n_components_pca", 2)
 
         self.model = None
         self.scaler = StandardScaler()
         self.pca = PCA(n_components=self.n_components_pca) if self.use_pca else None
         self.regime_labels = (
-            ['bear', 'sideways', 'bull']
+            ["bear", "sideways", "bull"]
             if self.n_clusters == 3
-            else [f'regime_{i}' for i in range(self.n_clusters)]
+            else [f"regime_{i}" for i in range(self.n_clusters)]
         )
 
-    def _extract_features(self, prices: List[float]) -> np.ndarray:
+    def _extract_features(self, prices: list[float]) -> np.ndarray:
         """
         Extraer features de precios.
 
@@ -94,7 +94,7 @@ class ClusteringRegimeDetector:
 
         return np.array(features)
 
-    def fit(self, prices: List[float]) -> bool:
+    def fit(self, prices: list[float]) -> bool:
         """
         Entrenar modelo de clustering.
 
@@ -138,10 +138,10 @@ class ClusteringRegimeDetector:
                 X = self.pca.fit_transform(X)
 
             # Entrenar clustering
-            if self.method == 'kmeans':
+            if self.method == "kmeans":
                 self.model = KMeans(n_clusters=self.n_clusters, random_state=42, n_init=10)
                 self.model.fit(X)
-            elif self.method == 'dbscan':
+            elif self.method == "dbscan":
                 self.model = DBSCAN(eps=0.5, min_samples=5)
                 self.model.fit(X)
             else:
@@ -155,7 +155,7 @@ class ClusteringRegimeDetector:
             logger.error(f"Error entrenando clustering: {e}")
             return False
 
-    def detect(self, prices: List[float]) -> Dict[str, Any]:
+    def detect(self, prices: list[float]) -> dict[str, Any]:
         """
         Detectar régimen actual usando clustering.
 
@@ -166,14 +166,14 @@ class ClusteringRegimeDetector:
             Dict con régimen detectado
         """
         if not self.model and not self.fit(prices):
-            return {'regime': 'unknown', 'cluster': -1, 'confidence': 0.0}
+            return {"regime": "unknown", "cluster": -1, "confidence": 0.0}
 
         try:
             # Extraer features recientes
             features = self._extract_features(prices)
 
             if len(features) == 0:
-                return {'regime': 'unknown', 'cluster': -1, 'confidence': 0.0}
+                return {"regime": "unknown", "cluster": -1, "confidence": 0.0}
 
             X = features.reshape(1, -1)
 
@@ -190,17 +190,17 @@ class ClusteringRegimeDetector:
 
             # Para DBSCAN, -1 significa outlier
             if cluster == -1:
-                return {'regime': 'outlier', 'cluster': -1, 'confidence': 0.0}
+                return {"regime": "outlier", "cluster": -1, "confidence": 0.0}
 
             # Mapear cluster a régimen
             regime = (
                 self.regime_labels[cluster]
                 if cluster < len(self.regime_labels)
-                else f'regime_{cluster}'
+                else f"regime_{cluster}"
             )
 
             # Calcular distancia al centroide (confianza)
-            if hasattr(self.model, 'cluster_centers_'):
+            if hasattr(self.model, "cluster_centers_"):
                 center = self.model.cluster_centers_[cluster]
                 distance = np.linalg.norm(X[0] - center)
                 # Normalizar distancia (confianza inversa)
@@ -211,8 +211,8 @@ class ClusteringRegimeDetector:
             else:
                 confidence = 0.5
 
-            return {'regime': regime, 'cluster': int(cluster), 'confidence': float(confidence)}
+            return {"regime": regime, "cluster": int(cluster), "confidence": float(confidence)}
 
         except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
             logger.error(f"Error detectando régimen con clustering: {e}")
-            return {'regime': 'unknown', 'cluster': -1, 'confidence': 0.0}
+            return {"regime": "unknown", "cluster": -1, "confidence": 0.0}

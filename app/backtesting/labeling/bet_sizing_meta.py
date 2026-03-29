@@ -48,7 +48,6 @@ from __future__ import annotations
 import logging
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Dict, Optional, Union
 
 import numpy as np
 import pandas as pd
@@ -158,12 +157,12 @@ class MetaBetSizingResult:
     confidence_levels: np.ndarray
     """Confidence levels (low, medium, high)"""
 
-    metadata: Dict[str, Union[str, int, float, bool, None]] = field(default_factory=dict)
+    metadata: dict[str, str | int | float | bool | None] = field(default_factory=dict)
     """Additional metadata"""
 
     timestamp: datetime = field(default_factory=datetime.now)
 
-    def to_dict(self) -> Dict[str, Union[str, int, float, bool, list, None]]:
+    def to_dict(self) -> dict[str, str | int | float | bool | list | None]:
         """Convert to dictionary."""
         return {
             "bet_sizes": self.bet_sizes.tolist(),
@@ -194,7 +193,7 @@ class MetaLabelingBetSizing:
         >>> print(f"Average bet size: {result.bet_sizes.mean():.2%}")
     """
 
-    def __init__(self, config: Optional[MetaBetSizingConfig] = None):
+    def __init__(self, config: MetaBetSizingConfig | None = None):
         """
         Initialize meta-labeling bet sizing.
 
@@ -207,10 +206,10 @@ class MetaLabelingBetSizing:
         self,
         primary_model: object,
         meta_model: object,
-        X: Union[pd.DataFrame, np.ndarray],
-        expected_returns: Optional[np.ndarray] = None,
-        volatilities: Optional[np.ndarray] = None,
-        correlation_matrix: Optional[np.ndarray] = None,
+        X: pd.DataFrame | np.ndarray,
+        expected_returns: np.ndarray | None = None,
+        volatilities: np.ndarray | None = None,
+        correlation_matrix: np.ndarray | None = None,
     ) -> MetaBetSizingResult:
         """
         Calculate bet sizes using meta-labeling.
@@ -432,7 +431,7 @@ class MetaLabelingBetSizing:
         self,
         primary_predictions: np.ndarray,
         meta_probabilities: np.ndarray,
-        expected_returns: Optional[np.ndarray],
+        expected_returns: np.ndarray | None,
     ) -> np.ndarray:
         """
         Calculate bet sizes using expected value with meta-probabilities.
@@ -572,7 +571,7 @@ class MetaLabelingBetSizing:
         self,
         primary_predictions: np.ndarray,
         meta_probabilities: np.ndarray,
-        volatilities: Optional[np.ndarray],
+        volatilities: np.ndarray | None,
     ) -> np.ndarray:
         """
         Calculate bet sizes using risk parity with meta-weights.
@@ -721,8 +720,8 @@ class MetaLabelingBetSizing:
 def calculate_bet_sizes_with_meta_labeling(
     primary_model: object,
     meta_model: object,
-    X: Union[pd.DataFrame, np.ndarray],
-    expected_returns: Optional[np.ndarray] = None,
+    X: pd.DataFrame | np.ndarray,
+    expected_returns: np.ndarray | None = None,
     method: str = "meta_kelly",
     confidence_threshold: float = 0.5,
     max_bet_size: float = 1.0,
@@ -769,8 +768,8 @@ def calculate_bet_sizes_with_meta_labeling(
 def calculate_expected_value_with_meta_probabilities(
     meta_probabilities: np.ndarray,
     primary_predictions: np.ndarray,
-    win_amounts: Optional[np.ndarray] = None,
-    loss_amounts: Optional[np.ndarray] = None,
+    win_amounts: np.ndarray | None = None,
+    loss_amounts: np.ndarray | None = None,
     default_win: float = 0.02,
     default_loss: float = 0.01,
 ) -> np.ndarray:
@@ -823,8 +822,8 @@ def calculate_expected_value_with_meta_probabilities(
 def calculate_kelly_with_meta_probabilities(
     meta_probabilities: np.ndarray,
     primary_predictions: np.ndarray,
-    win_amounts: Optional[np.ndarray] = None,
-    loss_amounts: Optional[np.ndarray] = None,
+    win_amounts: np.ndarray | None = None,
+    loss_amounts: np.ndarray | None = None,
     kelly_fraction: float = 0.25,
 ) -> np.ndarray:
     """

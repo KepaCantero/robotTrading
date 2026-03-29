@@ -20,11 +20,11 @@ from .tomasini_event_queue import (
 
 __all__ = [
     "Event",
-    "EventPriority",
     "EventHandler",
+    "EventPriority",
     "EventType",
-    "TomasiniEventQueue",
     "OrderEventHandler",
-    "OrderSubmitHandler",
     "OrderFillHandler",
+    "OrderSubmitHandler",
+    "TomasiniEventQueue",
 ]

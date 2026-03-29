@@ -40,9 +40,9 @@ from __future__ import annotations
 
 import asyncio
 import logging
+from collections.abc import Awaitable
 from datetime import datetime
-from types import ModuleType
-from typing import Awaitable, Callable, Dict, List, Optional, Tuple, Union
+from typing import TYPE_CHECKING, Callable, Union
 
 from .base_optimizer import (
     BaseOptimizer,
@@ -53,16 +53,19 @@ from .base_optimizer import (
     TrialResult,
 )
 
+if TYPE_CHECKING:
+    from types import ModuleType
+
 # Type aliases for parameter values and definitions
 ParamValue = Union[int, float, str, bool]
-ParamDict = Dict[str, ParamValue]
-ParamDef = Dict[str, Union[str, int, float, bool, List[ParamValue]]]
+ParamDict = dict[str, ParamValue]
+ParamDef = dict[str, Union[str, int, float, bool, list[ParamValue]]]
 ObjectiveFn = Callable[[ParamDict], Union[float, Awaitable[float]]]
 
 logger = logging.getLogger(__name__)
 
 # Initialize optuna as None, then try to import
-optuna: Optional[ModuleType] = None
+optuna: ModuleType | None = None
 OPTUNA_AVAILABLE = False
 
 try:
@@ -96,7 +99,7 @@ class SearchSpace:
     """
 
     def __init__(self) -> None:
-        self._parameters: Dict[str, ParamDef] = {}
+        self._parameters: dict[str, ParamDef] = {}
 
     def add_continuous(
         self,
@@ -104,7 +107,7 @@ class SearchSpace:
         min_value: float,
         max_value: float,
         log: bool = False,
-    ) -> "SearchSpace":
+    ) -> SearchSpace:
         """Add a continuous parameter."""
         self._parameters[name] = {
             "type": ParameterType.CONTINUOUS,
@@ -120,7 +123,7 @@ class SearchSpace:
         min_value: int,
         max_value: int,
         step: int = 1,
-    ) -> "SearchSpace":
+    ) -> SearchSpace:
         """Add an integer parameter."""
         self._parameters[name] = {
             "type": ParameterType.INTEGER,
@@ -133,8 +136,8 @@ class SearchSpace:
     def add_categorical(
         self,
         name: str,
-        choices: List[ParamValue],
-    ) -> "SearchSpace":
+        choices: list[ParamValue],
+    ) -> SearchSpace:
         """Add a categorical parameter."""
         self._parameters[name] = {
             "type": ParameterType.CATEGORICAL,
@@ -145,8 +148,8 @@ class SearchSpace:
     def add_discrete(
         self,
         name: str,
-        values: List[ParamValue],
-    ) -> "SearchSpace":
+        values: list[ParamValue],
+    ) -> SearchSpace:
         """Add a discrete parameter (same as categorical for Optuna)."""
         self._parameters[name] = {
             "type": ParameterType.DISCRETE,
@@ -154,7 +157,7 @@ class SearchSpace:
         }
         return self
 
-    def get_parameter_names(self) -> List[str]:
+    def get_parameter_names(self) -> list[str]:
         """Get all parameter names."""
         return list(self._parameters.keys())
 
@@ -163,14 +166,14 @@ class SearchSpace:
         return self._parameters.get(name, {})
 
     @classmethod
-    def from_dict(cls, params_dict: Dict[str, ParamDef]) -> "SearchSpace":
+    def from_dict(cls, params_dict: dict[str, ParamDef]) -> SearchSpace:
         """Create SearchSpace from dictionary."""
         space = cls()
         for name, defn in params_dict.items():
             space._parameters[name] = defn
         return space
 
-    def to_dict(self) -> Dict[str, ParamDef]:
+    def to_dict(self) -> dict[str, ParamDef]:
         """Convert to dictionary."""
         return self._parameters.copy()
 
@@ -215,9 +218,9 @@ class BayesianOptimizer(BaseOptimizer[SearchSpace]):
     def __init__(
         self,
         config: OptimizationConfig,
-        n_trials: Optional[int] = None,
-        pruner: Optional[str] = "median",
-        sampler: Optional[str] = "tpe",
+        n_trials: int | None = None,
+        pruner: str | None = "median",
+        sampler: str | None = "tpe",
         multivariate: bool = True,
         n_startup_trials: int = 10,
     ) -> None:
@@ -243,8 +246,8 @@ class BayesianOptimizer(BaseOptimizer[SearchSpace]):
         self.multivariate = multivariate
         self.n_startup_trials = n_startup_trials
 
-        self._study: "Optional[optuna.study.Study]" = None
-        self._search_space: Optional[SearchSpace] = None
+        self._study: optuna.study.Study | None = None
+        self._search_space: SearchSpace | None = None
 
     @classmethod
     def get_optimizer_type(cls) -> OptimizerType:
@@ -253,11 +256,11 @@ class BayesianOptimizer(BaseOptimizer[SearchSpace]):
 
     def get_best_params(self) -> ParamDict:
         """Get the best parameters found."""
-        if self._study is not None and hasattr(self._study, 'best_params'):
+        if self._study is not None and hasattr(self._study, "best_params"):
             return self._study.best_params
         return {}
 
-    def get_history(self) -> List[TrialResult]:
+    def get_history(self) -> list[TrialResult]:
         """Get optimization history."""
         return self._history
 
@@ -289,7 +292,7 @@ class BayesianOptimizer(BaseOptimizer[SearchSpace]):
             return await self._random_search_fallback(objective, search_space)
 
         self._start_time = datetime.now()
-        self._history: List[TrialResult] = []
+        self._history: list[TrialResult] = []
         self._iteration_count = 0
         self._search_space = search_space
 
@@ -301,7 +304,7 @@ class BayesianOptimizer(BaseOptimizer[SearchSpace]):
         self._study = self._create_study()
 
         # Define objective wrapper for Optuna
-        def optuna_objective(trial: "optuna.trial.Trial") -> float:
+        def optuna_objective(trial: optuna.trial.Trial) -> float:
             return self._run_trial(trial, objective)
 
         # Run optimization
@@ -312,7 +315,7 @@ class BayesianOptimizer(BaseOptimizer[SearchSpace]):
             if self.config.progress_bar and self.config.verbose >= 1:
                 pbar = tqdm(total=self.n_trials, desc="Bayesian Optimization")
 
-            def callback(study: "optuna.study.Study", trial: "optuna.trial.FrozenTrial") -> None:
+            def callback(study: optuna.study.Study, trial: optuna.trial.FrozenTrial) -> None:
                 self._iteration_count = len(study.trials)
 
                 if pbar:
@@ -359,7 +362,7 @@ class BayesianOptimizer(BaseOptimizer[SearchSpace]):
 
         return result
 
-    def _create_study(self) -> "optuna.study.Study":
+    def _create_study(self) -> optuna.study.Study:
         """Create Optuna study with appropriate sampler and pruner."""
         if not OPTUNA_AVAILABLE:
             raise RuntimeError("Optuna not available")
@@ -379,7 +382,7 @@ class BayesianOptimizer(BaseOptimizer[SearchSpace]):
 
         return study
 
-    def _create_sampler(self) -> "optuna.samplers.BaseSampler":
+    def _create_sampler(self) -> optuna.samplers.BaseSampler:
         """Create Optuna sampler."""
         if not OPTUNA_AVAILABLE:
             raise RuntimeError("Optuna not available")
@@ -400,7 +403,7 @@ class BayesianOptimizer(BaseOptimizer[SearchSpace]):
                 multivariate=self.multivariate,
             )
 
-    def _create_pruner(self) -> "Optional[optuna.pruners.BasePruner]":
+    def _create_pruner(self) -> optuna.pruners.BasePruner | None:
         """Create Optuna pruner."""
         if not OPTUNA_AVAILABLE:
             return None
@@ -418,7 +421,7 @@ class BayesianOptimizer(BaseOptimizer[SearchSpace]):
 
     def _run_trial(
         self,
-        trial: "optuna.trial.Trial",
+        trial: optuna.trial.Trial,
         objective: ObjectiveFn,
     ) -> float:
         """
@@ -485,7 +488,7 @@ class BayesianOptimizer(BaseOptimizer[SearchSpace]):
 
             return float("-inf") if self.config.maximize else float("inf")
 
-    def _sample_params(self, trial: "optuna.trial.Trial") -> ParamDict:
+    def _sample_params(self, trial: optuna.trial.Trial) -> ParamDict:
         """
         Sample parameters from search space using Optuna trial.
 
@@ -528,7 +531,7 @@ class BayesianOptimizer(BaseOptimizer[SearchSpace]):
 
         return params
 
-    def _extract_results_from_study(self, study: "optuna.study.Study") -> None:
+    def _extract_results_from_study(self, study: optuna.study.Study) -> None:
         """
         Extract trial results from Optuna study.
 
@@ -561,12 +564,16 @@ class BayesianOptimizer(BaseOptimizer[SearchSpace]):
                 params=params,
                 objective_value=value if value is not None else 0.0,
                 status=status,
-                start_time=datetime.fromtimestamp(trial.datetime_start.timestamp())
-                if trial.datetime_start
-                else None,
-                end_time=datetime.fromtimestamp(trial.datetime_complete.timestamp())
-                if trial.datetime_complete
-                else None,
+                start_time=(
+                    datetime.fromtimestamp(trial.datetime_start.timestamp())
+                    if trial.datetime_start
+                    else None
+                ),
+                end_time=(
+                    datetime.fromtimestamp(trial.datetime_complete.timestamp())
+                    if trial.datetime_complete
+                    else None
+                ),
                 iteration=trial.number,
                 additional_info={
                     "optuna_trial_number": trial.number,
@@ -669,7 +676,7 @@ class MultiObjectiveBayesianOptimizer(BaseOptimizer[SearchSpace]):
         self,
         config: OptimizationConfig,
         n_trials: int = 100,
-        objectives: Optional[List[str]] = None,
+        objectives: list[str] | None = None,
     ) -> None:
         """
         Initialize multi-objective Bayesian optimizer.
@@ -687,7 +694,7 @@ class MultiObjectiveBayesianOptimizer(BaseOptimizer[SearchSpace]):
         self.n_trials = n_trials
         self.objectives = objectives or ["return", "sharpe_ratio"]
 
-        self._pareto_front: List[Dict[str, Union[ParamDict, Tuple[float, ...], int]]] = []
+        self._pareto_front: list[dict[str, ParamDict | tuple[float, ...] | int]] = []
 
     @classmethod
     def get_optimizer_type(cls) -> OptimizerType:
@@ -700,13 +707,13 @@ class MultiObjectiveBayesianOptimizer(BaseOptimizer[SearchSpace]):
             return self._pareto_front[0].get("params", {})
         return {}
 
-    def get_history(self) -> List[TrialResult]:
+    def get_history(self) -> list[TrialResult]:
         """Get optimization history."""
         return self._history
 
     async def optimize(
         self,
-        objectives: List[Callable[[ParamDict], float]],
+        objectives: list[Callable[[ParamDict], float]],
         search_space: SearchSpace,
     ) -> OptimizationResult:
         """
@@ -723,7 +730,7 @@ class MultiObjectiveBayesianOptimizer(BaseOptimizer[SearchSpace]):
             raise RuntimeError("Optuna required for multi-objective optimization")
 
         self._start_time = datetime.now()
-        self._history: List[TrialResult] = []
+        self._history: list[TrialResult] = []
         self._search_space = search_space
 
         # Create multi-objective study
@@ -733,7 +740,7 @@ class MultiObjectiveBayesianOptimizer(BaseOptimizer[SearchSpace]):
         )
 
         # Define objective wrapper
-        def optuna_objective(trial: "optuna.trial.Trial") -> Tuple[float, ...]:
+        def optuna_objective(trial: optuna.trial.Trial) -> tuple[float, ...]:
             params = {}
             for name, defn in search_space.to_dict().items():
                 param_type = defn.get("type", ParameterType.CONTINUOUS)
@@ -772,7 +779,7 @@ class MultiObjectiveBayesianOptimizer(BaseOptimizer[SearchSpace]):
 
         return result
 
-    def _extract_pareto_front(self, study: "optuna.study.Study") -> None:
+    def _extract_pareto_front(self, study: optuna.study.Study) -> None:
         """Extract Pareto front from Optuna study."""
         self._pareto_front = []
 

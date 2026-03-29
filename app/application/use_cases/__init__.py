@@ -19,14 +19,14 @@ from .select_strategy import (
 )
 
 __all__ = [
-    'RunBacktestUseCase',
-    'AnalyzeBacktestResultsUseCase',
-    'CreatePortfolioUseCase',
-    'ExecuteStrategyUseCase',
-    'RebalancePortfolioUseCase',
-    'SelectStrategyUseCase',
-    'StrategySelector',
-    'StrategyConfiguration',
-    'StrategySelectionCriteria',
-    'StrategySelectionResult',
+    "AnalyzeBacktestResultsUseCase",
+    "CreatePortfolioUseCase",
+    "ExecuteStrategyUseCase",
+    "RebalancePortfolioUseCase",
+    "RunBacktestUseCase",
+    "SelectStrategyUseCase",
+    "StrategyConfiguration",
+    "StrategySelectionCriteria",
+    "StrategySelectionResult",
+    "StrategySelector",
 ]

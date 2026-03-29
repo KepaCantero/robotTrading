@@ -7,27 +7,27 @@ inventory risk and adverse selection.
 Key Equations:
 
 1. Reservation Price (inventory-adjusted mid):
-   r(s) = s - (γ * σ² / k) * q * (T - t) / T
+   r(s) = s - (gamma * sigma^2 / k) * q * (T - t) / T
 
    Where:
    - s: Current mid price
-   - γ (gamma): Risk aversion parameter
-   - σ (sigma): Volatility
+   - gamma (gamma): Risk aversion parameter
+   - sigma (sigma): Volatility
    - k: Order book depth parameter
    - q: Current inventory
    - T: Total time horizon
    - t: Current time
 
 2. Optimal Spread:
-   δ* = (γ * σ² / k) * (T - t) + (2/γ) * ln(1 + γ/2)
+   delta* = (gamma * sigma^2 / k) * (T - t) + (2/gamma) * ln(1 + gamma/2)
 
    Components:
-   - Inventory risk: (γ * σ² / k) * (T - t)
-   - Adverse selection: (2/γ) * ln(1 + γ/2)
+   - Inventory risk: (gamma * sigma^2 / k) * (T - t)
+   - Adverse selection: (2/gamma) * ln(1 + gamma/2)
 
 3. Bid/Ask Quotes:
-   - Bid: r(s) - δ*/2
-   - Ask: r(s) + δ*/2
+   - Bid: r(s) - delta*/2
+   - Ask: r(s) + delta*/2
 """
 
 from __future__ import annotations
@@ -112,7 +112,7 @@ class AvellanedaStoikovModel:
         - If short inventory: higher reservation price (encourage buying)
 
         Formula:
-        r(s) = s - (γ * σ² / k) * q * (T - t) / T
+        r(s) = s - (gamma * sigma^2 / k) * q * (T - t) / T
 
         Args:
             mid_price: Current mid price.
@@ -138,7 +138,7 @@ class AvellanedaStoikovModel:
         t_rem = float(time_remaining)
 
         # Calculate inventory adjustment
-        # adjustment = (γ * σ² / k) * q * (T - t) / T
+        # adjustment = (gamma * sigma^2 / k) * q * (T - t) / T
         inventory_factor = (self._gamma * self._sigma**2) / self._k
         time_decay = t_rem / self._T if self._T > 0 else 0
         adjustment = inventory_factor * inventory * time_decay
@@ -165,7 +165,7 @@ class AvellanedaStoikovModel:
         2. Adverse selection: Constant penalty for providing liquidity
 
         Formula:
-        δ* = (γ * σ² / k) * (T - t) + (2/γ) * ln(1 + γ/2)
+        delta* = (gamma * sigma^2 / k) * (T - t) + (2/gamma) * ln(1 + gamma/2)
 
         Args:
             time_remaining: Time remaining in trading window.
@@ -186,11 +186,11 @@ class AvellanedaStoikovModel:
         """
         t_rem = float(time_remaining)
 
-        # Inventory risk component: (γ * σ² / k) * (T - t)
+        # Inventory risk component: (gamma * sigma^2 / k) * (T - t)
         inventory_risk_component = (self._gamma * self._sigma**2 / self._k) * t_rem
 
-        # Adverse selection component: (2/γ) * ln(1 + γ/2)
-        # Use approximation for small gamma: ln(1+x) ≈ x - x²/2
+        # Adverse selection component: (2/gamma) * ln(1 + gamma/2)
+        # Use approximation for small gamma: ln(1+x) ~ x - x^2/2
         adverse_selection = (2 / self._gamma) * math.log(1 + self._gamma / 2)
 
         half_spread = inventory_risk_component + adverse_selection
@@ -216,7 +216,7 @@ class AvellanedaStoikovModel:
         Positive skew = shift up, Negative skew = shift down.
 
         Formula:
-        skew = (γ * σ² / k) * q * (T - t) / T
+        skew = (gamma * sigma^2 / k) * q * (T - t) / T
 
         Args:
             inventory: Current inventory position.
@@ -360,7 +360,7 @@ def calculate_inventory_risk(
     """
     Calculate inventory risk metric.
 
-    Risk = |inventory| × price × volatility × sqrt(time) × multiplier
+    Risk = |inventory| * price * volatility * sqrt(time) * multiplier
 
     Args:
         inventory: Current inventory position.

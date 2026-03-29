@@ -10,7 +10,7 @@ import logging
 from datetime import datetime
 from decimal import Decimal
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 import numpy as np
 import yaml
@@ -47,25 +47,25 @@ class MomentumAutoOptimizer:
         self.history = self._load_history()
 
         # Current parameters
-        self.current_params: Optional[Dict[str, Any]] = None
+        self.current_params: Optional[dict[str, Any]] = None
 
-    def _load_config(self) -> Dict[str, Any]:
+    def _load_config(self) -> dict[str, Any]:
         """Load preset configuration."""
         config_file = Path(self.preset_config_path)
         if not config_file.exists():
             logger.warning(f"Config not found: {self.preset_config_path}")
             return {}
 
-        with open(config_file, 'r') as f:
+        with open(config_file) as f:
             return yaml.safe_load(f)
 
-    def _load_history(self) -> List[Dict[str, Any]]:
+    def _load_history(self) -> list[dict[str, Any]]:
         """Load optimization history."""
         if not self.optimization_history_path.exists():
             return []
 
         try:
-            with open(self.optimization_history_path, 'r') as f:
+            with open(self.optimization_history_path) as f:
                 return json.load(f)
         except OSError as e:
             logger.error(f"Error loading history: {e}")
@@ -74,7 +74,7 @@ class MomentumAutoOptimizer:
     def _save_history(self) -> None:
         """Save optimization history."""
         try:
-            with open(self.optimization_history_path, 'w') as f:
+            with open(self.optimization_history_path, "w") as f:
                 json.dump(self.history, f, indent=2, default=str)
         except OSError as e:
             logger.error(f"Error saving history: {e}")
@@ -110,11 +110,11 @@ class MomentumAutoOptimizer:
 
     def optimize_parameters(
         self,
-        quotes: List[Quote],
+        quotes: list[Quote],
         start_date: datetime,
         end_date: datetime,
-        current_params: Optional[Dict[str, Any]] = None,
-    ) -> Dict[str, Any]:
+        current_params: Optional[dict[str, Any]] = None,
+    ) -> dict[str, Any]:
         """
         Optimize momentum parameters using walk-forward validation.
 
@@ -275,12 +275,12 @@ class MomentumAutoOptimizer:
         return best_params
 
     def _check_stability(
-        self, new_params: Dict[str, Any], current_params: Dict[str, Any]
-    ) -> Dict[str, Any]:
+        self, new_params: dict[str, Any], current_params: dict[str, Any]
+    ) -> dict[str, Any]:
         """Check if parameter changes are within stability limits."""
         max_change = self.auto_opt_config.get("stability", {}).get("max_parameter_change", 0.20)
 
-        for key in new_params.keys():
+        for key in new_params:
             if key not in current_params:
                 continue
 
@@ -301,8 +301,8 @@ class MomentumAutoOptimizer:
         return {"stable": True}
 
     def _apply_stability_constraint(
-        self, new_params: Dict[str, Any], current_params: Dict[str, Any]
-    ) -> Dict[str, Any]:
+        self, new_params: dict[str, Any], current_params: dict[str, Any]
+    ) -> dict[str, Any]:
         """Apply stability constraint to limit parameter changes."""
         max_change = self.auto_opt_config.get("stability", {}).get("max_parameter_change", 0.20)
 
@@ -325,7 +325,7 @@ class MomentumAutoOptimizer:
 
         return constrained_params
 
-    def get_optimized_config(self) -> Dict[str, Any]:
+    def get_optimized_config(self) -> dict[str, Any]:
         """
         Get optimized configuration for momentum strategy.
 

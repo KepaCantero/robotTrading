@@ -4,7 +4,7 @@ Usa análisis de correlaciones para detectar cambios de régimen.
 """
 
 import logging
-from typing import Any, Dict, List, Optional, Type
+from typing import Any, Optional
 
 import numpy as np
 import pandas as pd
@@ -18,7 +18,7 @@ try:
     SKLEARN_AVAILABLE = True
 except ImportError:
     SKLEARN_AVAILABLE = False
-    PCA: Optional[Type[Any]] = None
+    PCA: Optional[type[Any]] = None
 
 
 class CorrelationRegimeDetector:
@@ -26,7 +26,7 @@ class CorrelationRegimeDetector:
     Usa cambios en correlaciones entre activos para detectar cambios de régimen.
     """
 
-    def __init__(self, config: Dict[str, Any] = None):
+    def __init__(self, config: Optional[dict[str, Any]] = None):
         """
         Inicializar detector de correlación.
 
@@ -34,10 +34,10 @@ class CorrelationRegimeDetector:
             config: Configuración
         """
         config = config or {}
-        self.window_size = config.get('window_size', 60)
-        self.correlation_threshold = config.get('correlation_threshold', 0.7)
-        self.use_pca = config.get('use_pca', True)
-        self.n_components_pca = config.get('n_components_pca', 3)
+        self.window_size = config.get("window_size", 60)
+        self.correlation_threshold = config.get("correlation_threshold", 0.7)
+        self.use_pca = config.get("use_pca", True)
+        self.n_components_pca = config.get("n_components_pca", 3)
 
         self.pca = (
             PCA(n_components=self.n_components_pca) if SKLEARN_AVAILABLE and self.use_pca else None
@@ -65,8 +65,8 @@ class CorrelationRegimeDetector:
             return 0.0
 
     def detect(
-        self, price_data: Dict[str, List[float]], baseline_period: Optional[int] = None
-    ) -> Dict[str, Any]:
+        self, price_data: dict[str, list[float]], baseline_period: Optional[int] = None
+    ) -> dict[str, Any]:
         """
         Detectar régimen basado en correlaciones.
 
@@ -79,11 +79,11 @@ class CorrelationRegimeDetector:
         """
         if len(price_data) < 2:
             return {
-                'regime': 'unknown',
-                'correlation_regime': 'unknown',
-                'average_correlation': 0.0,
-                'pca_variance': 0.0,
-                'confidence': 0.0,
+                "regime": "unknown",
+                "correlation_regime": "unknown",
+                "average_correlation": 0.0,
+                "pca_variance": 0.0,
+                "confidence": 0.0,
             }
 
         try:
@@ -93,11 +93,11 @@ class CorrelationRegimeDetector:
 
             if min_length < self.window_size:
                 return {
-                    'regime': 'unknown',
-                    'correlation_regime': 'unknown',
-                    'average_correlation': 0.0,
-                    'pca_variance': 0.0,
-                    'confidence': 0.0,
+                    "regime": "unknown",
+                    "correlation_regime": "unknown",
+                    "average_correlation": 0.0,
+                    "pca_variance": 0.0,
+                    "confidence": 0.0,
                 }
 
             # Calcular returns
@@ -120,11 +120,11 @@ class CorrelationRegimeDetector:
 
             # Determinar régimen basado en correlación promedio
             if avg_correlation > self.correlation_threshold:
-                correlation_regime = 'high_correlation'
+                correlation_regime = "high_correlation"
             elif avg_correlation > 0.3:
-                correlation_regime = 'normal_correlation'
+                correlation_regime = "normal_correlation"
             else:
-                correlation_regime = 'low_correlation'
+                correlation_regime = "low_correlation"
 
             # Calcular varianza explicada por PCA
             pca_variance = self._calculate_pca_variance(returns_matrix)
@@ -137,32 +137,32 @@ class CorrelationRegimeDetector:
             if self.baseline_correlation is not None:
                 correlation_change = avg_correlation - self.baseline_correlation
                 baseline_comparison = {
-                    'baseline_correlation': float(self.baseline_correlation),
-                    'correlation_change': float(correlation_change),
-                    'regime_changed': abs(correlation_change) > 0.2,
+                    "baseline_correlation": float(self.baseline_correlation),
+                    "correlation_change": float(correlation_change),
+                    "regime_changed": abs(correlation_change) > 0.2,
                 }
 
             return {
-                'regime': correlation_regime,
-                'correlation_regime': correlation_regime,
-                'average_correlation': avg_correlation,
-                'correlation_matrix': corr_matrix.tolist(),
-                'pca_variance': pca_variance,
-                'confidence': confidence,
-                'baseline_comparison': baseline_comparison,
+                "regime": correlation_regime,
+                "correlation_regime": correlation_regime,
+                "average_correlation": avg_correlation,
+                "correlation_matrix": corr_matrix.tolist(),
+                "pca_variance": pca_variance,
+                "confidence": confidence,
+                "baseline_comparison": baseline_comparison,
             }
 
         except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.error(f"Error detectando régimen de correlación: {e}")
             return {
-                'regime': 'unknown',
-                'correlation_regime': 'unknown',
-                'average_correlation': 0.0,
-                'pca_variance': 0.0,
-                'confidence': 0.0,
+                "regime": "unknown",
+                "correlation_regime": "unknown",
+                "average_correlation": 0.0,
+                "pca_variance": 0.0,
+                "confidence": 0.0,
             }
 
-    def set_baseline(self, price_data: Dict[str, List[float]]) -> None:
+    def set_baseline(self, price_data: dict[str, list[float]]) -> None:
         """
         Establecer baseline de correlación.
 
@@ -170,4 +170,4 @@ class CorrelationRegimeDetector:
             price_data: Datos de precios para baseline
         """
         result = self.detect(price_data)
-        self.baseline_correlation = result.get('average_correlation')
+        self.baseline_correlation = result.get("average_correlation")

@@ -29,18 +29,18 @@ from pathlib import Path
 # Esto previene bloqueos de threading con mutex.cc
 # Debe ir ANTES de importar numpy, pandas, torch, o cualquier otra librería
 # ============================================================================
-os.environ['OMP_NUM_THREADS'] = '1'
-os.environ['OPENBLAS_NUM_THREADS'] = '1'
-os.environ['MKL_NUM_THREADS'] = '1'
-os.environ['NUMEXPR_NUM_THREADS'] = '1'
-os.environ['VECLIB_MAXIMUM_THREADS'] = '1'
-os.environ['MKL_SERVICE_FORCE_INTEL'] = '1'
-os.environ['KMP_DUPLICATE_LIB_OK'] = 'TRUE'
-os.environ['PYTORCH_ENABLE_MPS_FALLBACK'] = '1'
-os.environ['FOR_DISABLE_CONSOLE_CTRL_HANDLER'] = '1'
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
-os.environ['CUDA_VISIBLE_DEVICES'] = ''
-os.environ['TORCH_USE_CUDA_DSA'] = '0'
+os.environ["OMP_NUM_THREADS"] = "1"
+os.environ["OPENBLAS_NUM_THREADS"] = "1"
+os.environ["MKL_NUM_THREADS"] = "1"
+os.environ["NUMEXPR_NUM_THREADS"] = "1"
+os.environ["VECLIB_MAXIMUM_THREADS"] = "1"
+os.environ["MKL_SERVICE_FORCE_INTEL"] = "1"
+os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
+os.environ["PYTORCH_ENABLE_MPS_FALLBACK"] = "1"
+os.environ["FOR_DISABLE_CONSOLE_CTRL_HANDLER"] = "1"
+os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
+os.environ["CUDA_VISIBLE_DEVICES"] = ""
+os.environ["TORCH_USE_CUDA_DSA"] = "0"
 
 # Add project root to Python path
 project_root = Path(__file__).parent.parent.parent
@@ -81,10 +81,10 @@ try:
 except (FileNotFoundError, ValueError, KeyError, TypeError):
     setup_file_logging = None
 
+import contextlib
 import logging
 from datetime import datetime, timedelta
-from typing import Dict, List, Optional, Tuple, Union
-import contextlib
+from typing import Optional, Union
 
 logger = logging.getLogger(__name__)
 
@@ -139,30 +139,30 @@ st.markdown(
 )
 
 
-def load_thresholds(config_path: Optional[str] = None) -> Dict[str, Dict[str, float]]:
+def load_thresholds(config_path: Optional[str] = None) -> dict[str, dict[str, float]]:
     """Cargar thresholds desde configuración."""
     default = {
-        'sharpe': {'bad': 0.0, 'warn': 0.8, 'good': 1.5},
-        'drawdown': {'bad': 15.0, 'warn': 10.0, 'good': 5.0},
-        'winrate': {'bad': 0.4, 'warn': 0.55, 'good': 0.65},
-        'return_pct': {'bad': 0.0, 'warn': 10.0, 'good': 25.0},
+        "sharpe": {"bad": 0.0, "warn": 0.8, "good": 1.5},
+        "drawdown": {"bad": 15.0, "warn": 10.0, "good": 5.0},
+        "winrate": {"bad": 0.4, "warn": 0.55, "good": 0.65},
+        "return_pct": {"bad": 0.0, "warn": 10.0, "good": 25.0},
     }
 
     if not config_path:
         return default
 
     try:
-        with open(config_path, 'r') as f:
+        with open(config_path) as f:
             config = yaml.safe_load(f)
-        if 'thresholds' in config:
-            return config['thresholds']
+        if "thresholds" in config:
+            return config["thresholds"]
     except (FileNotFoundError, ValueError, KeyError, TypeError) as e:
         logger.warning(f"No se pudieron cargar thresholds: {e}")
 
     return default
 
 
-def get_metric_color(value: float, metric: str, thresholds: Dict) -> Tuple[str, str]:
+def get_metric_color(value: float, metric: str, thresholds: dict) -> tuple[str, str]:
     """
     Obtener color y emoji para métrica.
     Returns: (color_class, emoji)
@@ -171,18 +171,22 @@ def get_metric_color(value: float, metric: str, thresholds: Dict) -> Tuple[str, 
         return "metric-card", "📊"
 
     t = thresholds[metric]
-    if value >= t['good']:
+    if value >= t["good"]:
         return "metric-card-excellent", "🟢"
-    elif value >= t['warn']:
+    elif value >= t["warn"]:
         return "metric-card-good", "🟡"
-    elif value >= t['bad']:
+    elif value >= t["bad"]:
         return "metric-card-warn", "🟠"
     else:
         return "metric-card-bad", "🔴"
 
 
 def render_metric_card(
-    label: str, value: Union[str, int, float, bool], metric: str, thresholds: Dict, format_str: str = "{:.2f}"
+    label: str,
+    value: Union[str, int, float, bool],
+    metric: str,
+    thresholds: dict,
+    format_str: str = "{:.2f}",
 ):
     """Renderizar card de métrica con color dinámico."""
     try:
@@ -190,12 +194,12 @@ def render_metric_card(
     except (ValueError, TypeError):
         value_float = 0.0
 
-    color_class, emoji = get_metric_color(value_float, metric, thresholds)
+    _color_class, _emoji = get_metric_color(value_float, metric, thresholds)
 
     if isinstance(value, (int, float)):
-        if metric == 'return_pct' or metric == 'drawdown':
+        if metric == "return_pct" or metric == "drawdown":
             _ = f"{value_float:.2f}%"
-        elif metric == 'winrate':
+        elif metric == "winrate":
             _ = f"{value_float:.1f}%"
         else:
             format_str.format(value_float)
@@ -218,54 +222,54 @@ def render_metric_card(
 # ============================================================================
 
 
-def get_integration_test_objectives() -> Dict[str, Dict[str, Union[str, int, float, bool]]]:
+def get_integration_test_objectives() -> dict[str, dict[str, Union[str, int, float, bool]]]:
     """
     Define los objetivos de métricas para integration tests.
     Returns: Dict con objetivos por métrica
     """
     return {
-        'max_drawdown': {
-            'target': 20.0,  # < 20%
-            'operator': '<',
-            'description': 'Protección del capital ante rachas negativas',
-            'unit': '%',
+        "max_drawdown": {
+            "target": 20.0,  # < 20%
+            "operator": "<",
+            "description": "Protección del capital ante rachas negativas",
+            "unit": "%",
         },
-        'sharpe_ratio': {
-            'target': 1.2,  # > 1.2
-            'operator': '>',
-            'description': 'Buena relación retorno/riesgo',
-            'unit': '',
+        "sharpe_ratio": {
+            "target": 1.2,  # > 1.2
+            "operator": ">",
+            "description": "Buena relación retorno/riesgo",
+            "unit": "",
         },
-        'sortino_ratio': {
-            'target': 1.5,  # > 1.5
-            'operator': '>',
-            'description': 'Minimiza penalización por pérdidas',
-            'unit': '',
+        "sortino_ratio": {
+            "target": 1.5,  # > 1.5
+            "operator": ">",
+            "description": "Minimiza penalización por pérdidas",
+            "unit": "",
         },
-        'annualized_volatility': {
-            'target_min': 10.0,  # 10-15%
-            'target_max': 15.0,
-            'operator': 'range',
-            'description': 'Control de fluctuaciones de cartera',
-            'unit': '%',
+        "annualized_volatility": {
+            "target_min": 10.0,  # 10-15%
+            "target_max": 15.0,
+            "operator": "range",
+            "description": "Control de fluctuaciones de cartera",
+            "unit": "%",
         },
-        'profit_factor': {
-            'target': 1.4,  # > 1.4
-            'operator': '>',
-            'description': 'Ganancias por cada unidad de pérdida',
-            'unit': '',
+        "profit_factor": {
+            "target": 1.4,  # > 1.4
+            "operator": ">",
+            "description": "Ganancias por cada unidad de pérdida",
+            "unit": "",
         },
-        'win_rate': {
-            'target_min': 45.0,  # 45-60%
-            'target_max': 60.0,
-            'operator': 'range',
-            'description': 'Ideal si las ganancias promedio > pérdidas promedio',
-            'unit': '%',
+        "win_rate": {
+            "target_min": 45.0,  # 45-60%
+            "target_max": 60.0,
+            "operator": "range",
+            "description": "Ideal si las ganancias promedio > pérdidas promedio",
+            "unit": "%",
         },
     }
 
 
-def evaluate_objective(metric_name: str, value: float, objectives: Dict) -> Tuple[bool, str]:
+def evaluate_objective(metric_name: str, value: float, objectives: dict) -> tuple[bool, str]:
     """
     Evalúa si una métrica cumple con el objetivo.
     Returns: (passes, status_message)
@@ -274,16 +278,16 @@ def evaluate_objective(metric_name: str, value: float, objectives: Dict) -> Tupl
         return False, "Objetivo no definido"
 
     obj = objectives[metric_name]
-    operator = obj.get('operator', '>')
+    operator = obj.get("operator", ">")
 
-    if operator == '>':
-        passes = value > obj['target']
+    if operator == ">":
+        passes = value > obj["target"]
         status = "✅ CUMPLE" if passes else "❌ NO CUMPLE"
-    elif operator == '<':
-        passes = value < obj['target']
+    elif operator == "<":
+        passes = value < obj["target"]
         status = "✅ CUMPLE" if passes else "❌ NO CUMPLE"
-    elif operator == 'range':
-        passes = obj['target_min'] <= value <= obj['target_max']
+    elif operator == "range":
+        passes = obj["target_min"] <= value <= obj["target_max"]
         status = "✅ CUMPLE" if passes else "❌ NO CUMPLE"
     else:
         return False, "Operador desconocido"
@@ -292,8 +296,8 @@ def evaluate_objective(metric_name: str, value: float, objectives: Dict) -> Tupl
 
 
 def evaluate_all_objectives(
-    metrics: Dict[str, float], objectives: Dict
-) -> Dict[str, Tuple[bool, str, Dict]]:
+    metrics: dict[str, float], objectives: dict
+) -> dict[str, tuple[bool, str, dict]]:
     """
     Evalúa todas las métricas contra sus objetivos.
     Returns: Dict[metric_name] = (passes, status_message, objective_config)
@@ -303,12 +307,12 @@ def evaluate_all_objectives(
     for metric_name, objective_config in objectives.items():
         # Map metric names to actual column names
         metric_map = {
-            'max_drawdown': 'max_drawdown',
-            'sharpe_ratio': 'sharpe_ratio',
-            'sortino_ratio': 'sortino_ratio',
-            'annualized_volatility': 'volatility',  # Might need adjustment
-            'profit_factor': 'profit_factor',
-            'win_rate': 'win_rate',
+            "max_drawdown": "max_drawdown",
+            "sharpe_ratio": "sharpe_ratio",
+            "sortino_ratio": "sortino_ratio",
+            "annualized_volatility": "volatility",  # Might need adjustment
+            "profit_factor": "profit_factor",
+            "win_rate": "win_rate",
         }
 
         actual_metric = metric_map.get(metric_name, metric_name)
@@ -316,54 +320,56 @@ def evaluate_all_objectives(
         if actual_metric in metrics:
             value = float(metrics[actual_metric])
             # Handle abs for max_drawdown (it's negative)
-            if metric_name == 'max_drawdown':
+            if metric_name == "max_drawdown":
                 value = abs(value)
             # Handle percentage for win_rate
-            if metric_name == 'win_rate' and value <= 1.0:
+            if metric_name == "win_rate" and value <= 1.0:
                 value = value * 100
 
             passes, status = evaluate_objective(metric_name, value, objectives)
             results[metric_name] = (passes, status, objective_config)
         else:
-            results[metric_name] = (False, "⚠️ Métrica no disponible", objective_config)
+            results[metric_name] = (False, "⚠ Métrica no disponible", objective_config)
 
     return results
 
 
-def extract_strategy_config(result_row: pd.Series) -> Dict[str, Union[str, int, float, bool, Dict, List, None]]:
+def extract_strategy_config(
+    result_row: pd.Series,
+) -> dict[str, Union[str, int, float, bool, dict, list, None]]:
     """
     Extrae la configuración de estrategia y parámetros de un resultado.
     Returns: Dict con información de estrategia, parámetros, módulos, etc.
     """
     config = {
-        'test_name': result_row.get('test_name', 'Unknown'),
-        'test_type': result_row.get('test_type', 'Unknown'),
-        'strategy': result_row.get('strategy', 'Unknown'),
-        'learning_engine': result_row.get('learning_engine'),
-        'modules_active': result_row.get('modules_active', []),
-        'parameters': {},
+        "test_name": result_row.get("test_name", "Unknown"),
+        "test_type": result_row.get("test_type", "Unknown"),
+        "strategy": result_row.get("strategy", "Unknown"),
+        "learning_engine": result_row.get("learning_engine"),
+        "modules_active": result_row.get("modules_active", []),
+        "parameters": {},
     }
 
     # Try to extract parameters from different sources
-    if 'parameters' in result_row and isinstance(result_row['parameters'], dict):
-        config['parameters'] = result_row['parameters']
-    elif 'parameters' in result_row and isinstance(result_row['parameters'], str):
+    if "parameters" in result_row and isinstance(result_row["parameters"], dict):
+        config["parameters"] = result_row["parameters"]
+    elif "parameters" in result_row and isinstance(result_row["parameters"], str):
         try:
             import ast
 
-            config['parameters'] = ast.literal_eval(result_row['parameters'])
+            config["parameters"] = ast.literal_eval(result_row["parameters"])
         except (FileNotFoundError, ValueError, KeyError, TypeError):
             pass
 
     # Extract threshold information if available
-    if 'thresholds' in result_row:
-        if isinstance(result_row['thresholds'], dict):
-            config['thresholds'] = result_row['thresholds']
-        elif isinstance(result_row['thresholds'], str):
+    if "thresholds" in result_row:
+        if isinstance(result_row["thresholds"], dict):
+            config["thresholds"] = result_row["thresholds"]
+        elif isinstance(result_row["thresholds"], str):
             try:
                 import ast
 
-                config['thresholds'] = ast.literal_eval(result_row['thresholds'])
+                config["thresholds"] = ast.literal_eval(result_row["thresholds"])
             except (FileNotFoundError, ValueError, KeyError, TypeError):
                 pass  # Keep default thresholds
 
@@ -419,27 +425,27 @@ def main():
 
                 # Mostrar estadísticas
                 stats = loader.get_summary_stats()
-                if stats['total_tests'] > 0:
+                if stats["total_tests"] > 0:
                     st.success(f"✅ {stats['total_tests']} backtest results disponibles")
                     st.json(stats)
                 else:
-                    st.info("ℹ️ No hay resultados aún. Esto es normal si no has ejecutado tests.")
+                    st.info("i No hay resultados aún. Esto es normal si no has ejecutado tests.")
                     st.write("💡 Para generar resultados:")
                     st.write("1. Selecciona tests en el sidebar")
                     st.write("2. Selecciona learning engines (opcional)")
                     st.write("3. Haz clic en '🚀 EXECUTE SELECTED TESTS'")
 
             stats = loader.get_summary_stats()
-            if stats['total_tests'] > 0:
+            if stats["total_tests"] > 0:
                 st.success(f"📊 {stats['total_tests']} backtest results available")
             else:
                 st.info(
-                    "ℹ️ No backtest results yet. Configure tests in the sidebar and click EXECUTE."
+                    "i No backtest results yet. Configure tests in the sidebar and click EXECUTE."
                 )
         except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
             logger.debug(f"Could not load initial stats: {e}")
             # Don't show error to user, just continue
-            st.info("ℹ️ Ready to execute tests. Configure in the sidebar.")
+            st.info("i Ready to execute tests. Configure in the sidebar.")
 
         # Load configuration
         config_path = project_root / "config" / "backtesting" / "comprehensive_backtest.yaml"
@@ -457,7 +463,7 @@ def main():
 
         # Sidebar - Configuration
         with st.sidebar:
-            st.header("⚙️ Configuration Center")
+            st.header("⚙ Configuration Center")
 
             # Strategy Mode Selector
             st.subheader("🎯 Strategy Mode")
@@ -530,7 +536,7 @@ def main():
             if selected_learning_engines:
                 st.caption(f"✅ Selected: {', '.join(selected_learning_engines)}")
             else:
-                st.caption("ℹ️ No learning engines selected (Baseline only)")
+                st.caption("i No learning engines selected (Baseline only)")
 
             st.divider()
 
@@ -558,7 +564,7 @@ def main():
                 }
 
             # Guardar en session_state para acceso posterior
-            st.session_state['available_tests'] = available_tests
+            st.session_state["available_tests"] = available_tests
 
             # Test Selector (COLLAPSIBLE)
             with st.expander("📋 Select Tests to Execute", expanded=True):
@@ -594,7 +600,7 @@ def main():
                     )
 
                 # Guardar selected_tests en session_state para acceso fuera del expander
-                st.session_state['selected_tests_sidebar'] = selected_tests
+                st.session_state["selected_tests_sidebar"] = selected_tests
 
                 # If multi-strategy mode, ensure multi_strategy test is
                 # available
@@ -659,7 +665,7 @@ def main():
             st.divider()
 
             # Advanced Settings (COLLAPSIBLE)
-            with st.expander("⚙️ Advanced Settings", expanded=False):
+            with st.expander("⚙ Advanced Settings", expanded=False):
                 enable_parallel = st.checkbox(
                     "Enable Parallelization", value=True, key="enable_parallel"
                 )
@@ -686,49 +692,49 @@ def main():
                 col1, col2, col3 = st.columns(3)
                 with col1:
                     sharpe_bad = st.number_input(
-                        "Bad", value=thresholds['sharpe']['bad'], key="sharpe_bad", format="%.2"
+                        "Bad", value=thresholds["sharpe"]["bad"], key="sharpe_bad", format="%.2"
                     )
                 with col2:
                     sharpe_warn = st.number_input(
-                        "Warn", value=thresholds['sharpe']['warn'], key="sharpe_warn", format="%.2"
+                        "Warn", value=thresholds["sharpe"]["warn"], key="sharpe_warn", format="%.2"
                     )
                 with col3:
                     sharpe_good = st.number_input(
-                        "Good", value=thresholds['sharpe']['good'], key="sharpe_good", format="%.2"
+                        "Good", value=thresholds["sharpe"]["good"], key="sharpe_good", format="%.2"
                     )
 
                 st.write("**Max Drawdown (%)**")
                 col1, col2, col3 = st.columns(3)
                 with col1:
                     dd_bad = st.number_input(
-                        "Bad", value=thresholds['drawdown']['bad'], key="dd_bad", format="%.2"
+                        "Bad", value=thresholds["drawdown"]["bad"], key="dd_bad", format="%.2"
                     )
                 with col2:
                     dd_warn = st.number_input(
-                        "Warn", value=thresholds['drawdown']['warn'], key="dd_warn", format="%.2"
+                        "Warn", value=thresholds["drawdown"]["warn"], key="dd_warn", format="%.2"
                     )
                 with col3:
                     dd_good = st.number_input(
-                        "Good", value=thresholds['drawdown']['good'], key="dd_good", format="%.2"
+                        "Good", value=thresholds["drawdown"]["good"], key="dd_good", format="%.2"
                     )
 
                 st.write("**Win Rate (%)**")
                 col1, col2, col3 = st.columns(3)
                 with col1:
                     wr_bad = st.number_input(
-                        "Bad", value=thresholds['winrate']['bad'] * 100, key="wr_bad", format="%.1"
+                        "Bad", value=thresholds["winrate"]["bad"] * 100, key="wr_bad", format="%.1"
                     )
                 with col2:
                     wr_warn = st.number_input(
                         "Warn",
-                        value=thresholds['winrate']['warn'] * 100,
+                        value=thresholds["winrate"]["warn"] * 100,
                         key="wr_warn",
                         format="%.1",
                     )
                 with col3:
                     wr_good = st.number_input(
                         "Good",
-                        value=thresholds['winrate']['good'] * 100,
+                        value=thresholds["winrate"]["good"] * 100,
                         key="wr_good",
                         format="%.1",
                     )
@@ -737,29 +743,29 @@ def main():
                 col1, col2, col3 = st.columns(3)
                 with col1:
                     ret_bad = st.number_input(
-                        "Bad", value=thresholds['return_pct']['bad'], key="ret_bad", format="%.2"
+                        "Bad", value=thresholds["return_pct"]["bad"], key="ret_bad", format="%.2"
                     )
                 with col2:
                     ret_warn = st.number_input(
                         "Warn",
-                        value=thresholds['return_pct']['warn'],
+                        value=thresholds["return_pct"]["warn"],
                         key="ret_warn",
                         format="%.2",
                     )
                 with col3:
                     ret_good = st.number_input(
                         "Good",
-                        value=thresholds['return_pct']['good'],
+                        value=thresholds["return_pct"]["good"],
                         key="ret_good",
                         format="%.2",
                     )
 
             # Update thresholds (inside sidebar, using sidebar variables)
             thresholds = {
-                'sharpe': {'bad': sharpe_bad, 'warn': sharpe_warn, 'good': sharpe_good},
-                'drawdown': {'bad': dd_bad, 'warn': dd_warn, 'good': dd_good},
-                'winrate': {'bad': wr_bad / 100, 'warn': wr_warn / 100, 'good': wr_good / 100},
-                'return_pct': {'bad': ret_bad, 'warn': ret_warn, 'good': ret_good},
+                "sharpe": {"bad": sharpe_bad, "warn": sharpe_warn, "good": sharpe_good},
+                "drawdown": {"bad": dd_bad, "warn": dd_warn, "good": dd_good},
+                "winrate": {"bad": wr_bad / 100, "warn": wr_warn / 100, "good": wr_good / 100},
+                "return_pct": {"bad": ret_bad, "warn": ret_warn, "good": ret_good},
             }
 
             st.divider()
@@ -777,7 +783,7 @@ def main():
 
             # Check if execute button was clicked
             button_clicked = execute_button_top or st.session_state.get(
-                'execute_button_sidebar_clicked', False
+                "execute_button_sidebar_clicked", False
             )
             logger.debug(
                 f"🔍 Botón ejecutar: top={execute_button_top}, sidebar={st.session_state.get('execute_button_sidebar_clicked', False)}"
@@ -786,12 +792,12 @@ def main():
             if button_clicked:
                 logger.info("🔘 Botón EXECUTE presionado")
                 # Reset flag
-                if st.session_state.get('execute_button_sidebar_clicked'):
+                if st.session_state.get("execute_button_sidebar_clicked"):
                     st.session_state.execute_button_sidebar_clicked = False
 
                 # Obtener selected_tests desde session_state si no está disponible localmente
                 if not selected_tests:
-                    selected_tests = st.session_state.get('selected_tests_sidebar', [])
+                    selected_tests = st.session_state.get("selected_tests_sidebar", [])
 
                 # Reconstruir selected_tests desde checkboxes en session_state si aún está vacío
                 if not selected_tests:
@@ -799,8 +805,8 @@ def main():
                     # Usar available_tests desde session_state como respaldo
                     tests_to_check = (
                         available_tests
-                        if 'available_tests' not in st.session_state
-                        else st.session_state.get('available_tests', available_tests)
+                        if "available_tests" not in st.session_state
+                        else st.session_state.get("available_tests", available_tests)
                     )
                     for _display_name, test_name in tests_to_check.items():
                         checkbox_key = f"test_{test_name}_{use_multi_strategy}"
@@ -822,7 +828,7 @@ def main():
                     st.info(
                         "💡 Tip: Ve a '📋 Select Tests to Execute' en el sidebar y marca los tests que deseas ejecutar."
                     )
-                    logger.warning("⚠️ No hay tests seleccionados para ejecutar")
+                    logger.warning("⚠ No hay tests seleccionados para ejecutar")
                 else:
                     st.session_state.execute_tests = True
                     st.session_state.selected_tests = selected_tests
@@ -833,44 +839,44 @@ def main():
 
                     # Build execution params
                     execution_params = {
-                        'symbol': symbol,
-                        'start_date': start_date,
-                        'end_date': end_date,
-                        'initial_capital': initial_capital,
-                        'parallel': enable_parallel,
-                        'max_workers': max_workers if enable_parallel else None,
-                        'meta_analysis': enable_meta_analysis,
-                        'incremental_learning': enable_incremental_learning,
-                        'use_multi_strategy': use_multi_strategy,
+                        "symbol": symbol,
+                        "start_date": start_date,
+                        "end_date": end_date,
+                        "initial_capital": initial_capital,
+                        "parallel": enable_parallel,
+                        "max_workers": max_workers if enable_parallel else None,
+                        "meta_analysis": enable_meta_analysis,
+                        "incremental_learning": enable_incremental_learning,
+                        "use_multi_strategy": use_multi_strategy,
                     }
 
                     # Add multi-strategy specific params if in multi-strategy
                     # mode
                     if use_multi_strategy:
-                        execution_params['strategies'] = st.session_state.get(
-                            'multi_strategy_selection',
+                        execution_params["strategies"] = st.session_state.get(
+                            "multi_strategy_selection",
                             ["momentum", "mean_reversion", "pairs_trading"],
                         )
-                        execution_params['enable_dynamic_reallocation'] = st.session_state.get(
-                            'enable_dynamic_reallocation', True
+                        execution_params["enable_dynamic_reallocation"] = st.session_state.get(
+                            "enable_dynamic_reallocation", True
                         )
-                        if execution_params['enable_dynamic_reallocation']:
-                            execution_params['reallocation_frequency'] = st.session_state.get(
-                                'reallocation_frequency', 30
+                        if execution_params["enable_dynamic_reallocation"]:
+                            execution_params["reallocation_frequency"] = st.session_state.get(
+                                "reallocation_frequency", 30
                             )
 
                     # Add learning engines configuration
                     learning_engines = []
-                    if st.session_state.get('enable_supervised', False):
-                        learning_engines.append('supervised')
-                    if st.session_state.get('enable_deep', False):
-                        learning_engines.append('deep')
-                    if st.session_state.get('enable_reinforcement', False):
-                        learning_engines.append('reinforcement')
-                    if st.session_state.get('enable_transformer', False):
-                        learning_engines.append('transformer')
+                    if st.session_state.get("enable_supervised", False):
+                        learning_engines.append("supervised")
+                    if st.session_state.get("enable_deep", False):
+                        learning_engines.append("deep")
+                    if st.session_state.get("enable_reinforcement", False):
+                        learning_engines.append("reinforcement")
+                    if st.session_state.get("enable_transformer", False):
+                        learning_engines.append("transformer")
 
-                    execution_params['learning_engines'] = learning_engines
+                    execution_params["learning_engines"] = learning_engines
 
                     st.session_state.execution_params = execution_params
 
@@ -894,9 +900,9 @@ def main():
             # Load existing results
             try:
                 # Use cached results if available
-                if 'df_results' in st.session_state and not st.session_state.df_results.empty:
+                if "df_results" in st.session_state and not st.session_state.df_results.empty:
                     df_results = st.session_state.df_results
-                    stats = {'total_tests': len(df_results)}
+                    stats = {"total_tests": len(df_results)}
                 else:
                     # Load fresh if not in session state
                     loader = ComprehensiveBacktestLoader()
@@ -906,18 +912,18 @@ def main():
                     # Verificar y loggear datos de learning engines
                     if not df_results.empty:
                         learning_engine_results = df_results[
-                            df_results['test_type'] == 'learning_engine'
+                            df_results["test_type"] == "learning_engine"
                         ]
                         if not learning_engine_results.empty:
                             # Contar cuántos tienen datos de training
                             has_before = learning_engine_results.apply(
-                                lambda row: bool(row.get('before_training_metrics')), axis=1
+                                lambda row: bool(row.get("before_training_metrics")), axis=1
                             ).sum()
                             has_after = learning_engine_results.apply(
-                                lambda row: bool(row.get('after_training_metrics')), axis=1
+                                lambda row: bool(row.get("after_training_metrics")), axis=1
                             ).sum()
                             has_improvement = learning_engine_results.apply(
-                                lambda row: bool(row.get('improvement_pct')), axis=1
+                                lambda row: bool(row.get("improvement_pct")), axis=1
                             ).sum()
 
                             logger.info(
@@ -941,30 +947,30 @@ def main():
 
                     with col1:
                         best_sharpe = (
-                            df_results['sharpe_ratio'].max()
-                            if 'sharpe_ratio' in df_results.columns
+                            df_results["sharpe_ratio"].max()
+                            if "sharpe_ratio" in df_results.columns
                             else 0
                         )
                         render_metric_card("Best Sharpe Ratio", best_sharpe, "sharpe", thresholds)
 
                     with col2:
                         best_return = (
-                            df_results['return_pct'].max()
-                            if 'return_pct' in df_results.columns
+                            df_results["return_pct"].max()
+                            if "return_pct" in df_results.columns
                             else 0
                         )
                         render_metric_card("Best Return", best_return, "return_pct", thresholds)
 
                     with col3:
                         avg_winrate = (
-                            df_results['win_rate'].mean() if 'win_rate' in df_results.columns else 0
+                            df_results["win_rate"].mean() if "win_rate" in df_results.columns else 0
                         )
                         render_metric_card("Avg Win Rate", avg_winrate, "winrate", thresholds)
 
                     with col4:
                         min_drawdown = (
-                            abs(df_results['max_drawdown'].min())
-                            if 'max_drawdown' in df_results.columns
+                            abs(df_results["max_drawdown"].min())
+                            if "max_drawdown" in df_results.columns
                             else 0
                         )
                         render_metric_card("Worst Drawdown", min_drawdown, "drawdown", thresholds)
@@ -973,8 +979,8 @@ def main():
 
                     # Learning Engines Status Indicator
                     learning_engine_results = (
-                        df_results[df_results['test_type'] == 'learning_engine']
-                        if 'test_type' in df_results.columns
+                        df_results[df_results["test_type"] == "learning_engine"]
+                        if "test_type" in df_results.columns
                         else pd.DataFrame()
                     )
                     if not learning_engine_results.empty:
@@ -982,14 +988,12 @@ def main():
                         def has_valid_metrics(x):
                             if isinstance(x, dict) and len(x) > 0:
                                 return True
-                            if isinstance(x, str) and x not in ['nan', '', 'None', '{}']:
-                                return True
-                            return False
+                            return bool(isinstance(x, str) and x not in ["nan", "", "None", "{}"])
 
-                        before_valid = learning_engine_results['before_training_metrics'].apply(
+                        before_valid = learning_engine_results["before_training_metrics"].apply(
                             has_valid_metrics
                         )
-                        after_valid = learning_engine_results['after_training_metrics'].apply(
+                        after_valid = learning_engine_results["after_training_metrics"].apply(
                             has_valid_metrics
                         )
                         complete_count = ((before_valid) & (after_valid)).sum()
@@ -1003,22 +1007,22 @@ def main():
                             )
                         else:
                             st.info(
-                                f"ℹ️ **Learning Engines:** {len(learning_engine_results)} resultados encontrados, "
+                                f"i **Learning Engines:** {len(learning_engine_results)} resultados encontrados, "
                                 "pero sin datos de comparación. Ejecuta nuevos tests para ver análisis de entrenamiento."
                             )
 
                     # Top Performers
                     st.subheader("🏆 Top Performers")
 
-                    if 'sharpe_ratio' in df_results.columns:
-                        top_5 = df_results.nlargest(5, 'sharpe_ratio')
+                    if "sharpe_ratio" in df_results.columns:
+                        top_5 = df_results.nlargest(5, "sharpe_ratio")
 
                         # VECTORIZED: Usar to_dict('records') en lugar de iterrows
-                        for idx, row in enumerate(top_5.to_dict('records')):
+                        for idx, row in enumerate(top_5.to_dict("records")):
                             test_name_safe = (
-                                str(row.get('test_name', f'Test_{idx}'))
-                                .replace(' ', '_')
-                                .replace('/', '_')[:50]
+                                str(row.get("test_name", f"Test_{idx}"))
+                                .replace(" ", "_")
+                                .replace("/", "_")[:50]
                             )
                             with st.container(key=f"top_performer_{test_name_safe}_{idx}"):
                                 col1, col2, col3, col4, col5 = st.columns([2, 1, 1, 1, 1])
@@ -1029,23 +1033,23 @@ def main():
 
                                 with col2:
                                     render_metric_card(
-                                        "Sharpe", row.get('sharpe_ratio', 0), "sharpe", thresholds
+                                        "Sharpe", row.get("sharpe_ratio", 0), "sharpe", thresholds
                                     )
 
                                 with col3:
                                     render_metric_card(
-                                        "Return", row.get('return_pct', 0), "return_pct", thresholds
+                                        "Return", row.get("return_pct", 0), "return_pct", thresholds
                                     )
 
                                 with col4:
                                     render_metric_card(
-                                        "Win Rate", row.get('win_rate', 0), "winrate", thresholds
+                                        "Win Rate", row.get("win_rate", 0), "winrate", thresholds
                                     )
 
                                 with col5:
                                     render_metric_card(
                                         "DD",
-                                        abs(row.get('max_drawdown', 0)),
+                                        abs(row.get("max_drawdown", 0)),
                                         "drawdown",
                                         thresholds,
                                     )
@@ -1058,33 +1062,33 @@ def main():
                     col1, col2 = st.columns(2)
 
                     with col1:
-                        if 'sharpe_ratio' in df_results.columns:
+                        if "sharpe_ratio" in df_results.columns:
                             fig_sharpe = px.histogram(
                                 df_results,
-                                x='sharpe_ratio',
+                                x="sharpe_ratio",
                                 nbins=20,
-                                title='Sharpe Ratio Distribution',
-                                labels={'sharpe_ratio': 'Sharpe Ratio', 'count': 'Frequency'},
-                                color_discrete_sequence=['#667eea'],
+                                title="Sharpe Ratio Distribution",
+                                labels={"sharpe_ratio": "Sharpe Ratio", "count": "Frequency"},
+                                color_discrete_sequence=["#667eea"],
                             )
                             fig_sharpe.update_layout(showlegend=False)
                             st.plotly_chart(
-                                fig_sharpe, width='stretch', key="dashboard_sharpe_dist"
+                                fig_sharpe, width="stretch", key="dashboard_sharpe_dist"
                             )
 
                     with col2:
-                        if 'return_pct' in df_results.columns:
+                        if "return_pct" in df_results.columns:
                             fig_return = px.histogram(
                                 df_results,
-                                x='return_pct',
+                                x="return_pct",
                                 nbins=20,
-                                title='Return % Distribution',
-                                labels={'return_pct': 'Return (%)', 'count': 'Frequency'},
-                                color_discrete_sequence=['#764ba2'],
+                                title="Return % Distribution",
+                                labels={"return_pct": "Return (%)", "count": "Frequency"},
+                                color_discrete_sequence=["#764ba2"],
                             )
                             fig_return.update_layout(showlegend=False)
                             st.plotly_chart(
-                                fig_return, width='stretch', key="dashboard_return_dist"
+                                fig_return, width="stretch", key="dashboard_return_dist"
                             )
                 else:
                     st.info(
@@ -1118,7 +1122,7 @@ def main():
         with tabs[1]:
             st.header("📈 Individual Results")
 
-            if st.session_state.get('results_loaded') and 'df_results' in st.session_state:
+            if st.session_state.get("results_loaded") and "df_results" in st.session_state:
                 df = st.session_state.df_results
 
                 # Filter options
@@ -1127,9 +1131,9 @@ def main():
                     test_type_filter = st.selectbox(
                         "Filter by Test Type",
                         options=(
-                            ['All'] + list(df['test_type'].unique())
-                            if 'test_type' in df.columns
-                            else ['All']
+                            ["All", *list(df["test_type"].unique())]
+                            if "test_type" in df.columns
+                            else ["All"]
                         ),
                         key="test_type_filter",
                     )
@@ -1138,11 +1142,11 @@ def main():
                     sort_by = st.selectbox(
                         "Sort by",
                         options=[
-                            'sharpe_ratio',
-                            'return_pct',
-                            'win_rate',
-                            'max_drawdown',
-                            'total_pnl',
+                            "sharpe_ratio",
+                            "return_pct",
+                            "win_rate",
+                            "max_drawdown",
+                            "total_pnl",
                         ],
                         key="sort_by",
                     )
@@ -1154,19 +1158,19 @@ def main():
 
                 # Filter and sort
                 df_filtered = df.copy()
-                if test_type_filter != 'All' and 'test_type' in df_filtered.columns:
-                    df_filtered = df_filtered[df_filtered['test_type'] == test_type_filter]
+                if test_type_filter != "All" and "test_type" in df_filtered.columns:
+                    df_filtered = df_filtered[df_filtered["test_type"] == test_type_filter]
 
                 if sort_by in df_filtered.columns:
                     df_filtered = df_filtered.nlargest(limit_results, sort_by)
 
                 # Display results
                 # VECTORIZED: Usar to_dict('records') en lugar de iterrows
-                for idx, row in enumerate(df_filtered.to_dict('records')):
+                for idx, row in enumerate(df_filtered.to_dict("records")):
                     test_name_safe = (
-                        str(row.get('test_name', f'Test_{idx}'))
-                        .replace(' ', '_')
-                        .replace('/', '_')[:50]
+                        str(row.get("test_name", f"Test_{idx}"))
+                        .replace(" ", "_")
+                        .replace("/", "_")[:50]
                     )
                     expander_key = f"individual_result_{test_name_safe}_{idx}"
 
@@ -1179,19 +1183,19 @@ def main():
 
                             with col_m1:
                                 render_metric_card(
-                                    "Sharpe", row.get('sharpe_ratio', 0), "sharpe", thresholds
+                                    "Sharpe", row.get("sharpe_ratio", 0), "sharpe", thresholds
                                 )
                                 render_metric_card(
-                                    "Return", row.get('return_pct', 0), "return_pct", thresholds
+                                    "Return", row.get("return_pct", 0), "return_pct", thresholds
                                 )
 
                             with col_m2:
                                 render_metric_card(
-                                    "Win Rate", row.get('win_rate', 0), "winrate", thresholds
+                                    "Win Rate", row.get("win_rate", 0), "winrate", thresholds
                                 )
                                 render_metric_card(
                                     "Max DD",
-                                    abs(row.get('max_drawdown', 0)),
+                                    abs(row.get("max_drawdown", 0)),
                                     "drawdown",
                                     thresholds,
                                 )
@@ -1207,26 +1211,26 @@ def main():
                             st.subheader("Performance Metrics")
                             metrics_df = pd.DataFrame(
                                 {
-                                    'Metric': ['Sharpe', 'Return %', 'Win Rate %', 'Max DD %'],
-                                    'Value': [
-                                        row.get('sharpe_ratio', 0),
-                                        row.get('return_pct', 0),
-                                        row.get('win_rate', 0),
-                                        abs(row.get('max_drawdown', 0)),
+                                    "Metric": ["Sharpe", "Return %", "Win Rate %", "Max DD %"],
+                                    "Value": [
+                                        row.get("sharpe_ratio", 0),
+                                        row.get("return_pct", 0),
+                                        row.get("win_rate", 0),
+                                        abs(row.get("max_drawdown", 0)),
                                     ],
                                 }
                             )
 
                             fig = px.bar(
                                 metrics_df,
-                                x='Metric',
-                                y='Value',
-                                title='Metrics Comparison',
-                                color='Value',
-                                color_continuous_scale='RdYlGn',
+                                x="Metric",
+                                y="Value",
+                                title="Metrics Comparison",
+                                color="Value",
+                                color_continuous_scale="RdYlGn",
                             )
                             st.plotly_chart(
-                                fig, width='stretch', key=f"individual_chart_{test_name_safe}_{idx}"
+                                fig, width="stretch", key=f"individual_chart_{test_name_safe}_{idx}"
                             )
             else:
                 st.info(
@@ -1237,12 +1241,12 @@ def main():
         with tabs[2]:
             st.header("🎓 Training Analysis - Before vs After")
 
-            if st.session_state.get('results_loaded') and 'df_results' in st.session_state:
+            if st.session_state.get("results_loaded") and "df_results" in st.session_state:
                 df = st.session_state.df_results
 
                 # Filter for learning engine results with before/after metrics
                 # Convert dict columns to strings for comparison
-                learning_engine_results = df[(df['test_type'] == 'learning_engine')].copy()
+                learning_engine_results = df[(df["test_type"] == "learning_engine")].copy()
 
                 # Initialize variables
                 has_comparison = False
@@ -1257,13 +1261,13 @@ def main():
                     # exist
                     # VECTORIZED: Usar apply en lugar de iterrows
                     def check_valid_before_after(row):
-                        before = row.get('before_training_metrics')
-                        after = row.get('after_training_metrics')
+                        before = row.get("before_training_metrics")
+                        after = row.get("after_training_metrics")
                         before_valid = (isinstance(before, dict) and len(before) > 0) or (
-                            isinstance(before, str) and before not in ['nan', '', 'None', '{}']
+                            isinstance(before, str) and before not in ["nan", "", "None", "{}"]
                         )
                         after_valid = (isinstance(after, dict) and len(after) > 0) or (
-                            isinstance(after, str) and after not in ['nan', '', 'None', '{}']
+                            isinstance(after, str) and after not in ["nan", "", "None", "{}"]
                         )
                         return before_valid and after_valid
 
@@ -1290,38 +1294,38 @@ def main():
                     )
 
                     # VECTORIZED: Usar to_dict('records') en lugar de iterrows
-                    for idx, row in enumerate(learning_engine_results.to_dict('records')):
-                        test_name = row.get('test_name', f'Learning Engine {idx}')
-                        learning_engine = row.get('learning_engine', 'unknown')
+                    for idx, row in enumerate(learning_engine_results.to_dict("records")):
+                        test_name = row.get("test_name", f"Learning Engine {idx}")
+                        learning_engine = row.get("learning_engine", "unknown")
 
                         # Extract before/after metrics (handle both dict and
                         # string representations)
-                        before = row.get('before_training_metrics', {})
-                        after = row.get('after_training_metrics', {})
-                        improvement = row.get('improvement_pct', {})
+                        before = row.get("before_training_metrics", {})
+                        after = row.get("after_training_metrics", {})
+                        improvement = row.get("improvement_pct", {})
 
                         # Parse if string
-                        if isinstance(before, str) and before != 'nan' and before:
+                        if isinstance(before, str) and before != "nan" and before:
                             try:
                                 import ast
 
-                                before = ast.literal_eval(before) if before.startswith('{') else {}
+                                before = ast.literal_eval(before) if before.startswith("{") else {}
                             except (ValueError, TypeError, KeyError, AttributeError):
                                 before = {}
-                        if isinstance(after, str) and after != 'nan' and after:
+                        if isinstance(after, str) and after != "nan" and after:
                             try:
                                 import ast
 
-                                after = ast.literal_eval(after) if after.startswith('{') else {}
+                                after = ast.literal_eval(after) if after.startswith("{") else {}
                             except (ValueError, TypeError, KeyError, AttributeError):
                                 after = {}
-                        if isinstance(improvement, str) and improvement != 'nan' and improvement:
+                        if isinstance(improvement, str) and improvement != "nan" and improvement:
                             try:
                                 import ast
 
                                 improvement = (
                                     ast.literal_eval(improvement)
-                                    if improvement.startswith('{')
+                                    if improvement.startswith("{")
                                     else {}
                                 )
                             except (RuntimeError, ValueError, TypeError, KeyError):
@@ -1345,7 +1349,7 @@ def main():
                                 st.subheader("📉 Before Training")
                                 st.metric("Sharpe Ratio", f"{before.get('sharpe_ratio', 0):.2f}")
                                 st.metric("Return %", f"{before.get('return_pct', 0):.2f}%")
-                                st.metric("Win Rate", f"{before.get('win_rate', 0)*100:.1f}%")
+                                st.metric("Win Rate", f"{before.get('win_rate', 0) * 100:.1f}%")
                                 st.metric(
                                     "Max Drawdown", f"{abs(before.get('max_drawdown', 0)):.2f}%"
                                 )
@@ -1355,7 +1359,7 @@ def main():
                                 st.subheader("📈 After Training")
                                 st.metric("Sharpe Ratio", f"{after.get('sharpe_ratio', 0):.2f}")
                                 st.metric("Return %", f"{after.get('return_pct', 0):.2f}%")
-                                st.metric("Win Rate", f"{after.get('win_rate', 0)*100:.1f}%")
+                                st.metric("Win Rate", f"{after.get('win_rate', 0) * 100:.1f}%")
                                 st.metric(
                                     "Max Drawdown", f"{abs(after.get('max_drawdown', 0)):.2f}%"
                                 )
@@ -1364,27 +1368,27 @@ def main():
                             with col3:
                                 st.subheader("📊 Improvement")
                                 sharpe_imp = (
-                                    improvement.get('sharpe_ratio', 0)
+                                    improvement.get("sharpe_ratio", 0)
                                     if isinstance(improvement, dict)
                                     else 0
                                 )
                                 return_imp = (
-                                    improvement.get('return_pct', 0)
+                                    improvement.get("return_pct", 0)
                                     if isinstance(improvement, dict)
                                     else 0
                                 )
                                 winrate_imp = (
-                                    improvement.get('win_rate', 0)
+                                    improvement.get("win_rate", 0)
                                     if isinstance(improvement, dict)
                                     else 0
                                 )
                                 dd_imp = (
-                                    improvement.get('max_drawdown', 0)
+                                    improvement.get("max_drawdown", 0)
                                     if isinstance(improvement, dict)
                                     else 0
                                 )
                                 pnl_imp = (
-                                    improvement.get('total_pnl', 0)
+                                    improvement.get("total_pnl", 0)
                                     if isinstance(improvement, dict)
                                     else 0
                                 )
@@ -1421,37 +1425,37 @@ def main():
                             st.subheader("📊 Metrics Comparison Chart")
 
                             metrics_to_compare = [
-                                'sharpe_ratio',
-                                'return_pct',
-                                'win_rate',
-                                'max_drawdown',
+                                "sharpe_ratio",
+                                "return_pct",
+                                "win_rate",
+                                "max_drawdown",
                             ]
                             comparison_data = {
-                                'Metric': [],
-                                'Before': [],
-                                'After': [],
-                                'Improvement %': [],
+                                "Metric": [],
+                                "Before": [],
+                                "After": [],
+                                "Improvement %": [],
                             }
 
                             for metric in metrics_to_compare:
-                                if metric == 'max_drawdown':
-                                    comparison_data['Metric'].append('Max Drawdown (abs)')
-                                    comparison_data['Before'].append(abs(before.get(metric, 0)))
-                                    comparison_data['After'].append(abs(after.get(metric, 0)))
+                                if metric == "max_drawdown":
+                                    comparison_data["Metric"].append("Max Drawdown (abs)")
+                                    comparison_data["Before"].append(abs(before.get(metric, 0)))
+                                    comparison_data["After"].append(abs(after.get(metric, 0)))
                                 else:
-                                    comparison_data['Metric'].append(
-                                        metric.replace('_', ' ').title()
+                                    comparison_data["Metric"].append(
+                                        metric.replace("_", " ").title()
                                     )
-                                    comparison_data['Before'].append(before.get(metric, 0))
-                                    comparison_data['After'].append(after.get(metric, 0))
-                                comparison_data['Improvement %'].append(
+                                    comparison_data["Before"].append(before.get(metric, 0))
+                                    comparison_data["After"].append(after.get(metric, 0))
+                                comparison_data["Improvement %"].append(
                                     sharpe_imp
-                                    if metric == 'sharpe_ratio'
+                                    if metric == "sharpe_ratio"
                                     else (
                                         return_imp
-                                        if metric == 'return_pct'
+                                        if metric == "return_pct"
                                         else winrate_imp
-                                        if metric == 'win_rate'
+                                        if metric == "win_rate"
                                         else dd_imp
                                     )
                                 )
@@ -1460,27 +1464,27 @@ def main():
 
                             fig = px.bar(
                                 comparison_df,
-                                x='Metric',
-                                y=['Before', 'After'],
-                                barmode='group',
-                                title=f'Before vs After Training - {learning_engine}',
-                                labels={'value': 'Value', 'variable': 'Period'},
-                                color_discrete_map={'Before': '#e74c3c', 'After': '#2ecc71'},
+                                x="Metric",
+                                y=["Before", "After"],
+                                barmode="group",
+                                title=f"Before vs After Training - {learning_engine}",
+                                labels={"value": "Value", "variable": "Period"},
+                                color_discrete_map={"Before": "#e74c3c", "After": "#2ecc71"},
                             )
                             st.plotly_chart(
                                 fig,
-                                width='stretch',
+                                width="stretch",
                                 key=f"training_comparison_{learning_engine}_{idx}",
                             )
                     else:
                         # Mostrar qué learning engines fueron encontrados pero sin datos
                         learning_engines_found = (
-                            learning_engine_results['learning_engine'].unique().tolist()
-                            if 'learning_engine' in learning_engine_results.columns
+                            learning_engine_results["learning_engine"].unique().tolist()
+                            if "learning_engine" in learning_engine_results.columns
                             else []
                         )
                         st.warning(
-                            f"⚠️ Se encontraron {len(learning_engine_results)} resultados de learning engines "
+                            f"⚠ Se encontraron {len(learning_engine_results)} resultados de learning engines "
                             f"({', '.join([str(le) for le in learning_engines_found[:5]]) if learning_engines_found else 'unknown'}), "
                             "pero sin datos de comparación (before/after training).\n\n"
                             "**Posibles causas:**\n"
@@ -1490,7 +1494,7 @@ def main():
                             "**Solución:** Ejecuta nuevos tests con 'Learning Engines' habilitado para ver la comparación antes/después."
                         )
                         logger.warning(
-                            f"⚠️ {len(learning_engine_results)} learning engine results encontrados "
+                            f"⚠ {len(learning_engine_results)} learning engine results encontrados "
                             f"pero {comparison_count} tienen datos de comparación completos"
                         )
                 else:
@@ -1503,7 +1507,7 @@ def main():
                         "4. Los resultados mostrarán métricas ANTES y DESPUÉS del entrenamiento"
                     )
                     logger.info(
-                        "ℹ️ No se encontraron resultados de learning engines para análisis de training"
+                        "i No se encontraron resultados de learning engines para análisis de training"
                     )
             else:
                 st.info("📋 No results loaded. Execute tests or load results first.")
@@ -1518,17 +1522,17 @@ def main():
 
             # Save configuration section
             with st.expander("💾 Save Current Configuration", expanded=False):
-                if st.session_state.get('results_loaded') and 'df_results' in st.session_state:
+                if st.session_state.get("results_loaded") and "df_results" in st.session_state:
                     df = st.session_state.df_results
 
                     # Select result to save
-                    result_names = df['test_name'].tolist() if 'test_name' in df.columns else []
+                    result_names = df["test_name"].tolist() if "test_name" in df.columns else []
                     if result_names:
                         selected_result_name = st.selectbox(
                             "Select Result to Save", options=result_names, key="save_config_select"
                         )
 
-                        selected_result = df[df['test_name'] == selected_result_name].iloc[0]
+                        selected_result = df[df["test_name"] == selected_result_name].iloc[0]
 
                         col1, col2 = st.columns(2)
                         with col1:
@@ -1542,8 +1546,8 @@ def main():
                                 "Tags (comma-separated)",
                                 value=",".join(
                                     [
-                                        str(selected_result.get('test_type', '')),
-                                        str(selected_result.get('learning_engine', '')),
+                                        str(selected_result.get("test_type", "")),
+                                        str(selected_result.get("learning_engine", "")),
                                     ]
                                 ),
                                 key="config_tags_input",
@@ -1562,25 +1566,25 @@ def main():
                             try:
                                 # Extract full config
                                 config_to_save = {
-                                    'test_type': selected_result.get('test_type'),
-                                    'learning_engine': selected_result.get('learning_engine'),
-                                    'modules_active': selected_result.get('modules_active', []),
-                                    'thresholds': selected_result.get('thresholds', {}),
+                                    "test_type": selected_result.get("test_type"),
+                                    "learning_engine": selected_result.get("learning_engine"),
+                                    "modules_active": selected_result.get("modules_active", []),
+                                    "thresholds": selected_result.get("thresholds", {}),
                                 }
 
                                 metrics_to_save = {
-                                    'sharpe_ratio': selected_result.get('sharpe_ratio'),
-                                    'return_pct': selected_result.get('return_pct'),
-                                    'win_rate': selected_result.get('win_rate'),
-                                    'max_drawdown': selected_result.get('max_drawdown'),
-                                    'total_pnl': selected_result.get('total_pnl'),
-                                    'sortino_ratio': selected_result.get('sortino_ratio'),
-                                    'total_trades': selected_result.get('total_trades'),
+                                    "sharpe_ratio": selected_result.get("sharpe_ratio"),
+                                    "return_pct": selected_result.get("return_pct"),
+                                    "win_rate": selected_result.get("win_rate"),
+                                    "max_drawdown": selected_result.get("max_drawdown"),
+                                    "total_pnl": selected_result.get("total_pnl"),
+                                    "sortino_ratio": selected_result.get("sortino_ratio"),
+                                    "total_trades": selected_result.get("total_trades"),
                                 }
 
-                                before_training = selected_result.get('before_training_metrics')
-                                after_training = selected_result.get('after_training_metrics')
-                                improvement = selected_result.get('improvement_pct')
+                                before_training = selected_result.get("before_training_metrics")
+                                after_training = selected_result.get("after_training_metrics")
+                                improvement = selected_result.get("improvement_pct")
 
                                 # Parse if string
                                 if isinstance(before_training, str):
@@ -1589,7 +1593,7 @@ def main():
 
                                         before_training = (
                                             ast.literal_eval(before_training)
-                                            if before_training.startswith('{')
+                                            if before_training.startswith("{")
                                             else None
                                         )
                                     except (ValueError, TypeError, KeyError, AttributeError):
@@ -1600,7 +1604,7 @@ def main():
 
                                         after_training = (
                                             ast.literal_eval(after_training)
-                                            if after_training.startswith('{')
+                                            if after_training.startswith("{")
                                             else None
                                         )
                                     except (FileNotFoundError, ValueError, KeyError, TypeError):
@@ -1611,13 +1615,13 @@ def main():
 
                                         improvement = (
                                             ast.literal_eval(improvement)
-                                            if improvement.startswith('{')
+                                            if improvement.startswith("{")
                                             else None
                                         )
                                     except (FileNotFoundError, ValueError, KeyError, TypeError):
                                         improvement = None
 
-                                tags_list = [t.strip() for t in config_tags.split(',') if t.strip()]
+                                tags_list = [t.strip() for t in config_tags.split(",") if t.strip()]
 
                                 config_id = config_manager.save_config(
                                     name=config_name,
@@ -1667,7 +1671,7 @@ def main():
             )
         with col3:
             sort_by_config = st.selectbox(
-                "Sort By", ['sharpe_ratio', 'return_pct', 'timestamp'], key="sort_by_config"
+                "Sort By", ["sharpe_ratio", "return_pct", "timestamp"], key="sort_by_config"
             )
 
         saved_configs = config_manager.list_configs(
@@ -1680,12 +1684,12 @@ def main():
             st.success(f"Found {len(saved_configs)} saved configurations")
 
             for config in saved_configs:
-                config_id = config.get('id')
-                config_name = config.get('name')
-                metrics = config.get('metrics', {})
-                tags = config.get('tags', [])
-                timestamp = config.get('timestamp', '')
-                improvement = config.get('improvement_pct', {})
+                config_id = config.get("id")
+                config_name = config.get("name")
+                metrics = config.get("metrics", {})
+                tags = config.get("tags", [])
+                timestamp = config.get("timestamp", "")
+                improvement = config.get("improvement_pct", {})
 
                 with st.expander(
                     f"💾 {config_name} - Sharpe: {metrics.get('sharpe_ratio', 0):.2f}, Return: {metrics.get('return_pct', 0):.2f}%",
@@ -1696,7 +1700,7 @@ def main():
                     with col1:
                         st.write(f"**ID:** `{config_id}`")
                         st.write(f"**Timestamp:** {timestamp}")
-                        if config.get('description'):
+                        if config.get("description"):
                             st.write(f"**Description:** {config.get('description')}")
 
                         st.markdown("**Metrics:**")
@@ -1706,7 +1710,7 @@ def main():
                         with col_m2:
                             st.metric("Return %", f"{metrics.get('return_pct', 0):.2f}%")
                         with col_m3:
-                            st.metric("Win Rate", f"{metrics.get('win_rate', 0)*100:.1f}%")
+                            st.metric("Win Rate", f"{metrics.get('win_rate', 0) * 100:.1f}%")
                         with col_m4:
                             st.metric("Max DD", f"{abs(metrics.get('max_drawdown', 0)):.2f}%")
 
@@ -1720,12 +1724,12 @@ def main():
 
                     with col2:
                         if st.button("📥 Load", key=f"load_config_{config_id}"):
-                            st.session_state['selected_config_to_load'] = config_id
+                            st.session_state["selected_config_to_load"] = config_id
                             st.info(
                                 f"Configuration '{config_name}' selected. Use it when executing tests."
                             )
 
-                        if st.button("🗑️ Delete", key=f"delete_config_{config_id}"):
+                        if st.button("🗑 Delete", key=f"delete_config_{config_id}"):
                             if config_manager.delete_config(config_id=config_id):
                                 st.success(f"✅ Configuration '{config_name}' deleted")
                                 st.rerun()
@@ -1761,20 +1765,20 @@ def main():
                     with col1:
                         st.metric(
                             "Total Backtests Analizados",
-                            meta_summary.get('total_backtests_analyzed', 0),
+                            meta_summary.get("total_backtests_analyzed", 0),
                         )
                     with col2:
-                        st.metric("Clusters Encontrados", meta_summary.get('clusters_found', 0))
+                        st.metric("Clusters Encontrados", meta_summary.get("clusters_found", 0))
                     with col3:
                         st.metric(
-                            "Combinaciones Óptimas", meta_summary.get('optimal_combinations', 0)
+                            "Combinaciones Óptimas", meta_summary.get("optimal_combinations", 0)
                         )
 
                     st.markdown(f"**Archivo:** `{meta_summary.get('file_name', 'Unknown')}`")
                     st.markdown(f"**Timestamp:** {meta_summary.get('timestamp', 'Unknown')}")
 
                     # Show aggregate metrics if available
-                    if meta_summary.get('avg_sharpe') or meta_summary.get('avg_return'):
+                    if meta_summary.get("avg_sharpe") or meta_summary.get("avg_return"):
                         st.subheader("📊 Métricas Agregadas")
                         col1, col2 = st.columns(2)
                         with col1:
@@ -1787,7 +1791,7 @@ def main():
                             )
 
                     # Show optimal combinations if available
-                    optimal_combs = meta_summary.get('optimal_combinations', [])
+                    optimal_combs = meta_summary.get("optimal_combinations", [])
                     if optimal_combs:
                         st.subheader("🏆 Top Combinaciones Óptimas")
                         for idx, combo in enumerate(optimal_combs[:5], 1):  # Show top 5
@@ -1798,7 +1802,7 @@ def main():
                                 st.json(combo)
 
                     # Show correlations if available
-                    correlations = meta_summary.get('correlations', {})
+                    correlations = meta_summary.get("correlations", {})
                     if correlations:
                         st.subheader("📈 Correlaciones entre Métricas")
                         st.json(correlations)
@@ -1815,7 +1819,7 @@ def main():
             st.subheader("📋 Objetivos Definidos")
             objectives_data = []
             for metric_name, obj_config in objectives.items():
-                if obj_config['operator'] == 'range':
+                if obj_config["operator"] == "range":
                     target_str = f"{obj_config['target_min']}{obj_config['unit']} - {obj_config['target_max']}{obj_config['unit']}"
                 else:
                     target_str = (
@@ -1824,9 +1828,9 @@ def main():
 
                 objectives_data.append(
                     {
-                        'Métrica': metric_name.replace('_', ' ').title(),
-                        'Objetivo': target_str,
-                        'Descripción': obj_config['description'],
+                        "Métrica": metric_name.replace("_", " ").title(),
+                        "Objetivo": target_str,
+                        "Descripción": obj_config["description"],
                     }
                 )
 
@@ -1836,7 +1840,7 @@ def main():
             st.divider()
 
             # Evaluate all results against objectives
-            if st.session_state.get('results_loaded') and 'df_results' in st.session_state:
+            if st.session_state.get("results_loaded") and "df_results" in st.session_state:
                 df = st.session_state.df_results
 
                 if not df.empty:
@@ -1860,14 +1864,14 @@ def main():
                     evaluation_results = []
 
                     # VECTORIZED: Usar to_dict('records') en lugar de iterrows
-                    for _idx, row in enumerate(df.to_dict('records')):
+                    for _idx, row in enumerate(df.to_dict("records")):
                         # Extract metrics
                         metrics = {
-                            'max_drawdown': row.get('max_drawdown', 0),
-                            'sharpe_ratio': row.get('sharpe_ratio', 0),
-                            'sortino_ratio': row.get('sortino_ratio', 0),
-                            'profit_factor': row.get('profit_factor', 0),
-                            'win_rate': row.get('win_rate', 0),
+                            "max_drawdown": row.get("max_drawdown", 0),
+                            "sharpe_ratio": row.get("sharpe_ratio", 0),
+                            "sortino_ratio": row.get("sortino_ratio", 0),
+                            "profit_factor": row.get("profit_factor", 0),
+                            "win_rate": row.get("win_rate", 0),
                         }
 
                     # Evaluate objectives
@@ -1885,37 +1889,37 @@ def main():
 
                     # Build evaluation result
                     eval_result = {
-                        'test_name': row.get('test_name', f'Test {idx}'),
-                        'test_type': row.get('test_type', 'Unknown'),
-                        'strategy': strategy_config.get('strategy', 'Unknown'),
-                        'learning_engine': strategy_config.get('learning_engine', 'None'),
-                        'modules': (
-                            ', '.join(strategy_config.get('modules_active', []))
-                            if strategy_config.get('modules_active')
-                            else 'None'
+                        "test_name": row.get("test_name", f"Test {idx}"),
+                        "test_type": row.get("test_type", "Unknown"),
+                        "strategy": strategy_config.get("strategy", "Unknown"),
+                        "learning_engine": strategy_config.get("learning_engine", "None"),
+                        "modules": (
+                            ", ".join(strategy_config.get("modules_active", []))
+                            if strategy_config.get("modules_active")
+                            else "None"
                         ),
-                        'parameters': strategy_config.get('parameters', {}),
-                        'passed_count': passed_count,
-                        'total_count': total_count,
-                        'all_passed': all_passed,
-                        'evaluations': eval_results,
-                        'metrics': metrics,
-                        'row_index': idx,
+                        "parameters": strategy_config.get("parameters", {}),
+                        "passed_count": passed_count,
+                        "total_count": total_count,
+                        "all_passed": all_passed,
+                        "evaluations": eval_results,
+                        "metrics": metrics,
+                        "row_index": idx,
                     }
 
                     evaluation_results.append(eval_result)
 
                     # Filter results
                     if show_only_passing:
-                        evaluation_results = [r for r in evaluation_results if r['all_passed']]
+                        evaluation_results = [r for r in evaluation_results if r["all_passed"]]
 
                     evaluation_results = [
-                        r for r in evaluation_results if r['passed_count'] >= min_objectives_passed
+                        r for r in evaluation_results if r["passed_count"] >= min_objectives_passed
                     ]
 
                     # Sort by passed count (descending)
                     evaluation_results.sort(
-                        key=lambda x: (x['passed_count'], x['all_passed']), reverse=True
+                        key=lambda x: (x["passed_count"], x["all_passed"]), reverse=True
                     )
 
                     if evaluation_results:
@@ -1926,15 +1930,15 @@ def main():
                         # Display results
                         for eval_result in evaluation_results:
                             # Determine color based on performance
-                            if eval_result['all_passed']:
+                            if eval_result["all_passed"]:
                                 status_color = "🟢"
                                 status_text = "✅ CUMPLE TODOS LOS OBJETIVOS"
-                            elif eval_result['passed_count'] >= len(objectives) * 0.8:
+                            elif eval_result["passed_count"] >= len(objectives) * 0.8:
                                 status_color = "🟡"
-                                status_text = f"⚠️ CUMPLE {eval_result['passed_count']}/{eval_result['total_count']} OBJETIVOS"
-                            elif eval_result['passed_count'] >= len(objectives) * 0.5:
+                                status_text = f"⚠ CUMPLE {eval_result['passed_count']}/{eval_result['total_count']} OBJETIVOS"
+                            elif eval_result["passed_count"] >= len(objectives) * 0.5:
                                 status_color = "🟠"
-                                status_text = f"⚠️ CUMPLE {eval_result['passed_count']}/{eval_result['total_count']} OBJETIVOS"
+                                status_text = f"⚠ CUMPLE {eval_result['passed_count']}/{eval_result['total_count']} OBJETIVOS"
                             else:
                                 status_color = "🔴"
                                 status_text = f"❌ CUMPLE {eval_result['passed_count']}/{eval_result['total_count']} OBJETIVOS"
@@ -1942,7 +1946,7 @@ def main():
                             with st.expander(
                                 f"{status_color} **{eval_result['test_name']}** - {status_text}",
                                 # Auto-expand if all passed
-                                expanded=eval_result['all_passed'],
+                                expanded=eval_result["all_passed"],
                             ):
                                 # Strategy info
                                 col1, col2, col3 = st.columns(3)
@@ -1958,15 +1962,15 @@ def main():
                                     st.markdown(
                                         f"**Objetivos Cumplidos:** {eval_result['passed_count']}/{eval_result['total_count']}"
                                     )
-                                    if eval_result['all_passed']:
+                                    if eval_result["all_passed"]:
                                         st.success("🎯 ESTRATEGIA ÓPTIMA")
 
                                 st.divider()
 
                                 # Parameters
-                                if eval_result['parameters']:
-                                    st.subheader("⚙️ Parámetros de la Estrategia")
-                                    st.json(eval_result['parameters'])
+                                if eval_result["parameters"]:
+                                    st.subheader("⚙ Parámetros de la Estrategia")
+                                    st.json(eval_result["parameters"])
 
                                 st.divider()
 
@@ -1975,25 +1979,26 @@ def main():
 
                                 metric_cols = st.columns(3)
 
-                                for metric_idx, (metric_name, (_passes, status, obj_config)) in enumerate(eval_result[
-                                    'evaluations'
-                                ].items()):
+                                for metric_idx, (
+                                    metric_name,
+                                    (_passes, status, obj_config),
+                                ) in enumerate(eval_result["evaluations"].items()):
                                     with metric_cols[metric_idx % 3]:
                                         # Get actual value
                                         metric_key = metric_name
-                                        if metric_name == 'max_drawdown':
+                                        if metric_name == "max_drawdown":
                                             actual_value = abs(
-                                                eval_result['metrics'].get('max_drawdown', 0)
+                                                eval_result["metrics"].get("max_drawdown", 0)
                                             )
-                                        elif metric_name == 'win_rate':
-                                            actual_value = eval_result['metrics'].get('win_rate', 0)
+                                        elif metric_name == "win_rate":
+                                            actual_value = eval_result["metrics"].get("win_rate", 0)
                                             if actual_value <= 1.0:
                                                 actual_value = actual_value * 100
                                         else:
-                                            actual_value = eval_result['metrics'].get(metric_key, 0)
+                                            actual_value = eval_result["metrics"].get(metric_key, 0)
 
                                         # Format target
-                                        if obj_config['operator'] == 'range':
+                                        if obj_config["operator"] == "range":
                                             target_str = f"{obj_config['target_min']}{obj_config['unit']} - {obj_config['target_max']}{obj_config['unit']}"
                                         else:
                                             target_str = f"{obj_config['operator']} {obj_config['target']}{obj_config['unit']}"
@@ -2012,32 +2017,32 @@ def main():
                                 st.subheader("📈 Resumen de Métricas")
                                 summary_data = []
                                 for metric_name, (_passes, status, obj_config) in eval_result[
-                                    'evaluations'
+                                    "evaluations"
                                 ].items():
                                     metric_key = metric_name
-                                    if metric_name == 'max_drawdown':
+                                    if metric_name == "max_drawdown":
                                         actual_value = abs(
-                                            eval_result['metrics'].get('max_drawdown', 0)
+                                            eval_result["metrics"].get("max_drawdown", 0)
                                         )
-                                    elif metric_name == 'win_rate':
-                                        actual_value = eval_result['metrics'].get('win_rate', 0)
+                                    elif metric_name == "win_rate":
+                                        actual_value = eval_result["metrics"].get("win_rate", 0)
                                         if actual_value <= 1.0:
                                             actual_value = actual_value * 100
                                     else:
-                                        actual_value = eval_result['metrics'].get(metric_key, 0)
+                                        actual_value = eval_result["metrics"].get(metric_key, 0)
 
-                                    if obj_config['operator'] == 'range':
+                                    if obj_config["operator"] == "range":
                                         target_str = f"{obj_config['target_min']}{obj_config['unit']} - {obj_config['target_max']}{obj_config['unit']}"
                                     else:
                                         target_str = f"{obj_config['operator']} {obj_config['target']}{obj_config['unit']}"
 
                                     summary_data.append(
                                         {
-                                            'Métrica': metric_name.replace('_', ' ').title(),
-                                            'Valor Actual': f"{actual_value:.2f}{obj_config['unit']}",
-                                            'Objetivo': target_str,
-                                            'Estado': status,
-                                            'Descripción': obj_config['description'],
+                                            "Métrica": metric_name.replace("_", " ").title(),
+                                            "Valor Actual": f"{actual_value:.2f}{obj_config['unit']}",
+                                            "Objetivo": target_str,
+                                            "Estado": status,
+                                            "Descripción": obj_config["description"],
                                         }
                                     )
 
@@ -2045,7 +2050,7 @@ def main():
                                 st.dataframe(summary_df, use_container_width=True, hide_index=True)
                         else:
                             st.warning(
-                                "⚠️ No se encontraron estrategias que cumplan los criterios seleccionados. Ajusta los filtros o ejecuta más tests."
+                                "⚠ No se encontraron estrategias que cumplan los criterios seleccionados. Ajusta los filtros o ejecuta más tests."
                             )
                 else:
                     st.info(
@@ -2060,11 +2065,11 @@ def main():
         with tabs[5]:
             st.header("🔍 Comparison View")
 
-            if st.session_state.get('results_loaded') and 'df_results' in st.session_state:
+            if st.session_state.get("results_loaded") and "df_results" in st.session_state:
                 df = st.session_state.df_results
 
                 # Multi-select for comparison
-                test_names = df['test_name'].tolist() if 'test_name' in df.columns else []
+                test_names = df["test_name"].tolist() if "test_name" in df.columns else []
                 selected_for_comparison = st.multiselect(
                     "Select tests to compare",
                     options=test_names,
@@ -2072,12 +2077,12 @@ def main():
                 )
 
                 if selected_for_comparison:
-                    df_compare = df[df['test_name'].isin(selected_for_comparison)]
+                    df_compare = df[df["test_name"].isin(selected_for_comparison)]
 
                     # Comparison Chart
                     st.subheader("📊 Metrics Comparison")
 
-                    metrics_to_compare = ['sharpe_ratio', 'return_pct', 'win_rate', 'max_drawdown']
+                    metrics_to_compare = ["sharpe_ratio", "return_pct", "win_rate", "max_drawdown"]
                     available_metrics = [m for m in metrics_to_compare if m in df_compare.columns]
 
                     if available_metrics:
@@ -2086,30 +2091,28 @@ def main():
                         for metric in available_metrics:
                             fig.add_trace(
                                 go.Scatter(
-                                    x=df_compare['test_name'],
+                                    x=df_compare["test_name"],
                                     y=df_compare[metric],
-                                    mode='lines+markers',
-                                    name=metric.replace('_', ' ').title(),
+                                    mode="lines+markers",
+                                    name=metric.replace("_", " ").title(),
                                     marker={"size": 10},
                                 )
                             )
 
                         fig.update_layout(
-                            title='Metrics Comparison Across Tests',
-                            xaxis_title='Test Name',
-                            yaxis_title='Metric Value',
-                            hovermode='x unified',
+                            title="Metrics Comparison Across Tests",
+                            xaxis_title="Test Name",
+                            yaxis_title="Metric Value",
+                            hovermode="x unified",
                             height=500,
                         )
-                        st.plotly_chart(fig, width='stretch', key="comparison_chart")
+                        st.plotly_chart(fig, width="stretch", key="comparison_chart")
 
                     # Comparison Table
                     st.subheader("📋 Detailed Comparison Table")
-                    comparison_cols = (
-                        ['test_name'] + available_metrics + ['total_pnl', 'total_trades']
-                    )
+                    comparison_cols = ["test_name", *available_metrics, "total_pnl", "total_trades"]
                     display_cols = [c for c in comparison_cols if c in df_compare.columns]
-                    st.dataframe(df_compare[display_cols], width='stretch')
+                    st.dataframe(df_compare[display_cols], width="stretch")
                 else:
                     st.warning("Select at least one test to compare.")
             else:
@@ -2162,15 +2165,15 @@ def main():
                 st.warning(f"Directory {results_dir} does not exist.")
 
         # Execute tests if button was clicked
-        execute_tests_flag = st.session_state.get('execute_tests', False)
+        execute_tests_flag = st.session_state.get("execute_tests", False)
         logger.debug(f"🔍 execute_tests flag: {execute_tests_flag}")
 
         if execute_tests_flag:
             logger.info("🚀 Iniciando ejecución de tests...")
             try:
-                params = st.session_state.get('execution_params', {})
-                selected_tests = st.session_state.get('selected_tests', [])
-                use_multi_strategy = params.get('use_multi_strategy', False)
+                params = st.session_state.get("execution_params", {})
+                selected_tests = st.session_state.get("selected_tests", [])
+                use_multi_strategy = params.get("use_multi_strategy", False)
 
                 logger.info(f"📋 Params: {list(params.keys())}")
                 logger.info(f"📋 Selected tests: {selected_tests}")
@@ -2198,7 +2201,7 @@ def main():
                 import yaml
 
                 try:
-                    with open(config_path, 'r') as f:
+                    with open(config_path) as f:
                         config = yaml.safe_load(f)
 
                     if config is None:
@@ -2216,52 +2219,52 @@ def main():
 
                 # Update config with user selections
                 # Update input parameters
-                config['input']['symbol'] = params.get('symbol', 'SNOW')
-                config['input']['start_date'] = params.get(
-                    'start_date', datetime.now() - timedelta(days=365)
+                config["input"]["symbol"] = params.get("symbol", "SNOW")
+                config["input"]["start_date"] = params.get(
+                    "start_date", datetime.now() - timedelta(days=365)
                 ).strftime("%Y-%m-%d")
-                config['input']['end_date'] = params.get(
-                    'end_date', datetime.now() - timedelta(days=1)
+                config["input"]["end_date"] = params.get(
+                    "end_date", datetime.now() - timedelta(days=1)
                 ).strftime("%Y-%m-%d")
-                config['input']['initial_capital'] = float(params.get('initial_capital', 100000))
+                config["input"]["initial_capital"] = float(params.get("initial_capital", 100000))
 
                 # Update learning engines
-                if 'learning_engines' not in config:
-                    config['learning_engines'] = {}
+                if "learning_engines" not in config:
+                    config["learning_engines"] = {}
 
-                learning_engines_selected = params.get('learning_engines', [])
+                learning_engines_selected = params.get("learning_engines", [])
 
                 # Ensure all learning engine sections exist before updating
-                for engine_name in ['supervised', 'deep', 'reinforcement', 'transformer']:
-                    if engine_name not in config['learning_engines']:
-                        config['learning_engines'][engine_name] = {
-                            'enabled': False,
-                            'parameters': {},
+                for engine_name in ["supervised", "deep", "reinforcement", "transformer"]:
+                    if engine_name not in config["learning_engines"]:
+                        config["learning_engines"][engine_name] = {
+                            "enabled": False,
+                            "parameters": {},
                         }
 
                 # Update enabled flags
-                config['learning_engines']['supervised']['enabled'] = (
-                    'supervised' in learning_engines_selected
+                config["learning_engines"]["supervised"]["enabled"] = (
+                    "supervised" in learning_engines_selected
                 )
-                config['learning_engines']['deep']['enabled'] = 'deep' in learning_engines_selected
-                config['learning_engines']['reinforcement']['enabled'] = (
-                    'reinforcement' in learning_engines_selected
+                config["learning_engines"]["deep"]["enabled"] = "deep" in learning_engines_selected
+                config["learning_engines"]["reinforcement"]["enabled"] = (
+                    "reinforcement" in learning_engines_selected
                 )
-                config['learning_engines']['transformer']['enabled'] = (
-                    'transformer' in learning_engines_selected
+                config["learning_engines"]["transformer"]["enabled"] = (
+                    "transformer" in learning_engines_selected
                 )
 
                 # Validation: if learning_engines test is selected, warn if no engines are enabled
-                if 'learning_engines' in selected_tests and not learning_engines_selected:
+                if "learning_engines" in selected_tests and not learning_engines_selected:
                     st.warning(
-                        "⚠️ Learning Engines test selected but no learning engines enabled. Please select at least one learning engine."
+                        "⚠ Learning Engines test selected but no learning engines enabled. Please select at least one learning engine."
                     )
 
                 # Log learning engines configuration
                 enabled_engines = [
                     eng
-                    for eng in ['supervised', 'deep', 'reinforcement', 'transformer']
-                    if config['learning_engines'].get(eng, {}).get('enabled', False)
+                    for eng in ["supervised", "deep", "reinforcement", "transformer"]
+                    if config["learning_engines"].get(eng, {}).get("enabled", False)
                 ]
                 logger.info(
                     f"📋 Learning engines configurados: {enabled_engines} (seleccionados: {learning_engines_selected})"
@@ -2271,66 +2274,66 @@ def main():
                 )
 
                 # Update multi-strategy config
-                if 'backtests' not in config:
-                    config['backtests'] = {}
-                if 'multi_strategy' not in config['backtests']:
-                    config['backtests']['multi_strategy'] = {}
+                if "backtests" not in config:
+                    config["backtests"] = {}
+                if "multi_strategy" not in config["backtests"]:
+                    config["backtests"]["multi_strategy"] = {}
 
-                config['backtests']['multi_strategy']['enabled'] = use_multi_strategy
+                config["backtests"]["multi_strategy"]["enabled"] = use_multi_strategy
                 if use_multi_strategy:
-                    config['backtests']['multi_strategy']['strategies'] = params.get(
-                        'strategies', ["momentum", "mean_reversion", "pairs_trading"]
+                    config["backtests"]["multi_strategy"]["strategies"] = params.get(
+                        "strategies", ["momentum", "mean_reversion", "pairs_trading"]
                     )
-                    config['backtests']['multi_strategy'][
-                        'enable_dynamic_reallocation'
-                    ] = params.get('enable_dynamic_reallocation', True)
-                    if params.get('enable_dynamic_reallocation', True):
-                        config['backtests']['multi_strategy'][
-                            'reallocation_frequency_days'
-                        ] = params.get('reallocation_frequency', 30)
+                    config["backtests"]["multi_strategy"]["enable_dynamic_reallocation"] = (
+                        params.get("enable_dynamic_reallocation", True)
+                    )
+                    if params.get("enable_dynamic_reallocation", True):
+                        config["backtests"]["multi_strategy"]["reallocation_frequency_days"] = (
+                            params.get("reallocation_frequency", 30)
+                        )
 
                 # Enable/disable specific backtests
                 for test_name in [
-                    'baseline',
-                    'learning_engines',
-                    'monte_carlo',
-                    'grid_search',
-                    'ablation',
-                    'walk_forward',
-                    'out_of_sample',
-                    'regime_test',
-                    'transformer_optimization',
+                    "baseline",
+                    "learning_engines",
+                    "monte_carlo",
+                    "grid_search",
+                    "ablation",
+                    "walk_forward",
+                    "out_of_sample",
+                    "regime_test",
+                    "transformer_optimization",
                 ]:
-                    if 'backtests' not in config:
-                        config['backtests'] = {}
-                    if test_name not in config['backtests']:
-                        config['backtests'][test_name] = {}
-                    config['backtests'][test_name]['enabled'] = test_name in selected_tests
+                    if "backtests" not in config:
+                        config["backtests"] = {}
+                    if test_name not in config["backtests"]:
+                        config["backtests"][test_name] = {}
+                    config["backtests"][test_name]["enabled"] = test_name in selected_tests
 
                     # Para learning_engines test, asegurar que use simple strategy si estamos en modo simple
-                    if test_name == 'learning_engines' and test_name in selected_tests:
-                        config['backtests'][test_name]['use_multi_strategy'] = use_multi_strategy
+                    if test_name == "learning_engines" and test_name in selected_tests:
+                        config["backtests"][test_name]["use_multi_strategy"] = use_multi_strategy
                         logger.info(
                             f"📋 Learning engines test configurado con use_multi_strategy={use_multi_strategy}"
                         )
 
                 # Ensure multi_strategy test is enabled if selected
-                if 'multi_strategy' in selected_tests:
-                    config['backtests']['multi_strategy']['enabled'] = True
+                if "multi_strategy" in selected_tests:
+                    config["backtests"]["multi_strategy"]["enabled"] = True
 
                 # Update parallelization
-                if 'parallelization' not in config:
-                    config['parallelization'] = {}
-                config['parallelization']['enabled'] = params.get('parallel', True)
-                if params.get('max_workers'):
-                    config['parallelization']['max_workers'] = params.get('max_workers')
+                if "parallelization" not in config:
+                    config["parallelization"] = {}
+                config["parallelization"]["enabled"] = params.get("parallel", True)
+                if params.get("max_workers"):
+                    config["parallelization"]["max_workers"] = params.get("max_workers")
 
                 # Update meta analysis
-                if 'meta_analysis' not in config:
-                    config['meta_analysis'] = {}
-                config['meta_analysis']['enabled'] = params.get('meta_analysis', True)
-                config['meta_analysis']['enable_incremental_learning'] = params.get(
-                    'incremental_learning', True
+                if "meta_analysis" not in config:
+                    config["meta_analysis"] = {}
+                config["meta_analysis"]["enabled"] = params.get("meta_analysis", True)
+                config["meta_analysis"]["enable_incremental_learning"] = params.get(
+                    "incremental_learning", True
                 )
 
                 # Create temporary config file
@@ -2340,7 +2343,7 @@ def main():
                     / "backtesting"
                     / "comprehensive_backtest_dashboard_temp.yaml"
                 )
-                with open(temp_config_path, 'w') as f:
+                with open(temp_config_path, "w") as f:
                     yaml.dump(config, f, default_flow_style=False, sort_keys=False)
 
                 # Show execution summary
@@ -2350,17 +2353,17 @@ def main():
                 )
 
                 if use_multi_strategy:
-                    strategies = params.get('strategies', [])
+                    strategies = params.get("strategies", [])
                     st.write(f"**Strategies:** {', '.join(strategies) if strategies else 'None'}")
                     st.write(
                         f"**Dynamic Reallocation:** {'✅ Enabled' if params.get('enable_dynamic_reallocation', False) else '❌ Disabled'}"
                     )
-                    if params.get('enable_dynamic_reallocation', False):
+                    if params.get("enable_dynamic_reallocation", False):
                         st.write(
                             f"**Reallocation Frequency:** {params.get('reallocation_frequency', 30)} days"
                         )
 
-                learning_engines = params.get('learning_engines', [])
+                learning_engines = params.get("learning_engines", [])
                 if learning_engines:
                     st.write(f"**Learning Engines:** {', '.join(learning_engines)}")
                 else:
@@ -2396,7 +2399,9 @@ def main():
                                     ComprehensiveBacktestRunner,
                                 )
 
-                                logger.info("✅ ComprehensiveBacktestRunner importado correctamente")
+                                logger.info(
+                                    "✅ ComprehensiveBacktestRunner importado correctamente"
+                                )
                             except (
                                 ValueError,
                                 TypeError,
@@ -2454,32 +2459,34 @@ def main():
                         st.session_state.results_loaded = True
                         # Actualizar o inicializar df_results en session_state
                         if (
-                            'df_results' in st.session_state
+                            "df_results" in st.session_state
                             and not st.session_state.df_results.empty
                         ):
                             st.session_state.df_results = pd.concat(
                                 [st.session_state.df_results, df_results]
-                            ).drop_duplicates(subset=['test_name'], keep='last')
+                            ).drop_duplicates(subset=["test_name"], keep="last")
                         else:
                             st.session_state.df_results = df_results
 
                         # Contar learning engines con datos de training
                         learning_engine_results = (
-                            df_results[df_results['test_type'] == 'learning_engine']
-                            if 'test_type' in df_results.columns
+                            df_results[df_results["test_type"] == "learning_engine"]
+                            if "test_type" in df_results.columns
                             else pd.DataFrame()
                         )
                         if not learning_engine_results.empty:
                             has_training_data = learning_engine_results.apply(
-                                lambda row: bool(row.get('before_training_metrics'))
-                                and bool(row.get('after_training_metrics')),
+                                lambda row: (
+                                    bool(row.get("before_training_metrics"))
+                                    and bool(row.get("after_training_metrics"))
+                                ),
                                 axis=1,
                             ).sum()
                             st.info(
                                 f"📊 {len(learning_engine_results)} resultado(s) de learning engines, {has_training_data} con datos de comparación (antes/después)"
                             )
                     else:
-                        st.warning("⚠️ No se encontraron resultados después de la ejecución.")
+                        st.warning("⚠ No se encontraron resultados después de la ejecución.")
                         st.write(f"📁 Directorio buscado: `{loader.results_dir}`")
                         st.write(f"📁 Directorio existe: {loader.results_dir.exists()}")
                         if loader.results_dir.exists():
@@ -2511,15 +2518,15 @@ def main():
                         st.dataframe(
                             df_results[
                                 [
-                                    'test_name',
-                                    'test_type',
-                                    'sharpe_ratio',
-                                    'return_pct',
-                                    'win_rate',
-                                    'max_drawdown',
+                                    "test_name",
+                                    "test_type",
+                                    "sharpe_ratio",
+                                    "return_pct",
+                                    "win_rate",
+                                    "max_drawdown",
                                 ]
                             ].head(10),
-                            width='stretch',
+                            width="stretch",
                         )
 
                         st.info(f"📁 Full results saved to: `{runner.output_dir}`")
@@ -2544,7 +2551,7 @@ def main():
                     st.markdown("### 🚀 Alternative: Run Command Manually")
                     # Obtener selected_tests desde session_state como respaldo
                     tests_for_cmd = st.session_state.get(
-                        'selected_tests', selected_tests if 'selected_tests' in locals() else []
+                        "selected_tests", selected_tests if "selected_tests" in locals() else []
                     )
                     if use_multi_strategy:
                         if "multi_strategy" in tests_for_cmd:

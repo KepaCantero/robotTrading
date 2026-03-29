@@ -8,7 +8,7 @@ alpha generation sources and factor performance.
 import logging
 from datetime import datetime
 from decimal import Decimal
-from typing import Dict, List, Optional
+from typing import Optional
 
 from requests.exceptions import HTTPError, RequestException
 
@@ -29,8 +29,8 @@ class AlphalsensAnalyzer:
 
     def __init__(self):
         """Initialize Alphalens analyzer."""
-        self.factor_data: Dict = {}
-        self.analysis_results: Dict = {}
+        self.factor_data: dict = {}
+        self.analysis_results: dict = {}
         self.connected = False
         logger.info("✅ AlphalsensAnalyzer initialized")
 
@@ -43,16 +43,16 @@ class AlphalsensAnalyzer:
             logger.info("✅ Connected to Alphalens")
             return True
         except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
-            logger.error(f"❌ Failed to connect to Alphalens: {str(e)}")
+            logger.error(f"❌ Failed to connect to Alphalens: {e!s}")
             self.connected = False
             return False
 
     async def analyze_factor(
         self,
-        factor_data: Dict,
-        returns: Dict,
-        periods: List[int] = None,
-    ) -> Dict:
+        factor_data: dict,
+        returns: dict,
+        periods: Optional[list[int]] = None,
+    ) -> dict:
         """
         Analyze single factor performance.
 
@@ -91,14 +91,14 @@ class AlphalsensAnalyzer:
             return analysis
 
         except (ValueError, TypeError, KeyError, AttributeError) as e:
-            logger.error(f"❌ Factor analysis failed: {str(e)}")
+            logger.error(f"❌ Factor analysis failed: {e!s}")
             return {}
 
     async def analyze_factor_group(
         self,
-        factors: Dict[str, Dict],
-        returns: Dict,
-    ) -> Dict:
+        factors: dict[str, dict],
+        returns: dict,
+    ) -> dict:
         """
         Analyze multiple factors together.
 
@@ -136,15 +136,15 @@ class AlphalsensAnalyzer:
             return results
 
         except (ValueError, TypeError, KeyError, AttributeError) as e:
-            logger.error(f"❌ Group analysis failed: {str(e)}")
+            logger.error(f"❌ Group analysis failed: {e!s}")
             return {}
 
     async def calculate_information_coefficient(
         self,
-        factor_values: Dict,
-        returns: Dict,
-        periods: List[int] = None,
-    ) -> Dict:
+        factor_values: dict,
+        returns: dict,
+        periods: Optional[list[int]] = None,
+    ) -> dict:
         """
         Calculate information coefficient for factor.
 
@@ -179,15 +179,15 @@ class AlphalsensAnalyzer:
             return ic_stats
 
         except (ValueError, TypeError, KeyError, AttributeError) as e:
-            logger.error(f"❌ IC calculation failed: {str(e)}")
+            logger.error(f"❌ IC calculation failed: {e!s}")
             return {}
 
     async def analyze_long_short_portfolio(
         self,
-        factor_data: Dict,
-        returns: Dict,
+        factor_data: dict,
+        returns: dict,
         quantile_count: int = 5,
-    ) -> Dict:
+    ) -> dict:
         """
         Analyze long/short portfolio performance.
 
@@ -223,14 +223,14 @@ class AlphalsensAnalyzer:
             return analysis
 
         except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
-            logger.error(f"❌ Long/short analysis failed: {str(e)}")
+            logger.error(f"❌ Long/short analysis failed: {e!s}")
             return {}
 
     async def decompose_factor_performance(
         self,
-        factor_returns: Dict,
-        benchmark_returns: Dict,
-    ) -> Dict:
+        factor_returns: dict,
+        benchmark_returns: dict,
+    ) -> dict:
         """
         Decompose factor performance components.
 
@@ -262,14 +262,14 @@ class AlphalsensAnalyzer:
             return decomposition
 
         except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
-            logger.error(f"❌ Performance decomposition failed: {str(e)}")
+            logger.error(f"❌ Performance decomposition failed: {e!s}")
             return {}
 
     async def generate_analysis_report(
         self,
-        factors: Dict[str, Dict],
-        returns: Dict,
-    ) -> Dict:
+        factors: dict[str, dict],
+        returns: dict,
+    ) -> dict:
         """
         Generate comprehensive factor analysis report.
 
@@ -311,18 +311,18 @@ class AlphalsensAnalyzer:
             return report
 
         except (ValueError, TypeError, KeyError, AttributeError) as e:
-            logger.error(f"❌ Report generation failed: {str(e)}")
+            logger.error(f"❌ Report generation failed: {e!s}")
             return {}
 
-    def get_factor_statistics(self, factor_name: str) -> Optional[Dict]:
+    def get_factor_statistics(self, factor_name: str) -> Optional[dict]:
         """Get statistics for specific factor."""
         return self.factor_data.get(factor_name)
 
-    def get_all_analyses(self) -> Dict:
+    def get_all_analyses(self) -> dict:
         """Get all analysis results."""
         return self.analysis_results
 
-    def get_analyzer_status(self) -> Dict:
+    def get_analyzer_status(self) -> dict:
         """Get analyzer status."""
         return {
             "connected": self.connected,

@@ -16,7 +16,7 @@ Protocol Compliance:
 import asyncio
 import logging
 from datetime import datetime
-from typing import Any, Dict, Optional
+from typing import Any, Optional
 
 from ib_insync import IB, LimitOrder, MarketOrder, StopOrder, util
 from ib_insync.contract import Contract as IBContract
@@ -54,7 +54,7 @@ class IBKRSpainAdapter:
     CONNECTION_TIMEOUT = 10
     RECONNECT_DELAY = 5
 
-    def __init__(self, config: Optional[Dict[str, Any]] = None, ib_instance: Optional[IB] = None):
+    def __init__(self, config: Optional[dict[str, Any]] = None, ib_instance: Optional[IB] = None):
         """
         Initialize IBKR Spain adapter.
 
@@ -68,11 +68,11 @@ class IBKRSpainAdapter:
             ib_instance: Optional existing IB instance to reuse
         """
         self.config = config or self._load_config_from_env()
-        self.host = self.config.get('host', '127.0.0.1')
-        self.port = self.config.get('port', 7497)
-        self.client_id = self.config.get('client_id', int(datetime.now().timestamp() % 1000))
-        self.account = self.config.get('account', '')
-        self.paper_trading = self.config.get('paper_trading', True)
+        self.host = self.config.get("host", "127.0.0.1")
+        self.port = self.config.get("port", 7497)
+        self.client_id = self.config.get("client_id", int(datetime.now().timestamp() % 1000))
+        self.account = self.config.get("account", "")
+        self.paper_trading = self.config.get("paper_trading", True)
 
         # IB connection
         self.ib = ib_instance or IB()
@@ -88,7 +88,7 @@ class IBKRSpainAdapter:
         self.reconnection_manager = self._create_reconnection_manager()
 
         # Track orders
-        self._placed_orders: Dict[str, Any] = {}
+        self._placed_orders: dict[str, Any] = {}
 
         logger.info(
             f"IBKR Spain Adapter initialized: {self.host}:{self.port} "
@@ -96,16 +96,16 @@ class IBKRSpainAdapter:
         )
 
     @staticmethod
-    def _load_config_from_env() -> Dict[str, Any]:
+    def _load_config_from_env() -> dict[str, Any]:
         """Load configuration from environment variables."""
         import os
 
         return {
-            'host': os.getenv('IB_HOST', '127.0.0.1'),
-            'port': int(os.getenv('IB_PORT', '7497')),
-            'client_id': int(os.getenv('IB_CLIENT_ID', '1')),
-            'account': os.getenv('IB_ACCOUNT', ''),
-            'paper_trading': os.getenv('IB_PAPER_TRADING', 'True').lower() == 'true',
+            "host": os.getenv("IB_HOST", "127.0.0.1"),
+            "port": int(os.getenv("IB_PORT", "7497")),
+            "client_id": int(os.getenv("IB_CLIENT_ID", "1")),
+            "account": os.getenv("IB_ACCOUNT", ""),
+            "paper_trading": os.getenv("IB_PAPER_TRADING", "True").lower() == "true",
         }
 
     def _create_reconnection_manager(self) -> ReconnectionManager:
@@ -134,7 +134,7 @@ class IBKRSpainAdapter:
         if errorCode in [502, 504, 1100, 1101, 1102]:
             self._connected = False
             logger.warning("Connection lost with IB")
-            asyncio.create_task(self._reconnect())
+            self._reconnect_task = asyncio.create_task(self._reconnect())
 
     async def _reconnect(self) -> bool:
         """Attempt to reconnect."""
@@ -158,7 +158,7 @@ class IBKRSpainAdapter:
 
         try:
             logger.info(
-                f"Connecting to IB at {self.host}:{self.port} " f"(Client ID: {self.client_id})"
+                f"Connecting to IB at {self.host}:{self.port} (Client ID: {self.client_id})"
             )
 
             await asyncio.wait_for(
@@ -251,8 +251,8 @@ class IBKRSpainAdapter:
             quantity = int(quantity)
             if quantity <= 0:
                 raise ValueError("Quantity must be positive")
-        except (ValueError, TypeError):
-            raise ValueError(f"Invalid quantity: {quantity}")
+        except (ValueError, TypeError) as exc:
+            raise ValueError(f"Invalid quantity: {quantity}") from exc
 
         # Get contract
         contract = create_stock_contract(symbol, currency=currency, exchange=exchange)
@@ -294,13 +294,13 @@ class IBKRSpainAdapter:
                 "timestamp": datetime.now(),
             }
 
-            logger.info(f"Order placed: {order_id} - {side} {quantity} {symbol} " f"({order_type})")
+            logger.info(f"Order placed: {order_id} - {side} {quantity} {symbol} ({order_type})")
 
             return order_id
 
         except Exception as e:
             logger.error(f"Error placing order: {e}")
-            raise RuntimeError(f"Order placement failed: {e}")
+            raise RuntimeError(f"Order placement failed: {e}") from e
 
     async def cancel_order(self, order_id: str) -> bool:
         """
@@ -461,7 +461,7 @@ class IBKRSpainAdapter:
         return self._connected and self.ib.isConnected()
 
 
-def get_ibkr_spain_adapter(config: Optional[Dict[str, Any]] = None) -> IBKRSpainAdapter:
+def get_ibkr_spain_adapter(config: Optional[dict[str, Any]] = None) -> IBKRSpainAdapter:
     """
     Get or create IBKR Spain adapter instance.
 

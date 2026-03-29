@@ -20,7 +20,6 @@ References:
 from __future__ import annotations
 
 import logging
-from typing import Optional
 from decimal import Decimal
 
 import numpy as np
@@ -69,8 +68,8 @@ class CorrelationAnalyzer:
     def __init__(
         self,
         lookback_days: int = 60,
-        min_correlation: Optional[Decimal] = None,
-        min_significance: Optional[Decimal] = None,
+        min_correlation: Decimal | None = None,
+        min_significance: Decimal | None = None,
     ):
         """
         Initialize the correlation analyzer.
@@ -139,9 +138,7 @@ class CorrelationAnalyzer:
 
         # Validate inputs
         if len(series1) != len(series2):
-            raise ValueError(
-                f"Series must have same length: " f"got {len(series1)} and {len(series2)}"
-            )
+            raise ValueError(f"Series must have same length: got {len(series1)} and {len(series2)}")
 
         if len(series1) < 2:
             raise ValueError(f"Series must have at least 2 observations, got {len(series1)}")
@@ -153,7 +150,7 @@ class CorrelationAnalyzer:
 
         if len(clean_series1) < 2:
             raise ValueError(
-                f"Insufficient valid data points after removing NaN: " f"got {len(clean_series1)}"
+                f"Insufficient valid data points after removing NaN: got {len(clean_series1)}"
             )
 
         try:
@@ -276,7 +273,11 @@ class CorrelationAnalyzer:
             asset_returns = asset_returns.tail(self.lookback_days)
 
         # Ensure series are aligned
-        if len(fx_returns) != len(asset_returns) and isinstance(fx_returns, pd.Series) and isinstance(asset_returns, pd.Series):
+        if (
+            len(fx_returns) != len(asset_returns)
+            and isinstance(fx_returns, pd.Series)
+            and isinstance(asset_returns, pd.Series)
+        ):
             # Align by index if both are Series with datetime index
             aligned = pd.concat([fx_returns, asset_returns], axis=1, join="inner")
             fx_returns = aligned.iloc[:, 0]
@@ -431,9 +432,7 @@ class CorrelationAnalyzer:
             raise ValueError(f"Window must be > 1, got {window}")
 
         if len(series1) != len(series2):
-            raise ValueError(
-                f"Series must have same length: " f"got {len(series1)} and {len(series2)}"
-            )
+            raise ValueError(f"Series must have same length: got {len(series1)} and {len(series2)}")
 
         # Align series
         if isinstance(series1, pd.Series) and isinstance(series2, pd.Series):
@@ -525,7 +524,7 @@ class CorrelationAnalyzer:
 
                 except Exception as e:
                     logger.warning(
-                        f"Error calculating correlation for " f"{fx_pair} - {asset_symbol}: {e}"
+                        f"Error calculating correlation for {fx_pair} - {asset_symbol}: {e}"
                     )
                     continue
 
@@ -550,7 +549,9 @@ class CorrelationAnalyzer:
                 return RelationshipType.CARRY_TRADE
 
         # Commodity link: AUD, CAD, NZD with commodities
-        if asset_class == AssetClass.COMMODITY and any(curr in fx_pair for curr in ["AUD", "CAD", "NZD"]):
+        if asset_class == AssetClass.COMMODITY and any(
+            curr in fx_pair for curr in ["AUD", "CAD", "NZD"]
+        ):
             return RelationshipType.COMMODITY_LINK
 
         # Default to positive/negative correlation based on pair

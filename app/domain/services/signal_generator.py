@@ -14,7 +14,7 @@ import logging
 from dataclasses import dataclass, field
 from decimal import Decimal
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -51,12 +51,12 @@ class Signal:
     signal_type: SignalType
     strength: SignalStrength
     confidence: Decimal  # 0-1
-    target_price: Optional[Decimal] = None
-    stop_loss: Optional[Decimal] = None
-    take_profit: Optional[Decimal] = None
-    quantity: Optional[Decimal] = None
+    target_price: Decimal | None = None
+    stop_loss: Decimal | None = None
+    take_profit: Decimal | None = None
+    quantity: Decimal | None = None
     reason: str = ""
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
     @property
     def is_buy(self) -> bool:
@@ -79,17 +79,17 @@ class IndicatorValues:
     """Common indicator values for signal generation."""
 
     price: Decimal
-    sma_20: Optional[Decimal] = None
-    sma_50: Optional[Decimal] = None
-    ema_12: Optional[Decimal] = None
-    ema_26: Optional[Decimal] = None
-    rsi: Optional[Decimal] = None
-    macd: Optional[Decimal] = None
-    macd_signal: Optional[Decimal] = None
-    bollinger_upper: Optional[Decimal] = None
-    bollinger_lower: Optional[Decimal] = None
-    volume: Optional[Decimal] = None
-    volume_ma: Optional[Decimal] = None
+    sma_20: Decimal | None = None
+    sma_50: Decimal | None = None
+    ema_12: Decimal | None = None
+    ema_26: Decimal | None = None
+    rsi: Decimal | None = None
+    macd: Decimal | None = None
+    macd_signal: Decimal | None = None
+    bollinger_upper: Decimal | None = None
+    bollinger_lower: Decimal | None = None
+    volume: Decimal | None = None
+    volume_ma: Decimal | None = None
 
 
 class SignalGenerator:
@@ -103,7 +103,7 @@ class SignalGenerator:
     - Mean reversion
     """
 
-    def __init__(self, confidence_threshold: Optional[Decimal] = None):
+    def __init__(self, confidence_threshold: Decimal | None = None):
         """
         Initialize signal generator.
 
@@ -498,7 +498,7 @@ class SignalGenerator:
 
     def combine_signals(
         self,
-        signals: List[Signal],
+        signals: list[Signal],
         symbol: str = "",
     ) -> Signal:
         """
@@ -655,7 +655,7 @@ class SignalGenerator:
         else:
             return SignalStrength.WEAK
 
-    def _calculate_consensus_strength(self, signals: List[Signal]) -> SignalStrength:
+    def _calculate_consensus_strength(self, signals: list[Signal]) -> SignalStrength:
         """Calculate consensus strength from multiple signals."""
         if not signals:
             return SignalStrength.WEAK

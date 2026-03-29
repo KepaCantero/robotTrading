@@ -30,21 +30,21 @@ from .trading_bridge_orchestrator import TradingBridgeOrchestrator, get_trading_
 
 # Service Classes
 __all__ = [
-    "TradingBridgeOrchestrator",
+    "AccountSynchronizer",
+    "AlertToTradeMapper",
     "BrokerConnector",
     "OrderManager",
     "RiskGates",
-    "AccountSynchronizer",
-    "AlertToTradeMapper",
-    "TradingAuditTrail",
     "TradePersistenceManager",
-    # Singleton Getters
-    "get_trading_bridge_orchestrator",
+    "TradingAuditTrail",
+    "TradingBridgeOrchestrator",
+    "get_account_synchronizer",
+    "get_alert_to_trade_mapper",
     "get_broker_connector",
     "get_order_manager",
     "get_risk_gates",
-    "get_account_synchronizer",
-    "get_alert_to_trade_mapper",
-    "get_trading_audit_trail",
     "get_trade_persistence_manager",
+    "get_trading_audit_trail",
+    # Singleton Getters
+    "get_trading_bridge_orchestrator",
 ]

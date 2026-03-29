@@ -5,7 +5,7 @@ Provides advanced performance metrics using QuantStats library.
 """
 
 import logging
-from typing import Dict, Optional
+from typing import Optional
 
 import numpy as np
 import pandas as pd
@@ -44,7 +44,7 @@ class QuantStatsIntegration:
         returns: pd.Series,
         benchmark_returns: Optional[pd.Series] = None,
         periods_per_year: int = 252,
-    ) -> Dict[str, float]:
+    ) -> dict[str, float]:
         """
         Calculate advanced performance metrics using QuantStats (REQUIRED).
 
@@ -64,7 +64,7 @@ class QuantStatsIntegration:
                 returns = pd.Series(returns)
             except (ValueError, TypeError, KeyError, AttributeError) as e:
                 logger.error(f"Cannot convert returns to Series: {e}")
-                raise ValueError(f"Cannot convert returns to Series: {e}")
+                raise ValueError(f"Cannot convert returns to Series: {e}") from e
 
         if len(returns) < 2:
             raise ValueError("Returns series must have at least 2 data points")
@@ -76,7 +76,7 @@ class QuantStatsIntegration:
             # Avoid QuantStats plotting/output
             import warnings
 
-            warnings.filterwarnings('ignore')
+            warnings.filterwarnings("ignore")
 
             # Total return
             metrics["total_return"] = float((1 + returns).prod() - 1)
@@ -140,11 +140,9 @@ class QuantStatsIntegration:
             returns_sign = returns > 0
             changes = returns_sign.astype(int).diff()
             streaks = changes.ne(0).cumsum()
-            consecutive_wins = (
-                (returns_sign * streaks).groupby((returns_sign * streaks)).size().max()
-            )
+            consecutive_wins = (returns_sign * streaks).groupby(returns_sign * streaks).size().max()
             consecutive_losses = (
-                (~returns_sign * streaks).groupby((~returns_sign * streaks)).size().max()
+                (~returns_sign * streaks).groupby(~returns_sign * streaks).size().max()
             )
             metrics["max_consecutive_wins"] = float(consecutive_wins if consecutive_wins > 0 else 0)
             metrics["max_consecutive_losses"] = float(
@@ -172,7 +170,7 @@ class QuantStatsIntegration:
         self,
         returns: pd.Series,
         benchmark_returns: Optional[pd.Series] = None,
-    ) -> Dict:
+    ) -> dict:
         """
         Get comprehensive metrics summary (REQUIRED).
 

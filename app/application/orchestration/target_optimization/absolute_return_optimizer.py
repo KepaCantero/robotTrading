@@ -10,7 +10,7 @@ Transforms target EUR per month into operational parameters:
 
 import logging
 from decimal import Decimal
-from typing import Dict
+from typing import ClassVar
 
 from app.shared.config.centralized_config import get_config
 
@@ -85,7 +85,7 @@ class CapacityFadeAnalyzer:
 
     # Capacity fade multipliers by scale
     # Based on empirical research: larger capital = smaller alpha due to market impact
-    CAPACITY_FADE_CURVE = {
+    CAPACITY_FADE_CURVE: ClassVar[dict] = {
         Decimal("10000"): Decimal("1.0"),  # Baseline, no fade
         Decimal("50000"): Decimal("0.95"),  # -5% fade
         Decimal("100000"): Decimal("0.90"),  # -10% fade
@@ -156,7 +156,7 @@ class ParameterOptimizer:
 
     def optimize_position_sizing(
         self, capital: Decimal, target_alpha_pct: Decimal, expected_signal_return_pct: Decimal
-    ) -> Dict[str, Decimal]:
+    ) -> dict[str, Decimal]:
         """
         Calculate optimal position sizing for target.
 
@@ -196,7 +196,7 @@ class ParameterOptimizer:
         try:
             config = get_config()
             small_position_threshold = Decimal(
-                str(getattr(config.trading, 'position_size_small_threshold', 0.05))
+                str(getattr(config.trading, "position_size_small_threshold", 0.05))
             )
         except (AttributeError, ValueError) as e:
             logger.error(f"Error loading position sizing config: {e}, using default 0.05")
@@ -278,7 +278,7 @@ class FeasibilityValidator:
     """
 
     # Empirical benchmarks for realistic alpha by tier
-    REALISTIC_ALPHA_RANGE = {
+    REALISTIC_ALPHA_RANGE: ClassVar[dict] = {
         "CONSERVATIVE": (Decimal("2"), Decimal("5")),
         "BALANCED": (Decimal("3"), Decimal("8")),
         "AGGRESSIVE": (Decimal("4"), Decimal("12")),
@@ -309,7 +309,7 @@ class FeasibilityValidator:
         strategy_type = config["strategy_type"]
 
         # Check against realistic benchmarks
-        min_realistic, max_realistic = self.REALISTIC_ALPHA_RANGE[strategy_type]
+        _min_realistic, max_realistic = self.REALISTIC_ALPHA_RANGE[strategy_type]
 
         # Estimate capacity fade for this capital
         faded_alpha = self.fade_analyzer.estimate_capacity_fade(target.capital, max_realistic)

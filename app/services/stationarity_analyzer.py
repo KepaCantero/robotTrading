@@ -21,7 +21,7 @@ Reference:
 
 import logging
 from dataclasses import dataclass
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any
 
 import numpy as np
 import pandas as pd
@@ -36,10 +36,10 @@ class StationarityTestResult:
     is_stationary: bool
     adf_statistic: float
     p_value: float
-    critical_values: Dict[str, float]
+    critical_values: dict[str, float]
     confidence_level: float
-    half_life: Optional[float] = None
-    hurst_exponent: Optional[float] = None
+    half_life: float | None = None
+    hurst_exponent: float | None = None
     interpretation: str = ""
 
 
@@ -50,7 +50,7 @@ class CointegrationTestResult:
     is_cointegrated: bool
     test_statistic: float
     p_value: float
-    critical_values: Dict[str, float]
+    critical_values: dict[str, float]
     hedge_ratio: float
     spread_half_life: float
     confidence_level: float
@@ -106,8 +106,8 @@ class StationarityAnalyzer:
 
     def test_stationarity(
         self,
-        prices: Union[pd.Series, np.ndarray, List[float]],
-        asset_name: Optional[str] = None,
+        prices: pd.Series | np.ndarray | list[float],
+        asset_name: str | None = None,
         calculate_half_life: bool = True,
         calculate_hurst: bool = True,
     ) -> StationarityTestResult:
@@ -220,7 +220,7 @@ class StationarityAnalyzer:
                 reason=f"Test error: {e}",
             )
 
-    def _adf_test(self, series: np.ndarray) -> Dict[str, Any]:
+    def _adf_test(self, series: np.ndarray) -> dict[str, Any]:
         """
         Perform Augmented Dickey-Fuller test for stationarity.
 
@@ -243,7 +243,7 @@ class StationarityAnalyzer:
                 store=False,
             )
 
-            critical_values_dict: Dict[str, float] = dict(adf_result[4])
+            critical_values_dict: dict[str, float] = dict(adf_result[4])
             return {
                 "statistic": float(adf_result[0]),
                 "p_value": float(adf_result[1]),
@@ -259,7 +259,7 @@ class StationarityAnalyzer:
             logger.warning("statsmodels not available, using simplified ADF test")
             return self._simplified_adf_test(series)
 
-    def _simplified_adf_test(self, series: np.ndarray) -> Dict[str, Any]:
+    def _simplified_adf_test(self, series: np.ndarray) -> dict[str, Any]:
         """
         Simplified ADF test implementation when statsmodels is not available.
 
@@ -322,7 +322,7 @@ class StationarityAnalyzer:
 
     def calculate_half_life(
         self,
-        series: Union[pd.Series, np.ndarray, List[float]],
+        series: pd.Series | np.ndarray | list[float],
     ) -> float:
         """
         Calculate the half-life of mean reversion.
@@ -393,7 +393,7 @@ class StationarityAnalyzer:
 
     def calculate_hurst_exponent(
         self,
-        series: Union[pd.Series, np.ndarray, List[float]],
+        series: pd.Series | np.ndarray | list[float],
         max_lag: int = 20,
     ) -> float:
         """
@@ -485,7 +485,7 @@ class StationarityAnalyzer:
 
     def find_optimal_lookback(
         self,
-        prices: Union[pd.Series, np.ndarray, List[float]],
+        prices: pd.Series | np.ndarray | list[float],
         max_lookback: int = 100,
         min_lookback: int = 5,
     ) -> int:
@@ -546,8 +546,8 @@ class StationarityAnalyzer:
         self,
         is_stationary: bool,
         p_value: float,
-        half_life: Optional[float],
-        hurst_exponent: Optional[float],
+        half_life: float | None,
+        hurst_exponent: float | None,
     ) -> str:
         """Interpret stationarity test results."""
         parts = []
@@ -626,8 +626,8 @@ class CointegrationAnalyzer:
 
     def test_cointegration(
         self,
-        y1: Union[pd.Series, np.ndarray, List[float]],
-        y2: Union[pd.Series, np.ndarray, List[float]],
+        y1: pd.Series | np.ndarray | list[float],
+        y2: pd.Series | np.ndarray | list[float],
         asset1_name: str = "Asset1",
         asset2_name: str = "Asset2",
     ) -> CointegrationTestResult:
@@ -761,7 +761,7 @@ class CointegrationAnalyzer:
         self,
         y1: np.ndarray,
         y2: np.ndarray,
-    ) -> Tuple[float, float]:
+    ) -> tuple[float, float]:
         """
         Calculate hedge ratio using OLS regression.
 
@@ -793,7 +793,7 @@ class CointegrationAnalyzer:
         price2: float,
         capital: float,
         risk_per_trade: float = 0.02,
-    ) -> Tuple[float, float]:
+    ) -> tuple[float, float]:
         """
         Calculate optimal position sizes for a pairs trade.
 
@@ -841,7 +841,7 @@ class CointegrationAnalyzer:
         self,
         spread: np.ndarray,
         confidence_multiplier: float = 2.0,
-    ) -> Tuple[float, float]:
+    ) -> tuple[float, float]:
         """
         Calculate optimal entry and exit thresholds for pairs trading.
 
@@ -921,11 +921,11 @@ class CointegrationAnalyzer:
 
 
 def find_cointegrated_pairs(
-    price_data: Dict[str, Union[pd.Series, np.ndarray, List[float]]],
+    price_data: dict[str, pd.Series | np.ndarray | list[float]],
     confidence_level: float = 0.95,
     min_half_life: float = 30.0,
     max_half_life: float = 100.0,
-) -> List[Tuple[str, str, CointegrationTestResult]]:
+) -> list[tuple[str, str, CointegrationTestResult]]:
     """
     Find cointegrated pairs from a universe of assets.
 

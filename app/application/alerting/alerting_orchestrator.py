@@ -10,7 +10,7 @@ import asyncio
 import logging
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Callable, Dict, List, Optional
+from typing import Callable, Optional
 
 from app.services.alerting_system.alert_manager import AlertManager
 from app.services.alerting_system.alert_rule_engine import AlertRuleEngine
@@ -39,7 +39,7 @@ class AlertingHealth:
     last_evaluation_at: Optional[datetime] = None
     evaluation_errors: int = 0
     avg_evaluation_time_ms: float = 0.0
-    components_status: Dict[str, bool] = field(default_factory=dict)
+    components_status: dict[str, bool] = field(default_factory=dict)
 
 
 @dataclass
@@ -57,7 +57,7 @@ class AlertingStatistics:
     uptime_seconds: float = 0.0
     system_start_time: datetime = field(default_factory=datetime.utcnow)
 
-    def to_dict(self) -> Dict:
+    def to_dict(self) -> dict:
         """Convert to dictionary."""
         uptime = (datetime.utcnow() - self.system_start_time).total_seconds()
         return {
@@ -100,7 +100,7 @@ class AlertingOrchestrator:
         self.metrics_alerter: Optional[MetricsDrivenAlerter] = None
 
         # System state
-        self.registered_rules: Dict[str, AlertRule] = {}
+        self.registered_rules: dict[str, AlertRule] = {}
         self.statistics = AlertingStatistics()
         self._evaluation_task: Optional[asyncio.Task] = None
         self._lock = asyncio.Lock()
@@ -140,7 +140,7 @@ class AlertingOrchestrator:
                 )
 
             except (asyncio.TimeoutError, OSError) as e:
-                self.logger.error(f"Error during initialization: {str(e)}")
+                self.logger.error(f"Error during initialization: {e!s}")
                 raise
 
     async def register_default_rules(self) -> None:
@@ -174,7 +174,7 @@ class AlertingOrchestrator:
             self.logger.info(f"Registered {len(templates)} default alert rule templates")
 
         except (ValueError, TypeError, KeyError, AttributeError) as e:
-            self.logger.error(f"Error registering default rules: {str(e)}")
+            self.logger.error(f"Error registering default rules: {e!s}")
             raise
 
     async def register_custom_rule(
@@ -202,7 +202,7 @@ class AlertingOrchestrator:
             self.logger.info(f"Registered custom rule: {rule.rule_id}")
 
         except (ValueError, TypeError, KeyError, AttributeError) as e:
-            self.logger.error(f"Error registering custom rule: {str(e)}")
+            self.logger.error(f"Error registering custom rule: {e!s}")
             raise
 
     async def enable_rule(self, rule_id: str) -> None:
@@ -259,7 +259,7 @@ class AlertingOrchestrator:
 
             except (asyncio.TimeoutError, OSError) as e:
                 self.is_running = False
-                self.logger.error(f"Error starting alerting orchestrator: {str(e)}")
+                self.logger.error(f"Error starting alerting orchestrator: {e!s}")
                 raise
 
     async def stop(self) -> None:
@@ -279,7 +279,7 @@ class AlertingOrchestrator:
                 self.logger.info("Alerting orchestrator stopped")
 
             except (asyncio.TimeoutError, OSError) as e:
-                self.logger.error(f"Error stopping alerting orchestrator: {str(e)}")
+                self.logger.error(f"Error stopping alerting orchestrator: {e!s}")
 
     async def _flush_pending_operations(self) -> None:
         """Flush any pending alerts or operations."""
@@ -288,7 +288,7 @@ class AlertingOrchestrator:
             await asyncio.sleep(0.5)
             self.logger.info("Flushed pending operations")
         except (asyncio.TimeoutError, OSError) as e:
-            self.logger.error(f"Error flushing pending operations: {str(e)}")
+            self.logger.error(f"Error flushing pending operations: {e!s}")
 
     async def trigger_alert_manual(self, alert_event: AlertEvent) -> None:
         """
@@ -308,7 +308,7 @@ class AlertingOrchestrator:
             self.logger.info(f"Manually triggered alert: {alert_event.event_id}")
 
         except (asyncio.TimeoutError, OSError) as e:
-            self.logger.error(f"Error triggering manual alert: {str(e)}")
+            self.logger.error(f"Error triggering manual alert: {e!s}")
 
     async def acknowledge_alert(self, alert_id: str) -> bool:
         """
@@ -323,7 +323,7 @@ class AlertingOrchestrator:
         try:
             return self.alert_manager.acknowledge_alert(alert_id)
         except (asyncio.TimeoutError, OSError) as e:
-            self.logger.error(f"Error acknowledging alert: {str(e)}")
+            self.logger.error(f"Error acknowledging alert: {e!s}")
             return False
 
     async def resolve_alert(self, alert_id: str) -> bool:
@@ -339,7 +339,7 @@ class AlertingOrchestrator:
         try:
             return self.alert_manager.resolve_alert(alert_id)
         except (ValueError, TypeError, KeyError, AttributeError) as e:
-            self.logger.error(f"Error resolving alert: {str(e)}")
+            self.logger.error(f"Error resolving alert: {e!s}")
             return False
 
     def get_health_status(self) -> AlertingHealth:
@@ -374,7 +374,7 @@ class AlertingOrchestrator:
             )
 
         except (ValueError, TypeError, KeyError, AttributeError) as e:
-            self.logger.error(f"Error getting health status: {str(e)}")
+            self.logger.error(f"Error getting health status: {e!s}")
             return AlertingHealth(
                 is_running=False,
                 is_evaluating=False,
@@ -385,7 +385,7 @@ class AlertingOrchestrator:
                 evaluation_errors=1,
             )
 
-    def get_statistics(self) -> Dict:
+    def get_statistics(self) -> dict:
         """Get aggregated statistics."""
         try:
             alerter_stats = (
@@ -410,10 +410,10 @@ class AlertingOrchestrator:
             }
 
         except (ValueError, TypeError, KeyError, AttributeError) as e:
-            self.logger.error(f"Error getting statistics: {str(e)}")
+            self.logger.error(f"Error getting statistics: {e!s}")
             return {}
 
-    def get_registered_rules(self) -> Dict[str, AlertRule]:
+    def get_registered_rules(self) -> dict[str, AlertRule]:
         """Get all registered rules."""
         return dict(self.registered_rules)
 
@@ -421,11 +421,11 @@ class AlertingOrchestrator:
         """Get a specific rule by ID."""
         return self.registered_rules.get(rule_id)
 
-    def get_rules_by_severity(self, severity: AlertSeverity) -> List[AlertRule]:
+    def get_rules_by_severity(self, severity: AlertSeverity) -> list[AlertRule]:
         """Get all rules with a specific severity."""
         return [r for r in self.registered_rules.values() if r.severity == severity]
 
-    def get_rules_by_category(self, category: str) -> List[AlertRule]:
+    def get_rules_by_category(self, category: str) -> list[AlertRule]:
         """Get all rules with a specific category tag."""
         return [r for r in self.registered_rules.values() if r.tags.get("category") == category]
 
@@ -442,4 +442,4 @@ class AlertingOrchestrator:
             self.logger.info("Statistics reset")
 
         except (ValueError, TypeError, KeyError, AttributeError) as e:
-            self.logger.error(f"Error resetting statistics: {str(e)}")
+            self.logger.error(f"Error resetting statistics: {e!s}")

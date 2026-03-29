@@ -13,17 +13,17 @@ Key advantages:
 3. RiskMetrics methodology - industry standard for short-term VaR
 
 Formula:
-σ²_t = λ * σ²_{t-1} + (1-λ) * r²_{t-1}
+sigma^2_t = lambda * sigma^2_{t-1} + (1-lambda) * r^2_{t-1}
 
-Where λ (lambda) is the decay factor:
-- λ = 0.94 for daily data (RiskMetrics standard)
-- λ = 0.97 for monthly data
+Where lambda (lambda) is the decay factor:
+- lambda = 0.94 for daily data (RiskMetrics standard)
+- lambda = 0.97 for monthly data
 
 Reference: Hull, Options, Futures, and Other Derivatives, Chapter 18
 """
 
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 import numpy as np
 
@@ -37,7 +37,7 @@ class EWMAVaRCalculator:
     Calculates VaR using Exponentially Weighted Moving Average volatility estimation.
     """
 
-    def __init__(self, config: Optional[Dict[str, Any]] = None):
+    def __init__(self, config: Optional[dict[str, Any]] = None):
         """
         Initialize EWMA VaR calculator.
 
@@ -45,16 +45,16 @@ class EWMAVaRCalculator:
             config: Configuration dictionary
         """
         config = config or {}
-        self.confidence_level = config.get('confidence_level', 0.95)
-        self.decay_factor = config.get('decay_factor', 0.94)  # RiskMetrics standard
-        self.min_observations = config.get('min_observations', 30)
+        self.confidence_level = config.get("confidence_level", 0.95)
+        self.decay_factor = config.get("decay_factor", 0.94)  # RiskMetrics standard
+        self.min_observations = config.get("min_observations", 30)
         self.logger = logging.getLogger(self.__class__.__name__)
 
     def calculate_ewma_var(
         self,
-        returns: List[float],
+        returns: list[float],
         portfolio_value: Optional[float] = None,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Calculate VaR using EWMA volatility estimation.
 
@@ -70,8 +70,8 @@ class EWMAVaRCalculator:
 
             if len(returns_array) < self.min_observations:
                 return {
-                    'error': f'Insufficient data: {len(returns_array)} observations, '
-                    f'need {self.min_observations}+'
+                    "error": f"Insufficient data: {len(returns_array)} observations, "
+                    f"need {self.min_observations}+"
                 }
 
             # Calculate EWMA variance
@@ -100,37 +100,37 @@ class EWMAVaRCalculator:
             # Compare with simple historical volatility
             simple_std = np.std(returns_array)
             comparison = {
-                'ewma_volatility': float(ewma_volatility),
-                'simple_std': float(simple_std),
-                'volatility_ratio': float(ewma_volatility / simple_std) if simple_std > 0 else None,
-                'ewma_higher': ewma_volatility > simple_std,
+                "ewma_volatility": float(ewma_volatility),
+                "simple_std": float(simple_std),
+                "volatility_ratio": float(ewma_volatility / simple_std) if simple_std > 0 else None,
+                "ewma_higher": ewma_volatility > simple_std,
             }
 
             return {
-                'var': float(var_ewma),
-                'var_amount': float(var_amount) if var_amount is not None else None,
-                'cvar': float(cvar_ewma),
-                'cvar_amount': float(cvar_amount) if cvar_amount is not None else None,
-                'ewma_variance': float(ewma_variance),
-                'ewma_volatility': float(ewma_volatility),
-                'confidence_level': self.confidence_level,
-                'method': 'ewma',
-                'decay_factor': self.decay_factor,
-                'observations': len(returns_array),
-                'comparison': comparison,
-                'interpretation': self._interpret_ewma(comparison),
+                "var": float(var_ewma),
+                "var_amount": float(var_amount) if var_amount is not None else None,
+                "cvar": float(cvar_ewma),
+                "cvar_amount": float(cvar_amount) if cvar_amount is not None else None,
+                "ewma_variance": float(ewma_variance),
+                "ewma_volatility": float(ewma_volatility),
+                "confidence_level": self.confidence_level,
+                "method": "ewma",
+                "decay_factor": self.decay_factor,
+                "observations": len(returns_array),
+                "comparison": comparison,
+                "interpretation": self._interpret_ewma(comparison),
             }
 
         except (ValueError, TypeError, KeyError, AttributeError) as e:
-            self.logger.error(f'Error calculating EWMA VaR: {e}', exc_info=True)
-            return {'error': str(e)}
+            self.logger.error(f"Error calculating EWMA VaR: {e}", exc_info=True)
+            return {"error": str(e)}
 
     def _calculate_ewma_variance(self, returns: np.ndarray) -> float:
         """
         Calculate EWMA variance.
 
         Uses recursive formula:
-        σ²_t = λ * σ²_{t-1} + (1-λ) * r²_{t-1}
+        sigma^2_t = lambda * sigma^2_{t-1} + (1-lambda) * r^2_{t-1}
 
         Starting with sample variance for initial estimate.
         """
@@ -145,39 +145,39 @@ class EWMAVaRCalculator:
 
         return float(variance)
 
-    def _interpret_ewma(self, comparison: Dict[str, Any]) -> str:
+    def _interpret_ewma(self, comparison: dict[str, Any]) -> str:
         """Interpret EWMA vs simple volatility comparison."""
-        if comparison['volatility_ratio'] is None:
-            return 'Unable to compare - zero simple volatility'
+        if comparison["volatility_ratio"] is None:
+            return "Unable to compare - zero simple volatility"
 
-        ratio = comparison['volatility_ratio']
+        ratio = comparison["volatility_ratio"]
 
         if ratio > 1.3:
             return (
-                f'EWMA volatility {ratio:.2f}x higher than simple std. '
-                f'Recent volatility spike detected - consider reducing positions.'
+                f"EWMA volatility {ratio:.2f}x higher than simple std. "
+                f"Recent volatility spike detected - consider reducing positions."
             )
         elif ratio > 1.1:
             return (
-                f'EWMA volatility {ratio:.2f}x higher than simple std. '
-                f'Elevating volatility - monitor closely.'
+                f"EWMA volatility {ratio:.2f}x higher than simple std. "
+                f"Elevating volatility - monitor closely."
             )
         elif ratio < 0.9:
             return (
-                f'EWMA volatility {ratio:.2f}x lower than simple std. '
-                f'Volatility decelerating - favorable conditions.'
+                f"EWMA volatility {ratio:.2f}x lower than simple std. "
+                f"Volatility decelerating - favorable conditions."
             )
         else:
             return (
-                f'EWMA and simple volatility aligned (ratio {ratio:.2f}). '
-                f'Stable volatility environment.'
+                f"EWMA and simple volatility aligned (ratio {ratio:.2f}). "
+                f"Stable volatility environment."
             )
 
     def calculate_ewma_correlation(
         self,
-        returns1: List[float],
-        returns2: List[float],
-    ) -> Dict[str, Any]:
+        returns1: list[float],
+        returns2: list[float],
+    ) -> dict[str, Any]:
         """
         Calculate EWMA correlation between two return series.
 
@@ -195,8 +195,8 @@ class EWMAVaRCalculator:
 
             if min_len < self.min_observations:
                 return {
-                    'error': f'Insufficient data: {min_len} observations, '
-                    f'need {self.min_observations}+'
+                    "error": f"Insufficient data: {min_len} observations, "
+                    f"need {self.min_observations}+"
                 }
 
             r1 = np.array(returns1[:min_len])
@@ -215,20 +215,20 @@ class EWMAVaRCalculator:
             simple_correlation = np.corrcoef(r1, r2)[0, 1] if len(r1) > 1 else 0
 
             return {
-                'ewma_correlation': float(ewma_correlation),
-                'simple_correlation': float(simple_correlation),
-                'ewma_variance_1': float(var1),
-                'ewma_variance_2': float(var2),
-                'ewma_covariance': float(covariance),
-                'correlation_increase': ewma_correlation > simple_correlation,
-                'interpretation': self._interpret_correlation_change(
+                "ewma_correlation": float(ewma_correlation),
+                "simple_correlation": float(simple_correlation),
+                "ewma_variance_1": float(var1),
+                "ewma_variance_2": float(var2),
+                "ewma_covariance": float(covariance),
+                "correlation_increase": ewma_correlation > simple_correlation,
+                "interpretation": self._interpret_correlation_change(
                     ewma_correlation, simple_correlation
                 ),
             }
 
         except (ValueError, TypeError, KeyError, AttributeError) as e:
-            self.logger.error(f'Error calculating EWMA correlation: {e}', exc_info=True)
-            return {'error': str(e)}
+            self.logger.error(f"Error calculating EWMA correlation: {e}", exc_info=True)
+            return {"error": str(e)}
 
     def _calculate_ewma_covariance(
         self,
@@ -239,7 +239,7 @@ class EWMAVaRCalculator:
         Calculate EWMA covariance.
 
         Formula:
-        σ_{xy,t} = λ * σ_{xy,t-1} + (1-λ) * r_{x,t-1} * r_{y,t-1}
+        sigma_{xy,t} = lambda * sigma_{xy,t-1} + (1-lambda) * r_{x,t-1} * r_{y,t-1}
         """
         # Initialize with sample covariance
         covariance = np.cov(returns1, returns2)[0, 1]
@@ -264,38 +264,38 @@ class EWMAVaRCalculator:
 
         if diff > 0.15:
             return (
-                f'EWMA correlation {ewma_corr:.3f} significantly higher than '
-                f'simple {simple_corr:.3f}. Correlations INCREASING - '
-                f'reduce diversification benefits. Consider de-risking.'
+                f"EWMA correlation {ewma_corr:.3f} significantly higher than "
+                f"simple {simple_corr:.3f}. Correlations INCREASING - "
+                f"reduce diversification benefits. Consider de-risking."
             )
         elif diff > 0.05:
             return (
-                f'EWMA correlation {ewma_corr:.3f} moderately higher than '
-                f'simple {simple_corr:.3f}. Correlations elevating.'
+                f"EWMA correlation {ewma_corr:.3f} moderately higher than "
+                f"simple {simple_corr:.3f}. Correlations elevating."
             )
         elif diff < -0.15:
             return (
-                f'EWMA correlation {ewma_corr:.3f} significantly lower than '
-                f'simple {simple_corr:.3f}. Correlations DECREASING - '
-                f'improving diversification benefits.'
+                f"EWMA correlation {ewma_corr:.3f} significantly lower than "
+                f"simple {simple_corr:.3f}. Correlations DECREASING - "
+                f"improving diversification benefits."
             )
         elif diff < -0.05:
             return (
-                f'EWMA correlation {ewma_corr:.3f} moderately lower than '
-                f'simple {simple_corr:.3f}. Correlations declining.'
+                f"EWMA correlation {ewma_corr:.3f} moderately lower than "
+                f"simple {simple_corr:.3f}. Correlations declining."
             )
         else:
             return (
-                f'EWMA and simple correlations aligned '
-                f'(EWMA: {ewma_corr:.3f}, simple: {simple_corr:.3f}). '
-                f'Stable correlation regime.'
+                f"EWMA and simple correlations aligned "
+                f"(EWMA: {ewma_corr:.3f}, simple: {simple_corr:.3f}). "
+                f"Stable correlation regime."
             )
 
     def forecast_volatility(
         self,
-        returns: List[float],
+        returns: list[float],
         horizon_days: int = 10,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Forecast future volatility using EWMA.
 
@@ -310,7 +310,7 @@ class EWMAVaRCalculator:
             returns_array = np.array(returns)
 
             if len(returns_array) < self.min_observations:
-                return {'error': 'Insufficient data for forecasting'}
+                return {"error": "Insufficient data for forecasting"}
 
             # Calculate current EWMA variance
             current_variance = self._calculate_ewma_variance(returns_array)
@@ -328,12 +328,12 @@ class EWMAVaRCalculator:
                 forecasts.append(forecast_vol)
 
             return {
-                'current_volatility': float(current_vol),
-                'forecasts': [float(f) for f in forecasts],
-                'horizon_days': horizon_days,
-                'method': 'ewma_sqrt_time',
+                "current_volatility": float(current_vol),
+                "forecasts": [float(f) for f in forecasts],
+                "horizon_days": horizon_days,
+                "method": "ewma_sqrt_time",
             }
 
         except (ValueError, TypeError, KeyError, AttributeError) as e:
-            self.logger.error(f'Error forecasting volatility: {e}', exc_info=True)
-            return {'error': str(e)}
+            self.logger.error(f"Error forecasting volatility: {e}", exc_info=True)
+            return {"error": str(e)}

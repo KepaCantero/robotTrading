@@ -10,7 +10,7 @@ import asyncio
 import logging
 import os
 from datetime import datetime
-from typing import Any, Dict, Optional
+from typing import Any
 
 from fastapi import APIRouter
 from pydantic import BaseModel
@@ -27,7 +27,7 @@ class HealthCheckResponse(BaseModel):
 
     status: str  # "healthy", "degraded", "unhealthy"
     timestamp: str
-    checks: Dict[str, Any]
+    checks: dict[str, Any]
     uptime_seconds: float
 
 
@@ -38,7 +38,7 @@ class HealthChecker:
 
     def __init__(
         self,
-        db_health_checker: Optional[DatabaseHealthCheckerProtocol] = None,
+        db_health_checker: DatabaseHealthCheckerProtocol | None = None,
     ) -> None:
         """
         Initialize the health checker.
@@ -47,13 +47,13 @@ class HealthChecker:
             db_health_checker: Optional database health checker from infrastructure layer
         """
         self.start_time: datetime = datetime.now()
-        self._db_health_checker: Optional[DatabaseHealthCheckerProtocol] = db_health_checker
-        self._broker: Optional[Any] = None
+        self._db_health_checker: DatabaseHealthCheckerProtocol | None = db_health_checker
+        self._broker: object | None = None
 
     def set_dependencies(
         self,
-        db_path: Optional[str] = None,
-        broker: Optional[Any] = None,
+        db_path: str | None = None,
+        broker: object | None = None,
     ) -> None:
         """
         Set dependencies for health checks.
@@ -66,7 +66,7 @@ class HealthChecker:
         if db_path and not self._db_health_checker:
             self._db_health_checker = DatabaseHealthCheckerFactory.create_sqlite_checker(db_path)
 
-    async def check_database(self) -> Dict[str, Any]:
+    async def check_database(self) -> dict[str, Any]:
         """
         Check database connection and integrity.
 
@@ -82,10 +82,10 @@ class HealthChecker:
             logger.info(f"Database health check: {result.get('message', 'No message')}")
             return result
         except Exception as e:
-            logger.error(f"Database health check failed: {str(e)}")
-            return {"status": "unhealthy", "message": f"Database error: {str(e)}"}
+            logger.error(f"Database health check failed: {e!s}")
+            return {"status": "unhealthy", "message": f"Database error: {e!s}"}
 
-    async def check_broker(self) -> Dict[str, Any]:
+    async def check_broker(self) -> dict[str, Any]:
         """
         Check broker API connectivity.
 
@@ -115,10 +115,10 @@ class HealthChecker:
             logger.error("Broker health check: connection timeout after 5s")
             return {"status": "unhealthy", "message": "Broker connection timeout"}
         except Exception as e:
-            logger.error(f"Broker health check failed: {str(e)}")
-            return {"status": "unhealthy", "message": f"Broker error: {str(e)}"}
+            logger.error(f"Broker health check failed: {e!s}")
+            return {"status": "unhealthy", "message": f"Broker error: {e!s}"}
 
-    def check_memory(self) -> Dict[str, Any]:
+    def check_memory(self) -> dict[str, Any]:
         """
         Check memory usage.
 
@@ -172,10 +172,10 @@ class HealthChecker:
             logger.warning("Memory health check: psutil not installed")
             return {"status": "degraded", "message": "psutil not installed"}
         except Exception as e:
-            logger.error(f"Memory health check failed: {str(e)}")
-            return {"status": "degraded", "message": f"Memory check error: {str(e)}"}
+            logger.error(f"Memory health check failed: {e!s}")
+            return {"status": "degraded", "message": f"Memory check error: {e!s}"}
 
-    async def check_positions(self) -> Dict[str, Any]:
+    async def check_positions(self) -> dict[str, Any]:
         """
         Check active positions.
 
@@ -196,17 +196,17 @@ class HealthChecker:
             return result
 
         except Exception as e:
-            logger.error(f"Positions health check failed: {str(e)}")
-            return {"status": "degraded", "message": f"Position check error: {str(e)}", "count": 0}
+            logger.error(f"Positions health check failed: {e!s}")
+            return {"status": "degraded", "message": f"Position check error: {e!s}", "count": 0}
 
-    async def run_all_checks(self) -> Dict[str, Any]:
+    async def run_all_checks(self) -> dict[str, Any]:
         """
         Run all health checks and return combined status.
 
         Returns:
             Dict with all check results
         """
-        checks: Dict[str, Dict[str, Any]] = {
+        checks: dict[str, dict[str, Any]] = {
             "database": await self.check_database(),
             "broker": await self.check_broker(),
             "memory": self.check_memory(),
@@ -242,7 +242,7 @@ class HealthChecker:
 
 
 # Global health checker instance
-_health_checker: Optional[HealthChecker] = None
+_health_checker: HealthChecker | None = None
 
 
 def get_health_checker() -> HealthChecker:

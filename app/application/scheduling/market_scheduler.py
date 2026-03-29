@@ -19,7 +19,7 @@ import logging
 from dataclasses import dataclass, field
 from datetime import date, datetime, time
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Callable, Optional
 
 import pytz
 
@@ -60,7 +60,7 @@ class MarketSchedule:
     lunch_start: Optional[time] = None
     lunch_end: Optional[time] = None
     weekends: bool = False  # Trades on weekends
-    holidays: List[date] = field(default_factory=list)
+    holidays: list[date] = field(default_factory=list)
 
     def is_24_7(self) -> bool:
         """Check if market is 24/7."""
@@ -117,7 +117,7 @@ class ScheduledTask:
 
     task_id: str
     name: str
-    market_types: List[MarketType]
+    market_types: list[MarketType]
     handler: Callable
     run_when_closed: bool = False
     enabled: bool = True
@@ -146,7 +146,7 @@ class MarketScheduler:
 
     def __init__(
         self,
-        schedules: Optional[Dict[MarketType, MarketSchedule]] = None,
+        schedules: Optional[dict[MarketType, MarketSchedule]] = None,
         check_interval_24_7: float = 60.0,
         check_interval_scheduled: float = 60.0,
     ):
@@ -159,8 +159,8 @@ class MarketScheduler:
             check_interval_scheduled: Seconds between checks for scheduled markets (default: 60)
         """
         self.schedules = schedules or MARKET_SCHEDULES.copy()
-        self.tasks: Dict[str, ScheduledTask] = {}
-        self._task_loops: Dict[str, asyncio.Task] = {}
+        self.tasks: dict[str, ScheduledTask] = {}
+        self._task_loops: dict[str, asyncio.Task] = {}
         self._is_running = False
         self._check_interval_24_7 = check_interval_24_7
         self._check_interval_scheduled = check_interval_scheduled
@@ -233,7 +233,7 @@ class MarketScheduler:
         self,
         task_id: str,
         name: str,
-        market_types: List[MarketType],
+        market_types: list[MarketType],
         handler: Callable,
         run_when_closed: bool = False,
         enabled: bool = True,
@@ -275,7 +275,7 @@ class MarketScheduler:
             enabled=enabled,
         )
         self.tasks[task_id] = task
-        logger.info(f"Scheduled task: {name} ({task_id}) for " f"{[m.value for m in market_types]}")
+        logger.info(f"Scheduled task: {name} ({task_id}) for {[m.value for m in market_types]}")
 
     def unschedule_task(self, task_id: str) -> bool:
         """
@@ -462,7 +462,11 @@ class MarketScheduler:
             return MarketStatus.AFTER_HOURS
 
         # Check lunch break (if applicable)
-        if schedule.lunch_start and schedule.lunch_end and schedule.lunch_start <= current_time <= schedule.lunch_end:
+        if (
+            schedule.lunch_start
+            and schedule.lunch_end
+            and schedule.lunch_start <= current_time <= schedule.lunch_end
+        ):
             return MarketStatus.CLOSED
 
         # Market is open
@@ -568,7 +572,7 @@ class MarketScheduler:
             return True
         return False
 
-    def get_task_info(self, task_id: str) -> Optional[Dict[str, Any]]:
+    def get_task_info(self, task_id: str) -> Optional[dict[str, Any]]:
         """
         Get information about a scheduled task.
 
@@ -597,7 +601,7 @@ class MarketScheduler:
             "error_count": task.error_count,
         }
 
-    def list_tasks(self, market_type: Optional[MarketType] = None) -> List[Dict[str, Any]]:
+    def list_tasks(self, market_type: Optional[MarketType] = None) -> list[dict[str, Any]]:
         """
         List all scheduled tasks, optionally filtered by market type.
 

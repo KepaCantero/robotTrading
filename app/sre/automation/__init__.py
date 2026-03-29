@@ -19,13 +19,13 @@ from .toil_tracker import (
 )
 
 __all__ = [
-    "ToilEntry",
-    "ToilTracker",
-    "ToilCategory",
-    "ToilReport",
     "AutomationOpportunity",
     "AutomationPotential",
-    "ToilMetrics",
+    "ToilCategory",
     "ToilConfig",
+    "ToilEntry",
+    "ToilMetrics",
+    "ToilReport",
+    "ToilTracker",
     "get_toil_tracker",
 ]

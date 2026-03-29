@@ -8,7 +8,7 @@ Fuentes soportadas:
 
 import asyncio
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 # REQUIRED: No fallbacks - aiohttp is required for async HTTP requests
 import aiohttp
@@ -36,7 +36,7 @@ class FinancialModelingPrepSource(BaseDataSource):
     Uses centralized endpoint configuration.
     """
 
-    def __init__(self, config: Dict[str, Any]):
+    def __init__(self, config: dict[str, Any]):
         """
         Inicializar fuente FMP.
 
@@ -45,11 +45,11 @@ class FinancialModelingPrepSource(BaseDataSource):
                 - api_key: FMP API key
         """
         super().__init__(config)
-        self.api_key = config.get('api_key')
+        self.api_key = config.get("api_key")
         if not self.api_key:
             logger.warning("FMP API key no configurado")
         # Use centralized endpoint configuration
-        self.base_url = config.get('base_url', APIEndpoints.FINANCIAL_MODELING_PREP)
+        self.base_url = config.get("base_url", APIEndpoints.FINANCIAL_MODELING_PREP)
         self.session: Optional[aiohttp.ClientSession] = None
 
     async def connect(self) -> bool:
@@ -89,12 +89,12 @@ class FinancialModelingPrepSource(BaseDataSource):
         try:
             # Test con endpoint simple
             url = f"{self.base_url}/profile/AAPL"
-            async with self.session.get(url, params={'apikey': self.api_key}) as response:
+            async with self.session.get(url, params={"apikey": self.api_key}) as response:
                 return response.status == 200
         except (asyncio.TimeoutError, OSError):
             return False
 
-    async def get_company_profile(self, symbol: str) -> Optional[Dict[str, Any]]:
+    async def get_company_profile(self, symbol: str) -> Optional[dict[str, Any]]:
         """
         Obtener perfil de la compañía.
 
@@ -109,7 +109,7 @@ class FinancialModelingPrepSource(BaseDataSource):
 
         try:
             url = f"{self.base_url}/profile/{symbol}"
-            async with self.session.get(url, params={'apikey': self.api_key}) as response:
+            async with self.session.get(url, params={"apikey": self.api_key}) as response:
                 if response.status != 200:
                     return None
 
@@ -122,7 +122,7 @@ class FinancialModelingPrepSource(BaseDataSource):
             logger.error(f"Error obteniendo perfil de {symbol}: {e}")
             return None
 
-    async def get_key_metrics(self, symbol: str) -> List[Dict[str, Any]]:
+    async def get_key_metrics(self, symbol: str) -> list[dict[str, Any]]:
         """
         Obtener métricas clave (P/E, P/B, etc.).
 
@@ -138,7 +138,7 @@ class FinancialModelingPrepSource(BaseDataSource):
         try:
             url = f"{self.base_url}/key-metrics/{symbol}"
             async with self.session.get(
-                url, params={'apikey': self.api_key, 'limit': 5}
+                url, params={"apikey": self.api_key, "limit": 5}
             ) as response:
                 if response.status != 200:
                     return []
@@ -151,7 +151,7 @@ class FinancialModelingPrepSource(BaseDataSource):
 
     async def get_financial_statements(
         self, symbol: str, statement_type: str = "income-statement"
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """
         Obtener estados financieros.
 
@@ -168,7 +168,7 @@ class FinancialModelingPrepSource(BaseDataSource):
         try:
             url = f"{self.base_url}/{statement_type}/{symbol}"
             async with self.session.get(
-                url, params={'apikey': self.api_key, 'limit': 5}
+                url, params={"apikey": self.api_key, "limit": 5}
             ) as response:
                 if response.status != 200:
                     return []
@@ -188,7 +188,7 @@ class AlphaVantageFundamentalSource(BaseDataSource):
     Uses centralized endpoint configuration.
     """
 
-    def __init__(self, config: Dict[str, Any]):
+    def __init__(self, config: dict[str, Any]):
         """
         Inicializar fuente Alpha Vantage Fundamentales.
 
@@ -197,11 +197,11 @@ class AlphaVantageFundamentalSource(BaseDataSource):
                 - api_key: Alpha Vantage API key
         """
         super().__init__(config)
-        self.api_key = config.get('api_key')
+        self.api_key = config.get("api_key")
         if not self.api_key:
             logger.warning("Alpha Vantage API key no configurado")
         # Use centralized endpoint configuration
-        self.base_url = config.get('base_url', APIEndpoints.ALPHA_VANTAGE)
+        self.base_url = config.get("base_url", APIEndpoints.ALPHA_VANTAGE)
         self.session: Optional[aiohttp.ClientSession] = None
 
     async def connect(self) -> bool:
@@ -240,13 +240,13 @@ class AlphaVantageFundamentalSource(BaseDataSource):
             return False
         try:
             # Test con endpoint simple
-            params = {'function': 'OVERVIEW', 'symbol': 'AAPL', 'apikey': self.api_key}
+            params = {"function": "OVERVIEW", "symbol": "AAPL", "apikey": self.api_key}
             async with self.session.get(self.base_url, params=params) as response:
                 return response.status == 200
         except (ValueError, KeyError, AttributeError, IndexError, TypeError):
             return False
 
-    async def get_company_overview(self, symbol: str) -> Optional[Dict[str, Any]]:
+    async def get_company_overview(self, symbol: str) -> Optional[dict[str, Any]]:
         """
         Obtener overview de la compañía.
 
@@ -260,7 +260,7 @@ class AlphaVantageFundamentalSource(BaseDataSource):
             return None
 
         try:
-            params = {'function': 'OVERVIEW', 'symbol': symbol, 'apikey': self.api_key}
+            params = {"function": "OVERVIEW", "symbol": symbol, "apikey": self.api_key}
 
             async with self.session.get(self.base_url, params=params) as response:
                 if response.status != 200:
@@ -269,7 +269,7 @@ class AlphaVantageFundamentalSource(BaseDataSource):
                 data = await response.json()
 
                 # Alpha Vantage retorna error como dict con "Error Message" o "Note"
-                if 'Error Message' in data or 'Note' in data:
+                if "Error Message" in data or "Note" in data:
                     logger.warning(
                         f"Alpha Vantage error para {symbol}: {data.get('Error Message', data.get('Note'))}"
                     )
@@ -281,7 +281,7 @@ class AlphaVantageFundamentalSource(BaseDataSource):
             logger.error(f"Error obteniendo overview de {symbol}: {e}")
             return None
 
-    async def get_earnings(self, symbol: str) -> Optional[Dict[str, Any]]:
+    async def get_earnings(self, symbol: str) -> Optional[dict[str, Any]]:
         """
         Obtener earnings de la compañía.
 
@@ -295,7 +295,7 @@ class AlphaVantageFundamentalSource(BaseDataSource):
             return None
 
         try:
-            params = {'function': 'EARNINGS', 'symbol': symbol, 'apikey': self.api_key}
+            params = {"function": "EARNINGS", "symbol": symbol, "apikey": self.api_key}
 
             async with self.session.get(self.base_url, params=params) as response:
                 if response.status != 200:
@@ -303,7 +303,7 @@ class AlphaVantageFundamentalSource(BaseDataSource):
 
                 data = await response.json()
 
-                if 'Error Message' in data or 'Note' in data:
+                if "Error Message" in data or "Note" in data:
                     logger.warning(
                         f"Alpha Vantage error para {symbol}: {data.get('Error Message', data.get('Note'))}"
                     )

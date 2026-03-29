@@ -9,9 +9,7 @@ from __future__ import annotations
 
 import logging
 from datetime import datetime
-from decimal import Decimal
-from typing import Annotated, Any, Dict, List, Optional
-from uuid import UUID
+from typing import TYPE_CHECKING, Annotated, Any
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel, Field
@@ -23,7 +21,6 @@ from sqlalchemy.exc import (
     ProgrammingError,
 )
 
-from app.domain.models.market_data import Quote
 from app.domain.models.paper_trading import (
     OrderSide,
     OrderType,
@@ -36,6 +33,12 @@ from app.domain.models.paper_trading import (
 )
 from app.infrastructure.brokers.paper import PaperTradingService, get_paper_trading_service
 
+if TYPE_CHECKING:
+    from decimal import Decimal
+    from uuid import UUID
+
+    from app.domain.models.market_data import Quote
+
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/paper-trading", tags=["Paper Trading"])
@@ -46,8 +49,8 @@ class CreatePortfolioRequest(BaseModel):
     """Request model for creating a portfolio."""
 
     name: str = Field(..., description="Portfolio name")
-    config_id: Optional[UUID] = Field(None, description="Configuration ID")
-    initial_cash: Optional[Decimal] = Field(None, description="Initial cash amount")
+    config_id: UUID | None = Field(None, description="Configuration ID")
+    initial_cash: Decimal | None = Field(None, description="Initial cash amount")
 
 
 class CreateSessionRequest(BaseModel):
@@ -55,8 +58,8 @@ class CreateSessionRequest(BaseModel):
 
     portfolio_id: UUID = Field(..., description="Portfolio ID")
     name: str = Field(..., description="Session name")
-    description: Optional[str] = Field(None, description="Session description")
-    config_id: Optional[UUID] = Field(None, description="Configuration ID")
+    description: str | None = Field(None, description="Session description")
+    config_id: UUID | None = Field(None, description="Configuration ID")
 
 
 class ExecuteTradeRequest(BaseModel):
@@ -66,15 +69,15 @@ class ExecuteTradeRequest(BaseModel):
     side: OrderSide = Field(..., description="Order side")
     order_type: OrderType = Field(..., description="Order type")
     quantity: Decimal = Field(..., gt=0, description="Trade quantity")
-    price: Optional[Decimal] = Field(None, gt=0, description="Order price (for limit orders)")
-    strategy_id: Optional[str] = Field(None, description="Strategy ID")
-    signal_id: Optional[UUID] = Field(None, description="Signal ID")
+    price: Decimal | None = Field(None, gt=0, description="Order price (for limit orders)")
+    strategy_id: str | None = Field(None, description="Strategy ID")
+    signal_id: UUID | None = Field(None, description="Signal ID")
 
 
 class UpdateMarketPricesRequest(BaseModel):
     """Request model for updating market prices."""
 
-    quotes: Dict[str, Quote] = Field(..., description="Market quotes by symbol")
+    quotes: dict[str, Quote] = Field(..., description="Market quotes by symbol")
 
 
 class PortfolioResponse(BaseModel):
@@ -105,7 +108,7 @@ class TradesResponse(BaseModel):
     """Response model for multiple trades."""
 
     success: bool = Field(True, description="Success status")
-    trades: List[PaperTrade] = Field(..., description="List of trades")
+    trades: list[PaperTrade] = Field(..., description="List of trades")
     count: int = Field(..., description="Number of trades")
     timestamp: datetime = Field(default_factory=datetime.utcnow, description="Response timestamp")
 
@@ -114,7 +117,7 @@ class PositionsResponse(BaseModel):
     """Response model for positions."""
 
     success: bool = Field(True, description="Success status")
-    positions: List[PaperPosition] = Field(..., description="List of positions")
+    positions: list[PaperPosition] = Field(..., description="List of positions")
     count: int = Field(..., description="Number of positions")
     timestamp: datetime = Field(default_factory=datetime.utcnow, description="Response timestamp")
 
@@ -123,7 +126,7 @@ class MarketUpdateResponse(BaseModel):
     """Response model for market updates."""
 
     success: bool = Field(True, description="Success status")
-    updated_symbols: List[str] = Field(..., description="Updated symbols")
+    updated_symbols: list[str] = Field(..., description="Updated symbols")
     count: int = Field(..., description="Number of updated symbols")
     timestamp: datetime = Field(default_factory=datetime.utcnow, description="Response timestamp")
 
@@ -167,7 +170,7 @@ async def create_portfolio(
                 "error_message": str(e),
             },
         )
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
 
 
 @router.get("/portfolios/{portfolio_id}", response_model=PortfolioResponse)
@@ -193,10 +196,10 @@ async def get_portfolio(
     return PortfolioResponse(success=True, portfolio=portfolio)
 
 
-@router.get("/portfolios", response_model=List[PortfolioResponse])
+@router.get("/portfolios", response_model=list[PortfolioResponse])
 async def list_portfolios(
     service: Annotated[PaperTradingService, Depends(get_paper_trading_service)],
-) -> List[PortfolioResponse]:
+) -> list[PortfolioResponse]:
     """List all portfolios."""
     portfolios = list(service.portfolios.values())
     return [PortfolioResponse(success=True, portfolio=p) for p in portfolios]
@@ -243,13 +246,12 @@ async def create_session(
                 "error_message": str(e),
             },
         )
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
 
 
 @router.get("/sessions/{session_id}", response_model=SessionResponse)
 async def get_session(
-    session_id: UUID,
-    service: Annotated[PaperTradingService, Depends(get_paper_trading_service)]
+    session_id: UUID, service: Annotated[PaperTradingService, Depends(get_paper_trading_service)]
 ) -> SessionResponse:
     """Get session by ID."""
     session = await service.get_session(session_id)
@@ -261,23 +263,22 @@ async def get_session(
 
 @router.post("/sessions/{session_id}/close", response_model=SessionResponse)
 async def close_session(
-    session_id: UUID,
-    service: Annotated[PaperTradingService, Depends(get_paper_trading_service)]
+    session_id: UUID, service: Annotated[PaperTradingService, Depends(get_paper_trading_service)]
 ) -> SessionResponse:
     """Close a trading session."""
     try:
         session = await service.close_session(session_id)
         return SessionResponse(success=True, session=session)
     except (IntegrityError, OperationalError, DatabaseError, DataError, ProgrammingError) as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
 
 
-@router.get("/sessions", response_model=List[SessionResponse])
+@router.get("/sessions", response_model=list[SessionResponse])
 async def list_sessions(
-    portfolio_id: Annotated[Optional[UUID], Query(None, description="Filter by portfolio ID")],
-    is_active: Annotated[Optional[bool], Query(None, description="Filter by active status")],
+    portfolio_id: Annotated[UUID | None, Query(None, description="Filter by portfolio ID")],
+    is_active: Annotated[bool | None, Query(None, description="Filter by active status")],
     service: Annotated[PaperTradingService, Depends(get_paper_trading_service)],
-) -> List[SessionResponse]:
+) -> list[SessionResponse]:
     """List sessions with optional filters."""
     sessions = list(service.sessions.values())
 
@@ -295,7 +296,7 @@ async def list_sessions(
 async def execute_trade(
     portfolio_id: UUID,
     request: ExecuteTradeRequest,
-    session_id: Annotated[Optional[UUID], Query(None, description="Session ID")],
+    session_id: Annotated[UUID | None, Query(None, description="Session ID")],
     service: Annotated[PaperTradingService, Depends(get_paper_trading_service)],
 ) -> TradeResponse:
     """Execute a paper trade."""
@@ -343,15 +344,15 @@ async def execute_trade(
                 "error_message": str(e),
             },
         )
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
 
 
 @router.get("/portfolios/{portfolio_id}/trades", response_model=TradesResponse)
 async def get_trades(
     portfolio_id: UUID,
-    symbol: Annotated[Optional[str], Query(None, description="Filter by symbol")],
-    status: Annotated[Optional[TradeStatus], Query(None, description="Filter by status")],
-    session_id: Annotated[Optional[UUID], Query(None, description="Filter by session ID")],
+    symbol: Annotated[str | None, Query(None, description="Filter by symbol")],
+    status: Annotated[TradeStatus | None, Query(None, description="Filter by status")],
+    session_id: Annotated[UUID | None, Query(None, description="Filter by session ID")],
     limit: Annotated[int, Query(100, ge=1, le=1000, description="Maximum number of trades")],
     service: Annotated[PaperTradingService, Depends(get_paper_trading_service)],
 ) -> TradesResponse:
@@ -368,8 +369,7 @@ async def get_trades(
 
 @router.get("/trades/{trade_id}", response_model=TradeResponse)
 async def get_trade(
-    trade_id: UUID,
-    service: Annotated[PaperTradingService, Depends(get_paper_trading_service)]
+    trade_id: UUID, service: Annotated[PaperTradingService, Depends(get_paper_trading_service)]
 ) -> TradeResponse:
     """Get trade by ID."""
     trade = service.trades.get(trade_id)
@@ -433,22 +433,21 @@ async def update_market_prices(
                 "error_message": str(e),
             },
         )
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
 
 
 # Configuration Endpoints
-@router.get("/configs", response_model=List[PaperTradingConfig])
+@router.get("/configs", response_model=list[PaperTradingConfig])
 async def list_configs(
     service: Annotated[PaperTradingService, Depends(get_paper_trading_service)],
-) -> List[PaperTradingConfig]:
+) -> list[PaperTradingConfig]:
     """List all paper trading configurations."""
     return list(service.configs.values())
 
 
 @router.get("/configs/{config_id}", response_model=PaperTradingConfig)
 async def get_config(
-    config_id: UUID,
-    service: Annotated[PaperTradingService, Depends(get_paper_trading_service)]
+    config_id: UUID, service: Annotated[PaperTradingService, Depends(get_paper_trading_service)]
 ) -> PaperTradingConfig:
     """Get configuration by ID."""
     config = service.configs.get(config_id)
@@ -463,7 +462,7 @@ async def get_config(
 async def get_portfolio_stats(
     portfolio_id: UUID,
     service: Annotated[PaperTradingService, Depends(get_paper_trading_service)],
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Get portfolio statistics."""
     portfolio = await service.get_portfolio(portfolio_id)
     if not portfolio:
@@ -502,7 +501,7 @@ async def get_portfolio_stats(
 
 # Health Check Endpoint
 @router.get("/health")
-async def health_check() -> Dict[str, str]:
+async def health_check() -> dict[str, str]:
     """Health check endpoint for paper trading service."""
     logger.debug("Health check requested")
     return {

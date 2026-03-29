@@ -55,7 +55,6 @@ import logging
 from concurrent.futures import ProcessPoolExecutor, as_completed
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Dict, List, Optional, Tuple, Union
 
 import numpy as np
 import pandas as pd
@@ -122,19 +121,19 @@ class ModelResult:
     model_name: str
     model: object
     predictions: np.ndarray
-    probabilities: Optional[np.ndarray]
+    probabilities: np.ndarray | None
     score: float
     training_time: float
 
     # Uniqueness information
-    uniqueness_weights: Optional[np.ndarray] = None
+    uniqueness_weights: np.ndarray | None = None
     avg_uniqueness: float = 0.0
 
     # Feature importance
-    feature_importance: Dict[str, float] = field(default_factory=dict)
+    feature_importance: dict[str, float] = field(default_factory=dict)
 
     # Metadata
-    metadata: Dict[str, Union[str, int, float, bool, None]] = field(default_factory=dict)
+    metadata: dict[str, str | int | float | bool | None] = field(default_factory=dict)
     timestamp: datetime = field(default_factory=datetime.now)
 
 
@@ -142,30 +141,30 @@ class ModelResult:
 class EnsembleResult:
     """Result from ensemble model training."""
 
-    model_results: List[ModelResult]
+    model_results: list[ModelResult]
     """Results from individual models"""
 
     ensemble_predictions: np.ndarray
     """Ensemble predictions"""
 
-    ensemble_probabilities: Optional[np.ndarray]
+    ensemble_probabilities: np.ndarray | None
     """Ensemble probabilities"""
 
     ensemble_score: float
     """Ensemble score"""
 
-    ensemble_weights: Dict[str, float]
+    ensemble_weights: dict[str, float]
     """Weights for each model in ensemble"""
 
-    stacking_model: Optional[object] = None
+    stacking_model: object | None = None
     """Stacking meta-model (if used)"""
 
-    metadata: Dict[str, Union[str, int, float, bool, None]] = field(default_factory=dict)
+    metadata: dict[str, str | int | float | bool | None] = field(default_factory=dict)
     """Additional metadata"""
 
     timestamp: datetime = field(default_factory=datetime.now)
 
-    def to_dict(self) -> Dict[str, Union[str, int, float, bool, list, None]]:
+    def to_dict(self) -> dict[str, str | int | float | bool | list | None]:
         """Convert to dictionary."""
         return {
             "ensemble_predictions": self.ensemble_predictions.tolist(),
@@ -193,7 +192,7 @@ class ConcurrentModelTrainer:
         >>> ensemble_pred = results.ensemble_predictions
     """
 
-    def __init__(self, config: Optional[ConcurrentTrainingConfig] = None):
+    def __init__(self, config: ConcurrentTrainingConfig | None = None):
         """
         Initialize ConcurrentModelTrainer.
 
@@ -205,8 +204,8 @@ class ConcurrentModelTrainer:
     # ========== Helper Methods (ARCH-004: Extract helper methods) ==========
 
     def _convert_to_numpy(
-        self, X: Union[pd.DataFrame, np.ndarray], y: Union[pd.Series, np.ndarray]
-    ) -> Tuple[np.ndarray, np.ndarray]:
+        self, X: pd.DataFrame | np.ndarray, y: pd.Series | np.ndarray
+    ) -> tuple[np.ndarray, np.ndarray]:
         """
         Convert pandas objects to numpy arrays.
 
@@ -225,10 +224,10 @@ class ConcurrentModelTrainer:
 
     def _calculate_uniqueness_weights(
         self,
-        events: Optional[pd.Series],
-        labels: Optional[pd.DataFrame],
+        events: pd.Series | None,
+        labels: pd.DataFrame | None,
         X: np.ndarray,
-    ) -> Optional[np.ndarray]:
+    ) -> np.ndarray | None:
         """
         Calculate uniqueness weights if events and labels are provided.
 
@@ -250,9 +249,9 @@ class ConcurrentModelTrainer:
 
     def _combine_sample_weights(
         self,
-        sample_weights: Optional[np.ndarray],
-        uniqueness_weights: Optional[np.ndarray],
-    ) -> Optional[np.ndarray]:
+        sample_weights: np.ndarray | None,
+        uniqueness_weights: np.ndarray | None,
+    ) -> np.ndarray | None:
         """
         Combine sample weights with uniqueness weights.
 
@@ -272,12 +271,12 @@ class ConcurrentModelTrainer:
 
     def train_models_concurrent(
         self,
-        models: Dict[str, object],
-        X: Union[pd.DataFrame, np.ndarray],
-        y: Union[pd.Series, np.ndarray],
-        events: Optional[pd.Series] = None,
-        labels: Optional[pd.DataFrame] = None,
-        sample_weights: Optional[np.ndarray] = None,
+        models: dict[str, object],
+        X: pd.DataFrame | np.ndarray,
+        y: pd.Series | np.ndarray,
+        events: pd.Series | None = None,
+        labels: pd.DataFrame | None = None,
+        sample_weights: np.ndarray | None = None,
     ) -> EnsembleResult:
         """
         Train multiple models concurrently.
@@ -361,8 +360,8 @@ class ConcurrentModelTrainer:
         model: object,
         X: np.ndarray,
         y: np.ndarray,
-        sample_weights: Optional[np.ndarray],
-        uniqueness_weights: Optional[np.ndarray],
+        sample_weights: np.ndarray | None,
+        uniqueness_weights: np.ndarray | None,
     ) -> ModelResult:
         """
         Train a single model (for parallel execution).
@@ -423,11 +422,11 @@ class ConcurrentModelTrainer:
 
     def _create_ensemble(
         self,
-        model_results: List[ModelResult],
+        model_results: list[ModelResult],
         X: np.ndarray,
         y: np.ndarray,
-        events: Optional[pd.Series],
-        labels: Optional[pd.DataFrame],
+        events: pd.Series | None,
+        labels: pd.DataFrame | None,
     ) -> EnsembleResult:
         """
         Create ensemble from trained models.
@@ -472,7 +471,7 @@ class ConcurrentModelTrainer:
             },
         )
 
-    def _select_best_models(self, model_results: List[ModelResult]) -> List[ModelResult]:
+    def _select_best_models(self, model_results: list[ModelResult]) -> list[ModelResult]:
         """
         Select best models if configured (ARCH-004: Extract helper method).
 
@@ -490,10 +489,10 @@ class ConcurrentModelTrainer:
 
     def _calculate_ensemble_weights(
         self,
-        model_results: List[ModelResult],
+        model_results: list[ModelResult],
         X: np.ndarray,
         y: np.ndarray,
-    ) -> Dict[str, float]:
+    ) -> dict[str, float]:
         """
         Calculate ensemble weights for each model (ARCH-004: Extract helper method).
 
@@ -542,10 +541,10 @@ class ConcurrentModelTrainer:
 
     def _ensemble_predict(
         self,
-        model_results: List[ModelResult],
+        model_results: list[ModelResult],
         X: np.ndarray,
-        weights: Dict[str, float],
-    ) -> Tuple[np.ndarray, Optional[np.ndarray]]:
+        weights: dict[str, float],
+    ) -> tuple[np.ndarray, np.ndarray | None]:
         """
         Generate ensemble predictions (ARCH-004: Split into smaller methods).
 
@@ -564,10 +563,10 @@ class ConcurrentModelTrainer:
 
     def _voting_predict(
         self,
-        model_results: List[ModelResult],
+        model_results: list[ModelResult],
         X: np.ndarray,
-        weights: Dict[str, float],
-    ) -> Tuple[np.ndarray, Optional[np.ndarray]]:
+        weights: dict[str, float],
+    ) -> tuple[np.ndarray, np.ndarray | None]:
         """
         Generate ensemble predictions using majority voting (ARCH-004: Helper method).
 
@@ -593,10 +592,10 @@ class ConcurrentModelTrainer:
 
     def _weighted_predict(
         self,
-        model_results: List[ModelResult],
+        model_results: list[ModelResult],
         X: np.ndarray,
-        weights: Dict[str, float],
-    ) -> Tuple[np.ndarray, Optional[np.ndarray]]:
+        weights: dict[str, float],
+    ) -> tuple[np.ndarray, np.ndarray | None]:
         """
         Generate ensemble predictions using weighted average (ARCH-004: Helper method).
 
@@ -637,11 +636,11 @@ class ConcurrentModelTrainer:
 
     def _create_stacking_model(
         self,
-        model_results: List[ModelResult],
+        model_results: list[ModelResult],
         X: np.ndarray,
         y: np.ndarray,
-        events: Optional[pd.Series],
-        labels: Optional[pd.DataFrame],
+        events: pd.Series | None,
+        labels: pd.DataFrame | None,
     ) -> object:
         """
         Create stacking meta-model.
@@ -724,15 +723,15 @@ class SequentialModelTrainer:
         ... )
     """
 
-    def __init__(self, config: Optional[ConcurrentTrainingConfig] = None):
+    def __init__(self, config: ConcurrentTrainingConfig | None = None):
         """Initialize SequentialModelTrainer."""
         self.config = config or ConcurrentTrainingConfig()
 
     # ========== Helper Methods (ARCH-004: Extract helper methods) ==========
 
     def _convert_to_numpy(
-        self, X: Union[pd.DataFrame, np.ndarray], y: Union[pd.Series, np.ndarray]
-    ) -> Tuple[np.ndarray, np.ndarray]:
+        self, X: pd.DataFrame | np.ndarray, y: pd.Series | np.ndarray
+    ) -> tuple[np.ndarray, np.ndarray]:
         """Convert pandas objects to numpy arrays."""
         if isinstance(X, pd.DataFrame):
             X = X.values
@@ -740,7 +739,7 @@ class SequentialModelTrainer:
             y = y.values
         return X, y
 
-    def _get_feature_importance(self, model: object) -> Dict[str, float]:
+    def _get_feature_importance(self, model: object) -> dict[str, float]:
         """Extract feature importance from model if available."""
         feature_importance = {}
         if hasattr(model, "feature_importances_"):
@@ -749,7 +748,7 @@ class SequentialModelTrainer:
                 feature_importance[f"feature_{i}"] = float(imp)
         return feature_importance
 
-    def _get_probabilities(self, model: object, X: np.ndarray) -> Optional[np.ndarray]:
+    def _get_probabilities(self, model: object, X: np.ndarray) -> np.ndarray | None:
         """Get probabilities from model if available."""
         if hasattr(model, "predict_proba"):
             probabilities = model.predict_proba(X)
@@ -759,11 +758,11 @@ class SequentialModelTrainer:
 
     def train_models_sequential(
         self,
-        models: Dict[str, object],
-        X: Union[pd.DataFrame, np.ndarray],
-        y: Union[pd.Series, np.ndarray],
-        events: Optional[pd.Series] = None,
-        labels: Optional[pd.DataFrame] = None,
+        models: dict[str, object],
+        X: pd.DataFrame | np.ndarray,
+        y: pd.Series | np.ndarray,
+        events: pd.Series | None = None,
+        labels: pd.DataFrame | None = None,
     ) -> EnsembleResult:
         """
         Train models sequentially with purged data.
@@ -840,7 +839,7 @@ class SequentialModelTrainer:
 
     def _create_ensemble(
         self,
-        model_results: List[ModelResult],
+        model_results: list[ModelResult],
         X: np.ndarray,
         y: np.ndarray,
     ) -> EnsembleResult:
@@ -870,11 +869,11 @@ class SequentialModelTrainer:
 
 
 def train_models_concurrent(
-    models: Dict[str, object],
-    X: Union[pd.DataFrame, np.ndarray],
-    y: Union[pd.Series, np.ndarray],
-    events: Optional[pd.Series] = None,
-    labels: Optional[pd.DataFrame] = None,
+    models: dict[str, object],
+    X: pd.DataFrame | np.ndarray,
+    y: pd.Series | np.ndarray,
+    events: pd.Series | None = None,
+    labels: pd.DataFrame | None = None,
     ensemble_method: str = "weighted",
     n_jobs: int = -1,
 ) -> EnsembleResult:

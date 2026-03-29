@@ -7,7 +7,7 @@ Standard Stochastic RSI Strategy:
 """
 
 import logging
-from typing import Dict
+from typing import Optional
 
 from ..base_filter import BaseFilter
 
@@ -25,7 +25,11 @@ class StochRSIFilter(BaseFilter):
     """
 
     def __init__(
-        self, config: Dict = None, preset: str = "balanced", tier: str = None, use_yaml: bool = True
+        self,
+        config: Optional[dict] = None,
+        preset: str = "balanced",
+        tier: Optional[str] = None,
+        use_yaml: bool = True,
     ):
         """Inicializar filtro Stochastic RSI."""
         super().__init__("stoch_rsi_filter", config, preset, tier, use_yaml)
@@ -107,7 +111,7 @@ class StochRSIFilter(BaseFilter):
                 },  # Raised from 25/80
             }
 
-    def _get_thresholds_for_context(self, market_context: Dict) -> Dict:
+    def _get_thresholds_for_context(self, market_context: dict) -> dict:
         """Get thresholds based on market context."""
         if not self.adaptive:
             return {
@@ -128,7 +132,7 @@ class StochRSIFilter(BaseFilter):
             },
         )
 
-    def _apply_filter_logic(self, indicators: Dict, market_context: Dict, signal_type: str) -> Dict:
+    def _apply_filter_logic(self, indicators: dict, market_context: dict, signal_type: str) -> dict:
         """Aplicar lógica del filtro Stochastic RSI."""
         stoch_rsi_k = indicators.get("stoch_rsi_k")
         stoch_rsi_d = indicators.get("stoch_rsi_d")
@@ -137,10 +141,10 @@ class StochRSIFilter(BaseFilter):
         # This happens in early bars when there's not enough price history
         if stoch_rsi_k is None:
             return {
-                'passed': True,  # Don't block if indicator not available
-                'confidence': 0.5,  # Low confidence when data not available
-                'reason': 'StochRSI K not available (insufficient history)',
-                'metadata': {'stoch_rsi_available': False},
+                "passed": True,  # Don't block if indicator not available
+                "confidence": 0.5,  # Low confidence when data not available
+                "reason": "StochRSI K not available (insufficient history)",
+                "metadata": {"stoch_rsi_available": False},
             }
 
         # Get adaptive thresholds based on market context
@@ -162,24 +166,24 @@ class StochRSIFilter(BaseFilter):
                 )
 
                 return {
-                    'passed': True,
-                    'confidence': min(1.0, max(0.5, confidence + crossover_bonus)),
-                    'reason': f'StochRSI K {stoch_rsi_k:.2f} <= {oversold_threshold} (oversold)',
-                    'metadata': {
-                        'stoch_rsi_k': stoch_rsi_k,
-                        'stoch_rsi_d': stoch_rsi_d,
-                        'oversold_threshold': oversold_threshold,
-                        'crossover': stoch_rsi_d and stoch_rsi_k > stoch_rsi_d,
+                    "passed": True,
+                    "confidence": min(1.0, max(0.5, confidence + crossover_bonus)),
+                    "reason": f"StochRSI K {stoch_rsi_k:.2f} <= {oversold_threshold} (oversold)",
+                    "metadata": {
+                        "stoch_rsi_k": stoch_rsi_k,
+                        "stoch_rsi_d": stoch_rsi_d,
+                        "oversold_threshold": oversold_threshold,
+                        "crossover": stoch_rsi_d and stoch_rsi_k > stoch_rsi_d,
                     },
                 }
             else:
                 return {
-                    'passed': False,
-                    'confidence': 0.0,
-                    'reason': f'StochRSI K {stoch_rsi_k:.2f} > {oversold_threshold} (not oversold enough)',
-                    'metadata': {
-                        'stoch_rsi_k': stoch_rsi_k,
-                        'oversold_threshold': oversold_threshold,
+                    "passed": False,
+                    "confidence": 0.0,
+                    "reason": f"StochRSI K {stoch_rsi_k:.2f} > {oversold_threshold} (not oversold enough)",
+                    "metadata": {
+                        "stoch_rsi_k": stoch_rsi_k,
+                        "oversold_threshold": oversold_threshold,
                     },
                 }
 
@@ -198,25 +202,25 @@ class StochRSIFilter(BaseFilter):
                 confidence = 0.5 + (distance_from_threshold * 0.4)
 
                 return {
-                    'passed': True,
-                    'confidence': min(1.0, max(0.5, confidence + crossover_bonus)),
-                    'reason': f'StochRSI K {stoch_rsi_k:.2f} >= {overbought_threshold} (overbought)',
-                    'metadata': {
-                        'stoch_rsi_k': stoch_rsi_k,
-                        'stoch_rsi_d': stoch_rsi_d,
-                        'overbought_threshold': overbought_threshold,
-                        'crossover': stoch_rsi_d and stoch_rsi_k < stoch_rsi_d,
+                    "passed": True,
+                    "confidence": min(1.0, max(0.5, confidence + crossover_bonus)),
+                    "reason": f"StochRSI K {stoch_rsi_k:.2f} >= {overbought_threshold} (overbought)",
+                    "metadata": {
+                        "stoch_rsi_k": stoch_rsi_k,
+                        "stoch_rsi_d": stoch_rsi_d,
+                        "overbought_threshold": overbought_threshold,
+                        "crossover": stoch_rsi_d and stoch_rsi_k < stoch_rsi_d,
                     },
                 }
             else:
                 return {
-                    'passed': False,
-                    'confidence': 0.0,
-                    'reason': f'StochRSI K {stoch_rsi_k:.2f} < {overbought_threshold} (not overbought enough)',
-                    'metadata': {
-                        'stoch_rsi_k': stoch_rsi_k,
-                        'overbought_threshold': overbought_threshold,
+                    "passed": False,
+                    "confidence": 0.0,
+                    "reason": f"StochRSI K {stoch_rsi_k:.2f} < {overbought_threshold} (not overbought enough)",
+                    "metadata": {
+                        "stoch_rsi_k": stoch_rsi_k,
+                        "overbought_threshold": overbought_threshold,
                     },
                 }
 
-        return {'passed': False, 'confidence': 0.0, 'reason': 'Unknown signal type', 'metadata': {}}
+        return {"passed": False, "confidence": 0.0, "reason": "Unknown signal type", "metadata": {}}

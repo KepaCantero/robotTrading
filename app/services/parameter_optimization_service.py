@@ -12,7 +12,7 @@ import logging
 import random
 from dataclasses import dataclass
 from datetime import date, datetime, timedelta
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -37,8 +37,8 @@ class OptimizationState:
 
     current_iteration: int = 0
     best_score: float = float("-inf")
-    best_parameters: Dict[str, Union[float, int]] = None
-    optimization_history: List[Dict[str, Any]] = None
+    best_parameters: dict[str, float | int] = None
+    optimization_history: list[dict[str, Any]] = None
     convergence_count: int = 0
 
     def __post_init__(self):
@@ -49,14 +49,14 @@ class OptimizationState:
 class ParameterOptimizationService:
     """Service for parameter optimization and overfitting prevention."""
 
-    def __init__(self, cost_analysis_service: Optional[CostAnalysisService] = None):
+    def __init__(self, cost_analysis_service: CostAnalysisService | None = None):
         """Initialize the parameter optimization service."""
         logger.debug(
             "Initializing ParameterOptimizationService",
             extra={"has_cost_analysis_service": cost_analysis_service is not None},
         )
         self.cost_analysis_service = cost_analysis_service or CostAnalysisService()
-        self.optimization_artifacts: Dict[str, OptimizationArtifact] = {}
+        self.optimization_artifacts: dict[str, OptimizationArtifact] = {}
         self.optimization_summary = OptimizationSummary(
             total_optimizations=0,
             successful_optimizations=0,
@@ -158,7 +158,7 @@ class ParameterOptimizationService:
                 },
             )
             self.optimization_summary.failed_optimizations += 1
-            raise RuntimeError(f"Parameter optimization failed: {str(e)}")
+            raise RuntimeError(f"Parameter optimization failed: {e!s}") from e
 
     async def _validate_optimization_request(self, request: ParameterOptimizationRequest) -> None:
         """Validate the optimization request."""
@@ -192,7 +192,10 @@ class ParameterOptimizationService:
                 )
                 raise ValueError("walk_forward_config is required for walk-forward optimization")
 
-        elif request.optimization_config.method == OptimizationMethod.PURGED_K_FOLD and not request.optimization_config.purged_k_fold_config:
+        elif (
+            request.optimization_config.method == OptimizationMethod.PURGED_K_FOLD
+            and not request.optimization_config.purged_k_fold_config
+        ):
             logger.error(
                 "Validation failed: missing purged_k_fold_config",
                 extra={"strategy_name": request.strategy_name},
@@ -484,7 +487,7 @@ class ParameterOptimizationService:
         train_end: date,
         test_start: date,
         test_end: date,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Optimize parameters for a specific period."""
         # This is a simplified implementation
         # In a real implementation, you would:
@@ -519,7 +522,7 @@ class ParameterOptimizationService:
         n_splits: int,
         purged_period: int,
         embargo_period: int,
-    ) -> List[Tuple[date, date, date, date]]:
+    ) -> list[tuple[date, date, date, date]]:
         """Generate purged K-fold splits."""
         total_days = (end_date - start_date).days
         split_size = total_days // n_splits
@@ -554,8 +557,8 @@ class ParameterOptimizationService:
         return splits
 
     async def _generate_random_parameters(
-        self, parameters: List[OptimizationParameter]
-    ) -> Dict[str, Union[float, int]]:
+        self, parameters: list[OptimizationParameter]
+    ) -> dict[str, float | int]:
         """Generate random parameters within constraints."""
         random_params = {}
 
@@ -576,7 +579,7 @@ class ParameterOptimizationService:
     async def _evaluate_parameters(
         self,
         request: ParameterOptimizationRequest,
-        parameters: Dict[str, Union[float, int]],
+        parameters: dict[str, float | int],
     ) -> float:
         """Evaluate parameters and return a score."""
         # This is a simplified implementation
@@ -706,7 +709,7 @@ class ParameterOptimizationService:
                     "error_type": type(e).__name__,
                 },
             )
-            raise RuntimeError(f"Out-of-sample test failed: {str(e)}")
+            raise RuntimeError(f"Out-of-sample test failed: {e!s}") from e
 
     async def _validate_out_of_sample_test(self, test_config: OutOfSampleTest) -> None:
         """Validate out-of-sample test configuration."""
@@ -721,7 +724,7 @@ class ParameterOptimizationService:
 
     async def _run_strategy_test(
         self, test_config: OutOfSampleTest, cost_analysis_enabled: bool
-    ) -> Dict[str, float]:
+    ) -> dict[str, float]:
         """Run strategy test and return performance metrics."""
         # This is a simplified implementation
         # In a real implementation, you would:
@@ -754,8 +757,8 @@ class ParameterOptimizationService:
         return test_results
 
     async def get_optimization_artifacts(
-        self, strategy_name: Optional[str] = None
-    ) -> List[OptimizationArtifact]:
+        self, strategy_name: str | None = None
+    ) -> list[OptimizationArtifact]:
         """Get optimization artifacts, optionally filtered by strategy."""
         artifacts = list(self.optimization_artifacts.values())
 

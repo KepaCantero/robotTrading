@@ -13,9 +13,11 @@ from .asset_identification import AssetIdentificationService, get_asset_identifi
 from .circuit_breaker_manager import (
     CircuitBreakerConfig,
     CircuitBreakerLevel,
-    CircuitBreakerManager as MarketHaltManager,
     MarketState,
     TradingStatus,
+)
+from .circuit_breaker_manager import (
+    CircuitBreakerManager as MarketHaltManager,
 )
 from .market_universe_loader import MarketUniverseLoader, get_market_universe_loader
 from .market_universe_orchestrator import (
@@ -34,30 +36,30 @@ from .signal_scorer import SignalScorerService
 
 # Servicios principales
 __all__ = [
-    "PortfolioService",
-    "SignalScorerService",
-    "MomentumAnalysisService",
-    "get_momentum_analysis_service",
-    # Motores especializados
-    "SignalEvaluationEngine",
-    "PositionSizingEngine",
-    "SignalExecutionEngine",
+    # Asset & Market Universe
+    "AssetIdentificationService",
+    "CircuitBreakerConfig",
+    "CircuitBreakerLevel",
     # Gestores centralizados
     "CircuitBreakerManager",  # API circuit breaker (resilience pattern)
     "CircuitBreakerType",
     "MarketHaltManager",  # Market halt detection (renamed from v2)
-    "CircuitBreakerConfig",
-    "CircuitBreakerLevel",
     "MarketState",
-    "TradingStatus",
+    "MarketUniverseLoader",
+    "MarketUniverseOrchestrator",
+    "MomentumAnalysisService",
     "PortfolioRiskManager",
+    "PortfolioService",
+    "PositionSizingEngine",
     "RiskLevel",
     "RiskViolation",
-    # Asset & Market Universe
-    "AssetIdentificationService",
+    # Motores especializados
+    "SignalEvaluationEngine",
+    "SignalExecutionEngine",
+    "SignalScorerService",
+    "TradingStatus",
     "get_asset_identification_service",
-    "MarketUniverseLoader",
     "get_market_universe_loader",
-    "MarketUniverseOrchestrator",
     "get_market_universe_orchestrator",
+    "get_momentum_analysis_service",
 ]

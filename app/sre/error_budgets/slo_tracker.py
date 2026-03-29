@@ -19,7 +19,7 @@ from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from decimal import Decimal
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Callable
 
 import aiosqlite
 
@@ -57,9 +57,9 @@ class SLIMetric:
     value: Decimal
     timestamp: datetime
     metric_type: SLIMetricType
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
         return {
             "name": self.name,
@@ -91,7 +91,7 @@ class SLOConfig:
     # Minimum samples required for valid measurement
     min_samples: int = 10
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
         return {
             "name": self.name,
@@ -111,19 +111,19 @@ class SLOViolation:
 
     slo_name: str
     violation_start: datetime
-    violation_end: Optional[datetime]
+    violation_end: datetime | None
     actual_value: Decimal
     target_value: Decimal
     severity: str  # "warning" or "critical"
     resolved: bool = False
 
-    def duration_minutes(self) -> Optional[int]:
+    def duration_minutes(self) -> int | None:
         """Calculate violation duration."""
         if self.violation_end:
             return int((self.violation_end - self.violation_start).total_seconds() / 60)
         return None
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
         return {
             "slo_name": self.slo_name,
@@ -153,7 +153,7 @@ class SLOComplianceReport:
     status: SLOComplianceStatus
     total_measurements: int
     valid_measurements: int
-    violations: List[SLOViolation]
+    violations: list[SLOViolation]
     calculated_at: datetime
 
     @property
@@ -173,7 +173,7 @@ class SLOComplianceReport:
         """Get total minutes in violation state."""
         return sum(v.duration_minutes() or 0 for v in self.violations if v.duration_minutes())
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
         return {
             "slo_name": self.slo_name,
@@ -233,17 +233,17 @@ class SLOTracker:
         self.logger = logging.getLogger(f"{__name__}.{service_name}")
 
         # SLO configurations
-        self._slo_configs: Dict[str, SLOConfig] = {}
+        self._slo_configs: dict[str, SLOConfig] = {}
 
         # Active violations
-        self._active_violations: Dict[str, SLOViolation] = {}
+        self._active_violations: dict[str, SLOViolation] = {}
 
         # Metric buffer (in-memory cache)
-        self._metric_buffer: Dict[str, List[SLIMetric]] = defaultdict(list)
+        self._metric_buffer: dict[str, list[SLIMetric]] = defaultdict(list)
 
         # Callbacks
-        self._on_violation: Optional[Callable[[SLOViolation], None]] = None
-        self._on_violation_resolved: Optional[Callable[[SLOViolation], None]] = None
+        self._on_violation: Callable[[SLOViolation], None] | None = None
+        self._on_violation_resolved: Callable[[SLOViolation], None] | None = None
 
         # Lock
         self._lock = asyncio.Lock()
@@ -542,7 +542,7 @@ class SLOTracker:
     async def _calculate_slo_value(
         self,
         config: SLOConfig,
-        metrics: List[SLIMetric],
+        metrics: list[SLIMetric],
     ) -> Decimal:
         """Calculate SLO value from metrics."""
         if config.metric_type == SLIMetricType.AVAILABILITY:
@@ -670,15 +670,15 @@ class SLOTracker:
                 self.logger.error(f"Error in resolve callback: {e}")
 
         self.logger.info(
-            f"SLO violation resolved: {slo_name} " f"(duration: {violation.duration_minutes()}min)"
+            f"SLO violation resolved: {slo_name} (duration: {violation.duration_minutes()}min)"
         )
 
     async def generate_compliance_report(
         self,
-        slo_name: Optional[str] = None,
-        period_start: Optional[datetime] = None,
-        period_end: Optional[datetime] = None,
-    ) -> List[SLOComplianceReport]:
+        slo_name: str | None = None,
+        period_start: datetime | None = None,
+        period_end: datetime | None = None,
+    ) -> list[SLOComplianceReport]:
         """
         Generate SLO compliance report.
 
@@ -823,27 +823,27 @@ class SLOTracker:
 
     def set_violation_callback(
         self,
-        callback: Optional[Callable[[SLOViolation], None]],
+        callback: Callable[[SLOViolation], None] | None,
     ) -> None:
         """Set callback for SLO violations."""
         self._on_violation = callback
 
     def set_resolution_callback(
         self,
-        callback: Optional[Callable[[SLOViolation], None]],
+        callback: Callable[[SLOViolation], None] | None,
     ) -> None:
         """Set callback for violation resolutions."""
         self._on_violation_resolved = callback
 
-    async def get_active_violations(self) -> List[SLOViolation]:
+    async def get_active_violations(self) -> list[SLOViolation]:
         """Get list of active violations."""
         return list(self._active_violations.values())
 
-    async def get_slo_configs(self) -> Dict[str, SLOConfig]:
+    async def get_slo_configs(self) -> dict[str, SLOConfig]:
         """Get all SLO configurations."""
         return dict(self._slo_configs)
 
-    async def get_summary(self) -> Dict[str, Any]:
+    async def get_summary(self) -> dict[str, Any]:
         """Get SLO tracker summary."""
         active = list(self._active_violations.values())
 

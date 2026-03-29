@@ -17,17 +17,19 @@ import asyncio
 import logging
 import traceback
 from datetime import datetime
-from typing import Annotated, Dict
+from typing import TYPE_CHECKING, Annotated
 
-from fastapi import APIRouter, HTTPException, Request, Query
+from fastapi import APIRouter, HTTPException, Query, Request
 from requests.exceptions import HTTPError, RequestException
 
-from app.domain.models.deployment import DeploymentInput
 from app.services.deploy_decision_orchestrator import get_deploy_orchestrator
 from app.services.external_integrations.health_check_manager import get_health_check_manager
 
 from . import audit_logger, get_correlation_id
 from .security import audit_log, rate_limit, require_auth
+
+if TYPE_CHECKING:
+    from app.domain.models.deployment import DeploymentInput
 
 logger = logging.getLogger(__name__)
 
@@ -41,7 +43,7 @@ router = APIRouter(prefix="/deployment", tags=["deployment"])
 async def validate_strategy(
     deployment_input: DeploymentInput,
     http_request: Request,
-) -> Dict:
+) -> dict:
     """
     Validate a strategy and make deployment decision.
 
@@ -125,7 +127,7 @@ async def validate_strategy(
             error_message=str(e),
             stack_trace=traceback.format_exc(),
         )
-        raise HTTPException(status_code=504, detail=f"Validation timeout: {str(e)}")
+        raise HTTPException(status_code=504, detail=f"Validation timeout: {e!s}") from e
     except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
         logger.error(
             "Error validating strategy",
@@ -144,11 +146,11 @@ async def validate_strategy(
             error_message=str(e),
             stack_trace=traceback.format_exc(),
         )
-        raise HTTPException(status_code=500, detail=f"Validation failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Validation failed: {e!s}") from e
 
 
 @router.get("/decision/{decision_id}")
-async def get_deployment_decision(decision_id: str) -> Dict:
+async def get_deployment_decision(decision_id: str) -> dict:
     """
     Retrieve a previous deployment decision by ID.
 
@@ -178,15 +180,15 @@ async def get_deployment_decision(decision_id: str) -> Dict:
         raise HTTPException(status_code=404, detail=f"Decision {decision_id} not found")
 
     except (ValueError, TypeError, KeyError, AttributeError) as e:
-        logger.error(f"❌ Error retrieving decision: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Retrieval failed: {str(e)}")
+        logger.error(f"❌ Error retrieving decision: {e!s}")
+        raise HTTPException(status_code=500, detail=f"Retrieval failed: {e!s}") from e
 
 
 @router.get("/decisions")
 async def list_deployment_decisions(
     limit: Annotated[int, Query(10, ge=1, le=100)],
     offset: Annotated[int, Query(0, ge=0)],
-) -> Dict:
+) -> dict:
     """
     List recent deployment decisions.
 
@@ -222,12 +224,12 @@ async def list_deployment_decisions(
         }
 
     except (ValueError, TypeError, KeyError, AttributeError) as e:
-        logger.error(f"❌ Error listing decisions: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Listing failed: {str(e)}")
+        logger.error(f"❌ Error listing decisions: {e!s}")
+        raise HTTPException(status_code=500, detail=f"Listing failed: {e!s}") from e
 
 
 @router.get("/health")
-async def health_check() -> Dict:
+async def health_check() -> dict:
     """
     Check health of deployment service and external dependencies.
 
@@ -270,7 +272,7 @@ async def health_check() -> Dict:
         }
 
     except (ValueError, TypeError, KeyError, AttributeError) as e:
-        logger.error(f"❌ Error checking health: {str(e)}")
+        logger.error(f"❌ Error checking health: {e!s}")
         return {
             "status": "error",
             "error": str(e),
@@ -279,7 +281,7 @@ async def health_check() -> Dict:
 
 
 @router.get("/status")
-async def deployment_status() -> Dict:
+async def deployment_status() -> dict:
     """
     Get overall status of deployment system.
 
@@ -315,5 +317,5 @@ async def deployment_status() -> Dict:
         }
 
     except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
-        logger.error(f"❌ Error getting status: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Status check failed: {str(e)}")
+        logger.error(f"❌ Error getting status: {e!s}")
+        raise HTTPException(status_code=500, detail=f"Status check failed: {e!s}") from e

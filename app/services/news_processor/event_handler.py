@@ -15,7 +15,7 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 from decimal import Decimal
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional, Set
+from typing import Any, Callable, Optional
 
 from app.shared.utils.timezone_utils import utc_now
 
@@ -47,7 +47,7 @@ class NewsEvent:
     source: str
     url: Optional[str] = None
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
         return {
             "event_id": self.event_id,
@@ -72,7 +72,7 @@ class SentimentUpdate:
     timestamp: datetime
     news_count: int = 1
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
         return {
             "symbol": self.symbol,
@@ -116,9 +116,9 @@ class NewsEventHandler:
 
         # State
         self._is_running = False
-        self._subscriptions: Set[str] = set()
-        self._sentiment_cache: Dict[str, SentimentUpdate] = {}
-        self._event_history: List[NewsEvent] = []
+        self._subscriptions: set[str] = set()
+        self._sentiment_cache: dict[str, SentimentUpdate] = {}
+        self._event_history: list[NewsEvent] = []
         self._webhook_active = False
         self._polling_interval = 300.0  # 5 minutes
 
@@ -137,7 +137,7 @@ class NewsEventHandler:
             await self._setup_webhooks()
 
         # Start polling fallback
-        asyncio.create_task(self._polling_loop())
+        self._polling_task = asyncio.create_task(self._polling_loop())
 
         logger.info("NewsEventHandler started")
         return True
@@ -159,7 +159,7 @@ class NewsEventHandler:
 
     async def subscribe_to_news(
         self,
-        symbols: List[str],
+        symbols: list[str],
         webhook_url: Optional[str] = None,
     ) -> None:
         """
@@ -171,7 +171,7 @@ class NewsEventHandler:
         """
         for symbol in symbols:
             try:
-                if self.marketaux_client and hasattr(self.marketaux_client, 'subscribe_webhook'):
+                if self.marketaux_client and hasattr(self.marketaux_client, "subscribe_webhook"):
                     await self.marketaux_client.subscribe_webhook(
                         symbol=symbol,
                         webhook_url=webhook_url,
@@ -189,7 +189,7 @@ class NewsEventHandler:
     async def unsubscribe_from_news(self, symbol: str) -> None:
         """Unsubscribe from news for symbol."""
         try:
-            if self.marketaux_client and hasattr(self.marketaux_client, 'unsubscribe_webhook'):
+            if self.marketaux_client and hasattr(self.marketaux_client, "unsubscribe_webhook"):
                 await self.marketaux_client.unsubscribe_webhook(symbol)
 
             self._subscriptions.discard(symbol)
@@ -331,12 +331,12 @@ class NewsEventHandler:
                 event = NewsEvent(
                     event_id=f"{symbol}_{article.get('id', '')}",
                     symbol=symbol,
-                    headline=article.get('headline', ''),
-                    sentiment_score=Decimal(str(article.get('sentiment', 0))),
+                    headline=article.get("headline", ""),
+                    sentiment_score=Decimal(str(article.get("sentiment", 0))),
                     event_type=self._classify_event(article),
                     published_at=since,
-                    source=article.get('source', 'marketaux'),
-                    url=article.get('url'),
+                    source=article.get("source", "marketaux"),
+                    url=article.get("url"),
                 )
 
                 await self.on_news_event(event)
@@ -344,15 +344,15 @@ class NewsEventHandler:
         except (asyncio.TimeoutError, OSError) as e:
             logger.debug(f"Error polling news for {symbol}: {e}")
 
-    def _classify_event(self, article: Dict[str, Any]) -> NewsEventType:
+    def _classify_event(self, article: dict[str, Any]) -> NewsEventType:
         """Classify news event type."""
-        headline = article.get('headline', '').lower()
+        headline = article.get("headline", "").lower()
 
         keywords = {
-            NewsEventType.EARNINGS: ['earnings', 'eps', 'revenue', 'quarterly'],
-            NewsEventType.MERGER: ['merger', 'acquisition', 'buyout', 'takeover'],
-            NewsEventType.REGULATORY: ['sec', 'fda', 'regulation', 'lawsuit'],
-            NewsEventType.MACRO: ['fed', 'inflation', 'gdp', 'interest rate'],
+            NewsEventType.EARNINGS: ["earnings", "eps", "revenue", "quarterly"],
+            NewsEventType.MERGER: ["merger", "acquisition", "buyout", "takeover"],
+            NewsEventType.REGULATORY: ["sec", "fda", "regulation", "lawsuit"],
+            NewsEventType.MACRO: ["fed", "inflation", "gdp", "interest rate"],
         }
 
         for event_type, words in keywords.items():
@@ -365,7 +365,7 @@ class NewsEventHandler:
         """Get cached sentiment for symbol."""
         return self._sentiment_cache.get(symbol)
 
-    def get_recent_events(self, symbol: Optional[str] = None, limit: int = 50) -> List[NewsEvent]:
+    def get_recent_events(self, symbol: Optional[str] = None, limit: int = 50) -> list[NewsEvent]:
         """Get recent news events."""
         if symbol:
             return [e for e in self._event_history if e.symbol == symbol][-limit:]
@@ -382,7 +382,7 @@ class NewsEventHandler:
         """Check if handler is running."""
         return self._is_running
 
-    def get_subscribed_symbols(self) -> Set[str]:
+    def get_subscribed_symbols(self) -> set[str]:
         """Get all subscribed symbols."""
         return self._subscriptions.copy()
 
@@ -391,7 +391,7 @@ class NewsEventHandler:
         self._sentiment_cache.clear()
         logger.info("Sentiment cache cleared")
 
-    def get_cache_stats(self) -> Dict[str, Any]:
+    def get_cache_stats(self) -> dict[str, Any]:
         """Get cache statistics."""
         return {
             "cached_symbols": len(self._sentiment_cache),

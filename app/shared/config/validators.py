@@ -9,7 +9,7 @@ TASK-24: SRP Compliance - Separate validators for different aspects
 
 import logging
 from datetime import datetime
-from typing import Any, Dict, List
+from typing import Any
 
 from app.shared.config.protocols import ConfigValidator
 
@@ -20,9 +20,9 @@ class ATRMultiplierValidator:
     """Validates ATR multiplier configuration."""
 
     def __init__(self):
-        self._errors: List[str] = []
+        self._errors: list[str] = []
 
-    def validate(self, config: Dict[str, Any]) -> bool:
+    def validate(self, config: dict[str, Any]) -> bool:
         """
         Validate ATR multiplier configuration.
 
@@ -49,7 +49,7 @@ class ATRMultiplierValidator:
 
         return is_valid
 
-    def get_errors(self) -> List[str]:
+    def get_errors(self) -> list[str]:
         """Get validation errors."""
         return self._errors.copy()
 
@@ -58,9 +58,9 @@ class RiskPercentageValidator:
     """Validates risk percentage configuration."""
 
     def __init__(self):
-        self._errors: List[str] = []
+        self._errors: list[str] = []
 
-    def validate(self, config: Dict[str, Any]) -> bool:
+    def validate(self, config: dict[str, Any]) -> bool:
         """
         Validate risk percentage configuration.
 
@@ -87,7 +87,7 @@ class RiskPercentageValidator:
 
         return is_valid
 
-    def get_errors(self) -> List[str]:
+    def get_errors(self) -> list[str]:
         """Get validation errors."""
         return self._errors.copy()
 
@@ -96,9 +96,9 @@ class TradingSymbolsValidator:
     """Validates trading symbols list."""
 
     def __init__(self):
-        self._errors: List[str] = []
+        self._errors: list[str] = []
 
-    def validate(self, config: Dict[str, Any]) -> bool:
+    def validate(self, config: dict[str, Any]) -> bool:
         """
         Validate trading symbols list.
 
@@ -128,7 +128,7 @@ class TradingSymbolsValidator:
 
         return True
 
-    def get_errors(self) -> List[str]:
+    def get_errors(self) -> list[str]:
         """Get validation errors."""
         return self._errors.copy()
 
@@ -137,9 +137,9 @@ class DateRangeValidator:
     """Validates backtesting date configuration."""
 
     def __init__(self):
-        self._errors: List[str] = []
+        self._errors: list[str] = []
 
-    def validate(self, config: Dict[str, Any]) -> bool:
+    def validate(self, config: dict[str, Any]) -> bool:
         """
         Validate backtesting date configuration.
 
@@ -177,7 +177,7 @@ class DateRangeValidator:
             self._errors.append(f"Invalid date format: {e}")
             return False
 
-    def get_errors(self) -> List[str]:
+    def get_errors(self) -> list[str]:
         """Get validation errors."""
         return self._errors.copy()
 
@@ -189,15 +189,15 @@ class CompositeConfigValidator:
     """
 
     def __init__(self):
-        self._validators: Dict[str, ConfigValidator] = {
+        self._validators: dict[str, ConfigValidator] = {
             "atr_multipliers": ATRMultiplierValidator(),
             "risk_percentages": RiskPercentageValidator(),
             "trading_symbols": TradingSymbolsValidator(),
             "date_range": DateRangeValidator(),
         }
-        self._errors: List[str] = []
+        self._errors: list[str] = []
 
-    def validate(self, config: Dict[str, Any]) -> bool:
+    def validate(self, config: dict[str, Any]) -> bool:
         """
         Validate complete configuration object.
 
@@ -214,27 +214,35 @@ class CompositeConfigValidator:
         if "risk_management" in config:
             rm = config["risk_management"]
 
-            if "atr_multipliers" in rm and not self._validators["atr_multipliers"].validate(rm["atr_multipliers"]):
+            if "atr_multipliers" in rm and not self._validators["atr_multipliers"].validate(
+                rm["atr_multipliers"]
+            ):
                 self._errors.extend(self._validators["atr_multipliers"].get_errors())
                 is_valid = False
 
-            if "position_sizing" in rm and not self._validators["risk_percentages"].validate(rm["position_sizing"]):
+            if "position_sizing" in rm and not self._validators["risk_percentages"].validate(
+                rm["position_sizing"]
+            ):
                 self._errors.extend(self._validators["risk_percentages"].get_errors())
                 is_valid = False
 
         # Validate trading section
-        if "trading" in config and not self._validators["trading_symbols"].validate(config["trading"]):
+        if "trading" in config and not self._validators["trading_symbols"].validate(
+            config["trading"]
+        ):
             self._errors.extend(self._validators["trading_symbols"].get_errors())
             is_valid = False
 
         # Validate backtesting section
-        if "backtesting" in config and not self._validators["date_range"].validate(config["backtesting"]):
+        if "backtesting" in config and not self._validators["date_range"].validate(
+            config["backtesting"]
+        ):
             self._errors.extend(self._validators["date_range"].get_errors())
             is_valid = False
 
         return is_valid
 
-    def get_errors(self) -> List[str]:
+    def get_errors(self) -> list[str]:
         """Get all validation errors."""
         return self._errors.copy()
 

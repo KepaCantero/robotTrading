@@ -21,7 +21,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from decimal import Decimal
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional, Tuple
+from typing import Any, Callable, Optional
 
 from .market_mechanics import MarketMechanicsEngine
 from .order_book import LimitOrderBook, Order, OrderSide, OrderStatus, OrderType, Trade
@@ -160,7 +160,7 @@ class OrderMatchingEngine:
         self.algorithm = algorithm
         self.trade_callback = trade_callback
 
-        self._executions: List[TradeExecution] = []
+        self._executions: list[TradeExecution] = []
 
         logger.debug(
             f"Initialized OrderMatchingEngine for {order_book.symbol} "
@@ -168,11 +168,11 @@ class OrderMatchingEngine:
         )
 
     @property
-    def executions(self) -> List[TradeExecution]:
+    def executions(self) -> list[TradeExecution]:
         """Get all executions."""
         return list(self._executions)
 
-    def submit_order(self, order: Order) -> List[TradeExecution]:
+    def submit_order(self, order: Order) -> list[TradeExecution]:
         """
         Submit an order for execution.
 
@@ -291,7 +291,9 @@ class OrderMatchingEngine:
         if order.order_type == OrderType.STOP_MARKET and order.stop_price is None:
             raise ValueError("Stop market orders must have a stop price")
 
-        if order.order_type == OrderType.STOP_LIMIT and (order.price is None or order.stop_price is None):
+        if order.order_type == OrderType.STOP_LIMIT and (
+            order.price is None or order.stop_price is None
+        ):
             raise ValueError("Stop limit orders must have both price and stop price")
 
 
@@ -354,7 +356,7 @@ class MarketMakerStrategy:
 
         # State
         self._current_position = Decimal("0")
-        self._price_history: List[Tuple[datetime, Decimal]] = []
+        self._price_history: list[tuple[datetime, Decimal]] = []
 
         logger.debug(f"Initialized MarketMakerStrategy for {symbol}")
 
@@ -368,7 +370,7 @@ class MarketMakerStrategy:
         current_price: Decimal,
         volatility: Optional[float] = None,
         order_imbalance: Optional[float] = None,
-    ) -> Tuple[Decimal, Decimal]:
+    ) -> tuple[Decimal, Decimal]:
         """
         Calculate optimal bid and ask quotes.
 
@@ -414,7 +416,7 @@ class MarketMakerStrategy:
         else:
             self._current_position -= quantity
 
-        logger.debug(f"Updated position: {self._current_position} " f"({side.value} {quantity})")
+        logger.debug(f"Updated position: {self._current_position} ({side.value} {quantity})")
 
     def should_quote(self) -> bool:
         """
@@ -429,10 +431,7 @@ class MarketMakerStrategy:
             True if should quote, False otherwise
         """
         # Check position limits
-        if abs(self._current_position) >= self.max_position:
-            return False
-
-        return True
+        return not abs(self._current_position) >= self.max_position
 
     def get_quote_size(
         self,
@@ -607,7 +606,7 @@ class Exchange:
         )
 
         # Initialize market makers
-        self.market_makers: List[MarketMakerStrategy] = []
+        self.market_makers: list[MarketMakerStrategy] = []
         if enable_market_making:
             for i in range(num_market_makers):
                 # Use different spread strategies for diversity
@@ -623,7 +622,7 @@ class Exchange:
                 )
                 self.market_makers.append(mm)
 
-        self._trades: List[Trade] = []
+        self._trades: list[Trade] = []
 
         logger.info(f"Initialized exchange '{name}' for {symbol}")
 
@@ -647,7 +646,7 @@ class Exchange:
         """Get current mid price."""
         return self.order_book.mid_price
 
-    def submit_order(self, order: Order) -> List[TradeExecution]:
+    def submit_order(self, order: Order) -> list[TradeExecution]:
         """
         Submit an order to the exchange.
 
@@ -678,7 +677,7 @@ class Exchange:
 
         return executions
 
-    def get_market_maker_quotes(self) -> List[Tuple[Decimal, Decimal, Decimal]]:
+    def get_market_maker_quotes(self) -> list[tuple[Decimal, Decimal, Decimal]]:
         """
         Get current market maker quotes.
 
@@ -696,7 +695,7 @@ class Exchange:
 
         return quotes
 
-    def get_execution_statistics(self) -> Dict[str, Any]:
+    def get_execution_statistics(self) -> dict[str, Any]:
         """Get execution statistics."""
         if not self._trades:
             return {

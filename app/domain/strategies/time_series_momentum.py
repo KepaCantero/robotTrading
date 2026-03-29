@@ -14,7 +14,6 @@ from __future__ import annotations
 import logging
 from dataclasses import dataclass
 from enum import Enum
-from typing import Dict, List, Optional
 
 import numpy as np
 
@@ -40,8 +39,8 @@ class TimeSeriesSignal:
     state: TrendState
     strength: float  # Signal strength (0-1)
     position_size: float  # Suggested position size (-1 to 1)
-    stop_loss: Optional[float] = None  # Stop loss price
-    take_profit: Optional[float] = None  # Take profit price
+    stop_loss: float | None = None  # Stop loss price
+    take_profit: float | None = None  # Take profit price
 
     @property
     def is_long(self) -> bool:
@@ -202,8 +201,8 @@ class TimeSeriesMomentum:
             if atr:
                 try:
                     config = get_config()
-                    stop_loss_pct = float(getattr(config.trading, 'stop_loss_pct', 0.02))
-                    take_profit_pct = float(getattr(config.trading, 'take_profit_pct', 0.06))
+                    stop_loss_pct = float(getattr(config.trading, "stop_loss_pct", 0.02))
+                    take_profit_pct = float(getattr(config.trading, "take_profit_pct", 0.06))
                     stop_loss = current_price * (1 - stop_loss_pct)
                     take_profit = current_price * (1 + take_profit_pct)
                 except (AttributeError, ValueError, TypeError) as e:
@@ -238,8 +237,8 @@ class TimeSeriesMomentum:
             if atr:
                 try:
                     config = get_config()
-                    stop_loss_pct = float(getattr(config.trading, 'stop_loss_pct', 0.02))
-                    take_profit_pct = float(getattr(config.trading, 'take_profit_pct', 0.06))
+                    stop_loss_pct = float(getattr(config.trading, "stop_loss_pct", 0.02))
+                    take_profit_pct = float(getattr(config.trading, "take_profit_pct", 0.06))
                     stop_loss = current_price * (1 + stop_loss_pct)  # For short, stop loss is above
                     take_profit = current_price * (
                         1 - take_profit_pct
@@ -330,11 +329,11 @@ class TimeSeriesMomentum:
         # Get position sizing parameters from config
         try:
             config = get_config()
-            vol_target = float(getattr(config.trading, 'momentum_volatility_target', 0.15))
-            vol_floor = float(getattr(config.trading, 'momentum_volatility_floor', 0.01))
-            fixed_max_position = float(getattr(config.trading, 'momentum_fixed_max_position', 0.5))
+            vol_target = float(getattr(config.trading, "momentum_volatility_target", 0.15))
+            vol_floor = float(getattr(config.trading, "momentum_volatility_floor", 0.01))
+            fixed_max_position = float(getattr(config.trading, "momentum_fixed_max_position", 0.5))
             default_max_position = float(
-                getattr(config.trading, 'momentum_default_max_position', 0.3)
+                getattr(config.trading, "momentum_default_max_position", 0.3)
             )
         except (AttributeError, ValueError, TypeError) as e:
             logger.warning(f"Error getting position sizing config: {e}, using defaults")
@@ -371,8 +370,8 @@ class TimeSeriesMomentum:
 
     def calculate_portfolio_signals(
         self,
-        price_data: Dict[str, np.ndarray],
-    ) -> List[TimeSeriesSignal]:
+        price_data: dict[str, np.ndarray],
+    ) -> list[TimeSeriesSignal]:
         """
         Generate signals for multiple assets.
 

@@ -3,9 +3,10 @@ Spain Dividend Tax Calculator
 
 Calcula retenciones de dividendos para residentes espanoles
 """
+
 import logging
 from decimal import Decimal
-from typing import Dict
+from typing import ClassVar
 
 logger = logging.getLogger(__name__)
 
@@ -19,7 +20,7 @@ class SpainDividendTaxCalculator:
     """
 
     # Paises UE (codigos ISO)
-    EU_COUNTRY_CODES = {
+    EU_COUNTRY_CODES: ClassVar[dict] = {
         "AT",
         "BE",
         "BG",
@@ -62,7 +63,7 @@ class SpainDividendTaxCalculator:
         For production use, integrate with a securities master database or broker API
         to maintain comprehensive ticker mappings.
         """
-        self._ticker_to_country: Dict[str, str] = {
+        self._ticker_to_country: dict[str, str] = {
             # IBEX35
             "SAN": "ES",
             "REE": "ES",
@@ -105,10 +106,7 @@ class SpainDividendTaxCalculator:
         country = self._get_country(symbol)
         is_eu = country in self.EU_COUNTRY_CODES
 
-        if is_eu:
-            rate = self.UE_WITHHOLDING
-        else:
-            rate = self.NON_EU_WITHHOLDING
+        rate = self.UE_WITHHOLDING if is_eu else self.NON_EU_WITHHOLDING
 
         withholding_amount = gross_amount * rate
         net_amount = gross_amount - withholding_amount

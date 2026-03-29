@@ -26,12 +26,9 @@ Date: 2026-02-03
 from __future__ import annotations
 
 import logging
-from datetime import datetime
 from decimal import Decimal
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
-
-import pandas as pd
+from typing import TYPE_CHECKING, Any
 
 # Import refactored modules
 from app.core.compliance import (
@@ -47,6 +44,11 @@ from app.core.compliance import (
 # Add project root to path for imports
 project_root = Path(__file__).parent.parent.parent
 import sys
+
+if TYPE_CHECKING:
+    from datetime import datetime
+
+    import pandas as pd
 
 if str(project_root) not in sys.path:
     sys.path.insert(0, str(project_root))
@@ -79,7 +81,7 @@ class ComplianceIntegrationFacade:
         - Maintain backward compatibility
     """
 
-    _instance: Optional["ComplianceIntegrationFacade"] = None
+    _instance: ComplianceIntegrationFacade | None = None
 
     def __init__(
         self,
@@ -106,9 +108,9 @@ class ComplianceIntegrationFacade:
         self._registry = get_service_registry()
 
         # Initialize coordinators (lazy)
-        self._pre_trade_checker: Optional[PreTradeComplianceChecker] = None
-        self._post_trade_checker: Optional[PostTradeComplianceChecker] = None
-        self._portfolio_optimizer: Optional[PortfolioComplianceOptimizer] = None
+        self._pre_trade_checker: PreTradeComplianceChecker | None = None
+        self._post_trade_checker: PostTradeComplianceChecker | None = None
+        self._portfolio_optimizer: PortfolioComplianceOptimizer | None = None
 
         # Availability flags (for backward compatibility)
         self._initialize_availability_flags()
@@ -116,7 +118,7 @@ class ComplianceIntegrationFacade:
         logger.info("ComplianceIntegrationFacade initialized")
 
     @classmethod
-    def getInstance(cls) -> "ComplianceIntegrationFacade":
+    def get_instance(cls) -> ComplianceIntegrationFacade:
         """Get the singleton instance."""
         if cls._instance is None:
             cls._instance = cls()
@@ -182,10 +184,10 @@ class ComplianceIntegrationFacade:
         side: str,
         quantity: Decimal,
         current_price: Decimal,
-        price_history: Optional[pd.DataFrame] = None,
-        order_book: Optional[Any] = None,
+        price_history: pd.DataFrame | None = None,
+        order_book: object | None = None,
         urgency: float = 0.5,
-        signal_time: Optional[datetime] = None,
+        signal_time: datetime | None = None,
     ) -> ComprehensivePreTradeAnalysis:
         """
         Comprehensive pre-trade check using all available compliance systems.
@@ -241,11 +243,11 @@ class ComplianceIntegrationFacade:
         side: str,
         quantity: Decimal,
         execution_price: Decimal,
-        signal_price: Optional[Decimal],
-        signal_time: Optional[datetime],
+        signal_price: Decimal | None,
+        signal_time: datetime | None,
         submission_time: datetime,
         execution_time: datetime,
-        nbbo_at_execution: Optional[Tuple[Decimal, Decimal]] = None,
+        nbbo_at_execution: tuple[Decimal, Decimal] | None = None,
     ) -> ComprehensivePostTradeAnalysis:
         """
         Comprehensive post-trade analysis using all available systems.
@@ -286,10 +288,10 @@ class ComplianceIntegrationFacade:
 
     def optimize_portfolio_comprehensive(
         self,
-        symbols: List[str],
+        symbols: list[str],
         returns: pd.DataFrame,
-        current_prices: Dict[str, Decimal],
-        price_histories: Optional[Dict[str, pd.DataFrame]] = None,
+        current_prices: dict[str, Decimal],
+        price_histories: dict[str, pd.DataFrame] | None = None,
     ) -> PortfolioOptimizationResult:
         """
         Comprehensive portfolio optimization using Chan + Narang methods.
@@ -326,7 +328,7 @@ class ComplianceIntegrationFacade:
         latency_ms: float,
         fill_rate: float,
         error_occurred: bool = False,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Track SLO compliance using Google SRE methods."""
         return self.post_trade_checker.track_slo_compliance(
             order_id=order_id,
@@ -335,7 +337,7 @@ class ComplianceIntegrationFacade:
             error_occurred=error_occurred,
         )
 
-    def get_system_availability(self) -> Dict[str, bool]:
+    def get_system_availability(self) -> dict[str, bool]:
         """Get availability status of all compliance systems."""
         return {
             "ernest_chan": self.chan_available,
@@ -366,7 +368,7 @@ class ComplianceIntegrationEngine(ComplianceIntegrationFacade):
 # GLOBAL SINGLETON (Backward Compatible)
 # =============================================================================
 
-_compliance_integration_engine: Optional[ComplianceIntegrationFacade] = None
+_compliance_integration_engine: ComplianceIntegrationFacade | None = None
 
 
 def get_compliance_integration_engine(
@@ -419,8 +421,8 @@ def quick_pre_trade_check(
     side: str,
     quantity: Decimal,
     price: Decimal,
-    price_history: Optional[pd.DataFrame] = None,
-) -> Tuple[bool, str]:
+    price_history: pd.DataFrame | None = None,
+) -> tuple[bool, str]:
     """
     Quick pre-trade check - returns (can_execute, reason).
 
@@ -446,9 +448,9 @@ def get_execution_recommendation(
     symbol: str,
     quantity: Decimal,
     current_price: Decimal,
-    price_history: Optional[pd.DataFrame] = None,
-    order_book: Optional[Any] = None,
-) -> Dict[str, Any]:
+    price_history: pd.DataFrame | None = None,
+    order_book: object | None = None,
+) -> dict[str, Any]:
     """
     Get execution recommendation combining all compliance systems.
 

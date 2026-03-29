@@ -15,9 +15,12 @@ from dataclasses import dataclass
 from datetime import datetime
 from decimal import Decimal
 from enum import Enum
-from typing import Callable, Dict, List, Optional, Union
+from typing import TYPE_CHECKING, Callable, Optional, Union
 
 from app.shared.utils.timezone_utils import utc_now
+
+if TYPE_CHECKING:
+    from app.services.live_trading.broker_connector import BrokerPosition
 
 logger = logging.getLogger(__name__)
 
@@ -56,7 +59,7 @@ class BrokerState:
     total_failures: int = 0
     last_error: Optional[str] = None
 
-    def to_dict(self) -> Dict[str, Union[str, int, float, bool, datetime, None]]:
+    def to_dict(self) -> dict[str, Union[str, int, float, bool, datetime, None]]:
         """Convert to dictionary."""
         return {
             "name": self.name,
@@ -84,7 +87,7 @@ class BrokerFailoverManager:
 
     def __init__(
         self,
-        brokers: List[BrokerConfig],
+        brokers: list[BrokerConfig],
         on_failover: Optional[Callable[[str, str], None]] = None,
         health_check_interval: float = 60.0,
     ):
@@ -103,7 +106,7 @@ class BrokerFailoverManager:
 
         # State
         self._active_broker: Optional[BrokerConfig] = None
-        self._broker_states: Dict[str, BrokerState] = {}
+        self._broker_states: dict[str, BrokerState] = {}
         self._is_monitoring = False
         self._monitor_task: Optional[asyncio.Task] = None
 
@@ -222,7 +225,7 @@ class BrokerFailoverManager:
         logger.error("All brokers failed")
         return None
 
-    async def sync_positions(self) -> Dict[str, Dict[str, object]]:
+    async def sync_positions(self) -> dict[str, dict[str, object]]:
         """
         Sync positions across all brokers.
 
@@ -236,9 +239,7 @@ class BrokerFailoverManager:
                 continue
 
             try:
-                from app.services.live_trading.broker_connector import BrokerPosition
-
-                positions: List[BrokerPosition] = await broker_config.broker.get_positions()
+                positions: list[BrokerPosition] = await broker_config.broker.get_positions()
                 positions_by_broker[broker_config.name] = {pos.symbol: pos for pos in positions}
 
                 logger.debug(f"Synced {len(positions)} positions from {broker_config.name}")
@@ -248,7 +249,7 @@ class BrokerFailoverManager:
 
         return positions_by_broker
 
-    async def get_account_info(self) -> Optional[Dict[str, Union[str, int, float, bool, Decimal]]]:
+    async def get_account_info(self) -> Optional[dict[str, Union[str, int, float, bool, Decimal]]]:
         """
         Get account info from active broker with failover.
 
@@ -406,11 +407,11 @@ class BrokerFailoverManager:
         """Get name of currently active broker."""
         return self._active_broker.name if self._active_broker else None
 
-    def get_broker_states(self) -> Dict[str, BrokerState]:
+    def get_broker_states(self) -> dict[str, BrokerState]:
         """Get state of all brokers."""
         return self._broker_states.copy()
 
-    def get_statistics(self) -> Dict[str, Union[str, int, bool, None]]:
+    def get_statistics(self) -> dict[str, Union[str, int, bool, None]]:
         """Get failover statistics."""
         return {
             "active_broker": self._active_broker.name if self._active_broker else None,
@@ -424,7 +425,7 @@ class BrokerFailoverManager:
             "is_monitoring": self._is_monitoring,
         }
 
-    def get_health_report(self) -> Dict[str, Union[str, int, bool, None, Dict, List]]:
+    def get_health_report(self) -> dict[str, Union[str, int, bool, None, dict, list]]:
         """
         Generate a comprehensive health report.
 

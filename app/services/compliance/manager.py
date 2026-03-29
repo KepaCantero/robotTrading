@@ -38,7 +38,7 @@ import logging
 from dataclasses import dataclass, field
 from datetime import date, datetime
 from decimal import Decimal
-from typing import List, Optional, Tuple
+from typing import Optional
 
 from app.services.compliance.order_pattern_analyzer import OrderPatternAnalyzer
 from app.services.compliance.pdt_tracker import Country, PDTStatus, PDTTracker
@@ -103,7 +103,7 @@ class ComplianceReport:
     wash_sale_count: int = 0
     wash_sale_disallowed_loss: Decimal = Decimal("0")
     order_pattern_alerts: int = 0
-    active_violations: List[ComplianceViolation] = field(default_factory=list)
+    active_violations: list[ComplianceViolation] = field(default_factory=list)
     can_day_trade: bool = True
     restricted: bool = False
 
@@ -164,7 +164,7 @@ class ComplianceManager:
         self.order_analyzer = OrderPatternAnalyzer()
 
         # Violation tracking
-        self._violations: List[ComplianceViolation] = []
+        self._violations: list[ComplianceViolation] = []
 
         logger.info(
             f"ComplianceManager initialized for {country.value} "
@@ -175,7 +175,7 @@ class ComplianceManager:
         self,
         trade: TradeRecord,
         account_equity: Optional[Decimal] = None,
-    ) -> Tuple[bool, List[str]]:
+    ) -> tuple[bool, list[str]]:
         """
         Check if trade is allowed under compliance rules.
 
@@ -254,7 +254,7 @@ class ComplianceManager:
                 trade.price,
             )
             if is_wash:
-                wash_msg = f"Wash sale detected: {trade.symbol} - " f"loss may be disallowed"
+                wash_msg = f"Wash sale detected: {trade.symbol} - loss may be disallowed"
                 violations.append(wash_msg)
                 self._record_violation(
                     "WASH_SALE",
@@ -372,7 +372,7 @@ class ComplianceManager:
     def get_violations(
         self,
         severity: Optional[str] = None,
-    ) -> List[ComplianceViolation]:
+    ) -> list[ComplianceViolation]:
         """
         Get compliance violations.
 

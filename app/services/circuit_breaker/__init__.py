@@ -23,9 +23,9 @@ from app.services.circuit_breaker.daily_circuit_breaker import (
 )
 
 __all__ = [
-    "DailyCircuitBreaker",
+    "DailyBreakerEvent",
     "DailyBreakerState",
     "DailyBreakerStatus",
-    "DailyBreakerEvent",
+    "DailyCircuitBreaker",
     "create_daily_breaker",
 ]

@@ -16,7 +16,7 @@ from dataclasses import dataclass, field
 from datetime import date, datetime, timezone
 from decimal import Decimal
 from enum import Enum
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 from uuid import UUID, uuid4
 
 try:
@@ -120,13 +120,13 @@ class PeriodResult:
     is_in_sample: bool = field(default=True)
     total_trades: int = field(default=0)
     total_return: Decimal = field(default=Decimal("0"))
-    sharpe_ratio: Optional[Decimal] = field(default=None)
+    sharpe_ratio: Decimal | None = field(default=None)
     max_drawdown: Decimal = field(default=Decimal("0"))
     win_rate: Decimal = field(default=Decimal("0"))
-    profit_factor: Optional[Decimal] = field(default=None)
-    parameters: Dict[str, Any] = field(default_factory=dict)
-    trades: List[Any] = field(default_factory=list)
-    equity_curve: List[Tuple[date, Decimal]] = field(default_factory=list)
+    profit_factor: Decimal | None = field(default=None)
+    parameters: dict[str, Any] = field(default_factory=dict)
+    trades: list[Any] = field(default_factory=list)
+    equity_curve: list[tuple[date, Decimal]] = field(default_factory=list)
 
 
 @dataclass
@@ -146,17 +146,17 @@ class WalkForwardResult:
         recommendations: List of actionable recommendations
     """
 
-    is_results: List[PeriodResult] = field(default_factory=list)
-    os_results: List[PeriodResult] = field(default_factory=list)
-    is_performance: Dict[str, Any] = field(default_factory=dict)
-    os_performance: Dict[str, Any] = field(default_factory=dict)
+    is_results: list[PeriodResult] = field(default_factory=list)
+    os_results: list[PeriodResult] = field(default_factory=list)
+    is_performance: dict[str, Any] = field(default_factory=dict)
+    os_performance: dict[str, Any] = field(default_factory=dict)
     is_os_ratio: Decimal = field(default=Decimal("0"))
     consistency_score: Decimal = field(default=Decimal("0"))
     num_periods: int = field(default=0)
     total_days: int = field(default=0)
-    recommendations: List[str] = field(default_factory=list)
+    recommendations: list[str] = field(default_factory=list)
 
-    def get_degradation_summary(self) -> Dict[str, Any]:
+    def get_degradation_summary(self) -> dict[str, Any]:
         """Get summary of performance degradation from IS to OS."""
         if not self.is_performance or not self.os_performance:
             return {}
@@ -204,9 +204,9 @@ class OverfittingMetrics:
     return_degradation: Decimal = field(default=Decimal("0"))
     overfitting_probability: float = field(default=0.0)
     overfitting_level: OverfittingLevel = field(default=OverfittingLevel.NONE)
-    recommendations: List[str] = field(default_factory=list)
-    whites_reality_pvalue: Optional[float] = field(default=None)
-    mcs_pvalue: Optional[float] = field(default=None)
+    recommendations: list[str] = field(default_factory=list)
+    whites_reality_pvalue: float | None = field(default=None)
+    mcs_pvalue: float | None = field(default=None)
     parameter_stability_score: Decimal = field(default=Decimal("100"))
 
     def is_overfitted(self) -> bool:
@@ -238,9 +238,9 @@ class MarketRegime:
     trend_regime: TrendRegime = field(default=TrendRegime.TRANSITION)
     confidence: float = field(default=0.5)
     start_date: date = field(default_factory=date.today)
-    end_date: Optional[date] = field(default=None)
-    expected_duration: Optional[int] = field(default=None)
-    characteristics: Dict[str, Any] = field(default_factory=dict)
+    end_date: date | None = field(default=None)
+    expected_duration: int | None = field(default=None)
+    characteristics: dict[str, Any] = field(default_factory=dict)
 
     def description(self) -> str:
         """Get human-readable regime description."""
@@ -352,9 +352,9 @@ class RegimeTransitionMatrix:
         last_update: When the matrix was last updated
     """
 
-    matrix: Dict[str, Dict[str, float]] = field(default_factory=dict)
-    regimes: List[str] = field(default_factory=list)
-    expected_durations: Dict[str, float] = field(default_factory=dict)
+    matrix: dict[str, dict[str, float]] = field(default_factory=dict)
+    regimes: list[str] = field(default_factory=list)
+    expected_durations: dict[str, float] = field(default_factory=dict)
     last_update: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
 
     def get_transition_probability(self, from_regime: str, to_regime: str) -> float:
@@ -363,6 +363,6 @@ class RegimeTransitionMatrix:
             return self.matrix[from_regime][to_regime]
         return 0.0
 
-    def get_expected_duration(self, regime: str) -> Optional[float]:
+    def get_expected_duration(self, regime: str) -> float | None:
         """Get expected duration for a regime in days."""
         return self.expected_durations.get(regime)

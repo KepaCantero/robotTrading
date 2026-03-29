@@ -6,7 +6,7 @@ Tracks performance metrics per cycle to monitor system efficiency and identify b
 
 import logging
 import time
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 import numpy as np
 
@@ -48,7 +48,7 @@ class PerformanceTracker:
 
     def __init__(self, max_history: int = 1000):
         self.max_history = max_history
-        self.cycle_metrics: List[CycleMetrics] = []
+        self.cycle_metrics: list[CycleMetrics] = []
         self.total_cycles: int = 0
         self.current_cycle: Optional[CycleMetrics] = None
 
@@ -65,7 +65,7 @@ class PerformanceTracker:
         self.total_cycles += 1
         return cycle_metrics.cycle_id
 
-    def end_cycle(self) -> Optional[Dict[str, Any]]:
+    def end_cycle(self) -> Optional[dict[str, Any]]:
         """
         End the current cycle and return metrics.
 
@@ -106,7 +106,7 @@ class PerformanceTracker:
         if self.current_cycle:
             self.current_cycle.warnings_count += 1
 
-    def get_performance_summary(self, last_n_cycles: int = 100) -> Dict[str, Any]:
+    def get_performance_summary(self, last_n_cycles: int = 100) -> dict[str, Any]:
         """
         Get performance summary for the last N cycles.
 
@@ -141,7 +141,7 @@ class PerformanceTracker:
             "min_duration_ms": min(c.duration_ms for c in recent_cycles),
         }
 
-    def _cycle_to_dict(self, cycle: CycleMetrics) -> Dict[str, Any]:
+    def _cycle_to_dict(self, cycle: CycleMetrics) -> dict[str, Any]:
         """Convert CycleMetrics to dictionary."""
         return {
             "cycle_id": cycle.cycle_id,

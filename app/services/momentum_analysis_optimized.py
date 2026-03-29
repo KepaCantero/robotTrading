@@ -14,7 +14,7 @@ PERFORMANCE OPTIMIZATIONS:
 """
 
 import logging
-from typing import List, Optional, Tuple
+from typing import Optional
 
 import numpy as np
 import pandas as pd
@@ -75,7 +75,7 @@ class TechnicalIndicatorCalculatorOptimized:
     """
 
     @staticmethod
-    def calculate_rsi(prices: List[float], period: int = 14) -> Optional[float]:
+    def calculate_rsi(prices: list[float], period: int = 14) -> Optional[float]:
         """
         Calculate Relative Strength Index using Numba JIT compilation.
 
@@ -96,7 +96,7 @@ class TechnicalIndicatorCalculatorOptimized:
             raise ImportError("Neither Numba nor pandas-ta-classic is available")
 
         try:
-            df = pd.Series(prices, name='close')
+            df = pd.Series(prices, name="close")
             rsi_series = ta.rsi(df, length=period)
 
             if rsi_series is None or rsi_series.empty or rsi_series.isna().all():
@@ -112,7 +112,7 @@ class TechnicalIndicatorCalculatorOptimized:
             raise
 
     @staticmethod
-    def calculate_ema(prices: List[float], period: int) -> Optional[float]:
+    def calculate_ema(prices: list[float], period: int) -> Optional[float]:
         """
         Calculate Exponential Moving Average using Numba JIT compilation.
 
@@ -137,7 +137,7 @@ class TechnicalIndicatorCalculatorOptimized:
             raise ImportError("Neither Numba nor pandas-ta-classic is available")
 
         try:
-            df = pd.Series(prices, name='close')
+            df = pd.Series(prices, name="close")
             ema_series = ta.ema(df, length=period)
 
             if ema_series is None or ema_series.empty or ema_series.isna().all():
@@ -154,11 +154,11 @@ class TechnicalIndicatorCalculatorOptimized:
 
     @staticmethod
     def calculate_macd(
-        prices: List[float],
+        prices: list[float],
         fast_period: int = 12,
         slow_period: int = 26,
         signal_period: int = 9,
-    ) -> Tuple[Optional[float], Optional[float], Optional[float]]:
+    ) -> tuple[Optional[float], Optional[float], Optional[float]]:
         """
         Calculate MACD using Numba JIT compilation.
 
@@ -181,7 +181,7 @@ class TechnicalIndicatorCalculatorOptimized:
             raise ImportError("Neither Numba nor pandas-ta-classic is available")
 
         try:
-            df = pd.Series(prices, name='close')
+            df = pd.Series(prices, name="close")
             macd_df = ta.macd(df, fast=fast_period, slow=slow_period, signal=signal_period)
 
             if macd_df is None or macd_df.empty:
@@ -231,7 +231,7 @@ class TechnicalIndicatorCalculatorOptimized:
 
     @staticmethod
     def calculate_atr(
-        highs: List[float], lows: List[float], closes: List[float], period: int = 14
+        highs: list[float], lows: list[float], closes: list[float], period: int = 14
     ) -> Optional[float]:
         """
         Calculate Average True Range using Numba JIT compilation.
@@ -255,8 +255,8 @@ class TechnicalIndicatorCalculatorOptimized:
             raise ImportError("Neither Numba nor pandas-ta-classic is available")
 
         try:
-            df = pd.DataFrame({'high': highs, 'low': lows, 'close': closes})
-            atr_series = ta.atr(df['high'], df['low'], df['close'], length=period)
+            df = pd.DataFrame({"high": highs, "low": lows, "close": closes})
+            atr_series = ta.atr(df["high"], df["low"], df["close"], length=period)
 
             if atr_series is None or atr_series.empty or atr_series.isna().all():
                 logger.debug("ATR: pandas_ta_classic returned None or all NaN values")
@@ -272,8 +272,8 @@ class TechnicalIndicatorCalculatorOptimized:
 
     @staticmethod
     def calculate_bollinger_bands(
-        prices: List[float], period: int = 20, num_std: float = 2.0
-    ) -> Tuple[Optional[float], Optional[float], Optional[float]]:
+        prices: list[float], period: int = 20, num_std: float = 2.0
+    ) -> tuple[Optional[float], Optional[float], Optional[float]]:
         """
         Calculate Bollinger Bands using Numba JIT compilation.
 
@@ -296,7 +296,7 @@ class TechnicalIndicatorCalculatorOptimized:
             raise ImportError("Neither Numba nor pandas-ta-classic is available")
 
         try:
-            df = pd.Series(prices, name='close')
+            df = pd.Series(prices, name="close")
             bb_df = ta.bbands(df, length=period, std=num_std)
 
             if bb_df is None or bb_df.empty:
@@ -337,12 +337,12 @@ class TechnicalIndicatorCalculatorOptimized:
 
     @staticmethod
     def calculate_stochastic(
-        highs: List[float],
-        lows: List[float],
-        closes: List[float],
+        highs: list[float],
+        lows: list[float],
+        closes: list[float],
         k_period: int = 14,
         d_period: int = 3,
-    ) -> Tuple[Optional[float], Optional[float]]:
+    ) -> tuple[Optional[float], Optional[float]]:
         """
         Calculate Stochastic Oscillator using Numba JIT compilation.
 
@@ -365,8 +365,8 @@ class TechnicalIndicatorCalculatorOptimized:
             raise ImportError("Neither Numba nor pandas-ta-classic is available")
 
         try:
-            df = pd.DataFrame({'high': highs, 'low': lows, 'close': closes})
-            stoch_df = ta.stoch(df['high'], df['low'], df['close'], k=k_period, d=d_period)
+            df = pd.DataFrame({"high": highs, "low": lows, "close": closes})
+            stoch_df = ta.stoch(df["high"], df["low"], df["close"], k=k_period, d=d_period)
 
             if stoch_df is None or stoch_df.empty:
                 logger.debug("Stochastic: pandas_ta_classic returned None or empty DataFrame")
@@ -399,7 +399,7 @@ class TechnicalIndicatorCalculatorOptimized:
             return None, None
 
     @staticmethod
-    def calculate_skewness(returns: List[float]) -> Optional[float]:
+    def calculate_skewness(returns: list[float]) -> Optional[float]:
         """
         Calculate skewness using Numba JIT compilation.
 
@@ -422,7 +422,7 @@ class TechnicalIndicatorCalculatorOptimized:
         return float(skewness_value)
 
     @staticmethod
-    def calculate_kurtosis(returns: List[float]) -> Optional[float]:
+    def calculate_kurtosis(returns: list[float]) -> Optional[float]:
         """
         Calculate kurtosis using Numba JIT compilation.
 
@@ -445,7 +445,7 @@ class TechnicalIndicatorCalculatorOptimized:
         return float(kurtosis_value)
 
     @staticmethod
-    def calculate_var(returns: List[float], confidence_level: float = 0.95) -> Optional[float]:
+    def calculate_var(returns: list[float], confidence_level: float = 0.95) -> Optional[float]:
         """
         Calculate Value at Risk using Numba JIT compilation.
 
@@ -465,7 +465,7 @@ class TechnicalIndicatorCalculatorOptimized:
         return float(np.percentile(returns, (1 - confidence_level) * 100))
 
     @staticmethod
-    def calculate_cvar(returns: List[float], confidence_level: float = 0.95) -> Optional[float]:
+    def calculate_cvar(returns: list[float], confidence_level: float = 0.95) -> Optional[float]:
         """
         Calculate Conditional VaR using Numba JIT compilation.
 

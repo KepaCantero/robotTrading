@@ -28,10 +28,12 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, Generic, List, Optional, TypeVar
+from typing import TYPE_CHECKING, Any, Generic, TypeVar
 
 import numpy as np
-from numpy.typing import NDArray
+
+if TYPE_CHECKING:
+    from numpy.typing import NDArray
 
 logger = logging.getLogger(__name__)
 
@@ -87,18 +89,18 @@ class OptimizationConfig:
     """
 
     max_iterations: int = 100
-    timeout_seconds: Optional[int] = None
+    timeout_seconds: int | None = None
     n_jobs: int = 1
     early_stopping: bool = True
     early_stopping_patience: int = 10
     early_stopping_min_improvement: float = 0.001
     metric: str = "sharpe_ratio"
     maximize: bool = True
-    random_seed: Optional[int] = None
+    random_seed: int | None = None
     verbose: int = 1
     progress_bar: bool = True
     checkpoint_interval: int = 0
-    checkpoint_path: Optional[str] = None
+    checkpoint_path: str | None = None
 
     def __post_init__(self) -> None:
         """Validate configuration after initialization."""
@@ -120,7 +122,7 @@ class OptimizationConfig:
             return os.cpu_count() or 1
         return max(1, self.n_jobs)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary representation."""
         return {
             "max_iterations": self.max_iterations,
@@ -157,15 +159,15 @@ class TrialResult:
     """
 
     trial_id: str
-    params: Dict[str, Any]
+    params: dict[str, Any]
     objective_value: float
     status: OptimizationStatus = OptimizationStatus.COMPLETED
-    start_time: Optional[datetime] = None
-    end_time: Optional[datetime] = None
+    start_time: datetime | None = None
+    end_time: datetime | None = None
     iteration: int = 0
-    error_message: Optional[str] = None
-    metrics: Dict[str, Any] = field(default_factory=dict)
-    additional_info: Dict[str, Any] = field(default_factory=dict)
+    error_message: str | None = None
+    metrics: dict[str, Any] = field(default_factory=dict)
+    additional_info: dict[str, Any] = field(default_factory=dict)
 
     @property
     def is_success(self) -> bool:
@@ -173,13 +175,13 @@ class TrialResult:
         return self.status == OptimizationStatus.COMPLETED
 
     @property
-    def duration_seconds(self) -> Optional[float]:
+    def duration_seconds(self) -> float | None:
         """Get trial duration in seconds."""
         if self.start_time and self.end_time:
             return (self.end_time - self.start_time).total_seconds()
         return None
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary representation."""
         return {
             "trial_id": self.trial_id,
@@ -217,17 +219,17 @@ class OptimizationResult:
         additional_info: Additional metadata
     """
 
-    best_params: Dict[str, Any] = field(default_factory=dict)
-    best_weights: Optional[NDArray[np.float64]] = None
+    best_params: dict[str, Any] = field(default_factory=dict)
+    best_weights: NDArray[np.float64] | None = None
     best_score: float = 0.0
-    all_trials: List[TrialResult] = field(default_factory=list)
+    all_trials: list[TrialResult] = field(default_factory=list)
     optimization_time: float = 0.0
     n_iterations: int = 0
     converged: bool = False
-    convergence_iteration: Optional[int] = None
+    convergence_iteration: int | None = None
     status: OptimizationStatus = OptimizationStatus.COMPLETED
-    config: Optional[OptimizationConfig] = None
-    additional_info: Dict[str, Any] = field(default_factory=dict)
+    config: OptimizationConfig | None = None
+    additional_info: dict[str, Any] = field(default_factory=dict)
 
     @property
     def success_rate(self) -> float:
@@ -252,7 +254,7 @@ class OptimizationResult:
             return 0.0
         return float(np.std([t.objective_value for t in successful]))
 
-    def get_top_n(self, n: int = 10) -> List[Dict[str, Any]]:
+    def get_top_n(self, n: int = 10) -> list[dict[str, Any]]:
         """
         Get top N parameter sets.
 
@@ -270,7 +272,7 @@ class OptimizationResult:
         )
         return [t.params for t in sorted_trials[:n]]
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary representation."""
         return {
             "best_params": self.best_params,
@@ -291,7 +293,7 @@ class OptimizationResult:
         }
 
 
-T = TypeVar('T')
+T = TypeVar("T")
 
 
 class BaseOptimizer(ABC, Generic[T]):
@@ -330,11 +332,11 @@ class BaseOptimizer(ABC, Generic[T]):
             config: Optimization configuration
         """
         self.config = config
-        self._start_time: Optional[datetime] = None
-        self._end_time: Optional[datetime] = None
+        self._start_time: datetime | None = None
+        self._end_time: datetime | None = None
         self._best_score = float("-inf") if config.maximize else float("inf")
         self._iteration_count = 0
-        self._history: List[TrialResult] = []
+        self._history: list[TrialResult] = []
 
         # Set random seed if specified
         if config.random_seed is not None:
@@ -361,7 +363,7 @@ class BaseOptimizer(ABC, Generic[T]):
         """
 
     @abstractmethod
-    def get_best_params(self) -> Dict[str, Any]:
+    def get_best_params(self) -> dict[str, Any]:
         """
         Get the best parameters found.
 
@@ -370,7 +372,7 @@ class BaseOptimizer(ABC, Generic[T]):
         """
 
     @abstractmethod
-    def get_history(self) -> List[TrialResult]:
+    def get_history(self) -> list[TrialResult]:
         """
         Get optimization history.
 
@@ -419,7 +421,7 @@ class BaseOptimizer(ABC, Generic[T]):
 
         return improvement < self.config.early_stopping_min_improvement
 
-    def _log_progress(self, iteration: int, score: float, params: Dict[str, Any]) -> None:
+    def _log_progress(self, iteration: int, score: float, params: dict[str, Any]) -> None:
         """Log optimization progress."""
         if self.config.verbose == 0:
             return
@@ -431,9 +433,9 @@ class BaseOptimizer(ABC, Generic[T]):
 
     def _create_result(
         self,
-        best_params: Dict[str, Any],
+        best_params: dict[str, Any],
         best_score: float,
-        best_weights: Optional[NDArray[np.float64]] = None,
+        best_weights: NDArray[np.float64] | None = None,
     ) -> OptimizationResult:
         """
         Create OptimizationResult from current state.

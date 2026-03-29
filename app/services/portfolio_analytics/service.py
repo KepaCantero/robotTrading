@@ -8,7 +8,7 @@ metrics calculation, risk analysis, and portfolio management features.
 import logging
 from datetime import datetime, timedelta
 from decimal import Decimal
-from typing import Dict, List, Optional, Tuple
+from typing import Optional
 from uuid import UUID
 
 from app.domain.models.portfolio import Portfolio
@@ -349,7 +349,7 @@ class PortfolioAnalyticsService:
         domestic_allocation = Decimal("100")
         international_allocation = Decimal("0")
 
-        sector_allocations: Dict[str, Decimal] = {}
+        sector_allocations: dict[str, Decimal] = {}
         top_holdings = self._portfolio_calc.get_top_holdings(portfolio, limit=10)
 
         logger.info(
@@ -479,7 +479,7 @@ class PortfolioAnalyticsService:
             return_impact=return_impact,
         )
 
-    async def compare_portfolios(self, portfolio_ids: List[UUID]) -> PortfolioComparison:
+    async def compare_portfolios(self, portfolio_ids: list[UUID]) -> PortfolioComparison:
         """
         Compare multiple portfolios.
 
@@ -558,7 +558,7 @@ class PortfolioAnalyticsService:
 
     async def _get_portfolio_values(
         self, portfolio: Portfolio, start_date: datetime, end_date: datetime
-    ) -> List[Decimal]:
+    ) -> list[Decimal]:
         """Get historical portfolio values for a date range."""
         values = []
         current_date = start_date
@@ -700,7 +700,7 @@ class PortfolioAnalyticsService:
         portfolio: Portfolio,
         performance: PerformanceMetrics,
         risk: RiskMetrics,
-    ) -> List[str]:
+    ) -> list[str]:
         """Generate portfolio recommendations based on metrics."""
         recommendations = []
 
@@ -743,7 +743,7 @@ class PortfolioAnalyticsService:
         portfolio: Portfolio,
         performance: PerformanceMetrics,
         risk: RiskMetrics,
-    ) -> List[str]:
+    ) -> list[str]:
         """Generate portfolio warnings based on metrics."""
         warnings = []
 
@@ -793,7 +793,7 @@ class PortfolioAnalyticsService:
         target_allocation: PortfolioAllocation,
         equity_deviation: Decimal,
         rebalance_threshold: Decimal,
-    ) -> List[dict]:
+    ) -> list[dict]:
         """Create rebalance actions based on allocation deviation."""
         rebalance_actions = []
 
@@ -828,8 +828,8 @@ class PortfolioAnalyticsService:
         return rebalance_actions
 
     def _create_mock_comparisons(
-        self, portfolio_ids: List[UUID]
-    ) -> Tuple[Dict[str, PerformanceMetrics], Dict[str, RiskMetrics]]:
+        self, portfolio_ids: list[UUID]
+    ) -> tuple[dict[str, PerformanceMetrics], dict[str, RiskMetrics]]:
         """Create mock comparison data for portfolio comparison."""
         performance_comparison = {}
         risk_comparison = {}

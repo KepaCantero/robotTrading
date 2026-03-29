@@ -9,16 +9,13 @@ Uses centralized configuration for thresholds and parameters.
 import logging
 from decimal import Decimal
 from enum import Enum
-from typing import TYPE_CHECKING, Dict, List
+from typing import Optional
 
 from pydantic import BaseModel, Field
 
 from app.domain.models.portfolio import Portfolio
 from app.services.forex_data_service import get_forex_fetcher
 from app.shared.config.centralized_config import get_config
-
-if TYPE_CHECKING:
-    pass
 
 logger = logging.getLogger(__name__)
 
@@ -58,7 +55,7 @@ class CurrencyHedgingEngine:
     Uses centralized configuration for all thresholds and parameters.
     """
 
-    def __init__(self, config: Dict = None):
+    def __init__(self, config: Optional[dict] = None):
         """
         Initialize hedging engine.
 
@@ -84,7 +81,7 @@ class CurrencyHedgingEngine:
 
     def calculate_currency_exposure(
         self, portfolio: Portfolio, base_currency: str = "USD"
-    ) -> Dict[str, Decimal]:
+    ) -> dict[str, Decimal]:
         """
         Calculate aggregate currency exposure per non-base currency.
 
@@ -96,13 +93,13 @@ class CurrencyHedgingEngine:
             Dict[currency, notional_amount]: Currency exposures in base currency
         """
         logger.debug(f"Calculating currency exposure for {len(portfolio.positions)} positions")
-        exposure: Dict[str, Decimal] = {}
+        exposure: dict[str, Decimal] = {}
 
         for position in portfolio.positions:
             # Skip base currency and hedge positions
             # Safely check if position is a hedge
             is_hedge = False
-            if hasattr(position, 'hedging') and position.hedging is not None:
+            if hasattr(position, "hedging") and position.hedging is not None:
                 is_hedge = position.hedging.is_hedge
 
             if position.currency == base_currency or is_hedge:
@@ -123,7 +120,7 @@ class CurrencyHedgingEngine:
         self,
         portfolio: Portfolio,
         base_currency: str = "USD",
-    ) -> List[HedgeRecommendation]:
+    ) -> list[HedgeRecommendation]:
         """
         Calculate hedge recommendations for portfolio.
 
@@ -135,7 +132,7 @@ class CurrencyHedgingEngine:
             List of hedge recommendations
         """
         logger.debug("Calculating hedge recommendations")
-        recommendations: List[HedgeRecommendation] = []
+        recommendations: list[HedgeRecommendation] = []
 
         # Get current exposures
         exposure = self.calculate_currency_exposure(portfolio, base_currency)
@@ -163,8 +160,8 @@ class CurrencyHedgingEngine:
                 logger.debug(f"  {currency}: {exposure_pct} < max threshold, checking...")
 
             # Determine urgency using config thresholds
-            urgency_immediate = Decimal(str(getattr(self._tt, 'currency_urgency_immediate', 0.35)))
-            urgency_normal = Decimal(str(getattr(self._tt, 'currency_urgency_normal', 0.25)))
+            urgency_immediate = Decimal(str(getattr(self._tt, "currency_urgency_immediate", 0.35)))
+            urgency_normal = Decimal(str(getattr(self._tt, "currency_urgency_normal", 0.25)))
 
             if exposure_pct > urgency_immediate:
                 urgency = HedgeUrgency.IMMEDIATE
@@ -175,7 +172,7 @@ class CurrencyHedgingEngine:
 
             # Calculate hedge ratio
             default_correlation = Decimal(
-                str(getattr(self._tt, 'currency_default_correlation', 0.5))
+                str(getattr(self._tt, "currency_default_correlation", 0.5))
             )
             correlation = correlations.get(currency, default_correlation)
             hedge_ratio = self._calculate_hedge_ratio(exposure_pct, correlation, urgency)
@@ -240,11 +237,11 @@ class CurrencyHedgingEngine:
         strategy = self.config.get("hedge_strategy", "partial")
 
         # Get rolling hedge ratios from config
-        rolling_base = Decimal(str(getattr(self._tt, 'currency_hedge_rolling_base', 0.5)))
-        rolling_immediate = Decimal(str(getattr(self._tt, 'currency_hedge_rolling_immediate', 0.8)))
-        rolling_normal = Decimal(str(getattr(self._tt, 'currency_hedge_rolling_normal', 0.6)))
+        rolling_base = Decimal(str(getattr(self._tt, "currency_hedge_rolling_base", 0.5)))
+        rolling_immediate = Decimal(str(getattr(self._tt, "currency_hedge_rolling_immediate", 0.8)))
+        rolling_normal = Decimal(str(getattr(self._tt, "currency_hedge_rolling_normal", 0.6)))
         correlation_adjustment = Decimal(
-            str(getattr(self._tt, 'currency_correlation_adjustment', 0.5))
+            str(getattr(self._tt, "currency_correlation_adjustment", 0.5))
         )
 
         if strategy == "full":
@@ -283,13 +280,13 @@ class CurrencyHedgingEngine:
         """
         # Get cost factors from config
         execution_cost_factor = Decimal(
-            str(getattr(self._tt, 'currency_execution_cost_factor', 0.5))
+            str(getattr(self._tt, "currency_execution_cost_factor", 0.5))
         )
-        slippage_base = Decimal(str(getattr(self._tt, 'currency_slippage_base_bps', 0.5)))
+        slippage_base = Decimal(str(getattr(self._tt, "currency_slippage_base_bps", 0.5)))
         size_large_threshold = Decimal(
-            str(getattr(self._tt, 'currency_size_large_threshold', 1000000))
+            str(getattr(self._tt, "currency_size_large_threshold", 1000000))
         )
-        size_large_factor = Decimal(str(getattr(self._tt, 'currency_size_large_factor', 0.8)))
+        size_large_factor = Decimal(str(getattr(self._tt, "currency_size_large_factor", 0.8)))
 
         # Get bid-ask spread
         spread_bps = self.forex_fetcher.get_bid_ask_spread(forex_pair)
@@ -324,7 +321,7 @@ class CurrencyHedgingEngine:
             f"using hedge ratio {hedge_ratio:.2%}"
         )
 
-    def get_statistics(self) -> Dict[str, int]:
+    def get_statistics(self) -> dict[str, int]:
         """Get hedging engine statistics."""
         return {
             "total_recommendations_generated": self.total_hedges_generated,

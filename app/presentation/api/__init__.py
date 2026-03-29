@@ -10,14 +10,16 @@ import logging
 import time
 import uuid
 from contextvars import ContextVar
-from typing import Callable, Dict, List, Optional, Union
+from typing import TYPE_CHECKING, Callable
 
-from fastapi import Request, Response
 from starlette.middleware.base import BaseHTTPMiddleware
-from starlette.types import ASGIApp
+
+if TYPE_CHECKING:
+    from fastapi import Request, Response
+    from starlette.types import ASGIApp
 
 # Context variable for correlation ID (per-request)
-_correlation_id: ContextVar[Optional[str]] = ContextVar("correlation_id", default=None)
+_correlation_id: ContextVar[str | None] = ContextVar("correlation_id", default=None)
 
 
 def get_correlation_id() -> str:
@@ -70,9 +72,9 @@ class AuditLogger:
         self,
         method: str,
         path: str,
-        client_id: Optional[str] = None,
-        query_params: Optional[Dict[str, Union[str, int, float, bool]]] = None,
-        path_params: Optional[Dict[str, Union[str, int, float, bool]]] = None,
+        client_id: str | None = None,
+        query_params: dict[str, str | int | float | bool] | None = None,
+        path_params: dict[str, str | int | float | bool] | None = None,
     ) -> None:
         """
         Log an incoming API request.
@@ -104,7 +106,7 @@ class AuditLogger:
         path: str,
         status_code: int,
         duration_ms: float,
-        client_id: Optional[str] = None,
+        client_id: str | None = None,
     ) -> None:
         """
         Log an API response.
@@ -136,9 +138,9 @@ class AuditLogger:
         path: str,
         error_type: str,
         error_message: str,
-        stack_trace: Optional[str] = None,
-        status_code: Optional[int] = None,
-        client_id: Optional[str] = None,
+        stack_trace: str | None = None,
+        status_code: int | None = None,
+        client_id: str | None = None,
     ) -> None:
         """
         Log an API error.
@@ -153,7 +155,7 @@ class AuditLogger:
             client_id: Optional client identifier
         """
         correlation_id = get_correlation_id()
-        log_data: Dict[str, Union[str, int, float, bool, None]] = {
+        log_data: dict[str, str | int | float | bool | None] = {
             "event_type": "api_error",
             "correlation_id": correlation_id,
             "method": method,
@@ -178,8 +180,8 @@ class AuditLogger:
         action: str,
         method: str,
         path: str,
-        details: Optional[Dict[str, Union[str, int, float, bool]]] = None,
-        client_id: Optional[str] = None,
+        details: dict[str, str | int | float | bool] | None = None,
+        client_id: str | None = None,
     ) -> None:
         """
         Log a specific action (e.g., config change, trade execution).
@@ -219,8 +221,8 @@ class AuditMiddleware(BaseHTTPMiddleware):
 
     def __init__(
         self,
-        app: "ASGIApp",
-        audit_logger: Optional[AuditLogger] = None,
+        app: ASGIApp,
+        audit_logger: AuditLogger | None = None,
     ) -> None:
         """
         Initialize the audit middleware.
@@ -317,7 +319,9 @@ def log_endpoint_error(
         Callable: Wrapped function with error logging
     """
 
-    async def wrapper(*args: object, **kwargs: object) -> Union[str, int, float, bool, Dict, List, None]:
+    async def wrapper(
+        *args: object, **kwargs: object
+    ) -> str | int | float | bool | dict | list | None:
         try:
             return await func(*args, **kwargs)
         except Exception as e:
@@ -343,8 +347,8 @@ __all__ = [
     "AuditLogger",
     "AuditMiddleware",
     "audit_logger",
-    "get_correlation_id",
-    "set_correlation_id",
     "generate_correlation_id",
+    "get_correlation_id",
     "log_endpoint_error",
+    "set_correlation_id",
 ]

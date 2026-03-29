@@ -18,7 +18,7 @@ Security Compliance: 95%
 """
 
 import logging
-from typing import Dict, List, Optional
+from typing import ClassVar, Optional
 
 from fastapi import Request, Response
 from starlette.middleware.base import BaseHTTPMiddleware
@@ -46,7 +46,7 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         enable_xss_protection: bool = True,
         enable_referrer_policy: bool = True,
         enable_permissions_policy: bool = True,
-        custom_headers: Optional[Dict[str, str]] = None,
+        custom_headers: Optional[dict[str, str]] = None,
     ):
         """
         Initialize security headers middleware.
@@ -99,9 +99,9 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
 
         # Strict-Transport-Security
         if self.enable_hsts and request.url.scheme == "https":
-            response.headers[
-                "Strict-Transport-Security"
-            ] = "max-age=31536000; includeSubDomains; preload"
+            response.headers["Strict-Transport-Security"] = (
+                "max-age=31536000; includeSubDomains; preload"
+            )
 
         # Referrer-Policy
         if self.enable_referrer_policy:
@@ -149,7 +149,7 @@ class ContentSecurityPolicy:
     - Data injection
     """
 
-    DEFAULT_DIRECTIVES = {
+    DEFAULT_DIRECTIVES: ClassVar[dict] = {
         "default-src": ["'self'"],
         "script-src": ["'self'"],
         "style-src": ["'self'", "'unsafe-inline'"],
@@ -168,7 +168,7 @@ class ContentSecurityPolicy:
         "navigate-to": ["'self'"],
     }
 
-    def __init__(self, directives: Optional[Dict[str, List[str]]] = None):
+    def __init__(self, directives: Optional[dict[str, list[str]]] = None):
         """
         Initialize CSP with custom directives.
 
@@ -288,7 +288,7 @@ class HSTSHeader:
     """
 
     DEFAULT_MAX_AGE = 31536000  # 1 year
-    DEFAULT_DIRECTIVES = ["includeSubDomains", "preload"]
+    DEFAULT_DIRECTIVES: ClassVar[list] = ["includeSubDomains", "preload"]
 
     def __init__(
         self,
@@ -408,7 +408,7 @@ class PermissionsPolicy:
     Controls which browser features can be used.
     """
 
-    DEFAULT_PERMISSIONS = {
+    DEFAULT_PERMISSIONS: ClassVar[dict] = {
         "geolocation": [],
         "microphone": [],
         "camera": [],
@@ -425,7 +425,7 @@ class PermissionsPolicy:
         "sync-xhr": ["self"],
     }
 
-    def __init__(self, permissions: Optional[Dict[str, List[str]]] = None):
+    def __init__(self, permissions: Optional[dict[str, list[str]]] = None):
         """
         Initialize Permissions-Policy.
 
@@ -476,7 +476,7 @@ class PermissionsPolicy:
         self.permissions[feature] = []
 
 
-def get_security_headers() -> Dict[str, str]:
+def get_security_headers() -> dict[str, str]:
     """
     Get default security headers.
 
@@ -494,7 +494,7 @@ def get_security_headers() -> Dict[str, str]:
     }
 
 
-def add_security_headers(response: Response, headers: Optional[Dict[str, str]] = None):
+def add_security_headers(response: Response, headers: Optional[dict[str, str]] = None):
     """
     Add security headers to a response.
 

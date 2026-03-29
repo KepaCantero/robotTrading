@@ -10,7 +10,7 @@ This module provides comprehensive analysis tools for:
 - Vectorization verification and performance optimization
 
 Key Components:
-- fundamental_law: IR = IC × √BR decomposition and analysis
+- fundamental_law: IR = IC * sqrtBR decomposition and analysis
 - vectorization: Code vectorization auditing and benchmarking
 """
 
@@ -33,21 +33,21 @@ from app.domain.analysis.vectorization import (
 )
 
 __all__ = [
-    # Fundamental Law
-    "FundamentalLawCalculator",
-    "FundamentalLawComponents",
-    "StrategyAnalysis",
-    # Information Coefficient
-    "ICCalculator",
-    "ICMetrics",
+    "BenchmarkResult",
     # Breadth
     "BreadthCalculator",
     "BreadthMetrics",
+    # Fundamental Law
+    "FundamentalLawCalculator",
+    "FundamentalLawComponents",
+    # Information Coefficient
+    "ICCalculator",
+    "ICMetrics",
+    "StrategyAnalysis",
     # Vectorization
     "VectorizationAuditor",
     "VectorizationBenchmark",
     "VectorizationIssue",
-    "VectorizationReport",
     "VectorizationPatterns",
-    "BenchmarkResult",
+    "VectorizationReport",
 ]

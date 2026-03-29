@@ -11,16 +11,18 @@ import logging
 from datetime import datetime
 from decimal import Decimal
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import TYPE_CHECKING, Optional
 
 import optuna
 
 from app.backtesting.data_loader import DataLoader
 from app.backtesting.engines.multi_strategy_engine import MultiStrategyBacktester
-from app.domain.models.market_data import Quote
 from app.domain.strategies.mean_reversion import MeanReversionStrategy
 from app.domain.strategies.momentum import MomentumStrategy
 from app.domain.strategies.pairs_trading import PairsTrading as PairsTradingStrategy
+
+if TYPE_CHECKING:
+    from app.domain.models.market_data import Quote
 
 logger = logging.getLogger(__name__)
 
@@ -48,12 +50,12 @@ class MultiStrategyOptimizerV2:
         self.max_runs = max_runs
 
         # Results storage
-        self.optimization_results: List[Dict[str, Any]] = []
-        self.best_config: Optional[Dict[str, Any]] = None
-        self.best_score: float = -float('in')
+        self.optimization_results: list[dict[str, object]] = []
+        self.best_config: Optional[dict[str, int | float]] = None
+        self.best_score: float = -float("in")
 
         # Load data once
-        self.quotes: Dict[str, List[Quote]] = {}
+        self.quotes: dict[str, list[Quote]] = {}
         self._load_portfolio_data()
 
     def _load_portfolio_data(self) -> None:
@@ -88,7 +90,7 @@ class MultiStrategyOptimizerV2:
 
         logger.info(f"Loaded data for {len(self.quotes)} symbols")
 
-    def _create_search_space(self, trial: optuna.Trial) -> Dict[str, Any]:
+    def _create_search_space(self, trial: optuna.Trial) -> dict[str, int | float]:
         """Define search space for hyperparameters."""
         return {
             # Mean Reversion
@@ -126,12 +128,12 @@ class MultiStrategyOptimizerV2:
             "global.position_size_pct": trial.suggest_float("global.position_size_pct", 0.02, 0.08),
         }
 
-    def _create_strategies(self, params: Dict[str, Any]) -> Dict[str, Any]:
+    def _create_strategies(self, params: dict[str, int | float]) -> dict[str, object]:
         """Create strategy instances with optimized parameters."""
-        strategies: Dict[str, Any] = {}
+        strategies: dict[str, object] = {}
 
         # Momentum
-        momentum_config: Dict[str, Any] = {
+        momentum_config: dict[str, int | float | str] = {
             "name": "momentum",
             "rsi_threshold": int(params.get("momentum.rsi_threshold", 40)),
             "momentum_threshold": params.get("momentum.momentum_threshold", 0.02),
@@ -145,7 +147,7 @@ class MultiStrategyOptimizerV2:
         strategies["momentum"] = MomentumStrategy(momentum_config)
 
         # Mean Reversion
-        mean_rev_config: Dict[str, Any] = {
+        mean_rev_config: dict[str, int | float | str] = {
             "name": "mean_reversion",
             "z_score_threshold": params.get("mean_reversion.z_score_threshold", 1.0),
             "lookback_period": int(params.get("mean_reversion.lookback_period", 20)),
@@ -163,7 +165,7 @@ class MultiStrategyOptimizerV2:
 
         return strategies
 
-    def _run_backtest(self, params: Dict[str, Any]) -> Dict[str, Any]:
+    def _run_backtest(self, params: dict[str, Any]) -> dict[str, Any]:
         """Run backtest with given parameters."""
         try:
             # Create strategies
@@ -187,7 +189,7 @@ class MultiStrategyOptimizerV2:
             }
 
             # Prepare all quotes (flatten)
-            all_quotes: List[Quote] = []
+            all_quotes: list[Quote] = []
             for symbol_quotes in self.quotes.values():
                 all_quotes.extend(symbol_quotes)
 
@@ -212,7 +214,7 @@ class MultiStrategyOptimizerV2:
             logger.error(f"Backtest failed: {e}")
             return {}
 
-    def _calculate_objective(self, result: Dict[str, Any]) -> float:
+    def _calculate_objective(self, result: dict[str, Any]) -> float:
         """Calculate objective function value (Sharpe ratio with constraints)."""
         if not result or "combined" not in result:
             return -1000.0  # Heavy penalty for failed backtests
@@ -281,7 +283,7 @@ class MultiStrategyOptimizerV2:
         self,
         n_trials: Optional[int] = None,
         timeout: Optional[int] = None,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Run optimization study."""
         n_trials = n_trials or self.max_runs
 
@@ -318,7 +320,7 @@ class MultiStrategyOptimizerV2:
         """Save optimization results."""
         # Save CSV
         opt_results_file = self.output_dir / "opt_results.csv"
-        with open(opt_results_file, 'w', newline='') as f:
+        with open(opt_results_file, "w", newline="") as f:
             writer = csv.writer(f)
             writer.writerow(
                 [
@@ -359,7 +361,7 @@ class MultiStrategyOptimizerV2:
 
         # Save best config
         best_config_file = self.output_dir / "best_config.json"
-        with open(best_config_file, 'w') as f:
+        with open(best_config_file, "w") as f:
             json.dump(self.best_config, f, indent=2, default=str)
 
         # Save summary
@@ -379,7 +381,7 @@ class MultiStrategyOptimizerV2:
         }
 
         summary_file = self.output_dir / "optimization_summary.json"
-        with open(summary_file, 'w') as f:
+        with open(summary_file, "w") as f:
             json.dump(summary, f, indent=2, default=str)
 
         logger.info(f"Results saved to {self.output_dir}")

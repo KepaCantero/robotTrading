@@ -15,9 +15,9 @@ from .rebalancers import (
 
 __all__ = [
     "BaseRebalancer",
+    "HybridRebalancer",
     "ThresholdRebalancer",
     "TimeBasedRebalancer",
-    "VolatilityTargetingRebalancer",
     "TransactionCostAwareRebalancer",
-    "HybridRebalancer",
+    "VolatilityTargetingRebalancer",
 ]

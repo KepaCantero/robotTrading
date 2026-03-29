@@ -7,7 +7,7 @@ Loads configurations from YAML files with validation and fallback to default val
 import os
 import threading
 from pathlib import Path
-from typing import Dict, List, Optional, Union
+from typing import Optional, Union
 
 import structlog
 import yaml
@@ -42,7 +42,7 @@ class YAMLConfigLoader:
         else:
             self.config_dir = config_dir or Path("config")
 
-        self._cache: Dict[str, object] = {}
+        self._cache: dict[str, object] = {}
         # CFG-CACHE-001: Thread-safe cache with lock
         self._cache_lock = threading.RLock()
 
@@ -54,7 +54,7 @@ class YAMLConfigLoader:
                 message="Config directory does not exist",
             )
 
-    def load(self, filename: str, use_cache: bool = True) -> Dict[str, object]:
+    def load(self, filename: str, use_cache: bool = True) -> dict[str, object]:
         """
         Load a YAML file from the configuration directory.
 
@@ -102,7 +102,7 @@ class YAMLConfigLoader:
             return {}
 
         try:
-            with open(config_path, "r") as f:
+            with open(config_path) as f:
                 config = yaml.safe_load(f) or {}
 
             # CFG-003: Validate configuration values after loading
@@ -140,11 +140,11 @@ class YAMLConfigLoader:
 
     def get_nested(
         self,
-        config: Dict[str, object],
+        config: dict[str, object],
         key_path: str,
         default: Union[str, int, float, bool, None] = None,
         separator: str = ".",
-    ) -> Union[str, int, float, bool, Dict[str, object], List[object], None]:
+    ) -> Union[str, int, float, bool, dict[str, object], list[object], None]:
         """
         Get a nested value using dot notation.
 
@@ -178,7 +178,7 @@ class YAMLConfigLoader:
         self,
         filename: str,
         tier: Optional[str] = None,
-    ) -> Dict[str, object]:
+    ) -> dict[str, object]:
         """
         Load configuration with tier-specific overrides.
 
@@ -212,7 +212,9 @@ class YAMLConfigLoader:
 
         return config
 
-    def _apply_overrides(self, base: Dict[str, object], overrides: Dict[str, object]) -> Dict[str, object]:
+    def _apply_overrides(
+        self, base: dict[str, object], overrides: dict[str, object]
+    ) -> dict[str, object]:
         """
         Recursively apply overrides to base configuration.
 
@@ -233,7 +235,7 @@ class YAMLConfigLoader:
 
         return result
 
-    def get_strategy_stock_allocator_config(self, tier: Optional[str] = None) -> Dict[str, object]:
+    def get_strategy_stock_allocator_config(self, tier: Optional[str] = None) -> dict[str, object]:
         """
         Load the Strategy Stock Allocator configuration.
 
@@ -252,7 +254,7 @@ class YAMLConfigLoader:
             self._cache.clear()
         logger.debug("config_cache_cleared")
 
-    def _validate_config(self, config: Dict[str, object], filename: str) -> Dict[str, object]:
+    def _validate_config(self, config: dict[str, object], filename: str) -> dict[str, object]:
         """
         Validate configuration values after loading.
 
@@ -277,7 +279,7 @@ class YAMLConfigLoader:
 
         # CFG-SEC-001: Check for potential sensitive data patterns
         sensitive_keys = ["password", "secret", "api_key", "token", "private_key"]
-        for key in config.keys():
+        for key in config:
             key_lower = str(key).lower()
             if any(sensitive in key_lower for sensitive in sensitive_keys):
                 logger.warning(
@@ -300,8 +302,10 @@ class YAMLConfigLoader:
             "threshold": lambda v: isinstance(v, (int, float, dict)),
             "enabled": lambda v: isinstance(v, bool),
             # Tier validation - only validate string values, not tier config dicts
-            "tier": lambda v: (isinstance(v, str) and v in ["micro", "small", "medium", "large"])
-            or isinstance(v, dict),  # tier config dicts are valid
+            "tier": lambda v: (
+                (isinstance(v, str) and v in ["micro", "small", "medium", "large"])
+                or isinstance(v, dict)
+            ),  # tier config dicts are valid
         }
 
         # Recursively validate nested config
@@ -309,11 +313,11 @@ class YAMLConfigLoader:
 
     def _validate_dict_values(
         self,
-        config: Dict[str, object],
-        validation_rules: Dict[str, object],
+        config: dict[str, object],
+        validation_rules: dict[str, object],
         filename: str,
         path: str = "",
-    ) -> Dict[str, object]:
+    ) -> dict[str, object]:
         """
         Recursively validate dictionary values against rules.
 
@@ -385,7 +389,7 @@ def get_config_loader() -> YAMLConfigLoader:
 
 def load_strategy_stock_allocator_config(
     tier: Optional[str] = None,
-) -> Dict[str, object]:
+) -> dict[str, object]:
     """
     Convenience function to load the Strategy Stock Allocator configuration.
 
@@ -400,7 +404,7 @@ def load_strategy_stock_allocator_config(
 
 def load_momentum_filters_config(
     tier: Optional[str] = None,
-) -> Dict[str, object]:
+) -> dict[str, object]:
     """
     Convenience function to load the Momentum Filters configuration.
 
@@ -415,7 +419,7 @@ def load_momentum_filters_config(
 
 def load_market_detectors_config(
     tier: Optional[str] = None,
-) -> Dict[str, object]:
+) -> dict[str, object]:
     """
     Convenience function to load the Market Detectors configuration.
 
@@ -430,7 +434,7 @@ def load_market_detectors_config(
 
 def load_strategy_defaults_config(
     tier: Optional[str] = None,
-) -> Dict[str, object]:
+) -> dict[str, object]:
     """
     Convenience function to load the Strategy Defaults configuration.
 
@@ -445,7 +449,7 @@ def load_strategy_defaults_config(
 
 def load_learning_parameters_config(
     tier: Optional[str] = None,
-) -> Dict[str, object]:
+) -> dict[str, object]:
     """
     Convenience function to load the Learning Parameters configuration.
 
@@ -462,7 +466,7 @@ def get_filter_config(
     filter_name: str,
     tier: Optional[str] = None,
     preset: str = "balanced",
-) -> Dict[str, object]:
+) -> dict[str, object]:
     """
     Get the configuration of a specific filter from momentum_filters.yaml.
 
@@ -492,7 +496,7 @@ def get_filter_config(
 def get_detector_config(
     detector_name: str,
     tier: Optional[str] = None,
-) -> Dict[str, object]:
+) -> dict[str, object]:
     """
     Get the configuration of a specific detector from market_detectors.yaml.
 
@@ -510,7 +514,7 @@ def get_detector_config(
 def get_strategy_config(
     strategy_name: str,
     tier: Optional[str] = None,
-) -> Dict[str, object]:
+) -> dict[str, object]:
     """
     Get the configuration of a specific strategy from strategy_defaults.yaml.
 

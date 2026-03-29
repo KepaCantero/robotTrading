@@ -34,7 +34,7 @@ proper Decimal validation.
 
 import logging
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 import yaml
 from pydantic import BaseModel, ConfigDict, Field, field_validator
@@ -129,7 +129,7 @@ class VisualizationConfig(BaseModel):
 class ReportingConfig(BaseModel):
     """Configuration for reporting."""
 
-    include_sections: Dict[str, bool] = Field(
+    include_sections: dict[str, bool] = Field(
         default_factory=lambda: {
             "performance_summary": True,
             "statistical_insights": True,
@@ -175,7 +175,7 @@ class MetaAnalyzerConfig(BaseModel):
     unknown configuration keys.
     """
 
-    metric_thresholds: Dict[str, MetricThresholdConfig] = Field(
+    metric_thresholds: dict[str, MetricThresholdConfig] = Field(
         default_factory=lambda: {
             "sharpe_ratio": MetricThresholdConfig(
                 excellent=2.0, good=1.0, warning=0.5, critical=-0.5
@@ -198,7 +198,7 @@ class MetaAnalyzerConfig(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
 
-    def validate_config(self) -> List[str]:
+    def validate_config(self) -> list[str]:
         """
         Validate configuration values and return list of errors.
 
@@ -274,7 +274,7 @@ class ConfigLoader:
             return
 
         try:
-            with open(self.config_path, "r") as f:
+            with open(self.config_path) as f:
                 loaded = yaml.safe_load(f)
                 if loaded:
                     self._pydantic_config = MetaAnalyzerConfig(**loaded)
@@ -289,7 +289,7 @@ class ConfigLoader:
             self._pydantic_config = MetaAnalyzerConfig()
 
     @staticmethod
-    def _get_default_config() -> Dict[str, Any]:
+    def _get_default_config() -> dict[str, Any]:
         """Return default configuration when file not available."""
         default = MetaAnalyzerConfig()
         return default.model_dump()
@@ -321,7 +321,7 @@ class ConfigLoader:
 
         return value if value is not None else default
 
-    def get_section(self, section: str) -> Dict[str, Any]:
+    def get_section(self, section: str) -> dict[str, Any]:
         """
         Get entire configuration section.
 
@@ -335,7 +335,7 @@ class ConfigLoader:
             return {}
         return self._pydantic_config.model_dump().get(section, {})
 
-    def get_metric_thresholds(self, metric: str) -> Dict[str, float]:
+    def get_metric_thresholds(self, metric: str) -> dict[str, float]:
         """
         Get thresholds for a specific metric.
 
@@ -352,35 +352,35 @@ class ConfigLoader:
         # Handle Pydantic model
         return getattr(metric_config, "model_dump", lambda: metric_config)()
 
-    def get_analysis_config(self) -> Dict[str, Any]:
+    def get_analysis_config(self) -> dict[str, Any]:
         """Get analysis configuration section."""
         return self.get_section("analysis")
 
-    def get_visualization_config(self) -> Dict[str, Any]:
+    def get_visualization_config(self) -> dict[str, Any]:
         """Get visualization configuration section."""
         return self.get_section("visualization")
 
-    def get_reporting_config(self) -> Dict[str, Any]:
+    def get_reporting_config(self) -> dict[str, Any]:
         """Get reporting configuration section."""
         return self.get_section("reporting")
 
-    def get_alerts_config(self) -> Dict[str, Any]:
+    def get_alerts_config(self) -> dict[str, Any]:
         """Get alerts configuration section."""
         return self.get_section("alerts")
 
-    def get_regime_detection_config(self) -> Dict[str, Any]:
+    def get_regime_detection_config(self) -> dict[str, Any]:
         """Get regime detection configuration."""
         return self.get("analysis.regime_detection", {})
 
-    def get_seasonality_config(self) -> Dict[str, Any]:
+    def get_seasonality_config(self) -> dict[str, Any]:
         """Get seasonality analysis configuration."""
         return self.get("analysis.seasonality", {})
 
-    def get_clustering_config(self) -> Dict[str, Any]:
+    def get_clustering_config(self) -> dict[str, Any]:
         """Get clustering analysis configuration."""
         return self.get("analysis.clustering", {})
 
-    def get_walk_forward_config(self) -> Dict[str, Any]:
+    def get_walk_forward_config(self) -> dict[str, Any]:
         """Get walk-forward validation configuration."""
         return self.get("analysis.walk_forward", {})
 
@@ -418,7 +418,7 @@ class ConfigLoader:
         """Get logging level from configuration."""
         return self.get("advanced.logging.level", "INFO")
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Get entire configuration as dictionary."""
         if self._pydantic_config is None:
             return {}
@@ -429,7 +429,7 @@ class ConfigLoader:
         self._load_config()
         logger.info("Configuration reloaded")
 
-    def validate_config(self) -> List[str]:
+    def validate_config(self) -> list[str]:
         """
         Validate configuration and return list of errors.
 

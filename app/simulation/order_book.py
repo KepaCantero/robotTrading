@@ -24,7 +24,6 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from decimal import Decimal
 from enum import Enum
-from typing import Dict, List, Optional, Tuple
 
 import numpy as np
 
@@ -89,17 +88,17 @@ class Order:
     side: OrderSide
     order_type: OrderType
     quantity: Decimal
-    price: Optional[Decimal] = None
-    stop_price: Optional[Decimal] = None
+    price: Decimal | None = None
+    stop_price: Decimal | None = None
     status: OrderStatus = OrderStatus.PENDING
     filled_quantity: Decimal = Decimal("0")
-    avg_fill_price: Optional[Decimal] = None
+    avg_fill_price: Decimal | None = None
     created_at: datetime = field(default_factory=datetime.utcnow)
     updated_at: datetime = field(default_factory=datetime.utcnow)
-    client_id: Optional[str] = None
+    client_id: str | None = None
     time_in_force: str = "GTC"
-    display_quantity: Optional[Decimal] = None
-    hidden_quantity: Optional[Decimal] = None
+    display_quantity: Decimal | None = None
+    hidden_quantity: Decimal | None = None
 
     @property
     def remaining_quantity(self) -> Decimal:
@@ -121,29 +120,29 @@ class Order:
 
         # Update fill information
         new_filled_qty = self.filled_quantity + quantity
-        object.__setattr__(self, 'filled_quantity', new_filled_qty)
+        object.__setattr__(self, "filled_quantity", new_filled_qty)
 
         # Update average fill price
         if self.avg_fill_price is None:
-            object.__setattr__(self, 'avg_fill_price', price)
+            object.__setattr__(self, "avg_fill_price", price)
         else:
             total_value = self.avg_fill_price * (new_filled_qty - quantity) + price * quantity
-            object.__setattr__(self, 'avg_fill_price', total_value / new_filled_qty)
+            object.__setattr__(self, "avg_fill_price", total_value / new_filled_qty)
 
         # Update status
         if self.remaining_quantity == 0:
-            object.__setattr__(self, 'status', OrderStatus.FILLED)
+            object.__setattr__(self, "status", OrderStatus.FILLED)
         elif self.filled_quantity > 0:
-            object.__setattr__(self, 'status', OrderStatus.PARTIALLY_FILLED)
+            object.__setattr__(self, "status", OrderStatus.PARTIALLY_FILLED)
 
-        object.__setattr__(self, 'updated_at', datetime.utcnow())
+        object.__setattr__(self, "updated_at", datetime.utcnow())
 
     def cancel(self) -> None:
         """Cancel the order."""
         if self.status in [OrderStatus.FILLED, OrderStatus.CANCELLED]:
             raise ValueError(f"Cannot cancel order with status {self.status}")
-        object.__setattr__(self, 'status', OrderStatus.CANCELLED)
-        object.__setattr__(self, 'updated_at', datetime.utcnow())
+        object.__setattr__(self, "status", OrderStatus.CANCELLED)
+        object.__setattr__(self, "updated_at", datetime.utcnow())
 
     @property
     def is_buy(self) -> bool:
@@ -181,7 +180,7 @@ class PriceLevel:
 
     price: Decimal
     orders: deque = field(default_factory=deque)
-    total_quantity: Optional[Decimal] = None
+    total_quantity: Decimal | None = None
 
     def add_order(self, order: Order) -> None:
         """
@@ -193,9 +192,9 @@ class PriceLevel:
         if order.price != self.price:
             raise ValueError(f"Order price {order.price} doesn't match level {self.price}")
         self.orders.append(order)
-        object.__setattr__(self, 'total_quantity', self.total_quantity + order.remaining_quantity)
+        object.__setattr__(self, "total_quantity", self.total_quantity + order.remaining_quantity)
 
-    def remove_order(self, order_id: str) -> Optional[Order]:
+    def remove_order(self, order_id: str) -> Order | None:
         """
         Remove an order from this price level.
 
@@ -210,9 +209,9 @@ class PriceLevel:
                 # Convert deque to list, remove, then back to deque
                 orders_list = list(self.orders)
                 removed = orders_list.pop(i)
-                object.__setattr__(self, 'orders', deque(orders_list))
+                object.__setattr__(self, "orders", deque(orders_list))
                 object.__setattr__(
-                    self, 'total_quantity', self.total_quantity - removed.remaining_quantity
+                    self, "total_quantity", self.total_quantity - removed.remaining_quantity
                 )
                 return removed
         return None
@@ -278,12 +277,12 @@ class OrderBookSnapshot:
 
     symbol: str
     timestamp: datetime
-    bids: List[Tuple[Decimal, Decimal]]
-    asks: List[Tuple[Decimal, Decimal]]
-    best_bid: Optional[Decimal]
-    best_ask: Optional[Decimal]
-    spread: Optional[Decimal]
-    mid_price: Optional[Decimal]
+    bids: list[tuple[Decimal, Decimal]]
+    asks: list[tuple[Decimal, Decimal]]
+    best_bid: Decimal | None
+    best_ask: Decimal | None
+    spread: Decimal | None
+    mid_price: Decimal | None
     total_bid_quantity: Decimal
     total_ask_quantity: Decimal
     bid_depth: int
@@ -320,7 +319,7 @@ class LimitOrderBook:
     def __init__(
         self,
         symbol: str,
-        tick_size: Optional[Decimal] = None,
+        tick_size: Decimal | None = None,
         max_depth: int = 100,
     ):
         """
@@ -338,61 +337,61 @@ class LimitOrderBook:
         self.max_depth = max_depth
 
         # Price levels: price -> PriceLevel
-        self._bids: Dict[Decimal, PriceLevel] = {}
-        self._asks: Dict[Decimal, PriceLevel] = {}
+        self._bids: dict[Decimal, PriceLevel] = {}
+        self._asks: dict[Decimal, PriceLevel] = {}
 
         # Sorted price lists for efficient iteration
-        self._bid_prices: List[Decimal] = []
-        self._ask_prices: List[Decimal] = []
+        self._bid_prices: list[Decimal] = []
+        self._ask_prices: list[Decimal] = []
 
         # Orders: order_id -> Order
-        self._orders: Dict[str, Order] = {}
+        self._orders: dict[str, Order] = {}
 
         # Trade history
-        self._trades: List[Trade] = []
+        self._trades: list[Trade] = []
 
         logger.info(f"Initialized LimitOrderBook for {symbol} with tick_size={tick_size}")
 
     @property
-    def bids(self) -> Dict[Decimal, PriceLevel]:
+    def bids(self) -> dict[Decimal, PriceLevel]:
         """Get all bid price levels."""
         return self._bids
 
     @property
-    def asks(self) -> Dict[Decimal, PriceLevel]:
+    def asks(self) -> dict[Decimal, PriceLevel]:
         """Get all ask price levels."""
         return self._asks
 
     @property
-    def best_bid(self) -> Optional[Decimal]:
+    def best_bid(self) -> Decimal | None:
         """Get best bid price (highest bid)."""
         return self._bid_prices[0] if self._bid_prices else None
 
     @property
-    def best_ask(self) -> Optional[Decimal]:
+    def best_ask(self) -> Decimal | None:
         """Get best ask price (lowest ask)."""
         return self._ask_prices[0] if self._ask_prices else None
 
     @property
-    def spread(self) -> Optional[Decimal]:
+    def spread(self) -> Decimal | None:
         """Get current bid-ask spread."""
         if self.best_bid is not None and self.best_ask is not None:
             return self.best_ask - self.best_bid
         return None
 
     @property
-    def mid_price(self) -> Optional[Decimal]:
+    def mid_price(self) -> Decimal | None:
         """Get mid price."""
         if self.best_bid is not None and self.best_ask is not None:
             return (self.best_bid + self.best_ask) / 2
         return None
 
     @property
-    def trades(self) -> List[Trade]:
+    def trades(self) -> list[Trade]:
         """Get all trades."""
         return list(self._trades)
 
-    def get_snapshot(self, depth: Optional[int] = None) -> OrderBookSnapshot:
+    def get_snapshot(self, depth: int | None = None) -> OrderBookSnapshot:
         """
         Get a snapshot of the current order book state.
 
@@ -443,7 +442,7 @@ class LimitOrderBook:
             ask_depth=len(self._ask_prices),
         )
 
-    def submit_order(self, order: Order) -> List[Trade]:
+    def submit_order(self, order: Order) -> list[Trade]:
         """
         Submit an order to the book.
 
@@ -472,18 +471,18 @@ class LimitOrderBook:
         # Round to tick size
         if order.price is not None:
             order_price = self._round_to_tick(order.price)
-            object.__setattr__(order, 'price', order_price)
+            object.__setattr__(order, "price", order_price)
 
         # Store order
         self._orders[order.order_id] = order
-        object.__setattr__(order, 'status', OrderStatus.OPEN)
+        object.__setattr__(order, "status", OrderStatus.OPEN)
 
         # For market orders, set price to opposite side's best price
         if order.order_type == OrderType.MARKET:
             if order.is_buy:
-                object.__setattr__(order, 'price', self.best_ask)
+                object.__setattr__(order, "price", self.best_ask)
             else:
-                object.__setattr__(order, 'price', self.best_bid)
+                object.__setattr__(order, "price", self.best_bid)
 
         # Match order if marketable
         trades = self._match_order(order)
@@ -530,11 +529,11 @@ class LimitOrderBook:
 
         return True
 
-    def get_order(self, order_id: str) -> Optional[Order]:
+    def get_order(self, order_id: str) -> Order | None:
         """Get an order by ID."""
         return self._orders.get(order_id)
 
-    def get_market_depth(self, side: Optional[OrderSide] = None) -> Dict[str, int]:
+    def get_market_depth(self, side: OrderSide | None = None) -> dict[str, int]:
         """
         Get market depth metrics.
 
@@ -565,7 +564,7 @@ class LimitOrderBook:
             "total_orders": bid_orders + ask_orders,
         }
 
-    def get_liquidity_metrics(self) -> Dict[str, Decimal]:
+    def get_liquidity_metrics(self) -> dict[str, Decimal]:
         """
         Get liquidity metrics for the order book.
 
@@ -608,7 +607,7 @@ class LimitOrderBook:
         """Round price to tick size."""
         return (price / self.tick_size).quantize(Decimal("1")) * self.tick_size
 
-    def _match_order(self, order: Order) -> List[Trade]:
+    def _match_order(self, order: Order) -> list[Trade]:
         """
         Match an order against the book.
 
@@ -636,7 +635,9 @@ class LimitOrderBook:
                 # For limit orders, check price compatibility
                 # For market orders, match regardless of price
                 limit_price = order.price
-                if order.order_type != OrderType.MARKET and (limit_price is None or self._ask_prices[0] > limit_price):
+                if order.order_type != OrderType.MARKET and (
+                    limit_price is None or self._ask_prices[0] > limit_price
+                ):
                     break
 
                 best_ask_price = self._ask_prices[0]
@@ -673,7 +674,7 @@ class LimitOrderBook:
                         self._remove_ask_level(best_ask_price)
                 else:
                     object.__setattr__(
-                        ask_level, 'total_quantity', ask_level.total_quantity - trade_qty
+                        ask_level, "total_quantity", ask_level.total_quantity - trade_qty
                     )
 
         else:  # Sell order
@@ -682,7 +683,9 @@ class LimitOrderBook:
                 # For limit orders, check price compatibility
                 # For market orders, match regardless of price
                 limit_price = order.price
-                if order.order_type != OrderType.MARKET and (limit_price is None or self._bid_prices[0] < limit_price):
+                if order.order_type != OrderType.MARKET and (
+                    limit_price is None or self._bid_prices[0] < limit_price
+                ):
                     break
 
                 best_bid_price = self._bid_prices[0]
@@ -719,7 +722,7 @@ class LimitOrderBook:
                         self._remove_bid_level(best_bid_price)
                 else:
                     object.__setattr__(
-                        bid_level, 'total_quantity', bid_level.total_quantity - trade_qty
+                        bid_level, "total_quantity", bid_level.total_quantity - trade_qty
                     )
 
         # Add remaining quantity to book if any

@@ -10,9 +10,9 @@ from __future__ import annotations
 import logging
 from datetime import datetime
 from decimal import Decimal
-from typing import Annotated, Any, Dict
+from typing import Annotated, Any
 
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, Depends, HTTPException
 
 from app.backtesting.models import Trade, TradeStatus
 from app.services.cost_analysis_service import CostAnalysisResult, CostAnalysisService
@@ -30,7 +30,7 @@ def get_cost_analysis_service() -> CostAnalysisService:
 
 @router.post("/analyze-trade")
 async def analyze_trade_costs(
-    trade_data: Dict[str, Any],
+    trade_data: dict[str, Any],
     service: Annotated[CostAnalysisService, Depends(get_cost_analysis_service)],
 ):
     """Analyze costs for a single trade."""
@@ -106,12 +106,12 @@ async def analyze_trade_costs(
                 "error_type": type(e).__name__,
             },
         )
-        raise HTTPException(status_code=400, detail=f"Error analyzing trade costs: {str(e)}")
+        raise HTTPException(status_code=400, detail=f"Error analyzing trade costs: {e!s}") from e
 
 
 @router.post("/analyze-strategy")
 async def analyze_strategy_costs(
-    strategy_data: Dict[str, Any],
+    strategy_data: dict[str, Any],
     service: Annotated[CostAnalysisService, Depends(get_cost_analysis_service)],
 ):
     """Analyze costs for an entire trading strategy."""
@@ -210,12 +210,12 @@ async def analyze_strategy_costs(
             "Error analyzing strategy costs",
             extra={"strategy_name": strategy_name, "error": str(e), "error_type": type(e).__name__},
         )
-        raise HTTPException(status_code=400, detail=f"Error analyzing strategy costs: {str(e)}")
+        raise HTTPException(status_code=400, detail=f"Error analyzing strategy costs: {e!s}") from e
 
 
 @router.post("/validate-profitability")
 async def validate_profitability(
-    analysis_data: Dict[str, Any],
+    analysis_data: dict[str, Any],
     service: Annotated[CostAnalysisService, Depends(get_cost_analysis_service)],
 ):
     """Validate profitability of a trading strategy."""
@@ -247,7 +247,7 @@ async def validate_profitability(
             net_profit=Decimal(str(analysis_data["net_profit"])),
             cost_impact_ratio=Decimal(str(analysis_data["cost_impact_ratio"])),
             profitability_threshold=Decimal(
-                str(getattr(get_config().trading, 'profitability_threshold', 0.02))
+                str(getattr(get_config().trading, "profitability_threshold", 0.02))
             ),  # Use centralized config
             cost_breakdowns=[],
             is_profitable=analysis_data["is_profitable"],
@@ -282,7 +282,7 @@ async def validate_profitability(
             "Error validating profitability",
             extra={"strategy_name": strategy_name, "error": str(e), "error_type": type(e).__name__},
         )
-        raise HTTPException(status_code=400, detail=f"Error validating profitability: {str(e)}")
+        raise HTTPException(status_code=400, detail=f"Error validating profitability: {e!s}") from e
 
 
 @router.get("/cost-parameters")
@@ -308,7 +308,7 @@ async def get_cost_parameters(
 
 @router.post("/cost-parameters")
 async def update_cost_parameters(
-    parameters: Dict[str, Any],
+    parameters: dict[str, Any],
     service: Annotated[CostAnalysisService, Depends(get_cost_analysis_service)],
 ):
     """Update cost parameters configuration."""
@@ -375,13 +375,12 @@ async def update_cost_parameters(
             "Error updating cost parameters",
             extra={"error": str(e), "error_type": type(e).__name__},
         )
-        raise HTTPException(status_code=400, detail=f"Error updating cost parameters: {str(e)}")
+        raise HTTPException(status_code=400, detail=f"Error updating cost parameters: {e!s}") from e
 
 
 @router.get("/cost-breakdown/{trade_id}")
 async def get_cost_breakdown(
-    trade_id: str,
-    service: Annotated[CostAnalysisService, Depends(get_cost_analysis_service)]
+    trade_id: str, service: Annotated[CostAnalysisService, Depends(get_cost_analysis_service)]
 ):
     """Get detailed cost breakdown for a specific trade."""
     # This would typically fetch from database

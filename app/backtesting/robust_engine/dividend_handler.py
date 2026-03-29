@@ -26,7 +26,7 @@ import logging
 from collections import defaultdict
 from datetime import date
 from decimal import Decimal
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 import numpy as np
 import pandas as pd
@@ -70,7 +70,7 @@ class DividendHandler:
         ```
     """
 
-    def __init__(self, drip_config: Optional[DripConfig] = None):
+    def __init__(self, drip_config: DripConfig | None = None):
         """
         Initialize the dividend handler.
 
@@ -79,8 +79,8 @@ class DividendHandler:
         """
         self.drip_config = drip_config or DripConfig()
         self.tracker = DividendTracker()
-        self._dividend_payments: Dict[str, List[DividendAction]] = defaultdict(list)
-        self._position_costs: Dict[str, Decimal] = {}
+        self._dividend_payments: dict[str, list[DividendAction]] = defaultdict(list)
+        self._position_costs: dict[str, Decimal] = {}
 
     def handle_dividend(
         self,
@@ -88,8 +88,8 @@ class DividendHandler:
         amount: Decimal,
         ex_date: date,
         shares: Decimal,
-        payment_date: Optional[date] = None,
-        current_price: Optional[Decimal] = None,
+        payment_date: date | None = None,
+        current_price: Decimal | None = None,
         qualified: bool = True,
     ) -> DividendAction:
         """
@@ -163,7 +163,7 @@ class DividendHandler:
         cash: Decimal,
         price: Decimal,
         ex_date: date,
-    ) -> Dict[str, Decimal]:
+    ) -> dict[str, Decimal]:
         """
         Reinvest a dividend in the same stock.
 
@@ -225,7 +225,7 @@ class DividendHandler:
         self,
         symbol: str,
         original_cost: Decimal,
-        current_price: Optional[Decimal] = None,
+        current_price: Decimal | None = None,
     ) -> Decimal:
         """
         Calculate yield on cost for a position.
@@ -302,8 +302,8 @@ class DividendHandler:
 
     def get_dividend_history(
         self,
-        symbol: Optional[str] = None,
-    ) -> List[DividendAction]:
+        symbol: str | None = None,
+    ) -> list[DividendAction]:
         """
         Get dividend payment history.
 
@@ -324,8 +324,8 @@ class DividendHandler:
 
     def calculate_portfolio_dividend_yield(
         self,
-        positions: Dict[str, Decimal],
-        prices: Dict[str, Decimal],
+        positions: dict[str, Decimal],
+        prices: dict[str, Decimal],
     ) -> Decimal:
         """
         Calculate weighted average dividend yield for a portfolio.
@@ -357,8 +357,8 @@ class DividendHandler:
 
     def get_annual_dividend_income(
         self,
-        symbol: Optional[str] = None,
-    ) -> Dict[int, Decimal]:
+        symbol: str | None = None,
+    ) -> dict[int, Decimal]:
         """
         Get dividend income by year.
 
@@ -376,7 +376,7 @@ class DividendHandler:
 
         return dict(annual_income)
 
-    def get_dividend_statistics(self) -> Dict[str, Any]:
+    def get_dividend_statistics(self) -> dict[str, Any]:
         """
         Get comprehensive dividend statistics.
 
@@ -401,9 +401,9 @@ class DividendHandler:
     def process_dividend_stream(
         self,
         dividend_data: pd.DataFrame,
-        positions: Dict[str, Decimal],
-        prices: Dict[str, Decimal],
-    ) -> List[DividendAction]:
+        positions: dict[str, Decimal],
+        prices: dict[str, Decimal],
+    ) -> list[DividendAction]:
         """
         Process a stream of dividend data.
 
@@ -429,8 +429,8 @@ class DividendHandler:
     def _generate_dividend_actions(
         self,
         dividend_data: pd.DataFrame,
-        positions: Dict[str, Decimal],
-        prices: Dict[str, Decimal],
+        positions: dict[str, Decimal],
+        prices: dict[str, Decimal],
     ) -> DividendAction:
         """
         Generate DividendAction objects from dividend data.

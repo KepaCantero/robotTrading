@@ -7,10 +7,11 @@ Inversion Principle (DIP) from SOLID.
 
 from __future__ import annotations
 
-from typing import Any, Protocol
+from typing import TYPE_CHECKING, Any, Protocol
 
-import numpy as np
-import pandas as pd
+if TYPE_CHECKING:
+    import numpy as np
+    import pandas as pd
 
 
 class StockFilterProtocol(Protocol):

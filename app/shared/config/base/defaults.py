@@ -7,8 +7,6 @@ Single responsibility: manage default configuration values.
 TASK-24: SRP Compliance - Separate default values
 """
 
-from typing import Dict, List
-
 
 def get_default_atr_multiplier() -> float:
     """
@@ -66,7 +64,7 @@ def get_default_stop_distance_pct() -> float:
     return 0.05
 
 
-def get_default_magic_values() -> Dict[str, List[str]]:
+def get_default_magic_values() -> dict[str, list[str]]:
     """
     Get default magic values that should be moved to configuration.
 

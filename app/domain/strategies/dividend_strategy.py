@@ -19,10 +19,9 @@ SOLID Principles:
 """
 
 import logging
-from collections import deque
 from datetime import date
 from decimal import Decimal
-from typing import TYPE_CHECKING, Any, Dict, List, Optional
+from typing import TYPE_CHECKING, Any, Optional
 
 from app.domain.models.market_data import Quote
 from app.domain.models.portfolio import Portfolio
@@ -36,7 +35,7 @@ from .dividend_screener import DividendScreener
 from .models import DividendProfile, DividendStock, DividendStrategyConfig, ExDividendDate
 
 if TYPE_CHECKING:
-    pass
+    from collections import deque
 
 logger = logging.getLogger(__name__)
 
@@ -64,7 +63,7 @@ class DividendStrategy(BaseStrategy):
         yield_on_cost_history: Histórico de yield on cost
     """
 
-    def __init__(self, config: Dict[str, Any]):
+    def __init__(self, config: dict[str, Any]):
         """
         Inicializar estrategia de dividendos.
 
@@ -87,17 +86,17 @@ class DividendStrategy(BaseStrategy):
         self.constructor = DividendPortfolioConstructor(self.strategy_config)
 
         # Estado interno
-        self.dividend_calendar: Dict[str, ExDividendDate] = {}
-        self.yield_on_cost_history: Dict[str, deque] = {}
+        self.dividend_calendar: dict[str, ExDividendDate] = {}
+        self.yield_on_cost_history: dict[str, deque] = {}
         self.current_portfolio: Optional[DividendPortfolio] = None
         self.last_rebalance_date: Optional[date] = None
 
         # Universo de acciones (se llena con datos)
-        self.universe: List[DividendProfile] = []
+        self.universe: list[DividendProfile] = []
 
         # Métricas de rendimiento
         self.total_dividends_received = Decimal("0")
-        self.dividend_payments: List[Dict[str, Any]] = []
+        self.dividend_payments: list[dict[str, Any]] = []
 
         logger.info(
             f"✅ DividendStrategy inicializada: "
@@ -106,7 +105,7 @@ class DividendStrategy(BaseStrategy):
             f"portfolio_size={self.strategy_config.portfolio_size}"
         )
 
-    def _parse_config(self, config: Dict[str, Any]) -> DividendStrategyConfig:
+    def _parse_config(self, config: dict[str, Any]) -> DividendStrategyConfig:
         """
         Parsear configuración desde dict.
 
@@ -154,7 +153,11 @@ class DividendStrategy(BaseStrategy):
                 "min_quality_score",
                 "min_sustainability_score",
             ]:
-                if key in merged and merged[key] is not None and not isinstance(merged[key], Decimal):
+                if (
+                    key in merged
+                    and merged[key] is not None
+                    and not isinstance(merged[key], Decimal)
+                ):
                     merged[key] = Decimal(str(merged[key]))
 
             parsed_config = DividendStrategyConfig(**merged)
@@ -167,7 +170,7 @@ class DividendStrategy(BaseStrategy):
             # Retornar config por defecto
             return DividendStrategyConfig()
 
-    def generate_signals(self, market_data: Quote) -> List[Signal]:
+    def generate_signals(self, market_data: Quote) -> list[Signal]:
         """
         Generar señales de trading basadas en dividendos.
 
@@ -204,7 +207,7 @@ class DividendStrategy(BaseStrategy):
 
         # Actualizar precio en el perfil
         profile.current_price = (
-            market_data.close if hasattr(market_data, 'close') else market_data.price
+            market_data.close if hasattr(market_data, "close") else market_data.price
         )
 
         # Evaluar si generar señal
@@ -245,11 +248,17 @@ class DividendStrategy(BaseStrategy):
                     return False  # Ya tenemos posición
 
         # Evaluar calidad
-        if profile.quality_score is not None and profile.quality_score < self.strategy_config.min_quality_score:
+        if (
+            profile.quality_score is not None
+            and profile.quality_score < self.strategy_config.min_quality_score
+        ):
             return False
 
         # Evaluar sostenibilidad
-        if profile.sustainability_score is not None and profile.sustainability_score < self.strategy_config.min_sustainability_score:
+        if (
+            profile.sustainability_score is not None
+            and profile.sustainability_score < self.strategy_config.min_sustainability_score
+        ):
             return False
 
         # No debe ser un dividend trap
@@ -258,13 +267,10 @@ class DividendStrategy(BaseStrategy):
 
         # Yield dentro de rango
         yield_pct = profile.dividend_data.dividend_yield
-        if (
+        return not (
             yield_pct < self.strategy_config.min_dividend_yield
             or yield_pct > self.strategy_config.max_dividend_yield
-        ):
-            return False
-
-        return True
+        )
 
     def _should_sell(self, profile: DividendProfile) -> bool:
         """
@@ -288,12 +294,18 @@ class DividendStrategy(BaseStrategy):
             return True
 
         # Payout ratio peligroso - use config value
-        if profile.dividend_data.payout_ratio is not None and profile.dividend_data.payout_ratio > self._cfg.payout_ratio_critical:
+        if (
+            profile.dividend_data.payout_ratio is not None
+            and profile.dividend_data.payout_ratio > self._cfg.payout_ratio_critical
+        ):
             logger.warning(f"⚠️ Payout ratio crítico: {profile.symbol}")
             return True
 
         # Dividend coverage bajo - use config value
-        if profile.dividend_data.dividend_coverage_ratio is not None and profile.dividend_data.dividend_coverage_ratio < self._cfg.min_coverage_ratio:
+        if (
+            profile.dividend_data.dividend_coverage_ratio is not None
+            and profile.dividend_data.dividend_coverage_ratio < self._cfg.min_coverage_ratio
+        ):
             logger.warning(f"⚠️ Cobertura insuficiente: {profile.symbol}")
             return True
 
@@ -384,8 +396,8 @@ class DividendStrategy(BaseStrategy):
             liquidity_score=liquidity_score,
             priority_score=priority,
             source=SignalSource.FUNDAMENTAL,
-            price=market_data.close if hasattr(market_data, 'close') else market_data.price,
-            volume=market_data.volume if hasattr(market_data, 'volume') else Decimal("1000000"),
+            price=market_data.close if hasattr(market_data, "close") else market_data.price,
+            volume=market_data.volume if hasattr(market_data, "volume") else Decimal("1000000"),
             metadata={
                 "reason": reason,
                 "dividend_yield": float(profile.dividend_data.dividend_yield),
@@ -425,8 +437,8 @@ class DividendStrategy(BaseStrategy):
             ),  # Calculate real liquidity
             priority_score=self._cfg.sell_priority,  # Use config value
             source=SignalSource.FUNDAMENTAL,
-            price=market_data.close if hasattr(market_data, 'close') else market_data.price,
-            volume=market_data.volume if hasattr(market_data, 'volume') else Decimal("1000000"),
+            price=market_data.close if hasattr(market_data, "close") else market_data.price,
+            volume=market_data.volume if hasattr(market_data, "volume") else Decimal("1000000"),
             metadata={
                 "reason": "dividend_safety_deteriorated",
                 "payout_ratio": float(profile.dividend_data.payout_ratio or 0),
@@ -453,9 +465,9 @@ class DividendStrategy(BaseStrategy):
             Liquidity score from 0 to 100
         """
         # Get bid and ask prices
-        bid = getattr(market_data, 'bid', None)
-        ask = getattr(market_data, 'ask', None)
-        volume = float(getattr(market_data, 'volume', 0))
+        bid = getattr(market_data, "bid", None)
+        ask = getattr(market_data, "ask", None)
+        volume = float(getattr(market_data, "volume", 0))
 
         # If bid/ask not available, use default from config
         if bid is None or ask is None or bid == 0 or ask == 0:
@@ -544,7 +556,7 @@ class DividendStrategy(BaseStrategy):
                 return profile.sector
         return None
 
-    def get_required_parameters(self) -> List[str]:
+    def get_required_parameters(self) -> list[str]:
         """
         Obtener parámetros requeridos para la estrategia.
 
@@ -574,7 +586,7 @@ class DividendStrategy(BaseStrategy):
     # MÉTODOS DE GESTIÓN DE PORTAFOLIO
     # ============================================================================
 
-    def set_universe(self, profiles: List[DividendProfile]) -> None:
+    def set_universe(self, profiles: list[DividendProfile]) -> None:
         """
         Establecer universo de acciones de dividendos.
 
@@ -585,7 +597,7 @@ class DividendStrategy(BaseStrategy):
         logger.info(f"Universo establecido: {len(profiles)} acciones")
 
     def construct_portfolio(
-        self, stocks: List[DividendStock], total_capital: Decimal
+        self, stocks: list[DividendStock], total_capital: Decimal
     ) -> DividendPortfolio:
         """
         Construir portafolio de dividendos.
@@ -603,7 +615,7 @@ class DividendStrategy(BaseStrategy):
         return self.current_portfolio
 
     def rebalance_portfolio(
-        self, new_stocks: List[DividendStock], total_capital: Decimal
+        self, new_stocks: list[DividendStock], total_capital: Decimal
     ) -> DividendPortfolio:
         """
         Rebalancear portafolio existente.
@@ -625,7 +637,7 @@ class DividendStrategy(BaseStrategy):
 
         return self.current_portfolio
 
-    def analyze_portfolio_drift(self) -> Dict[str, Any]:
+    def analyze_portfolio_drift(self) -> dict[str, Any]:
         """
         Analizar drift del portafolio actual.
 
@@ -637,7 +649,7 @@ class DividendStrategy(BaseStrategy):
 
         return self.constructor.analyze_drift(self.current_portfolio)
 
-    def get_portfolio_metrics(self) -> Dict[str, Any]:
+    def get_portfolio_metrics(self) -> dict[str, Any]:
         """
         Obtener métricas del portafolio actual.
 
@@ -661,7 +673,7 @@ class DividendStrategy(BaseStrategy):
             ),
         }
 
-    def update_dividend_calendar(self, ex_dates: List[ExDividendDate]) -> None:
+    def update_dividend_calendar(self, ex_dates: list[ExDividendDate]) -> None:
         """
         Actualizar calendario de fechas ex-dividend.
 

@@ -9,7 +9,7 @@ TASK-24: SRP Refactoring
 """
 
 import logging
-from typing import Any, Dict, Optional
+from typing import Any, Optional
 
 from pydantic import BaseModel, Field, field_validator
 from pydantic_settings import BaseSettings
@@ -25,7 +25,7 @@ class StrategyConfig(BaseModel):
     weight: float = Field(default=1.0, description="Strategy weight for portfolio allocation")
 
     # Strategy-specific parameters
-    parameters: Dict[str, Any] = Field(
+    parameters: dict[str, Any] = Field(
         default_factory=dict, description="Strategy-specific parameters"
     )
 
@@ -139,7 +139,7 @@ class StockAllocationSettings(BaseSettings):
     )
 
     # Momentum scoring weights
-    MOMENTUM_WEIGHTS: Dict[str, float] = Field(
+    MOMENTUM_WEIGHTS: dict[str, float] = Field(
         default_factory=lambda: {
             "H_long": 0.40,
             "Sortino": 0.35,
@@ -150,7 +150,7 @@ class StockAllocationSettings(BaseSettings):
     )
 
     # Mean Reversion scoring weights
-    MEAN_REVERSION_WEIGHTS: Dict[str, float] = Field(
+    MEAN_REVERSION_WEIGHTS: dict[str, float] = Field(
         default_factory=lambda: {
             "H_long": 0.05,
             "Sortino": 0.10,
@@ -161,7 +161,7 @@ class StockAllocationSettings(BaseSettings):
     )
 
     # Pairs Trading scoring weights
-    PAIRS_TRADING_WEIGHTS: Dict[str, float] = Field(
+    PAIRS_TRADING_WEIGHTS: dict[str, float] = Field(
         default_factory=lambda: {
             "H_long": 0.00,
             "Sortino": 0.00,
@@ -321,7 +321,7 @@ class StockAllocationSettings(BaseSettings):
 
     @field_validator("MOMENTUM_WEIGHTS", "MEAN_REVERSION_WEIGHTS", "PAIRS_TRADING_WEIGHTS")
     @classmethod
-    def validate_weights_sum(cls, v: Dict[str, float]) -> Dict[str, float]:
+    def validate_weights_sum(cls, v: dict[str, float]) -> dict[str, float]:
         """Validate that weights sum approximately to 1.0."""
         total = sum(v.values())
         if not 0.95 <= total <= 1.05:  # Allow 5% tolerance

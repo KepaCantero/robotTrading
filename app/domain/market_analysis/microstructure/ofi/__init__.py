@@ -39,17 +39,17 @@ from app.domain.market_analysis.microstructure.ofi.ofi_signals import OFISignalG
 from app.domain.market_analysis.microstructure.ofi.tick_processor import TickLevelOFIProcessor
 
 __all__ = [
-    # Models
-    "OrderBookSnapshot",
-    "TickData",
-    "OFIConfig",
-    "OFISignalConfig",
-    "OFIPrediction",
-    "OFISignal",
     "CumulativeOFI",
     # Main Classes
     "OFICalculator",
+    "OFIConfig",
+    "OFIPrediction",
     "OFIPredictor",
+    "OFISignal",
+    "OFISignalConfig",
     "OFISignalGenerator",
+    # Models
+    "OrderBookSnapshot",
+    "TickData",
     "TickLevelOFIProcessor",
 ]

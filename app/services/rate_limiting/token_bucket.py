@@ -23,7 +23,7 @@ import logging
 import time
 from dataclasses import dataclass
 from enum import Enum, IntEnum
-from typing import Callable, Dict, List, Optional
+from typing import Callable, Optional
 
 from requests.exceptions import HTTPError
 
@@ -80,7 +80,7 @@ class RateLimit:
         return int(self.requests_per_second * 3600)
 
 
-def _get_broker_rate_limits() -> Dict[BrokerType, RateLimit]:
+def _get_broker_rate_limits() -> dict[BrokerType, RateLimit]:
     """
     Get broker-specific rate limits from centralized config.
 
@@ -228,7 +228,7 @@ class TokenBucketRateLimiter:
         )
 
         # Priority queue for pending requests
-        self._priority_queue: List[tuple[int, asyncio.Future]] = []
+        self._priority_queue: list[tuple[int, asyncio.Future]] = []
 
         # Statistics
         self._stats = RateLimitStatistics()
@@ -492,7 +492,7 @@ class TokenBucketRateLimiter:
         available = self.get_available_tokens()
         return 1.0 - (available / self.rate_limit.burst_capacity)
 
-    def get_statistics(self) -> Dict[str, any]:
+    def get_statistics(self) -> dict[str, any]:
         """
         Get rate limiter statistics.
 
@@ -572,7 +572,7 @@ class RateLimitManager:
 
     def __init__(self):
         """Initialize rate limit manager."""
-        self._limiters: Dict[BrokerType, TokenBucketRateLimiter] = {}
+        self._limiters: dict[BrokerType, TokenBucketRateLimiter] = {}
 
         logger.info("RateLimitManager initialized")
 
@@ -658,7 +658,7 @@ class RateLimitManager:
             limiter.reset()
         logger.info("All rate limiters reset")
 
-    def get_all_statistics(self) -> Dict[str, Dict]:
+    def get_all_statistics(self) -> dict[str, dict]:
         """
         Get statistics for all limiters.
 
@@ -676,7 +676,7 @@ class RateLimitManager:
             for broker_type, limiter in self._limiters.items()
         }
 
-    def get_summary(self) -> Dict[str, any]:
+    def get_summary(self) -> dict[str, any]:
         """
         Get a summary of all rate limiters.
 

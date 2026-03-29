@@ -10,7 +10,6 @@ from __future__ import annotations
 
 import logging
 import traceback
-from typing import Optional, Tuple
 
 import numpy as np
 
@@ -95,7 +94,7 @@ def validate_covariance_matrix(
     check_psd: bool = True,
     check_symmetry: bool = True,
     enforce_psd: bool = False,
-) -> Tuple[bool, np.ndarray, Optional[str]]:
+) -> tuple[bool, np.ndarray, str | None]:
     """
     Validate and optionally fix covariance matrix.
 
@@ -172,7 +171,7 @@ def enforce_positive_semidefinite(
 def sanitize_input_returns(
     returns: dict[str, list[float]] | np.ndarray,
     min_variance_threshold: float = MIN_VARIANCE_THRESHOLD,
-) -> Tuple[np.ndarray, list[str], list[int]]:
+) -> tuple[np.ndarray, list[str], list[int]]:
     """
     Sanitize input returns by removing NaN and zero-variance assets.
 
@@ -223,7 +222,7 @@ def sanitize_input_returns(
 def validate_weights_sum_to_one(
     weights: np.ndarray,
     tolerance: float = WEIGHT_SUM_TOLERANCE,
-) -> Tuple[bool, float]:
+) -> tuple[bool, float]:
     """
     Validate that weights sum to 1.0.
 
@@ -242,7 +241,7 @@ def validate_weights_sum_to_one(
 def log_optimization_failure(
     method_name: str,
     exception: Exception,
-    context: Optional[dict] = None,
+    context: dict | None = None,
 ) -> None:
     """
     Log optimization failure with stack trace and context.
@@ -253,7 +252,7 @@ def log_optimization_failure(
         context: Optional dictionary with context information
     """
     logger.error(
-        f"Optimization failed in {method_name}: {str(exception)}",
+        f"Optimization failed in {method_name}: {exception!s}",
         extra={
             "method": method_name,
             "exception_type": type(exception).__name__,
@@ -273,7 +272,7 @@ def sanitize_covariance_matrix(
     cov_matrix: np.ndarray,
     min_variance_threshold: float = MIN_VARIANCE_THRESHOLD,
     enforce_psd: bool = True,
-) -> Tuple[np.ndarray, list[int]]:
+) -> tuple[np.ndarray, list[int]]:
     """
     Sanitize covariance matrix by removing zero-variance assets.
 
@@ -294,7 +293,7 @@ def sanitize_covariance_matrix(
 
     if len(valid_indices) < cov_matrix.shape[0]:
         logger.warning(
-            f"Removed {cov_matrix.shape[0] - len(valid_indices)} " "assets with zero variance"
+            f"Removed {cov_matrix.shape[0] - len(valid_indices)} assets with zero variance"
         )
 
     # Extract submatrix

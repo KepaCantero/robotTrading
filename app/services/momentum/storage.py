@@ -10,7 +10,7 @@ SOLID Principles:
 """
 
 import logging
-from typing import Dict, List, Optional
+from typing import Optional
 
 from app.domain.models.momentum import MomentumAnalysis, MomentumStrategy
 
@@ -36,8 +36,8 @@ class InMemoryStorageBackend:
 
     def __init__(self) -> None:
         """Initialize in-memory storage."""
-        self.analyses: Dict[str, MomentumAnalysis] = {}
-        self.strategies: Dict[str, MomentumStrategy] = {}
+        self.analyses: dict[str, MomentumAnalysis] = {}
+        self.strategies: dict[str, MomentumStrategy] = {}
 
     async def save_analysis(self, analysis_id: str, analysis: MomentumAnalysis) -> None:
         """
@@ -62,7 +62,7 @@ class InMemoryStorageBackend:
         """
         return self.analyses.get(analysis_id)
 
-    async def get_all_analyses(self) -> List[MomentumAnalysis]:
+    async def get_all_analyses(self) -> list[MomentumAnalysis]:
         """
         Get all momentum analyses.
 
@@ -97,7 +97,7 @@ class InMemoryStorageBackend:
         self.strategies[strategy.name] = strategy
         logger.debug(f"Saved strategy: {strategy.name}")
 
-    async def load_strategies(self) -> Dict[str, MomentumStrategy]:
+    async def load_strategies(self) -> dict[str, MomentumStrategy]:
         """
         Load all momentum strategies.
 

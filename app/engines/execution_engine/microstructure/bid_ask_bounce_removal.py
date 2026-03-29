@@ -11,7 +11,6 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass
-from typing import Dict, Optional
 
 import numpy as np
 import pandas as pd
@@ -63,7 +62,7 @@ class BidAskBounceRemover:
         bid_col: str = "bid",
         ask_col: str = "ask",
         last_col: str = "close",
-        method: Optional[str] = None,
+        method: str | None = None,
         span: int = 20,
     ) -> pd.Series:
         """
@@ -219,10 +218,7 @@ class BidAskBounceRemover:
         mid_vol = mid_returns.std() * np.sqrt(252)
 
         # Bounce ratio
-        if mid_vol > 0:
-            bounce_ratio = original_vol / mid_vol
-        else:
-            bounce_ratio = 1.0
+        bounce_ratio = original_vol / mid_vol if mid_vol > 0 else 1.0
 
         is_dominant = bounce_ratio > self.min_bounce_threshold
 
@@ -249,7 +245,7 @@ class BidAskBounceRemover:
         bid_col: str = "bid",
         ask_col: str = "ask",
         window: int = 10,
-    ) -> Dict[str, any]:
+    ) -> dict[str, any]:
         """
         Detect bid-ask crossing pattern.
 
@@ -271,7 +267,9 @@ class BidAskBounceRemover:
         # Count crossings
         crossings = 0
         for i in range(1, len(df)):
-            if buy_mask.iloc[i] and sell_mask.iloc[i - 1] or sell_mask.iloc[i] and buy_mask.iloc[i - 1]:
+            if (buy_mask.iloc[i] and sell_mask.iloc[i - 1]) or (
+                sell_mask.iloc[i] and buy_mask.iloc[i - 1]
+            ):
                 crossings += 1
 
         # Calculate crossing rate

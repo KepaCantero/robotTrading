@@ -5,7 +5,7 @@ Contains configuration for database, Redis, API, logging, and monitoring.
 """
 
 import logging
-from typing import List, Optional
+from typing import Optional
 
 from pydantic import Field, field_validator
 
@@ -71,8 +71,7 @@ class DatabaseConfig(SettingsBase):
         if not db_password:
             logger.error("DB_PASSWORD environment variable not set")
             raise ValueError(
-                "DB_PASSWORD environment variable not set. "
-                "Cannot build secure connection string."
+                "DB_PASSWORD environment variable not set. Cannot build secure connection string."
             )
         conn_str = f"postgresql://{self.user}:{db_password}@{self.host}:{self.port}/{self.name}"
         logger.info(
@@ -147,8 +146,8 @@ class APIConfig(SettingsBase):
     rate_limit_per_minute: int = Field(default=100, description="Rate limit per minute")
 
     # CORS
-    cors_origins: List[str] = Field(default=["*"], description="CORS allowed origins")
-    cors_methods: List[str] = Field(
+    cors_origins: list[str] = Field(default=["*"], description="CORS allowed origins")
+    cors_methods: list[str] = Field(
         default=["GET", "POST", "PUT", "DELETE"], description="CORS allowed methods"
     )
 
@@ -226,7 +225,7 @@ class MonitoringConfig(ConfigBase):
 
     # Alerts
     alert_email_enabled: bool = Field(default=False, description="Enable email alerts")
-    alert_email_to: List[str] = Field(default=[], description="Alert email recipients")
+    alert_email_to: list[str] = Field(default=[], description="Alert email recipients")
     alert_email_from: str = Field(
         default="alerts@algotrading.com", description="Alert email sender"
     )

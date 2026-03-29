@@ -3,7 +3,7 @@ Rebalance Portfolio Use Case - Rebalance an existing portfolio
 """
 
 from decimal import Decimal
-from typing import Dict, List, Optional, Protocol
+from typing import Optional, Protocol
 
 import pandas as pd
 import structlog
@@ -21,7 +21,7 @@ class BasePortfolioOptimizer(Protocol):
     implementations that can be injected into the use case.
     """
 
-    def optimize(self, returns: pd.DataFrame, **kwargs: object) -> Dict[str, float]:
+    def optimize(self, returns: pd.DataFrame, **kwargs: object) -> dict[str, float]:
         """
         Optimize portfolio weights based on returns.
 
@@ -53,9 +53,9 @@ class RebalancePortfolioUseCase:
     def execute(
         self,
         portfolio: Portfolio,
-        target_weights: Dict[str, Decimal],
+        target_weights: dict[str, Decimal],
         rebalance_threshold: Optional[Decimal] = None,
-    ) -> List[str]:
+    ) -> list[str]:
         """
         Execute the use case - rebalance portfolio.
 
@@ -71,7 +71,7 @@ class RebalancePortfolioUseCase:
             rebalance_threshold = Decimal("0.05")
         logger.info(
             "rebalance_check_started",
-            portfolio_id=str(portfolio.id) if hasattr(portfolio, 'id') else 'unknown',
+            portfolio_id=str(portfolio.id) if hasattr(portfolio, "id") else "unknown",
             target_weights={k: float(v) for k, v in target_weights.items()},
             rebalance_threshold=float(rebalance_threshold),
         )
@@ -109,7 +109,7 @@ class RebalancePortfolioUseCase:
         )
         return orders
 
-    def _get_current_weights(self, portfolio: Portfolio) -> Dict[str, Decimal]:
+    def _get_current_weights(self, portfolio: Portfolio) -> dict[str, Decimal]:
         """
         Get current portfolio weights.
 
@@ -122,7 +122,7 @@ class RebalancePortfolioUseCase:
         Returns:
             Dictionary mapping symbols to their current weights (as Decimals)
         """
-        weights: Dict[str, Decimal] = {}
+        weights: dict[str, Decimal] = {}
 
         # Get total portfolio value (cash + positions)
         total_value = portfolio.get_total_value().amount
@@ -141,8 +141,8 @@ class RebalancePortfolioUseCase:
 
     def _needs_rebalance(
         self,
-        current: Dict[str, Decimal],
-        target: Dict[str, Decimal],
+        current: dict[str, Decimal],
+        target: dict[str, Decimal],
         threshold: Decimal,
     ) -> bool:
         """
@@ -177,9 +177,9 @@ class RebalancePortfolioUseCase:
 
     def _generate_rebalance_orders(
         self,
-        current: Dict[str, Decimal],
-        target: Dict[str, Decimal],
-    ) -> List[str]:
+        current: dict[str, Decimal],
+        target: dict[str, Decimal],
+    ) -> list[str]:
         """
         Generate rebalancing orders.
 
@@ -193,7 +193,7 @@ class RebalancePortfolioUseCase:
         Returns:
             List of rebalancing actions as descriptive strings
         """
-        orders: List[str] = []
+        orders: list[str] = []
 
         # Get all unique symbols from both current and target
         all_symbols = set(current.keys()) | set(target.keys())

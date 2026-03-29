@@ -14,7 +14,6 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass
-from typing import List, Optional
 
 import numpy as np
 
@@ -43,9 +42,9 @@ class CornerPortfolio:
     expected_return: float  # Expected return
     variance: float  # Portfolio variance
     lambda_val: float  # Lagrange multiplier for return constraint
-    in_assets: List[int]  # Assets with positive weights
-    out_assets: List[int]  # Assets at bounds (zero weight)
-    symbols: List[str]  # Asset symbols
+    in_assets: list[int]  # Assets with positive weights
+    out_assets: list[int]  # Assets at bounds (zero weight)
+    symbols: list[str]  # Asset symbols
 
     @property
     def risk(self) -> float:
@@ -57,9 +56,9 @@ class CornerPortfolio:
 class EfficientFrontierCLA:
     """Efficient frontier computed via CLA."""
 
-    corner_portfolios: List[CornerPortfolio]  # Corner portfolios
+    corner_portfolios: list[CornerPortfolio]  # Corner portfolios
     n_portfolios: int  # Number of corner portfolios
-    symbols: List[str]  # Asset symbols
+    symbols: list[str]  # Asset symbols
 
     def get_portfolio_for_return(
         self,
@@ -99,7 +98,7 @@ class EfficientFrontierCLA:
     def get_max_sharpe_portfolio(
         self,
         risk_free_rate: float,
-    ) -> Optional[CornerPortfolio]:
+    ) -> CornerPortfolio | None:
         """
         Get maximum Sharpe ratio portfolio.
 
@@ -164,7 +163,7 @@ class CriticalLineAlgorithm:
         self,
         expected_returns: np.ndarray,
         cov_matrix: np.ndarray,
-        symbols: Optional[List[str]] = None,
+        symbols: list[str] | None = None,
     ) -> EfficientFrontierCLA:
         """
         Compute efficient frontier using CLA.
@@ -208,7 +207,7 @@ class CriticalLineAlgorithm:
                 e,
                 {"n_assets": n_assets},
             )
-            raise ValueError(f"Failed to compute minimum variance portfolio: {e}")
+            raise ValueError(f"Failed to compute minimum variance portfolio: {e}") from e
 
         # Max return portfolio (single asset with highest return)
         max_return_idx = np.argmax(expected_returns)
@@ -251,7 +250,7 @@ class CriticalLineAlgorithm:
     def _solve_min_variance(
         self,
         cov_matrix: np.ndarray,
-        symbols: List[str],
+        symbols: list[str],
     ) -> CornerPortfolio:
         """Solve minimum variance portfolio."""
         n_assets = len(symbols)
@@ -267,7 +266,7 @@ class CriticalLineAlgorithm:
                 e,
                 {"n_assets": n_assets},
             )
-            raise ValueError(f"Cannot invert covariance matrix: {e}")
+            raise ValueError(f"Cannot invert covariance matrix: {e}") from e
 
         # Apply bounds if needed
         weights = np.clip(weights, self._min_weight, self._max_weight)
@@ -291,7 +290,7 @@ class CriticalLineAlgorithm:
         expected_returns: np.ndarray,
         cov_matrix: np.ndarray,
         target_return: float,
-        symbols: List[str],
+        symbols: list[str],
     ) -> CornerPortfolio:
         """Solve for target return (quadratic programming)."""
         from scipy.optimize import minimize

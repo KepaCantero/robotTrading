@@ -16,7 +16,7 @@ SINGLE SOURCE OF TRUTH: All values from CentralizedConfig.
 import logging
 from dataclasses import dataclass
 from decimal import Decimal
-from typing import Optional, Tuple
+from typing import Optional
 
 # SINGLE SOURCE OF TRUTH: Use CentralizedConfig for all values
 from app.shared.config.centralized_config import get_config
@@ -116,7 +116,7 @@ class LiquidityValidator:
 
     def validate_order(
         self, order_quantity: Decimal, symbol: str, current_bar, order_side: str = "buy"
-    ) -> Tuple[bool, str]:
+    ) -> tuple[bool, str]:
         """
         Validate if order can be filled based on available liquidity.
 
@@ -132,7 +132,7 @@ class LiquidityValidator:
                 - reason: Human-readable explanation of validation result
         """
         # Check for volume data
-        if not hasattr(current_bar, 'volume') or current_bar.volume is None:
+        if not hasattr(current_bar, "volume") or current_bar.volume is None:
             return False, "No volume data available"
 
         daily_volume = Decimal(str(current_bar.volume))
@@ -279,11 +279,11 @@ class LiquidityValidator:
             Execution price including all costs
         """
         # Get base price (prefer close, then last, then ask)
-        if hasattr(current_bar, 'close'):
+        if hasattr(current_bar, "close"):
             base_price = Decimal(str(current_bar.close))
-        elif hasattr(current_bar, 'last'):
+        elif hasattr(current_bar, "last"):
             base_price = Decimal(str(current_bar.last))
-        elif hasattr(current_bar, 'ask'):
+        elif hasattr(current_bar, "ask"):
             base_price = Decimal(str(current_bar.ask))
         else:
             base_price = Decimal("100")
@@ -292,7 +292,7 @@ class LiquidityValidator:
         total_slippage = self.base_slippage_pct
 
         # Add market impact if quantity provided
-        if quantity is not None and hasattr(current_bar, 'volume'):
+        if quantity is not None and hasattr(current_bar, "volume"):
             daily_volume = Decimal(str(current_bar.volume))
 
             if daily_volume > 0:
@@ -329,11 +329,11 @@ class LiquidityValidator:
             Execution price including all costs
         """
         # Get base price (prefer close, then last, then bid)
-        if hasattr(current_bar, 'close'):
+        if hasattr(current_bar, "close"):
             base_price = Decimal(str(current_bar.close))
-        elif hasattr(current_bar, 'last'):
+        elif hasattr(current_bar, "last"):
             base_price = Decimal(str(current_bar.last))
-        elif hasattr(current_bar, 'bid'):
+        elif hasattr(current_bar, "bid"):
             base_price = Decimal(str(current_bar.bid))
         else:
             base_price = Decimal("100")
@@ -342,7 +342,7 @@ class LiquidityValidator:
         total_slippage = self.base_slippage_pct
 
         # Add market impact if quantity provided
-        if quantity is not None and hasattr(current_bar, 'volume'):
+        if quantity is not None and hasattr(current_bar, "volume"):
             daily_volume = Decimal(str(current_bar.volume))
 
             if daily_volume > 0:
@@ -380,7 +380,7 @@ class LiquidityValidator:
         Returns:
             Estimated price impact in decimal (0.01 = 1%)
         """
-        if not hasattr(current_bar, 'volume') or current_bar.volume is None:
+        if not hasattr(current_bar, "volume") or current_bar.volume is None:
             return Decimal("0.01")  # 1% default if no volume data
 
         daily_volume = Decimal(str(current_bar.volume))
@@ -414,7 +414,7 @@ class LiquidityValidator:
         Returns:
             Dictionary with liquidity metrics
         """
-        daily_volume = Decimal(str(getattr(current_bar, 'volume', 0)))
+        daily_volume = Decimal(str(getattr(current_bar, "volume", 0)))
 
         metrics = {
             "daily_volume": float(daily_volume),

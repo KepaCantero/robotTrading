@@ -6,7 +6,7 @@ Data models for configuration storage and retrieval.
 
 import logging
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 from pydantic import BaseModel, Field
 
@@ -17,10 +17,10 @@ class StrategyConfiguration(BaseModel):
     """Strategy configuration with parameters."""
 
     strategy_name: str
-    parameters: Dict[str, Any]
+    parameters: dict[str, Any]
     version: str = "1.0"
     created_at: datetime = Field(default_factory=datetime.utcnow)
-    metadata: Dict[str, Any] = Field(default_factory=dict)
+    metadata: dict[str, Any] = Field(default_factory=dict)
 
 
 class VersionedConfiguration(BaseModel):
@@ -29,7 +29,7 @@ class VersionedConfiguration(BaseModel):
     config_id: str
     version: int
     strategy_name: str
-    parameters: Dict[str, Any]
+    parameters: dict[str, Any]
     created_at: datetime
     is_active: bool = True
 
@@ -38,9 +38,9 @@ class ConfigurationSaveRequest(BaseModel):
     """Request to save a configuration."""
 
     strategy_name: str
-    parameters: Dict[str, Any]
+    parameters: dict[str, Any]
     version: Optional[str] = None
-    metadata: Optional[Dict[str, Any]] = None
+    metadata: Optional[dict[str, Any]] = None
 
 
 class ConfigurationLoadRequest(BaseModel):
@@ -61,5 +61,5 @@ class ConfigurationLoadResponse(BaseModel):
 class ConfigurationListResponse(BaseModel):
     """Response from listing configurations."""
 
-    configurations: List[StrategyConfiguration]
+    configurations: list[StrategyConfiguration]
     total_count: int

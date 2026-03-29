@@ -12,7 +12,7 @@ from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from decimal import Decimal
 from enum import Enum
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 
 import numpy as np
 import pandas as pd
@@ -83,7 +83,7 @@ class AssetClassType(str, Enum):
     CASH = "cash"
 
     @classmethod
-    def get_trading_hours(cls, asset_type: str) -> Dict[str, str]:
+    def get_trading_hours(cls, asset_type: str) -> dict[str, str]:
         """
         Get typical trading hours for an asset class.
 
@@ -93,8 +93,8 @@ class AssetClassType(str, Enum):
         Returns:
             Dictionary with 'open' and 'close' times in UTC
         """
-        default_hours: Dict[str, str] = {"open": "00:00", "close": "23:59"}
-        hours_map: Dict[AssetClassType, Dict[str, str]] = {
+        default_hours: dict[str, str] = {"open": "00:00", "close": "23:59"}
+        hours_map: dict[AssetClassType, dict[str, str]] = {
             cls.EQUITY: {"open": "14:30", "close": "21:00"},  # NYSE hours in UTC
             cls.CRYPTO: {"open": "00:00", "close": "23:59"},  # 24/7
             cls.FOREX: {"open": "00:00", "close": "23:59"},  # 24/5
@@ -121,7 +121,7 @@ class AssetClassType(str, Enum):
             Settlement period as timedelta
         """
         default_period = timedelta(days=2)
-        settlement_map: Dict[AssetClassType, timedelta] = {
+        settlement_map: dict[AssetClassType, timedelta] = {
             cls.EQUITY: timedelta(days=2),  # T+2
             cls.CRYPTO: timedelta(seconds=0),  # Instant
             cls.FOREX: timedelta(days=2),  # T+2
@@ -137,7 +137,7 @@ class AssetClassType(str, Enum):
         return default_period
 
     @classmethod
-    def get_typical_volatility(cls, asset_type: str) -> Tuple[Decimal, Decimal]:
+    def get_typical_volatility(cls, asset_type: str) -> tuple[Decimal, Decimal]:
         """
         Get typical volatility range for an asset class.
 
@@ -179,7 +179,7 @@ class AssetClassType(str, Enum):
         return (Decimal(str(vol_min)), Decimal(str(vol_max)))
 
     @classmethod
-    def get_typical_return(cls, asset_type: str) -> Tuple[Decimal, Decimal]:
+    def get_typical_return(cls, asset_type: str) -> tuple[Decimal, Decimal]:
         """
         Get typical expected return range for an asset class.
 
@@ -280,7 +280,7 @@ class AssetClassReturns:
         annualized = vol * np.sqrt(n_periods)
         return Decimal(str(annualized))
 
-    def sharpe_ratio(self, risk_free_rate: Optional[float] = None) -> float:
+    def sharpe_ratio(self, risk_free_rate: float | None = None) -> float:
         """
         Calculate Sharpe ratio.
 
@@ -376,16 +376,16 @@ class AssetClassMetrics:
 
     expected_return: Decimal
     volatility: Decimal
-    sharpe_ratio: Optional[Decimal] = None
-    sortino_ratio: Optional[Decimal] = None
-    max_drawdown: Optional[Decimal] = None
-    var_95: Optional[Decimal] = None
-    cvar_95: Optional[Decimal] = None
-    beta: Optional[Decimal] = None
-    correlation_to_equities: Optional[Decimal] = None
-    correlation_to_bonds: Optional[Decimal] = None
-    skewness: Optional[Decimal] = None
-    kurtosis: Optional[Decimal] = None
+    sharpe_ratio: Decimal | None = None
+    sortino_ratio: Decimal | None = None
+    max_drawdown: Decimal | None = None
+    var_95: Decimal | None = None
+    cvar_95: Decimal | None = None
+    beta: Decimal | None = None
+    correlation_to_equities: Decimal | None = None
+    correlation_to_bonds: Decimal | None = None
+    skewness: Decimal | None = None
+    kurtosis: Decimal | None = None
 
     def validate(self) -> bool:
         """
@@ -409,7 +409,7 @@ class AssetClassMetrics:
         min_return = _get_asset_config("asset_class_min_expected_return", -1.0)
         if self.expected_return < Decimal(str(min_return)):
             raise ValueError(
-                f"Expected return cannot be less than {min_return*100}%, got {self.expected_return}"
+                f"Expected return cannot be less than {min_return * 100}%, got {self.expected_return}"
             )
 
         max_return = _get_asset_config("asset_class_max_expected_return", 2.0)
@@ -427,7 +427,7 @@ class AssetClassMetrics:
             return Decimal("0")
         return self.expected_return / self.volatility
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert metrics to dictionary."""
         return {
             "expected_return": float(self.expected_return),
@@ -501,14 +501,14 @@ class AssetClassConfig(BaseModel):
     rebalance_frequency: RebalanceFrequency = Field(
         default=RebalanceFrequency.MONTHLY, description="Rebalancing frequency"
     )
-    symbols: Optional[List[str]] = Field(default=None, description="List of symbols in this class")
+    symbols: list[str] | None = Field(default=None, description="List of symbols in this class")
     max_positions: int = Field(
         default=50, ge=1, le=500, description="Maximum positions within class"
     )
-    correlation_matrix: Optional[Dict[str, float]] = Field(
+    correlation_matrix: dict[str, float] | None = Field(
         default=None, description="Correlations with other asset classes"
     )
-    metadata: Dict[str, Any] = Field(default_factory=dict, description="Additional metadata")
+    metadata: dict[str, Any] = Field(default_factory=dict, description="Additional metadata")
     enabled: bool = Field(default=True, description="Whether this asset class is enabled")
 
     @field_validator("max_weight")
@@ -521,7 +521,7 @@ class AssetClassConfig(BaseModel):
 
     @field_validator("symbols")
     @classmethod
-    def validate_symbols(cls, v: Optional[List[str]]) -> Optional[List[str]]:
+    def validate_symbols(cls, v: list[str] | None) -> list[str] | None:
         """Validate symbols list."""
         if v is not None:
             if len(v) == 0:
@@ -540,7 +540,7 @@ class AssetClassConfig(BaseModel):
 
     @field_validator("correlation_matrix")
     @classmethod
-    def validate_correlations(cls, v: Optional[Dict[str, float]]) -> Optional[Dict[str, float]]:
+    def validate_correlations(cls, v: dict[str, float] | None) -> dict[str, float] | None:
         """Validate correlation values are in valid range."""
         if v is not None:
             for key, corr in v.items():
@@ -579,13 +579,13 @@ class AssetClass:
     min_weight: Decimal = Decimal("0")
     max_weight: Decimal = Decimal("1")
     rebalance_frequency: str = "monthly"
-    correlation_matrix: Optional[pd.DataFrame] = None
-    symbols: Optional[List[str]] = None
-    metrics: Optional[AssetClassMetrics] = None
-    config: Optional[AssetClassConfig] = None
+    correlation_matrix: pd.DataFrame | None = None
+    symbols: list[str] | None = None
+    metrics: AssetClassMetrics | None = None
+    config: AssetClassConfig | None = None
     enabled: bool = True
     max_positions: int = 50
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
     def __post_init__(self):
         """Validate asset class after initialization."""
@@ -643,7 +643,7 @@ class AssetClass:
         min_return = _get_asset_config("asset_class_min_expected_return", -1.0)
         if self.expected_return < Decimal(str(min_return)):
             raise ValueError(
-                f"Expected return cannot be less than {min_return*100}%, got {self.expected_return}"
+                f"Expected return cannot be less than {min_return * 100}%, got {self.expected_return}"
             )
 
         # Validate rebalance frequency
@@ -668,7 +668,7 @@ class AssetClass:
             return Decimal("0")
         return self.expected_return / self.volatility
 
-    def calculate_sharpe_ratio(self, risk_free_rate: Optional[float] = None) -> float:
+    def calculate_sharpe_ratio(self, risk_free_rate: float | None = None) -> float:
         """
         Calculate Sharpe ratio.
 
@@ -764,7 +764,7 @@ class AssetClass:
             enabled=config.enabled,
         )
 
-    def get_correlation_with(self, other_name: str) -> Optional[float]:
+    def get_correlation_with(self, other_name: str) -> float | None:
         """
         Get correlation with another asset class.
 
@@ -812,7 +812,7 @@ class AssetClass:
         weight = max(self.min_weight, min(self.max_weight, target_weight))
         return portfolio_value * weight
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary representation."""
         return {
             "name": self.name,

@@ -12,7 +12,6 @@ import logging
 from datetime import datetime
 from decimal import Decimal
 from pathlib import Path
-from typing import Dict, List, Optional
 
 from ...domain.entities.backtest import Backtest, BacktestStatus, BacktestType
 from ...domain.repositories.backtest_repository import BacktestRepository
@@ -59,12 +58,12 @@ class FileBacktestRepository(BacktestRepository):
         data = self._serialize_backtest(backtest)
 
         # Write to file
-        with open(file_path, 'w') as f:
+        with open(file_path, "w") as f:
             json.dump(data, f, indent=2, default=str)
 
         logger.debug(f"Saved backtest to {file_path}")
 
-    def find_by_id(self, backtest_id: str) -> Optional[Backtest]:
+    def find_by_id(self, backtest_id: str) -> Backtest | None:
         """
         Find a backtest by ID.
 
@@ -82,7 +81,7 @@ class FileBacktestRepository(BacktestRepository):
 
         return None
 
-    def find_by_status(self, status: BacktestStatus) -> List[Backtest]:
+    def find_by_status(self, status: BacktestStatus) -> list[Backtest]:
         """
         Find backtests by status.
 
@@ -105,7 +104,7 @@ class FileBacktestRepository(BacktestRepository):
 
         return backtests
 
-    def find_by_type(self, backtest_type: BacktestType) -> List[Backtest]:
+    def find_by_type(self, backtest_type: BacktestType) -> list[Backtest]:
         """
         Find backtests by type.
 
@@ -118,7 +117,7 @@ class FileBacktestRepository(BacktestRepository):
         all_backtests = self.find_all()
         return [bt for bt in all_backtests if bt.config.backtest_type == backtest_type]
 
-    def find_all(self, limit: int = 100, offset: int = 0) -> List[Backtest]:
+    def find_all(self, limit: int = 100, offset: int = 0) -> list[Backtest]:
         """
         Find all backtests with pagination.
 
@@ -179,7 +178,7 @@ class FileBacktestRepository(BacktestRepository):
         status_dir = self.base_dir / status.value
         return len(list(status_dir.glob("*.json")))
 
-    def get_recent_completed(self, limit: int = 10) -> List[Backtest]:
+    def get_recent_completed(self, limit: int = 10) -> list[Backtest]:
         """
         Get recently completed backtests.
 
@@ -194,84 +193,84 @@ class FileBacktestRepository(BacktestRepository):
         completed.sort(key=lambda bt: bt.completed_at or bt.created_at, reverse=True)
         return completed[:limit]
 
-    def _serialize_backtest(self, backtest: Backtest) -> Dict:
+    def _serialize_backtest(self, backtest: Backtest) -> dict:
         """Serialize backtest to dictionary."""
         return {
-            'backtest_id': backtest.backtest_id,
-            'status': backtest.status.value,
-            'error_message': backtest.error_message,
-            'created_at': backtest.created_at.isoformat(),
-            'started_at': backtest.started_at.isoformat() if backtest.started_at else None,
-            'completed_at': backtest.completed_at.isoformat() if backtest.completed_at else None,
-            'config': backtest.config.to_dict() if backtest.config else None,
-            'result': backtest.result.to_dict() if backtest.result else None,
+            "backtest_id": backtest.backtest_id,
+            "status": backtest.status.value,
+            "error_message": backtest.error_message,
+            "created_at": backtest.created_at.isoformat(),
+            "started_at": backtest.started_at.isoformat() if backtest.started_at else None,
+            "completed_at": backtest.completed_at.isoformat() if backtest.completed_at else None,
+            "config": backtest.config.to_dict() if backtest.config else None,
+            "result": backtest.result.to_dict() if backtest.result else None,
         }
 
-    def _deserialize_backtest(self, file_path: Path) -> Optional[Backtest]:
+    def _deserialize_backtest(self, file_path: Path) -> Backtest | None:
         """Deserialize backtest from file."""
-        with open(file_path, 'r') as f:
+        with open(file_path) as f:
             data = json.load(f)
 
         # Parse config
-        config = BacktestConfigValue.from_dict(data['config']) if data.get('config') else None
+        config = BacktestConfigValue.from_dict(data["config"]) if data.get("config") else None
 
         # Parse result
         result = None
-        if data.get('result'):
-            result_data = data['result']
+        if data.get("result"):
+            result_data = data["result"]
             result = BacktestResultValue(
-                initial_capital=Decimal(result_data['initial_capital']),
-                final_capital=Decimal(result_data['final_capital']),
-                total_return=Decimal(result_data['total_return']),
-                total_return_pct=Decimal(result_data['total_return_pct']),
+                initial_capital=Decimal(result_data["initial_capital"]),
+                final_capital=Decimal(result_data["final_capital"]),
+                total_return=Decimal(result_data["total_return"]),
+                total_return_pct=Decimal(result_data["total_return_pct"]),
                 sharpe_ratio=(
-                    Decimal(result_data['sharpe_ratio'])
-                    if result_data.get('sharpe_ratio')
+                    Decimal(result_data["sharpe_ratio"])
+                    if result_data.get("sharpe_ratio")
                     else None
                 ),
                 sortino_ratio=(
-                    Decimal(result_data['sortino_ratio'])
-                    if result_data.get('sortino_ratio')
+                    Decimal(result_data["sortino_ratio"])
+                    if result_data.get("sortino_ratio")
                     else None
                 ),
                 max_drawdown=(
-                    Decimal(result_data['max_drawdown'])
-                    if result_data.get('max_drawdown')
+                    Decimal(result_data["max_drawdown"])
+                    if result_data.get("max_drawdown")
                     else None
                 ),
                 volatility=(
-                    Decimal(result_data['volatility']) if result_data.get('volatility') else None
+                    Decimal(result_data["volatility"]) if result_data.get("volatility") else None
                 ),
-                var_95=Decimal(result_data['var_95']) if result_data.get('var_95') else None,
-                total_trades=result_data.get('total_trades', 0),
-                winning_trades=result_data.get('winning_trades', 0),
-                losing_trades=result_data.get('losing_trades', 0),
-                win_rate=Decimal(result_data['win_rate']) if result_data.get('win_rate') else None,
-                avg_win=Decimal(result_data['avg_win']) if result_data.get('avg_win') else None,
-                avg_loss=Decimal(result_data['avg_loss']) if result_data.get('avg_loss') else None,
+                var_95=Decimal(result_data["var_95"]) if result_data.get("var_95") else None,
+                total_trades=result_data.get("total_trades", 0),
+                winning_trades=result_data.get("winning_trades", 0),
+                losing_trades=result_data.get("losing_trades", 0),
+                win_rate=Decimal(result_data["win_rate"]) if result_data.get("win_rate") else None,
+                avg_win=Decimal(result_data["avg_win"]) if result_data.get("avg_win") else None,
+                avg_loss=Decimal(result_data["avg_loss"]) if result_data.get("avg_loss") else None,
                 profit_factor=(
-                    Decimal(result_data['profit_factor'])
-                    if result_data.get('profit_factor')
+                    Decimal(result_data["profit_factor"])
+                    if result_data.get("profit_factor")
                     else None
                 ),
             )
 
         # Parse status
-        status = BacktestStatus(data['status'])
+        status = BacktestStatus(data["status"])
 
         # Parse dates
-        created_at = datetime.fromisoformat(data['created_at'])
-        started_at = datetime.fromisoformat(data['started_at']) if data.get('started_at') else None
+        created_at = datetime.fromisoformat(data["created_at"])
+        started_at = datetime.fromisoformat(data["started_at"]) if data.get("started_at") else None
         completed_at = (
-            datetime.fromisoformat(data['completed_at']) if data.get('completed_at') else None
+            datetime.fromisoformat(data["completed_at"]) if data.get("completed_at") else None
         )
 
         return Backtest(
-            backtest_id=data['backtest_id'],
+            backtest_id=data["backtest_id"],
             config=config,
             status=status,
             result=result,
-            error_message=data.get('error_message'),
+            error_message=data.get("error_message"),
             created_at=created_at,
             started_at=started_at,
             completed_at=completed_at,

@@ -12,17 +12,17 @@ Now integrated with Hull-compliant risk management:
 - Correlation stress testing for diversification monitoring
 
 Key Formula:
-combined_scale = volatility_scale × sharpe_scale × loss_scale × drawdown_scale
+combined_scale = volatility_scale * sharpe_scale * loss_scale * drawdown_scale
 
 Enhanced with VaR-based scaling:
-var_adjusted_scale = combined_scale × (1 - VaR_utilization)
+var_adjusted_scale = combined_scale * (1 - VaR_utilization)
 
 Reference: Hull, Options, Futures, and Other Derivatives, Chapter 18
 """
 
 import logging
 from decimal import ROUND_HALF_UP, Decimal
-from typing import Dict, List, Optional
+from typing import Optional
 
 from app.services.risk_scaling.drawdown_monitor import DrawdownMonitor
 from app.services.risk_scaling.loss_monitor import LossMonitor, TradeResult
@@ -77,16 +77,16 @@ class RiskScalingOrchestrator:
         self.drawdown_monitor = DrawdownMonitor(max_drawdown_limit=max_drawdown_limit)
 
         self.sharpe_window_days = sharpe_window_days
-        self.state_history: List[RiskScalingState] = []
-        self.active_alerts: List[RiskAlert] = []
+        self.state_history: list[RiskScalingState] = []
+        self.active_alerts: list[RiskAlert] = []
 
     async def calculate_scaling_factors(
         self,
         symbol: str,
-        prices: List[PriceData],
-        daily_returns: List[Decimal],
-        trade_results: Optional[List[TradeResult]] = None,
-        equity_curve: Optional[List[Decimal]] = None,
+        prices: list[PriceData],
+        daily_returns: list[Decimal],
+        trade_results: Optional[list[TradeResult]] = None,
+        equity_curve: Optional[list[Decimal]] = None,
     ) -> RiskScalingFactors:
         """
         Calculate all scaling factors from 4 dimensions.
@@ -240,7 +240,7 @@ class RiskScalingOrchestrator:
 
     async def apply_dynamic_scaling(
         self,
-        signal: Dict,
+        signal: dict,
         base_position_size: Decimal,
         stop_loss_price: Optional[Decimal],
         scaling_factors: RiskScalingFactors,
@@ -316,10 +316,10 @@ class RiskScalingOrchestrator:
         self,
         portfolio_id: str,
         symbol: str,
-        prices: Optional[List[PriceData]] = None,
-        daily_returns: Optional[List[Decimal]] = None,
-        trade_results: Optional[List[TradeResult]] = None,
-        equity_curve: Optional[List[Decimal]] = None,
+        prices: Optional[list[PriceData]] = None,
+        daily_returns: Optional[list[Decimal]] = None,
+        trade_results: Optional[list[TradeResult]] = None,
+        equity_curve: Optional[list[Decimal]] = None,
     ) -> RiskScalingState:
         """
         Get complete risk scaling state snapshot.
@@ -438,7 +438,7 @@ class RiskScalingOrchestrator:
         alert_type: RiskAlertType,
         severity: RiskLevel,
         message: str,
-        metadata: Optional[Dict[str, str]] = None,
+        metadata: Optional[dict[str, str]] = None,
     ) -> RiskAlert:
         """Generate and store a risk alert."""
         alert = RiskAlert(
@@ -544,10 +544,7 @@ class RiskScalingOrchestrator:
         else:
             b = avg_win / avg_loss  # Win/loss ratio
 
-            if b == Decimal("0"):
-                kelly_fraction = Decimal("0")
-            else:
-                kelly_fraction = (p * b - q) / b
+            kelly_fraction = Decimal("0") if b == Decimal("0") else (p * b - q) / b
 
         # Apply half-Kelly for safety (reduces variance)
         half_kelly = kelly_fraction / Decimal("2")
@@ -560,7 +557,7 @@ class RiskScalingOrchestrator:
             combined_scale = scaling_factors.combined_scale
             kelly_adjusted = kelly_clamped * combined_scale
             logger.debug(
-                f"Kelly {kelly_clamped:.4f} × scaling {combined_scale:.2f} = {kelly_adjusted:.4f}"
+                f"Kelly {kelly_clamped:.4f} * scaling {combined_scale:.2f} = {kelly_adjusted:.4f}"
             )
         else:
             kelly_adjusted = kelly_clamped
@@ -605,9 +602,9 @@ class RiskScalingOrchestrator:
         """
         Calculate position size based on ATR (Average True Range) volatility.
 
-        Uses the formula: Position Size = (Capital × Risk%) / (ATR × Multiplier)
+        Uses the formula: Position Size = (Capital * Risk%) / (ATR * Multiplier)
 
-        This approach sizes positions so that a move of ATR × multiplier
+        This approach sizes positions so that a move of ATR * multiplier
         results in a loss of risk_per_trade_pct of capital.
 
         Args:
@@ -655,8 +652,7 @@ class RiskScalingOrchestrator:
         shares = (position_value / current_price).quantize(Decimal("1"), rounding=ROUND_HALF_UP)
 
         logger.debug(
-            f"ATR-based position: {shares} shares "
-            f"(ATR={atr:.4f}, risk={risk_per_trade_pct:.2%})"
+            f"ATR-based position: {shares} shares (ATR={atr:.4f}, risk={risk_per_trade_pct:.2%})"
         )
 
         return max(shares, Decimal("1"))

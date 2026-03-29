@@ -12,27 +12,27 @@ Key Features:
 Mathematical Foundation:
 
 1. Reservation Price (inventory-adjusted mid):
-   r(s) = s - (γ * σ² / k) * q * (T - t) / T
+   r(s) = s - (gamma * sigma^2 / k) * q * (T - t) / T
 
    Where:
    - s: Current mid price
-   - γ (gamma): Risk aversion parameter
-   - σ (sigma): Volatility of the asset
+   - gamma (gamma): Risk aversion parameter
+   - sigma (sigma): Volatility of the asset
    - k: Order book depth parameter
    - q: Current inventory (positive = long, negative = short)
    - T: Total time horizon
    - t: Current time
 
 2. Optimal Spread:
-   δ* = (γ * σ² / k) * (T - t) + (2/γ) * ln(1 + γ/2)
+   delta* = (gamma * sigma^2 / k) * (T - t) + (2/gamma) * ln(1 + gamma/2)
 
    The spread has two components:
    - Inventory risk term: Increases with time remaining and volatility
    - Adverse selection term: Constant for given risk aversion
 
 3. Bid/Ask Quotes:
-   - Bid: r(s) - δ*/2
-   - Ask: r(s) + δ*/2
+   - Bid: r(s) - delta*/2
+   - Ask: r(s) + delta*/2
 
 References:
 - Avellaneda, M. & Stoikov, S. (2008) "High-frequency trading in a limit order book"
@@ -55,9 +55,9 @@ from app.domain.trading.market_making.avellaneda_stoikov.quote_generator import 
 __all__ = [
     "ASConfig",
     "ASQuote",
+    "ASQuoteGenerator",
     "ASQuoteParams",
     "AvellanedaStoikovModel",
-    "ASQuoteGenerator",
     "InventoryConfig",
     "InventoryManager",
     "InventoryState",

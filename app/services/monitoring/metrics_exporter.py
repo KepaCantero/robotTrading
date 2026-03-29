@@ -9,7 +9,7 @@ import asyncio
 import json
 import logging
 from datetime import datetime
-from typing import Dict, List, Optional
+from typing import Optional
 
 import aiohttp
 from requests.exceptions import HTTPError, RequestException
@@ -51,7 +51,7 @@ class MetricsExporter:
         self.prometheus_url = prometheus_url or "http://localhost:9090"
         self.pushgateway_url = pushgateway_url or "http://localhost:9091"
         self.session: Optional[aiohttp.ClientSession] = None
-        self.export_history: List[Dict] = []
+        self.export_history: list[dict] = []
         logger.info(
             f"✅ MetricsExporter initialized "
             f"(Prometheus: {self.prometheus_url}, "
@@ -73,7 +73,7 @@ class MetricsExporter:
                     return True
 
         except (asyncio.TimeoutError, OSError) as e:
-            logger.warning(f"⚠️ Failed to connect to Prometheus: {str(e)}")
+            logger.warning(f"⚠️ Failed to connect to Prometheus: {e!s}")
 
         return False
 
@@ -85,12 +85,12 @@ class MetricsExporter:
             logger.info("✅ Disconnected from export services")
             return True
         except (asyncio.TimeoutError, OSError) as e:
-            logger.error(f"❌ Disconnect failed: {str(e)}")
+            logger.error(f"❌ Disconnect failed: {e!s}")
             return False
 
     async def push_metrics(
         self,
-        metrics_data: Dict,
+        metrics_data: dict,
         job_name: str = "trading_system",
         instance: str = "main",
     ) -> bool:
@@ -120,7 +120,7 @@ class MetricsExporter:
             ) as resp:
                 if resp.status in (200, 201, 204):
                     logger.info(
-                        f"✅ Pushed metrics to PushGateway " f"(job={job_name}, instance={instance})"
+                        f"✅ Pushed metrics to PushGateway (job={job_name}, instance={instance})"
                     )
                     self.export_history.append(
                         {
@@ -137,10 +137,10 @@ class MetricsExporter:
                     return False
 
         except (IntegrityError, OperationalError, DatabaseError, DataError, ProgrammingError) as e:
-            logger.error(f"❌ Failed to push metrics: {str(e)}")
+            logger.error(f"❌ Failed to push metrics: {e!s}")
             return False
 
-    async def query_prometheus(self, query: str, time: Optional[str] = None) -> Optional[Dict]:
+    async def query_prometheus(self, query: str, time: Optional[str] = None) -> Optional[dict]:
         """
         Query Prometheus for metric data.
 
@@ -173,7 +173,7 @@ class MetricsExporter:
                     return None
 
         except (asyncio.TimeoutError, OSError) as e:
-            logger.error(f"❌ Query failed: {str(e)}")
+            logger.error(f"❌ Query failed: {e!s}")
             return None
 
     async def query_range(
@@ -182,7 +182,7 @@ class MetricsExporter:
         start: str,
         end: str,
         step: str = "1m",
-    ) -> Optional[Dict]:
+    ) -> Optional[dict]:
         """
         Query Prometheus for time series data.
 
@@ -219,10 +219,10 @@ class MetricsExporter:
                     return None
 
         except (IntegrityError, OperationalError, DatabaseError, DataError, ProgrammingError) as e:
-            logger.error(f"❌ Range query failed: {str(e)}")
+            logger.error(f"❌ Range query failed: {e!s}")
             return None
 
-    def export_json(self, metrics_data: Dict) -> str:
+    def export_json(self, metrics_data: dict) -> str:
         """
         Export metrics as JSON.
 
@@ -243,7 +243,7 @@ class MetricsExporter:
 
         return json.dumps(export, indent=2)
 
-    def export_csv(self, metrics_data: Dict) -> str:
+    def export_csv(self, metrics_data: dict) -> str:
         """
         Export metrics as CSV.
 
@@ -263,11 +263,11 @@ class MetricsExporter:
 
         return "\n".join(lines)
 
-    def export_prometheus_text(self, metrics_data: Dict) -> str:
+    def export_prometheus_text(self, metrics_data: dict) -> str:
         """Export metrics in Prometheus text format."""
         return self._format_prometheus_text(metrics_data)
 
-    def _format_prometheus_text(self, metrics_data: Dict) -> str:
+    def _format_prometheus_text(self, metrics_data: dict) -> str:
         """Format metrics in Prometheus text format."""
         lines = []
 
@@ -282,11 +282,11 @@ class MetricsExporter:
 
         return "\n".join(lines)
 
-    def get_export_history(self, limit: int = 100) -> List[Dict]:
+    def get_export_history(self, limit: int = 100) -> list[dict]:
         """Get export history."""
         return self.export_history[-limit:]
 
-    async def health_check(self) -> Dict:
+    async def health_check(self) -> dict:
         """Check health of export services."""
         health = {
             "prometheus": False,

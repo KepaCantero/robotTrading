@@ -5,9 +5,10 @@ Order Repository Interface - Domain layer contract
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import List, Optional
+from typing import TYPE_CHECKING
 
-from ..entities.order import Order
+if TYPE_CHECKING:
+    from ..entities.order import Order
 
 
 class OrderRepository(ABC):
@@ -22,9 +23,9 @@ class OrderRepository(ABC):
         """Save an order."""
 
     @abstractmethod
-    async def find_by_id(self, order_id: str) -> Optional[Order]:
+    async def find_by_id(self, order_id: str) -> Order | None:
         """Find order by ID."""
 
     @abstractmethod
-    async def find_by_portfolio(self, portfolio_id: str) -> List[Order]:
+    async def find_by_portfolio(self, portfolio_id: str) -> list[Order]:
         """Find all orders for a portfolio."""

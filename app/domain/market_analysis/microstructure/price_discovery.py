@@ -17,6 +17,7 @@ References:
 - Hasbrouck, J. (1991) "Measuring the Information Content of Stock Trades"
 - Madhavan, A. (2000) "Market Microstructure: A Survey"
 """
+
 from __future__ import annotations
 
 import logging
@@ -24,17 +25,20 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 from decimal import Decimal
 from enum import Enum
-from typing import Tuple
+from typing import TYPE_CHECKING
 
 import numpy as np
-import pandas as pd
+
+if TYPE_CHECKING:
+    import pandas as pd
 
 logger = logging.getLogger(__name__)
 
 
 # Import statsmodels with fallback
 try:
-    from statsmodels.tsa.stattools import adfuller as sm_adfuller, coint as sm_coint
+    from statsmodels.tsa.stattools import adfuller as sm_adfuller
+    from statsmodels.tsa.stattools import coint as sm_coint
 
     STATSMODELS_AVAILABLE = True
 
@@ -58,12 +62,12 @@ except ImportError:
         y2 = args[1]
         # Ensure same length
         min_len = min(len(y1), len(y2))
-        y1 = y1.iloc[-min_len:] if hasattr(y1, 'iloc') else y1[-min_len:]
-        y2 = y2.iloc[-min_len:] if hasattr(y2, 'iloc') else y2[-min_len:]
+        y1 = y1.iloc[-min_len:] if hasattr(y1, "iloc") else y1[-min_len:]
+        y2 = y2.iloc[-min_len:] if hasattr(y2, "iloc") else y2[-min_len:]
 
         # Step 1: Estimate long-run relationship: y1 = alpha + beta*y2 + epsilon
-        X = np.vstack([np.ones(len(y2)), y2.values if hasattr(y2, 'values') else y2]).T
-        y1_vals = y1.values if hasattr(y1, 'values') else y1
+        X = np.vstack([np.ones(len(y2)), y2.values if hasattr(y2, "values") else y2]).T
+        y1_vals = y1.values if hasattr(y1, "values") else y1
 
         # OLS regression
         beta = np.linalg.lstsq(X, y1_vals, rcond=None)[0]
@@ -112,10 +116,10 @@ except ImportError:
         Fallback Augmented Dickey-Fuller test using scipy
         """
         x = args[0]
-        regression = kwargs.get('regression', args[2] if len(args) > 2 else 'c')
+        regression = kwargs.get("regression", args[2] if len(args) > 2 else "c")
 
         # Convert to numpy array if needed
-        if hasattr(x, 'values'):
+        if hasattr(x, "values"):
             x = x.values
 
         # Calculate differences
@@ -125,9 +129,9 @@ except ImportError:
         lagged_x = x[:-1]
 
         # Prepare design matrix based on regression type
-        if regression == 'c':  # Constant only
+        if regression == "c":  # Constant only
             X = np.vstack([np.ones(len(lagged_x)), lagged_x]).T
-        elif regression == 'ct':  # Constant and trend
+        elif regression == "ct":  # Constant and trend
             trend = np.arange(len(lagged_x))
             X = np.vstack([np.ones(len(lagged_x)), trend, lagged_x]).T
         else:  # No constant
@@ -138,9 +142,9 @@ except ImportError:
             beta = np.linalg.lstsq(X, diff_x, rcond=None)[0]
 
             # Test statistic is t-stat of coefficient on lagged level
-            if regression == 'c':
+            if regression == "c":
                 coef_idx = 1
-            elif regression == 'ct':
+            elif regression == "ct":
                 coef_idx = 2
             else:
                 coef_idx = 0
@@ -161,14 +165,14 @@ except ImportError:
             t_stat = 0
 
         # Critical values (MacKinnon approximate)
-        critical_values = {'1%': -3.43, '5%': -2.86, '10%': -2.57}
+        critical_values = {"1%": -3.43, "5%": -2.86, "10%": -2.57}
 
         # Approximate p-value
-        if t_stat < critical_values['1%']:
+        if t_stat < critical_values["1%"]:
             pvalue = 0.01
-        elif t_stat < critical_values['5%']:
+        elif t_stat < critical_values["5%"]:
             pvalue = 0.05
-        elif t_stat < critical_values['10%']:
+        elif t_stat < critical_values["10%"]:
             pvalue = 0.10
         else:
             pvalue = 0.99  # Cannot reject null
@@ -179,9 +183,9 @@ except ImportError:
             False,
             len(diff_x),
             {
-                '1%': critical_values['1%'],
-                '5%': critical_values['5%'],
-                '10%': critical_values['10%'],
+                "1%": critical_values["1%"],
+                "5%": critical_values["5%"],
+                "10%": critical_values["10%"],
             },
         )
 
@@ -229,12 +233,12 @@ class PriceDiscoveryMetrics:
     def to_dict(self) -> dict:
         """Convert to dictionary"""
         return {
-            'timestamp': self.timestamp.isoformat(),
-            'information_share': self.information_share,
-            'price_adjustment_speed': self.price_adjustment_speed,
-            'pricing_error': self.pricing_error,
-            'discovery_quality_score': self.discovery_quality_score,
-            'efficiency_level': self.efficiency_level.value,
+            "timestamp": self.timestamp.isoformat(),
+            "information_share": self.information_share,
+            "price_adjustment_speed": self.price_adjustment_speed,
+            "pricing_error": self.pricing_error,
+            "discovery_quality_score": self.discovery_quality_score,
+            "efficiency_level": self.efficiency_level.value,
         }
 
 
@@ -259,21 +263,21 @@ class EfficientPriceEstimate:
     observed_price: Decimal
     efficient_price: Decimal
     pricing_error: Decimal
-    confidence_interval: Tuple[Decimal, Decimal]
+    confidence_interval: tuple[Decimal, Decimal]
     estimation_method: str
 
     def to_dict(self) -> dict:
         """Convert to dictionary"""
         return {
-            'timestamp': self.timestamp.isoformat(),
-            'observed_price': str(self.observed_price),
-            'efficient_price': str(self.efficient_price),
-            'pricing_error': str(self.pricing_error),
-            'confidence_interval': (
+            "timestamp": self.timestamp.isoformat(),
+            "observed_price": str(self.observed_price),
+            "efficient_price": str(self.efficient_price),
+            "pricing_error": str(self.pricing_error),
+            "confidence_interval": (
                 str(self.confidence_interval[0]),
                 str(self.confidence_interval[1]),
             ),
-            'estimation_method': self.estimation_method,
+            "estimation_method": self.estimation_method,
         }
 
 
@@ -299,11 +303,11 @@ class InformationFlowMetrics:
     def to_dict(self) -> dict:
         """Convert to dictionary"""
         return {
-            'timestamp': self.timestamp.isoformat(),
-            'information_content': self.information_content,
-            'price_impact': self.price_impact,
-            'flow_persistence': self.flow_persistence,
-            'information_decay_rate': self.information_decay_rate,
+            "timestamp": self.timestamp.isoformat(),
+            "information_content": self.information_content,
+            "price_impact": self.price_impact,
+            "flow_persistence": self.flow_persistence,
+            "information_decay_rate": self.information_decay_rate,
         }
 
 
@@ -329,11 +333,11 @@ class MarketIntegrationMetrics:
     def to_dict(self) -> dict:
         """Convert to dictionary"""
         return {
-            'timestamp': self.timestamp.isoformat(),
-            'cointegration_coefficient': self.cointegration_coefficient,
-            'information_share': self.information_share,
-            'lead_lag_relationship': self.lead_lag_relationship,
-            'price_convergence_rate': self.price_convergence_rate,
+            "timestamp": self.timestamp.isoformat(),
+            "cointegration_coefficient": self.cointegration_coefficient,
+            "information_share": self.information_share,
+            "lead_lag_relationship": self.lead_lag_relationship,
+            "price_convergence_rate": self.price_convergence_rate,
         }
 
 
@@ -403,17 +407,14 @@ class PriceDiscoveryAnalyzer:
             )
             raise ValueError("Insufficient data for Roll model")
 
-        prices = price_history['close'].values
+        prices = price_history["close"].values
         returns = np.diff(np.log(prices))
 
         # Estimate spread from autocovariance
         # Cov(ΔPt, ΔPt-1) = -S²/4
         autocov = np.cov(returns[1:], returns[:-1])[0, 1]
 
-        if autocov < 0:
-            estimatedSpread = 2 * np.sqrt(-autocov)
-        else:
-            estimatedSpread = 0.0001  # Default spread
+        estimatedSpread = 2 * np.sqrt(-autocov) if autocov < 0 else 0.0001  # Default spread
 
         # Efficient price is midpoint
         observed_price = Decimal(str(prices[-1]))
@@ -546,7 +547,7 @@ class PriceDiscoveryAnalyzer:
             if pre_window.empty:
                 continue
 
-            pre_event_price = pre_window['close'].iloc[-1]
+            pre_event_price = pre_window["close"].iloc[-1]
 
             # Get post-event adjustment
             post_window = price_history[
@@ -558,14 +559,14 @@ class PriceDiscoveryAnalyzer:
                 continue
 
             # Find when price reaches new level (95% of total move)
-            total_move = abs(post_window['close'].iloc[-1] - pre_event_price)
+            total_move = abs(post_window["close"].iloc[-1] - pre_event_price)
             if total_move == 0:
                 continue
 
             target_move = total_move * 0.95
 
             for idx, row in post_window.iterrows():
-                current_move = abs(row['close'] - pre_event_price)
+                current_move = abs(row["close"] - pre_event_price)
                 if current_move >= target_move:
                     adjustment_time = (idx - event_time).total_seconds()
                     adjustment_times.append(adjustment_time)
@@ -624,7 +625,7 @@ class PriceDiscoveryAnalyzer:
             return MarketEfficiency.INEFFICIENT
 
         # Test 1: Random walk (weak form efficiency)
-        returns = price_history['close'].pct_change().dropna()
+        returns = price_history["close"].pct_change().dropna()
 
         # Autocorrelation test
         autocorr = returns.autocorr(lag=1)
@@ -688,25 +689,25 @@ class PriceDiscoveryAnalyzer:
             )
 
         # Calculate price impact of trades
-        trade_data['price_change'] = trade_data['price'].pct_change()
+        trade_data["price_change"] = trade_data["price"].pct_change()
 
         # Trade direction: +1 for buy, -1 for sell
-        trade_data['direction'] = np.where(trade_data['side'].str.upper() == 'BUY', 1, -1)
+        trade_data["direction"] = np.where(trade_data["side"].str.upper() == "BUY", 1, -1)
 
         # Weight by size
-        trade_data['signed_flow'] = trade_data['direction'] * trade_data['size']
+        trade_data["signed_flow"] = trade_data["direction"] * trade_data["size"]
 
         # Information content: correlation between order flow and price changes
         if len(trade_data) > 1:
-            information_content = abs(trade_data['signed_flow'].corr(trade_data['price_change']))
+            information_content = abs(trade_data["signed_flow"].corr(trade_data["price_change"]))
         else:
             information_content = 0.0
 
         # Average price impact per unit flow
-        if trade_data['size'].sum() > 0:
+        if trade_data["size"].sum() > 0:
             price_impact = (
-                (abs(trade_data['price_change'].mean()) / trade_data['size'].mean())
-                if trade_data['size'].mean() > 0
+                (abs(trade_data["price_change"].mean()) / trade_data["size"].mean())
+                if trade_data["size"].mean() > 0
                 else 0.0
             )
         else:
@@ -714,14 +715,14 @@ class PriceDiscoveryAnalyzer:
 
         # Flow persistence: autocorrelation of signed flow
         if len(trade_data) > 10:
-            flow_persistence = abs(trade_data['signed_flow'].autocorr())
+            flow_persistence = abs(trade_data["signed_flow"].autocorr())
         else:
             flow_persistence = 0.0
 
         # Information decay: how quickly impact dissipates
         # Estimate from price series autocorrelation
         if len(price_history) > 10:
-            returns = price_history['close'].pct_change().dropna()
+            returns = price_history["close"].pct_change().dropna()
             decay_rate = 1 - abs(returns.autocorr(lag=1))
         else:
             decay_rate = 0.5
@@ -758,14 +759,11 @@ class PriceDiscoveryAnalyzer:
 
         # Cointegration test
         try:
-            score, pvalue, _ = coint(m1, m2)
+            _score, pvalue, _ = coint(m1, m2)
 
             # Cointegration coefficient (beta)
             # From regression: m1 = alpha + beta * m2 + epsilon
-            if len(m1) > 1 and len(m2) > 1:
-                beta = np.cov(m1, m2)[0, 1] / np.var(m2)
-            else:
-                beta = 1.0
+            beta = np.cov(m1, m2)[0, 1] / np.var(m2) if len(m1) > 1 and len(m2) > 1 else 1.0
 
             cointegrated = pvalue < 0.05
 
@@ -779,10 +777,7 @@ class PriceDiscoveryAnalyzer:
         var2 = m2.pct_change().var()
         total_var = var1 + var2
 
-        if total_var > 0:
-            information_share = var1 / total_var
-        else:
-            information_share = 0.5
+        information_share = var1 / total_var if total_var > 0 else 0.5
 
         # Lead-lag relationship
         # Correlate market 1 returns with market 2 lagged returns
@@ -798,12 +793,8 @@ class PriceDiscoveryAnalyzer:
         else:
             lead_lag = 0.0
 
-        # Price convergence rate
-        if cointegrated:
-            # Error correction speed (simplified)
-            convergence = 0.1  # Placeholder
-        else:
-            convergence = 0.0
+        # Price convergence rate (error correction speed, simplified)
+        convergence = 0.1 if cointegrated else 0.0  # Placeholder
 
         return MarketIntegrationMetrics(
             timestamp=datetime.now(),
@@ -876,8 +867,8 @@ class PriceDiscoveryAnalyzer:
         # Calculate information share
         if trade_data is not None and not trade_data.empty:
             info_share = self.calculate_information_share_hasbrouck(
-                price_history['close'],
-                trade_data['size'] * np.where(trade_data['side'] == 'BUY', 1, -1),
+                price_history["close"],
+                trade_data["size"] * np.where(trade_data["side"] == "BUY", 1, -1),
             )
         else:
             info_share = 0.5
@@ -885,7 +876,7 @@ class PriceDiscoveryAnalyzer:
         # Measure price adjustment speed
         # Simulate event times at large price moves
         if len(price_history) >= 10:
-            returns = price_history['close'].pct_change()
+            returns = price_history["close"].pct_change()
             event_times = price_history.index[returns.abs() > returns.std() * 2].tolist()
         else:
             event_times = []
@@ -896,7 +887,7 @@ class PriceDiscoveryAnalyzer:
         fundamental_value = float(efficient_price.efficient_price)
         if len(price_history) >= 10:
             mean_error, std_error = self.calculate_pricing_error(
-                price_history['close'].tail(20), fundamental_value
+                price_history["close"].tail(20), fundamental_value
             )
         else:
             mean_error = 0.0
@@ -926,19 +917,19 @@ class PriceDiscoveryAnalyzer:
             )
 
         return {
-            'symbol': symbol,
-            'timestamp': datetime.now().isoformat(),
-            'efficient_price': efficient_price.to_dict(),
-            'information_share': info_share,
-            'price_adjustment_speed': adjustment_speed,
-            'pricing_error': {
-                'mean': mean_error,
-                'std': std_error,
+            "symbol": symbol,
+            "timestamp": datetime.now().isoformat(),
+            "efficient_price": efficient_price.to_dict(),
+            "information_share": info_share,
+            "price_adjustment_speed": adjustment_speed,
+            "pricing_error": {
+                "mean": mean_error,
+                "std": std_error,
             },
-            'market_efficiency': efficiency_level.value,
-            'discovery_quality_score': quality_score,
-            'information_flow': info_flow.to_dict(),
-            'recommendations': self._generate_discovery_recommendations(
+            "market_efficiency": efficiency_level.value,
+            "discovery_quality_score": quality_score,
+            "information_flow": info_flow.to_dict(),
+            "recommendations": self._generate_discovery_recommendations(
                 efficiency_level, quality_score, info_share
             ),
         }
@@ -1006,10 +997,10 @@ class PriceDiscoveryMonitor:
         """
         if current_score < self.efficiency_threshold:
             return {
-                'type': 'LOW_DISCOVERY_QUALITY',
-                'severity': 'HIGH' if current_score < 30 else 'MEDIUM',
-                'message': f"Price discovery quality ({current_score:.1f}) below threshold ({self.efficiency_threshold})",
-                'timestamp': datetime.now().isoformat(),
+                "type": "LOW_DISCOVERY_QUALITY",
+                "severity": "HIGH" if current_score < 30 else "MEDIUM",
+                "message": f"Price discovery quality ({current_score:.1f}) below threshold ({self.efficiency_threshold})",
+                "timestamp": datetime.now().isoformat(),
             }
 
         return None
@@ -1022,24 +1013,24 @@ class PriceDiscoveryMonitor:
             Trend direction
         """
         if len(self._historical_scores) < 5:
-            return 'UNKNOWN'
+            return "UNKNOWN"
 
         recent = [score for _, score in self._historical_scores[-5:]]
         older = [score for _, score in self._historical_scores[:-5]]
 
         if not older:
-            return 'STABLE'
+            return "STABLE"
 
         recent_avg = float(np.mean(recent))
         older_avg = float(np.mean(older))
         change = (recent_avg - older_avg) / max(older_avg, 1.0)
 
         if change > 0.05:
-            return 'IMPROVING'
+            return "IMPROVING"
         elif change < -0.05:
-            return 'DETERIORATING'
+            return "DETERIORATING"
         else:
-            return 'STABLE'
+            return "STABLE"
 
 
 # Singleton instances
@@ -1074,13 +1065,13 @@ def get_price_discovery_monitor(
 
 
 __all__ = [
-    "PriceDiscoveryModel",
-    "MarketEfficiency",
-    "PriceDiscoveryMetrics",
     "EfficientPriceEstimate",
     "InformationFlowMetrics",
+    "MarketEfficiency",
     "MarketIntegrationMetrics",
     "PriceDiscoveryAnalyzer",
+    "PriceDiscoveryMetrics",
+    "PriceDiscoveryModel",
     "PriceDiscoveryMonitor",
     "get_price_discovery_analyzer",
     "get_price_discovery_monitor",

@@ -9,7 +9,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from decimal import Decimal
 from enum import Enum
-from typing import Dict, List, Optional
+from typing import Optional
 
 logger = logging.getLogger(__name__)
 
@@ -42,7 +42,7 @@ class RebalancingEvent:
     event_id: str
     timestamp: datetime
     reason: str  # "threshold" or "scheduled"
-    trades: List[RebalancingTrade] = field(default_factory=list)
+    trades: list[RebalancingTrade] = field(default_factory=list)
     total_trade_value: Decimal = Decimal("0")
     total_transaction_cost: Decimal = Decimal("0")
     estimated_cost_basis_adjustment: Decimal = Decimal("0")
@@ -89,7 +89,7 @@ class RebalancingEngine:
         self.min_trade_value = min_trade_value
         self.transaction_cost_rate = transaction_cost_rate
         self.last_rebalance: Optional[datetime] = None
-        self.rebalancing_events: List[RebalancingEvent] = []
+        self.rebalancing_events: list[RebalancingEvent] = []
         self.event_counter = 0
         logger.info(f"✅ RebalancingEngine initialized ({frequency.value} rebalancing)")
 
@@ -121,8 +121,8 @@ class RebalancingEngine:
 
     async def plan_rebalancing(
         self,
-        current_allocation: Dict[str, Decimal],
-        target_allocation: Dict[str, Decimal],
+        current_allocation: dict[str, Decimal],
+        target_allocation: dict[str, Decimal],
         portfolio_value: Decimal,
         reason: str = "drift_threshold",
     ) -> RebalancingEvent:
@@ -204,8 +204,8 @@ class RebalancingEngine:
 
     async def should_rebalance_by_drift(
         self,
-        current_allocation: Dict[str, Decimal],
-        target_allocation: Dict[str, Decimal],
+        current_allocation: dict[str, Decimal],
+        target_allocation: dict[str, Decimal],
     ) -> bool:
         """
         Check if drift exceeds threshold.
@@ -231,7 +231,7 @@ class RebalancingEngine:
 
     async def estimate_rebalancing_cost(
         self,
-        trades: List[RebalancingTrade],
+        trades: list[RebalancingTrade],
     ) -> Decimal:
         """
         Estimate total cost of rebalancing.
@@ -244,7 +244,7 @@ class RebalancingEngine:
         """
         return sum(t.estimated_cost for t in trades)
 
-    async def get_rebalancing_statistics(self) -> Dict:
+    async def get_rebalancing_statistics(self) -> dict:
         """Get rebalancing statistics."""
         if not self.rebalancing_events:
             return {
@@ -271,7 +271,7 @@ class RebalancingEngine:
     async def get_rebalancing_history(
         self,
         limit: Optional[int] = None,
-    ) -> List[RebalancingEvent]:
+    ) -> list[RebalancingEvent]:
         """
         Get rebalancing event history.
 
@@ -285,7 +285,7 @@ class RebalancingEngine:
             return self.rebalancing_events
         return self.rebalancing_events[-limit:]
 
-    def get_engine_status(self) -> Dict:
+    def get_engine_status(self) -> dict:
         """Get rebalancing engine status."""
         return {
             "frequency": self.frequency.value,

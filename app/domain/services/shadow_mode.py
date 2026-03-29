@@ -64,7 +64,7 @@ from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
 from decimal import Decimal
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 import aiofiles
 import numpy as np
@@ -150,9 +150,9 @@ class ShadowExecutionResult:
     was_partial_fill: bool = False
     wal_recorded: bool = True
     timestamp: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for serialization."""
         return {
             "order_id": self.order_id,
@@ -236,9 +236,9 @@ class ShadowModeExecutor:
         self.config = config or ShadowModeConfig()
 
         # Tracking
-        self.shadow_results: List[ShadowExecutionResult] = []
-        self.comparisons: List[ShadowRealComparison] = []
-        self.daily_order_count: Dict[str, int] = defaultdict(int)
+        self.shadow_results: list[ShadowExecutionResult] = []
+        self.comparisons: list[ShadowRealComparison] = []
+        self.daily_order_count: dict[str, int] = defaultdict(int)
 
         # Locking
         self._lock = asyncio.Lock()
@@ -259,7 +259,7 @@ class ShadowModeExecutor:
         quantity: Decimal,
         price: Optional[Decimal] = None,
         order_type: str = "MARKET",
-        metadata: Optional[Dict[str, Any]] = None,
+        metadata: Optional[dict[str, Any]] = None,
     ) -> ShadowExecutionResult:
         """
         Execute order in shadow mode.
@@ -558,7 +558,7 @@ class ShadowModeExecutor:
                         f"Cannot determine price for MARKET order {shadow_order_id} "
                         f"for {symbol}: broker ticker unavailable and no fallback price provided. "
                         f"Error: {e}"
-                    )
+                    ) from e
         else:
             # For LIMIT orders, use the limit price
             base_price = price
@@ -585,10 +585,7 @@ class ShadowModeExecutor:
             is_partial = True
 
         # Create result
-        if is_partial:
-            status = "PARTIAL_FILLED"
-        else:
-            status = "FILLED"
+        status = "PARTIAL_FILLED" if is_partial else "FILLED"
 
         result = ShadowExecutionResult(
             order_id=shadow_order_id,
@@ -621,7 +618,7 @@ class ShadowModeExecutor:
 
     async def shadow_to_production_transition(
         self, validation_period_minutes: int = 60
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Transition from shadow mode to production.
 
@@ -646,7 +643,7 @@ class ShadowModeExecutor:
         logger.critical("THIS IS A CRITICAL OPERATION - VALIDATING...")
         logger.critical("=" * 80)
 
-        report: Dict[str, Any] = {
+        report: dict[str, Any] = {
             "timestamp": datetime.now(timezone.utc).isoformat(),
             "validation_period_minutes": validation_period_minutes,
             "can_transition": False,
@@ -741,7 +738,7 @@ class ShadowModeExecutor:
 
         return report
 
-    async def compare_shadow_vs_real(self, limit: int = 100) -> List[ShadowRealComparison]:
+    async def compare_shadow_vs_real(self, limit: int = 100) -> list[ShadowRealComparison]:
         """
         Compare shadow mode execution vs real execution.
 
@@ -795,7 +792,7 @@ class ShadowModeExecutor:
 
         return comparisons
 
-    async def get_shadow_statistics(self, minutes: int = 60) -> Dict[str, Any]:
+    async def get_shadow_statistics(self, minutes: int = 60) -> dict[str, Any]:
         """
         Get statistics about shadow mode execution.
 

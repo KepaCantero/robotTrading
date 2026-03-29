@@ -18,7 +18,7 @@ Uses objective-driven weighting:
 import logging
 from datetime import datetime
 from decimal import Decimal
-from typing import Dict, List, Optional, Tuple
+from typing import ClassVar, Optional
 
 import numpy as np
 
@@ -42,7 +42,7 @@ class StrategyRecommender:
     """
 
     # Objective-specific weights
-    OBJECTIVE_WEIGHTS = {
+    OBJECTIVE_WEIGHTS: ClassVar[dict] = {
         "maximizar_capital": ObjectiveWeights(
             sharpe_weight=Decimal("0.60"),
             return_weight=Decimal("0.30"),
@@ -75,7 +75,7 @@ class StrategyRecommender:
     }
 
     # Score thresholds for recommendation status
-    SCORE_THRESHOLDS = {
+    SCORE_THRESHOLDS: ClassVar[dict] = {
         "STRONG_BUY": Decimal("85"),
         "BUY": Decimal("70"),
         "HOLD": Decimal("50"),
@@ -85,7 +85,7 @@ class StrategyRecommender:
 
     def __init__(self):
         """Initialize strategy recommender."""
-        self.recommendation_history: List[StrategyRecommendation] = []
+        self.recommendation_history: list[StrategyRecommendation] = []
         logger.info("✅ StrategyRecommender initialized")
 
     async def recommend(
@@ -168,7 +168,7 @@ class StrategyRecommender:
         self,
         request: StrategyRecommendationRequest,
         weights: ObjectiveWeights,
-    ) -> Dict[str, StrategyScore]:
+    ) -> dict[str, StrategyScore]:
         """Calculate normalized scores for each component."""
         scores = {}
 
@@ -249,7 +249,7 @@ class StrategyRecommender:
 
     def _calculate_overall_score(
         self,
-        component_scores: Dict[str, StrategyScore],
+        component_scores: dict[str, StrategyScore],
     ) -> Decimal:
         """Calculate weighted overall score (0-100)."""
         if not component_scores:
@@ -266,7 +266,7 @@ class StrategyRecommender:
     def _determine_recommendation_status(
         self,
         overall_score: Decimal,
-    ) -> Tuple[str, str]:
+    ) -> tuple[str, str]:
         """Determine recommendation status and confidence based on score."""
         if overall_score >= self.SCORE_THRESHOLDS["STRONG_BUY"]:
             return "STRONG_BUY", "high"
@@ -282,9 +282,9 @@ class StrategyRecommender:
     def _generate_suggestions(
         self,
         request: StrategyRecommendationRequest,
-        component_scores: Dict[str, StrategyScore],
+        component_scores: dict[str, StrategyScore],
         weights: ObjectiveWeights,
-    ) -> List[RecommendationSuggestion]:
+    ) -> list[RecommendationSuggestion]:
         """Generate improvement suggestions based on weak components."""
         suggestions = []
 
@@ -367,9 +367,9 @@ class StrategyRecommender:
 
     def _identify_characteristics(
         self,
-        component_scores: Dict[str, StrategyScore],
+        component_scores: dict[str, StrategyScore],
         weights: ObjectiveWeights,
-    ) -> Tuple[List[str], List[str]]:
+    ) -> tuple[list[str], list[str]]:
         """Identify strategy strengths and weaknesses."""
         strengths = []
         weaknesses = []
@@ -389,14 +389,14 @@ class StrategyRecommender:
     async def get_recommendation_history(
         self,
         limit: Optional[int] = None,
-    ) -> List[StrategyRecommendation]:
+    ) -> list[StrategyRecommendation]:
         """Get recommendation history."""
         results = self.recommendation_history
         if limit:
             results = results[-limit:]
         return results
 
-    def get_recommender_status(self) -> Dict:
+    def get_recommender_status(self) -> dict:
         """Get recommender operational status."""
         successful = sum(1 for r in self.recommendation_history if r.success)
         total = len(self.recommendation_history)

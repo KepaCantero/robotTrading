@@ -27,30 +27,30 @@ from .scorers import MeanReversionScorer, MomentumScorer, PairsTradingScorer, WC
 from .validators import AllocationValidator
 
 __all__ = [
-    # Main orchestrator
-    "StrategyStockAllocator",
-    # Protocols
-    "StockFilterProtocol",
-    "CalculatorProtocol",
-    "ScorerProtocol",
-    "AllocatorProtocol",
-    # Filters
-    "StockFilter",
-    # Calculators
-    "HurstCalculator",
-    "HalfLifeCalculator",
-    "StationarityTester",
-    # Classifiers
-    "RegimeClassifier",
-    # Scorers
-    "MomentumScorer",
-    "MeanReversionScorer",
-    "PairsTradingScorer",
-    "WCMScoreCalculator",
-    # Allocators
-    "ERCCapitalAllocator",
     # Validators
     "AllocationValidator",
+    "AllocatorProtocol",
+    "CalculatorProtocol",
+    # Allocators
+    "ERCCapitalAllocator",
+    "HalfLifeCalculator",
+    # Calculators
+    "HurstCalculator",
+    "MeanReversionScorer",
+    # Scorers
+    "MomentumScorer",
     # Output
     "OutputGenerator",
+    "PairsTradingScorer",
+    # Classifiers
+    "RegimeClassifier",
+    "ScorerProtocol",
+    "StationarityTester",
+    # Filters
+    "StockFilter",
+    # Protocols
+    "StockFilterProtocol",
+    # Main orchestrator
+    "StrategyStockAllocator",
+    "WCMScoreCalculator",
 ]

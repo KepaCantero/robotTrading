@@ -15,7 +15,7 @@ import threading
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 import numpy as np
 import pandas as pd
@@ -69,9 +69,9 @@ class BacktestMetaAnalyzer:
 
         # Thread-safe state management with RLock
         self._lock = threading.RLock()
-        self.results: List[Dict[str, Any]] = []
+        self.results: list[dict[str, Any]] = []
         self.df_results: Optional[pd.DataFrame] = None
-        self.analysis_results: Dict[str, Any] = {}
+        self.analysis_results: dict[str, Any] = {}
 
         logger.info(
             f"BacktestMetaAnalyzer inicializado: data_dir={data_dir}, output_dir={self.output_dir}"
@@ -125,17 +125,17 @@ class BacktestMetaAnalyzer:
 
         return len(self.results)
 
-    async def _load_json_files_async(self, files: List[Path]) -> List[Dict[str, Any]]:
+    async def _load_json_files_async(self, files: list[Path]) -> list[dict[str, Any]]:
         """Cargar archivos JSON en paralelo."""
 
-        async def load_file(file_path: Path) -> Optional[Dict[str, Any]]:
+        async def load_file(file_path: Path) -> Optional[dict[str, Any]]:
             try:
-                with open(file_path, 'r') as f:
+                with open(file_path) as f:
                     data = json.load(f)
                     # Normalizar estructura
                     if isinstance(data, dict):
-                        data['source_file'] = str(file_path)
-                        data['file_type'] = 'json'
+                        data["source_file"] = str(file_path)
+                        data["file_type"] = "json"
                         return data
             except (ValueError, TypeError, KeyError, AttributeError) as e:
                 logger.debug(f"Error cargando {file_path}: {e}", exc_info=True)
@@ -147,18 +147,18 @@ class BacktestMetaAnalyzer:
         # Filtrar None
         return [r for r in results if r is not None]
 
-    async def _load_csv_files_async(self, files: List[Path]) -> List[Dict[str, Any]]:
+    async def _load_csv_files_async(self, files: list[Path]) -> list[dict[str, Any]]:
         """Cargar archivos CSV en paralelo."""
 
-        async def load_file(file_path: Path) -> Optional[List[Dict[str, Any]]]:
+        async def load_file(file_path: Path) -> Optional[list[dict[str, Any]]]:
             try:
                 df = pd.read_csv(file_path)
                 # Convertir a lista de dicts
-                records = df.to_dict('records')
+                records = df.to_dict("records")
                 # Agregar metadata
                 for record in records:
-                    record['source_file'] = str(file_path)
-                    record['file_type'] = 'csv'
+                    record["source_file"] = str(file_path)
+                    record["file_type"] = "csv"
                 return records
             except (ValueError, TypeError, KeyError, AttributeError) as e:
                 logger.debug(f"Error cargando {file_path}: {e}", exc_info=True)
@@ -175,7 +175,7 @@ class BacktestMetaAnalyzer:
 
         return flattened
 
-    def analyze_performance(self) -> Dict[str, Any]:
+    def analyze_performance(self) -> dict[str, Any]:
         """
         Analizar rendimiento agregado de todos los resultados.
 
@@ -195,48 +195,48 @@ class BacktestMetaAnalyzer:
 
         # Métricas numéricas clave
         metrics = [
-            'total_pnl',
-            'return_pct',
-            'sharpe_ratio',
-            'sortino_ratio',
-            'max_drawdown',
-            'win_rate',
-            'total_trades',
-            'avg_trade_pnl',
-            'profit_factor',
-            'calmar_ratio',
+            "total_pnl",
+            "return_pct",
+            "sharpe_ratio",
+            "sortino_ratio",
+            "max_drawdown",
+            "win_rate",
+            "total_trades",
+            "avg_trade_pnl",
+            "profit_factor",
+            "calmar_ratio",
         ]
 
         # Filtrar métricas disponibles
         available_metrics = [m for m in metrics if m in df_copy.columns]
 
         analysis = {
-            'summary_stats': {},
-            'performance_by_category': {},
-            'correlations': {},
-            'best_performers': {},
-            'worst_performers': {},
-            'timestamp': datetime.now().isoformat(),
+            "summary_stats": {},
+            "performance_by_category": {},
+            "correlations": {},
+            "best_performers": {},
+            "worst_performers": {},
+            "timestamp": datetime.now().isoformat(),
         }
 
         # Estadísticas resumidas
         for metric in available_metrics:
             col = df_copy[metric]
-            analysis['summary_stats'][metric] = {
-                'mean': float(col.mean()) if pd.notna(col.mean()) else None,
-                'median': float(col.median()) if pd.notna(col.median()) else None,
-                'std': float(col.std()) if pd.notna(col.std()) else None,
-                'min': float(col.min()) if pd.notna(col.min()) else None,
-                'max': float(col.max()) if pd.notna(col.max()) else None,
-                'q25': float(col.quantile(0.25)) if pd.notna(col.quantile(0.25)) else None,
-                'q75': float(col.quantile(0.75)) if pd.notna(col.quantile(0.75)) else None,
+            analysis["summary_stats"][metric] = {
+                "mean": float(col.mean()) if pd.notna(col.mean()) else None,
+                "median": float(col.median()) if pd.notna(col.median()) else None,
+                "std": float(col.std()) if pd.notna(col.std()) else None,
+                "min": float(col.min()) if pd.notna(col.min()) else None,
+                "max": float(col.max()) if pd.notna(col.max()) else None,
+                "q25": float(col.quantile(0.25)) if pd.notna(col.quantile(0.25)) else None,
+                "q75": float(col.quantile(0.75)) if pd.notna(col.quantile(0.75)) else None,
             }
 
         # Análisis por categoría
-        category_columns = ['test_type', 'strategy_name', 'learning_engine']
+        category_columns = ["test_type", "strategy_name", "learning_engine"]
         for cat_col in category_columns:
             if cat_col in df_copy.columns:
-                analysis['performance_by_category'][cat_col] = self._analyze_by_category(
+                analysis["performance_by_category"][cat_col] = self._analyze_by_category(
                     df_copy, cat_col, available_metrics
                 )
 
@@ -244,20 +244,20 @@ class BacktestMetaAnalyzer:
         if len(available_metrics) > 1:
             numeric_df = df_copy[available_metrics].select_dtypes(include=[np.number])
             if not numeric_df.empty:
-                analysis['correlations'] = numeric_df.corr().to_dict()
+                analysis["correlations"] = numeric_df.corr().to_dict()
 
         # Mejores y peores
-        if 'sharpe_ratio' in df_copy.columns:
-            best_sharpe = df_copy.nlargest(10, 'sharpe_ratio')
-            worst_sharpe = df_copy.nsmallest(10, 'sharpe_ratio')
-            analysis['best_performers']['by_sharpe'] = best_sharpe.to_dict('records')
-            analysis['worst_performers']['by_sharpe'] = worst_sharpe.to_dict('records')
+        if "sharpe_ratio" in df_copy.columns:
+            best_sharpe = df_copy.nlargest(10, "sharpe_ratio")
+            worst_sharpe = df_copy.nsmallest(10, "sharpe_ratio")
+            analysis["best_performers"]["by_sharpe"] = best_sharpe.to_dict("records")
+            analysis["worst_performers"]["by_sharpe"] = worst_sharpe.to_dict("records")
 
-        if 'total_pnl' in df_copy.columns:
-            best_pnl = df_copy.nlargest(10, 'total_pnl')
-            worst_pnl = df_copy.nsmallest(10, 'total_pnl')
-            analysis['best_performers']['by_pnl'] = best_pnl.to_dict('records')
-            analysis['worst_performers']['by_pnl'] = worst_pnl.to_dict('records')
+        if "total_pnl" in df_copy.columns:
+            best_pnl = df_copy.nlargest(10, "total_pnl")
+            worst_pnl = df_copy.nsmallest(10, "total_pnl")
+            analysis["best_performers"]["by_pnl"] = best_pnl.to_dict("records")
+            analysis["worst_performers"]["by_pnl"] = worst_pnl.to_dict("records")
 
         # Thread-safe update of shared state
         with self._lock:
@@ -268,8 +268,8 @@ class BacktestMetaAnalyzer:
         return analysis
 
     def _analyze_by_category(
-        self, df: pd.DataFrame, category_col: str, metrics: List[str]
-    ) -> Dict[str, Any]:
+        self, df: pd.DataFrame, category_col: str, metrics: list[str]
+    ) -> dict[str, Any]:
         """Analizar métricas por categoría (thread-safe with df copy)."""
         category_analysis = {}
 
@@ -282,15 +282,15 @@ class BacktestMetaAnalyzer:
                     col = category_data[metric].dropna()
                     if len(col) > 0:
                         category_analysis[category][metric] = {
-                            'mean': float(col.mean()),
-                            'count': int(len(col)),
+                            "mean": float(col.mean()),
+                            "count": len(col),
                         }
 
         return category_analysis
 
     def detect_clusters(
-        self, n_clusters: int = 3, features: Optional[List[str]] = None
-    ) -> Dict[str, Any]:
+        self, n_clusters: int = 3, features: Optional[list[str]] = None
+    ) -> dict[str, Any]:
         """
         Detectar clusters de resultados similares usando KMeans.
 
@@ -320,12 +320,12 @@ class BacktestMetaAnalyzer:
         # Features por defecto
         if features is None:
             features = [
-                'sharpe_ratio',
-                'total_pnl',
-                'max_drawdown',
-                'win_rate',
-                'return_pct',
-                'total_trades',
+                "sharpe_ratio",
+                "total_pnl",
+                "max_drawdown",
+                "win_rate",
+                "return_pct",
+                "total_trades",
             ]
 
         # Filtrar features disponibles
@@ -352,34 +352,34 @@ class BacktestMetaAnalyzer:
 
         # Agregar clusters al DataFrame
         cluster_df = X.copy()
-        cluster_df['cluster'] = clusters
+        cluster_df["cluster"] = clusters
 
         # Analizar cada cluster
         cluster_analysis = {}
         for i in range(n_clusters):
-            cluster_data = cluster_df[cluster_df['cluster'] == i]
-            cluster_analysis[f'cluster_{i}'] = {
-                'size': int(len(cluster_data)),
-                'characteristics': {
+            cluster_data = cluster_df[cluster_df["cluster"] == i]
+            cluster_analysis[f"cluster_{i}"] = {
+                "size": len(cluster_data),
+                "characteristics": {
                     feature: {
-                        'mean': float(cluster_data[feature].mean()),
-                        'std': float(cluster_data[feature].std()),
+                        "mean": float(cluster_data[feature].mean()),
+                        "std": float(cluster_data[feature].std()),
                     }
                     for feature in available_features
                     if feature in cluster_data.columns
                 },
-                'indices': cluster_data.index.tolist(),
+                "indices": cluster_data.index.tolist(),
             }
 
         # Thread-safe update of shared state
         with self._lock:
-            self.df_results['cluster'] = pd.Series(clusters, index=X.index)
+            self.df_results["cluster"] = pd.Series(clusters, index=X.index)
 
         result = {
-            'n_clusters': n_clusters,
-            'features_used': available_features,
-            'clusters': cluster_analysis,
-            'inertia': float(kmeans.inertia_),
+            "n_clusters": n_clusters,
+            "features_used": available_features,
+            "clusters": cluster_analysis,
+            "inertia": float(kmeans.inertia_),
         }
 
         logger.info(f"✅ Clusters detectados: {n_clusters}")
@@ -387,8 +387,8 @@ class BacktestMetaAnalyzer:
         return result
 
     def suggest_optimal_combinations(
-        self, top_n: int = 10, criteria: Optional[Dict[str, float]] = None
-    ) -> List[Dict[str, Any]]:
+        self, top_n: int = 10, criteria: Optional[dict[str, float]] = None
+    ) -> list[dict[str, Any]]:
         """
         Sugerir combinaciones óptimas de parámetros o estrategias.
 
@@ -414,10 +414,10 @@ class BacktestMetaAnalyzer:
         # Criterios por defecto
         if criteria is None:
             criteria = {
-                'sharpe_ratio': 0.4,
-                'total_pnl': 0.3,
-                'win_rate': 0.2,
-                'max_drawdown': -0.1,  # Negativo porque queremos minimizar drawdown
+                "sharpe_ratio": 0.4,
+                "total_pnl": 0.3,
+                "win_rate": 0.2,
+                "max_drawdown": -0.1,  # Negativo porque queremos minimizar drawdown
             }
 
         # Calcular score compuesto usando operaciones vectorizadas (100-1000x más rápido)
@@ -436,17 +436,17 @@ class BacktestMetaAnalyzer:
 
         # Calcular scores vectorizados
         scores = pd.DataFrame(index=df_copy.index)
-        scores['score'] = 0.0
+        scores["score"] = 0.0
         for metric, weight in available_criteria.items():
-            scores['score'] += normalized_dfs[metric] * abs(weight)
+            scores["score"] += normalized_dfs[metric] * abs(weight)
 
         # Ordenar por score y convertir a lista de dicts
-        scores_sorted = scores.sort_values('score', ascending=False)
+        scores_sorted = scores.sort_values("score", ascending=False)
         suggestions = [
             {
-                'index': idx,
-                'score': scores_sorted.loc[idx, 'score'],
-                'row': df_copy.loc[idx].to_dict(),
+                "index": idx,
+                "score": scores_sorted.loc[idx, "score"],
+                "row": df_copy.loc[idx].to_dict(),
             }
             for idx in scores_sorted.head(top_n).index
         ]
@@ -454,15 +454,15 @@ class BacktestMetaAnalyzer:
         logger.info(f"✅ {top_n} sugerencias generadas")
         logger.info(f"   Mejor score: {suggestions[0]['score']:.4f}")
 
-        return [s['row'] for s in suggestions]
+        return [s["row"] for s in suggestions]
 
-    def export_report(self, output_path: Optional[str] = None, format: str = "json") -> str:
+    def export_report(self, output_path: Optional[str] = None, output_format: str = "json") -> str:
         """
         Exportar reporte completo de análisis.
 
         Args:
             output_path: Ruta de salida (default: output_dir/meta_analysis_YYYYMMDD_HHMMSS.json)
-            format: Formato ('json' o 'csv')
+            output_format: Formato ('json' o 'csv')
 
         Returns:
             Ruta del archivo generado
@@ -481,18 +481,18 @@ class BacktestMetaAnalyzer:
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
 
         if output_path is None:
-            filename = f"meta_analysis_{timestamp}.{format}"
+            filename = f"meta_analysis_{timestamp}.{output_format}"
             output_path = self.output_dir / filename
         else:
             output_path = Path(output_path)
 
-        if format == "json":
-            with open(output_path, 'w') as f:
+        if output_format == "json":
+            with open(output_path, "w") as f:
                 json.dump(analysis_copy, f, indent=2, default=str)
-        elif format == "csv" and df_copy is not None:
+        elif output_format == "csv" and df_copy is not None:
             df_copy.to_csv(output_path, index=False)
         else:
-            logger.error(f"Formato no soportado: {format}")
+            logger.error(f"Formato no soportado: {output_format}")
             return ""
 
         logger.info(f"✅ Reporte exportado: {output_path}")
@@ -522,56 +522,56 @@ class BacktestMetaAnalyzer:
 
         try:
             # Configurar estilo
-            plt.style.use('seaborn-v0_8-darkgrid')
+            plt.style.use("seaborn-v0_8-darkgrid")
             if sns is not None:
                 sns.set_palette("husl")
 
             # 1. Distribución de Sharpe Ratio
-            if 'sharpe_ratio' in df_copy.columns:
-                fig, ax = plt.subplots(figsize=(10, 6))
-                df_copy['sharpe_ratio'].hist(bins=30, ax=ax)
-                ax.set_title('Distribución de Sharpe Ratio')
-                ax.set_xlabel('Sharpe Ratio')
-                ax.set_ylabel('Frecuencia')
+            if "sharpe_ratio" in df_copy.columns:
+                _fig, ax = plt.subplots(figsize=(10, 6))
+                df_copy["sharpe_ratio"].hist(bins=30, ax=ax)
+                ax.set_title("Distribución de Sharpe Ratio")
+                ax.set_xlabel("Sharpe Ratio")
+                ax.set_ylabel("Frecuencia")
                 plt.savefig(
-                    self.output_dir / 'sharpe_distribution.png', dpi=150, bbox_inches='tight'
+                    self.output_dir / "sharpe_distribution.png", dpi=150, bbox_inches="tight"
                 )
                 plt.close()
 
             # 2. Scatter: Sharpe vs PnL
-            if 'sharpe_ratio' in df_copy.columns and 'total_pnl' in df_copy.columns:
-                fig, ax = plt.subplots(figsize=(10, 6))
+            if "sharpe_ratio" in df_copy.columns and "total_pnl" in df_copy.columns:
+                _fig, ax = plt.subplots(figsize=(10, 6))
                 scatter = ax.scatter(
-                    df_copy['total_pnl'],
-                    df_copy['sharpe_ratio'],
+                    df_copy["total_pnl"],
+                    df_copy["sharpe_ratio"],
                     alpha=0.6,
-                    c=df_copy.get('cluster', 0),
-                    cmap='viridis',
+                    c=df_copy.get("cluster", 0),
+                    cmap="viridis",
                 )
-                ax.set_xlabel('Total PnL')
-                ax.set_ylabel('Sharpe Ratio')
-                ax.set_title('Sharpe Ratio vs Total PnL')
-                plt.colorbar(scatter, ax=ax, label='Cluster')
-                plt.savefig(self.output_dir / 'sharpe_vs_pnl.png', dpi=150, bbox_inches='tight')
+                ax.set_xlabel("Total PnL")
+                ax.set_ylabel("Sharpe Ratio")
+                ax.set_title("Sharpe Ratio vs Total PnL")
+                plt.colorbar(scatter, ax=ax, label="Cluster")
+                plt.savefig(self.output_dir / "sharpe_vs_pnl.png", dpi=150, bbox_inches="tight")
                 plt.close()
 
             # 3. Heatmap de correlaciones
             if len(df_copy.select_dtypes(include=[np.number]).columns) > 1:
                 numeric_cols = df_copy.select_dtypes(include=[np.number]).columns[:10]  # Top 10
                 corr = df_copy[numeric_cols].corr()
-                fig, ax = plt.subplots(figsize=(10, 8))
+                _fig, ax = plt.subplots(figsize=(10, 8))
                 if sns is not None:
-                    sns.heatmap(corr, annot=True, fmt='.2', cmap='coolwarm', center=0, ax=ax)
+                    sns.heatmap(corr, annot=True, fmt=".2", cmap="coolwarm", center=0, ax=ax)
                 else:
                     # Fallback if seaborn is not available
-                    ax.imshow(corr, cmap='coolwarm', aspect='auto', vmin=-1, vmax=1)
+                    ax.imshow(corr, cmap="coolwarm", aspect="auto", vmin=-1, vmax=1)
                     ax.set_xticks(range(len(corr.columns)))
                     ax.set_yticks(range(len(corr.columns)))
-                    ax.set_xticklabels(corr.columns, rotation=45, ha='right')
+                    ax.set_xticklabels(corr.columns, rotation=45, ha="right")
                     ax.set_yticklabels(corr.columns)
-                ax.set_title('Matriz de Correlaciones')
+                ax.set_title("Matriz de Correlaciones")
                 plt.savefig(
-                    self.output_dir / 'correlation_heatmap.png', dpi=150, bbox_inches='tight'
+                    self.output_dir / "correlation_heatmap.png", dpi=150, bbox_inches="tight"
                 )
                 plt.close()
 
@@ -582,7 +582,7 @@ class BacktestMetaAnalyzer:
 
     async def run_parallel_analysis(
         self, max_workers: int = 4, include_clustering: bool = True, n_clusters: int = 3
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Ejecutar análisis completo en paralelo.
 
@@ -601,10 +601,10 @@ class BacktestMetaAnalyzer:
             await self.load_results()
 
         # Tareas CPU-bound (ThreadPoolExecutor)
-        def analyze_cpu() -> Dict[str, Any]:
+        def analyze_cpu() -> dict[str, Any]:
             return self.analyze_performance()
 
-        def cluster_cpu() -> Dict[str, Any]:
+        def cluster_cpu() -> dict[str, Any]:
             if include_clustering:
                 return self.detect_clusters(n_clusters=n_clusters)
             return {}
@@ -615,8 +615,8 @@ class BacktestMetaAnalyzer:
         # Ejecutar análisis CPU-bound en paralelo
         with ThreadPoolExecutor(max_workers=max_workers) as executor:
             futures = {
-                executor.submit(analyze_cpu): 'performance',
-                executor.submit(cluster_cpu): 'clustering',
+                executor.submit(analyze_cpu): "performance",
+                executor.submit(cluster_cpu): "clustering",
             }
 
             results = {}
@@ -629,9 +629,9 @@ class BacktestMetaAnalyzer:
                     results[task_name] = {}
 
         # Sugerencias (usando resultados ya calculados)
-        if 'performance' in results:
+        if "performance" in results:
             suggestions = self.suggest_optimal_combinations(top_n=10)
-            results['suggestions'] = suggestions
+            results["suggestions"] = suggestions
 
         logger.info("✅ Análisis paralelo completado")
 

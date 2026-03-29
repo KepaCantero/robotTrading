@@ -6,17 +6,21 @@ TASK-3: Configuración de logging centralizado
 from __future__ import annotations
 
 import functools
-import logging
 import time
 import uuid
-from typing import Awaitable, Callable, TypeVar
+from typing import TYPE_CHECKING, Callable, TypeVar
 
-from fastapi import Request, Response
 from starlette.middleware.base import BaseHTTPMiddleware
-from starlette.types import ASGIApp
 from typing_extensions import ParamSpec
 
 from app.infrastructure.logging.logging_config import LogService, get_logger
+
+if TYPE_CHECKING:
+    import logging
+    from collections.abc import Awaitable
+
+    from fastapi import Request, Response
+    from starlette.types import ASGIApp
 
 logger = get_logger(__name__)
 centralized_logger: logging.Logger = logger
@@ -73,7 +77,7 @@ class LoggingMiddleware(BaseHTTPMiddleware):
             centralized_logger.error(
                 f"[{LogService.FASTAPI}] Request failed: {request.method} {request.url.path} | "
                 f"request_id={request_id} error_type={type(e).__name__} duration_ms={duration:.2f} | "
-                f"error={str(e)}",
+                f"error={e!s}",
                 exc_info=True,  # LOG-004: Include stack trace
             )
 
@@ -175,7 +179,7 @@ def log_trading_performance(
             except Exception as e:
                 duration = (time.time() - start_time) * 1000
                 centralized_logger.error(
-                    f"[{LogService.TRADING}] {operation} failed | error_type={type(e).__name__} duration_ms={duration:.2f} | error={str(e)}",
+                    f"[{LogService.TRADING}] {operation} failed | error_type={type(e).__name__} duration_ms={duration:.2f} | error={e!s}",
                     exc_info=True,
                 )
                 raise
@@ -204,7 +208,7 @@ def log_portfolio_performance(
             except Exception as e:
                 duration = (time.time() - start_time) * 1000
                 centralized_logger.error(
-                    f"[{LogService.PORTFOLIO}] {operation} failed | error_type={type(e).__name__} duration_ms={duration:.2f} | error={str(e)}",
+                    f"[{LogService.PORTFOLIO}] {operation} failed | error_type={type(e).__name__} duration_ms={duration:.2f} | error={e!s}",
                     exc_info=True,
                 )
                 raise
@@ -233,7 +237,7 @@ def log_market_data_performance(
             except Exception as e:
                 duration = (time.time() - start_time) * 1000
                 centralized_logger.error(
-                    f"[{LogService.MARKET_DATA}] {operation} failed | error_type={type(e).__name__} duration_ms={duration:.2f} | error={str(e)}",
+                    f"[{LogService.MARKET_DATA}] {operation} failed | error_type={type(e).__name__} duration_ms={duration:.2f} | error={e!s}",
                     exc_info=True,
                 )
                 raise
@@ -262,7 +266,7 @@ def log_fastapi_performance(
             except Exception as e:
                 duration = (time.time() - start_time) * 1000
                 centralized_logger.error(
-                    f"[{LogService.FASTAPI}] {operation} failed | error_type={type(e).__name__} duration_ms={duration:.2f} | error={str(e)}",
+                    f"[{LogService.FASTAPI}] {operation} failed | error_type={type(e).__name__} duration_ms={duration:.2f} | error={e!s}",
                     exc_info=True,
                 )
                 raise

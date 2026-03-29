@@ -6,7 +6,7 @@ Normaliza símbolos de diferentes formatos a formato estándar.
 
 import logging
 import re
-from typing import Dict, Optional, Union
+from typing import Optional, Union
 
 logger = logging.getLogger(__name__)
 
@@ -18,7 +18,7 @@ class SymbolNormalizer:
     Convierte símbolos a formato estándar y maneja variaciones.
     """
 
-    def __init__(self, config: Optional[Dict[str, Union[str, int, float, bool]]] = None):
+    def __init__(self, config: Optional[dict[str, Union[str, int, float, bool]]] = None):
         """
         Inicializar normalizador.
 
@@ -26,19 +26,19 @@ class SymbolNormalizer:
             config: Configuración
         """
         config = config or {}
-        self.uppercase = config.get('uppercase', True)
-        self.remove_suffixes = config.get('remove_suffixes', True)
+        self.uppercase = config.get("uppercase", True)
+        self.remove_suffixes = config.get("remove_suffixes", True)
         self.suffix_mappings = config.get(
-            'suffix_mappings',
+            "suffix_mappings",
             {
-                '.US': '',  # Polygon format
-                '.TO': '',  # Toronto
-                '.L': '',  # London
-                '.T': '',  # Tokyo
-                '.HK': '',  # Hong Kong
+                ".US": "",  # Polygon format
+                ".TO": "",  # Toronto
+                ".L": "",  # London
+                ".T": "",  # Tokyo
+                ".HK": "",  # Hong Kong
             },
         )
-        self.exchange_mappings = config.get('exchange_mappings', {})
+        self.exchange_mappings = config.get("exchange_mappings", {})
 
     def normalize(self, symbol: Union[str, int, float], source: Optional[str] = None) -> str:
         """
@@ -75,7 +75,7 @@ class SymbolNormalizer:
                     symbol_str = mapping.get(symbol_str, symbol_str)
 
             # Limpiar caracteres especiales (mantener letras, números, puntos, guiones)
-            symbol_str = re.sub(r'[^A-Z0-9.\-]', '', symbol_str)
+            symbol_str = re.sub(r"[^A-Z0-9.\-]", "", symbol_str)
 
             return symbol_str
 
@@ -111,7 +111,7 @@ class SymbolNormalizer:
         variations = [symbol]
 
         # Agregar sufijos comunes
-        for suffix in ['.US', '.TO', '.L', '.T', '.HK']:
+        for suffix in [".US", ".TO", ".L", ".T", ".HK"]:
             variations.append(f"{symbol}{suffix}")
 
         return variations

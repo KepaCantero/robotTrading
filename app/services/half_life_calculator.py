@@ -27,7 +27,7 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 
 import numpy as np
 import pandas as pd
@@ -41,15 +41,15 @@ class HalfLifeResult:
     """Result of half-life calculation."""
 
     half_life_days: float
-    half_life_hours: Optional[float]  # For intraday data
+    half_life_hours: float | None  # For intraday data
     mean_reversion_rate: float  # Theta in OU process
     mean_level: float  # Long-term mean
     mean_reversion_speed: str  # 'fast', 'medium', 'slow'
     is_mean_reverting: bool
     p_value: float  # Statistical significance
-    confidence_interval: Tuple[float, float]  # 95% CI for half-life
-    hurst_exponent: Optional[float]  # Hurst exponent for confirmation
-    stationarity_test: Optional[str]  # ADF test result
+    confidence_interval: tuple[float, float]  # 95% CI for half-life
+    hurst_exponent: float | None  # Hurst exponent for confirmation
+    stationarity_test: str | None  # ADF test result
 
 
 @dataclass
@@ -97,7 +97,7 @@ class HalfLifeCalculator:
 
     def calculate_half_life(
         self,
-        prices: pd.Series | np.ndarray | List[float],
+        prices: pd.Series | np.ndarray | list[float],
         data_frequency: str = "D",
         confidence_interval: bool = True,
         adf_test: bool = True,
@@ -219,7 +219,7 @@ class HalfLifeCalculator:
             logger.error(f"Error calculating half-life: {e}")
             return self._create_invalid_result()
 
-    def _fit_ou_process(self, prices: np.ndarray) -> Optional[OUProcessParams]:
+    def _fit_ou_process(self, prices: np.ndarray) -> OUProcessParams | None:
         """
         Fit Ornstein-Uhlenbeck process to price series.
 
@@ -243,7 +243,7 @@ class HalfLifeCalculator:
             if np.std(y_deviation) == 0:
                 return None
 
-            slope, intercept, r_value, p_value, std_err = stats.linregress(y_deviation, y_diff)
+            slope, intercept, _r_value, _p_value, _std_err = stats.linregress(y_deviation, y_diff)
 
             # Theta is negative of slope (since slope = -theta)
             theta = -slope
@@ -274,7 +274,7 @@ class HalfLifeCalculator:
 
     def _calculate_confidence_interval(
         self, prices: np.ndarray, theta: float
-    ) -> Tuple[Tuple[float, float], float]:
+    ) -> tuple[tuple[float, float], float]:
         """
         Calculate confidence interval for half-life.
 
@@ -330,7 +330,7 @@ class HalfLifeCalculator:
             if np.std(y_deviation) == 0:
                 return 1.0
 
-            slope, intercept, r_value, p_value, std_err = stats.linregress(y_deviation, y_diff)
+            slope, _intercept, _r_value, p_value, _std_err = stats.linregress(y_deviation, y_diff)
 
             # One-tailed test (theta > 0 means slope < 0)
             # p-value from linregress is two-tailed
@@ -341,7 +341,7 @@ class HalfLifeCalculator:
         except (ValueError, TypeError):
             return 1.0
 
-    def _perform_adf_test(self, prices: np.ndarray) -> Optional[str]:
+    def _perform_adf_test(self, prices: np.ndarray) -> str | None:
         """
         Perform Augmented Dickey-Fuller test for stationarity.
 
@@ -372,7 +372,7 @@ class HalfLifeCalculator:
             logger.error(f"Error performing ADF test: {e}")
             return None
 
-    def _calculate_hurst_exponent(self, prices: np.ndarray) -> Optional[float]:
+    def _calculate_hurst_exponent(self, prices: np.ndarray) -> float | None:
         """
         Calculate Hurst exponent for confirmation.
 
@@ -418,7 +418,7 @@ class HalfLifeCalculator:
             stationarity_test=None,
         )
 
-    def compare_half_lives(self, results: List[HalfLifeResult]) -> Dict[str, Any]:
+    def compare_half_lives(self, results: list[HalfLifeResult]) -> dict[str, Any]:
         """
         Compare multiple half-life results.
 
@@ -456,7 +456,7 @@ class HalfLifeCalculator:
 
 
 def calculate_half_life(
-    prices: List[float] | pd.Series,
+    prices: list[float] | pd.Series,
     data_frequency: str = "D",
     min_samples: int = 30,
 ) -> HalfLifeResult:

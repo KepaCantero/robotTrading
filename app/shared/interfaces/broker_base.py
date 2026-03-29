@@ -21,7 +21,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from decimal import Decimal
 from enum import Enum
-from typing import Dict, List, Optional, Tuple
+from typing import Optional
 
 logger = logging.getLogger(__name__)
 
@@ -186,7 +186,7 @@ class RateLimitError(BrokerError):
     """Error por exceder rate limit"""
 
 
-class ConnectionError(BrokerError):
+class BrokerConnectionError(BrokerError):
     """Error de conexión"""
 
 
@@ -288,7 +288,7 @@ class IBroker(ABC):
     # ========================================================================
 
     @abstractmethod
-    async def get_normalized_balance(self) -> Dict[str, Balance]:
+    async def get_normalized_balance(self) -> dict[str, Balance]:
         """
         Obtener balance normalizado de la cuenta.
 
@@ -338,7 +338,7 @@ class IBroker(ABC):
     @abstractmethod
     async def get_historical_ohlcv(
         self, symbol: str, interval: str, start_date: datetime, end_date: datetime
-    ) -> List[dict]:
+    ) -> list[dict]:
         """
         Obtener datos históricos OHLCV.
 
@@ -426,7 +426,7 @@ class IBroker(ABC):
     # ========================================================================
 
     @abstractmethod
-    async def get_all_open_positions(self) -> List[Position]:
+    async def get_all_open_positions(self) -> list[Position]:
         """
         Obtener todas las posiciones abiertas.
 
@@ -455,7 +455,7 @@ class IBroker(ABC):
     # ========================================================================
 
     @abstractmethod
-    async def start_ticker_stream(self, symbols: List[str], callback):
+    async def start_ticker_stream(self, symbols: list[str], callback):
         """
         Iniciar stream de precios en tiempo real via WebSocket.
 
@@ -598,7 +598,7 @@ class IBroker(ABC):
 # ========================================================================
 
 
-def validate_order(order: Order) -> Tuple[bool, Optional[str]]:
+def validate_order(order: Order) -> tuple[bool, Optional[str]]:
     """
     Validar orden antes de enviar al broker.
 

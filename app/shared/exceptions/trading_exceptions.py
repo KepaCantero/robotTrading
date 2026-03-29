@@ -6,7 +6,7 @@ TASK-4: Sistema de manejo de errores unificado
 # mypy: ignore-errors
 import logging
 from enum import Enum
-from typing import Any, Dict, Optional
+from typing import Any, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -43,7 +43,7 @@ class AlgoTradingError(Exception):
         error_code: str,
         category: ErrorCategory,
         severity: ErrorSeverity = ErrorSeverity.MEDIUM,
-        details: Optional[Dict[str, Any]] = None,
+        details: Optional[dict[str, Any]] = None,
         original_error: Optional[Exception] = None,
     ):
         self.message = message
@@ -64,7 +64,7 @@ class AlgoTradingError(Exception):
             },
         )
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert error to dictionary."""
         return {
             "error_code": self.error_code,
@@ -84,7 +84,7 @@ class ValidationError(AlgoTradingError):
         message: str,
         field: Optional[str] = None,
         value: Optional[Any] = None,
-        details: Optional[Dict[str, Any]] = None,
+        details: Optional[dict[str, Any]] = None,
     ):
         error_code = f"VALIDATION_ERROR_{field.upper()}" if field else "VALIDATION_ERROR"
         super().__init__(
@@ -116,7 +116,7 @@ class BusinessLogicError(AlgoTradingError):
         self,
         message: str,
         operation: Optional[str] = None,
-        details: Optional[Dict[str, Any]] = None,
+        details: Optional[dict[str, Any]] = None,
     ):
         error_code = f"BUSINESS_ERROR_{operation.upper()}" if operation else "BUSINESS_ERROR"
         super().__init__(
@@ -136,7 +136,7 @@ class ExternalAPIError(AlgoTradingError):
         message: str,
         api_name: str,
         status_code: Optional[int] = None,
-        details: Optional[Dict[str, Any]] = None,
+        details: Optional[dict[str, Any]] = None,
     ):
         error_code = f"API_ERROR_{api_name.upper()}"
         super().__init__(
@@ -170,7 +170,7 @@ class AlgoTradingDatabaseError(AlgoTradingError):
         message: str,
         operation: Optional[str] = None,
         table: Optional[str] = None,
-        details: Optional[Dict[str, Any]] = None,
+        details: Optional[dict[str, Any]] = None,
     ):
         error_code = f"DB_ERROR_{operation.upper()}" if operation else "DB_ERROR"
         super().__init__(
@@ -190,7 +190,7 @@ class NetworkError(AlgoTradingError):
         message: str,
         endpoint: Optional[str] = None,
         timeout: Optional[float] = None,
-        details: Optional[Dict[str, Any]] = None,
+        details: Optional[dict[str, Any]] = None,
     ):
         super().__init__(
             message=message,
@@ -208,7 +208,7 @@ class ConfigurationError(AlgoTradingError):
         self,
         message: str,
         config_key: Optional[str] = None,
-        details: Optional[Dict[str, Any]] = None,
+        details: Optional[dict[str, Any]] = None,
     ):
         error_code = f"CONFIG_ERROR_{config_key.upper()}" if config_key else "CONFIG_ERROR"
         super().__init__(
@@ -227,7 +227,7 @@ class SecurityError(AlgoTradingError):
         self,
         message: str,
         violation_type: Optional[str] = None,
-        details: Optional[Dict[str, Any]] = None,
+        details: Optional[dict[str, Any]] = None,
     ):
         error_code = (
             f"SECURITY_ERROR_{violation_type.upper()}" if violation_type else "SECURITY_ERROR"
@@ -259,7 +259,7 @@ class PerformanceError(AlgoTradingError):
         operation: Optional[str] = None,
         duration: Optional[float] = None,
         threshold: Optional[float] = None,
-        details: Optional[Dict[str, Any]] = None,
+        details: Optional[dict[str, Any]] = None,
     ):
         error_code = f"PERF_ERROR_{operation.upper()}" if operation else "PERF_ERROR"
         super().__init__(
@@ -276,14 +276,14 @@ class PerformanceError(AlgoTradingError):
         )
 
 
-class SystemError(AlgoTradingError):
+class TradingSystemError(AlgoTradingError):
     """Error for system-level issues."""
 
     def __init__(
         self,
         message: str,
         component: Optional[str] = None,
-        details: Optional[Dict[str, Any]] = None,
+        details: Optional[dict[str, Any]] = None,
     ):
         error_code = f"SYSTEM_ERROR_{component.upper()}" if component else "SYSTEM_ERROR"
         super().__init__(
@@ -304,7 +304,7 @@ class TradingError(BusinessLogicError):
         message: str,
         symbol: Optional[str] = None,
         operation: Optional[str] = None,
-        details: Optional[Dict[str, Any]] = None,
+        details: Optional[dict[str, Any]] = None,
     ):
         super().__init__(
             message=message,
@@ -321,7 +321,7 @@ class SignalError(BusinessLogicError):
         message: str,
         signal_type: Optional[str] = None,
         strategy: Optional[str] = None,
-        details: Optional[Dict[str, Any]] = None,
+        details: Optional[dict[str, Any]] = None,
     ):
         super().__init__(
             message=message,
@@ -342,7 +342,7 @@ class PortfolioError(BusinessLogicError):
         message: str,
         operation: Optional[str] = None,
         portfolio_id: Optional[str] = None,
-        details: Optional[Dict[str, Any]] = None,
+        details: Optional[dict[str, Any]] = None,
     ):
         super().__init__(
             message=message,
@@ -360,7 +360,7 @@ class RiskManagementError(BusinessLogicError):
         risk_type: Optional[str] = None,
         limit: Optional[float] = None,
         current_value: Optional[float] = None,
-        details: Optional[Dict[str, Any]] = None,
+        details: Optional[dict[str, Any]] = None,
     ):
         super().__init__(
             message=message,
@@ -382,7 +382,7 @@ class MarketDataError(ExternalAPIError):
         message: str,
         symbol: Optional[str] = None,
         data_type: Optional[str] = None,
-        details: Optional[Dict[str, Any]] = None,
+        details: Optional[dict[str, Any]] = None,
     ):
         super().__init__(
             message=message,
@@ -400,7 +400,7 @@ class BrokerError(ExternalAPIError):
         broker: Optional[str] = None,
         operation: Optional[str] = None,
         order_id: Optional[str] = None,
-        details: Optional[Dict[str, Any]] = None,
+        details: Optional[dict[str, Any]] = None,
     ):
         super().__init__(
             message=message,

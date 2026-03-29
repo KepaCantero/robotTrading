@@ -3,7 +3,7 @@ VolumeFilter - Filtro de volumen para confirmar señales.
 """
 
 import logging
-from typing import Dict
+from typing import Optional
 
 from ..base_filter import BaseFilter
 
@@ -18,7 +18,11 @@ class VolumeFilter(BaseFilter):
     """
 
     def __init__(
-        self, config: Dict = None, preset: str = "balanced", tier: str = None, use_yaml: bool = True
+        self,
+        config: Optional[dict] = None,
+        preset: str = "balanced",
+        tier: Optional[str] = None,
+        use_yaml: bool = True,
     ):
         """Inicializar filtro de volumen."""
         super().__init__("volume_filter", config, preset, tier, use_yaml)
@@ -32,7 +36,7 @@ class VolumeFilter(BaseFilter):
         # FIX: Lowered from 1.1 - requiring above-average volume is too restrictive
         self.min_volume_ratio = self.thresholds.get("min_volume_ratio", 0.9)
 
-    def _apply_filter_logic(self, indicators: Dict, market_context: Dict, signal_type: str) -> Dict:
+    def _apply_filter_logic(self, indicators: dict, market_context: dict, signal_type: str) -> dict:
         """Aplicar lógica del filtro de volumen."""
         volume_ratio = indicators.get("volume_ratio")
 
@@ -45,10 +49,10 @@ class VolumeFilter(BaseFilter):
                 volume_ratio = current_volume / avg_volume
             else:
                 return {
-                    'passed': False,
-                    'confidence': 0.0,
-                    'reason': 'Volume indicators missing',
-                    'metadata': {},
+                    "passed": False,
+                    "confidence": 0.0,
+                    "reason": "Volume indicators missing",
+                    "metadata": {},
                 }
 
         if volume_ratio >= self.min_volume_ratio:
@@ -58,19 +62,19 @@ class VolumeFilter(BaseFilter):
             confidence = 0.6 + (normalized_ratio * 0.4)
 
             return {
-                'passed': True,
-                'confidence': confidence,
-                'reason': f'Volume ratio {volume_ratio:.2f} >= threshold {self.min_volume_ratio:.2f}',
-                'metadata': {
-                    'volume_ratio': volume_ratio,
-                    'threshold': self.min_volume_ratio,
-                    'normalized': normalized_ratio,
+                "passed": True,
+                "confidence": confidence,
+                "reason": f"Volume ratio {volume_ratio:.2f} >= threshold {self.min_volume_ratio:.2f}",
+                "metadata": {
+                    "volume_ratio": volume_ratio,
+                    "threshold": self.min_volume_ratio,
+                    "normalized": normalized_ratio,
                 },
             }
         else:
             return {
-                'passed': False,
-                'confidence': 0.0,
-                'reason': f'Volume ratio {volume_ratio:.2f} below threshold {self.min_volume_ratio:.2f}',
-                'metadata': {'volume_ratio': volume_ratio},
+                "passed": False,
+                "confidence": 0.0,
+                "reason": f"Volume ratio {volume_ratio:.2f} below threshold {self.min_volume_ratio:.2f}",
+                "metadata": {"volume_ratio": volume_ratio},
             }

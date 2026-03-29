@@ -10,7 +10,7 @@ import json
 import logging
 from datetime import datetime, timedelta
 from decimal import Decimal
-from typing import Dict, List, Optional
+from typing import Optional
 
 from .models import (
     AggregatedMetrics,
@@ -42,10 +42,10 @@ class QuestDBConnector:
 
     def __init__(
         self,
-        host: str = None,
-        port: int = None,
-        user: str = None,
-        password: str = None,
+        host: Optional[str] = None,
+        port: Optional[int] = None,
+        user: Optional[str] = None,
+        password: Optional[str] = None,
         pool_size: int = 10,
         batch_size: int = 1000,
         retention_days: int = 90,
@@ -95,7 +95,7 @@ class QuestDBConnector:
         )
         self._connection_pool = None
         self._is_connected = False
-        self._pending_metrics: List[MetricPoint] = []
+        self._pending_metrics: list[MetricPoint] = []
         self._retry_count = 0
         self._max_retries = 3
         self._retry_delay = 1  # seconds
@@ -118,7 +118,7 @@ class QuestDBConnector:
                 self._connection_pool = _InMemoryPool()
                 self._is_connected = True
                 self._use_real_db = False
-                self._in_memory_storage: List[MetricPoint] = []
+                self._in_memory_storage: list[MetricPoint] = []
                 logger.info("✅ Using in-memory metrics storage (install asyncpg for QuestDB)")
                 return True
 
@@ -159,7 +159,7 @@ class QuestDBConnector:
                 self._connection_pool = _InMemoryPool()
                 self._is_connected = True
                 self._use_real_db = False
-                self._in_memory_storage: List[MetricPoint] = []
+                self._in_memory_storage: list[MetricPoint] = []
                 return True
 
         except (asyncio.TimeoutError, OSError) as e:
@@ -212,7 +212,7 @@ class QuestDBConnector:
             logger.error(f"Failed to insert metric: {e}")
             return False
 
-    async def insert_metrics_batch(self, metrics: List[MetricPoint]) -> int:
+    async def insert_metrics_batch(self, metrics: list[MetricPoint]) -> int:
         """
         Insert multiple metric points in batch.
 
@@ -261,7 +261,7 @@ class QuestDBConnector:
         self._pending_metrics.clear()
 
         try:
-            if getattr(self, '_use_real_db', False) and not isinstance(
+            if getattr(self, "_use_real_db", False) and not isinstance(
                 self._connection_pool, _InMemoryPool
             ):
                 # Real database insert using asyncpg
@@ -271,9 +271,9 @@ class QuestDBConnector:
                         (
                             m.timestamp,
                             m.metric_type.value,
-                            m.symbol or '',
+                            m.symbol or "",
                             float(m.value),
-                            str(m.metadata) if m.metadata else '',
+                            str(m.metadata) if m.metadata else "",
                         )
                         for m in metrics_to_flush
                     ]
@@ -289,7 +289,7 @@ class QuestDBConnector:
                 logger.debug(f"✅ Flushed {len(metrics_to_flush)} metrics to QuestDB")
             else:
                 # In-memory fallback storage
-                if not hasattr(self, '_in_memory_storage'):
+                if not hasattr(self, "_in_memory_storage"):
                     self._in_memory_storage = []
                 self._in_memory_storage.extend(metrics_to_flush)
 
@@ -310,7 +310,7 @@ class QuestDBConnector:
             self._pending_metrics.extend(metrics_to_flush)
             return 0
 
-    async def query_metrics(self, query: TimeSeriesQuery) -> List[MetricPoint]:
+    async def query_metrics(self, query: TimeSeriesQuery) -> list[MetricPoint]:
         """
         Query metrics from database.
 
@@ -330,11 +330,10 @@ class QuestDBConnector:
                 return []
 
             logger.debug(
-                f"Querying {query.metric_type.value} "
-                f"from {query.start_time} to {query.end_time}"
+                f"Querying {query.metric_type.value} from {query.start_time} to {query.end_time}"
             )
 
-            if getattr(self, '_use_real_db', False) and not isinstance(
+            if getattr(self, "_use_real_db", False) and not isinstance(
                 self._connection_pool, _InMemoryPool
             ):
                 # Real database query using asyncpg
@@ -361,20 +360,18 @@ class QuestDBConnector:
 
                     results = [
                         MetricPoint(
-                            timestamp=row['timestamp'],
-                            metric_type=MetricType(row['metric_type']),
-                            symbol=row['symbol'] if row['symbol'] else None,
-                            value=Decimal(str(row['value'])),
-                            tags=(
-                                json.loads(row['metadata']) if row.get('metadata') else {}
-                            ),
+                            timestamp=row["timestamp"],
+                            metric_type=MetricType(row["metric_type"]),
+                            symbol=row["symbol"] if row["symbol"] else None,
+                            value=Decimal(str(row["value"])),
+                            tags=(json.loads(row["metadata"]) if row.get("metadata") else {}),
                         )
                         for row in rows
                     ]
                     return results
             else:
                 # In-memory query fallback
-                if not hasattr(self, '_in_memory_storage'):
+                if not hasattr(self, "_in_memory_storage"):
                     return []
 
                 results = [
@@ -406,7 +403,7 @@ class QuestDBConnector:
         aggregation_type: AggregationType,
         interval_minutes: int = 5,
         symbol: Optional[str] = None,
-    ) -> List[AggregatedMetrics]:
+    ) -> list[AggregatedMetrics]:
         """
         Query aggregated metrics (OHLC candles).
 
@@ -426,9 +423,7 @@ class QuestDBConnector:
             return []
 
         try:
-            logger.debug(
-                f"Querying aggregated {metric_type.value} " f"interval: {interval_minutes}m"
-            )
+            logger.debug(f"Querying aggregated {metric_type.value} interval: {interval_minutes}m")
 
             # In production: execute aggregation query
             # SELECT timestamp, FIRST(value), LAST(value), MIN(value), MAX(value), AVG(value)
@@ -437,7 +432,7 @@ class QuestDBConnector:
             # SAMPLE BY {interval_minutes}m
 
             # Simulate aggregation
-            results: List[AggregatedMetrics] = []
+            results: list[AggregatedMetrics] = []
             return results
 
         except (asyncio.TimeoutError, OSError) as e:
@@ -458,7 +453,7 @@ class QuestDBConnector:
             Latest metric value, or None if not found
         """
         try:
-            if getattr(self, '_use_real_db', False) and not isinstance(
+            if getattr(self, "_use_real_db", False) and not isinstance(
                 self._connection_pool, _InMemoryPool
             ):
                 async with self._connection_pool.acquire() as conn:
@@ -476,11 +471,11 @@ class QuestDBConnector:
 
                     row = await conn.fetchrow(sql, *params)
                     if row:
-                        return Decimal(str(row['value']))
+                        return Decimal(str(row["value"]))
                     return None
             else:
                 # In-memory fallback
-                if not hasattr(self, '_in_memory_storage') or not self._in_memory_storage:
+                if not hasattr(self, "_in_memory_storage") or not self._in_memory_storage:
                     return None
 
                 matching = [
@@ -504,7 +499,7 @@ class QuestDBConnector:
         start_time: datetime,
         end_time: datetime,
         symbol: Optional[str] = None,
-    ) -> Optional[Dict]:
+    ) -> Optional[dict]:
         """
         Get statistics for metrics in time range.
 
@@ -534,7 +529,7 @@ class QuestDBConnector:
             logger.error(f"Failed to get statistics: {e}")
             return None
 
-    async def delete_old_metrics(self, days: int = None) -> int:
+    async def delete_old_metrics(self, days: Optional[int] = None) -> int:
         """
         Delete metrics older than specified days (retention policy).
 

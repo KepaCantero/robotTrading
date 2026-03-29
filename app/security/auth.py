@@ -23,10 +23,8 @@ SOLID Principles Applied:
 from __future__ import annotations
 
 import logging
-from collections.abc import Generator
 from contextlib import contextmanager
-from datetime import timedelta
-from typing import Callable
+from typing import TYPE_CHECKING, Callable
 
 from fastapi import Depends, HTTPException, Security, status
 from fastapi.security import APIKeyHeader, HTTPAuthorizationCredentials, HTTPBearer
@@ -39,6 +37,10 @@ from .interfaces import AuthAttemptTrackerProtocol, JWTTokenManagerProtocol, Use
 from .jwt_token_manager import JWTTokenManager, get_token_manager
 from .user import User, UserRoles
 from .user_store import UserStore, get_user_store
+
+if TYPE_CHECKING:
+    from collections.abc import Generator
+    from datetime import timedelta
 
 # Setup logger
 logger = logging.getLogger(__name__)
@@ -53,37 +55,37 @@ _bearer_security = Security(http_bearer)
 
 # Re-export for backward compatibility
 __all__ = [
+    # Tracker classes
+    "AuthAttemptTracker",
+    "AuthAttemptTrackerProtocol",
+    # Token classes
+    "JWTTokenManager",
+    "JWTTokenManagerProtocol",
     # User classes
     "User",
     "UserRoles",
     # Store classes
     "UserStore",
-    "get_user_store",
-    # Token classes
-    "JWTTokenManager",
-    "get_token_manager",
-    # Tracker classes
-    "AuthAttemptTracker",
-    "get_attempt_tracker",
     # Protocol interfaces
     "UserStoreProtocol",
-    "JWTTokenManagerProtocol",
-    "AuthAttemptTrackerProtocol",
-    # Authentication dependencies
-    "get_current_user_optional",
-    "get_current_user",
-    "get_admin_user",
-    "get_trader_user",
-    "get_deployer_user",
-    "require_roles",
-    "require_permissions",
-    "get_user_id",
-    "get_username",
-    # Utility functions
-    "create_access_token_for_user",
-    "verify_token_and_get_user",
     "_audit_auth_context",
     "_handle_failed_attempt",
+    # Utility functions
+    "create_access_token_for_user",
+    "get_admin_user",
+    "get_attempt_tracker",
+    "get_current_user",
+    # Authentication dependencies
+    "get_current_user_optional",
+    "get_deployer_user",
+    "get_token_manager",
+    "get_trader_user",
+    "get_user_id",
+    "get_user_store",
+    "get_username",
+    "require_permissions",
+    "require_roles",
+    "verify_token_and_get_user",
 ]
 
 
@@ -275,7 +277,7 @@ async def get_current_user_optional(
             return None
         except Exception as e:
             logger.error(
-                f"JWT authentication error: {str(e)}",
+                f"JWT authentication error: {e!s}",
                 extra={"request_id": request_id},
                 exc_info=True,
             )

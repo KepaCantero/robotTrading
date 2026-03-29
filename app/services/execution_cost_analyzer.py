@@ -13,7 +13,7 @@ that exceed strategy alpha, especially on small accounts.
 import logging
 from collections import deque
 from decimal import Decimal
-from typing import Dict, Optional, Tuple
+from typing import Optional
 
 import numpy as np
 
@@ -59,7 +59,7 @@ class ExecutionCostAnalyzer:
         self.cost_regime_history = deque(maxlen=lookback_days)
         self.current_cost_regime = "normal"  # normal | elevated | extreme
 
-    def add_trade_slippage(self, slippage_pct: Decimal, timestamp: str = None):
+    def add_trade_slippage(self, slippage_pct: Decimal, timestamp: Optional[str] = None):
         """
         Record actual slippage from a completed trade.
 
@@ -150,7 +150,7 @@ class ExecutionCostAnalyzer:
         expected_alpha: Decimal,
         volatility_percentile: int,
         num_concurrent_trades: int = 1,
-    ) -> Tuple[bool, Dict]:
+    ) -> tuple[bool, dict]:
         """
         Determine if a trade is economical to execute.
 
@@ -234,7 +234,7 @@ class ExecutionCostAnalyzer:
             "volatility_percentile": volatility_percentile,
         }
 
-    def get_slippage_stats(self) -> Dict:
+    def get_slippage_stats(self) -> dict:
         """
         Get statistics on recent slippage history.
 
@@ -270,7 +270,7 @@ class ExecutionCostAnalyzer:
             "has_history": True,
         }
 
-    def detect_cost_regime_shift(self, window_size: int = 10) -> Optional[Dict]:
+    def detect_cost_regime_shift(self, window_size: int = 10) -> Optional[dict]:
         """
         Detect if cost regime has shifted significantly.
 
@@ -312,8 +312,8 @@ class ExecutionCostAnalyzer:
         symbol: str,
         position_size: Decimal,
         expected_alpha: Decimal,
-        analysis: Dict,
-        account_id: str = None,
+        analysis: dict,
+        account_id: Optional[str] = None,
     ):
         """Log trade cost analysis for audit trail"""
 

@@ -11,7 +11,7 @@ import logging
 from dataclasses import dataclass, field
 from datetime import datetime
 from decimal import Decimal
-from typing import Dict, List, Optional
+from typing import Optional
 from urllib.parse import urljoin
 
 import aiohttp
@@ -28,8 +28,8 @@ class MLModel:
     name: str
     model_type: str  # neural_network, xgboost, ensemble, etc.
     version: int = 1
-    metrics: Dict[str, Decimal] = field(default_factory=dict)
-    params: Dict[str, str] = field(default_factory=dict)
+    metrics: dict[str, Decimal] = field(default_factory=dict)
+    params: dict[str, str] = field(default_factory=dict)
     created_at: datetime = field(default_factory=datetime.now)
     accuracy: Decimal = Decimal("0")
     f1_score: Decimal = Decimal("0")
@@ -43,9 +43,9 @@ class Experiment:
     experiment_id: str
     name: str
     description: str
-    runs: List[Dict] = field(default_factory=list)
+    runs: list[dict] = field(default_factory=list)
     created_at: datetime = field(default_factory=datetime.now)
-    best_run: Optional[Dict] = None
+    best_run: Optional[dict] = None
 
 
 class MLflowTracker:
@@ -77,9 +77,9 @@ class MLflowTracker:
         self.connected = False
 
         # Local tracking for when MLflow server is unavailable
-        self.experiments: Dict[str, Experiment] = {}
-        self.models: Dict[str, MLModel] = {}
-        self.active_run: Optional[Dict] = None
+        self.experiments: dict[str, Experiment] = {}
+        self.models: dict[str, MLModel] = {}
+        self.active_run: Optional[dict] = None
         self.active_run_id: Optional[str] = None
 
         logger.info(f"✅ MLflowTracker initialized ({host}:{port})")
@@ -100,7 +100,7 @@ class MLflowTracker:
                     return True
 
         except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
-            logger.warning(f"⚠️ MLflow server unavailable ({self.host}:{self.port}): {str(e)}")
+            logger.warning(f"⚠️ MLflow server unavailable ({self.host}:{self.port}): {e!s}")
             self.connected = False
             if self.session:
                 await self.session.close()
@@ -129,7 +129,7 @@ class MLflowTracker:
             logger.info("✅ Disconnected from MLflow server")
             return True
         except (asyncio.TimeoutError, OSError) as e:
-            logger.error(f"❌ Disconnect failed: {str(e)}")
+            logger.error(f"❌ Disconnect failed: {e!s}")
             return False
 
     async def create_experiment(
@@ -169,9 +169,7 @@ class MLflowTracker:
                             f"⚠️ MLflow experiment creation failed (HTTP {resp.status}), using local tracking"
                         )
             except (asyncio.TimeoutError, OSError) as e:
-                logger.warning(
-                    f"⚠️ Failed to create MLflow experiment: {str(e)}, using local tracking"
-                )
+                logger.warning(f"⚠️ Failed to create MLflow experiment: {e!s}, using local tracking")
 
         # Always store locally as backup
         experiment = Experiment(
@@ -183,7 +181,7 @@ class MLflowTracker:
         logger.info(f"✅ Created experiment: {name}")
         return experiment
 
-    async def start_run(self, experiment_id: str) -> Dict:
+    async def start_run(self, experiment_id: str) -> dict:
         """
         Start a new run in experiment via MLflow or locally.
 
@@ -220,7 +218,7 @@ class MLflowTracker:
                             f"⚠️ MLflow run creation failed (HTTP {resp.status}), using local tracking"
                         )
             except (ValueError, TypeError, KeyError, AttributeError) as e:
-                logger.warning(f"⚠️ Failed to start MLflow run: {str(e)}, using local tracking")
+                logger.warning(f"⚠️ Failed to start MLflow run: {e!s}, using local tracking")
 
         # Always store locally as backup
         run = {
@@ -235,7 +233,7 @@ class MLflowTracker:
         logger.info(f"✅ Started run: {run_id}")
         return run
 
-    async def log_params(self, params: Dict[str, str]) -> None:
+    async def log_params(self, params: dict[str, str]) -> None:
         """Log parameters to MLflow or locally."""
         if not self.active_run:
             return
@@ -258,7 +256,7 @@ class MLflowTracker:
                                 f"⚠️ Failed to log param {key} to MLflow (HTTP {resp.status})"
                             )
             except (ValueError, TypeError, KeyError, AttributeError) as e:
-                logger.warning(f"⚠️ Failed to log params to MLflow: {str(e)}")
+                logger.warning(f"⚠️ Failed to log params to MLflow: {e!s}")
 
         # Always log locally
         self.active_run["params"].update(params)
@@ -266,7 +264,7 @@ class MLflowTracker:
 
     async def log_metrics(
         self,
-        metrics: Dict[str, Decimal],
+        metrics: dict[str, Decimal],
         step: int = 0,
     ) -> None:
         """Log metrics to MLflow or locally."""
@@ -293,7 +291,7 @@ class MLflowTracker:
                                 f"⚠️ Failed to log metric {key} to MLflow (HTTP {resp.status})"
                             )
             except (ValueError, TypeError, KeyError, AttributeError) as e:
-                logger.warning(f"⚠️ Failed to log metrics to MLflow: {str(e)}")
+                logger.warning(f"⚠️ Failed to log metrics to MLflow: {e!s}")
 
         # Always log locally
         self.active_run["metrics"][f"step_{step}"] = metrics
@@ -322,7 +320,7 @@ class MLflowTracker:
                     else:
                         logger.warning(f"⚠️ Failed to end MLflow run (HTTP {resp.status})")
             except (ValueError, TypeError, KeyError, AttributeError) as e:
-                logger.warning(f"⚠️ Failed to end MLflow run: {str(e)}")
+                logger.warning(f"⚠️ Failed to end MLflow run: {e!s}")
 
         # Always update locally
         self.active_run["status"] = status
@@ -336,7 +334,7 @@ class MLflowTracker:
         self,
         model_name: str,
         model_type: str,
-        metrics: Dict[str, Decimal],
+        metrics: dict[str, Decimal],
     ) -> MLModel:
         """
         Register a trained model in MLflow or locally.
@@ -373,9 +371,7 @@ class MLflowTracker:
                             f"⚠️ MLflow model registration failed (HTTP {resp.status}), using local tracking"
                         )
             except (ValueError, TypeError, KeyError, AttributeError) as e:
-                logger.warning(
-                    f"⚠️ Failed to register model in MLflow: {str(e)}, using local tracking"
-                )
+                logger.warning(f"⚠️ Failed to register model in MLflow: {e!s}, using local tracking")
 
         # Always store locally
         model = MLModel(
@@ -427,14 +423,14 @@ class MLflowTracker:
                     else:
                         logger.warning(f"⚠️ MLflow model promotion failed (HTTP {resp.status})")
             except (ValueError, TypeError, KeyError, AttributeError) as e:
-                logger.warning(f"⚠️ Failed to promote model in MLflow: {str(e)}")
+                logger.warning(f"⚠️ Failed to promote model in MLflow: {e!s}")
 
         # Always update locally
         model.status = stage
         logger.info(f"✅ Promoted model to {stage}: {model.name}")
         return True
 
-    async def compare_models(self, metrics_key: str) -> List[MLModel]:
+    async def compare_models(self, metrics_key: str) -> list[MLModel]:
         """
         Compare models by metric.
 
@@ -453,7 +449,7 @@ class MLflowTracker:
         models = await self.compare_models(metric)
         return models[0] if models else None
 
-    async def get_model_versions(self, model_name: str) -> List[MLModel]:
+    async def get_model_versions(self, model_name: str) -> list[MLModel]:
         """Get all versions of a model."""
         return [m for m in self.models.values() if m.name == model_name]
 
@@ -461,7 +457,7 @@ class MLflowTracker:
         """Log artifact (model file, plot, etc.)."""
         logger.info(f"✅ Logged artifact: {artifact_path} ({artifact_type})")
 
-    def get_tracking_status(self) -> Dict:
+    def get_tracking_status(self) -> dict:
         """Get tracking status including MLflow connection."""
         return {
             "experiments": len(self.experiments),

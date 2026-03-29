@@ -16,7 +16,7 @@ from dataclasses import dataclass, field
 from datetime import date, datetime
 from decimal import Decimal
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 import numpy as np
 
@@ -104,7 +104,7 @@ class CryptoPosition:
 class CryptoPortfolio:
     """Represents a crypto portfolio."""
 
-    positions: List[CryptoPosition]
+    positions: list[CryptoPosition]
     total_value: Decimal
     cash: Decimal
     btc_weight: Decimal
@@ -112,7 +112,7 @@ class CryptoPortfolio:
     last_rebalance: Optional[date] = None
     rebalance_threshold: Decimal = Decimal("0.05")
     expected_volatility: Optional[Decimal] = None
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
     @property
     def btc_position(self) -> Optional[CryptoPosition]:
@@ -150,12 +150,12 @@ class CryptoPortfolioConstructor:
             config: Strategy configuration
         """
         self.config = config
-        self.rebalance_history: List[Dict] = []
+        self.rebalance_history: list[dict] = []
 
     def construct_portfolio(
         self,
-        ranked_assets: List[CryptoAsset],
-        momentum_scores: Dict[str, CryptoMomentumScore],
+        ranked_assets: list[CryptoAsset],
+        momentum_scores: dict[str, CryptoMomentumScore],
         total_capital: Decimal,
     ) -> CryptoPortfolio:
         """
@@ -176,7 +176,7 @@ class CryptoPortfolioConstructor:
         """
         logger.info(f"Constructing portfolio with ${total_capital:,.0f}")
 
-        positions: List[CryptoPosition] = []
+        positions: list[CryptoPosition] = []
 
         # Separate BTC and altcoins
         btc_asset = None
@@ -281,10 +281,10 @@ class CryptoPortfolioConstructor:
 
     def _calculate_altcoin_weights(
         self,
-        altcoins: List[CryptoAsset],
-        momentum_scores: Dict[str, CryptoMomentumScore],
+        altcoins: list[CryptoAsset],
+        momentum_scores: dict[str, CryptoMomentumScore],
         total_weight: Decimal,
-    ) -> List[Decimal]:
+    ) -> list[Decimal]:
         """
         Calculate altcoin weights based on momentum scores.
 
@@ -337,8 +337,8 @@ class CryptoPortfolioConstructor:
         return final_weights
 
     def _adjust_for_liquidity(
-        self, assets: List[CryptoAsset], weights: List[Decimal]
-    ) -> List[Decimal]:
+        self, assets: list[CryptoAsset], weights: list[Decimal]
+    ) -> list[Decimal]:
         """
         Adjust weights based on liquidity.
 
@@ -423,7 +423,7 @@ class CryptoPortfolioConstructor:
         self,
         current_portfolio: CryptoPortfolio,
         target_portfolio: CryptoPortfolio,
-    ) -> Dict[str, Decimal]:
+    ) -> dict[str, Decimal]:
         """
         Calculate rebalance trades.
 
@@ -438,7 +438,7 @@ class CryptoPortfolioConstructor:
             Dict of trades by symbol (positive = buy, negative = sell)
         """
         threshold = self.config.rebalance_threshold
-        trades: Dict[str, Decimal] = {}
+        trades: dict[str, Decimal] = {}
 
         # Create current position map
         current_positions = {pos.symbol: pos for pos in current_portfolio.positions}
@@ -512,7 +512,6 @@ class CryptoPortfolioConstructor:
         # - Avg altcoin vol = 100%
         # - Correlation matrix (simplified)
 
-        portfolio.btc_position
         btc_vol = Decimal("60")  # 60% annual vol for BTC
         btc_weight = portfolio.btc_weight
 
@@ -534,7 +533,7 @@ class CryptoPortfolioConstructor:
 
         return portfolio_vol
 
-    def get_portfolio_summary(self, portfolio: CryptoPortfolio) -> Dict:
+    def get_portfolio_summary(self, portfolio: CryptoPortfolio) -> dict:
         """
         Get portfolio summary statistics.
 

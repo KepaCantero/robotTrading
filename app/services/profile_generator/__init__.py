@@ -15,13 +15,13 @@ from .models import (
 from .profile_generator import ProfileGenerator, get_profile_generator
 
 __all__ = [
-    "ProfileGenerator",
-    "get_profile_generator",
     "CapitalTier",
     "InvestmentObjective",
-    "RiskProfile",
     "InvestmentProfile",
     "ModuleConfig",
     "ProfileGenerationRequest",
     "ProfileGenerationResult",
+    "ProfileGenerator",
+    "RiskProfile",
+    "get_profile_generator",
 ]

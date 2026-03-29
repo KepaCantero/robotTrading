@@ -7,7 +7,6 @@ circuit breakers, and related parameters.
 
 import logging
 from decimal import Decimal
-from typing import Dict
 
 logger = logging.getLogger(__name__)
 
@@ -35,7 +34,7 @@ class SignalThresholds(ConfigBase):
     signal_cooldown_minutes: int = Field(
         default=10, description="Signal cooldown period in minutes"
     )
-    signal_compound_weights: Dict[str, float] = Field(
+    signal_compound_weights: dict[str, float] = Field(
         default_factory=lambda: {
             "confidence": 0.30,
             "volume_ratio": 0.25,

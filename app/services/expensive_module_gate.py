@@ -30,7 +30,7 @@ accounts and upgrade modules only when capital and trading volume increase.
 import logging
 from decimal import Decimal
 from enum import Enum
-from typing import Dict, Tuple, Optional
+from typing import ClassVar, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -60,7 +60,7 @@ class ExpensiveModuleGate:
     """
 
     # Module definitions with cost estimates
-    MODULES = {
+    MODULES: ClassVar[dict] = {
         "transformer_engine": {
             "expense_level": ExpenseLevelEnum.VERY_EXPENSIVE,
             "monthly_cost_pct": Decimal("0.02"),  # 2% of capital
@@ -125,7 +125,7 @@ class ExpensiveModuleGate:
         capital: Decimal,
         expected_monthly_alpha: Optional[Decimal] = None,
         enforce_strict_cost_ratio: bool = False,
-    ) -> Tuple[bool, Dict]:
+    ) -> tuple[bool, dict]:
         """
         Determine if an expensive module should be enabled for this account.
 
@@ -245,7 +245,7 @@ class ExpensiveModuleGate:
         capital: Decimal,
         expected_monthly_alpha: Optional[Decimal] = None,
         enforce_strict_cost_ratio: bool = False,
-    ) -> Tuple[Dict[str, bool], Dict[str, Dict]]:
+    ) -> tuple[dict[str, bool], dict[str, dict]]:
         """
         Determine which expensive modules should be enabled for this account.
 
@@ -257,7 +257,7 @@ class ExpensiveModuleGate:
         enabled_modules = {}
         analysis = {}
 
-        for module_name in ExpensiveModuleGate.MODULES.keys():
+        for module_name in ExpensiveModuleGate.MODULES:
             should_enable, module_analysis = ExpensiveModuleGate.should_enable_module(
                 module_name=module_name,
                 capital=capital,
@@ -270,7 +270,7 @@ class ExpensiveModuleGate:
         return enabled_modules, analysis
 
     @staticmethod
-    def get_recommended_modules(capital: Decimal) -> Dict[str, bool]:
+    def get_recommended_modules(capital: Decimal) -> dict[str, bool]:
         """
         Get recommended module configuration for the given capital tier.
 
@@ -304,7 +304,7 @@ class ExpensiveModuleGate:
             recommendations["deep_learning_engine"] = True
         elif capital_tier == "large":  # $250k+
             # Enable all modules
-            for module_name in recommendations.keys():
+            for module_name in recommendations:
                 recommendations[module_name] = True
 
         return recommendations
@@ -324,7 +324,7 @@ class ExpensiveModuleGate:
     @staticmethod
     def get_total_expensive_module_cost(
         capital: Decimal,
-        enabled_modules: Dict[str, bool],
+        enabled_modules: dict[str, bool],
     ) -> Decimal:
         """
         Calculate total estimated monthly cost of all enabled expensive modules.
@@ -349,8 +349,8 @@ class ExpensiveModuleGate:
     def log_module_decision(
         module_name: str,
         capital: Decimal,
-        analysis: Dict,
-        account_id: str = None,
+        analysis: dict,
+        account_id: Optional[str] = None,
     ) -> str:
         """Log module enable/disable decision for audit trail"""
 
@@ -376,9 +376,9 @@ class ExpensiveModuleGate:
     @staticmethod
     def get_cost_summary(
         capital: Decimal,
-        enabled_modules: Dict[str, bool],
+        enabled_modules: dict[str, bool],
         expected_monthly_alpha: Optional[Decimal] = None,
-    ) -> Dict:
+    ) -> dict:
         """
         Get cost summary for all enabled expensive modules.
 

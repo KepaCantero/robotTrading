@@ -10,7 +10,7 @@ Implementa análisis de correlaciones:
 import logging
 from abc import ABC, abstractmethod
 from datetime import datetime
-from typing import Any, Dict, List
+from typing import Any
 
 import numpy as np
 import pandas as pd
@@ -23,7 +23,7 @@ logger = logging.getLogger(__name__)
 class BaseCorrelationAnalyzer(ABC):
     """Clase base para correlation analyzers."""
 
-    def __init__(self, config: Dict[str, Any]):
+    def __init__(self, config: dict[str, Any]):
         """
         Inicializar correlation analyzer.
 
@@ -35,8 +35,8 @@ class BaseCorrelationAnalyzer(ABC):
 
     @abstractmethod
     def analyze_correlations(
-        self, portfolio: Portfolio, prices_history: Dict[str, List[float]], **kwargs
-    ) -> Dict[str, Any]:
+        self, portfolio: Portfolio, prices_history: dict[str, list[float]], **kwargs
+    ) -> dict[str, Any]:
         """
         Analizar correlaciones del portfolio.
 
@@ -57,21 +57,21 @@ class CorrelationAnalyzer(BaseCorrelationAnalyzer):
     Analiza correlaciones entre posiciones del portfolio.
     """
 
-    def __init__(self, config: Dict[str, Any]):
+    def __init__(self, config: dict[str, Any]):
         """Inicializar correlation analyzer."""
         super().__init__(config)
 
         # Configuración
-        self.max_correlation = config.get('max_correlation', 0.8)  # 80% máximo
-        self.correlation_window = config.get('correlation_window', 60)  # 60 días
-        self.diversification_threshold = config.get('diversification_threshold', 0.3)  # 30% mínimo
+        self.max_correlation = config.get("max_correlation", 0.8)  # 80% máximo
+        self.correlation_window = config.get("correlation_window", 60)  # 60 días
+        self.diversification_threshold = config.get("diversification_threshold", 0.3)  # 30% mínimo
 
         # Historial de correlaciones
-        self.correlation_history: List[Dict[str, Any]] = []
+        self.correlation_history: list[dict[str, Any]] = []
 
     def analyze_correlations(
-        self, portfolio: Portfolio, prices_history: Dict[str, List[float]], **kwargs
-    ) -> Dict[str, Any]:
+        self, portfolio: Portfolio, prices_history: dict[str, list[float]], **kwargs
+    ) -> dict[str, Any]:
         """
         Analizar correlaciones completas del portfolio.
 
@@ -94,12 +94,12 @@ class CorrelationAnalyzer(BaseCorrelationAnalyzer):
 
             if len(relevant_prices) < 2:
                 return {
-                    'correlation_matrix': {},
-                    'average_correlation': 0.0,
-                    'max_correlation': 0.0,
-                    'violations': [],
-                    'diversification_score': 0.0,
-                    'error': 'Insufficient data for correlation analysis',
+                    "correlation_matrix": {},
+                    "average_correlation": 0.0,
+                    "max_correlation": 0.0,
+                    "violations": [],
+                    "diversification_score": 0.0,
+                    "error": "Insufficient data for correlation analysis",
                 }
 
             # Calcular matriz de correlación
@@ -120,22 +120,22 @@ class CorrelationAnalyzer(BaseCorrelationAnalyzer):
             position_limits = self._calculate_position_limits(correlation_matrix, portfolio_symbols)
 
             return {
-                'correlation_matrix': correlation_matrix,
-                'average_correlation': correlation_analysis['average'],
-                'max_correlation': correlation_analysis['max'],
-                'min_correlation': correlation_analysis['min'],
-                'violations': violations,
-                'diversification_score': diversification_score,
-                'position_limits': position_limits,
-                'timestamp': datetime.utcnow().isoformat(),
+                "correlation_matrix": correlation_matrix,
+                "average_correlation": correlation_analysis["average"],
+                "max_correlation": correlation_analysis["max"],
+                "min_correlation": correlation_analysis["min"],
+                "violations": violations,
+                "diversification_score": diversification_score,
+                "position_limits": position_limits,
+                "timestamp": datetime.utcnow().isoformat(),
             }
         except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
             self.logger.error(f"Error analizando correlaciones: {e}", exc_info=True)
-            return {'error': str(e)}
+            return {"error": str(e)}
 
     def _calculate_correlation_matrix(
-        self, prices_history: Dict[str, List[float]]
-    ) -> Dict[str, Dict[str, float]]:
+        self, prices_history: dict[str, list[float]]
+    ) -> dict[str, dict[str, float]]:
         """Calcular matriz de correlación."""
         # Convertir a DataFrame
         df = pd.DataFrame(prices_history)
@@ -177,57 +177,65 @@ class CorrelationAnalyzer(BaseCorrelationAnalyzer):
         return result
 
     def _analyze_correlations(
-        self, correlation_matrix: Dict[str, Dict[str, float]], symbols: List[str]
-    ) -> Dict[str, Any]:
+        self, correlation_matrix: dict[str, dict[str, float]], symbols: list[str]
+    ) -> dict[str, Any]:
         """Analizar estadísticas de correlaciones."""
         correlations = []
 
         for symbol1 in symbols:
             for symbol2 in symbols:
-                if symbol1 != symbol2 and symbol1 in correlation_matrix and symbol2 in correlation_matrix[symbol1]:
+                if (
+                    symbol1 != symbol2
+                    and symbol1 in correlation_matrix
+                    and symbol2 in correlation_matrix[symbol1]
+                ):
                     corr = correlation_matrix[symbol1][symbol2]
                     # Skip None values (insufficient data)
                     if corr is not None:
                         correlations.append(corr)
 
         if not correlations:
-            return {'average': None, 'max': None, 'min': None, 'std': None, 'count': 0}
+            return {"average": None, "max": None, "min": None, "std": None, "count": 0}
 
         return {
-            'average': float(np.mean(correlations)),
-            'max': float(np.max(correlations)),
-            'min': float(np.min(correlations)),
-            'std': float(np.std(correlations)),
-            'median': float(np.median(correlations)),
+            "average": float(np.mean(correlations)),
+            "max": float(np.max(correlations)),
+            "min": float(np.min(correlations)),
+            "std": float(np.std(correlations)),
+            "median": float(np.median(correlations)),
         }
 
     def _detect_correlation_violations(
-        self, correlation_matrix: Dict[str, Dict[str, float]], symbols: List[str]
-    ) -> List[Dict[str, Any]]:
+        self, correlation_matrix: dict[str, dict[str, float]], symbols: list[str]
+    ) -> list[dict[str, Any]]:
         """Detectar violaciones de correlación."""
         violations = []
 
         for symbol1 in symbols:
             for symbol2 in symbols:
-                if symbol1 != symbol2 and symbol1 in correlation_matrix and symbol2 in correlation_matrix[symbol1]:
+                if (
+                    symbol1 != symbol2
+                    and symbol1 in correlation_matrix
+                    and symbol2 in correlation_matrix[symbol1]
+                ):
                     corr = abs(correlation_matrix[symbol1][symbol2])
 
                     if corr > self.max_correlation:
                         violations.append(
                             {
-                                'type': 'high_correlation',
-                                'symbol1': symbol1,
-                                'symbol2': symbol2,
-                                'correlation': corr,
-                                'limit': self.max_correlation,
-                                'severity': 'high' if corr > 0.9 else 'medium',
+                                "type": "high_correlation",
+                                "symbol1": symbol1,
+                                "symbol2": symbol2,
+                                "correlation": corr,
+                                "limit": self.max_correlation,
+                                "severity": "high" if corr > 0.9 else "medium",
                             }
                         )
 
         return violations
 
     def _calculate_diversification_score(
-        self, correlation_matrix: Dict[str, Dict[str, float]], portfolio: Portfolio
+        self, correlation_matrix: dict[str, dict[str, float]], portfolio: Portfolio
     ) -> float:
         """
         Calcular diversification score.
@@ -244,7 +252,11 @@ class CorrelationAnalyzer(BaseCorrelationAnalyzer):
         correlations = []
         for symbol1 in symbols:
             for symbol2 in symbols:
-                if symbol1 != symbol2 and symbol1 in correlation_matrix and symbol2 in correlation_matrix[symbol1]:
+                if (
+                    symbol1 != symbol2
+                    and symbol1 in correlation_matrix
+                    and symbol2 in correlation_matrix[symbol1]
+                ):
                     corr = abs(correlation_matrix[symbol1][symbol2])
                     correlations.append(corr)
 
@@ -260,8 +272,8 @@ class CorrelationAnalyzer(BaseCorrelationAnalyzer):
         return float(score)
 
     def _calculate_position_limits(
-        self, correlation_matrix: Dict[str, Dict[str, float]], symbols: List[str]
-    ) -> Dict[str, Dict[str, Any]]:
+        self, correlation_matrix: dict[str, dict[str, float]], symbols: list[str]
+    ) -> dict[str, dict[str, Any]]:
         """Calcular límites de posición basados en correlaciones."""
         position_limits = {}
 
@@ -271,30 +283,29 @@ class CorrelationAnalyzer(BaseCorrelationAnalyzer):
             if symbol in correlation_matrix:
                 for other_symbol, corr in correlation_matrix[symbol].items():
                     if other_symbol != symbol and abs(corr) > self.max_correlation:
-                        high_corr_symbols.append({'symbol': other_symbol, 'correlation': corr})
+                        high_corr_symbols.append({"symbol": other_symbol, "correlation": corr})
 
             # Calcular límite sugerido
             # Si hay muchas correlaciones altas, reducir límite
             n_high_corr = len(high_corr_symbols)
-            if n_high_corr > 0:
-                # Reducir límite proporcionalmente
-                suggested_limit = max(0.05, 0.20 - (n_high_corr * 0.03))
-            else:
-                suggested_limit = 0.20  # Límite estándar
+            # Reducir límite proporcionalmente si hay correlaciones altas
+            suggested_limit = (
+                max(0.05, 0.2 - n_high_corr * 0.03) if n_high_corr > 0 else 0.2
+            )  # Límite estándar
 
             position_limits[symbol] = {
-                'suggested_limit': suggested_limit,
-                'high_correlation_count': n_high_corr,
-                'high_correlation_symbols': high_corr_symbols,
+                "suggested_limit": suggested_limit,
+                "high_correlation_count": n_high_corr,
+                "high_correlation_symbols": high_corr_symbols,
             }
 
         return position_limits
 
-    def get_status(self) -> Dict[str, Any]:
+    def get_status(self) -> dict[str, Any]:
         """Obtener estado del analyzer."""
         return {
-            'max_correlation': self.max_correlation,
-            'correlation_window': self.correlation_window,
-            'diversification_threshold': self.diversification_threshold,
-            'history_size': len(self.correlation_history),
+            "max_correlation": self.max_correlation,
+            "correlation_window": self.correlation_window,
+            "diversification_threshold": self.diversification_threshold,
+            "history_size": len(self.correlation_history),
         }

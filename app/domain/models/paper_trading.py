@@ -9,7 +9,7 @@ import logging
 from datetime import datetime
 from decimal import Decimal
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 from uuid import UUID, uuid4
 
 from pydantic import BaseModel, Field, field_validator, model_validator
@@ -83,7 +83,7 @@ class PaperTrade(BaseModel):
     # Metadata
     strategy_id: Optional[str] = Field(None, description="Strategy that generated the trade")
     signal_id: Optional[UUID] = Field(None, description="Signal that triggered the trade")
-    metadata: Dict[str, Any] = Field(default_factory=dict, description="Additional trade metadata")
+    metadata: dict[str, Any] = Field(default_factory=dict, description="Additional trade metadata")
 
     @field_validator("quantity", "price", "filled_quantity", "filled_price")
     @classmethod
@@ -218,7 +218,7 @@ class PaperPosition(BaseModel):
     last_updated: datetime = Field(default_factory=datetime.utcnow, description="Last update time")
 
     # Metadata
-    metadata: Dict[str, Any] = Field(
+    metadata: dict[str, Any] = Field(
         default_factory=dict, description="Additional position metadata"
     )
 
@@ -325,7 +325,7 @@ class PaperPortfolio(BaseModel):
     total_equity: Decimal = Field(..., ge=0, description="Total portfolio equity")
 
     # Positions
-    positions: List[PaperPosition] = Field(default_factory=list, description="Current positions")
+    positions: list[PaperPosition] = Field(default_factory=list, description="Current positions")
 
     # Performance metrics
     total_pnl: Decimal = Field(default=Decimal("0"), description="Total portfolio P&L")
@@ -360,7 +360,7 @@ class PaperPortfolio(BaseModel):
     last_updated: datetime = Field(default_factory=datetime.utcnow, description="Last update time")
 
     # Metadata
-    metadata: Dict[str, Any] = Field(
+    metadata: dict[str, Any] = Field(
         default_factory=dict, description="Additional portfolio metadata"
     )
 
@@ -494,7 +494,7 @@ class PaperTradingConfig(BaseModel):
     last_updated: datetime = Field(default_factory=datetime.utcnow, description="Last update time")
 
     # Metadata
-    metadata: Dict[str, Any] = Field(
+    metadata: dict[str, Any] = Field(
         default_factory=dict, description="Additional configuration metadata"
     )
 
@@ -545,7 +545,7 @@ class PaperTradingSession(BaseModel):
     session_return: Decimal = Field(default=Decimal("0"), description="Session return percentage")
 
     # Metadata
-    metadata: Dict[str, Any] = Field(
+    metadata: dict[str, Any] = Field(
         default_factory=dict, description="Additional session metadata"
     )
 

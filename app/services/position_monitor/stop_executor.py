@@ -17,7 +17,7 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 from decimal import Decimal
 from enum import Enum
-from typing import TYPE_CHECKING, Any, Dict, Optional
+from typing import TYPE_CHECKING, Any, Optional
 
 from app.shared.utils.decimal_utils import to_decimal
 
@@ -48,9 +48,9 @@ class StopExecutionResult:
     error_message: Optional[str] = None
     executed_at: Optional[datetime] = None
     execution_time_ms: Optional[int] = None
-    broker_response: Optional[Dict[str, Any]] = None
+    broker_response: Optional[dict[str, Any]] = None
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for serialization."""
         return {
             "success": self.success,
@@ -159,7 +159,7 @@ class StopExecutor:
             except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
                 logger.error(
                     f"STOP LOSS ERROR (attempt {attempt + 1}/{retry_attempts + 1}): "
-                    f"{position.symbol} - {str(e)}"
+                    f"{position.symbol} - {e!s}"
                 )
 
                 if attempt < retry_attempts:
@@ -173,7 +173,7 @@ class StopExecutor:
                     symbol=position.symbol,
                     quantity=position.quantity,
                     requested_price=position.stop_loss_price,
-                    error_message=f"Failed after {retry_attempts + 1} attempts: {str(e)}",
+                    error_message=f"Failed after {retry_attempts + 1} attempts: {e!s}",
                     executed_at=datetime.now(timezone.utc),
                 )
 
@@ -237,7 +237,7 @@ class StopExecutor:
             except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
                 logger.error(
                     f"TAKE PROFIT ERROR (attempt {attempt + 1}/{retry_attempts + 1}): "
-                    f"{position.symbol} - {str(e)}"
+                    f"{position.symbol} - {e!s}"
                 )
 
                 if attempt < retry_attempts:
@@ -251,7 +251,7 @@ class StopExecutor:
                     symbol=position.symbol,
                     quantity=position.quantity,
                     requested_price=position.take_profit_price,
-                    error_message=f"Failed after {retry_attempts + 1} attempts: {str(e)}",
+                    error_message=f"Failed after {retry_attempts + 1} attempts: {e!s}",
                     executed_at=datetime.now(timezone.utc),
                 )
 

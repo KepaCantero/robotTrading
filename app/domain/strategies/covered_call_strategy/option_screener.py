@@ -20,7 +20,7 @@ SOLID Principles:
 import logging
 import time
 from decimal import Decimal
-from typing import List, Optional
+from typing import Optional
 
 from .greeks_calculator import GreeksCalculator
 from .models import (
@@ -70,7 +70,7 @@ class OptionScreener:
 
     def screen(
         self,
-        options: List[CallOption],
+        options: list[CallOption],
         underlying_price: Decimal,
     ) -> OptionScreenerResult:
         """
@@ -136,7 +136,7 @@ class OptionScreener:
 
         return result
 
-    def _evaluate_option(self, option: CallOption) -> List[str]:
+    def _evaluate_option(self, option: CallOption) -> list[str]:
         """
         Evaluar opción contra todos los criterios.
 
@@ -177,17 +177,19 @@ class OptionScreener:
             option.open_interest is not None
             and option.open_interest < self.criteria.min_open_interest
         ):
-            failures.append(
-                f"OI bajo ({option.open_interest} < {self.criteria.min_open_interest})"
-            )
+            failures.append(f"OI bajo ({option.open_interest} < {self.criteria.min_open_interest})")
 
-        if self.criteria.min_volume > 0 and option.volume is not None and option.volume < self.criteria.min_volume:
+        if (
+            self.criteria.min_volume > 0
+            and option.volume is not None
+            and option.volume < self.criteria.min_volume
+        ):
             failures.append(f"Volumen bajo ({option.volume} < {self.criteria.min_volume})")
 
         # 5. Target Delta (si está especificado)
-        if self.criteria.target_delta is not None and hasattr(option, 'metadata'):
+        if self.criteria.target_delta is not None and hasattr(option, "metadata"):
             try:
-                delta_str = option.metadata.get('delta')
+                delta_str = option.metadata.get("delta")
                 if delta_str:
                     delta = float(delta_str)
                     target = float(self.criteria.target_delta)
@@ -244,9 +246,9 @@ class OptionScreener:
             score += Decimal(str(premium_score))
 
         # 2. Theta score (0-25 puntos)
-        if hasattr(option, 'metadata') and 'theta' in option.metadata:
+        if hasattr(option, "metadata") and "theta" in option.metadata:
             try:
-                theta = float(option.metadata['theta'])
+                theta = float(option.metadata["theta"])
                 # Más negativo = más theta decay para el vendedor = mejor
                 theta_score = min(25, abs(theta) * 100)
                 score += Decimal(str(theta_score))
@@ -254,8 +256,8 @@ class OptionScreener:
                 score += Decimal("10")  # Neutral si no hay theta
 
         # 3. Assignment probability score (0-25 puntos)
-        if hasattr(option, 'metadata') and 'assignment_probability' in option.metadata:
-            prob = option.metadata['assignment_probability']
+        if hasattr(option, "metadata") and "assignment_probability" in option.metadata:
+            prob = option.metadata["assignment_probability"]
             prob_scores = {
                 AssignmentProbability.VERY_LOW: 25,
                 AssignmentProbability.LOW: 20,
@@ -284,10 +286,10 @@ class OptionScreener:
 
     def get_best_option(
         self,
-        options: List[CallOption],
+        options: list[CallOption],
         underlying_price: Decimal,
         top_n: int = 1,
-    ) -> List[CallOption]:
+    ) -> list[CallOption]:
         """
         Obtener las mejores opciones después del screening.
 
@@ -313,10 +315,10 @@ class OptionScreener:
 
     def filter_by_moneyness(
         self,
-        options: List[CallOption],
+        options: list[CallOption],
         moneyness: Moneyness,
         underlying_price: Decimal,
-    ) -> List[CallOption]:
+    ) -> list[CallOption]:
         """
         Filtrar opciones por moneyness.
 
@@ -340,10 +342,10 @@ class OptionScreener:
 
     def filter_by_dte(
         self,
-        options: List[CallOption],
+        options: list[CallOption],
         min_dte: int,
         max_dte: int,
-    ) -> List[CallOption]:
+    ) -> list[CallOption]:
         """
         Filtrar opciones por días al vencimiento.
 
@@ -359,10 +361,10 @@ class OptionScreener:
 
     def filter_by_premium(
         self,
-        options: List[CallOption],
+        options: list[CallOption],
         min_premium_pct: Decimal,
         underlying_price: Decimal,
-    ) -> List[CallOption]:
+    ) -> list[CallOption]:
         """
         Filtrar opciones por prima mínima.
 

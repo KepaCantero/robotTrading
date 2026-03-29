@@ -11,7 +11,7 @@ import uuid
 from dataclasses import dataclass, field
 from datetime import datetime
 from decimal import Decimal
-from typing import Dict, List, Optional
+from typing import Optional
 
 from fastapi import Depends
 
@@ -78,16 +78,16 @@ class OrderManager:
         self.broker = broker or get_broker_connector()
         # Create RiskGates instance directly if not provided (avoiding Depends() for direct instantiation)
         if risk_gates is None:
-            from .risk_gates import RiskGates as RG
+            from .risk_gates import RiskGates as RiskGatesImpl
 
-            self.risk_gates = RG(broker=self.broker)
+            self.risk_gates = RiskGatesImpl(broker=self.broker)
         else:
             self.risk_gates = risk_gates
-        self.pending_orders: Dict[str, BrokerOrder] = {}
-        self.executed_orders: Dict[str, BrokerOrder] = {}
-        self.order_history: List[BrokerOrder] = []
-        self.order_errors: Dict[str, OrderError] = {}
-        self.executions: List[OrderExecution] = []
+        self.pending_orders: dict[str, BrokerOrder] = {}
+        self.executed_orders: dict[str, BrokerOrder] = {}
+        self.order_history: list[BrokerOrder] = []
+        self.order_errors: dict[str, OrderError] = {}
+        self.executions: list[OrderExecution] = []
         logger.info("✅ OrderManager initialized with risk validation")
 
     async def place_order(
@@ -256,7 +256,7 @@ class OrderManager:
                 logger.info(f"✅ Order canceled: {order_id}")
             return success
         except (OSError, ValueError) as e:
-            logger.error(f"❌ Error canceling order: {str(e)}")
+            logger.error(f"❌ Error canceling order: {e!s}")
             return False
 
     async def cancel_all_orders(self) -> int:
@@ -396,7 +396,7 @@ class OrderManager:
         logger.info(f"✅ Recorded execution: {order_id} - {quantity} {symbol} @ {price}")
         return execution
 
-    async def get_pending_orders(self, symbol: Optional[str] = None) -> List[BrokerOrder]:
+    async def get_pending_orders(self, symbol: Optional[str] = None) -> list[BrokerOrder]:
         """
         Get pending orders.
 
@@ -411,7 +411,7 @@ class OrderManager:
             orders = [o for o in orders if o.symbol == symbol]
         return orders
 
-    async def get_executed_orders(self, symbol: Optional[str] = None) -> List[BrokerOrder]:
+    async def get_executed_orders(self, symbol: Optional[str] = None) -> list[BrokerOrder]:
         """
         Get executed orders.
 
@@ -426,7 +426,7 @@ class OrderManager:
             orders = [o for o in orders if o.symbol == symbol]
         return orders
 
-    async def get_order_history(self, symbol: Optional[str] = None) -> List[BrokerOrder]:
+    async def get_order_history(self, symbol: Optional[str] = None) -> list[BrokerOrder]:
         """
         Get complete order history.
 
@@ -445,7 +445,7 @@ class OrderManager:
         self,
         symbol: Optional[str] = None,
         since: Optional[datetime] = None,
-    ) -> List[OrderExecution]:
+    ) -> list[OrderExecution]:
         """
         Get execution history.
 
@@ -496,7 +496,7 @@ class OrderManager:
         logger.warning(f"⚠️ Order error {error_code}: {error_message}")
         return error
 
-    async def get_order_errors(self, symbol: Optional[str] = None) -> List[OrderError]:
+    async def get_order_errors(self, symbol: Optional[str] = None) -> list[OrderError]:
         """
         Get recorded order errors.
 

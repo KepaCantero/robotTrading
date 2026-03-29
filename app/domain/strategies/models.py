@@ -21,7 +21,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from decimal import Decimal
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
@@ -408,7 +408,7 @@ class FactorStrategyConfig(BaseModel):
         )
         # Get tolerance from config
         cfg = get_config()
-        tolerance = Decimal(str(getattr(cfg.trading, 'factor_weights_tolerance', 0.05)))
+        tolerance = Decimal(str(getattr(cfg.trading, "factor_weights_tolerance", 0.05)))
         if abs(total - Decimal("1.0")) > tolerance:
             logger.error(
                 "Factor weights validation failed",
@@ -439,7 +439,7 @@ class FactorStrategyConfig(BaseModel):
         total_tilt = abs(self.value_tilt) + abs(self.size_tilt) + abs(self.profitability_tilt)
         # Get tilt limit from config
         cfg = get_config()
-        max_tilt = Decimal(str(getattr(cfg.trading, 'max_total_tilt', 0.8)))
+        max_tilt = Decimal(str(getattr(cfg.trading, "max_total_tilt", 0.8)))
         if total_tilt > max_tilt:
             logger.error(
                 "Factor tilt validation failed",
@@ -460,7 +460,7 @@ class FactorStrategyConfig(BaseModel):
         )
         return self
 
-    def get_factor_tilts(self) -> List[FactorTilt]:
+    def get_factor_tilts(self) -> list[FactorTilt]:
         """Get list of factor tilts as dataclasses."""
         logger.debug(
             "Generating factor tilts",
@@ -573,7 +573,7 @@ class FactorPosition(BaseModel):
 
     symbol: str = Field(..., description="Stock symbol")
     weight: Decimal = Field(..., ge=0, le=1, description="Portfolio weight")
-    factor_exposure: Dict[str, Decimal] = Field(
+    factor_exposure: dict[str, Decimal] = Field(
         default_factory=dict, description="Factor exposures"
     )
     expected_return: Optional[Decimal] = Field(
@@ -591,19 +591,19 @@ class FactorPortfolio(BaseModel):
         extra="forbid",
     )
 
-    positions: List[FactorPosition] = Field(default_factory=list, description="Portfolio positions")
+    positions: list[FactorPosition] = Field(default_factory=list, description="Portfolio positions")
     total_value: Decimal = Field(..., ge=0, description="Total portfolio value")
     cash: Decimal = Field(Decimal("0"), ge=0, description="Cash balance")
     created_at: datetime = Field(default_factory=datetime.utcnow, description="Creation timestamp")
     rebalance_at: Optional[datetime] = Field(None, description="Next rebalance date")
 
     # Factor exposures
-    factor_exposures: Dict[str, Decimal] = Field(
+    factor_exposures: dict[str, Decimal] = Field(
         default_factory=dict, description="Portfolio factor exposures"
     )
 
     # Sector weights
-    sector_weights: Dict[str, Decimal] = Field(default_factory=dict, description="Sector weights")
+    sector_weights: dict[str, Decimal] = Field(default_factory=dict, description="Sector weights")
 
     @property
     def positions_count(self) -> int:
@@ -643,10 +643,10 @@ class FactorPortfolio(BaseModel):
 class FactorOptimizationResult:
     """Result of factor optimization."""
 
-    weights: Dict[str, Decimal]  # Optimized weights
+    weights: dict[str, Decimal]  # Optimized weights
     expected_return: Decimal
     expected_risk: Decimal
-    factor_exposures: Dict[str, Decimal]
+    factor_exposures: dict[str, Decimal]
     optimization_status: str  # "optimal", "suboptimal", "failed"
     iterations: int
     objective_value: Decimal
@@ -658,9 +658,9 @@ class FactorRebalanceRecommendation:
 
     needs_rebalance: bool
     reason: str
-    current_weights: Dict[str, Decimal]
-    target_weights: Dict[str, Decimal]
-    trades_required: List[tuple[str, Decimal, Decimal]]  # (symbol, current, target)
+    current_weights: dict[str, Decimal]
+    target_weights: dict[str, Decimal]
+    trades_required: list[tuple[str, Decimal, Decimal]]  # (symbol, current, target)
     estimated_cost: Decimal
     expected_benefit: Decimal
 
@@ -775,7 +775,7 @@ class DividendStrategyConfig(BaseModel):
     min_dividend_safety: str = Field(
         default="moderate", description="Minimum dividend safety rating"
     )
-    excluded_sectors: List[str] = Field(default_factory=list, description="Sectors to exclude")
+    excluded_sectors: list[str] = Field(default_factory=list, description="Sectors to exclude")
     exclude_reits: bool = Field(default=False, description="Exclude REITs from screening")
     exclude_mlps: bool = Field(default=False, description="Exclude MLPs from screening")
     max_pe_ratio: Optional[Decimal] = Field(
@@ -926,8 +926,8 @@ class LowVolatilityStockResult:
 class LowVolatilityScreeningResult:
     """Result of low volatility stock screening operation."""
 
-    passed_stocks: List[LowVolatilityStockResult]
-    failed_stocks: Dict[str, List[str]]
+    passed_stocks: list[LowVolatilityStockResult]
+    failed_stocks: dict[str, list[str]]
     total_evaluated: int
     screening_time_ms: float
     criteria: "LowVolatilityScreeningCriteria"
@@ -996,11 +996,11 @@ class LowVolatilityStrategyConfig(BaseModel):
     require_defensive_sector: bool = Field(
         default=False, description="Require stocks to be in defensive sectors"
     )
-    preferred_sectors: List[str] = Field(
+    preferred_sectors: list[str] = Field(
         default_factory=lambda: ["Utilities", "Consumer Staples", "Healthcare", "Real Estate"],
         description="Preferred defensive sectors",
     )
-    avoid_sectors: List[str] = Field(
+    avoid_sectors: list[str] = Field(
         default_factory=lambda: ["Technology", "Biotechnology", "Energy", "Materials"],
         description="Sectors to avoid",
     )
@@ -1046,8 +1046,8 @@ class DividendScreeningCriteria(BaseModel):
     )
     min_years_of_growth: int = Field(default=3, description="Minimum years of dividend growth")
     min_fcf_coverage: Decimal = Field(default=Decimal("1.5"), description="Minimum FCF coverage")
-    exclude_sectors: List[str] = Field(default_factory=list, description="Sectors to exclude")
-    excluded_sectors: List[str] = Field(
+    exclude_sectors: list[str] = Field(default_factory=list, description="Sectors to exclude")
+    excluded_sectors: list[str] = Field(
         default_factory=list, description="Sectors to exclude (alias)"
     )
     min_yield: Decimal = Field(default=Decimal("2.0"), description="Minimum yield")
@@ -1093,11 +1093,11 @@ class LowVolatilityScreeningCriteria(BaseModel):
     min_stability_score: Decimal = Field(
         default=Decimal("50.0"), description="Minimum stability score"
     )
-    preferred_sectors: List[str] = Field(
+    preferred_sectors: list[str] = Field(
         default_factory=lambda: ["Utilities", "Consumer Staples", "Healthcare", "Real Estate"],
         description="Preferred defensive sectors",
     )
-    avoid_sectors: List[str] = Field(default_factory=list, description="Sectors to avoid")
+    avoid_sectors: list[str] = Field(default_factory=list, description="Sectors to avoid")
     require_defensive: bool = Field(default=False, description="Require defensive sector")
 
 
@@ -1124,8 +1124,8 @@ class ScreeningResult:
     passed: bool
     symbol: str
     score: Decimal
-    reasons: List[str]
-    details: Dict[str, Any] = field(default_factory=dict)
+    reasons: list[str]
+    details: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
@@ -1142,8 +1142,8 @@ class DividendStockResult:
 class DividendScreeningResult:
     """Result of dividend stock screening operation."""
 
-    passed_stocks: List[DividendStockResult]
-    failed_stocks: Dict[str, List[str]]
+    passed_stocks: list[DividendStockResult]
+    failed_stocks: dict[str, list[str]]
     total_evaluated: int
     screening_time_ms: float
     criteria: DividendScreeningCriteria
@@ -1226,7 +1226,7 @@ class CallOption:
     moneyness: Moneyness = Moneyness.ATM  # Moneyness classification
     intrinsic_value: Optional[Decimal] = None  # Intrinsic value
     time_value: Optional[Decimal] = None  # Time value
-    metadata: Dict[str, Any] = field(default_factory=dict)  # Additional metadata
+    metadata: dict[str, Any] = field(default_factory=dict)  # Additional metadata
 
     def __post_init__(self):
         """Calculate derived fields after initialization."""
@@ -1296,8 +1296,8 @@ class OptionScreenerResult:
 
     symbol: str  # Underlying symbol
     underlying_price: Decimal  # Current price
-    options_passed: List[CallOption]  # Options that passed screening
-    options_failed: Dict[str, List[str]]  # Options that failed with reasons
+    options_passed: list[CallOption]  # Options that passed screening
+    options_failed: dict[str, list[str]]  # Options that failed with reasons
     total_evaluated: int  # Total options evaluated
     screening_time_ms: float  # Screening time in milliseconds
     criteria: OptionScreeningCriteria  # Criteria used for screening
@@ -1410,7 +1410,7 @@ class CryptoAsset:
     market_cap: Decimal
     price: Decimal
     avg_daily_volume: Decimal
-    exchanges: List[CryptoExchange]
+    exchanges: list[CryptoExchange]
     btc_correlation: Optional[float] = None
     volatility_30d: Optional[Decimal] = None
     circulating_supply: Optional[Decimal] = None
@@ -1432,8 +1432,8 @@ class CryptoScreeningResult:
         min_liquidity_score: Minimum liquidity score used for screening
     """
 
-    passed_assets: List[CryptoAsset]
-    failed_assets: Dict[str, List[str]]
+    passed_assets: list[CryptoAsset]
+    failed_assets: dict[str, list[str]]
     total_evaluated: int
     screening_time_ms: float
     min_market_cap: Optional[Decimal] = None
@@ -1510,7 +1510,7 @@ class CryptoPortfolio:
         last_rebalanced: When portfolio was last rebalanced
     """
 
-    positions: Dict[str, Decimal]
+    positions: dict[str, Decimal]
     total_value: Decimal
     btc_weight: Decimal
     eth_weight: Decimal

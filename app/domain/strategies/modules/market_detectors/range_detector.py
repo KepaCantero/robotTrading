@@ -5,7 +5,7 @@ VECTORIZADO: Usa numpy para todos los cálculos. Sin bucles Python.
 """
 
 import logging
-from typing import Dict, List, Union
+from typing import Union
 
 import numpy as np
 
@@ -25,7 +25,7 @@ class RangeDetector(BaseMarketDetector):
     NOTA: Todas las implementaciones están vectorizadas con numpy.
     """
 
-    def __init__(self, config: Dict):
+    def __init__(self, config: dict):
         """Inicializar detector de rangos."""
         super().__init__("range_detector", config)
 
@@ -35,7 +35,7 @@ class RangeDetector(BaseMarketDetector):
         self.squeeze_threshold = range_config.get("squeeze_threshold", 0.1)
         self.max_range_pct = range_config.get("max_range_pct", 0.03)  # 3%
 
-    def detect(self, price_history: Union[List[float], np.ndarray], **kwargs) -> Dict:
+    def detect(self, price_history: Union[list[float], np.ndarray], **kwargs) -> dict:
         """
         Detectar si el mercado está en rango.
 
@@ -55,31 +55,31 @@ class RangeDetector(BaseMarketDetector):
 
         if not self.enabled or len(prices) < self.lookback_period:
             return {
-                'in_range': False,
-                'range_size_pct': 1.0,
-                'confidence': 0.5,
-                'method': self.method,
+                "in_range": False,
+                "range_size_pct": 1.0,
+                "confidence": 0.5,
+                "method": self.method,
             }
 
         # Check for NaN/Inf
         if not np.isfinite(prices).all():
             logger.warning("Price history contains NaN or Inf values")
             return {
-                'in_range': False,
-                'range_size_pct': 1.0,
-                'confidence': 0.0,
-                'method': self.method,
+                "in_range": False,
+                "range_size_pct": 1.0,
+                "confidence": 0.0,
+                "method": self.method,
             }
 
         # Si hay tendencia clara (pasado como parámetro), no está en rango
         trend_info = kwargs.get("trend_info", {})
-        if trend_info.get('strength', 0) > 0.5:
+        if trend_info.get("strength", 0) > 0.5:
             return {
-                'in_range': False,
-                'range_size_pct': 0.0,
-                'confidence': 1.0,
-                'method': self.method,
-                'reason': 'Strong trend detected',
+                "in_range": False,
+                "range_size_pct": 0.0,
+                "confidence": 1.0,
+                "method": self.method,
+                "reason": "Strong trend detected",
             }
 
         if self.method == "bollinger_squeeze":
@@ -90,7 +90,7 @@ class RangeDetector(BaseMarketDetector):
             logger.warning(f"Unknown range detection method: {self.method}")
             return self._detect_price_range(prices)
 
-    def _detect_price_range(self, prices: np.ndarray) -> Dict:
+    def _detect_price_range(self, prices: np.ndarray) -> dict:
         """Detectar rango basado en tamaño de movimiento de precios - VECTORIZADO."""
         recent_prices = prices[-self.lookback_period :]
 
@@ -110,14 +110,14 @@ class RangeDetector(BaseMarketDetector):
             confidence = 0.0
 
         return {
-            'in_range': in_range,
-            'range_size_pct': float(range_pct),
-            'confidence': float(confidence),
-            'method': 'price_range',
-            'metadata': {'price_range': price_range, 'avg_price': avg_price},
+            "in_range": in_range,
+            "range_size_pct": float(range_pct),
+            "confidence": float(confidence),
+            "method": "price_range",
+            "metadata": {"price_range": price_range, "avg_price": avg_price},
         }
 
-    def _detect_bollinger_squeeze(self, prices: np.ndarray, **kwargs) -> Dict:
+    def _detect_bollinger_squeeze(self, prices: np.ndarray, **kwargs) -> dict:
         """
         Detectar rango usando Bollinger Squeeze - COMPLETAMENTE VECTORIZADO.
 
@@ -131,10 +131,10 @@ class RangeDetector(BaseMarketDetector):
 
         if len(prices) < period:
             return {
-                'in_range': False,
-                'range_size_pct': 1.0,
-                'confidence': 0.5,
-                'method': 'bollinger_squeeze',
+                "in_range": False,
+                "range_size_pct": 1.0,
+                "confidence": 0.5,
+                "method": "bollinger_squeeze",
             }
 
         try:
@@ -172,10 +172,7 @@ class RangeDetector(BaseMarketDetector):
             # Position within bands
             current_price = float(prices[-1])
             band_range = upper_band - lower_band
-            if band_range > 0:
-                position_in_bands = (current_price - lower_band) / band_range
-            else:
-                position_in_bands = 0.5
+            position_in_bands = (current_price - lower_band) / band_range if band_range > 0 else 0.5
 
             # Confidence
             if in_squeeze:
@@ -185,19 +182,19 @@ class RangeDetector(BaseMarketDetector):
                 confidence = 0.3
 
             return {
-                'in_range': in_squeeze,
-                'range_size_pct': float(band_width),
-                'confidence': float(confidence),
-                'method': 'bollinger_squeeze',
-                'metadata': {
-                    'upper_band': float(upper_band),
-                    'lower_band': float(lower_band),
-                    'sma': float(current_sma),
-                    'band_width': float(band_width),
-                    'squeeze_threshold': float(squeeze_threshold),
-                    'position_in_bands': float(position_in_bands),
-                    'is_near_upper': position_in_bands > 0.8,
-                    'is_near_lower': position_in_bands < 0.2,
+                "in_range": in_squeeze,
+                "range_size_pct": float(band_width),
+                "confidence": float(confidence),
+                "method": "bollinger_squeeze",
+                "metadata": {
+                    "upper_band": float(upper_band),
+                    "lower_band": float(lower_band),
+                    "sma": float(current_sma),
+                    "band_width": float(band_width),
+                    "squeeze_threshold": float(squeeze_threshold),
+                    "position_in_bands": float(position_in_bands),
+                    "is_near_upper": position_in_bands > 0.8,
+                    "is_near_lower": position_in_bands < 0.2,
                 },
             }
 

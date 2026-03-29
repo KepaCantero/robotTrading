@@ -9,7 +9,7 @@ import logging
 from datetime import datetime
 from decimal import Decimal
 from enum import Enum
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Optional
 
 from pydantic import BaseModel, Field, field_validator
 
@@ -99,7 +99,7 @@ class CostBreakdownModel(BaseModel):
         return v
 
     @staticmethod
-    def _has_validation_data(info, required_keys: List[str]) -> bool:
+    def _has_validation_data(info, required_keys: list[str]) -> bool:
         """Check if validation info contains all required keys."""
         if info is None or not hasattr(info, "data"):
             return False
@@ -127,7 +127,7 @@ class CostAnalysisResultModel(BaseModel):
     """Pydantic model for cost analysis result."""
 
     strategy_name: str = Field(..., description="Strategy name", env="STRATEGY_NAME")
-    analysis_period: Tuple[datetime, datetime] = Field(..., description="Analysis period")
+    analysis_period: tuple[datetime, datetime] = Field(..., description="Analysis period")
     total_trades: int = Field(..., ge=0, description="Total number of trades", env="TOTAL_TRADES")
 
     # Cost metrics
@@ -162,7 +162,7 @@ class CostAnalysisResultModel(BaseModel):
     )
 
     # Cost breakdown by trade
-    cost_breakdowns: List[CostBreakdownModel] = Field(..., description="Cost breakdowns by trade")
+    cost_breakdowns: list[CostBreakdownModel] = Field(..., description="Cost breakdowns by trade")
 
     # Validation results
     is_profitable: bool = Field(
@@ -171,7 +171,7 @@ class CostAnalysisResultModel(BaseModel):
     exceeds_cost_threshold: bool = Field(
         ..., description="Whether costs exceed threshold", env="EXCEEDS_COST_THRESHOLD"
     )
-    recommendations: List[str] = Field(..., description="Recommendations for improvement")
+    recommendations: list[str] = Field(..., description="Recommendations for improvement")
 
     @field_validator("total_costs")
     @classmethod
@@ -267,7 +267,7 @@ class CostAnalysisResultModel(BaseModel):
         return v
 
     @staticmethod
-    def _has_validation_data(info, required_keys: List[str]) -> bool:
+    def _has_validation_data(info, required_keys: list[str]) -> bool:
         """Check if validation info contains all required keys."""
         if info is None or not hasattr(info, "data"):
             return False
@@ -291,8 +291,8 @@ class TradeCostAnalysisRequest(BaseModel):
         default=TradeStatus.CLOSED, description="Trade status", env="STATUS"
     )
     commission: Optional[Decimal] = Field(None, ge=0, description="Commission paid")
-    metadata: Dict[str, Any] = Field(default_factory=dict, description="Additional metadata")
-    market_data: Dict[str, Any] = Field(
+    metadata: dict[str, Any] = Field(default_factory=dict, description="Additional metadata")
+    market_data: dict[str, Any] = Field(
         default_factory=dict, description="Market data for cost calculation"
     )
 
@@ -301,8 +301,8 @@ class StrategyCostAnalysisRequest(BaseModel):
     """Request model for strategy cost analysis."""
 
     strategy_name: str = Field(..., description="Strategy name", env="STRATEGY_NAME")
-    trades: List[TradeCostAnalysisRequest] = Field(..., description="List of trades to analyze")
-    market_data: Dict[str, Any] = Field(
+    trades: list[TradeCostAnalysisRequest] = Field(..., description="List of trades to analyze")
+    market_data: dict[str, Any] = Field(
         default_factory=dict, description="Market data for cost calculation"
     )
 
@@ -311,7 +311,7 @@ class ProfitabilityValidationRequest(BaseModel):
     """Request model for profitability validation."""
 
     strategy_name: str = Field(..., description="Strategy name", env="STRATEGY_NAME")
-    analysis_period: Tuple[datetime, datetime] = Field(..., description="Analysis period")
+    analysis_period: tuple[datetime, datetime] = Field(..., description="Analysis period")
     total_trades: int = Field(..., ge=0, description="Total number of trades", env="TOTAL_TRADES")
     total_costs: Decimal = Field(..., ge=0, description="Total costs", env="TOTAL_COSTS")
     gross_profit: Decimal = Field(..., description="Gross profit", env="GROSS_PROFIT")
@@ -325,14 +325,14 @@ class ProfitabilityValidationRequest(BaseModel):
     exceeds_cost_threshold: bool = Field(
         ..., description="Whether costs exceed threshold", env="EXCEEDS_COST_THRESHOLD"
     )
-    recommendations: List[str] = Field(default_factory=list, description="Recommendations")
+    recommendations: list[str] = Field(default_factory=list, description="Recommendations")
 
 
 class CostParametersModel(BaseModel):
     """Model for cost parameters configuration."""
 
-    commission_rates: Dict[str, Decimal] = Field(..., description="Commission rates by asset class")
-    slippage_rates: Dict[str, Decimal] = Field(..., description="Slippage rates by asset class")
+    commission_rates: dict[str, Decimal] = Field(..., description="Commission rates by asset class")
+    slippage_rates: dict[str, Decimal] = Field(..., description="Slippage rates by asset class")
     infrastructure_cost_per_trade: Decimal = Field(
         ...,
         ge=0,
@@ -367,7 +367,7 @@ class CostParametersModel(BaseModel):
         from app.shared.config.centralized_config import get_config
 
         cfg = get_config()
-        max_commission = Decimal(str(getattr(cfg.trading, 'cost_max_commission_rate', 0.1)))
+        max_commission = Decimal(str(getattr(cfg.trading, "cost_max_commission_rate", 0.1)))
         for asset_class, rate in v.items():
             if rate < 0 or rate > max_commission:
                 logger.error(
@@ -392,7 +392,7 @@ class CostParametersModel(BaseModel):
         from app.shared.config.centralized_config import get_config
 
         cfg = get_config()
-        max_slippage = Decimal(str(getattr(cfg.trading, 'cost_max_slippage_rate', 0.05)))
+        max_slippage = Decimal(str(getattr(cfg.trading, "cost_max_slippage_rate", 0.05)))
         for asset_class, rate in v.items():
             if rate < 0 or rate > max_slippage:
                 logger.error(
@@ -441,7 +441,7 @@ class ProfitabilityValidationResponse(BaseModel):
     max_allowed_cir: Decimal = Field(
         ..., ge=0, description="Maximum allowed CIR", env="MAX_ALLOWED_CIR"
     )
-    recommendations: List[str] = Field(..., description="Recommendations for improvement")
+    recommendations: list[str] = Field(..., description="Recommendations for improvement")
     timestamp: datetime = Field(
         default_factory=datetime.utcnow,
         description="Response timestamp",

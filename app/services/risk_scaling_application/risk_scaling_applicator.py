@@ -22,7 +22,7 @@ Architecture:
 import logging
 from datetime import datetime
 from decimal import Decimal
-from typing import Dict, List, Optional
+from typing import Optional
 
 import numpy as np
 
@@ -68,7 +68,7 @@ class RiskScalingApplication:
         self.calculator = calculator or get_risk_adjustment_calculator()
         self.limit_adjuster = limit_adjuster or LimitAdjuster()
         self.monitor = monitor or RealTimeMonitor()
-        self.scaling_history: List[RiskAdjustedPortfolio] = []
+        self.scaling_history: list[RiskAdjustedPortfolio] = []
         logger.info(
             "✅ RiskScalingApplication initialized with RiskAdjustmentCalculator, "
             "LimitAdjuster, and RealTimeMonitor (T8.1 PHASE 4 & 5)"
@@ -195,14 +195,14 @@ class RiskScalingApplication:
     async def get_scaling_history(
         self,
         limit: Optional[int] = None,
-    ) -> List[RiskAdjustedPortfolio]:
+    ) -> list[RiskAdjustedPortfolio]:
         """Get scaling history."""
         results = self.scaling_history
         if limit:
             results = results[-limit:]
         return results
 
-    def get_scaler_status(self) -> Dict:
+    def get_scaler_status(self) -> dict:
         """Get scaler operational status."""
         successful = sum(1 for s in self.scaling_history if s.success)
         applied_count = sum(1 for s in self.scaling_history if s.risk_scaling_applied)

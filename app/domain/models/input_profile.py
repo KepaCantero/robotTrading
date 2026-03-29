@@ -14,7 +14,7 @@ Capabilities:
 import logging
 from decimal import Decimal
 from enum import Enum
-from typing import Dict, Optional
+from typing import Optional
 from uuid import uuid4
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
@@ -183,7 +183,7 @@ class InputProfile(BaseModel):
     )
 
     # Optional Parameters
-    constraints: Optional[Dict] = Field(
+    constraints: Optional[dict] = Field(
         default=None, description="Optional constraints (sector limits, etc.)"
     )
 
@@ -195,11 +195,11 @@ class InputProfile(BaseModel):
 
     # Metadata
     created_at: str = Field(
-        default_factory=lambda: __import__('datetime').datetime.now().isoformat(),
+        default_factory=lambda: __import__("datetime").datetime.now().isoformat(),
         description="Timestamp of input creation",
     )
 
-    @field_validator('capital_initial', mode='before')
+    @field_validator("capital_initial", mode="before")
     @classmethod
     def validate_capital(cls, v):
         """Convert capital to Decimal if needed."""
@@ -207,12 +207,12 @@ class InputProfile(BaseModel):
             try:
                 v = Decimal(v)
             except (ValueError, TypeError, KeyError, AttributeError) as e:
-                raise ValueError(f"Invalid capital format: {e}")
+                raise ValueError(f"Invalid capital format: {e}") from e
         elif isinstance(v, (int, float)):
             v = Decimal(str(v))
         return v
 
-    @field_validator('objetivo_inversion', mode='before')
+    @field_validator("objetivo_inversion", mode="before")
     @classmethod
     def validate_objetivo(cls, v):
         """Validate objective is in enum."""
@@ -223,26 +223,25 @@ class InputProfile(BaseModel):
             v = v.lower().strip()
             try:
                 return ObjectivoInversion(v)
-            except ValueError:
+            except ValueError as exc:
                 valid_values = [e.value for e in ObjectivoInversion]
                 raise ValueError(
-                    f"Invalid objetivo_inversion: {v}. "
-                    f"Must be one of: {', '.join(valid_values)}"
-                )
+                    f"Invalid objetivo_inversion: {v}. Must be one of: {', '.join(valid_values)}"
+                ) from exc
         return v
 
-    @field_validator('investment_horizon', mode='before')
+    @field_validator("investment_horizon", mode="before")
     @classmethod
     def validate_horizon(cls, v):
         """Validate investment horizon."""
         if isinstance(v, str):
             try:
                 v = int(v)
-            except ValueError:
-                raise ValueError(f"Investment horizon must be integer months: {v}")
+            except ValueError as exc:
+                raise ValueError(f"Investment horizon must be integer months: {v}") from exc
         return v
 
-    @field_validator('risk_tolerance', mode='before')
+    @field_validator("risk_tolerance", mode="before")
     @classmethod
     def validate_risk_tolerance(cls, v):
         """Validate risk tolerance is in enum."""
@@ -253,11 +252,11 @@ class InputProfile(BaseModel):
             v = v.lower().strip()
             try:
                 return RiskTolerance(v)
-            except ValueError:
+            except ValueError as exc:
                 valid_values = [e.value for e in RiskTolerance]
                 raise ValueError(
-                    f"Invalid risk_tolerance: {v}. " f"Must be one of: {', '.join(valid_values)}"
-                )
+                    f"Invalid risk_tolerance: {v}. Must be one of: {', '.join(valid_values)}"
+                ) from exc
         return v
 
     @property
@@ -360,7 +359,7 @@ class InputProcessor:
         except OSError as e:
             self.error_count += 1
             logger.error(f"Unexpected error processing input: {e}")
-            raise ValueError(f"Failed to process input: {e}")
+            raise ValueError(f"Failed to process input: {e}") from e
 
     def validate_consistency(self, profile: InputProfile) -> tuple[bool, list[str]]:
         """
@@ -375,7 +374,10 @@ class InputProcessor:
         warnings = []
 
         # Check risk tolerance vs objective consistency
-        if profile.objetivo_inversion == ObjectivoInversion.CAPITAL_PRESERVATION and profile.risk_tolerance == RiskTolerance.ALTO:
+        if (
+            profile.objetivo_inversion == ObjectivoInversion.CAPITAL_PRESERVATION
+            and profile.risk_tolerance == RiskTolerance.ALTO
+        ):
             warnings.append(
                 "Warning: capital_preservation objective with alto risk tolerance "
                 "may be contradictory. Consider lowering risk tolerance."

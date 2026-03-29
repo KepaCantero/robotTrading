@@ -6,9 +6,9 @@ through Interactive Brokers.
 """
 
 import logging
-from typing import List
 
-from ib_insync.contract import Contract as IBContract, Stock
+from ib_insync.contract import Contract as IBContract
+from ib_insync.contract import Stock
 
 logger = logging.getLogger(__name__)
 
@@ -73,7 +73,7 @@ def create_stock_contract(
         >>> create_stock_contract("TEF.MC", exchange="MADRID")
     """
     # Extract symbol without exchange suffix if provided
-    base_symbol = symbol.split('.')[0]
+    base_symbol = symbol.split(".")[0]
 
     logger.debug(
         "Creating stock contract",
@@ -141,7 +141,7 @@ def create_index_contract() -> IBContract:
     return contract
 
 
-def get_ibex35_symbols() -> List[str]:
+def get_ibex35_symbols() -> list[str]:
     """
     Get list of IBEX35 constituent symbols.
 
@@ -176,7 +176,7 @@ def is_ibex35_symbol(symbol: str) -> bool:
     """
     # Normalize symbol
     normalized = symbol.upper()
-    if '.' not in normalized:
+    if "." not in normalized:
         normalized = f"{normalized}.MC"
 
     result = normalized in IBEX35_SYMBOLS

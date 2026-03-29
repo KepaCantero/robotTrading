@@ -10,7 +10,7 @@ Provides regime detection and analysis functionality for backtesting:
 """
 
 import logging
-from typing import Any, Dict
+from typing import Any, Optional
 
 import numpy as np
 import pandas as pd
@@ -31,7 +31,9 @@ class RegimeAnalyzer:
     # Default window for rolling calculations
     DEFAULT_WINDOW = 20
 
-    def detect_simple_regimes(self, returns: np.ndarray, window: int = None) -> np.ndarray:
+    def detect_simple_regimes(
+        self, returns: np.ndarray, window: Optional[int] = None
+    ) -> np.ndarray:
         """
         Simple regime detection based on returns and volatility.
 
@@ -73,7 +75,7 @@ class RegimeAnalyzer:
 
     def get_regime_name_mapping(
         self, regime_labels: np.ndarray, returns: pd.Series
-    ) -> Dict[int, str]:
+    ) -> dict[int, str]:
         """
         Map regime indices to descriptive names based on characteristics.
 
@@ -92,33 +94,33 @@ class RegimeAnalyzer:
             regime_returns = returns[mask]
 
             regime_stats[regime] = {
-                'mean_return': float(regime_returns.mean()),
-                'volatility': float(regime_returns.std()),
+                "mean_return": float(regime_returns.mean()),
+                "volatility": float(regime_returns.std()),
             }
 
         # Sort regimes by mean return to determine Bear/Neutral/Bull
-        sorted_regimes = sorted(regime_stats.items(), key=lambda x: x[1]['mean_return'])
+        sorted_regimes = sorted(regime_stats.items(), key=lambda x: x[1]["mean_return"])
 
         regime_names = {}
         if len(sorted_regimes) == 3:
-            regime_names[sorted_regimes[0][0]] = 'Bear Market'
-            regime_names[sorted_regimes[1][0]] = 'Neutral Market'
-            regime_names[sorted_regimes[2][0]] = 'Bull Market'
+            regime_names[sorted_regimes[0][0]] = "Bear Market"
+            regime_names[sorted_regimes[1][0]] = "Neutral Market"
+            regime_names[sorted_regimes[2][0]] = "Bull Market"
         elif len(sorted_regimes) == 2:
-            regime_names[sorted_regimes[0][0]] = 'Bear Market'
-            regime_names[sorted_regimes[1][0]] = 'Bull Market'
+            regime_names[sorted_regimes[0][0]] = "Bear Market"
+            regime_names[sorted_regimes[1][0]] = "Bull Market"
         else:
             for regime, stats in sorted_regimes:
-                if stats['mean_return'] > 0:
-                    regime_names[regime] = f'Positive_Regime_{regime}'
+                if stats["mean_return"] > 0:
+                    regime_names[regime] = f"Positive_Regime_{regime}"
                 else:
-                    regime_names[regime] = f'Negative_Regime_{regime}'
+                    regime_names[regime] = f"Negative_Regime_{regime}"
 
         return regime_names
 
     def analyze_regime_transitions(
-        self, regime_labels: np.ndarray, regime_names: Dict[int, str]
-    ) -> Dict[str, Any]:
+        self, regime_labels: np.ndarray, regime_names: dict[int, str]
+    ) -> dict[str, Any]:
         """
         Analyze regime transitions and build transition probability matrix.
 
@@ -186,17 +188,17 @@ class RegimeAnalyzer:
                 avg_durations[name] = float(np.mean(durations))
 
         return {
-            'transition_matrix': named_transition_probs,
-            'average_durations': avg_durations,
-            'regime_counts': {
+            "transition_matrix": named_transition_probs,
+            "average_durations": avg_durations,
+            "regime_counts": {
                 regime_names.get(r, f"Regime_{r}"): int(np.sum(regime_labels == r))
                 for r in unique_regimes
             },
         }
 
     def get_regime_statistics(
-        self, regime_labels: np.ndarray, returns: pd.Series, regime_names: Dict[int, str]
-    ) -> Dict[str, Dict[str, float]]:
+        self, regime_labels: np.ndarray, returns: pd.Series, regime_names: dict[int, str]
+    ) -> dict[str, dict[str, float]]:
         """
         Calculate statistics for each regime.
 
@@ -217,14 +219,16 @@ class RegimeAnalyzer:
 
             name = regime_names.get(regime, f"Regime_{regime}")
             stats[name] = {
-                'count': int(np.sum(mask)),
-                'mean_return': float(regime_returns.mean()),
-                'volatility': float(regime_returns.std()),
-                'min_return': float(regime_returns.min()),
-                'max_return': float(regime_returns.max()),
-                'sharpe': float(regime_returns.mean() / regime_returns.std())
-                if regime_returns.std() > 0
-                else 0.0,
+                "count": int(np.sum(mask)),
+                "mean_return": float(regime_returns.mean()),
+                "volatility": float(regime_returns.std()),
+                "min_return": float(regime_returns.min()),
+                "max_return": float(regime_returns.max()),
+                "sharpe": (
+                    float(regime_returns.mean() / regime_returns.std())
+                    if regime_returns.std() > 0
+                    else 0.0
+                ),
             }
 
         return stats

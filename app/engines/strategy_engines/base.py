@@ -17,7 +17,7 @@ from abc import ABC, abstractmethod
 from collections.abc import Sequence
 from datetime import datetime
 from decimal import Decimal
-from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional
+from typing import TYPE_CHECKING, Any, Callable, Optional
 
 from app.domain.models.market_data import Quote
 from app.domain.models.signal import Signal
@@ -74,7 +74,7 @@ class BaseStrategyEngine(BaseStrategy, ABC):
     5. Métricas y tracking mejorado
     """
 
-    def __init__(self, config: Dict[str, Any]):
+    def __init__(self, config: dict[str, Any]):
         """
         Inicializar strategy engine con configuración.
 
@@ -138,12 +138,12 @@ class BaseStrategyEngine(BaseStrategy, ABC):
         self.feature_extractors = []  # Lista de extractores de features
 
         # Callbacks para aprendizaje continuo
-        self.on_signal_generated_callbacks: List[Callable] = []
-        self.on_trade_executed_callbacks: List[Callable] = []
-        self.on_market_data_callbacks: List[Callable] = []
+        self.on_signal_generated_callbacks: list[Callable] = []
+        self.on_trade_executed_callbacks: list[Callable] = []
+        self.on_market_data_callbacks: list[Callable] = []
 
         # Métricas y tracking
-        self.metrics: Dict[str, Any] = {
+        self.metrics: dict[str, Any] = {
             "signals_generated": 0,
             "trades_executed": 0,
             "learning_adjustments_applied": 0,
@@ -174,7 +174,7 @@ class BaseStrategyEngine(BaseStrategy, ABC):
     @abstractmethod
     def extract_features(
         self, market_data: Quote, historical_data: Optional[Sequence[Quote]] = None
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Extraer features estandarizados para Learning Engine.
 
@@ -217,7 +217,7 @@ class BaseStrategyEngine(BaseStrategy, ABC):
 
     def get_learning_prediction(
         self, market_data: Quote, historical_data: Optional[Sequence[Quote]] = None
-    ) -> Optional[Dict[str, Any]]:
+    ) -> Optional[dict[str, Any]]:
         """
         Obtener predicción del Learning Engine (si está disponible).
 
@@ -250,7 +250,7 @@ class BaseStrategyEngine(BaseStrategy, ABC):
             )
             return None
 
-    def apply_learning_adjustments(self, prediction: Dict[str, Any], signal: Signal) -> Signal:
+    def apply_learning_adjustments(self, prediction: dict[str, Any], signal: Signal) -> Signal:
         """
         Aplicar ajustes sugeridos por Learning Engine a una señal.
 
@@ -348,7 +348,7 @@ class BaseStrategyEngine(BaseStrategy, ABC):
         """Obtener peso actual en ensemble."""
         return self.ensemble_weight
 
-    def get_context_analysis(self, prices: List[float]) -> Optional[Dict[str, Any]]:
+    def get_context_analysis(self, prices: list[float]) -> Optional[dict[str, Any]]:
         """
         Obtener análisis de contexto de mercado usando ContextEngine.
 
@@ -363,12 +363,12 @@ class BaseStrategyEngine(BaseStrategy, ABC):
 
         try:
             self.metrics["context_analysis_calls"] += 1
-            return self.context_engine.get_current_regime(prices, method='ensemble')
+            return self.context_engine.get_current_regime(prices, method="ensemble")
         except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
             logger.error(f"Error obteniendo contexto: {e}")
             return None
 
-    def get_volatility_regime(self, prices: List[float]) -> Optional[Dict[str, Any]]:
+    def get_volatility_regime(self, prices: list[float]) -> Optional[dict[str, Any]]:
         """
         Obtener régimen de volatilidad usando ContextEngine.
 
@@ -389,7 +389,7 @@ class BaseStrategyEngine(BaseStrategy, ABC):
 
     def get_market_data_from_engine(
         self, symbol: str, start_date: datetime, end_date: datetime, source: Optional[str] = None
-    ) -> List[Quote]:
+    ) -> list[Quote]:
         """
         Obtener datos de mercado usando DataEngine.
 
@@ -418,15 +418,15 @@ class BaseStrategyEngine(BaseStrategy, ABC):
             for data in ohlcv_data:
                 quote = Quote(
                     symbol=symbol,
-                    timestamp=data.get('timestamp', datetime.now()),
-                    bid=data.get('close', Decimal('0')),
-                    ask=data.get('close', Decimal('0')),
-                    last=data.get('close', Decimal('0')),
-                    open=data.get('open', Decimal('0')),
-                    high=data.get('high', Decimal('0')),
-                    low=data.get('low', Decimal('0')),
-                    close=data.get('close', Decimal('0')),
-                    volume=data.get('volume', Decimal('0')),
+                    timestamp=data.get("timestamp", datetime.now()),
+                    bid=data.get("close", Decimal("0")),
+                    ask=data.get("close", Decimal("0")),
+                    last=data.get("close", Decimal("0")),
+                    open=data.get("open", Decimal("0")),
+                    high=data.get("high", Decimal("0")),
+                    low=data.get("low", Decimal("0")),
+                    close=data.get("close", Decimal("0")),
+                    volume=data.get("volume", Decimal("0")),
                 )
                 quotes.append(quote)
 
@@ -506,7 +506,7 @@ class BaseStrategyEngine(BaseStrategy, ABC):
 
     # ===== Métodos mejorados de generate_signals =====
 
-    def generate_signals(self, market_data: Quote) -> List[Signal]:
+    def generate_signals(self, market_data: Quote) -> list[Signal]:
         """
         Generar señales (método wrapper que añade callbacks y learning).
 
@@ -544,7 +544,7 @@ class BaseStrategyEngine(BaseStrategy, ABC):
         return signals
 
     @abstractmethod
-    def _generate_signals_impl(self, market_data: Quote) -> List[Signal]:
+    def _generate_signals_impl(self, market_data: Quote) -> list[Signal]:
         """
         Implementación específica de generación de señales.
 
@@ -559,7 +559,7 @@ class BaseStrategyEngine(BaseStrategy, ABC):
 
     # ===== Métricas y estado =====
 
-    def get_metrics(self) -> Dict[str, Any]:
+    def get_metrics(self) -> dict[str, Any]:
         """
         Obtener métricas del engine.
 
@@ -577,7 +577,7 @@ class BaseStrategyEngine(BaseStrategy, ABC):
             "last_update": None,
         }
 
-    def get_status(self) -> Dict[str, Any]:
+    def get_status(self) -> dict[str, Any]:
         """
         Obtener estado completo del engine.
 

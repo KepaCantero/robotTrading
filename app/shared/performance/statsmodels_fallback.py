@@ -10,7 +10,7 @@ All fallback implementations log warnings to indicate they are being used.
 
 import logging
 import warnings
-from typing import Dict, Optional, Tuple, Union
+from typing import Optional, Union
 
 import numpy as np
 import pandas as pd
@@ -41,7 +41,7 @@ def adfuller(
     autolag: str = "AIC",
     store: bool = False,
     regresults: bool = False,
-) -> Tuple[float, float, int, Dict[str, float], int]:
+) -> tuple[float, float, int, dict[str, float], int]:
     """
     Augmented Dickey-Fuller unit root test - fallback implementation.
 
@@ -201,7 +201,7 @@ def coint(
     method: str = "aeg",
     maxlag: Optional[int] = None,
     return_results: bool = False,
-) -> Union[Tuple[float, float, Dict], object]:
+) -> Union[tuple[float, float, dict], object]:
     """
     Test for no cointegration of a univariate equation - fallback implementation.
 
@@ -381,10 +381,7 @@ def seasonal_decompose(
             trend = x.rolling(window=period, center=True).mean()
 
         # Seasonal component
-        if model == "multiplicative":
-            detrended = x / trend
-        else:
-            detrended = x - trend
+        detrended = x / trend if model == "multiplicative" else x - trend
 
         # Compute seasonal component by averaging over periods
         seasonal = pd.Series(index=x.index, dtype=float)
@@ -398,10 +395,7 @@ def seasonal_decompose(
         seasonal = seasonal.fillna(seasonal.mean())
 
         # Residual component
-        if model == "multiplicative":
-            residual = x / (trend * seasonal)
-        else:
-            residual = x - trend - seasonal
+        residual = x / (trend * seasonal) if model == "multiplicative" else x - trend - seasonal
 
     except Exception as e:
         logger.warning(f"Decomposition failed: {e}, returning simplified components")
@@ -441,7 +435,7 @@ def acorr_ljungbox(
     model_df: int = 0,
     period: Optional[int] = None,
     return_df: bool = True,
-) -> Union[pd.DataFrame, Dict]:
+) -> Union[pd.DataFrame, dict]:
     """
     Ljung-Box test for autocorrelation - fallback implementation.
 
@@ -610,7 +604,7 @@ class OLS:
         """Fit the OLS model using numpy.linalg.lstsq"""
         # OLS estimation: beta = (X'X)^(-1)X'y
         try:
-            self.params, residuals, rank, singular = np.linalg.lstsq(
+            self.params, _residuals, _rank, _singular = np.linalg.lstsq(
                 self.exog, self.endog, rcond=None
             )
 
@@ -683,8 +677,8 @@ OLS Regression Results
 Dep. Variable:                      y   R-squared:                       {self.rsquared:.4f}
 Model:                            OLS   Adj. R-squared:                  {self.rsquared_adj:.4f}
 Method:                 Least Squares   F-statistic:                    {self.fvalue:.4f}
-Date:                {pd.Timestamp.now().strftime('%a, %d %b %Y')}   Prob (F-statistic):              {self.f_pvalue:.4f}
-Time:                        {pd.Timestamp.now().strftime('%H:%M:%S')}   Log-Likelihood:                {-self._nobs/2 * np.log(2*np.pi*self.scale) - self.ssr/(2*self.scale):.4f}
+Date:                {pd.Timestamp.now().strftime("%a, %d %b %Y")}   Prob (F-statistic):              {self.f_pvalue:.4f}
+Time:                        {pd.Timestamp.now().strftime("%H:%M:%S")}   Log-Likelihood:                {-self._nobs / 2 * np.log(2 * np.pi * self.scale) - self.ssr / (2 * self.scale):.4f}
 No. Observations:                 {self._nobs}   AIC:                             {self.aic:.4f}
 Df Residuals:                     {self.df_resid}   BIC:                             {self.bic:.4f}
 Df Model:                         {self.df_model}
@@ -701,7 +695,7 @@ Covariance Type:            nonrobust
                 p_value = (
                     2 * (1 - t.cdf(abs(t_stat), self.df_resid)) if not np.isnan(t_stat) else np.nan
                 )
-                summary_str += f"x{i:2d}        {coef:8.4f}    {se:8.4f}      {t_stat:8.4f}      {p_value:8.4f}     {coef-1.96*se:8.4f}     {coef+1.96*se:8.4f}\n"
+                summary_str += f"x{i:2d}        {coef:8.4f}    {se:8.4f}      {t_stat:8.4f}      {p_value:8.4f}     {coef - 1.96 * se:8.4f}     {coef + 1.96 * se:8.4f}\n"
             else:
                 summary_str += f"x{i:2d}        {coef:8.4f}    {se:8.4f}        nan        nan        nan        nan\n"
 
@@ -842,9 +836,9 @@ AutoReg Results
 Dep. Variable:                      y   No. Observations:                 {self.nobs}
 Model:                   AutoReg({self.model.lags})   Log Likelihood:                {np.sum(self.resid**2):.4f}
 Method:                           Least Squares   AIC:                             {self.aic:.4f}
-Date:                {pd.Timestamp.now().strftime('%a, %d %b %Y')}   BIC:                             {self.bic:.4f}
-Time:                        {pd.Timestamp.now().strftime('%H:%M:%S')}
-Sample:                    {self.model.lags+1}   HQIC:                            {self.aic:.4f}
+Date:                {pd.Timestamp.now().strftime("%a, %d %b %Y")}   BIC:                             {self.bic:.4f}
+Time:                        {pd.Timestamp.now().strftime("%H:%M:%S")}
+Sample:                    {self.model.lags + 1}   HQIC:                            {self.aic:.4f}
 ==============================================================================
                  coef    std err          z      P>|z|      [0.025      0.975]
 ------------------------------------------------------------------------------
@@ -1053,17 +1047,17 @@ def grangercausalitytests(x, maxlag, addconst=True, verbose=True):
 
 # Export all fallback functions
 __all__ = [
-    "adfuller",
-    "kpss",
-    "coint",
-    "seasonal_decompose",
-    "acorr_ljungbox",
     "OLS",
+    "USING_FALLBACK",
     "AutoReg",
     "AutoRegResults",
-    "pacf",
+    "acorr_ljungbox",
+    "adfuller",
+    "coint",
     "grangercausalitytests",
-    "USING_FALLBACK",
+    "kpss",
+    "pacf",
+    "seasonal_decompose",
 ]
 
 
@@ -1072,7 +1066,7 @@ def kpss(
     regression: str = "c",
     nlags: str = "auto",
     store: bool = False,
-) -> Tuple[float, float, int, Dict[str, float]]:
+) -> tuple[float, float, int, dict[str, float]]:
     """
     Kwiatkowski-Phillips-Schmidt-Shin test for stationarity - fallback implementation.
 
@@ -1163,10 +1157,7 @@ def kpss(
         long_run_var = gamma0 + gamma_j
 
         # Standardize test statistic
-        if long_run_var > 0:
-            kpss_stat = kpss_stat / long_run_var
-        else:
-            kpss_stat = 0.0
+        kpss_stat = kpss_stat / long_run_var if long_run_var > 0 else 0.0
 
         # Critical values for KPSS test
         # These depend on regression type

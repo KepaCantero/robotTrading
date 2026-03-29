@@ -32,7 +32,7 @@ import logging
 from collections import deque
 from datetime import date
 from decimal import Decimal
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 from app.domain.models.market_data import Quote
 from app.domain.models.portfolio import Portfolio
@@ -86,7 +86,7 @@ class MultiFactorStrategy(BaseStrategy):
         current_portfolio: Current factor portfolio
     """
 
-    def __init__(self, config: Dict[str, Any]):
+    def __init__(self, config: dict[str, Any]):
         """
         Initialize Multi-Factor Strategy.
 
@@ -108,9 +108,9 @@ class MultiFactorStrategy(BaseStrategy):
         self.factor_manager = FactorModelManager()
 
         # State
-        self.universe: List[FactorProfile] = []
+        self.universe: list[FactorProfile] = []
         self.current_portfolio: Optional[FactorPortfolio] = None
-        self.factor_scores_dict: Dict[str, Any] = {}
+        self.factor_scores_dict: dict[str, Any] = {}
         self.last_rebalance_date: Optional[date] = None
         self.rebalance_count = 0
 
@@ -126,7 +126,7 @@ class MultiFactorStrategy(BaseStrategy):
             f"profitability_tilt={self.strategy_config.profitability_tilt}"
         )
 
-    def _parse_config(self, config: Dict[str, Any]) -> FactorStrategyConfig:
+    def _parse_config(self, config: dict[str, Any]) -> FactorStrategyConfig:
         """
         Parse strategy configuration.
 
@@ -202,7 +202,11 @@ class MultiFactorStrategy(BaseStrategy):
                 "min_quality_score",
                 "min_factor_score",
             ]:
-                if key in merged and merged[key] is not None and not isinstance(merged[key], Decimal):
+                if (
+                    key in merged
+                    and merged[key] is not None
+                    and not isinstance(merged[key], Decimal)
+                ):
                     merged[key] = Decimal(str(merged[key]))
 
             return FactorStrategyConfig(**merged)
@@ -212,7 +216,7 @@ class MultiFactorStrategy(BaseStrategy):
             # Return default config
             return FactorStrategyConfig()
 
-    def set_universe(self, profiles: List[FactorProfile]) -> None:
+    def set_universe(self, profiles: list[FactorProfile]) -> None:
         """
         Set the stock universe for factor analysis.
 
@@ -258,12 +262,12 @@ class MultiFactorStrategy(BaseStrategy):
         self.rebalance_count = 1
 
         logger.info(
-            f"Initial portfolio constructed: " f"{len(self.current_portfolio.positions)} positions"
+            f"Initial portfolio constructed: {len(self.current_portfolio.positions)} positions"
         )
 
         return self.current_portfolio
 
-    def generate_signals(self, market_data: Quote) -> List[Signal]:
+    def generate_signals(self, market_data: Quote) -> list[Signal]:
         """
         Generate trading signals based on factor analysis.
 
@@ -349,14 +353,19 @@ class MultiFactorStrategy(BaseStrategy):
             return False
 
         # Check value tilt
-        if self.strategy_config.value_tilt > 0 and factor_scores.value_score and factor_scores.value_score < -0.5:
+        if (
+            self.strategy_config.value_tilt > 0
+            and factor_scores.value_score
+            and factor_scores.value_score < -0.5
+        ):
             return False
 
         # Check profitability tilt
-        if self.strategy_config.profitability_tilt > 0 and factor_scores.profitability_score and factor_scores.profitability_score < -0.5:
-            return False
-
-        return True
+        return not (
+            self.strategy_config.profitability_tilt > 0
+            and factor_scores.profitability_score
+            and factor_scores.profitability_score < -0.5
+        )
 
     def _should_sell(self, profile: FactorProfile) -> bool:
         """
@@ -403,7 +412,11 @@ class MultiFactorStrategy(BaseStrategy):
             return True
 
         # Sell if value signal inverted (for value tilt strategy)
-        if self.strategy_config.value_tilt > 0 and factor_scores.value_score and factor_scores.value_score < -1.5:
+        if (
+            self.strategy_config.value_tilt > 0
+            and factor_scores.value_score
+            and factor_scores.value_score < -1.5
+        ):
             logger.warning(
                 f"Value signal inverted for {profile.symbol}: {factor_scores.value_score}"
             )
@@ -575,7 +588,7 @@ class MultiFactorStrategy(BaseStrategy):
                 return profile.sector
         return None
 
-    def get_required_parameters(self) -> List[str]:
+    def get_required_parameters(self) -> list[str]:
         """Get required configuration parameters."""
         return [
             "portfolio_size",
@@ -591,9 +604,9 @@ class MultiFactorStrategy(BaseStrategy):
         try:
             # Get config for thresholds
             cfg = get_config()
-            weights_tolerance = Decimal(str(getattr(cfg.trading, 'factor_weights_tolerance', 0.05)))
+            weights_tolerance = Decimal(str(getattr(cfg.trading, "factor_weights_tolerance", 0.05)))
             max_single_position_limit = Decimal(
-                str(getattr(cfg.trading, 'max_single_position_limit', 0.5))
+                str(getattr(cfg.trading, "max_single_position_limit", 0.5))
             )
 
             # Validate weights sum
@@ -709,7 +722,7 @@ class MultiFactorStrategy(BaseStrategy):
 
         return self.current_portfolio
 
-    def get_portfolio_metrics(self) -> Dict[str, Any]:
+    def get_portfolio_metrics(self) -> dict[str, Any]:
         """
         Get current portfolio metrics.
 
@@ -721,7 +734,7 @@ class MultiFactorStrategy(BaseStrategy):
 
         return self.constructor.get_portfolio_metrics(self.current_portfolio)
 
-    def get_factor_exposures(self) -> Dict[str, float]:
+    def get_factor_exposures(self) -> dict[str, float]:
         """
         Get current portfolio factor exposures.
 
@@ -733,7 +746,7 @@ class MultiFactorStrategy(BaseStrategy):
 
         return {k: float(v) for k, v in self.current_portfolio.factor_exposures.items()}
 
-    def get_strategy_status(self) -> Dict[str, Any]:
+    def get_strategy_status(self) -> dict[str, Any]:
         """
         Get comprehensive strategy status.
 

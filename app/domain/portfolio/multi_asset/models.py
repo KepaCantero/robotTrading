@@ -12,12 +12,15 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from decimal import Decimal
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import TYPE_CHECKING, Any
 
 import pandas as pd
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from app.shared.config.centralized_config import get_config
+
+if TYPE_CHECKING:
+    from .asset_class import AssetClass
 
 logger = logging.getLogger(__name__)
 
@@ -83,24 +86,24 @@ class PortfolioMetrics(BaseModel):
     total_return: Decimal = Field(..., description="Total portfolio return")
     annualized_return: Decimal = Field(..., description="Annualized return")
     volatility: Decimal = Field(..., description="Annualized volatility")
-    sharpe_ratio: Optional[Decimal] = Field(None, description="Sharpe ratio")
-    sortino_ratio: Optional[Decimal] = Field(None, description="Sortino ratio")
-    max_drawdown: Optional[Decimal] = Field(None, description="Maximum drawdown")
-    beta: Optional[Decimal] = Field(None, description="Portfolio beta")
-    alpha: Optional[Decimal] = Field(None, description="Portfolio alpha")
-    information_ratio: Optional[Decimal] = Field(None, description="Information ratio")
-    tracking_error: Optional[Decimal] = Field(None, description="Tracking error")
-    var_95: Optional[Decimal] = Field(None, description="Value at Risk at 95%")
-    cvar_95: Optional[Decimal] = Field(None, description="Conditional VaR at 95%")
-    skewness: Optional[Decimal] = Field(None, description="Return skewness")
-    kurtosis: Optional[Decimal] = Field(None, description="Return kurtosis")
+    sharpe_ratio: Decimal | None = Field(None, description="Sharpe ratio")
+    sortino_ratio: Decimal | None = Field(None, description="Sortino ratio")
+    max_drawdown: Decimal | None = Field(None, description="Maximum drawdown")
+    beta: Decimal | None = Field(None, description="Portfolio beta")
+    alpha: Decimal | None = Field(None, description="Portfolio alpha")
+    information_ratio: Decimal | None = Field(None, description="Information ratio")
+    tracking_error: Decimal | None = Field(None, description="Tracking error")
+    var_95: Decimal | None = Field(None, description="Value at Risk at 95%")
+    cvar_95: Decimal | None = Field(None, description="Conditional VaR at 95%")
+    skewness: Decimal | None = Field(None, description="Return skewness")
+    kurtosis: Decimal | None = Field(None, description="Return kurtosis")
     calculated_at: datetime = Field(
         default_factory=datetime.utcnow, description="When metrics were calculated"
     )
 
     @field_validator("volatility", "sharpe_ratio", "sortino_ratio")
     @classmethod
-    def validate_non_negative(cls, v: Optional[Decimal]) -> Optional[Decimal]:
+    def validate_non_negative(cls, v: Decimal | None) -> Decimal | None:
         """Validate that risk metrics are non-negative."""
         if v is not None and v < 0:
             raise ValueError(f"Risk metric must be non-negative, got {v}")
@@ -108,7 +111,7 @@ class PortfolioMetrics(BaseModel):
 
     @field_validator("max_drawdown")
     @classmethod
-    def validate_drawdown(cls, v: Optional[Decimal]) -> Optional[Decimal]:
+    def validate_drawdown(cls, v: Decimal | None) -> Decimal | None:
         """Validate that drawdown is non-positive (losses)."""
         if v is not None and v > 0:
             raise ValueError(f"Max drawdown must be non-positive (a loss), got {v}")
@@ -138,9 +141,9 @@ class MultiAssetAllocation:
 
     asset_class: AssetClass
     weight: Decimal
-    assets: Dict[str, Decimal]
-    expected_return: Optional[Decimal] = None
-    risk: Optional[Decimal] = None
+    assets: dict[str, Decimal]
+    expected_return: Decimal | None = None
+    risk: Decimal | None = None
 
     @property
     def total_weight(self) -> Decimal:
@@ -152,11 +155,11 @@ class MultiAssetAllocation:
         return Decimal(sum(self.assets.values())) if self.assets else Decimal("0")
 
     @property
-    def asset_symbols(self) -> List[str]:
+    def asset_symbols(self) -> list[str]:
         """Get list of asset symbols in this allocation."""
         return list(self.assets.keys())
 
-    def get_asset_weight(self, symbol: str) -> Optional[Decimal]:
+    def get_asset_weight(self, symbol: str) -> Decimal | None:
         """Get weight of a specific asset within this class."""
         return self.assets.get(symbol)
 
@@ -195,7 +198,7 @@ class MultiAssetAllocation:
             tolerance = Decimal("0.01")  # 1% tolerance
             if abs(total - Decimal("1")) > tolerance:
                 raise ValueError(
-                    f"Sub-allocations must sum to 1, got {total} " f"(tolerance: {tolerance})"
+                    f"Sub-allocations must sum to 1, got {total} (tolerance: {tolerance})"
                 )
 
         # Check all asset weights are non-negative
@@ -228,16 +231,16 @@ class MultiAssetPortfolio:
     """
 
     name: str
-    allocations: Dict[str, MultiAssetAllocation]
+    allocations: dict[str, MultiAssetAllocation]
     total_value: Decimal
     last_rebalanced: datetime
     rebalance_threshold: Decimal = Decimal("0.05")
     currency: str = "USD"
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
     created_at: datetime = field(default_factory=datetime.utcnow)
     updated_at: datetime = field(default_factory=datetime.utcnow)
 
-    def get_asset_class_weights(self) -> Dict[str, Decimal]:
+    def get_asset_class_weights(self) -> dict[str, Decimal]:
         """
         Get weights by asset class.
 
@@ -246,14 +249,14 @@ class MultiAssetPortfolio:
         """
         return {name: alloc.weight for name, alloc in self.allocations.items()}
 
-    def get_all_assets(self) -> Dict[str, Decimal]:
+    def get_all_assets(self) -> dict[str, Decimal]:
         """
         Get all assets and their absolute weights.
 
         Returns:
             Dictionary mapping symbol to absolute weight in portfolio
         """
-        all_assets: Dict[str, Decimal] = {}
+        all_assets: dict[str, Decimal] = {}
         for alloc in self.allocations.values():
             for symbol in alloc.assets:
                 abs_weight = alloc.get_absolute_weight(symbol)
@@ -276,7 +279,7 @@ class MultiAssetPortfolio:
                 total += alloc.get_absolute_weight(symbol)
         return total
 
-    def get_asset_class_for_symbol(self, symbol: str) -> Optional[str]:
+    def get_asset_class_for_symbol(self, symbol: str) -> str | None:
         """
         Get the asset class that contains a given symbol.
 
@@ -291,7 +294,7 @@ class MultiAssetPortfolio:
                 return name
         return None
 
-    def get_portfolio_allocations(self) -> Dict[str, Decimal]:
+    def get_portfolio_allocations(self) -> dict[str, Decimal]:
         """
         Get complete portfolio allocation as symbol -> weight mapping.
 
@@ -325,7 +328,7 @@ class MultiAssetPortfolio:
         tolerance = Decimal("0.01")
         if abs(total_weight - Decimal("1")) > tolerance:
             raise ValueError(
-                f"Portfolio weights must sum to 1, got {total_weight} " f"(tolerance: {tolerance})"
+                f"Portfolio weights must sum to 1, got {total_weight} (tolerance: {tolerance})"
             )
 
         # Validate each allocation
@@ -349,7 +352,7 @@ class MultiAssetPortfolio:
         # For now, return False - this is typically checked by the manager
         return False
 
-    def get_asset_class_allocation(self, asset_class_name: str) -> Optional[MultiAssetAllocation]:
+    def get_asset_class_allocation(self, asset_class_name: str) -> MultiAssetAllocation | None:
         """
         Get allocation for a specific asset class.
 
@@ -492,7 +495,7 @@ class MultiAssetPortfolio:
             kurtosis=None,
         )
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """
         Convert portfolio to dictionary representation.
 
@@ -523,5 +526,3 @@ class MultiAssetPortfolio:
 
 # Import numpy at the end to avoid circular dependencies
 import numpy as np
-
-from .asset_class import AssetClass

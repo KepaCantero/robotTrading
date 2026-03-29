@@ -12,7 +12,6 @@ from __future__ import annotations
 import logging
 from dataclasses import dataclass
 from decimal import Decimal
-from typing import Dict, List, Optional, Tuple
 
 import numpy as np
 
@@ -40,7 +39,7 @@ class CovarianceResult:
     correlation_matrix: np.ndarray  # Correlation matrix
     std_devs: np.ndarray  # Standard deviations
     means: np.ndarray  # Mean returns
-    symbols: List[str]  # Asset symbols
+    symbols: list[str]  # Asset symbols
 
     def get_covariance(self, symbol1: str, symbol2: str) -> Decimal:
         """Get covariance between two symbols."""
@@ -48,8 +47,8 @@ class CovarianceResult:
             idx1 = self.symbols.index(symbol1)
             idx2 = self.symbols.index(symbol2)
             return Decimal(str(self.covariance_matrix[idx1, idx2]))
-        except ValueError:
-            raise ValueError("Symbol not found in result")
+        except ValueError as exc:
+            raise ValueError("Symbol not found in result") from exc
 
     def get_correlation(self, symbol1: str, symbol2: str) -> Decimal:
         """Get correlation between two symbols."""
@@ -57,16 +56,16 @@ class CovarianceResult:
             idx1 = self.symbols.index(symbol1)
             idx2 = self.symbols.index(symbol2)
             return Decimal(str(self.correlation_matrix[idx1, idx2]))
-        except ValueError:
-            raise ValueError("Symbol not found in result")
+        except ValueError as exc:
+            raise ValueError("Symbol not found in result") from exc
 
     def get_std_dev(self, symbol: str) -> Decimal:
         """Get standard deviation for a symbol."""
         try:
             idx = self.symbols.index(symbol)
             return Decimal(str(self.std_devs[idx]))
-        except ValueError:
-            raise ValueError("Symbol not found in result")
+        except ValueError as exc:
+            raise ValueError("Symbol not found in result") from exc
 
 
 class CovarianceCalculator:
@@ -89,7 +88,7 @@ class CovarianceCalculator:
     def __init__(
         self,
         min_observations: int = MIN_OBSERVATIONS,
-        shrinkage: Optional[float] = None,
+        shrinkage: float | None = None,
     ):
         """
         Initialize covariance calculator.
@@ -110,7 +109,7 @@ class CovarianceCalculator:
 
     def calculate_sample_covariance(
         self,
-        returns: Dict[str, List[Decimal]],
+        returns: dict[str, list[Decimal]],
     ) -> CovarianceResult:
         """
         Calculate sample covariance matrix.
@@ -132,7 +131,7 @@ class CovarianceCalculator:
             raise ValueError("Need at least 2 assets for covariance calculation")
 
         # Convert to numpy array and sanitize
-        returns_array, valid_symbols, valid_indices = self._sanitize_returns(returns, symbols)
+        returns_array, valid_symbols, _valid_indices = self._sanitize_returns(returns, symbols)
 
         n_obs = returns_array.shape[0]
         if n_obs < self._min_observations:
@@ -161,8 +160,8 @@ class CovarianceCalculator:
 
     def calculate_shrinkage_covariance(
         self,
-        returns: Dict[str, List[Decimal]],
-        shrinkage: Optional[float] = None,
+        returns: dict[str, list[Decimal]],
+        shrinkage: float | None = None,
     ) -> CovarianceResult:
         """
         Calculate shrinkage covariance matrix (Ledoit-Wolf).
@@ -220,7 +219,7 @@ class CovarianceCalculator:
 
     def calculate_exponential_covariance(
         self,
-        returns: Dict[str, List[Decimal]],
+        returns: dict[str, list[Decimal]],
         span: int = DEFAULT_EWMA_SPAN,
     ) -> CovarianceResult:
         """
@@ -245,7 +244,7 @@ class CovarianceCalculator:
         symbols = list(returns.keys())
 
         # Sanitize returns
-        returns_array, valid_symbols, valid_indices = self._sanitize_returns(returns, symbols)
+        returns_array, valid_symbols, _valid_indices = self._sanitize_returns(returns, symbols)
 
         # Calculate exponential weights
         n_obs = returns_array.shape[0]
@@ -308,9 +307,9 @@ class CovarianceCalculator:
 
     def _sanitize_returns(
         self,
-        returns: Dict[str, List[Decimal]],
-        symbols: List[str],
-    ) -> Tuple[np.ndarray, List[str], List[int]]:
+        returns: dict[str, list[Decimal]],
+        symbols: list[str],
+    ) -> tuple[np.ndarray, list[str], list[int]]:
         """
         Sanitize returns data by removing NaN and zero-variance assets.
 
@@ -436,7 +435,7 @@ class CovarianceCalculator:
         Calculate risk contribution of each asset.
 
         Component contribution to portfolio volatility:
-        RC_i = w_i * (Σw)_i / σ_p
+        RC_i = w_i * (Sigmaw)_i / sigma_p
 
         Args:
             weights: Portfolio weights
@@ -483,7 +482,7 @@ class CovarianceCalculator:
         avg_var = np.mean(np.diag(cov_matrix))
 
         # Effective number of bets
-        # N* = (w'Σw) / (σ²_avg)
+        # N* = (w'Sigmaw) / (sigma^2_avg)
         enb = portfolio_var / avg_var if avg_var > MIN_VARIANCE_THRESHOLD else 0
 
         return float(enb)

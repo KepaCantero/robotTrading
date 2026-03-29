@@ -6,7 +6,7 @@ import asyncio
 import logging
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any, Optional
 
 from .audit_trail import AuditTrail
 from .learning_storage import LearningEngineStorage
@@ -21,7 +21,7 @@ def integrate_meta_analyzer_with_runner(
     enable_audit: bool = True,
     enable_storage: bool = True,
     enable_analysis: bool = True,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Integrar meta_analyzer con ComprehensiveBacktestRunner.
 
@@ -36,24 +36,24 @@ def integrate_meta_analyzer_with_runner(
         Dict con instancias creadas
     """
     integration_results = {
-        'audit_trail': None,
-        'storage': None,
-        'analyzer': None,
-        'audit_hash': None,
+        "audit_trail": None,
+        "storage": None,
+        "analyzer": None,
+        "audit_hash": None,
     }
 
     # 1. Auditoría
     if enable_audit:
         audit_trail = AuditTrail()
         audit_hash = audit_trail.generate_hash(config_path)
-        integration_results['audit_trail'] = audit_trail
-        integration_results['audit_hash'] = audit_hash
+        integration_results["audit_trail"] = audit_trail
+        integration_results["audit_hash"] = audit_hash
         logger.info(f"✅ Auditoría habilitada: {audit_hash[:16]}...")
 
     # 2. Almacenamiento de pesos
     if enable_storage:
         storage = LearningEngineStorage()
-        integration_results['storage'] = storage
+        integration_results["storage"] = storage
         logger.info("✅ Almacenamiento de pesos habilitado")
 
     # 3. Analizador meta (para análisis posterior)
@@ -61,11 +61,11 @@ def integrate_meta_analyzer_with_runner(
         # El analizador se puede usar después de ejecutar los backtests
         results_dir = (
             runner.output_dir
-            if hasattr(runner, 'output_dir')
+            if hasattr(runner, "output_dir")
             else Path("reports/comprehensive_backtest")
         )
         analyzer = BacktestMetaAnalyzer(data_dir=str(results_dir))
-        integration_results['analyzer'] = analyzer
+        integration_results["analyzer"] = analyzer
         logger.info(f"✅ Analizador meta habilitado: {results_dir}")
 
     return integration_results
@@ -75,7 +75,7 @@ async def save_backtest_audit_and_weights(
     runner,
     audit_trail: AuditTrail,
     storage: Optional[LearningEngineStorage],
-    test_result: Dict[str, Any],
+    test_result: dict[str, Any],
     test_type: str,
     learning_engine_name: Optional[str] = None,
     learning_engine_weights: Optional[Any] = None,
@@ -93,18 +93,18 @@ async def save_backtest_audit_and_weights(
         learning_engine_weights: Pesos del learning engine (si aplica)
     """
     # Guardar registro de auditoría
-    if audit_trail and hasattr(runner, 'config_path'):
-        result_path = test_result.get('result_path') or str(runner.output_dir)
+    if audit_trail and hasattr(runner, "config_path"):
+        result_path = test_result.get("result_path") or str(runner.output_dir)
         await audit_trail.save_audit_record(
             config_path=runner.config_path,
-            hash_value=runner.audit_hash if hasattr(runner, 'audit_hash') else None,
+            hash_value=runner.audit_hash if hasattr(runner, "audit_hash") else None,
             metadata={
-                'test_type': test_type,
-                'timestamp': datetime.now().isoformat(),
-                'result_summary': {
-                    'total_pnl': test_result.get('total_pnl'),
-                    'sharpe_ratio': test_result.get('sharpe_ratio'),
-                    'total_trades': test_result.get('total_trades'),
+                "test_type": test_type,
+                "timestamp": datetime.now().isoformat(),
+                "result_summary": {
+                    "total_pnl": test_result.get("total_pnl"),
+                    "sharpe_ratio": test_result.get("sharpe_ratio"),
+                    "total_trades": test_result.get("total_trades"),
                 },
             },
             result_path=result_path,
@@ -119,9 +119,9 @@ async def save_backtest_audit_and_weights(
                 weights=learning_engine_weights,
                 test_id=test_id,
                 metadata={
-                    'test_type': test_type,
-                    'timestamp': datetime.now().isoformat(),
-                    'result_summary': test_result,
+                    "test_type": test_type,
+                    "timestamp": datetime.now().isoformat(),
+                    "result_summary": test_result,
                 },
             )
         except (asyncio.TimeoutError, OSError) as e:

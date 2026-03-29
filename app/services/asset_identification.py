@@ -8,7 +8,7 @@ for momentum trading strategies.
 import asyncio
 import logging
 from decimal import Decimal
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 from app.domain.models.assets import (
     Asset,
@@ -34,9 +34,9 @@ class AssetIdentificationService:
     """Service for identifying and ranking liquid assets."""
 
     def __init__(self):
-        self.asset_universes: Dict[AssetClass, AssetUniverse] = {}
-        self.liquidity_metrics: Dict[str, LiquidityMetrics] = {}
-        self.rankings: Dict[AssetClass, AssetRanking] = {}
+        self.asset_universes: dict[AssetClass, AssetUniverse] = {}
+        self.liquidity_metrics: dict[str, LiquidityMetrics] = {}
+        self.rankings: dict[AssetClass, AssetRanking] = {}
 
         # Initialize default universes
         self._initialize_default_universes()
@@ -47,7 +47,7 @@ class AssetIdentificationService:
             self.asset_universes[asset_class] = AssetUniverse(asset_class=asset_class, top_n=20)
             self.rankings[asset_class] = AssetRanking(asset_class=asset_class)
 
-    async def identify_liquid_assets(self, asset_class: AssetClass, limit: int = 20) -> List[Asset]:
+    async def identify_liquid_assets(self, asset_class: AssetClass, limit: int = 20) -> list[Asset]:
         """Identify the most liquid assets for a given asset class."""
         try:
             # Get predefined liquid assets for each class
@@ -65,7 +65,7 @@ class AssetIdentificationService:
             logger.error(f"Error identifying liquid assets for {asset_class}: {e}")
             return []
 
-    async def _get_predefined_liquid_assets(self, asset_class: AssetClass) -> List[Asset]:
+    async def _get_predefined_liquid_assets(self, asset_class: AssetClass) -> list[Asset]:
         """Get predefined liquid assets for each asset class."""
         if asset_class == AssetClass.EQUITY:
             return await self._get_liquid_equities()
@@ -78,7 +78,7 @@ class AssetIdentificationService:
         else:
             return []
 
-    async def _get_liquid_equities(self) -> List[Asset]:
+    async def _get_liquid_equities(self) -> list[Asset]:
         """Get liquid equity assets from MarketUniverseLoader (S&P 500)."""
         try:
             # Import here to avoid circular dependency
@@ -99,8 +99,8 @@ class AssetIdentificationService:
                     continue
 
                 try:
-                    avg_volume = Decimal(str(int(df['volume'].mean())))
-                    avg_price = Decimal(str(df['close'].mean()))
+                    avg_volume = Decimal(str(int(df["volume"].mean())))
+                    avg_price = Decimal(str(df["close"].mean()))
 
                     asset = Asset(
                         symbol=ticker,
@@ -128,7 +128,7 @@ class AssetIdentificationService:
         # Fallback to hardcoded list if API fails
         return await self._get_fallback_equities()
 
-    async def _get_liquid_cryptos(self) -> List[Asset]:
+    async def _get_liquid_cryptos(self) -> list[Asset]:
         """Get liquid cryptocurrency assets from MarketUniverseLoader."""
         try:
             # Import here to avoid circular dependency
@@ -152,7 +152,7 @@ class AssetIdentificationService:
                     continue
 
                 try:
-                    avg_volume = Decimal(str(int(df['volume'].mean())))
+                    avg_volume = Decimal(str(int(df["volume"].mean())))
 
                     asset = Asset(
                         symbol=(
@@ -182,7 +182,7 @@ class AssetIdentificationService:
 
         return await self._get_fallback_cryptos()
 
-    async def _get_liquid_forex(self) -> List[Asset]:
+    async def _get_liquid_forex(self) -> list[Asset]:
         """Get liquid forex pairs."""
         forex_pairs = [
             Asset(
@@ -278,7 +278,7 @@ class AssetIdentificationService:
         ]
         return forex_pairs
 
-    async def _get_liquid_commodities(self) -> List[Asset]:
+    async def _get_liquid_commodities(self) -> list[Asset]:
         """Get liquid commodity assets."""
         commodities = [
             Asset(
@@ -363,7 +363,7 @@ class AssetIdentificationService:
             logger.error(f"Error calculating liquidity score for {asset.symbol}: {e}")
             asset.liquidity_score = 0.0
 
-    async def update_asset_universe(self, asset_class: AssetClass, assets: List[Asset]) -> bool:
+    async def update_asset_universe(self, asset_class: AssetClass, assets: list[Asset]) -> bool:
         """Update asset universe with new assets."""
         try:
             universe = self.asset_universes[asset_class]
@@ -409,7 +409,7 @@ class AssetIdentificationService:
         except (asyncio.TimeoutError, OSError) as e:
             logger.error(f"Error updating rankings for {asset_class}: {e}")
 
-    async def get_top_liquid_assets(self, asset_class: AssetClass, limit: int = 20) -> List[Asset]:
+    async def get_top_liquid_assets(self, asset_class: AssetClass, limit: int = 20) -> list[Asset]:
         """Get top liquid assets for a given class."""
         try:
             universe = self.asset_universes[asset_class]
@@ -430,7 +430,7 @@ class AssetIdentificationService:
 
     async def filter_assets(
         self, asset_class: AssetClass, filter_criteria: AssetFilter
-    ) -> List[Asset]:
+    ) -> list[Asset]:
         """Filter assets based on criteria."""
         try:
             universe = self.asset_universes[asset_class]
@@ -466,7 +466,7 @@ class AssetIdentificationService:
             logger.error(f"Error getting asset {symbol}: {e}")
             return None
 
-    async def get_universe_summary(self, asset_class: AssetClass) -> Dict[str, Any]:
+    async def get_universe_summary(self, asset_class: AssetClass) -> dict[str, Any]:
         """Get universe summary."""
         try:
             universe = self.asset_universes[asset_class]
@@ -500,7 +500,7 @@ class AssetIdentificationService:
 
     # ============ FALLBACK METHODS (if MarketUniverseLoader fails) ============
 
-    async def _get_fallback_equities(self) -> List[Asset]:
+    async def _get_fallback_equities(self) -> list[Asset]:
         """Fallback hardcoded equities (used if MarketUniverseLoader fails)."""
         return [
             Asset(
@@ -595,7 +595,7 @@ class AssetIdentificationService:
             ),
         ]
 
-    async def _get_fallback_cryptos(self) -> List[Asset]:
+    async def _get_fallback_cryptos(self) -> list[Asset]:
         """Fallback hardcoded cryptos (used if MarketUniverseLoader fails)."""
         return [
             Asset(

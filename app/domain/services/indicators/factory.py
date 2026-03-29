@@ -47,24 +47,21 @@ class IndicatorCalculator(Protocol):
         data: Union[pd.DataFrame, pd.Series, list, np.ndarray],
         period: int = 14,
         return_array: bool = False,
-    ) -> Union[Optional[float], Optional[np.ndarray]]:
-        ...
+    ) -> Union[Optional[float], Optional[np.ndarray]]: ...
 
     def ema(
         self,
         data: Union[pd.DataFrame, pd.Series, list, np.ndarray],
         period: int = 20,
         return_array: bool = False,
-    ) -> Union[Optional[float], Optional[np.ndarray]]:
-        ...
+    ) -> Union[Optional[float], Optional[np.ndarray]]: ...
 
     def sma(
         self,
         data: Union[pd.DataFrame, pd.Series, list, np.ndarray],
         period: int = 20,
         return_array: bool = False,
-    ) -> Union[Optional[float], Optional[np.ndarray]]:
-        ...
+    ) -> Union[Optional[float], Optional[np.ndarray]]: ...
 
     def macd(
         self,
@@ -73,8 +70,7 @@ class IndicatorCalculator(Protocol):
         slow_period: int = 26,
         signal_period: int = 9,
         return_components: bool = True,
-    ) -> Union[Optional[float], tuple]:
-        ...
+    ) -> Union[Optional[float], tuple]: ...
 
     def atr(
         self,
@@ -83,8 +79,7 @@ class IndicatorCalculator(Protocol):
         close: Union[pd.DataFrame, pd.Series, list, np.ndarray],
         period: int = 14,
         return_array: bool = False,
-    ) -> Union[Optional[float], Optional[np.ndarray]]:
-        ...
+    ) -> Union[Optional[float], Optional[np.ndarray]]: ...
 
     def bollinger_bands(
         self,
@@ -92,8 +87,7 @@ class IndicatorCalculator(Protocol):
         period: int = 20,
         std_dev: float = 2.0,
         return_components: bool = True,
-    ) -> Union[tuple, dict]:
-        ...
+    ) -> Union[tuple, dict]: ...
 
     def stochastic(
         self,
@@ -103,8 +97,7 @@ class IndicatorCalculator(Protocol):
         k_period: int = 14,
         d_period: int = 3,
         return_components: bool = True,
-    ) -> Union[Optional[float], tuple]:
-        ...
+    ) -> Union[Optional[float], tuple]: ...
 
 
 class UnifiedIndicatorCalculator:
@@ -139,8 +132,7 @@ class UnifiedIndicatorCalculator:
 
         if backend == IndicatorBackend.NUMBA and not NUMBA_AVAILABLE:
             logger.warning(
-                "Numba backend requested but Numba not available. "
-                "Falling back to pandas backend."
+                "Numba backend requested but Numba not available. Falling back to pandas backend."
             )
             self.backend = IndicatorBackend.PANDAS
 
@@ -153,7 +145,7 @@ class UnifiedIndicatorCalculator:
         if isinstance(data, (pd.DataFrame, pd.Series, np.ndarray)):
             size = len(data)
         else:
-            size = len(data) if hasattr(data, '__len__') else 0
+            size = len(data) if hasattr(data, "__len__") else 0
 
         # Use numba for large datasets if available
         if size >= self.auto_threshold and NUMBA_AVAILABLE:
@@ -166,8 +158,8 @@ class UnifiedIndicatorCalculator:
     ) -> np.ndarray:
         """Convert data to numpy array for numba backend."""
         if isinstance(data, pd.DataFrame):
-            if 'close' in data.columns:
-                return data['close'].values
+            if "close" in data.columns:
+                return data["close"].values
             return data.iloc[:, 0].values
         elif isinstance(data, pd.Series):
             return data.values

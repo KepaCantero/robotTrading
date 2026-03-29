@@ -7,7 +7,6 @@ rebalancing, and related parameters.
 
 import logging
 from decimal import Decimal
-from typing import Dict
 
 from pydantic import Field, field_validator
 
@@ -132,7 +131,7 @@ class AccountConfiguration(ConfigBase):
     )
 
     # Crypto fallback prices (used when API is unavailable)
-    crypto_fallback_prices: Dict[str, Decimal] = Field(
+    crypto_fallback_prices: dict[str, Decimal] = Field(
         default_factory=lambda: {
             "BTC": Decimal("95000"),
             "ETH": Decimal("3500"),

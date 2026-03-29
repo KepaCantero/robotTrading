@@ -14,7 +14,7 @@ Uses centralized configuration from SpainTaxConfig.
 
 import logging
 from decimal import Decimal
-from typing import Dict, List, Optional
+from typing import Optional
 
 from app.shared.config.centralized_config import get_config
 from app.shared.utils.decimal_utils import to_decimal
@@ -43,7 +43,7 @@ class SpainTaxEngine(TaxEngine):
     All tax rates and thresholds are loaded from centralized configuration.
     """
 
-    def __init__(self, config: Optional[Dict] = None):
+    def __init__(self, config: Optional[dict] = None):
         """
         Initialize Spain tax engine with centralized configuration.
 
@@ -293,7 +293,7 @@ class SpainTaxEngine(TaxEngine):
 
         return self.calculate_capital_gains_tax(taxable_income)
 
-    def get_tax_brackets(self) -> List[Dict]:
+    def get_tax_brackets(self) -> list[dict]:
         """
         Get all tax brackets for display purposes.
 
@@ -324,7 +324,7 @@ class SpainTaxEngine(TaxEngine):
     def check_modelo_720_threshold(
         self,
         foreign_assets_value: Decimal,
-    ) -> Dict:
+    ) -> dict:
         """
         Check if foreign assets exceed Modelo 720 reporting threshold.
 
@@ -350,8 +350,8 @@ class SpainTaxEngine(TaxEngine):
 
     def calculate_compensated_tax(
         self,
-        gains: List[Decimal],
-        losses: List[Decimal],
+        gains: list[Decimal],
+        losses: list[Decimal],
     ) -> Decimal:
         """
         Calculate tax with gain/loss compensation.
@@ -371,7 +371,7 @@ class SpainTaxEngine(TaxEngine):
         net_gain = max(total_gains - total_losses, Decimal("0"))
 
         logger.info(
-            f"Gain compensation: gains={total_gains}, losses={total_losses}, " f"net={net_gain}"
+            f"Gain compensation: gains={total_gains}, losses={total_losses}, net={net_gain}"
         )
 
         return self.calculate_capital_gains_tax(net_gain)
@@ -380,7 +380,7 @@ class SpainTaxEngine(TaxEngine):
         self,
         unrealized_gains: Decimal,
         estimated_dividends: Optional[Decimal] = None,
-    ) -> Dict:
+    ) -> dict:
         """
         Estimate annual tax liability based on current positions.
 

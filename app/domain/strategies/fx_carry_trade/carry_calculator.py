@@ -25,14 +25,14 @@ from __future__ import annotations
 import logging
 import math
 from dataclasses import dataclass
-from datetime import date
 from decimal import Decimal
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING
 
 from app.domain.strategies.fx_carry_trade.models import FXCarrySignal, FXPair
 
 if TYPE_CHECKING:
     from collections.abc import Mapping
+    from datetime import date
 
     from app.domain.strategies.fx_carry_trade.fx_rates_provider import FXRateProvider
 
@@ -106,7 +106,7 @@ class CarryCalculator:
 
     def __init__(
         self,
-        signal_threshold: Optional[Decimal] = None,
+        signal_threshold: Decimal | None = None,
         signal_multiplier: float = 10.0,
     ) -> None:
         """

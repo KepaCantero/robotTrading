@@ -6,7 +6,7 @@ Stores configurations with versioning, search, and retrieval capabilities.
 
 import logging
 from datetime import datetime
-from typing import Dict, List, Optional
+from typing import Optional
 
 from .models import (
     ConfigurationListResponse,
@@ -35,16 +35,16 @@ class ConfigurationPersistence:
     def __init__(self):
         """Initialize persistence layer."""
         # Main storage: config_id -> StrategyConfiguration
-        self._configurations: Dict[str, StrategyConfiguration] = {}
+        self._configurations: dict[str, StrategyConfiguration] = {}
 
         # Version tracking: config_id -> List[VersionedConfiguration]
-        self._versions: Dict[str, List[VersionedConfiguration]] = {}
+        self._versions: dict[str, list[VersionedConfiguration]] = {}
 
         # Index for quick lookups: profile_id -> List[config_id]
-        self._profile_index: Dict[str, List[str]] = {}
+        self._profile_index: dict[str, list[str]] = {}
 
         # Index by objective: objective -> List[config_id]
-        self._objective_index: Dict[str, List[str]] = {}
+        self._objective_index: dict[str, list[str]] = {}
 
         logger.info("✅ ConfigurationPersistence initialized")
 
@@ -240,7 +240,7 @@ class ConfigurationPersistence:
     async def get_configuration_history(
         self,
         config_id: str,
-    ) -> List[VersionedConfiguration]:
+    ) -> list[VersionedConfiguration]:
         """
         Get version history for a configuration.
 
@@ -259,7 +259,7 @@ class ConfigurationPersistence:
         self,
         strategy_name: Optional[str] = None,
         deployment_status: Optional[str] = None,
-    ) -> List[StrategyConfiguration]:
+    ) -> list[StrategyConfiguration]:
         """
         Search configurations by criteria.
 
@@ -280,7 +280,7 @@ class ConfigurationPersistence:
 
         return results
 
-    def get_persistence_status(self) -> Dict:
+    def get_persistence_status(self) -> dict:
         """Get persistence layer operational status."""
         active_configs = sum(1 for c in self._configurations.values() if c.is_active)
         total_configs = len(self._configurations)

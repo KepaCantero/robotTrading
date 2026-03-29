@@ -5,7 +5,7 @@ TASK-4: Sistema de manejo de errores unificado
 
 import logging
 import traceback
-from typing import Any, Dict, NoReturn, Optional, Union
+from typing import Any, NoReturn, Optional, Union
 
 from fastapi import HTTPException, Request
 from fastapi.exceptions import RequestValidationError
@@ -15,13 +15,15 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 from app.services.centralized_logging import LogLevel, LogService, centralized_logger
 from app.shared.exceptions.trading_exceptions import (
     AlgoTradingDatabaseError as DatabaseError,
+)
+from app.shared.exceptions.trading_exceptions import (
     AlgoTradingError,
     BusinessLogicError,
     ConfigurationError,
     ErrorCategory,
     ErrorSeverity,
     ExternalAPIError,
-    SystemError,
+    TradingSystemError,
     ValidationError,
 )
 
@@ -102,10 +104,10 @@ class ErrorHandler:
         """Handle generic exceptions."""
 
         # Log the full traceback
-        self.logger.error(f"Unhandled exception: {str(error)}", exc_info=True)
+        self.logger.error(f"Unhandled exception: {error!s}", exc_info=True)
 
         # Create system error
-        algotrading_error = SystemError(
+        algotrading_error = TradingSystemError(
             message="An unexpected error occurred",
             component="system",
             details={
@@ -251,7 +253,7 @@ def create_error_response(
     message: str,
     category: ErrorCategory,
     severity: ErrorSeverity = ErrorSeverity.MEDIUM,
-    details: Optional[Dict[str, Any]] = None,
+    details: Optional[dict[str, Any]] = None,
     status_code: Optional[int] = None,
 ) -> JSONResponse:
     """Create a standardized error response."""
@@ -277,7 +279,7 @@ def raise_validation_error(
     message: str,
     field: Optional[str] = None,
     value: Optional[Any] = None,
-    details: Optional[Dict[str, Any]] = None,
+    details: Optional[dict[str, Any]] = None,
 ) -> NoReturn:
     """Raise a validation error."""
     raise ValidationError(message, field, value, details)
@@ -286,7 +288,7 @@ def raise_validation_error(
 def raise_business_logic_error(
     message: str,
     operation: Optional[str] = None,
-    details: Optional[Dict[str, Any]] = None,
+    details: Optional[dict[str, Any]] = None,
 ) -> NoReturn:
     """Raise a business logic error."""
     raise BusinessLogicError(message, operation, details)
@@ -296,7 +298,7 @@ def raise_external_api_error(
     message: str,
     api_name: str,
     status_code: Optional[int] = None,
-    details: Optional[Dict[str, Any]] = None,
+    details: Optional[dict[str, Any]] = None,
 ) -> NoReturn:
     """Raise an external API error."""
     raise ExternalAPIError(message, api_name, status_code, details)
@@ -306,7 +308,7 @@ def raise_database_error(
     message: str,
     operation: Optional[str] = None,
     table: Optional[str] = None,
-    details: Optional[Dict[str, Any]] = None,
+    details: Optional[dict[str, Any]] = None,
 ) -> NoReturn:
     """Raise a database error."""
     raise DatabaseError(message, operation, table, details)
@@ -315,7 +317,7 @@ def raise_database_error(
 def raise_configuration_error(
     message: str,
     config_key: Optional[str] = None,
-    details: Optional[Dict[str, Any]] = None,
+    details: Optional[dict[str, Any]] = None,
 ) -> NoReturn:
     """Raise a configuration error."""
     raise ConfigurationError(message, config_key, details)

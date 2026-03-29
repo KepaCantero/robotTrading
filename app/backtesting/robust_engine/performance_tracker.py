@@ -19,7 +19,7 @@ import logging
 from dataclasses import dataclass, field
 from datetime import date
 from decimal import Decimal
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 
 import numpy as np
 import pandas as pd
@@ -55,7 +55,7 @@ class YearlyBreakdown:
     cagr: float = field(default=0.0)
     volatility: float = field(default=0.0)
     max_drawdown: float = field(default=0.0)
-    sharpe_ratio: Optional[float] = field(default=None)
+    sharpe_ratio: float | None = field(default=None)
     trades: int = field(default=0)
     win_rate: float = field(default=0.0)
     best_month: float = field(default=0.0)
@@ -74,10 +74,10 @@ class RollingMetrics:
         window_10y: 10-year rolling metrics
     """
 
-    window_1y: Dict[str, float] = field(default_factory=dict)
-    window_3y: Dict[str, float] = field(default_factory=dict)
-    window_5y: Dict[str, float] = field(default_factory=dict)
-    window_10y: Dict[str, float] = field(default_factory=dict)
+    window_1y: dict[str, float] = field(default_factory=dict)
+    window_3y: dict[str, float] = field(default_factory=dict)
+    window_5y: dict[str, float] = field(default_factory=dict)
+    window_10y: dict[str, float] = field(default_factory=dict)
 
 
 @dataclass
@@ -96,8 +96,8 @@ class RegimeAnalysis:
     bull_market_return: float = field(default=0.0)
     bear_market_return: float = field(default=0.0)
     sideways_market_return: float = field(default=0.0)
-    bull_market_periods: List[Tuple[date, date]] = field(default_factory=list)
-    bear_market_periods: List[Tuple[date, date]] = field(default_factory=list)
+    bull_market_periods: list[tuple[date, date]] = field(default_factory=list)
+    bear_market_periods: list[tuple[date, date]] = field(default_factory=list)
 
 
 # NOTE: PerformanceMetrics is now imported from app.backtesting.models
@@ -133,7 +133,7 @@ class PerformanceTracker:
     def __init__(
         self,
         initial_capital: Decimal,
-        risk_free_rate: Decimal = None,
+        risk_free_rate: Decimal | None = None,
     ):
         """
         Initialize the performance tracker.
@@ -150,19 +150,19 @@ class PerformanceTracker:
         )
 
         # Equity curve tracking
-        self.equity_curve: List[Tuple[date, Decimal]] = []
+        self.equity_curve: list[tuple[date, Decimal]] = []
         self._peak_equity: Decimal = initial_capital
         self._current_drawdown: Decimal = Decimal("0")
 
         # Trade tracking
-        self._trades: List[Dict[str, Any]] = []
-        self._winning_trades: List[float] = []
-        self._losing_trades: List[float] = []
+        self._trades: list[dict[str, Any]] = []
+        self._winning_trades: list[float] = []
+        self._losing_trades: list[float] = []
 
         # Drawdown tracking
-        self._drawdowns: List[Tuple[date, date, Decimal]] = []
+        self._drawdowns: list[tuple[date, date, Decimal]] = []
         self._in_drawdown: bool = False
-        self._drawdown_start: Optional[date] = None
+        self._drawdown_start: date | None = None
 
         # Streaks
         self._current_winning_streak: int = 0
@@ -174,7 +174,7 @@ class PerformanceTracker:
         self,
         current_date: date,
         current_capital: Decimal,
-        trades: Optional[List[Dict[str, Any]]] = None,
+        trades: list[dict[str, Any]] | None = None,
     ) -> None:
         """
         Update tracker with new equity value.
@@ -291,7 +291,7 @@ class PerformanceTracker:
         gross_loss = abs(sum(self._losing_trades))
         profit_factor = gross_profit / gross_loss if gross_loss > 0 else None
 
-        expectancy = ((gross_profit - gross_loss)) / total_trades if total_trades > 0 else None
+        expectancy = (gross_profit - gross_loss) / total_trades if total_trades > 0 else None
 
         # Yearly breakdown
         yearly_returns = self._calculate_yearly_returns(equity_series)
@@ -358,7 +358,7 @@ class PerformanceTracker:
             losing_streak=self._max_losing_streak,
         )
 
-    def get_yearly_breakdown(self) -> List[YearlyBreakdown]:
+    def get_yearly_breakdown(self) -> list[YearlyBreakdown]:
         """
         Get year-by-year performance breakdown.
 
@@ -403,7 +403,7 @@ class PerformanceTracker:
             for month in range(1, 13):
                 month_data = year_data[year_data.index.month == month]
                 if len(month_data) >= 2:
-                    monthly_returns.append((month_data.iloc[-1] / month_data.iloc[0] - 1))
+                    monthly_returns.append(month_data.iloc[-1] / month_data.iloc[0] - 1)
 
             best_month = max(monthly_returns) if monthly_returns else 0.0
             worst_month = min(monthly_returns) if monthly_returns else 0.0
@@ -448,7 +448,7 @@ class PerformanceTracker:
 
     def get_rolling_metrics(
         self,
-        windows: List[int] = None,  # Default calculated from annual_trading_days
+        windows: list[int] | None = None,  # Default calculated from annual_trading_days
     ) -> RollingMetrics:
         """
         Calculate rolling metrics over different windows.
@@ -524,7 +524,7 @@ class PerformanceTracker:
 
         return max_duration
 
-    def _calculate_sortino_ratio(self, returns: pd.Series) -> Optional[float]:
+    def _calculate_sortino_ratio(self, returns: pd.Series) -> float | None:
         """Calculate Sortino ratio (downside deviation)."""
         if len(returns) < 2:
             return None
@@ -543,7 +543,7 @@ class PerformanceTracker:
         excess_return = returns.mean() * annual_trading_days - float(self.risk_free_rate)
         return float(excess_return / downside_deviation)
 
-    def _calculate_omega_ratio(self, returns: pd.Series, threshold: float = 0.0) -> Optional[float]:
+    def _calculate_omega_ratio(self, returns: pd.Series, threshold: float = 0.0) -> float | None:
         """Calculate Omega ratio."""
         if len(returns) < 2:
             return None
@@ -556,13 +556,13 @@ class PerformanceTracker:
 
         return float(gains.sum() / losses.sum())
 
-    def _calculate_ulcer_index(self, equity_series: pd.Series) -> Optional[float]:
+    def _calculate_ulcer_index(self, equity_series: pd.Series) -> float | None:
         """Calculate Ulcer Index."""
         cummax = equity_series.cummax()
         drawdown = ((equity_series - cummax) / cummax) ** 2
         return float(np.sqrt(drawdown.mean())) if len(drawdown) > 0 else None
 
-    def _calculate_tail_ratio(self, returns: pd.Series) -> Optional[float]:
+    def _calculate_tail_ratio(self, returns: pd.Series) -> float | None:
         """Calculate tail ratio (95th percentile / 5th percentile)."""
         if len(returns) < 10:
             return None
@@ -575,7 +575,7 @@ class PerformanceTracker:
 
         return float(abs(percentile_95 / percentile_5))
 
-    def _calculate_yearly_returns(self, equity_series: pd.Series) -> Dict[int, float]:
+    def _calculate_yearly_returns(self, equity_series: pd.Series) -> dict[int, float]:
         """Calculate returns by year."""
         yearly_returns = {}
 

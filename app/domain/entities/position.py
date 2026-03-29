@@ -12,7 +12,6 @@ from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from decimal import Decimal
 from enum import Enum
-from typing import Optional
 
 from app.domain.value_objects.money import Money
 
@@ -62,12 +61,12 @@ class Position:
 
     # Tracking
     status: PositionStatus = PositionStatus.OPEN
-    exit_date: Optional[datetime] = None
+    exit_date: datetime | None = None
     avg_exit_price: Decimal = Decimal("0")
 
     # Risk metrics
-    stop_loss: Optional[Decimal] = None
-    take_profit: Optional[Decimal] = None
+    stop_loss: Decimal | None = None
+    take_profit: Decimal | None = None
     max_price: Decimal = Decimal("0")  # Highest price since entry
     min_price: Decimal = Decimal("0")  # Lowest price since entry
 
@@ -78,22 +77,22 @@ class Position:
     def __init__(
         self,
         symbol: str,
-        entry_date: Optional[datetime] = None,
+        entry_date: datetime | None = None,
         side: PositionSide = PositionSide.LONG,
-        quantity: Optional[Decimal] = None,
-        avg_entry_price: Optional[Decimal] = None,
-        avg_price: Optional[Decimal] = None,  # Alias for avg_entry_price
-        current_price: Optional[Decimal] = None,
+        quantity: Decimal | None = None,
+        avg_entry_price: Decimal | None = None,
+        avg_price: Decimal | None = None,  # Alias for avg_entry_price
+        current_price: Decimal | None = None,
         currency: str = "USD",
         status: PositionStatus = PositionStatus.OPEN,
-        exit_date: Optional[datetime] = None,
-        avg_exit_price: Optional[Decimal] = None,
-        stop_loss: Optional[Decimal] = None,
-        take_profit: Optional[Decimal] = None,
-        max_price: Optional[Decimal] = None,
-        min_price: Optional[Decimal] = None,
-        created_at: Optional[datetime] = None,
-        updated_at: Optional[datetime] = None,
+        exit_date: datetime | None = None,
+        avg_exit_price: Decimal | None = None,
+        stop_loss: Decimal | None = None,
+        take_profit: Decimal | None = None,
+        max_price: Decimal | None = None,
+        min_price: Decimal | None = None,
+        created_at: datetime | None = None,
+        updated_at: datetime | None = None,
     ):
         """
         Initialize Position.
@@ -142,22 +141,22 @@ class Position:
             entry_date = now
 
         # Set all attributes directly to bypass dataclass __init__
-        self.__dict__['symbol'] = symbol
-        self.__dict__['entry_date'] = entry_date
-        self.__dict__['side'] = side
-        self.__dict__['quantity'] = quantity
-        self.__dict__['avg_entry_price'] = avg_entry_price
-        self.__dict__['current_price'] = current_price
-        self.__dict__['currency'] = currency
-        self.__dict__['status'] = status
-        self.__dict__['exit_date'] = exit_date
-        self.__dict__['avg_exit_price'] = avg_exit_price
-        self.__dict__['stop_loss'] = stop_loss
-        self.__dict__['take_profit'] = take_profit
-        self.__dict__['max_price'] = max_price if max_price != Decimal("0") else current_price
-        self.__dict__['min_price'] = min_price if min_price != Decimal("0") else current_price
-        self.__dict__['created_at'] = created_at
-        self.__dict__['updated_at'] = updated_at
+        self.__dict__["symbol"] = symbol
+        self.__dict__["entry_date"] = entry_date
+        self.__dict__["side"] = side
+        self.__dict__["quantity"] = quantity
+        self.__dict__["avg_entry_price"] = avg_entry_price
+        self.__dict__["current_price"] = current_price
+        self.__dict__["currency"] = currency
+        self.__dict__["status"] = status
+        self.__dict__["exit_date"] = exit_date
+        self.__dict__["avg_exit_price"] = avg_exit_price
+        self.__dict__["stop_loss"] = stop_loss
+        self.__dict__["take_profit"] = take_profit
+        self.__dict__["max_price"] = max_price if max_price != Decimal("0") else current_price
+        self.__dict__["min_price"] = min_price if min_price != Decimal("0") else current_price
+        self.__dict__["created_at"] = created_at
+        self.__dict__["updated_at"] = updated_at
 
         # Validate
         self._validate()
@@ -478,7 +477,7 @@ class Position:
         else:  # SHORT
             return self.current_price <= self.take_profit
 
-    def get_risk_reward_ratio(self) -> Optional[Decimal]:
+    def get_risk_reward_ratio(self) -> Decimal | None:
         """
         Calculate risk/reward ratio.
 
@@ -526,8 +525,8 @@ class Position:
         quantity: Decimal,
         entry_price: Decimal,
         currency: str = "USD",
-        stop_loss: Optional[Decimal] = None,
-        take_profit: Optional[Decimal] = None,
+        stop_loss: Decimal | None = None,
+        take_profit: Decimal | None = None,
     ) -> Position:
         """Create a new long position."""
         logger.info(
@@ -559,8 +558,8 @@ class Position:
         quantity: Decimal,
         entry_price: Decimal,
         currency: str = "USD",
-        stop_loss: Optional[Decimal] = None,
-        take_profit: Optional[Decimal] = None,
+        stop_loss: Decimal | None = None,
+        take_profit: Decimal | None = None,
     ) -> Position:
         """Create a new short position."""
         logger.info(

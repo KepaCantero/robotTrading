@@ -7,7 +7,7 @@ Provides paper trading simulation without real money.
 import logging
 from datetime import datetime
 from decimal import Decimal
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -19,11 +19,11 @@ class PaperTradingService:
         if initial_capital is None:
             initial_capital = Decimal("100000")
         self._capital = initial_capital
-        self._positions: Dict[str, Any] = {}
-        self._orders: List[Dict[str, Any]] = []
+        self._positions: dict[str, Any] = {}
+        self._orders: list[dict[str, Any]] = []
         self._pnl = Decimal("0")
 
-    async def get_portfolio(self) -> Dict[str, Any]:
+    async def get_portfolio(self) -> dict[str, Any]:
         """Get current portfolio state."""
         return {
             "capital": self._capital,
@@ -38,7 +38,7 @@ class PaperTradingService:
         side: str,
         quantity: Decimal,
         price: Optional[Decimal] = None,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Place a paper trading order."""
         order = {
             "order_id": f"order_{len(self._orders)}",
@@ -52,11 +52,11 @@ class PaperTradingService:
         self._orders.append(order)
         return order
 
-    async def get_positions(self) -> List[Dict[str, Any]]:
+    async def get_positions(self) -> list[dict[str, Any]]:
         """Get all positions."""
         return list(self._positions.values())
 
-    async def get_position(self, symbol: str) -> Optional[Dict[str, Any]]:
+    async def get_position(self, symbol: str) -> Optional[dict[str, Any]]:
         """Get position for a specific symbol."""
         return self._positions.get(symbol)
 
@@ -69,7 +69,7 @@ class PaperTradingService:
         """Simulate a trade without executing."""
         return True
 
-    async def get_circuit_breaker_status(self) -> Dict[str, Any]:
+    async def get_circuit_breaker_status(self) -> dict[str, Any]:
         """Get circuit breaker status."""
         return {}
 

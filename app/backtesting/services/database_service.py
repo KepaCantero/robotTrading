@@ -14,8 +14,7 @@ from __future__ import annotations
 
 import logging
 import threading
-from pathlib import Path
-from typing import Any, Dict
+from typing import TYPE_CHECKING, Any
 from uuid import uuid4
 
 from sqlalchemy import create_engine
@@ -29,8 +28,12 @@ from sqlalchemy.exc import (
 from sqlalchemy.orm import sessionmaker
 
 from app.backtesting.services.models import ProfileResult, ProfileResultDB
-from app.domain.models.input_profile import InputProfile
 from app.shared.utils.tier_mapper import map_profile_tier_to_config
+
+if TYPE_CHECKING:
+    from pathlib import Path
+
+    from app.domain.models.input_profile import InputProfile
 
 logger = logging.getLogger(__name__)
 
@@ -122,7 +125,7 @@ class DatabaseService:
         finally:
             session.close()
 
-    def batch_store_results(self, results: Dict[str, ProfileResult]) -> None:
+    def batch_store_results(self, results: dict[str, ProfileResult]) -> None:
         """
         Store multiple results in database sequentially.
 
@@ -218,7 +221,7 @@ class DatabaseService:
         finally:
             session.close()
 
-    def get_best_strategy(self, objective: str, tier: str, risk: str) -> Dict[str, Any]:
+    def get_best_strategy(self, objective: str, tier: str, risk: str) -> dict[str, Any]:
         """
         Get best strategy for specific objective, tier, and risk.
 

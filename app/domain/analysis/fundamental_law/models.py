@@ -28,7 +28,7 @@ class FundamentalLawComponents:
     Components of the Fundamental Law of Active Management.
 
     The Fundamental Law states:
-        IR = IC × √BR × TC
+        IR = IC * sqrtBR * TC
 
     Where:
         IR = Information Ratio (active return / tracking error)
@@ -65,7 +65,7 @@ class FundamentalLawComponents:
         ...     breadth_sqrt=Decimal("20.0"),
         ...     transfer_coefficient=Decimal("1.0")
         ... )
-        >>> # Verify the fundamental law: IR = IC × √BR × TC
+        >>> # Verify the fundamental law: IR = IC * sqrtBR * TC
         >>> components.validate()
         True
     """
@@ -80,7 +80,7 @@ class FundamentalLawComponents:
         """
         Validate that the components satisfy the Fundamental Law.
 
-        The law states: IR = IC × √BR × TC
+        The law states: IR = IC * sqrtBR * TC
 
         Args:
             tolerance: Acceptable deviation from exact equality (default: 1%)
@@ -328,9 +328,9 @@ class ICMetrics:
         Uses the same config-based assessment as FundamentalLawCalculator.
         """
         config = get_config()
-        ic_excellent = Decimal(str(getattr(config.trading, 'fundamental_law_ic_excellent', 0.05)))
-        ic_good = Decimal(str(getattr(config.trading, 'fundamental_law_ic_good', 0.03)))
-        ic_fair = Decimal(str(getattr(config.trading, 'fundamental_law_ic_fair', 0.01)))
+        ic_excellent = Decimal(str(getattr(config.trading, "fundamental_law_ic_excellent", 0.05)))
+        ic_good = Decimal(str(getattr(config.trading, "fundamental_law_ic_good", 0.03)))
+        ic_fair = Decimal(str(getattr(config.trading, "fundamental_law_ic_fair", 0.01)))
 
         if self.ic >= ic_excellent:
             return "excellent"
@@ -377,8 +377,8 @@ class ICMetrics:
         from app.shared.config.centralized_config import get_config
 
         cfg = get_config()
-        long_threshold = Decimal(str(getattr(cfg.trading, 'signal_persistence_long', 0.7)))
-        medium_threshold = Decimal(str(getattr(cfg.trading, 'signal_persistence_medium', 0.4)))
+        long_threshold = Decimal(str(getattr(cfg.trading, "signal_persistence_long", 0.7)))
+        medium_threshold = Decimal(str(getattr(cfg.trading, "signal_persistence_medium", 0.4)))
 
         if decay_ratio >= long_threshold:
             persistence = "long"  # Signal persists well
@@ -410,14 +410,14 @@ class BreadthMetrics:
 
     Attributes:
         annual_breadth: Total number of bets per year
-            - Example: Weekly rebalancing of 100 stocks = 52 × 100 = 5200
+            - Example: Weekly rebalancing of 100 stocks = 52 * 100 = 5200
             - Adjusted for independence factor
         independence_factor: Factor accounting for correlation between bets
             - Range: [0, 1]
             - 1.0 = All bets are independent
             - 0.1 = High correlation (bets are nearly redundant)
         effective_breadth: Annual breadth adjusted for independence
-            - effective_breadth = annual_breadth × independence_factor
+            - effective_breadth = annual_breadth * independence_factor
         notes: Additional context about the breadth calculation
 
     Examples:
@@ -455,8 +455,8 @@ class BreadthMetrics:
         """
         # Get breadth thresholds from config (use defaults if not available)
         config = get_config()
-        breadth_high = getattr(config.trading, 'breadth_high_threshold', 1000)
-        breadth_medium = getattr(config.trading, 'breadth_medium_threshold', 100)
+        breadth_high = getattr(config.trading, "breadth_high_threshold", 1000)
+        breadth_medium = getattr(config.trading, "breadth_medium_threshold", 100)
 
         if self.effective_breadth >= Decimal(str(breadth_high)):
             category = "high"
@@ -482,7 +482,7 @@ class BreadthMetrics:
         Calculate the square root of effective breadth.
 
         Returns:
-            √(effective_breadth), the breadth factor in the Fundamental Law
+            sqrt(effective_breadth), the breadth factor in the Fundamental Law
 
         Examples:
             >>> metrics = BreadthMetrics(
@@ -579,16 +579,16 @@ class StrategyAnalysis:
 
             # Add general suggestions based on skill level
             if self.skill_level == "poor":
-                lines.append("  • Focus on improving forecast quality (IC)")
-                lines.append("  • Review and refine alpha generation model")
+                lines.append("  * Focus on improving forecast quality (IC)")
+                lines.append("  * Review and refine alpha generation model")
 
             if self.breadth_assessment == "low":
-                lines.append("  • Increase trading frequency")
-                lines.append("  • Expand universe of tradeable assets")
+                lines.append("  * Increase trading frequency")
+                lines.append("  * Expand universe of tradeable assets")
 
             tc = self.components.transfer_coefficient
             if tc < Decimal("0.7"):
-                lines.append("  • Reduce portfolio constraints to improve TC")
+                lines.append("  * Reduce portfolio constraints to improve TC")
 
             lines.append("")
         else:

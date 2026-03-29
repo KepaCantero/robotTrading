@@ -12,7 +12,7 @@ from __future__ import annotations
 
 import logging
 from functools import wraps
-from typing import Callable, Dict, List, Type, TypeVar, Union
+from typing import Callable, TypeVar
 
 T = TypeVar("T")
 
@@ -39,7 +39,7 @@ class _PlaceholderValidator:
         @staticmethod
         def validate_order_params(
             symbol: str, side: str, quantity: float, price: float
-        ) -> Dict[str, object]:
+        ) -> dict[str, object]:
             return {
                 "symbol": symbol,
                 "side": side,
@@ -90,15 +90,15 @@ def validate_symbol(func: Callable) -> Callable:
     """Validate symbol parameter in request."""
 
     @wraps(func)
-    async def wrapper(*args, symbol: str = None, **kwargs):
+    async def wrapper(*args, symbol: str | None = None, **kwargs):
         logger.debug(
             "Validating symbol parameter", extra={"symbol": symbol, "function": func.__name__}
         )
         if symbol:
-            kwargs['symbol'] = validator.trading.validate_symbol(symbol)
+            kwargs["symbol"] = validator.trading.validate_symbol(symbol)
             logger.debug(
                 "Symbol validated successfully",
-                extra={"symbol": kwargs['symbol'], "function": func.__name__},
+                extra={"symbol": kwargs["symbol"], "function": func.__name__},
             )
         return await func(*args, **kwargs)
 
@@ -114,29 +114,29 @@ def validate_order_params(func: Callable) -> Callable:
             "Validating order parameters",
             extra={
                 "function": func.__name__,
-                "symbol": kwargs.get('symbol'),
-                "side": kwargs.get('side'),
+                "symbol": kwargs.get("symbol"),
+                "side": kwargs.get("side"),
             },
         )
-        if not kwargs.get('symbol'):
+        if not kwargs.get("symbol"):
             logger.error(
                 "Order validation failed - symbol required", extra={"function": func.__name__}
             )
             raise ValidationError("symbol is required")
 
         validated = validator.trading.validate_order_params(
-            kwargs.get('symbol'),
-            kwargs.get('side'),
-            kwargs.get('quantity'),
-            kwargs.get('price'),
+            kwargs.get("symbol"),
+            kwargs.get("side"),
+            kwargs.get("quantity"),
+            kwargs.get("price"),
         )
         kwargs.update(validated)
         logger.debug(
             "Order parameters validated successfully",
             extra={
                 "function": func.__name__,
-                "symbol": validated.get('symbol'),
-                "side": validated.get('side'),
+                "symbol": validated.get("symbol"),
+                "side": validated.get("side"),
             },
         )
         return await func(*args, **kwargs)
@@ -153,15 +153,15 @@ def validate_and_sanitize_input_decorator(func: Callable) -> Callable:
             "Validating and sanitizing inputs",
             extra={"function": func.__name__, "keys": list(kwargs.keys())},
         )
-        if 'symbol' in kwargs:
-            original = kwargs.get('symbol')
-            kwargs['symbol'] = InputSanitizer.sanitize_symbol(original)
+        if "symbol" in kwargs:
+            original = kwargs.get("symbol")
+            kwargs["symbol"] = InputSanitizer.sanitize_symbol(original)
             logger.debug(
                 "Symbol sanitized",
                 extra={
                     "function": func.__name__,
                     "original": original,
-                    "sanitized": kwargs['symbol'],
+                    "sanitized": kwargs["symbol"],
                 },
             )
         return await func(*args, **kwargs)
@@ -173,7 +173,7 @@ def validate_list_input(func: Callable) -> Callable:
     """Validate list input."""
 
     @wraps(func)
-    async def wrapper(*args, value: list = None, sanitize_elements: bool = True, **kwargs):
+    async def wrapper(*args, value: list | None = None, sanitize_elements: bool = True, **kwargs):
         logger.debug(
             "Validating list input",
             extra={
@@ -201,7 +201,7 @@ def validate_list_input(func: Callable) -> Callable:
                 element = InputSanitizer.sanitize_string(element)
             validated.append(element)
 
-        kwargs['value'] = validated
+        kwargs["value"] = validated
         logger.debug(
             "List input validated",
             extra={
@@ -226,8 +226,8 @@ def validate_request(func: Callable) -> Callable:
 
 
 def validate_request_model(
-    model_class: Type[T],
-    data: Dict[str, object],
+    model_class: type[T],
+    data: dict[str, object],
     sanitize: bool = True,
 ) -> T:
     """
@@ -248,7 +248,11 @@ def validate_request_model(
     return result
 
 
-def validate_and_sanitize_input(data: Union[str, int, float, Dict[str, object], List[object]], input_type: str = "auto", **constraints) -> Union[str, int, float, Dict[str, object], List[object]]:
+def validate_and_sanitize_input(
+    data: str | int | float | dict[str, object] | list[object],
+    input_type: str = "auto",
+    **constraints,
+) -> str | int | float | dict[str, object] | list[object]:
     """
     Convenience function to validate and sanitize any input.
 
@@ -281,10 +285,10 @@ def validate_and_sanitize_input(data: Union[str, int, float, Dict[str, object], 
     elif input_type == "order":
         if isinstance(data, dict):
             result = validator.trading.validate_order_params(
-                symbol=data.get('symbol'),
-                side=data.get('side'),
-                quantity=data.get('quantity'),
-                price=data.get('price'),
+                symbol=data.get("symbol"),
+                side=data.get("side"),
+                quantity=data.get("quantity"),
+                price=data.get("price"),
             )
         else:
             result = data

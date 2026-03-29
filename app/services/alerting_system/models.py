@@ -9,7 +9,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from decimal import Decimal
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -68,10 +68,10 @@ class NotificationTarget:
     enabled: bool = True
     retry_count: int = 3
     timeout_seconds: int = 10
-    headers: Dict[str, str] = field(default_factory=dict)
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    headers: dict[str, str] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
-    def to_dict(self) -> Dict:
+    def to_dict(self) -> dict:
         """Convert to dictionary."""
         return {
             "channel_type": self.channel_type.value,
@@ -127,7 +127,7 @@ class ThresholdRule:
         )
         return result
 
-    def to_dict(self) -> Dict:
+    def to_dict(self) -> dict:
         """Convert to dictionary."""
         return {
             "metric_name": self.metric_name,
@@ -149,7 +149,7 @@ class ChangeRule:
     portfolio_id: Optional[str] = None
     direction: str = "any"  # "up", "down", or "any"
 
-    def to_dict(self) -> Dict:
+    def to_dict(self) -> dict:
         """Convert to dictionary."""
         return {
             "metric_name": self.metric_name,
@@ -172,12 +172,12 @@ class AlertRule:
     enabled: bool = True
 
     # Rule composition
-    threshold_rules: List[ThresholdRule] = field(default_factory=list)
-    change_rules: List[ChangeRule] = field(default_factory=list)
+    threshold_rules: list[ThresholdRule] = field(default_factory=list)
+    change_rules: list[ChangeRule] = field(default_factory=list)
     logic_operator: LogicOperator = LogicOperator.OR
 
     # Notification configuration
-    notification_targets: List[NotificationTarget] = field(default_factory=list)
+    notification_targets: list[NotificationTarget] = field(default_factory=list)
 
     # De-duplication
     deduplicate_minutes: int = 5  # Don't trigger same alert within N minutes
@@ -185,9 +185,9 @@ class AlertRule:
     # Metadata
     created_at: datetime = field(default_factory=datetime.utcnow)
     updated_at: datetime = field(default_factory=datetime.utcnow)
-    tags: Dict[str, str] = field(default_factory=dict)
+    tags: dict[str, str] = field(default_factory=dict)
 
-    def to_dict(self) -> Dict:
+    def to_dict(self) -> dict:
         """Convert to dictionary."""
         return {
             "rule_id": self.rule_id,
@@ -228,13 +228,13 @@ class AlertEvent:
 
     # Message
     message: str = ""
-    details: Dict[str, Any] = field(default_factory=dict)
+    details: dict[str, Any] = field(default_factory=dict)
 
     # Notifications sent
     notifications_sent: int = 0
     last_notification_at: Optional[datetime] = None
 
-    def to_dict(self) -> Dict:
+    def to_dict(self) -> dict:
         """Convert to dictionary."""
         return {
             "event_id": self.event_id,
@@ -266,9 +266,9 @@ class AlertHistory:
     rule_id: str
     action: str  # "triggered", "resolved", "acknowledged", "notification_sent"
     timestamp: datetime = field(default_factory=datetime.utcnow)
-    details: Dict[str, Any] = field(default_factory=dict)
+    details: dict[str, Any] = field(default_factory=dict)
 
-    def to_dict(self) -> Dict:
+    def to_dict(self) -> dict:
         """Convert to dictionary."""
         return {
             "history_id": self.history_id,
@@ -290,7 +290,7 @@ class AlertEvaluationContext:
     portfolio_id: Optional[str] = None
     previous_value: Optional[Decimal] = None
     timestamp: datetime = field(default_factory=datetime.utcnow)
-    window_data: List[Decimal] = field(default_factory=list)  # Historical values for window
+    window_data: list[Decimal] = field(default_factory=list)  # Historical values for window
 
     def calculate_change_percent(self) -> Optional[Decimal]:
         """Calculate percentage change from first to current value."""
@@ -344,9 +344,9 @@ class NotificationPayload:
     metric_value: Optional[Decimal] = None
     symbol: Optional[str] = None
     triggered_at: datetime = field(default_factory=datetime.utcnow)
-    details: Dict[str, Any] = field(default_factory=dict)
+    details: dict[str, Any] = field(default_factory=dict)
 
-    def to_dict(self) -> Dict:
+    def to_dict(self) -> dict:
         """Convert to dictionary for JSON serialization."""
         return {
             "event_id": self.event_id,

@@ -17,7 +17,7 @@ Date: 2026-01-28
 
 import logging
 from dataclasses import dataclass
-from typing import Dict, Optional, Tuple
+from typing import Optional
 
 import numpy as np
 import pandas as pd
@@ -57,10 +57,10 @@ class FactorModelResult:
     asset_id: str
     factor_loadings: FactorLoadings
     r_squared: float
-    p_values: Dict[str, float]
+    p_values: dict[str, float]
     specific_return: float  # Idiosyncratic return
     expected_return: float
-    factor_contribution: Dict[str, float]
+    factor_contribution: dict[str, float]
 
 
 class FamaFrenchFactorModel:
@@ -127,10 +127,10 @@ class FamaFrenchFactorModel:
             # Align data
             data = pd.DataFrame(
                 {
-                    'asset': asset_returns,
-                    'market': market_returns,
-                    'smb': smb_returns,
-                    'hml': hml_returns,
+                    "asset": asset_returns,
+                    "market": market_returns,
+                    "smb": smb_returns,
+                    "hml": hml_returns,
                 }
             )
 
@@ -138,13 +138,13 @@ class FamaFrenchFactorModel:
             if self.model_type == "five_factor":
                 if rmw_returns is None or cma_returns is None:
                     raise ValueError("rmw_returns and cma_returns required for 5-factor model")
-                data['rmw'] = rmw_returns
-                data['cma'] = cma_returns
+                data["rmw"] = rmw_returns
+                data["cma"] = cma_returns
 
             elif self.model_type == "carhart":
                 if momentum_returns is None:
                     raise ValueError("momentum_returns required for Carhart model")
-                data['momentum'] = momentum_returns
+                data["momentum"] = momentum_returns
 
             # Drop NaN values
             data = data.dropna()
@@ -153,13 +153,13 @@ class FamaFrenchFactorModel:
                 raise ValueError(f"Insufficient data: {len(data)} observations")
 
             # Prepare regression data
-            y = data['asset'].values
-            X = data[['market', 'smb', 'hml']].values
+            y = data["asset"].values
+            X = data[["market", "smb", "hml"]].values
 
             if self.model_type == "five_factor":
-                X = data[['market', 'smb', 'hml', 'rmw', 'cma']].values
+                X = data[["market", "smb", "hml", "rmw", "cma"]].values
             elif self.model_type == "carhart":
-                X = data[['market', 'smb', 'hml', 'momentum']].values
+                X = data[["market", "smb", "hml", "momentum"]].values
 
             # Add constant
             X = np.column_stack([np.ones(len(X)), X])
@@ -187,11 +187,11 @@ class FamaFrenchFactorModel:
             p_values = self._calculate_p_values(y, X, result)
 
             # Calculate factor contributions
-            factor_names = ['alpha', 'market', 'smb', 'hml']
+            factor_names = ["alpha", "market", "smb", "hml"]
             if self.model_type == "five_factor":
-                factor_names.extend(['rmw', 'cma'])
+                factor_names.extend(["rmw", "cma"])
             elif self.model_type == "carhart":
-                factor_names.append('momentum')
+                factor_names.append("momentum")
 
             factor_contribution = {}
             expected_return = result[0]  # Alpha
@@ -251,7 +251,7 @@ class FamaFrenchFactorModel:
 
     def _calculate_p_values(
         self, y: np.ndarray, X: np.ndarray, beta: np.ndarray
-    ) -> Dict[str, float]:
+    ) -> dict[str, float]:
         """
         Calculate p-values for regression coefficients.
 
@@ -282,11 +282,11 @@ class FamaFrenchFactorModel:
         # p-values (two-tailed)
         p_values = 2 * (1 - stats.t.cdf(np.abs(t_stats), df=n - k))
 
-        factor_names = ['alpha', 'market', 'smb', 'hml']
+        factor_names = ["alpha", "market", "smb", "hml"]
         if self.model_type == "five_factor":
-            factor_names.extend(['rmw', 'cma'])
+            factor_names.extend(["rmw", "cma"])
         elif self.model_type == "carhart":
-            factor_names.append('momentum')
+            factor_names.append("momentum")
 
         return {name: float(p) for name, p in zip(factor_names, p_values)}
 
@@ -422,7 +422,7 @@ class APTModel:
 
         return pd.DataFrame(
             self.factor_loadings,
-            columns=[f"factor_{i+1}" for i in range(self.n_factors)],
+            columns=[f"factor_{i + 1}" for i in range(self.n_factors)],
         )
 
     def get_factor_returns(self) -> pd.DataFrame:
@@ -437,7 +437,7 @@ class APTModel:
 
         return pd.DataFrame(
             self.factor_returns,
-            columns=[f"factor_{i+1}" for i in range(self.n_factors)],
+            columns=[f"factor_{i + 1}" for i in range(self.n_factors)],
         )
 
     def get_explained_variance_ratio(self) -> np.ndarray:
@@ -546,9 +546,9 @@ class StatisticalArbitrage:
         loadings = self.factor_model.last_result.factor_loadings
 
         expected_return = (
-            loadings.beta_market * factor_returns.get('market', 0)
-            + loadings.beta_smb * factor_returns.get('smb', 0)
-            + loadings.beta_hml * factor_returns.get('hml', 0)
+            loadings.beta_market * factor_returns.get("market", 0)
+            + loadings.beta_smb * factor_returns.get("smb", 0)
+            + loadings.beta_hml * factor_returns.get("hml", 0)
         )
 
         # Residual = actual - expected
@@ -591,7 +591,7 @@ class StatisticalArbitrage:
         asset_returns: pd.DataFrame,
         factor_returns: pd.DataFrame,
         signals: Optional[pd.DataFrame] = None,
-    ) -> Tuple[np.ndarray, Dict[str, float]]:
+    ) -> tuple[np.ndarray, dict[str, float]]:
         """
         Construct factor-neutral portfolio from multiple assets.
 
@@ -613,9 +613,9 @@ class StatisticalArbitrage:
         for asset in asset_returns.columns:
             self.factor_model.fit(
                 asset_returns[asset],
-                factor_returns.get('market', 0),
-                factor_returns.get('smb', 0),
-                factor_returns.get('hml', 0),
+                factor_returns.get("market", 0),
+                factor_returns.get("smb", 0),
+                factor_returns.get("hml", 0),
             )
             factor_loadings_list.append(
                 [
@@ -640,15 +640,15 @@ class StatisticalArbitrage:
             return portfolio_returns.var()
 
         constraints = [
-            {'type': 'eq', 'fun': lambda w: np.sum(w) - 1},  # Fully invested
+            {"type": "eq", "fun": lambda w: np.sum(w) - 1},  # Fully invested
         ]
 
         # Factor neutral constraints
         for i in range(n_factors):
             constraints.append(
                 {
-                    'type': 'eq',
-                    'fun': lambda w, factor_idx=i: w @ factor_loadings_matrix[:, factor_idx],
+                    "type": "eq",
+                    "fun": lambda w, factor_idx=i: w @ factor_loadings_matrix[:, factor_idx],
                 }
             )
 
@@ -659,7 +659,7 @@ class StatisticalArbitrage:
         result = minimize(
             objective,
             initial_weights,
-            method='SLSQP',
+            method="SLSQP",
             bounds=bounds,
             constraints=constraints,
         )
@@ -673,10 +673,10 @@ class StatisticalArbitrage:
         # Calculate portfolio metrics
         portfolio_return = (asset_returns * weights).sum(axis=1)
         metrics = {
-            'expected_return': float(portfolio_return.mean() * 252),
-            'volatility': float(portfolio_return.std() * np.sqrt(252)),
-            'sharpe_ratio': float(portfolio_return.mean() / portfolio_return.std() * np.sqrt(252)),
-            'factor_neutrality': float(np.max(np.abs(factor_loadings_matrix.T @ weights))),
+            "expected_return": float(portfolio_return.mean() * 252),
+            "volatility": float(portfolio_return.std() * np.sqrt(252)),
+            "sharpe_ratio": float(portfolio_return.mean() / portfolio_return.std() * np.sqrt(252)),
+            "factor_neutrality": float(np.max(np.abs(factor_loadings_matrix.T @ weights))),
         }
 
         return weights, metrics
@@ -713,7 +713,7 @@ def create_factor_portfolio(
     returns: pd.DataFrame,
     n_factors: int = 10,
     method: str = "pca",
-) -> Tuple[pd.DataFrame, np.ndarray]:
+) -> tuple[pd.DataFrame, np.ndarray]:
     """
     Create factor-mimicking portfolio from returns.
 
@@ -791,5 +791,5 @@ def get_factor_model(model_type: str = "fama_french", **kwargs):
     else:
         available_models = ["fama_french", "apt"]
         raise ValueError(
-            f"Unknown model type: '{model_type}'. " f"Available models: {available_models}"
+            f"Unknown model type: '{model_type}'. Available models: {available_models}"
         )

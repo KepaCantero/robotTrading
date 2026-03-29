@@ -28,9 +28,7 @@ import logging
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from decimal import Decimal
-from typing import Union
-
-import pandas as pd
+from typing import TYPE_CHECKING
 
 from app.domain.models.signal import Signal, SignalSource, SignalStrength, SignalType
 from app.domain.strategies.base import BaseStrategy
@@ -42,6 +40,9 @@ from app.domain.strategies.fx_intermarket.models import (
     IntermarketSignal,
     RelationshipType,
 )
+
+if TYPE_CHECKING:
+    import pandas as pd
 
 logger = logging.getLogger(__name__)
 
@@ -98,7 +99,7 @@ class FXIntermarketStrategy(BaseStrategy):
 
     def __init__(
         self,
-        config: dict[str, Union[int, str, float, Decimal]] | FXIntermarketConfig,
+        config: dict[str, int | str | float | Decimal] | FXIntermarketConfig,
     ) -> None:
         """
         Initialize the FX Intermarket strategy.
@@ -290,7 +291,7 @@ class FXIntermarketStrategy(BaseStrategy):
         self,
         returns_data: dict[str, pd.Series],
         threshold_std: float = 2.0,
-    ) -> dict[str, dict[str, Union[Decimal, str]]]:
+    ) -> dict[str, dict[str, Decimal | str]]:
         """
         Detect significant moves in external assets.
 
@@ -354,7 +355,7 @@ class FXIntermarketStrategy(BaseStrategy):
         fx_pair: str,
         trigger_asset: str,
         relationship: IntermarketRelationship,
-        asset_move: dict[str, Union[Decimal, str]],
+        asset_move: dict[str, Decimal | str],
     ) -> IntermarketSignal | None:
         """
         Generate an intermarket trading signal.
@@ -619,7 +620,7 @@ class FXIntermarketStrategy(BaseStrategy):
         fx_pair: str,
         trigger_asset: str,
         relationship: IntermarketRelationship,
-        asset_move: dict[str, Union[Decimal, str]],
+        asset_move: dict[str, Decimal | str],
         expected_move: Decimal,
     ) -> str:
         """
@@ -643,7 +644,7 @@ class FXIntermarketStrategy(BaseStrategy):
             f"Based on {relationship.relationship_type.value} relationship "
             f"(corr={relationship.correlation:.2f}, "
             f"sig={relationship.significance:.0f}), "
-            f"expecting {fx_pair} to move {expected_move*100:.2f}%."
+            f"expecting {fx_pair} to move {expected_move * 100:.2f}%."
         )
 
         return rationale
@@ -674,7 +675,7 @@ class FXIntermarketStrategy(BaseStrategy):
     def _convert_to_base_signal(
         self,
         intermarket_signal: IntermarketSignal,
-        fx_price: Union[Decimal, pd.Series, None] = None,
+        fx_price: Decimal | pd.Series | None = None,
     ) -> Signal | None:
         """
         Convert IntermarketSignal to base Signal type.
@@ -825,7 +826,7 @@ class FXIntermarketStrategy(BaseStrategy):
             "take_profit",
         ]
 
-    def get_portfolio_summary(self) -> dict[str, Union[int, str]]:
+    def get_portfolio_summary(self) -> dict[str, int | str]:
         """
         Get summary of current strategy state.
 

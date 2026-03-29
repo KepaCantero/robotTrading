@@ -14,8 +14,8 @@ from .var_calculators import (
 
 __all__ = [
     "BaseVaRCalculator",
-    "HistoricalVaRCalculator",
-    "ParametricVaRCalculator",
-    "MonteCarloVaRCalculator",
     "GARCHVaRCalculator",
+    "HistoricalVaRCalculator",
+    "MonteCarloVaRCalculator",
+    "ParametricVaRCalculator",
 ]

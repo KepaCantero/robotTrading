@@ -18,7 +18,6 @@ from dataclasses import dataclass
 from datetime import date
 from decimal import Decimal
 from enum import Enum
-from typing import Dict, List, Optional
 
 import numpy as np
 import pandas as pd
@@ -59,10 +58,10 @@ class DelistingEvent:
     delisting_date: date
     reason: DelistingReason
     last_price: Decimal
-    last_volume: Optional[int] = None
-    recovery_rate: Optional[float] = None  # Recovery rate for bankruptcy
-    acquired_by: Optional[str] = None  # For mergers/acquisitions
-    acquisition_terms: Optional[str] = None  # Terms of acquisition
+    last_volume: int | None = None
+    recovery_rate: float | None = None  # Recovery rate for bankruptcy
+    acquired_by: str | None = None  # For mergers/acquisitions
+    acquisition_terms: str | None = None  # Terms of acquisition
 
     @property
     def is_bailout(self) -> bool:
@@ -84,10 +83,10 @@ class CorporateAction:
     symbol: str
     action_date: date
     action_type: CorporateActionType
-    ratio: Optional[float] = None  # For splits, spinoffs, etc.
-    cash_amount: Optional[Decimal] = None  # For dividends, tender offers
-    new_symbol: Optional[str] = None  # For symbol changes, spinoffs
-    description: Optional[str] = None
+    ratio: float | None = None  # For splits, spinoffs, etc.
+    cash_amount: Decimal | None = None  # For dividends, tender offers
+    new_symbol: str | None = None  # For symbol changes, spinoffs
+    description: str | None = None
 
     def adjust_price(self, price: Decimal) -> Decimal:
         """Adjust historical price for corporate action."""
@@ -139,9 +138,9 @@ class SurvivorshipBiasCorrector:
 
     def __init__(self):
         """Initialize survivorship bias corrector."""
-        self._delistings: Dict[str, DelistingEvent] = {}
-        self._corporate_actions: Dict[str, List[CorporateAction]] = {}
-        self._symbol_changes: Dict[str, str] = {}  # old -> new
+        self._delistings: dict[str, DelistingEvent] = {}
+        self._corporate_actions: dict[str, list[CorporateAction]] = {}
+        self._symbol_changes: dict[str, str] = {}  # old -> new
 
     def add_delisting(self, delisting: DelistingEvent) -> None:
         """
@@ -167,11 +166,11 @@ class SurvivorshipBiasCorrector:
         if action.action_type == CorporateActionType.SYMBOL_CHANGE and action.new_symbol:
             self._symbol_changes[action.symbol] = action.new_symbol
 
-    def get_delisting(self, symbol: str) -> Optional[DelistingEvent]:
+    def get_delisting(self, symbol: str) -> DelistingEvent | None:
         """Get delisting event for symbol."""
         return self._delistings.get(symbol)
 
-    def get_corporate_actions(self, symbol: str) -> List[CorporateAction]:
+    def get_corporate_actions(self, symbol: str) -> list[CorporateAction]:
         """Get all corporate actions for symbol."""
         return self._corporate_actions.get(symbol, [])
 
@@ -179,7 +178,7 @@ class SurvivorshipBiasCorrector:
         self,
         symbol: str,
         current_date: date,
-    ) -> Optional[DelistingEvent]:
+    ) -> DelistingEvent | None:
         """
         Check if symbol was delisted on or before current date.
 
@@ -299,7 +298,11 @@ class SurvivorshipBiasCorrector:
         actions = self._corporate_actions.get(historical_symbol, [])
 
         for action in sorted(actions, key=lambda a: a.action_date):
-            if action.action_date <= as_of_date and action.action_type == CorporateActionType.SYMBOL_CHANGE and action.new_symbol:
+            if (
+                action.action_date <= as_of_date
+                and action.action_type == CorporateActionType.SYMBOL_CHANGE
+                and action.new_symbol
+            ):
                 # Recursively check new symbol
                 return self.get_current_symbol(action.new_symbol, as_of_date)
 
@@ -308,9 +311,9 @@ class SurvivorshipBiasCorrector:
     def calculate_universe_including_delisted(
         self,
         current_date: date,
-        all_symbols: List[str],
+        all_symbols: list[str],
         lookback_days: int = 252,
-    ) -> List[str]:
+    ) -> list[str]:
         """
         Calculate tradable universe including delisted stocks.
 

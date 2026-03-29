@@ -6,12 +6,12 @@ from .qlib_connector import QlibConnector, get_qlib_connector
 from .talib_wrapper import TALibWrapper, get_talib_wrapper
 
 __all__ = [
-    "QlibConnector",
-    "get_qlib_connector",
-    "FinRLIntegrator",
-    "get_finrl_integrator",
     "AlphalsensAnalyzer",
-    "get_alphalens_analyzer",
+    "FinRLIntegrator",
+    "QlibConnector",
     "TALibWrapper",
+    "get_alphalens_analyzer",
+    "get_finrl_integrator",
+    "get_qlib_connector",
     "get_talib_wrapper",
 ]

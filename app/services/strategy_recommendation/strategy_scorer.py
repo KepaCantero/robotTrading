@@ -7,7 +7,7 @@ Calculates composite scores using objective-weighted metrics.
 import logging
 from dataclasses import dataclass
 from decimal import Decimal
-from typing import Dict, Optional
+from typing import Optional
 
 logger = logging.getLogger(__name__)
 
@@ -55,7 +55,7 @@ class StrategyScorer:
 
     def __init__(self):
         """Initialize strategy scorer."""
-        self.score_history: Dict[str, StrategyScore] = {}
+        self.score_history: dict[str, StrategyScore] = {}
         logger.info("✅ StrategyScorer initialized")
 
     async def score_strategy(
@@ -149,7 +149,7 @@ class StrategyScorer:
         consistency = (win_rate_score + pf_score) / Decimal("2")
         return max(Decimal("0"), min(Decimal("100"), consistency))
 
-    def _get_objective_weights(self, objective: str) -> Dict[str, Decimal]:
+    def _get_objective_weights(self, objective: str) -> dict[str, Decimal]:
         """Get metric weights based on objective."""
         weights_map = {
             "growth": {
@@ -194,7 +194,7 @@ class StrategyScorer:
         else:
             return "low"
 
-    def get_scorer_status(self) -> Dict:
+    def get_scorer_status(self) -> dict:
         """Get scorer status."""
         return {
             "strategies_scored": len(self.score_history),

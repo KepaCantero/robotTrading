@@ -9,7 +9,7 @@ market_impact = sqrt(participation_rate) * volatility_factor * base_impact
 
 import logging
 from decimal import Decimal
-from typing import Optional
+from typing import ClassVar, Optional
 
 from .models import MarketImpactEstimate
 
@@ -28,7 +28,7 @@ class MarketImpactEstimator:
 
     # Base market impact coefficients (empirically calibrated)
     # These are typical values; can be adjusted per asset class/market
-    BASE_IMPACT_BPS = {
+    BASE_IMPACT_BPS: ClassVar[dict] = {
         "equity": Decimal("10"),  # 10 bps base impact
         "crypto": Decimal("20"),  # 20 bps (more volatile)
         "forex": Decimal("5"),  # 5 bps (more liquid)
@@ -37,8 +37,8 @@ class MarketImpactEstimator:
     }
 
     # Volatility impact multipliers
-    # Higher volatility → higher market impact
-    VOLATILITY_MULTIPLIERS = {
+    # Higher volatility -> higher market impact
+    VOLATILITY_MULTIPLIERS: ClassVar[dict] = {
         0: Decimal("0.5"),  # Very low vol (0-10th percentile)
         1: Decimal("0.7"),  # Low vol (10-30th percentile)
         2: Decimal("1.0"),  # Normal vol (30-70th percentile)
@@ -113,10 +113,7 @@ class MarketImpactEstimator:
 
         # 2. Calculate square-root impact (empirical relationship)
         # sqrt(0.005) = 0.0707, sqrt(0.01) = 0.1, sqrt(0.02) = 0.1414
-        if participation_rate > 0:
-            sqrt_impact = participation_rate.sqrt()
-        else:
-            sqrt_impact = Decimal("0")
+        sqrt_impact = participation_rate.sqrt() if participation_rate > 0 else Decimal("0")
 
         # 3. Get volatility multiplier based on percentile
         # Map percentile (0-100) to volatility level (0-4)
@@ -124,7 +121,7 @@ class MarketImpactEstimator:
         volatility_multiplier = self.VOLATILITY_MULTIPLIERS.get(vol_level, Decimal("1.0"))
 
         logger.debug(
-            f"{symbol}: Volatility percentile {volatility_percentile} → "
+            f"{symbol}: Volatility percentile {volatility_percentile} -> "
             f"level {vol_level}, multiplier {volatility_multiplier}"
         )
 
@@ -137,17 +134,17 @@ class MarketImpactEstimator:
             num_doublings = (time_window_ms / Decimal("60000")).ln() / Decimal("2").ln()
             time_decay = self.TIME_DECAY_FACTOR**num_doublings
 
-        logger.debug(f"{symbol}: Time window {time_window_ms}ms → decay factor {time_decay}")
+        logger.debug(f"{symbol}: Time window {time_window_ms}ms -> decay factor {time_decay}")
 
         # 5. Calculate base market impact (in basis points)
         base_impact = self.BASE_IMPACT_BPS.get(asset_class, Decimal("10"))
 
-        # Combine factors: base × sqrt(participation) × volatility × time_decay
+        # Combine factors: base * sqrt(participation) * volatility * time_decay
         market_impact_bps = base_impact * sqrt_impact * volatility_multiplier * time_decay
 
         # 6. Calculate spread impact
-        # Spread cost is typically: spread × (0.5 + participation_impact)
-        # We model it as: spread_bps × SPREAD_COEFFICIENT × sqrt_impact
+        # Spread cost is typically: spread * (0.5 + participation_impact)
+        # We model it as: spread_bps * SPREAD_COEFFICIENT * sqrt_impact
         spread_impact = current_spread_bps * self.SPREAD_COEFFICIENT * sqrt_impact
 
         logger.debug(
@@ -165,7 +162,7 @@ class MarketImpactEstimator:
         estimated_slippage_usd = order_size * estimated_slippage_bps / Decimal("10000")
 
         logger.info(
-            f"Market impact estimate: {symbol} €{order_size:,.0f} → "
+            f"Market impact estimate: {symbol} €{order_size:,.0f} -> "
             f"{estimated_slippage_bps:.2f} bps (€{estimated_slippage_usd:,.2f})"
         )
 
@@ -222,7 +219,7 @@ class MarketImpactEstimator:
         Useful for comparing TWAP vs VWAP vs other strategies.
 
         Returns:
-            Dict with time_window_ms → estimated_slippage_bps mapping
+            Dict with time_window_ms -> estimated_slippage_bps mapping
         """
         windows = [
             60_000,  # 1 minute (extreme urgency)
@@ -238,10 +235,7 @@ class MarketImpactEstimator:
         participation_rate = order_size / daily_volume if daily_volume > 0 else Decimal("0")
         participation_rate = min(participation_rate, Decimal("1.0"))
 
-        if participation_rate > 0:
-            sqrt_impact = participation_rate.sqrt()
-        else:
-            sqrt_impact = Decimal("0")
+        sqrt_impact = participation_rate.sqrt() if participation_rate > 0 else Decimal("0")
 
         vol_level = min(int(volatility_percentile // 20), 4)
         volatility_multiplier = self.VOLATILITY_MULTIPLIERS.get(vol_level, Decimal("1.0"))

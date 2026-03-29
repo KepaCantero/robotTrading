@@ -10,7 +10,6 @@ import logging
 from dataclasses import dataclass
 from datetime import datetime
 from decimal import Decimal
-from typing import Optional
 
 from pydantic import Field, field_validator
 from pydantic.dataclasses import dataclass as pydantic_dataclass
@@ -146,11 +145,11 @@ class ASQuoteParams:
         default_factory=datetime.now,
         description="Quote timestamp",
     )
-    volatility_override: Optional[Decimal] = Field(
+    volatility_override: Decimal | None = Field(
         default=None,
         description="Override volatility for this quote",
     )
-    time_remaining: Optional[Decimal] = Field(
+    time_remaining: Decimal | None = Field(
         default=None,
         description="Time remaining in trading window (seconds)",
     )
@@ -200,7 +199,7 @@ class ASQuote:
     )
     is_bid_enabled: bool = Field(default=True, description="Whether bid is enabled")
     is_ask_enabled: bool = Field(default=True, description="Whether ask is enabled")
-    timestamp: Optional[datetime] = Field(default=None, description="Quote generation time")
+    timestamp: datetime | None = Field(default=None, description="Quote generation time")
 
     def get_full_spread_bps(self) -> Decimal:
         """Calculate full spread in basis points."""
@@ -301,7 +300,7 @@ class InventoryState:
         current_inventory: Current inventory position.
         target_inventory: Current target (may change over time).
         inventory_value: Total value of inventory at current price.
-        inventory_risk: Risk metric (|inventory| × price × volatility × sqrt(T)).
+        inventory_risk: Risk metric (|inventory| * price * volatility * sqrt(T)).
         liquidation_horizon: Time to flatten position (seconds).
         max_inventory: Maximum allowed inventory.
         min_inventory: Minimum allowed inventory.

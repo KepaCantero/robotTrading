@@ -9,10 +9,7 @@ import logging
 from dataclasses import dataclass, field
 from decimal import Decimal
 from enum import Enum
-from typing import TYPE_CHECKING, Any, Dict, List, Optional
-
-if TYPE_CHECKING:
-    pass
+from typing import Any, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -64,7 +61,7 @@ class ModuleParameterConfig:
     risk_adjustment: Decimal = field(default=Decimal("1.0"))  # 0.5 = half risk, 1.5 = 1.5x risk
 
     # Module-specific parameters (vary by module type)
-    module_specific: Dict[str, Any] = field(default_factory=dict)
+    module_specific: dict[str, Any] = field(default_factory=dict)
 
     # Metadata
     preset: ParameterizationPreset = ParameterizationPreset.BALANCED
@@ -82,13 +79,13 @@ class ModuleParameterSet:
     input_id: str
 
     # Module parameters indexed by module name
-    module_parameters: Dict[str, ModuleParameterConfig] = field(default_factory=dict)
+    module_parameters: dict[str, ModuleParameterConfig] = field(default_factory=dict)
 
     # Summary metrics
     total_modules_enabled: int = 0
-    high_priority_modules: List[str] = field(default_factory=list)  # Modules with priority 0-2
-    medium_priority_modules: List[str] = field(default_factory=list)  # Modules with priority 3-6
-    low_priority_modules: List[str] = field(default_factory=list)  # Modules with priority 7-10
+    high_priority_modules: list[str] = field(default_factory=list)  # Modules with priority 0-2
+    medium_priority_modules: list[str] = field(default_factory=list)  # Modules with priority 3-6
+    low_priority_modules: list[str] = field(default_factory=list)  # Modules with priority 7-10
 
     # Capital-tier-specific metadata
     capital_tier: str = ""  # micro, small, medium, large
@@ -102,7 +99,7 @@ class ModuleParameterSet:
     total_estimated_cost_usd: Decimal = field(default=Decimal("0.0"))  # Sum of module costs
     total_estimated_improvement_pct: Decimal = field(default=Decimal("0.0"))  # Average improvement
 
-    def to_dict(self) -> Dict:
+    def to_dict(self) -> dict:
         """Convert parameter set to dictionary."""
         return {
             "profile_id": self.profile_id,
@@ -142,7 +139,7 @@ class ParameterizationRequest:
     capital_tier: str  # micro, small, medium, large
     objective: str  # Investment objective
     risk_profile: str  # conservative, moderate, aggressive
-    enabled_modules: List[str]  # List of module names to parametrize
+    enabled_modules: list[str]  # List of module names to parametrize
     initial_capital: Decimal  # For capital-tier validation
 
 
@@ -153,8 +150,8 @@ class ParameterizationResult:
     success: bool
     parameter_set: Optional[ModuleParameterSet] = None
     error_message: str = ""
-    warnings: List[str] = field(default_factory=list)
-    disabled_modules: List[str] = field(
+    warnings: list[str] = field(default_factory=list)
+    disabled_modules: list[str] = field(
         default_factory=list
     )  # Modules disabled due to capital tier
     parametrization_time_ms: float = 0.0

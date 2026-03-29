@@ -9,7 +9,7 @@ import logging
 from datetime import datetime
 from decimal import Decimal
 from enum import Enum
-from typing import Dict, List, Optional
+from typing import Optional
 from uuid import uuid4
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -153,7 +153,7 @@ class RiskAlert(BaseModel):
         default_factory=datetime.now, description="When alert was triggered"
     )
     portfolio_id: str = Field(..., description="Portfolio that triggered alert")
-    metadata: Dict[str, str] = Field(
+    metadata: dict[str, str] = Field(
         default_factory=dict, description="Additional context (current_value, threshold, etc)"
     )
     resolved: bool = Field(default=False, description="Whether alert has been resolved")
@@ -181,10 +181,10 @@ class RiskScalingState(BaseModel):
     max_drawdown: Decimal = Field(
         default=Decimal("0"), ge=Decimal("0"), le=Decimal("1"), description="Max drawdown in period"
     )
-    scaling_history: List[RiskScalingSnapshot] = Field(
+    scaling_history: list[RiskScalingSnapshot] = Field(
         default_factory=list, description="Historical snapshots (last 30 days)"
     )
-    active_alerts: List[RiskAlert] = Field(
+    active_alerts: list[RiskAlert] = Field(
         default_factory=list, description="Currently active alerts"
     )
     updated_at: datetime = Field(default_factory=datetime.now, description="Last update time")
@@ -213,7 +213,7 @@ class AdjustedPositionSizes(BaseModel):
     scaling_factor: Decimal = Field(
         ..., ge=Decimal("0"), le=Decimal("1.5"), description="Final combined scaling factor applied"
     )
-    reasons: List[str] = Field(
+    reasons: list[str] = Field(
         default_factory=list,
         description="Reasons for size adjustment (high vol, negative Sharpe, etc)",
     )
@@ -294,7 +294,7 @@ class RiskScalingStatus(BaseModel):
     scaling_factors: RiskScalingFactors = Field(..., description="Current scaling factors")
     risk_level: RiskLevel = Field(..., description="Overall risk level")
     active_alerts_count: int = Field(default=0, ge=0, description="Number of active alerts")
-    active_alerts: List[RiskAlert] = Field(
+    active_alerts: list[RiskAlert] = Field(
         default_factory=list, description="List of active alerts"
     )
     last_update: datetime = Field(default_factory=datetime.now, description="Last update timestamp")
@@ -314,7 +314,7 @@ class AlertSubscription(BaseModel):
         default_factory=lambda: str(uuid4()), description="Unique subscription ID"
     )
     portfolio_id: str = Field(..., description="Portfolio to monitor")
-    alert_types: List[RiskAlertType] = Field(
+    alert_types: list[RiskAlertType] = Field(
         ..., min_length=1, description="Types of alerts to receive"
     )
     min_severity: RiskLevel = Field(
@@ -356,10 +356,10 @@ class RiskScalingReport(BaseModel):
     max_drawdown: Decimal = Field(...)
 
     # Alerts & warnings
-    active_alerts: List[str] = Field(
+    active_alerts: list[str] = Field(
         default_factory=list, description="List of active alert messages"
     )
-    recent_events: List[str] = Field(default_factory=list, description="Recent significant events")
+    recent_events: list[str] = Field(default_factory=list, description="Recent significant events")
 
     # Summary
     summary: str = Field(..., description="Human-readable summary of status")
@@ -367,11 +367,11 @@ class RiskScalingReport(BaseModel):
     def __str__(self) -> str:
         """Generate formatted report string."""
         lines = [
-            f"\n{'='*60}",
+            f"\n{'=' * 60}",
             f"RISK SCALING REPORT - {self.portfolio_id}",
             f"Generated: {self.timestamp.strftime('%Y-%m-%d %H:%M:%S')}",
             f"Period: {self.period}",
-            f"{'='*60}\n",
+            f"{'=' * 60}\n",
             f"COMBINED SCALING FACTOR: {self.current_combined_scale:.3f}",
             f"  Volatility Scale (ATR): {self.volatility_scale:.3f}",
             f"  Performance Scale (Sharpe): {self.sharpe_scale:.3f}",
@@ -397,9 +397,9 @@ class RiskScalingReport(BaseModel):
 
         lines.extend(
             [
-                f"\n{'='*60}",
+                f"\n{'=' * 60}",
                 f"SUMMARY: {self.summary}",
-                f"{'='*60}\n",
+                f"{'=' * 60}\n",
             ]
         )
 

@@ -9,11 +9,12 @@ Fuentes soportadas:
 - Yahoo Finance
 
 """
+
 import asyncio
 import logging
 from datetime import datetime
 from decimal import Decimal
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 import aiohttp
 from aiohttp import ClientError
@@ -25,7 +26,7 @@ from .base_source import BaseDataSource
 logger = logging.getLogger(__name__)
 
 
-class TimeoutError(Exception):
+class DataSourceTimeoutError(Exception):
     """Raised when a data source operation times out."""
 
 
@@ -36,11 +37,11 @@ class IBKRSource(BaseDataSource):
     Requiere conexion a TWS o IB Gateway con API habilitada.
     """
 
-    def __init__(self, config: Dict[str, Any]):
+    def __init__(self, config: dict[str, Any]):
         super().__init__(config)
-        self.host = config.get('host', 'localhost')
-        self.port = config.get('port', 7497)
-        self.client_id = config.get('client_id', 1)
+        self.host = config.get("host", "localhost")
+        self.port = config.get("port", 7497)
+        self.client_id = config.get("client_id", 1)
         self._ib_connection = None
         self._timeouts = get_timeouts()
 
@@ -98,7 +99,7 @@ class IBKRSource(BaseDataSource):
 
     async def get_ohlcv(
         self, symbol: str, start_date: datetime, end_date: datetime, bar_size: str = "1 day"
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """
         Obtener datos OHLCV de IBKR.
         Args:
@@ -118,14 +119,14 @@ class IBKRSource(BaseDataSource):
             logger.error("ib_insync no disponible")
             return []
         try:
-            contract = Stock(symbol, 'SMART', 'USD')
+            contract = Stock(symbol, "SMART", "USD")
             bars = await asyncio.wait_for(
                 self._ib.reqHistoricalData(
                     contract,
                     endDateTime=end_date,
-                    durationStr=f'{(end_date - start_date).days} D',
+                    durationStr=f"{(end_date - start_date).days} D",
                     barSizeSetting=bar_size,
-                    whatToShow='TRADES',
+                    whatToShow="TRADES",
                     useRTH=True,
                 ),
                 timeout=self._timeouts.ib_read,
@@ -134,12 +135,12 @@ class IBKRSource(BaseDataSource):
             for bar in bars:
                 ohlcv_data.append(
                     {
-                        'timestamp': bar.date,
-                        'open': Decimal(str(bar.open)),
-                        'high': Decimal(str(bar.high)),
-                        'low': Decimal(str(bar.low)),
-                        'close': Decimal(str(bar.close)),
-                        'volume': Decimal(str(bar.volume)),
+                        "timestamp": bar.date,
+                        "open": Decimal(str(bar.open)),
+                        "high": Decimal(str(bar.high)),
+                        "low": Decimal(str(bar.low)),
+                        "close": Decimal(str(bar.close)),
+                        "volume": Decimal(str(bar.volume)),
                     }
                 )
             return ohlcv_data
@@ -157,9 +158,9 @@ class BinanceSource(BaseDataSource):
     Usa la API publica de Binance para datos historicos y en tiempo real.
     """
 
-    def __init__(self, config: Dict[str, Any]):
+    def __init__(self, config: dict[str, Any]):
         super().__init__(config)
-        self.base_url = config.get('base_url', 'https://api.binance.com')
+        self.base_url = config.get("base_url", "https://api.binance.com")
         self._timeouts = get_timeouts()
         self._session: Optional[aiohttp.ClientSession] = None
 
@@ -198,7 +199,7 @@ class BinanceSource(BaseDataSource):
 
     async def get_ohlcv(
         self, symbol: str, start_date: datetime, end_date: datetime, bar_size: str = "1 day"
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """
         Obtener datos OHLCV de Binance.
         Args:
@@ -267,11 +268,11 @@ class AlpacaSource(BaseDataSource):
     Requiere autenticacion con API keys.
     """
 
-    def __init__(self, config: Dict[str, Any]):
+    def __init__(self, config: dict[str, Any]):
         super().__init__(config)
-        self.api_key = config.get('api_key')
-        self.api_secret = config.get('api_secret')
-        self.base_url = config.get('base_url', 'https://paper-api.alpaca.markets')
+        self.api_key = config.get("api_key")
+        self.api_secret = config.get("api_secret")
+        self.base_url = config.get("base_url", "https://paper-api.alpaca.markets")
         self._timeouts = get_timeouts()
         self._session: Optional[aiohttp.ClientSession] = None
 
@@ -312,7 +313,7 @@ class AlpacaSource(BaseDataSource):
 
     async def get_ohlcv(
         self, symbol: str, start_date: datetime, end_date: datetime, bar_size: str = "1 day"
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """
         Obtener datos OHLCV de Alpaca.
         Args:
@@ -384,10 +385,10 @@ class PolygonSource(BaseDataSource):
     Requiere API key.
     """
 
-    def __init__(self, config: Dict[str, Any]):
+    def __init__(self, config: dict[str, Any]):
         super().__init__(config)
-        self.api_key = config.get('api_key')
-        self.base_url = config.get('base_url', 'https://api.polygon.io')
+        self.api_key = config.get("api_key")
+        self.base_url = config.get("base_url", "https://api.polygon.io")
         self._timeouts = get_timeouts()
         self._session: Optional[aiohttp.ClientSession] = None
 
@@ -427,7 +428,7 @@ class PolygonSource(BaseDataSource):
 
     async def get_ohlcv(
         self, symbol: str, start_date: datetime, end_date: datetime, bar_size: str = "1 day"
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """
         Obtener datos OHLCV de Polygon.
         Args:
@@ -495,9 +496,9 @@ class YahooFinanceSource(BaseDataSource):
     Usa la API gratuita de Yahoo Finance para datos historicos.
     """
 
-    def __init__(self, config: Dict[str, Any]):
+    def __init__(self, config: dict[str, Any]):
         super().__init__(config)
-        self.base_url = config.get('base_url', 'https://query1.finance.yahoo.com/v8/finance/chart')
+        self.base_url = config.get("base_url", "https://query1.finance.yahoo.com/v8/finance/chart")
         self._timeouts = get_timeouts()
         self._session: Optional[aiohttp.ClientSession] = None
 
@@ -539,7 +540,7 @@ class YahooFinanceSource(BaseDataSource):
 
     async def get_ohlcv(
         self, symbol: str, start_date: datetime, end_date: datetime, bar_size: str = "1 day"
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """
         Obtener datos OHLCV de Yahoo Finance.
         Args:

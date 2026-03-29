@@ -9,11 +9,11 @@ References:
 - Cont, R., & Kukanov, A. (2017) "Order Flow Imbalance and Price Movement"
 - Aldridge, I. (2013) "High-Frequency Trading"
 """
+
 from __future__ import annotations
 
 import logging
-from datetime import datetime
-from typing import List, Optional
+from typing import TYPE_CHECKING
 
 import numpy as np
 
@@ -26,6 +26,9 @@ from app.domain.market_analysis.microstructure.ofi.models import (
 )
 from app.domain.market_analysis.microstructure.ofi.ofi_calculator import OFICalculator, OFIResult
 from app.domain.market_analysis.microstructure.ofi.ofi_predictor import OFIPredictor
+
+if TYPE_CHECKING:
+    from datetime import datetime
 
 logger = logging.getLogger(__name__)
 
@@ -124,8 +127,6 @@ class OFISignalGenerator:
                 },
             )
             return None
-
-        ofi_result.ofi
 
         # Check for mean reversion signal first (highest priority)
         if self.config.enable_mean_reversion and cofi_tracker is not None:
@@ -283,11 +284,11 @@ class OFISignalGenerator:
         if momentum > mom_threshold:
             # Positive momentum → BUY
             action = "BUY"
-            reasoning = f"Strong OFI momentum ({momentum:.3f}). " "Buying pressure accelerating."
+            reasoning = f"Strong OFI momentum ({momentum:.3f}). Buying pressure accelerating."
         elif momentum < -mom_threshold:
             # Negative momentum → SELL
             action = "SELL"
-            reasoning = f"Strong OFI momentum ({momentum:.3f}). " "Selling pressure accelerating."
+            reasoning = f"Strong OFI momentum ({momentum:.3f}). Selling pressure accelerating."
         else:
             return None
 
@@ -395,8 +396,8 @@ class OFISignalGenerator:
     def generate_batch_signals(
         self,
         order_books: list[OrderBookSnapshot],
-        historical_ofi: List[list[float]],
-        historical_returns: Optional[List[list[float]]] = None,
+        historical_ofi: list[list[float]],
+        historical_returns: list[list[float]] | None = None,
     ) -> list[OFISignal]:
         """
         Generate signals for multiple symbols.
@@ -487,10 +488,7 @@ class OFISignalGenerator:
             return False
 
         # Check action
-        if signal.action not in ("BUY", "SELL"):
-            return False
-
-        return True
+        return signal.action in ("BUY", "SELL")
 
     def get_signal_summary(self, signals: list[OFISignal]) -> dict:
         """

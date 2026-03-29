@@ -13,12 +13,14 @@ import logging
 from abc import ABC, abstractmethod
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from multiprocessing import Process, Queue
-from typing import Dict, List, Literal, Optional, Type, Union
+from typing import TYPE_CHECKING, ClassVar, Literal, Optional, Union
 
-from app.backtesting.models import BacktestConfig, BacktestResult
 from app.domain.models.market_data import Quote
 from app.domain.models.signal import Signal
 from app.domain.strategies.base import BaseStrategy
+
+if TYPE_CHECKING:
+    from app.backtesting.models import BacktestConfig, BacktestResult
 
 logger = logging.getLogger(__name__)
 
@@ -26,7 +28,7 @@ logger = logging.getLogger(__name__)
 # Module-level function for multiprocessing (must be picklable)
 def _run_backtest_process(
     config: BacktestConfig,
-    quotes: List[Quote],
+    quotes: list[Quote],
     strategy: BaseStrategy,
     strategy_name: str,
     enable_risk_envelope: bool,
@@ -63,16 +65,16 @@ def _run_backtest_process(
         result = backtester.run_backtest(quotes, signals=signals)
 
         # Put result in queue (BacktestResult should be pickleable)
-        result_queue.put(('success', result))
+        result_queue.put(("success", result))
     except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
-        result_queue.put(('error', str(e)))
+        result_queue.put(("error", str(e)))
 
 
 # Type aliases for better readability
 StrategyType = BaseStrategy
-QuotesType = List[Quote]
-SignalsType = List[Signal]
-MetricsDict = Dict[str, Union[float, int, str]]
+QuotesType = list[Quote]
+SignalsType = list[Signal]
+MetricsDict = dict[str, Union[float, int, str]]
 OptionalMetrics = Optional[MetricsDict]
 
 
@@ -222,19 +224,19 @@ class SimpleBacktestExecutor(BacktestExecutor):
         from app.backtesting.engine import SimpleBacktester
 
         # Get strategy name
-        strategy_name: str = kwargs.get('strategy_name', getattr(strategy, 'name', 'unknown'))
+        strategy_name: str = kwargs.get("strategy_name", getattr(strategy, "name", "unknown"))
 
         # Create backtester
         backtester = SimpleBacktester(
             config=self.config,
             strategy=strategy,
             strategy_name=strategy_name,
-            diagnostic_logger=kwargs.get('diagnostic_logger'),
-            enable_risk_envelope=kwargs.get('enable_risk_envelope', True),
+            diagnostic_logger=kwargs.get("diagnostic_logger"),
+            enable_risk_envelope=kwargs.get("enable_risk_envelope", True),
         )
 
         # Get or generate signals
-        signals: Optional[SignalsType] = kwargs.get('signals')
+        signals: SignalsType | None = kwargs.get("signals")
         if signals is None:
             signals = []
             for quote in quotes:
@@ -259,7 +261,7 @@ class ParallelBacktestExecutor(BacktestExecutor):
     def __init__(
         self,
         config: BacktestConfig,
-        max_workers: Optional[int] = None,
+        max_workers: int | None = None,
     ) -> None:
         """
         Initialize parallel executor.
@@ -274,9 +276,9 @@ class ParallelBacktestExecutor(BacktestExecutor):
     def execute_batch(
         self,
         quotes: QuotesType,
-        strategies: List[StrategyType],
+        strategies: list[StrategyType],
         **kwargs: object,
-    ) -> List[BacktestResult]:
+    ) -> list[BacktestResult]:
         """
         Execute multiple backtests in parallel.
 
@@ -288,7 +290,7 @@ class ParallelBacktestExecutor(BacktestExecutor):
         Returns:
             List of BacktestResult objects
         """
-        results: List[BacktestResult] = []
+        results: list[BacktestResult] = []
         max_workers = self.max_workers or min(len(strategies), 4)
 
         logger.info(
@@ -301,9 +303,9 @@ class ParallelBacktestExecutor(BacktestExecutor):
             },
         )
 
-        def run_single(strategy: StrategyType) -> Optional[BacktestResult]:
+        def run_single(strategy: StrategyType) -> BacktestResult | None:
             """Run single backtest."""
-            strategy_name = getattr(strategy, 'name', 'unknown')
+            strategy_name = getattr(strategy, "name", "unknown")
             try:
                 return self.execute(quotes, strategy, **kwargs)
             except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
@@ -372,7 +374,7 @@ class ProcessPoolBacktestExecutor(BacktestExecutor):
     def __init__(
         self,
         config: BacktestConfig,
-        max_processes: Optional[int] = None,
+        max_processes: int | None = None,
     ) -> None:
         """
         Initialize process pool executor.
@@ -404,7 +406,7 @@ class ProcessPoolBacktestExecutor(BacktestExecutor):
         Returns:
             BacktestResult with performance metrics
         """
-        strategy_name = kwargs.get('strategy_name', getattr(strategy, 'name', 'unknown'))
+        strategy_name = kwargs.get("strategy_name", getattr(strategy, "name", "unknown"))
 
         logger.info(
             "Starting process-isolated backtest execution",
@@ -453,7 +455,7 @@ class ProcessPoolBacktestExecutor(BacktestExecutor):
 
         result_queue: Queue = Queue()
 
-        strategy_name = kwargs.get('strategy_name', getattr(strategy, 'name', 'unknown'))
+        strategy_name = kwargs.get("strategy_name", getattr(strategy, "name", "unknown"))
 
         p = Process(
             target=_run_backtest_process,
@@ -462,7 +464,7 @@ class ProcessPoolBacktestExecutor(BacktestExecutor):
                 quotes,
                 strategy,
                 strategy_name,
-                kwargs.get('enable_risk_envelope', True),
+                kwargs.get("enable_risk_envelope", True),
                 result_queue,
             ),
         )
@@ -476,7 +478,7 @@ class ProcessPoolBacktestExecutor(BacktestExecutor):
 
         status, data = result_queue.get()
 
-        if status == 'success':
+        if status == "success":
             return data
         else:
             raise RuntimeError(f"Backtest execution failed: {data}")
@@ -491,23 +493,23 @@ class BacktestExecutorFactory:
     """
 
     ExecutorType = Literal[
-        'simple',
-        'parallel',
-        'process',
+        "simple",
+        "parallel",
+        "process",
     ]
 
-    _executor_registry: Dict[ExecutorType, Type[BacktestExecutor]] = {
-        'simple': SimpleBacktestExecutor,
-        'parallel': ParallelBacktestExecutor,
-        'process': ProcessPoolBacktestExecutor,
+    _executor_registry: ClassVar[dict[ExecutorType, type[BacktestExecutor]]] = {
+        "simple": SimpleBacktestExecutor,
+        "parallel": ParallelBacktestExecutor,
+        "process": ProcessPoolBacktestExecutor,
     }
 
     @classmethod
     def create(
         cls,
         config: BacktestConfig,
-        executor_type: ExecutorType = 'simple',
-        max_workers: Optional[int] = None,
+        executor_type: ExecutorType = "simple",
+        max_workers: int | None = None,
     ) -> BacktestExecutor:
         """
         Create appropriate executor instance.
@@ -538,11 +540,11 @@ class BacktestExecutorFactory:
                 f"Valid types: {list(cls._executor_registry.keys())}"
             )
 
-        if executor_type == 'simple':
+        if executor_type == "simple":
             return executor_class(config)
-        elif executor_type == 'parallel':
+        elif executor_type == "parallel":
             return executor_class(config, max_workers=max_workers)
-        elif executor_type == 'process':
+        elif executor_type == "process":
             # ProcessPoolBacktestExecutor uses max_processes parameter
             return executor_class(config, max_processes=max_workers)
         else:
@@ -552,7 +554,7 @@ class BacktestExecutorFactory:
     def register_executor(
         cls,
         executor_type: ExecutorType,
-        executor_class: Type[BacktestExecutor],
+        executor_class: type[BacktestExecutor],
     ) -> None:
         """
         Register a custom executor type.

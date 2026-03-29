@@ -8,7 +8,7 @@ import logging
 from dataclasses import dataclass, field
 from datetime import datetime
 from decimal import Decimal
-from typing import Dict, List, Optional
+from typing import Optional
 
 logger = logging.getLogger(__name__)
 
@@ -88,14 +88,14 @@ class ValidationResult:
 
     # Core validations
     passed: bool = False
-    critical_failures: List[str] = field(default_factory=list)
-    warnings: List[str] = field(default_factory=list)
+    critical_failures: list[str] = field(default_factory=list)
+    warnings: list[str] = field(default_factory=list)
 
     # Detailed analyses
     capital_viability: Optional[CapitalViabilityAnalysis] = None
     feasibility: Optional[FeasibilityAnalysis] = None
     learning_viability: Optional[LearningViabilityAnalysis] = None
-    module_viabilities: Dict[str, ModuleViabilityAnalysis] = field(default_factory=dict)
+    module_viabilities: dict[str, ModuleViabilityAnalysis] = field(default_factory=dict)
 
     # Overall recommendation
     overall_recommendation: str = "PENDING"  # APPROVE, CONDITIONAL, REJECT, REVIEW_REQUIRED

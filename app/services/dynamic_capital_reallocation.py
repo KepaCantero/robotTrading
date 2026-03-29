@@ -16,7 +16,7 @@ Uses centralized configuration for all thresholds and parameters.
 import logging
 from datetime import datetime, timedelta
 from decimal import Decimal
-from typing import Dict, List, Optional, Tuple
+from typing import Optional
 
 import numpy as np
 
@@ -30,7 +30,7 @@ class PerformanceMetrics:
 
     def __init__(
         self,
-        returns: List[Decimal],
+        returns: list[Decimal],
         sharpe_ratio: Optional[float],
         max_drawdown: float,
         win_rate: float,
@@ -94,12 +94,12 @@ class DynamicCapitalReallocationEngine:
 
     def __init__(
         self,
-        rebalance_frequency_days: int = None,
-        rolling_window_days: int = None,
-        min_weight: Decimal = None,
-        max_weight: Decimal = None,
-        volatility_target: float = None,
-        min_trades_threshold: int = None,
+        rebalance_frequency_days: Optional[int] = None,
+        rolling_window_days: Optional[int] = None,
+        min_weight: Optional[Decimal] = None,
+        max_weight: Optional[Decimal] = None,
+        volatility_target: Optional[float] = None,
+        min_trades_threshold: Optional[int] = None,
     ):
         """
         Initialize reallocation engine.
@@ -144,7 +144,7 @@ class DynamicCapitalReallocationEngine:
         )
 
         # Performance history per strategy
-        self.performance_history: Dict[str, List[Tuple[datetime, PerformanceMetrics]]] = {}
+        self.performance_history: dict[str, list[tuple[datetime, PerformanceMetrics]]] = {}
 
         # Last rebalance date
         self.last_rebalance_date: Optional[datetime] = None
@@ -196,7 +196,7 @@ class DynamicCapitalReallocationEngine:
         self,
         strategy_name: str,
         timestamp: datetime,
-        returns: List[Decimal],
+        returns: list[Decimal],
         sharpe_ratio: Optional[float],
         max_drawdown: float,
         win_rate: float,
@@ -294,11 +294,11 @@ class DynamicCapitalReallocationEngine:
 
     def calculate_new_allocations(
         self,
-        current_allocations: Dict[str, Decimal],
-        target_allocations: Dict[str, Decimal],
+        current_allocations: dict[str, Decimal],
+        target_allocations: dict[str, Decimal],
         total_capital: Decimal,
         current_date: datetime,
-    ) -> Dict[str, Decimal]:
+    ) -> dict[str, Decimal]:
         """
         Calculate new allocations based on performance.
 
@@ -321,10 +321,10 @@ class DynamicCapitalReallocationEngine:
         logger.info("🔄 Executing dynamic capital reallocation...")
 
         # Calculate performance scores for each strategy
-        strategy_scores: Dict[str, float] = {}
-        strategy_metrics: Dict[str, PerformanceMetrics] = {}
+        strategy_scores: dict[str, float] = {}
+        strategy_metrics: dict[str, PerformanceMetrics] = {}
 
-        for strategy_name in target_allocations.keys():
+        for strategy_name in target_allocations:
             metrics = self.calculate_rolling_metrics(strategy_name, current_date)
 
             if metrics is None:
@@ -369,7 +369,7 @@ class DynamicCapitalReallocationEngine:
         else:
             # Blend performance-based weights with target weights (50/50)
             new_allocations = {}
-            for strategy_name in target_allocations.keys():
+            for strategy_name in target_allocations:
                 target_weight = float(target_allocations[strategy_name])
                 performance_weight = normalized_scores[strategy_name] / total_normalized
 
@@ -402,7 +402,7 @@ class DynamicCapitalReallocationEngine:
 
         # Log allocation changes
         logger.info("📊 New allocations calculated:")
-        for strategy_name in target_allocations.keys():
+        for strategy_name in target_allocations:
             old_cap = current_allocations.get(strategy_name, Decimal("0"))
             new_cap = new_allocations[strategy_name]
             old_weight = float(old_cap / total_capital) if total_capital > 0 else 0.0

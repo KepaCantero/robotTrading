@@ -4,11 +4,12 @@ Dashboard service for collecting and aggregating trading data.
 Provides methods to fetch current positions, performance metrics,
 and system status for dashboard display.
 """
+
 import asyncio
 import logging
 from datetime import datetime, timezone
 from decimal import Decimal
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -131,7 +132,7 @@ class DashboardService:
             # Return empty metrics on error
             return self._empty_performance()
 
-    async def _get_positions(self) -> List[PositionSummary]:
+    async def _get_positions(self) -> list[PositionSummary]:
         """Get current positions."""
         try:
             logger.debug("Fetching positions from broker")
@@ -238,7 +239,7 @@ class DashboardService:
             )
             return self._empty_system_status()
 
-    async def _get_recent_alerts(self) -> List[Dict[str, Any]]:
+    async def _get_recent_alerts(self) -> list[dict[str, Any]]:
         """Get recent alerts."""
         try:
             logger.debug("Fetching recent alerts")

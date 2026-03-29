@@ -28,7 +28,7 @@ from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Callable
 
 import aiosqlite
 
@@ -64,19 +64,19 @@ class OncallStatus:
     primary, backup, and coverage information.
     """
 
-    primary_engineer_id: Optional[str]
-    primary_engineer_name: Optional[str]
-    primary_contact: Optional[str]
-    backup_engineer_id: Optional[str]
-    backup_engineer_name: Optional[str]
-    backup_contact: Optional[str]
-    shift_start: Optional[datetime]
-    shift_end: Optional[datetime]
+    primary_engineer_id: str | None
+    primary_engineer_name: str | None
+    primary_contact: str | None
+    backup_engineer_id: str | None
+    backup_engineer_name: str | None
+    backup_contact: str | None
+    shift_start: datetime | None
+    shift_end: datetime | None
     is_in_shift: bool = True
     coverage_status: StatusIndicator = StatusIndicator.HEALTHY
     last_updated: datetime = field(default_factory=datetime.utcnow)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
         return {
             "primary_engineer_id": self.primary_engineer_id,
@@ -111,7 +111,7 @@ class OncallMetrics:
     handoff_completion_rate: float  # Percentage of handoffs completed
     coverage_gaps: int  # Number of coverage gaps in schedule
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
         return {
             "total_oncalls": self.total_oncalls,
@@ -146,8 +146,8 @@ class DashboardConfig:
     db_path: str = "data/oncall_dashboard.db"
 
     # Callbacks
-    on_status_change: Optional[Callable[[OncallStatus], None]] = None
-    on_metric_update: Optional[Callable[[OncallMetrics], None]] = None
+    on_status_change: Callable[[OncallStatus], None] | None = None
+    on_metric_update: Callable[[OncallMetrics], None] | None = None
 
 
 class OncallDashboard:
@@ -170,7 +170,7 @@ class OncallDashboard:
 
     def __init__(
         self,
-        config: Optional[DashboardConfig] = None,
+        config: DashboardConfig | None = None,
     ):
         """
         Initialize on-call dashboard.
@@ -182,13 +182,13 @@ class OncallDashboard:
         self.logger = logging.getLogger(f"{__name__}")
 
         # State
-        self._current_status: Optional[OncallStatus] = None
-        self._current_metrics: Optional[OncallMetrics] = None
-        self._cache_timestamp: Optional[datetime] = None
+        self._current_status: OncallStatus | None = None
+        self._current_metrics: OncallMetrics | None = None
+        self._cache_timestamp: datetime | None = None
         self._lock = asyncio.Lock()
 
         # Update task
-        self._update_task: Optional[asyncio.Task] = None
+        self._update_task: asyncio.Task | None = None
         self._is_running = False
 
         self.logger.info("OncallDashboard initialized")
@@ -434,7 +434,7 @@ class OncallDashboard:
                 self.logger.error(f"Error in update loop: {e}")
                 await asyncio.sleep(self.config.refresh_interval_seconds)
 
-    async def get_current_status(self) -> Optional[OncallStatus]:
+    async def get_current_status(self) -> OncallStatus | None:
         """
         Get current on-call status.
 
@@ -450,7 +450,7 @@ class OncallDashboard:
 
             return self._current_status
 
-    async def get_current_metrics(self) -> Optional[OncallMetrics]:
+    async def get_current_metrics(self) -> OncallMetrics | None:
         """
         Get current on-call metrics.
 
@@ -469,7 +469,7 @@ class OncallDashboard:
     async def get_dashboard_view(
         self,
         view_type: DashboardViewType = DashboardViewType.OVERVIEW,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Get dashboard view data.
 
@@ -507,7 +507,7 @@ class OncallDashboard:
 
             return view_data
 
-    async def _get_overview_summary(self) -> Dict[str, Any]:
+    async def _get_overview_summary(self) -> dict[str, Any]:
         """Get overview summary."""
         return {
             "health_status": "healthy",
@@ -517,7 +517,7 @@ class OncallDashboard:
             "recent_activity": [],
         }
 
-    async def _get_schedule_view(self) -> Dict[str, Any]:
+    async def _get_schedule_view(self) -> dict[str, Any]:
         """Get schedule view."""
         return {
             "current_week": {},
@@ -525,7 +525,7 @@ class OncallDashboard:
             "coverage_gaps": [],
         }
 
-    async def _get_incidents_view(self) -> Dict[str, Any]:
+    async def _get_incidents_view(self) -> dict[str, Any]:
         """Get incidents view."""
         return {
             "active_incidents": [],
@@ -533,7 +533,7 @@ class OncallDashboard:
             "escalation_status": {},
         }
 
-    async def _get_detailed_metrics(self) -> Dict[str, Any]:
+    async def _get_detailed_metrics(self) -> dict[str, Any]:
         """Get detailed metrics view."""
         return {
             "response_times": {},
@@ -542,7 +542,7 @@ class OncallDashboard:
             "trends": [],
         }
 
-    async def _get_handoffs_view(self) -> Dict[str, Any]:
+    async def _get_handoffs_view(self) -> dict[str, Any]:
         """Get handoffs view."""
         return {
             "pending_handoffs": [],
@@ -550,7 +550,7 @@ class OncallDashboard:
             "quality_trends": [],
         }
 
-    async def _get_runbooks_view(self) -> Dict[str, Any]:
+    async def _get_runbooks_view(self) -> dict[str, Any]:
         """Get runbooks view."""
         return {
             "common_runbooks": [],
@@ -561,7 +561,7 @@ class OncallDashboard:
     async def get_status_history(
         self,
         hours: int = 24,
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """
         Get status history.
 
@@ -601,7 +601,7 @@ class OncallDashboard:
     async def get_metrics_history(
         self,
         hours: int = 24,
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """
         Get metrics history.
 
@@ -638,7 +638,7 @@ class OncallDashboard:
             self.logger.error(f"Error getting metrics history: {e}")
             return []
 
-    async def get_health_summary(self) -> Dict[str, Any]:
+    async def get_health_summary(self) -> dict[str, Any]:
         """
         Get overall health summary.
 

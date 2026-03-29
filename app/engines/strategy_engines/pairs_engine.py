@@ -10,8 +10,9 @@ Refactorización de PairsTradingStrategy como Strategy Engine con:
 
 import logging
 from collections import defaultdict, deque
+from collections.abc import Sequence
 from decimal import Decimal
-from typing import Any, Dict, List, Optional, Sequence
+from typing import Any, Optional
 
 import numpy as np
 
@@ -40,7 +41,7 @@ class PairsTradingStrategyEngine(BaseStrategyEngine):
     - Soporte para múltiples pares
     """
 
-    def __init__(self, config: Dict[str, Any]):
+    def __init__(self, config: dict[str, Any]):
         """
         Inicializar pairs trading strategy engine.
 
@@ -83,7 +84,7 @@ class PairsTradingStrategyEngine(BaseStrategyEngine):
             # Fallback to config or defaults
             self.cointegration_threshold = Decimal(str(config.get("cointegration_threshold", 0.05)))
             self.spread_threshold = Decimal(
-                str(getattr(centralized_config.trading, 'max_risk_per_trade', 0.02))
+                str(getattr(centralized_config.trading, "max_risk_per_trade", 0.02))
             )
             self.lookback_period = config.get("lookback_period", 60)
             self.min_correlation = Decimal(str(config.get("min_correlation", 0.7)))
@@ -109,7 +110,7 @@ class PairsTradingStrategyEngine(BaseStrategyEngine):
 
         # Pair symbols configuration
         pair_symbols_raw = config.get("pair_symbols")
-        if pair_symbols_raw is None and strategy_config and hasattr(strategy_config, 'parameters'):
+        if pair_symbols_raw is None and strategy_config and hasattr(strategy_config, "parameters"):
             pair_symbols_raw = strategy_config.parameters.get("pair_symbols")
 
         if pair_symbols_raw is None:
@@ -166,7 +167,7 @@ class PairsTradingStrategyEngine(BaseStrategyEngine):
 
     def extract_features(
         self, market_data: Quote, historical_data: Optional[Sequence[Quote]] = None
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Extraer features estandarizados para Learning Engine.
 
@@ -180,7 +181,7 @@ class PairsTradingStrategyEngine(BaseStrategyEngine):
             Diccionario con features estandarizados
         """
         features = {
-            "timestamp": market_data.timestamp if hasattr(market_data, 'timestamp') else None,
+            "timestamp": market_data.timestamp if hasattr(market_data, "timestamp") else None,
             "symbol": market_data.symbol,
             "price": float(market_data.close or market_data.bid or market_data.last or 0),
         }
@@ -288,7 +289,7 @@ class PairsTradingStrategyEngine(BaseStrategyEngine):
         return features
 
     def _calculate_cointegration(
-        self, prices1: List[float], prices2: List[float]
+        self, prices1: list[float], prices2: list[float]
     ) -> Optional[float]:
         """
         Calcular score de cointegración usando ADF test (simplificado).
@@ -315,7 +316,7 @@ class PairsTradingStrategyEngine(BaseStrategyEngine):
         except (ValueError, ImportError, AttributeError):
             return None
 
-    def _generate_signals_impl(self, market_data: Quote) -> List[Signal]:
+    def _generate_signals_impl(self, market_data: Quote) -> list[Signal]:
         """
         Implementación específica de generación de señales para pairs trading.
 
@@ -421,7 +422,7 @@ class PairsTradingStrategyEngine(BaseStrategyEngine):
                 "Error generando señal en PairsTradingStrategyEngine",
                 extra={
                     "strategy": "pairs_trading",
-                    "symbol": getattr(market_data, 'symbol', None),
+                    "symbol": getattr(market_data, "symbol", None),
                     "pair_symbols": self.pair_symbols,
                     "error_type": type(e).__name__,
                 },
@@ -456,18 +457,18 @@ class PairsTradingStrategyEngine(BaseStrategyEngine):
             signal_type=SignalType.BUY,
             strength=strength,
             price=Decimal(str(market_data.close or market_data.bid or market_data.last or 0)),
-            timestamp=market_data.timestamp if hasattr(market_data, 'timestamp') else None,
+            timestamp=market_data.timestamp if hasattr(market_data, "timestamp") else None,
             confidence=confidence,
             liquidity_score=75.0,
             priority_score=confidence * 0.8,
             source=SignalSource.PAIRS_TRADING,
             volume=Decimal("1"),
             metadata={
-                'strategy': self.name,
-                'spread_z_score': spread_z_score,
-                'cointegration_score': cointegration_score,
-                'correlation': correlation,
-                'pair_symbols': self.pair_symbols,
+                "strategy": self.name,
+                "spread_z_score": spread_z_score,
+                "cointegration_score": cointegration_score,
+                "correlation": correlation,
+                "pair_symbols": self.pair_symbols,
             },
         )
 
@@ -497,18 +498,18 @@ class PairsTradingStrategyEngine(BaseStrategyEngine):
             signal_type=SignalType.SELL,
             strength=strength,
             price=Decimal(str(market_data.close or market_data.bid or market_data.last or 0)),
-            timestamp=market_data.timestamp if hasattr(market_data, 'timestamp') else None,
+            timestamp=market_data.timestamp if hasattr(market_data, "timestamp") else None,
             confidence=confidence,
             liquidity_score=75.0,
             priority_score=confidence * 0.8,
             source=SignalSource.PAIRS_TRADING,
             volume=Decimal("1"),
             metadata={
-                'strategy': self.name,
-                'spread_z_score': spread_z_score,
-                'cointegration_score': cointegration_score,
-                'correlation': correlation,
-                'pair_symbols': self.pair_symbols,
+                "strategy": self.name,
+                "spread_z_score": spread_z_score,
+                "cointegration_score": cointegration_score,
+                "correlation": correlation,
+                "pair_symbols": self.pair_symbols,
             },
         )
 
@@ -553,7 +554,7 @@ class PairsTradingStrategyEngine(BaseStrategyEngine):
 
         return min(100.0, max(0.0, confidence))
 
-    def get_required_parameters(self) -> List[str]:
+    def get_required_parameters(self) -> list[str]:
         """Obtener parámetros requeridos."""
         return [
             "cointegration_threshold",
@@ -608,8 +609,8 @@ class PairsTradingStrategyEngine(BaseStrategyEngine):
             return False
 
         # Verificar cointegración y correlación en metadata
-        cointegration_score = signal.metadata.get('cointegration_score')
-        correlation = signal.metadata.get('correlation', 0.0)
+        cointegration_score = signal.metadata.get("cointegration_score")
+        correlation = signal.metadata.get("correlation", 0.0)
 
         if cointegration_score is not None and cointegration_score < float(
             self.cointegration_threshold

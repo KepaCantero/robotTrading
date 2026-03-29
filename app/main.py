@@ -91,18 +91,18 @@ from app.shared.config.config import get_settings
 # Debe ir ANTES de importar numpy, pandas, torch, o cualquier otra librería
 # ============================================================================
 
-os.environ['OMP_NUM_THREADS'] = '1'
-os.environ['OPENBLAS_NUM_THREADS'] = '1'
-os.environ['MKL_NUM_THREADS'] = '1'
-os.environ['NUMEXPR_NUM_THREADS'] = '1'
-os.environ['VECLIB_MAXIMUM_THREADS'] = '1'
-os.environ['MKL_SERVICE_FORCE_INTEL'] = '1'
-os.environ['KMP_DUPLICATE_LIB_OK'] = 'TRUE'
-os.environ['PYTORCH_ENABLE_MPS_FALLBACK'] = '1'
-os.environ['FOR_DISABLE_CONSOLE_CTRL_HANDLER'] = '1'
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
-os.environ['CUDA_VISIBLE_DEVICES'] = ''
-os.environ['TORCH_USE_CUDA_DSA'] = '0'
+os.environ["OMP_NUM_THREADS"] = "1"
+os.environ["OPENBLAS_NUM_THREADS"] = "1"
+os.environ["MKL_NUM_THREADS"] = "1"
+os.environ["NUMEXPR_NUM_THREADS"] = "1"
+os.environ["VECLIB_MAXIMUM_THREADS"] = "1"
+os.environ["MKL_SERVICE_FORCE_INTEL"] = "1"
+os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
+os.environ["PYTORCH_ENABLE_MPS_FALLBACK"] = "1"
+os.environ["FOR_DISABLE_CONSOLE_CTRL_HANDLER"] = "1"
+os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
+os.environ["CUDA_VISIBLE_DEVICES"] = ""
+os.environ["TORCH_USE_CUDA_DSA"] = "0"
 
 
 # IMPORTANT: Import logging_config FIRST to ensure all warnings/errors go to files
@@ -223,49 +223,49 @@ from starlette.responses import JSONResponse as StarletteJSONResponse
 # HTTP Exceptions (4xx, 5xx)
 app.add_exception_handler(
     HTTPException,
-    cast(Callable[[Request, HTTPException], Any], http_exception_handler),
+    cast("Callable[[Request, HTTPException], Any]", http_exception_handler),
 )
 app.add_exception_handler(
     StarletteHTTPException,
-    cast(Callable[[Request, StarletteHTTPException], Any], starlette_http_exception_handler),
+    cast("Callable[[Request, StarletteHTTPException], Any]", starlette_http_exception_handler),
 )
 
 # Validation Errors
 app.add_exception_handler(
     RequestValidationError,
-    cast(Callable[[Request, RequestValidationError], Any], validation_exception_handler),
+    cast("Callable[[Request, RequestValidationError], Any]", validation_exception_handler),
 )
 app.add_exception_handler(
     ValidationError,
-    cast(Callable[[Request, ValidationError], Any], pydantic_validation_exception_handler),
+    cast("Callable[[Request, ValidationError], Any]", pydantic_validation_exception_handler),
 )
 
 # Common Python Exceptions with specific handlers
 app.add_exception_handler(
     ValueError,
-    cast(Callable[[Request, ValueError], Any], value_error_handler),
+    cast("Callable[[Request, ValueError], Any]", value_error_handler),
 )
 app.add_exception_handler(
     KeyError,
-    cast(Callable[[Request, KeyError], Any], key_error_handler),
+    cast("Callable[[Request, KeyError], Any]", key_error_handler),
 )
 app.add_exception_handler(
     TypeError,
-    cast(Callable[[Request, TypeError], Any], type_error_handler),
+    cast("Callable[[Request, TypeError], Any]", type_error_handler),
 )
 app.add_exception_handler(
     AttributeError,
-    cast(Callable[[Request, AttributeError], Any], attribute_error_handler),
+    cast("Callable[[Request, AttributeError], Any]", attribute_error_handler),
 )
 app.add_exception_handler(
     IndexError,
-    cast(Callable[[Request, IndexError], Any], index_error_handler),
+    cast("Callable[[Request, IndexError], Any]", index_error_handler),
 )
 
 # Generic catch-all for unhandled exceptions
 app.add_exception_handler(
     Exception,
-    cast(Callable[[Request, Exception], Any], generic_exception_handler),
+    cast("Callable[[Request, Exception], Any]", generic_exception_handler),
 )
 
 # Include API routers

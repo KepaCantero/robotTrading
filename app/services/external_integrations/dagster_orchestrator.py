@@ -10,7 +10,7 @@ import logging
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import Dict, List, Optional
+from typing import Optional
 from urllib.parse import urljoin
 
 import aiohttp
@@ -40,7 +40,7 @@ class DagsterJob:
     started_at: Optional[datetime] = None
     completed_at: Optional[datetime] = None
     error_message: Optional[str] = None
-    result: Optional[Dict] = None
+    result: Optional[dict] = None
     run_count: int = 0
 
 
@@ -51,8 +51,8 @@ class PipelineStep:
     step_id: str
     name: str
     job_type: str
-    depends_on: List[str] = field(default_factory=list)
-    config: Dict = field(default_factory=dict)
+    depends_on: list[str] = field(default_factory=list)
+    config: dict = field(default_factory=dict)
 
 
 class DagsterOrchestrator:
@@ -83,9 +83,9 @@ class DagsterOrchestrator:
         self.connected = False
 
         # Local job tracking for when Dagster server is unavailable
-        self.jobs: Dict[str, DagsterJob] = {}
-        self.pipelines: Dict[str, List[PipelineStep]] = {}
-        self.job_history: List[DagsterJob] = []
+        self.jobs: dict[str, DagsterJob] = {}
+        self.pipelines: dict[str, list[PipelineStep]] = {}
+        self.job_history: list[DagsterJob] = []
 
         logger.info(f"✅ DagsterOrchestrator initialized ({host}:{port})")
 
@@ -105,7 +105,7 @@ class DagsterOrchestrator:
                     return True
 
         except (asyncio.TimeoutError, OSError) as e:
-            logger.warning(f"⚠️ Dagster server unavailable ({self.host}:{self.port}): {str(e)}")
+            logger.warning(f"⚠️ Dagster server unavailable ({self.host}:{self.port}): {e!s}")
             self.connected = False
             if self.session:
                 await self.session.close()
@@ -121,14 +121,14 @@ class DagsterOrchestrator:
             logger.info("✅ Disconnected from Dagster server")
             return True
         except (asyncio.TimeoutError, OSError) as e:
-            logger.error(f"❌ Disconnect failed: {str(e)}")
+            logger.error(f"❌ Disconnect failed: {e!s}")
             return False
 
     async def create_job(
         self,
         name: str,
         job_type: str,
-        config: Optional[Dict] = None,
+        config: Optional[dict] = None,
     ) -> DagsterJob:
         """
         Create a new job in Dagster or local tracking.
@@ -168,7 +168,7 @@ class DagsterOrchestrator:
                             f"⚠️ Dagster job creation failed (HTTP {resp.status}), using local tracking"
                         )
             except (asyncio.TimeoutError, OSError) as e:
-                logger.warning(f"⚠️ Failed to create Dagster job: {str(e)}, using local tracking")
+                logger.warning(f"⚠️ Failed to create Dagster job: {e!s}, using local tracking")
 
         # Always store locally as backup
         self.jobs[job.job_id] = job
@@ -207,7 +207,7 @@ class DagsterOrchestrator:
                             f"⚠️ Dagster execution failed (HTTP {resp.status}), using local tracking"
                         )
             except Exception as e:
-                logger.warning(f"⚠️ Failed to execute on Dagster: {str(e)}, using local tracking")
+                logger.warning(f"⚠️ Failed to execute on Dagster: {e!s}, using local tracking")
 
         # Always update local state
         job.status = JobStatus.RUNNING
@@ -219,7 +219,7 @@ class DagsterOrchestrator:
     async def complete_job(
         self,
         job_id: str,
-        result: Optional[Dict] = None,
+        result: Optional[dict] = None,
     ) -> bool:
         """
         Mark job as complete.
@@ -288,7 +288,7 @@ class DagsterOrchestrator:
     async def create_pipeline(
         self,
         pipeline_name: str,
-        steps: List[PipelineStep],
+        steps: list[PipelineStep],
     ) -> str:
         """
         Create a multi-step pipeline (DAG) with dependency management.
@@ -336,9 +336,7 @@ class DagsterOrchestrator:
                             f"⚠️ Dagster pipeline creation failed (HTTP {resp.status}), using local tracking"
                         )
             except (asyncio.TimeoutError, OSError) as e:
-                logger.warning(
-                    f"⚠️ Failed to create Dagster pipeline: {str(e)}, using local tracking"
-                )
+                logger.warning(f"⚠️ Failed to create Dagster pipeline: {e!s}, using local tracking")
 
         logger.info(f"✅ Created pipeline: {pipeline_name} ({len(steps)} steps, ID: {pipeline_id})")
         return pipeline_id
@@ -373,7 +371,7 @@ class DagsterOrchestrator:
                     else:
                         logger.warning(f"⚠️ Dagster pipeline execution failed (HTTP {resp.status})")
             except Exception as e:
-                logger.warning(f"⚠️ Failed to execute pipeline on Dagster: {str(e)}")
+                logger.warning(f"⚠️ Failed to execute pipeline on Dagster: {e!s}")
 
         # Local execution with dependency resolution
         logger.info(f"✅ Executing pipeline {pipeline_id} with {len(steps)} steps")
@@ -401,13 +399,13 @@ class DagsterOrchestrator:
                         if status_str in [s.value for s in JobStatus]:
                             return JobStatus(status_str)
             except (asyncio.TimeoutError, OSError) as e:
-                logger.debug(f"Failed to get Dagster job status: {str(e)}")
+                logger.debug(f"Failed to get Dagster job status: {e!s}")
 
         # Fall back to local tracking
         job = self.jobs.get(job_id)
         return job.status if job else None
 
-    async def get_job_result(self, job_id: str) -> Optional[Dict]:
+    async def get_job_result(self, job_id: str) -> Optional[dict]:
         """Get job result from Dagster or local tracking."""
         # Try to get result from Dagster if connected
         if self.connected and self.session:
@@ -419,7 +417,7 @@ class DagsterOrchestrator:
                         data = await resp.json()
                         return data.get("result", {})
             except (asyncio.TimeoutError, OSError) as e:
-                logger.debug(f"Failed to get Dagster job result: {str(e)}")
+                logger.debug(f"Failed to get Dagster job result: {e!s}")
 
         # Fall back to local tracking
         job = self.jobs.get(job_id)
@@ -428,7 +426,7 @@ class DagsterOrchestrator:
     async def list_jobs(
         self,
         status: Optional[JobStatus] = None,
-    ) -> List[DagsterJob]:
+    ) -> list[DagsterJob]:
         """List jobs from Dagster or local tracking."""
         jobs = []
 
@@ -459,7 +457,7 @@ class DagsterOrchestrator:
                             jobs.append(job)
                         return jobs
             except (ValueError, TypeError, KeyError, AttributeError) as e:
-                logger.debug(f"Failed to list Dagster jobs: {str(e)}")
+                logger.debug(f"Failed to list Dagster jobs: {e!s}")
 
         # Fall back to local tracking
         jobs = list(self.jobs.values())
@@ -491,12 +489,12 @@ class DagsterOrchestrator:
                         job.run_count += 1
                         return True
             except Exception as e:
-                logger.warning(f"⚠️ Failed to retry on Dagster: {str(e)}")
+                logger.warning(f"⚠️ Failed to retry on Dagster: {e!s}")
 
         # Retry locally
         return await self.execute_job(job_id)
 
-    def get_orchestration_status(self) -> Dict:
+    def get_orchestration_status(self) -> dict:
         """Get overall orchestration status from Dagster or local tracking."""
         # Fall back to local tracking
         total = len(self.jobs)

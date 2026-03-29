@@ -17,7 +17,6 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from decimal import Decimal
 from enum import Enum
-from typing import Dict, List, Optional, Tuple
 
 import numpy as np
 
@@ -37,8 +36,8 @@ class ImpactParameters:
 
     adv: Decimal  # Average daily volume
     volatility: float  # Annualized volatility (default 0.2 = 20%)
-    market_cap: Optional[Decimal] = None  # Market capitalization
-    spread: Optional[Decimal] = None  # Bid-ask spread
+    market_cap: Decimal | None = None  # Market capitalization
+    spread: Decimal | None = None  # Bid-ask spread
     price: Decimal = Decimal("0")  # Current price
 
     # Model-specific parameters
@@ -359,7 +358,7 @@ class MarketImpactCalculator:
             default_model: Default impact model to use
         """
         self._default_model = default_model
-        self._models: Dict[ImpactModelType, MarketImpactModel] = {
+        self._models: dict[ImpactModelType, MarketImpactModel] = {
             ImpactModelType.ALMGREN_CHRISS: AlmgrenChristModel(),
             ImpactModelType.SQUARE_ROOT: SquareRootImpactModel(),
             ImpactModelType.LINEAR: LinearImpactModel(),
@@ -370,7 +369,7 @@ class MarketImpactCalculator:
         quantity: Decimal,
         side: str,
         params: ImpactParameters,
-        model: Optional[ImpactModelType] = None,
+        model: ImpactModelType | None = None,
     ) -> MarketImpactResult:
         """
         Calculate market impact using specified model.
@@ -395,7 +394,7 @@ class MarketImpactCalculator:
         side: str,
         params: ImpactParameters,
         max_impact_pct: float = 0.01,  # Maximum 1% impact
-        model: Optional[ImpactModelType] = None,
+        model: ImpactModelType | None = None,
     ) -> Decimal:
         """
         Estimate optimal execution size to stay within impact threshold.
@@ -437,8 +436,8 @@ class MarketImpactCalculator:
         params: ImpactParameters,
         side: str,
         num_points: int = 20,
-        model: Optional[ImpactModelType] = None,
-    ) -> List[Tuple[Decimal, float]]:
+        model: ImpactModelType | None = None,
+    ) -> list[tuple[Decimal, float]]:
         """
         Calculate impact curve (impact vs order size).
 

@@ -27,7 +27,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from decimal import Decimal
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 import aiohttp
 import aiosqlite
@@ -67,9 +67,9 @@ class LoadTest:
     target_rps: int  # Requests per second
     duration_minutes: int
     ramp_up_minutes: int = 0
-    endpoints: List[str] = field(default_factory=list)
-    headers: Dict[str, str] = field(default_factory=dict)
-    payload_template: Optional[Dict[str, Any]] = None
+    endpoints: list[str] = field(default_factory=list)
+    headers: dict[str, str] = field(default_factory=dict)
+    payload_template: dict[str, Any] | None = None
 
     # Load pattern
     test_type: StressTestType = StressTestType.GRADUAL_RAMP
@@ -80,7 +80,7 @@ class LoadTest:
     stop_on_latency_ms: int = 5000  # 5 seconds
     stop_on_availability_drop: bool = True
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
         return {
             "name": self.name,
@@ -105,7 +105,7 @@ class StressTestReport:
     test_name: str
     status: TestStatus
     started_at: datetime
-    completed_at: Optional[datetime]
+    completed_at: datetime | None
     duration_seconds: int
 
     # Performance metrics
@@ -127,21 +127,21 @@ class StressTestReport:
 
     # Error analysis
     error_rate: Decimal
-    error_types: Dict[str, int]
+    error_types: dict[str, int]
 
     # Break point analysis
-    max_sustained_rps: Optional[int] = None
-    breaking_point_rps: Optional[int] = None
-    performance_degradation_start: Optional[int] = None
+    max_sustained_rps: int | None = None
+    breaking_point_rps: int | None = None
+    performance_degradation_start: int | None = None
 
     # Resource usage
-    cpu_usage_avg: Optional[float] = None
-    memory_usage_avg: Optional[float] = None
+    cpu_usage_avg: float | None = None
+    memory_usage_avg: float | None = None
 
     # Incidents
-    incidents: List[Dict[str, Any]] = field(default_factory=list)
+    incidents: list[dict[str, Any]] = field(default_factory=list)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
         return {
             "test_name": self.test_name,
@@ -215,8 +215,8 @@ class StressTester:
     def __init__(
         self,
         service_name: str,
-        metrics_collector: Optional[Any] = None,
-        config: Optional[StressTestConfig] = None,
+        metrics_collector: object | None = None,
+        config: StressTestConfig | None = None,
     ):
         """
         Initialize stress tester.
@@ -232,8 +232,8 @@ class StressTester:
         self.logger = logging.getLogger(f"{__name__}.{service_name}")
 
         # State
-        self._active_test: Optional[StressTestReport] = None
-        self._test_history: List[StressTestReport] = []
+        self._active_test: StressTestReport | None = None
+        self._test_history: list[StressTestReport] = []
         self._lock = asyncio.Lock()
 
     async def initialize(self) -> None:
@@ -381,7 +381,7 @@ class StressTester:
         self.logger.info("Running gradual ramp-up test")
 
         latencies = []
-        errors: Dict[str, int] = {}
+        errors: dict[str, int] = {}
 
         # Calculate ramp-up steps
         total_steps = 20
@@ -428,7 +428,7 @@ class StressTester:
         self.logger.info("Running sustained load test")
 
         latencies = []
-        errors: Dict[str, int] = {}
+        errors: dict[str, int] = {}
 
         # Ramp up first
         if load_test.ramp_up_minutes > 0:
@@ -469,7 +469,7 @@ class StressTester:
         self.logger.info("Running spike test")
 
         latencies = []
-        errors: Dict[str, int] = {}
+        errors: dict[str, int] = {}
 
         # Baseline phase
         baseline_rps = load_test.target_rps // 2
@@ -508,7 +508,7 @@ class StressTester:
         self.logger.info("Running break point test")
 
         latencies = []
-        errors: Dict[str, int] = {}
+        errors: dict[str, int] = {}
 
         # Binary search for breaking point
         min_rps = 10
@@ -547,10 +547,10 @@ class StressTester:
         load_test: LoadTest,
         target_rps: int,
         duration_seconds: int,
-    ) -> tuple[List[float], Dict[str, int]]:
+    ) -> tuple[list[float], dict[str, int]]:
         """Execute load for a step."""
         latencies = []
-        errors: Dict[str, int] = {}
+        errors: dict[str, int] = {}
 
         # Calculate request interval
         interval = 1.0 / target_rps
@@ -600,8 +600,8 @@ class StressTester:
     async def _should_stop_early(
         self,
         load_test: LoadTest,
-        latencies: List[float],
-        errors: Dict[str, int],
+        latencies: list[float],
+        errors: dict[str, int],
     ) -> bool:
         """Check if test should stop early."""
         if not latencies:
@@ -625,8 +625,8 @@ class StressTester:
     def _update_report_from_metrics(
         self,
         report: StressTestReport,
-        latencies: List[float],
-        errors: Dict[str, int],
+        latencies: list[float],
+        errors: dict[str, int],
     ) -> None:
         """Update report from collected metrics."""
         if not latencies:
@@ -706,11 +706,11 @@ class StressTester:
         except (aiosqlite.Error, asyncio.TimeoutError, OSError) as e:
             self.logger.error(f"Error saving report: {e}")
 
-    async def get_test_history(self, limit: int = 100) -> List[StressTestReport]:
+    async def get_test_history(self, limit: int = 100) -> list[StressTestReport]:
         """Get test history."""
         return self._test_history[-limit:]
 
-    async def get_summary(self) -> Dict[str, Any]:
+    async def get_summary(self) -> dict[str, Any]:
         """Get stress tester summary."""
         return {
             "service": self.service_name,

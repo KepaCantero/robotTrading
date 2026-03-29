@@ -10,7 +10,7 @@ Implementa meta-learning para optimizar asignación de capital entre estrategias
 import logging
 from abc import ABC, abstractmethod
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 import numpy as np
 
@@ -24,7 +24,7 @@ import torch.nn as nn
 class BaseMetaLearner(ABC):
     """Clase base para meta-learners."""
 
-    def __init__(self, config: Dict[str, Any]):
+    def __init__(self, config: dict[str, Any]):
         """
         Inicializar meta-learner.
 
@@ -33,14 +33,14 @@ class BaseMetaLearner(ABC):
         """
         self.config = config
         self.logger = logging.getLogger(self.__class__.__name__)
-        self.learning_history: List[Dict[str, Any]] = []
+        self.learning_history: list[dict[str, Any]] = []
 
     @abstractmethod
     def learn_weights(
         self,
-        strategy_performance: Dict[str, Dict[str, float]],
-        market_context: Optional[Dict[str, Any]] = None,
-    ) -> Dict[str, float]:
+        strategy_performance: dict[str, dict[str, float]],
+        market_context: Optional[dict[str, Any]] = None,
+    ) -> dict[str, float]:
         """
         Aprender pesos óptimos para estrategias.
 
@@ -55,9 +55,9 @@ class BaseMetaLearner(ABC):
     @abstractmethod
     def update(
         self,
-        strategy_performance: Dict[str, Dict[str, float]],
+        strategy_performance: dict[str, dict[str, float]],
         portfolio_return: float,
-        market_context: Optional[Dict[str, Any]] = None,
+        market_context: Optional[dict[str, Any]] = None,
     ) -> None:
         """
         Actualizar modelo con nueva experiencia.
@@ -76,23 +76,23 @@ class HistoricalPerformanceLearner(BaseMetaLearner):
     Asigna pesos basándose en performance histórica reciente.
     """
 
-    def __init__(self, config: Dict[str, Any]):
+    def __init__(self, config: dict[str, Any]):
         """Inicializar historical performance learner."""
         super().__init__(config)
-        self.lookback_period = config.get('lookback_period', 30)  # días
-        self.smoothing_factor = config.get('smoothing_factor', 0.1)  # Exponencial smoothing
-        self.use_sharpe = config.get('use_sharpe', True)
-        self.use_return = config.get('use_return', True)
-        self.use_drawdown = config.get('use_drawdown', False)
+        self.lookback_period = config.get("lookback_period", 30)  # días
+        self.smoothing_factor = config.get("smoothing_factor", 0.1)  # Exponencial smoothing
+        self.use_sharpe = config.get("use_sharpe", True)
+        self.use_return = config.get("use_return", True)
+        self.use_drawdown = config.get("use_drawdown", False)
 
         # Historial de performance
-        self.performance_history: Dict[str, List[Dict[str, float]]] = {}
+        self.performance_history: dict[str, list[dict[str, float]]] = {}
 
     def learn_weights(
         self,
-        strategy_performance: Dict[str, Dict[str, float]],
-        market_context: Optional[Dict[str, Any]] = None,
-    ) -> Dict[str, float]:
+        strategy_performance: dict[str, dict[str, float]],
+        market_context: Optional[dict[str, Any]] = None,
+    ) -> dict[str, float]:
         """
         Aprender pesos basados en performance histórica.
 
@@ -113,24 +113,24 @@ class HistoricalPerformanceLearner(BaseMetaLearner):
             score = 0.0
 
             # Sharpe ratio (normalizado)
-            if self.use_sharpe and 'sharpe_ratio' in metrics:
-                sharpe = metrics['sharpe_ratio']
+            if self.use_sharpe and "sharpe_ratio" in metrics:
+                sharpe = metrics["sharpe_ratio"]
                 # Normalizar Sharpe (asumir rango típico -2 a 5)
                 normalized_sharpe = (sharpe + 2) / 7.0
                 normalized_sharpe = max(0.0, min(1.0, normalized_sharpe))
                 score += normalized_sharpe * 0.4
 
             # Return (normalizado)
-            if self.use_return and 'return' in metrics:
-                ret = metrics['return']
+            if self.use_return and "return" in metrics:
+                ret = metrics["return"]
                 # Normalizar return (asumir rango típico -50% a 100%)
                 normalized_return = (ret + 0.5) / 1.5
                 normalized_return = max(0.0, min(1.0, normalized_return))
                 score += normalized_return * 0.4
 
             # Drawdown penalty
-            if self.use_drawdown and 'max_drawdown' in metrics:
-                drawdown = abs(metrics['max_drawdown'])
+            if self.use_drawdown and "max_drawdown" in metrics:
+                drawdown = abs(metrics["max_drawdown"])
                 # Penalizar drawdowns grandes
                 drawdown_penalty = max(0.0, 1.0 - drawdown / 0.5)  # Penalizar si > 50%
                 score += drawdown_penalty * 0.2
@@ -156,12 +156,12 @@ class HistoricalPerformanceLearner(BaseMetaLearner):
         return weights
 
     def _apply_smoothing(
-        self, new_weights: Dict[str, float], new_scores: Dict[str, float]
-    ) -> Dict[str, float]:
+        self, new_weights: dict[str, float], new_scores: dict[str, float]
+    ) -> dict[str, float]:
         """Aplicar smoothing exponencial a los pesos."""
         # Obtener último peso del historial
         if self.learning_history:
-            last_weights = self.learning_history[-1].get('weights', {})
+            last_weights = self.learning_history[-1].get("weights", {})
 
             # Smoothing: nuevo_peso = alpha * nuevo + (1-alpha) * anterior
             smoothed_weights = {}
@@ -182,27 +182,27 @@ class HistoricalPerformanceLearner(BaseMetaLearner):
 
         return new_weights
 
-    def _update_history(self, performance: Dict[str, Dict[str, float]]) -> None:
+    def _update_history(self, performance: dict[str, dict[str, float]]) -> None:
         """Actualizar historial de performance."""
         for strategy, metrics in performance.items():
             if strategy not in self.performance_history:
                 self.performance_history[strategy] = []
 
             self.performance_history[strategy].append(
-                {'timestamp': datetime.utcnow(), 'metrics': metrics}
+                {"timestamp": datetime.utcnow(), "metrics": metrics}
             )
 
             # Mantener solo lookback_period días
             cutoff = datetime.utcnow() - timedelta(days=self.lookback_period)
             self.performance_history[strategy] = [
-                entry for entry in self.performance_history[strategy] if entry['timestamp'] > cutoff
+                entry for entry in self.performance_history[strategy] if entry["timestamp"] > cutoff
             ]
 
     def update(
         self,
-        strategy_performance: Dict[str, Dict[str, float]],
+        strategy_performance: dict[str, dict[str, float]],
         portfolio_return: float,
-        market_context: Optional[Dict[str, Any]] = None,
+        market_context: Optional[dict[str, Any]] = None,
     ) -> None:
         """Actualizar con nueva experiencia."""
         self._update_history(strategy_performance)
@@ -211,15 +211,15 @@ class HistoricalPerformanceLearner(BaseMetaLearner):
         weights = self.learn_weights(strategy_performance, market_context)
         self.learning_history.append(
             {
-                'timestamp': datetime.utcnow(),
-                'weights': weights,
-                'portfolio_return': portfolio_return,
-                'market_context': market_context,
+                "timestamp": datetime.utcnow(),
+                "weights": weights,
+                "portfolio_return": portfolio_return,
+                "market_context": market_context,
             }
         )
 
         # Mantener historial limitado
-        max_history = self.config.get('max_history_size', 1000)
+        max_history = self.config.get("max_history_size", 1000)
         if len(self.learning_history) > max_history:
             self.learning_history = self.learning_history[-max_history:]
 
@@ -231,17 +231,17 @@ class ReinforcementLearningLearner(BaseMetaLearner):
     Usa RL para aprender política óptima de asignación.
     """
 
-    def __init__(self, config: Dict[str, Any]):
+    def __init__(self, config: dict[str, Any]):
         """Inicializar RL learner."""
         super().__init__(config)
 
         # PyTorch es REQUIRED - ya importado al inicio del módulo
         self._initialize_model()
 
-        self.learning_rate = config.get('learning_rate', 0.001)
-        self.discount_factor = config.get('discount_factor', 0.99)
-        self.exploration_rate = config.get('exploration_rate', 0.1)
-        self.exploration_decay = config.get('exploration_decay', 0.995)
+        self.learning_rate = config.get("learning_rate", 0.001)
+        self.discount_factor = config.get("discount_factor", 0.99)
+        self.exploration_rate = config.get("exploration_rate", 0.1)
+        self.exploration_decay = config.get("exploration_decay", 0.995)
 
     def _initialize_model(self) -> None:
         """Inicializar modelo de RL."""
@@ -272,9 +272,9 @@ class ReinforcementLearningLearner(BaseMetaLearner):
 
     def learn_weights(
         self,
-        strategy_performance: Dict[str, Dict[str, float]],
-        market_context: Optional[Dict[str, Any]] = None,
-    ) -> Dict[str, float]:
+        strategy_performance: dict[str, dict[str, float]],
+        market_context: Optional[dict[str, Any]] = None,
+    ) -> dict[str, float]:
         """
         Aprender pesos usando RL.
 
@@ -322,24 +322,24 @@ class ReinforcementLearningLearner(BaseMetaLearner):
 
     def _extract_features(
         self,
-        strategy_performance: Dict[str, Dict[str, float]],
-        market_context: Optional[Dict[str, Any]],
+        strategy_performance: dict[str, dict[str, float]],
+        market_context: Optional[dict[str, Any]],
     ) -> np.ndarray:
         """Extraer features para el modelo."""
         features = []
 
         # Features de performance de estrategias
         for _strategy, metrics in strategy_performance.items():
-            features.append(metrics.get('return', 0.0))
-            features.append(metrics.get('sharpe_ratio', 0.0))
-            features.append(metrics.get('max_drawdown', 0.0))
-            features.append(metrics.get('win_rate', 0.0))
+            features.append(metrics.get("return", 0.0))
+            features.append(metrics.get("sharpe_ratio", 0.0))
+            features.append(metrics.get("max_drawdown", 0.0))
+            features.append(metrics.get("win_rate", 0.0))
 
         # Features de contexto de mercado
         if market_context:
-            features.append(market_context.get('regime', 0.0))  # Codificado
-            features.append(market_context.get('volatility', 0.0))
-            features.append(market_context.get('trend_strength', 0.0))
+            features.append(market_context.get("regime", 0.0))  # Codificado
+            features.append(market_context.get("volatility", 0.0))
+            features.append(market_context.get("trend_strength", 0.0))
         else:
             features.extend([0.0, 0.0, 0.0])
 
@@ -351,9 +351,9 @@ class ReinforcementLearningLearner(BaseMetaLearner):
 
     def update(
         self,
-        strategy_performance: Dict[str, Dict[str, float]],
+        strategy_performance: dict[str, dict[str, float]],
         portfolio_return: float,
-        market_context: Optional[Dict[str, Any]] = None,
+        market_context: Optional[dict[str, Any]] = None,
     ) -> None:
         """Actualizar modelo RL con nueva experiencia."""
         if not self.model:
@@ -381,10 +381,10 @@ class ReinforcementLearningLearner(BaseMetaLearner):
             # Por ahora, solo guardar experiencia
             self.learning_history.append(
                 {
-                    'timestamp': datetime.utcnow(),
-                    'features': features.tolist(),
-                    'reward': reward,
-                    'market_context': market_context,
+                    "timestamp": datetime.utcnow(),
+                    "features": features.tolist(),
+                    "reward": reward,
+                    "market_context": market_context,
                 }
             )
 
@@ -402,22 +402,22 @@ class EnsembleMetaLearner(BaseMetaLearner):
     Combina múltiples meta-learners para mejor asignación.
     """
 
-    def __init__(self, config: Dict[str, Any]):
+    def __init__(self, config: dict[str, Any]):
         """Inicializar ensemble meta-learner."""
         super().__init__(config)
 
         # Crear múltiples learners
         self.learners = []
 
-        if config.get('use_historical', True):
+        if config.get("use_historical", True):
             self.learners.append(HistoricalPerformanceLearner(config))
 
-        if config.get('use_rl', False):
+        if config.get("use_rl", False):
             # PyTorch es REQUIRED - ya importado al inicio del módulo
             self.learners.append(ReinforcementLearningLearner(config))
 
         # Pesos del ensemble
-        self.learner_weights = config.get('learner_weights')
+        self.learner_weights = config.get("learner_weights")
         if self.learner_weights is None:
             # Pesos iguales por defecto
             self.learner_weights = {
@@ -426,9 +426,9 @@ class EnsembleMetaLearner(BaseMetaLearner):
 
     def learn_weights(
         self,
-        strategy_performance: Dict[str, Dict[str, float]],
-        market_context: Optional[Dict[str, Any]] = None,
-    ) -> Dict[str, float]:
+        strategy_performance: dict[str, dict[str, float]],
+        market_context: Optional[dict[str, Any]] = None,
+    ) -> dict[str, float]:
         """
         Aprender pesos usando ensemble de learners.
 
@@ -493,9 +493,9 @@ class EnsembleMetaLearner(BaseMetaLearner):
 
     def update(
         self,
-        strategy_performance: Dict[str, Dict[str, float]],
+        strategy_performance: dict[str, dict[str, float]],
         portfolio_return: float,
-        market_context: Optional[Dict[str, Any]] = None,
+        market_context: Optional[dict[str, Any]] = None,
     ) -> None:
         """Actualizar todos los learners."""
         for learner in self.learners:

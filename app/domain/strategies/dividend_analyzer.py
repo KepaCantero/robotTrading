@@ -16,7 +16,7 @@ SOLID Principles:
 import logging
 from dataclasses import dataclass
 from decimal import Decimal
-from typing import Dict, List, Optional, Tuple
+from typing import Optional
 
 import numpy as np
 
@@ -64,8 +64,8 @@ class DividendSustainabilityMetrics:
 
     sustainable: bool
     sustainability_score: Decimal  # 0-100
-    risk_factors: List[str]
-    strength_factors: List[str]
+    risk_factors: list[str]
+    strength_factors: list[str]
     payout_trend: str  # "improving", "stable", "declining"
     fcf_trend: str  # "improving", "stable", "declining"
     earnings_stability: Decimal  # 0-100
@@ -139,7 +139,7 @@ class DividendAnalyzer:
     def analyze_sustainability(
         self,
         profile: DividendProfile,
-        historical_data: Optional[Dict[str, List[Decimal]]] = None,
+        historical_data: Optional[dict[str, list[Decimal]]] = None,
     ) -> DividendSustainabilityMetrics:
         """
         Analizar sostenibilidad del dividendo.
@@ -329,7 +329,7 @@ class DividendAnalyzer:
         """
         return None  # Implementado en estrategia principal
 
-    def _identify_risk_factors(self, profile: DividendProfile) -> List[str]:
+    def _identify_risk_factors(self, profile: DividendProfile) -> list[str]:
         """Identificar factores de riesgo."""
         risks = []
 
@@ -348,7 +348,10 @@ class DividendAnalyzer:
             elif profile.dividend_data.dividend_growth_rate_3y < 2:
                 risks.append("Crecimiento mínimo de dividendos")
 
-        if profile.dividend_data.dividend_coverage_ratio is not None and profile.dividend_data.dividend_coverage_ratio < 1.0:
+        if (
+            profile.dividend_data.dividend_coverage_ratio is not None
+            and profile.dividend_data.dividend_coverage_ratio < 1.0
+        ):
             risks.append("Cobertura de FCF insuficiente")
 
         if profile.debt_to_equity is not None and profile.debt_to_equity > 200:
@@ -359,7 +362,7 @@ class DividendAnalyzer:
 
         return risks
 
-    def _identify_strength_factors(self, profile: DividendProfile) -> List[str]:
+    def _identify_strength_factors(self, profile: DividendProfile) -> list[str]:
         """Identificar factores de fortaleza."""
         strengths = []
 
@@ -373,12 +376,18 @@ class DividendAnalyzer:
         if profile.dividend_data.safety == DividendSafety.VERY_SAFE:
             strengths.append("Dividend muy seguro (payout < 40%)")
 
-        if profile.dividend_data.dividend_growth_rate_5y is not None and profile.dividend_data.dividend_growth_rate_5y >= 10:
+        if (
+            profile.dividend_data.dividend_growth_rate_5y is not None
+            and profile.dividend_data.dividend_growth_rate_5y >= 10
+        ):
             strengths.append(
                 f"Crecimiento alto 5A: {profile.dividend_data.dividend_growth_rate_5y}%"
             )
 
-        if profile.dividend_data.dividend_coverage_ratio is not None and profile.dividend_data.dividend_coverage_ratio >= 2.0:
+        if (
+            profile.dividend_data.dividend_coverage_ratio is not None
+            and profile.dividend_data.dividend_coverage_ratio >= 2.0
+        ):
             strengths.append("Cobertura sólida (FCF >= 2x dividendos)")
 
         if profile.roe is not None and profile.roe >= 15:
@@ -389,8 +398,8 @@ class DividendAnalyzer:
     def _calculate_sustainability_score(
         self,
         profile: DividendProfile,
-        risk_factors: List[str],
-        strength_factors: List[str],
+        risk_factors: list[str],
+        strength_factors: list[str],
     ) -> Decimal:
         """
         Calcular score de sostenibilidad (0-100).
@@ -421,7 +430,7 @@ class DividendAnalyzer:
 
         return min(Decimal("100"), max(Decimal("0"), base))
 
-    def _analyze_payout_trend(self, historical_data: Optional[Dict[str, List[Decimal]]]) -> str:
+    def _analyze_payout_trend(self, historical_data: Optional[dict[str, list[Decimal]]]) -> str:
         """Analizar tendencia de payout ratio."""
         if historical_data is None or "payout_ratio" not in historical_data:
             return "stable"
@@ -441,7 +450,7 @@ class DividendAnalyzer:
         else:
             return "stable"
 
-    def _analyze_fcf_trend(self, historical_data: Optional[Dict[str, List[Decimal]]]) -> str:
+    def _analyze_fcf_trend(self, historical_data: Optional[dict[str, list[Decimal]]]) -> str:
         """Analizar tendencia de FCF."""
         if historical_data is None or "fcf" not in historical_data:
             return "stable"
@@ -470,7 +479,7 @@ class DividendAnalyzer:
             return "stable"
 
     def _calculate_earnings_stability(
-        self, historical_data: Optional[Dict[str, List[Decimal]]]
+        self, historical_data: Optional[dict[str, list[Decimal]]]
     ) -> Decimal:
         """
         Calcular estabilidad de earnings (0-100).
@@ -544,7 +553,7 @@ class DividendAnalyzer:
         investment_amount: Decimal,
         years: int = 10,
         growth_rate: Optional[Decimal] = None,
-    ) -> List[Tuple[int, Decimal, Decimal]]:
+    ) -> list[tuple[int, Decimal, Decimal]]:
         """
         Proyectar ingreso por dividendos futuro.
 

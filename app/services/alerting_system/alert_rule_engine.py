@@ -10,7 +10,7 @@ Evaluates alert rules against incoming metrics with support for:
 
 import logging
 from datetime import datetime
-from typing import Dict, List, Optional, Tuple
+from typing import Optional
 
 from .models import (
     AlertEvaluationContext,
@@ -40,8 +40,8 @@ class AlertRuleEngine:
 
     def __init__(self):
         """Initialize rule engine."""
-        self.rules: Dict[str, AlertRule] = {}
-        self.evaluation_history: List[Dict] = []
+        self.rules: dict[str, AlertRule] = {}
+        self.evaluation_history: list[dict] = []
         self._max_history = 10000
 
     def register_rule(self, rule: AlertRule) -> None:
@@ -72,7 +72,7 @@ class AlertRuleEngine:
 
     def evaluate_rule(
         self, rule: AlertRule, context: AlertEvaluationContext
-    ) -> Tuple[bool, Optional[AlertEvent]]:
+    ) -> tuple[bool, Optional[AlertEvent]]:
         """
         Evaluate single rule against context.
 
@@ -122,7 +122,7 @@ class AlertRuleEngine:
             self._record_evaluation(rule.rule_id, context, False, None, str(e))
             return False, None
 
-    def evaluate_all_rules(self, context: AlertEvaluationContext) -> List[AlertEvent]:
+    def evaluate_all_rules(self, context: AlertEvaluationContext) -> list[AlertEvent]:
         """
         Evaluate all registered rules.
 
@@ -190,13 +190,10 @@ class AlertRuleEngine:
         # Check direction if specified
         if rule.direction == "up" and change_pct <= 0:
             return False
-        if rule.direction == "down" and change_pct >= 0:
-            return False
-
-        return True
+        return not (rule.direction == "down" and change_pct >= 0)
 
     def _create_alert_event(
-        self, rule: AlertRule, context: AlertEvaluationContext, results: List[bool]
+        self, rule: AlertRule, context: AlertEvaluationContext, results: list[bool]
     ) -> AlertEvent:
         """Create alert event from triggered rule."""
         from uuid import uuid4
@@ -253,7 +250,7 @@ class AlertRuleEngine:
         if len(self.evaluation_history) > self._max_history:
             self.evaluation_history = self.evaluation_history[-self._max_history :]
 
-    def get_evaluation_stats(self) -> Dict:
+    def get_evaluation_stats(self) -> dict:
         """Get statistics about rule evaluation."""
         if not self.evaluation_history:
             return {
@@ -285,7 +282,7 @@ class AlertRuleEngine:
         self.evaluation_history.clear()
         logger.info("Cleared rule evaluation history")
 
-    def get_rules_summary(self) -> Dict:
+    def get_rules_summary(self) -> dict:
         """Get summary of registered rules."""
         return {
             "total_rules": len(self.rules),

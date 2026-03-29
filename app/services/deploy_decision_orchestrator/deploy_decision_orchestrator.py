@@ -13,7 +13,7 @@ Makes final APPROVED/CONDITIONAL/REJECTED decision.
 import logging
 from datetime import datetime
 from decimal import Decimal
-from typing import Dict, List, Optional
+from typing import ClassVar, Optional
 
 import numpy as np
 
@@ -41,13 +41,13 @@ class DeployDecisionOrchestrator:
     """
 
     # Thresholds for different decision criteria
-    FEASIBILITY_THRESHOLDS = {
+    FEASIBILITY_THRESHOLDS: ClassVar[dict] = {
         "approved": Decimal("1.0"),  # >= 1.0: Can meet target
         "conditional": Decimal("0.7"),  # 0.7-1.0: Marginal viability
         "rejected": Decimal("0"),  # < 0.7: Not viable
     }
 
-    RECOMMENDATION_THRESHOLDS = {
+    RECOMMENDATION_THRESHOLDS: ClassVar[dict] = {
         "strong_buy": Decimal("80"),
         "buy": Decimal("65"),
         "hold": Decimal("50"),
@@ -55,7 +55,7 @@ class DeployDecisionOrchestrator:
         "not_recommended": Decimal("0"),
     }
 
-    CONFIDENCE_THRESHOLDS = {
+    CONFIDENCE_THRESHOLDS: ClassVar[dict] = {
         "high": Decimal("75"),
         "medium": Decimal("50"),
         "low": Decimal("0"),
@@ -63,7 +63,7 @@ class DeployDecisionOrchestrator:
 
     def __init__(self):
         """Initialize orchestrator."""
-        self.decision_history: List[DeploymentDecision] = []
+        self.decision_history: list[DeploymentDecision] = []
         self.capacity_fade_validator = CapacityFadeValidator()  # T4.1 injection
         logger.info("✅ DeployDecisionOrchestrator initialized with T4.1 CapacityFadeValidator")
 
@@ -112,7 +112,7 @@ class DeployDecisionOrchestrator:
             (
                 capacity_fade_score,
                 capacity_fade_feasible,
-                capacity_fade_alpha,
+                _capacity_fade_alpha,
             ) = await self._assess_capacity_fade(deployment_input)
 
             # Step 6: Calculate overall score (weighted average)
@@ -211,7 +211,7 @@ class DeployDecisionOrchestrator:
                     recommendation_assessment="Error occurred",
                     risk_assessment="Error occurred",
                     diversification_assessment="Error occurred",
-                    overall_assessment=f"Error: {str(e)}",
+                    overall_assessment=f"Error: {e!s}",
                     critical_factors=[str(e)],
                     improvement_areas=[],
                 ),
@@ -236,7 +236,7 @@ class DeployDecisionOrchestrator:
     async def _assess_validation(
         self,
         validation_passed: bool,
-        validation_failures: List[str],
+        validation_failures: list[str],
     ) -> Decimal:
         """Assess validation score."""
         if validation_passed:
@@ -305,7 +305,7 @@ class DeployDecisionOrchestrator:
             # This triggers weight redistribution in _calculate_overall_score()
             if deployment_input.current_capital is None or deployment_input.target_capital is None:
                 logger.warning(
-                    "⚠️ Capacity fade validation skipped: missing capital data, redistributing weights"
+                    "⚠ Capacity fade validation skipped: missing capital data, redistributing weights"
                 )
                 return None, None, None
 
@@ -365,7 +365,7 @@ class DeployDecisionOrchestrator:
             return score, is_feasible, estimated_alpha
 
         except (ValueError, TypeError, KeyError, AttributeError) as e:
-            logger.error(f"❌ T4.1 Capacity Fade validation error: {str(e)}")
+            logger.error(f"❌ T4.1 Capacity Fade validation error: {e!s}")
             return Decimal("20"), False, Decimal("0")
 
     async def _calculate_overall_score(
@@ -473,10 +473,7 @@ class DeployDecisionOrchestrator:
         if Decimal("0.7") <= feasibility_ratio < Decimal("1.0"):
             status = "CONDITIONAL"
             # Keep confidence low if overall_score is also low
-            if overall_score >= Decimal("60"):
-                confidence = "medium"
-            else:
-                confidence = "low"
+            confidence = "medium" if overall_score >= Decimal("60") else "low"
 
         return status, confidence
 
@@ -501,7 +498,7 @@ class DeployDecisionOrchestrator:
             )
         elif input_data.feasibility_ratio >= Decimal("0.7"):
             feasibility_text = (
-                f"⚠️ Feasibility ratio {input_data.feasibility_ratio:.2f}x is marginal. "
+                f"⚠ Feasibility ratio {input_data.feasibility_ratio:.2f}x is marginal. "
                 f"Strategy may struggle to meet {input_data.target_annual_return_pct:.1f}% target."
             )
         else:
@@ -515,7 +512,7 @@ class DeployDecisionOrchestrator:
             validation_text = "✅ All validation gates passed successfully."
         elif not input_data.validation_failures:
             validation_text = (
-                f"⚠️ Validation passed with {len(input_data.validation_warnings)} warning(s)."
+                f"⚠ Validation passed with {len(input_data.validation_warnings)} warning(s)."
             )
         else:
             validation_text = (
@@ -527,11 +524,9 @@ class DeployDecisionOrchestrator:
         if recommendation_score >= Decimal("80"):
             recommendation_text = f"✅ Strong recommendation score ({recommendation_score:.0f}/100). Strategy shows high potential."
         elif recommendation_score >= Decimal("65"):
-            recommendation_text = (
-                f"👍 Good recommendation score ({recommendation_score:.0f}/100). Strategy is viable."
-            )
+            recommendation_text = f"👍 Good recommendation score ({recommendation_score:.0f}/100). Strategy is viable."
         elif recommendation_score >= Decimal("50"):
-            recommendation_text = f"➖ Neutral recommendation score ({recommendation_score:.0f}/100). Marginal viability."
+            recommendation_text = f"- Neutral recommendation score ({recommendation_score:.0f}/100). Marginal viability."
         else:
             recommendation_text = (
                 f"❌ Weak recommendation score ({recommendation_score:.0f}/100). Caution advised."
@@ -541,7 +536,7 @@ class DeployDecisionOrchestrator:
         if input_data.max_drawdown_pct <= input_data.max_acceptable_drawdown_pct * Decimal("0.7"):
             risk_text = f"✅ Risk well-controlled. Drawdown {input_data.max_drawdown_pct:.1f}% is below acceptable {input_data.max_acceptable_drawdown_pct:.1f}%."
         elif input_data.max_drawdown_pct <= input_data.max_acceptable_drawdown_pct:
-            risk_text = f"⚠️ Risk acceptable. Drawdown {input_data.max_drawdown_pct:.1f}% is near acceptable limit."
+            risk_text = f"⚠ Risk acceptable. Drawdown {input_data.max_drawdown_pct:.1f}% is near acceptable limit."
         else:
             risk_text = f"❌ Risk unacceptable. Drawdown {input_data.max_drawdown_pct:.1f}% exceeds limit {input_data.max_acceptable_drawdown_pct:.1f}%."
 
@@ -551,7 +546,7 @@ class DeployDecisionOrchestrator:
         elif input_data.diversification_ratio >= Decimal("1.5"):
             div_text = f"👍 Adequately diversified (ratio: {input_data.diversification_ratio:.2f}). Acceptable concentration."
         else:
-            div_text = f"⚠️ Limited diversification (ratio: {input_data.diversification_ratio:.2f}). Consider broader allocation."
+            div_text = f"⚠ Limited diversification (ratio: {input_data.diversification_ratio:.2f}). Consider broader allocation."
 
         # Capacity fade assessment (T4.1 PHASE 6)
         capacity_fade_text = ""
@@ -574,17 +569,17 @@ class DeployDecisionOrchestrator:
                 and input_data.estimated_alpha_at_scale >= Decimal("1")
             ):
                 capacity_fade_text = (
-                    f"⚠️ Capacity fade analysis: Strategy alpha moderates to {input_data.estimated_alpha_at_scale:.1f}% "
+                    f"⚠ Capacity fade analysis: Strategy alpha moderates to {input_data.estimated_alpha_at_scale:.1f}% "
                     "at target capital. Feasible but with less margin."
                 )
             else:
                 capacity_fade_text = (
-                    "⚠️ Capacity fade analysis: Strategy reaches target capital but with marginal alpha. "
+                    "⚠ Capacity fade analysis: Strategy reaches target capital but with marginal alpha. "
                     "May need optimization for scale."
                 )
         else:
             capacity_fade_text = (
-                "➖ Capacity fade analysis: Not evaluated. Assuming capacity-neutral scaling. "
+                "- Capacity fade analysis: Not evaluated. Assuming capacity-neutral scaling. "
                 "Recommend capacity fade validation before large-scale deployment."
             )
 
@@ -626,7 +621,7 @@ class DeployDecisionOrchestrator:
             )
         elif status == "CONDITIONAL":
             overall_assessment = (
-                f"⚠️ CONDITIONAL - Strategy {input_data.strategy_name} is viable with improvements. "
+                f"⚠ CONDITIONAL - Strategy {input_data.strategy_name} is viable with improvements. "
                 f"Overall score: {overall_score:.0f}/100."
             )
         else:
@@ -663,7 +658,7 @@ class DeployDecisionOrchestrator:
             )
         elif status == "CONDITIONAL":
             text = (
-                f"⚠️ Conditionally approved subject to improvements. Overall score: {score:.0f}/100. "
+                f"⚠ Conditionally approved subject to improvements. Overall score: {score:.0f}/100. "
                 f"{rationale.overall_assessment} "
                 f"Recommended improvements: {', '.join(rationale.improvement_areas[:2])}. "
                 "Deploy with enhanced monitoring and consider phased rollout."
@@ -682,7 +677,7 @@ class DeployDecisionOrchestrator:
         status: str,
         rationale: DeploymentRationale,
         input_data: DeploymentInput,
-    ) -> List[str]:
+    ) -> list[str]:
         """Determine recommended next steps."""
         next_steps = []
 
@@ -710,14 +705,14 @@ class DeployDecisionOrchestrator:
     async def get_decision_history(
         self,
         limit: Optional[int] = None,
-    ) -> List[DeploymentDecision]:
+    ) -> list[DeploymentDecision]:
         """Get decision history."""
         results = self.decision_history
         if limit:
             results = results[-limit:]
         return results
 
-    def get_orchestrator_status(self) -> Dict:
+    def get_orchestrator_status(self) -> dict:
         """Get orchestrator operational status."""
         approved = sum(1 for d in self.decision_history if d.status == "APPROVED")
         conditional = sum(1 for d in self.decision_history if d.status == "CONDITIONAL")

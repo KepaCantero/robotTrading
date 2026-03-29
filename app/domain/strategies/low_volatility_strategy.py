@@ -22,7 +22,7 @@ import logging
 from collections import deque
 from datetime import date
 from decimal import Decimal
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, ClassVar, Optional
 
 from app.domain.models.market_data import Quote
 from app.domain.models.portfolio import Portfolio
@@ -69,12 +69,17 @@ class LowVolatilityStrategy(BaseStrategy):
     """
 
     # Sectores defensivos por defecto
-    DEFENSIVE_SECTORS = ["Utilities", "Consumer Staples", "Healthcare", "Real Estate"]
+    DEFENSIVE_SECTORS: ClassVar[list] = [
+        "Utilities",
+        "Consumer Staples",
+        "Healthcare",
+        "Real Estate",
+    ]
 
     # Sectores a evitar por defecto
-    CYCLICAL_SECTORS = ["Technology", "Biotechnology", "Energy", "Materials"]
+    CYCLICAL_SECTORS: ClassVar[list] = ["Technology", "Biotechnology", "Energy", "Materials"]
 
-    def __init__(self, config: Dict[str, Any]):
+    def __init__(self, config: dict[str, Any]):
         """
         Inicializar estrategia de baja volatilidad.
 
@@ -97,7 +102,7 @@ class LowVolatilityStrategy(BaseStrategy):
         # Estado interno
         self.current_portfolio: Optional[LowVolatilityPortfolio] = None
         self.last_rebalance_date: Optional[date] = None
-        self.universe: List[LowVolatilityProfile] = []
+        self.universe: list[LowVolatilityProfile] = []
 
         # Métricas de rendimiento
         self.volatility_history: deque = deque(maxlen=252)  # 1 año de datos diarios
@@ -111,7 +116,7 @@ class LowVolatilityStrategy(BaseStrategy):
             f"portfolio_size={self.strategy_config.portfolio_size}"
         )
 
-    def _parse_config(self, config: Dict[str, Any]) -> LowVolatilityStrategyConfig:
+    def _parse_config(self, config: dict[str, Any]) -> LowVolatilityStrategyConfig:
         """
         Parsear configuración desde dict.
 
@@ -186,7 +191,11 @@ class LowVolatilityStrategy(BaseStrategy):
                 "target_volatility",
                 "min_market_cap",
             ]:
-                if key in merged and merged[key] is not None and not isinstance(merged[key], Decimal):
+                if (
+                    key in merged
+                    and merged[key] is not None
+                    and not isinstance(merged[key], Decimal)
+                ):
                     merged[key] = Decimal(str(merged[key]))
 
             return LowVolatilityStrategyConfig(**merged)
@@ -196,7 +205,7 @@ class LowVolatilityStrategy(BaseStrategy):
             # Retornar config por defecto
             return LowVolatilityStrategyConfig()
 
-    def generate_signals(self, market_data: Quote) -> List[Signal]:
+    def generate_signals(self, market_data: Quote) -> list[Signal]:
         """
         Generar señales de trading basadas en baja volatilidad.
 
@@ -233,7 +242,7 @@ class LowVolatilityStrategy(BaseStrategy):
 
         # Actualizar precio en el perfil
         profile.current_price = (
-            market_data.close if hasattr(market_data, 'close') else market_data.price
+            market_data.close if hasattr(market_data, "close") else market_data.price
         )
 
         # Evaluar si generar señal
@@ -268,15 +277,24 @@ class LowVolatilityStrategy(BaseStrategy):
                     return False  # Ya tenemos posición
 
         # Evaluar score de baja volatilidad
-        if profile.low_vol_score is not None and profile.low_vol_score < self.strategy_config.min_low_vol_score:
+        if (
+            profile.low_vol_score is not None
+            and profile.low_vol_score < self.strategy_config.min_low_vol_score
+        ):
             return False
 
         # Evaluar score defensivo
-        if profile.defensive_score is not None and profile.defensive_score < self.strategy_config.min_defensive_score:
+        if (
+            profile.defensive_score is not None
+            and profile.defensive_score < self.strategy_config.min_defensive_score
+        ):
             return False
 
         # Evaluar score de estabilidad
-        if profile.stability_score is not None and profile.stability_score < self.strategy_config.min_stability_score:
+        if (
+            profile.stability_score is not None
+            and profile.stability_score < self.strategy_config.min_stability_score
+        ):
             return False
 
         # Verificar que sea baja volatilidad
@@ -290,10 +308,7 @@ class LowVolatilityStrategy(BaseStrategy):
 
         # Verificar beta
         beta = profile.volatility_metrics.beta
-        if beta is None or beta > self.strategy_config.max_beta:
-            return False
-
-        return True
+        return not (beta is None or beta > self.strategy_config.max_beta)
 
     def _should_sell(self, profile: LowVolatilityProfile) -> bool:
         """
@@ -380,8 +395,8 @@ class LowVolatilityStrategy(BaseStrategy):
             liquidity_score=liquidity_score,
             priority_score=priority,
             source=SignalSource.FUNDAMENTAL,
-            price=market_data.close if hasattr(market_data, 'close') else market_data.price,
-            volume=market_data.volume if hasattr(market_data, 'volume') else Decimal("1000000"),
+            price=market_data.close if hasattr(market_data, "close") else market_data.price,
+            volume=market_data.volume if hasattr(market_data, "volume") else Decimal("1000000"),
             metadata={
                 "reason": reason,
                 "volatility": float(vol),
@@ -420,8 +435,8 @@ class LowVolatilityStrategy(BaseStrategy):
             liquidity_score=80.0,
             priority_score=60.0,
             source=SignalSource.FUNDAMENTAL,
-            price=market_data.close if hasattr(market_data, 'close') else market_data.price,
-            volume=market_data.volume if hasattr(market_data, 'volume') else Decimal("1000000"),
+            price=market_data.close if hasattr(market_data, "close") else market_data.price,
+            volume=market_data.volume if hasattr(market_data, "volume") else Decimal("1000000"),
             metadata={
                 "reason": "volatility_increased",
                 "volatility": float(profile.volatility_metrics.average_volatility or 0),
@@ -484,7 +499,7 @@ class LowVolatilityStrategy(BaseStrategy):
                 return profile.sector
         return None
 
-    def get_required_parameters(self) -> List[str]:
+    def get_required_parameters(self) -> list[str]:
         """
         Obtener parámetros requeridos para la estrategia.
 
@@ -535,7 +550,7 @@ class LowVolatilityStrategy(BaseStrategy):
     # MÉTODOS DE GESTIÓN DE PORTAFOLIO
     # ============================================================================
 
-    def set_universe(self, profiles: List[LowVolatilityProfile]) -> None:
+    def set_universe(self, profiles: list[LowVolatilityProfile]) -> None:
         """
         Establecer universo de acciones de baja volatilidad.
 
@@ -547,7 +562,7 @@ class LowVolatilityStrategy(BaseStrategy):
 
     def construct_portfolio(
         self,
-        stocks: List[LowVolatilityStock],
+        stocks: list[LowVolatilityStock],
         total_capital: Decimal,
         returns_matrix: Optional[Any] = None,
     ) -> LowVolatilityPortfolio:
@@ -576,7 +591,7 @@ class LowVolatilityStrategy(BaseStrategy):
 
     def rebalance_portfolio(
         self,
-        new_stocks: List[LowVolatilityStock],
+        new_stocks: list[LowVolatilityStock],
         total_capital: Decimal,
         returns_matrix: Optional[Any] = None,
     ) -> LowVolatilityPortfolio:
@@ -606,7 +621,7 @@ class LowVolatilityStrategy(BaseStrategy):
 
         return self.current_portfolio
 
-    def analyze_portfolio_drift(self) -> Dict[str, Any]:
+    def analyze_portfolio_drift(self) -> dict[str, Any]:
         """
         Analizar drift del portafolio actual.
 
@@ -618,7 +633,7 @@ class LowVolatilityStrategy(BaseStrategy):
 
         return self.constructor.analyze_drift(self.current_portfolio)
 
-    def get_portfolio_metrics(self) -> Dict[str, Any]:
+    def get_portfolio_metrics(self) -> dict[str, Any]:
         """
         Obtener métricas del portafolio actual.
 
@@ -644,8 +659,8 @@ class LowVolatilityStrategy(BaseStrategy):
     def update_volatility_metrics(
         self,
         symbol: str,
-        price_series: List[Tuple[date, Decimal]],
-        market_series: List[Tuple[date, Decimal]],
+        price_series: list[tuple[date, Decimal]],
+        market_series: list[tuple[date, Decimal]],
     ) -> VolatilityMetrics:
         """
         Actualizar métricas de volatilidad para un símbolo.
@@ -670,8 +685,8 @@ class LowVolatilityStrategy(BaseStrategy):
 
     def calculate_portfolio_volatility(
         self,
-        weights: List[float],
-        returns_matrix: List[List[float]],
+        weights: list[float],
+        returns_matrix: list[list[float]],
     ) -> Decimal:
         """
         Calcular volatilidad de portafolio.

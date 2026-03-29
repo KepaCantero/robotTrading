@@ -11,13 +11,15 @@ from __future__ import annotations
 import logging
 import uuid
 from datetime import datetime
-from typing import Optional
+from typing import TYPE_CHECKING
 
 from ...core.exceptions import BacktestError, ValidationError
 from ...domain.entities.backtest import Backtest, BacktestStatus
-from ...domain.repositories.backtest_repository import BacktestRepository
-from ...domain.value_objects.backtest_config import BacktestConfigValue
 from ...domain.value_objects.backtest_result import BacktestResultValue
+
+if TYPE_CHECKING:
+    from ...domain.repositories.backtest_repository import BacktestRepository
+    from ...domain.value_objects.backtest_config import BacktestConfigValue
 
 logger = logging.getLogger(__name__)
 
@@ -102,7 +104,7 @@ class RunBacktestUseCase:
 
         return backtests
 
-    def get_backtest(self, backtest_id: str) -> Optional[Backtest]:
+    def get_backtest(self, backtest_id: str) -> Backtest | None:
         """
         Get a backtest by ID.
 
@@ -173,7 +175,7 @@ class RunBacktestUseCase:
 
             # Import strategy from config if available
             # For now, we need to get the strategy from the config or use a default
-            strategy_name = getattr(config, 'strategy_name', 'default')
+            strategy_name = getattr(config, "strategy_name", "default")
 
             # Create a placeholder result with the configured parameters
             # In a full implementation, this would call the backtesting engine
@@ -193,7 +195,7 @@ class RunBacktestUseCase:
                 f"Backtest execution completed for {strategy_name}",
                 extra={
                     "initial_capital": float(config.initial_capital),
-                    "commission": float(getattr(config, 'commission', 0.001)),
+                    "commission": float(getattr(config, "commission", 0.001)),
                 },
             )
 

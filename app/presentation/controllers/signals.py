@@ -10,7 +10,7 @@ import asyncio
 import logging
 from datetime import datetime
 from decimal import Decimal
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
 from pydantic import BaseModel
@@ -33,7 +33,7 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/signals", tags=["signals"])
 
 # Global signal scorer service instance
-_signal_scorer_service: Optional[SignalScorerService] = None
+_signal_scorer_service: SignalScorerService | None = None
 
 
 def get_signal_scorer_service() -> SignalScorerService:
@@ -66,14 +66,14 @@ class SignalEvaluationRequest(BaseModel):
     symbol: str
     signal_type: str
     market_data: MarketDataRequest
-    metadata: Dict[str, Any] = {}
+    metadata: dict[str, Any] = {}
 
 
 class SignalResponse(BaseModel):
     """Response model for signal evaluation."""
 
     success: bool
-    signal: Optional[Signal] = None
+    signal: Signal | None = None
     message: str
 
 
@@ -85,8 +85,8 @@ class SignalStatisticsResponse(BaseModel):
     success_rate: float
     total_pnl: float
     queue_size: int
-    queue_summary: Dict[str, Any]
-    thresholds: Dict[str, float]
+    queue_summary: dict[str, Any]
+    thresholds: dict[str, float]
 
 
 @router.post("/evaluate", response_model=SignalResponse)
@@ -122,10 +122,10 @@ async def evaluate_signal(
         # Convert signal type
         try:
             signal_type = SignalType(request.signal_type.lower())
-        except ValueError:
+        except ValueError as exc:
             raise HTTPException(
                 status_code=DEFAULT_VALUE_400, detail=f"Invalid signal type: {request.signal_type}"
-            )
+            ) from exc
 
         # Evaluate signal
         signal = await service.evaluate_signal(
@@ -147,8 +147,8 @@ async def evaluate_signal(
 
     except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
         raise HTTPException(
-            status_code=DEFAULT_VALUE_500, detail=f"Error evaluating signal: {str(e)}"
-        )
+            status_code=DEFAULT_VALUE_500, detail=f"Error evaluating signal: {e!s}"
+        ) from e
 
 
 @router.get("/next", response_model=SignalResponse)
@@ -183,8 +183,8 @@ async def get_next_actionable_signal(
 
     except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
         raise HTTPException(
-            status_code=DEFAULT_VALUE_500, detail=f"Error getting next signal: {str(e)}"
-        )
+            status_code=DEFAULT_VALUE_500, detail=f"Error getting next signal: {e!s}"
+        ) from e
 
 
 @router.post("/execute/{signal_id}")
@@ -192,7 +192,7 @@ async def execute_signal(
     signal_id: str,
     background_tasks: BackgroundTasks,
     service: SignalScorerService = Depends(get_signal_scorer_service),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Execute a trading signal.
 
@@ -236,7 +236,7 @@ async def execute_signal(
         logger.error(f"Error executing signal for {signal_id}: {e}")
         return {
             "success": False,
-            "message": f"Error executing signal: {str(e)}",
+            "message": f"Error executing signal: {e!s}",
             "signal": None,
         }
 
@@ -276,14 +276,14 @@ async def get_signal_statistics(
 
     except (asyncio.TimeoutError, OSError) as e:
         raise HTTPException(
-            status_code=DEFAULT_VALUE_500, detail=f"Error getting statistics: {str(e)}"
-        )
+            status_code=DEFAULT_VALUE_500, detail=f"Error getting statistics: {e!s}"
+        ) from e
 
 
-@router.get("/symbol/{symbol}", response_model=List[Signal])
+@router.get("/symbol/{symbol}", response_model=list[Signal])
 async def get_signals_by_symbol(
     symbol: str, service: SignalScorerService = Depends(get_signal_scorer_service)
-) -> List[Signal]:
+) -> list[Signal]:
     """
     Get all signals for a specific symbol.
 
@@ -303,15 +303,15 @@ async def get_signals_by_symbol(
 
     except (asyncio.TimeoutError, OSError) as e:
         raise HTTPException(
-            status_code=DEFAULT_VALUE_500, detail=f"Error getting signals for {symbol}: {str(e)}"
-        )
+            status_code=DEFAULT_VALUE_500, detail=f"Error getting signals for {symbol}: {e!s}"
+        ) from e
 
 
 @router.post("/clear-expired")
 async def clear_expired_signals(
     max_age_minutes: int = MAX_60,
     service: SignalScorerService = Depends(get_signal_scorer_service),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Clear signals older than specified age.
 
@@ -334,8 +334,8 @@ async def clear_expired_signals(
 
     except (asyncio.TimeoutError, OSError) as e:
         raise HTTPException(
-            status_code=DEFAULT_VALUE_500, detail=f"Error clearing expired signals: {str(e)}"
-        )
+            status_code=DEFAULT_VALUE_500, detail=f"Error clearing expired signals: {e!s}"
+        ) from e
 
 
 @router.post("/thresholds")
@@ -343,7 +343,7 @@ async def update_thresholds(
     confidence_threshold: float,
     liquidity_threshold: float,
     service: SignalScorerService = Depends(get_signal_scorer_service),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Update minimum thresholds for signal evaluation.
 
@@ -380,15 +380,15 @@ async def update_thresholds(
 
     except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
         raise HTTPException(
-            status_code=DEFAULT_VALUE_500, detail=f"Error updating thresholds: {str(e)}"
-        )
+            status_code=DEFAULT_VALUE_500, detail=f"Error updating thresholds: {e!s}"
+        ) from e
 
 
 @router.post("/position-size-limit")
 async def update_position_size_limit(
     max_percent: float,
     service: SignalScorerService = Depends(get_signal_scorer_service),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Update maximum position size limit.
 
@@ -417,14 +417,14 @@ async def update_position_size_limit(
 
     except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
         raise HTTPException(
-            status_code=MAX_500, detail=f"Error updating position size limit: {str(e)}"
-        )
+            status_code=MAX_500, detail=f"Error updating position size limit: {e!s}"
+        ) from e
 
 
 @router.get("/health")
 async def signal_health_check(
     service: SignalScorerService = Depends(get_signal_scorer_service),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Health check for signal scorer service.
 
@@ -457,5 +457,5 @@ async def signal_health_check(
     except (ValueError, TypeError, KeyError, AttributeError) as e:
         return {
             "status": "unhealthy",
-            "message": f"Signal scorer service error: {str(e)}",
+            "message": f"Signal scorer service error: {e!s}",
         }

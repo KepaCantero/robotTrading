@@ -20,13 +20,15 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass, field
-from datetime import date
 from decimal import Decimal
-from typing import Any, Dict, List, Optional, Tuple
+from typing import TYPE_CHECKING, Any
 
 import pandas as pd
 
 from .models import CorporateAction, Merger, SpinOff, StockSplit
+
+if TYPE_CHECKING:
+    from datetime import date
 
 logger = logging.getLogger(__name__)
 
@@ -39,13 +41,13 @@ class PositionAdjustment:
     original_quantity: Decimal = field(default=Decimal("0"))
     original_cost_basis: Decimal = field(default=Decimal("0"))
 
-    new_symbol: Optional[str] = field(default=None)
+    new_symbol: str | None = field(default=None)
     new_quantity: Decimal = field(default=Decimal("0"))
     new_cost_basis: Decimal = field(default=Decimal("0"))
 
     cash_received: Decimal = field(default=Decimal("0"))
     adjustment_type: str = field(default="")
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
 
 class CorporateActionHandler:
@@ -84,18 +86,18 @@ class CorporateActionHandler:
 
     def __init__(self):
         """Initialize the corporate action handler."""
-        self._splits: Dict[str, List[StockSplit]] = {}
-        self._mergers: Dict[str, List[Merger]] = {}
-        self._spinoffs: Dict[str, List[SpinOff]] = {}
-        self._all_actions: List[CorporateAction] = []
+        self._splits: dict[str, list[StockSplit]] = {}
+        self._mergers: dict[str, list[Merger]] = {}
+        self._spinoffs: dict[str, list[SpinOff]] = {}
+        self._all_actions: list[CorporateAction] = []
 
     def add_split(
         self,
         symbol: str,
         split_ratio: Decimal,
         ex_date: date,
-        declaration_date: Optional[date] = None,
-        record_date: Optional[date] = None,
+        declaration_date: date | None = None,
+        record_date: date | None = None,
     ) -> StockSplit:
         """
         Add a stock split to the handler.
@@ -137,8 +139,8 @@ class CorporateActionHandler:
         acquirer: str,
         exchange_ratio: Decimal,
         ex_date: date,
-        cash_consideration: Optional[Decimal] = None,
-        declaration_date: Optional[date] = None,
+        cash_consideration: Decimal | None = None,
+        declaration_date: date | None = None,
     ) -> Merger:
         """
         Add a merger/acquisition to the handler.
@@ -183,7 +185,7 @@ class CorporateActionHandler:
         spinoff: str,
         distribution_ratio: Decimal,
         ex_date: date,
-        declaration_date: Optional[date] = None,
+        declaration_date: date | None = None,
     ) -> SpinOff:
         """
         Add a spin-off to the handler.
@@ -271,10 +273,10 @@ class CorporateActionHandler:
         target: str,
         acquirer: str,
         ratio: Decimal,
-        cash: Optional[Decimal],
+        cash: Decimal | None,
         target_shares: Decimal,
         target_cost_basis: Decimal,
-        acquirer_price: Optional[Decimal] = None,
+        acquirer_price: Decimal | None = None,
     ) -> PositionAdjustment:
         """
         Handle a merger/acquisition for a position.
@@ -340,9 +342,9 @@ class CorporateActionHandler:
         ratio: Decimal,
         parent_shares: Decimal,
         parent_cost_basis: Decimal,
-        parent_price: Optional[Decimal] = None,
-        spinoff_price: Optional[Decimal] = None,
-    ) -> Tuple[PositionAdjustment, PositionAdjustment]:
+        parent_price: Decimal | None = None,
+        spinoff_price: Decimal | None = None,
+    ) -> tuple[PositionAdjustment, PositionAdjustment]:
         """
         Handle a spin-off for a position.
 
@@ -421,7 +423,7 @@ class CorporateActionHandler:
     def adjust_history_for_splits(
         self,
         prices: pd.DataFrame,
-        splits: Optional[List[StockSplit]] = None,
+        splits: list[StockSplit] | None = None,
     ) -> pd.DataFrame:
         """
         Adjust historical price data for stock splits.
@@ -525,7 +527,7 @@ class CorporateActionHandler:
         symbol: str,
         current_date: date,
         lookahead_days: int = 30,
-    ) -> List[CorporateAction]:
+    ) -> list[CorporateAction]:
         """
         Get corporate actions that will occur in the near future.
 

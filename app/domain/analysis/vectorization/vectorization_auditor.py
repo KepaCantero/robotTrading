@@ -14,6 +14,7 @@ import logging
 import time
 from decimal import Decimal
 from pathlib import Path
+from typing import ClassVar
 
 from app.domain.analysis.vectorization.models import VectorizationIssue, VectorizationReport
 from app.domain.analysis.vectorization.patterns import VectorizationPatterns
@@ -48,7 +49,7 @@ class VectorizationAuditor:
     """
 
     # Default directories to exclude
-    DEFAULT_EXCLUDE_DIRS = {
+    DEFAULT_EXCLUDE_DIRS: ClassVar[dict] = {
         "__pycache__",
         ".git",
         ".venv",
@@ -281,9 +282,11 @@ class VectorizationAuditor:
                 ):
                     # Check if it's range(len(x)) or range(len(x) +/- N)
                     first_arg = node.iter.args[0]
-                    if isinstance(first_arg, ast.Call) and isinstance(
-                        first_arg.func, ast.Name
-                    ) and first_arg.func.id == "len":
+                    if (
+                        isinstance(first_arg, ast.Call)
+                        and isinstance(first_arg.func, ast.Name)
+                        and first_arg.func.id == "len"
+                    ):
                         self.issues.append(
                             VectorizationIssue(
                                 file_path=file_path,
@@ -336,8 +339,10 @@ class VectorizationAuditor:
 
                 # Check for numerical operations in loop body
                 has_numerical_ops = self._check_for_numerical_operations(node)
-                if has_numerical_ops and not has_subscript_ops and isinstance(
-                    node.iter, (ast.Name, ast.Attribute)
+                if (
+                    has_numerical_ops
+                    and not has_subscript_ops
+                    and isinstance(node.iter, (ast.Name, ast.Attribute))
                 ):
                     self.issues.append(
                         VectorizationIssue(
@@ -357,14 +362,16 @@ class VectorizationAuditor:
 
             def _contains_len_call(self, node: ast.AST) -> bool:
                 """Check if AST node contains a len() call."""
-                if isinstance(node, ast.Call) and isinstance(
-                    node.func, ast.Name
-                ) and node.func.id == "len":
+                if (
+                    isinstance(node, ast.Call)
+                    and isinstance(node.func, ast.Name)
+                    and node.func.id == "len"
+                ):
                     return True
                 return any(
-                    isinstance(child, ast.Call) and isinstance(
-                        child.func, ast.Name
-                    ) and child.func.id == "len"
+                    isinstance(child, ast.Call)
+                    and isinstance(child.func, ast.Name)
+                    and child.func.id == "len"
                     for child in ast.walk(node)
                 )
 
@@ -386,9 +393,8 @@ class VectorizationAuditor:
             def _check_for_numerical_operations(self, node: ast.For) -> bool:
                 """Check if loop body contains numerical operations."""
                 return any(
-                    isinstance(child, (ast.BinOp, ast.AugAssign)) and isinstance(
-                        child.op, (ast.Add, ast.Sub, ast.Mult, ast.Div, ast.Pow)
-                    )
+                    isinstance(child, (ast.BinOp, ast.AugAssign))
+                    and isinstance(child.op, (ast.Add, ast.Sub, ast.Mult, ast.Div, ast.Pow))
                     for child in ast.walk(node)
                 )
 
@@ -468,7 +474,8 @@ class VectorizationAuditor:
 
             def visit_Call(self, node: ast.Call) -> None:
                 if isinstance(node.func, ast.Attribute) and node.func.attr in (
-                    "iterrows", "itertuples"
+                    "iterrows",
+                    "itertuples",
                 ):
                     severity = "critical" if node.func.attr == "iterrows" else "high"
                     issues.append(
@@ -704,7 +711,7 @@ class VectorizationAuditor:
     ) -> Decimal:
         """Calculate vectorization score (0-100).
 
-        Score = 100 - (critical × 10) - (high × 5) - (medium × 2) - (low × 1)
+        Score = 100 - (critical * 10) - (high * 5) - (medium * 2) - (low * 1)
 
         Args:
             issues: List of vectorization issues.

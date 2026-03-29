@@ -11,7 +11,7 @@ Dashboard avanzado con:
 
 import logging
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any, Optional
 
 import numpy as np
 import pandas as pd
@@ -67,18 +67,18 @@ class MetaDashboard:
 
         # Meta analyzer
         self.analyzer: Optional[BacktestMetaAnalyzer] = None
-        self.analysis_results: Dict[str, Any] = {}
+        self.analysis_results: dict[str, Any] = {}
         self.df_results: Optional[pd.DataFrame] = None
 
         logger.info(f"MetaDashboard inicializado: results_dir={results_dir}")
 
-    def _load_thresholds(self) -> Dict[str, Dict[str, float]]:
+    def _load_thresholds(self) -> dict[str, dict[str, float]]:
         """Cargar umbrales desde configuración YAML."""
         default_thresholds = {
-            'sharpe': {'bad': 0.0, 'warn': 0.8, 'good': 1.5},
-            'drawdown': {'bad': 15.0, 'warn': 10.0, 'good': 5.0},
-            'winrate': {'bad': 0.4, 'warn': 0.55, 'good': 0.65},
-            'return_pct': {'bad': 0.0, 'warn': 10.0, 'good': 25.0},
+            "sharpe": {"bad": 0.0, "warn": 0.8, "good": 1.5},
+            "drawdown": {"bad": 15.0, "warn": 10.0, "good": 5.0},
+            "winrate": {"bad": 0.4, "warn": 0.55, "good": 0.65},
+            "return_pct": {"bad": 0.0, "warn": 10.0, "good": 25.0},
         }
 
         if not self.config_path:
@@ -87,11 +87,11 @@ class MetaDashboard:
         try:
             import yaml
 
-            with open(self.config_path, 'r') as f:
+            with open(self.config_path) as f:
                 config = yaml.safe_load(f)
 
-            if 'thresholds' in config:
-                return config['thresholds']
+            if "thresholds" in config:
+                return config["thresholds"]
         except (FileNotFoundError, ValueError, KeyError, TypeError) as e:
             logger.warning(f"No se pudieron cargar umbrales desde config: {e}")
 
@@ -109,30 +109,30 @@ class MetaDashboard:
             Color: 'red', 'orange', 'yellow', 'green'
         """
         if metric not in self.thresholds:
-            return 'gray'
+            return "gray"
 
         t = self.thresholds[metric]
 
         # Para drawdown, valores negativos son peores (mayor drawdown absoluto)
-        if metric == 'drawdown':
+        if metric == "drawdown":
             value = abs(value)  # Drawdown es negativo, convertir a absoluto
 
-        if value < t['bad']:
-            return 'red'
-        elif value < t['warn']:
-            return 'orange'
-        elif value < t['good']:
-            return 'yellow'
+        if value < t["bad"]:
+            return "red"
+        elif value < t["warn"]:
+            return "orange"
+        elif value < t["good"]:
+            return "yellow"
         else:
-            return 'green'
+            return "green"
 
     def emoji_for_metric(self, value: float, metric: str) -> str:
         """Obtener emoji según color."""
         color = self.color_for_metric(value, metric)
-        emoji_map = {'red': '🔴', 'orange': '🟠', 'yellow': '🟡', 'green': '🟢'}
-        return emoji_map.get(color, '⚪')
+        emoji_map = {"red": "🔴", "orange": "🟠", "yellow": "🟡", "green": "🟢"}
+        return emoji_map.get(color, "⚪")
 
-    async def load_and_analyze(self) -> Dict[str, Any]:
+    async def load_and_analyze(self) -> dict[str, Any]:
         """Cargar resultados y ejecutar análisis completo."""
         self.analyzer = BacktestMetaAnalyzer(
             data_dir=str(self.results_dir),
@@ -194,25 +194,25 @@ class MetaDashboard:
 
         # VECTORIZED: Usar operaciones vectorizadas en lugar de iterrows
         # Extraer columnas relevantes de forma vectorizada
-        test_names = self.df_results.get('test_type', pd.Series(['unknown'] * len(self.df_results)))
-        sharpes = self.df_results.get('sharpe_ratio', pd.Series([0] * len(self.df_results)))
-        drawdowns = self.df_results.get('max_drawdown', pd.Series([0] * len(self.df_results)))
-        winrates = self.df_results.get('win_rate', pd.Series([0] * len(self.df_results)))
+        test_names = self.df_results.get("test_type", pd.Series(["unknown"] * len(self.df_results)))
+        sharpes = self.df_results.get("sharpe_ratio", pd.Series([0] * len(self.df_results)))
+        drawdowns = self.df_results.get("max_drawdown", pd.Series([0] * len(self.df_results)))
+        winrates = self.df_results.get("win_rate", pd.Series([0] * len(self.df_results)))
 
         # Encontrar índices donde las condiciones se cumplen
-        bad_sharpe_mask = sharpes < self.thresholds['sharpe']['bad']
-        bad_drawdown_mask = abs(drawdowns) > self.thresholds['drawdown']['bad']
-        bad_winrate_mask = winrates < self.thresholds['winrate']['bad']
+        bad_sharpe_mask = sharpes < self.thresholds["sharpe"]["bad"]
+        bad_drawdown_mask = abs(drawdowns) > self.thresholds["drawdown"]["bad"]
+        bad_winrate_mask = winrates < self.thresholds["winrate"]["bad"]
 
         # Generar alertas para Sharpe bajo
         for idx in bad_sharpe_mask[bad_sharpe_mask].index:
             alerts.append(
                 {
-                    'type': 'critical',
-                    'test': test_names.iloc[idx],
-                    'metric': 'Sharpe Ratio',
-                    'value': sharpes.iloc[idx],
-                    'message': f'Sharpe negativo: {sharpes.iloc[idx]:.2f}',
+                    "type": "critical",
+                    "test": test_names.iloc[idx],
+                    "metric": "Sharpe Ratio",
+                    "value": sharpes.iloc[idx],
+                    "message": f"Sharpe negativo: {sharpes.iloc[idx]:.2f}",
                 }
             )
 
@@ -220,11 +220,11 @@ class MetaDashboard:
         for idx in bad_drawdown_mask[bad_drawdown_mask].index:
             alerts.append(
                 {
-                    'type': 'critical',
-                    'test': test_names.iloc[idx],
-                    'metric': 'Max Drawdown',
-                    'value': abs(drawdowns.iloc[idx]),
-                    'message': f'Drawdown crítico: {abs(drawdowns.iloc[idx]):.1f}%',
+                    "type": "critical",
+                    "test": test_names.iloc[idx],
+                    "metric": "Max Drawdown",
+                    "value": abs(drawdowns.iloc[idx]),
+                    "message": f"Drawdown crítico: {abs(drawdowns.iloc[idx]):.1f}%",
                 }
             )
 
@@ -232,17 +232,17 @@ class MetaDashboard:
         for idx in bad_winrate_mask[bad_winrate_mask].index:
             alerts.append(
                 {
-                    'type': 'warning',
-                    'test': test_names.iloc[idx],
-                    'metric': 'Win Rate',
-                    'value': winrates.iloc[idx],
-                    'message': f'Win rate bajo: {winrates.iloc[idx]:.1%}',
+                    "type": "warning",
+                    "test": test_names.iloc[idx],
+                    "metric": "Win Rate",
+                    "value": winrates.iloc[idx],
+                    "message": f"Win rate bajo: {winrates.iloc[idx]:.1%}",
                 }
             )
 
         if alerts:
             for alert in alerts[:10]:  # Top 10 alertas
-                emoji = '🔴' if alert['type'] == 'critical' else '🟠'
+                emoji = "🔴" if alert["type"] == "critical" else "🟠"
                 st.markdown(f"{emoji} **{alert['test']}**: {alert['message']}")
         else:
             st.success("✅ No hay alertas críticas")
@@ -254,54 +254,54 @@ class MetaDashboard:
 
         st.subheader("📊 Performance Matrix")
 
-        if 'test_type' not in self.df_results.columns:
+        if "test_type" not in self.df_results.columns:
             st.warning("No hay información de test_type para matriz")
             return
 
         # Preparar datos para matriz
         matrix_data = []
         strategies = (
-            self.df_results['test_type'].unique()
-            if 'test_type' in self.df_results.columns
-            else ['all']
+            self.df_results["test_type"].unique()
+            if "test_type" in self.df_results.columns
+            else ["all"]
         )
 
         # Obtener engines únicos
         engines = []
-        if 'learning_engine' in self.df_results.columns:
-            engines = self.df_results['learning_engine'].dropna().unique().tolist()
-        engines = engines if engines else ['baseline']
+        if "learning_engine" in self.df_results.columns:
+            engines = self.df_results["learning_engine"].dropna().unique().tolist()
+        engines = engines if engines else ["baseline"]
 
         for strategy in strategies:
             for engine in engines:
                 subset = self.df_results[
                     (
-                        (self.df_results['test_type'] == strategy)
-                        if 'test_type' in self.df_results.columns
+                        (self.df_results["test_type"] == strategy)
+                        if "test_type" in self.df_results.columns
                         else True
                     )
                 ]
-                if 'learning_engine' in self.df_results.columns:
-                    subset = subset[subset['learning_engine'] == engine]
+                if "learning_engine" in self.df_results.columns:
+                    subset = subset[subset["learning_engine"] == engine]
 
                 if not subset.empty:
                     avg_sharpe = (
-                        subset['sharpe_ratio'].mean() if 'sharpe_ratio' in subset.columns else 0
+                        subset["sharpe_ratio"].mean() if "sharpe_ratio" in subset.columns else 0
                     )
                     avg_return = (
-                        subset['return_pct'].mean() if 'return_pct' in subset.columns else 0
+                        subset["return_pct"].mean() if "return_pct" in subset.columns else 0
                     )
                     avg_dd = (
-                        subset['max_drawdown'].mean() if 'max_drawdown' in subset.columns else 0
+                        subset["max_drawdown"].mean() if "max_drawdown" in subset.columns else 0
                     )
 
                     matrix_data.append(
                         {
-                            'Strategy': strategy,
-                            'Engine': engine if engine else 'baseline',
-                            'Sharpe': avg_sharpe,
-                            'Return %': avg_return,
-                            'Drawdown %': abs(avg_dd),
+                            "Strategy": strategy,
+                            "Engine": engine if engine else "baseline",
+                            "Sharpe": avg_sharpe,
+                            "Return %": avg_return,
+                            "Drawdown %": abs(avg_dd),
                         }
                     )
 
@@ -312,10 +312,10 @@ class MetaDashboard:
             if PLOTLY_AVAILABLE:
                 # Heatmap de Sharpe
                 fig = px.imshow(
-                    df_matrix.pivot(index='Strategy', columns='Engine', values='Sharpe'),
+                    df_matrix.pivot(index="Strategy", columns="Engine", values="Sharpe"),
                     labels={"x": "Engine", "y": "Strategy", "color": "Sharpe Ratio"},
                     title="Performance Matrix - Sharpe Ratio",
-                    color_continuous_scale='RdYlGn',
+                    color_continuous_scale="RdYlGn",
                     aspect="auto",
                 )
                 st.plotly_chart(fig, use_container_width=True)
@@ -340,29 +340,29 @@ class MetaDashboard:
 
         # Rows
         # VECTORIZED: Usar to_dict('records') en lugar de iterrows
-        for row in df.to_dict('records'):
+        for row in df.to_dict("records"):
             html += "<tr>"
             for col in df.columns:
                 value = row[col]
 
                 # Determinar color según métrica
-                if col in ['Sharpe', 'Return %']:
+                if col in ["Sharpe", "Return %"]:
                     color = self.color_for_metric(
-                        value, 'sharpe' if col == 'Sharpe' else 'return_pct'
+                        value, "sharpe" if col == "Sharpe" else "return_pct"
                     )
-                elif col == 'Drawdown %':
-                    color = self.color_for_metric(value, 'drawdown')
+                elif col == "Drawdown %":
+                    color = self.color_for_metric(value, "drawdown")
                 else:
                     color = None
 
                 bg_color_map = {
-                    'red': '#ffcccc',
-                    'orange': '#ffdd99',
-                    'yellow': '#ffff99',
-                    'green': '#ccffcc',
+                    "red": "#ffcccc",
+                    "orange": "#ffdd99",
+                    "yellow": "#ffff99",
+                    "green": "#ccffcc",
                 }
-                bg_color = bg_color_map.get(color, 'white')
-                emoji = self.emoji_for_metric(value, col.lower().replace(' %', '').replace(' ', ''))
+                bg_color = bg_color_map.get(color, "white")
+                emoji = self.emoji_for_metric(value, col.lower().replace(" %", "").replace(" ", ""))
 
                 html += f"<td style='border: 1px solid #ddd; padding: 8px; background-color: {bg_color};'>"
                 html += (
@@ -381,12 +381,12 @@ class MetaDashboard:
         """Renderizar vista de meta-analyzer con correlaciones."""
         st.subheader("🔍 Meta-Analyzer View")
 
-        if 'performance' not in self.analysis_results:
+        if "performance" not in self.analysis_results:
             st.info("Ejecuta análisis completo para ver correlaciones")
             return
 
         # Correlaciones
-        if 'correlations' in self.analysis_results['performance']:
+        if "correlations" in self.analysis_results["performance"]:
             st.markdown("**Correlaciones entre Métricas**")
             if PLOTLY_AVAILABLE and self.analyzer:
                 try:
@@ -401,26 +401,26 @@ class MetaDashboard:
 
         # Clusters
         if (
-            'clustering' in self.analysis_results
-            and 'clusters' in self.analysis_results['clustering']
+            "clustering" in self.analysis_results
+            and "clusters" in self.analysis_results["clustering"]
         ):
             st.markdown("**Clusters Detectados**")
-            clusters = self.analysis_results['clustering']['clusters']
+            clusters = self.analysis_results["clustering"]["clusters"]
 
             for cluster_name, cluster_info in clusters.items():
                 with st.expander(f"{cluster_name} (Size: {cluster_info['size']})"):
-                    st.json(cluster_info['characteristics'])
+                    st.json(cluster_info["characteristics"])
 
         # Sugerencias
-        if 'suggestions' in self.analysis_results:
+        if "suggestions" in self.analysis_results:
             st.markdown("**Top 10 Combinaciones Óptimas**")
-            suggestions = self.analysis_results['suggestions'][:10]
+            suggestions = self.analysis_results["suggestions"][:10]
 
             for i, suggestion in enumerate(suggestions, 1):
-                test_type = suggestion.get('test_type', 'unknown')
-                sharpe = suggestion.get('sharpe_ratio', 0)
-                pnl = suggestion.get('total_pnl', 0)
-                emoji = self.emoji_for_metric(sharpe, 'sharpe')
+                test_type = suggestion.get("test_type", "unknown")
+                sharpe = suggestion.get("sharpe_ratio", 0)
+                pnl = suggestion.get("total_pnl", 0)
+                emoji = self.emoji_for_metric(sharpe, "sharpe")
 
                 st.markdown(f"{i}. {emoji} **{test_type}**: Sharpe={sharpe:.2f}, PnL=${pnl:,.2f}")
 
@@ -435,18 +435,18 @@ class MetaDashboard:
         indicators = {}
 
         # Stability Index (correlación entre resultados consecutivos)
-        if len(self.df_results) > 1 and 'sharpe_ratio' in self.df_results.columns:
+        if len(self.df_results) > 1 and "sharpe_ratio" in self.df_results.columns:
             stability = self._calculate_stability_index()
-            indicators['Stability Index'] = stability
+            indicators["Stability Index"] = stability
 
         # Meta-Cluster Quality (silueta media)
-        if 'clustering' in self.analysis_results and SKLEARN_AVAILABLE:
+        if "clustering" in self.analysis_results and SKLEARN_AVAILABLE:
             cluster_quality = self._calculate_cluster_quality()
-            indicators['Meta-Cluster Quality'] = cluster_quality
+            indicators["Meta-Cluster Quality"] = cluster_quality
 
         # Profit Consistency (% días con beneficio)
         profit_consistency = self._calculate_profit_consistency()
-        indicators['Profit Consistency %'] = profit_consistency
+        indicators["Profit Consistency %"] = profit_consistency
 
         # Mostrar indicadores
         cols = st.columns(len(indicators))
@@ -459,10 +459,10 @@ class MetaDashboard:
         if self.df_results is None:
             return 0.0
 
-        if 'sharpe_ratio' not in self.df_results.columns:
+        if "sharpe_ratio" not in self.df_results.columns:
             return 0.0
 
-        sharpe_values = self.df_results['sharpe_ratio'].dropna().values
+        sharpe_values = self.df_results["sharpe_ratio"].dropna().values
 
         if len(sharpe_values) < 2:
             return 0.0
@@ -479,17 +479,17 @@ class MetaDashboard:
         if self.df_results is None:
             return 0.0
 
-        if not SKLEARN_AVAILABLE or 'cluster' not in self.df_results.columns:
+        if not SKLEARN_AVAILABLE or "cluster" not in self.df_results.columns:
             return 0.0
 
-        features = ['sharpe_ratio', 'total_pnl', 'max_drawdown']
+        features = ["sharpe_ratio", "total_pnl", "max_drawdown"]
         available_features = [f for f in features if f in self.df_results.columns]
 
         if len(available_features) < 2:
             return 0.0
 
         X = self.df_results[available_features].select_dtypes(include=[np.number]).dropna()
-        clusters = self.df_results.loc[X.index, 'cluster']
+        clusters = self.df_results.loc[X.index, "cluster"]
 
         if len(X) < 2 or len(set(clusters)) < 2:
             return 0.0
@@ -505,10 +505,10 @@ class MetaDashboard:
         if self.df_results is None:
             return 0.0
 
-        if 'total_pnl' not in self.df_results.columns:
+        if "total_pnl" not in self.df_results.columns:
             return 0.0
 
-        profitable = (self.df_results['total_pnl'] > 0).sum()
+        profitable = (self.df_results["total_pnl"] > 0).sum()
         total = len(self.df_results)
 
         return (profitable / total * 100) if total > 0 else 0.0
@@ -520,26 +520,26 @@ class MetaDashboard:
         if self.df_results is None or self.df_results.empty:
             return
 
-        if PLOTLY_AVAILABLE and 'max_drawdown' in self.df_results.columns:
+        if PLOTLY_AVAILABLE and "max_drawdown" in self.df_results.columns:
             fig = go.Figure()
 
             # Drawdown timeline (si hay timestamps)
-            if 'timestamp' in self.df_results.columns:
+            if "timestamp" in self.df_results.columns:
                 # Agrupar por fecha para ver evolución
                 pass  # Implementar si hay datos temporales
 
             # Scatter: Drawdown vs Sharpe (proxy de volatilidad)
-            if 'sharpe_ratio' in self.df_results.columns:
+            if "sharpe_ratio" in self.df_results.columns:
                 fig.add_trace(
                     go.Scatter(
-                        x=self.df_results['sharpe_ratio'],
-                        y=abs(self.df_results['max_drawdown']),
-                        mode='markers',
-                        text=self.df_results.get('test_type', 'unknown'),
+                        x=self.df_results["sharpe_ratio"],
+                        y=abs(self.df_results["max_drawdown"]),
+                        mode="markers",
+                        text=self.df_results.get("test_type", "unknown"),
                         marker={
                             "size": 10,
-                            "color": abs(self.df_results['max_drawdown']),
-                            "colorscale": 'RdYlGn',
+                            "color": abs(self.df_results["max_drawdown"]),
+                            "colorscale": "RdYlGn",
                             "showscale": True,
                             "colorbar": {"title": "Drawdown"},
                         },
@@ -565,16 +565,16 @@ class MetaDashboard:
 
         # Selector de test
         test_types = (
-            self.df_results['test_type'].unique()
-            if 'test_type' in self.df_results.columns
-            else ['all']
+            self.df_results["test_type"].unique()
+            if "test_type" in self.df_results.columns
+            else ["all"]
         )
         selected_test = st.selectbox("Selecciona test para ver detalles:", test_types)
 
         if selected_test:
             subset = (
-                self.df_results[self.df_results['test_type'] == selected_test]
-                if 'test_type' in self.df_results.columns
+                self.df_results[self.df_results["test_type"] == selected_test]
+                if "test_type" in self.df_results.columns
                 else self.df_results
             )
 
@@ -586,23 +586,23 @@ class MetaDashboard:
                 cols = st.columns(4)
                 with cols[0]:
                     sharpe = (
-                        subset['sharpe_ratio'].mean() if 'sharpe_ratio' in subset.columns else 0
+                        subset["sharpe_ratio"].mean() if "sharpe_ratio" in subset.columns else 0
                     )
-                    emoji = self.emoji_for_metric(sharpe, 'sharpe')
+                    emoji = self.emoji_for_metric(sharpe, "sharpe")
                     st.metric("Sharpe Ratio", f"{emoji} {sharpe:.2f}")
 
                 with cols[1]:
-                    pnl = subset['total_pnl'].mean() if 'total_pnl' in subset.columns else 0
+                    pnl = subset["total_pnl"].mean() if "total_pnl" in subset.columns else 0
                     st.metric("Total PnL", f"${pnl:,.2f}")
 
                 with cols[2]:
-                    dd = subset['max_drawdown'].mean() if 'max_drawdown' in subset.columns else 0
-                    emoji = self.emoji_for_metric(abs(dd), 'drawdown')
+                    dd = subset["max_drawdown"].mean() if "max_drawdown" in subset.columns else 0
+                    emoji = self.emoji_for_metric(abs(dd), "drawdown")
                     st.metric("Max Drawdown", f"{emoji} {abs(dd):.1f}%")
 
                 with cols[3]:
-                    wr = subset['win_rate'].mean() if 'win_rate' in subset.columns else 0
-                    emoji = self.emoji_for_metric(wr, 'winrate')
+                    wr = subset["win_rate"].mean() if "win_rate" in subset.columns else 0
+                    emoji = self.emoji_for_metric(wr, "winrate")
                     st.metric("Win Rate", f"{emoji} {wr:.1%}")
 
                 # Tabla completa

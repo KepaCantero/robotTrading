@@ -11,12 +11,14 @@ import dataclasses
 import logging
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
-from decimal import Decimal
 from enum import Enum
-from typing import Optional
+from typing import TYPE_CHECKING
 
-from ..value_objects.backtest_config import BacktestConfigValue
-from ..value_objects.backtest_result import BacktestResultValue
+if TYPE_CHECKING:
+    from decimal import Decimal
+
+    from ..value_objects.backtest_config import BacktestConfigValue
+    from ..value_objects.backtest_result import BacktestResultValue
 
 logger = logging.getLogger(__name__)
 
@@ -60,11 +62,11 @@ class Backtest:
     backtest_id: str
     config: BacktestConfigValue
     status: BacktestStatus = BacktestStatus.PENDING
-    result: Optional[BacktestResultValue] = None
-    error_message: Optional[str] = None
+    result: BacktestResultValue | None = None
+    error_message: str | None = None
     created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
-    started_at: Optional[datetime] = None
-    completed_at: Optional[datetime] = None
+    started_at: datetime | None = None
+    completed_at: datetime | None = None
 
     def __post_init__(self):
         """Validate backtest invariants."""
@@ -73,7 +75,7 @@ class Backtest:
         if not self.config:
             raise ValueError("Backtest configuration is required")
 
-    def start(self) -> "Backtest":
+    def start(self) -> Backtest:
         """
         Mark backtest as started.
 
@@ -101,7 +103,7 @@ class Backtest:
             started_at=datetime.now(timezone.utc),
         )
 
-    def complete(self, result: BacktestResultValue) -> "Backtest":
+    def complete(self, result: BacktestResultValue) -> Backtest:
         """
         Mark backtest as completed with results.
 
@@ -134,7 +136,7 @@ class Backtest:
             completed_at=datetime.now(timezone.utc),
         )
 
-    def fail(self, error_message: str) -> "Backtest":
+    def fail(self, error_message: str) -> Backtest:
         """
         Mark backtest as failed.
 
@@ -167,7 +169,7 @@ class Backtest:
             completed_at=datetime.now(timezone.utc),
         )
 
-    def cancel(self) -> "Backtest":
+    def cancel(self) -> Backtest:
         """
         Cancel backtest.
 
@@ -195,7 +197,7 @@ class Backtest:
             completed_at=datetime.now(timezone.utc),
         )
 
-    def get_duration(self) -> Optional[float]:
+    def get_duration(self) -> float | None:
         """
         Get backtest execution duration in seconds.
 
@@ -218,7 +220,7 @@ class Backtest:
         """Check if backtest failed."""
         return self.status == BacktestStatus.FAILED
 
-    def get_roi(self) -> Optional[Decimal]:
+    def get_roi(self) -> Decimal | None:
         """
         Get return on investment.
 
@@ -238,7 +240,7 @@ class Backtest:
             ) / self.result.initial_capital
         return None
 
-    def get_sharpe_ratio(self) -> Optional[Decimal]:
+    def get_sharpe_ratio(self) -> Decimal | None:
         """
         Get Sharpe ratio from results.
 

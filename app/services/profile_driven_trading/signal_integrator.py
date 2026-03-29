@@ -6,7 +6,7 @@ using confidence-weighted voting and produces a unified signal set.
 """
 
 import logging
-from typing import Dict, Optional, Tuple
+from typing import Optional
 
 import numpy as np
 
@@ -63,9 +63,9 @@ class SignalIntegrator:
 
     def combine_signals(
         self,
-        rl_signals: Optional[Dict[str, Tuple[str, float]]] = None,
-        momentum_signals: Optional[Dict[str, Tuple[str, float]]] = None,
-        mean_reversion_signals: Optional[Dict[str, Tuple[str, float]]] = None,
+        rl_signals: Optional[dict[str, tuple[str, float]]] = None,
+        momentum_signals: Optional[dict[str, tuple[str, float]]] = None,
+        mean_reversion_signals: Optional[dict[str, tuple[str, float]]] = None,
     ) -> SignalSet:
         """
         Combine signals from multiple sources using confidence-weighted voting.
@@ -129,8 +129,8 @@ class SignalIntegrator:
 
     def _weighted_vote(
         self,
-        *signal_tuples: Tuple[str, float, float],
-    ) -> Tuple[str, float]:
+        *signal_tuples: tuple[str, float, float],
+    ) -> tuple[str, float]:
         """
         Perform weighted voting on signals.
 
@@ -181,7 +181,7 @@ class SignalIntegrator:
         self,
         signal_set: SignalSet,
         symbol: str,
-    ) -> Tuple[bool, str]:
+    ) -> tuple[bool, str]:
         """
         Check if there's consensus among signal sources for a symbol.
 
@@ -310,7 +310,7 @@ class SignalIntegrator:
 
         return filtered_set
 
-    def generate_signal_report(self, signal_set: SignalSet) -> Dict[str, any]:
+    def generate_signal_report(self, signal_set: SignalSet) -> dict[str, any]:
         """
         Generate comprehensive report on signal set.
 
@@ -328,7 +328,7 @@ class SignalIntegrator:
         }
 
         consensus_symbols = []
-        for symbol in signal_set.signals.keys():
+        for symbol in signal_set.signals:
             has_consensus, action = self.check_consensus(signal_set, symbol)
             if has_consensus:
                 consensus_symbols.append((symbol, action))
@@ -336,7 +336,7 @@ class SignalIntegrator:
         # Quality distribution
         quality_scores = {
             symbol: self.get_signal_quality_score(signal_set, symbol)
-            for symbol in signal_set.signals.keys()
+            for symbol in signal_set.signals
         }
 
         avg_quality = np.mean(list(quality_scores.values())) if quality_scores else 0.0

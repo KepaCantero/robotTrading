@@ -13,7 +13,7 @@ Analyzes seasonal patterns in strategy returns:
 import logging
 from datetime import datetime
 from decimal import Decimal
-from typing import Dict, List, Optional, Tuple
+from typing import Optional
 
 import numpy as np
 import pandas as pd
@@ -47,8 +47,8 @@ class SeasonalityAnalyzer:
         self.analysis_performed = False
 
     def analyze_monthly_returns(
-        self, equity_curve: List[Tuple[datetime, Decimal]]
-    ) -> Optional[Dict]:
+        self, equity_curve: list[tuple[datetime, Decimal]]
+    ) -> Optional[dict]:
         """
         Analyze monthly return patterns.
 
@@ -64,27 +64,27 @@ class SeasonalityAnalyzer:
                 return None
 
             # Convert to DataFrame
-            df = pd.DataFrame(equity_curve, columns=['date', 'equity'])
-            df['date'] = pd.to_datetime(df['date'])
-            df['equity'] = df['equity'].astype(float)
-            df = df.sort_values('date').set_index('date')
+            df = pd.DataFrame(equity_curve, columns=["date", "equity"])
+            df["date"] = pd.to_datetime(df["date"])
+            df["equity"] = df["equity"].astype(float)
+            df = df.sort_values("date").set_index("date")
 
             # Calculate daily returns
-            df['daily_return'] = df['equity'].pct_change()
+            df["daily_return"] = df["equity"].pct_change()
 
             # Group by month and year
-            df['year_month'] = df.index.to_period('M')
-            monthly_returns = df.groupby('year_month')['daily_return'].apply(
+            df["year_month"] = df.index.to_period("M")
+            monthly_returns = df.groupby("year_month")["daily_return"].apply(
                 lambda x: (1 + x).prod() - 1
             )
 
             # Calculate statistics by month of year
-            df['month'] = df.index.month
-            df['month_name'] = df.index.strftime('%B')
+            df["month"] = df.index.month
+            df["month_name"] = df.index.strftime("%B")
 
             month_stats = []
             for month in range(1, 13):
-                month_data = df[df['month'] == month]['daily_return'].dropna()
+                month_data = df[df["month"] == month]["daily_return"].dropna()
 
                 if len(month_data) > 0:
                     # Monthly return (cumulative for month)
@@ -92,24 +92,24 @@ class SeasonalityAnalyzer:
 
                     month_stats.append(
                         {
-                            'month': month,
-                            'month_name': self._month_name(month),
-                            'avg_return': float(np.mean(month_data)),
-                            'median_return': float(np.median(month_data)),
-                            'std_dev': float(np.std(month_data)),
-                            'cumulative_return': float(monthly_ret),
-                            'positive_count': int((month_data > 0).sum()),
-                            'negative_count': int((month_data <= 0).sum()),
-                            'total_count': len(month_data),
+                            "month": month,
+                            "month_name": self._month_name(month),
+                            "avg_return": float(np.mean(month_data)),
+                            "median_return": float(np.median(month_data)),
+                            "std_dev": float(np.std(month_data)),
+                            "cumulative_return": float(monthly_ret),
+                            "positive_count": int((month_data > 0).sum()),
+                            "negative_count": int((month_data <= 0).sum()),
+                            "total_count": len(month_data),
                         }
                     )
 
             return {
-                'total_months_analyzed': len(monthly_returns),
-                'month_stats': month_stats,
-                'best_month': max(month_stats, key=lambda x: x['cumulative_return'], default=None),
-                'worst_month': min(month_stats, key=lambda x: x['cumulative_return'], default=None),
-                'overall_avg_return': float(np.mean(monthly_returns)),
+                "total_months_analyzed": len(monthly_returns),
+                "month_stats": month_stats,
+                "best_month": max(month_stats, key=lambda x: x["cumulative_return"], default=None),
+                "worst_month": min(month_stats, key=lambda x: x["cumulative_return"], default=None),
+                "overall_avg_return": float(np.mean(monthly_returns)),
             }
 
         except (ValueError, TypeError, KeyError, AttributeError) as e:
@@ -117,8 +117,8 @@ class SeasonalityAnalyzer:
             return None
 
     def analyze_quarterly_returns(
-        self, equity_curve: List[Tuple[datetime, Decimal]]
-    ) -> Optional[Dict]:
+        self, equity_curve: list[tuple[datetime, Decimal]]
+    ) -> Optional[dict]:
         """
         Analyze quarterly return patterns.
 
@@ -134,54 +134,54 @@ class SeasonalityAnalyzer:
                 return None
 
             # Convert to DataFrame
-            df = pd.DataFrame(equity_curve, columns=['date', 'equity'])
-            df['date'] = pd.to_datetime(df['date'])
-            df['equity'] = df['equity'].astype(float)
-            df = df.sort_values('date').set_index('date')
+            df = pd.DataFrame(equity_curve, columns=["date", "equity"])
+            df["date"] = pd.to_datetime(df["date"])
+            df["equity"] = df["equity"].astype(float)
+            df = df.sort_values("date").set_index("date")
 
             # Calculate daily returns
-            df['daily_return'] = df['equity'].pct_change()
+            df["daily_return"] = df["equity"].pct_change()
 
             # Group by quarter
-            df['quarter'] = df.index.quarter
-            df['year_quarter'] = df.index.to_period('Q')
+            df["quarter"] = df.index.quarter
+            df["year_quarter"] = df.index.to_period("Q")
 
-            quarterly_returns = df.groupby('year_quarter')['daily_return'].apply(
+            quarterly_returns = df.groupby("year_quarter")["daily_return"].apply(
                 lambda x: (1 + x).prod() - 1
             )
 
             # Calculate statistics by quarter
             quarter_stats = []
             for q in range(1, 5):
-                q_data = df[df['quarter'] == q]['daily_return'].dropna()
+                q_data = df[df["quarter"] == q]["daily_return"].dropna()
 
                 if len(q_data) > 0:
                     q_return = (1 + q_data).prod() - 1
 
                     quarter_stats.append(
                         {
-                            'quarter': q,
-                            'quarter_name': f'Q{q}',
-                            'avg_return': float(np.mean(q_data)),
-                            'median_return': float(np.median(q_data)),
-                            'std_dev': float(np.std(q_data)),
-                            'cumulative_return': float(q_return),
-                            'positive_count': int((q_data > 0).sum()),
-                            'negative_count': int((q_data <= 0).sum()),
-                            'total_count': len(q_data),
+                            "quarter": q,
+                            "quarter_name": f"Q{q}",
+                            "avg_return": float(np.mean(q_data)),
+                            "median_return": float(np.median(q_data)),
+                            "std_dev": float(np.std(q_data)),
+                            "cumulative_return": float(q_return),
+                            "positive_count": int((q_data > 0).sum()),
+                            "negative_count": int((q_data <= 0).sum()),
+                            "total_count": len(q_data),
                         }
                     )
 
             return {
-                'total_quarters_analyzed': len(quarterly_returns),
-                'quarter_stats': quarter_stats,
-                'best_quarter': max(
-                    quarter_stats, key=lambda x: x['cumulative_return'], default=None
+                "total_quarters_analyzed": len(quarterly_returns),
+                "quarter_stats": quarter_stats,
+                "best_quarter": max(
+                    quarter_stats, key=lambda x: x["cumulative_return"], default=None
                 ),
-                'worst_quarter': min(
-                    quarter_stats, key=lambda x: x['cumulative_return'], default=None
+                "worst_quarter": min(
+                    quarter_stats, key=lambda x: x["cumulative_return"], default=None
                 ),
-                'overall_avg_return': float(np.mean(quarterly_returns)),
+                "overall_avg_return": float(np.mean(quarterly_returns)),
             }
 
         except (ValueError, TypeError, KeyError, AttributeError) as e:
@@ -189,8 +189,8 @@ class SeasonalityAnalyzer:
             return None
 
     def get_best_worst_months(
-        self, equity_curve: List[Tuple[datetime, Decimal]]
-    ) -> Optional[Dict[str, List]]:
+        self, equity_curve: list[tuple[datetime, Decimal]]
+    ) -> Optional[dict[str, list]]:
         """
         Get ranking of best and worst months for the strategy.
 
@@ -203,21 +203,21 @@ class SeasonalityAnalyzer:
         try:
             monthly_analysis = self.analyze_monthly_returns(equity_curve)
 
-            if not monthly_analysis or not monthly_analysis.get('month_stats'):
+            if not monthly_analysis or not monthly_analysis.get("month_stats"):
                 return None
 
-            month_stats = monthly_analysis['month_stats']
+            month_stats = monthly_analysis["month_stats"]
 
             # Sort by cumulative return
-            sorted_months = sorted(month_stats, key=lambda x: x['cumulative_return'], reverse=True)
+            sorted_months = sorted(month_stats, key=lambda x: x["cumulative_return"], reverse=True)
 
             # Get worst months and sort them in ascending order (lowest first)
-            worst_months = sorted(sorted_months[-3:], key=lambda x: x['cumulative_return'])
+            worst_months = sorted(sorted_months[-3:], key=lambda x: x["cumulative_return"])
 
             return {
-                'best_months': sorted_months[:3],  # Top 3
-                'worst_months': worst_months,  # Bottom 3, sorted ascending
-                'all_months_ranked': sorted_months,
+                "best_months": sorted_months[:3],  # Top 3
+                "worst_months": worst_months,  # Bottom 3, sorted ascending
+                "all_months_ranked": sorted_months,
             }
 
         except (RuntimeError, ValueError, TypeError, KeyError) as e:
@@ -225,7 +225,7 @@ class SeasonalityAnalyzer:
             return None
 
     def get_seasonality_strength(
-        self, equity_curve: List[Tuple[datetime, Decimal]]
+        self, equity_curve: list[tuple[datetime, Decimal]]
     ) -> Optional[Decimal]:
         """
         Calculate seasonality strength index (0-1).
@@ -244,13 +244,13 @@ class SeasonalityAnalyzer:
         try:
             monthly_analysis = self.analyze_monthly_returns(equity_curve)
 
-            if not monthly_analysis or not monthly_analysis.get('month_stats'):
+            if not monthly_analysis or not monthly_analysis.get("month_stats"):
                 return None
 
-            month_stats = monthly_analysis['month_stats']
+            month_stats = monthly_analysis["month_stats"]
 
             # Get cumulative returns by month
-            returns_by_month = [m['cumulative_return'] for m in month_stats]
+            returns_by_month = [m["cumulative_return"] for m in month_stats]
 
             # Calculate variance
             total_variance = np.var(returns_by_month)
@@ -263,11 +263,10 @@ class SeasonalityAnalyzer:
             mean_return = np.mean(returns_by_month)
             std_return = np.std(returns_by_month)
 
-            if mean_return == 0:
-                # Use normalized measure
-                strength = std_return / 0.1  # Normalize to 0.1 baseline
-            else:
-                strength = std_return / abs(mean_return)
+            # Use normalized measure
+            strength = (
+                std_return / 0.1 if mean_return == 0 else std_return / abs(mean_return)
+            )  # Normalize to 0.1 baseline or use CoV
 
             # Normalize to 0-1 range
             strength = min(1.0, strength)
@@ -279,8 +278,8 @@ class SeasonalityAnalyzer:
             return None
 
     def decompose_returns(
-        self, equity_curve: List[Tuple[datetime, Decimal]], method: str = 'additive'
-    ) -> Optional[Dict]:
+        self, equity_curve: list[tuple[datetime, Decimal]], method: str = "additive"
+    ) -> Optional[dict]:
         """
         Decompose returns into trend, seasonal, and residual components.
 
@@ -297,13 +296,13 @@ class SeasonalityAnalyzer:
                 return None
 
             # Convert to DataFrame
-            df = pd.DataFrame(equity_curve, columns=['date', 'equity'])
-            df['date'] = pd.to_datetime(df['date'])
-            df['equity'] = df['equity'].astype(float)
-            df = df.sort_values('date').set_index('date')
+            df = pd.DataFrame(equity_curve, columns=["date", "equity"])
+            df["date"] = pd.to_datetime(df["date"])
+            df["equity"] = df["equity"].astype(float)
+            df = df.sort_values("date").set_index("date")
 
             # Resample to monthly frequency
-            monthly = df['equity'].resample('M').last()
+            monthly = df["equity"].resample("M").last()
 
             if len(monthly) < 12:
                 logger.warning("Insufficient monthly data for decomposition")
@@ -316,11 +315,11 @@ class SeasonalityAnalyzer:
                 decomposition = seasonal_decompose(monthly, model=method, period=12)
 
                 return {
-                    'method': method,
-                    'trend': [float(x) for x in decomposition.trend.dropna()],
-                    'seasonal': [float(x) for x in decomposition.seasonal.dropna()],
-                    'residual': [float(x) for x in decomposition.resid.dropna()],
-                    'periods_analyzed': len(monthly),
+                    "method": method,
+                    "trend": [float(x) for x in decomposition.trend.dropna()],
+                    "seasonal": [float(x) for x in decomposition.seasonal.dropna()],
+                    "residual": [float(x) for x in decomposition.resid.dropna()],
+                    "periods_analyzed": len(monthly),
                 }
             except ImportError:
                 # Use fallback implementation
@@ -331,11 +330,11 @@ class SeasonalityAnalyzer:
                 decomposition = fallback_decompose(monthly, model=method, period=12)
 
                 return {
-                    'method': f'{method}_fallback',
-                    'trend': [float(x) for x in decomposition.trend.dropna()],
-                    'seasonal': [float(x) for x in decomposition.seasonal.dropna()],
-                    'residual': [float(x) for x in decomposition.resid.dropna()],
-                    'periods_analyzed': len(monthly),
+                    "method": f"{method}_fallback",
+                    "trend": [float(x) for x in decomposition.trend.dropna()],
+                    "seasonal": [float(x) for x in decomposition.seasonal.dropna()],
+                    "residual": [float(x) for x in decomposition.resid.dropna()],
+                    "periods_analyzed": len(monthly),
                 }
 
         except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
@@ -343,7 +342,7 @@ class SeasonalityAnalyzer:
             return None
 
     def generate_seasonality_report(
-        self, equity_curve: List[Tuple[datetime, Decimal]], strategy_name: str = "Strategy"
+        self, equity_curve: list[tuple[datetime, Decimal]], strategy_name: str = "Strategy"
     ) -> str:
         """
         Generate a markdown report of seasonality analysis.
@@ -369,12 +368,12 @@ class SeasonalityAnalyzer:
                     f"**Average Monthly Return**: {monthly['overall_avg_return']:.4f}\n\n"
                 )
 
-                if monthly['best_month']:
+                if monthly["best_month"]:
                     report.append(
                         f"**Best Month**: {monthly['best_month']['month_name']} "
                         f"({monthly['best_month']['cumulative_return']:.4f})\n"
                     )
-                if monthly['worst_month']:
+                if monthly["worst_month"]:
                     report.append(
                         f"**Worst Month**: {monthly['worst_month']['month_name']} "
                         f"({monthly['worst_month']['cumulative_return']:.4f})\n\n"
@@ -389,9 +388,9 @@ class SeasonalityAnalyzer:
                     "|-------|-----------|---------------|---------|----------|-------|\n"
                 )
 
-                for m in monthly['month_stats']:
+                for m in monthly["month_stats"]:
                     win_rate = (
-                        m['positive_count'] / m['total_count'] * 100 if m['total_count'] > 0 else 0
+                        m["positive_count"] / m["total_count"] * 100 if m["total_count"] > 0 else 0
                     )
                     report.append(
                         f"| {m['month_name']:>10} | {m['avg_return']:>9.4f} | {m['median_return']:>13.4f} | "
@@ -410,12 +409,12 @@ class SeasonalityAnalyzer:
                     f"**Average Quarterly Return**: {quarterly['overall_avg_return']:.4f}\n\n"
                 )
 
-                if quarterly['best_quarter']:
+                if quarterly["best_quarter"]:
                     report.append(
                         f"**Best Quarter**: {quarterly['best_quarter']['quarter_name']} "
                         f"({quarterly['best_quarter']['cumulative_return']:.4f})\n"
                     )
-                if quarterly['worst_quarter']:
+                if quarterly["worst_quarter"]:
                     report.append(
                         f"**Worst Quarter**: {quarterly['worst_quarter']['quarter_name']} "
                         f"({quarterly['worst_quarter']['cumulative_return']:.4f})\n\n"
@@ -430,9 +429,9 @@ class SeasonalityAnalyzer:
                     "|---------|-----------|---------------|---------|----------|-------|\n"
                 )
 
-                for q in quarterly['quarter_stats']:
+                for q in quarterly["quarter_stats"]:
                     win_rate = (
-                        q['positive_count'] / q['total_count'] * 100 if q['total_count'] > 0 else 0
+                        q["positive_count"] / q["total_count"] * 100 if q["total_count"] > 0 else 0
                     )
                     report.append(
                         f"| {q['quarter_name']:>7} | {q['avg_return']:>9.4f} | {q['median_return']:>13.4f} | "
@@ -462,13 +461,13 @@ class SeasonalityAnalyzer:
             report.append("\n## Key Insights\n")
 
             if monthly:
-                best_months_names = [m['month_name'] for m in monthly['month_stats'][:3]]
+                best_months_names = [m["month_name"] for m in monthly["month_stats"][:3]]
                 report.append(
                     f"- Historically strongest months: {', '.join(best_months_names[:2])}\n"
                 )
 
             if quarterly:
-                best_quarters = [q['quarter_name'] for q in quarterly['quarter_stats'][:2]]
+                best_quarters = [q["quarter_name"] for q in quarterly["quarter_stats"][:2]]
                 report.append(f"- Historically strongest quarters: {', '.join(best_quarters)}\n")
 
             if strength is not None and float(strength) > 0.3:
@@ -484,23 +483,23 @@ class SeasonalityAnalyzer:
 
         except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
             logger.error(f"Error generating seasonality report: {e}")
-            return f"Error generating report: {str(e)}"
+            return f"Error generating report: {e!s}"
 
     @staticmethod
     def _month_name(month: int) -> str:
         """Get month name from number."""
         months = [
-            'January',
-            'February',
-            'March',
-            'April',
-            'May',
-            'June',
-            'July',
-            'August',
-            'September',
-            'October',
-            'November',
-            'December',
+            "January",
+            "February",
+            "March",
+            "April",
+            "May",
+            "June",
+            "July",
+            "August",
+            "September",
+            "October",
+            "November",
+            "December",
         ]
         return months[month - 1] if 1 <= month <= 12 else f"Month {month}"

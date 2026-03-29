@@ -17,7 +17,6 @@ import math
 from dataclasses import dataclass
 from datetime import datetime
 from decimal import Decimal
-from typing import Optional
 
 from app.domain.trading.market_making.avellaneda_stoikov.as_model import calculate_inventory_risk
 from app.domain.trading.market_making.avellaneda_stoikov.models import (
@@ -66,7 +65,7 @@ class InventoryManager:
     def __init__(
         self,
         config: InventoryConfig,
-        as_config: Optional[ASConfig] = None,
+        as_config: ASConfig | None = None,
     ) -> None:
         """
         Initialize the inventory manager.
@@ -94,7 +93,7 @@ class InventoryManager:
         inventory: int,
         price: float | Decimal,
         volatility: float | Decimal,
-        current_timestamp: Optional[datetime] = None,
+        current_timestamp: datetime | None = None,
     ) -> InventoryState:
         """
         Get current inventory state with risk metrics.
@@ -234,10 +233,7 @@ class InventoryManager:
         target = self.config.target_inventory + int(inventory_diff * decay_factor)
 
         # Round toward target
-        if inventory_diff > 0:
-            target = math.ceil(target)
-        else:
-            target = math.floor(target)
+        target = math.ceil(target) if inventory_diff > 0 else math.floor(target)
 
         return target
 
@@ -408,7 +404,7 @@ class InventoryManager:
         """
         # Base position size from capital
         config = get_config()
-        risk_amount = getattr(config.trading, 'max_risk_per_trade', 0.02)  # 2% risk per trade
+        risk_amount = getattr(config.trading, "max_risk_per_trade", 0.02)  # 2% risk per trade
         price_f = float(price)
         vol_f = float(volatility)
 

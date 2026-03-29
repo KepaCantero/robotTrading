@@ -20,7 +20,7 @@ Características:
 import logging
 from datetime import datetime, timedelta
 from decimal import Decimal
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 import numpy as np
 
@@ -39,7 +39,7 @@ from .transfer_learning import TransferLearningManager
 logger = logging.getLogger(__name__)
 
 
-def load_transfer_learning_config(config_path: Optional[str] = None) -> Dict[str, Any]:
+def load_transfer_learning_config(config_path: Optional[str] = None) -> dict[str, Any]:
     """
     Load Transfer Learning configuration from YAML file.
 
@@ -66,7 +66,7 @@ def load_transfer_learning_config(config_path: Optional[str] = None) -> Dict[str
         try:
             import yaml
 
-            with open(config_path, "r", encoding="utf-8") as f:
+            with open(config_path, encoding="utf-8") as f:
                 config = yaml.safe_load(f)
                 logger.debug(f"Loaded transfer learning config from {config_path}")
                 return config or {}
@@ -116,7 +116,7 @@ class LearningEngineUpdater:
         rebalance_frequency_days: int = 7,
         min_trades_for_retrain: int = 20,
         lookahead_window_days: int = 10,
-        drift_config: Optional[Dict[str, Any]] = None,
+        drift_config: Optional[dict[str, Any]] = None,
     ):
         """
         Inicializar updater.
@@ -134,8 +134,8 @@ class LearningEngineUpdater:
         self.lookahead_window_days = lookahead_window_days
 
         self.last_retrain_date: Optional[datetime] = None
-        self.trade_history: List[Dict[str, Any]] = []
-        self.market_history: List[Dict[str, Any]] = []
+        self.trade_history: list[dict[str, Any]] = []
+        self.market_history: list[dict[str, Any]] = []
 
         self.training_data_preparator = TrainingDataPreparator()
 
@@ -152,7 +152,7 @@ class LearningEngineUpdater:
                 self._drift_config.get("auto_retrain", {})
             )
             self._reference_features: Optional[np.ndarray] = None
-            self._drift_history: List[ComprehensiveDriftReport] = []
+            self._drift_history: list[ComprehensiveDriftReport] = []
             logger.info("Drift detection enabled for LearningEngineUpdater")
         else:
             self._drift_detector = None
@@ -167,8 +167,8 @@ class LearningEngineUpdater:
 
         if self._feature_importance_enabled:
             self._feature_analyzer = ComprehensiveFeatureAnalyzer(self._feature_importance_config)
-            self._feature_importance_history: List[Dict[str, Any]] = []
-            self._last_feature_analysis: Optional[Dict[str, Any]] = None
+            self._feature_importance_history: list[dict[str, Any]] = []
+            self._last_feature_analysis: Optional[dict[str, Any]] = None
             logger.info("Feature importance analysis enabled for LearningEngineUpdater")
         else:
             self._feature_analyzer = None
@@ -188,8 +188,8 @@ class LearningEngineUpdater:
                     )
                 }
                 self._transfer_manager = TransferLearningManager(config=tl_config)
-                self._transfer_history: List[Dict[str, Any]] = []
-                self._last_transfer_operation: Optional[Dict[str, Any]] = None
+                self._transfer_history: list[dict[str, Any]] = []
+                self._last_transfer_operation: Optional[dict[str, Any]] = None
                 logger.info("Transfer Learning enabled for LearningEngineUpdater")
             except (FileNotFoundError, ValueError, KeyError, TypeError) as e:
                 logger.warning(f"Failed to initialize Transfer Learning: {e}, disabling TL")
@@ -316,7 +316,7 @@ class LearningEngineUpdater:
         epoch: int,
         train_loss: float,
         val_loss: float,
-    ) -> Optional[Dict[str, Any]]:
+    ) -> Optional[dict[str, Any]]:
         """
         Record training metrics for overfitting detection.
 
@@ -354,18 +354,18 @@ class LearningEngineUpdater:
             logger.warning(f"Error recording training metrics: {e}")
             return None
 
-    def get_drift_history(self) -> List[ComprehensiveDriftReport]:
+    def get_drift_history(self) -> list[ComprehensiveDriftReport]:
         """Get drift detection history."""
         return self._drift_history.copy()
 
-    def get_drift_summary(self) -> Dict[str, Any]:
+    def get_drift_summary(self) -> dict[str, Any]:
         """Get summary of drift detection status."""
         if not self._drift_enabled:
             return {"enabled": False}
 
         total_checks = len(self._drift_history)
         drift_detected_count = sum(1 for r in self._drift_history if r.overall_drift_detected)
-        severity_counts: Dict[str, int] = {}
+        severity_counts: dict[str, int] = {}
         for report in self._drift_history:
             sev = report.overall_severity.value
             severity_counts[sev] = severity_counts.get(sev, 0) + 1
@@ -379,7 +379,7 @@ class LearningEngineUpdater:
             "reference_set": self._reference_features is not None,
         }
 
-    def add_trade_result(self, trade: Dict[str, Any], timestamp: datetime) -> None:
+    def add_trade_result(self, trade: dict[str, Any], timestamp: datetime) -> None:
         """
         Agregar resultado de trade al historial.
 
@@ -387,10 +387,10 @@ class LearningEngineUpdater:
             trade: Dict con información del trade (pnl, entry_time, exit_time, etc.)
             timestamp: Timestamp del trade
         """
-        trade_record = {**trade, 'recorded_at': timestamp}
+        trade_record = {**trade, "recorded_at": timestamp}
         self.trade_history.append(trade_record)
 
-    def add_market_data(self, market_data: Dict[str, Any], timestamp: datetime) -> None:
+    def add_market_data(self, market_data: dict[str, Any], timestamp: datetime) -> None:
         """
         Agregar datos de mercado al historial.
 
@@ -398,10 +398,10 @@ class LearningEngineUpdater:
             market_data: Dict con datos de mercado (price, volume, indicators, etc.)
             timestamp: Timestamp de los datos
         """
-        market_record = {**market_data, 'timestamp': timestamp}
+        market_record = {**market_data, "timestamp": timestamp}
         self.market_history.append(market_record)
 
-    def _detect_market_regime(self, training_data: Dict[str, Any]) -> str:
+    def _detect_market_regime(self, training_data: dict[str, Any]) -> str:
         """
         Detect current market regime (bull, bear, sideways, etc.).
 
@@ -468,8 +468,8 @@ class LearningEngineUpdater:
             return "normal"
 
     def _execute_transfer_learning_step(
-        self, training_data: Dict[str, Any], current_date: datetime
-    ) -> Optional[Dict[str, Any]]:
+        self, training_data: dict[str, Any], current_date: datetime
+    ) -> Optional[dict[str, Any]]:
         """
         Execute transfer learning step before training.
 
@@ -563,7 +563,7 @@ class LearningEngineUpdater:
             )
             return None
 
-    def retrain_if_needed(self, current_date: datetime, quotes: Optional[List] = None) -> bool:
+    def retrain_if_needed(self, current_date: datetime, quotes: Optional[list] = None) -> bool:
         """
         Reentrenar learning engine si es necesario.
 
@@ -665,8 +665,8 @@ class LearningEngineUpdater:
             return False
 
     def _prepare_training_data_from_history(
-        self, quotes: Optional[List] = None
-    ) -> Optional[Dict[str, Any]]:
+        self, quotes: Optional[list] = None
+    ) -> Optional[dict[str, Any]]:
         """
         Preparar datos de entrenamiento desde historial de trades y market data.
 
@@ -712,7 +712,8 @@ class LearningEngineUpdater:
             )
         elif engine_type == "reinforcement":
             return self.training_data_preparator.prepare_reinforcement_learning_data(
-                quotes=quotes, initial_capital=Decimal("100000")  # Default
+                quotes=quotes,
+                initial_capital=Decimal("100000"),  # Default
             )
 
         return None
@@ -744,16 +745,19 @@ class LearningEngineUpdater:
             if engine_type == "supervised":
                 # Verificar scikit-learn
                 import importlib.util
+
                 if importlib.util.find_spec("sklearn") is None:
                     return False
             elif engine_type == "deep":
                 # Verificar tensorflow/pytorch
                 import importlib.util
+
                 if importlib.util.find_spec("tensorflow") is None:
                     return False
             elif engine_type == "reinforcement":
                 # Verificar gym/stable-baselines
                 import importlib.util
+
                 if importlib.util.find_spec("gym") is None:
                     return False
         except ImportError:
@@ -783,7 +787,7 @@ class LearningEngineUpdater:
 
         return False
 
-    def _convert_trade_history_to_trades(self) -> List:
+    def _convert_trade_history_to_trades(self) -> list:
         """
         Convertir trade_history a formato Trade (simplificado para backtest).
 
@@ -792,9 +796,9 @@ class LearningEngineUpdater:
         """
         trades = []
         for trade_record in self.trade_history:
-            entry_time = trade_record.get('entry_time')
-            exit_time = trade_record.get('exit_time')
-            pnl = trade_record.get('pnl', 0)
+            entry_time = trade_record.get("entry_time")
+            exit_time = trade_record.get("exit_time")
+            pnl = trade_record.get("pnl", 0)
 
             # Convertir pnl a Decimal si es necesario
             if pnl is not None and not isinstance(pnl, (int, float, Decimal)):
@@ -806,23 +810,23 @@ class LearningEngineUpdater:
                 pnl = Decimal("0")
 
             # Determinar status
-            status_str = 'CLOSED' if exit_time else 'OPEN'
+            status_str = "CLOSED" if exit_time else "OPEN"
 
             trade_dict = {
-                'pnl': pnl,
-                'entry_time': entry_time,
-                'exit_time': exit_time,
-                'status': status_str,
-                'symbol': trade_record.get('symbol', 'UNKNOWN'),
-                'side': trade_record.get('side', 'BUY'),
-                'quantity': trade_record.get('quantity', 0),
-                'entry_price': trade_record.get('entry_price', 0),
-                'exit_price': trade_record.get('exit_price', trade_record.get('entry_price', 0)),
+                "pnl": pnl,
+                "entry_time": entry_time,
+                "exit_time": exit_time,
+                "status": status_str,
+                "symbol": trade_record.get("symbol", "UNKNOWN"),
+                "side": trade_record.get("side", "BUY"),
+                "quantity": trade_record.get("quantity", 0),
+                "entry_price": trade_record.get("entry_price", 0),
+                "exit_price": trade_record.get("exit_price", trade_record.get("entry_price", 0)),
             }
             trades.append(trade_dict)
         return trades
 
-    def _convert_market_history_to_quotes(self) -> List:
+    def _convert_market_history_to_quotes(self) -> list:
         """Convertir market_history a formato Quote (simplificado)."""
         # En producción, esto requeriría reconstruir objetos Quote completos
         # Por ahora, retornar formato simplificado
@@ -831,11 +835,11 @@ class LearningEngineUpdater:
         quotes = []
         for market_record in self.market_history:
             quote = Quote(
-                symbol=market_record.get('symbol', 'UNKNOWN'),
-                timestamp=market_record.get('timestamp', datetime.now()),
-                bid=Decimal(str(market_record.get('price', 0))),
-                ask=Decimal(str(market_record.get('price', 0))),
-                volume=int(market_record.get('volume', 0)),
+                symbol=market_record.get("symbol", "UNKNOWN"),
+                timestamp=market_record.get("timestamp", datetime.now()),
+                bid=Decimal(str(market_record.get("price", 0))),
+                ask=Decimal(str(market_record.get("price", 0))),
+                volume=int(market_record.get("volume", 0)),
             )
             quotes.append(quote)
 
@@ -846,11 +850,11 @@ class LearningEngineUpdater:
         cutoff_date = current_date - timedelta(days=30)
 
         self.trade_history = [
-            t for t in self.trade_history if t.get('recorded_at', current_date) >= cutoff_date
+            t for t in self.trade_history if t.get("recorded_at", current_date) >= cutoff_date
         ]
 
         self.market_history = [
-            m for m in self.market_history if m.get('timestamp', current_date) >= cutoff_date
+            m for m in self.market_history if m.get("timestamp", current_date) >= cutoff_date
         ]
 
         logger.debug(
@@ -859,7 +863,7 @@ class LearningEngineUpdater:
         )
 
     def _analyze_and_log_feature_importance(
-        self, training_data: Dict[str, Any], current_date: datetime
+        self, training_data: dict[str, Any], current_date: datetime
     ) -> None:
         """
         Analizar importancia de features después del reentrenamiento [TASK-4.2-FEATURE-IMPORTANCE].
@@ -897,11 +901,11 @@ class LearningEngineUpdater:
                 feature_names=training_data.get("feature_names"),
             )
 
-            if analysis_result and not hasattr(analysis_result, 'get'):
+            if analysis_result and not hasattr(analysis_result, "get"):
                 # Convert ComprehensiveImportanceReport to dict if needed
                 analysis_result = (
                     analysis_result.to_dict()
-                    if hasattr(analysis_result, 'to_dict')
+                    if hasattr(analysis_result, "to_dict")
                     else analysis_result
                 )
 
@@ -961,7 +965,7 @@ class LearningEngineUpdater:
             # Feature importance is non-critical, continue regardless
 
     def _register_trained_model_for_transfer_learning(
-        self, training_data: Dict[str, Any], metrics: Dict[str, Any], current_date: datetime
+        self, training_data: dict[str, Any], metrics: dict[str, Any], current_date: datetime
     ) -> None:
         """
         Register newly trained model for future transfer learning.
@@ -1002,26 +1006,26 @@ class LearningEngineUpdater:
                 model_type=engine_type,
                 algorithm=(
                     self.learning_engine.algorithm
-                    if hasattr(self.learning_engine, 'algorithm')
-                    else 'unknown'
+                    if hasattr(self.learning_engine, "algorithm")
+                    else "unknown"
                 ),
                 metadata={
-                    'training_date': current_date.isoformat(),
-                    'metrics': metrics,
-                    'n_features': n_features,
-                    'n_samples': n_samples,
-                    'feature_importance': feature_importance,
+                    "training_date": current_date.isoformat(),
+                    "metrics": metrics,
+                    "n_features": n_features,
+                    "n_samples": n_samples,
+                    "feature_importance": feature_importance,
                 },
             )
 
             # Store in transfer learning history
             self._transfer_history.append(
                 {
-                    'timestamp': current_date,
-                    'model_id': model_id,
-                    'regime': regime,
-                    'type': 'new_model_registration',
-                    'metrics': metrics,
+                    "timestamp": current_date,
+                    "model_id": model_id,
+                    "regime": regime,
+                    "type": "new_model_registration",
+                    "metrics": metrics,
                 }
             )
 
@@ -1031,7 +1035,7 @@ class LearningEngineUpdater:
             logger.debug(f"Failed to register model (non-critical): {type(e).__name__}: {e}")
             # Model registration is non-critical, continue regardless
 
-    def get_last_feature_importance_analysis(self) -> Optional[Dict[str, Any]]:
+    def get_last_feature_importance_analysis(self) -> Optional[dict[str, Any]]:
         """
         Obtener último análisis de importancia de features.
 
@@ -1040,7 +1044,7 @@ class LearningEngineUpdater:
         """
         return self._last_feature_analysis
 
-    def get_feature_importance_history(self) -> List[Dict[str, Any]]:
+    def get_feature_importance_history(self) -> list[dict[str, Any]]:
         """
         Obtener historial completo de análisis de importancia.
 
@@ -1049,7 +1053,7 @@ class LearningEngineUpdater:
         """
         return self._feature_importance_history.copy()
 
-    def get_feature_importance_summary(self) -> Dict[str, Any]:
+    def get_feature_importance_summary(self) -> dict[str, Any]:
         """
         Obtener resumen de feature importance (últimas 5 análisis).
 
@@ -1063,7 +1067,7 @@ class LearningEngineUpdater:
         recent_analyses = self._feature_importance_history[-5:]
 
         # Collect all top features from recent analyses
-        all_top_features: Dict[str, List[float]] = {}
+        all_top_features: dict[str, list[float]] = {}
         for analysis_record in recent_analyses:
             analysis = analysis_record.get("analysis", {})
             top_features = analysis.get("top_features", {})
@@ -1091,7 +1095,7 @@ class LearningEngineUpdater:
             ),
         }
 
-    def get_last_transfer_operation(self) -> Optional[Dict[str, Any]]:
+    def get_last_transfer_operation(self) -> Optional[dict[str, Any]]:
         """
         Get details of last transfer learning operation (fine-tune or registration).
 
@@ -1100,7 +1104,7 @@ class LearningEngineUpdater:
         """
         return self._last_transfer_operation
 
-    def get_transfer_history(self) -> List[Dict[str, Any]]:
+    def get_transfer_history(self) -> list[dict[str, Any]]:
         """
         Get complete history of transfer learning operations.
 
@@ -1109,7 +1113,7 @@ class LearningEngineUpdater:
         """
         return self._transfer_history.copy()
 
-    def get_available_pretrained_models(self, regime: Optional[str] = None) -> Dict[str, Any]:
+    def get_available_pretrained_models(self, regime: Optional[str] = None) -> dict[str, Any]:
         """
         Get available pre-trained models, optionally filtered by market regime.
 
@@ -1135,7 +1139,7 @@ class LearningEngineUpdater:
             logger.debug(f"Error listing pre-trained models: {e}")
             return {"status": "error", "error": str(e), "models": []}
 
-    def get_transfer_learning_status(self) -> Dict[str, Any]:
+    def get_transfer_learning_status(self) -> dict[str, Any]:
         """
         Get current transfer learning configuration and status.
 

@@ -7,7 +7,8 @@ Maneja ajustes por splits, dividendos y corporate actions.
 import logging
 from datetime import datetime
 from decimal import Decimal
-from typing import Any, Dict, List, Union
+from typing import Any, Optional, Union
+
 logger = logging.getLogger(__name__)
 
 
@@ -18,7 +19,7 @@ class PriceNormalizer:
     Ajusta precios históricos por splits, dividendos y otras corporate actions.
     """
 
-    def __init__(self, config: Dict[str, Any] = None):
+    def __init__(self, config: Optional[dict[str, Any]] = None):
         """
         Inicializar normalizador.
 
@@ -26,9 +27,9 @@ class PriceNormalizer:
             config: Configuración
         """
         config = config or {}
-        self.apply_splits = config.get('apply_splits', True)
-        self.apply_dividends = config.get('apply_dividends', True)
-        self.corporate_actions_db: Dict[str, List[Dict[str, Any]]] = {}
+        self.apply_splits = config.get("apply_splits", True)
+        self.apply_dividends = config.get("apply_dividends", True)
+        self.corporate_actions_db: dict[str, list[dict[str, Any]]] = {}
 
     def normalize(
         self,
@@ -94,19 +95,19 @@ class PriceNormalizer:
         splits = [
             a
             for a in actions
-            if a.get('type') == 'split'
-            and isinstance(a.get('date'), datetime)
-            and a.get('date') > timestamp
+            if a.get("type") == "split"
+            and isinstance(a.get("date"), datetime)
+            and a.get("date") > timestamp
         ]
 
         # Función auxiliar para obtener fecha con tipo correcto
         def get_split_date(action: dict) -> datetime:
-            date = action.get('date')
+            date = action.get("date")
             return date if isinstance(date, datetime) else datetime.min
 
         # Aplicar splits en orden cronológico
         for split in sorted(splits, key=get_split_date):
-            ratio = split.get('ratio', 1.0)
+            ratio = split.get("ratio", 1.0)
             if ratio > 0:
                 price = price * Decimal(str(ratio))
 
@@ -133,19 +134,19 @@ class PriceNormalizer:
         dividends = [
             a
             for a in actions
-            if a.get('type') == 'dividend'
-            and isinstance(a.get('date'), datetime)
-            and a.get('date') > timestamp
+            if a.get("type") == "dividend"
+            and isinstance(a.get("date"), datetime)
+            and a.get("date") > timestamp
         ]
 
         # Función auxiliar para obtener fecha con tipo correcto
         def get_dividend_date(action: dict) -> datetime:
-            date = action.get('date')
+            date = action.get("date")
             return date if isinstance(date, datetime) else datetime.min
 
         # Aplicar ajustes por dividendos (restar del precio)
         for dividend in sorted(dividends, key=get_dividend_date):
-            amount = Decimal(str(dividend.get('amount', 0)))
+            amount = Decimal(str(dividend.get("amount", 0)))
             price = price - amount
 
         return price
@@ -165,19 +166,19 @@ class PriceNormalizer:
         if symbol not in self.corporate_actions_db:
             self.corporate_actions_db[symbol] = []
 
-        action = {'type': action_type, 'date': date, **kwargs}
+        action = {"type": action_type, "date": date, **kwargs}
 
         self.corporate_actions_db[symbol].append(action)
         logger.debug(f"Corporate action registrada: {symbol} {action_type} en {date}")
 
     def normalize_batch(
         self,
-        prices: List[Any],
+        prices: list[Any],
         symbol: str,
-        timestamps: List[datetime],
+        timestamps: list[datetime],
         adjust_for_splits: bool = True,
         adjust_for_dividends: bool = True,
-    ) -> List[Decimal]:
+    ) -> list[Decimal]:
         """
         Normalizar múltiples precios.
 

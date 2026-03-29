@@ -1,4 +1,5 @@
 """Alert processing protocols"""
+
 from typing import TYPE_CHECKING, Optional, Protocol
 
 if TYPE_CHECKING:

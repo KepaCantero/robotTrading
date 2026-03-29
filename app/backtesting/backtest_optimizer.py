@@ -22,7 +22,7 @@ import tempfile
 from concurrent.futures import ProcessPoolExecutor, as_completed
 from datetime import datetime
 from itertools import product
-from typing import Any, Dict, List, Optional
+from typing import TYPE_CHECKING, Any
 
 import numpy as np
 
@@ -30,7 +30,6 @@ logger = logging.getLogger(__name__)
 
 from app.backtesting.core.error_handling import train_with_retry
 from app.backtesting.core.executor import SimpleBacktestExecutor
-from app.backtesting.core.memory_manager import AggressiveMemoryManager
 from app.backtesting.data_split import (
     DataSplit,
     MultipleTestingCorrector,
@@ -39,6 +38,9 @@ from app.backtesting.data_split import (
 )
 from app.backtesting.models import BacktestConfig
 from app.domain.strategies.momentum_modular.strategy import ModularMomentumStrategy
+
+if TYPE_CHECKING:
+    from app.backtesting.core.memory_manager import AggressiveMemoryManager
 
 
 class BacktestOptimizer:
@@ -56,11 +58,11 @@ class BacktestOptimizer:
         self,
         backtest_config: BacktestConfig,
         memory_manager: AggressiveMemoryManager,
-        raw_config: Dict[str, Any],
-        quotes: List,
+        raw_config: dict[str, Any],
+        quotes: list,
         parallel_enabled: bool = False,
-        max_workers: Optional[int] = None,
-        config_path: Optional[str] = None,
+        max_workers: int | None = None,
+        config_path: str | None = None,
     ):
         """
         Initialize BacktestOptimizer.
@@ -91,7 +93,7 @@ class BacktestOptimizer:
         audit_helper,
         run_backtest_helper,
         get_safe_split_dates_helper,
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """
         Execute grid search hyperparameter optimization backtest.
 
@@ -114,17 +116,17 @@ class BacktestOptimizer:
 
         try:
             # Step 1: Define parameter grid from configuration
-            grid_config = self.raw_config.get('backtests', {}).get('grid_search', {})
-            param_grid_def = grid_config.get('param_grid', {})
+            grid_config = self.raw_config.get("backtests", {}).get("grid_search", {})
+            param_grid_def = grid_config.get("param_grid", {})
 
             # Default parameter grid if not specified
             if not param_grid_def:
                 param_grid_def = {
-                    'buy_threshold': [0.60, 0.70, 0.80, 0.90],
-                    'sell_threshold': [0.10, 0.20, 0.30, 0.40],
-                    'stop_loss': [-0.03, -0.05, -0.07, -0.10],
-                    'take_profit': [0.05, 0.10, 0.15, 0.20],
-                    'min_confidence': [0.5, 0.6, 0.7, 0.8, 0.9],
+                    "buy_threshold": [0.60, 0.70, 0.80, 0.90],
+                    "sell_threshold": [0.10, 0.20, 0.30, 0.40],
+                    "stop_loss": [-0.03, -0.05, -0.07, -0.10],
+                    "take_profit": [0.05, 0.10, 0.15, 0.20],
+                    "min_confidence": [0.5, 0.6, 0.7, 0.8, 0.9],
                 }
 
             logger.info(f"Parameter grid defined with {len(param_grid_def)} parameters")
@@ -147,8 +149,8 @@ class BacktestOptimizer:
                 param_combinations.append(param_dict)
 
             # Step 3: Determine actual data bounds
-            config_start = datetime.strptime(self.raw_config['input']['start_date'], "%Y-%m-%d")
-            config_end = datetime.strptime(self.raw_config['input']['end_date'], "%Y-%m-%d")
+            config_start = datetime.strptime(self.raw_config["input"]["start_date"], "%Y-%m-%d")
+            config_end = datetime.strptime(self.raw_config["input"]["end_date"], "%Y-%m-%d")
 
             if self.quotes:
                 actual_start = min(q.timestamp for q in self.quotes)
@@ -200,9 +202,7 @@ class BacktestOptimizer:
             results = []
             failed_combinations = 0
 
-            def evaluate_param_set(
-                params: Dict[str, Any], param_idx: int
-            ) -> Optional[Dict[str, Any]]:
+            def evaluate_param_set(params: dict[str, Any], param_idx: int) -> dict[str, Any] | None:
                 """Evaluate a single parameter combination on train/val sets."""
                 try:
                     if param_idx % 10 == 0:
@@ -212,25 +212,29 @@ class BacktestOptimizer:
 
                     strategy_config = create_strategy_config_helper()
 
-                    if 'thresholds' not in strategy_config:
-                        strategy_config['thresholds'] = {}
+                    if "thresholds" not in strategy_config:
+                        strategy_config["thresholds"] = {}
 
                     for param_name, param_value in params.items():
-                        strategy_config['thresholds'][param_name] = param_value
+                        strategy_config["thresholds"][param_name] = param_value
 
-                    if 'presets' in strategy_config and 'custom' in strategy_config['presets'] and 'min_confidence' in params:
-                        strategy_config['presets']['custom']['min_confidence'] = params[
-                            'min_confidence'
+                    if (
+                        "presets" in strategy_config
+                        and "custom" in strategy_config["presets"]
+                        and "min_confidence" in params
+                    ):
+                        strategy_config["presets"]["custom"]["min_confidence"] = params[
+                            "min_confidence"
                         ]
 
                     strategy = ModularMomentumStrategy(strategy_config)
 
                     # Train if learning engines enabled
                     train_success = True
-                    if hasattr(strategy, 'learning_engine') and strategy.learning_engine:
+                    if hasattr(strategy, "learning_engine") and strategy.learning_engine:
                         train_success = train_with_retry(
                             strategy=strategy,
-                            engine_type='supervised',
+                            engine_type="supervised",
                             use_subprocess=False,
                         )
 
@@ -263,22 +267,22 @@ class BacktestOptimizer:
                     train_sharpe = float(train_result.performance.sharpe_ratio or 0)
 
                     return {
-                        'param_idx': param_idx,
-                        'params': params.copy(),
-                        'train_sharpe': train_sharpe,
-                        'val_sharpe': val_sharpe,
-                        'val_return': val_return,
-                        'win_rate': (
+                        "param_idx": param_idx,
+                        "params": params.copy(),
+                        "train_sharpe": train_sharpe,
+                        "val_sharpe": val_sharpe,
+                        "val_return": val_return,
+                        "win_rate": (
                             float(val_result.performance.win_rate)
                             if val_result.performance
                             else 0.0
                         ),
-                        'max_drawdown': (
+                        "max_drawdown": (
                             float(val_result.performance.max_drawdown_percentage)
                             if val_result.performance
                             else 0.0
                         ),
-                        'total_trades': (
+                        "total_trades": (
                             val_result.performance.total_trades if val_result.performance else 0
                         ),
                     }
@@ -329,7 +333,7 @@ class BacktestOptimizer:
                 return []
 
             # Select best parameters based on validation Sharpe ratio
-            best_result = max(results, key=lambda x: x['val_sharpe'])
+            best_result = max(results, key=lambda x: x["val_sharpe"])
 
             logger.info("\n" + "-" * 80)
             logger.info("BEST PARAMETERS SELECTED")
@@ -347,15 +351,19 @@ class BacktestOptimizer:
             logger.info("-" * 80)
 
             strategy_config = create_strategy_config_helper()
-            if 'thresholds' not in strategy_config:
-                strategy_config['thresholds'] = {}
+            if "thresholds" not in strategy_config:
+                strategy_config["thresholds"] = {}
 
-            for param_name, param_value in best_result['params'].items():
-                strategy_config['thresholds'][param_name] = param_value
+            for param_name, param_value in best_result["params"].items():
+                strategy_config["thresholds"][param_name] = param_value
 
-            if 'presets' in strategy_config and 'custom' in strategy_config['presets'] and 'min_confidence' in best_result['params']:
-                strategy_config['presets']['custom']['min_confidence'] = best_result['params'][
-                    'min_confidence'
+            if (
+                "presets" in strategy_config
+                and "custom" in strategy_config["presets"]
+                and "min_confidence" in best_result["params"]
+            ):
+                strategy_config["presets"]["custom"]["min_confidence"] = best_result["params"][
+                    "min_confidence"
                 ]
 
             best_strategy = ModularMomentumStrategy(strategy_config)
@@ -384,22 +392,22 @@ class BacktestOptimizer:
 
             # Validate OOS performance
             oos_validation = validate_out_of_sample_performance(
-                train_sharpe=best_result['train_sharpe'],
-                val_sharpe=best_result['val_sharpe'],
+                train_sharpe=best_result["train_sharpe"],
+                val_sharpe=best_result["val_sharpe"],
                 test_sharpe=test_sharpe,
                 min_performance_ratio=0.7,
             )
 
             # Calculate performance degradation
             sharpe_degradation = (
-                (best_result['val_sharpe'] - test_sharpe) / abs(best_result['val_sharpe']) * 100
-                if best_result['val_sharpe'] != 0
+                (best_result["val_sharpe"] - test_sharpe) / abs(best_result["val_sharpe"]) * 100
+                if best_result["val_sharpe"] != 0
                 else 0.0
             )
 
             return_degradation = (
-                (best_result['val_return'] - test_return) / abs(best_result['val_return']) * 100
-                if best_result['val_return'] != 0
+                (best_result["val_return"] - test_return) / abs(best_result["val_return"]) * 100
+                if best_result["val_return"] != 0
                 else 0.0
             )
 
@@ -410,43 +418,43 @@ class BacktestOptimizer:
 
             # Compile comprehensive results
             result_dict = {
-                'test_type': 'grid_search',
-                'test_name': 'Grid Search Hyperparameter Optimization',
-                'best_params': best_result['params'],
-                'train_sharpe': best_result['train_sharpe'],
-                'val_sharpe': best_result['val_sharpe'],
-                'test_sharpe': test_sharpe,
-                'val_return': best_result['val_return'],
-                'test_return': test_return,
-                'val_win_rate': best_result['win_rate'],
-                'test_win_rate': float(test_result.performance.win_rate),
-                'val_max_drawdown': best_result['max_drawdown'],
-                'test_max_drawdown': float(test_result.performance.max_drawdown_percentage),
-                'sharpe_degradation_pct': sharpe_degradation,
-                'return_degradation_pct': return_degradation,
-                'num_combinations_tested': total_combinations,
-                'num_successful': len(results),
-                'num_failed': failed_combinations,
-                'adjusted_confidence': adjusted_confidence,
-                'base_confidence': 0.95,
-                'oos_validation_passed': oos_validation,
-                'all_iterations': results,
-                'data_split': {
-                    'train_size': len(train_quotes),
-                    'val_size': len(val_quotes),
-                    'test_size': len(test_quotes),
-                    'train_ratio': 0.6,
-                    'val_ratio': 0.2,
-                    'test_ratio': 0.2,
+                "test_type": "grid_search",
+                "test_name": "Grid Search Hyperparameter Optimization",
+                "best_params": best_result["params"],
+                "train_sharpe": best_result["train_sharpe"],
+                "val_sharpe": best_result["val_sharpe"],
+                "test_sharpe": test_sharpe,
+                "val_return": best_result["val_return"],
+                "test_return": test_return,
+                "val_win_rate": best_result["win_rate"],
+                "test_win_rate": float(test_result.performance.win_rate),
+                "val_max_drawdown": best_result["max_drawdown"],
+                "test_max_drawdown": float(test_result.performance.max_drawdown_percentage),
+                "sharpe_degradation_pct": sharpe_degradation,
+                "return_degradation_pct": return_degradation,
+                "num_combinations_tested": total_combinations,
+                "num_successful": len(results),
+                "num_failed": failed_combinations,
+                "adjusted_confidence": adjusted_confidence,
+                "base_confidence": 0.95,
+                "oos_validation_passed": oos_validation,
+                "all_iterations": results,
+                "data_split": {
+                    "train_size": len(train_quotes),
+                    "val_size": len(val_quotes),
+                    "test_size": len(test_quotes),
+                    "train_ratio": 0.6,
+                    "val_ratio": 0.2,
+                    "test_ratio": 0.2,
                 },
-                'param_grid': param_grid_def,
-                'parallel_execution': self.parallel_enabled,
+                "param_grid": param_grid_def,
+                "parallel_execution": self.parallel_enabled,
             }
 
             self.memory_manager.add_result(result_dict)
-            self.memory_manager.add_backtest_object('grid_search_best', test_result)
+            self.memory_manager.add_backtest_object("grid_search_best", test_result)
 
-            audit_helper(result_dict, 'grid_search', best_strategy)
+            audit_helper(result_dict, "grid_search", best_strategy)
 
             logger.info("\n" + "=" * 80)
             logger.info("GRID SEARCH COMPLETE")
@@ -470,11 +478,11 @@ class BacktestOptimizer:
     @staticmethod
     def _evaluate_param_set_static(
         config_path: str,
-        params: Dict[str, Any],
+        params: dict[str, Any],
         param_idx: int,
         train_size: int,
         val_size: int,
-    ) -> Optional[Dict[str, Any]]:
+    ) -> dict[str, Any] | None:
         """
         Static method for evaluating a parameter set in parallel.
 
@@ -494,14 +502,14 @@ class BacktestOptimizer:
             # Placeholder for parallel execution
             # Full implementation would require significant refactoring
             return {
-                'param_idx': param_idx,
-                'params': params,
-                'train_sharpe': 0.0,
-                'val_sharpe': 0.0,
-                'val_return': 0.0,
-                'win_rate': 0.0,
-                'max_drawdown': 0.0,
-                'total_trades': 0,
+                "param_idx": param_idx,
+                "params": params,
+                "train_sharpe": 0.0,
+                "val_sharpe": 0.0,
+                "val_return": 0.0,
+                "win_rate": 0.0,
+                "max_drawdown": 0.0,
+                "total_trades": 0,
             }
 
         except Exception:
@@ -511,7 +519,7 @@ class BacktestOptimizer:
         self,
         create_strategy_config_helper,
         run_baseline_backtest_func,
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """
         Execute Optuna-based hyperparameter optimization for learning engines.
 
@@ -530,20 +538,20 @@ class BacktestOptimizer:
         logger.info("=" * 80)
 
         # Get optimization config
-        opt_config = self.raw_config.get('backtests', {}).get('hyperparameter_optimization', {})
-        n_trials = opt_config.get('n_trials', 50)
-        timeout = opt_config.get('timeout', 600)
-        metric = opt_config.get('metric', 'sharpe_ratio')
+        opt_config = self.raw_config.get("backtests", {}).get("hyperparameter_optimization", {})
+        n_trials = opt_config.get("n_trials", 50)
+        timeout = opt_config.get("timeout", 600)
+        metric = opt_config.get("metric", "sharpe_ratio")
 
         logger.info(f"Configuration: {n_trials} trials, {timeout}s timeout, optimizing {metric}")
 
         trial_results = []
         best_result = None
         best_params = None
-        best_value = float('-inf')
+        best_value = float("-inf")
 
-        learning_config = self.raw_config.get('learning_engines', {}).get('supervised', {})
-        algorithm = learning_config.get('parameters', {}).get('algorithm', 'random_forest')
+        learning_config = self.raw_config.get("learning_engines", {}).get("supervised", {})
+        algorithm = learning_config.get("parameters", {}).get("algorithm", "random_forest")
 
         logger.info(f"Optimizing {algorithm} learning engine")
 
@@ -553,53 +561,53 @@ class BacktestOptimizer:
 
             try:
                 # Suggest hyperparameters based on algorithm
-                if algorithm == 'random_forest':
+                if algorithm == "random_forest":
                     params = {
-                        'n_estimators': trial.suggest_int('n_estimators', 20, 200),
-                        'max_depth': trial.suggest_int('max_depth', 3, 20),
-                        'min_samples_split': trial.suggest_int('min_samples_split', 2, 20),
-                        'min_samples_leaf': trial.suggest_int('min_samples_leaf', 1, 10),
-                        'max_features': trial.suggest_categorical(
-                            'max_features', ['sqrt', 'log2', None]
+                        "n_estimators": trial.suggest_int("n_estimators", 20, 200),
+                        "max_depth": trial.suggest_int("max_depth", 3, 20),
+                        "min_samples_split": trial.suggest_int("min_samples_split", 2, 20),
+                        "min_samples_leaf": trial.suggest_int("min_samples_leaf", 1, 10),
+                        "max_features": trial.suggest_categorical(
+                            "max_features", ["sqrt", "log2", None]
                         ),
                     }
-                elif algorithm == 'xgboost':
+                elif algorithm == "xgboost":
                     params = {
-                        'n_estimators': trial.suggest_int('n_estimators', 20, 200),
-                        'max_depth': trial.suggest_int('max_depth', 3, 15),
-                        'learning_rate': trial.suggest_float('learning_rate', 0.01, 0.3, log=True),
-                        'min_child_weight': trial.suggest_int('min_child_weight', 1, 10),
-                        'subsample': trial.suggest_float('subsample', 0.6, 1.0),
-                        'colsample_bytree': trial.suggest_float('colsample_bytree', 0.6, 1.0),
+                        "n_estimators": trial.suggest_int("n_estimators", 20, 200),
+                        "max_depth": trial.suggest_int("max_depth", 3, 15),
+                        "learning_rate": trial.suggest_float("learning_rate", 0.01, 0.3, log=True),
+                        "min_child_weight": trial.suggest_int("min_child_weight", 1, 10),
+                        "subsample": trial.suggest_float("subsample", 0.6, 1.0),
+                        "colsample_bytree": trial.suggest_float("colsample_bytree", 0.6, 1.0),
                     }
-                elif algorithm == 'lightgbm':
+                elif algorithm == "lightgbm":
                     params = {
-                        'n_estimators': trial.suggest_int('n_estimators', 20, 200),
-                        'max_depth': trial.suggest_int('max_depth', 3, 15),
-                        'learning_rate': trial.suggest_float('learning_rate', 0.01, 0.3, log=True),
-                        'num_leaves': trial.suggest_int('num_leaves', 20, 150),
-                        'min_child_samples': trial.suggest_int('min_child_samples', 5, 50),
+                        "n_estimators": trial.suggest_int("n_estimators", 20, 200),
+                        "max_depth": trial.suggest_int("max_depth", 3, 15),
+                        "learning_rate": trial.suggest_float("learning_rate", 0.01, 0.3, log=True),
+                        "num_leaves": trial.suggest_int("num_leaves", 20, 150),
+                        "min_child_samples": trial.suggest_int("min_child_samples", 5, 50),
                     }
                 else:
                     params = {
-                        'n_estimators': trial.suggest_int('n_estimators', 20, 200),
-                        'max_depth': trial.suggest_int('max_depth', 3, 15),
+                        "n_estimators": trial.suggest_int("n_estimators", 20, 200),
+                        "max_depth": trial.suggest_int("max_depth", 3, 15),
                     }
 
-                lookahead_days = trial.suggest_int('lookahead_days', 3, 10)
+                lookahead_days = trial.suggest_int("lookahead_days", 3, 10)
 
                 # Create modified config for this trial
                 trial_config = copy.deepcopy(self.raw_config)
-                trial_config.setdefault('learning_engines', {}).setdefault('supervised', {})
-                trial_config['learning_engines']['supervised']['parameters'] = params
-                trial_config['learning_engines']['supervised']['lookahead_days'] = lookahead_days
+                trial_config.setdefault("learning_engines", {}).setdefault("supervised", {})
+                trial_config["learning_engines"]["supervised"]["parameters"] = params
+                trial_config["learning_engines"]["supervised"]["lookahead_days"] = lookahead_days
 
                 # Write config to temp file and run backtest
                 import os
 
                 import yaml
 
-                with tempfile.NamedTemporaryFile(mode='w', suffix='.yaml', delete=False) as f:
+                with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as f:
                     yaml.dump(trial_config, f)
                     temp_config_path = f.name
 
@@ -613,28 +621,28 @@ class BacktestOptimizer:
                     results = trial_runner.run_learning_engines_backtest()
 
                     if not results or len(results) == 0:
-                        return float('-inf')
+                        return float("-inf")
 
                     result = results[0] if isinstance(results[0], dict) else {}
                     value = result.get(metric, 0) or 0
 
                     trial_result = {
-                        'trial_number': trial.number,
-                        'params': params,
-                        'lookahead_days': lookahead_days,
-                        'value': value,
-                        'total_pnl': result.get('total_pnl', 0),
-                        'return_pct': result.get('return_pct', 0),
-                        'sharpe_ratio': result.get('sharpe_ratio', 0),
-                        'win_rate': result.get('win_rate', 0),
-                        'total_trades': result.get('total_trades', 0),
+                        "trial_number": trial.number,
+                        "params": params,
+                        "lookahead_days": lookahead_days,
+                        "value": value,
+                        "total_pnl": result.get("total_pnl", 0),
+                        "return_pct": result.get("return_pct", 0),
+                        "sharpe_ratio": result.get("sharpe_ratio", 0),
+                        "win_rate": result.get("win_rate", 0),
+                        "total_trades": result.get("total_trades", 0),
                     }
                     trial_results.append(trial_result)
 
                     if value > best_value:
                         best_value = value
                         best_params = params.copy()
-                        best_params['lookahead_days'] = lookahead_days
+                        best_params["lookahead_days"] = lookahead_days
                         best_result = result
 
                     logger.info(
@@ -651,7 +659,7 @@ class BacktestOptimizer:
 
             except Exception as e:
                 logger.warning(f"Trial {trial.number} failed: {e}")
-                return float('-inf')
+                return float("-inf")
 
         # Run baseline first for comparison
         logger.info("-" * 60)
@@ -679,10 +687,10 @@ class BacktestOptimizer:
         pruner = MedianPruner(n_startup_trials=5, n_warmup_steps=3)
 
         study = optuna.create_study(
-            direction='maximize',
+            direction="maximize",
             sampler=sampler,
             pruner=pruner,
-            study_name='learning_engine_optimization',
+            study_name="learning_engine_optimization",
         )
 
         optuna.logging.set_verbosity(optuna.logging.WARNING)
@@ -699,39 +707,41 @@ class BacktestOptimizer:
 
         # Compile final results
         final_results = {
-            'test_type': 'optuna_optimization',
-            'test_name': 'Optuna Hyperparameter Optimization',
-            'algorithm': algorithm,
-            'optimization_metric': metric,
-            'n_trials': len(study.trials),
-            'best_trial': study.best_trial.number if study.best_trial else None,
-            'best_params': best_params,
-            'best_value': float(best_value) if best_value != float('-inf') else None,
-            'best_result': {
-                'total_pnl': best_result.get('total_pnl', 0) if best_result else 0,
-                'return_pct': best_result.get('return_pct', 0) if best_result else 0,
-                'sharpe_ratio': best_result.get('sharpe_ratio', 0) if best_result else 0,
-                'win_rate': best_result.get('win_rate', 0) if best_result else 0,
-                'total_trades': best_result.get('total_trades', 0) if best_result else 0,
-            }
-            if best_result
-            else {},
-            'baseline': {
-                'total_pnl': baseline_metrics.get('total_pnl', 0),
-                'return_pct': baseline_metrics.get('return_pct', 0),
-                'sharpe_ratio': baseline_metrics.get('sharpe_ratio', 0),
-                'win_rate': baseline_metrics.get('win_rate', 0),
-                'total_trades': baseline_metrics.get('total_trades', 0),
+            "test_type": "optuna_optimization",
+            "test_name": "Optuna Hyperparameter Optimization",
+            "algorithm": algorithm,
+            "optimization_metric": metric,
+            "n_trials": len(study.trials),
+            "best_trial": study.best_trial.number if study.best_trial else None,
+            "best_params": best_params,
+            "best_value": float(best_value) if best_value != float("-inf") else None,
+            "best_result": (
+                {
+                    "total_pnl": best_result.get("total_pnl", 0) if best_result else 0,
+                    "return_pct": best_result.get("return_pct", 0) if best_result else 0,
+                    "sharpe_ratio": best_result.get("sharpe_ratio", 0) if best_result else 0,
+                    "win_rate": best_result.get("win_rate", 0) if best_result else 0,
+                    "total_trades": best_result.get("total_trades", 0) if best_result else 0,
+                }
+                if best_result
+                else {}
+            ),
+            "baseline": {
+                "total_pnl": baseline_metrics.get("total_pnl", 0),
+                "return_pct": baseline_metrics.get("return_pct", 0),
+                "sharpe_ratio": baseline_metrics.get("sharpe_ratio", 0),
+                "win_rate": baseline_metrics.get("win_rate", 0),
+                "total_trades": baseline_metrics.get("total_trades", 0),
             },
-            'improvement': {
-                'pnl_diff': (best_result.get('total_pnl', 0) if best_result else 0)
-                - baseline_metrics.get('total_pnl', 0),
-                'sharpe_diff': (best_result.get('sharpe_ratio', 0) if best_result else 0)
-                - baseline_metrics.get('sharpe_ratio', 0),
+            "improvement": {
+                "pnl_diff": (best_result.get("total_pnl", 0) if best_result else 0)
+                - baseline_metrics.get("total_pnl", 0),
+                "sharpe_diff": (best_result.get("sharpe_ratio", 0) if best_result else 0)
+                - baseline_metrics.get("sharpe_ratio", 0),
             },
-            'all_trials': trial_results[:20],
-            'optimization_history': [
-                {'trial': t.number, 'value': t.value} for t in study.trials if t.value is not None
+            "all_trials": trial_results[:20],
+            "optimization_history": [
+                {"trial": t.number, "value": t.value} for t in study.trials if t.value is not None
             ],
         }
 
@@ -751,7 +761,7 @@ class BacktestOptimizer:
             f"  Optimized PnL:   ${final_results['best_result'].get('total_pnl', 0):,.2f} | "
             f"Sharpe: {final_results['best_result'].get('sharpe_ratio', 0):.2f}"
         )
-        improvement = final_results['improvement']['pnl_diff']
+        improvement = final_results["improvement"]["pnl_diff"]
         logger.info(
             f"  Improvement:     ${improvement:,.2f} ({'BETTER' if improvement > 0 else 'WORSE'})"
         )
@@ -769,7 +779,7 @@ class BacktestOptimizer:
         metrics_helper,
         audit_helper,
         create_ablation_config_helper,
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """
         Execute ablation backtest to measure individual filter/module impact.
 
@@ -785,13 +795,13 @@ class BacktestOptimizer:
         logger.info("ABLATION BACKTEST - Starting filter impact analysis")
         logger.info("=" * 80)
 
-        ablation_config = self.raw_config.get('backtests', {}).get('ablation', {})
+        ablation_config = self.raw_config.get("backtests", {}).get("ablation", {})
 
-        modules_to_test = ablation_config.get('modules_to_test', [])
+        modules_to_test = ablation_config.get("modules_to_test", [])
         if not modules_to_test:
-            modules_config = self.raw_config.get('modules', {}).get('filters', {})
+            modules_config = self.raw_config.get("modules", {}).get("filters", {})
             modules_to_test = [
-                name for name, config in modules_config.items() if config.get('enabled', False)
+                name for name, config in modules_config.items() if config.get("enabled", False)
             ]
 
         if not modules_to_test:
@@ -833,7 +843,7 @@ class BacktestOptimizer:
             if baseline_result.performance.sharpe_ratio
             else 0.0
         )
-        baseline_return = baseline_metrics['return_pct']
+        baseline_return = baseline_metrics["return_pct"]
         baseline_win_rate = (
             float(baseline_result.performance.win_rate) if baseline_result.performance else 0.0
         )
@@ -879,7 +889,7 @@ class BacktestOptimizer:
                     if ablation_result.performance.sharpe_ratio
                     else 0.0
                 )
-                ablation_return = ablation_metrics['return_pct']
+                ablation_return = ablation_metrics["return_pct"]
                 ablation_win_rate = (
                     float(ablation_result.performance.win_rate)
                     if ablation_result.performance
@@ -908,45 +918,45 @@ class BacktestOptimizer:
                 )
 
                 result_dict = {
-                    'test_type': 'ablation',
-                    'test_name': f'Ablation - {filter_name}',
-                    'filter_name': filter_name,
-                    'filter_disabled': True,
-                    'modules_active': [f for f in modules_to_test if f != filter_name],
-                    'learning_engine': None,
-                    'thresholds': thresholds_helper(ablation_config_dict),
-                    'total_pnl': ablation_metrics['total_pnl'],
-                    'return_pct': ablation_return,
-                    'win_rate': ablation_win_rate,
-                    'sharpe_ratio': ablation_sharpe,
-                    'max_drawdown': ablation_max_dd,
-                    'total_trades': (
+                    "test_type": "ablation",
+                    "test_name": f"Ablation - {filter_name}",
+                    "filter_name": filter_name,
+                    "filter_disabled": True,
+                    "modules_active": [f for f in modules_to_test if f != filter_name],
+                    "learning_engine": None,
+                    "thresholds": thresholds_helper(ablation_config_dict),
+                    "total_pnl": ablation_metrics["total_pnl"],
+                    "return_pct": ablation_return,
+                    "win_rate": ablation_win_rate,
+                    "sharpe_ratio": ablation_sharpe,
+                    "max_drawdown": ablation_max_dd,
+                    "total_trades": (
                         ablation_result.performance.total_trades
                         if ablation_result.performance
                         else 0
                     ),
-                    'avg_trade_pnl': (
-                        ablation_metrics['total_pnl'] / ablation_result.performance.total_trades
+                    "avg_trade_pnl": (
+                        ablation_metrics["total_pnl"] / ablation_result.performance.total_trades
                         if ablation_result.performance
                         and ablation_result.performance.total_trades > 0
                         else 0.0
                     ),
-                    'final_capital': ablation_metrics['final_capital'],
-                    'sharpe_degradation': sharpe_degradation,
-                    'return_degradation_pct': return_degradation,
-                    'win_rate_degradation_pct': win_rate_degradation * 100,
-                    'max_drawdown_change_pct': max_dd_change,
-                    'sharpe_importance': sharpe_importance,
-                    'return_importance': return_importance,
-                    'combined_importance': combined_importance,
-                    'baseline_sharpe': baseline_sharpe,
-                    'baseline_return': baseline_return,
-                    'baseline_win_rate': baseline_win_rate,
+                    "final_capital": ablation_metrics["final_capital"],
+                    "sharpe_degradation": sharpe_degradation,
+                    "return_degradation_pct": return_degradation,
+                    "win_rate_degradation_pct": win_rate_degradation * 100,
+                    "max_drawdown_change_pct": max_dd_change,
+                    "sharpe_importance": sharpe_importance,
+                    "return_importance": return_importance,
+                    "combined_importance": combined_importance,
+                    "baseline_sharpe": baseline_sharpe,
+                    "baseline_return": baseline_return,
+                    "baseline_win_rate": baseline_win_rate,
                 }
 
                 ablation_results.append(result_dict)
                 self.memory_manager.add_result(result_dict)
-                self.memory_manager.add_backtest_object(f'ablation_{filter_name}', ablation_result)
+                self.memory_manager.add_backtest_object(f"ablation_{filter_name}", ablation_result)
 
                 logger.info(
                     f"{filter_name} Results: "
@@ -969,7 +979,7 @@ class BacktestOptimizer:
         logger.info("-" * 80)
 
         ranked_results = sorted(
-            ablation_results, key=lambda x: x['combined_importance'], reverse=True
+            ablation_results, key=lambda x: x["combined_importance"], reverse=True
         )
 
         for rank, result in enumerate(ranked_results, 1):
@@ -981,9 +991,9 @@ class BacktestOptimizer:
             )
 
         # Step 4: Create consolidated summary
-        importance_scores = [r['combined_importance'] for r in ablation_results]
-        sharpe_degradations = [r['sharpe_degradation'] for r in ablation_results]
-        return_degradations = [r['return_degradation_pct'] for r in ablation_results]
+        importance_scores = [r["combined_importance"] for r in ablation_results]
+        sharpe_degradations = [r["sharpe_degradation"] for r in ablation_results]
+        return_degradations = [r["return_degradation_pct"] for r in ablation_results]
 
         most_important = ranked_results[0] if ranked_results else None
         least_important = ranked_results[-1] if ranked_results else None
@@ -993,54 +1003,54 @@ class BacktestOptimizer:
         avg_sharpe_impact = np.mean(sharpe_degradations)
         avg_return_impact = np.mean(return_degradations)
 
-        helpful_filters = sum(1 for r in ablation_results if r['combined_importance'] > 0)
-        harmful_filters = sum(1 for r in ablation_results if r['combined_importance'] < 0)
+        helpful_filters = sum(1 for r in ablation_results if r["combined_importance"] > 0)
+        harmful_filters = sum(1 for r in ablation_results if r["combined_importance"] < 0)
         neutral_filters = len(ablation_results) - helpful_filters - harmful_filters
 
         summary_dict = {
-            'test_type': 'ablation_summary',
-            'test_name': 'Ablation Study - Filter Importance Analysis',
-            'baseline_metrics': {
-                'return_pct': float(baseline_return),
-                'sharpe_ratio': float(baseline_sharpe),
-                'win_rate': float(baseline_win_rate),
-                'max_drawdown_pct': float(baseline_max_dd),
-                'total_pnl': float(baseline_metrics['total_pnl']),
-                'final_capital': float(baseline_metrics['final_capital']),
+            "test_type": "ablation_summary",
+            "test_name": "Ablation Study - Filter Importance Analysis",
+            "baseline_metrics": {
+                "return_pct": float(baseline_return),
+                "sharpe_ratio": float(baseline_sharpe),
+                "win_rate": float(baseline_win_rate),
+                "max_drawdown_pct": float(baseline_max_dd),
+                "total_pnl": float(baseline_metrics["total_pnl"]),
+                "final_capital": float(baseline_metrics["final_capital"]),
             },
-            'num_filters_tested': len(ablation_results),
-            'avg_importance': float(avg_importance),
-            'std_importance': float(std_importance),
-            'avg_sharpe_impact': float(avg_sharpe_impact),
-            'avg_return_impact_pct': float(avg_return_impact),
-            'helpful_filters_count': helpful_filters,
-            'harmful_filters_count': harmful_filters,
-            'neutral_filters_count': neutral_filters,
-            'most_important_filter': most_important['filter_name'] if most_important else None,
-            'most_important_score': (
-                float(most_important['combined_importance']) if most_important else 0.0
+            "num_filters_tested": len(ablation_results),
+            "avg_importance": float(avg_importance),
+            "std_importance": float(std_importance),
+            "avg_sharpe_impact": float(avg_sharpe_impact),
+            "avg_return_impact_pct": float(avg_return_impact),
+            "helpful_filters_count": helpful_filters,
+            "harmful_filters_count": harmful_filters,
+            "neutral_filters_count": neutral_filters,
+            "most_important_filter": most_important["filter_name"] if most_important else None,
+            "most_important_score": (
+                float(most_important["combined_importance"]) if most_important else 0.0
             ),
-            'least_important_filter': least_important['filter_name'] if least_important else None,
-            'least_important_score': (
-                float(least_important['combined_importance']) if least_important else 0.0
+            "least_important_filter": least_important["filter_name"] if least_important else None,
+            "least_important_score": (
+                float(least_important["combined_importance"]) if least_important else 0.0
             ),
-            'filter_rankings': [
+            "filter_rankings": [
                 {
-                    'rank': idx + 1,
-                    'filter_name': r['filter_name'],
-                    'importance': float(r['combined_importance']),
-                    'sharpe_degradation': float(r['sharpe_degradation']),
-                    'return_degradation_pct': float(r['return_degradation_pct']),
+                    "rank": idx + 1,
+                    "filter_name": r["filter_name"],
+                    "importance": float(r["combined_importance"]),
+                    "sharpe_degradation": float(r["sharpe_degradation"]),
+                    "return_degradation_pct": float(r["return_degradation_pct"]),
                 }
                 for idx, r in enumerate(ranked_results)
             ],
-            'ablation_results': ablation_results,
-            'modules_active': modules_to_test,
-            'thresholds': thresholds_helper(baseline_config),
+            "ablation_results": ablation_results,
+            "modules_active": modules_to_test,
+            "thresholds": thresholds_helper(baseline_config),
         }
 
         self.memory_manager.add_result(summary_dict)
-        audit_helper(summary_dict, 'ablation_summary', baseline_strategy)
+        audit_helper(summary_dict, "ablation_summary", baseline_strategy)
 
         logger.info("\n" + "=" * 80)
         logger.info("ABLATION BACKTEST COMPLETE")
@@ -1060,17 +1070,17 @@ class BacktestOptimizer:
         logger.info(f"Average importance: {avg_importance:.3f} +/- {std_importance:.3f}")
         logger.info("=" * 80)
 
-        return [summary_dict] + ablation_results
+        return [summary_dict, *ablation_results]
 
     def optimize_transformer_parameters(
         self,
-        train_quotes: List,
-        val_quotes: List,
-        transformer_config: Dict[str, Any],
+        train_quotes: list,
+        val_quotes: list,
+        transformer_config: dict[str, Any],
         create_strategy_config_helper,
         run_backtest_helper,
         n_iterations: int = 20,
-    ) -> Dict[str, float]:
+    ) -> dict[str, float]:
         """
         Bayesian optimization of strategy parameters using Transformer predictions.
 
@@ -1088,11 +1098,11 @@ class BacktestOptimizer:
             Dictionary with best parameters
         """
         param_bounds = {
-            'buy_threshold': (0.5, 0.9),
-            'sell_threshold': (0.1, 0.5),
-            'stop_loss': (-0.10, -0.02),
-            'take_profit': (0.05, 0.20),
-            'min_confidence': (0.5, 0.9),
+            "buy_threshold": (0.5, 0.9),
+            "sell_threshold": (0.1, 0.5),
+            "stop_loss": (-0.10, -0.02),
+            "take_profit": (0.05, 0.20),
+            "min_confidence": (0.5, 0.9),
         }
 
         best_score = -np.inf
@@ -1100,21 +1110,21 @@ class BacktestOptimizer:
 
         for iteration in range(n_iterations):
             params = {
-                'buy_threshold': np.random.uniform(*param_bounds['buy_threshold']),
-                'sell_threshold': np.random.uniform(*param_bounds['sell_threshold']),
-                'stop_loss': np.random.uniform(*param_bounds['stop_loss']),
-                'take_profit': np.random.uniform(*param_bounds['take_profit']),
-                'min_confidence': np.random.uniform(*param_bounds['min_confidence']),
+                "buy_threshold": np.random.uniform(*param_bounds["buy_threshold"]),
+                "sell_threshold": np.random.uniform(*param_bounds["sell_threshold"]),
+                "stop_loss": np.random.uniform(*param_bounds["stop_loss"]),
+                "take_profit": np.random.uniform(*param_bounds["take_profit"]),
+                "min_confidence": np.random.uniform(*param_bounds["min_confidence"]),
             }
 
             config = create_strategy_config_helper()
-            config['thresholds'].update(params)
+            config["thresholds"].update(params)
 
             strategy = ModularMomentumStrategy(config)
 
             train_success = train_with_retry(
                 strategy=strategy,
-                engine_type='transformer',
+                engine_type="transformer",
                 use_subprocess=False,
             )
 

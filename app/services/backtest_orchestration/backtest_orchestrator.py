@@ -11,7 +11,7 @@ Calculates feasibility_ratio: achieved_return / required_return
 import logging
 from datetime import datetime
 from decimal import Decimal
-from typing import Dict, List, Optional
+from typing import Optional
 
 from .models import (
     BacktestConfig,
@@ -39,7 +39,7 @@ class BacktestOrchestrator:
 
     def __init__(self):
         """Initialize backtest orchestrator."""
-        self.execution_history: List[BacktestOrchestrationResult] = []
+        self.execution_history: list[BacktestOrchestrationResult] = []
         # Lazy-import backtesting infrastructure to avoid heavy dependencies
         self._backtest_engine = None
         self._data_loader = None
@@ -137,7 +137,7 @@ class BacktestOrchestrator:
                 orchestration_time_ms=elapsed_ms,
             )
 
-    def _validate_request(self, request: BacktestOrchestrationRequest) -> List[str]:
+    def _validate_request(self, request: BacktestOrchestrationRequest) -> list[str]:
         """Validate orchestration request."""
         errors = []
 
@@ -255,7 +255,7 @@ class BacktestOrchestrator:
         if initial_capital <= Decimal("0"):
             return Decimal("0")
 
-        # Required annual return = (monthly return / capital) × 12 × 100
+        # Required annual return = (monthly return / capital) * 12 * 100
         required_annual_return_pct = (
             (target_monthly_return_eur / initial_capital) * 12 * Decimal("100")
         )
@@ -288,7 +288,7 @@ class BacktestOrchestrator:
         self,
         result: BacktestResult,
         feasibility_ratio: Decimal,
-    ) -> List[str]:
+    ) -> list[str]:
         """Validate backtest result and return warnings."""
         warnings = []
 
@@ -296,28 +296,28 @@ class BacktestOrchestrator:
             # Check Sharpe ratio (should be > 1.0 for good strategies)
             if result.metrics.sharpe_ratio < Decimal("1.0"):
                 warnings.append(
-                    f"⚠️  Low Sharpe ratio ({result.metrics.sharpe_ratio:.2f}) - "
+                    f"⚠  Low Sharpe ratio ({result.metrics.sharpe_ratio:.2f}) - "
                     "consider adjusting parameters"
                 )
 
             # Check max drawdown (should be < 20%)
             if result.metrics.max_drawdown_pct > Decimal("20"):
                 warnings.append(
-                    f"⚠️  High max drawdown ({result.metrics.max_drawdown_pct:.2f}%) - "
+                    f"⚠  High max drawdown ({result.metrics.max_drawdown_pct:.2f}%) - "
                     "consider adding risk management"
                 )
 
             # Check win rate (should be > 40%)
             if result.metrics.win_rate_pct < Decimal("40"):
                 warnings.append(
-                    f"⚠️  Low win rate ({result.metrics.win_rate_pct:.2f}%) - "
+                    f"⚠  Low win rate ({result.metrics.win_rate_pct:.2f}%) - "
                     "may indicate poor signal quality"
                 )
 
         # Check feasibility ratio
         if feasibility_ratio < Decimal("1.0"):
             warnings.append(
-                "⚠️  Cannot consistently meet return target "
+                "⚠  Cannot consistently meet return target "
                 f"(feasibility_ratio={feasibility_ratio:.2f})"
             )
 
@@ -326,14 +326,14 @@ class BacktestOrchestrator:
     async def get_execution_history(
         self,
         limit: Optional[int] = None,
-    ) -> List[BacktestOrchestrationResult]:
+    ) -> list[BacktestOrchestrationResult]:
         """Get execution history."""
         results = self.execution_history
         if limit:
             results = results[-limit:]
         return results
 
-    def get_orchestrator_status(self) -> Dict:
+    def get_orchestrator_status(self) -> dict:
         """Get orchestrator operational status."""
         successful = sum(1 for r in self.execution_history if r.success)
         total = len(self.execution_history)

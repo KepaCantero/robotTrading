@@ -9,7 +9,7 @@ Now includes Purged K-Fold with Embargo cross-validation as described in:
 
 import logging
 from datetime import datetime
-from typing import List, Optional, Tuple
+from typing import Optional
 
 import numpy as np
 
@@ -78,10 +78,10 @@ class TrainValTestSplitter:
 
     def split_data(
         self,
-        market_data: List,
+        market_data: list,
         start_date: Optional[datetime] = None,
         end_date: Optional[datetime] = None,
-    ) -> Tuple[List, List, List]:
+    ) -> tuple[list, list, list]:
         """
         Split market data into train/validation/test sets.
 
@@ -126,19 +126,19 @@ class TrainValTestSplitter:
         test_data = sorted_data[val_end_idx:]
 
         logger.info(
-            f"Data split: Train={len(train_data)} bars ({len(train_data)/total_bars:.1%}), "
-            f"Val={len(val_data)} bars ({len(val_data)/total_bars:.1%}), "
-            f"Test={len(test_data)} bars ({len(test_data)/total_bars:.1%})"
+            f"Data split: Train={len(train_data)} bars ({len(train_data) / total_bars:.1%}), "
+            f"Val={len(val_data)} bars ({len(val_data) / total_bars:.1%}), "
+            f"Test={len(test_data)} bars ({len(test_data) / total_bars:.1%})"
         )
 
         return train_data, val_data, test_data
 
     def walk_forward_split(
         self,
-        market_data: List,
+        market_data: list,
         window_size: int = 252,  # 1 year
         step_size: int = 63,  # 3 months
-    ) -> List[Tuple[List, List, List]]:
+    ) -> list[tuple[list, list, list]]:
         """
         Create multiple train/val/test splits for walk-forward validation.
 
@@ -157,8 +157,7 @@ class TrainValTestSplitter:
 
         if total_bars < window_size * 3:
             logger.warning(
-                f"Insufficient data for walk-forward: {total_bars} bars < "
-                f"{window_size * 3} minimum"
+                f"Insufficient data for walk-forward: {total_bars} bars < {window_size * 3} minimum"
             )
             return []
 
@@ -186,8 +185,8 @@ class TrainValTestSplitter:
 
     def purged_kfold_split(
         self,
-        market_data: List,
-    ) -> List[Tuple[List, List]]:
+        market_data: list,
+    ) -> list[tuple[list, list]]:
         """
         Create purged K-Fold splits for cross-validation.
 
@@ -234,8 +233,8 @@ class TrainValTestSplitter:
 
     def purged_kfold_split_with_validation(
         self,
-        market_data: List,
-    ) -> List[Tuple[List, List, List]]:
+        market_data: list,
+    ) -> list[tuple[list, list, list]]:
         """
         Create purged K-Fold splits with train/validation/test sets.
 
@@ -323,7 +322,7 @@ class MultipleTestingCorrector:
         )
         return adjusted
 
-    def benjamini_hochberg_correction(self, p_values: List[float]) -> List[bool]:
+    def benjamini_hochberg_correction(self, p_values: list[float]) -> list[bool]:
         """
         Apply Benjamini-Hochberg procedure for false discovery rate.
 
@@ -361,7 +360,7 @@ class MultipleTestingCorrector:
 
         return significant
 
-    def holm_bonferroni_correction(self, p_values: List[float]) -> List[bool]:
+    def holm_bonferroni_correction(self, p_values: list[float]) -> list[bool]:
         """
         Apply Holm-Bonferroni step-down procedure.
 
@@ -393,7 +392,7 @@ class MultipleTestingCorrector:
 
         num_significant = sum(significant)
         logger.info(
-            f"Holm-Bonferroni: {num_significant}/{len(p_values)} tests significant " f"at 5% level"
+            f"Holm-Bonferroni: {num_significant}/{len(p_values)} tests significant at 5% level"
         )
 
         return significant

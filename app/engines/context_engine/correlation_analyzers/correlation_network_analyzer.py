@@ -5,7 +5,7 @@ Usa teoría de grafos para analizar correlaciones entre activos.
 """
 
 import logging
-from typing import Any, Dict, List
+from typing import Any, Optional
 
 # REQUIRED: networkx is REQUIRED - NO FALLBACKS
 import networkx as nx
@@ -17,11 +17,11 @@ logger = logging.getLogger(__name__)
 class CorrelationNetworkAnalyzer:
     """Analizador de red de correlaciones."""
 
-    def __init__(self, config: Dict[str, Any] = None):
+    def __init__(self, config: Optional[dict[str, Any]] = None):
         config = config or {}
-        self.threshold = config.get('threshold', 0.5)
+        self.threshold = config.get("threshold", 0.5)
 
-    def analyze_network(self, correlation_matrix: np.ndarray, symbols: List[str]) -> Dict[str, Any]:
+    def analyze_network(self, correlation_matrix: np.ndarray, symbols: list[str]) -> dict[str, Any]:
         """
         Analizar red de correlaciones.
 
@@ -52,12 +52,12 @@ class CorrelationNetworkAnalyzer:
             clusters = list(nx.community.greedy_modularity_communities(G))
 
             return {
-                'centrality': centrality,
-                'clusters': [list(c) for c in clusters],
-                'num_nodes': G.number_of_nodes(),
-                'num_edges': G.number_of_edges(),
+                "centrality": centrality,
+                "clusters": [list(c) for c in clusters],
+                "num_nodes": G.number_of_nodes(),
+                "num_edges": G.number_of_edges(),
             }
 
         except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.error(f"Error analizando red: {e}")
-            return {'centrality': {}, 'clusters': [], 'error': str(e)}
+            return {"centrality": {}, "clusters": [], "error": str(e)}

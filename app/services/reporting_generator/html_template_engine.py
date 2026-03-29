@@ -10,7 +10,7 @@ import logging
 from dataclasses import dataclass
 from datetime import datetime
 from decimal import Decimal
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -39,7 +39,7 @@ class ReportSection:
 
     section_name: str
     title: str
-    content: Dict[str, Any]
+    content: dict[str, Any]
     section_type: str  # "metrics", "charts", "tables", "text"
     enabled: bool = True
     order: int = 0
@@ -54,7 +54,7 @@ class ReportConfig:
     strategy_name: str = ""
     report_date: Optional[datetime] = None
     branding: Optional[BrandingConfig] = None
-    sections: List[ReportSection] = None
+    sections: list[ReportSection] = None
     include_toc: bool = True  # Table of contents
     include_summary: bool = True
     include_disclaimers: bool = True
@@ -79,9 +79,9 @@ class HTMLReport:
     generation_date: datetime
     file_size_kb: Decimal
     sections_count: int
-    metadata: Dict[str, Any]
+    metadata: dict[str, Any]
 
-    def to_dict(self) -> Dict:
+    def to_dict(self) -> dict:
         """Convert to dictionary."""
         return {
             "report_title": self.report_title,
@@ -124,9 +124,9 @@ class HTMLTemplateEngine:
     def render_report(
         self,
         config: ReportConfig,
-        metrics: Optional[Dict[str, Any]] = None,
-        charts_data: Optional[Dict[str, str]] = None,
-        tables_data: Optional[Dict[str, List[Dict]]] = None,
+        metrics: Optional[dict[str, Any]] = None,
+        charts_data: Optional[dict[str, str]] = None,
+        tables_data: Optional[dict[str, list[dict]]] = None,
     ) -> HTMLReport:
         """
         Render complete HTML report from configuration and data.
@@ -241,14 +241,14 @@ class HTMLTemplateEngine:
             if config.report_subtitle:
                 html += (
                     '  <h2 class="report-subtitle">'
-                    f'{self._escape_html(config.report_subtitle)}</h2>\n'
+                    f"{self._escape_html(config.report_subtitle)}</h2>\n"
                 )
 
             # Add strategy name if provided
             if config.strategy_name:
                 html += (
                     '  <p class="strategy-name">'
-                    f'Strategy: <strong>{self._escape_html(config.strategy_name)}</strong></p>\n'
+                    f"Strategy: <strong>{self._escape_html(config.strategy_name)}</strong></p>\n"
                 )
 
             # Add generation date
@@ -263,7 +263,7 @@ class HTMLTemplateEngine:
             logger.warning(f"Header rendering failed: {e}")
             return ""
 
-    def _render_toc(self, sections: List[ReportSection]) -> str:
+    def _render_toc(self, sections: list[ReportSection]) -> str:
         """Render table of contents."""
         try:
             html = '<nav class="table-of-contents">\n'
@@ -286,7 +286,7 @@ class HTMLTemplateEngine:
     def _render_summary(
         self,
         config: ReportConfig,
-        metrics: Optional[Dict[str, Any]] = None,
+        metrics: Optional[dict[str, Any]] = None,
     ) -> str:
         """Render executive summary section."""
         try:
@@ -306,7 +306,7 @@ class HTMLTemplateEngine:
                 html += f'      <div class="metric"><span>Sharpe Ratio:</span> <strong>{sharpe}</strong></div>\n'
                 html += f'      <div class="metric"><span>Max Drawdown:</span> <strong>{max_dd}%</strong></div>\n'
                 html += f'      <div class="metric"><span>Win Rate:</span> <strong>{win_rate}%</strong></div>\n'
-                html += '    </div>\n'
+                html += "    </div>\n"
 
             html += "    <p>This report provides a comprehensive analysis of strategy performance, "
             html += "risk metrics, and factor exposures. Please see detailed sections below for "
@@ -322,9 +322,9 @@ class HTMLTemplateEngine:
     def _render_section(
         self,
         section: ReportSection,
-        metrics: Optional[Dict[str, Any]] = None,
-        charts_data: Optional[Dict[str, str]] = None,
-        tables_data: Optional[Dict[str, List[Dict]]] = None,
+        metrics: Optional[dict[str, Any]] = None,
+        charts_data: Optional[dict[str, str]] = None,
+        tables_data: Optional[dict[str, list[dict]]] = None,
     ) -> str:
         """Render a report section based on type."""
         try:
@@ -350,8 +350,8 @@ class HTMLTemplateEngine:
 
     def _render_metrics_section(
         self,
-        content: Dict[str, Any],
-        metrics: Optional[Dict[str, Any]] = None,
+        content: dict[str, Any],
+        metrics: Optional[dict[str, Any]] = None,
     ) -> str:
         """Render metrics display section."""
         try:
@@ -375,7 +375,7 @@ class HTMLTemplateEngine:
                     html += '    <div class="metric-card">\n'
                     html += f'      <div class="metric-label">{escaped_label}</div>\n'
                     html += f'      <div class="metric-value">{escaped_value}</div>\n'
-                    html += '    </div>\n'
+                    html += "    </div>\n"
 
             html += "  </div>\n"
             return html
@@ -386,8 +386,8 @@ class HTMLTemplateEngine:
 
     def _render_charts_section(
         self,
-        content: Dict[str, Any],
-        charts_data: Optional[Dict[str, str]] = None,
+        content: dict[str, Any],
+        charts_data: Optional[dict[str, str]] = None,
     ) -> str:
         """Render charts section."""
         try:
@@ -408,8 +408,8 @@ class HTMLTemplateEngine:
 
     def _render_tables_section(
         self,
-        content: Dict[str, Any],
-        tables_data: Optional[Dict[str, List[Dict]]] = None,
+        content: dict[str, Any],
+        tables_data: Optional[dict[str, list[dict]]] = None,
     ) -> str:
         """Render tables section."""
         try:
@@ -451,7 +451,7 @@ class HTMLTemplateEngine:
             logger.warning(f"Tables section rendering failed: {e}")
             return ""
 
-    def _render_text_section(self, content: Dict[str, Any]) -> str:
+    def _render_text_section(self, content: dict[str, Any]) -> str:
         """Render text/content section."""
         try:
             html = "  <div class='text-content'>\n"
@@ -693,7 +693,7 @@ class HTMLTemplateEngine:
         # Convert snake_case to Title Case
         return " ".join(word.capitalize() for word in text.split("_"))
 
-    def get_engine_status(self) -> Dict:
+    def get_engine_status(self) -> dict:
         """Get engine operational status."""
         return {
             "status": "operational",

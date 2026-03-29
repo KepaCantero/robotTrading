@@ -6,7 +6,7 @@ Engine for portfolio rebalancing operations.
 
 import logging
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -29,7 +29,7 @@ class RebalanceEngine:
     rebalancing orders to maintain target allocations.
     """
 
-    def __init__(self, config: Optional[Dict[str, Any]] = None):
+    def __init__(self, config: Optional[dict[str, Any]] = None):
         """
         Initialize the Rebalance Engine.
 
@@ -48,10 +48,10 @@ class RebalanceEngine:
 
     def check_rebalance_needed(
         self,
-        current_weights: Dict[str, float],
-        target_weights: Dict[str, float],
+        current_weights: dict[str, float],
+        target_weights: dict[str, float],
         trigger: RebalanceTrigger = RebalanceTrigger.DRIFT,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Check if portfolio rebalancing is needed.
 
@@ -102,8 +102,8 @@ class RebalanceEngine:
         return result
 
     def generate_rebalance_orders(
-        self, current_portfolio: Dict[str, Any], target_weights: Dict[str, float], **kwargs
-    ) -> List[Dict[str, Any]]:
+        self, current_portfolio: dict[str, Any], target_weights: dict[str, float], **kwargs
+    ) -> list[dict[str, Any]]:
         """
         Generate rebalancing orders to reach target weights.
 
@@ -123,7 +123,7 @@ class RebalanceEngine:
             },
         )
 
-        orders: List[Dict[str, Any]] = []
+        orders: list[dict[str, Any]] = []
         total_value = current_portfolio.get("total_value", 0)
 
         if total_value <= 0:
@@ -159,11 +159,11 @@ class RebalanceEngine:
 
     def execute_rebalance(
         self,
-        current_portfolio: Dict[str, Any],
-        target_weights: Dict[str, float],
+        current_portfolio: dict[str, Any],
+        target_weights: dict[str, float],
         trigger: RebalanceTrigger = RebalanceTrigger.MANUAL,
         **kwargs,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Execute a full portfolio rebalance.
 
@@ -191,7 +191,7 @@ class RebalanceEngine:
             trigger=trigger,
         )
 
-        result: Dict[str, Any] = {
+        result: dict[str, Any] = {
             "trigger": trigger.value,
             "check_result": check_result,
             "orders": [],

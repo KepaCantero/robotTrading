@@ -12,7 +12,7 @@ With dynamic rebalancing based on rolling 30-day performance.
 import logging
 from datetime import datetime, timedelta
 from decimal import Decimal
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 from app.shared.config.centralized_config import get_config
 
@@ -48,7 +48,7 @@ class StrategyCapitalAllocation:
         self.max_weight = max_weight
         self.current_weight = target_weight
         self.allocated_capital = Decimal("0")
-        self.performance_data: List[Dict[str, Any]] = []
+        self.performance_data: list[dict[str, Any]] = []
 
     def allocate(self, total_capital: Decimal) -> Decimal:
         """
@@ -133,7 +133,7 @@ class MultiStrategyAllocationManager:
             total_capital: Total portfolio capital
         """
         self.total_capital = total_capital
-        self.strategy_allocations: Dict[str, StrategyCapitalAllocation] = {}
+        self.strategy_allocations: dict[str, StrategyCapitalAllocation] = {}
 
         # TASK-PA-1: Default allocations
         # 50% Momentum, 25% Mean Reversion, 25% Pairs Trading
@@ -172,7 +172,7 @@ class MultiStrategyAllocationManager:
                 f"  {name}: {allocation.target_weight:.1%} (range: {allocation.min_weight:.1%} - {allocation.max_weight:.1%})"
             )
 
-    def allocate_capital(self) -> Dict[str, Decimal]:
+    def allocate_capital(self) -> dict[str, Decimal]:
         """
         Allocate capital to each strategy based on current weights.
 
@@ -196,8 +196,7 @@ class MultiStrategyAllocationManager:
                 largest_strategy = max(allocations.keys(), key=lambda k: allocations[k])
                 allocations[largest_strategy] += difference
                 logger.debug(
-                    f"Adjusted {largest_strategy} by ${difference:,.2f} "
-                    f"to match total capital"
+                    f"Adjusted {largest_strategy} by ${difference:,.2f} to match total capital"
                 )
 
         return allocations
@@ -269,7 +268,7 @@ class DynamicPortfolioSelector:
         allocation = self.allocation_manager.strategy_allocations[strategy_name]
         allocation.add_performance_data(timestamp, pnl, returns)
 
-    def rebalance_allocations(self) -> Dict[str, Decimal]:
+    def rebalance_allocations(self) -> dict[str, Decimal]:
         """
         Rebalance allocations based on rolling 30-day performance.
 

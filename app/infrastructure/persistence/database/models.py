@@ -17,7 +17,7 @@ import logging
 import uuid
 from datetime import datetime
 from decimal import Decimal
-from typing import TYPE_CHECKING, List, Optional
+from typing import TYPE_CHECKING, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -61,10 +61,10 @@ class User(Base):
     last_login: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
 
     # Relationships
-    portfolios: Mapped[List["Portfolio"]] = relationship(
+    portfolios: Mapped[list["Portfolio"]] = relationship(
         "Portfolio", back_populates="user", cascade="all, delete-orphan"
     )
-    api_keys: Mapped[List["APIKey"]] = relationship(
+    api_keys: Mapped[list["APIKey"]] = relationship(
         "APIKey", back_populates="user", cascade="all, delete-orphan"
     )
 
@@ -125,13 +125,13 @@ class Portfolio(Base):
 
     # Relationships
     user: Mapped["User"] = relationship("User", back_populates="portfolios")
-    positions: Mapped[List["Position"]] = relationship(
+    positions: Mapped[list["Position"]] = relationship(
         "Position", back_populates="portfolio", cascade="all, delete-orphan"
     )
-    trades: Mapped[List["Trade"]] = relationship(
+    trades: Mapped[list["Trade"]] = relationship(
         "Trade", back_populates="portfolio", cascade="all, delete-orphan"
     )
-    backtests: Mapped[List["Backtest"]] = relationship(
+    backtests: Mapped[list["Backtest"]] = relationship(
         "Backtest", back_populates="portfolio", cascade="all, delete-orphan"
     )
 
@@ -162,9 +162,9 @@ class Asset(Base):
     )
 
     # Relationships
-    positions: Mapped[List["Position"]] = relationship("Position", back_populates="asset")
-    trades: Mapped[List["Trade"]] = relationship("Trade", back_populates="asset")
-    market_data: Mapped[List["MarketData"]] = relationship("MarketData", back_populates="asset")
+    positions: Mapped[list["Position"]] = relationship("Position", back_populates="asset")
+    trades: Mapped[list["Trade"]] = relationship("Trade", back_populates="asset")
+    market_data: Mapped[list["MarketData"]] = relationship("MarketData", back_populates="asset")
 
     __table_args__ = (
         Index("idx_assets_symbol", "symbol"),
@@ -281,7 +281,8 @@ class Trade(Base):
                 "side": self.side,
             },
         )
-        from app.backtesting.models import Trade as PydanticTrade, TradeStatus
+        from app.backtesting.models import Trade as PydanticTrade
+        from app.backtesting.models import TradeStatus
 
         # Map SQLAlchemy status to Pydantic TradeStatus
         status_map = {

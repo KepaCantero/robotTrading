@@ -25,7 +25,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from decimal import Decimal
 from enum import Enum
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 
 import numpy as np
 
@@ -98,7 +98,7 @@ class OrderSpecification:
     side: str  # "buy" or "sell"
     quantity: Decimal
     order_type: str  # "market", "limit", etc.
-    limit_price: Optional[Decimal] = None
+    limit_price: Decimal | None = None
     time_in_force: str = "DAY"  # DAY, GTC, IOC, FOK
     execution_algorithm: ExecutionAlgorithm = ExecutionAlgorithm.MARKET
     urgency: float = 0.5  # 0-1, higher = more urgent
@@ -162,10 +162,10 @@ class CostAnalysis:
     avg_cost_as_bps: float
 
     # Cost breakdown by component
-    cost_breakdown: Dict[str, Decimal]
+    cost_breakdown: dict[str, Decimal]
 
     # Recommendations
-    recommendations: List[str]
+    recommendations: list[str]
 
 
 class TransactionCostModel:
@@ -179,7 +179,7 @@ class TransactionCostModel:
     4. Inform position sizing decisions
     """
 
-    def __init__(self, config: Dict[str, Any]):
+    def __init__(self, config: dict[str, Any]):
         self.config = config
         self.name = config.get("name", self.__class__.__name__)
 
@@ -309,7 +309,7 @@ class TransactionCostModel:
 
     def _calculate_market_impact(
         self, order: OrderSpecification, market_data: MarketData
-    ) -> Tuple[Decimal, float]:
+    ) -> tuple[Decimal, float]:
         """
         Calculate market impact cost using square-root model.
 
@@ -488,7 +488,7 @@ class TransactionCostModel:
 
     def validate_order_type(
         self, order: OrderSpecification, market_data: MarketData
-    ) -> Tuple[bool, Optional[str]]:
+    ) -> tuple[bool, str | None]:
         """
         Validate that order type is appropriate for order size.
 
@@ -550,7 +550,7 @@ class TransactionCostModel:
         else:
             return ExecutionAlgorithm.VWAP
 
-    def analyze_cost_impact(self, cost_breakdown: CostBreakdown) -> Dict[str, Any]:
+    def analyze_cost_impact(self, cost_breakdown: CostBreakdown) -> dict[str, Any]:
         """
         Analyze the impact of transaction costs on strategy profitability.
 
@@ -603,7 +603,7 @@ class TransactionCostModel:
 class CommissionModel(TransactionCostModel):
     """Simple commission-only cost model."""
 
-    def __init__(self, config: Dict[str, Any]):
+    def __init__(self, config: dict[str, Any]):
         super().__init__(config)
         self.impact_model = MarketImpactModel.NONE
 
@@ -616,7 +616,7 @@ class AlmgrenChrissModel(TransactionCostModel):
     estimating market impact. It models both permanent and temporary impact.
     """
 
-    def __init__(self, config: Dict[str, Any]):
+    def __init__(self, config: dict[str, Any]):
         super().__init__(config)
         self.impact_model = MarketImpactModel.SQUARE_ROOT
 
@@ -627,7 +627,7 @@ class AlmgrenChrissModel(TransactionCostModel):
 
     def _calculate_market_impact(
         self, order: OrderSpecification, market_data: MarketData
-    ) -> Tuple[Decimal, float]:
+    ) -> tuple[Decimal, float]:
         """
         Calculate Almgren-Chriss market impact.
 
@@ -663,7 +663,7 @@ class AlmgrenChrissModel(TransactionCostModel):
         return Decimal(str(total_impact)).quantize(Decimal("0.01")), participation_rate
 
 
-def get_transaction_cost_model(config: Dict[str, Any]) -> TransactionCostModel:
+def get_transaction_cost_model(config: dict[str, Any]) -> TransactionCostModel:
     """
     Factory function to create transaction cost models.
 
@@ -684,15 +684,15 @@ def get_transaction_cost_model(config: Dict[str, Any]) -> TransactionCostModel:
 
 
 __all__ = [
+    "AlmgrenChrissModel",
+    "CommissionModel",
+    "CostAnalysis",
+    "CostBreakdown",
     "CostComponent",
-    "MarketImpactModel",
     "ExecutionAlgorithm",
     "MarketData",
+    "MarketImpactModel",
     "OrderSpecification",
-    "CostBreakdown",
-    "CostAnalysis",
     "TransactionCostModel",
-    "CommissionModel",
-    "AlmgrenChrissModel",
     "get_transaction_cost_model",
 ]

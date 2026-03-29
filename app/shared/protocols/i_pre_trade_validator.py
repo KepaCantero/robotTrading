@@ -1,6 +1,7 @@
 """
 Pre-trade validation protocols (R1, R2, R4)
 """
+
 from decimal import Decimal
 from typing import Optional, Protocol
 

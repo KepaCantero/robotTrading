@@ -13,13 +13,13 @@ from app.services.capital.phase_config import (
 )
 
 __all__ = [
-    # Main manager
-    "CapitalPhaseManager",
-    # Configuration
-    "CapitalPhase",
-    "PhaseRiskParameters",
     "PHASE_CONFIGS",
     "PHASE_THRESHOLDS",
+    # Configuration
+    "CapitalPhase",
     # Events
     "CapitalPhaseEvent",
+    # Main manager
+    "CapitalPhaseManager",
+    "PhaseRiskParameters",
 ]

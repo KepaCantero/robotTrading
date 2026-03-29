@@ -5,6 +5,7 @@ Valida que el tamano de la posicion no exceda:
 - Kelly Criterion calculado
 - 2% maximo del capital
 """
+
 import logging
 from dataclasses import dataclass
 from decimal import Decimal

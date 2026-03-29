@@ -11,7 +11,6 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from decimal import Decimal
 from enum import Enum
-from typing import Dict, List, Optional
 
 
 class AssetClass(str, Enum):
@@ -58,7 +57,7 @@ class FXCorrelationPair:
     correlation: Decimal
     p_value: Decimal
     lookback_days: int
-    calculated_at: Optional[datetime] = None
+    calculated_at: datetime | None = None
 
     @property
     def is_significant(self) -> bool:
@@ -105,7 +104,7 @@ class IntermarketRelationship:
     beta: Decimal
     significance: Decimal
     lookback_days: int
-    last_updated: Optional[datetime] = None
+    last_updated: datetime | None = None
 
     @property
     def is_actionable(self) -> bool:
@@ -138,7 +137,7 @@ class IntermarketSignal:
     relationship: IntermarketRelationship
     trigger_move: Decimal
     timestamp: datetime
-    expiry: Optional[datetime] = None
+    expiry: datetime | None = None
 
     @property
     def is_valid(self) -> bool:
@@ -180,7 +179,7 @@ class FXIntermarketConfig:
     signal_threshold: Decimal = Decimal("0.005")
     max_relationships: int = 10
     update_frequency: int = 24
-    monitored_assets: Dict[AssetClass, List[str]] = field(
+    monitored_assets: dict[AssetClass, list[str]] = field(
         default_factory=lambda: {
             AssetClass.EQUITY: ["SPX", "NDX", "DAX", "NKY"],
             AssetClass.COMMODITY: ["XAU", "XAG", "OIL", "GAS"],

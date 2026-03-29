@@ -21,12 +21,14 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from decimal import Decimal
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import TYPE_CHECKING, Any
 
 import numpy as np
-import pandas as pd
 
 from app.domain.models.signal import Signal, SignalSource, SignalStrength, SignalType
+
+if TYPE_CHECKING:
+    import pandas as pd
 
 logger = logging.getLogger(__name__)
 
@@ -73,9 +75,9 @@ class AlphaSignal:
     expected_return: float  # Expected return in basis points
     holding_period_days: int  # Expected holding period
     decay_regime: AlphaDecayRegime
-    decay_half_life: Optional[int] = None  # Days until alpha loses half its value
+    decay_half_life: int | None = None  # Days until alpha loses half its value
     timestamp: datetime = field(default_factory=datetime.now)
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
     def to_signal(self, price: Decimal) -> Signal:
         """Convert AlphaSignal to trading Signal."""
@@ -133,7 +135,7 @@ class AlphaDecayMetrics:
     decay_regime: AlphaDecayRegime
     half_life_days: float
     decay_rate: float  # For exponential decay
-    predictive_power_by_day: Dict[int, float]  # Day -> R²
+    predictive_power_by_day: dict[int, float]  # Day -> R²
     is_significant: bool  # Whether alpha is statistically significant
 
 
@@ -149,20 +151,20 @@ class AlphaModel(ABC):
     4. Track alpha decay characteristics
     """
 
-    def __init__(self, config: Dict[str, Any]):
+    def __init__(self, config: dict[str, Any]):
         self.config = config
         self.name = config.get("name", self.__class__.__name__)
         self.alpha_type = AlphaType(config.get("alpha_type", "momentum"))
         self.min_confidence = config.get("min_confidence", 0.6)
         self.min_holding_period = config.get("min_holding_period", 1)
         self.max_holding_period = config.get("max_holding_period", 30)
-        self.signal_history: List[AlphaSignal] = []
-        self.performance_history: List[Dict[str, Any]] = []
+        self.signal_history: list[AlphaSignal] = []
+        self.performance_history: list[dict[str, Any]] = []
 
     @abstractmethod
     def generate_alpha(
         self, symbol: str, market_data: pd.DataFrame, timestamp: datetime
-    ) -> Optional[AlphaSignal]:
+    ) -> AlphaSignal | None:
         """
         Generate alpha signal for a symbol.
 
@@ -176,8 +178,8 @@ class AlphaModel(ABC):
         """
 
     def generate_multi_alpha(
-        self, symbols: List[str], market_data: Dict[str, pd.DataFrame], timestamp: datetime
-    ) -> List[AlphaSignal]:
+        self, symbols: list[str], market_data: dict[str, pd.DataFrame], timestamp: datetime
+    ) -> list[AlphaSignal]:
         """Generate alpha signals for multiple symbols."""
         signals = []
         for symbol in symbols:
@@ -194,9 +196,9 @@ class AlphaModel(ABC):
         self,
         symbol: str,
         realized_returns: pd.Series,
-        signal_dates: List[datetime],
+        signal_dates: list[datetime],
         min_observations: int = 30,
-    ) -> Optional[AlphaDecayMetrics]:
+    ) -> AlphaDecayMetrics | None:
         """
         Analyze how alpha decays over time after signal generation.
 
@@ -257,7 +259,7 @@ class AlphaModel(ABC):
             is_significant=max(predictive_power.values()) > 0.1 if predictive_power else False,
         )
 
-    def _determine_decay_regime(self, predictive_power: Dict[int, float]) -> AlphaDecayRegime:
+    def _determine_decay_regime(self, predictive_power: dict[int, float]) -> AlphaDecayRegime:
         """Determine the decay regime based on predictive power pattern."""
         if not predictive_power:
             return AlphaDecayRegime.NONE
@@ -287,7 +289,7 @@ class AlphaModel(ABC):
         # Default to linear
         return AlphaDecayRegime.LINEAR
 
-    def _calculate_half_life(self, predictive_power: Dict[int, float]) -> float:
+    def _calculate_half_life(self, predictive_power: dict[int, float]) -> float:
         """Calculate half-life in days (time until predictive power halves)."""
         if not predictive_power:
             return 0.0
@@ -303,7 +305,7 @@ class AlphaModel(ABC):
         # If never drops below half, return max day
         return float(max(predictive_power.keys()))
 
-    def _calculate_decay_rate(self, predictive_power: Dict[int, float]) -> float:
+    def _calculate_decay_rate(self, predictive_power: dict[int, float]) -> float:
         """Calculate decay rate for exponential decay."""
         if not predictive_power or len(predictive_power) < 3:
             return 0.0
@@ -334,7 +336,7 @@ class AlphaModel(ABC):
             return 0.0
 
     def get_optimal_holding_period(
-        self, decay_metrics: Optional[AlphaDecayMetrics], default_days: int = 5
+        self, decay_metrics: AlphaDecayMetrics | None, default_days: int = 5
     ) -> int:
         """
         Determine optimal holding period based on alpha decay.
@@ -360,15 +362,15 @@ class AlphaModel(ABC):
             sorted_days = sorted(decay_metrics.predictive_power_by_day.items())
             for i in range(len(sorted_days) - 1):
                 day, power = sorted_days[i]
-                next_day, next_power = sorted_days[i + 1]
+                _next_day, next_power = sorted_days[i + 1]
                 if next_power < power * 0.7:  # Significant drop
                     return max(self.min_holding_period, day - 1)
 
         return default_days
 
     def combine_alpha_signals(
-        self, signals: List[AlphaSignal], method: str = "weighted"
-    ) -> Optional[AlphaSignal]:
+        self, signals: list[AlphaSignal], method: str = "weighted"
+    ) -> AlphaSignal | None:
         """
         Combine multiple alpha signals into one.
 
@@ -391,7 +393,7 @@ class AlphaModel(ABC):
         else:
             return self._weighted_combine(signals)
 
-    def _voting_combine(self, signals: List[AlphaSignal]) -> Optional[AlphaSignal]:
+    def _voting_combine(self, signals: list[AlphaSignal]) -> AlphaSignal | None:
         """Combine signals by voting."""
         # Count votes for long vs short
         long_votes = sum(1 for s in signals if s.direction == SignalType.BUY)
@@ -421,7 +423,7 @@ class AlphaModel(ABC):
             metadata={"combined_from": len(signals)},
         )
 
-    def _weighted_combine(self, signals: List[AlphaSignal]) -> Optional[AlphaSignal]:
+    def _weighted_combine(self, signals: list[AlphaSignal]) -> AlphaSignal | None:
         """Combine signals by weighting by confidence."""
         # Separate long and short signals
         long_signals = [s for s in signals if s.direction == SignalType.BUY]
@@ -470,14 +472,14 @@ class AlphaModel(ABC):
 class MomentumAlphaModel(AlphaModel):
     """Momentum-based alpha model."""
 
-    def __init__(self, config: Dict[str, Any]):
+    def __init__(self, config: dict[str, Any]):
         super().__init__(config)
         self.lookback_period = config.get("lookback_period", 20)
         self.alpha_type = AlphaType.MOMENTUM
 
     def generate_alpha(
         self, symbol: str, market_data: pd.DataFrame, timestamp: datetime
-    ) -> Optional[AlphaSignal]:
+    ) -> AlphaSignal | None:
         """Generate momentum alpha signal."""
         if len(market_data) < self.lookback_period:
             return None
@@ -530,7 +532,7 @@ class MomentumAlphaModel(AlphaModel):
 class MeanReversionAlphaModel(AlphaModel):
     """Mean reversion alpha model."""
 
-    def __init__(self, config: Dict[str, Any]):
+    def __init__(self, config: dict[str, Any]):
         super().__init__(config)
         self.lookback_period = config.get("lookback_period", 20)
         self.z_score_threshold = config.get("z_score_threshold", 2.0)
@@ -538,7 +540,7 @@ class MeanReversionAlphaModel(AlphaModel):
 
     def generate_alpha(
         self, symbol: str, market_data: pd.DataFrame, timestamp: datetime
-    ) -> Optional[AlphaSignal]:
+    ) -> AlphaSignal | None:
         """Generate mean reversion alpha signal."""
         if len(market_data) < self.lookback_period:
             return None
@@ -593,9 +595,9 @@ class MeanReversionAlphaModel(AlphaModel):
 class MultiFactorAlphaModel(AlphaModel):
     """Combines multiple alpha sources for robustness."""
 
-    def __init__(self, config: Dict[str, Any]):
+    def __init__(self, config: dict[str, Any]):
         super().__init__(config)
-        self.sub_models: List[AlphaModel] = []
+        self.sub_models: list[AlphaModel] = []
         self.alpha_type = AlphaType.MACHINE_LEARNING
         self.combination_method = config.get("combination_method", "weighted")
 
@@ -605,7 +607,7 @@ class MultiFactorAlphaModel(AlphaModel):
 
     def generate_alpha(
         self, symbol: str, market_data: pd.DataFrame, timestamp: datetime
-    ) -> Optional[AlphaSignal]:
+    ) -> AlphaSignal | None:
         """Generate combined alpha from all sub-models."""
         if not self.sub_models:
             return None
@@ -618,7 +620,7 @@ class MultiFactorAlphaModel(AlphaModel):
                 if signal:
                     signals.append(signal)
             except (ValueError, TypeError, KeyError, IndexError, AttributeError) as e:
-                logger.error(f"Error in sub-model {model.name}: {str(e)}", exc_info=True)
+                logger.error(f"Error in sub-model {model.name}: {e!s}", exc_info=True)
 
         if not signals:
             return None
@@ -627,7 +629,7 @@ class MultiFactorAlphaModel(AlphaModel):
         return self.combine_alpha_signals(signals, method=self.combination_method)
 
 
-def get_alpha_model(config: Dict[str, Any]) -> AlphaModel:
+def get_alpha_model(config: dict[str, Any]) -> AlphaModel:
     """
     Factory function to create alpha models.
 
@@ -650,13 +652,13 @@ def get_alpha_model(config: Dict[str, Any]) -> AlphaModel:
 
 
 __all__ = [
-    "AlphaType",
-    "AlphaDecayRegime",
-    "AlphaSignal",
     "AlphaDecayMetrics",
+    "AlphaDecayRegime",
     "AlphaModel",
-    "MomentumAlphaModel",
+    "AlphaSignal",
+    "AlphaType",
     "MeanReversionAlphaModel",
+    "MomentumAlphaModel",
     "MultiFactorAlphaModel",
     "get_alpha_model",
 ]

@@ -17,12 +17,14 @@ Date: 2026-02-03
 from __future__ import annotations
 
 import logging
-from datetime import datetime
-from decimal import Decimal
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import TYPE_CHECKING, Any
 
 from app.domain.services.compliance.results import PostTradeCheckResult
 from app.domain.services.compliance.service_registry import get_service_registry
+
+if TYPE_CHECKING:
+    from datetime import datetime
+    from decimal import Decimal
 
 logger = logging.getLogger(__name__)
 
@@ -49,7 +51,7 @@ class PostTradeComplianceChecker:
     def __init__(self) -> None:
         """Initialize the post-trade checker with service registry."""
         self._registry = get_service_registry()
-        self._cache: Dict[str, Any] = {}
+        self._cache: dict[str, Any] = {}
 
     # =========================================================================
     # MAIN CHECK METHOD
@@ -62,12 +64,12 @@ class PostTradeComplianceChecker:
         side: str,
         quantity: Decimal,
         execution_price: Decimal,
-        signal_price: Optional[Decimal] = None,
-        signal_time: Optional[datetime] = None,
-        submission_time: Optional[datetime] = None,
-        execution_time: Optional[datetime] = None,
-        nbbo_at_execution: Optional[Tuple[Decimal, Decimal]] = None,
-        **kwargs: Union[str, int, float, bool, Dict, List],  # Extension point for additional params
+        signal_price: Decimal | None = None,
+        signal_time: datetime | None = None,
+        submission_time: datetime | None = None,
+        execution_time: datetime | None = None,
+        nbbo_at_execution: tuple[Decimal, Decimal] | None = None,
+        **kwargs: str | int | float | bool | dict | list,  # Extension point for additional params
     ) -> PostTradeCheckResult:
         """
         Perform comprehensive post-trade analysis using all available services.
@@ -140,11 +142,11 @@ class PostTradeComplianceChecker:
         side: str,
         quantity: Decimal,
         execution_price: Decimal,
-        signal_price: Optional[Decimal],
-        signal_time: Optional[datetime],
-        submission_time: Optional[datetime],
-        execution_time: Optional[datetime],
-        nbbo_at_execution: Optional[Tuple[Decimal, Decimal]],
+        signal_price: Decimal | None,
+        signal_time: datetime | None,
+        submission_time: datetime | None,
+        execution_time: datetime | None,
+        nbbo_at_execution: tuple[Decimal, Decimal] | None,
         result: PostTradeCheckResult,
     ) -> None:
         """Analyze Harris execution quality."""
@@ -184,7 +186,7 @@ class PostTradeComplianceChecker:
         latency_ms: float,
         fill_rate: float = 100.0,
         error_occurred: bool = False,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Track SLO compliance using Google SRE methods.
 
@@ -237,7 +239,7 @@ class PostTradeComplianceChecker:
     # UTILITY METHODS
     # =========================================================================
 
-    def get_available_analyses(self) -> List[str]:
+    def get_available_analyses(self) -> list[str]:
         """Get list of available post-trade analyses."""
         analyses = []
 
@@ -279,7 +281,7 @@ class PostTradeComplianceChecker:
     def calculate_effective_spread(
         self,
         execution_price: Decimal,
-        nbbo: Tuple[Decimal, Decimal],
+        nbbo: tuple[Decimal, Decimal],
     ) -> float:
         """
         Calculate effective spread in basis points.

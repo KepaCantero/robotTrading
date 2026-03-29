@@ -8,7 +8,6 @@ including returns, volatility, and various performance ratios.
 import statistics
 from datetime import datetime, timedelta
 from decimal import Decimal
-from typing import List
 
 
 class PerformanceCalculations:
@@ -47,7 +46,7 @@ class PerformanceCalculations:
         delta = period_map.get(period_value, timedelta(days=30))
         return end_date - delta
 
-    def calculate_returns(self, values: List[Decimal]) -> List[Decimal]:
+    def calculate_returns(self, values: list[Decimal]) -> list[Decimal]:
         """
         Calculate period-over-period returns from portfolio values.
 
@@ -68,7 +67,7 @@ class PerformanceCalculations:
 
         return returns
 
-    def calculate_total_return(self, values: List[Decimal]) -> Decimal:
+    def calculate_total_return(self, values: list[Decimal]) -> Decimal:
         """
         Calculate total return over the entire period.
 
@@ -83,7 +82,7 @@ class PerformanceCalculations:
 
         return (values[-1] - values[0]) / values[0] * 100
 
-    def calculate_annualized_return(self, returns: List[Decimal], period_value: str) -> Decimal:
+    def calculate_annualized_return(self, returns: list[Decimal], period_value: str) -> Decimal:
         """
         Calculate annualized return from period returns.
 
@@ -110,7 +109,7 @@ class PerformanceCalculations:
 
         return avg_return * factor * 100
 
-    def calculate_cumulative_return(self, returns: List[Decimal]) -> Decimal:
+    def calculate_cumulative_return(self, returns: list[Decimal]) -> Decimal:
         """
         Calculate cumulative return from period returns.
 
@@ -129,7 +128,7 @@ class PerformanceCalculations:
 
         return (cumulative - 1) * 100
 
-    def calculate_volatility(self, returns: List[Decimal]) -> Decimal:
+    def calculate_volatility(self, returns: list[Decimal]) -> Decimal:
         """
         Calculate volatility (standard deviation of returns).
 
@@ -147,7 +146,7 @@ class PerformanceCalculations:
 
         return (variance ** Decimal("0.5")) * 100
 
-    def calculate_sharpe_ratio(self, returns: List[Decimal]) -> Decimal:
+    def calculate_sharpe_ratio(self, returns: list[Decimal]) -> Decimal:
         """
         Calculate Sharpe ratio (risk-adjusted return).
 
@@ -172,7 +171,7 @@ class PerformanceCalculations:
         sharpe = excess_return / volatility
         return max(min(sharpe, Decimal("10")), Decimal("-10"))
 
-    def calculate_sortino_ratio(self, returns: List[Decimal]) -> Decimal:
+    def calculate_sortino_ratio(self, returns: list[Decimal]) -> Decimal:
         """
         Calculate Sortino ratio (downside risk-adjusted return).
 
@@ -198,7 +197,7 @@ class PerformanceCalculations:
 
         return (avg_return - self._risk_free_rate / 252) / downside_deviation
 
-    def calculate_max_drawdown(self, values: List[Decimal]) -> Decimal:
+    def calculate_max_drawdown(self, values: list[Decimal]) -> Decimal:
         """
         Calculate maximum drawdown from peak.
 
@@ -224,7 +223,7 @@ class PerformanceCalculations:
 
         return max_dd * 100
 
-    def calculate_var(self, returns: List[Decimal], confidence: float) -> Decimal:
+    def calculate_var(self, returns: list[Decimal], confidence: float) -> Decimal:
         """
         Calculate Value at Risk at given confidence level.
 
@@ -262,7 +261,7 @@ class PerformanceCalculations:
 
         return annualized_return / abs(max_drawdown)
 
-    def calculate_information_ratio(self, returns: List[Decimal]) -> Decimal:
+    def calculate_information_ratio(self, returns: list[Decimal]) -> Decimal:
         """
         Calculate Information ratio vs benchmark.
 
@@ -287,7 +286,7 @@ class PerformanceCalculations:
         info_ratio = excess_return / tracking_error
         return max(min(info_ratio, Decimal("10")), Decimal("-10"))
 
-    def calculate_treynor_ratio(self, returns: List[Decimal], beta: Decimal) -> Decimal:
+    def calculate_treynor_ratio(self, returns: list[Decimal], beta: Decimal) -> Decimal:
         """
         Calculate Treynor ratio (excess return / beta).
 
@@ -306,7 +305,7 @@ class PerformanceCalculations:
         treynor = (avg_return - self._risk_free_rate / 252) / beta
         return max(min(treynor, Decimal("10")), Decimal("-10"))
 
-    def calculate_jensen_alpha(self, returns: List[Decimal], beta: Decimal) -> Decimal:
+    def calculate_jensen_alpha(self, returns: list[Decimal], beta: Decimal) -> Decimal:
         """
         Calculate Jensen's alpha.
 
@@ -328,7 +327,7 @@ class PerformanceCalculations:
         )
         return max(min(alpha, Decimal("1")), Decimal("-1"))
 
-    def calculate_tracking_error(self, returns: List[Decimal]) -> Decimal:
+    def calculate_tracking_error(self, returns: list[Decimal]) -> Decimal:
         """
         Calculate tracking error vs benchmark.
 
@@ -346,7 +345,7 @@ class PerformanceCalculations:
 
         return self.calculate_volatility(excess_returns) / 100
 
-    def calculate_realized_volatility(self, returns: List[Decimal]) -> Decimal:
+    def calculate_realized_volatility(self, returns: list[Decimal]) -> Decimal:
         """
         Calculate realized volatility.
 

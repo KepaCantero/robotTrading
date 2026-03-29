@@ -10,7 +10,7 @@ import asyncio
 import logging
 from datetime import datetime
 from enum import Enum
-from typing import Any, Callable, Dict, Optional
+from typing import Any, Callable, Optional
 
 from app.services.centralized_logging import LogLevel, LogService, centralized_logger
 from app.shared.config.centralized_config import get_config
@@ -21,7 +21,7 @@ from app.shared.exceptions.trading_exceptions import (
     NetworkError,
     PerformanceError,
     RiskManagementError,
-    SystemError,
+    TradingSystemError,
     ValidationError,
 )
 
@@ -71,10 +71,10 @@ class TradingErrorHandler:
     def __init__(self):
         self.logger = logging.getLogger(__name__)
         self.config = get_config()
-        self.error_counts: Dict[str, int] = {}
-        self.circuit_breakers: Dict[str, bool] = {}
-        self.last_error_times: Dict[str, datetime] = {}
-        self.retry_counts: Dict[str, int] = {}
+        self.error_counts: dict[str, int] = {}
+        self.circuit_breakers: dict[str, bool] = {}
+        self.last_error_times: dict[str, datetime] = {}
+        self.retry_counts: dict[str, int] = {}
 
         # Error handling rules
         self.error_rules = self._initialize_error_rules()
@@ -87,7 +87,7 @@ class TradingErrorHandler:
             "market_data_fetch_ms": 500,
         }
 
-    def _initialize_error_rules(self) -> Dict[str, Dict[str, Any]]:
+    def _initialize_error_rules(self) -> dict[str, dict[str, Any]]:
         """Initialize error handling rules."""
         return {
             "signal_generation": {
@@ -196,8 +196,8 @@ class TradingErrorHandler:
         error: Exception,
         context: ErrorContext,
         operation_id: Optional[str] = None,
-        metadata: Optional[Dict[str, Any]] = None,
-    ) -> Dict[str, Any]:
+        metadata: Optional[dict[str, Any]] = None,
+    ) -> dict[str, Any]:
         """
         Handle an error with unified processing.
 
@@ -264,7 +264,7 @@ class TradingErrorHandler:
         operation: Callable,
         context: ErrorContext,
         operation_id: Optional[str] = None,
-        metadata: Optional[Dict[str, Any]] = None,
+        metadata: Optional[dict[str, Any]] = None,
         *args,
         **kwargs,
     ) -> Any:
@@ -292,7 +292,7 @@ class TradingErrorHandler:
             try:
                 # Check circuit breaker
                 if self._is_circuit_breaker_open(context):
-                    raise SystemError(
+                    raise TradingSystemError(
                         f"Circuit breaker is open for {context.value}",
                         component=context.value,
                     )
@@ -325,7 +325,7 @@ class TradingErrorHandler:
         raise last_error
 
     def _convert_to_algotrading_error(
-        self, error: Exception, context: ErrorContext, metadata: Dict[str, Any]
+        self, error: Exception, context: ErrorContext, metadata: dict[str, Any]
     ) -> AlgoTradingError:
         """Convert a generic exception to AlgoTradingError."""
 
@@ -336,7 +336,7 @@ class TradingErrorHandler:
         elif isinstance(error, TimeoutError):
             return PerformanceError(message=str(error), operation=context.value, details=metadata)
         else:
-            return SystemError(
+            return TradingSystemError(
                 message=str(error),
                 component=context.value,
                 details={
@@ -363,7 +363,7 @@ class TradingErrorHandler:
         error: AlgoTradingError,
         context: ErrorContext,
         operation_id: str,
-        metadata: Dict[str, Any],
+        metadata: dict[str, Any],
     ) -> None:
         """Log error using centralized logging."""
 
@@ -406,9 +406,9 @@ class TradingErrorHandler:
         error: AlgoTradingError,
         context: ErrorContext,
         operation_id: str,
-        metadata: Dict[str, Any],
-        rules: Dict[str, Any],
-    ) -> Dict[str, Any]:
+        metadata: dict[str, Any],
+        rules: dict[str, Any],
+    ) -> dict[str, Any]:
         """Execute a specific error handling action."""
 
         if action == ErrorAction.LOG_ONLY:
@@ -440,8 +440,8 @@ class TradingErrorHandler:
         error: AlgoTradingError,
         context: ErrorContext,
         operation_id: str,
-        metadata: Dict[str, Any],
-    ) -> Dict[str, Any]:
+        metadata: dict[str, Any],
+    ) -> dict[str, Any]:
         """Execute fallback mechanism."""
 
         if context == ErrorContext.MARKET_DATA_FETCH:
@@ -468,7 +468,7 @@ class TradingErrorHandler:
 
     async def _check_circuit_breaker(
         self, context: ErrorContext, operation_id: str
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Check circuit breaker status."""
 
         key = f"{context.value}_circuit_breaker"
@@ -482,7 +482,7 @@ class TradingErrorHandler:
 
     async def _check_kill_switch(
         self, error: AlgoTradingError, context: ErrorContext, operation_id: str
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Check if kill switch should be activated."""
 
         # Critical errors in live trading should activate kill switch
@@ -500,8 +500,8 @@ class TradingErrorHandler:
         error: AlgoTradingError,
         context: ErrorContext,
         operation_id: str,
-        metadata: Dict[str, Any],
-    ) -> Dict[str, Any]:
+        metadata: dict[str, Any],
+    ) -> dict[str, Any]:
         """Send alert for critical errors."""
 
         # Only send alerts for high/critical severity errors
@@ -538,8 +538,8 @@ class TradingErrorHandler:
         error: AlgoTradingError,
         context: ErrorContext,
         operation_id: str,
-        metadata: Dict[str, Any],
-    ) -> Dict[str, Any]:
+        metadata: dict[str, Any],
+    ) -> dict[str, Any]:
         """Execute rollback for failed operations."""
 
         if context == ErrorContext.PORTFOLIO_UPDATE:
@@ -586,10 +586,7 @@ class TradingErrorHandler:
             return True
 
         # Risk management violations
-        if isinstance(error, RiskManagementError):
-            return True
-
-        return False
+        return bool(isinstance(error, RiskManagementError))
 
     async def _activate_circuit_breaker(self, context: ErrorContext, operation_id: str) -> None:
         """Activate circuit breaker for a context."""
@@ -661,7 +658,7 @@ class TradingErrorHandler:
         }
         return context_mapping.get(context, LogService.ERROR_HANDLER)
 
-    def get_error_statistics(self) -> Dict[str, Any]:
+    def get_error_statistics(self) -> dict[str, Any]:
         """Get error statistics for monitoring."""
         return {
             "error_counts": self.error_counts.copy(),
@@ -696,8 +693,8 @@ async def handle_trading_error(
     error: Exception,
     context: ErrorContext,
     operation_id: Optional[str] = None,
-    metadata: Optional[Dict[str, Any]] = None,
-) -> Dict[str, Any]:
+    metadata: Optional[dict[str, Any]] = None,
+) -> dict[str, Any]:
     """Handle a trading error with unified processing."""
     return await trading_error_handler.handle_error(error, context, operation_id, metadata)
 
@@ -706,7 +703,7 @@ async def execute_with_retry(
     operation: Callable,
     context: ErrorContext,
     operation_id: Optional[str] = None,
-    metadata: Optional[Dict[str, Any]] = None,
+    metadata: Optional[dict[str, Any]] = None,
     *args,
     **kwargs,
 ) -> Any:
@@ -716,7 +713,7 @@ async def execute_with_retry(
     )
 
 
-def get_error_statistics() -> Dict[str, Any]:
+def get_error_statistics() -> dict[str, Any]:
     """Get current error statistics."""
     return trading_error_handler.get_error_statistics()
 

@@ -26,11 +26,9 @@ import logging
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import TYPE_CHECKING, Any
 
 import numpy as np
-import pandas as pd
-from sklearn.base import BaseEstimator
 from sklearn.ensemble import (
     BaggingClassifier,
     BaggingRegressor,
@@ -43,6 +41,10 @@ from sklearn.ensemble import (
 )
 from sklearn.tree import DecisionTreeRegressor
 from sklearn.utils.validation import check_is_fitted, check_X_y
+
+if TYPE_CHECKING:
+    import pandas as pd
+    from sklearn.base import BaseEstimator
 
 logger = logging.getLogger(__name__)
 
@@ -69,7 +71,7 @@ class EnsembleResult:
     test_score: float
 
     # Individual estimator scores
-    estimator_scores: List[float]
+    estimator_scores: list[float]
 
     # Ensemble performance
     ensemble_improvement: float  # Improvement over best single estimator
@@ -79,9 +81,9 @@ class EnsembleResult:
     model_name: str
 
     # Additional info
-    details: Dict[str, Any] = field(default_factory=dict)
+    details: dict[str, Any] = field(default_factory=dict)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
         return {
             "timestamp": self.timestamp.isoformat(),
@@ -126,7 +128,7 @@ class BoostingConfig:
 class StackingConfig:
     """Configuration for stacking."""
 
-    base_estimators: List[Tuple[str, BaseEstimator]]
+    base_estimators: list[tuple[str, BaseEstimator]]
     meta_estimator: BaseEstimator
     cv: int = 5
     n_jobs: int = -1
@@ -148,11 +150,11 @@ class BaggingEnsemble:
     2. Fit model on each bootstrap sample
     3. Average predictions (regression) or majority vote (classification)
 
-    Variance reduction: Var(f̄) ≈ ρσ² + (1-ρ)σ²/B
+    Variance reduction: Var(f̄) ~ rhosigma^2 + (1-rho)sigma^2/B
 
     Where:
-    - ρ = correlation between predictions
-    - σ² = variance of single predictor
+    - rho = correlation between predictions
+    - sigma^2 = variance of single predictor
     - B = number of bootstrap samples
 
     Reference: ESL Section 8.7
@@ -160,8 +162,8 @@ class BaggingEnsemble:
 
     def __init__(
         self,
-        estimator: Optional[BaseEstimator] = None,
-        config: Optional[BaggingConfig] = None,
+        estimator: BaseEstimator | None = None,
+        config: BaggingConfig | None = None,
     ):
         """
         Initialize Bagging Ensemble.
@@ -176,13 +178,13 @@ class BaggingEnsemble:
         self.config = config
         self.estimator = estimator or DecisionTreeRegressor()
 
-        self.bagger_: Optional[Union[BaggingRegressor, BaggingClassifier]] = None
+        self.bagger_: BaggingRegressor | BaggingClassifier | None = None
 
     def fit(
         self,
-        X: Union[np.ndarray, pd.DataFrame],
-        y: Union[np.ndarray, pd.Series],
-    ) -> "BaggingEnsemble":
+        X: np.ndarray | pd.DataFrame,
+        y: np.ndarray | pd.Series,
+    ) -> BaggingEnsemble:
         """
         Fit bagging ensemble.
 
@@ -201,15 +203,15 @@ class BaggingEnsemble:
 
         return self
 
-    def _get_bagging_class(self, y: np.ndarray) -> type[Union[BaggingClassifier, BaggingRegressor]]:
+    def _get_bagging_class(self, y: np.ndarray) -> type[BaggingClassifier | BaggingRegressor]:
         """Determine bagging class based on target type."""
         if len(np.unique(y)) <= 15:
             return BaggingClassifier
         return BaggingRegressor
 
     def _create_bagger(
-        self, bagging_cls: type[Union[BaggingClassifier, BaggingRegressor]]
-    ) -> Union[BaggingClassifier, BaggingRegressor]:
+        self, bagging_cls: type[BaggingClassifier | BaggingRegressor]
+    ) -> BaggingClassifier | BaggingRegressor:
         """Create bagging estimator with configuration."""
         return bagging_cls(
             estimator=self.estimator,
@@ -222,7 +224,7 @@ class BaggingEnsemble:
             random_state=self.config.random_state,
         )
 
-    def predict(self, X: Union[np.ndarray, pd.DataFrame]) -> np.ndarray:
+    def predict(self, X: np.ndarray | pd.DataFrame) -> np.ndarray:
         """
         Predict using ensemble.
 
@@ -237,8 +239,8 @@ class BaggingEnsemble:
 
     def score(
         self,
-        X: Union[np.ndarray, pd.DataFrame],
-        y: Union[np.ndarray, pd.Series],
+        X: np.ndarray | pd.DataFrame,
+        y: np.ndarray | pd.Series,
     ) -> float:
         """
         Return score.
@@ -248,16 +250,16 @@ class BaggingEnsemble:
             y: Target vector
 
         Returns:
-            Score (R² for regression, accuracy for classification)
+            Score (R^2 for regression, accuracy for classification)
         """
         check_is_fitted(self, ["bagger_"])
         return self.bagger_.score(X, y)
 
     def get_estimator_scores(
         self,
-        X: Union[np.ndarray, pd.DataFrame],
-        y: Union[np.ndarray, pd.Series],
-    ) -> List[float]:
+        X: np.ndarray | pd.DataFrame,
+        y: np.ndarray | pd.Series,
+    ) -> list[float]:
         """
         Get individual estimator scores.
 
@@ -271,7 +273,7 @@ class BaggingEnsemble:
         check_is_fitted(self, ["bagger_"])
         return [estimator.score(X, y) for estimator in self.bagger_.estimators_]
 
-    def get_oob_score(self) -> Optional[float]:
+    def get_oob_score(self) -> float | None:
         """
         Get out-of-bag score.
 
@@ -279,7 +281,7 @@ class BaggingEnsemble:
             OOB score if available, None otherwise
         """
         check_is_fitted(self, ["bagger_"])
-        return getattr(self.bagger_, 'oob_score_', None)
+        return getattr(self.bagger_, "oob_score_", None)
 
 
 class BoostingEnsemble:
@@ -298,24 +300,24 @@ class BoostingEnsemble:
     2. For m = 1 to M:
        a. Fit classifier fₘ(x) with weights wᵢ
        b. Compute weighted error errₘ
-       c. Compute coefficient αₘ
+       c. Compute coefficient alphaₘ
        d. Update weights wᵢ
-    3. Output: F(x) = sign(Σ αₘ fₘ(x))
+    3. Output: F(x) = sign(Sigma alphaₘ fₘ(x))
 
     Algorithm (Gradient Boosting):
     1. Initialize F₀(x)
     2. For m = 1 to M:
        a. Compute pseudo-residuals
        b. Fit weak learner to residuals
-       c. Compute multiplier ρₘ
-       d. Update Fₘ(x) = Fₘ₋₁(x) + ρₘ fₘ(x)
+       c. Compute multiplier rhoₘ
+       d. Update Fₘ(x) = Fₘ₋₁(x) + rhoₘ fₘ(x)
 
     Reference: ESL Chapter 10
     """
 
     def __init__(
         self,
-        config: Optional[BoostingConfig] = None,
+        config: BoostingConfig | None = None,
         task_type: str = "auto",
     ):
         """
@@ -331,13 +333,13 @@ class BoostingEnsemble:
         self.config = config
         self.task_type = task_type
 
-        self.booster_: Optional[Union[GradientBoostingClassifier, GradientBoostingRegressor]] = None
+        self.booster_: GradientBoostingClassifier | GradientBoostingRegressor | None = None
 
     def fit(
         self,
-        X: Union[np.ndarray, pd.DataFrame],
-        y: Union[np.ndarray, pd.Series],
-    ) -> "BoostingEnsemble":
+        X: np.ndarray | pd.DataFrame,
+        y: np.ndarray | pd.Series,
+    ) -> BoostingEnsemble:
         """
         Fit boosting ensemble.
 
@@ -362,9 +364,7 @@ class BoostingEnsemble:
             return "classification" if len(np.unique(y)) <= 15 else "regression"
         return self.task_type
 
-    def _create_booster(
-        self, task: str
-    ) -> Union[GradientBoostingClassifier, GradientBoostingRegressor]:
+    def _create_booster(self, task: str) -> GradientBoostingClassifier | GradientBoostingRegressor:
         """Create gradient booster based on task type."""
         common_params = {
             "n_estimators": self.config.n_estimators,
@@ -378,7 +378,7 @@ class BoostingEnsemble:
             return GradientBoostingClassifier(**common_params)
         return GradientBoostingRegressor(**common_params)
 
-    def predict(self, X: Union[np.ndarray, pd.DataFrame]) -> np.ndarray:
+    def predict(self, X: np.ndarray | pd.DataFrame) -> np.ndarray:
         """
         Predict using ensemble.
 
@@ -391,7 +391,7 @@ class BoostingEnsemble:
         check_is_fitted(self, ["booster_"])
         return self.booster_.predict(X)
 
-    def staged_predict(self, X: Union[np.ndarray, pd.DataFrame]):
+    def staged_predict(self, X: np.ndarray | pd.DataFrame):
         """
         Get staged predictions.
 
@@ -406,8 +406,8 @@ class BoostingEnsemble:
 
     def score(
         self,
-        X: Union[np.ndarray, pd.DataFrame],
-        y: Union[np.ndarray, pd.Series],
+        X: np.ndarray | pd.DataFrame,
+        y: np.ndarray | pd.Series,
     ) -> float:
         """
         Return score.
@@ -452,15 +452,15 @@ class StackingEnsemble:
     1. Train K base models on training data
     2. Use CV to generate meta-features (out-of-fold predictions)
     3. Train meta-model on meta-features
-    4. For prediction: base models predict → meta-model combines
+    4. For prediction: base models predict -> meta-model combines
 
     Reference: ESL Section 8.8
     """
 
     def __init__(
         self,
-        base_estimators: List[Tuple[str, BaseEstimator]],
-        meta_estimator: Optional[BaseEstimator] = None,
+        base_estimators: list[tuple[str, BaseEstimator]],
+        meta_estimator: BaseEstimator | None = None,
         cv: int = 5,
     ):
         """
@@ -475,13 +475,13 @@ class StackingEnsemble:
         self.meta_estimator = meta_estimator
         self.cv = cv
 
-        self.stacker_: Optional[Union[StackingClassifier, StackingRegressor]] = None
+        self.stacker_: StackingClassifier | StackingRegressor | None = None
 
     def fit(
         self,
-        X: Union[np.ndarray, pd.DataFrame],
-        y: Union[np.ndarray, pd.Series],
-    ) -> "StackingEnsemble":
+        X: np.ndarray | pd.DataFrame,
+        y: np.ndarray | pd.Series,
+    ) -> StackingEnsemble:
         """
         Fit stacking ensemble.
 
@@ -515,15 +515,13 @@ class StackingEnsemble:
 
             self.meta_estimator = Ridge()
 
-    def _get_stacking_class(
-        self, y: np.ndarray
-    ) -> type[Union[StackingClassifier, StackingRegressor]]:
+    def _get_stacking_class(self, y: np.ndarray) -> type[StackingClassifier | StackingRegressor]:
         """Get stacking class based on target type."""
         return StackingClassifier if len(np.unique(y)) <= 15 else StackingRegressor
 
     def _create_stacker(
-        self, stacking_cls: type[Union[StackingClassifier, StackingRegressor]]
-    ) -> Union[StackingClassifier, StackingRegressor]:
+        self, stacking_cls: type[StackingClassifier | StackingRegressor]
+    ) -> StackingClassifier | StackingRegressor:
         """Create stacking estimator."""
         return stacking_cls(
             estimators=self.base_estimators,
@@ -531,7 +529,7 @@ class StackingEnsemble:
             cv=self.cv,
         )
 
-    def predict(self, X: Union[np.ndarray, pd.DataFrame]) -> np.ndarray:
+    def predict(self, X: np.ndarray | pd.DataFrame) -> np.ndarray:
         """
         Predict using ensemble.
 
@@ -546,8 +544,8 @@ class StackingEnsemble:
 
     def score(
         self,
-        X: Union[np.ndarray, pd.DataFrame],
-        y: Union[np.ndarray, pd.Series],
+        X: np.ndarray | pd.DataFrame,
+        y: np.ndarray | pd.Series,
     ) -> float:
         """
         Return score.
@@ -564,9 +562,9 @@ class StackingEnsemble:
 
     def get_base_model_scores(
         self,
-        X: Union[np.ndarray, pd.DataFrame],
-        y: Union[np.ndarray, pd.Series],
-    ) -> Dict[str, float]:
+        X: np.ndarray | pd.DataFrame,
+        y: np.ndarray | pd.Series,
+    ) -> dict[str, float]:
         """
         Get individual base model scores.
 
@@ -602,7 +600,7 @@ class RandomForestEnsemble:
        d. Choose best split from m features
 
     Parameter m:
-    - Classification: m = √p
+    - Classification: m = sqrtp
     - Regression: m = p/3
 
     Out-of-bag error: Internal CV estimate using samples not in bootstrap.
@@ -613,7 +611,7 @@ class RandomForestEnsemble:
     def __init__(
         self,
         n_estimators: int = 100,
-        max_depth: Optional[int] = None,
+        max_depth: int | None = None,
         min_samples_split: int = 2,
         max_features: str = "sqrt",
         bootstrap: bool = True,
@@ -639,13 +637,13 @@ class RandomForestEnsemble:
         self.bootstrap = bootstrap
         self.oob_score = oob_score
         self.random_state = random_state
-        self.rf_: Optional[Union[RandomForestClassifier, RandomForestRegressor]] = None
+        self.rf_: RandomForestClassifier | RandomForestRegressor | None = None
 
     def fit(
         self,
-        X: Union[np.ndarray, pd.DataFrame],
-        y: Union[np.ndarray, pd.Series],
-    ) -> "RandomForestEnsemble":
+        X: np.ndarray | pd.DataFrame,
+        y: np.ndarray | pd.Series,
+    ) -> RandomForestEnsemble:
         """
         Fit Random Forest.
 
@@ -664,15 +662,13 @@ class RandomForestEnsemble:
 
         return self
 
-    def _get_rf_class(
-        self, y: np.ndarray
-    ) -> type[Union[RandomForestClassifier, RandomForestRegressor]]:
+    def _get_rf_class(self, y: np.ndarray) -> type[RandomForestClassifier | RandomForestRegressor]:
         """Determine Random Forest class based on target type."""
         return RandomForestClassifier if len(np.unique(y)) <= 15 else RandomForestRegressor
 
     def _create_random_forest(
-        self, rf_cls: type[Union[RandomForestClassifier, RandomForestRegressor]]
-    ) -> Union[RandomForestClassifier, RandomForestRegressor]:
+        self, rf_cls: type[RandomForestClassifier | RandomForestRegressor]
+    ) -> RandomForestClassifier | RandomForestRegressor:
         """Create Random Forest estimator."""
         return rf_cls(
             n_estimators=self.n_estimators,
@@ -684,7 +680,7 @@ class RandomForestEnsemble:
             random_state=self.random_state,
         )
 
-    def predict(self, X: Union[np.ndarray, pd.DataFrame]) -> np.ndarray:
+    def predict(self, X: np.ndarray | pd.DataFrame) -> np.ndarray:
         """
         Predict using ensemble.
 
@@ -699,8 +695,8 @@ class RandomForestEnsemble:
 
     def score(
         self,
-        X: Union[np.ndarray, pd.DataFrame],
-        y: Union[np.ndarray, pd.Series],
+        X: np.ndarray | pd.DataFrame,
+        y: np.ndarray | pd.Series,
     ) -> float:
         """
         Return score.
@@ -725,7 +721,7 @@ class RandomForestEnsemble:
         check_is_fitted(self, ["rf_"])
         return self.rf_.feature_importances_
 
-    def get_oob_score(self) -> Optional[float]:
+    def get_oob_score(self) -> float | None:
         """
         Get out-of-bag score.
 
@@ -733,7 +729,7 @@ class RandomForestEnsemble:
             OOB score if computed, None otherwise
         """
         check_is_fitted(self, ["rf_"])
-        return getattr(self.rf_, 'oob_score_', None)
+        return getattr(self.rf_, "oob_score_", None)
 
 
 class EnsembleAnalyzer:
@@ -758,8 +754,8 @@ class EnsembleAnalyzer:
     def analyze_bagging(
         self,
         estimator: BaseEstimator,
-        X: Union[np.ndarray, pd.DataFrame],
-        y: Union[np.ndarray, pd.Series],
+        X: np.ndarray | pd.DataFrame,
+        y: np.ndarray | pd.Series,
         n_estimators: int = 100,
     ) -> EnsembleResult:
         """
@@ -784,9 +780,7 @@ class EnsembleAnalyzer:
 
         return result
 
-    def _split_data(
-        self, X: Union[np.ndarray, pd.DataFrame], y: Union[np.ndarray, pd.Series]
-    ) -> Tuple:
+    def _split_data(self, X: np.ndarray | pd.DataFrame, y: np.ndarray | pd.Series) -> tuple:
         """Split data into train and test sets."""
         from sklearn.model_selection import train_test_split
 
@@ -795,11 +789,11 @@ class EnsembleAnalyzer:
     def _compute_bagging_scores(
         self,
         bagging: BaggingEnsemble,
-        X_train: Union[np.ndarray, pd.DataFrame],
-        X_test: Union[np.ndarray, pd.DataFrame],
-        y_train: Union[np.ndarray, pd.Series],
-        y_test: Union[np.ndarray, pd.Series],
-    ) -> Dict[str, Any]:
+        X_train: np.ndarray | pd.DataFrame,
+        X_test: np.ndarray | pd.DataFrame,
+        y_train: np.ndarray | pd.Series,
+        y_test: np.ndarray | pd.Series,
+    ) -> dict[str, Any]:
         """Compute bagging scores."""
         return {
             "train": bagging.score(X_train, y_train),
@@ -812,8 +806,8 @@ class EnsembleAnalyzer:
         bagging: BaggingEnsemble,
         estimator: BaseEstimator,
         n_estimators: int,
-        scores: Dict[str, Any],
-        X_test: Union[np.ndarray, pd.DataFrame],
+        scores: dict[str, Any],
+        X_test: np.ndarray | pd.DataFrame,
     ) -> EnsembleResult:
         """Create ensemble result for bagging."""
         result = self._create_ensemble_result(
@@ -831,8 +825,8 @@ class EnsembleAnalyzer:
     def _train_bagging(
         self,
         estimator: BaseEstimator,
-        X: Union[np.ndarray, pd.DataFrame],
-        y: Union[np.ndarray, pd.Series],
+        X: np.ndarray | pd.DataFrame,
+        y: np.ndarray | pd.Series,
         n_estimators: int,
     ) -> BaggingEnsemble:
         """Train bagging ensemble with given estimator."""
@@ -844,14 +838,13 @@ class EnsembleAnalyzer:
     def _log_bagging_result(self, n_estimators: int, test_score: float, improvement: float) -> None:
         """Log bagging analysis results."""
         logger.info(
-            f"Bagging: n={n_estimators}, test_score={test_score:.4f}, "
-            f"improvement={improvement:.4f}"
+            f"Bagging: n={n_estimators}, test_score={test_score:.4f}, improvement={improvement:.4f}"
         )
 
     def analyze_boosting(
         self,
-        X: Union[np.ndarray, pd.DataFrame],
-        y: Union[np.ndarray, pd.Series],
+        X: np.ndarray | pd.DataFrame,
+        y: np.ndarray | pd.Series,
         n_estimators: int = 100,
         learning_rate: float = 0.1,
         max_depth: int = 3,
@@ -900,8 +893,8 @@ class EnsembleAnalyzer:
 
     def _train_boosting(
         self,
-        X: Union[np.ndarray, pd.DataFrame],
-        y: Union[np.ndarray, pd.Series],
+        X: np.ndarray | pd.DataFrame,
+        y: np.ndarray | pd.Series,
         n_estimators: int,
         learning_rate: float,
         max_depth: int,
@@ -918,10 +911,10 @@ class EnsembleAnalyzer:
 
     def analyze_stacking(
         self,
-        base_estimators: List[Tuple[str, BaseEstimator]],
-        X: Union[np.ndarray, pd.DataFrame],
-        y: Union[np.ndarray, pd.Series],
-        meta_estimator: Optional[BaseEstimator] = None,
+        base_estimators: list[tuple[str, BaseEstimator]],
+        X: np.ndarray | pd.DataFrame,
+        y: np.ndarray | pd.Series,
+        meta_estimator: BaseEstimator | None = None,
     ) -> EnsembleResult:
         """
         Analyze stacking ensemble.
@@ -962,10 +955,10 @@ class EnsembleAnalyzer:
 
     def _train_stacking(
         self,
-        base_estimators: List[Tuple[str, BaseEstimator]],
-        X: Union[np.ndarray, pd.DataFrame],
-        y: Union[np.ndarray, pd.Series],
-        meta_estimator: Optional[BaseEstimator],
+        base_estimators: list[tuple[str, BaseEstimator]],
+        X: np.ndarray | pd.DataFrame,
+        y: np.ndarray | pd.Series,
+        meta_estimator: BaseEstimator | None,
     ) -> StackingEnsemble:
         """Train stacking ensemble with given base estimators."""
         stacking = StackingEnsemble(
@@ -986,8 +979,8 @@ class EnsembleAnalyzer:
 
     def _compute_diversity(
         self,
-        ensemble: Union[BaggingEnsemble, RandomForestEnsemble],
-        X: Union[np.ndarray, pd.DataFrame],
+        ensemble: BaggingEnsemble | RandomForestEnsemble,
+        X: np.ndarray | pd.DataFrame,
     ) -> float:
         """
         Compute diversity among ensemble members.
@@ -1013,20 +1006,20 @@ class EnsembleAnalyzer:
         return 1 - np.mean(correlations)
 
     def _get_ensemble_estimators(
-        self, ensemble: Union[BaggingEnsemble, RandomForestEnsemble]
-    ) -> List[BaseEstimator]:
+        self, ensemble: BaggingEnsemble | RandomForestEnsemble
+    ) -> list[BaseEstimator]:
         """Get estimators from fitted ensemble."""
         if hasattr(ensemble, "bagger_"):
             return ensemble.bagger_.estimators_
         return ensemble.rf_.estimators_
 
     def _get_estimator_predictions(
-        self, estimators: List[BaseEstimator], X: Union[np.ndarray, pd.DataFrame]
+        self, estimators: list[BaseEstimator], X: np.ndarray | pd.DataFrame
     ) -> np.ndarray:
         """Get predictions from all estimators."""
         return np.array([estimator.predict(X) for estimator in estimators])
 
-    def _compute_pairwise_correlations(self, predictions: np.ndarray) -> List[float]:
+    def _compute_pairwise_correlations(self, predictions: np.ndarray) -> list[float]:
         """Compute pairwise correlations between predictions."""
         n_estimators = len(predictions)
         correlations = []
@@ -1045,9 +1038,9 @@ class EnsembleAnalyzer:
         n_estimators: int,
         train_score: float,
         test_score: float,
-        estimator_scores: List[float],
+        estimator_scores: list[float],
         model_name: str,
-        details: Dict[str, Any],
+        details: dict[str, Any],
     ) -> EnsembleResult:
         """Create ensemble result with computed metrics."""
         best_single = max(estimator_scores) if estimator_scores else test_score
@@ -1068,12 +1061,12 @@ class EnsembleAnalyzer:
 
     def compare_ensembles(
         self,
-        X: Union[np.ndarray, pd.DataFrame],
-        y: Union[np.ndarray, pd.Series],
-        base_estimator: Optional[BaseEstimator] = None,
-        base_estimators: Optional[List[Tuple[str, BaseEstimator]]] = None,
+        X: np.ndarray | pd.DataFrame,
+        y: np.ndarray | pd.Series,
+        base_estimator: BaseEstimator | None = None,
+        base_estimators: list[tuple[str, BaseEstimator]] | None = None,
         n_estimators: int = 100,
-    ) -> Dict[str, EnsembleResult]:
+    ) -> dict[str, EnsembleResult]:
         """
         Compare different ensemble methods.
 
@@ -1099,7 +1092,7 @@ class EnsembleAnalyzer:
 
         return results
 
-    def _get_default_base_estimators(self) -> List[Tuple[str, BaseEstimator]]:
+    def _get_default_base_estimators(self) -> list[tuple[str, BaseEstimator]]:
         """Get default base estimators for stacking."""
         return [
             ("dt", DecisionTreeRegressor()),
@@ -1109,10 +1102,10 @@ class EnsembleAnalyzer:
     def _safe_analyze_bagging(
         self,
         estimator: BaseEstimator,
-        X: Union[np.ndarray, pd.DataFrame],
-        y: Union[np.ndarray, pd.Series],
+        X: np.ndarray | pd.DataFrame,
+        y: np.ndarray | pd.Series,
         n_estimators: int,
-    ) -> Optional[EnsembleResult]:
+    ) -> EnsembleResult | None:
         """Safely analyze bagging ensemble with error handling."""
         try:
             return self.analyze_bagging(estimator, X, y, n_estimators=n_estimators)
@@ -1121,8 +1114,8 @@ class EnsembleAnalyzer:
             return None
 
     def _safe_analyze_random_forest(
-        self, X: Union[np.ndarray, pd.DataFrame], y: Union[np.ndarray, pd.Series], n_estimators: int
-    ) -> Optional[EnsembleResult]:
+        self, X: np.ndarray | pd.DataFrame, y: np.ndarray | pd.Series, n_estimators: int
+    ) -> EnsembleResult | None:
         """Safely analyze random forest with error handling."""
         try:
             rf = RandomForestEnsemble(n_estimators=n_estimators)
@@ -1144,8 +1137,8 @@ class EnsembleAnalyzer:
             return None
 
     def _safe_analyze_boosting(
-        self, X: Union[np.ndarray, pd.DataFrame], y: Union[np.ndarray, pd.Series], n_estimators: int
-    ) -> Optional[EnsembleResult]:
+        self, X: np.ndarray | pd.DataFrame, y: np.ndarray | pd.Series, n_estimators: int
+    ) -> EnsembleResult | None:
         """Safely analyze boosting ensemble with error handling."""
         try:
             return self.analyze_boosting(X, y, n_estimators=n_estimators)
@@ -1155,10 +1148,10 @@ class EnsembleAnalyzer:
 
     def _safe_analyze_stacking(
         self,
-        base_estimators: List[Tuple[str, BaseEstimator]],
-        X: Union[np.ndarray, pd.DataFrame],
-        y: Union[np.ndarray, pd.Series],
-    ) -> Optional[EnsembleResult]:
+        base_estimators: list[tuple[str, BaseEstimator]],
+        X: np.ndarray | pd.DataFrame,
+        y: np.ndarray | pd.Series,
+    ) -> EnsembleResult | None:
         """Safely analyze stacking ensemble with error handling."""
         try:
             return self.analyze_stacking(base_estimators, X, y)
@@ -1168,10 +1161,10 @@ class EnsembleAnalyzer:
 
 
 def bagging_ensemble(
-    X: Union[np.ndarray, pd.DataFrame],
-    y: Union[np.ndarray, pd.Series],
+    X: np.ndarray | pd.DataFrame,
+    y: np.ndarray | pd.Series,
     n_estimators: int = 100,
-) -> Tuple[BaggingEnsemble, EnsembleResult]:
+) -> tuple[BaggingEnsemble, EnsembleResult]:
     """
     Convenience function for bagging.
 
@@ -1198,10 +1191,10 @@ def bagging_ensemble(
 
 
 def stacking_ensemble(
-    X: Union[np.ndarray, pd.DataFrame],
-    y: Union[np.ndarray, pd.Series],
-    base_estimators: List[Tuple[str, BaseEstimator]],
-) -> Tuple[StackingEnsemble, EnsembleResult]:
+    X: np.ndarray | pd.DataFrame,
+    y: np.ndarray | pd.Series,
+    base_estimators: list[tuple[str, BaseEstimator]],
+) -> tuple[StackingEnsemble, EnsembleResult]:
     """
     Convenience function for stacking.
 

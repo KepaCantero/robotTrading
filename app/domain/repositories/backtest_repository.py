@@ -8,9 +8,10 @@ specifying the implementation. Implementations are in the infrastructure layer.
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import List, Optional
+from typing import TYPE_CHECKING
 
-from ..entities.backtest import Backtest, BacktestStatus, BacktestType
+if TYPE_CHECKING:
+    from ..entities.backtest import Backtest, BacktestStatus, BacktestType
 
 
 class BacktestRepository(ABC):
@@ -31,7 +32,7 @@ class BacktestRepository(ABC):
         """
 
     @abstractmethod
-    def find_by_id(self, backtest_id: str) -> Optional[Backtest]:
+    def find_by_id(self, backtest_id: str) -> Backtest | None:
         """
         Find a backtest by ID.
 
@@ -43,7 +44,7 @@ class BacktestRepository(ABC):
         """
 
     @abstractmethod
-    def find_by_status(self, status: BacktestStatus) -> List[Backtest]:
+    def find_by_status(self, status: BacktestStatus) -> list[Backtest]:
         """
         Find backtests by status.
 
@@ -55,7 +56,7 @@ class BacktestRepository(ABC):
         """
 
     @abstractmethod
-    def find_by_type(self, backtest_type: BacktestType) -> List[Backtest]:
+    def find_by_type(self, backtest_type: BacktestType) -> list[Backtest]:
         """
         Find backtests by type.
 
@@ -67,7 +68,7 @@ class BacktestRepository(ABC):
         """
 
     @abstractmethod
-    def find_all(self, limit: int = 100, offset: int = 0) -> List[Backtest]:
+    def find_all(self, limit: int = 100, offset: int = 0) -> list[Backtest]:
         """
         Find all backtests with pagination.
 
@@ -104,7 +105,7 @@ class BacktestRepository(ABC):
         """
 
     @abstractmethod
-    def get_recent_completed(self, limit: int = 10) -> List[Backtest]:
+    def get_recent_completed(self, limit: int = 10) -> list[Backtest]:
         """
         Get recently completed backtests.
 

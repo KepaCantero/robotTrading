@@ -7,7 +7,7 @@ capital tier, and market conditions.
 
 import logging
 from decimal import Decimal
-from typing import Dict, Optional, Tuple
+from typing import ClassVar, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -17,9 +17,9 @@ class RiskAdjustmentCalculator:
     Calculates position size and leverage adjustments based on strategy feasibility.
 
     Core Logic:
-    - feasibility_ratio >= 1.0: Strategy can meet targets → maintain 100% position
-    - 0.7-1.0: Strategy marginal → scale 70-100% (reduce to improve odds)
-    - < 0.7: Strategy not viable → reject or scale 0-70% (high risk, low confidence)
+    - feasibility_ratio >= 1.0: Strategy can meet targets -> maintain 100% position
+    - 0.7-1.0: Strategy marginal -> scale 70-100% (reduce to improve odds)
+    - < 0.7: Strategy not viable -> reject or scale 0-70% (high risk, low confidence)
 
     Capital tier effects:
     - MICRO: Conservative scaling (smaller positions, tighter stops)
@@ -29,7 +29,7 @@ class RiskAdjustmentCalculator:
     """
 
     # Position scaling multipliers by feasibility ratio
-    POSITION_SCALING = {
+    POSITION_SCALING: ClassVar[dict] = {
         "very_high": (1.3, 1.5),  # >= 1.5: Can increase positions
         "high": (1.0, 1.5),  # 1.0-1.5: Hold or slightly increase
         "acceptable": (0.8, 1.0),  # 0.7-1.0: Scale down slightly
@@ -38,7 +38,7 @@ class RiskAdjustmentCalculator:
     }
 
     # Capital tier multipliers (affect max leverage/position sizing)
-    CAPITAL_TIER_MULTIPLIERS = {
+    CAPITAL_TIER_MULTIPLIERS: ClassVar[dict] = {
         "micro": Decimal("0.5"),  # €1k-€15k: Tight controls
         "small": Decimal("0.75"),  # €15k-€50k: Moderate controls
         "medium": Decimal("1.0"),  # €50k-€250k: Standard controls
@@ -46,7 +46,7 @@ class RiskAdjustmentCalculator:
     }
 
     # Stop loss widening factors (based on volatility/risk_tolerance)
-    STOP_LOSS_WIDENING = {
+    STOP_LOSS_WIDENING: ClassVar[dict] = {
         1: Decimal("0.5"),  # Very tight stops (1% risk tolerance)
         2: Decimal("0.7"),
         3: Decimal("0.9"),
@@ -66,7 +66,7 @@ class RiskAdjustmentCalculator:
         base_position_size: Decimal,
         capital_tier: str,
         risk_tolerance: int = 4,
-    ) -> Tuple[Decimal, str]:
+    ) -> tuple[Decimal, str]:
         """
         Calculate adjusted position size based on feasibility.
 
@@ -88,19 +88,19 @@ class RiskAdjustmentCalculator:
         # Determine scaling category
         if feasibility_ratio >= Decimal("1.5"):
             category = "very_high"
-            scale_min, scale_max = self.POSITION_SCALING["very_high"]
+            _scale_min, _scale_max = self.POSITION_SCALING["very_high"]
         elif feasibility_ratio >= Decimal("1.0"):
             category = "high"
-            scale_min, scale_max = self.POSITION_SCALING["high"]
+            _scale_min, _scale_max = self.POSITION_SCALING["high"]
         elif feasibility_ratio >= Decimal("0.7"):
             category = "acceptable"
-            scale_min, scale_max = self.POSITION_SCALING["acceptable"]
+            _scale_min, _scale_max = self.POSITION_SCALING["acceptable"]
         elif feasibility_ratio >= Decimal("0.5"):
             category = "marginal"
-            scale_min, scale_max = self.POSITION_SCALING["marginal"]
+            _scale_min, _scale_max = self.POSITION_SCALING["marginal"]
         else:
             category = "unviable"
-            scale_min, scale_max = self.POSITION_SCALING["unviable"]
+            _scale_min, _scale_max = self.POSITION_SCALING["unviable"]
 
         # Calculate scale factor
         scale_factor = self._interpolate_scale(
@@ -121,8 +121,8 @@ class RiskAdjustmentCalculator:
 
         # Generate reason
         reason = (
-            f"Feasibility ratio {feasibility_ratio:.2f} ({category}) → "
-            f"scale {final_scale:.2f}x ({capital_tier} tier) → "
+            f"Feasibility ratio {feasibility_ratio:.2f} ({category}) -> "
+            f"scale {final_scale:.2f}x ({capital_tier} tier) -> "
             f"€{scaled_position:,.0f}"
         )
 
@@ -165,7 +165,7 @@ class RiskAdjustmentCalculator:
         capital_tier: str,
         market_volatility: str = "normal",
         risk_tolerance: int = 4,
-    ) -> Tuple[Decimal, str]:
+    ) -> tuple[Decimal, str]:
         """
         Calculate adjusted leverage based on strategy and market conditions.
 
@@ -192,14 +192,14 @@ class RiskAdjustmentCalculator:
         if feasibility_ratio < Decimal("0.7"):
             leverage = base_leverage * Decimal("0.5")
             reason = (
-                f"Low feasibility ({feasibility_ratio:.2f}) → reduce leverage to {leverage:.2f}x"
+                f"Low feasibility ({feasibility_ratio:.2f}) -> reduce leverage to {leverage:.2f}x"
             )
         elif feasibility_ratio < Decimal("1.0"):
             leverage = base_leverage * Decimal("0.75")
-            reason = f"Marginal feasibility ({feasibility_ratio:.2f}) → {leverage:.2f}x leverage"
+            reason = f"Marginal feasibility ({feasibility_ratio:.2f}) -> {leverage:.2f}x leverage"
         else:
             leverage = base_leverage
-            reason = f"Good feasibility ({feasibility_ratio:.2f}) → {leverage:.2f}x leverage"
+            reason = f"Good feasibility ({feasibility_ratio:.2f}) -> {leverage:.2f}x leverage"
 
         # Adjust for market volatility
         if market_volatility == "volatile":
@@ -256,9 +256,9 @@ class RiskAdjustmentCalculator:
         adjusted_stop = min(adjusted_stop, max_stop)
 
         logger.info(
-            f"Stop loss: {recommended_stop_loss_pct:.2%} × "
-            f"{widening_factor:.2f} (risk_tol) × "
-            f"{volatility_multiplier:.2f} (vol) → {adjusted_stop:.2%}"
+            f"Stop loss: {recommended_stop_loss_pct:.2%} * "
+            f"{widening_factor:.2f} (risk_tol) * "
+            f"{volatility_multiplier:.2f} (vol) -> {adjusted_stop:.2%}"
         )
 
         return adjusted_stop
@@ -271,7 +271,7 @@ class RiskAdjustmentCalculator:
         capital_tier: str,
         risk_tolerance: int = 4,
         market_volatility: str = "normal",
-    ) -> Dict[str, any]:
+    ) -> dict[str, any]:
         """
         Calculate both position and leverage adjustments comprehensively.
 
@@ -300,7 +300,7 @@ class RiskAdjustmentCalculator:
             risk_tolerance=risk_tolerance,
         )
 
-        # Calculate capital at risk (position × leverage)
+        # Calculate capital at risk (position * leverage)
         capital_at_risk = position_size * leverage
 
         # Cap at available capital

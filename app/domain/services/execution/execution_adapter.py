@@ -13,7 +13,7 @@ import logging
 from dataclasses import asdict, dataclass
 from datetime import datetime
 from decimal import Decimal
-from typing import TYPE_CHECKING, Any, Dict, Optional
+from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from app.services.live_trading.alert_to_trade_mapper import TradeSignal
@@ -44,11 +44,11 @@ class TradeResultData:
     commission: Decimal
     slippage_bps: Decimal
     signal_price: Decimal
-    error: Optional[str] = None
+    error: str | None = None
 
 
 # Type alias for protocol compatibility (dict is expected by ITradeExecutor)
-TradeResult = Dict[str, Any]
+TradeResult = dict[str, Any]
 
 
 class ExecutionEngineAdapter(ITradeExecutor):
@@ -70,7 +70,7 @@ class ExecutionEngineAdapter(ITradeExecutor):
 
     def __init__(
         self,
-        execution_engine: Optional[PessimisticExecutionEngine] = None,
+        execution_engine: PessimisticExecutionEngine | None = None,
         enable_logging: bool = False,
     ):
         """
@@ -86,13 +86,13 @@ class ExecutionEngineAdapter(ITradeExecutor):
             execution_engine = PessimisticExecutionEngine(config=default_config)
         self.execution_engine = execution_engine
         self.enable_logging = enable_logging
-        self._active_positions: Dict[str, Any] = {}
-        self._order_history: Dict[str, Dict[str, Any]] = {}
+        self._active_positions: dict[str, Any] = {}
+        self._order_history: dict[str, dict[str, Any]] = {}
 
     async def execute_order(
         self,
-        signal: "TradeSignal",
-    ) -> "TradeResult":
+        signal: TradeSignal,
+    ) -> TradeResult:
         """
         Execute order using PessimisticExecutionEngine with realistic delays.
 
@@ -295,7 +295,7 @@ class ExecutionEngineAdapter(ITradeExecutor):
     # Additional methods for enhanced functionality
     # -------------------------------------------------------------------------
 
-    def get_order_history(self) -> Dict[str, Dict[str, Any]]:
+    def get_order_history(self) -> dict[str, dict[str, Any]]:
         """
         Get complete order history.
 
@@ -304,7 +304,7 @@ class ExecutionEngineAdapter(ITradeExecutor):
         """
         return self._order_history.copy()
 
-    def get_execution_stats(self) -> Dict[str, Any]:
+    def get_execution_stats(self) -> dict[str, Any]:
         """
         Get execution statistics.
 

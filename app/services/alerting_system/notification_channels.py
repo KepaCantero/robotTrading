@@ -11,8 +11,12 @@ Supports:
 import asyncio
 import logging
 from abc import ABC, abstractmethod
+from typing import TYPE_CHECKING
 
 from .models import NotificationChannelType, NotificationPayload, NotificationTarget
+
+if TYPE_CHECKING:
+    from types import ModuleType
 
 logger = logging.getLogger(__name__)
 
@@ -82,7 +86,7 @@ class WebhookChannel(NotificationChannel):
                     return True
                 else:
                     logger.warning(
-                        f"Webhook failed: {target.endpoint} " f"(status: {response.status_code})"
+                        f"Webhook failed: {target.endpoint} (status: {response.status_code})"
                     )
                     return False
 
@@ -119,7 +123,6 @@ class EmailChannel(NotificationChannel):
 
         from email.mime.multipart import MIMEMultipart
         from email.mime.text import MIMEText
-        from types import ModuleType
         from typing import Optional
 
         aiosmtplib: Optional[ModuleType] = None
@@ -162,7 +165,7 @@ Message: {payload.message}
 
 Metric: {payload.metric_name}
 Value: {payload.metric_value}
-Symbol: {payload.symbol or 'N/A'}
+Symbol: {payload.symbol or "N/A"}
 
 ---
 This is an automated alert from the AlgoTrading system.
@@ -198,7 +201,7 @@ This is an automated alert from the AlgoTrading system.
         <div class="metric">
             <p><strong>Metric:</strong> {payload.metric_name}</p>
             <p><strong>Value:</strong> {payload.metric_value}</p>
-            <p><strong>Symbol:</strong> {payload.symbol or 'N/A'}</p>
+            <p><strong>Symbol:</strong> {payload.symbol or "N/A"}</p>
         </div>
         <p><strong>Time:</strong> {payload.triggered_at.isoformat()}</p>
     </div>
@@ -411,8 +414,8 @@ class TelegramChannel(NotificationChannel):
 
             # Build message with Markdown formatting
             emoji_map = {
-                "info": "ℹ️",
-                "warning": "⚠️",
+                "info": "i",
+                "warning": "⚠",
                 "critical": "🚨",
             }
             emoji = emoji_map.get(payload.severity.value, "📊")

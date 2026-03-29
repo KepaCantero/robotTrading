@@ -1,6 +1,7 @@
 """
 Logging protocols (R15, R28)
 """
+
 from typing import TYPE_CHECKING, Protocol
 
 if TYPE_CHECKING:

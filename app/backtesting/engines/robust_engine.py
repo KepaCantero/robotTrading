@@ -24,31 +24,31 @@ from dataclasses import dataclass, field
 from datetime import date, datetime
 from decimal import Decimal
 from pathlib import Path
-from typing import TYPE_CHECKING, Callable, Dict, List, Optional, Tuple, Union
+from typing import TYPE_CHECKING, Callable, Optional, Union
 
 import pandas as pd
 
 from app.backtesting.base_engine import BaseBacktestEngine, EngineType
-from app.domain.models.signal import Signal
-from app.domain.strategies.base import BaseStrategy
-from app.services.corporate_actions.handler import CorporateAction
 
 # SINGLE SOURCE OF TRUTH: Import CentralizedConfig
 from app.shared.config.centralized_config import get_config
 
 if TYPE_CHECKING:
     from app.backtesting.robust_engine.look_ahead_validator import ValidationResult
+    from app.domain.models.signal import Signal
+    from app.domain.strategies.base import BaseStrategy
+    from app.services.corporate_actions.handler import CorporateAction
 
 logger = logging.getLogger(__name__)
 
 # Type alias for performance metrics dictionary
-PerformanceMetrics = Dict[str, Optional[Union[float, int]]]
-YearlyBreakdown = Dict[str, Union[float, int, str]]
-RollingMetrics = Dict[str, Union[float, int]]
-SurvivorshipAdjustment = Dict[str, Union[float, int, str]]
-DividendTracker = Dict[str, Union[float, int, str, Decimal]]
-TradeRecord = Dict[str, Union[str, int, float, date, datetime, Decimal]]
-CheckpointData = Dict[str, Union[str, float, int, Dict[str, float], None]]
+PerformanceMetrics = dict[str, Optional[Union[float, int]]]
+YearlyBreakdown = dict[str, Union[float, int, str]]
+RollingMetrics = dict[str, Union[float, int]]
+SurvivorshipAdjustment = dict[str, Union[float, int, str]]
+DividendTracker = dict[str, Union[float, int, str, Decimal]]
+TradeRecord = dict[str, Union[str, int, float, date, datetime, Decimal]]
+CheckpointData = dict[str, Union[str, float, int, dict[str, float], None]]
 
 
 class DecimalEncoder(json.JSONEncoder):
@@ -90,9 +90,9 @@ class RobustBacktestConfig:
     initial_capital: Decimal = field(default=Decimal("100000"))
     start_date: date = field(default_factory=date.today)
     end_date: date = field(default_factory=date.today)
-    commission_per_trade: Optional[Decimal] = field(default=None)
-    slippage_bps: Optional[Decimal] = field(default=None)
-    risk_free_rate: Optional[Decimal] = field(default=None)
+    commission_per_trade: Decimal | None = field(default=None)
+    slippage_bps: Decimal | None = field(default=None)
+    risk_free_rate: Decimal | None = field(default=None)
 
     # Feature flags
     enable_survivorship_correction: bool = field(default=True)
@@ -100,17 +100,17 @@ class RobustBacktestConfig:
     enable_checkpointing: bool = field(default=True)
 
     # Checkpointing
-    checkpoint_dir: Optional[Path] = field(default=None)
+    checkpoint_dir: Path | None = field(default=None)
     checkpoint_frequency: int = field(default=365)
 
     # Memory optimization
     chunk_size_days: int = field(default=365)
 
     # Progress tracking
-    progress_callback: Optional[Callable] = field(default=None)
+    progress_callback: Callable | None = field(default=None)
 
     # Point-in-Time database
-    pit_data_path: Optional[Path] = field(default=None)
+    pit_data_path: Path | None = field(default=None)
     pit_cache_size_mb: int = field(default=100)
 
     # Look-ahead validation
@@ -157,13 +157,13 @@ class RobustBacktestResult:
     """
 
     config: RobustBacktestConfig = field(default_factory=RobustBacktestConfig)
-    performance: Optional[PerformanceMetrics] = field(default=None)
-    equity_curve: List[Tuple[date, Decimal]] = field(default_factory=list)
-    trades: List[TradeRecord] = field(default_factory=list)
-    yearly_breakdown: List[YearlyBreakdown] = field(default_factory=list)
-    rolling_metrics: Optional[RollingMetrics] = field(default=None)
-    survivorship_adjustment: Optional[SurvivorshipAdjustment] = field(default=None)
-    dividend_tracker: Optional[DividendTracker] = field(default=None)
+    performance: PerformanceMetrics | None = field(default=None)
+    equity_curve: list[tuple[date, Decimal]] = field(default_factory=list)
+    trades: list[TradeRecord] = field(default_factory=list)
+    yearly_breakdown: list[YearlyBreakdown] = field(default_factory=list)
+    rolling_metrics: RollingMetrics | None = field(default=None)
+    survivorship_adjustment: SurvivorshipAdjustment | None = field(default=None)
+    dividend_tracker: DividendTracker | None = field(default=None)
     checkpoints_used: int = field(default=0)
     total_duration_seconds: float = field(default=0.0)
 
@@ -217,20 +217,20 @@ class RobustBacktestEngine(BaseBacktestEngine[RobustBacktestConfig, RobustBackte
 
         # State tracking
         self._capital: Decimal = config.initial_capital
-        self._positions: Dict[str, Decimal] = {}
-        self._cost_basis: Dict[str, Decimal] = {}
-        self._trades: List[TradeRecord] = []
-        self._current_date: Optional[date] = config.start_date
+        self._positions: dict[str, Decimal] = {}
+        self._cost_basis: dict[str, Decimal] = {}
+        self._trades: list[TradeRecord] = []
+        self._current_date: date | None = config.start_date
 
         # Checkpointing
-        self._latest_checkpoint: Optional[CheckpointData] = None
+        self._latest_checkpoint: CheckpointData | None = None
         self._checkpoint_count: int = 0
 
         # Validation
-        self._validation_result: Optional[ValidationResult] = None
+        self._validation_result: ValidationResult | None = None
 
         # Timing
-        self._start_time: Optional[datetime] = None
+        self._start_time: datetime | None = None
 
         # Ensure checkpoint directory exists
         if config.enable_checkpointing and config.checkpoint_dir:
@@ -260,10 +260,10 @@ class RobustBacktestEngine(BaseBacktestEngine[RobustBacktestConfig, RobustBackte
 
     def run_backtest(
         self,
-        market_data: Union[pd.DataFrame, List[Signal]],
-        signals: Optional[List[Signal]] = None,
-        start_date: Optional[datetime] = None,
-        end_date: Optional[datetime] = None,
+        market_data: pd.DataFrame | list[Signal],
+        signals: list[Signal] | None = None,
+        start_date: datetime | None = None,
+        end_date: datetime | None = None,
         resume_from_checkpoint: bool = False,
         **kwargs,
     ) -> RobustBacktestResult:
@@ -353,7 +353,7 @@ class RobustBacktestEngine(BaseBacktestEngine[RobustBacktestConfig, RobustBackte
         if self._performance_tracker:
             self._performance_tracker.reset()
 
-    def _convert_to_dataframe(self, data: List[Signal]) -> pd.DataFrame:
+    def _convert_to_dataframe(self, data: list[Signal]) -> pd.DataFrame:
         """Convert list of market data objects to DataFrame."""
         records = []
         for item in data:
@@ -376,7 +376,7 @@ class RobustBacktestEngine(BaseBacktestEngine[RobustBacktestConfig, RobustBackte
 
         return df
 
-    def _split_data_into_chunks(self, data: pd.DataFrame) -> List[pd.DataFrame]:
+    def _split_data_into_chunks(self, data: pd.DataFrame) -> list[pd.DataFrame]:
         """Split data into memory-efficient chunks."""
         chunk_size_days = self.config.chunk_size_days
         chunks = []
@@ -395,9 +395,9 @@ class RobustBacktestEngine(BaseBacktestEngine[RobustBacktestConfig, RobustBackte
 
     def _process_backtest_chunks(
         self,
-        strategy: Optional[BaseStrategy],
+        strategy: BaseStrategy | None,
         market_data: pd.DataFrame,
-        signals: Optional[List[Signal]],
+        signals: list[Signal] | None,
     ) -> None:
         """Process backtest in chunks for memory efficiency."""
         chunks = self._split_data_into_chunks(market_data)
@@ -419,8 +419,8 @@ class RobustBacktestEngine(BaseBacktestEngine[RobustBacktestConfig, RobustBackte
         chunk_idx: int,
         total_chunks: int,
         chunk: pd.DataFrame,
-        strategy: Optional[BaseStrategy],
-        signals: Optional[List[Signal]],
+        strategy: BaseStrategy | None,
+        signals: list[Signal] | None,
     ) -> None:
         """Process a single chunk with progress tracking."""
         chunk_start = datetime.utcnow()
@@ -641,7 +641,7 @@ class RobustBacktestEngine(BaseBacktestEngine[RobustBacktestConfig, RobustBackte
         latest_file = max(checkpoint_files, key=lambda p: p.stat().st_mtime)
 
         try:
-            with open(latest_file, "r") as f:
+            with open(latest_file) as f:
                 data = json.load(f)
 
             self._current_date = (
@@ -663,7 +663,7 @@ class RobustBacktestEngine(BaseBacktestEngine[RobustBacktestConfig, RobustBackte
 
     def _perform_validation(
         self,
-        signals: List[Signal],
+        signals: list[Signal],
         market_data: pd.DataFrame,
     ) -> None:
         """Perform look-ahead bias validation."""
@@ -701,7 +701,7 @@ class RobustBacktestEngine(BaseBacktestEngine[RobustBacktestConfig, RobustBackte
             if self.config.validation_strict_mode:
                 raise ValueError(error_msg)
 
-    def _convert_signals_to_dataframe(self, signals: List[Signal]) -> pd.DataFrame:
+    def _convert_signals_to_dataframe(self, signals: list[Signal]) -> pd.DataFrame:
         """Convert list of signal objects to DataFrame."""
         records = []
         for signal in signals:

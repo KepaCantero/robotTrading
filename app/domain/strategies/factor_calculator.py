@@ -23,7 +23,7 @@ SOLID Principles:
 import logging
 from datetime import datetime
 from decimal import Decimal
-from typing import Dict, List, Optional
+from typing import Optional
 
 import numpy as np
 from scipy import stats
@@ -49,12 +49,12 @@ class FactorCalculator:
             min_samples: Minimum number of samples required for calculation
         """
         self.min_samples = min_samples
-        self.factor_statistics: Dict[str, Dict[str, float]] = {}
+        self.factor_statistics: dict[str, dict[str, float]] = {}
 
     def calculate_factor_scores(
         self,
-        profiles: List[FactorProfile],
-    ) -> Dict[str, FactorScores]:
+        profiles: list[FactorProfile],
+    ) -> dict[str, FactorScores]:
         """
         Calculate factor scores for all profiles.
 
@@ -119,7 +119,7 @@ class FactorCalculator:
 
         return factor_scores_dict
 
-    def _calculate_value_scores(self, profiles: List[FactorProfile]) -> Dict[str, Decimal]:
+    def _calculate_value_scores(self, profiles: list[FactorProfile]) -> dict[str, Decimal]:
         """
         Calculate value factor scores based on book-to-market ratio.
 
@@ -154,7 +154,7 @@ class FactorCalculator:
 
         return {symbol: Decimal(str(z_score)) for symbol, z_score in zip(symbols, z_scores)}
 
-    def _calculate_size_scores(self, profiles: List[FactorProfile]) -> Dict[str, Decimal]:
+    def _calculate_size_scores(self, profiles: list[FactorProfile]) -> dict[str, Decimal]:
         """
         Calculate size factor scores based on market cap.
 
@@ -194,7 +194,7 @@ class FactorCalculator:
             symbol: Decimal(str(size_score)) for symbol, size_score in zip(symbols, size_scores)
         }
 
-    def _calculate_profitability_scores(self, profiles: List[FactorProfile]) -> Dict[str, Decimal]:
+    def _calculate_profitability_scores(self, profiles: list[FactorProfile]) -> dict[str, Decimal]:
         """
         Calculate profitability factor scores.
 
@@ -226,7 +226,7 @@ class FactorCalculator:
 
         return {symbol: Decimal(str(z_score)) for symbol, z_score in zip(symbols, z_scores)}
 
-    def _calculate_investment_scores(self, profiles: List[FactorProfile]) -> Dict[str, Decimal]:
+    def _calculate_investment_scores(self, profiles: list[FactorProfile]) -> dict[str, Decimal]:
         """
         Calculate investment factor scores.
 
@@ -264,7 +264,7 @@ class FactorCalculator:
             symbol: Decimal(str(inv_score)) for symbol, inv_score in zip(symbols, investment_scores)
         }
 
-    def _calculate_momentum_scores(self, profiles: List[FactorProfile]) -> Dict[str, Decimal]:
+    def _calculate_momentum_scores(self, profiles: list[FactorProfile]) -> dict[str, Decimal]:
         """
         Calculate momentum factor scores.
 
@@ -397,7 +397,7 @@ class FactorCalculator:
         except (ValueError, OverflowError):
             return None
 
-    def _store_statistics(self, factor_scores_dict: Dict[str, FactorScores]) -> None:
+    def _store_statistics(self, factor_scores_dict: dict[str, FactorScores]) -> None:
         """Store factor score statistics for analysis."""
         if not factor_scores_dict:
             return
@@ -428,16 +428,16 @@ class FactorCalculator:
                     "count": len(values),
                 }
 
-    def get_factor_statistics(self) -> Dict[str, Dict[str, float]]:
+    def get_factor_statistics(self) -> dict[str, dict[str, float]]:
         """Get stored factor statistics."""
         return self.factor_statistics.copy()
 
     def calculate_predicted_returns(
         self,
-        factor_scores_dict: Dict[str, FactorScores],
-        factor_premiums: Dict[str, float],
+        factor_scores_dict: dict[str, FactorScores],
+        factor_premiums: dict[str, float],
         risk_free_rate: float = 0.02,
-    ) -> Dict[str, Decimal]:
+    ) -> dict[str, Decimal]:
         """
         Calculate predicted returns using factor model.
 
@@ -474,7 +474,7 @@ class FactorCalculator:
         return predicted_returns
 
 
-def get_default_factor_premiums() -> Dict[str, float]:
+def get_default_factor_premiums() -> dict[str, float]:
     """
     Get default factor premiums based on historical research.
 

@@ -4,6 +4,7 @@ Multi-Asset Portfolio Manager.
 This module provides the main portfolio management functionality for multi-asset
 portfolios, including construction, rebalancing, and risk management.
 """
+
 # mypy: ignore-errors
 
 from __future__ import annotations
@@ -12,7 +13,7 @@ import logging
 from dataclasses import dataclass
 from datetime import datetime
 from decimal import Decimal
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 
 import numpy as np
 import pandas as pd
@@ -51,7 +52,7 @@ class MultiAssetConfig(BaseModel):
         str_strip_whitespace=True,
     )
 
-    asset_classes: List[AssetClassConfig] = Field(
+    asset_classes: list[AssetClassConfig] = Field(
         ..., min_length=1, description="Asset class configurations"
     )
     rebalance_threshold: Decimal = Field(
@@ -80,7 +81,7 @@ class MultiAssetConfig(BaseModel):
         default=Decimal("0.20"), ge=Decimal("0"), le=Decimal("0.5"), description="Max tactical tilt"
     )
     currency: str = Field(default="USD", description="Portfolio base currency")
-    metadata: Dict[str, Any] = Field(default_factory=dict, description="Additional metadata")
+    metadata: dict[str, Any] = Field(default_factory=dict, description="Additional metadata")
 
     @field_validator("max_position_size")
     @classmethod
@@ -94,7 +95,7 @@ class MultiAssetConfig(BaseModel):
 
     @field_validator("asset_classes")
     @classmethod
-    def validate_asset_classes(cls, v: List[AssetClassConfig]) -> List[AssetClassConfig]:
+    def validate_asset_classes(cls, v: list[AssetClassConfig]) -> list[AssetClassConfig]:
         """Validate asset class configurations."""
         names = [ac.name for ac in v]
         if len(names) != len(set(names)):
@@ -121,12 +122,12 @@ class PortfolioConstructionResult:
         error: Error message if unsuccessful
     """
 
-    portfolio: Optional[MultiAssetPortfolio]
-    metrics: Optional[PortfolioMetrics]
-    trades: List[Trade]
-    warnings: List[str]
+    portfolio: MultiAssetPortfolio | None
+    metrics: PortfolioMetrics | None
+    trades: list[Trade]
+    warnings: list[str]
     success: bool
-    error: Optional[str] = None
+    error: str | None = None
 
 
 @dataclass
@@ -144,13 +145,13 @@ class RebalanceResult:
         error: Error message if unsuccessful
     """
 
-    trades: List[Trade]
+    trades: list[Trade]
     total_cost: Decimal
-    pre_rebalance_weights: Dict[str, Decimal]
-    post_rebalance_weights: Dict[str, Decimal]
-    warnings: List[str]
+    pre_rebalance_weights: dict[str, Decimal]
+    post_rebalance_weights: dict[str, Decimal]
+    warnings: list[str]
     success: bool
-    error: Optional[str] = None
+    error: str | None = None
 
 
 class MultiAssetPortfolioManager:
@@ -184,7 +185,7 @@ class MultiAssetPortfolioManager:
             config: Portfolio configuration
         """
         self.config = config
-        self.asset_classes: Dict[str, AssetClass] = {}
+        self.asset_classes: dict[str, AssetClass] = {}
         self._initialize_asset_classes()
 
     def _initialize_asset_classes(self) -> None:
@@ -197,8 +198,8 @@ class MultiAssetPortfolioManager:
 
     def construct_portfolio(
         self,
-        target_weights: Dict[str, Decimal],
-        market_data: Dict[str, pd.DataFrame],
+        target_weights: dict[str, Decimal],
+        market_data: dict[str, pd.DataFrame],
         strategy: str = "equal_weight",
     ) -> PortfolioConstructionResult:
         """
@@ -221,7 +222,7 @@ class MultiAssetPortfolioManager:
         Returns:
             PortfolioConstructionResult with portfolio and metadata
         """
-        warnings: List[str] = []
+        warnings: list[str] = []
 
         try:
             # Step 1: Validate target weights
@@ -231,7 +232,7 @@ class MultiAssetPortfolioManager:
             available_classes = self._get_available_asset_classes(target_weights)
 
             # Step 3: Create allocations for each asset class
-            allocations: Dict[str, MultiAssetAllocation] = {}
+            allocations: dict[str, MultiAssetAllocation] = {}
 
             for class_name, weight in target_weights.items():
                 if class_name not in available_classes:
@@ -257,7 +258,7 @@ class MultiAssetPortfolioManager:
                     )
                     allocations[class_name] = allocation
                 except Exception as e:
-                    warnings.append(f"Failed to allocate to '{class_name}': {str(e)}")
+                    warnings.append(f"Failed to allocate to '{class_name}': {e!s}")
                     logger.error(f"Allocation failed for {class_name}: {e}")
                     # Fallback to cash
                     allocations[class_name] = self._create_cash_allocation(asset_class, weight)
@@ -302,8 +303,8 @@ class MultiAssetPortfolioManager:
     def rebalance(
         self,
         current_portfolio: MultiAssetPortfolio,
-        target_weights: Dict[str, Decimal],
-        current_prices: Dict[str, Decimal],
+        target_weights: dict[str, Decimal],
+        current_prices: dict[str, Decimal],
         portfolio_value: Decimal,
     ) -> RebalanceResult:
         """
@@ -322,15 +323,15 @@ class MultiAssetPortfolioManager:
         Returns:
             RebalanceResult with trades and metadata
         """
-        warnings: List[str] = []
-        trades: List[Trade] = []
+        warnings: list[str] = []
+        trades: list[Trade] = []
 
         try:
             # Get current weights
             pre_rebalance_weights = current_portfolio.get_asset_class_weights()
 
             # Check if rebalancing is needed
-            rebalance_needed, deviations = self._check_rebalance_needed(
+            rebalance_needed, _deviations = self._check_rebalance_needed(
                 current_portfolio, target_weights, current_prices, portfolio_value
             )
 
@@ -403,7 +404,7 @@ class MultiAssetPortfolioManager:
 
     def calculate_risk_contributions(
         self, portfolio: MultiAssetPortfolio, returns: pd.DataFrame
-    ) -> Dict[str, Decimal]:
+    ) -> dict[str, Decimal]:
         """
         Calculate risk contributions by asset class.
 
@@ -448,11 +449,11 @@ class MultiAssetPortfolioManager:
                 return dict.fromkeys(portfolio.allocations, contribution)
 
             # Calculate marginal contribution to risk for each asset
-            # MCTR_i = (w_i * (Σw)_i) / σ_p^2
+            # MCTR_i = (w_i * (Sigmaw)_i) / sigma_p^2
             marginal_contrib = (cov_matrix @ weights) / portfolio_variance
 
             # Aggregate by asset class
-            risk_contributions: Dict[str, float] = {}
+            risk_contributions: dict[str, float] = {}
 
             for class_name, alloc in portfolio.allocations.items():
                 class_contribution = 0.0
@@ -489,7 +490,7 @@ class MultiAssetPortfolioManager:
             )
             return dict.fromkeys(portfolio.allocations, equal_contrib)
 
-    def _validate_target_weights(self, target_weights: Dict[str, Decimal]) -> None:
+    def _validate_target_weights(self, target_weights: dict[str, Decimal]) -> None:
         """
         Validate target weights.
 
@@ -507,7 +508,7 @@ class MultiAssetPortfolioManager:
         tolerance = Decimal("0.01")
 
         if abs(total - Decimal("1")) > tolerance:
-            raise ValueError(f"Target weights must sum to 1 (±{tolerance}), got {total}")
+            raise ValueError(f"Target weights must sum to 1 (+/-{tolerance}), got {total}")
 
         # Check all weights are non-negative
         for name, weight in target_weights.items():
@@ -522,8 +523,8 @@ class MultiAssetPortfolioManager:
                 raise ValueError(f"Unknown asset class: {name}")
 
     def _get_available_asset_classes(
-        self, target_weights: Dict[str, Decimal]
-    ) -> Dict[str, AssetClass]:
+        self, target_weights: dict[str, Decimal]
+    ) -> dict[str, AssetClass]:
         """Get available asset classes from target weights."""
         available = {}
         for name in target_weights:
@@ -603,8 +604,8 @@ class MultiAssetPortfolioManager:
         )
 
     def _calculate_market_cap_weights(
-        self, symbols: List[str], market_data: pd.DataFrame
-    ) -> Dict[str, Decimal]:
+        self, symbols: list[str], market_data: pd.DataFrame
+    ) -> dict[str, Decimal]:
         """Calculate market cap weighted allocation."""
         # Simplified - would need actual market cap data
         # For now, use equal weight
@@ -612,8 +613,8 @@ class MultiAssetPortfolioManager:
         return {s: Decimal("1") / Decimal(str(n)) for s in symbols}
 
     def _calculate_volatility_weights(
-        self, symbols: List[str], market_data: pd.DataFrame
-    ) -> Dict[str, Decimal]:
+        self, symbols: list[str], market_data: pd.DataFrame
+    ) -> dict[str, Decimal]:
         """Calculate inverse volatility weighted allocation."""
         weights = {}
 
@@ -631,7 +632,7 @@ class MultiAssetPortfolioManager:
 
         return weights
 
-    def _apply_position_limits(self, weights: Dict[str, Decimal]) -> Dict[str, Decimal]:
+    def _apply_position_limits(self, weights: dict[str, Decimal]) -> dict[str, Decimal]:
         """Apply position size limits to weights."""
         limited = {}
 
@@ -653,7 +654,7 @@ class MultiAssetPortfolioManager:
         return limited
 
     def _calculate_initial_metrics(
-        self, portfolio: MultiAssetPortfolio, market_data: Dict[str, pd.DataFrame]
+        self, portfolio: MultiAssetPortfolio, market_data: dict[str, pd.DataFrame]
     ) -> PortfolioMetrics:
         """Calculate initial portfolio metrics."""
         # Calculate expected return and volatility
@@ -676,8 +677,8 @@ class MultiAssetPortfolioManager:
         )
 
     def _generate_implementation_trades(
-        self, portfolio: MultiAssetPortfolio, market_data: Dict[str, pd.DataFrame]
-    ) -> List[Trade]:
+        self, portfolio: MultiAssetPortfolio, market_data: dict[str, pd.DataFrame]
+    ) -> list[Trade]:
         """Generate trades to implement the portfolio."""
         trades = []
 
@@ -689,7 +690,11 @@ class MultiAssetPortfolioManager:
                 # Get price from market data
                 price = Decimal("100")  # Default
 
-                if class_name in market_data and not market_data[class_name].empty and symbol in market_data[class_name].columns:
+                if (
+                    class_name in market_data
+                    and not market_data[class_name].empty
+                    and symbol in market_data[class_name].columns
+                ):
                     # Get last price
                     price = Decimal(str(market_data[class_name][symbol].iloc[-1]))
 
@@ -737,10 +742,10 @@ class MultiAssetPortfolioManager:
     def _check_rebalance_needed(
         self,
         portfolio: MultiAssetPortfolio,
-        target_weights: Dict[str, Decimal],
-        current_prices: Dict[str, Decimal],
+        target_weights: dict[str, Decimal],
+        current_prices: dict[str, Decimal],
         portfolio_value: Decimal,
-    ) -> Tuple[bool, Dict[str, Decimal]]:
+    ) -> tuple[bool, dict[str, Decimal]]:
         """Check if rebalancing is needed."""
         deviations = {}
         rebalance_needed = False
@@ -766,9 +771,9 @@ class MultiAssetPortfolioManager:
         target_weight: Decimal,
         current_weight: Decimal,
         portfolio_value: Decimal,
-        current_prices: Dict[str, Decimal],
-        current_allocation: Optional[MultiAssetAllocation] = None,
-    ) -> List[Trade]:
+        current_prices: dict[str, Decimal],
+        current_allocation: MultiAssetAllocation | None = None,
+    ) -> list[Trade]:
         """Calculate trades to rebalance an asset class."""
         trades = []
 

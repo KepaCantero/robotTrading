@@ -20,7 +20,7 @@ import logging
 from dataclasses import dataclass
 from datetime import datetime
 from decimal import ROUND_HALF_UP, Decimal
-from typing import List, Optional
+from typing import Optional
 
 from app.shared.config.centralized_config import get_config
 
@@ -74,11 +74,11 @@ class LossMonitor:
         self.reset_threshold = reset_threshold
         self.consecutive_loss_count = 0
         self.consecutive_win_count = 0
-        self.trade_history: List[TradeResult] = []
+        self.trade_history: list[TradeResult] = []
 
     def detect_consecutive_losses(
         self,
-        trade_results: List[TradeResult],
+        trade_results: list[TradeResult],
         window_days: Optional[int] = None,
     ) -> int:
         """
@@ -165,7 +165,7 @@ class LossMonitor:
 
     def should_reset_loss_counter(
         self,
-        trade_results: List[TradeResult],
+        trade_results: list[TradeResult],
         lookback_trades: Optional[int] = None,
     ) -> bool:
         """
@@ -235,7 +235,7 @@ class LossMonitor:
 
     def calculate_win_rate(
         self,
-        trade_results: List[TradeResult],
+        trade_results: list[TradeResult],
         window_trades: Optional[int] = None,
     ) -> Decimal:
         """
@@ -265,7 +265,7 @@ class LossMonitor:
 
     def calculate_average_win_loss_ratio(
         self,
-        trade_results: List[TradeResult],
+        trade_results: list[TradeResult],
         window_trades: Optional[int] = None,
     ) -> Optional[Decimal]:
         """
@@ -345,14 +345,14 @@ class LossMonitor:
             )
         else:
             recommendation = (
-                f"No loss streak. Maintain normal sizing (1.0x). " f"Win rate: {win_rate:.1f}%"
+                f"No loss streak. Maintain normal sizing (1.0x). Win rate: {win_rate:.1f}%"
             )
 
         return loss_scale, recommendation
 
     def detect_performance_transition(
         self,
-        trade_results: List[TradeResult],
+        trade_results: list[TradeResult],
         early_window: int = 10,
         recent_window: int = 10,
     ) -> tuple[bool, str]:

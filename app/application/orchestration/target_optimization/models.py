@@ -11,7 +11,7 @@ Defines:
 import logging
 from decimal import Decimal
 from enum import Enum
-from typing import ClassVar, Dict, List, Optional
+from typing import ClassVar, Optional
 
 from pydantic import BaseModel, Field
 
@@ -70,7 +70,7 @@ class StrategyFeatures(BaseModel):
     currency_hedging: bool = False
 
     class Config:
-        json_schema_extra = {
+        json_schema_extra: ClassVar[dict] = {
             "example": {
                 "momentum": True,
                 "mean_reversion": True,
@@ -84,7 +84,7 @@ class StrategyFeatures(BaseModel):
             }
         }
 
-    def enabled_modules(self) -> List[str]:
+    def enabled_modules(self) -> list[str]:
         """Return list of enabled module names."""
         modules = [k for k, v in self.dict().items() if v]
         logger.debug(
@@ -123,7 +123,7 @@ class AbsoluteReturnTarget(BaseModel):
     )
 
     class Config:
-        json_schema_extra = {
+        json_schema_extra: ClassVar[dict] = {
             "example": {
                 "target_euros_monthly": Decimal("800"),
                 "capital": Decimal("250000"),
@@ -177,7 +177,7 @@ class AbsoluteReturnValidation(BaseModel):
     )
     recommendation: str = Field(..., description="Recommendation text")
     confidence_level: str = Field(..., description="HIGH / MEDIUM / LOW confidence in feasibility")
-    monthly_costs: Dict[str, Decimal] = Field(default={}, description="Breakdown of monthly costs")
+    monthly_costs: dict[str, Decimal] = Field(default={}, description="Breakdown of monthly costs")
 
 
 class CapitalTierResult(BaseModel):
@@ -189,6 +189,6 @@ class CapitalTierResult(BaseModel):
     enabled_features: StrategyFeatures = Field(..., description="Enabled strategy features")
     strategy_type: str = Field(..., description="Recommended strategy type")
     expected_annual_return_pct_range: tuple = Field(..., description="(min, max) expected return %")
-    modules_enabled: List[str] = Field(..., description="List of enabled modules")
+    modules_enabled: list[str] = Field(..., description="List of enabled modules")
     leverage_multiplier: Decimal = Field(..., description="Leverage allowed")
     max_position_size_eur: Decimal = Field(..., description="Max position size in EUR")

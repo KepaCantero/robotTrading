@@ -10,9 +10,10 @@ Implementa sistema de alertas y notificaciones:
 import logging
 from abc import ABC, abstractmethod
 from datetime import datetime
-from typing import Any, Dict, List
+from typing import Any
 
-from requests.exceptions import ConnectionError, HTTPError
+from requests.exceptions import ConnectionError as RequestsConnectionError
+from requests.exceptions import HTTPError
 
 from app.domain.models.portfolio import Portfolio
 
@@ -34,7 +35,7 @@ except ImportError:
 class BaseAlertSystem(ABC):
     """Clase base para sistemas de alerta."""
 
-    def __init__(self, config: Dict[str, Any]):
+    def __init__(self, config: dict[str, Any]):
         """
         Inicializar sistema de alerta.
 
@@ -46,8 +47,8 @@ class BaseAlertSystem(ABC):
 
     @abstractmethod
     def check_thresholds(
-        self, risk_assessment: Dict[str, Any], portfolio: Portfolio
-    ) -> List[Dict[str, Any]]:
+        self, risk_assessment: dict[str, Any], portfolio: Portfolio
+    ) -> list[dict[str, Any]]:
         """
         Verificar umbrales y generar alertas.
 
@@ -60,7 +61,7 @@ class BaseAlertSystem(ABC):
         """
 
     @abstractmethod
-    def send_alerts(self, alerts: List[Dict[str, Any]]) -> bool:
+    def send_alerts(self, alerts: list[dict[str, Any]]) -> bool:
         """
         Enviar alertas.
 
@@ -79,46 +80,46 @@ class AlertSystem(BaseAlertSystem):
     Sistema completo de alertas y notificaciones.
     """
 
-    def __init__(self, config: Dict[str, Any]):
+    def __init__(self, config: dict[str, Any]):
         """Inicializar alert system."""
         super().__init__(config)
 
         # Configuración de umbrales
         self.thresholds = config.get(
-            'thresholds',
+            "thresholds",
             {
-                'var_breach': 0.05,  # VaR excedido en 5%
-                'drawdown_limit': 0.15,  # Drawdown > 15%
-                'exposure_limit': 0.20,  # Exposición > 20% por activo
-                'leverage_limit': 1.0,  # Leverage > 1.0
-                'correlation_limit': 0.8,  # Correlación > 80%
-                'violation_count': 5,  # Más de 5 violaciones
+                "var_breach": 0.05,  # VaR excedido en 5%
+                "drawdown_limit": 0.15,  # Drawdown > 15%
+                "exposure_limit": 0.20,  # Exposición > 20% por activo
+                "leverage_limit": 1.0,  # Leverage > 1.0
+                "correlation_limit": 0.8,  # Correlación > 80%
+                "violation_count": 5,  # Más de 5 violaciones
             },
         )
 
         # Canales de notificación
-        self.enable_email = config.get('enable_email', False)
-        self.enable_slack = config.get('enable_slack', False)
-        self.enable_logging = config.get('enable_logging', True)
-        self.enable_dashboard = config.get('enable_dashboard', True)
+        self.enable_email = config.get("enable_email", False)
+        self.enable_slack = config.get("enable_slack", False)
+        self.enable_logging = config.get("enable_logging", True)
+        self.enable_dashboard = config.get("enable_dashboard", True)
 
         # Configuración de email
-        self.email_config = config.get('email', {})
+        self.email_config = config.get("email", {})
 
         # Configuración de Slack
-        self.slack_config = config.get('slack', {})
+        self.slack_config = config.get("slack", {})
 
         # Historial de alertas
-        self.alert_history: List[Dict[str, Any]] = []
-        self.max_alert_history = config.get('max_alert_history', 1000)
+        self.alert_history: list[dict[str, Any]] = []
+        self.max_alert_history = config.get("max_alert_history", 1000)
 
         # Rate limiting
-        self.alert_cooldown: Dict[str, datetime] = {}
-        self.cooldown_period = config.get('cooldown_period_minutes', 60)  # 1 hora
+        self.alert_cooldown: dict[str, datetime] = {}
+        self.cooldown_period = config.get("cooldown_period_minutes", 60)  # 1 hora
 
     def check_thresholds(
-        self, risk_assessment: Dict[str, Any], portfolio: Portfolio
-    ) -> List[Dict[str, Any]]:
+        self, risk_assessment: dict[str, Any], portfolio: Portfolio
+    ) -> list[dict[str, Any]]:
         """
         Verificar umbrales y generar alertas.
 
@@ -133,24 +134,24 @@ class AlertSystem(BaseAlertSystem):
 
         try:
             # Verificar VaR
-            if 'var' in risk_assessment:
-                var_alerts = self._check_var_thresholds(risk_assessment['var'])
+            if "var" in risk_assessment:
+                var_alerts = self._check_var_thresholds(risk_assessment["var"])
                 alerts.extend(var_alerts)
 
             # Verificar drawdown
-            if 'drawdown' in risk_assessment:
-                drawdown_alerts = self._check_drawdown_thresholds(risk_assessment['drawdown'])
+            if "drawdown" in risk_assessment:
+                drawdown_alerts = self._check_drawdown_thresholds(risk_assessment["drawdown"])
                 alerts.extend(drawdown_alerts)
 
             # Verificar exposición
-            if 'exposure' in risk_assessment:
-                exposure_alerts = self._check_exposure_thresholds(risk_assessment['exposure'])
+            if "exposure" in risk_assessment:
+                exposure_alerts = self._check_exposure_thresholds(risk_assessment["exposure"])
                 alerts.extend(exposure_alerts)
 
             # Verificar correlaciones
-            if 'correlations' in risk_assessment:
+            if "correlations" in risk_assessment:
                 correlation_alerts = self._check_correlation_thresholds(
-                    risk_assessment['correlations']
+                    risk_assessment["correlations"]
                 )
                 alerts.extend(correlation_alerts)
 
@@ -163,9 +164,9 @@ class AlertSystem(BaseAlertSystem):
 
             # Agregar timestamp y metadata
             for alert in filtered_alerts:
-                alert['timestamp'] = datetime.utcnow().isoformat()
-                alert['portfolio_value'] = float(portfolio.total_equity)
-                alert['alert_id'] = f"{alert['type']}_{datetime.utcnow().timestamp()}"
+                alert["timestamp"] = datetime.utcnow().isoformat()
+                alert["portfolio_value"] = float(portfolio.total_equity)
+                alert["alert_id"] = f"{alert['type']}_{datetime.utcnow().timestamp()}"
 
             # Guardar en historial
             self.alert_history.extend(filtered_alerts)
@@ -178,193 +179,193 @@ class AlertSystem(BaseAlertSystem):
             self.logger.error(f"Error verificando umbrales: {e}", exc_info=True)
             return []
 
-    def _check_var_thresholds(self, var_result: Dict[str, Any]) -> List[Dict[str, Any]]:
+    def _check_var_thresholds(self, var_result: dict[str, Any]) -> list[dict[str, Any]]:
         """Verificar umbrales de VaR."""
         alerts = []
 
-        var_amount = var_result.get('var_amount')
-        var_percent = var_result.get('var')
+        var_amount = var_result.get("var_amount")
+        var_percent = var_result.get("var")
 
         if var_amount and var_percent:
-            threshold = self.thresholds.get('var_breach', 0.05)
+            threshold = self.thresholds.get("var_breach", 0.05)
 
             if abs(var_percent) > threshold:
                 alerts.append(
                     {
-                        'type': 'var_breach',
-                        'severity': 'high',
-                        'message': f"VaR excedido: {var_percent:.2%} > {threshold:.2%}",
-                        'var_amount': var_amount,
-                        'var_percent': var_percent,
-                        'threshold': threshold,
+                        "type": "var_breach",
+                        "severity": "high",
+                        "message": f"VaR excedido: {var_percent:.2%} > {threshold:.2%}",
+                        "var_amount": var_amount,
+                        "var_percent": var_percent,
+                        "threshold": threshold,
                     }
                 )
 
         return alerts
 
-    def _check_drawdown_thresholds(self, drawdown_result: Dict[str, Any]) -> List[Dict[str, Any]]:
+    def _check_drawdown_thresholds(self, drawdown_result: dict[str, Any]) -> list[dict[str, Any]]:
         """Verificar umbrales de drawdown."""
         alerts = []
 
-        portfolio_drawdown = drawdown_result.get('portfolio_drawdown', {})
-        current_drawdown = portfolio_drawdown.get('current_drawdown', 0.0)
+        portfolio_drawdown = drawdown_result.get("portfolio_drawdown", {})
+        current_drawdown = portfolio_drawdown.get("current_drawdown", 0.0)
 
-        threshold = self.thresholds.get('drawdown_limit', 0.15)
+        threshold = self.thresholds.get("drawdown_limit", 0.15)
 
         if current_drawdown > threshold:
             alerts.append(
                 {
-                    'type': 'drawdown_limit',
-                    'severity': 'critical',
-                    'message': f"Drawdown excedido: {current_drawdown:.2%} > {threshold:.2%}",
-                    'current_drawdown': current_drawdown,
-                    'threshold': threshold,
+                    "type": "drawdown_limit",
+                    "severity": "critical",
+                    "message": f"Drawdown excedido: {current_drawdown:.2%} > {threshold:.2%}",
+                    "current_drawdown": current_drawdown,
+                    "threshold": threshold,
                 }
             )
 
         # Circuit breaker alerts
-        circuit_breaker = drawdown_result.get('circuit_breaker_status', {})
-        if circuit_breaker.get('global_circuit_breaker_active'):
+        circuit_breaker = drawdown_result.get("circuit_breaker_status", {})
+        if circuit_breaker.get("global_circuit_breaker_active"):
             alerts.append(
                 {
-                    'type': 'circuit_breaker',
-                    'severity': 'critical',
-                    'message': f"CIRCUIT BREAKER ACTIVADO: {circuit_breaker.get('global_circuit_breaker_reason', 'Unknown')}",
-                    'reason': circuit_breaker.get('global_circuit_breaker_reason'),
-                    'timestamp': circuit_breaker.get('global_circuit_breaker_timestamp'),
+                    "type": "circuit_breaker",
+                    "severity": "critical",
+                    "message": f"CIRCUIT BREAKER ACTIVADO: {circuit_breaker.get('global_circuit_breaker_reason', 'Unknown')}",
+                    "reason": circuit_breaker.get("global_circuit_breaker_reason"),
+                    "timestamp": circuit_breaker.get("global_circuit_breaker_timestamp"),
                 }
             )
 
         return alerts
 
-    def _check_exposure_thresholds(self, exposure_result: Dict[str, Any]) -> List[Dict[str, Any]]:
+    def _check_exposure_thresholds(self, exposure_result: dict[str, Any]) -> list[dict[str, Any]]:
         """Verificar umbrales de exposición."""
         alerts = []
 
         # Check max single asset exposure
-        max_single_exposure = exposure_result.get('max_single_exposure', 0.0)
-        exposure_threshold = self.thresholds.get('exposure_limit', 0.20)
+        max_single_exposure = exposure_result.get("max_single_exposure", 0.0)
+        exposure_threshold = self.thresholds.get("exposure_limit", 0.20)
 
         if max_single_exposure > exposure_threshold:
             alerts.append(
                 {
-                    'type': 'exposure_limit',
-                    'severity': 'high',
-                    'message': f"Exposición máxima excedida: {max_single_exposure:.2%} > {exposure_threshold:.2%}",
-                    'max_single_exposure': max_single_exposure,
-                    'threshold': exposure_threshold,
+                    "type": "exposure_limit",
+                    "severity": "high",
+                    "message": f"Exposición máxima excedida: {max_single_exposure:.2%} > {exposure_threshold:.2%}",
+                    "max_single_exposure": max_single_exposure,
+                    "threshold": exposure_threshold,
                 }
             )
 
-        violations = exposure_result.get('violations', [])
+        violations = exposure_result.get("violations", [])
 
         if violations:
             for violation in violations:
                 alerts.append(
                     {
-                        'type': 'exposure_violation',
-                        'severity': violation.get('severity', 'medium'),
-                        'message': f"Violación de exposición: {violation.get('type', 'unknown')}",
-                        'violation': violation,
+                        "type": "exposure_violation",
+                        "severity": violation.get("severity", "medium"),
+                        "message": f"Violación de exposición: {violation.get('type', 'unknown')}",
+                        "violation": violation,
                     }
                 )
 
         # Leverage alerts
-        leverage = exposure_result.get('leverage', {})
+        leverage = exposure_result.get("leverage", {})
         # Handle leverage being either a dict or a float value
         if isinstance(leverage, dict):
-            leverage_value = leverage.get('leverage', 0.0)
+            leverage_value = leverage.get("leverage", 0.0)
         elif isinstance(leverage, (int, float)):
             leverage_value = leverage
         else:
             leverage_value = 0.0
 
-        leverage_threshold = self.thresholds.get('leverage_limit', 1.0)
+        leverage_threshold = self.thresholds.get("leverage_limit", 1.0)
 
         if leverage_value > leverage_threshold:
             alerts.append(
                 {
-                    'type': 'leverage_limit',
-                    'severity': 'high',
-                    'message': f"Leverage excedido: {leverage_value:.2f} > {leverage_threshold:.2f}",
-                    'leverage': leverage_value,
-                    'threshold': leverage_threshold,
+                    "type": "leverage_limit",
+                    "severity": "high",
+                    "message": f"Leverage excedido: {leverage_value:.2f} > {leverage_threshold:.2f}",
+                    "leverage": leverage_value,
+                    "threshold": leverage_threshold,
                 }
             )
 
         return alerts
 
     def _check_correlation_thresholds(
-        self, correlation_result: Dict[str, Any]
-    ) -> List[Dict[str, Any]]:
+        self, correlation_result: dict[str, Any]
+    ) -> list[dict[str, Any]]:
         """Verificar umbrales de correlación."""
         alerts = []
 
         # Check max correlation value
-        max_correlation = correlation_result.get('max_correlation', 0.0)
-        correlation_threshold = self.thresholds.get('correlation_limit', 0.8)
+        max_correlation = correlation_result.get("max_correlation", 0.0)
+        correlation_threshold = self.thresholds.get("correlation_limit", 0.8)
 
         if max_correlation > correlation_threshold:
             alerts.append(
                 {
-                    'type': 'correlation_limit',
-                    'severity': 'high',
-                    'message': f"Correlación máxima excedida: {max_correlation:.2%} > {correlation_threshold:.2%}",
-                    'max_correlation': max_correlation,
-                    'threshold': correlation_threshold,
+                    "type": "correlation_limit",
+                    "severity": "high",
+                    "message": f"Correlación máxima excedida: {max_correlation:.2%} > {correlation_threshold:.2%}",
+                    "max_correlation": max_correlation,
+                    "threshold": correlation_threshold,
                 }
             )
 
         # Check for specific violations
-        violations = correlation_result.get('violations', [])
+        violations = correlation_result.get("violations", [])
 
         if violations:
             for violation in violations:
                 alerts.append(
                     {
-                        'type': 'correlation_violation',
-                        'severity': violation.get('severity', 'medium'),
-                        'message': f"Correlación alta: {violation.get('symbol1', '')} - {violation.get('symbol2', '')}",
-                        'violation': violation,
+                        "type": "correlation_violation",
+                        "severity": violation.get("severity", "medium"),
+                        "message": f"Correlación alta: {violation.get('symbol1', '')} - {violation.get('symbol2', '')}",
+                        "violation": violation,
                     }
                 )
 
         return alerts
 
-    def _check_violations(self, risk_assessment: Dict[str, Any]) -> List[Dict[str, Any]]:
+    def _check_violations(self, risk_assessment: dict[str, Any]) -> list[dict[str, Any]]:
         """Verificar violaciones generales."""
         alerts = []
 
         # Contar violaciones totales
         total_violations = 0
 
-        if 'exposure' in risk_assessment:
-            total_violations += len(risk_assessment['exposure'].get('violations', []))
+        if "exposure" in risk_assessment:
+            total_violations += len(risk_assessment["exposure"].get("violations", []))
 
-        if 'correlations' in risk_assessment:
-            total_violations += len(risk_assessment['correlations'].get('violations', []))
+        if "correlations" in risk_assessment:
+            total_violations += len(risk_assessment["correlations"].get("violations", []))
 
-        threshold = self.thresholds.get('violation_count', 5)
+        threshold = self.thresholds.get("violation_count", 5)
 
         if total_violations > threshold:
             alerts.append(
                 {
-                    'type': 'violation_count',
-                    'severity': 'high',
-                    'message': f"Múltiples violaciones detectadas: {total_violations} > {threshold}",
-                    'violation_count': total_violations,
-                    'threshold': threshold,
+                    "type": "violation_count",
+                    "severity": "high",
+                    "message": f"Múltiples violaciones detectadas: {total_violations} > {threshold}",
+                    "violation_count": total_violations,
+                    "threshold": threshold,
                 }
             )
 
         return alerts
 
-    def _filter_by_cooldown(self, alerts: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    def _filter_by_cooldown(self, alerts: list[dict[str, Any]]) -> list[dict[str, Any]]:
         """Filtrar alertas por cooldown period."""
         filtered = []
 
         for alert in alerts:
-            alert_type = alert.get('type')
+            alert_type = alert.get("type")
 
             if alert_type in self.alert_cooldown:
                 last_alert_time = self.alert_cooldown[alert_type]
@@ -375,7 +376,7 @@ class AlertSystem(BaseAlertSystem):
                     continue
 
             # Alert crítico siempre pasa
-            if alert.get('severity') == 'critical':
+            if alert.get("severity") == "critical":
                 filtered.append(alert)
                 self.alert_cooldown[alert_type] = datetime.utcnow()
             else:
@@ -385,7 +386,7 @@ class AlertSystem(BaseAlertSystem):
 
         return filtered
 
-    def send_alerts(self, alerts: List[Dict[str, Any]]) -> bool:
+    def send_alerts(self, alerts: list[dict[str, Any]]) -> bool:
         """
         Enviar alertas por todos los canales configurados.
 
@@ -403,15 +404,15 @@ class AlertSystem(BaseAlertSystem):
         # Logging
         if self.enable_logging:
             for alert in alerts:
-                severity = alert.get('severity', 'medium')
-                message = alert.get('message', 'Unknown alert')
+                severity = alert.get("severity", "medium")
+                message = alert.get("message", "Unknown alert")
 
-                if severity == 'critical':
+                if severity == "critical":
                     self.logger.critical(f"🚨 ALERT: {message}")
-                elif severity == 'high':
-                    self.logger.warning(f"⚠️ ALERT: {message}")
+                elif severity == "high":
+                    self.logger.warning(f"⚠ ALERT: {message}")
                 else:
-                    self.logger.info(f"ℹ️ ALERT: {message}")
+                    self.logger.info(f"i ALERT: {message}")
 
         # Email
         if self.enable_email and EMAIL_AVAILABLE:
@@ -436,17 +437,17 @@ class AlertSystem(BaseAlertSystem):
 
         return success
 
-    def _send_email_alerts(self, alerts: List[Dict[str, Any]]) -> None:
+    def _send_email_alerts(self, alerts: list[dict[str, Any]]) -> None:
         """Enviar alertas por email."""
         if not EMAIL_AVAILABLE:
             return
 
         # Implementación básica (requiere configuración SMTP)
-        smtp_server = self.email_config.get('smtp_server')
-        smtp_port = self.email_config.get('smtp_port', 587)
-        sender_email = self.email_config.get('sender_email')
-        sender_password = self.email_config.get('sender_password')
-        recipient_emails = self.email_config.get('recipient_emails', [])
+        smtp_server = self.email_config.get("smtp_server")
+        smtp_port = self.email_config.get("smtp_port", 587)
+        sender_email = self.email_config.get("sender_email")
+        sender_password = self.email_config.get("sender_password")
+        recipient_emails = self.email_config.get("recipient_emails", [])
 
         if not all([smtp_server, sender_email, recipient_emails]):
             self.logger.warning("Configuración de email incompleta")
@@ -455,9 +456,9 @@ class AlertSystem(BaseAlertSystem):
         try:
             # Crear mensaje
             msg = MIMEMultipart()
-            msg['From'] = sender_email
-            msg['To'] = ', '.join(recipient_emails)
-            msg['Subject'] = f"Risk Alerts - {len(alerts)} alertas generadas"
+            msg["From"] = sender_email
+            msg["To"] = ", ".join(recipient_emails)
+            msg["Subject"] = f"Risk Alerts - {len(alerts)} alertas generadas"
 
             # Cuerpo del mensaje
             body = "Alertas de riesgo generadas:\n\n"
@@ -466,7 +467,7 @@ class AlertSystem(BaseAlertSystem):
                 body += f"  Severidad: {alert.get('severity', 'medium')}\n"
                 body += f"  Tipo: {alert.get('type', 'unknown')}\n\n"
 
-            msg.attach(MIMEText(body, 'plain'))
+            msg.attach(MIMEText(body, "plain"))
 
             # Enviar
             server = smtplib.SMTP(smtp_server, smtp_port)
@@ -479,9 +480,9 @@ class AlertSystem(BaseAlertSystem):
         except (FileNotFoundError, ValueError, KeyError, TypeError) as e:
             self.logger.error(f"Error enviando email: {e}", exc_info=True)
 
-    def _send_slack_alerts(self, alerts: List[Dict[str, Any]]) -> None:
+    def _send_slack_alerts(self, alerts: list[dict[str, Any]]) -> None:
         """Enviar alertas por Slack."""
-        webhook_url = self.slack_config.get('webhook_url')
+        webhook_url = self.slack_config.get("webhook_url")
 
         if not webhook_url:
             self.logger.warning("Webhook de Slack no configurado")
@@ -494,28 +495,28 @@ class AlertSystem(BaseAlertSystem):
             # Preparar mensaje
             text = f"🚨 *{len(alerts)} Alertas de Riesgo*\n\n"
             for alert in alerts:
-                severity = alert.get('severity', 'medium')
-                emoji = '🔴' if severity == 'critical' else '🟠' if severity == 'high' else '🟡'
+                severity = alert.get("severity", "medium")
+                emoji = "🔴" if severity == "critical" else "🟠" if severity == "high" else "🟡"
                 text += f"{emoji} {alert.get('message', 'Unknown')}\n"
 
-            payload = {'text': text, 'username': 'Risk Alert System', 'icon_emoji': ':warning:'}
+            payload = {"text": text, "username": "Risk Alert System", "icon_emoji": ":warning:"}
 
             response = requests.post(webhook_url, json=payload, timeout=10)
             response.raise_for_status()
 
             self.logger.info("Alertas enviadas por Slack")
 
-        except (ConnectionError, TimeoutError, HTTPError, RequestException) as e:
+        except (RequestsConnectionError, TimeoutError, HTTPError, RequestException) as e:
             self.logger.error(f"Error enviando Slack: {e}", exc_info=True)
 
-    def get_status(self) -> Dict[str, Any]:
+    def get_status(self) -> dict[str, Any]:
         """Obtener estado del sistema de alertas."""
         return {
-            'enabled': True,
-            'alert_history_size': len(self.alert_history),
-            'email_enabled': self.enable_email,
-            'slack_enabled': self.enable_slack,
-            'dashboard_enabled': self.enable_dashboard,
-            'cooldown_period_minutes': self.cooldown_period,
-            'thresholds': self.thresholds,
+            "enabled": True,
+            "alert_history_size": len(self.alert_history),
+            "email_enabled": self.enable_email,
+            "slack_enabled": self.enable_slack,
+            "dashboard_enabled": self.enable_dashboard,
+            "cooldown_period_minutes": self.cooldown_period,
+            "thresholds": self.thresholds,
         }

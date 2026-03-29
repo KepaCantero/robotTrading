@@ -13,11 +13,8 @@ from __future__ import annotations
 import logging
 from collections import deque
 from decimal import Decimal
-from typing import Any, Optional
+from typing import TYPE_CHECKING, Any
 
-from app.core.protocols.signal_scoring import SignalScoringEngineProtocol
-from app.domain.models.market_data import Quote
-from app.domain.models.portfolio import Portfolio
 from app.domain.models.signal import Signal, SignalSource, SignalStrength, SignalType
 from app.domain.services.analysis.momentum import TechnicalIndicatorCalculator
 from app.shared.config.centralized_config import (
@@ -28,6 +25,11 @@ from app.shared.config.centralized_config import (
 
 from .base import BaseStrategy
 
+if TYPE_CHECKING:
+    from app.core.protocols.signal_scoring import SignalScoringEngineProtocol
+    from app.domain.models.market_data import Quote
+    from app.domain.models.portfolio import Portfolio
+
 logger = logging.getLogger(__name__)
 
 
@@ -37,7 +39,7 @@ class MomentumStrategy(BaseStrategy):
     def __init__(
         self,
         config: dict[str, Any],
-        signal_scoring_engine: Optional[SignalScoringEngineProtocol] = None,
+        signal_scoring_engine: SignalScoringEngineProtocol | None = None,
     ) -> None:
         """
         Inicializar estrategia de momentum.
@@ -48,7 +50,7 @@ class MomentumStrategy(BaseStrategy):
                 If not provided, will be lazily initialized on first use.
         """
         super().__init__(config)
-        self._signal_scoring_engine: Optional[SignalScoringEngineProtocol] = signal_scoring_engine
+        self._signal_scoring_engine: SignalScoringEngineProtocol | None = signal_scoring_engine
 
         # Initialize all parameters with defaults FIRST (before loading YAML config)
         # Parámetros técnicos
@@ -126,7 +128,7 @@ class MomentumStrategy(BaseStrategy):
             self.rsi_threshold = Decimal(str(config.get("rsi_threshold", 40)))
             trading_cfg = config.get("trading", {})
             risk_value = (
-                trading_cfg.get('max_risk_per_trade', 0.02)
+                trading_cfg.get("max_risk_per_trade", 0.02)
                 if isinstance(trading_cfg, dict)
                 else 0.02
             )
@@ -167,8 +169,8 @@ class MomentumStrategy(BaseStrategy):
         # Note: min_atr_threshold, atr_filter_enabled, use_relative_atr already initialized above
 
         # Cooldown para evitar señales repetidas - use config value
-        self.last_signal_bar_index: Optional[int] = None
-        self.last_signal_type: Optional[str] = None
+        self.last_signal_bar_index: int | None = None
+        self.last_signal_type: str | None = None
         self.current_bar_index = 0
         self.cooldown_bars = config.get("cooldown_bars", 5)  # Número de barras para cooldown
 
@@ -271,7 +273,7 @@ class MomentumStrategy(BaseStrategy):
             stoch_rsi_k = None
             stoch_rsi_d = None
             if rsi is not None:
-                if not hasattr(self, 'rsi_history'):
+                if not hasattr(self, "rsi_history"):
                     self.rsi_history = deque(maxlen=50)
                 # Append RSI ONCE (removed duplicate append)
                 self.rsi_history.append(rsi)

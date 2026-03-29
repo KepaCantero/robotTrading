@@ -9,14 +9,14 @@ from __future__ import annotations
 
 import logging
 from decimal import Decimal
-from typing import TYPE_CHECKING, Dict, Optional, Union
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
+    from app.backtesting.models import BacktestConfig
     from app.domain.strategies.strategy_registry import BaseStrategy
     from app.engines.portfolio_engine.portfolio_engine import Portfolio
     from app.services.logging.trading_decision_logger import SignalDiagnosticLogger
 
-from app.backtesting.models import BacktestConfig
 from app.domain.models.signal import Signal, SignalType
 from app.domain.services.compliance.compliance_engine import ComplianceEngine
 
@@ -43,11 +43,11 @@ class SignalProcessor:
     def __init__(
         self,
         config: BacktestConfig,
-        strategy: Optional[Union["BaseStrategy", object]] = None,
-        compliance_engine: Optional[ComplianceEngine] = None,
+        strategy: BaseStrategy | object | None = None,
+        compliance_engine: ComplianceEngine | None = None,
         enable_risk_envelope: bool = True,
-        diagnostic_logger: Optional["SignalDiagnosticLogger"] = None,
-        total_portfolio_capital: Optional[Decimal] = None,
+        diagnostic_logger: SignalDiagnosticLogger | None = None,
+        total_portfolio_capital: Decimal | None = None,
         strategy_name: str = "unknown",
     ):
         """
@@ -84,12 +84,12 @@ class SignalProcessor:
         self,
         signal: Signal,
         market_data: object,
-        positions: Dict[str, Decimal],
+        positions: dict[str, Decimal],
         capital: Decimal,
-        last_known_prices: Dict[str, Decimal],
+        last_known_prices: dict[str, Decimal],
         create_portfolio_func: object,
         validate_profitability_func: object,
-    ) -> Optional[str]:
+    ) -> str | None:
         """
         Process a trading signal with full validation pipeline.
 
@@ -145,8 +145,8 @@ class SignalProcessor:
         self,
         signal: Signal,
         market_data: object,
-        positions: Dict[str, Decimal],
-        last_known_prices: Dict[str, Decimal],
+        positions: dict[str, Decimal],
+        last_known_prices: dict[str, Decimal],
         create_portfolio_func: object,
     ) -> bool:
         """
@@ -229,7 +229,7 @@ class SignalProcessor:
                     self.strategy_name,
                     signal.symbol,
                     signal_type_str,
-                    f"Risk check error: {str(e)}",
+                    f"Risk check error: {e!s}",
                     signal.metadata if hasattr(signal, "metadata") else {},
                 )
             return False
@@ -237,7 +237,7 @@ class SignalProcessor:
         return True
 
     def _build_rejection_reason(
-        self, signal: Signal, portfolio: "Portfolio", current_price: Decimal
+        self, signal: Signal, portfolio: Portfolio, current_price: Decimal
     ) -> str:
         """Build detailed rejection reason for logging."""
         rejection_reason = "Risk check failed"
@@ -263,9 +263,9 @@ class SignalProcessor:
         self,
         signal: Signal,
         market_data: object,
-        positions: Dict[str, Decimal],
+        positions: dict[str, Decimal],
         capital: Decimal,
-        last_known_prices: Dict[str, Decimal],
+        last_known_prices: dict[str, Decimal],
         create_portfolio_func: object,
     ) -> bool:
         """

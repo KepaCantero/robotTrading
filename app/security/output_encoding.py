@@ -23,13 +23,13 @@ import json
 import logging
 import re
 import urllib.parse
-from typing import Dict, List, Union
+from typing import ClassVar, Optional, Union
 
 # Type alias for values that can be encoded
 EncodableValue = Union[str, int, float, bool, None]
 # Type alias for recursive data structures
-RecursiveDict = Dict[str, "RecursiveValue"]
-RecursiveList = List["RecursiveValue"]
+RecursiveDict = dict[str, "RecursiveValue"]
+RecursiveList = list["RecursiveValue"]
 RecursiveValue = Union[EncodableValue, RecursiveDict, RecursiveList]
 
 logger = logging.getLogger(__name__)
@@ -47,7 +47,7 @@ class OutputEncoder:
     """
 
     # Dangerous HTML/JS patterns to block
-    DANGEROUS_PATTERNS = [
+    DANGEROUS_PATTERNS: ClassVar[list] = [
         r"<script[^>]*>.*?</script>",
         r"javascript:",
         r"vbscript:",
@@ -124,10 +124,10 @@ class OutputEncoder:
         encoded = html.escape(text, quote=True)
 
         # Additional attribute encoding
-        encoded = encoded.replace('"', '&quot;')
-        encoded = encoded.replace("'", '&#x27;')
-        encoded = encoded.replace('`', '&#96;')
-        encoded = encoded.replace('=', '&#x3d;')
+        encoded = encoded.replace('"', "&quot;")
+        encoded = encoded.replace("'", "&#x27;")
+        encoded = encoded.replace("`", "&#96;")
+        encoded = encoded.replace("=", "&#x3d;")
 
         return encoded
 
@@ -192,7 +192,7 @@ class OutputEncoder:
             else:
                 encoded.append(char)
 
-        return f'\'{"".join(encoded)}\''
+        return f"'{''.join(encoded)}'"
 
     @staticmethod
     def encode_for_css(value: EncodableValue) -> str:
@@ -222,7 +222,7 @@ class OutputEncoder:
             codepoint = ord(char)
 
             # Encode all non-alphanumeric characters except space
-            if char.isalnum() or char == ' ':
+            if char.isalnum() or char == " ":
                 encoded.append(char)
             elif codepoint <= 255:
                 # Encode as \XX hex
@@ -257,7 +257,7 @@ class OutputEncoder:
         text = str(value)
 
         # URL encode
-        return urllib.parse.quote_plus(text, safe='')
+        return urllib.parse.quote_plus(text, safe="")
 
     @staticmethod
     def encode_json(data: Union[EncodableValue, RecursiveDict, RecursiveList]) -> str:
@@ -279,7 +279,7 @@ class OutputEncoder:
             return json.dumps(data, ensure_ascii=False, default=str)
         except (TypeError, ValueError) as e:
             logger.error(f"Failed to encode JSON: {e}")
-            raise ValueError(f"Cannot encode data as JSON: {e}")
+            raise ValueError(f"Cannot encode data as JSON: {e}") from e
 
     @staticmethod
     def encode_for_xml(value: EncodableValue, attribute: bool = False) -> str:
@@ -423,9 +423,9 @@ class OutputEncoder:
 
         # Mask potentially sensitive patterns
         sensitive_patterns = [
-            (r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b', '***@***.***'),  # Email
-            (r'\b\d{4}[-\s]?\d{4}[-\s]?\d{4}[-\s]?\d{4}\b', '****-****-****-****'),  # Credit card
-            (r'\b\d{3}-\d{2}-\d{4}\b', '***-**-****'),  # SSN
+            (r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b", "***@***.***"),  # Email
+            (r"\b\d{4}[-\s]?\d{4}[-\s]?\d{4}[-\s]?\d{4}\b", "****-****-****-****"),  # Credit card
+            (r"\b\d{3}-\d{2}-\d{4}\b", "***-**-****"),  # SSN
             (r'(?i)password["\']?\s*[:=]\s*["\']?[^\s"\']+', 'password="***"'),  # Password
         ]
 
@@ -435,7 +435,7 @@ class OutputEncoder:
         return text
 
     @staticmethod
-    def sanitize_html(value: str, allowed_tags: List[str] = None) -> str:
+    def sanitize_html(value: str, allowed_tags: Optional[list[str]] = None) -> str:
         """
         Sanitize HTML by removing dangerous tags and attributes.
 
@@ -452,25 +452,25 @@ class OutputEncoder:
         """
         if allowed_tags is None:
             # Remove all HTML tags
-            return re.sub(r'<[^>]+>', '', value)
+            return re.sub(r"<[^>]+>", "", value)
 
         # Basic sanitization - remove script tags and event handlers
         sanitized = value
 
         # Remove script tags
         sanitized = re.sub(
-            r'<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>', '', sanitized, flags=re.IGNORECASE
+            r"<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>", "", sanitized, flags=re.IGNORECASE
         )
 
         # Remove event handlers
-        sanitized = re.sub(r'\s*on\w+\s*=\s*(["\']).*?\1', '', sanitized, flags=re.IGNORECASE)
+        sanitized = re.sub(r'\s*on\w+\s*=\s*(["\']).*?\1', "", sanitized, flags=re.IGNORECASE)
 
         # Remove javascript: protocol
-        sanitized = re.sub(r'javascript:', '', sanitized, flags=re.IGNORECASE)
+        sanitized = re.sub(r"javascript:", "", sanitized, flags=re.IGNORECASE)
 
         # Remove dangerous iframes
         sanitized = re.sub(
-            r'<iframe\b[^<]*(?:(?!<\/iframe>)<[^<]*)*<\/iframe>', '', sanitized, flags=re.IGNORECASE
+            r"<iframe\b[^<]*(?:(?!<\/iframe>)<[^<]*)*<\/iframe>", "", sanitized, flags=re.IGNORECASE
         )
 
         return sanitized
@@ -595,7 +595,7 @@ class ContentSecurityPolicy:
     Provides CSP headers to prevent XSS and other injection attacks.
     """
 
-    DEFAULT_DIRECTIVES = {
+    DEFAULT_DIRECTIVES: ClassVar[dict] = {
         "default-src": "'self'",
         "script-src": "'self'",
         "style-src": "'self' 'unsafe-inline'",
@@ -609,7 +609,7 @@ class ContentSecurityPolicy:
         "object-src": "'none'",
     }
 
-    def __init__(self, directives: Dict[str, str] = None):
+    def __init__(self, directives: Optional[dict[str, str]] = None):
         """
         Initialize CSP with custom directives.
 
@@ -741,18 +741,18 @@ def encode_for_log(value: EncodableValue, max_length: int = 1000) -> str:
 
 
 __all__ = [
-    "OutputEncoder",
     "ContentSecurityPolicy",
+    "OutputEncoder",
+    "encode_for_css",
+    "encode_for_csv",
     "encode_for_html",
     "encode_for_html_attribute",
     "encode_for_javascript",
-    "encode_for_css",
+    "encode_for_log",
+    "encode_for_sql_like",
     "encode_for_url",
     "encode_for_xml",
-    "encode_for_csv",
-    "encode_for_sql_like",
-    "encode_for_log",
+    "encoder",
     "safe_json_dumps",
     "sanitize_output",
-    "encoder",
 ]

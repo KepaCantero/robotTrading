@@ -39,12 +39,12 @@ import logging
 import statistics
 import tempfile
 from collections import deque
-from pathlib import Path
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from decimal import Decimal
 from enum import Enum
-from typing import Dict, List, Optional, Union
+from pathlib import Path
+from typing import Optional, Union
 
 import aiosqlite
 
@@ -130,8 +130,8 @@ class DataSanityLayer:
         self.min_samples = min_samples
 
         # In-memory cache for recent prices (fast access)
-        self.price_cache: Dict[str, deque] = {}
-        self.timestamp_cache: Dict[str, datetime] = {}
+        self.price_cache: dict[str, deque] = {}
+        self.timestamp_cache: dict[str, datetime] = {}
 
     def _get_db_path(self) -> str:
         """Get database path, creating a secure temp directory if none was provided."""
@@ -203,9 +203,7 @@ class DataSanityLayer:
                 confirmed = await self._confirm_with_secondary_source(symbol, price)
 
                 if not confirmed:
-                    logger.error(
-                        f"Price NOT confirmed by secondary source: {symbol} price={price}"
-                    )
+                    logger.error(f"Price NOT confirmed by secondary source: {symbol} price={price}")
                     return PriceValidation(
                         symbol=symbol,
                         price=price,
@@ -276,7 +274,7 @@ class DataSanityLayer:
 
         return False
 
-    async def _get_recent_prices(self, symbol: str, minutes: int = 5) -> List[float]:
+    async def _get_recent_prices(self, symbol: str, minutes: int = 5) -> list[float]:
         """
         Get recent prices from cache.
 
@@ -386,7 +384,7 @@ class DataSanityLayer:
         self.timestamp_cache[symbol] = timestamp
 
         # Update database cache (async, don't wait)
-        asyncio.create_task(self._write_to_db_cache(symbol, price, timestamp))
+        self._cache_task = asyncio.create_task(self._write_to_db_cache(symbol, price, timestamp))
 
     async def _write_to_db_cache(self, symbol: str, price: Decimal, timestamp: datetime):
         """Write price to database cache."""
@@ -443,7 +441,9 @@ class SafeStopLossExecutor:
         self.sanity_layer = sanity_layer
         self.broker = broker_client
 
-    async def execute_stop_loss(self, position: Dict[str, Union[str, int, float, Decimal, None]], stop_price: Decimal) -> bool:
+    async def execute_stop_loss(
+        self, position: dict[str, Union[str, int, float, Decimal, None]], stop_price: Decimal
+    ) -> bool:
         """
         Execute stop-loss with price validation.
 
@@ -456,7 +456,7 @@ class SafeStopLossExecutor:
         Returns:
             True if stop-loss executed, False if rejected
         """
-        symbol = position['symbol']
+        symbol = position["symbol"]
 
         # Get current price
         current_price = await self._get_current_price(symbol)
@@ -473,7 +473,7 @@ class SafeStopLossExecutor:
 
         if validation.result == SanityCheckResult.STALE:
             logger.error(
-                f"STOP-LOSS EXECUTION BLOCKED: {symbol} " f"data is stale: {validation.reason}"
+                f"STOP-LOSS EXECUTION BLOCKED: {symbol} data is stale: {validation.reason}"
             )
             return False
 
@@ -485,13 +485,11 @@ class SafeStopLossExecutor:
             # Continue anyway, but log warning
 
         # Price validated - execute stop-loss
-        logger.info(
-            f"Executing stop-loss for {symbol}: " f"current={current_price} stop={stop_price}"
-        )
+        logger.info(f"Executing stop-loss for {symbol}: current={current_price} stop={stop_price}")
 
         try:
             await self.broker.close_position(
-                symbol=symbol, quantity=float(position['quantity']), side=position['side']
+                symbol=symbol, quantity=float(position["quantity"]), side=position["side"]
             )
 
             logger.info(f"Stop-loss executed successfully: {symbol}")

@@ -29,6 +29,7 @@ References:
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import logging
 import os
 import time
@@ -38,11 +39,10 @@ from datetime import datetime
 from decimal import Decimal
 from enum import Enum
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional, Tuple
+from typing import Any, Callable
 
 import aiosqlite
 import psutil
-import contextlib
 
 logger = logging.getLogger(__name__)
 
@@ -77,7 +77,7 @@ class LatencyMetrics:
     mean_ms: float
     timestamp: datetime
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
         return {
             "p50_ms": self.p50_ms,
@@ -101,7 +101,7 @@ class TrafficMetrics:
     current_connections: int
     timestamp: datetime
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
         return {
             "requests_per_second": self.requests_per_second,
@@ -120,11 +120,11 @@ class ErrorMetrics:
     error_rate_pct: float
     error_count: int
     total_requests: int
-    errors_by_type: Dict[str, int]
+    errors_by_type: dict[str, int]
     critical_errors: int
     timestamp: datetime
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
         return {
             "error_rate_pct": self.error_rate_pct,
@@ -148,12 +148,12 @@ class SaturationMetrics:
     disk_used_gb: float
     disk_free_gb: float
     network_utilization_pct: float
-    load_average: Tuple[float, float, float]  # 1min, 5min, 15min
+    load_average: tuple[float, float, float]  # 1min, 5min, 15min
     open_files: int
     thread_count: int
     timestamp: datetime
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
         return {
             "cpu_usage_pct": self.cpu_usage_pct,
@@ -185,7 +185,7 @@ class GoldenSignalMetrics:
     overall_health: HealthStatus
     collected_at: datetime
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
         return {
             "service_name": self.service_name,
@@ -234,7 +234,7 @@ class GoldenSignalsConfig:
     service_name: str = "trading-system"
 
     # SLO Targets
-    slo_targets: List[SLOTarget] = field(default_factory=list)
+    slo_targets: list[SLOTarget] = field(default_factory=list)
 
     # Alert thresholds
     latency_warning_ms: float = 500.0
@@ -261,8 +261,8 @@ class GoldenSignalsConfig:
     db_path: str = "data/golden_signals.db"
 
     # Callbacks
-    on_health_change: Optional[Callable[[HealthStatus, HealthStatus], None]] = None
-    on_slo_violation: Optional[Callable[[SLOTarget, float], None]] = None
+    on_health_change: Callable[[HealthStatus, HealthStatus], None] | None = None
+    on_slo_violation: Callable[[SLOTarget, float], None] | None = None
 
     def __post_init__(self):
         """Initialize default SLO targets if none provided."""
@@ -319,10 +319,10 @@ class RequestTracker:
         self.window_seconds = window_seconds
         self._requests: deque = deque()
         self._errors: deque = deque()
-        self._error_types: Dict[str, int] = {}
+        self._error_types: dict[str, int] = {}
         self._lock = asyncio.Lock()
 
-    def record_request(self, success: bool = True, error_type: Optional[str] = None) -> None:
+    def record_request(self, success: bool = True, error_type: str | None = None) -> None:
         """
         Record a request.
 
@@ -338,7 +338,7 @@ class RequestTracker:
             if error_type:
                 self._error_types[error_type] = self._error_types.get(error_type, 0) + 1
 
-    async def get_metrics(self) -> Tuple[int, int, Dict[str, int]]:
+    async def get_metrics(self) -> tuple[int, int, dict[str, int]]:
         """
         Get request metrics.
 
@@ -377,7 +377,7 @@ class LatencyCollector:
         """Record a latency measurement."""
         self._latencies.append(latency_ms)
 
-    async def get_metrics(self) -> Optional[LatencyMetrics]:
+    async def get_metrics(self) -> LatencyMetrics | None:
         """
         Get latency metrics.
 
@@ -424,7 +424,7 @@ class GoldenSignalsMonitor:
     def __init__(
         self,
         service_name: str,
-        config: Optional[GoldenSignalsConfig] = None,
+        config: GoldenSignalsConfig | None = None,
     ):
         """
         Initialize golden signals monitor.
@@ -447,10 +447,10 @@ class GoldenSignalsMonitor:
         self._request_tracker = RequestTracker(window_seconds=self.config.request_window_seconds)
 
         # Network baseline for saturation
-        self._network_baseline: Dict[str, float] = {}
+        self._network_baseline: dict[str, float] = {}
 
         # Collection task
-        self._collection_task: Optional[asyncio.Task] = None
+        self._collection_task: asyncio.Task | None = None
         self._is_running = False
 
         self.logger.info(f"GoldenSignalsMonitor initialized for {service_name}")
@@ -667,7 +667,7 @@ class GoldenSignalsMonitor:
             memory_available_mb = memory.available / (1024 * 1024)
 
             # Disk
-            disk = psutil.disk_usage('/')
+            disk = psutil.disk_usage("/")
             disk_used_gb = disk.used / (1024 * 1024 * 1024)
             disk_free_gb = disk.free / (1024 * 1024 * 1024)
 
@@ -682,7 +682,7 @@ class GoldenSignalsMonitor:
 
             # Process info
             process = psutil.Process()
-            open_files = len(process.open_files()) if hasattr(process, 'open_files') else 0
+            open_files = len(process.open_files()) if hasattr(process, "open_files") else 0
             thread_count = process.num_threads()
 
             return SaturationMetrics(
@@ -760,7 +760,7 @@ class GoldenSignalsMonitor:
             # Count network connections
             process = psutil.Process()
             connections = process.connections()
-            return len([c for c in connections if c.status == 'ESTABLISHED'])
+            return len([c for c in connections if c.status == "ESTABLISHED"])
         except Exception:
             return 0
 
@@ -859,7 +859,7 @@ class GoldenSignalsMonitor:
 
     def _get_metric_value(
         self, metrics: GoldenSignalMetrics, slo_target: SLOTarget
-    ) -> Optional[float]:
+    ) -> float | None:
         """Get metric value from metrics based on SLO target."""
         try:
             if slo_target.signal_type == SignalType.LATENCY:
@@ -910,7 +910,7 @@ class GoldenSignalsMonitor:
         except (aiosqlite.Error, asyncio.TimeoutError, OSError) as e:
             self.logger.error(f"Error persisting metrics: {e}")
 
-    def record_request(self, success: bool = True, error_type: Optional[str] = None) -> None:
+    def record_request(self, success: bool = True, error_type: str | None = None) -> None:
         """Record a request for traffic/error tracking."""
         self._request_tracker.record_request(success, error_type)
 
@@ -922,7 +922,7 @@ class GoldenSignalsMonitor:
         """Get current health status."""
         return self._current_health
 
-    async def get_current_metrics(self) -> Optional[GoldenSignalMetrics]:
+    async def get_current_metrics(self) -> GoldenSignalMetrics | None:
         """Get most recent metrics."""
         async with self._lock:
             if self._metrics_history:
@@ -932,13 +932,13 @@ class GoldenSignalsMonitor:
     async def get_metrics_history(
         self,
         limit: int = 100,
-    ) -> List[GoldenSignalMetrics]:
+    ) -> list[GoldenSignalMetrics]:
         """Get metrics history."""
         async with self._lock:
             history = list(self._metrics_history)
             return history[-limit:] if limit else history
 
-    async def get_metrics_summary(self) -> Dict[str, Any]:
+    async def get_metrics_summary(self) -> dict[str, Any]:
         """Get comprehensive metrics summary."""
         current = await self.get_current_metrics()
 
@@ -991,7 +991,7 @@ class GoldenSignalsMonitor:
             "collected_at": current.collected_at.isoformat(),
         }
 
-    async def check_slo_compliance(self) -> Dict[str, bool]:
+    async def check_slo_compliance(self) -> dict[str, bool]:
         """
         Check compliance with all SLO targets.
 
@@ -1013,12 +1013,12 @@ class GoldenSignalsMonitor:
 
 
 # Singleton instances
-_monitors: Dict[str, GoldenSignalsMonitor] = {}
+_monitors: dict[str, GoldenSignalsMonitor] = {}
 
 
 def get_golden_signals_monitor(
     service_name: str,
-    config: Optional[GoldenSignalsConfig] = None,
+    config: GoldenSignalsConfig | None = None,
 ) -> GoldenSignalsMonitor:
     """
     Get or create singleton golden signals monitor for service.

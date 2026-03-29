@@ -30,7 +30,7 @@ from dataclasses import dataclass, field
 from datetime import date, datetime, timezone
 from decimal import Decimal
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 from uuid import UUID
 
 from sqlalchemy import extract, select
@@ -68,7 +68,7 @@ class CryptoBalance:
     quantity: Decimal
     balance_eur: Decimal
     exchange_rate_eur: Decimal
-    exchanges: List[str]
+    exchanges: list[str]
     captured_at: datetime
 
 
@@ -110,26 +110,26 @@ class Modelo721Report:
     generated_at: datetime
 
     # Holdings as of December 31
-    dec31_balances: List[CryptoBalance]
+    dec31_balances: list[CryptoBalance]
     total_holdings_eur: Decimal
 
     # Transactions during the year
-    transactions: List[TransactionDetail]
+    transactions: list[TransactionDetail]
     total_transactions: int
 
     # Capital gains/losses
-    capital_gains_losses: List[CapitalGainLoss]
+    capital_gains_losses: list[CapitalGainLoss]
     total_gain_eur: Decimal
     total_loss_eur: Decimal
     net_gain_loss_eur: Decimal
 
     # Exchanges used
-    exchanges_used: List[str]
+    exchanges_used: list[str]
 
     # Additional metadata
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert report to dictionary."""
         return {
             "tax_year": self.tax_year,
@@ -258,7 +258,7 @@ class Modelo721Generator:
             self.logger.error(f"Error generating Modelo 721 report: {e}", exc_info=True)
             raise
 
-    async def _get_crypto_accounts(self, session: AsyncSession, user_id: UUID) -> List[Account]:
+    async def _get_crypto_accounts(self, session: AsyncSession, user_id: UUID) -> list[Account]:
         """Get all crypto accounts for user."""
         stmt = select(Account).where(
             Account.user_id == user_id,
@@ -269,8 +269,8 @@ class Modelo721Generator:
         return list(result.scalars().all())
 
     async def _calculate_dec31_snapshot(
-        self, session: AsyncSession, accounts: List[Account], year: int
-    ) -> List[CryptoBalance]:
+        self, session: AsyncSession, accounts: list[Account], year: int
+    ) -> list[CryptoBalance]:
         """
         Calculate Dec 31 balance for crypto holdings.
 
@@ -332,8 +332,8 @@ class Modelo721Generator:
         ]
 
     async def _get_annual_transactions(
-        self, session: AsyncSession, accounts: List[Account], year: int
-    ) -> List[TransactionDetail]:
+        self, session: AsyncSession, accounts: list[Account], year: int
+    ) -> list[TransactionDetail]:
         """
         Get all transactions for the tax year.
 
@@ -373,8 +373,8 @@ class Modelo721Generator:
         ]
 
     async def _calculate_capital_gains(
-        self, session: AsyncSession, accounts: List[Account], year: int
-    ) -> List[CapitalGainLoss]:
+        self, session: AsyncSession, accounts: list[Account], year: int
+    ) -> list[CapitalGainLoss]:
         """
         Calculate capital gains and losses for the tax year.
 
@@ -398,7 +398,7 @@ class Modelo721Generator:
         lots = result.scalars().all()
 
         # Group by symbol
-        gains_by_symbol: Dict[str, Dict[str, Any]] = {}
+        gains_by_symbol: dict[str, dict[str, Any]] = {}
 
         for lot in lots:
             symbol = lot.symbol
@@ -703,9 +703,9 @@ class Modelo721Generator:
 
         except (IntegrityError, OperationalError, DatabaseError, DataError, ProgrammingError) as e:
             self.logger.error(f"Error saving report to database: {e}", exc_info=True)
-            raise RuntimeError(f"Failed to save report: {e}")
+            raise RuntimeError(f"Failed to save report: {e}") from e
 
-    async def get_previous_year_reports(self, user_id: UUID) -> List[TaxReport]:
+    async def get_previous_year_reports(self, user_id: UUID) -> list[TaxReport]:
         """
         Get all previous Modelo 721 reports for a user.
 

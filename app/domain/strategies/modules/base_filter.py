@@ -4,7 +4,7 @@ BaseFilter - Clase abstracta base para todos los filtros modulares.
 
 import logging
 from abc import ABC, abstractmethod
-from typing import Dict, Optional
+from typing import Optional
 
 logger = logging.getLogger(__name__)
 
@@ -22,7 +22,7 @@ class BaseFilter(ABC):
     def __init__(
         self,
         name: str,
-        config: Optional[Dict] = None,
+        config: Optional[dict] = None,
         preset: str = "balanced",
         tier: Optional[str] = None,
         use_yaml: bool = True,
@@ -76,7 +76,7 @@ class BaseFilter(ABC):
             # thresholds_config son valores directos (no es un dict de presets)
             self.thresholds = thresholds_config if thresholds_config else {}
 
-    def _is_active_in_context(self, market_context: Dict) -> bool:
+    def _is_active_in_context(self, market_context: dict) -> bool:
         """
         Determinar si el filtro debe estar activo según el contexto de mercado.
 
@@ -105,8 +105,11 @@ class BaseFilter(ABC):
         return market_type in self.active_in_contexts
 
     def evaluate(
-        self, indicators: Dict, market_context: Dict, signal_type: str  # 'BUY' | 'SELL'
-    ) -> Dict:
+        self,
+        indicators: dict,
+        market_context: dict,
+        signal_type: str,  # 'BUY' | 'SELL'
+    ) -> dict:
         """
         Evalúa si el filtro pasa para el signal_type dado.
 
@@ -126,30 +129,30 @@ class BaseFilter(ABC):
         # Si el filtro no está activo en este contexto, no bloquea
         if not self._is_active_in_context(market_context):
             return {
-                'passed': True,
-                'confidence': 1.0,
-                'reason': f"{self.name} inactive in {market_context.get('type', 'unknown')} market",
-                'metadata': {'active': False},
+                "passed": True,
+                "confidence": 1.0,
+                "reason": f"{self.name} inactive in {market_context.get('type', 'unknown')} market",
+                "metadata": {"active": False},
             }
 
         # Aplicar lógica específica del filtro
         try:
             result = self._apply_filter_logic(indicators, market_context, signal_type)
-            result['filter_name'] = self.name
-            result['priority'] = self.priority
+            result["filter_name"] = self.name
+            result["priority"] = self.priority
             return result
         except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
             logger.error(f"Error in {self.name}.evaluate(): {e}", exc_info=True)
             # En caso de error, permitir la señal (fail-open)
             return {
-                'passed': True,
-                'confidence': 0.5,
-                'reason': f"{self.name}_generic_error: {str(e)}",
-                'metadata': {'error': True},
+                "passed": True,
+                "confidence": 0.5,
+                "reason": f"{self.name}_generic_error: {e!s}",
+                "metadata": {"error": True},
             }
 
     @abstractmethod
-    def _apply_filter_logic(self, indicators: Dict, market_context: Dict, signal_type: str) -> Dict:
+    def _apply_filter_logic(self, indicators: dict, market_context: dict, signal_type: str) -> dict:
         """
         Lógica específica del filtro. Debe ser implementada por cada subclase.
 

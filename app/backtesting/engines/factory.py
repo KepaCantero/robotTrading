@@ -20,7 +20,7 @@ Usage:
 """
 
 from decimal import Decimal
-from typing import Dict, Optional, Type, TypeVar, Union
+from typing import ClassVar, Optional, TypeVar, Union
 
 from pydantic import BaseModel
 
@@ -47,10 +47,10 @@ class EngineFactory:
     """
 
     # Registry of engine types to their classes
-    _registry: Dict[EngineType, Type[BaseBacktestEngine]] = {}
+    _registry: ClassVar[dict[EngineType, type[BaseBacktestEngine]]] = {}
 
     @classmethod
-    def register(cls, engine_type: EngineType, engine_class: Type[BaseBacktestEngine]) -> None:
+    def register(cls, engine_type: EngineType, engine_class: type[BaseBacktestEngine]) -> None:
         """
         Register an engine class for a given type.
 
@@ -211,8 +211,8 @@ class EngineFactory:
     def create_multi_strategy(
         cls,
         allocation_manager: object,
-        strategies: Dict[str, object],
-        config_params: Dict[str, object],
+        strategies: dict[str, object],
+        config_params: dict[str, object],
         **kwargs,
     ) -> BaseBacktestEngine:
         """
@@ -281,7 +281,7 @@ class EngineFactory:
         return list(cls._registry.keys())
 
     @classmethod
-    def get_engine_class(cls, engine_type: EngineType) -> Optional[Type[BaseBacktestEngine]]:
+    def get_engine_class(cls, engine_type: EngineType) -> Optional[type[BaseBacktestEngine]]:
         """
         Get the engine class for a given type.
 

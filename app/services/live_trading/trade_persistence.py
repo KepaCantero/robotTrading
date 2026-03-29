@@ -8,7 +8,7 @@ Implements SQLAlchemy ORM models and database operations for persistent storage.
 import logging
 from datetime import datetime
 from decimal import Decimal
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 from uuid import uuid4
 
 from sqlalchemy import (
@@ -40,7 +40,7 @@ logger = logging.getLogger(__name__)
 class OrderRecord(Base):
     """ORM Model for order records."""
 
-    __tablename__ = 'order_records'
+    __tablename__ = "order_records"
 
     order_id = Column(String(36), primary_key=True, default=lambda: str(uuid4()))
     symbol = Column(String(10), nullable=False, index=True)
@@ -69,7 +69,7 @@ class OrderRecord(Base):
         Index("idx_status_created", "status", "created_at"),
     )
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
         return {
             "order_id": self.order_id,
@@ -109,7 +109,7 @@ class TradeRecord(Base):
     # Relationships
     order = relationship("OrderRecord", back_populates="trades")
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
         return {
             "trade_id": self.trade_id,
@@ -141,7 +141,7 @@ class PositionHistory(Base):
     unrealized_pnl_pct = Column(Numeric(10, 4), nullable=False)
     cost_basis = Column(Numeric(18, 8), nullable=False)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
         return {
             "position_id": self.position_id,
@@ -173,7 +173,7 @@ class TradeStatistics(Base):
     daily_pnl = Column(Numeric(18, 8), nullable=False, default=0)
     daily_pnl_pct = Column(Numeric(10, 4), nullable=False, default=0)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
         return {
             "date": self.date.isoformat(),
@@ -212,7 +212,7 @@ class TradePersistenceManager:
             self.logger.info("Trade persistence manager initialized")
 
         except (IntegrityError, OperationalError, DatabaseError, DataError, ProgrammingError) as e:
-            self.logger.error(f"Error initializing persistence manager: {str(e)}")
+            self.logger.error(f"Error initializing persistence manager: {e!s}")
             raise
 
     async def shutdown(self) -> None:
@@ -222,7 +222,7 @@ class TradePersistenceManager:
         """
         self.logger.info("Trade persistence manager shutdown")
 
-    async def save_order(self, order_data: Dict[str, Any]) -> str:
+    async def save_order(self, order_data: dict[str, Any]) -> str:
         """Save an order record to database.
 
         Args:
@@ -254,10 +254,10 @@ class TradePersistenceManager:
                 return order.order_id
 
         except (IntegrityError, OperationalError, DatabaseError, DataError, ProgrammingError) as e:
-            self.logger.error(f"Error saving order: {str(e)}")
+            self.logger.error(f"Error saving order: {e!s}")
             raise
 
-    async def save_trade(self, trade_data: Dict[str, Any]) -> str:
+    async def save_trade(self, trade_data: dict[str, Any]) -> str:
         """Save a trade execution record.
 
         Args:
@@ -287,10 +287,10 @@ class TradePersistenceManager:
                 return trade.trade_id
 
         except (IntegrityError, OperationalError, DatabaseError, DataError, ProgrammingError) as e:
-            self.logger.error(f"Error saving trade: {str(e)}")
+            self.logger.error(f"Error saving trade: {e!s}")
             raise
 
-    async def save_position_snapshot(self, position_data: Dict[str, Any]) -> str:
+    async def save_position_snapshot(self, position_data: dict[str, Any]) -> str:
         """Save a position history snapshot.
 
         Args:
@@ -316,10 +316,10 @@ class TradePersistenceManager:
                 return position.position_id
 
         except (IntegrityError, OperationalError, DatabaseError, DataError, ProgrammingError) as e:
-            self.logger.error(f"Error saving position: {str(e)}")
+            self.logger.error(f"Error saving position: {e!s}")
             raise
 
-    async def get_order(self, order_id: str) -> Optional[Dict[str, Any]]:
+    async def get_order(self, order_id: str) -> Optional[dict[str, Any]]:
         """Retrieve an order by ID.
 
         Args:
@@ -336,10 +336,10 @@ class TradePersistenceManager:
                 return order.to_dict() if order else None
 
         except (IntegrityError, OperationalError, DatabaseError, DataError, ProgrammingError) as e:
-            self.logger.error(f"Error retrieving order: {str(e)}")
+            self.logger.error(f"Error retrieving order: {e!s}")
             return None
 
-    async def get_trades_by_symbol(self, symbol: str) -> List[Dict[str, Any]]:
+    async def get_trades_by_symbol(self, symbol: str) -> list[dict[str, Any]]:
         """Get all trades for a symbol.
 
         Args:
@@ -360,12 +360,12 @@ class TradePersistenceManager:
                 return [trade.to_dict() for trade in trades]
 
         except (IntegrityError, OperationalError, DatabaseError, DataError, ProgrammingError) as e:
-            self.logger.error(f"Error retrieving trades: {str(e)}")
+            self.logger.error(f"Error retrieving trades: {e!s}")
             return []
 
     async def get_trades_by_date_range(
         self, start_date: datetime, end_date: datetime
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """Get trades within a date range.
 
         Args:
@@ -392,10 +392,10 @@ class TradePersistenceManager:
                 return [trade.to_dict() for trade in trades]
 
         except (IntegrityError, OperationalError, DatabaseError, DataError, ProgrammingError) as e:
-            self.logger.error(f"Error retrieving trades by date: {str(e)}")
+            self.logger.error(f"Error retrieving trades by date: {e!s}")
             return []
 
-    async def get_position_history(self, symbol: str, limit: int = 100) -> List[Dict[str, Any]]:
+    async def get_position_history(self, symbol: str, limit: int = 100) -> list[dict[str, Any]]:
         """Get position history for a symbol.
 
         Args:
@@ -418,10 +418,10 @@ class TradePersistenceManager:
                 return [pos.to_dict() for pos in positions]
 
         except (IntegrityError, OperationalError, DatabaseError, DataError, ProgrammingError) as e:
-            self.logger.error(f"Error retrieving position history: {str(e)}")
+            self.logger.error(f"Error retrieving position history: {e!s}")
             return []
 
-    async def get_execution_statistics(self, date: datetime) -> Optional[Dict[str, Any]]:
+    async def get_execution_statistics(self, date: datetime) -> Optional[dict[str, Any]]:
         """Get execution statistics for a date.
 
         Args:
@@ -438,7 +438,7 @@ class TradePersistenceManager:
                 return stats.to_dict() if stats else None
 
         except (IntegrityError, OperationalError, DatabaseError, DataError, ProgrammingError) as e:
-            self.logger.error(f"Error retrieving statistics: {str(e)}")
+            self.logger.error(f"Error retrieving statistics: {e!s}")
             return None
 
     async def update_order_status(
@@ -471,7 +471,7 @@ class TradePersistenceManager:
                 return True
 
         except (IntegrityError, OperationalError, DatabaseError, DataError, ProgrammingError) as e:
-            self.logger.error(f"Error updating order status: {str(e)}")
+            self.logger.error(f"Error updating order status: {e!s}")
             return False
 
     async def count_trades(self, symbol: Optional[str] = None) -> int:
@@ -493,7 +493,7 @@ class TradePersistenceManager:
                 return len(result.scalars().all())
 
         except (IntegrityError, OperationalError, DatabaseError, DataError, ProgrammingError) as e:
-            self.logger.error(f"Error counting trades: {str(e)}")
+            self.logger.error(f"Error counting trades: {e!s}")
             return 0
 
 

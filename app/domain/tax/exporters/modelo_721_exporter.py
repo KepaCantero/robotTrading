@@ -36,7 +36,7 @@ from dataclasses import dataclass
 from datetime import date, datetime
 from decimal import Decimal
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Optional
 
 import aiohttp
 import aiosqlite
@@ -104,15 +104,15 @@ class Modelo721Exporter:
         self.output_dir.mkdir(parents=True, exist_ok=True)
 
         # Cache for exchange rates
-        self.exchange_rate_cache: Dict[str, Decimal] = {}
+        self.exchange_rate_cache: dict[str, Decimal] = {}
 
-    async def generate_annual_export(self, year: int, format: str = "coinpanda") -> str:
+    async def generate_annual_export(self, year: int, output_format: str = "coinpanda") -> str:
         """
         Generate annual CSV export for Modelo 721.
 
         Args:
             year: Tax year
-            format: Export format ('coinpanda', 'koinly', 'generic')
+            output_format: Export format ('coinpanda', 'koinly', 'generic')
 
         Returns:
             Path to generated CSV file
@@ -129,11 +129,11 @@ class Modelo721Exporter:
         balance_snapshot = await self._get_dec31_balance(year)
 
         # Generate CSV based on format
-        output_path = self.output_dir / f"modelo_721_{year}_{format}.csv"
+        output_path = self.output_dir / f"modelo_721_{year}_{output_format}.csv"
 
-        if format == "coinpanda":
+        if output_format == "coinpanda":
             await self._export_coinpanda(transactions, balance_snapshot, output_path)
-        elif format == "koinly":
+        elif output_format == "koinly":
             await self._export_koinly(transactions, balance_snapshot, output_path)
         else:
             await self._export_generic(transactions, balance_snapshot, output_path)
@@ -141,7 +141,7 @@ class Modelo721Exporter:
         logger.info(f"Export generated: {output_path}")
         return str(output_path)
 
-    async def _get_year_transactions(self, year: int) -> List[Transaction]:
+    async def _get_year_transactions(self, year: int) -> list[Transaction]:
         """Get all transactions for the tax year."""
         transactions = []
 
@@ -202,14 +202,14 @@ class Modelo721Exporter:
             logger.error(f"Error fetching transactions for {year}: {e}")
             raise
 
-    async def _calculate_capital_gains(self, transactions: List[Transaction]) -> List[Transaction]:
+    async def _calculate_capital_gains(self, transactions: list[Transaction]) -> list[Transaction]:
         """
         Calculate capital gains/losses for SELL transactions.
 
         Uses FIFO cost basis from the database.
         """
         # Group by symbol and lot
-        lots: Dict[str, List[Transaction]] = {}
+        lots: dict[str, list[Transaction]] = {}
         for tx in transactions:
             if tx.side == "BUY":
                 if tx.symbol not in lots:
@@ -232,7 +232,7 @@ class Modelo721Exporter:
 
         return transactions
 
-    async def _get_dec31_balance(self, year: int) -> List[BalanceSnapshot]:
+    async def _get_dec31_balance(self, year: int) -> list[BalanceSnapshot]:
         """
         Get December 31 balance snapshot for Modelo 720/721.
 
@@ -359,32 +359,30 @@ class Modelo721Exporter:
         # BOE API endpoint
         url = f"https://api.bde.es/v1/exchange_rates/{currency}/EUR/{date.isoformat()}"
 
-        async with aiohttp.ClientSession() as session:
-            async with session.get(url) as response:
-                if response.status == 200:
-                    data = await response.json()
-                    rate = Decimal(str(data['rate']))
-                    logger.info(f"BOE rate: {currency}/EUR = {rate}")
-                    return rate
-                else:
-                    raise RuntimeError(f"BOE API returned {response.status}")
+        async with aiohttp.ClientSession() as session, session.get(url) as response:
+            if response.status == 200:
+                data = await response.json()
+                rate = Decimal(str(data["rate"]))
+                logger.info(f"BOE rate: {currency}/EUR = {rate}")
+                return rate
+            else:
+                raise RuntimeError(f"BOE API returned {response.status}")
 
     async def _fetch_ecb_rate(self, currency: str, date: date) -> Decimal:
         """Fetch exchange rate from European Central Bank API."""
         # ECB daily reference rates
         url = "https://sdw-wsrest.ecb.europa.eu/service/data/EXR/D.{currency}.EUR.SP00.A"
 
-        async with aiohttp.ClientSession() as session:
-            async with session.get(url) as response:
-                if response.status == 200:
-                    # Parse ECB response
-                    # NOTE: Implement proper ECB XML parsing
-                    return Decimal("1.0")
-                else:
-                    raise RuntimeError(f"ECB API returned {response.status}")
+        async with aiohttp.ClientSession() as session, session.get(url) as response:
+            if response.status == 200:
+                # Parse ECB response
+                # NOTE: Implement proper ECB XML parsing
+                return Decimal("1.0")
+            else:
+                raise RuntimeError(f"ECB API returned {response.status}")
 
     async def _export_coinpanda(
-        self, transactions: List[Transaction], balances: List[BalanceSnapshot], output_path: Path
+        self, transactions: list[Transaction], balances: list[BalanceSnapshot], output_path: Path
     ):
         """
         Export in Coinpanda CSV format.
@@ -392,22 +390,22 @@ class Modelo721Exporter:
         Coinpanda format:
         Date,Sent Amount,Sent Currency,Received Amount,Received Currency,Fee,Fee Currency,Label,Description,TxHash
         """
-        with open(output_path, 'w', newline='') as f:
+        with open(output_path, "w", newline="") as f:
             writer = csv.writer(f)
 
             # Header
             writer.writerow(
                 [
-                    'Date',
-                    'Sent Amount',
-                    'Sent Currency',
-                    'Received Amount',
-                    'Received Currency',
-                    'Fee',
-                    'Fee Currency',
-                    'Label',
-                    'Description',
-                    'TxHash',
+                    "Date",
+                    "Sent Amount",
+                    "Sent Currency",
+                    "Received Amount",
+                    "Received Currency",
+                    "Fee",
+                    "Fee Currency",
+                    "Label",
+                    "Description",
+                    "TxHash",
                 ]
             )
 
@@ -416,55 +414,55 @@ class Modelo721Exporter:
                 if tx.side == "BUY":
                     writer.writerow(
                         [
-                            tx.date.strftime('%Y-%m-%d %H:%M:%S'),
-                            '',  # No sent amount
-                            '',
+                            tx.date.strftime("%Y-%m-%d %H:%M:%S"),
+                            "",  # No sent amount
+                            "",
                             str(tx.quantity),  # Received
                             tx.symbol,
-                            '',  # No fee
-                            '',
-                            'Buy',
-                            f'Cost basis: €{tx.cost_basis_eur:.2f}',
-                            tx.lot_id or '',
+                            "",  # No fee
+                            "",
+                            "Buy",
+                            f"Cost basis: €{tx.cost_basis_eur:.2f}",
+                            tx.lot_id or "",
                         ]
                     )
                 else:  # SELL
                     writer.writerow(
                         [
-                            tx.date.strftime('%Y-%m-%d %H:%M:%S'),
+                            tx.date.strftime("%Y-%m-%d %H:%M:%S"),
                             str(tx.quantity),  # Sent
                             tx.symbol,
-                            '',  # No received
-                            '',
-                            '',  # No fee
-                            '',
-                            'Sell',
-                            f'Gain: €{tx.capital_gain_eur:.2f}',
-                            tx.lot_id or '',
+                            "",  # No received
+                            "",
+                            "",  # No fee
+                            "",
+                            "Sell",
+                            f"Gain: €{tx.capital_gain_eur:.2f}",
+                            tx.lot_id or "",
                         ]
                     )
 
             # Dec 31 balance
             writer.writerow([])
-            writer.writerow(['# December 31 Balance Snapshot'])
+            writer.writerow(["# December 31 Balance Snapshot"])
             for bal in balances:
                 writer.writerow(
                     [
-                        bal.date.strftime('%Y-%m-%d'),
-                        '',
-                        '',
-                        '',
-                        '',
-                        '',
-                        '',
-                        'Balance',
-                        f'{bal.symbol}: {bal.quantity} @ €{bal.price_eur:.2f} = €{bal.total_value_eur:.2f}',
-                        '',
+                        bal.date.strftime("%Y-%m-%d"),
+                        "",
+                        "",
+                        "",
+                        "",
+                        "",
+                        "",
+                        "Balance",
+                        f"{bal.symbol}: {bal.quantity} @ €{bal.price_eur:.2f} = €{bal.total_value_eur:.2f}",
+                        "",
                     ]
                 )
 
     async def _export_koinly(
-        self, transactions: List[Transaction], balances: List[BalanceSnapshot], output_path: Path
+        self, transactions: list[Transaction], balances: list[BalanceSnapshot], output_path: Path
     ):
         """
         Export in Koinly CSV format.
@@ -472,62 +470,62 @@ class Modelo721Exporter:
         Koinly format:
         Date,Amount,Currency,Label,Description,Price
         """
-        with open(output_path, 'w', newline='') as f:
+        with open(output_path, "w", newline="") as f:
             writer = csv.writer(f)
 
             # Header
-            writer.writerow(['Date', 'Amount', 'Currency', 'Label', 'Description', 'Price'])
+            writer.writerow(["Date", "Amount", "Currency", "Label", "Description", "Price"])
 
             # Transactions
             for tx in transactions:
                 if tx.side == "BUY":
                     writer.writerow(
                         [
-                            tx.date.strftime('%Y-%m-%d %H:%M:%S'),
+                            tx.date.strftime("%Y-%m-%d %H:%M:%S"),
                             str(tx.quantity),
                             tx.symbol,
-                            'Deposit',
-                            f'Cost: €{tx.cost_basis_eur:.2f}',
+                            "Deposit",
+                            f"Cost: €{tx.cost_basis_eur:.2f}",
                             str(tx.price),
                         ]
                     )
                 else:  # SELL
                     writer.writerow(
                         [
-                            tx.date.strftime('%Y-%m-%d %H:%M:%S'),
+                            tx.date.strftime("%Y-%m-%d %H:%M:%S"),
                             str(-tx.quantity),  # Negative for sells
                             tx.symbol,
-                            'Withdrawal',
-                            f'Gain: €{tx.capital_gain_eur:.2f}',
+                            "Withdrawal",
+                            f"Gain: €{tx.capital_gain_eur:.2f}",
                             str(tx.price),
                         ]
                     )
 
     async def _export_generic(
-        self, transactions: List[Transaction], balances: List[BalanceSnapshot], output_path: Path
+        self, transactions: list[Transaction], balances: list[BalanceSnapshot], output_path: Path
     ):
         """
         Export in generic tax software format.
 
         Generic format with all tax-relevant fields.
         """
-        with open(output_path, 'w', newline='') as f:
+        with open(output_path, "w", newline="") as f:
             writer = csv.writer(f)
 
             # Header
             writer.writerow(
                 [
-                    'Date',
-                    'Symbol',
-                    'Side',
-                    'Quantity',
-                    'Price',
-                    'Currency',
-                    'Cost Basis (EUR)',
-                    'Proceeds (EUR)',
-                    'Capital Gain (EUR)',
-                    'Acquisition Date',
-                    'Lot ID',
+                    "Date",
+                    "Symbol",
+                    "Side",
+                    "Quantity",
+                    "Price",
+                    "Currency",
+                    "Cost Basis (EUR)",
+                    "Proceeds (EUR)",
+                    "Capital Gain (EUR)",
+                    "Acquisition Date",
+                    "Lot ID",
                 ]
             )
 
@@ -535,7 +533,7 @@ class Modelo721Exporter:
             for tx in transactions:
                 writer.writerow(
                     [
-                        tx.date.strftime('%Y-%m-%d %H:%M:%S'),
+                        tx.date.strftime("%Y-%m-%d %H:%M:%S"),
                         tx.symbol,
                         tx.side,
                         str(tx.quantity),
@@ -544,15 +542,15 @@ class Modelo721Exporter:
                         str(tx.cost_basis_eur),
                         str(tx.proceeds_eur),
                         str(tx.capital_gain_eur),
-                        tx.acquisition_date.strftime('%Y-%m-%d') if tx.acquisition_date else '',
-                        tx.lot_id or '',
+                        tx.acquisition_date.strftime("%Y-%m-%d") if tx.acquisition_date else "",
+                        tx.lot_id or "",
                     ]
                 )
 
             # Dec 31 balance
             writer.writerow([])
-            writer.writerow(['# DECEMBER 31 BALANCE SNAPSHOT (Modelo 720/721)'])
-            writer.writerow(['Symbol', 'Quantity', 'Price (EUR)', 'Total Value (EUR)', 'Date'])
+            writer.writerow(["# DECEMBER 31 BALANCE SNAPSHOT (Modelo 720/721)"])
+            writer.writerow(["Symbol", "Quantity", "Price (EUR)", "Total Value (EUR)", "Date"])
             for bal in balances:
                 writer.writerow(
                     [
@@ -560,13 +558,16 @@ class Modelo721Exporter:
                         str(bal.quantity),
                         str(bal.price_eur),
                         str(bal.total_value_eur),
-                        bal.date.strftime('%Y-%m-%d'),
+                        bal.date.strftime("%Y-%m-%d"),
                     ]
                 )
 
 
 async def generate_modelo_721_export(
-    fifo_db_path: str, year: int, output_dir: str = "./tax_exports", format: str = "coinpanda"
+    fifo_db_path: str,
+    year: int,
+    output_dir: str = "./tax_exports",
+    output_format: str = "coinpanda",
 ) -> str:
     """
     Convenience function to generate Modelo 721 CSV export.
@@ -575,7 +576,7 @@ async def generate_modelo_721_export(
         csv_path = await generate_modelo_721_export(
             fifo_db_path="data/fifo.db",
             year=2024,
-            format="coinpanda"
+            output_format="coinpanda"
         )
 
         logger.debug(f"Export generated: {csv_path}")
@@ -585,10 +586,10 @@ async def generate_modelo_721_export(
         fifo_db_path: Path to FIFO database
         year: Tax year
         output_dir: Output directory for CSV
-        format: Export format ('coinpanda', 'koinly', 'generic')
+        output_format: Export format ('coinpanda', 'koinly', 'generic')
 
     Returns:
         Path to generated CSV file
     """
     exporter = Modelo721Exporter(fifo_db_path, output_dir)
-    return await exporter.generate_annual_export(year, format)
+    return await exporter.generate_annual_export(year, output_format)

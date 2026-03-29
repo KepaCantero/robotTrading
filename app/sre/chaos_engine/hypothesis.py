@@ -26,7 +26,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from decimal import Decimal
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 import aiosqlite
 
@@ -55,8 +55,8 @@ class ChaosHypothesis:
     name: str
     description: str
     expected_behavior: str
-    baseline_metrics: Dict[str, Any]
-    actual_metrics: Dict[str, Any]
+    baseline_metrics: dict[str, Any]
+    actual_metrics: dict[str, Any]
     steady_state_threshold: Decimal = Decimal("0.95")  # 95% of baseline
     created_at: datetime = field(default_factory=datetime.utcnow)
 
@@ -66,7 +66,7 @@ class ChaosHypothesis:
     validate_error_rate: bool = True
     validate_throughput: bool = True
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
         return {
             "name": self.name,
@@ -94,21 +94,21 @@ class ValidationResult:
     hypothesis_name: str
     status: HypothesisStatus
     confidence: Decimal  # 0.0 to 1.0
-    details: Dict[str, Any]
+    details: dict[str, Any]
     validated_at: datetime = field(default_factory=datetime.utcnow)
 
     # Metric comparisons
-    availability_delta: Optional[Decimal] = None
-    latency_delta: Optional[Decimal] = None
-    error_rate_delta: Optional[Decimal] = None
-    throughput_delta: Optional[Decimal] = None
+    availability_delta: Decimal | None = None
+    latency_delta: Decimal | None = None
+    error_rate_delta: Decimal | None = None
+    throughput_delta: Decimal | None = None
 
     # Statistical analysis
-    p_value: Optional[Decimal] = None
-    effect_size: Optional[Decimal] = None
+    p_value: Decimal | None = None
+    effect_size: Decimal | None = None
     sample_size: int = 0
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
         return {
             "hypothesis_name": self.hypothesis_name,
@@ -281,7 +281,7 @@ class HypothesisValidator:
     async def _compare_metrics(
         self,
         hypothesis: ChaosHypothesis,
-    ) -> Dict[str, Dict[str, Any]]:
+    ) -> dict[str, dict[str, Any]]:
         """Compare baseline vs actual metrics."""
         baseline = hypothesis.baseline_metrics
         actual = hypothesis.actual_metrics
@@ -353,8 +353,8 @@ class HypothesisValidator:
     async def _calculate_deltas(
         self,
         hypothesis: ChaosHypothesis,
-        comparisons: Dict[str, Dict[str, Any]],
-    ) -> Dict[str, Decimal]:
+        comparisons: dict[str, dict[str, Any]],
+    ) -> dict[str, Decimal]:
         """Calculate metric deltas."""
         deltas = {}
 
@@ -370,8 +370,8 @@ class HypothesisValidator:
     async def _check_steady_state(
         self,
         hypothesis: ChaosHypothesis,
-        deltas: Dict[str, Decimal],
-    ) -> Dict[str, bool]:
+        deltas: dict[str, Decimal],
+    ) -> dict[str, bool]:
         """Check if system maintained steady state."""
         steady_state = {}
         threshold = hypothesis.steady_state_threshold
@@ -401,8 +401,8 @@ class HypothesisValidator:
     async def _calculate_statistics(
         self,
         hypothesis: ChaosHypothesis,
-        comparisons: Dict[str, Dict[str, Any]],
-    ) -> Dict[str, Any]:
+        comparisons: dict[str, dict[str, Any]],
+    ) -> dict[str, Any]:
         """Calculate statistical significance."""
         # This is a simplified implementation
         # In production, you would use proper statistical tests
@@ -418,8 +418,8 @@ class HypothesisValidator:
 
     async def _determine_status(
         self,
-        steady_state: Dict[str, bool],
-        statistics: Dict[str, Any],
+        steady_state: dict[str, bool],
+        statistics: dict[str, Any],
     ) -> HypothesisStatus:
         """Determine hypothesis status."""
         # Check if all metrics maintained steady state
@@ -443,7 +443,7 @@ class HypothesisValidator:
     async def _calculate_confidence(
         self,
         status: HypothesisStatus,
-        statistics: Dict[str, Any],
+        statistics: dict[str, Any],
     ) -> Decimal:
         """Calculate confidence in result."""
         # Simplified confidence calculation
@@ -500,7 +500,7 @@ class HypothesisValidator:
         except (aiosqlite.Error, asyncio.TimeoutError, OSError) as e:
             self.logger.error(f"Error saving result: {e}")
 
-    async def get_hypothesis_history(self, limit: int = 100) -> List[Dict[str, Any]]:
+    async def get_hypothesis_history(self, limit: int = 100) -> list[dict[str, Any]]:
         """Get hypothesis validation history."""
         try:
             async with aiosqlite.connect(self.db_path) as db:
@@ -532,7 +532,7 @@ class HypothesisValidator:
             self.logger.error(f"Error getting history: {e}")
             return []
 
-    async def get_summary(self) -> Dict[str, Any]:
+    async def get_summary(self) -> dict[str, Any]:
         """Get hypothesis validator summary."""
         try:
             async with aiosqlite.connect(self.db_path) as db:

@@ -16,7 +16,7 @@ from .fx_carry_config import FXCarryTradeStrategyConfig
 from .momentum_config import MomentumModularConfig
 
 __all__ = [
-    "MomentumModularConfig",
     "DividendStrategyConfig",
     "FXCarryTradeStrategyConfig",
+    "MomentumModularConfig",
 ]

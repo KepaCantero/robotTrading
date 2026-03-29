@@ -10,7 +10,6 @@ from __future__ import annotations
 from dataclasses import dataclass
 from decimal import Decimal
 from enum import Enum
-from typing import Optional
 
 
 class RegulatoryRegion(str, Enum):
@@ -38,7 +37,7 @@ class TaxResidence:
 
     # Country identification
     country_code: str
-    country_name: Optional[str] = None
+    country_name: str | None = None
     region: RegulatoryRegion = RegulatoryRegion.OTHER
 
     # Tax rates (can be overridden with custom values)
@@ -52,14 +51,14 @@ class TaxResidence:
     # Country-specific rules
     applies_wash_sale_rule: bool = False
     allows_loss_carryforward: bool = True
-    loss_carryforward_years: Optional[int] = 4
+    loss_carryforward_years: int | None = 4
 
     # Currency
     base_currency: str = "EUR"
 
     # Regulatory
     requires_currency_hedging: bool = False
-    regulatory_authority: Optional[str] = None
+    regulatory_authority: str | None = None
 
     def __post_init__(self):
         """Validate tax residence invariants."""
