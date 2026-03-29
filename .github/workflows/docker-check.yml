@@ -1,0 +1,25 @@
+name: Docker-Build-Check
+
+on:
+  push:
+    branches: [main, develop]
+
+jobs:
+  docker:
+    name: Docker Build Validation
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check Dockerfile exists
+        run: test -f Dockerfile || echo "No Dockerfile found - skipping"
+
+      - name: Build Docker Image
+        if: hashFiles('Dockerfile')
+        run: docker build -t algotrading:test .
+
+      - name: Verify Image
+        if: hashFiles('Dockerfile')
+        run: |
+          docker run --rm algotrading:test python -c "print('Build OK')"
