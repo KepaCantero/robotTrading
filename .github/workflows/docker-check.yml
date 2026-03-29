@@ -3,6 +3,15 @@ name: Docker-Build-Check
 on:
   push:
     branches: [main, develop]
+    paths:
+      - 'Dockerfile'
+      - 'pyproject.toml'
+      - 'app/**'
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - 'Dockerfile'
+      - 'pyproject.toml'
 
 jobs:
   docker:
@@ -12,14 +21,20 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Check Dockerfile exists
-        run: test -f Dockerfile || echo "No Dockerfile found - skipping"
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
 
-      - name: Build Docker Image
-        if: hashFiles('Dockerfile')
-        run: docker build -t algotrading:test .
+      - name: Build Docker Image (production target)
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          target: production
+          push: false
+          load: true
+          tags: algotrading:test
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
-      - name: Verify Image
-        if: hashFiles('Dockerfile')
+      - name: Verify Image starts
         run: |
           docker run --rm algotrading:test python -c "print('Build OK')"

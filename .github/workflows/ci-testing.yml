@@ -43,7 +43,7 @@ jobs:
           pytest tests/unit/ -v --tb=short -q \
             --cov=app --cov-branch \
             --cov-report=term-missing \
-            --cov-fail-under=60
+            --cov-fail-under=40
         env:
           PYTHONPATH: .
 

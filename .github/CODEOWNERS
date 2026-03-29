@@ -1,0 +1,24 @@
+# CODEOWNERS - Code review assignments
+# https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+
+# Default owners for everything
+*       @KepaCantero
+
+# CI/CD
+/.github/workflows/   @KepaCantero
+
+# Docker
+/Dockerfile           @KepaCantero
+
+# Dependencies
+/pyproject.toml       @KepaCantero
+/requirements*.txt    @KepaCantero
+
+# Core application
+/app/                 @KepaCantero
+
+# Tests
+/tests/               @KepaCantero
+
+# Configuration
+/config/              @KepaCantero
