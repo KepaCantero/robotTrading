@@ -1,0 +1,169 @@
+{
+  "discovered_at": "2026-03-29T07:11:52.149213+00:00",
+  "total_files": 1189,
+  "quality_summary": {
+    "ruff_errors": 0,
+    "format_errors": 0,
+    "mypy_errors": 1331,
+    "mypy_files_affected": 126,
+    "bandit_issues": 0,
+    "anti_patterns": {
+      "type_ignore": 3,
+      "pylint_disable": 0,
+      "noqa": 0,
+      "nosec": 0,
+      "any_type": 19
+    }
+  },
+  "files_by_layer": {
+    "core": 12,
+    "domain": 288,
+    "services": 325,
+    "infrastructure": 55,
+    "engines": 105,
+    "presentation": 63,
+    "backtesting": 167,
+    "api": 2,
+    "other": 172
+  },
+  "mypy_top_errors": [
+    {
+      "error": "DividendProfile has no attribute",
+      "count": 65
+    },
+    {
+      "error": "object has no attribute get",
+      "count": 42
+    },
+    {
+      "error": "raise_database_error incompatible type",
+      "count": 38
+    },
+    {
+      "error": "FloatArray not valid as type",
+      "count": 32
+    },
+    {
+      "error": "Library stubs not installed yaml",
+      "count": 17
+    },
+    {
+      "error": "FloatArray has no attribute shape",
+      "count": 17
+    },
+    {
+      "error": "ProfileConfigLoader get incompatible type",
+      "count": 14
+    },
+    {
+      "error": "object not indexable",
+      "count": 13
+    },
+    {
+      "error": "Library stubs not installed requests",
+      "count": 13
+    },
+    {
+      "error": "Unsupported right operand for in object",
+      "count": 12
+    }
+  ],
+  "priority_fixes": {
+    "P0_critical": [
+      "Fix 3 type: ignore suppressions in strategy_stock_allocator files",
+      "Fix 19 Any type hints in compliance, health, sre, and strategy files"
+    ],
+    "P1_important": [
+      "Fix 1331 mypy errors across 126 files",
+      "Top error pattern: DividendProfile attribute errors (65)",
+      "Top error pattern: object.get() calls on untyped data (42)",
+      "Top error pattern: raise_database_error signature mismatch (38)"
+    ],
+    "P2_nice_to_have": [
+      "Install types-PyYAML stubs (17 errors)",
+      "Install types-requests stubs (13 errors)"
+    ]
+  },
+  "files": [
+    {
+      "path": "app/__init__.py",
+      "layer": "other"
+    },
+    {
+      "path": "app/api/__init__.py",
+      "layer": "api"
+    },
+    {
+      "path": "app/api/cost_analysis.py",
+      "layer": "api"
+    },
+    {
+      "path": "app/application/__init__.py",
+      "layer": "other"
+    },
+    {
+      "path": "app/application/alerting/__init__.py",
+      "layer": "other"
+    },
+    {
+      "path": "app/application/alerting/alerting_orchestrator.py",
+      "layer": "other"
+    },
+    {
+      "path": "app/application/dto/__init__.py",
+      "layer": "other"
+    },
+    {
+      "path": "app/application/handlers/__init__.py",
+      "layer": "other"
+    },
+    {
+      "path": "app/application/interfaces/__init__.py",
+      "layer": "other"
+    },
+    {
+      "path": "app/application/interfaces/backtest_presenter.py",
+      "layer": "other"
+    },
+    {
+      "path": "app/application/orchestration/__init__.py",
+      "layer": "other"
+    },
+    {
+      "path": "app/application/orchestration/target_optimization/__init__.py",
+      "layer": "other"
+    },
+    {
+      "path": "app/application/orchestration/target_optimization/absolute_return_optimizer.py",
+      "layer": "other"
+    },
+    {
+      "path": "app/application/orchestration/target_optimization/capital_tier_selector.py",
+      "layer": "other"
+    },
+    {
+      "path": "app/application/orchestration/target_optimization/models.py",
+      "layer": "other"
+    },
+    {
+      "path": "app/application/reconciliation/__init__.py",
+      "layer": "other"
+    },
+    {
+      "path": "app/application/reporting/__init__.py",
+      "layer": "other"
+    },
+    {
+      "path": "app/application/reporting/quantstats_integration.py",
+      "layer": "other"
+    },
+    {
+      "path": "app/application/reporting/report_templates.py",
+      "layer": "other"
+    },
+    {
+      "path": "app/application/reporting/reporting_orchestrator.py",
+      "layer": "other"
+    }
+  ]
+}

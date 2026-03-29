@@ -7,6 +7,10 @@
 name: "Architecture & File System Compliance Fix"
 description: "Fix ALL architecture and file system violations in app/"
 
+cli:
+  backend: "claude"
+  model: "glm-5-turbo"  # Turbo para compliance fix rápido
+
 # COVERAGE MATRIX:
 # | Issue | Report | Severity | Hat | Status |
 # |-------|--------|----------|-----|--------|
@@ -47,6 +51,7 @@ hats:
   # HAT 1: Violation Scanner - Scans all files for violations
   violation_scanner:
     name: "Violation Scanner"
+    description: "Scan all files for architecture and file system violations"
     triggers: ["audit.started"]
     publishes: ["violations.scanned"]
     tools: ["Bash", "Grep", "Read", "Write"]
@@ -58,6 +63,7 @@ hats:
   # Coverage: 40+ files importing from services/infrastructure in domain
   domain_purity_fixer:
     name: "Domain Purity Fixer"
+    description: "Remove service/infrastructure imports from domain layer using Protocol pattern"
     triggers: ["violations.scanned"]
     publishes: ["domain.purified"]
     tools: ["Read", "Edit", "Write", "Bash"]
@@ -69,6 +75,7 @@ hats:
   # Coverage: domain/tax/database/fifo_schema.py (SQLAlchemy in domain)
   infrastructure_extractor:
     name: "Infrastructure Extractor"
+    description: "Move infrastructure files out of domain (SQLAlchemy schemas to infrastructure/database/)"
     triggers: ["domain.purified"]
     publishes: ["infrastructure.extracted"]
     tools: ["Read", "Edit", "Write", "Bash"]
@@ -79,6 +86,7 @@ hats:
   # HAT 4: Protocol Creator - Creates Protocol interfaces
   protocol_creator:
     name: "Protocol Creator"
+    description: "Create Protocol interfaces for domain dependencies"
     triggers: ["infrastructure.extracted"]
     publishes: ["protocols.created"]
     tools: ["Read", "Edit", "Write"]
@@ -90,6 +98,7 @@ hats:
   # Coverage: 30+ files exceeding 300 lines
   god_file_splitter:
     name: "God File Splitter"
+    description: "Split files exceeding 300 lines into smaller modules"
     triggers: ["protocols.created"]
     publishes: ["files.splitted"]
     tools: ["Read", "Edit", "Write", "Bash"]
@@ -101,6 +110,7 @@ hats:
   # Coverage: app/presentation/api/utils.py, app/services/hurst_analysis/utils.py
   file_renamer:
     name: "File Renamer"
+    description: "Rename prohibited files (utils.py, helpers.py, etc.) and move app.py from root"
     triggers: ["files.splitted"]
     publishes: ["files.renamed"]
     tools: ["Bash", "Read", "Edit", "Write"]
@@ -112,6 +122,7 @@ hats:
   # Coverage: 9 non-standard directories (application/, shared/, presentation/, etc.)
   directory_consolidator:
     name: "Directory Consolidator"
+    description: "Consolidate overlapping directories (Phase 1 only - create plan for Phase 2/3)"
     triggers: ["files.renamed"]
     publishes: ["directories.consolidated"]
     tools: ["Bash", "Read", "Edit", "Write"]
@@ -123,6 +134,7 @@ hats:
   # Coverage: 30+ directories with depth > 4
   depth_flattener:
     name: "Depth Flattener"
+    description: "Flatten directory structures exceeding depth 4"
     triggers: ["directories.consolidated"]
     publishes: ["depth.flattened"]
     tools: ["Bash", "Read", "Edit", "Write"]
@@ -133,6 +145,7 @@ hats:
   # HAT 9: Import Fixer - Fixes all broken imports after moves
   import_fixer:
     name: "Import Fixer"
+    description: "Fix all broken imports after file moves and renames"
     triggers: ["depth.flattened"]
     publishes: ["imports.fixed"]
     tools: ["Bash", "Grep", "Read", "Edit"]
@@ -143,6 +156,7 @@ hats:
   # HAT 10: Requirements Updater - Updates .requirements files
   requirements_updater:
     name: "Requirements Updater"
+    description: "Update .requirements/app/ files after structural changes"
     triggers: ["imports.fixed"]
     publishes: ["requirements.updated"]
     tools: ["Read", "Edit", "Write", "Glob"]
@@ -153,6 +167,7 @@ hats:
   # HAT 11: Compliance Verifier - Final verification
   compliance_verifier:
     name: "Compliance Verifier"
+    description: "Verify all violations are fixed, run validation"
     triggers: ["requirements.updated"]
     publishes: ["compliance.verified"]
     tools: ["Bash", "Grep", "Read", "Write"]
@@ -163,6 +178,7 @@ hats:
   # HAT 12: Final Reporter - Generate final report
   final_reporter:
     name: "Final Reporter"
+    description: "Generate final compliance report with all fixes applied"
     triggers: ["compliance.verified"]
     publishes: ["audit.complete"]
     tools: ["Read", "Write", "Bash"]

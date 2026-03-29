@@ -18,6 +18,10 @@
 
 ## Fixes
 
+### mem-1774707451-06d7
+> Fixed corrupted Depends/Query names (epends->Depends, uery->Query) in app/presentation/ files. Added extend-immutable-calls to .flake8 for FastAPI patterns (Depends, Query, Path, Security, Body, Field, Form, Header, Cookie, File) to properly handle B008 without noqa. auth.py Security() calls moved to module-level vars.
+<!-- tags: flake8, fastapi, B008 | created: 2026-03-28 -->
+
 ### mem-1773647476-ee7e
 > MI score 0.00 for large files (3000+ LOC): Root cause is Lines of Code factor in MI calculation. Only fix is to split file into smaller modules. Adding docstrings, reducing CC, or comments won't help. Architectural refactoring required.
 <!-- tags: radon, mi, maintainability, code-quality | created: 2026-03-16 -->

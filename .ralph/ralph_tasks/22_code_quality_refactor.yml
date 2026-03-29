@@ -21,6 +21,7 @@ event_loop:
 
 cli:
   backend: "claude"
+  model: "glm-5-turbo"  # Turbo para refactor rápido de calidad
 
 core:
   specs_dir: "./specs/"

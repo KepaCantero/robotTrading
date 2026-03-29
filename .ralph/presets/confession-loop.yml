@@ -1,0 +1,115 @@
+# ============================================
+# Confession Loop Preset - 4 Hats Pipeline
+# ============================================
+# A structured self-review pipeline that forces
+# the agent to evaluate its own output through
+# four distinct analytical perspectives before
+# accepting the result.
+# ============================================
+
+name: confession-loop
+description: >
+  Four-hat self-review pipeline. Each hat represents
+  a different analytical lens applied sequentially to
+  every output before it is accepted.
+
+# Pipeline stages - executed in order
+hats:
+  # Hat 1: The Critic - Find flaws and weaknesses
+  - name: critic
+    role: >
+      Identify every defect, anti-pattern, edge case failure,
+      and logical error in the current output. Be ruthless.
+    checks:
+      - logic_errors: "Are there logical inconsistencies?"
+      - edge_cases: "What happens at boundary conditions?"
+      - anti_patterns: "Does this introduce known anti-patterns?"
+      - missing_validation: "Are all inputs validated?"
+      - error_handling: "Are all failure paths handled?"
+    output_format: |
+      ## Critic Findings
+      - [SEVERE] <issues that must be fixed>
+      - [MODERATE] <issues that should be fixed>
+      - [MINOR] <issues that could be improved>
+
+  # Hat 2: The Architect - Evaluate design and structure
+  - name: architect
+    role: >
+      Evaluate structural soundness, adherence to SOLID principles,
+      and alignment with the existing codebase architecture.
+    checks:
+      - solid_compliance: "Does the code follow SOLID principles?"
+      - dependency_direction: "Do dependencies point inward (Clean Architecture)?"
+      - separation_of_concerns: "Are responsibilities properly separated?"
+      - naming_conventions: "Are names clear, consistent, and intention-revealing?"
+      - interface_design: "Are interfaces minimal and well-defined?"
+    output_format: |
+      ## Architect Assessment
+      - PATTERN: <pattern used and why>
+      - COHESION: <high/medium/low>
+      - COUPLING: <tight/loose>
+      - RECOMMENDATIONS: <structural improvements>
+
+  # Hat 3: The Engineer - Verify correctness and performance
+  - name: engineer
+    role: >
+      Verify functional correctness, performance characteristics,
+      and operational readiness. Run the numbers.
+    checks:
+      - test_coverage: "Is the code adequately tested?"
+      - type_safety: "Are types correct and complete?"
+      - performance: "Are there performance bottlenecks?"
+      - resource_usage: "Memory, CPU, I/O efficiency?"
+      - concurrency_safety: "Thread-safe? Race conditions?"
+    output_format: |
+      ## Engineer Verification
+      - CORRECTNESS: <pass/fail with evidence>
+      - PERFORMANCE: <estimated impact>
+      - COVERAGE: <estimated percentage>
+      - ACTION_ITEMS: <must-fix items>
+
+  # Hat 4: The Steward - Security, compliance, maintainability
+  - name: steward
+    role: >
+      Ensure the output is secure, maintainable, and does not
+      introduce technical debt or compliance risks.
+    checks:
+      - security_review: "Any injection vectors, auth bypasses, data leaks?"
+      - secrets_exposure: "Are secrets properly managed?"
+      - backwards_compatibility: "Does this break existing interfaces?"
+      - documentation: "Is the change documented adequately?"
+      - tech_debt: "Does this introduce shortcuts that need later cleanup?"
+    output_format: |
+      ## Steward Gate
+      - SECURITY: <pass/fail>
+      - COMPATIBILITY: <breaking/non-breaking>
+      - DOCUMENTATION: <adequate/needs-work>
+      - DEBT_IMPACT: <none/low/medium/high>
+
+# Execution rules
+rules:
+  - All four hats must complete before output is accepted
+  - Any SEVERE finding from the Critic blocks acceptance
+  - Any SECURITY fail from the Steward blocks acceptance
+  - Hat findings are accumulated, not overwritten
+  - The agent must address all blocking findings before re-submitting
+
+# Integration with Ralph backpressure
+backpressure_integration:
+  trigger_on: ["Write", "Edit", "MultiEdit"]
+  file_patterns: ["*.py"]
+  skip_patterns:
+    - "tests/**"
+    - "scripts/**"
+    - "examples/**"
+  min_severity_to_block: "SEVERE"
+
+# Scoring
+scoring:
+  max_issues_per_hat: 10
+  pass_threshold: 0  # zero blocking issues required
+  weights:
+    critic: 0.30
+    architect: 0.25
+    engineer: 0.25
+    steward: 0.20

@@ -44,14 +44,11 @@ jobs:
           pip install -r requirements.txt
           pip install -r requirements-dev.txt
 
-      - name: Run Black (Code Formatting)
-        run: black --check --diff .
+      - name: Run Ruff (Linting)
+        run: ruff check .
 
-      - name: Run isort (Import Sorting)
-        run: isort --check-only --diff .
-
-      - name: Run Flake8 (Linting)
-        run: flake8 .
+      - name: Run Ruff (Format Check)
+        run: ruff format --check .
 
       - name: Run MyPy (Type Checking)
         run: mypy app/
@@ -59,12 +56,17 @@ jobs:
       - name: Run Bandit (Security Linting)
         run: bandit -r app/ -f json -o bandit-report.json
 
-      - name: Upload Bandit Security Report
+      - name: Run Safety (Dependency Audit)
+        run: safety check --json --output safety-report.json || true
+
+      - name: Upload Security Reports
         uses: actions/upload-artifact@v3
         if: always()
         with:
-          name: bandit-security-report
-          path: bandit-report.json
+          name: security-reports
+          path: |
+            bandit-report.json
+            safety-report.json
 
   # Job 2: Testing
   testing:

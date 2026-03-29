@@ -36,6 +36,8 @@ event_loop:
 # ============================================================================
 cli:
   backend: "claude"  # Always claude for this project
+  # model: "glm"         # GLM 5.1 - default, para tareas que requieren precisión
+  # model: "glm-5-turbo" # GLM 5 Turbo - para tareas rápidas (QA, tests, lint, validación)
 
 # ============================================================================
 # CORE SETTINGS

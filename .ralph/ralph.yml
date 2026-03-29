@@ -8,7 +8,9 @@
 # CLI Settings
 cli:
   backend: claude
-  model: glm  # GLM 5.0
+  model: glm  # GLM 5.1 (default)
+  # glm-5-turbo: disponible para tareas rápidas (QA, tests, lint)
+  # Cambiar a: model: glm-5-turbo cuando se necesite velocidad
 
 # Event Loop Configuration
 event_loop:
@@ -34,6 +36,27 @@ backpressure:
     typecheck: pass
     lint: pass
     build: pass
+    security:
+      enabled: true
+      tools:
+        - bandit
+        - safety
+      fail_on: high
+    format:
+      enabled: true
+      tool: ruff
+      check_args: ["--diff"]
+      fix_args: ["--fix"]
+    coverage:
+      enabled: true
+      minimum: 80
+      enforce: true
+      report_format: term-missing
+    dependencies:
+      enabled: true
+      check_audit: true
+      check_outdated: false
+      fail_on_vulnerability: true
 
 # Memories - Aprendizaje persistente
 memories:

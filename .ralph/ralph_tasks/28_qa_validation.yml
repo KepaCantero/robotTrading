@@ -16,6 +16,7 @@ event_loop:
 
 cli:
   backend: "claude"
+  model: "glm-5-turbo"  # Turbo para QA rápido (linting, formatting, type checking)
 
 core:
   specs_dir: "./specs/"

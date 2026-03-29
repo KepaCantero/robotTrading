@@ -54,8 +54,31 @@ jobs:
             --cov-report=xml \
             --cov-report=html \
             --cov-report=term-missing \
+            --cov-fail-under=80 \
             --junitxml=unit-test-results.xml \
             --maxfail=5
+
+      - name: Enforce Coverage Threshold
+        if: always()
+        run: |
+          echo "Checking coverage enforcement..."
+          python -c "
+          import xml.etree.ElementTree as ET
+          import sys
+          try:
+              tree = ET.parse('coverage.xml')
+              root = tree.getroot()
+              rate = float(root.attrib.get('line-rate', 0)) * 100
+              print(f'Coverage: {rate:.1f}%')
+              if rate < 80:
+                  print(f'FAIL: Coverage {rate:.1f}% is below 80% threshold')
+                  sys.exit(1)
+              else:
+                  print(f'PASS: Coverage {rate:.1f}% meets 80% threshold')
+          except Exception as e:
+              print(f'Could not parse coverage report: {e}')
+              sys.exit(1)
+          "
 
       - name: Upload Unit Test Results
         uses: actions/upload-artifact@v3
@@ -153,6 +176,8 @@ jobs:
             --cov=app \
             --cov-report=xml \
             --cov-report=html \
+            --cov-report=term-missing \
+            --cov-fail-under=60 \
             --junitxml=integration-test-results.xml \
             --maxfail=3
 
@@ -316,7 +341,7 @@ jobs:
         run: |
           pip install coverage[toml]
           coverage combine unit-coverage/coverage.xml integration-coverage/coverage.xml
-          coverage report
+          coverage report --fail-under=80
           coverage html
 
       - name: Upload Combined Coverage

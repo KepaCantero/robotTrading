@@ -1,6 +1,6 @@
 # AlgoTrading Makefile
 
-.PHONY: help up down api db logs clean test test-cov migrate migration dev api-dev build deploy prod
+.PHONY: help up down api db logs clean test test-cov migrate migration dev api-dev build deploy prod lint format type-check security
 
 # Default target
 help:
@@ -14,7 +14,7 @@ help:
 	@echo "  make logs        - View logs"
 	@echo "  make clean       - Clean up"
 	@echo "  make test        - Run tests"
-	@echo "  make test-cov    - Run tests with coverage"
+	@echo "  make test-cov    - Run tests with coverage (fails under 80%)"
 	@echo "  make migrate     - Run database migrations"
 	@echo "  make migration   - Create new migration"
 	@echo "  make dev         - Start development environment"
@@ -22,6 +22,10 @@ help:
 	@echo "  make build       - Build production image"
 	@echo "  make deploy      - Deploy to production"
 	@echo "  make prod        - Run production environment"
+	@echo "  make lint        - Run ruff lint + mypy"
+	@echo "  make format      - Auto-format with ruff"
+	@echo "  make type-check  - Run mypy type checking"
+	@echo "  make security    - Run bandit + safety scans"
 
 # Start all services
 up:
@@ -60,12 +64,12 @@ clean:
 # Run tests
 test:
 	@echo "Running tests..."
-	pytest -v
+	pytest -v --tb=short
 
 # Run tests with coverage
 test-cov:
 	@echo "Running tests with coverage..."
-	pytest --cov=app --cov-report=term-missing -v
+	pytest --cov=app --cov-report=term-missing --cov-fail-under=80 -v
 
 # Run specific test file
 test-file:
@@ -130,15 +134,15 @@ setup:
 # Code quality checks
 lint:
 	@echo "Running code quality checks..."
-	black .
-	flake8 .
+	ruff check .
 	mypy app/
 	@echo "Code quality checks completed"
 
 # Format code
 format:
 	@echo "Formatting code..."
-	black .
+	ruff format .
+	ruff check --fix .
 	@echo "Code formatted"
 
 # Type checking
@@ -150,7 +154,8 @@ type-check:
 # Security scan
 security:
 	@echo "Running security scan..."
-	bandit -r app/
+	bandit -r app/ -f json -o bandit-report.json
+	safety check --json --output safety-report.json || true
 	@echo "Security scan completed"
 
 # Performance test

@@ -1,0 +1,1017 @@
+# ============================================
+# Ralph Task 34: AAA Production Pipeline
+# ============================================
+# VERSION: 1.0 - INTEGRATED PIPELINE
+# Pipeline completo que integra Ralph + Aider + OpenHands
+# para llevar el codigo de algoTrading a estandar AAA.
+# ============================================================================
+# FEATURES:
+# - Aider: formateo y fixes rapidos con AI pair programming
+# - OpenHands: resolucion de issues complejos via GitHub
+# - Confession Loop: self-audit con 4 perspectivas
+# - Backpressure: 7 quality gates automaticos
+# - Desloppify: deteccion de code smells
+# - Multi-step reasoning para GLM 5.1
+# ============================================================================
+# USO: ralph -c .ralph/ralph_tasks/34_aaa_production.yml
+# ANTERIOR: ralph -c .ralph/ralph_tasks/31_production_audit.yml
+# ============================================================================
+
+event_loop:
+  prompt_file: ".ralph/ralph_tasks/prompts/34_aaa_production.md"
+  completion_promise: "AAA_PRODUCTION_COMPLETE"
+  max_iterations: 5000
+  max_runtime_seconds: 432000  # 5 days
+  checkpoint_interval: 3
+  starting_event: "aaa_production.start"
+  checkpoint_file: ".ralph/checkpoints/34_aaa_production_checkpoint.json"
+  # GLM 5.1 - Multi-step reasoning
+  reasoning:
+    enabled: true
+    type: "multi-step"
+
+cli:
+  backend: "claude"
+  model: "glm-5-turbo"
+
+core:
+  specs_dir: "./specs/"
+
+# ============================================================================
+# VARIABLES COMPARTIDAS
+# ============================================================================
+shared_vars:
+  OUTPUT_DIR: ".ralph/outputs"
+  APP_DIR: "app"
+  TASK_PREFIX: "aaa_production"
+  TASK_NAME: "AAA Production Pipeline"
+  TASK_ID: "34"
+  VALIDATE_SCRIPT: "scripts/validate_file_complete.sh"
+  REQUIREMENTS_DIR: ".requirements"
+  REQUIREMENTS_FORMATS: [".md", ".txt"]
+  ARCHITECTURE_REQUIREMENTS: ".requirements/ARCHITECTURE_REQUIREMENTS.md"
+  FILE_SYSTEM_REQUIREMENTS: ".requirements/FILE_SYSTEM_REQUIREMENTS.md"
+  BASE_RULES: ".requirements/BASE_RULES.md"
+  CRITICAL_RULES: ".requirements/CRITICAL_RULES.md"
+  # Aider config
+  AIDER_CONFIG: ".aider.conf.yml"
+  AIDER_MODEL: "claude-sonnet-4-20250514"
+  # OpenHands config
+  OPENHANDS_REPO: "mikeyobrien/algoTrading"
+
+# ============================================================================
+# CRITICAL RULES
+# ============================================================================
+critical_rules: |
+  ## REGLAS CRITICAS - AAA Production
+
+  ### FORBIDDEN PATTERNS (Usage = BLOCK):
+  - `# type: ignore` → REMOVE and add proper type
+  - `# pylint: disable` → REMOVE and fix the issue
+  - `# noqa` → REMOVE and fix the issue
+  - `# nosec` → REMOVE and fix the security issue
+  - `: Any` → REPLACE with proper type hint
+  - `pass` in production code → IMPLEMENT or raise NotImplementedError
+
+  ### TOOL PRIORITY:
+  1. **Ruff** → Auto-fix lint + formato (reemplaza black/isort/flake8)
+  2. **Aider** → Fix interactivo con AI para problemas complejos
+  3. **OpenHands** → Resolver issues via GitHub para problemas arquitecturales
+  4. **Manual** → Solo cuando las herramientas automaticas no pueden
+
+  ### NO SHORTCUTS:
+  - ❌ "I'll process 50 files for now" → Process ALL files
+  - ❌ "This is too many files" → Use checkpoints, resume later
+  - ❌ Skip large directories → Process one at a time, checkpoint each
+  - ❌ Batch files → Process individually for quality
+
+  ### VALIDATION REQUIREMENTS:
+  - ✅ Run validate_file_complete.sh for EVERY file
+  - ✅ Fix DEEPLY - no shallow fixes
+  - ✅ Check against requirements (.md/.txt) BEFORE marking complete
+  - ✅ Each fix attempt must be DIFFERENT approach
+
+# ============================================================================
+# EXCLUDE PATTERNS
+# ============================================================================
+exclude:
+  directory_patterns:
+    - "tests/"
+    - "test/"
+    - "__pycache__/"
+    - "migrations/"
+    - "venv/"
+    - ".venv/"
+    - ".pytest_cache/"
+    - ".mypy_cache/"
+    - "integration/"
+    - "integrations/"
+    - "*_test.py"
+    - "test_*.py"
+    - "conftest.py"
+
+# ============================================================================
+# SUBAGENTS
+# ============================================================================
+subagents:
+  enabled: true
+  path: ~/.claude/agents/awesome-claude-agents
+  useful_for_aaa_production:
+    - code-archaeologist     # Deep codebase exploration
+    - python-expert          # Python modern patterns
+    - code-reviewer          # Security-aware reviews
+    - performance-optimizer  # When slow code detected
+    - security-engineer      # Security hardening
+
+# ============================================================================
+# QUALITY GATES - Backpressure (7 gates)
+# ============================================================================
+quality:
+  enforce_solid: true
+  enforce_tests: true
+  enforce_typecheck: true
+  enforce_lint: true
+  enforce_format: true
+  enforce_security: true
+  enforce_requirements: true
+  min_coverage: 80
+
+# ============================================================================
+# HATS - Pipeline de 12 hats
+# ============================================================================
+hats:
+  # ==========================================================================
+  # HAT 0: Discovery - Descubre archivos y mapea estado
+  # ==========================================================================
+  discovery:
+    name: "Discovery & Mapping"
+    description: "Descubre archivos, verifica requirements, mapea estado actual"
+    hat_template: ".ralph/ralph_templates/hats/base_processor_hat.yml"
+    triggers: ["aaa_production.start"]
+    publishes: ["files.discovered", "requirements.needed"]
+    default_publishes: "files.discovered"
+
+    instructions: |
+      ## DISCOVERY & MAPPING
+
+      {{shared_instructions}}
+
+      ### OBJETIVO
+      Descubrir todos los archivos Python en app/ y mapear su estado actual.
+
+      ### FASE 1: Descubrir archivos
+      ```bash
+      find app -name "*.py" -type f | grep -v -E "tests/|test/|__pycache__|migrations/" | sort
+      ```
+
+      ### FASE 2: Quick quality check
+      ```bash
+      # Ruff lint
+      ruff check app/ --output-format=json > .ralph/outputs/ruff_results.json 2>&1 || true
+
+      # Ruff format check
+      ruff format --check app/ > .ralph/outputs/format_results.txt 2>&1 || true
+
+      # Mypy
+      mypy app/ --ignore-missing-imports --follow-imports=skip > .ralph/outputs/mypy_results.txt 2>&1 || true
+
+      # Bandit
+      bandit -r app/ -ll -q > .ralph/outputs/bandit_results.json 2>&1 || true
+
+      # Safety
+      safety check --json > .ralph/outputs/safety_results.json 2>&1 || true
+      ```
+
+      ### FASE 3: Verificar requirements (.md/.txt)
+      ```bash
+      for file in $(find app -name "*.py" -type f | grep -v test); do
+        req_md=".requirements/${file}.requirements.md"
+        req_txt=".requirements/${file}.requirements.txt"
+        if [[ ! -f "$req_md" ]] && [[ ! -f "$req_txt" ]]; then
+          echo "MISSING_REQUIREMENT: $file"
+        fi
+      done
+      ```
+
+      ### FASE 4: Generar lista de trabajo
+      Output: `.ralph/outputs/AAA_FILE_LIST.json`
+
+      ```json
+      {
+        "discovered_at": "{{timestamp}}",
+        "total_files": 350,
+        "quality_summary": {
+          "ruff_errors": 0,
+          "format_errors": 0,
+          "mypy_errors": 0,
+          "bandit_issues": 0,
+          "safety_issues": 0
+        },
+        "files_with_requirements": 300,
+        "files_missing_requirements": 50,
+        "files": [...]
+      }
+      ```
+
+      Emitir "files.discovered" (o "requirements.needed" si faltan requirements)
+
+  # ==========================================================================
+  # HAT 1: Requirements Generator (si faltan)
+  # ==========================================================================
+  requirements_generator:
+    name: "Requirements Generator"
+    description: "Genera requirements faltantes antes de auditar"
+    hat_template: ".ralph/ralph_templates/hats/implementer_hat.yml"
+    triggers: ["requirements.needed"]
+    publishes: ["requirements.generated"]
+    default_publishes: "requirements.generated"
+
+    instructions: |
+      ## REQUIREMENTS GENERATOR
+
+      {{shared_instructions}}
+
+      ### OBJETIVO
+      Generar requirements (.md preferiblemente) para archivos que no los tienen.
+
+      ### WORKFLOW
+      Para cada archivo sin requirements:
+      1. Leer archivo fuente completo
+      2. Analizar estructura (imports, clases, funciones)
+      3. Identificar reglas aplicables (SOLID, calidad, trading)
+      4. Generar requirements con checkboxes
+      5. Guardar en `.requirements/{{file_path}}.requirements.md`
+
+      Emitir "requirements.generated"
+
+  # ==========================================================================
+  # HAT 2: Aider Formatter - Auto-fix rapido con Ruff + Aider
+  # ==========================================================================
+  aider_formatter:
+    name: "Aider Formatter"
+    description: "Auto-fix rapido: ruff format, ruff check --fix, y Aider para lo restante"
+    hat_template: ".ralph/ralph_templates/hats/implementer_hat.yml"
+    triggers: ["files.discovered", "requirements.generated"]
+    publishes: ["files.auto_fixed"]
+    default_publishes: "files.auto_fixed"
+
+    instructions: |
+      ## AIDER FORMATTER - Auto-Fix Rapido
+
+      {{shared_instructions}}
+
+      ### OBJETIVO
+      Ejecutar auto-fixes masivos usando ruff + aider para formatear y corregir
+      la mayor cantidad de archivos posible automaticamente.
+
+      ### PASO 1: Ruff auto-fix masivo
+      ```bash
+      # Formatear todo con ruff
+      ruff format app/
+
+      # Fix lint automaticamente
+      ruff check app/ --fix
+
+      # Verificar que queda
+      ruff check app/ --output-format=concise > .ralph/outputs/ruff_remaining.txt 2>&1 || true
+      ```
+
+      ### PASO 2: Aider fixes para archivos que aun fallan
+      Para cada archivo que aun falla ruff check o ruff format:
+
+      ```bash
+      # Usar Aider para fix interactivo
+      aider --model claude-sonnet-4-20250514 \
+            --message "Fix all lint errors and formatting issues in this file. Do NOT add # noqa, # type: ignore, or any suppression comments. Fix the actual issues." \
+            --no-auto-commits \
+            <file_path>
+      ```
+
+      ### PASO 3: Verificar resultados
+      ```bash
+      for file in $(cat .ralph/outputs/AAA_FILE_LIST.json | jq -r '.files[].path'); do
+        ruff check "$file" --output-format=concise 2>&1 || echo "STILL_FAILS: $file"
+      done
+      ```
+
+      ### OUTPUT
+      `.ralph/outputs/AUTO_FIX_REPORT.json`
+      ```json
+      {
+        "ruff_format_fixed": 250,
+        "ruff_lint_fixed": 200,
+        "aider_fixed": 30,
+        "still_failing": 20,
+        "failing_files": ["app/path/file.py"]
+      }
+      ```
+
+      Emitir "files.auto_fixed"
+
+  # ==========================================================================
+  # HAT 3: Linter - Ruff deep fix
+  # ==========================================================================
+  linter:
+    name: "Deep Linter"
+    description: "Fix profundo de errores de lint que ruff --fix no resuelve automaticamente"
+    hat_template: ".ralph/ralph_templates/hats/implementer_hat.yml"
+    triggers: ["files.auto_fixed"]
+    publishes: ["files.linted"]
+    default_publishes: "files.linted"
+
+    instructions: |
+      ## DEEP LINTER
+
+      {{shared_instructions}}
+      {{critical_rules}}
+
+      ### OBJETIVO
+      Fix manual profundo de errores de lint que ruff --fix no pudo resolver.
+
+      ### PASO 1: Obtener lista de archivos con errores
+      ```bash
+      ruff check app/ --output-format=json > .ralph/outputs/deep_lint_errors.json 2>&1 || true
+      ```
+
+      ### PASO 2: Para cada archivo con errores
+      1. Leer archivo COMPLETO - entender contexto
+      2. Leer requirements (.md/.txt) si existen
+      3. Fix cada error:
+         - Unused imports: REMOVE (no comentar)
+         - Unused variables: REMOVE o usar
+         - Line too long: Break lines
+         - Complex expressions: Simplify
+         - Naming: Rename to snake_case/PascalCase
+      4. Re-run: `ruff check <file>`
+      5. Si aun falla despues de 3 intentos: usar Aider
+
+      ```bash
+      aider --model claude-sonnet-4-20250514 \
+            --message "Fix all remaining ruff lint errors. NO noqa comments." \
+            <file_path>
+      ```
+
+      ### PASO 3: Verificacion final
+      ```bash
+      ruff check app/ --output-format=concise
+      # Must exit 0
+      ```
+
+      Emitir "files.linted"
+
+  # ==========================================================================
+  # HAT 4: Deep Fixer - Type hints, complexity, security
+  # ==========================================================================
+  deep_fixer:
+    name: "Deep Fixer"
+    description: "Fix type hints, complejidad, security issues - DEEP fixes"
+    hat_template: ".ralph/ralph_templates/hats/implementer_hat.yml"
+    triggers: ["files.linted"]
+    publishes: ["files.deep_fixed"]
+    default_publishes: "files.deep_fixed"
+
+    instructions: |
+      ## DEEP FIXER - Type Hints, Complexity, Security
+
+      {{shared_instructions}}
+      {{critical_rules}}
+
+      ### OBJETIVO
+      Fix profundo de type hints, complejidad ciclomatica, y security issues.
+
+      ### PASO 1: Mypy type checking
+      ```bash
+      mypy app/ --ignore-missing-imports --follow-imports=skip > .ralph/outputs/mypy_errors.txt 2>&1 || true
+      ```
+
+      Para cada archivo con errores mypy:
+      1. Leer archivo completo
+      2. Agregar type hints proper (NO `Any`, NO `# type: ignore`)
+      3. Usar `Optional[T]`, `Union[A, B]`, `Dict[str, V]` etc.
+      4. Re-run: `mypy <file> --ignore-missing-imports`
+      5. Si despues de 3 intentos sigue fallando: usar Aider
+         ```bash
+         aider --model claude-sonnet-4-20250514 \
+               --message "Fix all mypy type errors. Use proper type hints, no Any, no type: ignore." \
+               <file_path>
+         ```
+
+      ### PASO 2: Complexity reduction
+      ```bash
+      radon cc app/ -s -nc > .ralph/outputs/complexity_report.txt 2>&1 || true
+      ```
+
+      Para cada funcion con CC >= 10:
+      1. Leer funcion completa
+      2. Refactorizar:
+         - Extract helper functions
+         - Early returns
+         - Guard clauses
+         - Dictionary dispatch
+      3. Si CC sigue >= 10 despues de 3 intentos: usar Aider
+         ```bash
+         aider --model claude-sonnet-4-20250514 \
+               --message "Refactor this function to reduce cyclomatic complexity below 10. Extract helpers, use early returns." \
+               <file_path>
+         ```
+
+      ### PASO 3: Security fixes
+      ```bash
+      bandit -r app/ -ll > .ralph/outputs/bandit_issues.txt 2>&1 || true
+      ```
+
+      Para cada security issue:
+      1. Leer issue y entender contexto
+      2. Fix real (NO `# nosec`):
+         - Hardcoded secrets → env vars/config
+         - SQL injection → parameterized queries
+         - eval() → ast.literal_eval()
+         - Weak crypto → stronger algorithms
+      3. Re-run: `bandit <file> -ll`
+
+      ### PASO 4: Validar cada archivo
+      ```bash
+      bash scripts/validate_file_complete.sh <file_path>
+      # Must return success: true
+      ```
+
+      Emitir "files.deep_fixed"
+
+  # ==========================================================================
+  # HAT 5: Requirements Compliance
+  # ==========================================================================
+  requirements_checker:
+    name: "Requirements Compliance"
+    description: "Verifica cumplimiento contra requirements .md/.txt"
+    hat_template: ".ralph/ralph_templates/hats/validation_hat.yml"
+    triggers: ["files.deep_fixed"]
+    publishes: ["requirements.checked"]
+    default_publishes: "requirements.checked"
+
+    instructions: |
+      ## REQUIREMENTS COMPLIANCE CHECKER
+
+      {{shared_instructions}}
+
+      ### OBJETIVO
+      Verificar que cada archivo cumple sus requirements (.md/.txt).
+
+      ### FASE 1: Para cada archivo con requirements
+      1. Leer requirements (.md o .txt)
+      2. Verificar cada regla:
+         - SOLID compliance
+         - Code quality (god-class, god-func, type-hints)
+         - Trading rules (R1-R4 si aplica)
+      3. Marcar estado: ✅ / ❌ / ⚠️
+
+      ### FASE 2: Generar compliance report
+      `.ralph/outputs/REQUIREMENTS_COMPLIANCE_REPORT.json`
+
+      Si non_compliant > 0: usar Aider para fix rapidos
+      ```bash
+      aider --model claude-sonnet-4-20250514 \
+            --message "Make this file comply with requirements. Read .requirements/{{file}}.requirements.md first." \
+            <file_path>
+      ```
+
+      Emitir "requirements.checked"
+
+  # ==========================================================================
+  # HAT 6: Architecture Checker
+  # ==========================================================================
+  architecture_checker:
+    name: "Architecture Checker"
+    description: "Verifica layer boundaries, naming, structure"
+    hat_template: ".ralph/ralph_templates/hats/validation_hat.yml"
+    triggers: ["requirements.checked"]
+    publishes: ["architecture.checked", "architecture.violations_found"]
+    default_publishes: "architecture.checked"
+
+    instructions: |
+      ## ARCHITECTURE COMPLIANCE CHECKER
+
+      {{shared_instructions}}
+
+      ### OBJETIVO
+      Verificar que el codigo cumple con reglas de arquitectura.
+
+      ### CHECKS:
+
+      #### Layer Boundaries
+      ```bash
+      # Domain NO depende de services/infrastructure
+      grep -r "from app.services\|from app.infrastructure\|from app.api" app/domain/
+      # Expected: 0 matches
+
+      # Services NO depende de infrastructure directamente
+      grep -r "from app.infrastructure.database\|from app.infrastructure.brokers" app/services/
+      # Expected: 0 matches
+      ```
+
+      #### File Naming
+      ```bash
+      find app -name "*[A-Z]*.py" -o -name "*-[a-z]*.py"
+      # Expected: 0 matches
+      ```
+
+      #### Size Limits
+      ```bash
+      find app -name "*.py" -exec sh -c 'lines=$(wc -l < "$1"); if [ $lines -gt 300 ]; then echo "$1: $lines lines"; fi' _ {} \;
+      ```
+
+      #### Module Structure
+      ```bash
+      find app -type d | while read dir; do
+        if [[ ! -f "$dir/__init__.py" ]] && [[ $(find "$dir" -maxdepth 1 -name "*.py" | wc -l) -gt 0 ]]; then
+          echo "MISSING: $dir/__init__.py"
+        fi
+      done
+      ```
+
+      ### OUTPUT
+      `.ralph/outputs/ARCHITECTURE_COMPLIANCE_REPORT.json`
+
+      Si violations > 0 y son complejas:
+      - Crear GitHub Issues para cada violacion arquitectural
+      - Emitir "architecture.violations_found"
+      - El siguiente hat (openhands_resolver) los resolvera via OpenHands
+
+      Si todo OK: Emitir "architecture.checked"
+
+  # ==========================================================================
+  # HAT 7: OpenHands Resolver - Issues complejos via GitHub
+  # ==========================================================================
+  openhands_resolver:
+    name: "OpenHands Resolver"
+    description: "Resuelve issues complejos via OpenHands + GitHub"
+    hat_template: ".ralph/ralph_templates/hats/implementer_hat.yml"
+    triggers: ["architecture.violations_found"]
+    publishes: ["openhands.resolved"]
+    default_publishes: "openhands.resolved"
+
+    instructions: |
+      ## OPENHANDS RESOLVER - Issues Complejos
+
+      {{shared_instructions}}
+
+      ### OBJETIVO
+      Resolver issues complejos (arquitectura, refactoring mayor) usando OpenHands.
+
+      ### CUANDO USAR OPENHANDS:
+      - Archivos con CC > 15 que necesitan redesign arquitectural
+      - Violaciones de layer boundaries que requieren refactoring mayor
+      - Issues de seguridad que necesitan changes transversales
+      - Cualquier issue que ha resistido 5+ intentos de fix
+
+      ### PASO 1: Crear GitHub Issues
+      Para cada issue complejo, crear un GitHub Issue detallado:
+
+      ```bash
+      gh issue create \
+        --title "AAA Production: Fix architecture violation in <file>" \
+        --body "## Issue
+      <detailed description>
+
+      ## Context
+      - File: <file_path>
+      - Type: <architecture_violation/complexity/security>
+      - Attempts: <number of attempts>
+      - Error: <error message>
+
+      ## Requirements
+      - <what needs to be done>
+
+      ## Constraints
+      - NO # type: ignore, # noqa, # pylint: disable
+      - Must pass: ruff check, mypy, bandit
+      - Must maintain backwards compatibility" \
+        --label "aaa-production,architecture,automated"
+      ```
+
+      ### PASO 2: Resolver con OpenHands
+      ```bash
+      # Resolver issue especifico
+      openhands resolve --repo mikeyobrien/algoTrading --issue <issue_number>
+
+      # O resolver todos los issues de aaa-production
+      gh issue list --label "aaa-production" --json number -q '.[].number' | \
+        xargs -I {} openhands resolve --repo mikeyobrien/algoTrading --issue {}
+      ```
+
+      ### PASO 3: Verificar soluciones
+      ```bash
+      # Pull los cambios del PR
+      gh pr list --label "aaa-production" --state merged --json number -q '.[].number' | \
+        xargs -I {} gh pr merge {} --merge
+
+      # Re-run quality checks
+      ruff check app/ --output-format=concise
+      mypy app/ --ignore-missing-imports
+      bandit -r app/ -ll
+      ```
+
+      ### PASO 4: Si OpenHands no esta disponible
+      Si OpenHands no esta instalado o no puede resolver:
+      1. Marcar archivos como BLOCKED
+      2. Documentar en `.ralph/outputs/BLOCKED_FILES.json`
+      3. Intentar fix manual con Aider como fallback:
+         ```bash
+         aider --model claude-sonnet-4-20250514 \
+               --message "Fix the architecture violation. This file must not import from other layers." \
+               --map-repo \
+               <file_path>
+         ```
+
+      Emitir "openhands.resolved"
+
+  # ==========================================================================
+  # HAT 8: Anti-Pattern Scanner
+  # ==========================================================================
+  anti_pattern_scanner:
+    name: "Anti-Pattern Scanner"
+    description: "Escanea TODOS los archivos buscando patrones prohibidos"
+    hat_template: ".ralph/ralph_templates/hats/validation_hat.yml"
+    triggers: ["architecture.checked", "openhands.resolved"]
+    publishes: ["anti_patterns.scanned", "anti_patterns.found"]
+    default_publishes: "anti_patterns.scanned"
+
+    instructions: |
+      ## ANTI-PATTERN SCANNER
+
+      {{shared_instructions}}
+
+      ### OBJETIVO
+      Detectar TODOS los patrones prohibidos.
+
+      ### SCAN PATTERNS
+      ```bash
+      # Forbidden patterns
+      grep -rn "# type: ignore" app/ --include="*.py" > .ralph/outputs/type_ignore.txt 2>&1 || true
+      grep -rn "# pylint: disable" app/ --include="*.py" > .ralph/outputs/pylint_disable.txt 2>&1 || true
+      grep -rn "# noqa" app/ --include="*.py" > .ralph/outputs/noqa.txt 2>&1 || true
+      grep -rn "# nosec" app/ --include="*.py" > .ralph/outputs/nosec.txt 2>&1 || true
+      grep -rn ": Any" app/ --include="*.py" > .ralph/outputs/any_type.txt 2>&1 || true
+
+      # God classes
+      find app -name "*.py" -exec sh -c 'lines=$(wc -l < "$1"); if [ $lines -gt 300 ]; then echo "$1: $lines lines"; fi' _ {} \; > .ralph/outputs/god_classes.txt 2>&1 || true
+
+      # High complexity
+      radon cc app/ -s -nc > .ralph/outputs/high_complexity.txt 2>&1 || true
+
+      # Dead code
+      ruff check app/ --select F401,F841 > .ralph/outputs/dead_code.txt 2>&1 || true
+
+      # Desloppify scan
+      desloppify scan app/ --output .ralph/outputs/CODE_SMELLS.json 2>&1 || true
+      ```
+
+      ### OUTPUT
+      `.ralph/outputs/ANTI_PATTERN_REPORT.json`
+
+      Si patterns > 0: Emitir "anti_patterns.found"
+      Si todo limpio: Emitir "anti_patterns.scanned"
+
+  # ==========================================================================
+  # HAT 9: Confession Loop - Self-audit con 4 perspectivas
+  # ==========================================================================
+  confession_loop:
+    name: "Confession Loop"
+    description: "Self-audit con 4 perspectivas: Critic, Architect, Engineer, Steward"
+    hat_template: ".ralph/ralph_templates/hats/validation_hat.yml"
+    triggers: ["anti_patterns.scanned"]
+    publishes: ["confession.passed", "confession.failed"]
+    default_publishes: "confession.passed"
+
+    instructions: |
+      ## CONFESSION LOOP - Self-Audit Pipeline
+
+      {{shared_instructions}}
+
+      ### OBJETIVO
+      Revisar el codigo desde 4 perspectivas distintas para encontrar
+      problemas que el autor no ve (tunnel vision).
+
+      ### HAT 1: CRITIC (30%) - Encontrar defectos
+      Revision despiadada buscando:
+      - Errores logicos e inconsistencias
+      - Edge cases y boundary conditions
+      - Anti-patrones no detectados por herramientas
+      - Missing validation en inputs
+      - Error handling insuficiente
+
+      Output: `.ralph/outputs/CONFESSION_CRITIC.json`
+      ```json
+      {
+        "findings": [
+          {"severity": "SEVERE", "file": "...", "line": 42, "issue": "..."},
+          {"severity": "MODERATE", "file": "...", "line": 10, "issue": "..."}
+        ]
+      }
+      ```
+
+      ### HAT 2: ARCHITECT (25%) - Evaluar estructura
+      - SOLID compliance
+      - Dependency direction (Clean Architecture)
+      - Separation of concerns
+      - Naming conventions
+      - Interface design
+
+      Output: `.ralph/outputs/CONFESSION_ARCHITECT.json`
+
+      ### HAT 3: ENGINEER (25%) - Verificar correccion
+      - Type safety
+      - Performance bottlenecks
+      - Concurrency safety
+      - Resource usage
+      - Test coverage
+
+      Output: `.ralph/outputs/CONFESSION_ENGINEER.json`
+
+      ### HAT 4: STEWARD (20%) - Seguridad y compatibilidad
+      - Security review (injection, auth, data leaks)
+      - Secrets management
+      - Backwards compatibility
+      - Tech debt impact
+
+      Output: `.ralph/outputs/CONFESSION_STEWARD.json`
+
+      ### SCORING
+      ```json
+      {
+        "confidence_score": 85.0,
+        "max_issues_per_hat": 10,
+        "pass_threshold": 80,
+        "weights": {
+          "critic": 0.30,
+          "architect": 0.25,
+          "engineer": 0.25,
+          "steward": 0.20
+        },
+        "blocking_issues": 0,
+        "status": "PASSED"
+      }
+      ```
+
+      - Si confidence >= 80% y 0 SEVERE + 0 SECURITY fails: PASSED → "confession.passed"
+      - Si confidence < 80% o hay SEVERE/SECURITY fails: FAILED → "confession.failed"
+
+      Emitir "confession.passed" o "confession.failed"
+
+  # ==========================================================================
+  # HAT 10: Aider Fix-up - Fix issues del confession loop
+  # ==========================================================================
+  aider_fixup:
+    name: "Aider Fix-up"
+    description: "Fix issues encontrados por el confession loop usando Aider"
+    hat_template: ".ralph/ralph_templates/hats/implementer_hat.yml"
+    triggers: ["confession.failed", "anti_patterns.found"]
+    publishes: ["fixup.complete"]
+    default_publishes: "fixup.complete"
+
+    instructions: |
+      ## AIDER FIX-UP - Fix Issues del Confession Loop
+
+      {{shared_instructions}}
+      {{critical_rules}}
+
+      ### OBJETIVO
+      Fix todos los issues encontrados por el confession loop y anti-pattern scanner.
+
+      ### PASO 1: Agregarar issues de todas las fuentes
+      Leer:
+      - `.ralph/outputs/CONFESSION_CRITIC.json`
+      - `.ralph/outputs/CONFESSION_ARCHITECT.json`
+      - `.ralph/outputs/CONFESSION_ENGINEER.json`
+      - `.ralph/outputs/CONFESSION_STEWARD.json`
+      - `.ralph/outputs/ANTI_PATTERN_REPORT.json`
+
+      ### PASO 2: Priorizar fixes
+      1. SEVERE findings → Fix primero
+      2. SECURITY fails → Fix segundo
+      3. MODERATE findings → Fix tercero
+      4. Anti-patterns → Fix cuarto
+      5. MINOR findings → Fix ultimo
+
+      ### PASO 3: Fix con Aider
+      Para cada issue:
+      ```bash
+      aider --model claude-sonnet-4-20250514 \
+            --message "Fix this specific issue: <issue_description>. Do NOT add suppression comments." \
+            <file_path>
+      ```
+
+      Para issues arquitecturales complejos:
+      ```bash
+      aider --model claude-sonnet-4-20250514 \
+            --message "Refactor to fix architectural issue: <description>. Maintain backwards compatibility." \
+            --map-repo \
+            <file_path>
+      ```
+
+      ### PASO 4: Re-validar
+      ```bash
+      ruff check app/ --output-format=concise
+      ruff format --check app/
+      mypy app/ --ignore-missing-imports
+      bandit -r app/ -ll
+      ```
+
+      Emitir "fixup.complete"
+
+  # ==========================================================================
+  # HAT 11: Test Runner - Tests + Coverage
+  # ==========================================================================
+  test_runner:
+    name: "Test Runner"
+    description: "Ejecuta tests, verifica coverage >= 80%, identifica gaps"
+    hat_template: ".ralph/ralph_templates/hats/validation_hat.yml"
+    triggers: ["confession.passed", "fixup.complete"]
+    publishes: ["tests.passed", "tests.failed"]
+    default_publishes: "tests.passed"
+
+    instructions: |
+      ## TEST RUNNER
+
+      {{shared_instructions}}
+
+      ### OBJETIVO
+      Ejecutar tests, verificar coverage >= 80%, identificar gaps.
+
+      ### PASO 1: Ejecutar tests
+      ```bash
+      pytest tests/ -v --tb=short --strict-markers \
+        --cov=app --cov-branch \
+        --cov-report=term-missing \
+        --cov-report=json:.ralph/outputs/coverage.json \
+        --cov-report=html:htmlcov \
+        --cov-fail-under=80
+      ```
+
+      ### PASO 2: Si tests fallan
+      1. Leer output de tests fallidos
+      2. Identificar si el fallo es por:
+         - Tests desactualizados (fix test)
+         - Codigo roto por nuestros fixes (fix codigo)
+      3. Fix con Aider:
+         ```bash
+         aider --model claude-sonnet-4-20250514 \
+               --message "Fix the failing test. The source code was refactored." \
+               <test_file_path>
+         ```
+      4. Re-run tests
+
+      ### PASO 3: Si coverage < 80%
+      1. Identificar modulos sin coverage
+      2. Generar tests basicos para modulos criticos
+      3. Re-run con coverage
+
+      ### PASO 4: Test structure check
+      ```bash
+      # Verificar que tests espejean estructura de source
+      find app -name "*.py" -type f | grep -v test | wc -l
+      find tests -name "test_*.py" -type f | wc -l
+      ```
+
+      ### OUTPUT
+      `.ralph/outputs/TEST_REPORT.json`
+      ```json
+      {
+        "tests_run": 450,
+        "passed": 448,
+        "failed": 2,
+        "coverage_percent": 82.5,
+        "coverage_min": 80,
+        "status": "PASSED"
+      }
+      ```
+
+      Si status PASSED: Emitir "tests.passed"
+      Si status FAILED: Emitir "tests.failed"
+
+  # ==========================================================================
+  # HAT 12: Final Validator - AAA Quality Gate
+  # ==========================================================================
+  final_validator:
+    name: "Final AAA Validator"
+    description: "Validacion final completa - AAA quality gate"
+    hat_template: ".ralph/ralph_templates/hats/final_reviewer_hat.yml"
+    triggers: ["tests.passed"]
+    publishes: ["AAA_PRODUCTION_COMPLETE", "aaa_production.blocked"]
+    default_publishes: "AAA_PRODUCTION_COMPLETE"
+
+    instructions: |
+      ## FINAL AAA VALIDATION
+
+      {{shared_instructions}}
+
+      ### OBJETIVO
+      Validacion final que TODO el codigo cumple estandar AAA.
+
+      ### FASE 1: Quality gates completos
+      ```bash
+      # 7 gates - ALL must pass
+      ruff check app/ --output-format=concise                              # Gate 1: Lint
+      ruff format --check app/                                              # Gate 2: Format
+      mypy app/ --ignore-missing-imports --follow-imports=skip             # Gate 3: Typecheck
+      bandit -r app/ -ll                                                    # Gate 4: Security
+      safety check                                                         # Gate 5: Dependencies
+      pytest tests/ --cov=app --cov-branch --cov-fail-under=80 -q         # Gate 6: Tests + Coverage
+      bash scripts/validate_file_complete.sh <file> (sample 10%)           # Gate 7: Validation
+      ```
+
+      ### FASE 2: Anti-pattern check final
+      ```bash
+      grep -rE "# type: ignore|# pylint: disable|# noqa|# nosec|: Any" app/ --include="*.py"
+      # Must return 0 matches
+      ```
+
+      ### FASE 3: Requirements compliance
+      Verificar `.ralph/outputs/REQUIREMENTS_COMPLIANCE_REPORT.json`:
+      - fully_compliant > 95%
+      - non_compliant < 2%
+
+      ### FASE 4: Architecture compliance
+      Verificar `.ralph/outputs/ARCHITECTURE_COMPLIANCE_REPORT.json`:
+      - violations_count == 0
+
+      ### FASE 5: Confession score
+      Verificar `.ralph/outputs/CONFESSION_SCORE.json`:
+      - confidence_score >= 80
+
+      ### FASE 6: Generar reporte final
+      `.ralph/outputs/AAA_PRODUCTION_FINAL_REPORT.json`
+      ```json
+      {
+        "task": "AAA_PRODUCTION",
+        "version": "1.0",
+        "status": "COMPLETE",
+        "timestamp": "{{timestamp}}",
+        "quality_gates": {
+          "ruff_lint": "PASS",
+          "ruff_format": "PASS",
+          "mypy": "PASS",
+          "bandit": "PASS",
+          "safety": "PASS",
+          "tests": "PASS",
+          "coverage": "PASS",
+          "coverage_percent": 82.5
+        },
+        "summary": {
+          "total_files": 350,
+          "all_passed": 348,
+          "blocked": 2,
+          "pass_rate": "99.4%"
+        },
+        "requirements_compliance": {
+          "fully_compliant": 330,
+          "partially_compliant": 18,
+          "non_compliant": 2
+        },
+        "architecture_compliance": {
+          "layer_boundaries_ok": true,
+          "violations": []
+        },
+        "confession_score": {
+          "confidence": 85.0,
+          "critic_findings": 0,
+          "architect_findings": 0,
+          "engineer_findings": 0,
+          "steward_findings": 0
+        },
+        "tools_used": {
+          "ruff": "auto-fix + deep lint",
+          "aider": "complex fixes + confession fixup",
+          "openhands": "architectural issues via GitHub",
+          "mypy": "type checking",
+          "bandit": "security scanning",
+          "safety": "dependency auditing"
+        },
+        "blocked_files": []
+      }
+      ```
+
+      ### FASE 7: Emitir evento final
+
+      Si TODOS los gates pasan Y blocked < 2%:
+      Emitir "AAA_PRODUCTION_COMPLETE"
+
+      Si algun gate falla:
+      Emitir "aaa_production.blocked" con detalles
+
+# ============================================================================
+# MEMORIES - Aprendizaje persistente
+# ============================================================================
+memories:
+  enabled: true
+  inject: auto
+  budget: 10000
+  file: .ralph/agent/memories.md
+  consolidation:
+    enabled: true
+    interval: 10
+
+# ============================================================================
+# CHECKPOINT
+# ============================================================================
+checkpoint:
+  file: ".ralph/checkpoints/34_aaa_production_checkpoint.json"

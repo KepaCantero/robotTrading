@@ -40,7 +40,7 @@ def run_pytest(args: List[str]) -> int:
     print(f"Running: {' '.join(cmd)}")
     print(f"{'=' * 70}\n")
 
-    result = subprocess.run(cmd, sys.stdout)
+    result = subprocess.run(cmd)
 
     return result.returncode
 

@@ -1,11 +1,12 @@
 {
-  "timestamp": "2026-03-28T08:30:00Z",
+  "timestamp": "2026-03-28T16:00:00Z",
   "layer_boundaries": {
     "domain_pure": false,
     "violations": {
       "ARCH-DEP-001": {
         "rule": "Domain layer NO depende de otras capas",
         "count": 43,
+        "unique_files": 13,
         "severity": "P0",
         "files": [
           "app/domain/strategies/automated_backtest.py - imports app.services",
@@ -16,28 +17,36 @@
           "app/domain/repositories/unit_of_work.py - imports app.infrastructure",
           "app/domain/services/signals/scoring.py - imports app.services",
           "app/domain/services/signals/__init__.py - imports app.services",
-          "app/domain/services/compliance/compliance_engine.py - imports app.services multiple times",
-          "app/domain/services/compliance/service_registry.py - imports app.services multiple times"
+          "app/domain/services/compliance/compliance_engine.py - imports app.services and app.infrastructure (15+ import lines)",
+          "app/domain/services/compliance/service_registry.py - imports app.services (7 import lines)",
+          "app/domain/services/execution/execution_adapter.py - imports app.services",
+          "app/domain/services/execution/order_manager_adapter.py - imports app.services (4 import lines)",
+          "app/domain/services/execution/trading_bridge_adapter.py - imports app.services"
         ]
       },
       "ARCH-DEP-002": {
         "rule": "Domain layer NO tiene dependencias de framework",
-        "count": 0,
+        "count": 4,
+        "unique_files": 1,
         "severity": "P0",
-        "files": [],
-        "note": "Previously 3 violations in fifo_schema.py - file deleted (D app/domain/tax/database/fifo_schema.py)"
+        "files": [
+          "app/domain/tax/database/fifo_schema.py - imports sqlalchemy (sa, JSONB, UUID, declarative_base, hybrid_property)"
+        ],
+        "note": "File was previously reported as deleted but still exists (840 lines). 34 files import pydantic in domain - accepted as domain value objects use pydantic for validation."
       },
       "ARCH-DEP-003": {
         "rule": "Services depende SOLO de Domain",
         "count": 0,
         "severity": "P0",
-        "files": []
+        "files": [],
+        "status": "PASS"
       },
       "ARCH-DEP-004": {
         "rule": "Infrastructure implementa interfaces de Domain",
         "count": 3,
         "severity": "INFO",
-        "note": "Infrastructure correctly imports from domain/protocols"
+        "note": "Infrastructure correctly imports from domain (paper_trading.py, feeds.py, data/__init__.py)",
+        "status": "PASS"
       }
     }
   },
@@ -56,21 +65,26 @@
       "passed": "ALL",
       "failed": 0,
       "note": "No violations detected - all functions use snake_case"
-    }
+    },
+    "status": "PASS"
   },
   "size_limits": {
     "god_classes": {
       "threshold": 300,
-      "count": 645,
+      "count": 650,
       "severity": "P1",
-      "note": "645 files exceed 300 lines - architectural debt requiring systematic refactoring",
+      "change": "645 -> 650 (5 new files crossed threshold since last report)",
       "top_violations": [
         {"file": "app/backtesting/comprehensive_backtest_runner.py", "lines": 4531},
-        {"file": "app/domain/services/compliance/compliance_engine.py", "lines": 3859},
-        {"file": "app/presentation/dashboard/advanced_dashboard.py", "lines": 2610},
-        {"file": "app/application/use_cases/select_strategy.py", "lines": 2289},
+        {"file": "app/domain/services/compliance/compliance_engine.py", "lines": 3865},
+        {"file": "app/presentation/dashboard/advanced_dashboard.py", "lines": 2604},
+        {"file": "app/application/use_cases/select_strategy.py", "lines": 2284},
         {"file": "app/domain/strategies/learning/drift_detector.py", "lines": 2160},
-        {"file": "app/domain/strategies/learning/feature_importance.py", "lines": 2091}
+        {"file": "app/services/strategy_stock_allocator.py", "lines": 2098},
+        {"file": "app/shared/config/trading_config.py", "lines": 2097},
+        {"file": "app/services/_strategy_stock_allocator.py", "lines": 2095},
+        {"file": "app/domain/strategies/learning/feature_importance.py", "lines": 2091},
+        {"file": "app/backtesting/walk_forward_validator.py", "lines": 1910}
       ]
     },
     "god_functions": {
@@ -80,51 +94,64 @@
     },
     "high_complexity": {
       "threshold": 10,
-      "count": 327,
+      "count": 385,
       "severity": "P1",
-      "note": "327 files have functions with CC >= 10 per production audit"
-    }
+      "note": "385 files have functions with CC >= 10 per requirements compliance report",
+      "top_offenders": [
+        "app/backtesting/walk_forward_validator.py - WalkForwardValidator.validate_strategy CC=52",
+        "app/backtesting/metrics.py - MetricsCalculator.calculate_all_metrics CC=43",
+        "app/backtesting/walk_forward_validator.py - CrossValidationTemporal.cross_validate CC=20",
+        "app/backtesting/data_loader.py - DataLoader._load_from_yahoo_v8_api CC=21"
+      ],
+      "radon_average_complexity": "A (3.60)"
+    },
+    "status": "FAIL"
   },
   "module_structure": {
     "missing_init": {
       "count": 1,
       "files": [
-        "app/core/models/__/__init__.py (artifact - directory has init__.py instead, likely corrupted)"
+        "app/core/models/__/__init__.py (artifact directory - corrupted name with double underscores)"
       ],
-      "note": "16 of 17 previously missing __init__.py files have been created"
+      "note": "Only 1 artifact remaining - likely a corrupted directory from a previous rename"
     },
     "import_cycles": {
       "detected": false,
-      "note": "No circular import errors at module load time"
-    }
+      "note": "No circular import errors detected at module load time"
+    },
+    "status": "PASS"
   },
   "directory_structure": {
     "missing_layers": [],
     "extra_directories": [],
-    "note": "All required layers exist: core, domain, services, infrastructure, api"
+    "existing_layers": ["core", "domain", "services", "infrastructure", "presentation", "engines"],
+    "note": "All required layers exist"
   },
   "status": "FAIL",
   "violations_count": {
-    "P0_critical": 43,
-    "P1_important": 645,
-    "P2_moderate": 1
+    "P0_critical_layer_purity": 43,
+    "P0_critical_framework": 4,
+    "P1_important_size": 650,
+    "P1_important_complexity": 385,
+    "P2_moderate_missing_init": 1
   },
   "summary": {
-    "layer_boundaries": "FAIL - 43 violations (all from domain importing services/infrastructure)",
+    "layer_boundaries": "FAIL - 43 import violations across 13 files (domain importing services/infrastructure); 4 SQLAlchemy imports in fifo_schema.py",
     "file_naming": "PASS - No violations detected",
-    "size_limits": "FAIL - 645 files exceed 300 lines, 327 high complexity functions",
-    "module_structure": "PASS - Only 1 artifact directory missing init, no circular imports",
+    "size_limits": "FAIL - 650 files exceed 300 lines, 385 files with CC>=10",
+    "module_structure": "PASS - 1 artifact directory, no circular imports",
     "directory_structure": "PASS - All required layers exist"
   },
   "improvements_since_last_report": [
-    "ARCH-DEP-002: Fixed 3 framework violations (fifo_schema.py deleted)",
-    "ARCH-MOD-001: Created 16 missing __init__.py files (was 17, now 1 artifact)"
+    "No regressions in anti-pattern suppression patterns (all CLEAN)",
+    "SEC-001: No hardcoded secrets found, all eval() matches are PyTorch .eval() calls (safe)"
   ],
   "recommendations": [
-    "CRITICAL: Fix 43 domain layer purity violations - move services imports out of domain",
-    "HIGH: Refactor top god classes (compliance_engine 3859 lines, select_strategy 2289 lines, drift_detector 2160 lines)",
-    "HIGH: Plan systematic refactoring of 645 files exceeding 300 lines",
+    "CRITICAL: Fix 13 domain layer purity violations - refactor lazy imports in domain to use dependency injection or protocol-based interfaces",
+    "CRITICAL: Move app/domain/tax/database/fifo_schema.py to infrastructure layer (SQLAlchemy belongs in infra)",
+    "HIGH: Refactor top god classes - compliance_engine (3865 lines), comprehensive_backtest_runner (4531 lines), advanced_dashboard (2604 lines)",
+    "HIGH: Address 385 files with CC>=10 - prioritize functions with CC>20 first",
     "MEDIUM: Clean up app/core/models/__ artifact directory",
-    "MEDIUM: Fix 327 files with high complexity functions"
+    "NOTE: 34 domain files import pydantic - accepted for value object validation"
   ]
 }

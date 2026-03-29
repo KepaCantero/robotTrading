@@ -5,6 +5,7 @@ Validates tool calls before execution
 """
 import json
 import sys
+from pathlib import Path
 
 
 def main():
@@ -32,7 +33,8 @@ def main():
             )
             sys.exit(0)
 
-    # Log tool use for    log_file = Path(".ralph/logs/tool_usage.log")
+    # Log tool use for audit trail
+    log_file = Path(".ralph/logs/tool_usage.log")
     log_file.parent.mkdir(parents=True, exist_ok=True)
 
     with open(log_file, "a") as f:
