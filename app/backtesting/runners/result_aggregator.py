@@ -9,6 +9,8 @@ Provides result aggregation and persistence functionality for backtesting:
 - Weight persistence for learning engines
 """
 
+from __future__ import annotations
+
 import json
 import logging
 from datetime import datetime

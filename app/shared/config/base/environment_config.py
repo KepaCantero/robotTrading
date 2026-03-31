@@ -3,6 +3,8 @@ Centralized Configuration System
 TASK-5: Configuración de variables de entorno
 """
 
+from __future__ import annotations
+
 import logging
 import os
 from enum import Enum
@@ -175,7 +177,11 @@ class APIConfig(BaseSettings):
     refresh_token_expire_days: int = Field(default=7, env="REFRESH_TOKEN_EXPIRE_DAYS")
 
     # CORS
-    cors_origins: list[str] = Field(default=["*"])
+    cors_origins: list[str] = Field(
+        default_factory=lambda: os.environ.get(
+            "CORS_ALLOWED_ORIGINS", "http://localhost:3000"
+        ).split(",")
+    )
     cors_methods: list[str] = Field(default=["*"])
     cors_headers: list[str] = Field(default=["*"])
 
@@ -490,7 +496,7 @@ def reload_config() -> CentralizedConfig:
     """Reload the configuration."""
     logger.info("Reloading configuration instance")
     # global _config  # F824 removed
-
+    assert _config is not None
     return _config
 
 

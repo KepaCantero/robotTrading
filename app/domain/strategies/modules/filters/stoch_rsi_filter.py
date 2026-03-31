@@ -6,6 +6,8 @@ Standard Stochastic RSI Strategy:
 - SELL when StochRSI K >= overbought_threshold (typically >= 80)
 """
 
+from __future__ import annotations
+
 import logging
 from typing import Optional
 

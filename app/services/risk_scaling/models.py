@@ -5,6 +5,8 @@ Core data structures for risk scaling system with Pydantic validation.
 Handles scaling factors, state management, alerts, and reporting.
 """
 
+from __future__ import annotations
+
 import logging
 from datetime import datetime
 from decimal import Decimal

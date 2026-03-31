@@ -6,6 +6,8 @@ Implementa risk attribution:
 - Factor risk models (Fama-French, APT)
 """
 
+from __future__ import annotations
+
 import logging
 from abc import ABC, abstractmethod
 from datetime import datetime
@@ -86,7 +88,7 @@ class RiskAttributor(BaseRiskAttributor):
             Risk attribution completo
         """
         try:
-            attribution = {}
+            attribution: dict[str, Any] = {}
 
             # Atribución por activo
             if self.use_asset_attribution:
@@ -114,7 +116,7 @@ class RiskAttributor(BaseRiskAttributor):
             return attribution
         except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
             self.logger.error(f"Error atribuyendo riesgo: {e}", exc_info=True)
-            return {"error": str(e)}
+            return {"error": str(e), "timestamp": datetime.utcnow().isoformat()}
 
     def _attribute_by_asset(
         self, portfolio: Portfolio, returns_history: Optional[dict[str, list[float]]]
@@ -179,7 +181,7 @@ class RiskAttributor(BaseRiskAttributor):
                 symbol_to_strategy[symbol] = strategy
 
         # Agrupar por estrategia
-        strategy_positions = {}
+        strategy_positions: dict[str, list[Any]] = {}
         for position in portfolio.positions:
             strategy = symbol_to_strategy.get(position.symbol, "unknown")
             if strategy not in strategy_positions:
@@ -332,7 +334,7 @@ class RiskAttributor(BaseRiskAttributor):
 
     def _generate_summary(self, attribution: dict[str, Any]) -> dict[str, Any]:
         """Generar resumen de risk attribution."""
-        summary = {"top_risk_sources": [], "total_risk_decomposed": 0.0}
+        summary: dict[str, Any] = {"top_risk_sources": [], "total_risk_decomposed": 0.0}
 
         # Top fuentes de riesgo por activo
         if "by_asset" in attribution:

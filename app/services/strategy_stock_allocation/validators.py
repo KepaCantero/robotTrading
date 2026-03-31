@@ -103,7 +103,7 @@ class AllocationValidator:
                     )
 
             # Check strategy exposure limits
-            strategy_totals = defaultdict(float)
+            strategy_totals: dict[str, float] = defaultdict(float)
             for alloc in allocations.values():
                 if alloc.strategy:
                     strategy_totals[alloc.strategy] += alloc.weight

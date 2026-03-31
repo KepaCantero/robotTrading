@@ -18,12 +18,14 @@ Phase 3.4: Broker API Rate Limiting for 24/7 Operation
 Uses centralized configuration for all rate limits and backoff parameters.
 """
 
+from __future__ import annotations
+
 import asyncio
 import logging
 import time
 from dataclasses import dataclass
 from enum import Enum, IntEnum
-from typing import Callable, Optional
+from typing import Callable
 
 from requests.exceptions import HTTPError
 
@@ -196,9 +198,9 @@ class TokenBucketRateLimiter:
     def __init__(
         self,
         broker_type: BrokerType,
-        rate_limit: Optional[RateLimit] = None,
-        on_limit_exceeded: Optional[Callable[[], None]] = None,
-        alert_threshold: Optional[float] = None,
+        rate_limit: RateLimit | None = None,
+        on_limit_exceeded: Callable[[], None] | None = None,
+        alert_threshold: float | None = None,
     ):
         """
         Initialize token bucket rate limiter.
@@ -210,9 +212,10 @@ class TokenBucketRateLimiter:
             alert_threshold: Alert when token usage exceeds this ratio (uses centralized config if None)
         """
         self.broker_type = broker_type
-        self.rate_limit = rate_limit or BROKER_RATE_LIMITS.get(broker_type)
-        if self.rate_limit is None:
+        resolved_rate_limit: RateLimit | None = rate_limit or BROKER_RATE_LIMITS.get(broker_type)
+        if resolved_rate_limit is None:
             raise ValueError(f"No rate limit configured for broker: {broker_type}")
+        self.rate_limit: RateLimit = resolved_rate_limit
 
         self.on_limit_exceeded = on_limit_exceeded
 
@@ -246,7 +249,7 @@ class TokenBucketRateLimiter:
         self,
         tokens: int = 1,
         priority: int = RequestPriority.MEDIUM,
-        timeout: Optional[float] = None,
+        timeout: float | None = None,
     ) -> bool:
         """
         Acquire tokens, wait if necessary.
@@ -345,7 +348,7 @@ class TokenBucketRateLimiter:
                     return True
 
             # Queue the request
-            future = asyncio.Future()
+            future: asyncio.Future[bool] = asyncio.Future()
             self._priority_queue.append((priority, future))
 
             return False
@@ -370,8 +373,8 @@ class TokenBucketRateLimiter:
     async def acquire_with_backoff(
         self,
         tokens: int = 1,
-        max_retries: Optional[int] = None,
-        initial_backoff: Optional[float] = None,
+        max_retries: int | None = None,
+        initial_backoff: float | None = None,
         priority: int = RequestPriority.MEDIUM,
     ) -> bool:
         """
@@ -492,7 +495,7 @@ class TokenBucketRateLimiter:
         available = self.get_available_tokens()
         return 1.0 - (available / self.rate_limit.burst_capacity)
 
-    def get_statistics(self) -> dict[str, any]:
+    def get_statistics(self) -> dict[str, object]:
         """
         Get rate limiter statistics.
 
@@ -580,9 +583,9 @@ class RateLimitManager:
         self,
         broker_type: BrokerType,
         create_if_missing: bool = True,
-        rate_limit: Optional[RateLimit] = None,
-        on_limit_exceeded: Optional[Callable[[], None]] = None,
-    ) -> Optional[TokenBucketRateLimiter]:
+        rate_limit: RateLimit | None = None,
+        on_limit_exceeded: Callable[[], None] | None = None,
+    ) -> TokenBucketRateLimiter | None:
         """
         Get rate limiter for a specific broker.
 
@@ -676,7 +679,7 @@ class RateLimitManager:
             for broker_type, limiter in self._limiters.items()
         }
 
-    def get_summary(self) -> dict[str, any]:
+    def get_summary(self) -> dict[str, object]:
         """
         Get a summary of all rate limiters.
 

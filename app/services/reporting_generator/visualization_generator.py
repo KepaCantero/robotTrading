@@ -5,6 +5,8 @@ Generates professional interactive visualizations for performance reports using 
 Charts are optimized for HTML embedding and interactive exploration.
 """
 
+from __future__ import annotations
+
 import json
 import logging
 from dataclasses import dataclass

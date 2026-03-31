@@ -4,6 +4,8 @@ Shared type definitions for backtesting module.
 Consolidates type aliases that were duplicated across multiple files.
 """
 
+from __future__ import annotations
+
 from typing import Any, Union
 
 # Type aliases for better type safety and consistency

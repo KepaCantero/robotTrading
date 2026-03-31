@@ -4,6 +4,8 @@ Infrastructure Configuration Module
 Contains configuration for database, Redis, API, logging, and monitoring.
 """
 
+from __future__ import annotations
+
 import logging
 from typing import Optional
 

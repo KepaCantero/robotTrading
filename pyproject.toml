@@ -15,6 +15,7 @@ dependencies = [
     # Data & Config
     "pydantic>=2.0.0",
     "pydantic-settings>=2.0.0",
+    "eval-type-backport>=0.2.0",
     "python-dotenv>=1.0.0",
     "PyYAML>=6.0",
 
@@ -162,6 +163,10 @@ target-version = "py39"
 select = ["E", "F", "W", "I", "N", "UP", "B", "A", "C4", "SIM", "TCH", "RUF"]
 ignore = ["E203", "E402", "E501", "B008"]
 
+[tool.ruff.lint.per-file-ignores]
+# Pydantic model_rebuild() requires runtime imports for forward reference resolution
+"app/services/risk_scaling_application/models.py" = ["TCH"]
+
 [tool.ruff.lint.pep8-naming]
 # Standard mathematical/ML variable names (X for features, T for time, etc.)
 # Also includes external API parameter names (reqId from IBKR) and
@@ -174,6 +179,7 @@ known-first-party = ["app"]
 
 [tool.mypy]
 python_version = "3.9"
+mypy_path = "stubs"
 warn_return_any = true
 warn_unused_configs = true
 disallow_untyped_defs = false
@@ -183,7 +189,7 @@ no_implicit_optional = true
 warn_redundant_casts = true
 warn_unused_ignores = false
 warn_no_return = true
-follow_imports = "skip"
+follow_imports = "silent"
 ignore_missing_imports = true
 strict_optional = true
 
@@ -229,6 +235,7 @@ markers = [
     "e2e: End-to-end tests",
     "slow: Slow running tests",
     "property_based: Property-based tests",
+    "property: Property-based test alias",
     "coverage: Coverage tests",
     "critical: Critical path tests that must always pass",
     "requires_broker: Tests requiring broker connection",

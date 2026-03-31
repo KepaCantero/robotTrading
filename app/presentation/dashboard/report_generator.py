@@ -4,6 +4,8 @@ Report Generator for Backtest Results
 Automatically generates documentation for backtest results.
 """
 
+from __future__ import annotations
+
 import json
 import logging
 import statistics

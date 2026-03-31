@@ -15,6 +15,8 @@ Author: Algorithmic Trading System
 Date: 2026-01-28
 """
 
+from __future__ import annotations
+
 import logging
 from dataclasses import dataclass
 from typing import Optional
@@ -356,7 +358,7 @@ class APTModel:
 
         logger.info(f"APTModel initialized: n_factors={n_factors}")
 
-    def fit(self, returns: pd.DataFrame) -> "APTModel":
+    def fit(self, returns: pd.DataFrame) -> APTModel:
         """
         Fit APT model using PCA to extract statistical factors.
 

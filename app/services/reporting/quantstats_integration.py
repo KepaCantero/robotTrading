@@ -4,6 +4,8 @@ T9.1.2: QuantStatsIntegration - Integrate QuantStats for advanced metrics
 Provides advanced performance metrics using QuantStats library.
 """
 
+from __future__ import annotations
+
 import logging
 from typing import Optional
 

@@ -14,6 +14,8 @@ have limited trading hours. Efficiently manages CPU usage by only running
 tasks when markets are open.
 """
 
+from __future__ import annotations
+
 import asyncio
 import logging
 from dataclasses import dataclass, field
@@ -487,7 +489,7 @@ class MarketScheduler:
         """
         schedule = self.schedules.get(market_type)
 
-        if schedule.is_24_7():
+        if schedule and schedule.is_24_7():
             logger.info(f"{market_type.value} is 24/7, not waiting")
             return  # Already open
 
@@ -620,7 +622,7 @@ class MarketScheduler:
         if market_type:
             tasks = [t for t in tasks if market_type in t.market_types]
 
-        return [self.get_task_info(t.task_id) for t in tasks]
+        return [info for t in tasks if (info := self.get_task_info(t.task_id)) is not None]
 
     async def run_task_once(self, task_id: str) -> bool:
         """

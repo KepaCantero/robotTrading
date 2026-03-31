@@ -4,6 +4,8 @@ Trading Decision Logger - R15, R28
 Logger append-only con correlation ID para todas las decisiones de trading.
 """
 
+from __future__ import annotations
+
 import logging
 from datetime import datetime
 from typing import Any, Optional

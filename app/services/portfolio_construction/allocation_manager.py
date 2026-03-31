@@ -4,12 +4,13 @@ T18.1.1: AllocationManager - Portfolio allocation tracking and management
 Manages current portfolio allocations, tracks deviations, and maintains allocation history.
 """
 
+from __future__ import annotations
+
 import asyncio
 import logging
 from dataclasses import dataclass
 from datetime import datetime
 from decimal import Decimal
-from typing import Optional
 
 logger = logging.getLogger(__name__)
 
@@ -49,7 +50,7 @@ class AllocationManager:
     - Concentration metrics
     """
 
-    def __init__(self, rebalancing_threshold: Optional[Decimal] = None):
+    def __init__(self, rebalancing_threshold: Decimal | None = None):
         """
         Initialize allocation manager.
 
@@ -217,7 +218,7 @@ class AllocationManager:
 
     async def get_allocation_history(
         self,
-        limit: Optional[int] = None,
+        limit: int | None = None,
     ) -> list[AllocationSnapshot]:
         """
         Get allocation history snapshots.
@@ -244,11 +245,11 @@ class AllocationManager:
 
 
 # Singleton
-_manager: Optional[AllocationManager] = None
+_manager: AllocationManager | None = None
 
 
 def get_allocation_manager(
-    rebalancing_threshold: Optional[Decimal] = None,
+    rebalancing_threshold: Decimal | None = None,
 ) -> AllocationManager:
     """Get or create singleton AllocationManager."""
     if rebalancing_threshold is None:

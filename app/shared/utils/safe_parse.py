@@ -14,18 +14,23 @@ Usage:
     data = safe_parse_json('{"key": "value"}')  # Returns dict
 """
 
+from __future__ import annotations
+
 import ast
 import contextlib
 import json
 import logging
-from typing import Union
+from typing import Union, cast
 
 logger = logging.getLogger(__name__)
 
+# Type alias for values returned by ast.literal_eval
+_LiteralValue = Union[str, int, float, bool, list, dict, tuple, set, None]
+# Type alias for values returned by json.loads
+_JsonValue = Union[str, int, float, bool, list, dict, None]
 
-def safe_parse(
-    value: str, default: Union[str, int, float, bool, list, dict, tuple, set, None] = None
-) -> Union[str, int, float, bool, list, dict, tuple, set, None]:
+
+def safe_parse(value: str, default: _LiteralValue = None) -> _LiteralValue:
     """
     Safely parse a string containing a Python literal.
 
@@ -60,15 +65,13 @@ def safe_parse(
         return default
 
     try:
-        return ast.literal_eval(value)
+        return cast("_LiteralValue", ast.literal_eval(value))
     except (ValueError, SyntaxError) as e:
         logger.debug(f"Failed to parse value with literal_eval: {e}")
         return default
 
 
-def safe_parse_json(
-    value: str, default: Union[str, int, float, bool, list, dict, None] = None
-) -> Union[str, int, float, bool, list, dict, None]:
+def safe_parse_json(value: str, default: _JsonValue = None) -> _JsonValue:
     """
     Safely parse a JSON string.
 
@@ -94,15 +97,13 @@ def safe_parse_json(
         return default
 
     try:
-        return json.loads(value)
+        return cast("_JsonValue", json.loads(value))
     except json.JSONDecodeError as e:
         logger.debug(f"Failed to parse JSON: {e}")
         return default
 
 
-def safe_parse_with_fallback(
-    value: str, default: Union[str, int, float, bool, list, dict, tuple, set, None] = None
-) -> Union[str, int, float, bool, list, dict, tuple, set, None]:
+def safe_parse_with_fallback(value: str, default: _LiteralValue = None) -> _LiteralValue:
     """
     Try parsing with literal_eval first, then JSON, then return default.
 
@@ -127,17 +128,17 @@ def safe_parse_with_fallback(
 
     # Try literal_eval first (for Python-format data)
     with contextlib.suppress(ValueError, SyntaxError):
-        return ast.literal_eval(value)
+        return cast("_LiteralValue", ast.literal_eval(value))
 
     # Try JSON (for JSON-format data)
     with contextlib.suppress(json.JSONDecodeError):
-        return json.loads(value)
+        return cast("_LiteralValue", json.loads(value))
 
     logger.debug(f"Failed to parse value with both literal_eval and JSON: {value[:50]}...")
     return default
 
 
-def serialize_for_storage(value: Union[str, int, float, bool, list, dict, tuple, set, None]) -> str:
+def serialize_for_storage(value: _LiteralValue) -> str:
     """
     Serialize a value for safe storage.
 

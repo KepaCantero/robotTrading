@@ -5,6 +5,8 @@ TASK-11: Análisis Dinámico de Slippage
 Servicio para calcular slippage dinámico basado en volatilidad del mercado y liquidez.
 """
 
+from __future__ import annotations
+
 import logging
 from decimal import Decimal
 from typing import Optional
@@ -186,7 +188,7 @@ class LiquidityCalculator:
         depth_score = min(1.0, float(depth) / self._tt.liquidity_depth_normalization)
 
         # Score combinado con pesos - use config weights
-        return (
+        return float(
             spread_score * self._tt.liquidity_spread_weight
             + volume_score * self._tt.liquidity_volume_weight
             + depth_score * self._tt.liquidity_depth_weight
@@ -249,9 +251,9 @@ class OrderSizeCalculator:
         if ratio <= self._tt.order_size_tiny_threshold:
             return 1.0
         elif ratio <= self._tt.order_size_small_threshold:
-            return 1.0 + ratio * self._tt.order_size_small_multiplier
+            return float(1.0 + ratio * self._tt.order_size_small_multiplier)
         else:
-            return 1.0 + ratio * self._tt.order_size_large_multiplier
+            return float(1.0 + ratio * self._tt.order_size_large_multiplier)
 
 
 class DynamicSlippageService:
@@ -466,7 +468,7 @@ class DynamicSlippageService:
         base_slippage = self.params.base_slippage
         total += base_slippage
 
-        return total
+        return Decimal(total)
 
     def _determine_market_condition(
         self, volatility_metrics: VolatilityMetrics, liquidity_metrics: LiquidityMetrics
@@ -492,7 +494,7 @@ class DynamicSlippageService:
 
         # Promedio ponderado de confianzas
         total_confidence = sum(c.confidence for c in components)
-        return total_confidence / len(components)
+        return float(total_confidence / len(components))
 
     def _add_to_history(self, analysis: DynamicSlippageAnalysis):
         """Agregar análisis al historial."""
@@ -513,7 +515,8 @@ class DynamicSlippageService:
         logger.debug("Getting average slippage", extra={"asset_symbol": asset_symbol, "days": days})
         history = self.get_slippage_history(asset_symbol)
         if history:
-            avg_slippage = history.get_average_slippage(days)
+            raw_avg = history.get_average_slippage(days)
+            avg_slippage: Optional[Decimal] = Decimal(str(raw_avg)) if raw_avg is not None else None
             logger.debug(
                 "Average slippage retrieved",
                 extra={

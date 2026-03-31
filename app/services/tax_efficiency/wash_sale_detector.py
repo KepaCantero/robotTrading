@@ -6,6 +6,8 @@ A wash sale occurs when a security is sold at a loss and a substantially identic
 security is purchased within 30 days before or after the sale.
 """
 
+from __future__ import annotations
+
 import logging
 from dataclasses import dataclass
 from datetime import datetime, timedelta

@@ -10,7 +10,7 @@ from decimal import Decimal
 
 import pytest
 
-from app.core.trading_validators import TradingValidator
+from app.domain.services.trading_validators import TradingValidator
 
 
 class TestTradingValidator:

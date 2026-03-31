@@ -135,8 +135,8 @@ services:
       - "80:80"
       - "443:443"
     volumes:
-      - ./nginx/nginx-prod.conf:/etc/nginx/nginx.conf:ro
-      - ./nginx/ssl:/etc/nginx/ssl:ro
+      - ./deploy/nginx/nginx-prod.conf:/etc/nginx/nginx.conf:ro
+      - ./deploy/nginx/ssl:/etc/nginx/ssl:ro
       - nginx_logs:/var/log/nginx
     networks:
       - algotrading-network
@@ -156,7 +156,7 @@ services:
     ports:
       - "9090:9090"
     volumes:
-      - ./monitoring/prometheus-prod.yml:/etc/prometheus/prometheus.yml:ro
+      - ./deploy/monitoring/prometheus-prod.yml:/etc/prometheus/prometheus.yml:ro
       - prometheus_data:/prometheus
     networks:
       - algotrading-network
@@ -180,8 +180,8 @@ services:
       GF_AUTH_ANONYMOUS_ENABLED: "false"
     volumes:
       - grafana_data:/var/lib/grafana
-      - ./monitoring/grafana/dashboards:/etc/grafana/provisioning/dashboards:ro
-      - ./monitoring/grafana/datasources:/etc/grafana/provisioning/datasources:ro
+      - ./deploy/monitoring/grafana/dashboards:/etc/grafana/provisioning/dashboards:ro
+      - ./deploy/monitoring/grafana/datasources:/etc/grafana/provisioning/datasources:ro
     networks:
       - algotrading-network
     depends_on:
@@ -216,7 +216,7 @@ services:
     image: docker.elastic.co/logstash/logstash:8.11.0
     container_name: algotrading-logstash-prod
     volumes:
-      - ./monitoring/logstash/logstash.conf:/usr/share/logstash/pipeline/logstash.conf:ro
+      - ./deploy/monitoring/logstash/logstash.conf:/usr/share/logstash/pipeline/logstash.conf:ro
       - app_logs:/app/logs:ro
     networks:
       - algotrading-network

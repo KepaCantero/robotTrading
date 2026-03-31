@@ -8,7 +8,7 @@ from unittest.mock import patch
 
 import pytest
 
-from app.core.config_validator import (
+from app.shared.config.config_validator import (
     CircuitBreakerValidator,
     ConfigValidator,
     DatabaseConfigValidator,

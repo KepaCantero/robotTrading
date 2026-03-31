@@ -4,8 +4,10 @@ Telegram Bot Helper
 Helper utilities for setting up and testing Telegram bot integration.
 """
 
+from __future__ import annotations
+
 import logging
-from typing import Optional
+from typing import Optional, cast
 
 import httpx
 
@@ -84,7 +86,8 @@ class TelegramBotHelper:
                     updates = data.get("result", [])
                     if updates:
                         # Get the most recent message's chat_id
-                        return updates[-1].get("message", {}).get("chat", {}).get("id")
+                        chat_id = updates[-1].get("message", {}).get("chat", {}).get("id")
+                        return cast("Optional[int]", chat_id)
 
             return None
 
@@ -122,7 +125,7 @@ class TelegramBotHelper:
 
             if response.status_code == 200:
                 data = response.json()
-                return data.get("ok", False)
+                return bool(data.get("ok", False))
 
             return False
 

@@ -25,7 +25,7 @@ from app.application.use_cases.select_strategy import (
     StrategySelectionResult,
     StrategySelector,
 )
-from app.core.models.input_profile import InputProfile, ObjectivoInversion, RiskTolerance
+from app.domain.models.input_profile import InputProfile, ObjectivoInversion, RiskTolerance
 
 
 class TestStrategyConfiguration:

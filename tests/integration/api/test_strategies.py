@@ -14,9 +14,9 @@ from fastapi.testclient import TestClient
 
 from app.presentation.api.strategies import (
     get_config_loader,
-    get_execution_engine,
-    get_strategy_logger,
-    get_strategy_registry,
+    get_execution_engine_dep as get_execution_engine,
+    get_strategy_logger_dep as get_strategy_logger,
+    get_strategy_registry_dep as get_strategy_registry,
     router,
 )
 from app.domain.strategies.execution_engine import ExecutionEngine

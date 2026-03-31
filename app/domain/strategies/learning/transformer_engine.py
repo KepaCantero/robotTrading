@@ -2,6 +2,8 @@
 TransformerEngine - Usa Transformers para optimización de parámetros y predicción de series de tiempo.
 """
 
+from __future__ import annotations
+
 import logging
 import os
 from typing import Optional
@@ -334,8 +336,7 @@ class TransformerEngine(BaseLearningEngine):
 
             # PyTorch is imported at module level (lines 37-39)
             # Import Dataset and DataLoader from torch.utils.data
-            from torch.utils.data import DataLoader as _DataLoader
-            from torch.utils.data import Dataset as _Dataset
+            from torch.utils.data import DataLoader as _DataLoader, Dataset as _Dataset
 
             # Type guard - model should exist at this point
             assert self.model is not None
@@ -424,8 +425,7 @@ class TransformerEngine(BaseLearningEngine):
                 )
                 if len(val_sequences) > 0:
                     # Import Dataset and DataLoader again for this context
-                    from torch.utils.data import DataLoader as _DataLoader
-                    from torch.utils.data import Dataset as _Dataset
+                    from torch.utils.data import DataLoader as _DataLoader, Dataset as _Dataset
 
                     class TransformerDatasetVal(_Dataset):
                         """Dataset para sequences de tiempo para Transformer."""
@@ -583,8 +583,7 @@ class TransformerEngine(BaseLearningEngine):
                 return {"error": "no_data"}
 
             # Import Dataset and DataLoader for this context
-            from torch.utils.data import DataLoader as _DataLoader
-            from torch.utils.data import Dataset as _Dataset
+            from torch.utils.data import DataLoader as _DataLoader, Dataset as _Dataset
 
             # Definir TransformerDatasetEval aquí también
             class TransformerDatasetEval(_Dataset):

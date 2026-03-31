@@ -199,7 +199,9 @@ class BacktestValidator:
 
     def _load_oos_config(self) -> dict[str, Any]:
         """Load out-of-sample test configuration."""
-        return self.raw_config.get("backtests", {}).get("out_of_sample", {})
+        backtests: dict[str, Any] = self.raw_config.get("backtests", {})
+        oos_config: dict[str, Any] = backtests.get("out_of_sample", {})
+        return oos_config
 
     def _split_data_for_oos(self, oos_config: dict[str, Any], train_ratio: float) -> tuple | None:
         """

@@ -18,6 +18,8 @@ Configuration Sources:
 - config/strategies/ensemble.yaml - Ensemble configurations
 """
 
+from __future__ import annotations
+
 import logging
 from decimal import Decimal
 from pathlib import Path
@@ -77,7 +79,7 @@ def get_capital_tier(capital: Decimal) -> str:
     """
     try:
         # Use the centralized tier mapper
-        return TierMapper.get_tier_from_capital(capital)
+        return str(TierMapper.get_tier_from_capital(capital))
     except OSError as e:
         # Fallback to manual calculation if tier mapper fails
         logger.warning(
@@ -173,8 +175,8 @@ class ProfileStrategyMapper:
 
     def __init__(
         self,
-        investment_profiles_path: str = "config/investment_profiles.yaml",
-        learning_params_path: str = "config/learning_parameters.yaml",
+        investment_profiles_path: str = "config/portfolio/investment_profiles.yaml",
+        learning_params_path: str = "config/learning/learning_parameters.yaml",
         ensemble_config_path: str = "config/strategies/ensemble.yaml",
     ):
         """
@@ -707,8 +709,8 @@ class ProfileStrategyMapper:
 
 
 def create_profile_mapper(
-    investment_profiles_path: str = "config/investment_profiles.yaml",
-    learning_params_path: str = "config/learning_parameters.yaml",
+    investment_profiles_path: str = "config/portfolio/investment_profiles.yaml",
+    learning_params_path: str = "config/learning/learning_parameters.yaml",
     ensemble_config_path: str = "config/strategies/ensemble.yaml",
 ) -> ProfileStrategyMapper:
     """

@@ -8,6 +8,8 @@ Usage:
     from app.backtesting.shared.trade_utils import build_trade_reason
 """
 
+from __future__ import annotations
+
 from decimal import Decimal
 from typing import Optional
 

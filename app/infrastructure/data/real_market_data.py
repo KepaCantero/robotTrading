@@ -1,3 +1,6 @@
+from __future__ import annotations
+
+# mypy: ignore-errors
 # mypy: ignore-errors
 """
 Real Market Data Fetcher - Alpha Vantage Integration

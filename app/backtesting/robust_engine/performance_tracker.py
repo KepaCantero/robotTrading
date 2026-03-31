@@ -500,10 +500,10 @@ class PerformanceTracker:
             }
 
         return RollingMetrics(
-            window_1y=metrics.get("window_1y", {}),
-            window_3y=metrics.get("window_3y", {}),
-            window_5y=metrics.get("window_5y", {}),
-            window_10y=metrics.get("window_10y", {}),
+            window_1y={k: v for k, v in metrics.get("window_1y", {}).items() if v is not None},
+            window_3y={k: v for k, v in metrics.get("window_3y", {}).items() if v is not None},
+            window_5y={k: v for k, v in metrics.get("window_5y", {}).items() if v is not None},
+            window_10y={k: v for k, v in metrics.get("window_10y", {}).items() if v is not None},
         )
 
     def _calculate_max_drawdown(self, equity_series: pd.Series) -> float:

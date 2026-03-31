@@ -11,6 +11,8 @@ This module provides secure storage and retrieval of secrets with:
 R29: Security Hardening
 """
 
+from __future__ import annotations
+
 import contextlib
 import json
 import logging
@@ -171,11 +173,14 @@ class EncryptedFileStorage:
             decrypted_content = self._fernet.decrypt(encrypted_content)
             self._data = json.loads(decrypted_content.decode())
         except InvalidToken:
-            logger.error(f"Failed to decrypt secrets file: {self._file_path}")
-            self._data = {}
+            logger.critical(
+                f"Failed to decrypt secrets file (key rotated?): {self._file_path}. "
+                "Secrets are NOT loaded. Re-initialize with correct key."
+            )
+            raise
         except (json.JSONDecodeError, UnicodeDecodeError) as e:
-            logger.error(f"Failed to parse secrets file: {e}")
-            self._data = {}
+            logger.critical(f"Failed to parse secrets file: {e}. Secrets are NOT loaded.")
+            raise
 
     def _save(self) -> None:
         """Save encrypted data to file."""
@@ -284,7 +289,8 @@ class SecretsManagerImpl:
             raise SecretsError(
                 "Encryption not available. Set ALGOTRADING_ENCRYPTION_KEY environment variable."
             )
-        return self._fernet.encrypt(value.encode()).decode()
+        encrypted: bytes = self._fernet.encrypt(value.encode())
+        return encrypted.decode()
 
     def _decrypt(self, encrypted_value: str) -> str:
         """Decrypt a secret value."""
@@ -292,7 +298,8 @@ class SecretsManagerImpl:
             raise SecretsError(
                 "Encryption not available. Set ALGOTRADING_ENCRYPTION_KEY environment variable."
             )
-        return self._fernet.decrypt(encrypted_value.encode()).decode()
+        decrypted: bytes = self._fernet.decrypt(encrypted_value.encode())
+        return decrypted.decode()
 
     def set_secret(self, key: str, value: str) -> None:
         """

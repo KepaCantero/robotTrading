@@ -4,6 +4,8 @@ Data models for parameter optimization.
 Defines the core data structures used across all optimization algorithms.
 """
 
+from __future__ import annotations
+
 import logging
 from dataclasses import dataclass, field
 from decimal import Decimal

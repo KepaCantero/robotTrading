@@ -5,6 +5,8 @@ This module provides plotting functions to visualize the effects of fractional
 differentiation on time series data, including memory preservation and stationarity.
 """
 
+from __future__ import annotations
+
 import logging
 import warnings
 from typing import Optional

@@ -4,6 +4,8 @@ T7.1: PortfolioConstructor - Optimize portfolio allocation
 Constructs optimal portfolios using mean-variance optimization and equal-weighting strategies.
 """
 
+from __future__ import annotations
+
 import asyncio
 import logging
 from dataclasses import dataclass
@@ -247,7 +249,7 @@ class PortfolioConstructor:
         correlation_matrix: dict[str, dict[str, float]],
     ) -> dict[str, dict[str, float]]:
         """Build covariance matrix from volatilities and correlations."""
-        cov = {}
+        cov: dict[str, dict[str, float]] = {}
         for asset1 in assets:
             cov[asset1] = {}
             for asset2 in assets:
@@ -273,7 +275,7 @@ class PortfolioConstructor:
                 w2 = allocation[asset2]
                 cov = cov_matrix.get(asset1, {}).get(asset2, 0.0)
                 variance += w1 * w2 * cov
-        return variance**0.5
+        return float(variance**0.5)
 
     async def _calculate_diversification_ratio(
         self,

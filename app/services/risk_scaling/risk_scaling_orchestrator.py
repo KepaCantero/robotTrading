@@ -20,6 +20,8 @@ var_adjusted_scale = combined_scale * (1 - VaR_utilization)
 Reference: Hull, Options, Futures, and Other Derivatives, Chapter 18
 """
 
+from __future__ import annotations
+
 import logging
 from decimal import ROUND_HALF_UP, Decimal
 from typing import Optional
@@ -356,14 +358,14 @@ class RiskScalingOrchestrator:
                     symbol, prices, lookback_periods=60
                 )
             except (ValueError, ZeroDivisionError, IndexError) as e:
-                self.logger.warning(f"ATR calculation error: {e}")
+                logger.warning(f"ATR calculation error: {e}")
                 average_atr = current_atr  # Fallback to current
 
         if daily_returns:
             try:
                 sharpe_ratio = await self.sharpe_monitor.calculate_rolling_sharpe(daily_returns)
             except (ValueError, ZeroDivisionError, IndexError) as e:
-                self.logger.warning(f"Sharpe calculation error: {e}")
+                logger.warning(f"Sharpe calculation error: {e}")
 
         if trade_results:
             consecutive_losses = self.loss_monitor.detect_consecutive_losses(trade_results)
@@ -372,7 +374,7 @@ class RiskScalingOrchestrator:
             try:
                 current_dd, max_dd = self.drawdown_monitor.calculate_drawdown(equity_curve)
             except (ValueError, ZeroDivisionError, IndexError) as e:
-                self.logger.warning(f"Drawdown calculation error: {e}")
+                logger.warning(f"Drawdown calculation error: {e}")
 
         # Create snapshot
         snapshot = RiskScalingSnapshot(

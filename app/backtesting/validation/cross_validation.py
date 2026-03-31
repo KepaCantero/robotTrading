@@ -23,16 +23,25 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Protocol, cast, runtime_checkable
 
 import numpy as np
 import pandas as pd
 from sklearn.model_selection import KFold
 
 if TYPE_CHECKING:
-    from collections.abc import Generator
+    from collections.abc import Callable, Generator
 
 logger = logging.getLogger(__name__)
+
+
+@runtime_checkable
+class SklearnEstimator(Protocol):
+    """Protocol for sklearn-compatible estimators."""
+
+    def fit(self, X: pd.DataFrame | np.ndarray, y: pd.Series | np.ndarray) -> object: ...
+
+    def predict(self, X: pd.DataFrame | np.ndarray) -> np.ndarray: ...
 
 
 @dataclass
@@ -349,7 +358,7 @@ class PurgedKFold:
         if not test_t1_values:
             # Fallback to percentage-based
             max(1, int(len(index) * self.config.embargo_pct))
-            return np.array([])
+            return cast("np.ndarray", np.array([], dtype=np.intp))
 
         # Find maximum t1 in test set
         max_t1 = max(test_t1_values)
@@ -372,7 +381,7 @@ class PurgedKFold:
 
         # Embargo indices are from test_end to embargo_end
         embargo_start = test_indices[-1] + 1
-        embargo_indices = np.arange(embargo_start, embargo_end_pos)
+        embargo_indices: np.ndarray = np.arange(embargo_start, embargo_end_pos)
 
         return embargo_indices
 
@@ -585,15 +594,15 @@ class PurgedTimeSeriesSplit:
 
 
 def cv_score(
-    estimator: object,
+    estimator: SklearnEstimator,
     X: pd.DataFrame | np.ndarray,
     y: pd.Series | np.ndarray,
     events: pd.DataFrame | None = None,
     n_splits: int = 5,
     embargo_pct: float = 0.01,
     purge_pct: float = 0.05,
-    scoring: callable | None = None,
-) -> dict[str, float]:
+    scoring: Callable[[object, object], float] | None = None,
+) -> dict[str, float | list[float]]:
     """
     Cross-validate an estimator using purged K-Fold splits.
 
@@ -626,7 +635,7 @@ def cv_score(
         purge_pct=purge_pct,
     )
 
-    fold_scores = []
+    fold_scores: list[float] = []
 
     for fold, (train_idx, test_idx) in enumerate(purged_cv.split(X, events=events)):
         # Split data
@@ -654,12 +663,12 @@ def cv_score(
         else:
             score = scoring(y_test, y_pred)
 
-        fold_scores.append(score)
+        fold_scores.append(float(score))
         logger.debug(f"Fold {fold}: score = {score:.4f}")
 
     return {
-        "mean_score": np.mean(fold_scores),
-        "std_score": np.std(fold_scores),
+        "mean_score": float(np.mean(fold_scores)),
+        "std_score": float(np.std(fold_scores)),
         "fold_scores": fold_scores,
     }
 

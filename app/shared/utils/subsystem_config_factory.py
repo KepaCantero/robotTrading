@@ -13,6 +13,8 @@ Usage:
     risk_config = factory.get_risk_engine_config()
 """
 
+from __future__ import annotations
+
 import logging
 from decimal import Decimal
 from typing import TYPE_CHECKING, Any, Optional
@@ -39,10 +41,10 @@ class SubsystemConfigFactory:
     - Single source of truth for subsystem configs
     """
 
-    _instance: Optional["SubsystemConfigFactory"] = None
+    _instance: Optional[SubsystemConfigFactory] = None
     _initialized: bool
 
-    def __new__(cls) -> "SubsystemConfigFactory":
+    def __new__(cls) -> SubsystemConfigFactory:
         """Singleton pattern for consistent config access."""
         if cls._instance is None:
             logger.debug(
@@ -65,7 +67,7 @@ class SubsystemConfigFactory:
     # BACKTESTING ENGINE CONFIG
     # ==========================================================================
 
-    def get_backtest_config(self) -> "BacktestConfig":
+    def get_backtest_config(self) -> BacktestConfig:
         """
         Get default BacktestConfig for BacktestEngine.
 

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 """CorrelationRegimeDetector - Detección de régimen basada en correlaciones dinámicas.
 
 Usa análisis de correlaciones para detectar cambios de régimen.
@@ -18,7 +20,7 @@ try:
     SKLEARN_AVAILABLE = True
 except ImportError:
     SKLEARN_AVAILABLE = False
-    PCA: Optional[type[Any]] = None
+    PCA = None
 
 
 class CorrelationRegimeDetector:
@@ -47,10 +49,12 @@ class CorrelationRegimeDetector:
     def _calculate_correlation_matrix(self, returns_matrix: np.ndarray) -> np.ndarray:
         """Calcular matriz de correlación."""
         if returns_matrix.shape[1] < 2:
-            return np.array([[1.0]])
+            result: np.ndarray = np.array([[1.0]])
+            return result
 
         df = pd.DataFrame(returns_matrix)
-        return df.corr().values
+        corr_values: np.ndarray = np.array(df.corr().values)
+        return corr_values
 
     def _calculate_pca_variance(self, returns_matrix: np.ndarray) -> float:
         """Calcular varianza explicada por PCA."""
@@ -59,8 +63,8 @@ class CorrelationRegimeDetector:
 
         try:
             self.pca.fit(returns_matrix)
-            explained_variance = np.sum(self.pca.explained_variance_ratio_)
-            return float(explained_variance)
+            explained_variance: float = float(np.sum(self.pca.explained_variance_ratio_))
+            return explained_variance
         except (ValueError, TypeError, KeyError, AttributeError):
             return 0.0
 

@@ -10,6 +10,8 @@ Key principles:
 - Safe conversion from external data sources
 """
 
+from __future__ import annotations
+
 import logging
 import math
 from collections.abc import Sequence
@@ -99,7 +101,10 @@ def to_decimal_required(value: Union[int, float, str, Decimal]) -> Decimal:
     """
     if value is None:
         raise ValueError("Value cannot be None for required Decimal field")
-    return to_decimal(value)
+    result = to_decimal(value)
+    if result is None:
+        raise ValueError(f"Cannot convert {value!r} to Decimal")
+    return result
 
 
 def safe_decimal_divide(
@@ -556,11 +561,12 @@ def safe_mean(
 
     # Convert all values to Decimal
     decimal_values = [to_decimal(v) for v in values if v is not None]
-    if not decimal_values:
+    non_none_values: list[Decimal] = [dv for dv in decimal_values if dv is not None]
+    if not non_none_values:
         return default
 
     # Use Decimal(0) as start to ensure sum returns Decimal
-    return sum(decimal_values, Decimal(0)) / len(decimal_values)
+    return sum(non_none_values, Decimal(0)) / len(non_none_values)
 
 
 def safe_variance(
@@ -592,13 +598,14 @@ def safe_variance(
         return default
 
     decimal_values = [to_decimal(v) for v in values if v is not None]
-    n = len(decimal_values)
+    non_none_values: list[Decimal] = [dv for dv in decimal_values if dv is not None]
+    n = len(non_none_values)
 
     if n < 2:
         return default
 
     # Calculate variance
-    squared_diffs = [(v - mean_val) ** 2 for v in decimal_values]
+    squared_diffs = [(v - mean_val) ** 2 for v in non_none_values]
     denominator = n - 1 if sample else n
     return sum(squared_diffs, Decimal(0)) / denominator
 

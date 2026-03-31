@@ -4,6 +4,8 @@ User Settings Model
 Defines the user-specific configuration model.
 """
 
+from __future__ import annotations
+
 import logging
 from decimal import Decimal
 from enum import Enum

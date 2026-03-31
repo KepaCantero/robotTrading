@@ -13,7 +13,7 @@ import time
 
 import pytest
 
-from app.core.secret_manager import (
+from app.security.secrets.secret_manager import (
     SecretCategory,
     SecretDefinition,
     SecretManager,

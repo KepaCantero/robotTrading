@@ -4,6 +4,8 @@ Sector Diversification Validator - TASK-5.6-SECTOR-COUNTRY-DIVERSIFICATION
 Validates sector concentration constraints and generates rebalancing recommendations.
 """
 
+from __future__ import annotations
+
 import logging
 from decimal import Decimal
 from typing import Any, Optional
@@ -30,7 +32,7 @@ class SectorDiversificationValidator:
         Returns:
             List of violation dicts for breaches
         """
-        violations = []
+        violations: list[dict[str, Any]] = []
         self.checks_performed += 1
 
         # Calculate sector exposures
@@ -115,7 +117,7 @@ class SectorDiversificationValidator:
         Returns:
             List of suggestion dicts with sector, exposure, and action
         """
-        suggestions = []
+        suggestions: list[dict[str, Any]] = []
         sector_exposure = self._calculate_sector_exposure(portfolio)
         total_value = portfolio.total_equity
 

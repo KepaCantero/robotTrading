@@ -5,10 +5,12 @@ Manages stop losses, margin requirements, position limits, and daily loss limits
 based on market conditions and portfolio state.
 """
 
+from __future__ import annotations
+
 import logging
 from dataclasses import dataclass
 from decimal import Decimal
-from typing import Optional
+from typing import Any, Optional
 
 from app.shared.config.centralized_config import get_config
 
@@ -447,7 +449,7 @@ class LimitAdjuster:
         current_volatility: Decimal,
         average_volatility: Decimal,
         current_drawdown_pct: Decimal,
-    ) -> dict[str, any]:
+    ) -> dict[str, Any]:
         """
         Get all trading limits with all adjustments applied.
 

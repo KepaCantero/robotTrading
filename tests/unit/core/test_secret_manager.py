@@ -19,7 +19,7 @@ from unittest.mock import patch
 
 import pytest
 
-from app.core.secret_manager import (
+from app.security.secrets.secret_manager import (
     SecretCategory,
     SecretDefinition,
     SecretManager,
@@ -297,7 +297,7 @@ class TestConvenienceFunctions:
     def test_get_connection_string_function(self):
         """Test get_connection_string convenience function."""
         # Clear cache to ensure fresh values
-        import app.core.secret_manager as sm_module
+        import app.security.secret_manager as sm_module
 
         sm_module._secret_manager.clear_cache()
 
@@ -325,7 +325,7 @@ class TestConvenienceFunctions:
     def test_is_production_function(self):
         """Test is_production function."""
         # Need to patch at the module level since is_production uses the global instance
-        import app.core.secret_manager as sm_module
+        import app.security.secret_manager as sm_module
 
         with patch.dict(os.environ, {'ENVIRONMENT': 'production'}):
             # Create new instance to pick up the environment

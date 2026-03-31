@@ -42,7 +42,7 @@ import asyncio
 import logging
 from collections.abc import Awaitable
 from datetime import datetime
-from typing import TYPE_CHECKING, Callable, Union
+from typing import TYPE_CHECKING, Callable, Union, cast
 
 from .base_optimizer import (
     BaseOptimizer,
@@ -56,9 +56,15 @@ from .base_optimizer import (
 if TYPE_CHECKING:
     from types import ModuleType
 
+    from optuna.pruners import BasePruner
+    from optuna.samplers import BaseSampler
+    from optuna.study import Study
+    from optuna.trial import FrozenTrial, Trial
+
 # Type aliases for parameter values and definitions
 ParamValue = Union[int, float, str, bool]
 ParamDict = dict[str, ParamValue]
+ScalarParamValue = Union[int, float, bool]
 ParamDef = dict[str, Union[str, int, float, bool, list[ParamValue]]]
 ObjectiveFn = Callable[[ParamDict], Union[float, Awaitable[float]]]
 
@@ -246,7 +252,7 @@ class BayesianOptimizer(BaseOptimizer[SearchSpace]):
         self.multivariate = multivariate
         self.n_startup_trials = n_startup_trials
 
-        self._study: optuna.study.Study | None = None
+        self._study: Study | None = None
         self._search_space: SearchSpace | None = None
 
     @classmethod
@@ -257,7 +263,7 @@ class BayesianOptimizer(BaseOptimizer[SearchSpace]):
     def get_best_params(self) -> ParamDict:
         """Get the best parameters found."""
         if self._study is not None and hasattr(self._study, "best_params"):
-            return self._study.best_params
+            return dict(self._study.best_params)
         return {}
 
     def get_history(self) -> list[TrialResult]:
@@ -304,7 +310,7 @@ class BayesianOptimizer(BaseOptimizer[SearchSpace]):
         self._study = self._create_study()
 
         # Define objective wrapper for Optuna
-        def optuna_objective(trial: optuna.trial.Trial) -> float:
+        def optuna_objective(trial: Trial) -> float:
             return self._run_trial(trial, objective)
 
         # Run optimization
@@ -315,7 +321,7 @@ class BayesianOptimizer(BaseOptimizer[SearchSpace]):
             if self.config.progress_bar and self.config.verbose >= 1:
                 pbar = tqdm(total=self.n_trials, desc="Bayesian Optimization")
 
-            def callback(study: optuna.study.Study, trial: optuna.trial.FrozenTrial) -> None:
+            def callback(study: Study, trial: FrozenTrial) -> None:
                 self._iteration_count = len(study.trials)
 
                 if pbar:
@@ -362,10 +368,12 @@ class BayesianOptimizer(BaseOptimizer[SearchSpace]):
 
         return result
 
-    def _create_study(self) -> optuna.study.Study:
+    def _create_study(self) -> Study:
         """Create Optuna study with appropriate sampler and pruner."""
         if not OPTUNA_AVAILABLE:
             raise RuntimeError("Optuna not available")
+
+        assert optuna is not None
 
         # Create sampler
         sampler = self._create_sampler()
@@ -382,7 +390,7 @@ class BayesianOptimizer(BaseOptimizer[SearchSpace]):
 
         return study
 
-    def _create_sampler(self) -> optuna.samplers.BaseSampler:
+    def _create_sampler(self) -> BaseSampler:
         """Create Optuna sampler."""
         if not OPTUNA_AVAILABLE:
             raise RuntimeError("Optuna not available")
@@ -403,7 +411,7 @@ class BayesianOptimizer(BaseOptimizer[SearchSpace]):
                 multivariate=self.multivariate,
             )
 
-    def _create_pruner(self) -> optuna.pruners.BasePruner | None:
+    def _create_pruner(self) -> BasePruner | None:
         """Create Optuna pruner."""
         if not OPTUNA_AVAILABLE:
             return None
@@ -421,7 +429,7 @@ class BayesianOptimizer(BaseOptimizer[SearchSpace]):
 
     def _run_trial(
         self,
-        trial: optuna.trial.Trial,
+        trial: Trial,
         objective: ObjectiveFn,
     ) -> float:
         """
@@ -445,9 +453,11 @@ class BayesianOptimizer(BaseOptimizer[SearchSpace]):
             if asyncio.iscoroutinefunction(objective):
                 # Run async function in event loop
                 loop = asyncio.get_event_loop()
-                value = loop.run_until_complete(objective(params))
+                value: float = loop.run_until_complete(objective(params))
             else:
-                value = objective(params)
+                raw_result = objective(params)
+                assert not isinstance(raw_result, Awaitable)
+                value = float(raw_result)
 
             # Apply maximize/minimize
             if not self.config.maximize:
@@ -488,7 +498,7 @@ class BayesianOptimizer(BaseOptimizer[SearchSpace]):
 
             return float("-inf") if self.config.maximize else float("inf")
 
-    def _sample_params(self, trial: optuna.trial.Trial) -> ParamDict:
+    def _sample_params(self, trial: Trial) -> ParamDict:
         """
         Sample parameters from search space using Optuna trial.
 
@@ -501,20 +511,25 @@ class BayesianOptimizer(BaseOptimizer[SearchSpace]):
         if self._search_space is None:
             return {}
 
-        params = {}
+        params: ParamDict = {}
         for name, defn in self._search_space.to_dict().items():
             param_type = defn.get("type", ParameterType.CONTINUOUS)
 
             if param_type == ParameterType.CATEGORICAL:
-                params[name] = trial.suggest_categorical(name, defn["choices"])
+                params[name] = trial.suggest_categorical(
+                    name, cast("list[Union[str, int, float, bool]]", defn["choices"])
+                )
 
             elif param_type == ParameterType.DISCRETE:
-                params[name] = trial.suggest_categorical(name, defn["values"])
+                params[name] = trial.suggest_categorical(
+                    name, cast("list[Union[str, int, float, bool]]", defn["values"])
+                )
 
             elif param_type == ParameterType.INTEGER:
-                min_val = int(defn["min"])
-                max_val = int(defn["max"])
-                step = int(defn.get("step", 1))
+                min_val = int(cast("Union[int, float]", defn["min"]))
+                max_val = int(cast("Union[int, float]", defn["max"]))
+                step_raw = defn.get("step", 1)
+                step = int(cast("Union[int, float]", step_raw))
 
                 if step == 1:
                     params[name] = trial.suggest_int(name, min_val, max_val)
@@ -523,15 +538,15 @@ class BayesianOptimizer(BaseOptimizer[SearchSpace]):
                     params[name] = trial.suggest_categorical(name, values)
 
             elif param_type == ParameterType.CONTINUOUS:
-                min_val_float = float(defn["min"])
-                max_val_float = float(defn["max"])
+                min_val_float = float(cast("Union[int, float]", defn["min"]))
+                max_val_float = float(cast("Union[int, float]", defn["max"]))
                 log = defn.get("log", False)
 
                 params[name] = trial.suggest_float(name, min_val_float, max_val_float, log=log)
 
         return params
 
-    def _extract_results_from_study(self, study: optuna.study.Study) -> None:
+    def _extract_results_from_study(self, study: Study) -> None:
         """
         Extract trial results from Optuna study.
 
@@ -540,6 +555,9 @@ class BayesianOptimizer(BaseOptimizer[SearchSpace]):
         """
         if not OPTUNA_AVAILABLE:
             return
+
+        assert optuna is not None
+        from optuna.trial import TrialState
 
         self._iteration_count = len(study.trials)
 
@@ -551,9 +569,9 @@ class BayesianOptimizer(BaseOptimizer[SearchSpace]):
             value = trial.value
 
             # Determine status
-            if trial.state == optuna.trial.TrialState.COMPLETE:
+            if trial.state == TrialState.COMPLETE:
                 status = OptimizationStatus.COMPLETED
-            elif trial.state in (optuna.trial.TrialState.PRUNED, optuna.trial.TrialState.FAIL):
+            elif trial.state in (TrialState.PRUNED, TrialState.FAIL):
                 status = OptimizationStatus.FAILED
             else:
                 status = OptimizationStatus.FAILED
@@ -595,7 +613,7 @@ class BayesianOptimizer(BaseOptimizer[SearchSpace]):
         self._history = []
         self._iteration_count = 0
 
-        best_params = {}
+        best_params: ParamDict = {}
         best_score = float("-inf") if self.config.maximize else float("inf")
 
         for i in range(self.n_trials):
@@ -606,22 +624,31 @@ class BayesianOptimizer(BaseOptimizer[SearchSpace]):
             start_time = datetime.now()
 
             # Random sample
-            params = {}
+            params: ParamDict = {}
             for name, defn in search_space.to_dict().items():
                 param_type = defn.get("type", ParameterType.CONTINUOUS)
 
                 if param_type == ParameterType.CATEGORICAL:
-                    params[name] = random.choice(defn["choices"])
+                    choices = cast("list[Union[str, int, float, bool]]", defn["choices"])
+                    params[name] = random.choice(choices)
                 elif param_type == ParameterType.INTEGER:
-                    params[name] = random.randint(int(defn["min"]), int(defn["max"]))
+                    params[name] = random.randint(
+                        int(cast("Union[int, float]", defn["min"])),
+                        int(cast("Union[int, float]", defn["max"])),
+                    )
                 elif param_type == ParameterType.CONTINUOUS:
-                    params[name] = random.uniform(float(defn["min"]), float(defn["max"]))
+                    params[name] = random.uniform(
+                        float(cast("Union[int, float]", defn["min"])),
+                        float(cast("Union[int, float]", defn["max"])),
+                    )
 
             try:
                 if asyncio.iscoroutinefunction(objective):
                     value = await objective(params)
                 else:
-                    value = objective(params)
+                    raw_result = objective(params)
+                    assert not isinstance(raw_result, Awaitable)
+                    value = float(raw_result)
 
                 end_time = datetime.now()
 
@@ -704,7 +731,9 @@ class MultiObjectiveBayesianOptimizer(BaseOptimizer[SearchSpace]):
     def get_best_params(self) -> ParamDict:
         """Get the best parameters found (first Pareto solution)."""
         if self._pareto_front:
-            return self._pareto_front[0].get("params", {})
+            candidate = self._pareto_front[0].get("params", {})
+            if isinstance(candidate, dict):
+                return candidate
         return {}
 
     def get_history(self) -> list[TrialResult]:
@@ -729,6 +758,8 @@ class MultiObjectiveBayesianOptimizer(BaseOptimizer[SearchSpace]):
         if not OPTUNA_AVAILABLE:
             raise RuntimeError("Optuna required for multi-objective optimization")
 
+        assert optuna is not None
+
         self._start_time = datetime.now()
         self._history: list[TrialResult] = []
         self._search_space = search_space
@@ -740,20 +771,30 @@ class MultiObjectiveBayesianOptimizer(BaseOptimizer[SearchSpace]):
         )
 
         # Define objective wrapper
-        def optuna_objective(trial: optuna.trial.Trial) -> tuple[float, ...]:
-            params = {}
+        def optuna_objective(trial: Trial) -> tuple[float, ...]:
+            params: ParamDict = {}
             for name, defn in search_space.to_dict().items():
                 param_type = defn.get("type", ParameterType.CONTINUOUS)
 
                 if param_type == ParameterType.CATEGORICAL:
-                    params[name] = trial.suggest_categorical(name, defn["choices"])
+                    params[name] = trial.suggest_categorical(
+                        name, cast("list[Union[str, int, float, bool]]", defn["choices"])
+                    )
                 elif param_type == ParameterType.INTEGER:
-                    params[name] = trial.suggest_int(name, int(defn["min"]), int(defn["max"]))
+                    params[name] = trial.suggest_int(
+                        name,
+                        int(cast("Union[int, float]", defn["min"])),
+                        int(cast("Union[int, float]", defn["max"])),
+                    )
                 elif param_type == ParameterType.CONTINUOUS:
-                    params[name] = trial.suggest_float(name, float(defn["min"]), float(defn["max"]))
+                    params[name] = trial.suggest_float(
+                        name,
+                        float(cast("Union[int, float]", defn["min"])),
+                        float(cast("Union[int, float]", defn["max"])),
+                    )
 
             # Evaluate all objectives
-            values = []
+            values: list[float] = []
             for obj_func in objectives:
                 try:
                     value = obj_func(params)
@@ -772,21 +813,31 @@ class MultiObjectiveBayesianOptimizer(BaseOptimizer[SearchSpace]):
         self._end_time = datetime.now()
 
         # Return result with first Pareto solution as best
-        best_params = self._pareto_front[0]["params"] if self._pareto_front else {}
+        raw_params = self._pareto_front[0]["params"] if self._pareto_front else {}
+        if isinstance(raw_params, dict):
+            best_params: ParamDict = raw_params
+        else:
+            best_params = {}
 
         result = self._create_result(best_params, 0.0)  # Score is meaningless for multi-objective
         result.additional_info["pareto_front"] = self._pareto_front
 
         return result
 
-    def _extract_pareto_front(self, study: optuna.study.Study) -> None:
+    def _extract_pareto_front(self, study: Study) -> None:
         """Extract Pareto front from Optuna study."""
+        if not OPTUNA_AVAILABLE:
+            return
+
+        assert optuna is not None
+        from optuna.trial import TrialState
+
         self._pareto_front = []
 
         best_trials = study.best_trials
 
         for trial in best_trials:
-            if trial.state == optuna.trial.TrialState.COMPLETE:
+            if trial.state == TrialState.COMPLETE:
                 self._pareto_front.append(
                     {
                         "params": dict(trial.params),

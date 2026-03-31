@@ -8,6 +8,8 @@ Enhanced with:
 - Bias-variance monitoring (Hastie)
 """
 
+from __future__ import annotations
+
 import json
 import logging
 import os
@@ -121,9 +123,9 @@ class BaseLearningEngine(ABC):
         self._feature_explosion_threshold = config.get("feature_explosion_threshold", 0.1)
 
         # Learning curve tracking (Hastie)
-        self._learning_curve_data: list[
-            tuple[int, float, float]
-        ] = []  # (n_samples, train_score, val_score)
+        self._learning_curve_data: list[tuple[int, float, float]] = (
+            []
+        )  # (n_samples, train_score, val_score)
 
         # Crear directorio de modelos si no existe
         os.makedirs(
@@ -351,7 +353,7 @@ class BaseLearningEngine(ABC):
                             return getattr(mod, name)
                         except (ImportError, AttributeError):
                             pass
-                    raise pickle.UnpicklingError(
+                    raise pickle.UnpicklingError(  # nosemgrep: python.lang.security.deserialization.pickle.avoid-pickle - RestrictedUnpickler only allows basic Python/numpy types for safe legacy migration
                         f"Forbidden class during migration: {module}.{name}. "
                         f"Only basic Python and numpy types are allowed."
                     )

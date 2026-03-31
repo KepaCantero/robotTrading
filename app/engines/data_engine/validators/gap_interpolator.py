@@ -8,6 +8,8 @@ Métodos soportados:
 - Spline interpolation
 """
 
+from __future__ import annotations
+
 import logging
 from decimal import Decimal
 from typing import Any, Optional

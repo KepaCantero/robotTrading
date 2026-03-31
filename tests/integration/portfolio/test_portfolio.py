@@ -7,7 +7,7 @@ from decimal import Decimal
 import pytest
 
 from app.domain.models.portfolio import AssetClass, Position
-from app.providers.paper_trading import PaperTradingPortfolioProvider
+from app.infrastructure.providers.paper_trading import PaperTradingPortfolioProvider
 from app.services.portfolio_service import PortfolioService
 
 

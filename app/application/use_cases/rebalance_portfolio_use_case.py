@@ -2,13 +2,17 @@
 Rebalance Portfolio Use Case - Rebalance an existing portfolio
 """
 
-from decimal import Decimal
-from typing import Optional, Protocol
+from __future__ import annotations
 
-import pandas as pd
+from decimal import Decimal
+from typing import TYPE_CHECKING, Protocol
+
 import structlog
 
-from app.domain.entities.portfolio import Portfolio
+if TYPE_CHECKING:
+    import pandas as pd
+
+    from app.domain.entities.portfolio import Portfolio
 
 logger = structlog.get_logger(__name__)
 
@@ -45,7 +49,7 @@ class RebalancePortfolioUseCase:
 
     def __init__(
         self,
-        optimizer: Optional[BasePortfolioOptimizer] = None,
+        optimizer: BasePortfolioOptimizer | None = None,
     ):
         """Initialize use case with optional optimizer."""
         self._optimizer = optimizer
@@ -54,7 +58,7 @@ class RebalancePortfolioUseCase:
         self,
         portfolio: Portfolio,
         target_weights: dict[str, Decimal],
-        rebalance_threshold: Optional[Decimal] = None,
+        rebalance_threshold: Decimal | None = None,
     ) -> list[str]:
         """
         Execute the use case - rebalance portfolio.

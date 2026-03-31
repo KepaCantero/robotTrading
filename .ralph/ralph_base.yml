@@ -60,8 +60,9 @@ validation_instructions: |
 
   ### Validate ANY file:
   ```bash
-  python .ralph/scripts/utils.py validate <file_path>
-  # Returns JSON with success: true/false
+  black <file_path> --check && echo "BLACK: OK"
+  isort <file_path> --check-only && echo "ISORT: OK"
+  ruff check <file_path> && echo "RUFF: OK"
   ```
 
   ### Auto-fix formatting:
@@ -72,15 +73,10 @@ validation_instructions: |
   ruff format <file_path>
   ```
 
-  ### Security audit (check pinned dependencies):
-  ```bash
-  safety check --full-report
-  ```
-
   ### Re-validate after fixes:
   ```bash
-  python .ralph/scripts/utils.py validate <file_path> | jq '.success'
-  # Must return "true"
+  black <file_path> --check && isort <file_path> --check-only && ruff check <file_path>
+  # All three must pass
   ```
 
 golden_rules: |

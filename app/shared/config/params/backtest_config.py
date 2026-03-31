@@ -8,6 +8,8 @@ TASK-10: Centralización de Configuración
 TASK-24: SRP Refactoring
 """
 
+from __future__ import annotations
+
 import logging
 from decimal import Decimal
 
@@ -391,7 +393,7 @@ class BacktestingConfig(BaseModel):
 BACKTESTING_CONSTANTS = None  # Will be set after CentralizedConfig instantiation
 
 
-def get_backtesting_constants() -> "BacktestingConfig":
+def get_backtesting_constants() -> BacktestingConfig:
     """Get backtesting constants from centralized config."""
     global BACKTESTING_CONSTANTS
     if BACKTESTING_CONSTANTS is None:

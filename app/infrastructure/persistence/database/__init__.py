@@ -3,6 +3,8 @@ Database Configuration and Setup
 TASK-6: Configuración de base de datos
 """
 
+from __future__ import annotations
+
 import contextlib
 import logging
 from collections.abc import AsyncGenerator
@@ -220,23 +222,49 @@ class DatabaseManager:
                 logger.info("Synchronous database connections closed")
 
             if self.async_engine:
-                # Note: async engine disposal should be done with await in
-                # async context
-                logger.info("Asynchronous database engine marked for disposal")
+                self.async_engine.sync_engine.dispose()
+                logger.info("Asynchronous database connections closed")
+
+        except (IntegrityError, OperationalError, DatabaseError, DataError, ProgrammingError) as e:
+            logger.error(f"Error closing database connections: {e}")
+
+    async def close_connections_async(self) -> None:
+        """Close all database connections (async-safe)."""
+        try:
+            if self.sync_engine:
+                self.sync_engine.dispose()
+                logger.info("Synchronous database connections closed")
+
+            if self.async_engine:
+                await self.async_engine.dispose()
+                logger.info("Asynchronous database connections closed")
 
         except (IntegrityError, OperationalError, DatabaseError, DataError, ProgrammingError) as e:
             logger.error(f"Error closing database connections: {e}")
 
 
-# Global database manager instance
-db_manager = DatabaseManager()
+# Global database manager instance (lazy initialization)
+_db_manager: Optional[DatabaseManager] = None
+
+
+def _get_db_manager() -> DatabaseManager:
+    """Lazily create and cache the DatabaseManager singleton.
+
+    Deferring instantiation avoids triggering config loading (which requires
+    environment variables like SECRET_KEY) at import time, preventing import
+    failures in tests and other modules that only need symbols from this module.
+    """
+    global _db_manager
+    if _db_manager is None:
+        _db_manager = DatabaseManager()
+    return _db_manager
 
 
 # Dependency functions for FastAPI
 @contextlib.contextmanager
 def get_sync_db() -> Session:
     """Get synchronous database session for FastAPI dependency injection."""
-    session = db_manager.get_sync_session()
+    session = _get_db_manager().get_sync_session()
     try:
         yield session
     finally:
@@ -245,7 +273,7 @@ def get_sync_db() -> Session:
 
 async def get_async_db() -> AsyncGenerator[AsyncSession, None]:
     """Get asynchronous database session for FastAPI dependency injection."""
-    session = db_manager.get_async_session()
+    session = _get_db_manager().get_async_session()
     try:
         yield session
     finally:
@@ -259,11 +287,12 @@ def initialize_database() -> None:
         logger.info("Initializing database...")
 
         # Initialize engines
-        db_manager.initialize_sync_engine()
-        db_manager.initialize_async_engine()
+        mgr = _get_db_manager()
+        mgr.initialize_sync_engine()
+        mgr.initialize_async_engine()
 
         # Create tables
-        db_manager.create_tables()
+        mgr.create_tables()
 
         logger.info("Database initialization completed successfully")
 
@@ -278,7 +307,7 @@ def initialize_database_async() -> None:
         logger.info("Initializing async database...")
 
         # Initialize async engine
-        db_manager.initialize_async_engine()
+        _get_db_manager().initialize_async_engine()
 
         logger.info("Async database initialization completed successfully")
 
@@ -291,7 +320,7 @@ def initialize_database_async() -> None:
 def check_database_health() -> bool:
     """Check database health."""
     try:
-        session = db_manager.get_sync_session()
+        session = _get_db_manager().get_sync_session()
         try:
             # Simple query to check connection
             session.execute(text("SELECT 1"))
@@ -306,7 +335,7 @@ def check_database_health() -> bool:
 async def check_database_health_async() -> bool:
     """Check database health asynchronously."""
     try:
-        session = db_manager.get_async_session()
+        session = _get_db_manager().get_async_session()
         try:
             # Simple query to check connection
             await session.execute(text("SELECT 1"))
@@ -350,7 +379,7 @@ class DatabaseSession:
     def __enter__(self):
         if self.async_mode:
             raise RuntimeError("Use async context manager for async sessions")
-        self.session = db_manager.get_sync_session()
+        self.session = _get_db_manager().get_sync_session()
         return self.session
 
     def __exit__(self, exc_type, exc_val, exc_tb):
@@ -364,7 +393,7 @@ class DatabaseSession:
     async def __aenter__(self):
         if not self.async_mode:
             raise RuntimeError("Use sync context manager for sync sessions")
-        self.session = db_manager.get_async_session()
+        self.session = _get_db_manager().get_async_session()
         return self.session
 
     async def __aexit__(self, exc_type, exc_val, exc_tb):
@@ -400,14 +429,25 @@ def async_database_transaction(func):
 # Backward compatibility functions for tests
 def get_session_factory():
     """Get the session factory for backward compatibility."""
-    if not db_manager.session_factory:
-        db_manager.initialize_sync_engine()
-    return db_manager.session_factory
+    mgr = _get_db_manager()
+    if not mgr.session_factory:
+        mgr.initialize_sync_engine()
+    return mgr.session_factory
 
 
 def close_database():
     """Close database connections for backward compatibility."""
-    db_manager.close_connections()
+    _get_db_manager().close_connections()
+
+
+async def init_database():
+    """Initialize database connections for application startup."""
+    mgr = _get_db_manager()
+    mgr.initialize_sync_engine()
+    try:
+        mgr.initialize_async_engine()
+    except Exception as e:
+        logger.warning(f"Async engine init skipped: {e}")
 
 
 def get_db_transaction():

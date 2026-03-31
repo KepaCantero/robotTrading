@@ -10,6 +10,8 @@ GAP Fixes:
 - API-005: FIXED - Added security decorators (rate_limit, require_auth, audit_log)
 """
 
+from __future__ import annotations
+
 import logging
 import traceback
 from datetime import datetime

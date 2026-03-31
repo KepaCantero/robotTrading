@@ -17,6 +17,8 @@ References:
 Uses centralized configuration from app.shared.config.centralized_config.
 """
 
+from __future__ import annotations
+
 import logging
 from dataclasses import dataclass
 from decimal import Decimal
@@ -390,7 +392,9 @@ class RiskGates:
 
         if target_quantity > max_qty:
             adjusted_qty = max_qty
-            logger.warning(f"⚠️ Adjusted {symbol} quantity from {target_quantity} to {adjusted_qty}")
+            logger.warning(
+                f"⚠️ Adjusted {symbol} quantity from {target_quantity} to {adjusted_qty}"
+            )
             return False, adjusted_qty
 
         return True, target_quantity

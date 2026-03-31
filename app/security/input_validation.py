@@ -24,7 +24,7 @@ import re
 import time
 from collections import defaultdict
 from decimal import Decimal, InvalidOperation
-from typing import TypeVar
+from typing import TypeVar, cast
 from urllib.parse import unquote
 
 from pydantic import BaseModel
@@ -339,8 +339,9 @@ class NumericValidator:
             raise ValidationError(f"Value {decimal_value} above maximum {max_value}")
 
         # Check precision
-        if decimal_value.as_tuple().exponent < -max_precision:
-            actual_precision = abs(decimal_value.as_tuple().exponent)
+        exponent = decimal_value.as_tuple().exponent
+        if isinstance(exponent, int) and exponent < -max_precision:
+            actual_precision = abs(exponent)
             raise ValidationError(f"Precision {actual_precision} exceeds maximum {max_precision}")
 
         return decimal_value
@@ -540,8 +541,9 @@ class TradingValidator:
             raise ValidationError(f"Price {decimal_price} above maximum {MAX_PRICE}")
 
         # Check precision
-        if decimal_price.as_tuple().exponent < -MAX_DECIMAL_PLACES:
-            actual_precision = abs(decimal_price.as_tuple().exponent)
+        price_exponent = decimal_price.as_tuple().exponent
+        if isinstance(price_exponent, int) and price_exponent < -MAX_DECIMAL_PLACES:
+            actual_precision = abs(price_exponent)
             raise ValidationError(
                 f"Price precision {actual_precision} exceeds maximum {MAX_DECIMAL_PLACES}"
             )
@@ -579,8 +581,9 @@ class TradingValidator:
             raise ValidationError(f"Quantity {decimal_quantity} above maximum {MAX_QUANTITY}")
 
         # Check precision
-        if decimal_quantity.as_tuple().exponent < -MAX_DECIMAL_PLACES:
-            actual_precision = abs(decimal_quantity.as_tuple().exponent)
+        qty_exponent = decimal_quantity.as_tuple().exponent
+        if isinstance(qty_exponent, int) and qty_exponent < -MAX_DECIMAL_PLACES:
+            actual_precision = abs(qty_exponent)
             raise ValidationError(
                 f"Quantity precision {actual_precision} exceeds maximum {MAX_DECIMAL_PLACES}"
             )
@@ -967,7 +970,7 @@ class SecureRequestValidator:
     def validate_request_model(
         self,
         model_class: type[T],
-        data: dict[str, str | int | float | bool],
+        data: dict[str, str | int | float | bool | list | dict],
         sanitize: bool = True,
     ) -> T:
         """
@@ -993,7 +996,7 @@ class SecureRequestValidator:
 
         # Validate with Pydantic
         try:
-            return model_class(**data)
+            return cast("T", model_class(**data))
         except Exception as e:
             raise ValidationError(f"Model validation failed: {e!s}") from e
 
@@ -1001,7 +1004,7 @@ class SecureRequestValidator:
         self, data: dict[str, str | int | float | bool | list | dict]
     ) -> dict[str, str | int | float | bool | list | dict]:
         """Recursively sanitize dictionary values."""
-        sanitized = {}
+        sanitized: dict[str, str | int | float | bool | list | dict] = {}
         for key, value in data.items():
             if isinstance(value, str):
                 sanitized[key] = self.sanitizer.sanitize_string(value)
@@ -1017,7 +1020,7 @@ class SecureRequestValidator:
         self, data: list[str | int | float | bool | dict | list]
     ) -> list[str | int | float | bool | dict | list]:
         """Recursively sanitize list values."""
-        sanitized = []
+        sanitized: list[str | int | float | bool | dict | list] = []
         for item in data:
             if isinstance(item, str):
                 sanitized.append(self.sanitizer.sanitize_string(item))
@@ -1075,65 +1078,127 @@ def validate_and_sanitize_input(
             raise ValidationError(f"Cannot auto-detect type for {type(data)}")
 
     if input_type == "str":
-        max_len = constraints.get("max_length", 10000)
+        if not isinstance(data, str):
+            raise ValidationError(f"Expected string, got {type(data).__name__}")
+        max_len_val = constraints.get("max_length", 10000)
+        max_len = int(max_len_val) if isinstance(max_len_val, (int, float)) else 10000
         return validator.sanitizer.sanitize_string(data, max_len)
 
     elif input_type == "symbol":
+        if not isinstance(data, str):
+            raise ValidationError(f"Expected string for symbol, got {type(data).__name__}")
         return TradingValidator.validate_symbol(data)
 
     elif input_type == "email":
+        if not isinstance(data, str):
+            raise ValidationError(f"Expected string for email, got {type(data).__name__}")
         return validator.sanitizer.sanitize_email(data)
 
     elif input_type == "url":
+        if not isinstance(data, str):
+            raise ValidationError(f"Expected string for URL, got {type(data).__name__}")
         return validator.sanitizer.sanitize_url(data)
 
     elif input_type == "price":
+        if not isinstance(data, (Decimal, str, int, float)):
+            raise ValidationError(f"Expected numeric for price, got {type(data).__name__}")
         return TradingValidator.validate_price(data)
 
     elif input_type == "quantity":
+        if not isinstance(data, (Decimal, str, int, float)):
+            raise ValidationError(f"Expected numeric for quantity, got {type(data).__name__}")
         return TradingValidator.validate_quantity(data)
 
     elif input_type == "numeric":
         if constraints.get("as_decimal", False):
+            min_v = constraints.get("min_value")
+            max_v = constraints.get("max_value")
+            prec_v = constraints.get("max_precision", 8)
+            min_decimal = Decimal(str(min_v)) if isinstance(min_v, (int, float, str)) else None
+            max_decimal = Decimal(str(max_v)) if isinstance(max_v, (int, float, str)) else None
+            prec_int = int(prec_v) if isinstance(prec_v, (int, float)) else 8
             return validator.numeric.validate_decimal(
                 data,
-                constraints.get("min_value"),
-                constraints.get("max_value"),
-                constraints.get("max_precision", 8),
+                min_decimal,
+                max_decimal,
+                prec_int,
             )
         else:
-            return validator.numeric.validate_integer(
-                data, constraints.get("min_value"), constraints.get("max_value")
-            )
+            min_v = constraints.get("min_value")
+            max_v = constraints.get("max_value")
+            min_int = int(min_v) if isinstance(min_v, (int, float)) else None
+            max_int = int(max_v) if isinstance(max_v, (int, float)) else None
+            return validator.numeric.validate_integer(data, min_int, max_int)
 
     elif input_type == "list":
+        if not isinstance(data, list):
+            raise ValidationError(f"Expected list, got {type(data).__name__}")
+        min_len_v = constraints.get("min_length", 0)
+        max_len_v = constraints.get("max_length", 1000)
+        elem_type_v = constraints.get("element_type")
+        sanitize_v = constraints.get("sanitize_elements", True)
+        min_len = int(min_len_v) if isinstance(min_len_v, (int, float)) else 0
+        max_len = int(max_len_v) if isinstance(max_len_v, (int, float)) else 1000
+        elem_type = elem_type_v if isinstance(elem_type_v, type) else None
+        sanitize_elem = bool(sanitize_v)
         return validator.list.validate_list(
             data,
-            constraints.get("min_length", 0),
-            constraints.get("max_length", 1000),
-            constraints.get("element_type"),
-            constraints.get("sanitize_elements", True),
+            min_len,
+            max_len,
+            elem_type,
+            sanitize_elem,
         )
 
     elif input_type == "symbol_list":
-        return validator.list.validate_symbol_list(data, constraints.get("max_length", 100))
+        if not isinstance(data, (list, tuple, set)):
+            raise ValidationError(
+                f"Expected list/tuple/set for symbol_list, got {type(data).__name__}"
+            )
+        max_len_v = constraints.get("max_length", 100)
+        max_len = int(max_len_v) if isinstance(max_len_v, (int, float)) else 100
+        return validator.list.validate_symbol_list(data, max_len)
 
     elif input_type == "dict":
+        if not isinstance(data, dict):
+            raise ValidationError(f"Expected dict, got {type(data).__name__}")
+        max_keys_v = constraints.get("max_keys", 100)
+        key_type_v = constraints.get("key_type")
+        value_type_v = constraints.get("value_type")
+        sanitize_v = constraints.get("sanitize_strings", True)
+        max_keys = int(max_keys_v) if isinstance(max_keys_v, (int, float)) else 100
+        kt = key_type_v if isinstance(key_type_v, type) else None
+        vt = value_type_v if isinstance(value_type_v, type) else None
+        sanitize_str = bool(sanitize_v)
         return validator.dict.validate_dict(
             data,
-            constraints.get("max_keys", 100),
-            constraints.get("key_type"),
-            constraints.get("value_type"),
-            constraints.get("sanitize_strings", True),
+            max_keys,
+            kt,
+            vt,
+            sanitize_str,
         )
 
     elif input_type == "order":
+        sym_v = constraints.get("symbol")
+        side_v = constraints.get("side")
+        qty_v = constraints.get("quantity")
+        price_v = constraints.get("price")
+        otype_v = constraints.get("order_type", "market")
+        if not isinstance(sym_v, str):
+            raise ValidationError("Order 'symbol' must be a string")
+        if not isinstance(side_v, str):
+            raise ValidationError("Order 'side' must be a string")
+        if not isinstance(qty_v, (Decimal, str, int, float)):
+            raise ValidationError("Order 'quantity' must be numeric")
+        if price_v is not None and not isinstance(price_v, (Decimal, str, int, float)):
+            raise ValidationError("Order 'price' must be numeric or None")
+        if not isinstance(otype_v, str):
+            raise ValidationError("Order 'order_type' must be a string")
         return TradingValidator.validate_order_params(
-            constraints.get("symbol"),
-            constraints.get("side"),
-            constraints.get("quantity"),
-            constraints.get("price"),
-            constraints.get("order_type", "market"),
+            sym_v,
+            side_v,
+            qty_v,
+            price_v,
+            otype_v,
         )
 
     else:

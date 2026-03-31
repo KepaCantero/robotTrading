@@ -15,7 +15,7 @@ from datetime import datetime, timedelta
 import numpy as np
 import pytest
 
-from app.domain.strategies.momentum_modular.learning.drift_detector import (
+from app.domain.strategies.learning.drift_detector import (
     ADWINDetector,
     AutoRetrainingTrigger,
     ComprehensiveDriftDetector,

@@ -1,0 +1,489 @@
+# ============================================
+# Ralph Task 35: Fix Pytest - Unit Tests Green
+# ============================================
+# VERSION: 2.0 - REWRITE OVER FIX
+# Pipeline enfocado en hacer pasar SOLO los unit tests.
+# Objetivo: 0 collection errors, 0 failures en tests/unit/
+# Coverage >= 80% medido solo sobre tests/unit/
+# ============================================================================
+# ESTRATEGIA: REESCRIBIR > ARREGLAR
+#   Se ha hecho un refactor masivo del codigo de produccion.
+#   Los tests estan SUPER rotos (imports, APIs, estructura toda cambiada).
+#   Es MAS RAPIDO y MAS SEGURO reescribir tests desde cero que arreglarlos.
+# ============================================================================
+# REGLAS INVARIABLES:
+#   - NO tocar codigo de produccion (app/) - SOLO tests
+#   - NO tocar tests/integration/ - fuera de scope
+#   - Solo se modifica codigo dentro de tests/unit/
+#   - REESCRIBIR test files enteros cuando estan muy rotos
+#   - Tests nuevos = mocks minimos, sin dependencias reales
+# ============================================================================
+# CONTEXTO:
+#   - Refactor masivo reciente: estructura de app/ cambio completamente
+#   - Tests estan super rotos: imports, APIs, fixtures todos desactualizados
+#   - Es mejor REESCRIBIR que intentar arreglar tests con 5+ errores
+# ============================================================================
+# USO: ralph -c .ralph/ralph_tasks/35_fix_pytest.yml
+# ANTERIOR: ralph -c .ralph/ralph_tasks/34_aaa_production.yml
+# ============================================================================
+
+event_loop:
+  prompt_file: ".ralph/ralph_tasks/prompts/35_fix_pytest.md"
+  completion_promise: "PYTEST_GREEN_COMPLETE"
+  max_iterations: 3000
+  max_runtime_seconds: 259200  # 3 days
+  checkpoint_interval: 2
+  starting_event: "fix_pytest.start"
+
+cli:
+  backend: "claude"
+
+core:
+  specs_dir: "./specs/"
+
+# ============================================================================
+# HATS - Pipeline de 7 hats (solo unit tests)
+# ============================================================================
+hats:
+  # ==========================================================================
+  # HAT 0: Discovery - Diagnostico de unit tests
+  # ==========================================================================
+  discovery:
+    name: "Unit Test Discovery"
+    description: "Diagnostico completo del estado de tests/unit/"
+    triggers: ["fix_pytest.start"]
+    publishes: ["tests.diagnosed"]
+    default_publishes: "tests.diagnosed"
+
+    instructions: |
+      ## UNIT TEST DISCOVERY
+
+      {{shared_instructions}}
+      {{critical_rules}}
+
+      ### OBJETIVO
+      Diagnostico completo del estado actual de tests/unit/ y clasificar
+      cada test file como: REWRITE (mayoria) o FIX_MINOR (excepcion).
+
+      ### ⛔ NO TOCAR: app/ ni tests/integration/
+
+      ### PASO 1: Collection status de unit tests
+      ```bash
+      python -m pytest tests/unit/ --collect-only -q 2>&1 | tee .ralph/outputs/unit_collection.txt
+      ```
+
+      ### PASO 2: Ejecutar solo unit tests
+      ```bash
+      python -m pytest tests/unit/ -v --tb=short --no-header 2>&1 | tee .ralph/outputs/unit_run_full.txt
+      ```
+
+      ### PASO 3: Clasificar cada test file
+      Para cada test file en tests/unit/, categorizar:
+      - **REWRITE**: Test file tiene collection error (no compila) o 3+ failures
+      - **FIX_MINOR**: Test file tiene solo 1-2 errores de import path
+      - **OK**: Test file pasa completamente
+
+      Despues de un refactor masivo, la MAYORIA seran REWRITE.
+
+      ### OUTPUT
+      `.ralph/outputs/UNIT_TEST_DIAGNOSIS.json`
+      ```json
+      {
+        "total_test_files": 0,
+        "rewrite": ["tests/unit/path/test_broken.py", ...],
+        "fix_minor": ["tests/unit/path/test_almost_ok.py", ...],
+        "ok": ["tests/unit/path/test_good.py", ...],
+        "source_files_without_tests": ["app/path/module.py", ...]
+      }
+      ```
+
+      Emitir "tests.diagnosed"
+
+  # ==========================================================================
+  # HAT 1: Test Rewriter - REESCRIBIR tests rotos
+  # ==========================================================================
+  test_rewriter:
+    name: "Unit Test Rewriter"
+    description: "REESCRIBE tests rotos desde cero basandose en la API actual de app/"
+    triggers: ["tests.diagnosed"]
+    publishes: ["tests.rewritten"]
+    default_publishes: "tests.rewritten"
+
+    instructions: |
+      ## UNIT TEST REWRITER
+
+      {{shared_instructions}}
+      {{critical_rules}}
+
+      ### OBJETIVO
+      REESCRIBIR todos los test files clasificados como "rewrite" y "fix_minor"
+      en el diagnostico (Hat 0). Despues de un refactor masivo, la mayoria
+      necesita reescritura completa.
+
+      ### ⛔ NO TOCAR archivos en app/ - SOLO files en tests/unit/
+
+      ### ESTRATEGIA
+      Para cada test file en la lista "rewrite" del diagnostico:
+
+      1. **BORRAR contenido** del test file (no borrar el archivo, solo su contenido)
+      2. **Leer el source file** en app/ que este test deberia testear (SOLO LECTURA)
+         ```bash
+         # Si test es tests/unit/execution/test_execution_adapter.py
+         # Source seria app/infrastructure/execution/execution_adapter.py
+         # NOTA: los adapters se movieron de app/domain/services/execution/ a app/infrastructure/execution/
+         ```
+      3. **Identificar la API actual** del source:
+         - Clases publicas y sus __init__ signatures
+         - Metodos publicos y sus signatures
+         - Propiedades
+         - Excepciones que lanza
+      4. **Escribir tests nuevos** basados en la API ACTUAL (no la vieja):
+         - Importar desde la ruta NUEVA del modulo
+         - Usar mocks para todas las dependencias externas
+         - Testear la API actual, no la que existia antes del refactor
+         - Cada test < 1 segundo, sin conexiones reales
+
+      Para test files en "fix_minor" (1-2 errores de import):
+      - Solo actualizar los import paths al nuevo location
+      - No reescribir si solo necesita un import fix
+
+      ### TEMPLATE para tests reescritos
+      ```python
+      """Tests for <module>."""
+      import pytest
+      from unittest.mock import MagicMock, patch, PropertyMock
+
+      from app.infrastructure.execution.module import ClassName
+
+
+      @pytest.fixture
+      def instance():
+          """Minimal fixture - mock everything external."""
+          with patch("app.infrastructure.execution.module.ExternalDep"):
+              return ClassName()
+
+
+      class TestClassName:
+          def test_init(self, instance):
+              assert instance is not None
+
+          def test_method_happy_path(self, instance):
+              with patch.object(instance, "_internal_call", return_value=MagicMock(status="ok")):
+                  result = instance.public_method()
+              assert result is not None
+
+          def test_method_error(self, instance):
+              with patch.object(instance, "_internal_call", side_effect=ValueError("err")):
+                  with pytest.raises(ValueError):
+                      instance.public_method()
+      ```
+
+      ### PASO FINAL: Verificar
+      ```bash
+      python -m pytest tests/unit/ --collect-only -q 2>&1 | tee .ralph/outputs/unit_collection_after_rewrite.txt
+      python -m pytest tests/unit/ -v --tb=short --no-header 2>&1 | tee .ralph/outputs/unit_run_after_rewrite.txt
+      ```
+
+      ### OUTPUT
+      `.ralph/outputs/REWRITE_REPORT.json`
+      ```json
+      {
+        "rewritten_files": [],
+        "fix_minor_files": [],
+        "deleted_files": [],
+        "still_failing": []
+      }
+      ```
+
+      Emitir "tests.rewritten"
+
+  # ==========================================================================
+  # HAT 2: Rewrite Validator - Verificar y fix edge cases
+  # ==========================================================================
+  rewrite_validator:
+    name: "Rewrite Validator"
+    description: "Valida tests reescritos, fix edge cases que queden"
+    triggers: ["tests.rewritten"]
+    publishes: ["failures.fixed", "failures.blocked"]
+    default_publishes: "failures.fixed"
+
+    instructions: |
+      ## REWRITE VALIDATOR
+
+      {{shared_instructions}}
+      {{critical_rules}}
+
+      ### OBJETIVO
+      Verificar los tests reescritos y fix cualquier edge case que quede.
+
+      ### ⛔ NO TOCAR archivos en app/ - SOLO files en tests/unit/
+
+      ### PASO 1: Ejecutar tests
+      ```bash
+      python -m pytest tests/unit/ -v --tb=long --no-header 2>&1 | tee .ralph/outputs/unit_validation.txt
+      ```
+
+      ### PASO 2: Para cada test que aun falla
+      1. Leer el error detallado
+      2. Leer el test file (reescrito en Hat 1)
+      3. Leer el source file (SOLO LECTURA)
+      4. Fix el test:
+         - Import path incorrecto → Buscar donde esta y corregir
+         - Signature incorrecta → Ajustar al __init__/metodo actual
+         - Mock incompleto → Agregar mock faltante
+         - Assert incorrecto → Ajustar al comportamiento actual
+      5. Si despues de 2 intentos no se puede fixear sin tocar app/:
+         → REESCRIBIR el test file de nuevo (volver a Hat 1 para ese archivo)
+      6. Verificar:
+         ```bash
+         python -m pytest <test_file> -v --tb=short
+         ```
+
+      ### PASO 3: Si quedan tests que testean modulos que ya NO EXISTEN
+      ```bash
+      # Verificar si el source file existe
+      ls app/path/to/module.py 2>/dev/null || echo "MODULE_DELETED"
+      ```
+      Si el modulo fue eliminado en el refactor → BORRAR el test file.
+
+      ### PASO 4: Verificacion completa
+      ```bash
+      python -m pytest tests/unit/ -v --tb=short --no-header 2>&1 | tee .ralph/outputs/unit_run_final.txt
+      ```
+
+      ### OUTPUT
+      `.ralph/outputs/VALIDATION_REPORT.json`
+
+      Emitir "failures.fixed" si 0 failures
+      Emitir "failures.blocked" si quedan failures despues de 5 intentos
+
+  # ==========================================================================
+  # HAT 3: Coverage Analyzer - Gaps en unit tests
+  # ==========================================================================
+  coverage_analyzer:
+    name: "Coverage Analyzer"
+    description: "Analiza cobertura y prioriza modulos para nuevos unit tests"
+    triggers: ["failures.fixed"]
+    publishes: ["coverage.analyzed"]
+    default_publishes: "coverage.analyzed"
+
+    instructions: |
+      ## COVERAGE ANALYZER
+
+      {{shared_instructions}}
+
+      ### OBJETIVO
+      Analizar coverage y planificar nuevos unit tests para llegar al 80%.
+
+      ### PASO 1: Coverage actual
+      ```bash
+      python -m pytest tests/unit/ --cov=app --cov-branch \
+        --cov-report=term-missing \
+        --cov-report=json:.ralph/outputs/coverage.json \
+        -q --no-header 2>&1 | tee .ralph/outputs/coverage_report.txt
+      ```
+
+      ### PASO 2: Priorizar
+      1. Archivos grandes con 0% coverage → Max impacto
+      2. app/domain/ (34% actual)
+      3. app/services/ (52% actual)
+      4. app/infrastructure/ (39% actual)
+      5. app/engines/ (40% actual)
+
+      ### OUTPUT
+      `.ralph/outputs/COVERAGE_PLAN.json`
+
+      Emitir "coverage.analyzed"
+
+  # ==========================================================================
+  # HAT 4: Test Writer - Generar unit tests nuevos
+  # ==========================================================================
+  test_writer:
+    name: "Unit Test Writer"
+    description: "Genera unit tests con mocks minimos para modulos sin cobertura"
+    triggers: ["coverage.analyzed"]
+    publishes: ["tests.written"]
+    default_publishes: "tests.written"
+
+    instructions: |
+      ## UNIT TEST WRITER
+
+      {{shared_instructions}}
+      {{critical_rules}}
+
+      ### OBJETIVO
+      Generar unit tests rapidos y ligeros para llegar al 80% de coverage.
+
+      ### ⛔ NO TOCAR archivos en app/
+
+      ### PRINCIPIOS: TESTS RAPIDOS Y MINIMALES
+      - **NO abrir conexiones reales** (DBs, brokers, APIs)
+      - **NO usar archivos de datos grandes**
+      - **NO sleeps, waits, o timeouts**
+      - **Mock TODO lo externo** (brokers, DBs, filesystem, network)
+      - **Tests deben ejecutarse en < 1 segundo cada uno**
+      - **Usar `unittest.mock.MagicMock` / `patch` agresivamente**
+      - **Fixtures minimas**: solo los datos necesarios para el assert
+      - **Preferir `@patch` sobre crear archivos de datos**
+
+      ### PASO 1: Para cada modulo prioritario
+      1. Leer el source file (SOLO LECTURA)
+      2. Identificar clases y funciones publicas
+      3. Generar tests en `tests/unit/<mirror_path>/test_<module>.py`
+      4. Mockear TODAS las dependencias externas
+
+      ### PASO 2: Template para tests rapidos
+      ```python
+      """Tests for <module>."""
+      import pytest
+      from unittest.mock import MagicMock, patch, PropertyMock
+
+      # Import con fallback para moved modules
+      try:
+          from app.infrastructure.execution.foo import Foo
+      except ImportError:
+          from app.domain.services.execution.foo import Foo
+
+
+      @pytest.fixture
+      def foo():
+          """Minimal fixture - mock everything external."""
+          with patch("app.infrastructure.execution.foo.ExternalDep") as mock_dep:
+              mock_dep.return_value = MagicMock()
+              instance = Foo()
+              yield instance
+
+
+      class TestFoo:
+          def test_init(self, foo):
+              assert foo is not None
+
+          def test_happy_path(self, foo):
+              with patch.object(foo, "_external_call", return_value="ok"):
+                  result = foo.method()
+              assert result == "expected"
+
+          def test_error_handling(self, foo):
+              with patch.object(foo, "_external_call", side_effect=ValueError):
+                  with pytest.raises(ValueError):
+                      foo.method()
+      ```
+
+      ### PASO 3: Verificar cada test file
+      ```bash
+      python -m pytest <test_file> -v --tb=short
+      ```
+
+      ### PASO 4: Coverage check incremental
+      ```bash
+      python -m pytest tests/unit/ --cov=app --cov-branch -q 2>&1 | tail -5
+      ```
+
+      Si coverage < 80%: continuar con siguiente modulo
+
+      ### OUTPUT
+      `.ralph/outputs/TEST_WRITER_REPORT.json`
+
+      Emitir "tests.written"
+
+  # ==========================================================================
+  # HAT 5: Error Handler - Recover from blocked state
+  # ==========================================================================
+  error_handler:
+    name: "Error Handler"
+    triggers: ["failures.blocked", "pytest_green.blocked"]
+    publishes: ["fix_pytest.start"]
+    default_publishes: "fix_pytest.start"
+    max_activations: 5
+    instructions: |
+      ## ERROR HANDLER - Recover from blocked state
+
+      A pytest hat reported being blocked.
+
+      1. Read the blocked event details
+      2. Identify the specific hat that got blocked
+      3. Fix the underlying test issue
+      4. Re-emit the starting event to retry from the beginning
+
+      If unable to fix after 5 attempts, log the issue and stop.
+
+  # ==========================================================================
+  # HAT 6: Final Validator - Unit tests green
+  # ==========================================================================
+  final_validator:
+    name: "Final Unit Test Validator"
+    description: "Validacion final: tests/unit/ pasa con coverage >= 80%"
+    triggers: ["tests.written"]
+    publishes: ["PYTEST_GREEN_COMPLETE", "pytest_green.blocked"]
+    default_publishes: "PYTEST_GREEN_COMPLETE"
+
+    instructions: |
+      ## FINAL UNIT TEST VALIDATION
+
+      {{shared_instructions}}
+
+      ### OBJETIVO
+      Validacion final que tests/unit/ pasa con coverage >= 80%.
+
+      ### FASE 1: Full unit test suite
+      ```bash
+      python -m pytest tests/unit/ -v --tb=short --strict-markers \
+        --cov=app --cov-branch \
+        --cov-report=term-missing \
+        --cov-report=json:.ralph/outputs/coverage_final.json \
+        --cov-report=html:htmlcov \
+        --cov-report=xml:coverage.xml \
+        --cov-fail-under=80 \
+        2>&1 | tee .ralph/outputs/PYTEST_FINAL.txt
+      ```
+
+      ### FASE 2: Si falla
+      1. Leer output
+      2. Fix SOLO en tests/unit/ (NO en app/)
+      3. Re-run
+
+      ### FASE 3: Verificar que NO se toco production code
+      ```bash
+      git diff --name-only app/ 2>/dev/null
+      # Debe estar vacio - si hay cambios en app/, REVERTIR
+      ```
+
+      ### FASE 4: Generar reporte
+      `.ralph/outputs/PYTEST_GREEN_REPORT.json`
+      ```json
+      {
+        "task": "FIX_PYTEST_UNIT",
+        "version": "1.1",
+        "scope": "tests/unit/ ONLY",
+        "production_code_touched": false,
+        "status": "COMPLETE",
+        "results": {
+          "total_tests": 0,
+          "passed": 0,
+          "failed": 0,
+          "collection_errors": 0
+        },
+        "coverage": {
+          "percent": 0,
+          "target": 80,
+          "status": "PASS"
+        }
+      }
+      ```
+
+      ### FASE 5: Emitir evento final
+
+      Si tests/unit/ pasa Y coverage >= 80% Y NO se toco app/:
+      Emitir "PYTEST_GREEN_COMPLETE"
+
+      Si falla algo:
+      Emitir "pytest_green.blocked" con detalles
+
+# ============================================================================
+# MEMORIES
+# ============================================================================
+memories:
+  enabled: true
+  inject: auto
+  budget: 10000
+

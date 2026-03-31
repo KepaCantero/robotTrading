@@ -5,13 +5,15 @@ Component that queries metrics from T18.1 and evaluates alert rules.
 Provides the bridge between real-time metrics and rule-based alerting.
 """
 
+from __future__ import annotations
+
 import asyncio
 import contextlib
 import logging
 from dataclasses import dataclass, field
 from datetime import datetime
 from decimal import Decimal
-from typing import Optional
+from typing import Any, Optional
 from uuid import uuid4
 
 from app.services.alerting_system.alert_manager import AlertManager
@@ -159,7 +161,7 @@ class MetricsDrivenAlerter:
             Dict with evaluation results and triggered alerts
         """
         evaluation_start = datetime.utcnow()
-        results = {
+        results: dict[str, Any] = {
             "total_rules": len(self.registered_rules),
             "triggered_alerts": [],
             "errors": [],
@@ -278,16 +280,17 @@ class MetricsDrivenAlerter:
         if first_value == 0 or current_value is None:
             return False
 
-        change_percent = ((current_value - first_value) / first_value) * 100
+        change_percent = float(current_value - first_value) / float(first_value) * 100
 
         # Check direction
+        threshold = float(change_rule.change_percent)
         if change_rule.direction == "up":
-            return change_percent > float(change_rule.change_percent)
+            return change_percent > threshold
         elif change_rule.direction == "down":
-            return change_percent < float(change_rule.change_percent)
+            return change_percent < threshold
         else:  # "any"
             abs_change = abs(change_percent)
-            abs_threshold = abs(float(change_rule.change_percent))
+            abs_threshold = abs(threshold)
             return abs_change > abs_threshold
 
     async def _create_and_trigger_alert(

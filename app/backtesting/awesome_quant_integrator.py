@@ -7,6 +7,8 @@ Provides comprehensive financial metrics using AWESOME-QUANT libraries:
 - pyfolio: Portfolio analysis and tear sheets
 """
 
+from __future__ import annotations
+
 import logging
 from typing import Optional, TypedDict
 

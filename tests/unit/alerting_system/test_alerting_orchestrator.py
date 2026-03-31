@@ -11,7 +11,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from app.services.alerting_system.alerting_orchestrator import AlertingHealth, AlertingOrchestrator
+from app.application.alerting.alerting_orchestrator import AlertingHealth, AlertingOrchestrator
 from app.services.alerting_system.metrics_driven_alerter import MetricQueryConfig
 from app.services.alerting_system.models import (
     AlertEvent,

@@ -7,9 +7,7 @@ Tests for compliance check result data classes.
 
 from decimal import Decimal
 
-import pytest
-
-from app.core.compliance.results import (
+from app.domain.services.compliance.results import (
     CheckResult,
     ComprehensivePostTradeAnalysis,
     ComprehensivePreTradeAnalysis,
@@ -58,11 +56,11 @@ class TestCheckResult:
         assert data["reasons"] == ["Test reason"]
         assert data["risk_factors"] == {"risk": 0.1}
 
-    def test_check_result_immutability(self):
-        """Test that CheckResult is immutable (frozen=True)."""
+    def test_check_result_mutability(self):
+        """Test that CheckResult fields can be updated (mutable dataclass)."""
         result = CheckResult(passed=True, confidence=1.0)
-        with pytest.raises(Exception):  # FrozenInstanceError
-            result.passed = False
+        result.passed = False
+        assert result.passed is False
 
 
 class TestPreTradeCheckResult:

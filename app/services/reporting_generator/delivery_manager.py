@@ -9,6 +9,8 @@ Handles exporting reports to multiple formats and delivery channels:
 - Cloud storage (S3, optional)
 """
 
+from __future__ import annotations
+
 import json
 import logging
 from dataclasses import dataclass

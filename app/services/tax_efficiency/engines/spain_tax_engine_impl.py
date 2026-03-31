@@ -8,6 +8,8 @@ Implements:
 - LOSS-CF-001: Loss carryforward max 4 years
 """
 
+from __future__ import annotations
+
 import logging
 from datetime import datetime
 from decimal import Decimal
@@ -34,7 +36,7 @@ class SpainTaxEngineImpl(ISpainTaxEngine):
     ]
 
     # EU Countries for dividend tax (DIV-001)
-    EU_COUNTRIES: ClassVar[dict] = {
+    EU_COUNTRIES: ClassVar[set[str]] = {
         "AT",
         "BE",
         "BG",

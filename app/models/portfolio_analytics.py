@@ -5,6 +5,8 @@ This module defines enhanced models for portfolio management including
 performance metrics, risk analysis, and portfolio analytics.
 """
 
+from __future__ import annotations
+
 import logging
 from datetime import datetime
 from decimal import Decimal
@@ -33,7 +35,7 @@ class ExtendedPortfolio(BasePortfolio):
     )
 
     @model_validator(mode="after")
-    def validate_portfolio_consistency(self) -> "ExtendedPortfolio":
+    def validate_portfolio_consistency(self) -> ExtendedPortfolio:
         """Validate portfolio consistency."""
         from app.shared.config.centralized_config import get_config
 
@@ -94,7 +96,7 @@ class ExtendedPortfolio(BasePortfolio):
     @property
     def equity_value(self) -> Decimal:
         """Calculate total equity value."""
-        return sum(pos.market_value for pos in self.positions)
+        return Decimal(sum(pos.market_value for pos in self.positions))
 
 
 class PortfolioStatus(str, Enum):
@@ -185,7 +187,7 @@ class PerformanceMetrics(BaseModel):
         "jensen_alpha",
     )
     @classmethod
-    def validate_percentage_fields(cls, v) -> Decimal:
+    def validate_percentage_fields(cls, v: object) -> Decimal:
         """Validate percentage fields are reasonable."""
         if isinstance(v, (int, float)):
             v = Decimal(str(v))
@@ -196,11 +198,11 @@ class PerformanceMetrics(BaseModel):
         if v < Decimal("-100") or v > Decimal("1000"):
             raise ValueError(f"Percentage field out of reasonable range: {v}")
 
-        return v
+        return Decimal(str(v))
 
     @field_validator("total_value", "cash_value", "equity_value")
     @classmethod
-    def validate_value_fields(cls, v) -> Decimal:
+    def validate_value_fields(cls, v: object) -> Decimal:
         """Validate value fields are non-negative."""
         if isinstance(v, (int, float)):
             v = Decimal(str(v))
@@ -210,10 +212,10 @@ class PerformanceMetrics(BaseModel):
         if v < 0:
             raise ValueError(f"Value fields must be non-negative: {v}")
 
-        return v
+        return Decimal(str(v))
 
     @model_validator(mode="after")
-    def validate_metrics_consistency(self) -> "PerformanceMetrics":
+    def validate_metrics_consistency(self) -> PerformanceMetrics:
         """Validate consistency between metrics."""
         logger.debug(
             "Validating performance metrics consistency",
@@ -303,7 +305,7 @@ class RiskMetrics(BaseModel):
         "lower_partial_moment",
     )
     @classmethod
-    def validate_volatility_fields(cls, v) -> Decimal:
+    def validate_volatility_fields(cls, v: object) -> Decimal:
         """Validate volatility fields are non-negative."""
         if isinstance(v, (int, float)):
             v = Decimal(str(v))
@@ -313,7 +315,7 @@ class RiskMetrics(BaseModel):
         if v < 0:
             raise ValueError(f"Volatility fields must be non-negative: {v}")
 
-        return v
+        return Decimal(str(v))
 
 
 class PortfolioAnalytics(BaseModel):
@@ -348,7 +350,7 @@ class PortfolioAnalytics(BaseModel):
 
     @field_validator("risk_score", "health_score", "diversification_score", "liquidity_score")
     @classmethod
-    def validate_score_fields(cls, v) -> Decimal:
+    def validate_score_fields(cls, v: object) -> Decimal:
         """Validate score fields are between 0 and 100."""
         if isinstance(v, (int, float)):
             v = Decimal(str(v))
@@ -358,7 +360,7 @@ class PortfolioAnalytics(BaseModel):
         if v < 0 or v > 100:
             raise ValueError(f"Score fields must be between 0 and 100: {v}")
 
-        return v
+        return Decimal(str(v))
 
 
 class PortfolioAllocation(BaseModel):
@@ -405,7 +407,7 @@ class PortfolioAllocation(BaseModel):
         "international_allocation",
     )
     @classmethod
-    def validate_allocation_fields(cls, v) -> Decimal:
+    def validate_allocation_fields(cls, v: object) -> Decimal:
         """Validate allocation fields are between 0 and 100."""
         if isinstance(v, (int, float)):
             v = Decimal(str(v))
@@ -415,10 +417,10 @@ class PortfolioAllocation(BaseModel):
         if v < 0 or v > 100:
             raise ValueError(f"Allocation fields must be between 0 and 100: {v}")
 
-        return v
+        return Decimal(str(v))
 
     @model_validator(mode="after")
-    def validate_allocation_sum(self) -> "PortfolioAllocation":
+    def validate_allocation_sum(self) -> PortfolioAllocation:
         """Validate that allocations sum to 100%."""
         from app.shared.config.centralized_config import get_config
 
@@ -497,14 +499,14 @@ class PortfolioRebalance(BaseModel):
 
     @field_validator("trigger_threshold", "estimated_cost", "risk_impact", "return_impact")
     @classmethod
-    def validate_impact_fields(cls, v) -> Decimal:
+    def validate_impact_fields(cls, v: object) -> Decimal:
         """Validate impact fields are reasonable."""
         if isinstance(v, (int, float)):
             v = Decimal(str(v))
         elif not isinstance(v, Decimal):
             raise ValueError("Impact fields must be numbers")
 
-        return v
+        return Decimal(str(v))
 
 
 class PortfolioComparison(BaseModel):
@@ -537,7 +539,7 @@ class PortfolioComparison(BaseModel):
     recommendations: list[str] = Field(default_factory=list, description="Recommendations")
 
     @model_validator(mode="after")
-    def validate_comparison_data(self) -> "PortfolioComparison":
+    def validate_comparison_data(self) -> PortfolioComparison:
         """Validate comparison data consistency."""
         logger.debug(
             "Validating portfolio comparison data",

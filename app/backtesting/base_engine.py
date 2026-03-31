@@ -19,7 +19,7 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from decimal import Decimal
 from enum import Enum
-from typing import TYPE_CHECKING, Generic, TypeVar
+from typing import TYPE_CHECKING, Generic, TypeVar, cast
 
 from pydantic import BaseModel
 
@@ -157,7 +157,7 @@ class BacktestState:
         self.current_date = None
         self.equity_curve.clear()
 
-    def to_dict(self) -> dict[str, int | float | str | bool]:
+    def to_dict(self) -> dict[str, object]:
         """Convert state to dictionary for serialization."""
         return {
             "capital": float(self.capital),
@@ -309,10 +309,12 @@ class BaseBacktestEngine(ABC, Generic[ConfigType, ResultType]):
 
         Subclasses can override to add engine-specific validation.
         """
-        if hasattr(self.config, "initial_capital") and self.config.initial_capital <= 0:
+        initial_capital = getattr(self.config, "initial_capital", None)
+        if initial_capital is not None and initial_capital <= 0:
             raise ValueError("Initial capital must be positive")
 
-        if hasattr(self.config, "commission_per_trade") and self.config.commission_per_trade < 0:
+        commission = getattr(self.config, "commission_per_trade", None)
+        if commission is not None and commission < 0:
             raise ValueError("Commission cannot be negative")
 
     def _validate_market_data(self, market_data: list[object]) -> None:
@@ -346,8 +348,9 @@ class BaseBacktestEngine(ABC, Generic[ConfigType, ResultType]):
 
     def _get_initial_capital(self) -> Decimal:
         """Get initial capital from config."""
-        if hasattr(self.config, "initial_capital"):
-            return self.config.initial_capital
+        capital = getattr(self.config, "initial_capital", None)
+        if capital is not None:
+            return cast("Decimal", capital)
         return Decimal("100000")
 
     def _apply_slippage(self, params: SlippageParams) -> Decimal:
@@ -369,12 +372,15 @@ class BaseBacktestEngine(ABC, Generic[ConfigType, ResultType]):
                 apply_slippage as shared_apply_slippage,
             )
 
-            return shared_apply_slippage(
-                price=params.price,
-                is_buy=params.is_buy,
-                slippage_pct=params.slippage_pct,
-                is_stop=params.is_stop,
-                is_volatile=params.is_volatile,
+            return cast(
+                "Decimal",
+                shared_apply_slippage(
+                    price=params.price,
+                    is_buy=params.is_buy,
+                    slippage_pct=params.slippage_pct,
+                    is_stop=params.is_stop,
+                    is_volatile=params.is_volatile,
+                ),
             )
         except ImportError:
             # Fallback to local implementation
@@ -422,7 +428,7 @@ class BaseBacktestEngine(ABC, Generic[ConfigType, ResultType]):
                 build_trade_reason as shared_build_trade_reason,
             )
 
-            return shared_build_trade_reason(signal=signal, market_data=market_data)
+            return cast("str", shared_build_trade_reason(signal=signal, market_data=market_data))
         except ImportError:
             # Fallback implementation
             return self._build_trade_reason_local(signal, market_data)
@@ -456,9 +462,9 @@ class BaseBacktestEngine(ABC, Generic[ConfigType, ResultType]):
             AttributeError: If object has no price attribute
         """
         if hasattr(md, "close"):
-            return md.close
+            return cast("Decimal", md.close)
         elif hasattr(md, "close_price"):
-            return md.close_price
+            return cast("Decimal", md.close_price)
         else:
             raise AttributeError(
                 f"MarketData object has no 'close' or 'close_price' attribute: {type(md)}"
@@ -474,10 +480,11 @@ class BaseBacktestEngine(ABC, Generic[ConfigType, ResultType]):
         Returns:
             Dictionary mapping symbol to most recent price
         """
-        price_map = {}
+        price_map: dict[str, Decimal] = {}
         for md in reversed(market_data):  # Start from most recent
-            if md.symbol not in price_map:
-                price_map[md.symbol] = self._get_price(md)
+            symbol = getattr(md, "symbol", None)
+            if symbol is not None and symbol not in price_map:
+                price_map[symbol] = self._get_price(md)
         return price_map
 
     def _sort_data_by_timestamp(
@@ -531,7 +538,7 @@ class BaseBacktestEngine(ABC, Generic[ConfigType, ResultType]):
     # PICKLE SUPPORT (for multiprocessing)
     # =========================================================================
 
-    def __getstate__(self) -> dict[str, int | float | str | bool]:
+    def __getstate__(self) -> dict[str, object]:
         """
         Get state for pickling (excludes unpicklable objects).
 
@@ -545,16 +552,16 @@ class BaseBacktestEngine(ABC, Generic[ConfigType, ResultType]):
             "enable_risk_envelope": self.enable_risk_envelope,
         }
 
-    def __setstate__(self, state: dict[str, int | float | str | bool]) -> None:
+    def __setstate__(self, state: dict[str, object]) -> None:
         """
         Restore state from pickling.
 
         Subclasses should override and call super().__setstate__()
         to restore their own state.
         """
-        self.config = state["config"]
-        self.strategy_name = state["strategy_name"]
-        self.enable_risk_envelope = state.get("enable_risk_envelope", True)
+        self.config = cast("BaseModel", state["config"])
+        self.strategy_name = cast("str", state["strategy_name"])
+        self.enable_risk_envelope = bool(state.get("enable_risk_envelope", True))
 
         # Restore state
         self.state = BacktestState(
@@ -591,7 +598,7 @@ class BaseBacktestEngine(ABC, Generic[ConfigType, ResultType]):
     ) -> None:
         """Log rejected signal details."""
         logger.warning(f"{self.strategy_name} SIGNAL REJECTED: {symbol} - {reason}. {details}")
-        if self.diagnostic_logger:
+        if self.diagnostic_logger is not None:
             self.diagnostic_logger.log_signal_rejected(
                 self.strategy_name,
                 symbol,

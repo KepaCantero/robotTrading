@@ -1,46 +1,64 @@
 # ============================================
 # Ralph Configuration - AlgoTrading System
 # ============================================
+# Ralph v2.8.0 compatible
+# Task-specific config: .ralph/ralph_tasks/00_master_orchestrator.yml
+# This file provides DEFAULT settings; task configs override specific values.
+# ============================================================================
 
 # CLI Settings
 cli:
   backend: claude
 
-# Event Loop Configuration
+# Event Loop - defaults (overridden by task configs)
 event_loop:
   prompt_file: .ralph/ralph_tasks/prompts/00_master_orchestrator.md
-  completion_promise: "ALGOTRADING_SYSTEM_COMPLETE"
+  completion_promise: "AAA_PRODUCTION_READY"
   max_iterations: 500
   max_runtime_seconds: 604800  # 7 days
+  idle_timeout_secs: 3600      # 1 hour idle = something wrong
   checkpoint_interval: 3
-  starting_event: "master.start"
+  starting_event: "aaa.start"
 
-# Core Settings
+# Core
 core:
   specs_dir: ./specs/
+  scratchpad: .ralph/agent/scratchpad.md
+  guardrails:
+    - "CRITICAL: NEVER claim a check passes without RUNNING the actual command and including REAL output."
+    - "CRITICAL: NEVER skip a phase. If a phase has errors, FIX them before proceeding."
+    - "CRITICAL: NEVER invent file paths. Use 'find app/ -name' to verify paths before referencing them."
+    - "Fresh context each iteration - re-read scratchpad and plan before acting."
+    - "Commit after each completed phase. Never commit Ralph files (.ralph/)."
 
-# Default mode
-default_mode: interactive
+# Memories
+memories:
+  enabled: true
+  inject: auto
+  budget: 16000
+  filter:
+    recent: 30
 
-# Session settings - VERBOSE para ver más logs
-session:
-  verbose: true
-  idle_timeout: 0  # No timeout para tareas largas
+# Tasks
+tasks:
+  enabled: true
 
-# Preflight checks
-preflight:
-  enabled: false
+# Features
+features:
+  parallel: false
+  preflight:
+    enabled: true
+    strict: false
+    skip: []
 
 # Color output
 color: auto
 
-# Habilitar TUI para ver en tiempo real
+# TUI
 tui:
   enabled: true
 
-# Logging configuration (si ralph lo soporta)
+# Logging
 logging:
-  level: debug
+  level: info
   file: .ralph/logs/ralph.log
-  max_size: 10MB
-  keep: 5

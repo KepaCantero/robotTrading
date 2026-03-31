@@ -8,6 +8,8 @@ Refactorización de PairsTradingStrategy como Strategy Engine con:
 - Métricas mejoradas
 """
 
+from __future__ import annotations
+
 import logging
 from collections import defaultdict, deque
 from collections.abc import Sequence
@@ -132,12 +134,12 @@ class PairsTradingStrategyEngine(BaseStrategyEngine):
         self.max_spread_deviation = Decimal(str(config.get("max_spread_deviation", 3.0)))
 
         # Price history for both symbols
-        self.price_history = defaultdict(lambda: deque(maxlen=300))
+        self.price_history: dict[str, deque] = defaultdict(lambda: deque(maxlen=300))
 
         # Rolling cointegration revalidation
         self.last_cointegration_recalc_date = None
         self.cointegration_recalc_interval_days = 30
-        self.cached_cointegration_score = None
+        self.cached_cointegration_score: Optional[float] = None
         self.cached_hedge_ratio = Decimal("1.0")
 
         # Trade frequency limiting
@@ -312,7 +314,7 @@ class PairsTradingStrategyEngine(BaseStrategyEngine):
             from app.shared.performance.statsmodels_fallback import adfuller
 
             result = adfuller(spread)
-            return result[0]  # Return test statistic
+            return float(result[0])  # Return test statistic
         except (ValueError, ImportError, AttributeError):
             return None
 
@@ -366,7 +368,7 @@ class PairsTradingStrategyEngine(BaseStrategyEngine):
             spread_z_score = (current_spread - spread_mean) / spread_std if spread_std > 0 else 0.0
 
             # Verificar cointegración (caché)
-            cointegration_score = self.cached_cointegration_score
+            cointegration_score: Optional[float] = self.cached_cointegration_score
             if cointegration_score is None:
                 cointegration_score = self._calculate_cointegration(prices1, prices2)
                 self.cached_cointegration_score = cointegration_score
@@ -652,7 +654,7 @@ class PairsTradingStrategyEngine(BaseStrategyEngine):
             return Decimal("0")
 
         invested_value = total_value - portfolio.cash
-        return invested_value / total_value
+        return Decimal(str(invested_value)) / Decimal(str(total_value))
 
     def _calculate_pair_exposure(self, portfolio: Portfolio) -> Decimal:
         """Calcular exposición específica del par."""
@@ -665,7 +667,7 @@ class PairsTradingStrategyEngine(BaseStrategyEngine):
         if total_value == 0:
             return Decimal("0")
 
-        return pair_value / total_value
+        return pair_value / Decimal(str(total_value))
 
     # Helper methods to reduce average cyclomatic complexity
     def _get_symbol1(self) -> str:

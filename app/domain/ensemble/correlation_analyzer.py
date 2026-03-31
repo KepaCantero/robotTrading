@@ -5,6 +5,8 @@ This module provides tools for analyzing correlations between trading
 strategies to identify redundancy and improve diversification.
 """
 
+from __future__ import annotations
+
 # mypy: ignore-errors
 import logging
 from decimal import Decimal

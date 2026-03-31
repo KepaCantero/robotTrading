@@ -8,6 +8,8 @@ Implementa diferentes estrategias de rebalanceo dinámico:
 - Transaction cost-aware rebalancing
 """
 
+from __future__ import annotations
+
 import logging
 from abc import ABC, abstractmethod
 from datetime import datetime, timedelta
@@ -112,7 +114,7 @@ class ThresholdRebalancer(BaseRebalancer):
             deviation = abs(current_weight - target_weight)
             max_deviation = max(max_deviation, deviation)
 
-        should_rebalance = max_deviation > self.threshold
+        should_rebalance = bool(max_deviation > self.threshold)
 
         if should_rebalance:
             self.logger.info(
@@ -262,9 +264,7 @@ class VolatilityTargetingRebalancer(BaseRebalancer):
         """Inicializar volatility-targeting rebalancer."""
         super().__init__(config)
         self.target_volatility = config.get("target_volatility", 0.15)  # 15% por defecto
-        self.volatility_threshold = getattr(
-            config.trading, "max_risk_per_trade", 0.02
-        )  # 2% desviación
+        self.volatility_threshold = config.get("volatility_threshold", 0.02)  # 2% desviación
         self.cov_matrix = None  # Se actualizará con datos reales
 
     def should_rebalance(
@@ -295,9 +295,9 @@ class VolatilityTargetingRebalancer(BaseRebalancer):
 
         portfolio_volatility = np.sqrt(np.dot(weights_array, np.dot(cov_matrix, weights_array)))
 
-        # Verificar si se desvía del objetivo
+        # Verificar si se desvia del objetivo
         deviation = abs(float(portfolio_volatility) - self.target_volatility)
-        should_rebalance = deviation > self.volatility_threshold
+        should_rebalance = bool(deviation > self.volatility_threshold)
 
         if should_rebalance:
             self.logger.info(
@@ -407,7 +407,7 @@ class TransactionCostAwareRebalancer(BaseRebalancer):
         estimated_benefit = Decimal(str(max_deviation)) * portfolio_value * Decimal("0.01")
 
         # Rebalancear solo si beneficio > costos
-        should_rebalance = estimated_benefit > total_cost
+        should_rebalance = bool(estimated_benefit > total_cost)
 
         if not should_rebalance:
             self.logger.info(
@@ -460,7 +460,7 @@ class HybridRebalancer(BaseRebalancer):
         super().__init__(config)
 
         # Crear rebalanceadores base
-        self.rebalancers = []
+        self.rebalancers: list[BaseRebalancer] = []
 
         if config.get("use_threshold", True):
             self.rebalancers.append(ThresholdRebalancer(config))

@@ -18,11 +18,20 @@ from datetime import datetime, timedelta
 from decimal import Decimal
 from enum import Enum
 from pathlib import Path
-from typing import Any, Callable
+from typing import Any, Callable, Protocol, runtime_checkable
 
 import aiosqlite
 
 logger = logging.getLogger(__name__)
+
+
+@runtime_checkable
+class MetricsCollectorProtocol(Protocol):
+    """Protocol for metrics collector used by canary deployment."""
+
+    async def collect_canary_metrics(self, strategy_name: str, version: str) -> dict[str, Any]: ...
+
+    async def collect_baseline_metrics(self, strategy_name: str) -> dict[str, Any]: ...
 
 
 class CanaryStatus(str, Enum):
@@ -213,7 +222,7 @@ class CanaryDeployment:
         self,
         config: CanaryConfig,
         db_path: str = "data/canary_deployments.db",
-        metrics_collector: object | None = None,
+        metrics_collector: MetricsCollectorProtocol | None = None,
     ):
         """
         Initialize canary deployment.
@@ -259,8 +268,7 @@ class CanaryDeployment:
             db_path.parent.mkdir(parents=True, exist_ok=True)
 
             async with aiosqlite.connect(self.db_path) as db:
-                await db.execute(
-                    """
+                await db.execute("""
                     CREATE TABLE IF NOT EXISTS canary_deployments (
                         id INTEGER PRIMARY KEY AUTOINCREMENT,
                         strategy_name TEXT NOT NULL,
@@ -274,11 +282,9 @@ class CanaryDeployment:
                         rollback_reason TEXT,
                         created_at TEXT NOT NULL DEFAULT (datetime('utc'))
                     )
-                """
-                )
+                """)
 
-                await db.execute(
-                    """
+                await db.execute("""
                     CREATE TABLE IF NOT EXISTS canary_metrics (
                         id INTEGER PRIMARY KEY AUTOINCREMENT,
                         deployment_id INTEGER NOT NULL,
@@ -305,15 +311,12 @@ class CanaryDeployment:
                         throughput_delta TEXT,
                         FOREIGN KEY (deployment_id) REFERENCES canary_deployments(id)
                     )
-                """
-                )
+                """)
 
-                await db.execute(
-                    """
+                await db.execute("""
                     CREATE INDEX IF NOT EXISTS idx_canary_deployment_strategy
                     ON canary_deployments(strategy_name)
-                """
-                )
+                """)
 
                 await db.commit()
 
@@ -635,7 +638,7 @@ class CanaryDeployment:
 
                 await db.commit()
 
-                return cursor.lastrowid
+                return int(cursor.lastrowid)
 
         except (aiosqlite.Error, asyncio.TimeoutError, OSError) as e:
             self.logger.error(f"Error saving deployment: {e}")

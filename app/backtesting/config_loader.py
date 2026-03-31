@@ -32,9 +32,11 @@ configuration IS converted to a typed value object (BacktestConfig) with
 proper Decimal validation.
 """
 
+from __future__ import annotations
+
 import logging
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any, Optional, cast
 
 import yaml
 from pydantic import BaseModel, ConfigDict, Field, field_validator
@@ -262,7 +264,7 @@ class ConfigLoader:
         Args:
             config_path: Path to config YAML file. If None, uses default location.
         """
-        self.config_path = Path(config_path or "config/meta_analyzer_config.yaml")
+        self.config_path = Path(config_path or "config/learning/meta_analyzer_config.yaml")
         self._pydantic_config: Optional[MetaAnalyzerConfig] = None
         self._load_config()
 
@@ -292,7 +294,7 @@ class ConfigLoader:
     def _get_default_config() -> dict[str, Any]:
         """Return default configuration when file not available."""
         default = MetaAnalyzerConfig()
-        return default.model_dump()
+        return dict(default.model_dump())
 
     def get(self, key: str, default: Optional[object] = None) -> Optional[object]:
         """
@@ -309,7 +311,7 @@ class ConfigLoader:
             return default
 
         keys = key.split(".")
-        value = self._pydantic_config.model_dump()
+        value: object = self._pydantic_config.model_dump()
 
         for k in keys:
             if isinstance(value, dict):
@@ -333,7 +335,8 @@ class ConfigLoader:
         """
         if self._pydantic_config is None:
             return {}
-        return self._pydantic_config.model_dump().get(section, {})
+        result = self._pydantic_config.model_dump().get(section, {})
+        return dict(result) if isinstance(result, dict) else {}
 
     def get_metric_thresholds(self, metric: str) -> dict[str, float]:
         """
@@ -348,9 +351,10 @@ class ConfigLoader:
         section = self.get_section("metric_thresholds")
         metric_config = section.get(metric, {})
         if isinstance(metric_config, dict):
-            return metric_config
+            return cast("dict[str, float]", metric_config)
         # Handle Pydantic model
-        return getattr(metric_config, "model_dump", lambda: metric_config)()
+        result = getattr(metric_config, "model_dump", lambda: metric_config)()
+        return cast("dict[str, float]", result)
 
     def get_analysis_config(self) -> dict[str, Any]:
         """Get analysis configuration section."""
@@ -370,19 +374,23 @@ class ConfigLoader:
 
     def get_regime_detection_config(self) -> dict[str, Any]:
         """Get regime detection configuration."""
-        return self.get("analysis.regime_detection", {})
+        result = self.get("analysis.regime_detection", {})
+        return dict(result) if isinstance(result, dict) else {}
 
     def get_seasonality_config(self) -> dict[str, Any]:
         """Get seasonality analysis configuration."""
-        return self.get("analysis.seasonality", {})
+        result = self.get("analysis.seasonality", {})
+        return dict(result) if isinstance(result, dict) else {}
 
     def get_clustering_config(self) -> dict[str, Any]:
         """Get clustering analysis configuration."""
-        return self.get("analysis.clustering", {})
+        result = self.get("analysis.clustering", {})
+        return dict(result) if isinstance(result, dict) else {}
 
     def get_walk_forward_config(self) -> dict[str, Any]:
         """Get walk-forward validation configuration."""
-        return self.get("analysis.walk_forward", {})
+        result = self.get("analysis.walk_forward", {})
+        return dict(result) if isinstance(result, dict) else {}
 
     def get_alert_threshold(self, metric: str, level: str = "warning") -> Optional[float]:
         """
@@ -408,21 +416,24 @@ class ConfigLoader:
         Returns:
             True if enabled, False otherwise
         """
-        return self.get(f"{feature}.enabled", False)
+        result = self.get(f"{feature}.enabled", False)
+        return bool(result)
 
     def get_random_state(self) -> int:
         """Get random state for reproducibility."""
-        return self.get("advanced.random_state", 42)
+        result = self.get("advanced.random_state", 42)
+        return int(result) if isinstance(result, (int, float)) else 42
 
     def get_logging_level(self) -> str:
         """Get logging level from configuration."""
-        return self.get("advanced.logging.level", "INFO")
+        result = self.get("advanced.logging.level", "INFO")
+        return str(result) if isinstance(result, str) else "INFO"
 
     def to_dict(self) -> dict[str, Any]:
         """Get entire configuration as dictionary."""
         if self._pydantic_config is None:
             return {}
-        return self._pydantic_config.model_dump()
+        return dict(self._pydantic_config.model_dump())
 
     def reload(self) -> None:
         """Reload configuration from file."""

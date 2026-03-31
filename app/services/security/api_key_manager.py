@@ -11,6 +11,8 @@ This module provides secure storage and management of API keys with:
 R29: Security Hardening
 """
 
+from __future__ import annotations
+
 import logging
 import uuid
 from dataclasses import dataclass
@@ -89,11 +91,13 @@ class ApiKeyManager:
 
     def _encrypt_key(self, api_key: str) -> str:
         """Encrypt an API key."""
-        return self._fernet.encrypt(api_key.encode()).decode()
+        encrypted: bytes = self._fernet.encrypt(api_key.encode())
+        return encrypted.decode()
 
     def _decrypt_key(self, encrypted_key: str) -> str:
         """Decrypt an encrypted API key."""
-        return self._fernet.decrypt(encrypted_key.encode()).decode()
+        decrypted: bytes = self._fernet.decrypt(encrypted_key.encode())
+        return decrypted.decode()
 
     def _validate_key_format(self, api_key: str) -> bool:
         """

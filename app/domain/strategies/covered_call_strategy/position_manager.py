@@ -13,10 +13,11 @@ SOLID Principles:
 - Open/Closed: Extensible con nuevos tipos de gestión
 """
 
+from __future__ import annotations
+
 import logging
 from datetime import date, timedelta
 from decimal import Decimal
-from typing import Any, Optional
 
 from .greeks_calculator import GreeksCalculator
 from .models import (
@@ -51,7 +52,7 @@ class PositionManager:
     def __init__(
         self,
         config: CoveredCallConfig,
-        greeks_calculator: Optional[GreeksCalculator] = None,
+        greeks_calculator: GreeksCalculator | None = None,
     ):
         """
         Inicializar gestor de posiciones.
@@ -124,7 +125,10 @@ class PositionManager:
             )
 
         # Calcular probabilidad de assignment
-        assignment_prob = self.greeks_calculator.estimate_probability(call_option, current_price)
+        assignment_prob_str = self.greeks_calculator.estimate_probability(
+            call_option, current_price
+        )
+        assignment_prob = AssignmentProbability(assignment_prob_str)
 
         # Calcular prima total
         total_premium = premium_received * contracts_to_sell * 100
@@ -168,8 +172,8 @@ class PositionManager:
         expiry_date: date,
         strike: Decimal,
         current_price: Decimal,
-        current_option_price: Optional[Decimal] = None,
-    ) -> Optional[CoveredCallPosition]:
+        current_option_price: Decimal | None = None,
+    ) -> CoveredCallPosition | None:
         """
         Actualizar una posición existente.
 
@@ -195,9 +199,8 @@ class PositionManager:
         position.current_option_price = current_option_price
 
         # Recalcular probabilidad de assignment
-        position.assignment_probability = self.greeks_calculator.estimate_probability(
-            position.call_option, current_price
-        )
+        prob_str = self.greeks_calculator.estimate_probability(position.call_option, current_price)
+        position.assignment_probability = AssignmentProbability(prob_str)
 
         logger.debug(
             f"Posición actualizada: {symbol} P=${current_price:.2f}, "
@@ -211,9 +214,9 @@ class PositionManager:
         symbol: str,
         expiry_date: date,
         strike: Decimal,
-        close_price: Optional[Decimal] = None,
+        close_price: Decimal | None = None,
         reason: str = "manual",
-    ) -> Optional[CoveredCallPosition]:
+    ) -> CoveredCallPosition | None:
         """
         Cerrar una posición.
 
@@ -293,16 +296,19 @@ class PositionManager:
         dte = position.call_option.days_to_expiry
         otm_pct = self._calculate_otm_pct(position, current_price)
 
+        # Resolve optional expiry_date for the call option
+        option_expiry = position.call_option.expiry_date or position.call_option.expiry
+
         # 1. Roll por DTE bajo
         if dte <= self.config.roll_threshold_days:
             if otm_pct < 0:  # ITM
                 # Roll up and out
                 new_strike = current_price * (1 + self.config.target_otm_pct)
-                new_expiry = self._calculate_next_expiry(position.call_option.expiry_date)
+                new_expiry = self._calculate_next_expiry(option_expiry)
 
                 return RollDecision(
                     should_roll=True,
-                    roll_type=RollType.ROLL_UP_AND_OUT,
+                    roll_type=RollType.ROLL_OUT_UP,
                     new_strike=new_strike,
                     new_expiry=new_expiry,
                     reason=f"DTE bajo ({dte}d) y ITM, roll up&out",
@@ -310,7 +316,7 @@ class PositionManager:
                 )
             else:
                 # Roll out (mismo strike, más tiempo)
-                new_expiry = self._calculate_next_expiry(position.call_option.expiry_date)
+                new_expiry = self._calculate_next_expiry(option_expiry)
 
                 return RollDecision(
                     should_roll=True,
@@ -327,11 +333,11 @@ class PositionManager:
             AssignmentProbability.VERY_HIGH,
         ]:
             new_strike = current_price * (1 + self.config.target_otm_pct)
-            new_expiry = self._calculate_next_expiry(position.call_option.expiry_date)
+            new_expiry = self._calculate_next_expiry(option_expiry)
 
             return RollDecision(
                 should_roll=True,
-                roll_type=RollType.ROLL_UP_AND_OUT,
+                roll_type=RollType.ROLL_OUT_UP,
                 new_strike=new_strike,
                 new_expiry=new_expiry,
                 reason=f"Alta probabilidad de assignment ({position.assignment_probability})",
@@ -341,11 +347,11 @@ class PositionManager:
         # 3. Roll si está muy OTM (bajar strike, recibir más prima)
         if otm_pct > float(self.config.roll_threshold_otm):
             new_strike = current_price * (1 + self.config.target_otm_pct)
-            new_expiry = self._calculate_next_expiry(position.call_option.expiry_date)
+            new_expiry = self._calculate_next_expiry(option_expiry)
 
             return RollDecision(
                 should_roll=True,
-                roll_type=RollType.ROLL_DOWN_AND_OUT,
+                roll_type=RollType.ROLL_OUT_DOWN,
                 new_strike=new_strike,
                 new_expiry=new_expiry,
                 reason=f"Muy OTM ({otm_pct:.1%}), oportunidad de bajar strike",
@@ -367,7 +373,7 @@ class PositionManager:
         symbol: str,
         expiry_date: date,
         strike: Decimal,
-    ) -> Optional[CoveredCallPosition]:
+    ) -> CoveredCallPosition | None:
         """
         Obtener una posición específica.
 
@@ -402,7 +408,11 @@ class PositionManager:
         """
         threshold = date.today() + timedelta(days=days)
 
-        return [pos for pos in self.positions.values() if pos.call_option.expiry_date <= threshold]
+        return [
+            pos
+            for pos in self.positions.values()
+            if pos.call_option.expiry_date is not None and pos.call_option.expiry_date <= threshold
+        ]
 
     def get_itm_positions(self, current_prices: dict[str, Decimal]) -> list[CoveredCallPosition]:
         """
@@ -428,7 +438,9 @@ class PositionManager:
 
         return itm_positions
 
-    def calculate_portfolio_pnl(self, current_prices: dict[str, Decimal]) -> dict[str, Any]:
+    def calculate_portfolio_pnl(
+        self, current_prices: dict[str, Decimal]
+    ) -> dict[str, Decimal | dict[str, Decimal]]:
         """
         Calcular P&L del portfolio.
 
@@ -439,7 +451,7 @@ class PositionManager:
             Dict con P&L total y por posición
         """
         total_pnl = Decimal("0")
-        pnl_by_position = {}
+        pnl_by_position: dict[str, Decimal] = {}
 
         for key, position in self.positions.items():
             current_price = current_prices.get(position.symbol)
@@ -452,16 +464,21 @@ class PositionManager:
                 pnl_by_position[key] = unrealized_pnl
                 total_pnl += unrealized_pnl
 
+        total_realized_pnl = Decimal("0")
+        for pos in self.closed_positions:
+            close_profit_str = pos.metadata.get("close_profit", "0")
+            total_realized_pnl += Decimal(close_profit_str)
+
         return {
             "total_unrealized_pnl": total_pnl,
             "by_position": pnl_by_position,
             "total_premium_collected": self.total_premium_collected,
-            "total_realized_pnl": sum(
-                Decimal(pos.metadata.get("close_profit", 0)) for pos in self.closed_positions
-            ),
+            "total_realized_pnl": total_realized_pnl,
         }
 
-    def get_position_metrics(self) -> dict[str, Any]:
+    def get_position_metrics(
+        self,
+    ) -> dict[str, Decimal | int | float]:
         """
         Obtener métricas agregadas del portfolio.
 
@@ -551,7 +568,7 @@ class PositionManager:
         if key in self.positions:
             del self.positions[key]
 
-        position.metadata["assigned"] = True
+        position.metadata["assigned"] = "True"
         position.metadata["assignment_date"] = date.today().isoformat()
 
         self.closed_positions.append(position)

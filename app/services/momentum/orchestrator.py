@@ -9,8 +9,10 @@ SOLID Principles:
 - DIP: Depends on protocol abstractions, not concrete implementations
 """
 
+from __future__ import annotations
+
 import logging
-from typing import Optional
+from typing import TYPE_CHECKING
 
 from app.domain.models.momentum import (
     MomentumAnalysis,
@@ -22,22 +24,18 @@ from app.domain.models.momentum import (
 from app.services.momentum.analyzer import MomentumAnalyzer
 from app.services.momentum.data_provider import MockPriceDataProvider
 from app.services.momentum.indicators.calculator import TechnicalIndicatorCalculator
-from app.services.momentum.protocols import (
-    IndicatorCalculator,
-    PriceDataProvider,
-)
-from app.services.momentum.protocols import (
-    MomentumAnalyzer as MomentumAnalyzerProtocol,
-)
-from app.services.momentum.protocols import (
-    SignalGenerator as SignalGeneratorProtocol,
-)
-from app.services.momentum.protocols import (
-    StrategyManager as StrategyManagerProtocol,
-)
 from app.services.momentum.signal_generator import SignalGenerator
 from app.services.momentum.storage import InMemoryStorageBackend
 from app.services.momentum.strategy_manager import StrategyManager
+
+if TYPE_CHECKING:
+    from app.services.momentum.protocols import (
+        IndicatorCalculator,
+        MomentumAnalyzer as MomentumAnalyzerProtocol,
+        PriceDataProvider,
+        SignalGenerator as SignalGeneratorProtocol,
+        StrategyManager as StrategyManagerProtocol,
+    )
 
 logger = logging.getLogger(__name__)
 
@@ -143,7 +141,7 @@ class MomentumAnalysisService:
         return analysis
 
     async def get_momentum_signals(
-        self, filter_criteria: Optional[MomentumFilter] = None
+        self, filter_criteria: MomentumFilter | None = None
     ) -> list[MomentumSignal]:
         """
         Get momentum signals based on filter criteria.
@@ -178,7 +176,7 @@ class MomentumAnalysisService:
         all_signals = await self.get_momentum_signals()
         return await self.strategy_manager.get_strategy_signals(strategy_name, all_signals)
 
-    async def get_top_momentum_assets(self, limit: int = 10) -> list[dict[str, any]]:
+    async def get_top_momentum_assets(self, limit: int = 10) -> list[dict[str, float | str]]:
         """
         Get top momentum assets.
 
@@ -203,7 +201,7 @@ class MomentumAnalysisService:
         """
         return await self.strategy_manager.create_strategy(strategy)
 
-    async def get_strategy(self, strategy_name: str) -> Optional[MomentumStrategy]:
+    async def get_strategy(self, strategy_name: str) -> MomentumStrategy | None:
         """
         Get a momentum strategy by name.
 
@@ -216,8 +214,8 @@ class MomentumAnalysisService:
         return await self.strategy_manager.get_strategy(strategy_name)
 
     async def update_strategy(
-        self, strategy_name: str, updated_fields: dict[str, any]
-    ) -> Optional[MomentumStrategy]:
+        self, strategy_name: str, updated_fields: dict[str, float | str | bool]
+    ) -> MomentumStrategy | None:
         """
         Update a momentum strategy.
 
@@ -251,7 +249,7 @@ class MomentumAnalysisService:
         """
         return list(self.analyses.values())
 
-    async def get_analysis(self, analysis_id: str) -> Optional[MomentumAnalysis]:
+    async def get_analysis(self, analysis_id: str) -> MomentumAnalysis | None:
         """
         Get a momentum analysis by ID.
 
@@ -280,7 +278,7 @@ class MomentumAnalysisService:
 
 
 # Global service instance
-_momentum_service: Optional[MomentumAnalysisService] = None
+_momentum_service: MomentumAnalysisService | None = None
 
 
 def get_momentum_analysis_service() -> MomentumAnalysisService:

@@ -13,6 +13,8 @@ Características principales:
 - Gestión de conflictos entre estrategias
 """
 
+from __future__ import annotations
+
 import contextlib
 import logging
 from abc import abstractmethod
@@ -166,7 +168,9 @@ class BaseStrategyEnsemble(BaseStrategyEngine):
         if strategy_name and strategy_name in self.strategies:
             strategy = self.strategies[strategy_name]
             with contextlib.suppress(ValueError, TypeError, KeyError, AttributeError, IndexError):
-                return strategy.risk_check(signal, portfolio)
+                result = strategy.risk_check(signal, portfolio)
+                if isinstance(result, bool):
+                    return result
 
         return True
 
@@ -178,7 +182,7 @@ class BaseStrategyEnsemble(BaseStrategyEngine):
             strategy_name: Nombre de la estrategia
             metrics: Métricas de performance (sharpe, return, drawdown, etc.)
         """
-        metrics["timestamp"] = datetime.utcnow().isoformat()
+        metrics["timestamp"] = float(datetime.utcnow().timestamp())
         self.performance_history[strategy_name].append(metrics)
 
         # Mantener solo últimos N registros
@@ -351,20 +355,21 @@ class WeightedEnsemble(BaseStrategyEnsemble):
 
             recent = history[-self.performance_lookback :]
 
+            new_weight: float
             if self.weight_method == "sharpe":
                 avg_sharpe = np.mean([h.get("sharpe", 0) for h in recent])
-                new_weight = max(0.5 + avg_sharpe * 0.5, float(self.min_weight))
+                new_weight = float(max(0.5 + float(avg_sharpe) * 0.5, float(self.min_weight)))
             elif self.weight_method == "return":
                 avg_return = np.mean([h.get("return", 0) for h in recent])
-                new_weight = max(1.0 + avg_return * 10, float(self.min_weight))
+                new_weight = float(max(1.0 + float(avg_return) * 10, float(self.min_weight)))
             elif self.weight_method == "inverse_dd":
                 avg_dd = np.mean([h.get("max_drawdown", 0.1) for h in recent])
-                new_weight = max(1.0 / (avg_dd + 0.01), float(self.min_weight))
+                new_weight = float(max(1.0 / (float(avg_dd) + 0.01), float(self.min_weight)))
             else:
                 new_weight = 1.0
 
             # Aplicar decay y límites
-            current_weight = self.strategy_weights.get(strategy_name, 1.0)
+            current_weight = float(self.strategy_weights.get(strategy_name, 1.0))
             smoothed_weight = current_weight * float(self.weight_decay) + new_weight * (
                 1 - float(self.weight_decay)
             )
@@ -719,7 +724,7 @@ class VotingEnsemble(BaseStrategyEnsemble):
                     continue
 
                 # Calcular confianza promedio
-                avg_confidence = np.mean([s.confidence for _, s in voted_signals])
+                avg_confidence: float = float(np.mean([s.confidence for _, s in voted_signals]))
 
                 # Boost si es unánime
                 is_unanimous = num_votes == total_strategies
@@ -736,16 +741,16 @@ class VotingEnsemble(BaseStrategyEnsemble):
                 )
 
                 # Calcular priority_score con cap en 100
-                priority = min(100.0, avg_confidence * (num_votes / total_strategies))
+                priority = min(100.0, float(avg_confidence) * (num_votes / total_strategies))
 
                 # Crear señal combinada
                 combined_signal = Signal(
                     symbol=symbol,
                     signal_type=signal_type_enum,
-                    strength=self._map_confidence_to_strength(avg_confidence),
+                    strength=self._map_confidence_to_strength(float(avg_confidence)),
                     price=base_signal.price,
                     timestamp=base_signal.timestamp,
-                    confidence=avg_confidence,
+                    confidence=float(avg_confidence),
                     liquidity_score=base_signal.liquidity_score,
                     priority_score=priority,
                     source=SignalSource.TECHNICAL,

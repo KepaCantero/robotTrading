@@ -4,6 +4,8 @@ Modelo 720 Report Generator
 Genera reportes para el Modelo 720 (declaracion de bienes en el extranjero)
 """
 
+from __future__ import annotations
+
 import logging
 from datetime import datetime
 from decimal import Decimal
@@ -20,7 +22,7 @@ class Modelo720Generator:
     """
 
     def __init__(self):
-        self.assets = {
+        self.assets: dict[str, dict[str, object]] = {
             "stocks": {},
             "funds": {},
             "bonds": {},

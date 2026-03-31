@@ -6,6 +6,8 @@ Valida que el tamano de la posicion no exceda:
 - 2% maximo del capital
 """
 
+from __future__ import annotations
+
 import logging
 from dataclasses import dataclass
 from decimal import Decimal

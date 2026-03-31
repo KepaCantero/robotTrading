@@ -26,7 +26,7 @@ class TestCompleteWorkflowsByObjective:
     @pytest.mark.asyncio
     async def test_workflow_maximizar_capital(self):
         """Test MAXIMIZAR_CAPITAL workflow with Sharpe/return focus."""
-        from app.core.models.input_profile import InputProfile
+        from app.domain.models.input_profile import InputProfile
 
         # Step 1: Create input profile
         input_profile = InputProfile(
@@ -42,7 +42,7 @@ class TestCompleteWorkflowsByObjective:
     @pytest.mark.asyncio
     async def test_workflow_maximizar_dividendos(self):
         """Test MAXIMIZAR_DIVIDENDOS workflow with dividend yield focus."""
-        from app.core.models.input_profile import InputProfile
+        from app.domain.models.input_profile import InputProfile
 
         input_profile = InputProfile(
             capital_initial=Decimal("150000"),
@@ -57,7 +57,7 @@ class TestCompleteWorkflowsByObjective:
     @pytest.mark.asyncio
     async def test_workflow_capital_preservation(self):
         """Test CAPITAL_PRESERVATION workflow with drawdown minimization."""
-        from app.core.models.input_profile import InputProfile
+        from app.domain.models.input_profile import InputProfile
 
         input_profile = InputProfile(
             capital_initial=Decimal("50000"),
@@ -71,7 +71,7 @@ class TestCompleteWorkflowsByObjective:
     @pytest.mark.asyncio
     async def test_workflow_balanced_growth(self):
         """Test BALANCED_GROWTH workflow with balanced metric weighting."""
-        from app.core.models.input_profile import InputProfile
+        from app.domain.models.input_profile import InputProfile
 
         input_profile = InputProfile(
             capital_initial=Decimal("200000"),
@@ -85,7 +85,7 @@ class TestCompleteWorkflowsByObjective:
     @pytest.mark.asyncio
     async def test_workflow_income_generation(self):
         """Test INCOME_GENERATION workflow with yield consistency focus."""
-        from app.core.models.input_profile import InputProfile
+        from app.domain.models.input_profile import InputProfile
 
         input_profile = InputProfile(
             capital_initial=Decimal("250000"),
@@ -108,7 +108,7 @@ class TestCapitalTierIntegration:
     @pytest.mark.asyncio
     async def test_micro_tier_capital_gating(self):
         """Test MICRO tier (€1k-€10k) disables expensive modules."""
-        from app.core.models.input_profile import InputProfile
+        from app.domain.models.input_profile import InputProfile
 
         # Create MICRO tier input
         input_profile = InputProfile(
@@ -124,7 +124,7 @@ class TestCapitalTierIntegration:
     @pytest.mark.asyncio
     async def test_small_tier_capital_gating(self):
         """Test SMALL tier (€10k-€50k) allows partial module access."""
-        from app.core.models.input_profile import InputProfile
+        from app.domain.models.input_profile import InputProfile
 
         input_profile = InputProfile(
             capital_initial=Decimal("30000"),
@@ -138,7 +138,7 @@ class TestCapitalTierIntegration:
     @pytest.mark.asyncio
     async def test_medium_tier_capital_gating(self):
         """Test MEDIUM tier (€50k-€250k) allows full module access."""
-        from app.core.models.input_profile import InputProfile
+        from app.domain.models.input_profile import InputProfile
 
         input_profile = InputProfile(
             capital_initial=Decimal("100000"),
@@ -152,7 +152,7 @@ class TestCapitalTierIntegration:
     @pytest.mark.asyncio
     async def test_large_tier_capital_gating(self):
         """Test LARGE tier (€250k+) enables leverage and advanced strategies."""
-        from app.core.models.input_profile import InputProfile
+        from app.domain.models.input_profile import InputProfile
 
         input_profile = InputProfile(
             capital_initial=Decimal("500000"),
@@ -175,7 +175,7 @@ class TestFullPipelineOrchestration:
     @pytest.mark.asyncio
     async def test_pipeline_input_to_decision(self):
         """Test complete pipeline: Input → Profile → Params → Backtest → Decision."""
-        from app.core.models.input_profile import InputProfile
+        from app.domain.models.input_profile import InputProfile
         from app.services.deployment.deploy_decision_orchestrator import DeployDecisionOrchestrator
 
         # Step 1: Create input profile (T1.1)

@@ -14,7 +14,7 @@ from datetime import datetime
 
 import pytest
 
-from app.domain.strategies.momentum_modular.learning import (
+from app.domain.strategies.learning import (
     AdvancedOverfittingDetector,
     OverfittingDetector,
     OverfittingMetrics,

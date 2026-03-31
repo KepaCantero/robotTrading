@@ -20,8 +20,8 @@ from pathlib import Path
 import pytest
 import yaml
 
-from app.core.models.input_profile import InputProfile, ObjectivoInversion, RiskTolerance
-from app.core.models.investment_profile import CapitalTier, ProfileGenerator
+from app.domain.models.input_profile import InputProfile, ObjectivoInversion, RiskTolerance
+from app.domain.models.investment_profile import CapitalTier, ProfileGenerator
 from app.services.parametrization.module_parametrizer import ModuleParametrizer
 
 # ===================== FIXTURES =====================

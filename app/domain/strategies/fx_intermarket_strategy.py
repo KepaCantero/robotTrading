@@ -28,7 +28,7 @@ import logging
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from decimal import Decimal
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
 from app.domain.models.signal import Signal, SignalSource, SignalStrength, SignalType
 from app.domain.strategies.base import BaseStrategy
@@ -382,10 +382,12 @@ class FXIntermarketStrategy(BaseStrategy):
         """
         try:
             # Calculate expected move in FX pair
+            asset_return = asset_move["return"]
+            assert isinstance(asset_return, Decimal), f"Expected Decimal, got {type(asset_return)}"
             expected_move = self.calculate_expected_move(
-                asset_move["return"],
-                relationship.correlation,
-                relationship.beta,
+                asset_return,
+                cast("Decimal", relationship.correlation),
+                cast("Decimal", relationship.beta),
             )
 
             # Calculate signal strength
@@ -563,12 +565,12 @@ class FXIntermarketStrategy(BaseStrategy):
 
         if key not in self.state.historical_correlations:
             # No history, use significance as proxy
-            return relationship.significance
+            return cast("Decimal", relationship.significance)
 
         historical = self.state.historical_correlations[key]
 
         if len(historical) < 5:
-            return relationship.significance
+            return cast("Decimal", relationship.significance)
 
         # Calculate stability (1 - std/mean)
         import numpy as np
@@ -764,7 +766,7 @@ class FXIntermarketStrategy(BaseStrategy):
         Examples:
             >>> pairs = strategy.get_monitored_pairs()
         """
-        return self.config.get_fx_pairs()
+        return cast("list[str]", self.config.get_fx_pairs())
 
     def get_monitored_assets(self) -> dict[str, AssetClass]:
         """
@@ -776,7 +778,7 @@ class FXIntermarketStrategy(BaseStrategy):
         Examples:
             >>> assets = strategy.get_monitored_assets()
         """
-        return self.config.get_external_assets()
+        return cast("dict[str, AssetClass]", self.config.get_external_assets())
 
     def risk_check(self, signal: Signal, portfolio: object) -> bool:
         """

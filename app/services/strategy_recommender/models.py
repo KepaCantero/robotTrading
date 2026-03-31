@@ -4,6 +4,8 @@ T6.1: StrategyRecommender - Models
 Data models for strategy recommendation requests and results.
 """
 
+from __future__ import annotations
+
 import logging
 from dataclasses import dataclass, field
 from datetime import datetime

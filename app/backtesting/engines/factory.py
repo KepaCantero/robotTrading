@@ -19,6 +19,8 @@ Usage:
     engine = EngineFactory.create_standard(config, strategy)
 """
 
+from __future__ import annotations
+
 from decimal import Decimal
 from typing import ClassVar, Optional, TypeVar, Union
 

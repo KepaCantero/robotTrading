@@ -7,6 +7,8 @@ T4.1 (Capacity Fade) → T8.1 (Risk Scaling) → T9.1 (Reporting) → T10.1 (Dep
 TODO: Complete implementation in PHASE 4
 """
 
+from __future__ import annotations
+
 from datetime import datetime
 from decimal import Decimal
 from typing import Optional

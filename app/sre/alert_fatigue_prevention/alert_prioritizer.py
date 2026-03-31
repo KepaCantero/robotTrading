@@ -4,6 +4,8 @@ Alert Prioritizer - Prioritizes alerts based on impact and urgency.
 Part of Alert Fatigue Prevention (SRE Rule 20.11).
 """
 
+from __future__ import annotations
+
 from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Any

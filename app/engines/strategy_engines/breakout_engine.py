@@ -12,6 +12,8 @@ Características principales:
 - Extiende BaseStrategyEngine para futura integración con Learning Engines.
 """
 
+from __future__ import annotations
+
 import logging
 from collections import deque
 from collections.abc import Sequence

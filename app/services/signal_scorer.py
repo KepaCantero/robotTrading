@@ -5,6 +5,8 @@ Este módulo implementa el servicio de scoring de señales refactorizado,
 utilizando los nuevos motores especializados.
 """
 
+from __future__ import annotations
+
 import logging
 from datetime import datetime, timedelta
 from decimal import Decimal

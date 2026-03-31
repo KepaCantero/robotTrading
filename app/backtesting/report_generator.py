@@ -9,6 +9,8 @@ Creates comprehensive, auditable backtest reports with:
 - Recommendations for Improvement
 """
 
+from __future__ import annotations
+
 import json
 import logging
 import time
@@ -291,6 +293,7 @@ class BacktestReportGenerator:
 
     def _generate_executive_summary(self, result: BacktestResult, config: BacktestConfig) -> str:
         """Generate executive summary."""
+        assert result.performance is not None
         performance = result.performance
 
         # Calculate key metrics
@@ -355,6 +358,7 @@ class BacktestReportGenerator:
 
     def _generate_technical_analysis(self, result: BacktestResult, config: BacktestConfig) -> str:
         """Generate technical analysis."""
+        assert result.performance is not None
         performance = result.performance
         perf = performance
 
@@ -378,7 +382,7 @@ Max Position Size: {float(config.max_position_size):.2f}%
 
 - **Total Return:** {float(result.total_return):.2f}%
 - **Annualized Return:** {float(result.annualized_return) if result.annualized_return else 0:.2f}%
-- **CAGR:** {self._calculate_cagr(result):.2f}%
+- **CAGR:** {self._calculate_cagr(result, config):.2f}%
 
 ### Risk Metrics
 
@@ -424,6 +428,7 @@ Max Position Size: {float(config.max_position_size):.2f}%
 
     def _generate_risk_analysis(self, result: BacktestResult, config: BacktestConfig) -> str:
         """Generate risk analysis."""
+        assert result.performance is not None
         performance = result.performance
         perf = performance
 
@@ -477,6 +482,7 @@ Max Position Size: {float(config.max_position_size):.2f}%
         metrics: DetailedMetrics,
     ) -> str:
         """Generate recommendations."""
+        assert result.performance is not None
         recommendations: list[RecommendationDict] = []
 
         # Analyze performance
@@ -573,13 +579,18 @@ Max Position Size: {float(config.max_position_size):.2f}%
 
         return "\n".join(steps)
 
-    def _calculate_cagr(self, result: BacktestResult) -> float:
+    def _calculate_cagr(self, result: BacktestResult, config: BacktestConfig) -> float:
         """Calculate CAGR."""
-        days = (result.end_date - result.start_date).days
+        days = int((result.end_date - result.start_date).days)
         years = days / 365.25
-        if years <= 0 or result.final_capital <= 0 or result.initial_capital <= 0:
+        final_cap = float(result.final_capital)
+        initial_cap = float(config.initial_capital)
+        if years <= 0 or final_cap <= 0 or initial_cap <= 0:
             return 0.0
-        return ((result.final_capital / result.initial_capital) ** (1 / years) - 1) * 100
+        ratio = final_cap / initial_cap
+        exponent = 1.0 / years
+        cagr: float = (ratio**exponent - 1.0) * 100.0
+        return cagr
 
     def _calculate_kelly(self, perf: PerformanceMetrics) -> float:
         """Calculate Kelly Criterion."""
@@ -595,11 +606,13 @@ Max Position Size: {float(config.max_position_size):.2f}%
     def _calculate_drawdown_duration(self, result: BacktestResult) -> int:
         """Calculate maximum drawdown duration in days."""
         # Simplified calculation
-        return (result.end_date - result.start_date).days // 4  # Approximate
+        return int((result.end_date - result.start_date).days) // 4  # Approximate
 
     def _calculate_var(self, result: BacktestResult, confidence: float) -> float:
         """Calculate Value at Risk."""
         # Simplified calculation
+        if result.performance is None:
+            return 0.0
         return abs(float(result.performance.max_drawdown)) * (1 - confidence)
 
     def _analyze_equity_curve(self, result: BacktestResult) -> str:
@@ -661,6 +674,7 @@ Max Position Size: {float(config.max_position_size):.2f}%
         self, result: BacktestResult, config: BacktestConfig
     ) -> DetailedMetrics:
         """Extract detailed metrics."""
+        assert result.performance is not None
         perf = result.performance
 
         return DetailedMetrics(

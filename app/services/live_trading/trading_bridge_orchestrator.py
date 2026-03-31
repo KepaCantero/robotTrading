@@ -10,23 +10,26 @@ Coordinates the complete flow from alert trigger to order execution:
 - Handles errors and recovery
 """
 
+from __future__ import annotations
+
 import asyncio
 import logging
-from collections import deque
+from collections import OrderedDict, deque
 from dataclasses import dataclass, field
 from datetime import datetime
 from decimal import Decimal
 from enum import Enum
 from itertools import islice
-from typing import Optional
+from typing import TYPE_CHECKING
 from uuid import uuid4
-
-from app.services.alerting_system import AlertEvent, AlertManager
 
 from .alert_to_trade_mapper import AlertToTradeMapper, TradeSignal
 from .broker_connector import BrokerConnector, OrderSide, OrderStatus, get_broker_connector
 from .order_manager import OrderManager
 from .risk_gates import RiskCheckResult, RiskGates, RiskLevel
+
+if TYPE_CHECKING:
+    from app.services.alerting_system import AlertEvent, AlertManager
 
 logger = logging.getLogger(__name__)
 
@@ -59,8 +62,8 @@ class AlertToTradeExecution:
     execution_status: OrderStatus = OrderStatus.PENDING
     risk_approved: bool = False
     created_at: datetime = field(default_factory=datetime.utcnow)
-    executed_at: Optional[datetime] = None
-    error_message: Optional[str] = None
+    executed_at: datetime | None = None
+    error_message: str | None = None
 
     def to_dict(self) -> dict:
         """Convert to dictionary for serialization."""
@@ -98,10 +101,10 @@ class TradingBridgeOrchestrator:
 
     def __init__(
         self,
-        alert_manager: Optional[AlertManager] = None,
-        broker: Optional[BrokerConnector] = None,
-        order_manager: Optional[OrderManager] = None,
-        risk_gates: Optional[RiskGates] = None,
+        alert_manager: AlertManager | None = None,
+        broker: BrokerConnector | None = None,
+        order_manager: OrderManager | None = None,
+        risk_gates: RiskGates | None = None,
     ):
         """
         Initialize trading bridge orchestrator.
@@ -123,14 +126,16 @@ class TradingBridgeOrchestrator:
         self.executions: dict[str, AlertToTradeExecution] = {}
         self.execution_history: deque[AlertToTradeExecution] = deque(maxlen=10000)
         self.errors: dict[str, tuple[AlertEvent, str]] = {}
+        self._max_errors = 1000
         self.is_active = False
 
         # Idempotency: Track processed alert IDs to prevent duplicates
-        self._processed_alert_ids: set[str] = set()
+        self._processed_alert_ids: OrderedDict[str, bool] = OrderedDict()
         self._max_processed_ids = 50000  # Limit memory for processed IDs
 
         # CONCURRENCY: Lock for thread-safe order execution
         self._execution_lock = asyncio.Lock()
+        self._monitor_task: asyncio.Task[None] | None = None
 
         logger.info("✅ TradingBridgeOrchestrator initialized with concurrency protection")
 
@@ -165,7 +170,7 @@ class TradingBridgeOrchestrator:
     async def process_alert(
         self,
         alert_event: AlertEvent,
-    ) -> Optional[AlertToTradeExecution]:
+    ) -> AlertToTradeExecution | None:
         """
         Process alert event and potentially execute trade.
 
@@ -195,14 +200,15 @@ class TradingBridgeOrchestrator:
                 logger.info(f"🔔 Processing alert: {alert_event.event_id}")
 
                 # Mark as processed BEFORE execution to prevent race conditions
-                self._processed_alert_ids.add(alert_event.event_id)
+                self._processed_alert_ids[alert_event.event_id] = True
 
                 # Cleanup old processed IDs to prevent memory leak
                 if len(self._processed_alert_ids) > self._max_processed_ids:
-                    # Remove oldest half
-                    to_remove = list(self._processed_alert_ids)[: self._max_processed_ids // 2]
-                    for old_id in to_remove:
-                        self._processed_alert_ids.discard(old_id)
+                    # Remove oldest half (FIFO order)
+                    n_to_remove = self._max_processed_ids // 2
+                    for _ in range(n_to_remove):
+                        if self._processed_alert_ids:
+                            self._processed_alert_ids.popitem(last=False)
 
                 # Get broker account for portfolio value
                 account = await self.broker.get_account_info()
@@ -225,7 +231,9 @@ class TradingBridgeOrchestrator:
                 )
 
                 if not signal:
-                    logger.warning(f"⚠️ No trade signal generated for alert: {alert_event.event_id}")
+                    logger.warning(
+                        f"⚠️ No trade signal generated for alert: {alert_event.event_id}"
+                    )
                     return None
 
                 # Validate risk gates
@@ -236,6 +244,7 @@ class TradingBridgeOrchestrator:
                     error_msg = f"Risk validation failed: {', '.join(risk_result.violations)}"
                     logger.error(f"❌ {error_msg}")
                     self.errors[alert_event.event_id] = (alert_event, error_msg)
+                    self._evict_errors()
                     return None
 
                 if risk_result.risk_level == RiskLevel.HIGH:
@@ -243,12 +252,19 @@ class TradingBridgeOrchestrator:
 
                 # Execute trade
                 self.status = BridgeStatus.EXECUTING
-                execution = await self._execute_trade(signal, alert_event)
+                execution: AlertToTradeExecution | None = await self._execute_trade(
+                    signal, alert_event
+                )
 
                 if execution:
                     self.status = BridgeStatus.EXECUTED
                     self.executions[execution.execution_id] = execution
                     self.execution_history.append(execution)
+                    # Prevent unbounded growth: evict oldest if over limit
+                    if len(self.executions) > 1000:
+                        oldest_keys = list(self.executions.keys())[:100]
+                        for k in oldest_keys:
+                            del self.executions[k]
                     logger.info(
                         f"✅ Trade executed: {execution.execution_id} "
                         f"({execution.side.value} {execution.quantity} {execution.symbol})"
@@ -270,7 +286,15 @@ class TradingBridgeOrchestrator:
                 logger.error(f"❌ Error processing alert: {e!s}")
                 if hasattr(alert_event, "event_id"):
                     self.errors[alert_event.event_id] = (alert_event, str(e))
+                    self._evict_errors()
                 return None
+
+    def _evict_errors(self) -> None:
+        """Evict oldest error entries when over limit."""
+        if len(self.errors) > self._max_errors:
+            keys_to_remove = list(self.errors.keys())[: len(self.errors) - self._max_errors // 2]
+            for key in keys_to_remove:
+                del self.errors[key]
 
     async def _validate_risk_gates(
         self,
@@ -362,7 +386,7 @@ class TradingBridgeOrchestrator:
         self,
         signal: TradeSignal,
         alert_event: AlertEvent,
-    ) -> Optional[AlertToTradeExecution]:
+    ) -> AlertToTradeExecution | None:
         """
         Execute trade based on signal.
 
@@ -401,7 +425,9 @@ class TradingBridgeOrchestrator:
                 risk_approved=True,
             )
 
-            # Monitor order status
+            # Monitor order status (cancel any previous monitor before starting new one)
+            if self._monitor_task is not None and not self._monitor_task.done():
+                self._monitor_task.cancel()
             self._monitor_task = asyncio.create_task(self._monitor_order(execution))
 
             return execution
@@ -445,7 +471,7 @@ class TradingBridgeOrchestrator:
                 logger.error(f"❌ Error monitoring order: {e!s}")
                 break
 
-    def get_execution(self, execution_id: str) -> Optional[AlertToTradeExecution]:
+    def get_execution(self, execution_id: str) -> AlertToTradeExecution | None:
         """
         Get execution record by ID.
 
@@ -510,7 +536,7 @@ class TradingBridgeOrchestrator:
 
 
 # Singleton instance
-_orchestrator_instance: Optional[TradingBridgeOrchestrator] = None
+_orchestrator_instance: TradingBridgeOrchestrator | None = None
 
 
 def get_trading_bridge_orchestrator() -> TradingBridgeOrchestrator:

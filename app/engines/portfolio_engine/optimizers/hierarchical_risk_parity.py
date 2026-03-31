@@ -20,7 +20,7 @@ Algorithm steps:
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import Any, cast
 
 import numpy as np
 from scipy.cluster.hierarchy import cophenet, dendrogram, linkage
@@ -130,7 +130,7 @@ class HierarchicalRiskParity:
 
         # Edge case: single asset
         if n == 1:
-            return np.array([1.0])
+            return cast("np.ndarray", np.array([1.0]))
 
         # Ensure symmetry
         cov_matrix = (cov_matrix + cov_matrix.T) / 2
@@ -175,7 +175,7 @@ class HierarchicalRiskParity:
             f"effective_n={1 / np.sum(weights**2):.2f}"
         )
 
-        return weights
+        return cast("np.ndarray", weights)
 
     def _cov_to_corr(self, cov_matrix: np.ndarray) -> np.ndarray:
         """
@@ -204,7 +204,7 @@ class HierarchicalRiskParity:
         # Clip to valid range [-1, 1]
         corr_matrix = np.clip(corr_matrix, -1.0, 1.0)
 
-        return corr_matrix
+        return cast("np.ndarray", corr_matrix)
 
     def _correlation_to_distance(self, corr_matrix: np.ndarray) -> np.ndarray:
         """
@@ -230,7 +230,7 @@ class HierarchicalRiskParity:
         # Ensure diagonal is zero
         np.fill_diagonal(distance_matrix, 0.0)
 
-        return distance_matrix
+        return cast("np.ndarray", distance_matrix)
 
     def _quasi_diagonalization(
         self,
@@ -317,7 +317,7 @@ class HierarchicalRiskParity:
         # Use scipy's leaves_list to get the optimal ordering
         from scipy.cluster.hierarchy import leaves_list
 
-        ordered_indices = leaves_list(linkage_matrix).tolist()
+        ordered_indices: list[int] = leaves_list(linkage_matrix).tolist()
 
         return ordered_indices
 
@@ -352,14 +352,14 @@ class HierarchicalRiskParity:
 
         # Base case: single asset
         if n == 1:
-            return np.array([1.0])
+            return cast("np.ndarray", np.array([1.0]))
 
         # Base case: two assets - allocate by inverse variance
         if n == 2:
             variances = np.diag(cov_matrix)[indices]
             weights = 1.0 / variances
             weights = weights / weights.sum()
-            return weights
+            return cast("np.ndarray", weights)
 
         # Recursive case: split cluster and allocate
 
@@ -369,7 +369,7 @@ class HierarchicalRiskParity:
 
         if split_point is None or split_point == 0 or split_point == n:
             # No valid split found, use equal weights
-            return np.ones(n) / n
+            return cast("np.ndarray", np.ones(n) / n)
 
         # Split the cluster
         left_indices = indices[:split_point]
@@ -392,7 +392,7 @@ class HierarchicalRiskParity:
         # Combine weights
         weights = np.concatenate([left_weights * left_alpha, right_weights * right_alpha])
 
-        return weights
+        return cast("np.ndarray", weights)
 
     def _find_split_point(
         self,
@@ -589,7 +589,8 @@ class HRPOptimizer:
 
             # Clip weights
             weights = np.clip(weights, min_weight, max_weight)
-            weights = weights / weights.sum()  # Re-normalize
+            total = weights.sum()
+            weights = weights / total if total > 0 else np.ones(len(weights)) / len(weights)
 
             # Calculate metrics
             metrics = self.hrp.get_metrics(weights, cov_matrix)

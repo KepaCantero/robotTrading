@@ -86,6 +86,8 @@ def mock_harris_integrator():
     pre_trade_result.can_execute = True
     pre_trade_result.order_book_depth_ok = True
     pre_trade_result.liquidity_score = 65.0
+    pre_trade_result.liquidity_sufficient = True
+    pre_trade_result.estimated_cost_bps = 5.0
     pre_trade_result.vpin = 0.05
     pre_trade_result.pin = 0.03
     pre_trade_result.estimated_market_impact_bps = 5.0
@@ -404,15 +406,19 @@ class TestComplianceEnginePreTradeAnalysis:
         """Test that systems_contributed is incremented correctly."""
         engine = engine_without_logging
 
-        with patch.object(engine, '_get_subsystem', return_value=mock_harris_integrator):
-            result = engine.analyze_pre_trade(
-                symbol="AAPL",
-                side="BUY",
-                quantity=Decimal("100"),
-                price=Decimal("150"),
-            )
+        def is_available(name):
+            return name == "harris"
 
-            assert result.systems_contributed > 0
+        with patch.object(engine, '_get_subsystem', return_value=mock_harris_integrator):
+            with patch.object(engine.availability, 'is_available', side_effect=is_available):
+                result = engine.analyze_pre_trade(
+                    symbol="AAPL",
+                    side="BUY",
+                    quantity=Decimal("100"),
+                    price=Decimal("150"),
+                )
+
+                assert result.systems_contributed > 0
 
     def test_analyze_pre_trade_harris_integration_works(
         self, engine_without_logging, mock_harris_integrator

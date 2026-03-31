@@ -8,7 +8,7 @@ from decimal import Decimal
 
 import pytest
 
-from app.core.models.input_profile import (
+from app.domain.models.input_profile import (
     InputProcessor,
     InputProfile,
     ObjectivoInversion,

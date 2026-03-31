@@ -8,12 +8,13 @@ rather than concrete classes. This improves testability and maintainability.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Protocol
+from typing import TYPE_CHECKING, Protocol
 
 if TYPE_CHECKING:
     from decimal import Decimal
 
     from app.domain.models.signal import Signal
+    from app.domain.strategies.strategy_registry import BaseStrategy
 
 
 class StrategyRegistryProto(Protocol):
@@ -24,8 +25,40 @@ class StrategyRegistryProto(Protocol):
         """Name of active strategy."""
         ...
 
-    def get_active_strategy(self) -> Any | None:
+    def get_active_strategy(self) -> BaseStrategy | None:
         """Get currently active strategy."""
+        ...
+
+    def get_all_strategies_status(self) -> dict[str, object]:
+        """Get status summary for all strategies."""
+        ...
+
+    def list_available_strategies(self) -> list[str]:
+        """List names of all available (registered) strategies."""
+        ...
+
+    def list_loaded_strategies(self) -> list[str]:
+        """List names of all loaded (instantiated) strategies."""
+        ...
+
+    def load_strategy(self, name: str, config: dict[str, object]) -> BaseStrategy:
+        """Load (create) a strategy instance by name with config."""
+        ...
+
+    def set_active_strategy(self, name: str) -> None:
+        """Set the currently active strategy by name."""
+        ...
+
+    def unload_strategy(self, name: str) -> None:
+        """Unload (remove) a loaded strategy."""
+        ...
+
+    def get_strategy_status(self, name: str) -> dict[str, object]:
+        """Get status information for a specific strategy."""
+        ...
+
+    def get_strategy(self, name: str) -> BaseStrategy | None:
+        """Get a strategy instance by name."""
         ...
 
 
@@ -74,4 +107,32 @@ class StrategyLoggerProto(Protocol):
         error: str,
     ) -> None:
         """Log signal execution error event."""
+        ...
+
+    def log_strategy_loaded(
+        self,
+        strategy_name: str,
+        config: dict[str, object],
+    ) -> None:
+        """Log strategy loaded event."""
+        ...
+
+    def log_strategy_unloaded(self, strategy_name: str) -> None:
+        """Log strategy unloaded event."""
+        ...
+
+    def log_strategy_activated(self, strategy_name: str) -> None:
+        """Log strategy activated event."""
+        ...
+
+    def log_strategy_deactivated(self, strategy_name: str) -> None:
+        """Log strategy deactivated event."""
+        ...
+
+    def get_strategy_metrics(self, strategy_name: str) -> dict[str, object]:
+        """Get metrics for a specific strategy."""
+        ...
+
+    def get_all_metrics(self) -> dict[str, object]:
+        """Get metrics for all strategies."""
         ...

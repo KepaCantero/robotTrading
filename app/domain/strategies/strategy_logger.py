@@ -5,6 +5,8 @@ Proporciona logging estructurado y métricas para todas las estrategias,
 incluyendo señales generadas, ejecutadas, rechazadas y errores.
 """
 
+from __future__ import annotations
+
 import json
 import logging
 from datetime import datetime

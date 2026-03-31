@@ -1,21 +1,37 @@
-# Ralph Tasks - Master Orchestrator v10.0
+# Ralph Tasks
 
-**Actualizado:** 2026-03-08
+**Actualizado:** 2026-04-02
 
-## Master Orchestrator v10.0
+## Tareas Activas
 
-**Flujo:**
-1. **VERIFY RULES** → Verifica `rules/` tiene todas las reglas (R1-R4, R15, R28, IRPF, SOLID)
-2. **AUDIT COMPONENTS** → Lee source + requirements + rules → Verifica cumplimiento → Arregla si falta
-3. **QA VALIDATION** → black, isort, ruff
-4. **FINAL REPORT** → Genera audit.md
+| ID | Tarea | Descripcion | Estado |
+|----|-------|-------------|--------|
+| 00 | Master Orchestrator | Orquestador principal AAA v14.0 | Lista para ejecutar |
+| 23 | Profile Backtest Metrics Fix | Fix Sharpe ratio, metricas de backtesting | Pendiente |
+| 31 | Production Audit | Audit de archivos contra .requirements/ + QA gates | Pendiente |
+| 32 | Architecture Requirements Audit | Audit de arquitectura y estructura del sistema | Pendiente |
+| 35 | Fix Pytest | Corregir 175 collection errors en tests/unit/ | Pendiente |
+| 99 | Final Cleanup | Limpieza final post-orquestador | Pendiente |
 
 ## Ejecutar
 
 ```bash
+# Orquestador principal
 ralph run -P .ralph/ralph_tasks/prompts/00_master_orchestrator.md
+
+# Fix pytest (independiente)
+ralph run -P .ralph/ralph_tasks/prompts/35_fix_pytest.md
+
+# Fix metricas backtesting (independiente)
+ralph run -P .ralph/ralph_tasks/prompts/23_profile_backtest_metrics_fix.md
 ```
 
-## Output
+## Tareas Eliminadas (2026-04-02)
 
-`.ralph/outputs/production_readiness_audit.md`
+Las siguientes tareas se eliminaron por estar ya implementadas en el codigo
+o por ser redundantes con el orquestador:
+
+- 01-16, 19: Ya implementadas en app/
+- 22, 24-25, 27-30: Redundantes con el orquestador
+- 33-34: Auditorias redundantes con tasks 31/32
+- 26: Config centralizada ya existe (centralized_config.py, 859 lineas)

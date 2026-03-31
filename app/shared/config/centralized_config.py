@@ -25,6 +25,8 @@ SOLID COMPLIANCE:
     - DIP: Depend on abstractions (protocols), not concretions
 """
 
+from __future__ import annotations
+
 import logging
 from enum import Enum
 from pathlib import Path
@@ -38,6 +40,7 @@ from app.shared.config.base.defaults import get_default_magic_values
 
 # Import modular components (OCP)
 from app.shared.config.cache import FileBasedConfigCache
+from app.shared.config.compliance import SpainTaxConfig
 from app.shared.config.legacy_wrapper import Configuration
 from app.shared.config.loaders import ConfigLoaderRegistry
 from app.shared.config.mergers import RecursiveConfigMerger
@@ -132,6 +135,10 @@ class CentralizedConfig(BaseSettings):
     compliance: ComplianceConfig = Field(
         default_factory=ComplianceConfig, description="Compliance engine configuration"
     )
+    spain_tax: SpainTaxConfig = Field(
+        default_factory=SpainTaxConfig,
+        description="Spain-specific tax configuration (IRPF, Modelo 720)",
+    )
     shadow_mode: ShadowModeConfigParams = Field(
         default_factory=ShadowModeConfigParams, description="Shadow mode configuration"
     )
@@ -215,7 +222,7 @@ class CentralizedConfig(BaseSettings):
         return self.strategies.get(strategy_name)
 
     @property
-    def trading_thresholds(self) -> "TradingThresholds":
+    def trading_thresholds(self) -> TradingThresholds:
         """Alias for trading property - backwards compatibility."""
         return self.trading
 
@@ -223,7 +230,10 @@ class CentralizedConfig(BaseSettings):
         """Get a specific trading threshold value."""
         if not hasattr(self.trading, threshold_name):
             raise AttributeError(f"Trading threshold '{threshold_name}' does not exist")
-        return getattr(self.trading, threshold_name)
+        val = getattr(self.trading, threshold_name)
+        if isinstance(val, (int, float, str, bool)):
+            return val
+        raise TypeError(f"Threshold '{threshold_name}' has unexpected type {type(val)}")
 
     def update_strategy_config(self, strategy_name: str, updates: dict[str, object]) -> bool:
         """Update configuration for a specific strategy."""
@@ -323,7 +333,7 @@ def get_config() -> CentralizedConfig:
 
 def get_trading_threshold(
     threshold_name: Optional[str] = None,
-) -> Union[int, float, str, bool, "TradingThresholds"]:
+) -> Union[int, float, str, bool, TradingThresholds]:
     """Get trading thresholds or specific threshold."""
     if threshold_name is None:
         return get_config().trading
@@ -353,7 +363,7 @@ def get_strategy_stock_allocator_config(tier: Optional[str] = None) -> dict[str,
     """
     from app.shared.config.config_loader import load_strategy_stock_allocator_config
 
-    return load_strategy_stock_allocator_config(tier)
+    return dict(load_strategy_stock_allocator_config(tier))
 
 
 def reload_config() -> CentralizedConfig:
@@ -374,23 +384,23 @@ def set_config(config: CentralizedConfig) -> None:
 
 def validate_config() -> bool:
     """Validate the current configuration."""
-    return get_config().validate_configuration()
+    return bool(get_config().validate_configuration())
 
 
 def get_config_summary() -> dict[str, object]:
     """Get a summary of the current configuration."""
-    return get_config().get_config_summary()
+    return dict(get_config().get_config_summary())
 
 
 def validate_configuration() -> bool:
     """Validate the current configuration (alias for validate_config)."""
-    return validate_config()
+    return bool(validate_config())
 
 
 def update_strategy_config(strategy_name: str, new_config: dict) -> bool:
     """Update strategy configuration."""
     config = get_config()
-    return config.update_strategy_config(strategy_name, new_config)
+    return bool(config.update_strategy_config(strategy_name, new_config))
 
 
 # =============================================================================
@@ -413,7 +423,7 @@ def load_config_from_yaml(config_path: Path) -> dict[str, object]:
         FileNotFoundError: If config file doesn't exist
         ValueError: If YAML is invalid
     """
-    return _loader_registry.load(config_path)
+    return dict(_loader_registry.load(config_path))
 
 
 def load_config_from_json(config_path: Path) -> dict[str, object]:
@@ -430,7 +440,7 @@ def load_config_from_json(config_path: Path) -> dict[str, object]:
         FileNotFoundError: If config file doesn't exist
         ValueError: If JSON is invalid
     """
-    return _loader_registry.load(config_path)
+    return dict(_loader_registry.load(config_path))
 
 
 def load_config_with_cache(config_path: Path) -> dict[str, object]:
@@ -446,7 +456,7 @@ def load_config_with_cache(config_path: Path) -> dict[str, object]:
     # Check cache first
     cached = _config_cache.get_cached(config_path)
     if cached is not None:
-        return cached
+        return dict(cached)
 
     # Load fresh configuration
     config = _loader_registry.load(config_path)
@@ -454,7 +464,7 @@ def load_config_with_cache(config_path: Path) -> dict[str, object]:
     # Cache the configuration
     _config_cache.set_cached(config_path, config)
 
-    return config
+    return dict(config)
 
 
 # =============================================================================
@@ -476,7 +486,7 @@ def validate_atr_multipliers(atr_multipliers: dict[str, float]) -> bool:
     from app.shared.config.validators import ATRMultiplierValidator
 
     validator = ATRMultiplierValidator()
-    return validator.validate(atr_multipliers)
+    return bool(validator.validate(atr_multipliers))
 
 
 def validate_risk_percentages(risk_config: dict[str, float]) -> bool:
@@ -492,7 +502,7 @@ def validate_risk_percentages(risk_config: dict[str, float]) -> bool:
     from app.shared.config.validators import RiskPercentageValidator
 
     validator = RiskPercentageValidator()
-    return validator.validate(risk_config)
+    return bool(validator.validate(risk_config))
 
 
 def validate_trading_symbols(symbols: list[str]) -> bool:
@@ -508,7 +518,7 @@ def validate_trading_symbols(symbols: list[str]) -> bool:
     from app.shared.config.validators import TradingSymbolsValidator
 
     validator = TradingSymbolsValidator()
-    return validator.validate({"symbols": symbols})
+    return bool(validator.validate({"symbols": symbols}))
 
 
 def validate_dates(backtest_config: dict[str, str]) -> bool:
@@ -524,7 +534,7 @@ def validate_dates(backtest_config: dict[str, str]) -> bool:
     from app.shared.config.validators import DateRangeValidator
 
     validator = DateRangeValidator()
-    return validator.validate(backtest_config)
+    return bool(validator.validate(backtest_config))
 
 
 def validate_config_object(config: Configuration) -> bool:
@@ -540,7 +550,7 @@ def validate_config_object(config: Configuration) -> bool:
     if not config or not hasattr(config, "_config"):
         return False
 
-    return _config_validator.validate(config._config)
+    return bool(_config_validator.validate(config._config))
 
 
 # =============================================================================
@@ -562,7 +572,7 @@ def merge_configs(
     Returns:
         Merged configuration dictionary
     """
-    return _config_merger.merge(base_config, override_config)
+    return dict(_config_merger.merge(base_config, override_config))
 
 
 # =============================================================================
@@ -573,7 +583,7 @@ def merge_configs(
 
 def find_magic_values() -> dict[str, list[str]]:
     """Find magic values in the codebase that should be moved to configuration."""
-    return get_default_magic_values()
+    return dict(get_default_magic_values())
 
 
 def migrate_magic_values(magic_values: dict[str, list[str]]) -> bool:

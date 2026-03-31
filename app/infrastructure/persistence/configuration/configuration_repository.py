@@ -4,6 +4,8 @@ Configuration Repository - T11.1
 Type-based storage for various artifact types.
 """
 
+from __future__ import annotations
+
 import logging
 from dataclasses import dataclass, field
 from datetime import datetime

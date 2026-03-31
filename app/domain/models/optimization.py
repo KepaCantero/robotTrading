@@ -5,6 +5,8 @@ This module contains Pydantic models for walk-forward analysis, out-of-sample te
 and parameter optimization to prevent overfitting in trading strategies.
 """
 
+from __future__ import annotations
+
 import logging
 from datetime import date, datetime
 from decimal import Decimal

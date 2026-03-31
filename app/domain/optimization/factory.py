@@ -43,6 +43,45 @@ logger = logging.getLogger(__name__)
 ObjectiveFunction = Callable[[dict[str, Union[str, int, float, bool]]], float]
 SearchSpaceType = Union[SearchSpace, NDArray[np.float64]]
 
+# Shared kwargs value type used across factory methods
+_KwargsValue = Union[str, int, float, bool]
+
+
+def _as_int(value: _KwargsValue | None, default: int) -> int:
+    """Extract an int from a kwargs value, returning default if None."""
+    if value is None:
+        return default
+    if isinstance(value, int) and not isinstance(value, bool):
+        return value
+    return int(value)
+
+
+def _as_float(value: _KwargsValue | None, default: float) -> float:
+    """Extract a float from a kwargs value, returning default if None."""
+    if value is None:
+        return default
+    if isinstance(value, float):
+        return value
+    return float(value)
+
+
+def _as_str(value: _KwargsValue | None, default: str) -> str:
+    """Extract a str from a kwargs value, returning default if None."""
+    if value is None:
+        return default
+    if isinstance(value, str):
+        return value
+    return str(value)
+
+
+def _as_bool(value: _KwargsValue | None, default: bool) -> bool:
+    """Extract a bool from a kwargs value, returning default if None."""
+    if value is None:
+        return default
+    if isinstance(value, bool):
+        return value
+    return bool(value)
+
 
 class OptimizerFactory:
     """
@@ -227,13 +266,19 @@ class OptimizerFactory:
         cls, config: OptimizationConfig, **kwargs: str | int | float | bool
     ) -> BayesianOptimizer:
         """Create a Bayesian optimizer."""
+        n_trials: int | None = _as_int(kwargs.get("n_trials"), config.max_iterations)
+        pruner: str | None = _as_str(kwargs.get("pruner"), "median")
+        sampler: str | None = _as_str(kwargs.get("sampler"), "tpe")
+        multivariate: bool = _as_bool(kwargs.get("multivariate"), True)
+        n_startup_trials: int = _as_int(kwargs.get("n_startup_trials"), 10)
+
         return BayesianOptimizer(
             config=config,
-            n_trials=kwargs.get("n_trials", config.max_iterations),
-            pruner=kwargs.get("pruner", "median"),
-            sampler=kwargs.get("sampler", "tpe"),
-            multivariate=kwargs.get("multivariate", True),
-            n_startup_trials=kwargs.get("n_startup_trials", 10),
+            n_trials=n_trials,
+            pruner=pruner,
+            sampler=sampler,
+            multivariate=multivariate,
+            n_startup_trials=n_startup_trials,
         )
 
     @classmethod
@@ -241,13 +286,15 @@ class OptimizerFactory:
         cls, config: OptimizationConfig, **kwargs: str | int | float | bool
     ) -> GridSearchOptimizer:
         """Create a Grid Search optimizer."""
-        use_cv = kwargs.get("use_cv", False)
+        use_cv: bool = _as_bool(kwargs.get("use_cv"), False)
 
         if use_cv:
+            cv_folds: int = _as_int(kwargs.get("cv_folds"), 5)
+            cv_metric: str = _as_str(kwargs.get("cv_metric"), "mean")
             return GridSearchOptimizerCV(
                 config=config,
-                cv_folds=kwargs.get("cv_folds", 5),
-                cv_metric=kwargs.get("cv_metric", "mean"),
+                cv_folds=cv_folds,
+                cv_metric=cv_metric,
             )
 
         return GridSearchOptimizer(config=config)
@@ -257,16 +304,26 @@ class OptimizerFactory:
         cls, config: OptimizationConfig, **kwargs: str | int | float | bool
     ) -> MeanVarianceOptimizer:
         """Create a Mean-Variance optimizer."""
+        lookback_days: int = _as_int(kwargs.get("lookback_days"), 252)
+        max_position: float = _as_float(kwargs.get("max_position"), 0.20)
+        risk_free_rate_raw = kwargs.get(
+            "risk_free_rate", float(get_config().backtesting.default_risk_free_rate)
+        )
+        risk_free_rate: float | None = (
+            _as_float(risk_free_rate_raw, 0.0) if risk_free_rate_raw is not None else None
+        )
+        regularization_gamma: float = _as_float(kwargs.get("regularization_gamma"), 0.01)
+        sum_tolerance: float = _as_float(kwargs.get("sum_tolerance"), 1e-6)
+        allow_short: bool = _as_bool(kwargs.get("allow_short"), False)
+
         return MeanVarianceOptimizer(
             config=config,
-            lookback_days=kwargs.get("lookback_days", 252),
-            max_position=kwargs.get("max_position", 0.20),
-            risk_free_rate=kwargs.get(
-                "risk_free_rate", float(get_config().backtesting.default_risk_free_rate)
-            ),
-            regularization_gamma=kwargs.get("regularization_gamma", 0.01),
-            sum_tolerance=kwargs.get("sum_tolerance", 1e-6),
-            allow_short=kwargs.get("allow_short", False),
+            lookback_days=lookback_days,
+            max_position=max_position,
+            risk_free_rate=risk_free_rate,
+            regularization_gamma=regularization_gamma,
+            sum_tolerance=sum_tolerance,
+            allow_short=allow_short,
         )
 
     @classmethod
@@ -279,11 +336,15 @@ class OptimizerFactory:
         Note: Multi-strategy optimization uses Bayesian optimization
         with a specialized objective function.
         """
+        n_trials: int | None = _as_int(kwargs.get("n_trials"), config.max_iterations)
+        pruner: str | None = _as_str(kwargs.get("pruner"), "median")
+        sampler: str | None = _as_str(kwargs.get("sampler"), "tpe")
+
         return BayesianOptimizer(
             config=config,
-            n_trials=kwargs.get("n_trials", config.max_iterations),
-            pruner=kwargs.get("pruner", "median"),
-            sampler=kwargs.get("sampler", "tpe"),
+            n_trials=n_trials,
+            pruner=pruner,
+            sampler=sampler,
         )
 
     @classmethod
@@ -358,11 +419,19 @@ class OptimizerFactory:
             else float(get_config().backtesting.default_risk_free_rate)
         )
 
+        lookback_days: int = _as_int(kwargs.get("lookback_days"), 252)
+        regularization_gamma: float = _as_float(kwargs.get("regularization_gamma"), 0.01)
+        sum_tolerance: float = _as_float(kwargs.get("sum_tolerance"), 1e-6)
+        allow_short: bool = _as_bool(kwargs.get("allow_short"), False)
+
         return MeanVarianceOptimizer(
             config=config,
             risk_free_rate=rf,
             max_position=max_position,
-            **kwargs,
+            lookback_days=lookback_days,
+            regularization_gamma=regularization_gamma,
+            sum_tolerance=sum_tolerance,
+            allow_short=allow_short,
         )
 
     @classmethod
@@ -395,10 +464,18 @@ class OptimizerFactory:
             progress_bar=True,
         )
 
+        pruner: str | None = _as_str(kwargs.get("pruner"), "median")
+        sampler: str | None = _as_str(kwargs.get("sampler"), "tpe")
+        multivariate: bool = _as_bool(kwargs.get("multivariate"), True)
+        n_startup_trials: int = _as_int(kwargs.get("n_startup_trials"), 10)
+
         return BayesianOptimizer(
             config=config,
             n_trials=n_trials,
-            **kwargs,
+            pruner=pruner,
+            sampler=sampler,
+            multivariate=multivariate,
+            n_startup_trials=n_startup_trials,
         )
 
 
@@ -424,6 +501,8 @@ def create_optimizer(
 
 def create_portfolio_optimizer(
     method: str = "max_sharpe",
+    risk_free_rate: float | None = None,
+    max_position: float = 0.20,
     **kwargs: str | int | float | bool,
 ) -> MeanVarianceOptimizer:
     """
@@ -431,16 +510,25 @@ def create_portfolio_optimizer(
 
     Args:
         method: Optimization method
+        risk_free_rate: Annual risk-free rate (default: from CentralizedConfig)
+        max_position: Maximum position per asset
         **kwargs: Additional arguments
 
     Returns:
         Configured MeanVarianceOptimizer
     """
-    return OptimizerFactory.create_for_portfolio(method=method, **kwargs)
+    return OptimizerFactory.create_for_portfolio(
+        method=method,
+        risk_free_rate=risk_free_rate,
+        max_position=max_position,
+        **kwargs,
+    )
 
 
 def create_backtest_optimizer(
     n_trials: int = 100,
+    early_stopping: bool = True,
+    n_jobs: int = 1,
     **kwargs: str | int | float | bool,
 ) -> BayesianOptimizer:
     """
@@ -448,9 +536,16 @@ def create_backtest_optimizer(
 
     Args:
         n_trials: Number of optimization trials
+        early_stopping: Enable early stopping
+        n_jobs: Number of parallel jobs
         **kwargs: Additional arguments
 
     Returns:
         Configured BayesianOptimizer
     """
-    return OptimizerFactory.create_for_backtest(n_trials=n_trials, **kwargs)
+    return OptimizerFactory.create_for_backtest(
+        n_trials=n_trials,
+        early_stopping=early_stopping,
+        n_jobs=n_jobs,
+        **kwargs,
+    )

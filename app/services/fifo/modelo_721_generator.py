@@ -23,6 +23,8 @@ Author: Claude (FIFO Database Integration - Phase 2.1)
 Date: 2026-01-25
 """
 
+from __future__ import annotations
+
 import asyncio
 import csv
 import logging
@@ -223,9 +225,9 @@ class Modelo721Generator:
                 capital_gains_losses = await self._calculate_capital_gains(session, accounts, year)
 
                 # Calculate totals
-                total_holdings_eur = sum(b.balance_eur for b in dec31_balances)
-                total_gain = sum(g.net_gain for g in capital_gains_losses)
-                total_loss = sum(g.net_loss for g in capital_gains_losses)
+                total_holdings_eur = sum((b.balance_eur for b in dec31_balances), Decimal("0"))
+                total_gain = sum((g.net_gain for g in capital_gains_losses), Decimal("0"))
+                total_loss = sum((g.net_loss for g in capital_gains_losses), Decimal("0"))
 
                 # Get exchanges used
                 exchanges_used = list({acc.exchange_name for acc in accounts})
@@ -699,7 +701,9 @@ class Modelo721Generator:
                 await session.flush()
 
                 self.logger.info(f"Modelo 721 report saved to database: {tax_report.id}")
-                return tax_report.id
+                report_id = tax_report.id
+                assert isinstance(report_id, UUID)
+                return report_id
 
         except (IntegrityError, OperationalError, DatabaseError, DataError, ProgrammingError) as e:
             self.logger.error(f"Error saving report to database: {e}", exc_info=True)

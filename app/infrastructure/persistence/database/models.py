@@ -13,6 +13,8 @@ Architecture layers:
 - Infrastructure (app.database): SQLAlchemy ORM, persistence ✅
 """
 
+from __future__ import annotations
+
 import logging
 import uuid
 from datetime import datetime
@@ -61,10 +63,10 @@ class User(Base):
     last_login: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
 
     # Relationships
-    portfolios: Mapped[list["Portfolio"]] = relationship(
+    portfolios: Mapped[list[Portfolio]] = relationship(
         "Portfolio", back_populates="user", cascade="all, delete-orphan"
     )
-    api_keys: Mapped[list["APIKey"]] = relationship(
+    api_keys: Mapped[list[APIKey]] = relationship(
         "APIKey", back_populates="user", cascade="all, delete-orphan"
     )
 
@@ -94,7 +96,7 @@ class APIKey(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
 
     # Relationships
-    user: Mapped["User"] = relationship("User", back_populates="api_keys")
+    user: Mapped[User] = relationship("User", back_populates="api_keys")
 
     __table_args__ = (
         Index("idx_api_keys_key_hash", "key_hash"),
@@ -124,14 +126,14 @@ class Portfolio(Base):
     )
 
     # Relationships
-    user: Mapped["User"] = relationship("User", back_populates="portfolios")
-    positions: Mapped[list["Position"]] = relationship(
+    user: Mapped[User] = relationship("User", back_populates="portfolios")
+    positions: Mapped[list[Position]] = relationship(
         "Position", back_populates="portfolio", cascade="all, delete-orphan"
     )
-    trades: Mapped[list["Trade"]] = relationship(
+    trades: Mapped[list[Trade]] = relationship(
         "Trade", back_populates="portfolio", cascade="all, delete-orphan"
     )
-    backtests: Mapped[list["Backtest"]] = relationship(
+    backtests: Mapped[list[Backtest]] = relationship(
         "Backtest", back_populates="portfolio", cascade="all, delete-orphan"
     )
 
@@ -162,9 +164,9 @@ class Asset(Base):
     )
 
     # Relationships
-    positions: Mapped[list["Position"]] = relationship("Position", back_populates="asset")
-    trades: Mapped[list["Trade"]] = relationship("Trade", back_populates="asset")
-    market_data: Mapped[list["MarketData"]] = relationship("MarketData", back_populates="asset")
+    positions: Mapped[list[Position]] = relationship("Position", back_populates="asset")
+    trades: Mapped[list[Trade]] = relationship("Trade", back_populates="asset")
+    market_data: Mapped[list[MarketData]] = relationship("MarketData", back_populates="asset")
 
     __table_args__ = (
         Index("idx_assets_symbol", "symbol"),
@@ -200,8 +202,8 @@ class Position(Base):
     )
 
     # Relationships
-    portfolio: Mapped["Portfolio"] = relationship("Portfolio", back_populates="positions")
-    asset: Mapped["Asset"] = relationship("Asset", back_populates="positions")
+    portfolio: Mapped[Portfolio] = relationship("Portfolio", back_populates="positions")
+    asset: Mapped[Asset] = relationship("Asset", back_populates="positions")
 
     __table_args__ = (
         Index("idx_positions_portfolio_id", "portfolio_id"),
@@ -252,8 +254,8 @@ class Trade(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
 
     # Relationships
-    portfolio: Mapped["Portfolio"] = relationship("Portfolio", back_populates="trades")
-    asset: Mapped["Asset"] = relationship("Asset", back_populates="trades")
+    portfolio: Mapped[Portfolio] = relationship("Portfolio", back_populates="trades")
+    asset: Mapped[Asset] = relationship("Asset", back_populates="trades")
 
     __table_args__ = (
         Index("idx_trades_portfolio_id", "portfolio_id"),
@@ -266,7 +268,7 @@ class Trade(Base):
         CheckConstraint("price > 0", name="ck_trades_price_positive"),
     )
 
-    def to_pydantic(self) -> "PydanticTrade":
+    def to_pydantic(self) -> PydanticTrade:
         """
         Convert SQLAlchemy Trade to canonical Pydantic Trade model.
 
@@ -281,8 +283,7 @@ class Trade(Base):
                 "side": self.side,
             },
         )
-        from app.backtesting.models import Trade as PydanticTrade
-        from app.backtesting.models import TradeStatus
+        from app.backtesting.models import Trade as PydanticTrade, TradeStatus
 
         # Map SQLAlchemy status to Pydantic TradeStatus
         status_map = {
@@ -312,11 +313,11 @@ class Trade(Base):
     @classmethod
     def from_pydantic(
         cls,
-        pydantic_trade: "PydanticTrade",
+        pydantic_trade: PydanticTrade,
         portfolio_id: uuid.UUID,
         asset_id: uuid.UUID,
         order_id: Optional[str] = None,
-    ) -> "Trade":
+    ) -> Trade:
         """
         Create SQLAlchemy Trade from canonical Pydantic Trade model.
 
@@ -388,7 +389,7 @@ class MarketData(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
 
     # Relationships
-    asset: Mapped["Asset"] = relationship("Asset", back_populates="market_data")
+    asset: Mapped[Asset] = relationship("Asset", back_populates="market_data")
 
     __table_args__ = (
         Index("idx_market_data_asset_id", "asset_id"),
@@ -425,7 +426,7 @@ class Signal(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
 
     # Relationships
-    asset: Mapped["Asset"] = relationship("Asset")
+    asset: Mapped[Asset] = relationship("Asset")
 
     __table_args__ = (
         Index("idx_signals_asset_id", "asset_id"),
@@ -467,7 +468,7 @@ class Backtest(Base):
     completed_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
 
     # Relationships
-    portfolio: Mapped["Portfolio"] = relationship("Portfolio", back_populates="backtests")
+    portfolio: Mapped[Portfolio] = relationship("Portfolio", back_populates="backtests")
 
     __table_args__ = (
         Index("idx_backtests_portfolio_id", "portfolio_id"),
@@ -506,7 +507,7 @@ class RiskMetrics(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
 
     # Relationships
-    portfolio: Mapped["Portfolio"] = relationship("Portfolio")
+    portfolio: Mapped[Portfolio] = relationship("Portfolio")
 
     __table_args__ = (
         Index("idx_risk_metrics_portfolio_id", "portfolio_id"),

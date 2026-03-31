@@ -12,6 +12,8 @@ Key Features:
 - Implementation recommendations
 """
 
+from __future__ import annotations
+
 import json
 import logging
 from dataclasses import dataclass, field
@@ -24,7 +26,27 @@ from jinja2 import Template
 
 from app.domain.models.input_profile import InputProfile
 
+# Recursive type for nested JSON-like data structures used in report dicts
+JsonValue = Union[int, float, str, bool, list["JsonValue"], dict[str, "JsonValue"], None]
+
+# Type for chart-like nested structures returned by chart-building methods
+# Uses object because the actual values are recursive JSON-like structures that
+# cannot be expressed with invariant recursive type aliases in mypy.
+ChartDict = dict[str, object]
+
 logger = logging.getLogger(__name__)
+
+
+def _to_float(value: JsonValue) -> float:
+    """Safely convert a JsonValue to float, returning 0.0 for non-numeric types."""
+    if isinstance(value, (int, float)):
+        return float(value)
+    if isinstance(value, str):
+        try:
+            return float(value)
+        except ValueError:
+            return 0.0
+    return 0.0
 
 
 @dataclass
@@ -100,11 +122,13 @@ class BaselineOptimizationReporter:
             template_path: Path to Jinja2 template. If None, uses default template.
         """
         if template_path is None:
-            template_path = (
+            resolved_path = (
                 Path(__file__).parent / "templates" / "baseline_optimization_report.html"
             )
+        else:
+            resolved_path = Path(template_path)
 
-        self.template_path = Path(template_path)
+        self.template_path: Path = resolved_path
 
         # Load template
         try:
@@ -119,11 +143,11 @@ class BaselineOptimizationReporter:
     def generate_report(
         self,
         profile: InputProfile,
-        baseline_results: dict[str, Union[int, float, str, bool, list]],
-        optimization_results: dict[str, Union[int, float, str, bool, list]],
-        comparison: Optional[dict[str, Union[int, float, str, bool, list]]] = None,
-        walk_forward_results: Optional[dict[str, Union[int, float, str, bool, list]]] = None,
-        sensitivity_results: Optional[dict[str, Union[int, float, str, bool, list]]] = None,
+        baseline_results: dict[str, JsonValue],
+        optimization_results: dict[str, JsonValue],
+        comparison: Optional[dict[str, JsonValue]] = None,
+        walk_forward_results: Optional[dict[str, JsonValue]] = None,
+        sensitivity_results: Optional[dict[str, JsonValue]] = None,
     ) -> str:
         """
         Generate HTML comparison report.
@@ -153,9 +177,13 @@ class BaselineOptimizationReporter:
         )
 
         # Extract parameter changes
+        baseline_params_raw = baseline_results.get("parameters", {})
+        optimized_params_raw = optimization_results.get("parameters", {})
+        baseline_params = baseline_params_raw if isinstance(baseline_params_raw, dict) else {}
+        optimized_params = optimized_params_raw if isinstance(optimized_params_raw, dict) else {}
         parameter_changes = self._extract_parameter_changes(
-            baseline_results.get("parameters", {}),
-            optimization_results.get("parameters", {}),
+            baseline_params,
+            optimized_params,
             comparison,
         )
 
@@ -170,7 +198,7 @@ class BaselineOptimizationReporter:
         )
 
         # Render template
-        html_content = self.template.render(
+        html_content: str = self.template.render(
             # Profile info
             strategy_name=profile.objetivo_inversion.value.replace("_", " ").title(),
             profile_name=profile.risk_tolerance.value.title(),
@@ -198,14 +226,36 @@ class BaselineOptimizationReporter:
             optimized_winrate=f"{optimized_metrics['win_rate']:.1f}",
             # Metric cards styling
             sharpe_card_class=self._get_card_class(
-                comparison["sharpe_improvement"], higher_better=True
+                (
+                    float(comparison["sharpe_improvement"])
+                    if isinstance(comparison["sharpe_improvement"], (int, float))
+                    else 0.0
+                ),
+                higher_better=True,
             ),
             return_card_class=self._get_card_class(
-                comparison["return_improvement"], higher_better=True
+                (
+                    float(comparison["return_improvement"])
+                    if isinstance(comparison["return_improvement"], (int, float))
+                    else 0.0
+                ),
+                higher_better=True,
             ),
-            dd_card_class=self._get_card_class(comparison["dd_change"], higher_better=False),
+            dd_card_class=self._get_card_class(
+                (
+                    float(comparison["dd_change"])
+                    if isinstance(comparison["dd_change"], (int, float))
+                    else 0.0
+                ),
+                higher_better=False,
+            ),
             winrate_card_class=self._get_card_class(
-                comparison["winrate_improvement"], higher_better=True
+                (
+                    float(comparison["winrate_improvement"])
+                    if isinstance(comparison["winrate_improvement"], (int, float))
+                    else 0.0
+                ),
+                higher_better=True,
             ),
             # Key metrics table
             key_metrics=self._prepare_key_metrics_table(
@@ -254,25 +304,25 @@ class BaselineOptimizationReporter:
             logger.error("Cannot save empty HTML report")
             raise ValueError("HTML content is required for saving report")
 
-        output_path = Path(output_path)
+        path = Path(output_path)
 
         try:
-            output_path.parent.mkdir(parents=True, exist_ok=True)
+            path.parent.mkdir(parents=True, exist_ok=True)
         except OSError as e:
             logger.error(
-                f"Failed to create output directory: {output_path.parent}",
-                extra={"error": str(e), "path": str(output_path.parent)},
+                f"Failed to create output directory: {path.parent}",
+                extra={"error": str(e), "path": str(path.parent)},
             )
             raise
 
         try:
-            with open(output_path, "w", encoding="utf-8") as f:
+            with open(path, "w", encoding="utf-8") as f:
                 f.write(html)
-            logger.info(f"Report saved to: {output_path}")
+            logger.info(f"Report saved to: {path}")
         except OSError as e:
             logger.error(
-                f"Failed to write report to file: {output_path}",
-                extra={"error": str(e), "path": str(output_path)},
+                f"Failed to write report to file: {path}",
+                extra={"error": str(e), "path": str(path)},
             )
             raise
 
@@ -306,7 +356,7 @@ class BaselineOptimizationReporter:
 
             # Generate PDF from HTML
             html_doc = HTML(string=html)
-            pdf_bytes = html_doc.write_pdf()
+            pdf_bytes: bytes = html_doc.write_pdf()
 
             # Save to file if output path provided
             if output_path:
@@ -327,44 +377,58 @@ class BaselineOptimizationReporter:
             logger.error(f"Error generating PDF: {e}", exc_info=True)
             return b""
 
-    def _extract_metrics(
-        self, results: dict[str, Union[int, float, str, bool, list]]
-    ) -> dict[str, float]:
+    def _extract_metrics(self, results: dict[str, JsonValue]) -> dict[str, float]:
         """Extract key metrics from results dictionary."""
-        performance = results.get("performance", {})
-        equity_curve = results.get("equity_curve", [])
+        performance_raw = results.get("performance", {})
+        performance: dict[str, JsonValue] = (
+            performance_raw if isinstance(performance_raw, dict) else {}
+        )
+        raw_equity = results.get("equity_curve", [])
+        equity_curve: list[JsonValue] = raw_equity if isinstance(raw_equity, list) else []
 
         # Calculate returns if not provided
         if not equity_curve:
             total_return = 0.0
         else:
-            initial = equity_curve[0][1] if isinstance(equity_curve[0], tuple) else equity_curve[0]
-            final = equity_curve[-1][1] if isinstance(equity_curve[-1], tuple) else equity_curve[-1]
+            first = equity_curve[0]
+            last = equity_curve[-1]
+            initial: float = (
+                float(first[1])
+                if isinstance(first, tuple)
+                else float(first) if isinstance(first, (int, float)) else 0.0
+            )
+            final: float = (
+                float(last[1])
+                if isinstance(last, tuple)
+                else float(last) if isinstance(last, (int, float)) else 0.0
+            )
             total_return = (final - initial) / initial if initial > 0 else 0.0
 
         # Drawdown is stored as negative (e.g., -15%), but we want it as positive for comparisons
-        max_dd = float(performance.get("max_drawdown_percentage", 0.0))
+        max_dd = _to_float(performance.get("max_drawdown_percentage", 0.0) or 0.0)
         if max_dd < 0:
             max_dd = abs(max_dd)
 
         return {
-            "sharpe_ratio": float(performance.get("sharpe_ratio", 0.0)),
-            "total_return": float(performance.get("total_return", total_return * 100)),
+            "sharpe_ratio": _to_float(performance.get("sharpe_ratio", 0.0) or 0.0),
+            "total_return": _to_float(
+                performance.get("total_return", total_return * 100) or total_return * 100
+            ),
             "max_drawdown": max_dd,  # Store as positive value
-            "win_rate": float(performance.get("win_rate", 0.0)),
-            "profit_factor": float(performance.get("profit_factor", 0.0)),
-            "sortino_ratio": float(performance.get("sortino_ratio", 0.0)),
-            "calmar_ratio": float(performance.get("calmar_ratio", 0.0)),
-            "omega_ratio": float(performance.get("omega_ratio", 0.0)),
+            "win_rate": _to_float(performance.get("win_rate", 0.0) or 0.0),
+            "profit_factor": _to_float(performance.get("profit_factor", 0.0) or 0.0),
+            "sortino_ratio": _to_float(performance.get("sortino_ratio", 0.0) or 0.0),
+            "calmar_ratio": _to_float(performance.get("calmar_ratio", 0.0) or 0.0),
+            "omega_ratio": _to_float(performance.get("omega_ratio", 0.0) or 0.0),
             # Additional metrics that were missing
-            "avg_drawdown": float(performance.get("avg_drawdown", 0.0)),
-            "ulcer_index": float(performance.get("ulcer_index", 0.0)),
-            "volatility": float(performance.get("volatility", 0.0)),
+            "avg_drawdown": _to_float(performance.get("avg_drawdown", 0.0) or 0.0),
+            "ulcer_index": _to_float(performance.get("ulcer_index", 0.0) or 0.0),
+            "volatility": _to_float(performance.get("volatility", 0.0) or 0.0),
         }
 
     def _calculate_comparison(
         self, baseline: dict[str, float], optimized: dict[str, float]
-    ) -> dict[str, Union[int, float, str, bool, list]]:
+    ) -> dict[str, JsonValue]:
         """Calculate comparison metrics."""
         return {
             "sharpe_improvement": self._pct_improvement(
@@ -426,14 +490,18 @@ class BaselineOptimizationReporter:
         equity_curve = results.get("equity_curve", [])
 
         if not equity_curve:
-            return np.array([])
+            return np.array([], dtype=np.float64)
 
-        # Convert to returns
-        values = [point[1] if isinstance(point, tuple) else point for point in equity_curve]
-        values = np.array(values)
+        # Convert to returns - extract numeric values from equity curve points
+        raw_values: list[float] = []
+        for point in equity_curve:
+            val = point[1] if isinstance(point, tuple) and len(point) > 1 else point
+            raw_values.append(float(val) if isinstance(val, (int, float)) else 0.0)
+        values: np.ndarray = np.array(raw_values, dtype=np.float64)
 
-        returns = np.diff(values) / values[:-1]
-        returns = returns[~np.isnan(returns)]
+        with np.errstate(divide="ignore", invalid="ignore"):
+            returns: np.ndarray = np.diff(values) / values[:-1]
+            returns = returns[~np.isnan(returns)]
 
         return returns
 
@@ -475,12 +543,12 @@ class BaselineOptimizationReporter:
 
     def _extract_parameter_changes(
         self,
-        baseline_params: dict[str, Union[int, float, str, bool, list]],
-        optimized_params: dict[str, Union[int, float, str, bool, list]],
-        comparison: dict[str, Union[int, float, str, bool, list]],
+        baseline_params: dict[str, JsonValue],
+        optimized_params: dict[str, JsonValue],
+        comparison: dict[str, JsonValue],
     ) -> list[ParameterChange]:
         """Extract and analyze parameter changes."""
-        changes = []
+        changes: list[ParameterChange] = []
 
         for key in set(list(baseline_params.keys()) + list(optimized_params.keys())):
             baseline_val = baseline_params.get(key)
@@ -492,11 +560,23 @@ class BaselineOptimizationReporter:
                     key, baseline_val, optimized_val, comparison
                 )
 
+                # Only include scalar values (not lists or dicts or None)
+                before_scalar = (
+                    baseline_val
+                    if isinstance(baseline_val, (int, float, str, bool))
+                    else str(baseline_val)
+                )
+                after_scalar = (
+                    optimized_val
+                    if isinstance(optimized_val, (int, float, str, bool))
+                    else str(optimized_val)
+                )
+
                 changes.append(
                     ParameterChange(
                         name=key,
-                        before=baseline_val,
-                        after=optimized_val,
+                        before=before_scalar,
+                        after=after_scalar,
                         impact=impact,
                     )
                 )
@@ -506,9 +586,9 @@ class BaselineOptimizationReporter:
     def _estimate_parameter_impact(
         self,
         param_name: str,
-        before: Union[int, float, str, bool],
-        after: Union[int, float, str, bool],
-        comparison: dict[str, Union[int, float, str, bool, list]],
+        before: JsonValue,
+        after: JsonValue,
+        comparison: dict[str, JsonValue],
     ) -> str:
         """Estimate the impact of a parameter change."""
         # Simple heuristic-based impact estimation
@@ -535,8 +615,8 @@ class BaselineOptimizationReporter:
         self,
         baseline_metrics: dict[str, float],
         optimized_metrics: dict[str, float],
-        comparison: dict[str, Union[int, float, str, bool, list]],
-        walk_forward_results: Optional[dict[str, Union[int, float, str, bool, list]]],
+        comparison: dict[str, JsonValue],
+        walk_forward_results: Optional[dict[str, JsonValue]],
     ) -> Recommendation:
         """
         Generate recommendation with confidence score.
@@ -553,8 +633,18 @@ class BaselineOptimizationReporter:
         # Check walk-forward validation
         oos_stability = True
         if walk_forward_results:
-            is_sharpe = walk_forward_results.get("is_sharpe", optimized_sharpe)
-            oos_sharpe = walk_forward_results.get("oos_sharpe", optimized_sharpe * 0.7)
+            is_sharpe_raw = walk_forward_results.get("is_sharpe", optimized_sharpe)
+            oos_sharpe_raw = walk_forward_results.get("oos_sharpe", optimized_sharpe * 0.7)
+            is_sharpe: float = (
+                float(is_sharpe_raw)
+                if isinstance(is_sharpe_raw, (int, float))
+                else optimized_sharpe
+            )
+            oos_sharpe: float = (
+                float(oos_sharpe_raw)
+                if isinstance(oos_sharpe_raw, (int, float))
+                else optimized_sharpe * 0.7
+            )
             oos_stability = oos_sharpe > 0.8 * is_sharpe if is_sharpe > 0 else False
 
         decision = "USE_BASELINE"
@@ -632,7 +722,7 @@ class BaselineOptimizationReporter:
         optimized_results: dict,
         walk_forward_results: Optional[dict] = None,
         sensitivity_results: Optional[dict] = None,
-    ) -> dict[str, Union[int, float, str, bool, list]]:
+    ) -> ChartDict:
         """Prepare Plotly chart data."""
         chart_data = {
             "baseline_equity": self._create_equity_chart(
@@ -665,9 +755,7 @@ class BaselineOptimizationReporter:
 
         return chart_data
 
-    def _create_equity_chart(
-        self, equity_curve: list, name: str, color: str
-    ) -> dict[str, Union[int, float, str, bool, list]]:
+    def _create_equity_chart(self, equity_curve: list, name: str, color: str) -> ChartDict:
         """Create equity chart for single strategy."""
         if not equity_curve:
             logger.warning(f"Empty equity curve for {name}")
@@ -699,9 +787,7 @@ class BaselineOptimizationReporter:
             },
         }
 
-    def _create_dual_equity_chart(
-        self, baseline_curve: list, optimized_curve: list
-    ) -> dict[str, Union[int, float, str, bool, list]]:
+    def _create_dual_equity_chart(self, baseline_curve: list, optimized_curve: list) -> ChartDict:
         """Create dual equity chart overlay."""
         if not baseline_curve or not optimized_curve:
             logger.warning("Empty curve data for dual equity chart")
@@ -763,9 +849,7 @@ class BaselineOptimizationReporter:
             },
         }
 
-    def _create_drawdown_chart(
-        self, baseline_curve: list, optimized_curve: list
-    ) -> dict[str, Union[int, float, str, bool, list]]:
+    def _create_drawdown_chart(self, baseline_curve: list, optimized_curve: list) -> ChartDict:
         """Create underwater drawdown comparison chart."""
         if not baseline_curve or not optimized_curve:
             return {"data": [], "layout": {}}
@@ -811,22 +895,27 @@ class BaselineOptimizationReporter:
 
     def _calculate_drawdown(self, equity_curve: list) -> list[float]:
         """Calculate drawdown series from equity curve."""
-        values = [point[1] if isinstance(point, tuple) else point for point in equity_curve]
+        raw_values: list[float] = []
+        for point in equity_curve:
+            val = point[1] if isinstance(point, tuple) and len(point) > 1 else point
+            raw_values.append(float(val) if isinstance(val, (int, float)) else 0.0)
 
-        if not values:
+        if not raw_values:
             return []
 
+        values_arr: np.ndarray = np.array(raw_values, dtype=np.float64)
+
         # Calculate running maximum
-        running_max = np.maximum.accumulate(values)
+        running_max: np.ndarray = np.maximum.accumulate(values_arr)
 
         # Calculate drawdown as percentage
-        drawdown = ((values - running_max) / running_max) * 100
+        drawdown: np.ndarray = ((values_arr - running_max) / running_max) * 100
 
-        return drawdown.tolist()
+        return [float(d) for d in drawdown]
 
     def _create_risk_radar_chart(
         self, baseline_metrics: dict, optimized_metrics: dict
-    ) -> dict[str, Union[int, float, str, bool, list]]:
+    ) -> ChartDict:
         """Create risk-adjusted returns radar chart."""
         # Normalize metrics to 0-1 scale for radar chart
         metrics_to_plot = ["sharpe_ratio", "sortino_ratio", "calmar_ratio", "omega_ratio"]
@@ -867,9 +956,7 @@ class BaselineOptimizationReporter:
             },
         }
 
-    def _create_walk_forward_chart(
-        self, walk_forward_results: dict
-    ) -> dict[str, Union[int, float, str, bool, list]]:
+    def _create_walk_forward_chart(self, walk_forward_results: dict) -> ChartDict:
         """Create walk-forward window performance chart."""
         windows = walk_forward_results.get("windows", [])
 
@@ -893,9 +980,7 @@ class BaselineOptimizationReporter:
             },
         }
 
-    def _create_sensitivity_heatmap(
-        self, sensitivity_results: dict
-    ) -> dict[str, Union[int, float, str, bool, list]]:
+    def _create_sensitivity_heatmap(self, sensitivity_results: dict) -> ChartDict:
         """Create parameter sensitivity heatmap."""
         # Placeholder - implement based on sensitivity data structure
         return {"data": [], "layout": {}}
@@ -905,7 +990,7 @@ class BaselineOptimizationReporter:
         baseline: dict[str, float],
         optimized: dict[str, float],
         significance_tests: dict[str, StatisticalTest],
-    ) -> list[dict[str, Union[int, float, str, bool, list]]]:
+    ) -> list[dict[str, Union[str, bool]]]:
         """Prepare key metrics table data."""
         metrics_config = [
             ("Sharpe Ratio", "sharpe_ratio", "{:.2f}"),
@@ -956,7 +1041,7 @@ class BaselineOptimizationReporter:
 
     def _prepare_drawdown_metrics(
         self, baseline: dict[str, float], optimized: dict[str, float]
-    ) -> list[dict[str, Union[int, float, str, bool, list]]]:
+    ) -> list[dict[str, str]]:
         """Prepare drawdown metrics table data."""
         metrics = [
             ("Max Drawdown", "max_drawdown", "{:.2f}%"),
@@ -994,7 +1079,7 @@ class BaselineOptimizationReporter:
 
     def _prepare_risk_metrics_table(
         self, baseline: dict[str, float], optimized: dict[str, float]
-    ) -> list[dict[str, Union[int, float, str, bool, list]]]:
+    ) -> list[dict[str, str]]:
         """Prepare risk metrics table data."""
         metrics = [
             ("Sharpe Ratio", "sharpe_ratio", "{:.2f}", 1.0),
@@ -1035,9 +1120,7 @@ class BaselineOptimizationReporter:
 
         return table_data
 
-    def _prepare_walk_forward_metrics(
-        self, walk_forward_results: dict
-    ) -> list[dict[str, Union[int, float, str, bool, list]]]:
+    def _prepare_walk_forward_metrics(self, walk_forward_results: dict) -> list[dict[str, str]]:
         """Prepare walk-forward validation metrics table."""
         if not walk_forward_results:
             return []

@@ -4,6 +4,8 @@ CorporateActionsHandler - Manejo de corporate actions.
 Detecta y aplica splits, dividendos, y otras corporate actions.
 """
 
+from __future__ import annotations
+
 import logging
 from datetime import datetime
 from decimal import Decimal

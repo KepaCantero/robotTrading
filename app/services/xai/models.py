@@ -4,6 +4,8 @@ FASE 6.1: XAI Models - Data structures for explainability results
 Defines Pydantic models for SHAP, LIME, and feature importance explanations.
 """
 
+from __future__ import annotations
+
 import logging
 from dataclasses import dataclass
 from datetime import datetime

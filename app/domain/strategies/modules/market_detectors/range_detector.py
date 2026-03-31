@@ -4,6 +4,8 @@ RangeDetector - Módulo independiente para detectar mercados en rango.
 VECTORIZADO: Usa numpy para todos los cálculos. Sin bucles Python.
 """
 
+from __future__ import annotations
+
 import logging
 from typing import Union
 

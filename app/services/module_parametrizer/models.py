@@ -5,6 +5,8 @@ Dataclasses for module-level parameter generation and configuration.
 Uses centralized configuration for default values.
 """
 
+from __future__ import annotations
+
 import logging
 from dataclasses import dataclass, field
 from decimal import Decimal

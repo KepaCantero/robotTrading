@@ -778,10 +778,11 @@ class ChanReturnDistributionAnalyzer:
     ) -> np.ndarray:
         """Convert returns to numpy array and remove NaN values."""
         if isinstance(returns, (list, pd.Series)):
-            returns_array = np.array(returns, dtype=np.float64)
+            returns_array: np.ndarray = np.array(returns, dtype=np.float64)
         else:
             returns_array = returns.astype(np.float64)
-        return returns_array[~np.isnan(returns_array)]
+        clean_result: np.ndarray = returns_array[~np.isnan(returns_array)]
+        return clean_result
 
     def _calculate_basic_statistics(
         self,
@@ -922,9 +923,11 @@ class ChanStrategyComparator:
             sharpe1, sharpe2 = self._calculate_strategy_sharpe(returns1, returns2)
             sharpe_diff = sharpe1 - sharpe2
 
-            is_significant = self._test_sharpe_difference(returns1, returns2, confidence_level)
-            tracking_error = self._calculate_tracking_error(returns1, returns2)
-            info_ratio = self._calculate_information_ratio(returns1, returns2)
+            r1_array: np.ndarray = self._to_ndarray(returns1)
+            r2_array: np.ndarray = self._to_ndarray(returns2)
+            is_significant = self._test_sharpe_difference(r1_array, r2_array, confidence_level)
+            tracking_error = self._calculate_tracking_error(r1_array, r2_array)
+            info_ratio = self._calculate_information_ratio(r1_array, r2_array)
 
             recommended = self._determine_recommended_strategy(sharpe1, sharpe2, is_significant)
 
@@ -977,6 +980,17 @@ class ChanStrategyComparator:
         else:
             return "No significant difference"
 
+    def _to_ndarray(
+        self,
+        data: pd.Series | np.ndarray | list[float],
+    ) -> np.ndarray:
+        """Convert input data to numpy ndarray, removing NaN values."""
+        if isinstance(data, (list, pd.Series)):
+            arr: np.ndarray = np.array(data, dtype=np.float64)
+        else:
+            arr = data.astype(np.float64)
+        return arr[~np.isnan(arr)]
+
     def _test_sharpe_difference(
         self,
         returns1: np.ndarray,
@@ -1007,12 +1021,12 @@ class ChanStrategyComparator:
         """Calculate tracking error between strategies."""
         try:
             min_len = min(len(returns1), len(returns2))
-            r1 = returns1[:min_len]
-            r2 = returns2[:min_len]
+            r1: np.ndarray = returns1[:min_len]
+            r2: np.ndarray = returns2[:min_len]
 
-            diff = r1 - r2
-            annual_trading_days = get_config().backtesting.annual_trading_days
-            return float(np.std(diff, ddof=1) * np.sqrt(annual_trading_days))
+            diff: np.ndarray = r1 - r2
+            annual_trading_days: int = get_config().backtesting.annual_trading_days
+            return float(float(np.std(diff, ddof=1)) * np.sqrt(annual_trading_days))
 
         except (ValueError, TypeError):
             return 0.0

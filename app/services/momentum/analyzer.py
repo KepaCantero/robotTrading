@@ -9,6 +9,8 @@ SOLID Principles:
 - DIP: Depends on IndicatorCalculator and PriceDataProvider protocols
 """
 
+from __future__ import annotations
+
 import logging
 
 import numpy as np

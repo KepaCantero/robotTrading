@@ -19,6 +19,8 @@ This module implements the risk management controls recommended in Hull:
 Reference: Hull, Options, Futures, and Other Derivatives, Chapter 18
 """
 
+from __future__ import annotations
+
 import logging
 from datetime import datetime
 from decimal import Decimal

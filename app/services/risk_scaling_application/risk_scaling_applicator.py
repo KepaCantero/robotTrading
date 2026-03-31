@@ -19,6 +19,8 @@ Architecture:
 - Singleton pattern for dependency injection
 """
 
+from __future__ import annotations
+
 import logging
 from datetime import datetime
 from decimal import Decimal
@@ -216,7 +218,7 @@ class RiskScalingApplication:
                 if s.risk_scaling_applied and s.success
             ]
             if factors:
-                avg_scaling_factor = np.mean(factors)
+                avg_scaling_factor = Decimal(str(np.mean(factors)))
 
         return {
             "total_scalings": total,

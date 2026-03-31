@@ -10,13 +10,14 @@ Synchronizes local portfolio state with broker account:
 MEMORY: Uses deque with maxlen to prevent unbounded memory growth.
 """
 
+from __future__ import annotations
+
 import asyncio
 import logging
 from collections import deque
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from decimal import Decimal
-from typing import Optional
 
 from fastapi import Depends
 
@@ -68,7 +69,7 @@ class AccountSynchronizer:
     - Discrepancy detection
     """
 
-    def __init__(self, broker: Optional[BrokerConnector] = None):
+    def __init__(self, broker: BrokerConnector | None = None):
         """Initialize account synchronizer."""
         self.broker = broker or get_broker_connector()
         self.local_positions: dict[str, BrokerPosition] = {}
@@ -76,7 +77,7 @@ class AccountSynchronizer:
         # MEMORY: Use deque with maxlen to prevent unbounded growth
         self.snapshots: deque[PortfolioSnapshot] = deque(maxlen=1440)  # 24h at 1min intervals
         self.reconciliation_history: deque[Reconciliation] = deque(maxlen=1000)
-        self.last_sync: Optional[datetime] = None
+        self.last_sync: datetime | None = None
         logger.info("✅ AccountSynchronizer initialized with bounded history")
 
     async def sync_account(self) -> bool:
@@ -275,7 +276,7 @@ class AccountSynchronizer:
 
         return snapshot
 
-    async def get_latest_snapshot(self) -> Optional[PortfolioSnapshot]:
+    async def get_latest_snapshot(self) -> PortfolioSnapshot | None:
         """Get latest portfolio snapshot."""
         return self.snapshots[-1] if self.snapshots else None
 
@@ -295,7 +296,7 @@ class AccountSynchronizer:
         cutoff_time = datetime.now() - timedelta(hours=hours)
         return [s for s in self.snapshots if s.timestamp >= cutoff_time]
 
-    async def calculate_daily_return(self) -> Optional[Decimal]:
+    async def calculate_daily_return(self) -> Decimal | None:
         """
         Calculate return since start of day.
 
@@ -359,7 +360,7 @@ class AccountSynchronizer:
 
 
 # Singleton
-_synchronizer: Optional[AccountSynchronizer] = None
+_synchronizer: AccountSynchronizer | None = None
 
 
 def get_account_synchronizer(

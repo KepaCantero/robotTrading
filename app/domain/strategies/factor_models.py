@@ -17,6 +17,8 @@ SOLID Principles:
 - Open/Closed: Extensible with new factor models
 """
 
+from __future__ import annotations
+
 import logging
 from dataclasses import dataclass
 from typing import Optional
@@ -69,7 +71,7 @@ class BaseFactorModel:
         self.name = name
         self.calculator = FactorCalculator()
 
-    def _ols_regression(self, y: np.ndarray, X: np.ndarray) -> "SimpleOLSResult":
+    def _ols_regression(self, y: np.ndarray, X: np.ndarray) -> SimpleOLSResult:
         """Perform OLS regression using SimpleOLSResult."""
         return SimpleOLSResult(X, y)
 

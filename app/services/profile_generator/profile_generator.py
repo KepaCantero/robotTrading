@@ -6,6 +6,8 @@ Uses configuration templates to create objective-aware parameter sets.
 Integrates MAESTRO PHASE 1 for absolute return optimization and feasibility validation.
 """
 
+from __future__ import annotations
+
 import logging
 from datetime import datetime
 from decimal import Decimal

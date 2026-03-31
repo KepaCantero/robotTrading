@@ -2,6 +2,8 @@
 ATRFilter - Filtro de volatilidad usando Average True Range.
 """
 
+from __future__ import annotations
+
 import logging
 from typing import Optional
 

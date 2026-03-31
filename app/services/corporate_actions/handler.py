@@ -21,6 +21,8 @@ Author: Algorithmic Trading System
 Date: 2026-01-25
 """
 
+from __future__ import annotations
+
 import logging
 from dataclasses import dataclass
 from datetime import date, datetime

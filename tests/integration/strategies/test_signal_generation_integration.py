@@ -28,7 +28,7 @@ from app.domain.models.market_data import Quote  # noqa: E402
 from app.services.strategy_stock_allocator import StrategyStockAllocator  # noqa: E402
 from app.domain.strategies.mean_reversion import MeanReversionStrategy  # noqa: E402
 from app.domain.strategies.momentum import MomentumStrategy  # noqa: E402
-from app.domain.strategies.pairs_trading import PairsTradingStrategy  # noqa: E402
+from app.domain.strategies.pairs_trading import PairsTrading as PairsTradingStrategy  # noqa: E402
 from tests.integration.data.test_data_loader import load_all_csv_data  # noqa: E402
 
 logging.basicConfig(

@@ -5,6 +5,8 @@ This module defines the data models for momentum trading strategies,
 technical indicators, and momentum signals.
 """
 
+from __future__ import annotations
+
 import logging
 from datetime import datetime, timedelta
 from decimal import Decimal
@@ -222,7 +224,7 @@ class MarketData(BaseModel):
         return v
 
     @model_validator(mode="after")
-    def validate_price_consistency(self) -> "MarketData":
+    def validate_price_consistency(self) -> MarketData:
         """Validate consistency between high, low, open, and close prices."""
         logger.debug("Validating market data price consistency", extra={"symbol": self.symbol})
         if self.high_price < self.low_price:

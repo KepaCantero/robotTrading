@@ -58,6 +58,12 @@ class ConcreteStrategyEngine(BaseStrategyEngine):
             ]
         return []
 
+    def get_required_parameters(self) -> List[str]:
+        return []
+
+    def risk_check(self, signal: Signal, portfolio: Any) -> bool:
+        return True
+
 
 # ===== Initialization Tests =====
 

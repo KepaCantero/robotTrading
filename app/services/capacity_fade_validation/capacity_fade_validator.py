@@ -7,6 +7,8 @@ Validates that strategy alpha is sustainable as capital scales to target level (
 Uses sqrt(capacity) model with liquidity constraints and conservative assumptions.
 """
 
+from __future__ import annotations
+
 import logging
 from decimal import Decimal
 from typing import Optional

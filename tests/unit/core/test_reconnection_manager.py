@@ -23,7 +23,7 @@ class TestReconnectionConfig:
         """Test default configuration values."""
         config = ReconnectionConfig()
 
-        assert config.max_attempts == 10
+        assert config.max_attempts == 5
         assert config.base_delay_seconds == 1.0
         assert config.max_delay_seconds == 60.0
         assert config.exponential_base == 2.0

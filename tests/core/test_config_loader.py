@@ -12,7 +12,7 @@ from pathlib import Path
 import pytest
 import yaml
 
-from app.core.config_loader import (
+from app.shared.config.config_loader import (
     YAMLConfigLoader,
     get_config_loader,
     get_detector_config,
@@ -33,7 +33,7 @@ class TestYAMLConfigLoaderStructlog:
         """Test that YAMLConfigLoader uses structlog for logging."""
 
         # The logger is a module-level variable using structlog
-        from app.core.config_loader import logger
+        from app.shared.config.config_loader import logger
 
         # Check that logger exists and has structlog methods
         # Structlog bound loggers have specific methods like info, warning, error, debug

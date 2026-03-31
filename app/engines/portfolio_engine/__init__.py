@@ -9,6 +9,8 @@ Proporciona interfaz clara para:
 - Integración con múltiples brokers
 """
 
+from __future__ import annotations
+
 import contextlib
 import logging
 from abc import ABC, abstractmethod

@@ -625,7 +625,9 @@ class StandardBacktestEngine(BaseBacktestEngine[BacktestConfig, BacktestResult])
                 return Decimal(str(signal.metadata["commission_per_trade_pct"]))
 
         if self.strategy and hasattr(self.strategy, "commission_per_trade_pct"):
-            return self.strategy.commission_per_trade_pct
+            raw_value = self.strategy.commission_per_trade_pct
+            if isinstance(raw_value, Decimal):
+                return raw_value
 
         return None
 
@@ -922,13 +924,14 @@ class StandardBacktestEngine(BaseBacktestEngine[BacktestConfig, BacktestResult])
 
     def __getstate__(self) -> dict[str, object]:
         """Get state for pickling."""
-        state = super().__getstate__()
-        state.update(
-            {
-                "total_portfolio_capital": float(self.total_portfolio_capital),
-            }
-        )
-        return state
+        base_state: dict[str, object] = {
+            "config": self.config,
+            "strategy_name": self.strategy_name,
+            "state": self.state.to_dict(),
+            "enable_risk_envelope": self.enable_risk_envelope,
+            "total_portfolio_capital": float(self.total_portfolio_capital),
+        }
+        return base_state
 
     def __setstate__(self, state: dict[str, object]) -> None:
         """Restore state from pickling."""

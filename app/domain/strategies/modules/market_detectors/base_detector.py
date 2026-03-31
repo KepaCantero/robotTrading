@@ -2,6 +2,8 @@
 BaseMarketDetector - Clase base abstracta para detectores de régimen de mercado.
 """
 
+from __future__ import annotations
+
 import logging
 from abc import ABC, abstractmethod
 from typing import Optional

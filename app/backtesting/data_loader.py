@@ -7,6 +7,8 @@ Provides functionality to load historical market data from various sources:
 - Market data feeds
 """
 
+from __future__ import annotations
+
 import logging
 from datetime import datetime
 from decimal import Decimal

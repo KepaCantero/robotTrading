@@ -8,6 +8,8 @@ and provides standardized interface for the parametrization pipeline.
 Calculates feasibility_ratio: achieved_return / required_return
 """
 
+from __future__ import annotations
+
 import logging
 from datetime import datetime
 from decimal import Decimal

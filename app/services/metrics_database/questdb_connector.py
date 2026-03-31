@@ -5,6 +5,8 @@ Provides high-performance async interface to QuestDB for storing and querying me
 Handles connection pooling, bulk operations, and error handling.
 """
 
+from __future__ import annotations
+
 import asyncio
 import json
 import logging
@@ -137,8 +139,7 @@ class QuestDBConnector:
                 # Test connection and create table if needed
                 async with self._connection_pool.acquire() as conn:
                     # Create metrics table if not exists
-                    await conn.execute(
-                        """
+                    await conn.execute("""
                         CREATE TABLE IF NOT EXISTS metrics (
                             timestamp TIMESTAMP,
                             metric_type SYMBOL,
@@ -146,8 +147,7 @@ class QuestDBConnector:
                             value DOUBLE,
                             metadata STRING
                         ) TIMESTAMP(timestamp) PARTITION BY DAY;
-                    """
-                    )
+                    """)
 
                 self._is_connected = True
                 self._use_real_db = True

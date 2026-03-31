@@ -6,7 +6,6 @@ including quotes, historical data, and feed configuration.
 """
 
 # mypy: ignore-errors
-
 from __future__ import annotations
 
 import logging
@@ -17,8 +16,6 @@ from fastapi import APIRouter, Depends, HTTPException, Path, Query
 from pydantic import BaseModel, Field
 from requests.exceptions import (
     ConnectionError as RequestsConnectionError,
-)
-from requests.exceptions import (
     HTTPError,
     RequestException,
 )

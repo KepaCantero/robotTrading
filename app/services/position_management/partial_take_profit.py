@@ -90,7 +90,7 @@ class PartialTakeProfit:
         self.entry_price = entry_price
         self.initial_stop = initial_stop
         self.targets = targets or self.DEFAULT_TARGETS
-        self.executed_targets = set()
+        self.executed_targets: set[float] = set()
 
         # Validar que los targets sumen <= 100%
         total_close_pct = sum(t.close_pct for t in self.targets)

@@ -3,6 +3,8 @@ Core Exceptions for AlgoTrading
 Independent exception definitions to avoid circular imports
 """
 
+from __future__ import annotations
+
 import logging
 from typing import Any, NoReturn, Optional
 
@@ -72,23 +74,34 @@ class AuthenticationError(AlgoTradingError):
     """Exception raised for authentication errors."""
 
 
+def _raise_error(
+    exc_class: type[AlgoTradingError],
+    message: str,
+    error_code: Optional[str] = None,
+    details: Optional[dict[str, Any]] = None,
+) -> NoReturn:
+    """Raise a typed error after validating the message."""
+    logger.debug(
+        f"Raising {exc_class.__name__}",
+        extra={"message": message, "error_code": error_code},
+    )
+    if not message or not message.strip():
+        logger.error(f"{exc_class.__name__} message validation failed: message is empty")
+        raise ValueError("message must be a non-empty string")
+    logger.error(
+        f"{exc_class.__name__} raised",
+        extra={"message": message, "error_code": error_code, "details": details},
+    )
+    raise exc_class(message, error_code, details)
+
+
 def raise_configuration_error(
     message: str,
     error_code: Optional[str] = None,
     details: Optional[dict[str, Any]] = None,
 ) -> NoReturn:
     """Helper function to raise configuration errors."""
-    logger.debug(
-        "Raising configuration error", extra={"message": message, "error_code": error_code}
-    )
-    if not message or not message.strip():
-        logger.error("Configuration error message validation failed: message is empty")
-        raise ValueError("message must be a non-empty string")
-    logger.error(
-        "Configuration error raised",
-        extra={"message": message, "error_code": error_code, "details": details},
-    )
-    raise ConfigurationError(message, error_code, details)
+    _raise_error(ConfigurationError, message, error_code, details)
 
 
 def raise_validation_error(
@@ -97,15 +110,7 @@ def raise_validation_error(
     details: Optional[dict[str, Any]] = None,
 ) -> NoReturn:
     """Helper function to raise validation errors."""
-    logger.debug("Raising validation error", extra={"message": message, "error_code": error_code})
-    if not message or not message.strip():
-        logger.error("Validation error message validation failed: message is empty")
-        raise ValueError("message must be a non-empty string")
-    logger.error(
-        "Validation error raised",
-        extra={"message": message, "error_code": error_code, "details": details},
-    )
-    raise ValidationError(message, error_code, details)
+    _raise_error(ValidationError, message, error_code, details)
 
 
 def raise_business_logic_error(
@@ -114,17 +119,7 @@ def raise_business_logic_error(
     details: Optional[dict[str, Any]] = None,
 ) -> NoReturn:
     """Helper function to raise business logic errors."""
-    logger.debug(
-        "Raising business logic error", extra={"message": message, "error_code": error_code}
-    )
-    if not message or not message.strip():
-        logger.error("Business logic error message validation failed: message is empty")
-        raise ValueError("message must be a non-empty string")
-    logger.error(
-        "Business logic error raised",
-        extra={"message": message, "error_code": error_code, "details": details},
-    )
-    raise BusinessLogicError(message, error_code, details)
+    _raise_error(BusinessLogicError, message, error_code, details)
 
 
 def raise_market_data_error(
@@ -133,15 +128,7 @@ def raise_market_data_error(
     details: Optional[dict[str, Any]] = None,
 ) -> NoReturn:
     """Helper function to raise market data errors."""
-    logger.debug("Raising market data error", extra={"message": message, "error_code": error_code})
-    if not message or not message.strip():
-        logger.error("Market data error message validation failed: message is empty")
-        raise ValueError("message must be a non-empty string")
-    logger.error(
-        "Market data error raised",
-        extra={"message": message, "error_code": error_code, "details": details},
-    )
-    raise MarketDataError(message, error_code, details)
+    _raise_error(MarketDataError, message, error_code, details)
 
 
 def raise_trading_error(
@@ -150,15 +137,7 @@ def raise_trading_error(
     details: Optional[dict[str, Any]] = None,
 ) -> NoReturn:
     """Helper function to raise trading errors."""
-    logger.debug("Raising trading error", extra={"message": message, "error_code": error_code})
-    if not message or not message.strip():
-        logger.error("Trading error message validation failed: message is empty")
-        raise ValueError("message must be a non-empty string")
-    logger.error(
-        "Trading error raised",
-        extra={"message": message, "error_code": error_code, "details": details},
-    )
-    raise TradingError(message, error_code, details)
+    _raise_error(TradingError, message, error_code, details)
 
 
 def raise_database_error(
@@ -167,15 +146,7 @@ def raise_database_error(
     details: Optional[dict[str, Any]] = None,
 ) -> NoReturn:
     """Helper function to raise database errors."""
-    logger.debug("Raising database error", extra={"message": message, "error_code": error_code})
-    if not message or not message.strip():
-        logger.error("Database error message validation failed: message is empty")
-        raise ValueError("message must be a non-empty string")
-    logger.error(
-        "Database error raised",
-        extra={"message": message, "error_code": error_code, "details": details},
-    )
-    raise AlgoTradingDatabaseError(message, error_code, details)
+    _raise_error(AlgoTradingDatabaseError, message, error_code, details)
 
 
 def raise_authentication_error(
@@ -184,14 +155,4 @@ def raise_authentication_error(
     details: Optional[dict[str, Any]] = None,
 ) -> NoReturn:
     """Helper function to raise authentication errors."""
-    logger.debug(
-        "Raising authentication error", extra={"message": message, "error_code": error_code}
-    )
-    if not message or not message.strip():
-        logger.error("Authentication error message validation failed: message is empty")
-        raise ValueError("message must be a non-empty string")
-    logger.error(
-        "Authentication error raised",
-        extra={"message": message, "error_code": error_code, "details": details},
-    )
-    raise AuthenticationError(message, error_code, details)
+    _raise_error(AuthenticationError, message, error_code, details)

@@ -11,6 +11,8 @@ matrices from Phase 2.4.
 Uses centralized configuration for all thresholds and parameters.
 """
 
+from __future__ import annotations
+
 import logging
 from dataclasses import dataclass
 from datetime import datetime, timezone
@@ -102,7 +104,7 @@ class VaRPositionLimiter:
     def __init__(
         self,
         portfolio,
-        correlation_analyzer: Optional["CorrelationAnalyzer"] = None,
+        correlation_analyzer: Optional[CorrelationAnalyzer] = None,
         config: Optional[VaRConfig] = None,
     ):
         """
@@ -629,7 +631,7 @@ class VaRPositionLimiter:
 
 def get_var_position_limiter(
     portfolio,
-    correlation_analyzer: Optional["CorrelationAnalyzer"] = None,
+    correlation_analyzer: Optional[CorrelationAnalyzer] = None,
     config: Optional[VaRConfig] = None,
 ) -> VaRPositionLimiter:
     """

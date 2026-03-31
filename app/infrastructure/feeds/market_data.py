@@ -4,10 +4,13 @@ Market Data Service
 Provides market data retrieval and management.
 """
 
+from __future__ import annotations
+
 import logging
 from datetime import datetime
 from decimal import Decimal
 from typing import Any, Optional
+from uuid import UUID
 
 logger = logging.getLogger(__name__)
 
@@ -18,6 +21,8 @@ class MarketDataService:
     def __init__(self):
         self._cache: dict[str, Any] = {}
         self._feeds: dict[str, Any] = {}
+        self._feed_configs: dict[UUID, Any] = {}
+        self._subscriptions: set[str] = set()
 
     async def get_quote(self, symbol: str) -> Optional[dict[str, Any]]:
         """Get current quote for a symbol."""
@@ -57,6 +62,55 @@ class MarketDataService:
         return {
             "cached_quotes": len(self._cache),
             "cache_size_mb": 0,
+        }
+
+    async def add_feed_config(self, config: object) -> UUID:
+        """Add a feed configuration."""
+        import uuid
+
+        config_id = uuid.uuid4()
+        if hasattr(config, "id"):
+            config.id = config_id
+        self._feed_configs[config_id] = config
+        return config_id
+
+    async def list_feed_configs(self) -> list[object]:
+        """List all feed configurations."""
+        return list(self._feed_configs.values())
+
+    async def get_feed_config(self, config_id: UUID) -> Optional[object]:
+        """Get a specific feed configuration."""
+        return self._feed_configs.get(config_id)
+
+    async def connect_feed(self, config_id: UUID) -> bool:
+        """Connect to a data feed."""
+        if config_id in self._feed_configs:
+            self._feeds[str(config_id)] = {"connected": True}
+            return True
+        return False
+
+    async def disconnect_feed(self, config_id: UUID) -> bool:
+        """Disconnect from a data feed."""
+        feed_key = str(config_id)
+        if feed_key in self._feeds:
+            del self._feeds[feed_key]
+            return True
+        return False
+
+    async def subscribe_to_symbols(
+        self, symbols: list[str], feed_id: Optional[UUID] = None
+    ) -> bool:
+        """Subscribe to real-time updates for symbols."""
+        self._subscriptions.update(symbols)
+        return True
+
+    async def get_service_status(self) -> dict[str, Any]:
+        """Get market data service status."""
+        return {
+            "status": "running",
+            "active_feeds": len(self._feeds),
+            "cached_quotes": len(self._cache),
+            "subscriptions": len(self._subscriptions),
         }
 
 

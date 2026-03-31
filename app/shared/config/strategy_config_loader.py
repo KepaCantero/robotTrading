@@ -29,10 +29,12 @@ Usage:
     take_profit = config.get_take_profit(strategy='momentum')
 """
 
+from __future__ import annotations
+
 import logging
 from decimal import Decimal
 from pathlib import Path
-from typing import Optional, Union
+from typing import Optional, Union, cast
 
 logger = logging.getLogger(__name__)
 
@@ -119,7 +121,7 @@ class StrategyConfigLoader:
             Value at key path or default
         """
         keys = key_path.split(".")
-        value = data
+        value: object = data
 
         for key in keys:
             if isinstance(value, dict) and key in value:
@@ -148,7 +150,7 @@ class StrategyConfigLoader:
             RSI period value
         """
         config = self.get_indicator_config()
-        return self._get_nested(config, f"rsi.period.{variant}", 14)
+        return cast("int", self._get_nested(config, f"rsi.period.{variant}", 14))
 
     def get_rsi_threshold(self, threshold: str) -> int:
         """
@@ -168,7 +170,7 @@ class StrategyConfigLoader:
             70
         """
         config = self.get_indicator_config()
-        return self._get_nested(config, f"rsi.thresholds.{threshold}", 30)
+        return cast("int", self._get_nested(config, f"rsi.thresholds.{threshold}", 30))
 
     def get_rsi_adaptive_threshold(self, market_type: str, threshold_type: str) -> int:
         """
@@ -187,7 +189,9 @@ class StrategyConfigLoader:
             25
         """
         config = self.get_indicator_config()
-        return self._get_nested(config, f"rsi.adaptive.{market_type}.{threshold_type}", 30)
+        return cast(
+            "int", self._get_nested(config, f"rsi.adaptive.{market_type}.{threshold_type}", 30)
+        )
 
     def get_ma_period(self, length: str = "medium") -> int:
         """
@@ -200,7 +204,7 @@ class StrategyConfigLoader:
             MA period value
         """
         config = self.get_indicator_config()
-        return self._get_nested(config, f"moving_averages.periods.{length}", 20)
+        return cast("int", self._get_nested(config, f"moving_averages.periods.{length}", 20))
 
     def get_atr_period(self, variant: str = "default") -> int:
         """
@@ -213,7 +217,7 @@ class StrategyConfigLoader:
             ATR period value
         """
         config = self.get_indicator_config()
-        return self._get_nested(config, f"atr.period.{variant}", 14)
+        return cast("int", self._get_nested(config, f"atr.period.{variant}", 14))
 
     def get_atr_multiplier(self, variant: str = "default_stop") -> float:
         """
@@ -231,7 +235,7 @@ class StrategyConfigLoader:
             2.0
         """
         config = self.get_indicator_config()
-        return float(self._get_nested(config, f"atr.multipliers.{variant}", 2.0))
+        return float(cast("float", self._get_nested(config, f"atr.multipliers.{variant}", 2.0)))
 
     # ========================================================================
     # RISK MANAGEMENT CONFIGURATION
@@ -333,7 +337,12 @@ class StrategyConfigLoader:
             Risk/reward ratio (e.g., 2.0 means 2:1)
         """
         config = self.get_risk_config()
-        return float(self._get_nested(config, f"risk_reward.by_strategy.{strategy}.min_ratio", 2.0))
+        return float(
+            cast(
+                "float",
+                self._get_nested(config, f"risk_reward.by_strategy.{strategy}.min_ratio", 2.0),
+            )
+        )
 
     def get_max_leverage(self, tier: str = "medium") -> float:
         """
@@ -346,7 +355,7 @@ class StrategyConfigLoader:
             Maximum leverage multiplier
         """
         config = self.get_risk_config()
-        return float(self._get_nested(config, f"leverage.max_leverage.{tier}", 1.0))
+        return float(cast("float", self._get_nested(config, f"leverage.max_leverage.{tier}", 1.0)))
 
     # ========================================================================
     # CAPITAL TIER CONFIGURATION
@@ -372,14 +381,14 @@ class StrategyConfigLoader:
             15000
         """
         config = self.get_tier_config()
-        thresholds = config.get("thresholds", {})
+        thresholds = cast("dict[str, object]", config.get("thresholds", {}))
 
         return {
             "micro": 0,
-            "small": thresholds.get("micro_small", 15000),
-            "medium": thresholds.get("small_medium", 50000),
-            "large": thresholds.get("medium_large", 250000),
-            "institutional": thresholds.get("large_institutional", 1000000),
+            "small": cast("int", thresholds.get("micro_small", 15000)),
+            "medium": cast("int", thresholds.get("small_medium", 50000)),
+            "large": cast("int", thresholds.get("medium_large", 250000)),
+            "institutional": cast("int", thresholds.get("large_institutional", 1000000)),
         }
 
     def get_tier_from_capital(self, capital: Union[int, float, Decimal]) -> str:
@@ -400,15 +409,14 @@ class StrategyConfigLoader:
             'medium'
         """
         capital_decimal = Decimal(str(capital))
-        thresholds = self.get_tier_config().get("tiers", {})
+        tiers_raw = self.get_tier_config().get("tiers", {})
+        tiers = cast("dict[str, dict[str, object]]", tiers_raw)
 
         # Use min_capital thresholds for proper tier determination
-        small_min = Decimal(str(thresholds.get("small", {}).get("min_capital", 15000)))
-        medium_min = Decimal(str(thresholds.get("medium", {}).get("min_capital", 50000)))
-        large_min = Decimal(str(thresholds.get("large", {}).get("min_capital", 250000)))
-        institutional_min = Decimal(
-            str(thresholds.get("institutional", {}).get("min_capital", 1000000))
-        )
+        small_min = Decimal(str(tiers.get("small", {}).get("min_capital", 15000)))
+        medium_min = Decimal(str(tiers.get("medium", {}).get("min_capital", 50000)))
+        large_min = Decimal(str(tiers.get("large", {}).get("min_capital", 250000)))
+        institutional_min = Decimal(str(tiers.get("institutional", {}).get("min_capital", 1000000)))
 
         if capital_decimal < small_min:
             return "micro"
@@ -445,11 +453,14 @@ class StrategyConfigLoader:
 
     def get_max_positions(self, tier: str = "medium") -> int:
         """Get maximum number of positions for a tier."""
-        return self.get_tier_config_value(tier, "max_positions", 10)
+        return cast("int", self.get_tier_config_value(tier, "max_positions", 10))
 
     def get_enabled_strategies(self, tier: str = "medium") -> list[str]:
         """Get list of enabled strategies for a tier."""
-        return self.get_tier_config_value(tier, "enabled_strategies", ["momentum_strategy"])
+        return cast(
+            "list[str]",
+            self.get_tier_config_value(tier, "enabled_strategies", ["momentum_strategy"]),
+        )
 
     # ========================================================================
     # CONVENIENCE METHODS

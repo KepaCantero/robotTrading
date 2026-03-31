@@ -5,10 +5,12 @@ This module provides centralized configuration loading from YAML files,
 with support for backtest configuration, strategy parameters, and execution settings.
 """
 
+from __future__ import annotations
+
 import logging
 from decimal import Decimal
 from pathlib import Path
-from typing import Optional, Union
+from typing import Optional, Union, cast
 
 import yaml
 
@@ -16,6 +18,16 @@ from app.backtesting.models import BacktestConfig
 from app.shared.config.centralized_config import get_config
 
 logger = logging.getLogger(__name__)
+
+YamlValue = Union[str, int, float, bool, "YamlDict", list[object]]
+YamlDict = dict[str, "YamlValue"]
+
+
+def _ensure_dict(value: YamlValue) -> YamlDict:
+    """Narrow a YamlValue to YamlDict, returning empty dict if not a dict."""
+    if isinstance(value, dict):
+        return value
+    return {}
 
 
 class ConfigValidationError(ValueError):
@@ -41,7 +53,7 @@ class BacktestConfigLoader:
             FileNotFoundError: If config file doesn't exist
         """
         self.config_path = Path(config_path)
-        self._raw_config: dict[str, Union[str, int, float, bool, dict, list]] = {}
+        self._raw_config: YamlDict = {}
         self._load()
 
     def _load(self) -> None:
@@ -50,12 +62,20 @@ class BacktestConfigLoader:
             raise FileNotFoundError(f"Config not found: {self.config_path}")
 
         with open(self.config_path) as f:
-            self._raw_config = yaml.safe_load(f) or {}
+            loaded: object = yaml.safe_load(f)
+
+        if isinstance(loaded, dict):
+            self._raw_config = loaded
+        else:
+            self._raw_config = {}
 
         logger.debug(f"Loaded configuration from {self.config_path}")
 
     def _validate_positive_decimal(
-        self, value: Union[str, int, float, Decimal], name: str, allow_zero: bool = False
+        self,
+        value: Union[str, int, float, bool, Decimal, YamlDict, list[object]],
+        name: str,
+        allow_zero: bool = False,
     ) -> Decimal:
         """
         Validate that a value is a positive Decimal.
@@ -85,7 +105,10 @@ class BacktestConfigLoader:
         return decimal_value
 
     def _validate_percentage(
-        self, value: Union[str, int, float, Decimal], name: str, max_value: Optional[Decimal] = None
+        self,
+        value: Union[str, int, float, bool, Decimal, YamlDict, list[object]],
+        name: str,
+        max_value: Optional[Decimal] = None,
     ) -> Decimal:
         """
         Validate that a value is a percentage (0-100 or 0-1).
@@ -112,9 +135,7 @@ class BacktestConfigLoader:
         return decimal_value
 
     @property
-    def raw_config(
-        self,
-    ) -> dict[str, Union[str, int, float, bool, dict, list]]:
+    def raw_config(self) -> YamlDict:
         """Get raw configuration dictionary."""
         return self._raw_config
 
@@ -133,7 +154,10 @@ class BacktestConfigLoader:
         Returns:
             Configuration section as dictionary
         """
-        return self._raw_config.get(section, default or {})
+        value = self._raw_config.get(section, default or {})
+        if isinstance(value, dict):
+            return cast("dict[str, Union[str, int, float, bool, dict, list]]", value)
+        return default or {}
 
     def get_backtest_config(self) -> BacktestConfig:
         """
@@ -145,8 +169,8 @@ class BacktestConfigLoader:
         Raises:
             ConfigValidationError: If required configuration is missing or invalid
         """
-        config = self._raw_config.get("backtest", {})
-        input_config = self._raw_config.get("input", {})
+        config = _ensure_dict(self._raw_config.get("backtest", {}))
+        input_config = _ensure_dict(self._raw_config.get("input", {}))
 
         # Get initial capital from input section if not in backtest section
         initial_capital_raw = config.get("initial_capital") or input_config.get(
@@ -205,7 +229,7 @@ class BacktestConfigLoader:
             ) from e
 
         return BacktestConfig(
-            strategy_name=config.get("strategy_name", "default"),
+            strategy_name=str(config.get("strategy_name", "default")),
             initial_capital=initial_capital,
             commission_per_trade=commission_per_trade,
             slippage_percentage=slippage_percentage,

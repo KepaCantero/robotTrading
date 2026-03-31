@@ -8,6 +8,8 @@ This module provides an interactive dashboard for:
 - Analyzing decision-making processes
 """
 
+from __future__ import annotations
+
 import asyncio
 import json
 import logging
@@ -711,13 +713,11 @@ if execute_button:
                     # Show link to summary
                     st.markdown("---")
                     st.success("📄 **Backend Test Result Summary Generated**")
-                    st.markdown(
-                        f"""
+                    st.markdown(f"""
                     **Location:** `{summary_file.relative_to(project_root)}`
 
                     **To view:** Open the file in your editor or download it.
-                    """
-                    )
+                    """)
 
                     # Add download button
                     with open(summary_file) as f:
@@ -835,15 +835,13 @@ if selected_module in module_info or selected_module == "all":
         info = module_info[selected_module]
 
         # Show static module info
-        st.info(
-            f"""
+        st.info(f"""
 **Description**: {info["description"]}
 
 **Metrics**: {info["metrics"]}
 
 **Good Indicators**: {info["indicators"]}
-        """
-        )
+        """)
 
         # Count available results for this module
         if "backtest_results" in session_state and session_state.backtest_results:
@@ -1063,9 +1061,7 @@ if session_state.backtest_results:
         sharpe_color = (
             "#28a745"
             if sharpe and sharpe > 1
-            else "#ffc107"
-            if sharpe and sharpe > 0
-            else "#dc3545"
+            else "#ffc107" if sharpe and sharpe > 0 else "#dc3545"
         )
         sharpe_display = f"{sharpe:.2f}" if sharpe is not None else "N/A"
         st.markdown(

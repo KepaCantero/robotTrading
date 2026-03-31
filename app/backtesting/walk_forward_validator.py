@@ -14,29 +14,21 @@ COMPLIANCE: Integrado con BacktestingCompliance para validar:
 - DATA-001: Purged Cross-Validation
 """
 
+from __future__ import annotations
+
 import json
 import logging
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Optional, Union
+from typing import Any, Optional, Union, cast
 
 import numpy as np
+import numpy.typing as npt
 import yaml
 
 # Type alias for nested JSON-like configuration and result dictionaries
-JsonDict = dict[
-    str,
-    Union[
-        int,
-        float,
-        str,
-        bool,
-        None,
-        "JsonDict",
-        list[Union[int, float, str, bool, None, "JsonDict"]],
-    ],
-]
+JsonDict = dict[str, Any]
 
 # COMPLIANCE: Importar BacktestingCompliance para R5, R6, R7, DATA-001
 from app.backtesting.backtesting_compliance import (
@@ -160,7 +152,7 @@ def load_validation_config(config_path: str = "config/validation.yaml") -> JsonD
         return get_default_config()
 
     with open(path) as f:
-        return yaml.safe_load(f)
+        return cast("JsonDict", yaml.safe_load(f))
 
 
 def get_default_config() -> JsonDict:
@@ -406,12 +398,15 @@ class SyntheticDataGenerator:
         logger.info(f"Generating {n_days} days of realistic data (replacing simplistic GBM)")
 
         # Use realistic generator with regime switching
-        return self.realistic_generator.generate_realistic_quotes(
-            symbol=symbol,
-            n_days=n_days,
-            start_date=start_date,
-            use_regime_switching=True,
-            initial_regime=MarketRegime.BULL,  # Default to bull market
+        return cast(
+            "list[Quote]",
+            self.realistic_generator.generate_realistic_quotes(
+                symbol=symbol,
+                n_days=n_days,
+                start_date=start_date,
+                use_regime_switching=True,
+                initial_regime=MarketRegime.BULL,  # Default to bull market
+            ),
         )
 
     def generate_ou_prices(
@@ -439,12 +434,15 @@ class SyntheticDataGenerator:
             f"Generating {n_days} days of realistic sideways data (replacing simplistic OU)"
         )
 
-        return self.realistic_generator.generate_realistic_quotes(
-            symbol=symbol,
-            n_days=n_days,
-            start_date=start_date,
-            use_regime_switching=True,
-            initial_regime=MarketRegime.SIDEWAYS,
+        return cast(
+            "list[Quote]",
+            self.realistic_generator.generate_realistic_quotes(
+                symbol=symbol,
+                n_days=n_days,
+                start_date=start_date,
+                use_regime_switching=True,
+                initial_regime=MarketRegime.SIDEWAYS,
+            ),
         )
 
     def generate_jump_diffusion_prices(
@@ -480,12 +478,15 @@ class SyntheticDataGenerator:
             f"(replacing simplistic jump-diffusion)"
         )
 
-        return self.realistic_generator.generate_realistic_quotes(
-            symbol=symbol,
-            n_days=n_days,
-            start_date=start_date,
-            use_regime_switching=True,
-            initial_regime=MarketRegime.VOLATILE,
+        return cast(
+            "list[Quote]",
+            self.realistic_generator.generate_realistic_quotes(
+                symbol=symbol,
+                n_days=n_days,
+                start_date=start_date,
+                use_regime_switching=True,
+                initial_regime=MarketRegime.VOLATILE,
+            ),
         )
 
     def generate_flash_crash_scenario(
@@ -519,12 +520,15 @@ class SyntheticDataGenerator:
             f"Generating {n_days} days of flash crash scenario (bear regime with high volatility)"
         )
 
-        return self.realistic_generator.generate_realistic_quotes(
-            symbol=symbol,
-            n_days=n_days,
-            start_date=start_date,
-            use_regime_switching=True,
-            initial_regime=MarketRegime.BEAR,
+        return cast(
+            "list[Quote]",
+            self.realistic_generator.generate_realistic_quotes(
+                symbol=symbol,
+                n_days=n_days,
+                start_date=start_date,
+                use_regime_switching=True,
+                initial_regime=MarketRegime.BEAR,
+            ),
         )
 
     def generate_high_volatility_scenario(
@@ -548,12 +552,15 @@ class SyntheticDataGenerator:
         """
         logger.info(f"Generating {n_days} days of high volatility scenario (volatile regime)")
 
-        return self.realistic_generator.generate_realistic_quotes(
-            symbol=symbol,
-            n_days=n_days,
-            start_date=start_date,
-            use_regime_switching=True,
-            initial_regime=MarketRegime.VOLATILE,
+        return cast(
+            "list[Quote]",
+            self.realistic_generator.generate_realistic_quotes(
+                symbol=symbol,
+                n_days=n_days,
+                start_date=start_date,
+                use_regime_switching=True,
+                initial_regime=MarketRegime.VOLATILE,
+            ),
         )
 
     def generate_trending_scenario(
@@ -577,12 +584,15 @@ class SyntheticDataGenerator:
         """
         logger.info(f"Generating {n_days} days of trending scenario (bull regime)")
 
-        return self.realistic_generator.generate_realistic_quotes(
-            symbol=symbol,
-            n_days=n_days,
-            start_date=start_date,
-            use_regime_switching=True,
-            initial_regime=MarketRegime.BULL,
+        return cast(
+            "list[Quote]",
+            self.realistic_generator.generate_realistic_quotes(
+                symbol=symbol,
+                n_days=n_days,
+                start_date=start_date,
+                use_regime_switching=True,
+                initial_regime=MarketRegime.BULL,
+            ),
         )
 
     def generate_gap_scenario(
@@ -610,12 +620,15 @@ class SyntheticDataGenerator:
             f"Generating {n_days} days with realistic gaps (using volatile regime for more gaps)"
         )
 
-        return self.realistic_generator.generate_realistic_quotes(
-            symbol=symbol,
-            n_days=n_days,
-            start_date=start_date,
-            use_regime_switching=True,
-            initial_regime=MarketRegime.VOLATILE,  # Volatile = more gaps
+        return cast(
+            "list[Quote]",
+            self.realistic_generator.generate_realistic_quotes(
+                symbol=symbol,
+                n_days=n_days,
+                start_date=start_date,
+                use_regime_switching=True,
+                initial_regime=MarketRegime.VOLATILE,  # Volatile = more gaps
+            ),
         )
 
     def _prices_to_quotes(
@@ -635,12 +648,15 @@ class SyntheticDataGenerator:
         logger.warning("_prices_to_quotes is deprecated. Using realistic data generator instead.")
 
         # Use realistic generator for proper OHLC
-        return self.realistic_generator.generate_realistic_quotes(
-            symbol=symbol,
-            n_days=len(prices),
-            start_date=start_date,
-            use_regime_switching=False,  # Don't use regime switching for single list
-            initial_regime=MarketRegime.SIDEWAYS,
+        return cast(
+            "list[Quote]",
+            self.realistic_generator.generate_realistic_quotes(
+                symbol=symbol,
+                n_days=len(prices),
+                start_date=start_date,
+                use_regime_switching=False,  # Don't use regime switching for single list
+                initial_regime=MarketRegime.SIDEWAYS,
+            ),
         )
 
 
@@ -862,7 +878,7 @@ class WalkForwardValidator:
                 is_total_return=is_metrics["total_return"],
                 is_sharpe_ratio=is_metrics["sharpe_ratio"],
                 is_max_drawdown=is_metrics["max_drawdown"],
-                is_total_trades=is_metrics["total_trades"],
+                is_total_trades=int(is_metrics["total_trades"]),
                 is_win_rate=is_metrics["win_rate"],
             )
             results.append(window_result)
@@ -892,34 +908,33 @@ class WalkForwardValidator:
         consistency = len([r for r in total_returns if r > 0]) / len(total_returns)
 
         # IS/OOS Analysis (Req #2)
-        is_oos_analysis = {
-            "avg_is_return": np.mean(is_returns) if is_returns else 0.0,
-            "avg_is_sharpe": (np.mean(is_sharpe_ratios) if is_sharpe_ratios else 0.0),
-            "avg_is_drawdown": np.mean(is_drawdowns) if is_drawdowns else 0.0,
+        is_oos_analysis: JsonDict = {
+            "avg_is_return": float(np.mean(is_returns)) if is_returns else 0.0,
+            "avg_is_sharpe": float(np.mean(is_sharpe_ratios)) if is_sharpe_ratios else 0.0,
+            "avg_is_drawdown": float(np.mean(is_drawdowns)) if is_drawdowns else 0.0,
         }
 
         # Consistency Ratio: Sharpe_OOS / Sharpe_IS (Req #2)
-        if is_oos_analysis["avg_is_sharpe"] > 0:
-            consistency_ratio = avg_sharpe / is_oos_analysis["avg_is_sharpe"]
-        else:
-            consistency_ratio = 0.0
+        consistency_ratio: float = 0.0
+        if float(is_oos_analysis["avg_is_sharpe"]) > 0:
+            consistency_ratio = float(avg_sharpe / float(is_oos_analysis["avg_is_sharpe"]))
 
         is_oos_analysis["consistency_ratio"] = consistency_ratio
 
         # Degradation metrics (Req #2 - max 30%)
-        if is_oos_analysis["avg_is_return"] != 0:
+        return_degradation: float = 0.0
+        if float(is_oos_analysis["avg_is_return"]) != 0:
             return_degradation = abs(
-                (is_oos_analysis["avg_is_return"] - avg_return) / is_oos_analysis["avg_is_return"]
+                (float(is_oos_analysis["avg_is_return"]) - float(avg_return))
+                / float(is_oos_analysis["avg_is_return"])
             )
-        else:
-            return_degradation = 0.0
 
-        if is_oos_analysis["avg_is_sharpe"] > 0:
-            sharpe_degradation = (is_oos_analysis["avg_is_sharpe"] - avg_sharpe) / is_oos_analysis[
-                "avg_is_sharpe"
-            ]
-        else:
-            sharpe_degradation = 0.0
+        sharpe_degradation: float = 0.0
+        if float(is_oos_analysis["avg_is_sharpe"]) > 0:
+            sharpe_degradation = float(
+                (float(is_oos_analysis["avg_is_sharpe"]) - float(avg_sharpe))
+                / float(is_oos_analysis["avg_is_sharpe"])
+            )
 
         is_oos_analysis["return_degradation"] = return_degradation
         is_oos_analysis["sharpe_degradation"] = sharpe_degradation
@@ -1126,12 +1141,12 @@ class CrossValidationTemporal:
         self,
         start_date: datetime,
         end_date: datetime,
-    ) -> list[dict[str, datetime]]:
+    ) -> list[dict[str, Union[datetime, int]]]:
         """Create temporal folds for cross-validation."""
         total_days = (end_date - start_date).days
         fold_days = total_days // self.n_folds
 
-        folds = []
+        folds: list[dict[str, Union[datetime, int]]] = []
         for i in range(self.n_folds):
             fold_start = start_date + timedelta(days=i * fold_days)
             fold_end = start_date + timedelta(days=(i + 1) * fold_days)
@@ -1169,20 +1184,23 @@ class CrossValidationTemporal:
         end_date = params.end_date
 
         folds = self.create_folds(start_date, end_date)
-        results = []
+        results: list[JsonDict] = []
 
         for fold in folds:
+            fold_start = cast("datetime", fold["start"])
+            fold_end = cast("datetime", fold["end"])
+
             logger.info(
                 f"Fold {fold['fold']}/{self.n_folds}: "
-                f"{fold['start'].strftime('%Y-%m-%d')} to {fold['end'].strftime('%Y-%m-%d')}"
+                f"{fold_start.strftime('%Y-%m-%d')} to {fold_end.strftime('%Y-%m-%d')}"
             )
 
-            fold_quotes = [q for q in quotes if fold["start"] <= q.timestamp <= fold["end"]]
+            fold_quotes = [q for q in quotes if fold_start <= q.timestamp <= fold_end]
 
             fold_signals = [
                 s
                 for s in signals
-                if hasattr(s, "timestamp") and fold["start"] <= s.timestamp <= fold["end"]
+                if hasattr(s, "timestamp") and fold_start <= s.timestamp <= fold_end
             ]
 
             if not fold_quotes or not fold_signals:
@@ -1192,16 +1210,16 @@ class CrossValidationTemporal:
             result = backtester.run_backtest(
                 fold_quotes,
                 fold_signals,
-                fold["start"],
-                fold["end"],
+                fold_start,
+                fold_end,
             )
 
             results.append(
                 {
                     "fold": fold["fold"],
                     "period": {
-                        "start": fold["start"].isoformat(),
-                        "end": fold["end"].isoformat(),
+                        "start": fold_start.isoformat(),
+                        "end": fold_end.isoformat(),
                     },
                     "result": {
                         "total_return": float(result.total_return),
@@ -1333,11 +1351,11 @@ class StressTester:
                 daily_drift=scenario_config.get("daily_drift", -0.002),
             ),
             "mean_reverting": lambda: self.data_generator.generate_ou_prices(
-                n_days,
-                start_date,
-                symbol,
-                theta=scenario_config.get("reversion_speed", 0.1),
-                mu=scenario_config.get("equilibrium_price", 100.0),
+                DataGenerationParams(
+                    n_days=n_days,
+                    start_date=start_date,
+                    symbol=symbol,
+                ),
             ),
             "gap_up": lambda: self.data_generator.generate_gap_scenario(
                 GapScenarioParams(
@@ -1370,7 +1388,7 @@ class StressTester:
 
     def run_stress_tests(
         self,
-        strategy,
+        strategy: object,
         backtest_config: BacktestConfig,
         n_days: int = 252,
         symbol: str = "STRESS_TEST",
@@ -1415,7 +1433,7 @@ class StressTester:
 
     def _run_scenario_batch(
         self,
-        strategy,
+        strategy: object,
         backtest_config: BacktestConfig,
         scenario_type: str,
         count: int,
@@ -1449,7 +1467,7 @@ class StressTester:
 
     def _run_single_scenario(
         self,
-        strategy,
+        strategy: object,
         backtest_config: BacktestConfig,
         scenario_type: str,
         scenario_config: JsonDict,
@@ -1461,7 +1479,15 @@ class StressTester:
         """Run a single stress test scenario."""
         end_date = start_date + timedelta(days=n_days)
 
-        quotes = self._generate_scenario(scenario_type, scenario_config, n_days, start_date, symbol)
+        quotes = self._generate_scenario(
+            ScenarioGenerationParams(
+                scenario_type=scenario_type,
+                scenario_config=scenario_config,
+                n_days=n_days,
+                start_date=start_date,
+                symbol=symbol,
+            )
+        )
 
         signals = self._generate_strategy_signals(strategy, quotes)
         if not signals:
@@ -1486,14 +1512,16 @@ class StressTester:
             trades_executed=result.performance.total_trades,
         )
 
-    def _generate_strategy_signals(self, strategy, quotes: list) -> list:
+    def _generate_strategy_signals(self, strategy: object, quotes: list[Quote]) -> list[object]:
         """Generate signals from strategy for a list of quotes."""
-        signals = []
+        signals: list[object] = []
         for quote in quotes:
             try:
-                signal = strategy.analyze(quote)
-                if signal:
-                    signals.append(signal)
+                analyze_fn = getattr(strategy, "analyze", None)
+                if callable(analyze_fn):
+                    signal = analyze_fn(quote)
+                    if signal:
+                        signals.append(signal)
             except (ValueError, TypeError, KeyError, AttributeError, IndexError):
                 pass
         return signals
@@ -1560,9 +1588,11 @@ class StressTester:
 
         return passed, failures
 
-    def _group_results_by_type(self, results: list[StressScenarioResult]) -> dict[str, list[dict]]:
+    def _group_results_by_type(
+        self, results: list[StressScenarioResult]
+    ) -> dict[str, list[dict[str, object]]]:
         """Group scenario results by type."""
-        by_scenario: dict[str, list[dict]] = {}
+        by_scenario: dict[str, list[dict[str, object]]] = {}
         for r in results:
             if r.scenario_type not in by_scenario:
                 by_scenario[r.scenario_type] = []
@@ -1638,7 +1668,7 @@ class MonteCarloSimulator:
         return self._build_simulation_report(returns, drawdowns)
 
     def _run_all_simulations(
-        self, returns_array: np.ndarray, initial_capital: float, n_periods: int
+        self, returns_array: npt.NDArray[np.float64], initial_capital: float, n_periods: int
     ) -> list[JsonDict]:
         """Run all Monte Carlo simulations."""
         simulation_results = []
@@ -1650,7 +1680,7 @@ class MonteCarloSimulator:
         return simulation_results
 
     def _run_single_simulation(
-        self, returns_array: np.ndarray, initial_capital: float, n_periods: int
+        self, returns_array: npt.NDArray[np.float64], initial_capital: float, n_periods: int
     ) -> JsonDict:
         """Run a single Monte Carlo simulation path."""
         simulated_returns = self._block_bootstrap(returns_array, n_periods)
@@ -1703,8 +1733,8 @@ class MonteCarloSimulator:
         self, returns: list[float]
     ) -> tuple[dict[str, float], dict[str, float]]:
         """Calculate VaR and CVaR for all confidence levels."""
-        var_results = {}
-        cvar_results = {}
+        var_results: dict[str, float] = {}
+        cvar_results: dict[str, float] = {}
 
         for conf in self.confidence_levels:
             percentile = (1 - conf) * 100
@@ -1716,23 +1746,27 @@ class MonteCarloSimulator:
 
         return var_results, cvar_results
 
-    def _block_bootstrap(self, returns: np.ndarray, n_periods: int) -> np.ndarray:
+    def _block_bootstrap(
+        self, returns: npt.NDArray[np.float64], n_periods: int
+    ) -> npt.NDArray[np.float64]:
         """Perform block bootstrap resampling with reproducible random state."""
         n_blocks = int(np.ceil(n_periods / self.block_size))
         max_start = len(returns) - self.block_size + 1
 
         # Pre-generate all random indices for reproducibility
-        start_indices = self._rng.integers(0, max_start, size=n_blocks)
+        raw_indices = self._rng.integers(0, max_start, size=n_blocks)
+        start_indices: list[int] = raw_indices.tolist()
 
         # Vectorized block collection
-        sampled = np.concatenate([returns[idx : idx + self.block_size] for idx in start_indices])
+        blocks = [returns[idx : idx + self.block_size] for idx in start_indices]
+        sampled = np.concatenate(blocks)
 
         return sampled[:n_periods]
 
     def _calculate_max_drawdown(self, equity: list[float]) -> float:
         """Calculate maximum drawdown from equity curve."""
         peak = equity[0]
-        max_dd = 0
+        max_dd = 0.0
 
         for value in equity[1:]:
             if value > peak:

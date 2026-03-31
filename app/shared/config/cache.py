@@ -7,6 +7,8 @@ Single responsibility: manage configuration caching.
 TASK-24: SRP Compliance - Separate caching logic
 """
 
+from __future__ import annotations
+
 import logging
 import os
 import time

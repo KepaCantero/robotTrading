@@ -22,15 +22,11 @@ from __future__ import annotations
 
 import logging
 from decimal import Decimal
-from typing import Callable
+from typing import Callable, Protocol, runtime_checkable
 
 import numpy as np
 import pandas as pd
-
-try:
-    from typing import ParamSpec
-except ImportError:
-    from typing_extensions import ParamSpec
+from typing_extensions import ParamSpec
 
 from app.shared.config.centralized_config import get_config
 
@@ -39,6 +35,18 @@ from .models import PeriodResult, WalkForwardConfig, WalkForwardResult
 logger = logging.getLogger(__name__)
 
 P = ParamSpec("P")
+
+
+@runtime_checkable
+class _OptimizerProtocol(Protocol):
+    """Protocol for optimizer objects used in walk-forward validation."""
+
+    def optimize(
+        self,
+        strategy_factory: Callable[[dict[str, int | float | str | bool]], object],
+        param_grid: dict[str, list[int | float | str | bool]],
+        data: pd.DataFrame,
+    ) -> dict[str, int | float | str | bool]: ...
 
 
 class WalkForwardValidator:
@@ -73,7 +81,7 @@ class WalkForwardValidator:
     def __init__(
         self,
         config: WalkForwardConfig | None = None,
-        optimizer: object | None = None,
+        optimizer: _OptimizerProtocol | None = None,
     ):
         """
         Initialize walk-forward validator.
@@ -90,7 +98,7 @@ class WalkForwardValidator:
         strategy_factory: Callable[[dict[str, int | float | str | bool]], object],
         param_grid: dict[str, list[int | float | str | bool]],
         data: pd.DataFrame,
-        optimizer: object | None = None,
+        optimizer: _OptimizerProtocol | None = None,
         progress_callback: Callable[[int, int], None] | None = None,
     ) -> WalkForwardResult:
         """
@@ -386,8 +394,8 @@ class WalkForwardValidator:
         Returns:
             IS/OS ratio (OS/IS, values < 1 indicate degradation)
         """
-        is_sharpe = result.is_performance.get("sharpe_ratio", Decimal("0"))
-        os_sharpe = result.os_performance.get("sharpe_ratio", Decimal("0"))
+        is_sharpe = Decimal(str(result.is_performance.get("sharpe_ratio", Decimal("0"))))
+        os_sharpe = Decimal(str(result.os_performance.get("sharpe_ratio", Decimal("0"))))
 
         if is_sharpe > 0:
             return os_sharpe / is_sharpe
@@ -634,13 +642,13 @@ def calculate_consistency_score(values: list[float]) -> float:
     if not values:
         return 0.0
 
-    mean_val = np.mean(values)
-    std_val = np.std(values)
+    mean_val = float(np.mean(values))
+    std_val = float(np.std(values))
 
     if mean_val == 0:
         return 0.0
 
     cv = std_val / abs(mean_val)
-    consistency = max(0, 100 * (1 - cv))
+    consistency = max(0.0, 100.0 * (1 - cv))
 
-    return consistency
+    return float(consistency)

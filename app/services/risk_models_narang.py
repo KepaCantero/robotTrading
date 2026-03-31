@@ -520,7 +520,7 @@ class FactorRiskModel(RiskModel):
             try:
                 # Estimate factor return as weighted average return
                 factor_return = np.average(y_values, weights=np.abs(x_factor.flatten()))
-                factor_returns[factor] = factor_return
+                factor_returns[factor] = float(factor_return)
             except (ValueError, ZeroDivisionError):
                 continue
 

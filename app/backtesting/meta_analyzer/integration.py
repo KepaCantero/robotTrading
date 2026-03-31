@@ -2,6 +2,8 @@
 Integration helpers para integrar meta_analyzer con ComprehensiveBacktestRunner.
 """
 
+from __future__ import annotations
+
 import asyncio
 import logging
 from datetime import datetime

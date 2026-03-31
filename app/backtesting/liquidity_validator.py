@@ -13,6 +13,8 @@ This module addresses HIGH PRIORITY #1 from the audit report:
 SINGLE SOURCE OF TRUTH: All values from CentralizedConfig.
 """
 
+from __future__ import annotations
+
 import logging
 from dataclasses import dataclass
 from decimal import Decimal

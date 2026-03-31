@@ -5,6 +5,8 @@ Este módulo implementa el motor de ejecución de señales, separando la lógica
 de ejecución de la evaluación y gestión de señales.
 """
 
+from __future__ import annotations
+
 import asyncio
 import logging
 from datetime import datetime

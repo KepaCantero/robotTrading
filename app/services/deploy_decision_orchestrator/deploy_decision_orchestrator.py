@@ -10,6 +10,8 @@ Synthesizes outputs from all services:
 Makes final APPROVED/CONDITIONAL/REJECTED decision.
 """
 
+from __future__ import annotations
+
 import logging
 from datetime import datetime
 from decimal import Decimal

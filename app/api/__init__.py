@@ -2,6 +2,8 @@
 API Module - Common utilities and exports
 """
 
+from __future__ import annotations
+
 import logging
 import uuid
 from contextvars import ContextVar

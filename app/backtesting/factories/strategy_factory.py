@@ -13,8 +13,10 @@ Responsibilities:
 This follows the Factory pattern for better separation of concerns.
 """
 
+from __future__ import annotations
+
 import logging
-from typing import ClassVar, Optional, Union
+from typing import ClassVar, Optional, Union, cast
 
 from app.domain.strategies.mean_reversion import MeanReversionStrategy
 from app.domain.strategies.momentum import MomentumStrategy
@@ -27,6 +29,18 @@ logger = logging.getLogger(__name__)
 # Temporary alias until momentum_modular is created
 ModularMomentumStrategy = MomentumStrategy
 
+# Type alias for the deeply-nested config value type used throughout this module
+ConfigValue = Union[str, int, float, bool, list, dict]
+ConfigDict = dict[str, ConfigValue]
+
+
+def _extract_nested_dict(parent: ConfigDict, key: str) -> ConfigDict:
+    """Extract a nested dict value from a config dict, defaulting to empty dict."""
+    raw = parent.get(key, {})
+    if isinstance(raw, dict):
+        return cast("ConfigDict", raw)
+    return {}
+
 
 class StrategyFactory:
     """
@@ -36,7 +50,7 @@ class StrategyFactory:
     """
 
     # Strategy type mapping
-    STRATEGY_CLASSES: ClassVar[dict] = {
+    STRATEGY_CLASSES: ClassVar[dict[str, type]] = {
         "mean_reversion": MeanReversionStrategy,
         "momentum": MomentumStrategy,
         "modular_momentum": ModularMomentumStrategy,
@@ -46,7 +60,7 @@ class StrategyFactory:
     @classmethod
     def create_strategy(
         cls,
-        strategy_config: dict[str, Union[str, int, float, bool, list, dict]],
+        strategy_config: ConfigDict,
         symbols: Optional[list[str]] = None,
     ) -> Union[MomentumStrategy, MeanReversionStrategy, PairsTradingStrategy]:
         """
@@ -62,7 +76,10 @@ class StrategyFactory:
         Raises:
             ValueError: If strategy type is unknown
         """
-        strategy_type = strategy_config.get("type", "momentum")
+        raw_strategy_type = strategy_config.get("type", "momentum")
+        strategy_type = (
+            raw_strategy_type if isinstance(raw_strategy_type, str) else str(raw_strategy_type)
+        )
 
         strategy_class = cls.STRATEGY_CLASSES.get(strategy_type)
         if not strategy_class:
@@ -91,15 +108,16 @@ class StrategyFactory:
             Strategy name as string
         """
         if hasattr(strategy, "name"):
-            return strategy.name
+            name_attr = strategy.name
+            if isinstance(name_attr, str):
+                return name_attr
+            return str(name_attr)
 
         # Fallback to class name
         return strategy.__class__.__name__
 
     @classmethod
-    def extract_thresholds(
-        cls, strategy_config: dict[str, Union[str, int, float, bool, list, dict]]
-    ) -> dict[str, Union[str, int, float, bool, list, dict]]:
+    def extract_thresholds(cls, strategy_config: ConfigDict) -> ConfigDict:
         """
         Extract trading thresholds from strategy configuration.
 
@@ -109,7 +127,11 @@ class StrategyFactory:
         Returns:
             Dictionary with thresholds for buy/sell signals
         """
-        thresholds = strategy_config.get("thresholds", {})
+        raw_thresholds = strategy_config.get("thresholds", {})
+
+        # Ensure thresholds is a dict
+        thresholds: ConfigDict
+        thresholds = cast("ConfigDict", raw_thresholds) if isinstance(raw_thresholds, dict) else {}
 
         # Default thresholds if not specified
         if not thresholds:
@@ -123,9 +145,7 @@ class StrategyFactory:
         return thresholds
 
     @classmethod
-    def create_baseline_config(
-        cls, base_config: dict[str, Union[str, int, float, bool, list, dict]]
-    ) -> dict[str, Union[str, int, float, bool, list, dict]]:
+    def create_baseline_config(cls, base_config: ConfigDict) -> ConfigDict:
         """
         Create baseline strategy configuration.
 
@@ -135,12 +155,20 @@ class StrategyFactory:
         Returns:
             Strategy configuration for baseline test
         """
-        strategy_type = base_config.get("strategy", {}).get("type", "modular_momentum")
+        strategy_subdict = _extract_nested_dict(base_config, "strategy")
+        strategy_type = strategy_subdict.get("type", "modular_momentum")
+        if not isinstance(strategy_type, str):
+            strategy_type = str(strategy_type)
 
-        config = {
+        parameters_raw = strategy_subdict.get("parameters", {})
+        parameters: ConfigDict = (
+            cast("ConfigDict", parameters_raw) if isinstance(parameters_raw, dict) else {}
+        )
+
+        config: ConfigDict = {
             "type": strategy_type,
-            "parameters": base_config.get("strategy", {}).get("parameters", {}),
-            "thresholds": cls.extract_thresholds(base_config.get("strategy", {})),
+            "parameters": parameters,
+            "thresholds": cls.extract_thresholds(strategy_subdict),
         }
 
         # Add default filters for modular_momentum to ensure signals are generated
@@ -158,9 +186,7 @@ class StrategyFactory:
         return config
 
     @classmethod
-    def create_multi_strategy_configs(
-        cls, base_config: dict[str, Union[str, int, float, bool, list, dict]]
-    ) -> list[dict[str, Union[str, int, float, bool, list, dict]]]:
+    def create_multi_strategy_configs(cls, base_config: ConfigDict) -> list[ConfigDict]:
         """
         Create configurations for multiple strategies.
 
@@ -170,17 +196,25 @@ class StrategyFactory:
         Returns:
             List of strategy configurations
         """
-        base_strategy_config = base_config.get("strategy", {})
-        symbols = base_config.get("input", {}).get("symbols", ["AAPL"])
+        base_strategy_config = _extract_nested_dict(base_config, "strategy")
+        input_subdict = _extract_nested_dict(base_config, "input")
+        symbols_raw = input_subdict.get("symbols", ["AAPL"])
+        symbols: list[str]
+        symbols = [str(s) for s in symbols_raw] if isinstance(symbols_raw, list) else ["AAPL"]
 
-        configs = []
+        configs: list[ConfigDict] = []
 
         # Create config for each strategy type
         for strategy_type in ["momentum", "mean_reversion", "modular_momentum"]:
-            strategy_config = {
+            parameters_raw = base_strategy_config.get("parameters", {})
+            parameters: ConfigDict = (
+                cast("ConfigDict", parameters_raw) if isinstance(parameters_raw, dict) else {}
+            )
+
+            strategy_config: ConfigDict = {
                 "type": strategy_type,
                 "symbols": symbols,
-                "parameters": base_strategy_config.get("parameters", {}),
+                "parameters": parameters,
                 "thresholds": cls.extract_thresholds(base_strategy_config),
             }
             configs.append(strategy_config)
@@ -198,9 +232,7 @@ class StrategyFactory:
         return list(cls.STRATEGY_CLASSES.keys())
 
     @classmethod
-    def validate_config(
-        cls, strategy_config: dict[str, Union[str, int, float, bool, list, dict]]
-    ) -> bool:
+    def validate_config(cls, strategy_config: ConfigDict) -> bool:
         """
         Validate strategy configuration.
 
@@ -222,20 +254,26 @@ class StrategyFactory:
 
         # Check for required fields
         if "thresholds" in strategy_config:
-            thresholds = strategy_config["thresholds"]
-            if (
-                "buy_threshold" in thresholds
-                and "sell_threshold" in thresholds
-                and thresholds["buy_threshold"] <= thresholds["sell_threshold"]
-            ):
-                logger.warning("buy_threshold must be > sell_threshold")
-                return False
+            raw_thresholds = strategy_config["thresholds"]
+            if isinstance(raw_thresholds, dict):
+                thresholds = cast("ConfigDict", raw_thresholds)
+                buy_val = thresholds.get("buy_threshold")
+                sell_val = thresholds.get("sell_threshold")
+                if (
+                    buy_val is not None
+                    and sell_val is not None
+                    and isinstance(buy_val, (int, float))
+                    and isinstance(sell_val, (int, float))
+                    and buy_val <= sell_val
+                ):
+                    logger.warning("buy_threshold must be > sell_threshold")
+                    return False
 
         return True
 
 
 def create_strategy_from_config(
-    strategy_config: dict[str, Union[str, int, float, bool, list, dict]],
+    strategy_config: ConfigDict,
     symbols: Optional[list[str]] = None,
 ) -> Union[MomentumStrategy, MeanReversionStrategy, PairsTradingStrategy]:
     """
@@ -251,7 +289,7 @@ def create_strategy_from_config(
     return StrategyFactory.create_strategy(strategy_config, symbols)
 
 
-def get_strategy_metadata(strategy: object) -> dict[str, Union[str, int, float, bool, list, dict]]:
+def get_strategy_metadata(strategy: object) -> ConfigDict:
     """
     Get metadata about a strategy instance.
 

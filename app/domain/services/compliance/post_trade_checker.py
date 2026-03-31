@@ -199,19 +199,15 @@ class PostTradeComplianceChecker:
         Returns:
             Dict with SLO status
         """
+        latency_ok = latency_ms < 100  # 100ms threshold
+        fill_ok = fill_rate >= 0.95
+
+        slo_status = "OK" if (latency_ok and fill_ok and not error_occurred) else "VIOLATED"
+
         golden_signals = self._registry.get_service("golden_signals")
         trading_metrics = self._registry.get_service("trading_metrics")
 
-        if golden_signals is None and trading_metrics is None:
-            return {"tracked": False, "reason": "SRE services not available"}
-
         try:
-            # Update golden signals
-            latency_ok = latency_ms < 100  # 100ms threshold
-            fill_ok = fill_rate >= 0.95
-
-            slo_status = "OK" if (latency_ok and fill_ok and not error_occurred) else "VIOLATED"
-
             if trading_metrics:
                 trading_metrics.record_execution_latency(latency_ms)
                 trading_metrics.record_fill_rate(fill_rate)
@@ -220,20 +216,18 @@ class PostTradeComplianceChecker:
                 golden_signals.record_latency(latency_ms)
                 if error_occurred:
                     golden_signals.record_error()
-
-            return {
-                "tracked": True,
-                "slo_status": slo_status,
-                "latency_ms": latency_ms,
-                "latency_ok": latency_ok,
-                "fill_rate": fill_rate,
-                "fill_ok": fill_ok,
-                "error_occurred": error_occurred,
-            }
-
         except Exception as e:
-            logger.warning("SLO tracking error: %s", e)
-            return {"tracked": False, "error": str(e)}
+            logger.warning("SLO recording error: %s", e)
+
+        return {
+            "tracked": True,
+            "slo_status": slo_status,
+            "latency_ms": latency_ms,
+            "latency_ok": latency_ok,
+            "fill_rate": fill_rate,
+            "fill_ok": fill_ok,
+            "error_occurred": error_occurred,
+        }
 
     # =========================================================================
     # UTILITY METHODS

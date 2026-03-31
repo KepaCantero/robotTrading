@@ -530,14 +530,14 @@ class StrategyStockAllocator:
                 return result
 
             adf_result = adfuller(clean_series, autolag="AIC")
-            _, adf_pvalue = adf_result[0], adf_result[1]
+            adf_pvalue = adf_result[1]
             result["adf_pvalue"] = float(adf_pvalue)
             result["adf_stationary"] = adf_pvalue < self.config.ADF_P_VALUE_THRESHOLD
 
             # KPSS Test (null hypothesis: stationary) - REQUIRED: use statsmodels
             try:
                 kpss_result = kpss(clean_series, regression="ct", nlags="auto")
-                _, kpss_pvalue = kpss_result[0], kpss_result[1]
+                kpss_pvalue = kpss_result[1]
                 result["kpss_pvalue"] = float(kpss_pvalue)
                 result["kpss_stationary"] = kpss_pvalue > self.config.KPSS_P_VALUE_THRESHOLD
             except (ValueError, TypeError, KeyError, AttributeError) as e:
@@ -864,8 +864,6 @@ class StrategyStockAllocator:
 
             # Normalize metrics for scoring
             sortino_norm = min(1.0, max(0.0, sortino / 2.0)) if sortino is not None else 0.5
-            min(1.0, max(0.0, (slope_pct + 0.1) / 0.2))
-            min(1.0, max(0.0, (spearman_rho + 1) / 2))
             h_long_norm = (
                 (h_long - 0.3) / 0.4 if h_long is not None else 0.5
             )  # Normalize 0.3-0.7 to 0-1
@@ -982,8 +980,6 @@ class StrategyStockAllocator:
                 inv_tau = 1.0 / half_life
                 inv_tau_norm = min(1.0, max(0.0, (inv_tau - 0.01) / 0.1))  # 0.01-0.11 range
 
-            min(1.0, abs(z_score) / 3.0)  # Normalize |Z-score|
-            (min(1.0, max(0.0, (garch_vol - 0.1) / 0.3)) if garch_vol is not None else 0.5)
             sortino_norm = min(1.0, max(0.0, sortino / 2.0)) if sortino is not None else 0.5
             h_long_norm = (
                 max(0.0, (0.5 - h_long) / 0.2) if h_long is not None else 0.5

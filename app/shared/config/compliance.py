@@ -6,6 +6,8 @@ for statistical learning, meta-labeling, microstructure, risk management,
 and execution quality.
 """
 
+from __future__ import annotations
+
 import logging
 
 from pydantic import Field, field_validator, model_validator

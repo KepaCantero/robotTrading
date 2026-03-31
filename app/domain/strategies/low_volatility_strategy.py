@@ -18,6 +18,8 @@ SOLID Principles:
 - Dependency Inversion: Depende de abstracciones
 """
 
+from __future__ import annotations
+
 import logging
 from collections import deque
 from datetime import date
@@ -496,7 +498,8 @@ class LowVolatilityStrategy(BaseStrategy):
         """Obtener sector para un símbolo."""
         for profile in self.universe:
             if profile.symbol == symbol:
-                return profile.sector
+                sector: str = profile.sector
+                return sector
         return None
 
     def get_required_parameters(self) -> list[str]:
@@ -631,7 +634,8 @@ class LowVolatilityStrategy(BaseStrategy):
         if self.current_portfolio is None:
             return {"needs_rebalance": False, "reason": "No portfolio"}
 
-        return self.constructor.analyze_drift(self.current_portfolio)
+        result: dict[str, Any] = self.constructor.analyze_drift(self.current_portfolio)
+        return result
 
     def get_portfolio_metrics(self) -> dict[str, Any]:
         """
@@ -701,4 +705,5 @@ class LowVolatilityStrategy(BaseStrategy):
         import numpy as np
 
         returns_array = np.array(returns_matrix)
-        return self.calculator.calculate_portfolio_volatility(weights, returns_array)
+        volatility: Decimal = self.calculator.calculate_portfolio_volatility(weights, returns_array)
+        return volatility

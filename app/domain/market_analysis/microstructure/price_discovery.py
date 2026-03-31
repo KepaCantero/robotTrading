@@ -37,8 +37,7 @@ logger = logging.getLogger(__name__)
 
 # Import statsmodels with fallback
 try:
-    from statsmodels.tsa.stattools import adfuller as sm_adfuller
-    from statsmodels.tsa.stattools import coint as sm_coint
+    from statsmodels.tsa.stattools import adfuller as sm_adfuller, coint as sm_coint
 
     STATSMODELS_AVAILABLE = True
 

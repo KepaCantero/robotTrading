@@ -10,6 +10,8 @@ Protects against catastrophic losses by closing all positions when:
 Uses centralized configuration for all timeout parameters.
 """
 
+from __future__ import annotations
+
 import asyncio
 import logging
 import signal
@@ -110,7 +112,19 @@ class EmergencyCloser:
         # State
         self._is_closing = False
         self._audit_log: list[
-            dict[str, Union[str, int, float, bool, Decimal, list[str], datetime]]
+            dict[
+                str,
+                Union[
+                    str,
+                    int,
+                    float,
+                    bool,
+                    Decimal,
+                    list[str],
+                    datetime,
+                    dict[str, Union[str, int, float, bool, Decimal, list[str], datetime]],
+                ],
+            ]
         ] = []
         self._last_trigger: Optional[EmergencyTrigger] = None
         self._last_close_time: Optional[datetime] = None
@@ -378,22 +392,25 @@ class EmergencyCloser:
             # Close all positions
             closed = 0
             failed = 0
-            errors = []
+            errors: list[str] = []
             total_value = Decimal("0")
 
             for position in positions:
                 try:
-                    result = await self._close_position(position)
-                    if result["success"]:
+                    close_result = await self._close_position(position)
+                    if close_result.get("success", False):
                         closed += 1
-                        total_value += result.get("value", Decimal("0"))
+                        raw_value = close_result.get("value", Decimal("0"))
+                        total_value += Decimal(str(raw_value))
                     else:
                         failed += 1
-                        errors.append(result.get("error", "Unknown error"))
+                        raw_error = close_result.get("error", "Unknown error")
+                        errors.append(str(raw_error))
                 except (ValueError, TypeError, KeyError, AttributeError) as e:
                     failed += 1
-                    errors.append(f"Error closing {position.symbol}: {e!s}")
-                    logger.error(f"Error closing position {position.symbol}: {e}")
+                    symbol = getattr(position, "symbol", "unknown")
+                    errors.append(f"Error closing {symbol}: {e!s}")
+                    logger.error(f"Error closing position {symbol}: {e}")
 
             execution_time = asyncio.get_event_loop().time() - start_time
 

@@ -15,10 +15,13 @@ from app.services.error_handling.error_handler import (
     ParameterizationError,
     PortfolioError,
     RecommendationError,
-    ServiceException,
+    ServiceError,
     ValidationError,
     service_error_handler,
 )
+
+# Backward-compatible alias for code that references ServiceException
+ServiceException = ServiceError
 
 __all__ = [
     "BacktestError",
@@ -31,6 +34,7 @@ __all__ = [
     "ParameterizationError",
     "PortfolioError",
     "RecommendationError",
+    "ServiceError",
     "ServiceException",
     "ValidationError",
     "service_error_handler",

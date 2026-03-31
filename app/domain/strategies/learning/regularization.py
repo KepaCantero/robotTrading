@@ -242,7 +242,7 @@ class L1Regularization:
         """
         check_is_fitted(self, ["lasso_"])
         X_array = check_array(X, accept_sparse=True)
-        return self.lasso_.predict(X_array)
+        return np.asarray(self.lasso_.predict(X_array))
 
     def score(
         self,
@@ -260,17 +260,17 @@ class L1Regularization:
             R^2 score
         """
         check_is_fitted(self, ["lasso_"])
-        return self.lasso_.score(X, y)
+        return float(self.lasso_.score(X, y))
 
     def get_coefficients(self) -> np.ndarray:
         """Get model coefficients."""
         check_is_fitted(self, ["lasso_"])
-        return self.lasso_.coef_
+        return np.asarray(self.lasso_.coef_)
 
     def get_intercept(self) -> float:
         """Get intercept."""
         check_is_fitted(self, ["lasso_"])
-        return self.lasso_.intercept_
+        return float(self.lasso_.intercept_)
 
     def get_sparsity_mask(self) -> np.ndarray:
         """Get boolean mask of non-zero coefficients."""
@@ -380,7 +380,7 @@ class L2Regularization:
         """
         check_is_fitted(self, ["ridge_"])
         X_array = check_array(X, accept_sparse=True)
-        return self.ridge_.predict(X_array)
+        return np.asarray(self.ridge_.predict(X_array))
 
     def score(
         self,
@@ -398,17 +398,17 @@ class L2Regularization:
             R^2 score
         """
         check_is_fitted(self, ["ridge_"])
-        return self.ridge_.score(X, y)
+        return float(self.ridge_.score(X, y))
 
     def get_coefficients(self) -> np.ndarray:
         """Get model coefficients."""
         check_is_fitted(self, ["ridge_"])
-        return self.ridge_.coef_
+        return np.asarray(self.ridge_.coef_)
 
     def get_intercept(self) -> float:
         """Get intercept."""
         check_is_fitted(self, ["ridge_"])
-        return self.ridge_.intercept_
+        return float(self.ridge_.intercept_)
 
 
 class ElasticNetRegularization:
@@ -515,7 +515,7 @@ class ElasticNetRegularization:
         """
         check_is_fitted(self, ["enet_"])
         X_array = check_array(X, accept_sparse=True)
-        return self.enet_.predict(X_array)
+        return np.asarray(self.enet_.predict(X_array))
 
     def score(
         self,
@@ -533,17 +533,17 @@ class ElasticNetRegularization:
             R^2 score
         """
         check_is_fitted(self, ["enet_"])
-        return self.enet_.score(X, y)
+        return float(self.enet_.score(X, y))
 
     def get_coefficients(self) -> np.ndarray:
         """Get model coefficients."""
         check_is_fitted(self, ["enet_"])
-        return self.enet_.coef_
+        return np.asarray(self.enet_.coef_)
 
     def get_intercept(self) -> float:
         """Get intercept."""
         check_is_fitted(self, ["enet_"])
-        return self.enet_.intercept_
+        return float(self.enet_.intercept_)
 
     def get_sparsity_mask(self) -> np.ndarray:
         """Get boolean mask of non-zero coefficients."""
@@ -662,12 +662,12 @@ class AdaptiveLasso:
         """
         check_is_fitted(self, ["coef_", "intercept_"])
         X_array = check_array(X, accept_sparse=True)
-        return X_array @ self.coef_ + self.intercept_
+        return np.asarray(X_array @ self.coef_ + self.intercept_)
 
     def get_coefficients(self) -> np.ndarray:
         """Get model coefficients."""
         check_is_fitted(self, ["coef_"])
-        return self.coef_
+        return np.asarray(self.coef_)
 
 
 class RegularizationAnalyzer:

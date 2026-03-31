@@ -4,6 +4,8 @@ VolatilityRegimeDetector - Detección de regímenes de volatilidad.
 Clasifica volatilidad en high/normal/low usando percentiles.
 """
 
+from __future__ import annotations
+
 import logging
 from typing import Any, Optional
 

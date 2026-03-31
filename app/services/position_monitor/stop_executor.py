@@ -11,6 +11,8 @@ take-profit is triggered, the executor must:
 4. Return detailed execution results
 """
 
+from __future__ import annotations
+
 import asyncio
 import logging
 from dataclasses import dataclass
@@ -99,7 +101,7 @@ class StopExecutor:
         logger.info("StopExecutor initialized")
 
     async def execute_stop_loss(
-        self, position: "MonitoredPosition", retry_attempts: int = DEFAULT_RETRY_ATTEMPTS
+        self, position: MonitoredPosition, retry_attempts: int = DEFAULT_RETRY_ATTEMPTS
     ) -> StopExecutionResult:
         """
         Execute stop-loss order for a position.
@@ -178,7 +180,7 @@ class StopExecutor:
                 )
 
     async def execute_take_profit(
-        self, position: "MonitoredPosition", retry_attempts: int = DEFAULT_RETRY_ATTEMPTS
+        self, position: MonitoredPosition, retry_attempts: int = DEFAULT_RETRY_ATTEMPTS
     ) -> StopExecutionResult:
         """
         Execute take-profit order for a position.

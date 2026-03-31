@@ -15,6 +15,8 @@ Overall Score 60-79: WARN (Conditional - monitor closely)
 Overall Score < 60: FAIL (Too risky - needs improvement)
 """
 
+from __future__ import annotations
+
 import json
 import logging
 from dataclasses import dataclass, field
@@ -478,9 +480,7 @@ class RobustnessScorer:
             status_icon = (
                 "✓"
                 if result.production_readiness == ProductionReadiness.PASS
-                else "⚠"
-                if result.production_readiness == ProductionReadiness.WARN
-                else "✗"
+                else "⚠" if result.production_readiness == ProductionReadiness.WARN else "✗"
             )
 
             print(

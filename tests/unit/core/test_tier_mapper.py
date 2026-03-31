@@ -12,7 +12,7 @@ from decimal import Decimal
 
 import pytest
 
-from app.core.tier_mapper import (
+from app.shared.utils.tier_mapper import (
     TierMapper,
     TierSystem,
     get_tier,

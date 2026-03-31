@@ -2,6 +2,8 @@
 UnifiedNormalizer - Normalizador unificado que combina todos los normalizadores.
 """
 
+from __future__ import annotations
+
 import logging
 from decimal import Decimal
 from typing import Any, Optional

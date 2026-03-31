@@ -9,14 +9,14 @@ Refactorización de ModularMomentumStrategy como Strategy Engine con:
 - Métricas mejoradas
 """
 
+from __future__ import annotations
+
 import logging
 from collections import deque
 from collections.abc import Sequence
 from datetime import datetime
 from decimal import Decimal
 from typing import Any, Optional
-
-import numpy as np
 
 from app.domain.models.market_data import Quote
 from app.domain.models.portfolio import Portfolio
@@ -113,17 +113,17 @@ class ModularMomentumStrategyEngine(BaseStrategyEngine):
 
         # Históricos para indicadores
         self.indicator_calculator = TechnicalIndicatorCalculator()
-        self.price_history = deque(maxlen=200)
-        self.high_history = deque(maxlen=200)
-        self.low_history = deque(maxlen=200)
-        self.volume_history = deque(maxlen=200)
-        self.atr_history = deque(maxlen=100)
+        self.price_history: deque[float] = deque(maxlen=200)
+        self.high_history: deque[float] = deque(maxlen=200)
+        self.low_history: deque[float] = deque(maxlen=200)
+        self.volume_history: deque[float] = deque(maxlen=200)
+        self.atr_history: deque[float] = deque(maxlen=100)
 
         # Histórico de trades para metadata
-        self.recent_trades: deque = deque(maxlen=10)
+        self.recent_trades: deque[object] = deque(maxlen=10)
 
         # Histórico de features para Deep Learning / Transformer (secuencias)
-        self.features_history = deque(maxlen=200)
+        self.features_history: deque[dict[str, Any]] = deque(maxlen=200)
 
         logger.info(
             f"✅ ModularMomentumStrategyEngine inicializada (preset: {self.preset}, "
@@ -188,13 +188,20 @@ class ModularMomentumStrategyEngine(BaseStrategyEngine):
 
         # Usar FeatureExtractor para extraer features completos
         try:
-            features = self._feature_extractor.extract_complete_features(
-                indicators=indicators,
-                filter_results=filter_results,
-                market_context=market_context,
-                metadata=metadata,
-            )
-            return features
+            if self._feature_extractor is not None:
+                features = self._feature_extractor.extract_complete_features(
+                    indicators=indicators,
+                    filter_results=filter_results,
+                    market_context=market_context,
+                    metadata=metadata,
+                )
+                return dict(features) if features else {}
+            return {
+                "indicators": indicators,
+                "filter_results": filter_results,
+                "market_context": market_context,
+                "metadata": metadata,
+            }
         except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
             logger.warning(f"Error extrayendo features: {e}")
             # Fallback: features básicos
@@ -241,7 +248,10 @@ class ModularMomentumStrategyEngine(BaseStrategyEngine):
             # 3. Analizar contexto de mercado
             price_list = list(self.price_history)
             atr_list = list(self.atr_history) if self.atr_history else []
-            market_context = self.market_analyzer.analyze(market_data, price_list, atr_list)
+            if self.market_analyzer is not None:
+                market_context = self.market_analyzer.analyze(market_data, price_list, atr_list)
+            else:
+                market_context = self._get_market_context(market_data)
 
             # 4. Evaluar todos los filtros
             filter_results = self._evaluate_filters(indicators, market_context)
@@ -371,17 +381,19 @@ class ModularMomentumStrategyEngine(BaseStrategyEngine):
 
         # Fallback a MarketAnalyzer
         if self.market_analyzer:
-            return self.market_analyzer.analyze(market_data, price_list, atr_list)
-        else:
-            # Fallback mínimo si no hay ningún analyzer
-            return {
-                "type": "unknown",
-                "confidence": 0.5,
-                "volatility_regime": "normal",
-                "trend_strength": 0.0,
-                "volatility_percentile": 50,
-                "in_range": False,
-            }
+            analyzer_result = self.market_analyzer.analyze(market_data, price_list, atr_list)
+            if isinstance(analyzer_result, dict):
+                return analyzer_result
+
+        # Fallback mínimo si no hay ningún analyzer
+        return {
+            "type": "unknown",
+            "confidence": 0.5,
+            "volatility_regime": "normal",
+            "trend_strength": 0.0,
+            "volatility_percentile": 50,
+            "in_range": False,
+        }
 
     def _calculate_indicators(self) -> dict[str, Any]:
         """Calcular todos los indicadores técnicos necesarios."""
@@ -535,13 +547,15 @@ class ModularMomentumStrategyEngine(BaseStrategyEngine):
     ) -> float:
         """Calcular confianza de la señal."""
         # Confianza base desde filtros
-        confidences = [res.get("confidence", 0.0) for res in filter_results.values()]
-        base_confidence = np.mean(confidences) if confidences else 0.5
+        confidences = [float(res.get("confidence", 0.0)) for res in filter_results.values()]
+        base_confidence: float = sum(confidences) / len(confidences) if confidences else 0.5
 
         # Ajustar con predicción de learning engine (si está disponible)
         if learning_prediction:
-            learning_confidence = learning_prediction.get(
-                "confidence", learning_prediction.get("success_probability", 0.5)
+            learning_confidence = float(
+                learning_prediction.get(
+                    "confidence", learning_prediction.get("success_probability", 0.5)
+                )
             )
             # Combinar: 60% filtros, 40% learning
             combined = base_confidence * 0.6 + learning_confidence * 0.4

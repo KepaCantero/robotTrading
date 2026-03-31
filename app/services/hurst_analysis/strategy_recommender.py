@@ -11,6 +11,8 @@ Strategy mapping:
 - H >> 0.5: Strong trend (use trend following strategies)
 """
 
+from __future__ import annotations
+
 import logging
 
 from app.services.hurst_analysis.models import MarketRegime, StrategyRecommendation

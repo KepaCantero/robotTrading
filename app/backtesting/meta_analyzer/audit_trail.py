@@ -7,13 +7,15 @@ Permite:
 - Verificar reproducibilidad
 """
 
+from __future__ import annotations
+
 import hashlib
 import json
 import logging
 import subprocess
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 # REQUIRED: aiofiles is REQUIRED - NO FALLBACKS
 import aiofiles
@@ -46,8 +48,8 @@ class AuditTrail:
     def generate_hash(
         self,
         config_path: str,
-        code_version: Optional[str] = None,
-        additional_data: Optional[dict[str, Any]] = None,
+        code_version: str | None = None,
+        additional_data: dict[str, Any] | None = None,
     ) -> str:
         """
         Generar hash SHA256 único para una configuración.
@@ -78,7 +80,7 @@ class AuditTrail:
         git_info = self._get_git_info() if self.enable_git_tracking else {}
 
         # Construir string para hash
-        hash_input = {
+        hash_input: dict[str, Any] = {
             "config_content": config_content.decode("utf-8"),
             "code_version": code_version,
             "git_commit": git_info.get("commit_hash", ""),
@@ -105,15 +107,16 @@ class AuditTrail:
         # Intentar obtener de Git
         if self.enable_git_tracking:
             git_info = self._get_git_info()
-            if git_info.get("commit_hash"):
-                return git_info["commit_hash"]
+            commit_hash = git_info.get("commit_hash")
+            if commit_hash:
+                return str(commit_hash)
 
         # Fallback: timestamp
         return datetime.now().strftime("%Y%m%d")
 
-    def _get_git_info(self) -> dict[str, str]:
+    def _get_git_info(self) -> dict[str, Any]:
         """Obtener información de Git."""
-        git_info = {"commit_hash": "", "branch": "", "is_dirty": False}
+        git_info: dict[str, Any] = {"commit_hash": "", "branch": "", "is_dirty": False}
 
         try:
             # Commit hash
@@ -139,10 +142,10 @@ class AuditTrail:
 
         try:
             # Check si hay cambios sin commit
-            result = subprocess.run(
+            diff_result = subprocess.run(
                 ["git", "diff", "--quiet"], capture_output=True, check=False, timeout=5
             )
-            git_info["is_dirty"] = result.returncode != 0
+            git_info["is_dirty"] = diff_result.returncode != 0
         except (subprocess.CalledProcessError, FileNotFoundError, subprocess.TimeoutExpired) as e:
             git_info["is_dirty"] = True  # Asumir dirty si no se puede verificar
             logger.debug(f"Error checking git dirty state: {e}", exc_info=True)
@@ -153,8 +156,8 @@ class AuditTrail:
         self,
         config_path: str,
         hash_value: str,
-        metadata: Optional[dict[str, Any]] = None,
-        result_path: Optional[str] = None,
+        metadata: dict[str, Any] | None = None,
+        result_path: str | None = None,
     ) -> None:
         """
         Guardar registro de auditoría (asíncrono).
@@ -185,8 +188,8 @@ class AuditTrail:
         self,
         config_path: str,
         hash_value: str,
-        metadata: Optional[dict[str, Any]] = None,
-        result_path: Optional[str] = None,
+        metadata: dict[str, Any] | None = None,
+        result_path: str | None = None,
     ) -> None:
         """
         Guardar registro de auditoría (síncrono).
@@ -280,7 +283,7 @@ class AuditTrail:
 
         return result
 
-    def _find_record_by_hash(self, target_hash: str) -> Optional[dict[str, Any]]:
+    def _find_record_by_hash(self, target_hash: str) -> dict[str, Any] | None:
         """Buscar registro por hash."""
         if not self.log_file.exists():
             return None
@@ -288,7 +291,7 @@ class AuditTrail:
         with open(self.log_file) as f:
             for line in f:
                 try:
-                    record = json.loads(line.strip())
+                    record: dict[str, Any] = json.loads(line.strip())
                     if record.get("hash") == target_hash:
                         return record
                 except json.JSONDecodeError:
@@ -297,7 +300,7 @@ class AuditTrail:
         return None
 
     def list_audit_records(
-        self, limit: Optional[int] = None, filter_by_config: Optional[str] = None
+        self, limit: int | None = None, filter_by_config: str | None = None
     ) -> list[dict[str, Any]]:
         """
         Listar registros de auditoría.

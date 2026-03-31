@@ -8,6 +8,8 @@ Implements Bayesian optimization with:
 - Efficient for expensive evaluations
 """
 
+from __future__ import annotations
+
 import logging
 from datetime import datetime
 from typing import Any, Callable, Optional
@@ -217,7 +219,7 @@ class BayesianOptimizer(BaseOptimizer):
 
         return result
 
-    def _create_study(self) -> "optuna.Study":
+    def _create_study(self) -> optuna.Study:
         """Create Optuna study with appropriate sampler and pruner."""
         if not OPTUNA_AVAILABLE:
             raise RuntimeError("Optuna not available")
@@ -237,7 +239,7 @@ class BayesianOptimizer(BaseOptimizer):
 
         return study
 
-    def _create_sampler(self) -> "optuna.samplers.BaseSampler":
+    def _create_sampler(self) -> optuna.samplers.BaseSampler:
         """Create Optuna sampler."""
         if not OPTUNA_AVAILABLE:
             raise RuntimeError("Optuna not available")
@@ -258,7 +260,7 @@ class BayesianOptimizer(BaseOptimizer):
                 multivariate=self.multivariate,
             )
 
-    def _create_pruner(self) -> Optional["optuna.pruners.BasePruner"]:
+    def _create_pruner(self) -> Optional[optuna.pruners.BasePruner]:
         """Create Optuna pruner."""
         if not OPTUNA_AVAILABLE:
             return None
@@ -276,7 +278,7 @@ class BayesianOptimizer(BaseOptimizer):
 
     def _objective_function(
         self,
-        trial: "optuna.Trial",
+        trial: optuna.Trial,
         objective: Callable[[dict[str, Any]], float],
         param_grid: ParameterGrid,
     ) -> float:
@@ -289,7 +291,7 @@ class BayesianOptimizer(BaseOptimizer):
             param_grid: Parameter search space
 
         Returns:
-            Objective value (will be maximized/minimized by Optuna)
+            Objective value (will be maximized/minimized by Optuna
         """
         # Define search space and get params
         params = self._define_search_space(trial, param_grid)
@@ -311,7 +313,7 @@ class BayesianOptimizer(BaseOptimizer):
 
     def _define_search_space(
         self,
-        trial: "optuna.Trial",
+        trial: optuna.Trial,
         param_grid: ParameterGrid,
     ) -> dict[str, Any]:
         """
@@ -333,9 +335,9 @@ class BayesianOptimizer(BaseOptimizer):
 
     def _suggest_parameter(
         self,
-        trial: "optuna.Trial",
+        trial: optuna.Trial,
         param: ParameterRange,
-    ) -> Any:
+    ) -> object:
         """
         Suggest a parameter value using Optuna.
 
@@ -390,7 +392,7 @@ class BayesianOptimizer(BaseOptimizer):
 
         raise ValueError(f"Unknown parameter type: {param.parameter_type}")
 
-    def _extract_results_from_study(self, study: "optuna.Study") -> None:
+    def _extract_results_from_study(self, study: optuna.Study) -> None:
         """
         Extract trial results from Optuna study.
 
@@ -474,7 +476,7 @@ class MultiObjectiveBayesianOptimizer(BaseOptimizer):
         self,
         objectives: list[Callable[[dict[str, Any]], float]],
         param_grid: ParameterGrid,
-    ) -> "ParetoFront":
+    ) -> ParetoFront:
         """
         Run multi-objective optimization.
 
@@ -525,9 +527,9 @@ class MultiObjectiveBayesianOptimizer(BaseOptimizer):
 
     def _suggest_parameter(
         self,
-        trial: "optuna.Trial",
+        trial: optuna.Trial,
         param: ParameterRange,
-    ) -> Any:
+    ) -> object:
         """Suggest parameter using Optuna."""
         if param.parameter_type == ParameterType.CATEGORICAL:
             if param.values is None:
@@ -553,9 +555,9 @@ class MultiObjectiveBayesianOptimizer(BaseOptimizer):
 
     def _extract_pareto_front(
         self,
-        study: "optuna.Study",
+        study: optuna.Study,
         objectives: list[Callable],
-    ) -> "ParetoFront":
+    ) -> ParetoFront:
         """Extract Pareto front from Optuna study."""
         best_trials = study.best_trials
 

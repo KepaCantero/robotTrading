@@ -8,6 +8,8 @@ Incluye:
 - Data quality metrics
 """
 
+from __future__ import annotations
+
 import hashlib
 import logging
 from datetime import datetime

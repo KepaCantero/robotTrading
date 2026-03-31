@@ -5,11 +5,13 @@ Prometheus integration for collecting, tracking, and exposing trading metrics.
 Includes counters, gauges, histograms, and summary metrics for comprehensive monitoring.
 """
 
+from __future__ import annotations
+
 import logging
 import time
 from datetime import datetime
 from enum import Enum
-from typing import Optional
+from typing import Any, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -97,7 +99,7 @@ class PrometheusMetricsCollector:
     def __init__(self):
         """Initialize Prometheus metrics collector."""
         self.metrics: dict[str, PrometheusMetric] = {}
-        self.metric_values: dict[str, dict[str, float]] = {}
+        self.metric_values: dict[str, dict[str, Any]] = {}
         self.timestamps: dict[str, float] = {}
         self._initialize_metrics()
         logger.info("✅ PrometheusMetricsCollector initialized")
@@ -448,9 +450,9 @@ class PrometheusMetricsCollector:
 
         return "\n".join(lines)
 
-    def get_metrics_summary(self) -> dict:
+    def get_metrics_summary(self) -> dict[str, Any]:
         """Get summary of all metrics."""
-        summary = {
+        summary: dict[str, Any] = {
             "total_metrics": len(self.metrics),
             "metrics_by_type": {},
             "last_updated": datetime.now().isoformat(),

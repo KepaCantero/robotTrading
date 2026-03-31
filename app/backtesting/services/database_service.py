@@ -14,7 +14,7 @@ from __future__ import annotations
 
 import logging
 import threading
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 from uuid import uuid4
 
 from sqlalchemy import create_engine
@@ -291,7 +291,9 @@ class DatabaseService:
             Mapped tier key for config lookups (bajo, medio, or alto)
         """
         try:
-            return map_profile_tier_to_config(profile.capital_flag, target_format="spanish")
+            return cast(
+                "str", map_profile_tier_to_config(profile.capital_flag, target_format="spanish")
+            )
         except OSError as e:
             logger.warning(f"Tier mapper failed for {profile.capital_flag}, using fallback: {e}")
             tier_map = {"small": "bajo", "medium": "medio", "large": "alto"}

@@ -6,6 +6,8 @@ Implements:
 - Dynamic capital adjustments for strategies with negative streaks (TASK-REB-2)
 """
 
+from __future__ import annotations
+
 import logging
 from datetime import datetime
 from decimal import Decimal

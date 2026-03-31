@@ -6,7 +6,7 @@ from unittest.mock import Mock
 
 import pytest
 
-from app.security.security_headers import (
+from app.security.web_security.security_headers import (
     ContentSecurityPolicy,
     HSTSHeader,
     PermissionsPolicy,

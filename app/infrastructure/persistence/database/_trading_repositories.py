@@ -19,8 +19,7 @@ from sqlalchemy.exc import (
     OperationalError,
     ProgrammingError,
 )
-from sqlalchemy.sql.functions import count as sa_count
-from sqlalchemy.sql.functions import sum as sa_sum
+from sqlalchemy.sql.functions import count as sa_count, sum as sa_sum
 
 from app.infrastructure.persistence.database._base_repository import BaseRepository, logger
 from app.infrastructure.persistence.database.models import Signal, Trade

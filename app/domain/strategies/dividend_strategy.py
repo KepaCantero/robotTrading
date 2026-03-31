@@ -18,6 +18,8 @@ SOLID Principles:
 - Dependency Inversion: Depende de abstracciones
 """
 
+from __future__ import annotations
+
 import logging
 from datetime import date
 from decimal import Decimal
@@ -121,13 +123,13 @@ class DividendStrategy(BaseStrategy):
                 "name": "DividendStrategy",
                 "description": "Estrategia de inversión en dividendos",
                 "version": "1.0.0",
-                "min_dividend_yield": Decimal(str(self._cfg.min_yield_default)),
-                "max_dividend_yield": Decimal(str(self._cfg.max_yield_default)),
-                "max_payout_ratio": Decimal(str(self._cfg.max_payout_ratio_default)),
+                "min_dividend_yield": Decimal(str(self._cfg.get("min_yield", 0.02))),
+                "max_dividend_yield": Decimal(str(self._cfg.get("max_yield", 0.08))),
+                "max_payout_ratio": Decimal(str(self._cfg.get("min_payout", 0.75))),
                 "min_years_consecutive": 3,
-                "portfolio_size": self._cfg.portfolio_size_default,
-                "max_sector_weight": Decimal(str(self._cfg.max_sector_weight_default)),
-                "max_single_position": Decimal(str(self._cfg.max_single_position_default)),
+                "portfolio_size": int(self._cfg.get("portfolio_size", 20)),
+                "max_sector_weight": Decimal(str(self._cfg.get("max_sector_weight", 0.25))),
+                "max_single_position": Decimal(str(self._cfg.get("max_single_position", 0.05))),
             }
 
             # Merge con config provisto
@@ -206,9 +208,7 @@ class DividendStrategy(BaseStrategy):
             return []
 
         # Actualizar precio en el perfil
-        profile.current_price = (
-            market_data.close if hasattr(market_data, "close") else market_data.price
-        )
+        profile.current_price = market_data.close if market_data.close else market_data.last
 
         # Evaluar si generar señal
         signals = []
@@ -296,7 +296,8 @@ class DividendStrategy(BaseStrategy):
         # Payout ratio peligroso - use config value
         if (
             profile.dividend_data.payout_ratio is not None
-            and profile.dividend_data.payout_ratio > self._cfg.payout_ratio_critical
+            and profile.dividend_data.payout_ratio
+            > Decimal(str(self._cfg.get("critical_payout_ratio", 1.0)))
         ):
             logger.warning(f"⚠️ Payout ratio crítico: {profile.symbol}")
             return True
@@ -304,7 +305,8 @@ class DividendStrategy(BaseStrategy):
         # Dividend coverage bajo - use config value
         if (
             profile.dividend_data.dividend_coverage_ratio is not None
-            and profile.dividend_data.dividend_coverage_ratio < self._cfg.min_coverage_ratio
+            and profile.dividend_data.dividend_coverage_ratio
+            < Decimal(str(self._cfg.get("min_coverage_ratio", 1.5)))
         ):
             logger.warning(f"⚠️ Cobertura insuficiente: {profile.symbol}")
             return True
@@ -312,8 +314,9 @@ class DividendStrategy(BaseStrategy):
         # Calidad baja - use config multiplier
         if profile.quality_score is not None and (
             profile.quality_score
-            < self.strategy_config.min_quality_score * self._cfg.quality_multiplier
-        ):  # Use config multiplier
+            < self.strategy_config.min_quality_score
+            * Decimal(str(self._cfg.get("quality_multiplier", 0.8)))
+        ):
             logger.warning(f"⚠️ Calidad deteriorada: {profile.symbol}")
             return True
 
@@ -337,7 +340,7 @@ class DividendStrategy(BaseStrategy):
             return None
 
         today = date.today()
-        days_until = (ex_div_date - today).days
+        days_until = (ex_div_date.date() - today).days
 
         # Comprar antes de ex-dividend
         if 0 <= days_until <= self.strategy_config.min_days_before_ex_dividend:
@@ -367,12 +370,16 @@ class DividendStrategy(BaseStrategy):
             Señal de compra
         """
         # Calcular confianza basada en calidad - use config default
-        confidence = float(profile.quality_score or self._cfg.default_quality_score)
+        confidence = float(profile.quality_score or self._cfg.get("default_quality_score", 70.0))
 
         # Calcular fuerza basada en yield y sostenibilidad - use config thresholds
-        if profile.dividend_data.dividend_yield >= self._cfg.strong_yield_threshold:
+        if profile.dividend_data.dividend_yield >= Decimal(
+            str(self._cfg.get("strong_yield_threshold", 0.05))
+        ):
             strength = SignalStrength.STRONG
-        elif profile.dividend_data.dividend_yield >= self._cfg.moderate_yield_threshold:
+        elif profile.dividend_data.dividend_yield >= Decimal(
+            str(self._cfg.get("moderate_yield_threshold", 0.03))
+        ):
             strength = SignalStrength.MODERATE
         else:
             strength = SignalStrength.WEAK
@@ -380,8 +387,9 @@ class DividendStrategy(BaseStrategy):
         # Priority score combinado - use config weights
         priority = min(
             100,
-            confidence * self._cfg.priority_confidence_weight
-            + float(profile.dividend_data.dividend_yield) * self._cfg.priority_yield_weight,
+            confidence * self._cfg.get("priority_confidence_weight", 0.6)
+            + float(profile.dividend_data.dividend_yield)
+            * self._cfg.get("priority_yield_weight", 0.4),
         )
 
         # Liquidity score - calculate using actual market data instead of hardcoded value
@@ -396,8 +404,8 @@ class DividendStrategy(BaseStrategy):
             liquidity_score=liquidity_score,
             priority_score=priority,
             source=SignalSource.FUNDAMENTAL,
-            price=market_data.close if hasattr(market_data, "close") else market_data.price,
-            volume=market_data.volume if hasattr(market_data, "volume") else Decimal("1000000"),
+            price=market_data.close if market_data.close else market_data.last,
+            volume=market_data.volume,
             metadata={
                 "reason": reason,
                 "dividend_yield": float(profile.dividend_data.dividend_yield),
@@ -431,14 +439,12 @@ class DividendStrategy(BaseStrategy):
             symbol=profile.symbol,
             signal_type=SignalType.SELL,
             strength=SignalStrength.MODERATE,
-            confidence=self._cfg.sell_confidence,  # Use config value
-            liquidity_score=self._calculate_liquidity_score(
-                market_data
-            ),  # Calculate real liquidity
-            priority_score=self._cfg.sell_priority,  # Use config value
+            confidence=self._cfg.get("sell_confidence", 70.0),
+            liquidity_score=self._calculate_liquidity_score(market_data),
+            priority_score=self._cfg.get("sell_priority", 60.0),
             source=SignalSource.FUNDAMENTAL,
-            price=market_data.close if hasattr(market_data, "close") else market_data.price,
-            volume=market_data.volume if hasattr(market_data, "volume") else Decimal("1000000"),
+            price=market_data.close if market_data.close else market_data.last,
+            volume=market_data.volume,
             metadata={
                 "reason": "dividend_safety_deteriorated",
                 "payout_ratio": float(profile.dividend_data.payout_ratio or 0),
@@ -464,27 +470,27 @@ class DividendStrategy(BaseStrategy):
         Returns:
             Liquidity score from 0 to 100
         """
-        # Get bid and ask prices
-        bid = getattr(market_data, "bid", None)
-        ask = getattr(market_data, "ask", None)
-        volume = float(getattr(market_data, "volume", 0))
+        # Get bid and ask prices directly from Quote
+        bid: Decimal = market_data.bid
+        ask: Decimal = market_data.ask
+        volume: float = float(market_data.volume)
 
-        # If bid/ask not available, use default from config
-        if bid is None or ask is None or bid == 0 or ask == 0:
-            return self._cfg.default_liquidity_score
+        # If bid/ask are zero, use default from config
+        if bid == 0 or ask == 0:
+            return float(self._cfg.get("default_liquidity_score", 70.0))
 
         # Calculate spread percentage
-        spread_pct = ((ask - bid) / bid) * 100
+        spread_pct = float((ask - bid) / bid) * 100
 
         # Normalize spread: lower spread = higher liquidity
         # Use 0.1% (10 bps) as "excellent" liquidity, 5% as "poor" liquidity
-        spread_score = max(0, 100 - (spread_pct / 5.0) * 100)
+        spread_score = max(0.0, 100.0 - (spread_pct / 5.0) * 100)
 
         # Normalize volume: use log scale for better distribution
         # $1M daily volume = 50 points (baseline), $100M = 100 points
         import math
 
-        volume_score = min(100, max(0, 50 + math.log10(max(1, volume / 1_000_000)) * 25))
+        volume_score = min(100.0, max(0.0, 50 + math.log10(max(1, volume / 1_000_000)) * 25))
 
         # Combine spread (60%) and volume (40%) for final score
         liquidity_score = (spread_score * 0.6) + (volume_score * 0.4)
@@ -522,7 +528,7 @@ class DividendStrategy(BaseStrategy):
 
         for pos in portfolio.positions:
             if pos.symbol == signal.symbol:
-                current_allocation = pos.value / portfolio.total_value
+                current_allocation = pos.market_value / portfolio.total_value
 
         # Si ya tenemos posición, verificar si podemos aumentar
         if current_allocation > 0 and current_allocation >= max_pos:
@@ -553,7 +559,8 @@ class DividendStrategy(BaseStrategy):
         """Obtener sector para un símbolo."""
         for profile in self.universe:
             if profile.symbol == symbol:
-                return profile.sector
+                sector: Optional[str] = profile.sector
+                return sector
         return None
 
     def get_required_parameters(self) -> list[str]:
@@ -647,7 +654,8 @@ class DividendStrategy(BaseStrategy):
         if self.current_portfolio is None:
             return {"needs_rebalance": False, "reason": "No portfolio"}
 
-        return self.constructor.analyze_drift(self.current_portfolio)
+        result: dict[str, Any] = self.constructor.analyze_drift(self.current_portfolio)
+        return result
 
     def get_portfolio_metrics(self) -> dict[str, Any]:
         """

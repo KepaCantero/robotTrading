@@ -8,6 +8,8 @@ correlation calculated from historical price movements using pandas for
 efficient calculation.
 """
 
+from __future__ import annotations
+
 import asyncio
 import contextlib
 import logging

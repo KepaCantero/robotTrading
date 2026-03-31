@@ -2,6 +2,8 @@
 Logging protocols (R15, R28)
 """
 
+from __future__ import annotations
+
 from typing import TYPE_CHECKING, Protocol
 
 if TYPE_CHECKING:
@@ -13,11 +15,11 @@ if TYPE_CHECKING:
 class ITradingDecisionLogger(Protocol):
     """Logger append-only con correlation ID - Máximo 5 métodos"""
 
-    def log_signal(self, signal: "TradeSignal", metadata: dict) -> str:
+    def log_signal(self, signal: TradeSignal, metadata: dict) -> str:
         """Log signal con correlation ID"""
         ...
 
-    def log_execution(self, correlation_id: str, result: "TradeResult") -> None:
+    def log_execution(self, correlation_id: str, result: TradeResult) -> None:
         """Log execution result"""
         ...
 

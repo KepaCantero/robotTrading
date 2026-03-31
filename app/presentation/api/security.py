@@ -13,13 +13,14 @@ GAP Fixes:
 from __future__ import annotations
 
 import asyncio
+import hashlib
 import logging
 import time
 import traceback
 from collections import defaultdict
 from datetime import datetime
 from functools import wraps
-from typing import TYPE_CHECKING, Any, Callable
+from typing import TYPE_CHECKING, Callable, TypeVar, cast
 
 from fastapi import HTTPException, Request, Response, status
 from starlette.middleware.base import BaseHTTPMiddleware
@@ -30,6 +31,8 @@ if TYPE_CHECKING:
     from starlette.types import ASGIApp
 
 logger = logging.getLogger(__name__)
+
+F = TypeVar("F", bound=Callable[..., object])
 
 
 # ============================================================================
@@ -84,7 +87,8 @@ class RateLimiter:
         # Try to get API key from headers
         api_key = request.headers.get("X-API-Key")
         if api_key:
-            return f"api_key:{api_key}"
+            key_hash = hashlib.sha256(api_key.encode()).hexdigest()[:16]
+            return f"api_key:{key_hash}"
 
         # Fall back to client IP
         # Handle proxies by checking X-Forwarded-For or X-Real-IP
@@ -103,7 +107,7 @@ class RateLimiter:
         key: str,
         max_requests: int | None = None,
         window_seconds: int | None = None,
-    ) -> tuple[bool, dict[str, Any]]:
+    ) -> tuple[bool, dict[str, int | str]]:
         """
         Check if a request is allowed under rate limiting rules.
 
@@ -192,7 +196,7 @@ def rate_limit(
     max_requests: int = 100,
     window_seconds: int = 60,
     key_func: Callable[[Request], str] | None = None,
-):
+) -> Callable[[F], F]:
     """
     Decorator to apply rate limiting to an endpoint.
 
@@ -211,11 +215,9 @@ def rate_limit(
             return {"data": "..."}
     """
 
-    def decorator(func: Callable) -> Callable:
+    def decorator(func: F) -> F:
         @wraps(func)
-        async def wrapper(
-            *args: object, **kwargs: object
-        ) -> object:
+        async def wrapper(*args: object, **kwargs: object) -> object:
             # Try to extract Request from kwargs
             request: Request | None = None
             for arg in args:
@@ -273,7 +275,7 @@ def rate_limit(
 
             return await func(*args, **kwargs)
 
-        return wrapper
+        return cast("F", wrapper)
 
     return decorator
 
@@ -381,12 +383,12 @@ class SecurityConfig:
     """Security configuration settings."""
 
     # NOTE: Move these to environment variables or config file
-    AUTH_ENABLED = False  # Set to True when JWT/OAuth is implemented
-    AUTH_REQUIRED_BY_DEFAULT = False
+    AUTH_ENABLED = True  # Authentication must be enabled for production
+    AUTH_REQUIRED_BY_DEFAULT = True
     ADMIN_ROLE_REQUIRED = False
 
 
-def get_user_from_request(request: Request) -> dict[str, Any] | None:
+def get_user_from_request(request: Request) -> dict[str, str] | None:
     """
     Extract user information from the request.
 
@@ -402,8 +404,11 @@ def get_user_from_request(request: Request) -> dict[str, Any] | None:
     # Placeholder: Check for API key in headers
     api_key = request.headers.get("X-API-Key")
     if api_key:
-        # NOTE: Validate API key against database
-        return {"id": "api_user", "type": "api_key", "key": api_key[:8] + "..."}
+        # Basic validation: reject empty or clearly invalid keys
+        if len(api_key) < 32:
+            return None
+        # Mask the key for logging - never expose full key
+        return {"id": "api_key_user", "type": "api_key", "key_prefix": api_key[:8]}
 
     # Placeholder: Check for JWT token
     auth_header = request.headers.get("Authorization")
@@ -423,7 +428,7 @@ def require_auth(
     allow_api_key: bool = True,
     roles: list[str] | None = None,
     require_verified: bool = False,
-):
+) -> Callable[[F], F]:
     """
     Decorator to require authentication for an endpoint.
 
@@ -444,11 +449,9 @@ def require_auth(
             return {"status": "executed"}
     """
 
-    def decorator(func: Callable) -> Callable:
+    def decorator(func: F) -> F:
         @wraps(func)
-        async def wrapper(
-            *args: object, **kwargs: object
-        ) -> object:
+        async def wrapper(*args: object, **kwargs: object) -> object:
             # Extract Request from args or kwargs
             request: Request | None = None
             for arg in args:
@@ -541,12 +544,12 @@ def require_auth(
 
             return await func(*args, **kwargs)
 
-        return wrapper
+        return cast("F", wrapper)
 
     return decorator
 
 
-def require_admin(func: Callable) -> Callable:
+def require_admin(func: F) -> F:
     """
     Decorator to require admin role for an endpoint.
 
@@ -577,7 +580,7 @@ def audit_log(
     log_args: bool = False,
     log_result: bool = False,
     sensitive_params: list[str] | None = None,
-):
+) -> Callable[[F], F]:
     """
     Decorator to add comprehensive audit logging to an endpoint.
 
@@ -597,11 +600,9 @@ def audit_log(
             return {"status": "executed"}
     """
 
-    def decorator(func: Callable) -> Callable:
+    def decorator(func: F) -> F:
         @wraps(func)
-        async def wrapper(
-            *args: object, **kwargs: object
-        ) -> object:
+        async def wrapper(*args: object, **kwargs: object) -> object:
             correlation_id = get_correlation_id()
             start_time = time.time()
 
@@ -712,7 +713,7 @@ def audit_log(
 
                 raise
 
-        return wrapper
+        return cast("F", wrapper)
 
     return decorator
 
@@ -762,7 +763,7 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
 # ============================================================================
 
 
-def get_cors_config() -> dict[str, Any]:
+def get_cors_config() -> dict[str, list[str] | bool | int]:
     """
     Get CORS configuration for FastAPI.
 

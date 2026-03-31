@@ -5,6 +5,8 @@ This module implements various methods for combining trading strategies
 into a portfolio with optimal weight allocations.
 """
 
+from __future__ import annotations
+
 import logging
 from decimal import Decimal
 from typing import Any, Optional

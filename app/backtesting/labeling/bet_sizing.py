@@ -27,8 +27,24 @@ from __future__ import annotations
 import logging
 from dataclasses import dataclass, field
 from datetime import datetime
+from typing import Protocol, cast, runtime_checkable
 
 import numpy as np
+
+
+@runtime_checkable
+class SklearnModel(Protocol):
+    """Protocol for sklearn-like models with predict interface."""
+
+    def predict(self, X: np.ndarray) -> np.ndarray: ...
+
+
+@runtime_checkable
+class SklearnModelWithProba(SklearnModel, Protocol):
+    """Protocol for sklearn-like models that also support predict_proba."""
+
+    def predict_proba(self, X: np.ndarray) -> np.ndarray: ...
+
 
 logger = logging.getLogger(__name__)
 
@@ -301,9 +317,9 @@ class BetSizing:
                 # Clip to bounds
                 kelly = np.clip(kelly, self.config.min_kelly, self.config.max_kelly)
 
-                bet_sizes[i] = abs(kelly)
+                bet_sizes[i] = abs(float(kelly))
 
-        return bet_sizes
+        return cast("np.ndarray", bet_sizes)
 
     def _probability_sizing(
         self,
@@ -352,7 +368,7 @@ class BetSizing:
 
             bet_sizes[i] = size
 
-        return bet_sizes
+        return cast("np.ndarray", bet_sizes)
 
     def _risk_parity_sizing(
         self,
@@ -380,7 +396,7 @@ class BetSizing:
         n_active = active_mask.sum()
 
         if n_active == 0:
-            return bet_sizes
+            return cast("np.ndarray", bet_sizes)
 
         # Default volatilities if not provided
         volatilities = np.ones(n_active) if volatilities is None else volatilities[active_mask]
@@ -392,7 +408,7 @@ class BetSizing:
         # Set bet sizes
         bet_sizes[active_mask] = weights
 
-        return bet_sizes
+        return cast("np.ndarray", bet_sizes)
 
     def _fixed_sizing(self, predictions: np.ndarray) -> np.ndarray:
         """
@@ -411,10 +427,10 @@ class BetSizing:
         n_active = active_mask.sum()
 
         if n_active > 0:
-            size = 1.0 / n_active
+            size = 1.0 / int(n_active)
             bet_sizes[active_mask] = size
 
-        return bet_sizes
+        return cast("np.ndarray", bet_sizes)
 
     def _adjust_for_volatility(
         self,
@@ -440,7 +456,7 @@ class BetSizing:
         vol_adjustment = 1.0 / (norm_vol + 1e-10)
 
         # Apply adjustment
-        return bet_sizes * vol_adjustment
+        return cast("np.ndarray", bet_sizes * vol_adjustment)
 
     def _adjust_for_correlation(
         self,
@@ -464,7 +480,7 @@ class BetSizing:
         active_indices = np.where(active_mask)[0]
 
         if len(active_indices) < 2:
-            return bet_sizes
+            return cast("np.ndarray", bet_sizes)
 
         # Calculate average correlation for each position
         avg_correlations = np.zeros(len(active_indices))
@@ -480,7 +496,7 @@ class BetSizing:
         correlation_adjustment = 1.0 / (1.0 + avg_correlations)
         bet_sizes[active_indices] = bet_sizes[active_indices] * correlation_adjustment
 
-        return bet_sizes
+        return cast("np.ndarray", bet_sizes)
 
     def _apply_concentration_limit(self, bet_sizes: np.ndarray) -> np.ndarray:
         """
@@ -497,7 +513,7 @@ class BetSizing:
         # Cap each position
         bet_sizes = np.minimum(bet_sizes, self.config.concentration_limit)
 
-        return bet_sizes
+        return cast("np.ndarray", bet_sizes)
 
     def _apply_exposure_limit(self, bet_sizes: np.ndarray) -> np.ndarray:
         """
@@ -539,7 +555,7 @@ class BetSizing:
         risk_contrib = np.zeros(len(bet_sizes))
 
         if volatilities is None:
-            return risk_contrib
+            return cast("np.ndarray", risk_contrib)
 
         # Calculate portfolio volatility
         active_mask = bet_sizes > 0
@@ -1025,7 +1041,7 @@ def calculate_kelly_criterion(
 
 
 def calculate_bet_sizes_with_meta_model(
-    meta_model: object,
+    meta_model: SklearnModel,
     X: np.ndarray,
     primary_predictions: np.ndarray,
     expected_returns: np.ndarray | None = None,
@@ -1059,7 +1075,7 @@ def calculate_bet_sizes_with_meta_model(
         ... )
     """
     # Get meta-model predictions
-    if hasattr(meta_model, "predict_proba"):
+    if isinstance(meta_model, SklearnModelWithProba):
         meta_proba_raw = meta_model.predict_proba(X)
 
         # Extract probability of positive class (meta-label = 1)

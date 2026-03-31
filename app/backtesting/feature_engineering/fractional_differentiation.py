@@ -18,8 +18,10 @@ Author: Advanced Financial Machine Learning Implementation
 Version: 3.0.0 - NUMBA OPTIMIZED
 """
 
+from __future__ import annotations
+
 import warnings
-from typing import Optional, Union
+from typing import Optional, Union, cast
 
 import numpy as np
 import pandas as pd
@@ -30,13 +32,17 @@ try:
 
     STATSMODELS_AVAILABLE = True
 
-    def adfuller(*args, **kwargs):
+    def adfuller_wrapper(*args, **kwargs):
         return sm_adfuller(*args, **kwargs)
 
 except ImportError:
-    from app.shared.performance.statsmodels_fallback import adfuller
+    from app.shared.performance.statsmodels_fallback import adfuller as fallback_adfuller
 
     STATSMODELS_AVAILABLE = False
+
+    def adfuller_wrapper(*args, **kwargs):
+        return fallback_adfuller(*args, **kwargs)
+
 
 import numba
 
@@ -55,7 +61,7 @@ warnings.filterwarnings("ignore")
 
 
 @jit(nopython=True, cache=True)
-def calculate_weights_numba(d: float, threshold: float) -> np.ndarray:
+def calculate_weights_numba(d: float, threshold: float):
     """
     Calculate weights for fractional differentiation using Numba JIT.
 
@@ -98,8 +104,13 @@ def calculate_weights_numba(d: float, threshold: float) -> np.ndarray:
     return weights[: k + 1]
 
 
+def calculate_weights(d: float, threshold: float) -> np.ndarray:
+    """Calculate weights for fractional differentiation (typed wrapper)."""
+    return cast("np.ndarray", calculate_weights_numba(d, threshold))
+
+
 @jit(nopython=True, cache=True)
-def fractional_diff_fast_numba(series: np.ndarray, weights: np.ndarray) -> np.ndarray:
+def fractional_diff_fast_numba(series: np.ndarray, weights: np.ndarray):
     """
     Apply fractional differentiation using Numba JIT (vectorized).
 
@@ -134,7 +145,7 @@ def fractional_diff_fast_numba(series: np.ndarray, weights: np.ndarray) -> np.nd
 
 
 @njit(parallel=True, cache=True)
-def fractional_diff_parallel_numba(series: np.ndarray, weights: np.ndarray) -> np.ndarray:
+def fractional_diff_parallel_numba(series: np.ndarray, weights: np.ndarray):
     """
     Apply fractional differentiation using parallel Numba JIT.
 
@@ -171,7 +182,7 @@ def fractional_diff_parallel_numba(series: np.ndarray, weights: np.ndarray) -> n
 
 
 @jit(nopython=True, cache=True)
-def calculate_adfuller_on_diff_series(series: np.ndarray, weights: np.ndarray, d: float) -> float:
+def calculate_adfuller_on_diff_series(series: np.ndarray, weights: np.ndarray, d: float):
     """
     Calculate ADF test statistic for fractionally differentiated series.
 
@@ -279,7 +290,7 @@ class FractionalDifferentiation:
         self.max_lookback = max_lookback
         self.use_parallel = use_parallel
         self.numba_enabled = numba_enabled and NUMBA_AVAILABLE
-        self._weights_cache: dict[float, np.ndarray] = {}
+        self._weights_cache: dict[tuple[float, float], np.ndarray] = {}
 
         if not NUMBA_AVAILABLE:
             import logging
@@ -318,7 +329,7 @@ class FractionalDifferentiation:
 
         # Use Numba if enabled
         if self.numba_enabled:
-            weights_array = calculate_weights_numba(d, threshold)
+            weights_array = cast("np.ndarray", calculate_weights_numba(d, threshold))
         else:
             # Fallback to pure Python (should not happen in production)
             weights = [1.0]
@@ -392,9 +403,9 @@ class FractionalDifferentiation:
         # Apply fractional differentiation
         if self.numba_enabled:
             if self.use_parallel and len(series_values) > 10000:
-                result = fractional_diff_parallel_numba(series_values, weights)
+                result = cast("np.ndarray", fractional_diff_parallel_numba(series_values, weights))
             else:
-                result = fractional_diff_fast_numba(series_values, weights)
+                result = cast("np.ndarray", fractional_diff_fast_numba(series_values, weights))
         else:
             # Fallback to vectorized numpy operations
             result = np.full(len(series), np.nan)
@@ -443,7 +454,7 @@ class FractionalDifferentiation:
 
         # Apply with Numba
         if self.numba_enabled:
-            result = fractional_diff_fast_numba(series_values, weights_filtered)
+            result = cast("np.ndarray", fractional_diff_fast_numba(series_values, weights_filtered))
         else:
             # Fallback
             result = np.full(len(series), np.nan)
@@ -461,7 +472,7 @@ class FractionalDifferentiation:
         step: float = 0.05,
         adfuller_alpha: Optional[float] = None,
         method: str = "binary",
-    ) -> tuple[float, float, dict]:
+    ) -> tuple[float, float, dict[str, object]]:
         """
         Find minimum d that achieves stationarity (OPTIMIZED with Numba helpers).
 
@@ -513,12 +524,13 @@ class FractionalDifferentiation:
 
     def _binary_search_d(
         self, series: pd.Series, min_d: float, max_d: float, alpha: float
-    ) -> tuple[float, float, dict]:
+    ) -> tuple[float, float, dict[str, object]]:
         """Binary search for optimal d (more efficient) - NUMBA OPTIMIZED."""
-        metadata = {
+        test_history: list[dict[str, object]] = []
+        metadata: dict[str, object] = {
             "method": "binary_search",
             "iterations": 0,
-            "test_history": [],
+            "test_history": test_history,
             "numba_accelerated": self.numba_enabled,
             "using_fallback": not STATSMODELS_AVAILABLE,
         }
@@ -531,14 +543,12 @@ class FractionalDifferentiation:
             warnings.warn("Insufficient data points after differentiation", stacklevel=2)
 
         try:
-            adf_result = adfuller(diff_max_clean, maxlag=1)
+            adf_result = adfuller_wrapper(diff_max_clean, maxlag=1)
             p_value_max = adf_result[1]
         except Exception:
             p_value_max = 1.0
 
-        metadata["test_history"].append(
-            {"d": max_d, "p_value": p_value_max, "stationary": p_value_max < alpha}
-        )
+        test_history.append({"d": max_d, "p_value": p_value_max, "stationary": p_value_max < alpha})
 
         # If even d=1 doesn't achieve stationarity, return max_d
         if p_value_max >= alpha:
@@ -547,23 +557,23 @@ class FractionalDifferentiation:
         # Binary search for minimum d
         low, high = min_d, max_d
         best_d, best_p = max_d, p_value_max
+        iteration_count = 0
 
         while high - low > 0.01:
-            metadata["iterations"] += 1
+            iteration_count += 1
+            metadata["iterations"] = iteration_count
             mid = (low + high) / 2
 
             diff_mid = self.fractional_diff(series, d=mid)
             diff_mid_clean = diff_mid.dropna()
 
             try:
-                adf_result = adfuller(diff_mid_clean, maxlag=1)
+                adf_result = adfuller_wrapper(diff_mid_clean, maxlag=1)
                 p_value = adf_result[1]
             except (ValueError, TypeError, np.linalg.LinAlgError):
                 p_value = 1.0
 
-            metadata["test_history"].append(
-                {"d": mid, "p_value": p_value, "stationary": p_value < alpha}
-            )
+            test_history.append({"d": mid, "p_value": p_value, "stationary": p_value < alpha})
 
             if p_value < alpha:
                 best_d, best_p = mid, p_value
@@ -571,40 +581,40 @@ class FractionalDifferentiation:
             else:
                 low = mid
 
-            if metadata["iterations"] > 50:
+            if iteration_count > 50:
                 break
 
         return best_d, best_p, metadata
 
     def _grid_search_d(
         self, series: pd.Series, min_d: float, max_d: float, step: float, alpha: float
-    ) -> tuple[float, float, dict]:
+    ) -> tuple[float, float, dict[str, object]]:
         """Grid search for optimal d (more thorough) - NUMBA OPTIMIZED."""
-        metadata = {
+        test_history: list[dict[str, object]] = []
+        test_values = np.arange(min_d, max_d + step, step)
+        metadata: dict[str, object] = {
             "method": "grid_search",
-            "test_values": np.arange(min_d, max_d + step, step),
-            "test_history": [],
+            "test_values": test_values,
+            "test_history": test_history,
             "numba_accelerated": self.numba_enabled,
         }
 
         best_d, best_p = max_d, 1.0
 
-        for d in metadata["test_values"]:
-            diff_series = self.fractional_diff(series, d=d)
+        for d in test_values:
+            diff_series = self.fractional_diff(series, d=float(d))
             diff_clean = diff_series.dropna()
 
             if len(diff_clean) < 50:
                 continue
 
             try:
-                adf_result = adfuller(diff_clean, maxlag=1)
+                adf_result = adfuller_wrapper(diff_clean, maxlag=1)
                 p_value = adf_result[1]
             except (ValueError, TypeError, np.linalg.LinAlgError):
                 p_value = 1.0
 
-            metadata["test_history"].append(
-                {"d": d, "p_value": p_value, "stationary": p_value < alpha}
-            )
+            test_history.append({"d": d, "p_value": p_value, "stationary": p_value < alpha})
 
             # Update best if stationary and smaller d
             if p_value < alpha and d < best_d:
@@ -649,10 +659,10 @@ class FractionalDifferentiation:
         memory_preservation = diff_acf_mean / (orig_acf_mean + 1e-10)
 
         return {
-            "original_acf_mean": orig_acf_mean,
-            "diff_acf_mean": diff_acf_mean,
-            "memory_preservation_ratio": memory_preservation,
-            "memory_loss_pct": (1 - memory_preservation) * 100,
+            "original_acf_mean": float(orig_acf_mean),
+            "diff_acf_mean": float(diff_acf_mean),
+            "memory_preservation_ratio": float(memory_preservation),
+            "memory_loss_pct": float((1 - memory_preservation) * 100),
         }
 
     def compare_d_values(
@@ -681,7 +691,7 @@ class FractionalDifferentiation:
 
             # ADF test
             try:
-                adf_result = adfuller(diff_clean, maxlag=1)
+                adf_result = adfuller_wrapper(diff_clean, maxlag=1)
                 adf_stat = adf_result[0]
                 p_value = adf_result[1]
                 adf_result[4]
@@ -757,8 +767,8 @@ class FractionalDiffTransformer:
             use_parallel=use_parallel,
             numba_enabled=numba_enabled,
         )
-        self.optimal_d_ = None
-        self.feature_names_in_ = None
+        self.optimal_d_: Optional[float] = None
+        self.feature_names_in_: Optional[list[str]] = None
 
     def fit(self, X: Union[pd.DataFrame, np.ndarray], y=None):
         """
@@ -802,6 +812,9 @@ class FractionalDiffTransformer:
         if isinstance(X, np.ndarray):
             X = pd.DataFrame(X)
 
+        if self.optimal_d_ is None:
+            raise RuntimeError("Transformer has not been fitted yet. Call fit() first.")
+
         result = pd.DataFrame(index=X.index)
 
         for col in X.columns:
@@ -828,7 +841,7 @@ class FractionalDiffTransformer:
         """
         return self.fit(X, y).transform(X)
 
-    def get_feature_names_out(self, input_features=None):
+    def get_feature_names_out(self, input_features: Optional[list[str]] = None) -> np.ndarray:
         """
         Get output feature names for transformation.
 
@@ -841,7 +854,10 @@ class FractionalDiffTransformer:
         if input_features is None:
             input_features = self.feature_names_in_
 
-        return np.array([f"{f}_fracdiff" for f in input_features])
+        if input_features is None:
+            input_features = []
+
+        return cast("np.ndarray", np.array([f"{f}_fracdiff" for f in input_features]))
 
 
 # ============================================================================

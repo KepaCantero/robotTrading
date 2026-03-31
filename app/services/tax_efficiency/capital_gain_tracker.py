@@ -5,6 +5,8 @@ Classifies gains as short-term (<1 year) or long-term (≥1 year) and calculates
 tax liability based on investor's tax bracket.
 """
 
+from __future__ import annotations
+
 import logging
 from dataclasses import dataclass
 from datetime import datetime
@@ -256,28 +258,36 @@ class CapitalGainTracker:
     def get_short_term_gains(self) -> Decimal:
         """Calculate total short-term realized gains."""
         st_gains = sum(
-            g.gain_loss for g in self.realized_gains if not g.is_long_term and g.gain_loss > 0
+            (g.gain_loss for g in self.realized_gains if not g.is_long_term and g.gain_loss > 0),
+            Decimal("0"),
         )
         return st_gains
 
     def get_short_term_losses(self) -> Decimal:
         """Calculate total short-term realized losses."""
         st_losses = sum(
-            abs(g.gain_loss) for g in self.realized_gains if not g.is_long_term and g.gain_loss < 0
+            (
+                abs(g.gain_loss)
+                for g in self.realized_gains
+                if not g.is_long_term and g.gain_loss < 0
+            ),
+            Decimal("0"),
         )
         return st_losses
 
     def get_long_term_gains(self) -> Decimal:
         """Calculate total long-term realized gains."""
         lt_gains = sum(
-            g.gain_loss for g in self.realized_gains if g.is_long_term and g.gain_loss > 0
+            (g.gain_loss for g in self.realized_gains if g.is_long_term and g.gain_loss > 0),
+            Decimal("0"),
         )
         return lt_gains
 
     def get_long_term_losses(self) -> Decimal:
         """Calculate total long-term realized losses."""
         lt_losses = sum(
-            abs(g.gain_loss) for g in self.realized_gains if g.is_long_term and g.gain_loss < 0
+            (abs(g.gain_loss) for g in self.realized_gains if g.is_long_term and g.gain_loss < 0),
+            Decimal("0"),
         )
         return lt_losses
 

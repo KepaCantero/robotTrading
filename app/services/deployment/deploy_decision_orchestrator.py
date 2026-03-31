@@ -5,6 +5,8 @@ Synthesizes all components (validation, backtest, recommendation, portfolio)
 into a final APPROVED|CONDITIONAL|REJECTED deployment decision.
 """
 
+from __future__ import annotations
+
 import asyncio
 import logging
 from dataclasses import dataclass

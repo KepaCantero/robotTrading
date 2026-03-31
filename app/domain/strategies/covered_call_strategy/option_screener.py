@@ -17,6 +17,8 @@ SOLID Principles:
 - Open/Closed: Extensible con nuevos criterios
 """
 
+from __future__ import annotations
+
 import logging
 import time
 from decimal import Decimal

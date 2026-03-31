@@ -17,6 +17,8 @@ Características:
 - Registro automático de modelos entrenados para transferencia futura
 """
 
+from __future__ import annotations
+
 import logging
 from datetime import datetime, timedelta
 from decimal import Decimal
@@ -54,8 +56,8 @@ def load_transfer_learning_config(config_path: Optional[str] = None) -> dict[str
         from pathlib import Path
 
         possible_paths = [
-            Path("config/transfer_learning.yaml"),
-            Path(__file__).parent.parent.parent.parent.parent / "config/transfer_learning.yaml",
+            Path("config/learning/transfer_learning.yaml"),
+            Path(__file__).parent.parent.parent.parent.parent / "config/learning/transfer_learning.yaml",
         ]
         for path in possible_paths:
             if path.exists():

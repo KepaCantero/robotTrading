@@ -16,7 +16,7 @@ interpretable than complex optimization methods."
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 
 import numpy as np
 
@@ -102,6 +102,9 @@ class HandcraftedWeightsOptimizer(BaseOptimizer):
             raise ValueError("cov_matrix is required for HandcraftedWeightsOptimizer")
 
         try:
+            if expected_returns is None:
+                raise ValueError("expected_returns is required")
+
             len(expected_returns)
 
             # Step 1: Calculate instrument volatilities
@@ -158,7 +161,8 @@ class HandcraftedWeightsOptimizer(BaseOptimizer):
 
         except (ValueError, TypeError, KeyError, AttributeError) as e:
             self.logger.error(f"Error in handcrafted optimization: {e}", exc_info=True)
-            return self._equal_weight_fallback(len(expected_returns))
+            n_assets = len(expected_returns) if expected_returns is not None else 1
+            return self._equal_weight_fallback(n_assets)
 
     def _calculate_volatilities(self, cov_matrix: np.ndarray) -> np.ndarray:
         """
@@ -176,7 +180,7 @@ class HandcraftedWeightsOptimizer(BaseOptimizer):
         # Ensure all volatilities are positive
         volatilities = np.maximum(volatilities, 1e-10)
 
-        return volatilities
+        return cast("np.ndarray", volatilities)
 
     def _inverse_volatility_weights(self, volatilities: np.ndarray) -> np.ndarray:
         """
@@ -199,7 +203,7 @@ class HandcraftedWeightsOptimizer(BaseOptimizer):
         # Normalize to sum to 1
         weights = inv_vol / inv_vol.sum()
 
-        return weights
+        return cast("np.ndarray", weights)
 
     def _equal_risk_contribution_weights(self, cov_matrix: np.ndarray) -> np.ndarray:
         """
@@ -234,7 +238,7 @@ class HandcraftedWeightsOptimizer(BaseOptimizer):
             target_risk = 1.0 / n
 
             # Check convergence
-            error = np.sum((risk_contrib - target_risk) ** 2)
+            error: float = np.sum((risk_contrib - target_risk) ** 2)
             if error < tolerance:
                 break
 
@@ -282,7 +286,7 @@ class HandcraftedWeightsOptimizer(BaseOptimizer):
 
         scaled_weights = weights * scale_factor
 
-        return scaled_weights
+        return cast("np.ndarray", scaled_weights)
 
     def _calculate_risk_contributions(
         self, weights: np.ndarray, cov_matrix: np.ndarray
@@ -301,7 +305,7 @@ class HandcraftedWeightsOptimizer(BaseOptimizer):
         portfolio_var = weights @ cov_matrix @ weights
 
         if portfolio_var <= 0:
-            return np.zeros(len(weights))
+            return cast("np.ndarray", np.zeros(len(weights)))
 
         # Marginal risk contribution
         marginal_contrib = (cov_matrix @ weights) / np.sqrt(portfolio_var)
@@ -312,9 +316,9 @@ class HandcraftedWeightsOptimizer(BaseOptimizer):
         # Normalize to percentages
         total_risk = risk_contrib.sum()
         if total_risk > 0:
-            return risk_contrib / total_risk
+            return cast("np.ndarray", risk_contrib / total_risk)
 
-        return risk_contrib
+        return cast("np.ndarray", risk_contrib)
 
     def _calculate_diversification_ratio(
         self, weights: np.ndarray, volatilities: np.ndarray
@@ -334,7 +338,7 @@ class HandcraftedWeightsOptimizer(BaseOptimizer):
             Diversification ratio
         """
         # Weighted average volatility
-        weighted_avg_vol = np.sum(weights * volatilities)
+        weighted_avg_vol: float = np.sum(weights * volatilities)
 
         # Portfolio volatility (approximate, assuming correlation = 1)
         portfolio_vol = np.sqrt(np.sum((weights * volatilities) ** 2))

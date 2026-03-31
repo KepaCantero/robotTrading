@@ -8,20 +8,25 @@ Refactorización de MomentumStrategy como Strategy Engine con:
 - Métricas mejoradas
 """
 
+from __future__ import annotations
+
 import logging
 from collections import deque
 from collections.abc import Sequence
 from decimal import Decimal
-from typing import Any, Optional
+from typing import TYPE_CHECKING, Any, Optional, Union
 
 from app.domain.models.market_data import Quote
 from app.domain.models.portfolio import Portfolio
 from app.domain.models.signal import Signal, SignalSource, SignalStrength, SignalType
 from app.domain.services.analysis.momentum import TechnicalIndicatorCalculator
-from app.domain.services.signals.scoring import get_signal_scoring_engine
+from app.services.signal_scoring_engine import get_signal_scoring_engine
 from app.shared.config.centralized_config import get_config
 
 from .base import BaseStrategyEngine
+
+if TYPE_CHECKING:
+    from datetime import datetime
 
 logger = logging.getLogger(__name__)
 
@@ -106,10 +111,10 @@ class MomentumStrategyEngine(BaseStrategyEngine):
                 )
 
         # Price history
-        self.price_history = deque(maxlen=200)
-        self.high_history = deque(maxlen=200)
-        self.low_history = deque(maxlen=200)
-        self.volume_history = deque(maxlen=200)
+        self.price_history: deque[float] = deque(maxlen=200)
+        self.high_history: deque[float] = deque(maxlen=200)
+        self.low_history: deque[float] = deque(maxlen=200)
+        self.volume_history: deque[float] = deque(maxlen=200)
 
         # Technical indicator calculator
         self.indicator_calculator = TechnicalIndicatorCalculator()
@@ -150,10 +155,13 @@ class MomentumStrategyEngine(BaseStrategyEngine):
         Returns:
             Diccionario con features estandarizados
         """
-        features = {
-            "timestamp": market_data.timestamp if hasattr(market_data, "timestamp") else None,
+        # Use local typed variables for numeric values to keep mypy happy
+        current_price: float = float(market_data.close or market_data.bid or market_data.last or 0)
+
+        features: dict[str, Union[float, str, datetime, None, bool]] = {
+            "timestamp": market_data.timestamp,
             "symbol": market_data.symbol,
-            "price": float(market_data.close or market_data.bid or market_data.last or 0),
+            "price": current_price,
         }
 
         # Usar histórico interno si no se provee
@@ -171,16 +179,21 @@ class MomentumStrategyEngine(BaseStrategyEngine):
         # Calcular indicadores técnicos si hay suficiente histórico
         if len(prices) >= max(self.rsi_period, self.ema_period):
             # RSI
-            rsi = self.indicator_calculator.calculate_rsi(prices, period=self.rsi_period)
-            features["rsi"] = float(rsi) if rsi is not None else 50.0
+            rsi_raw = self.indicator_calculator.calculate_rsi(prices, period=self.rsi_period)
+            rsi_value: float = float(rsi_raw) if rsi_raw is not None else 50.0
+            features["rsi"] = rsi_value
 
             # EMA
-            ema = self.indicator_calculator.calculate_ema(prices, period=self.ema_period)
-            features["ema"] = float(ema) if ema is not None else features["price"]
+            ema_raw = self.indicator_calculator.calculate_ema(prices, period=self.ema_period)
+            ema_value: float = float(ema_raw) if ema_raw is not None else current_price
+            features["ema"] = ema_value
 
             # Momentum/ROC
-            momentum = self.indicator_calculator.calculate_roc(prices, period=self.lookback_period)
-            features["momentum"] = float(momentum) if momentum is not None else 0.0
+            momentum_raw = self.indicator_calculator.calculate_roc(
+                prices, period=self.lookback_period
+            )
+            momentum_value: float = float(momentum_raw) if momentum_raw is not None else 0.0
+            features["momentum"] = momentum_value
 
             # Volume
             if len(volumes) >= 20:
@@ -192,19 +205,20 @@ class MomentumStrategyEngine(BaseStrategyEngine):
 
             # ATR
             if len(highs) > 0 and len(lows) > 0:
-                atr = self.indicator_calculator.calculate_atr(highs, lows, prices, period=14)
-                features["atr"] = float(atr) if atr is not None else 0.0
-                if features["price"] > 0:
-                    features["relative_atr"] = features["atr"] / features["price"]
+                atr_raw = self.indicator_calculator.calculate_atr(highs, lows, prices, period=14)
+                atr_value: float = float(atr_raw) if atr_raw is not None else 0.0
+                features["atr"] = atr_value
+                if current_price > 0:
+                    features["relative_atr"] = atr_value / current_price
 
             # Price position relative to EMA
-            if features["ema"] > 0:
-                features["price_ema_ratio"] = features["price"] / features["ema"]
-                features["price_above_ema"] = features["price"] > features["ema"]
+            if ema_value > 0:
+                features["price_ema_ratio"] = current_price / ema_value
+                features["price_above_ema"] = current_price > ema_value
         else:
             # Defaults cuando no hay suficiente histórico
             features["rsi"] = 50.0
-            features["ema"] = features["price"]
+            features["ema"] = current_price
             features["momentum"] = 0.0
             features["volume_ratio"] = 1.0
             features["atr"] = 0.0
@@ -313,7 +327,7 @@ class MomentumStrategyEngine(BaseStrategyEngine):
                     signal_type=SignalType.BUY,
                     strength=strength,
                     price=Decimal(str(current_price)),
-                    timestamp=market_data.timestamp if hasattr(market_data, "timestamp") else None,
+                    timestamp=market_data.timestamp,
                     confidence=confidence,
                     liquidity_score=min(100.0, max(0.0, (volume_ratio - 0.5) * 50.0)),
                     priority_score=confidence * 0.7
@@ -466,7 +480,10 @@ class MomentumStrategyEngine(BaseStrategyEngine):
             True si pasa el risk check
         """
         # Verificar exposición máxima
-        current_exposure = portfolio.get_total_exposure()
+        # Compute exposure as the ratio of position market values to total equity
+        total_equity = float(portfolio.total_equity)
+        positions_value = sum(float(pos.market_value) for pos in portfolio.positions)
+        current_exposure = positions_value / total_equity if total_equity > 0 else 0.0
         if current_exposure >= float(self.max_exposure):
             logger.debug(
                 "Risk check fallido: exposición excedida",

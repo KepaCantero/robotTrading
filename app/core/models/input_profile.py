@@ -4,6 +4,8 @@ Input Profile Model
 Defines the input profile for investment strategy configuration.
 """
 
+from __future__ import annotations
+
 import logging
 from datetime import datetime
 from decimal import Decimal

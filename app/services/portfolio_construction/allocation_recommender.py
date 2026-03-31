@@ -4,6 +4,8 @@ T18.1.3: AllocationRecommender - Smart allocation recommendations
 Provides allocation recommendations based on risk profile, objectives, and market conditions.
 """
 
+from __future__ import annotations
+
 import logging
 from dataclasses import dataclass
 from decimal import Decimal

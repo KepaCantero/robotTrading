@@ -15,8 +15,9 @@ Reference:
     Harris, L. (2003). Trading and Exchanges, Chapters 8-9.
 """
 
-# mypy: ignore-errors
+from __future__ import annotations
 
+# mypy: ignore-errors
 import logging
 from dataclasses import dataclass, field
 from datetime import datetime

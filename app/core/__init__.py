@@ -11,8 +11,10 @@ Compliance Integration (2026-01-28): Added THE ONLY Compliance Engine.
 USE ComplianceEngine FOR EVERYTHING.
 """
 
+from __future__ import annotations
+
 import logging
-from typing import Any, Callable, Optional
+from typing import Callable, Union
 
 logger = logging.getLogger(__name__)
 
@@ -37,6 +39,17 @@ from app.shared.utils.timezone_utils import (
 # =============================================================================
 # THE ONLY COMPLIANCE ENGINE - USE THIS FOR EVERYTHING
 # =============================================================================
+# Initialize fallback values first, then attempt import
+ComplianceEngine: Union[type, None] = None
+PreTradeAnalysis: Union[type, None] = None
+PostTradeAnalysis: Union[type, None] = None
+PortfolioOptimization: Union[type, None] = None
+get_compliance_engine: Union[Callable[..., object], None] = None
+quick_check: Union[Callable[..., object], None] = None
+get_execution_plan: Union[Callable[..., object], None] = None
+SystemAvailability: Union[type, None] = None
+_compliance_engine_available = False
+
 try:
     from app.domain.services.compliance.compliance_engine import (
         ComplianceEngine,
@@ -52,29 +65,22 @@ try:
     _compliance_engine_available = True
 except ImportError:
     # Import error - likely due to NumPy/matplotlib compatibility issues
-    # Set these to None to prevent import errors when only using other core modules
+    # Values already set to None above
     logger.error("Failed to import ComplianceEngine", exc_info=True)
-    ComplianceEngine: Optional[type[Any]] = None
-    PreTradeAnalysis: Optional[type[Any]] = None
-    PostTradeAnalysis: Optional[type[Any]] = None
-    PortfolioOptimization: Optional[type[Any]] = None
-    get_compliance_engine: Optional[Callable[..., Any]] = None
-    quick_check: Optional[Callable[..., Any]] = None
-    get_execution_plan: Optional[Callable[..., Any]] = None
-    SystemAvailability: Optional[type[Any]] = None
-    _compliance_engine_available = False
 
 # =============================================================================
 # LEGACY SUPPORT (DEPRECATED - use ComplianceEngine instead)
 # =============================================================================
+ComplianceIntegrationEngineDeprecated: Union[type, None] = None
+get_compliance_integration_engine_deprecated: Union[Callable[..., object], None] = None
+quick_pre_trade_check: Union[Callable[..., object], None] = None
+get_execution_recommendation: Union[Callable[..., object], None] = None
+_compliance_integration_available = False
+
 try:
     from app.domain.services.compliance.compliance_integration import (
         ComplianceIntegrationEngine as ComplianceIntegrationEngineDeprecated,
-    )
-    from app.domain.services.compliance.compliance_integration import (
         get_compliance_integration_engine as get_compliance_integration_engine_deprecated,
-    )
-    from app.domain.services.compliance.compliance_integration import (
         get_execution_recommendation,
         quick_pre_trade_check,
     )
@@ -82,12 +88,8 @@ try:
     _compliance_integration_available = True
 except ImportError:
     # Import error - likely due to NumPy/matplotlib compatibility issues
+    # Values already set to None above
     logger.error("Failed to import ComplianceIntegrationEngine (legacy)", exc_info=True)
-    ComplianceIntegrationEngineDeprecated: Optional[type[Any]] = None
-    get_compliance_integration_engine_deprecated: Optional[Callable[..., Any]] = None
-    quick_pre_trade_check: Optional[Callable[..., Any]] = None
-    get_execution_recommendation: Optional[Callable[..., Any]] = None
-    _compliance_integration_available = False
 
 __all__ = [
     # THE ONLY COMPLIANCE ENGINE - USE THIS

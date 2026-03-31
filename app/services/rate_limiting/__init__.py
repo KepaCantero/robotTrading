@@ -38,6 +38,8 @@ Usage:
     await limiter.acquire_with_backoff()
 """
 
+from __future__ import annotations
+
 from app.services.rate_limiting.token_bucket import (
     BROKER_RATE_LIMITS,
     BrokerType,

@@ -696,10 +696,10 @@ class TestConfigurationIntegration:
 
     def test_config_with_validation(self, sample_config_dict):
         """Test configuration with full validation."""
-        from app.shared.config.centralized_config import Configuration, validate_config
+        from app.shared.config.centralized_config import Configuration, validate_config_object
 
         config = Configuration(sample_config_dict)
 
-        is_valid = validate_config(config)
+        is_valid = validate_config_object(config)
 
         assert is_valid is True

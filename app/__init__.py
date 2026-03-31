@@ -9,6 +9,8 @@ Version: 1.0.0
 License: MIT
 """
 
+from __future__ import annotations
+
 # Core application metadata
 __version__ = "1.0.0"
 __description__ = "Algorithmic Trading System with ML and Real-Time Analysis"

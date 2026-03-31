@@ -2,8 +2,8 @@
 Distributed Cache - Sistema de cache distribuido con Redis y PostgreSQL.
 
 Proporciona:
-- Cache rápido con Redis (TTL, expiración automática) - REQUIRED
-- Persistencia con PostgreSQL (datos históricos, metadata) - REQUIRED
+- Cache rapido con Redis (TTL, expiracion automatica) - REQUIRED
+- Persistencia con PostgreSQL (datos historicos, metadata) - REQUIRED
 - Cache en memoria como respaldo temporal
 
 REQUIREMENTS:
@@ -11,18 +11,21 @@ REQUIREMENTS:
 - sqlalchemy>=2.0.0 must be installed
 """
 
+from __future__ import annotations
+
 import asyncio
+import importlib
 import json
 import logging
 from datetime import datetime, timedelta
-from typing import TYPE_CHECKING, Optional, Union
+from typing import TYPE_CHECKING, Union
 
 # Fallback pattern: Try to import redis, provide in-memory fallback if not available
-# Using module-level pattern for optional dependencies
-_redis_module = None
+REDIS_AVAILABLE = False
+_redis_from_url: object = None
 try:
-    import redis.asyncio as _redis_module
-
+    _redis_async_mod = importlib.import_module("redis.asyncio")
+    _redis_from_url = _redis_async_mod.from_url
     REDIS_AVAILABLE = True
 except ImportError:
     REDIS_AVAILABLE = False
@@ -39,16 +42,16 @@ from sqlalchemy.exc import (
     OperationalError,
     ProgrammingError,
 )
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import DeclarativeBase, sessionmaker
 
-from app.security.secure_serialization import sign_and_dump, verify_and_load
+from app.security.secrets.secure_serialization import sign_and_dump, verify_and_load
 
 logger = logging.getLogger(__name__)
 
 
-# Base para modelos SQLAlchemy
-Base = declarative_base()
+# Base para modelos SQLAlchemy - using DeclarativeBase for proper mypy support
+class Base(DeclarativeBase):
+    """SQLAlchemy declarative base class."""
 
 
 class CacheEntry(Base):
@@ -71,26 +74,35 @@ class CacheEntry(Base):
     )
 
 
+# Type alias for cached values
+CacheValue = Union[str, int, float, bool, dict[str, object], list[object]]
+
+# Type alias for memory cache entries
+MemoryCacheEntry = dict[
+    str, Union[str, int, float, bool, dict[str, object], list[object], datetime]
+]
+
+
 class DistributedCache:
     """
     Sistema de cache distribuido.
 
-    Usa Redis para cache rápido y PostgreSQL para persistencia.
-    Fallback a cache en memoria si Redis no está disponible.
+    Usa Redis para cache rapido y PostgreSQL para persistencia.
+    Fallback a cache en memoria si Redis no esta disponible.
     """
 
-    def __init__(self, config: Optional[dict[str, Union[str, int, float, bool]]] = None):
+    def __init__(self, config: dict[str, str | int | float | bool] | None = None):
         """
         Inicializar cache distribuido.
 
         Args:
-            config: Configuración con:
+            config: Configuracion con:
                 - redis_url: URL de Redis (opcional, desde YAML o env)
                 - postgres_url: URL de PostgreSQL (opcional, desde YAML o env)
                 - default_ttl: TTL por defecto en segundos (desde YAML)
-                - use_redis: Usar Redis si está disponible (desde YAML)
-                - use_postgres: Usar PostgreSQL si está disponible (desde YAML)
-                - postgres_schema: Configuración de esquema PostgreSQL (desde YAML)
+                - use_redis: Usar Redis si esta disponible (desde YAML)
+                - use_postgres: Usar PostgreSQL si esta disponible (desde YAML)
+                - postgres_schema: Configuracion de esquema PostgreSQL (desde YAML)
         """
         config = config or {}
         self.config = config
@@ -103,14 +115,14 @@ class DistributedCache:
         if "use_postgres" not in config:
             raise ValueError("use_postgres debe estar en config (cargado desde YAML)")
 
-        self.default_ttl = config["default_ttl"]
-        self.use_redis = config.get("use_redis", False)
-        self.use_postgres = config.get("use_postgres", False)
+        self.default_ttl: int = int(config["default_ttl"])
+        self.use_redis: bool = bool(config.get("use_redis", False))
+        self.use_postgres: bool = bool(config.get("use_postgres", False))
 
         # Redis client
-        self.redis_client: Optional[Redis] = None
+        self.redis_client: Redis | None = None
         if self.use_redis:
-            if not REDIS_AVAILABLE or _redis_module is None:
+            if not REDIS_AVAILABLE or _redis_from_url is None:
                 logger.warning(
                     "Redis package not installed. Disabling Redis cache, using in-memory fallback."
                 )
@@ -120,7 +132,8 @@ class DistributedCache:
                     redis_url = config.get("redis_url")
                     if not redis_url:
                         raise ValueError("redis_url debe estar en config cuando use_redis=True")
-                    self.redis_client = _redis_module.from_url(redis_url, decode_responses=False)
+                    assert callable(_redis_from_url)
+                    self.redis_client = _redis_from_url(redis_url, decode_responses=False)
                     logger.info("Redis cache inicializado")
                 except (FileNotFoundError, ValueError, KeyError, TypeError) as e:
                     logger.warning(f"No se pudo conectar a Redis: {e}. Usando cache en memoria.")
@@ -136,13 +149,15 @@ class DistributedCache:
                     logger.warning("PostgreSQL URL no proporcionada. Cache solo en Redis/memoria.")
                     self.use_postgres = False
                 else:
-                    self.postgres_engine = create_engine(postgres_url)
+                    self.postgres_engine = create_engine(str(postgres_url))
                     Session = sessionmaker(bind=self.postgres_engine)
                     self.postgres_session = Session()
 
                     # Configurar esquema desde config
-                    postgres_schema = config.get("postgres_schema", {})
-                    # Actualizar tabla si hay configuración personalizada
+                    raw_schema_val: object = config.get("postgres_schema", {})
+                    postgres_schema: dict[str, str] = (
+                        dict(raw_schema_val) if isinstance(raw_schema_val, dict) else {}
+                    )
                     CacheEntry.__tablename__ = postgres_schema.get(
                         "table_name", "data_engine_cache"
                     )
@@ -156,14 +171,36 @@ class DistributedCache:
                 )
                 self.use_postgres = False
 
-        # Fallback: cache en memoria
-        self.memory_cache: dict[str, dict[str, Union[str, int, float, bool, dict, list]]] = {}
+        # Fallback: cache en memoria (bounded)
+        self.memory_cache: dict[str, MemoryCacheEntry] = {}
+        self._max_memory_cache_size = 10000
 
         logger.info(
             f"DistributedCache inicializado: Redis={self.use_redis}, PostgreSQL={self.use_postgres}"
         )
 
-    def _make_key(self, prefix: str, symbol: str, **kwargs) -> str:
+    def _evict_memory_cache(self) -> None:
+        """Evict expired and oldest entries when memory cache exceeds limit."""
+        now = datetime.utcnow()
+        # First pass: remove expired entries
+        expired_keys = [
+            k
+            for k, v in self.memory_cache.items()
+            if isinstance(v["expires_at"], datetime) and v["expires_at"] <= now
+        ]
+        for k in expired_keys:
+            del self.memory_cache[k]
+        # Second pass: if still over limit, drop oldest
+        if len(self.memory_cache) > self._max_memory_cache_size:
+            sorted_keys = sorted(
+                self.memory_cache.keys(),
+                key=lambda k: self.memory_cache[k]["expires_at"],
+            )
+            to_remove = len(self.memory_cache) - self._max_memory_cache_size
+            for k in sorted_keys[:to_remove]:
+                del self.memory_cache[k]
+
+    def _make_key(self, prefix: str, symbol: str, **kwargs: object) -> str:
         """Crear clave de cache."""
         parts = [prefix, symbol]
         for key, value in sorted(kwargs.items()):
@@ -171,9 +208,7 @@ class DistributedCache:
                 parts.append(f"{key}:{value}")
         return ":".join(parts)
 
-    async def get(
-        self, key: str, default: Optional[Union[str, int, float, bool, dict, list]] = None
-    ) -> Optional[Union[str, int, float, bool, dict, list]]:
+    async def get(self, key: str, default: CacheValue | None = None) -> CacheValue | None:
         """
         Obtener valor del cache.
 
@@ -190,7 +225,10 @@ class DistributedCache:
                 cached_data = await self.redis_client.get(key)
                 if cached_data:
                     # SECURE: Use JSON+HMAC verification instead of pickle
-                    return verify_and_load(cached_data)
+                    result = verify_and_load(cached_data)
+                    if isinstance(result, (str, int, float, bool, dict, list)):
+                        return result
+                    return None
             except ValueError as e:
                 logger.warning(f"Security error getting from Redis: {e}")
             except (
@@ -202,18 +240,17 @@ class DistributedCache:
             ) as e:
                 logger.warning(f"Error obteniendo de Redis: {e}")
 
-        # Intentar PostgreSQL
+        # Intentar PostgreSQL (offloaded to thread to avoid blocking event loop)
         if self.use_postgres and self.postgres_session:
             try:
-                entry = (
-                    self.postgres_session.query(CacheEntry)
-                    .filter(CacheEntry.key == key, CacheEntry.expires_at > datetime.utcnow())
-                    .first()
-                )
+                entry = await asyncio.to_thread(self._pg_get, key)
 
                 if entry:
                     # SECURE: Use JSON+HMAC verification instead of pickle
-                    return verify_and_load(entry.data)
+                    result = verify_and_load(entry.data)
+                    if isinstance(result, (str, int, float, bool, dict, list)):
+                        return result
+                    return None
             except ValueError as e:
                 logger.warning(f"Security error getting from PostgreSQL: {e}")
             except (
@@ -228,8 +265,11 @@ class DistributedCache:
         # Fallback a memoria
         if key in self.memory_cache:
             entry = self.memory_cache[key]
-            if entry["expires_at"] > datetime.utcnow():
-                return entry["data"]
+            expires_at_value = entry["expires_at"]
+            if isinstance(expires_at_value, datetime) and expires_at_value > datetime.utcnow():
+                data_value = entry["data"]
+                if isinstance(data_value, (str, int, float, bool, dict, list)):
+                    return data_value
             else:
                 # Expirar entrada
                 del self.memory_cache[key]
@@ -239,9 +279,9 @@ class DistributedCache:
     async def set(
         self,
         key: str,
-        value: Union[str, int, float, bool, dict, list],
-        ttl: Optional[int] = None,
-        metadata: Optional[dict[str, Union[str, int, float, bool]]] = None,
+        value: CacheValue,
+        ttl: int | None = None,
+        metadata: dict[str, str | int | float | bool] | None = None,
     ) -> bool:
         """
         Guardar valor en cache.
@@ -253,10 +293,10 @@ class DistributedCache:
             metadata: Metadata adicional
 
         Returns:
-            True si se guardó correctamente
+            True si se guardo correctamente
         """
-        ttl = ttl or self.default_ttl
-        expires_at = datetime.utcnow() + timedelta(seconds=ttl)
+        effective_ttl: int = ttl if ttl is not None else self.default_ttl
+        expires_at = datetime.utcnow() + timedelta(seconds=effective_ttl)
         # SECURE: Use JSON+HMAC instead of pickle
         serialized_data = sign_and_dump(value)
 
@@ -265,15 +305,15 @@ class DistributedCache:
         # Guardar en Redis
         if self.use_redis and self.redis_client:
             try:
-                await self.redis_client.setex(key, ttl, serialized_data)
+                await self.redis_client.setex(key, effective_ttl, serialized_data)
             except (asyncio.TimeoutError, OSError) as e:
                 logger.warning(f"Error guardando en Redis: {e}")
                 success = False
 
-        # Guardar en PostgreSQL
+        # Guardar en PostgreSQL (offloaded to thread)
         if self.use_postgres and self.postgres_session:
             try:
-                # Extraer metadata útil
+                # Extraer metadata util
                 metadata_json = json.dumps(metadata) if metadata else None
                 symbol = metadata.get("symbol") if metadata else None
                 source = metadata.get("source") if metadata else None
@@ -289,16 +329,7 @@ class DistributedCache:
                     metadata_json=metadata_json,
                 )
 
-                # Upsert
-                existing = self.postgres_session.query(CacheEntry).filter_by(key=key).first()
-                if existing:
-                    for attr, val in entry.__dict__.items():
-                        if attr != "_sa_instance_state":
-                            setattr(existing, attr, val)
-                else:
-                    self.postgres_session.add(entry)
-
-                self.postgres_session.commit()
+                await asyncio.to_thread(self._pg_set, entry)
             except (
                 IntegrityError,
                 OperationalError,
@@ -313,6 +344,7 @@ class DistributedCache:
 
         # Fallback a memoria
         self.memory_cache[key] = {"data": value, "expires_at": expires_at}
+        self._evict_memory_cache()
 
         return success
 
@@ -334,11 +366,10 @@ class DistributedCache:
                 logger.warning(f"Error eliminando de Redis: {e}")
                 success = False
 
-        # PostgreSQL
+        # PostgreSQL (offloaded to thread)
         if self.use_postgres and self.postgres_session:
             try:
-                self.postgres_session.query(CacheEntry).filter_by(key=key).delete()
-                self.postgres_session.commit()
+                await asyncio.to_thread(self._pg_delete, key)
             except (
                 IntegrityError,
                 OperationalError,
@@ -362,23 +393,15 @@ class DistributedCache:
         Limpiar entradas expiradas.
 
         Returns:
-            Número de entradas eliminadas
+            Numero de entradas eliminadas
         """
         now = datetime.utcnow()
 
         count = 0
-        # PostgreSQL
+        # PostgreSQL (offloaded to thread)
         if self.use_postgres and self.postgres_session:
             try:
-                expired = (
-                    self.postgres_session.query(CacheEntry)
-                    .filter(CacheEntry.expires_at < now)
-                    .all()
-                )
-                count += len(expired)
-                for entry in expired:
-                    self.postgres_session.delete(entry)
-                self.postgres_session.commit()
+                count += await asyncio.to_thread(self._pg_clear_expired, now)
             except (
                 IntegrityError,
                 OperationalError,
@@ -390,7 +413,9 @@ class DistributedCache:
 
         # Memoria
         expired_keys = [
-            key for key, entry in self.memory_cache.items() if entry["expires_at"] < now
+            key
+            for key, entry in self.memory_cache.items()
+            if isinstance(entry["expires_at"], datetime) and entry["expires_at"] < now
         ]
         for key in expired_keys:
             del self.memory_cache[key]
@@ -409,7 +434,50 @@ class DistributedCache:
         if self.postgres_engine:
             self.postgres_engine.dispose()
 
-    def get_status(self) -> dict[str, Union[str, int, float, bool, None]]:
+    # --- Thread-offload helpers for synchronous PostgreSQL operations ---
+
+    def _pg_get(self, key: str) -> CacheEntry | None:
+        """Synchronous PG get - call via asyncio.to_thread()."""
+        if not self.postgres_session:
+            return None
+        return (
+            self.postgres_session.query(CacheEntry)
+            .filter(CacheEntry.key == key, CacheEntry.expires_at > datetime.utcnow())
+            .first()
+        )
+
+    def _pg_set(self, entry: CacheEntry) -> None:
+        """Synchronous PG upsert - call via asyncio.to_thread()."""
+        if not self.postgres_session:
+            return
+        existing = self.postgres_session.query(CacheEntry).filter_by(key=entry.key).first()
+        if existing:
+            for attr, val in entry.__dict__.items():
+                if attr != "_sa_instance_state":
+                    setattr(existing, attr, val)
+        else:
+            self.postgres_session.add(entry)
+        self.postgres_session.commit()
+
+    def _pg_delete(self, key: str) -> None:
+        """Synchronous PG delete - call via asyncio.to_thread()."""
+        if not self.postgres_session:
+            return
+        self.postgres_session.query(CacheEntry).filter_by(key=key).delete()
+        self.postgres_session.commit()
+
+    def _pg_clear_expired(self, now: datetime) -> int:
+        """Synchronous PG expired cleanup - call via asyncio.to_thread()."""
+        if not self.postgres_session:
+            return 0
+        expired = self.postgres_session.query(CacheEntry).filter(CacheEntry.expires_at < now).all()
+        count = len(expired)
+        for entry in expired:
+            self.postgres_session.delete(entry)
+        self.postgres_session.commit()
+        return count
+
+    def get_status(self) -> dict[str, str | int | float | bool | None]:
         """Obtener estado del cache."""
         return {
             "redis_enabled": self.use_redis,

@@ -9,7 +9,9 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, cast
+
+from typing_extensions import Any
 
 from app.domain.models.market_data import (
     DataFeedConfig,
@@ -66,6 +68,7 @@ class MarketDataService:
         yahoo_config = DataFeedConfig(
             name="Yahoo Finance",
             feed_type=DataFeedType.YAHOO_FINANCE,
+            api_key=None,
             base_url="https://query1.finance.yahoo.com",
             rate_limit=100,
             supported_symbols=default_symbols[:8],
@@ -79,6 +82,7 @@ class MarketDataService:
             retry_attempts=3,
             retry_delay=2.0,
             is_active=True,
+            last_updated=None,
         )
         self.feed_configs[yahoo_config.id] = yahoo_config
 
@@ -87,7 +91,7 @@ class MarketDataService:
         async with self._feed_lock:
             self.feed_configs[config.id] = config
             logger.info(f"Added feed config: {config.name}")
-            return config.id
+            return cast("UUID", config.id)
 
     async def remove_feed_config(self, config_id: UUID) -> bool:
         """Remove a data feed configuration."""
@@ -144,7 +148,7 @@ class MarketDataService:
             success = await feed.disconnect()
             del self.active_feeds[config_id]
             logger.info(f"Disconnected from feed: {config_id}")
-            return success
+            return cast("bool", success)
         return False
 
     async def get_quote(self, symbol: str, feed_id: UUID | None = None) -> Quote | None:
@@ -206,7 +210,7 @@ class MarketDataService:
                 # Cache the data
                 await self._cache_historical_data(cache_key, historical_data)
                 logger.debug(f"Retrieved fresh historical data for {symbol}")
-                return historical_data
+                return cast("list[HistoricalData]", historical_data)
             else:
                 logger.warning(f"No historical data for {symbol}")
                 return []

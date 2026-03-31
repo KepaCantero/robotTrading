@@ -11,6 +11,8 @@ Validates ExtendedBacktestResult from T4.1 against all PHASE 0 capital viability
 Returns ValidationReport with detailed gate status and recommendations.
 """
 
+from __future__ import annotations
+
 import logging
 from dataclasses import dataclass, field
 from decimal import Decimal

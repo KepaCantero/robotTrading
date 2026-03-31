@@ -7,9 +7,11 @@ Uses empirical market impact formula:
 market_impact = sqrt(participation_rate) * volatility_factor * base_impact
 """
 
+from __future__ import annotations
+
 import logging
 from decimal import Decimal
-from typing import ClassVar, Optional
+from typing import ClassVar
 
 from .models import MarketImpactEstimate
 
@@ -62,7 +64,7 @@ class MarketImpactEstimator:
         symbol: str,
         order_size: Decimal,
         daily_volume: Decimal,
-        current_spread_bps: Optional[Decimal] = None,
+        current_spread_bps: Decimal | None = None,
         volatility_percentile: int = 50,
         time_window_ms: int = 60_000,
         asset_class: str = "equity",
@@ -182,7 +184,7 @@ class MarketImpactEstimator:
         participation_rate: Decimal,
         daily_volume: Decimal,
         order_size: Decimal,
-        current_spread_bps: Optional[Decimal] = None,
+        current_spread_bps: Decimal | None = None,
         volatility_percentile: int = 50,
         asset_class: str = "equity",
     ) -> MarketImpactEstimate:
@@ -264,7 +266,7 @@ class MarketImpactEstimator:
 
 
 # Global singleton
-_market_impact_estimator: MarketImpactEstimator = None
+_market_impact_estimator: MarketImpactEstimator | None = None
 
 
 def get_market_impact_estimator() -> MarketImpactEstimator:

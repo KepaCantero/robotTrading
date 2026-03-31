@@ -7,6 +7,8 @@ Implements exhaustive grid search over parameter space with:
 - Progress tracking
 """
 
+from __future__ import annotations
+
 # mypy: ignore-errors
 import asyncio
 import logging

@@ -7,13 +7,14 @@ Implementa sistema de alertas y notificaciones:
 - Dashboard de riesgo en tiempo real
 """
 
+from __future__ import annotations
+
 import logging
 from abc import ABC, abstractmethod
 from datetime import datetime
 from typing import Any
 
-from requests.exceptions import ConnectionError as RequestsConnectionError
-from requests.exceptions import HTTPError
+from requests.exceptions import ConnectionError as RequestsConnectionError, HTTPError
 
 from app.domain.models.portfolio import Portfolio
 

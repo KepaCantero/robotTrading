@@ -4,6 +4,8 @@ T9.1: ReportingGenerator - Generate comprehensive performance reports
 Creates HTML reports with performance metrics, visualizations, and recommendations.
 """
 
+from __future__ import annotations
+
 import logging
 from datetime import datetime
 from decimal import Decimal
@@ -542,7 +544,7 @@ class ReportingGenerator:
         successful = sum(1 for r in self.report_history if r.success)
         total = len(self.report_history)
 
-        ratings = {}
+        ratings: dict[str, int] = {}
         for report in self.report_history:
             rating = report.overall_rating
             ratings[rating] = ratings.get(rating, 0) + 1
@@ -557,7 +559,7 @@ class ReportingGenerator:
 
 
 # Singleton
-_generator: Optional["ReportingGenerator"] = None
+_generator: Optional[ReportingGenerator] = None
 
 
 def get_reporting_generator() -> ReportingGenerator:

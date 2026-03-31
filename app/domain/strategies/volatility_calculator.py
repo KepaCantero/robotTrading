@@ -17,6 +17,8 @@ SOLID Principles:
 - Dependency Inversion: Depende de abstracciones (models)
 """
 
+from __future__ import annotations
+
 import logging
 from dataclasses import dataclass
 from datetime import date
@@ -452,12 +454,12 @@ class VolatilityCalculator:
             Array de retornos
         """
         if len(price_series) < 2:
-            return np.array([])
+            return np.array([], dtype=np.float64)
 
         prices = np.array([float(p[1]) for p in price_series])
 
-        # Retornos logarítmicos
-        log_returns = np.diff(np.log(prices))
+        # Retornos logaritmicos
+        log_returns: np.ndarray = np.diff(np.log(prices))
 
         return log_returns
 
@@ -584,7 +586,7 @@ class VolatilityCalculator:
         )
 
         if result.success:
-            return result.x.tolist()
+            return list(result.x.tolist())
         else:
             logger.warning(f"Optimization failed: {result.message}")
             return [1.0 / n_assets] * n_assets

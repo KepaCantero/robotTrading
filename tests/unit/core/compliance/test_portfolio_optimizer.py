@@ -10,8 +10,8 @@ from decimal import Decimal
 import pandas as pd
 import pytest
 
-from app.core.compliance.portfolio_optimizer import PortfolioComplianceOptimizer
-from app.core.compliance.results import OptimizeResult
+from app.domain.services.compliance.portfolio_optimizer import PortfolioComplianceOptimizer
+from app.domain.services.compliance.results import OptimizeResult
 
 
 @pytest.fixture

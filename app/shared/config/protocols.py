@@ -7,6 +7,8 @@ Allows dependency injection and makes configuration system extensible.
 TASK-24: OCP Compliance - Protocol interfaces for configuration
 """
 
+from __future__ import annotations
+
 from pathlib import Path
 from typing import Optional, Protocol, runtime_checkable
 

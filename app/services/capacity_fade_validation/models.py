@@ -5,6 +5,8 @@ Data structures for capacity fade analysis and validation.
 Used to validate that strategy alpha remains sustainable as capital scales.
 """
 
+from __future__ import annotations
+
 import logging
 from datetime import datetime
 from decimal import Decimal

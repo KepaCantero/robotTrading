@@ -5,6 +5,8 @@ Provides live exchange rate conversion between EUR and USD for
 multi-currency trading accounts.
 """
 
+from __future__ import annotations
+
 import asyncio
 import logging
 from datetime import datetime, timedelta

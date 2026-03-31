@@ -5,6 +5,8 @@ Implementa el patrón Factory para la creación dinámica de estrategias,
 permitiendo registro y creación de estrategias sin modificar código.
 """
 
+from __future__ import annotations
+
 import logging
 from typing import Any
 

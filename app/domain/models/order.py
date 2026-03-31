@@ -5,6 +5,8 @@ This module defines order models with comprehensive domain validation
 for the algorithmic trading system.
 """
 
+from __future__ import annotations
+
 import logging
 from datetime import datetime, timedelta
 from decimal import Decimal
@@ -191,7 +193,7 @@ class Order(BaseModel):
         return v
 
     @model_validator(mode="after")
-    def validate_order_consistency(self) -> "Order":
+    def validate_order_consistency(self) -> Order:
         """Validate order consistency rules."""
         # Validate filled quantity doesn't exceed order quantity
         if self.filled_quantity > self.quantity:
@@ -481,7 +483,7 @@ class MarketData(BaseModel):
         return v
 
     @model_validator(mode="after")
-    def validate_market_data_consistency(self) -> "MarketData":
+    def validate_market_data_consistency(self) -> MarketData:
         """Validate market data consistency rules."""
         # Validate high >= low
         if self.high_price < self.low_price:

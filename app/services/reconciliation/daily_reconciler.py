@@ -7,11 +7,12 @@ This module provides daily reconciliation between broker positions and internal 
 to detect discrepancies and ensure data consistency.
 """
 
+from __future__ import annotations
+
 import logging
 from dataclasses import dataclass, field
 from datetime import date, datetime
 from decimal import Decimal
-from typing import Optional
 
 logger = logging.getLogger(__name__)
 
@@ -208,7 +209,7 @@ class DailyReconciler:
         )
 
     def _compare_positions(
-        self, symbol: str, broker_pos: Optional[Position], internal_pos: Optional[Position]
+        self, symbol: str, broker_pos: Position | None, internal_pos: Position | None
     ) -> dict:
         """
         Compare two positions and return comparison result
@@ -270,6 +271,11 @@ class DailyReconciler:
             }
 
         # Both exist - verify quantities and prices
+        # At this point, both broker_pos and internal_pos are not None
+        # (all None cases have been handled above)
+        assert broker_pos is not None  # guaranteed by early returns above
+        assert internal_pos is not None  # guaranteed by early returns above
+
         qty_diff = abs(broker_pos.quantity - internal_pos.quantity)
 
         # Price difference calculation (avoid division by zero)
@@ -389,7 +395,7 @@ class DailyReconciler:
         return report
 
     def get_position_delta(
-        self, symbol: str, broker_pos: Optional[Position], internal_pos: Optional[Position]
+        self, symbol: str, broker_pos: Position | None, internal_pos: Position | None
     ) -> dict:
         """
         Calculate the delta between broker and internal position
@@ -405,7 +411,7 @@ class DailyReconciler:
         if broker_pos is None and internal_pos is None:
             return {"symbol": symbol, "delta_quantity": Decimal("0"), "delta_value": Decimal("0")}
 
-        if broker_pos is None:
+        if broker_pos is None and internal_pos is not None:
             return {
                 "symbol": symbol,
                 "delta_quantity": -internal_pos.quantity,

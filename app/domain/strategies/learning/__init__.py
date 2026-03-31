@@ -2,6 +2,8 @@
 LearningEngine - Sistema modular de aprendizaje híbrido para estrategias de trading.
 """
 
+from __future__ import annotations
+
 from .base_learning_engine import BaseLearningEngine
 
 # Drift detection y overfitting (siempre disponibles) [TASK-4.2-DRIFT]

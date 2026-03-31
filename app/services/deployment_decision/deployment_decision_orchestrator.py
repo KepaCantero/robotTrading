@@ -5,6 +5,8 @@ Synthesizes validation, recommendation, portfolio allocation, and risk assessmen
 into final deployment decision (APPROVED, CONDITIONAL, REJECTED).
 """
 
+from __future__ import annotations
+
 import logging
 from dataclasses import dataclass, field
 from datetime import datetime

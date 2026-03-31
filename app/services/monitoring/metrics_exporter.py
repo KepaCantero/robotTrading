@@ -5,6 +5,8 @@ Handles metrics export in multiple formats (Prometheus, JSON, CSV) and
 supports real-time streaming to monitoring backends.
 """
 
+from __future__ import annotations
+
 import asyncio
 import json
 import logging
@@ -165,7 +167,7 @@ class MetricsExporter:
                 params=params,
             ) as resp:
                 if resp.status == 200:
-                    data = await resp.json()
+                    data: dict = await resp.json()
                     logger.debug(f"✅ Prometheus query successful: {query}")
                     return data
                 else:
@@ -211,7 +213,7 @@ class MetricsExporter:
                 params=params,
             ) as resp:
                 if resp.status == 200:
-                    data = await resp.json()
+                    data: dict = await resp.json()
                     logger.debug("✅ Prometheus range query successful")
                     return data
                 else:

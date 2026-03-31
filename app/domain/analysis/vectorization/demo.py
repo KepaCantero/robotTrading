@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 #!/usr/bin/env python3
 """
 Vectorization Verification Module - Demo Script
@@ -8,7 +10,6 @@ This script demonstrates the key features of the vectorization verification modu
 3. Pattern library with examples
 """
 
-from __future__ import annotations
 
 import logging
 import sys

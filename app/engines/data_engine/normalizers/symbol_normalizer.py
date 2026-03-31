@@ -4,6 +4,8 @@ SymbolNormalizer - Normalización de símbolos.
 Normaliza símbolos de diferentes formatos a formato estándar.
 """
 
+from __future__ import annotations
+
 import logging
 import re
 from typing import Optional, Union
@@ -28,7 +30,7 @@ class SymbolNormalizer:
         config = config or {}
         self.uppercase = config.get("uppercase", True)
         self.remove_suffixes = config.get("remove_suffixes", True)
-        self.suffix_mappings = config.get(
+        self.suffix_mappings: dict[str, str] = config.get(
             "suffix_mappings",
             {
                 ".US": "",  # Polygon format
@@ -38,7 +40,7 @@ class SymbolNormalizer:
                 ".HK": "",  # Hong Kong
             },
         )
-        self.exchange_mappings = config.get("exchange_mappings", {})
+        self.exchange_mappings: dict[str, dict[str, str]] = config.get("exchange_mappings", {})
 
     def normalize(self, symbol: Union[str, int, float], source: Optional[str] = None) -> str:
         """

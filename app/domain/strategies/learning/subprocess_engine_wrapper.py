@@ -16,6 +16,8 @@ FIX: Added proper initialization handshake, config sanitization, and better
 timeout handling to prevent hangs.
 """
 
+from __future__ import annotations
+
 import contextlib
 import logging
 import multiprocessing as mp
@@ -234,7 +236,9 @@ class SubprocessLearningEngineWrapper:
             try:
                 import pickle
 
-                pickle.dumps(obj)
+                pickle.dumps(
+                    obj
+                )  # nosemgrep: python.lang.security.deserialization.pickle.avoid-pickle - only used for picklability check, not deserialization of untrusted data
                 return True
             except (TypeError, pickle.PicklingError, AttributeError):
                 return False
@@ -255,7 +259,9 @@ class SubprocessLearningEngineWrapper:
                     # Try to pickle the value
                     import pickle
 
-                    pickle.dumps(value)
+                    pickle.dumps(
+                        value
+                    )  # nosemgrep: python.lang.security.deserialization.pickle.avoid-pickle - only used for picklability check, not deserialization of untrusted data
                     sanitized[key] = value
                 except (TypeError, pickle.PicklingError):
                     # Convert to string representation

@@ -16,6 +16,8 @@ Backward Compatibility:
     compatibility with existing code.
 """
 
+from __future__ import annotations
+
 import logging
 from decimal import Decimal
 from pathlib import Path
@@ -36,8 +38,6 @@ from app.shared.config.infrastructure import (
 )
 from app.shared.config.position_sizing import (
     AccountConfiguration as _AccountConfiguration,
-)
-from app.shared.config.position_sizing import (
     PortfolioAllocationThresholds,
     PositionSizingThresholds,
 )
@@ -1931,7 +1931,7 @@ class CentralizedConfig(SettingsBase):
         """Get configuration for a specific strategy."""
         return self.strategies.get(strategy_name)
 
-    def get_trading_threshold(self, threshold_name: str) -> Any:
+    def get_trading_threshold(self, threshold_name: str) -> object:
         """Get a specific trading threshold value."""
         if not hasattr(self.trading, threshold_name):
             raise AttributeError(f"Trading threshold '{threshold_name}' does not exist")
@@ -2024,7 +2024,7 @@ def reload_config() -> CentralizedConfig:
     return _config
 
 
-def get_trading_threshold(threshold_name: Optional[str] = None) -> Any:
+def get_trading_threshold(threshold_name: Optional[str] = None) -> object:
     """Get trading thresholds or specific threshold."""
     if threshold_name is None:
         return get_config().trading

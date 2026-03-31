@@ -5,6 +5,8 @@ Tracks detailed information about signal generation, rejection reasons,
 and strategy-level metrics for diagnostic purposes.
 """
 
+from __future__ import annotations
+
 import json
 import logging
 from collections import defaultdict

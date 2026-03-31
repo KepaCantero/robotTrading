@@ -5,6 +5,8 @@ Dataclasses for backtesting orchestration, execution, and result handling.
 Uses centralized configuration for default values.
 """
 
+from __future__ import annotations
+
 import logging
 from dataclasses import dataclass, field
 from datetime import date, datetime

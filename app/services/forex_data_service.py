@@ -6,6 +6,8 @@ Integrates with OANDA/FXCM brokers and includes fallback defaults.
 Includes reconnection with exponential backoff for 24/7 forex markets.
 """
 
+from __future__ import annotations
+
 import asyncio
 import logging
 from datetime import datetime, timedelta

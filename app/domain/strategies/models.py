@@ -16,6 +16,8 @@ Reference:
 - Factor investing approach (Berkin & Swedroe)
 """
 
+from __future__ import annotations
+
 import logging
 from dataclasses import dataclass, field
 from datetime import datetime
@@ -395,7 +397,7 @@ class FactorStrategyConfig(BaseModel):
     )
 
     @model_validator(mode="after")
-    def validate_weights_sum(self) -> "FactorStrategyConfig":
+    def validate_weights_sum(self) -> FactorStrategyConfig:
         """Validate that factor weights sum approximately to 1."""
         from app.shared.config.centralized_config import get_config
 
@@ -432,7 +434,7 @@ class FactorStrategyConfig(BaseModel):
         return self
 
     @model_validator(mode="after")
-    def validate_tilt_ranges(self) -> "FactorStrategyConfig":
+    def validate_tilt_ranges(self) -> FactorStrategyConfig:
         """Validate that tilts are within reasonable ranges."""
         from app.shared.config.centralized_config import get_config
 
@@ -460,8 +462,24 @@ class FactorStrategyConfig(BaseModel):
         )
         return self
 
+    @staticmethod
+    def _tilt_direction(value: Decimal) -> FactorTiltDirection:
+        """Determine tilt direction from a signed value."""
+        if value > 0:
+            return FactorTiltDirection.POSITIVE
+        if value < 0:
+            return FactorTiltDirection.NEGATIVE
+        return FactorTiltDirection.NEUTRAL
+
     def get_factor_tilts(self) -> list[FactorTilt]:
         """Get list of factor tilts as dataclasses."""
+        tilt_specs: list[tuple[FactorType, Decimal, Decimal]] = [
+            (FactorType.VALUE, self.value_tilt, self.value_weight),
+            (FactorType.SIZE, self.size_tilt, self.size_weight),
+            (FactorType.PROFITABILITY, self.profitability_tilt, self.profitability_weight),
+            (FactorType.INVESTMENT, self.investment_tilt, self.investment_weight),
+            (FactorType.MOMENTUM, self.momentum_tilt, self.momentum_weight),
+        ]
         logger.debug(
             "Generating factor tilts",
             extra={
@@ -474,80 +492,13 @@ class FactorStrategyConfig(BaseModel):
         )
         return [
             FactorTilt(
-                factor=FactorType.VALUE,
-                direction=(
-                    FactorTiltDirection.POSITIVE
-                    if self.value_tilt > 0
-                    else (
-                        FactorTiltDirection.NEGATIVE
-                        if self.value_tilt < 0
-                        else FactorTiltDirection.NEUTRAL
-                    )
-                ),
-                target_exposure=abs(self.value_tilt),
+                factor=factor,
+                direction=self._tilt_direction(tilt),
+                target_exposure=abs(tilt),
                 max_exposure=self.max_factor_exposure,
-                weight=self.value_weight,
-            ),
-            FactorTilt(
-                factor=FactorType.SIZE,
-                direction=(
-                    FactorTiltDirection.POSITIVE
-                    if self.size_tilt > 0
-                    else (
-                        FactorTiltDirection.NEGATIVE
-                        if self.size_tilt < 0
-                        else FactorTiltDirection.NEUTRAL
-                    )
-                ),
-                target_exposure=abs(self.size_tilt),
-                max_exposure=self.max_factor_exposure,
-                weight=self.size_weight,
-            ),
-            FactorTilt(
-                factor=FactorType.PROFITABILITY,
-                direction=(
-                    FactorTiltDirection.POSITIVE
-                    if self.profitability_tilt > 0
-                    else (
-                        FactorTiltDirection.NEGATIVE
-                        if self.profitability_tilt < 0
-                        else FactorTiltDirection.NEUTRAL
-                    )
-                ),
-                target_exposure=abs(self.profitability_tilt),
-                max_exposure=self.max_factor_exposure,
-                weight=self.profitability_weight,
-            ),
-            FactorTilt(
-                factor=FactorType.INVESTMENT,
-                direction=(
-                    FactorTiltDirection.POSITIVE
-                    if self.investment_tilt > 0
-                    else (
-                        FactorTiltDirection.NEGATIVE
-                        if self.investment_tilt < 0
-                        else FactorTiltDirection.NEUTRAL
-                    )
-                ),
-                target_exposure=abs(self.investment_tilt),
-                max_exposure=self.max_factor_exposure,
-                weight=self.investment_weight,
-            ),
-            FactorTilt(
-                factor=FactorType.MOMENTUM,
-                direction=(
-                    FactorTiltDirection.POSITIVE
-                    if self.momentum_tilt > 0
-                    else (
-                        FactorTiltDirection.NEGATIVE
-                        if self.momentum_tilt < 0
-                        else FactorTiltDirection.NEUTRAL
-                    )
-                ),
-                target_exposure=abs(self.momentum_tilt),
-                max_exposure=self.max_factor_exposure,
-                weight=self.momentum_weight,
-            ),
+                weight=weight,
+            )
+            for factor, tilt, weight in tilt_specs
         ]
 
     def get_config_description(self) -> str:
@@ -673,11 +624,28 @@ class FactorRebalanceRecommendation:
 class DividendSafety(str, Enum):
     """Dividend safety rating."""
 
+    VERY_SAFE = "very_safe"
     SAFE = "safe"
     MODERATE = "moderate"
-    AT_RISK = "at_risk"
-    HIGH_RISK = "high_risk"
-    UNSUSTAINABLE = "unsustainable"
+    RISKY = "risky"
+    DANGEROUS = "dangerous"
+
+
+@dataclass
+class DividendData:
+    """Detailed dividend metrics for a stock."""
+
+    dividend_yield: Decimal
+    annual_dividend: Decimal
+    payout_ratio: Optional[Decimal] = None
+    dividend_growth_rate_3y: Optional[Decimal] = None
+    dividend_growth_rate_5y: Optional[Decimal] = None
+    years_consecutive_increases: int = 0
+    safety: DividendSafety = DividendSafety.MODERATE
+    earnings_per_share: Optional[Decimal] = None
+    free_cash_flow_per_share: Optional[Decimal] = None
+    dividend_coverage_ratio: Optional[Decimal] = None
+    next_ex_dividend_date: Optional[datetime] = None
 
 
 @dataclass
@@ -686,15 +654,26 @@ class DividendProfile:
 
     symbol: str
     company_name: str
-    dividend_yield: Decimal
-    annual_dividend: Decimal
-    payout_ratio: Decimal
-    dividend_growth_rate: Decimal
-    years_of_growth: int
+    dividend_data: DividendData
+    current_price: Decimal = Decimal("0")
+    market_cap: Optional[Decimal] = None
+    sector: Optional[str] = None
+    quality_score: Optional[Decimal] = None
+    sustainability_score: Optional[Decimal] = None
+    is_dividend_trap: bool = False
+    pe_ratio: Optional[Decimal] = None
+    pb_ratio: Optional[Decimal] = None
+    beta: Optional[Decimal] = None
+    roe: Optional[Decimal] = None
+    debt_to_equity: Optional[Decimal] = None
     ex_dividend_date: Optional[datetime] = None
     payment_date: Optional[datetime] = None
     safety_rating: DividendSafety = DividendSafety.MODERATE
-    quality_score: Decimal = Decimal("0")
+    dividend_yield: Decimal = Decimal("0")
+    annual_dividend: Decimal = Decimal("0")
+    payout_ratio: Decimal = Decimal("0")
+    dividend_growth_rate: Decimal = Decimal("0")
+    years_of_growth: int = 0
 
 
 @dataclass
@@ -846,21 +825,10 @@ class VolatilityMetrics:
     idiosyncratic_volatility: Optional[Decimal] = None  # Idiosyncratic volatility (%)
     skewness: Optional[Decimal] = None  # Return distribution skewness
     kurtosis: Optional[Decimal] = None  # Return distribution kurtosis
+    volatility_score: Decimal = Decimal("50")  # Composite volatility score (0-100)
 
-    def __post_init__(self):
-        # Ensure all fields are properly initialized
-        if self.average_volatility is None:
-            self.average_volatility = Decimal("0.15")
-        if self.annualized_volatility is None:
-            self.annualized_volatility = Decimal("0.20")
-        if self.beta is None:
-            self.beta = Decimal("1.0")
-        if self.downside_risk is None:
-            self.downside_risk = Decimal("0.10")
-        if self.max_drawdown is None:
-            self.max_drawdown = Decimal("0.10")
-        if self.sortino_ratio is None:
-            self.sortino_ratio = Decimal("1.0")
+    # __post_init__ removed: all fields already have non-None defaults in the
+    # dataclass definition, so the redundant None-guard checks were dead code.
 
 
 @dataclass
@@ -885,6 +853,12 @@ class LowVolatilityProfile:
     stability_score: Optional[Decimal] = None
     overall_score: Optional[Decimal] = None
     is_defensive_stock: bool = False
+    market_cap: Optional[Decimal] = None  # Market capitalization
+    pe_ratio: Optional[Decimal] = None  # Price-to-Earnings ratio
+    pb_ratio: Optional[Decimal] = None  # Price-to-Book ratio
+    debt_to_equity: Optional[Decimal] = None  # Debt-to-Equity ratio
+    roe: Optional[Decimal] = None  # Return on Equity
+    sector_defensive_level: Optional[SectorDefensiveLevel] = None  # Sector defensive classification
 
     def __post_init__(self):
         """Initialize volatility_metrics with default values if not provided."""
@@ -930,7 +904,7 @@ class LowVolatilityScreeningResult:
     failed_stocks: dict[str, list[str]]
     total_evaluated: int
     screening_time_ms: float
-    criteria: "LowVolatilityScreeningCriteria"
+    criteria: LowVolatilityScreeningCriteria
 
     @property
     def pass_rate(self) -> float:
@@ -1014,6 +988,13 @@ class LowVolatilityStrategyConfig(BaseModel):
 
     # Universe settings
     min_market_cap: Optional[Decimal] = Field(default=None, description="Minimum market cap")
+
+    # Valuation constraints
+    max_pe_ratio: Optional[Decimal] = Field(default=None, description="Maximum P/E ratio")
+    max_pb_ratio: Optional[Decimal] = Field(default=None, description="Maximum P/B ratio")
+    max_debt_to_equity: Optional[Decimal] = Field(
+        default=None, description="Maximum debt-to-equity ratio"
+    )
 
     # Scoring weights
     volatility_weight: Decimal = Field(

@@ -17,13 +17,16 @@ import json
 import logging
 from datetime import datetime
 from pathlib import Path
-from typing import Union
+from typing import TYPE_CHECKING, Union
 
 import numpy as np
 import pandas as pd
 from jinja2 import Template
 
 from app.domain.models.input_profile import ObjectivoInversion
+
+if TYPE_CHECKING:
+    from app.backtesting.profile_batch.result_aggregator import ProfileResult
 
 # Type alias for nested JSON-like result dictionaries
 JsonDict = Union[
@@ -57,7 +60,7 @@ class ReportGenerator:
         self.output_dir = output_dir
         self.output_dir.mkdir(parents=True, exist_ok=True)
 
-    def generate_comparison_report(self, results: JsonDict) -> str:
+    def generate_comparison_report(self, results: dict[str, ProfileResult]) -> str:
         """
         Generate HTML comparison report.
 
@@ -89,15 +92,19 @@ class ReportGenerator:
         )
 
         # Aggregate parameter importance
-        param_importance = {}
+        param_importance: dict[str, list[float]] = {}
         for result in results_list:
-            for param, imp in result.comparison.parameter_importance.items():
-                if param not in param_importance:
-                    param_importance[param] = []
-                param_importance[param].append(imp)
+            if isinstance(result.comparison, object) and hasattr(
+                result.comparison, "parameter_importance"
+            ):
+                for param, imp in result.comparison.parameter_importance.items():
+                    if param not in param_importance:
+                        param_importance[param] = []
+                    param_importance[param].append(imp)
 
         param_importance_avg = {
-            k: np.mean(v) for k, v in sorted(param_importance.items(), key=lambda x: -np.mean(x[1]))
+            k: float(np.mean(v))
+            for k, v in sorted(param_importance.items(), key=lambda x: -np.mean(x[1]))
         }
 
         # Group best strategies by objective
@@ -105,7 +112,7 @@ class ReportGenerator:
 
         # Render template
         template = Template(template_str)
-        html = template.render(
+        html: str = template.render(
             timestamp=datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
             total_profiles=len(results_list),
             ready_count=ready_count,
@@ -139,24 +146,25 @@ class ReportGenerator:
 
         return html
 
-    def _group_best_strategies(self, results_list: list[object]) -> list[JsonDict]:
+    def _group_best_strategies(self, results_list: list[ProfileResult]) -> list[dict[str, object]]:
         """Group best strategies by objective."""
-        best_by_objective = []
+        best_by_objective: list[dict[str, object]] = []
 
         for objective in ObjectivoInversion:
             obj_results = [r for r in results_list if r.profile.objetivo_inversion == objective]
 
             if obj_results:
                 # Group by risk and tier
-                grouped = {}
+                grouped: dict[tuple[object, object], ProfileResult] = {}
                 for r in obj_results:
                     key = (r.profile.risk_tolerance.value, r.profile.capital_flag)
-                    if key not in grouped:
+                    existing = grouped.get(key)
+                    if existing is None:
                         grouped[key] = r
                     else:
-                        if r.optimization_results.get("sharpe_ratio", 0) > grouped[
-                            key
-                        ].optimization_results.get("sharpe_ratio", 0):
+                        if r.optimization_results.get(
+                            "sharpe_ratio", 0
+                        ) > existing.optimization_results.get("sharpe_ratio", 0):
                             grouped[key] = r
 
                 best_by_objective.append(
@@ -179,7 +187,9 @@ class ReportGenerator:
 
         return best_by_objective
 
-    def generate_batch_summary(self, results: JsonDict, fallback_metrics: dict[str, int]) -> None:
+    def generate_batch_summary(
+        self, results: dict[str, ProfileResult], fallback_metrics: dict[str, int]
+    ) -> None:
         """
         Generate batch execution summary.
 
@@ -187,25 +197,31 @@ class ReportGenerator:
             results: Dictionary of profile_id to ProfileResult
             fallback_metrics: Fallback metrics dictionary
         """
-        summary = {
+        results_values = list(results.values())
+        summary: dict[str, object] = {
             "timestamp": datetime.now().isoformat(),
             "total_profiles": len(results),
-            "ready_for_paper_trading": sum(
-                1 for r in results.values() if r.ready_for_paper_trading
-            ),
-            "rejected": sum(1 for r in results.values() if not r.ready_for_paper_trading),
+            "ready_for_paper_trading": sum(1 for r in results_values if r.ready_for_paper_trading),
+            "rejected": sum(1 for r in results_values if not r.ready_for_paper_trading),
             "average_improvements": {
-                "sharpe": np.mean(
-                    [r.improvement_metrics.get("sharpe_improvement", 0) for r in results.values()]
+                "sharpe": float(
+                    np.mean(
+                        [r.improvement_metrics.get("sharpe_improvement", 0) for r in results_values]
+                    )
                 ),
-                "return": np.mean(
-                    [r.improvement_metrics.get("return_improvement", 0) for r in results.values()]
+                "return": float(
+                    np.mean(
+                        [r.improvement_metrics.get("return_improvement", 0) for r in results_values]
+                    )
                 ),
             },
-            "best_overall": max(
-                results.items(),
-                key=lambda x: x[1].optimization_results.get("sharpe_ratio", 0),
-                default=(None, None),
+            "best_overall": (
+                max(
+                    results.items(),
+                    key=lambda x: x[1].optimization_results.get("sharpe_ratio", 0),
+                )
+                if results
+                else (None, None)
             ),
             "fallback_metrics": fallback_metrics,
         }
@@ -216,6 +232,8 @@ class ReportGenerator:
         with open(summary_path, "w") as f:
             json.dump(summary, f, indent=2, default=str)
 
+        avg_improvements = summary["average_improvements"]
+        assert isinstance(avg_improvements, dict)
         logger.info(
             "Batch summary saved",
             extra={
@@ -224,12 +242,14 @@ class ReportGenerator:
                 "total_profiles": len(results),
                 "ready_for_paper_trading": summary["ready_for_paper_trading"],
                 "rejected": summary["rejected"],
-                "avg_sharpe_improvement": summary["average_improvements"]["sharpe"],
-                "avg_return_improvement": summary["average_improvements"]["return"],
+                "avg_sharpe_improvement": avg_improvements["sharpe"],
+                "avg_return_improvement": avg_improvements["return"],
             },
         )
 
-    def export_results(self, results: JsonDict, output_format: str = "json") -> Path:
+    def export_results(
+        self, results: dict[str, ProfileResult], output_format: str = "json"
+    ) -> Path:
         """
         Export results to file.
 
@@ -259,7 +279,7 @@ class ReportGenerator:
             )
             raise ValueError(f"Unsupported format: {output_format}")
 
-    def _export_json(self, results: JsonDict, timestamp: str) -> Path:
+    def _export_json(self, results: dict[str, ProfileResult], timestamp: str) -> Path:
         """Export results to JSON."""
         output_path = self.output_dir / f"profile_batch_results_{timestamp}.json"
 
@@ -279,24 +299,27 @@ class ReportGenerator:
         )
         return output_path
 
-    def _export_csv(self, results: JsonDict, timestamp: str) -> Path:
+    def _export_csv(self, results: dict[str, ProfileResult], timestamp: str) -> Path:
         """Export results to CSV."""
         output_path = self.output_dir / f"profile_batch_results_{timestamp}.csv"
 
-        rows = []
+        rows: list[dict[str, object]] = []
         for pid, result in results.items():
-            row = {
+            row: dict[str, object] = {
                 "profile_id": pid,
                 "objective": result.profile.objetivo_inversion.value,
                 "risk_tolerance": result.profile.risk_tolerance.value,
                 "capital_tier": result.profile.capital_flag,
                 "investment_horizon": result.profile.investment_horizon,
-                **result.baseline_results,
-                **{f"opt_{k}": v for k, v in result.optimization_results.items()},
-                **{f"imp_{k}": v for k, v in result.improvement_metrics.items()},
-                "ready_for_paper_trading": result.ready_for_paper_trading,
-                "recommendation": result.recommendation,
             }
+            for k, v in result.baseline_results.items():
+                row[k] = v
+            for k, v in result.optimization_results.items():
+                row[f"opt_{k}"] = v
+            for k, v in result.improvement_metrics.items():
+                row[f"imp_{k}"] = v
+            row["ready_for_paper_trading"] = result.ready_for_paper_trading
+            row["recommendation"] = result.recommendation
             rows.append(row)
 
         df = pd.DataFrame(rows)
@@ -314,15 +337,17 @@ class ReportGenerator:
         )
         return output_path
 
-    def _export_excel(self, results: JsonDict, timestamp: str) -> Path:
+    def _export_excel(self, results: dict[str, ProfileResult], timestamp: str) -> Path:
         """Export results to Excel."""
         output_path = self.output_dir / f"profile_batch_results_{timestamp}.xlsx"
 
+        results_values = list(results.values())
+
         with pd.ExcelWriter(output_path, engine="openpyxl") as writer:
             # Summary sheet
-            rows = []
+            rows: list[dict[str, object]] = []
             for pid, result in results.items():
-                row = {
+                row: dict[str, object] = {
                     "profile_id": pid,
                     "objective": result.profile.objetivo_inversion.value,
                     "risk_tolerance": result.profile.risk_tolerance.value,
@@ -340,7 +365,7 @@ class ReportGenerator:
             # Detailed sheets by objective
             for objective in ObjectivoInversion:
                 obj_results = [
-                    r for r in results.values() if r.profile.objetivo_inversion == objective
+                    r for r in results_values if r.profile.objetivo_inversion == objective
                 ]
                 if obj_results:
                     obj_rows = [self._result_to_dict(r) for r in obj_results]
@@ -360,14 +385,14 @@ class ReportGenerator:
                     [
                         o
                         for o in ObjectivoInversion
-                        if any(r.profile.objetivo_inversion == o for r in results.values())
+                        if any(r.profile.objetivo_inversion == o for r in results_values)
                     ]
                 ),
             },
         )
         return output_path
 
-    def _result_to_dict(self, result: object) -> JsonDict:
+    def _result_to_dict(self, result: ProfileResult) -> dict[str, object]:
         """Convert ProfileResult to dictionary."""
         return {
             "profile_id": result.profile_id,

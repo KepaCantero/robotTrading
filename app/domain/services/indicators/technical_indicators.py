@@ -20,9 +20,11 @@ Supported Indicators:
 - ROC (Rate of Change)
 """
 
+from __future__ import annotations
+
 import logging
 from dataclasses import dataclass, field
-from typing import Any, Callable, ClassVar, Optional, Union
+from typing import Any, Callable, ClassVar, Optional, Union, cast
 
 import numpy as np
 import pandas as pd
@@ -188,12 +190,13 @@ class TechnicalIndicators:
                 series = pd.Series(prices)
                 result = ta.rsi(series, length=period)
                 if return_array:
-                    return result.values
+                    return cast("np.ndarray", result.values)
                 return float(result.iloc[-1]) if not pd.isna(result.iloc[-1]) else None
             except Exception as e:
                 logger.debug(f"pandas-ta RSI failed, using fallback: {e}")
 
         # Native pandas implementation (Wilder's smoothing)
+        assert prices is not None
         return self._rsi_native(prices, period, return_array)
 
     def _rsi_native(
@@ -229,7 +232,7 @@ class TechnicalIndicators:
                 rsi_values[i + 1] = 100.0
 
         if return_array:
-            return rsi_values
+            return cast("np.ndarray", rsi_values)
         return float(rsi_values[-1]) if not np.isnan(rsi_values[-1]) else None
 
     # ========================================================================
@@ -265,12 +268,13 @@ class TechnicalIndicators:
                 series = pd.Series(prices)
                 result = ta.ema(series, length=period)
                 if return_array:
-                    return result.values
+                    return cast("np.ndarray", result.values)
                 return float(result.iloc[-1]) if not pd.isna(result.iloc[-1]) else None
             except Exception as e:
                 logger.debug(f"pandas-ta EMA failed, using fallback: {e}")
 
         # Native pandas implementation
+        assert prices is not None
         return self._ema_native(prices, period, return_array)
 
     def _ema_native(
@@ -288,7 +292,7 @@ class TechnicalIndicators:
             ema_values[i] = alpha * prices[i] + (1.0 - alpha) * ema_values[i - 1]
 
         if return_array:
-            return ema_values
+            return cast("np.ndarray", ema_values)
         return float(ema_values[-1]) if not np.isnan(ema_values[-1]) else None
 
     # ========================================================================
@@ -323,18 +327,19 @@ class TechnicalIndicators:
                 series = pd.Series(prices)
                 result = ta.sma(series, length=period)
                 if return_array:
-                    return result.values
+                    return cast("np.ndarray", result.values)
                 return float(result.iloc[-1]) if not pd.isna(result.iloc[-1]) else None
             except Exception as e:
                 logger.debug(f"pandas-ta SMA failed, using fallback: {e}")
 
         # Native pandas implementation
+        assert prices is not None
         sma_values = np.full(len(prices), np.nan)
         for i in range(period - 1, len(prices)):
             sma_values[i] = np.mean(prices[i - period + 1 : i + 1])
 
         if return_array:
-            return sma_values
+            return cast("np.ndarray", sma_values)
         return float(sma_values[-1]) if not np.isnan(sma_values[-1]) else None
 
     # ========================================================================
@@ -401,6 +406,7 @@ class TechnicalIndicators:
                 logger.debug(f"pandas-ta MACD failed, using fallback: {e}")
 
         # Native implementation
+        assert prices is not None
         return self._macd_native(prices, fast_period, slow_period, signal_period, return_components)
 
     def _macd_native(
@@ -489,12 +495,15 @@ class TechnicalIndicators:
                 df = pd.DataFrame({"high": highs, "low": lows, "close": closes})
                 result = ta.atr(df["high"], df["low"], df["close"], length=period)
                 if return_array:
-                    return result.values
+                    return cast("np.ndarray", result.values)
                 return float(result.iloc[-1]) if not pd.isna(result.iloc[-1]) else None
             except Exception as e:
                 logger.debug(f"pandas-ta ATR failed, using fallback: {e}")
 
         # Native implementation
+        assert highs is not None
+        assert lows is not None
+        assert closes is not None
         return self._atr_native(highs, lows, closes, period, return_array)
 
     def _atr_native(
@@ -521,7 +530,7 @@ class TechnicalIndicators:
             atr_values[i] = (atr_values[i - 1] * (period - 1) + tr[i]) / period
 
         if return_array:
-            return atr_values
+            return cast("np.ndarray", atr_values)
         return float(atr_values[-1]) if not np.isnan(atr_values[-1]) else None
 
     # ========================================================================
@@ -558,6 +567,8 @@ class TechnicalIndicators:
                 return (None, None, None)
             return {"upper": None, "middle": None, "lower": None, "width": None, "position": None}
 
+        assert prices is not None
+
         if self.use_pandas_ta:
             try:
                 series = pd.Series(prices)
@@ -572,8 +583,16 @@ class TechnicalIndicators:
                     lower = float(lower) if not pd.isna(lower) else None
 
                     # Calculate width and position
-                    width = (upper - lower) / middle if middle and upper and lower else None
-                    position = (prices[-1] - lower) / (upper - lower) if upper != lower else 0.5
+                    if upper is not None and lower is not None and middle is not None:
+                        width: Optional[float] = (upper - lower) / middle
+                    else:
+                        width = None
+                    if upper is not None and lower is not None:
+                        position: Optional[float] = (
+                            (float(prices[-1]) - lower) / (upper - lower) if upper != lower else 0.5
+                        )
+                    else:
+                        position = None
 
                     if return_components:
                         return (upper, middle, lower)
@@ -589,11 +608,11 @@ class TechnicalIndicators:
 
         # Native implementation
         middle = float(np.mean(prices[-period:]))
-        std = float(np.std(prices[-period:]))
+        std = float(np.std(prices[-period:], ddof=1))
         upper = middle + std_dev * std
         lower = middle - std_dev * std
         width = (upper - lower) / middle if middle > 0.0 else 0.0
-        position = (prices[-1] - lower) / (upper - lower) if upper != lower else 0.5
+        position = (float(prices[-1]) - lower) / (upper - lower) if upper != lower else 0.5
 
         if return_components:
             return (upper, middle, lower)
@@ -663,6 +682,9 @@ class TechnicalIndicators:
                 logger.debug(f"pandas-ta ADX failed, using fallback: {e}")
 
         # Native implementation (simplified)
+        assert highs is not None
+        assert lows is not None
+        assert closes is not None
         return self._adx_native(highs, lows, closes, period, return_components)
 
     def _adx_native(
@@ -775,11 +797,14 @@ class TechnicalIndicators:
                 logger.debug(f"pandas-ta Stochastic failed, using fallback: {e}")
 
         # Native implementation
+        assert highs is not None
+        assert lows is not None
+        assert closes is not None
         recent_highs = highs[-k_period:]
         recent_lows = lows[-k_period:]
         highest_high: float = float(np.max(recent_highs))
         lowest_low: float = float(np.min(recent_lows))
-        current_close = closes[-1]
+        current_close: float = float(closes[-1])
 
         if highest_high != lowest_low:
             k_val = 100.0 * (current_close - lowest_low) / (highest_high - lowest_low)
@@ -931,14 +956,17 @@ class TechnicalIndicators:
                 logger.debug(f"pandas-ta CCI failed, using fallback: {e}")
 
         # Native implementation
+        assert highs is not None
+        assert lows is not None
+        assert closes is not None
         recent_highs = highs[-period:]
         recent_lows = lows[-period:]
         recent_closes = closes[-period:]
 
         tp_list = (recent_highs + recent_lows + recent_closes) / 3
-        tp_sma = np.mean(tp_list)
-        mean_deviation = np.mean(np.abs(tp_list - tp_sma))
-        current_tp = (highs[-1] + lows[-1] + closes[-1]) / 3
+        tp_sma = float(np.mean(tp_list))
+        mean_deviation = float(np.mean(np.abs(tp_list - tp_sma)))
+        current_tp = float((highs[-1] + lows[-1] + closes[-1]) / 3)
 
         if mean_deviation > 0:
             return (current_tp - tp_sma) / (0.015 * mean_deviation)
@@ -980,12 +1008,14 @@ class TechnicalIndicators:
                 vol_series = pd.Series(volumes)
                 result = ta.obv(close_series, vol_series)
                 if return_array:
-                    return result.values
+                    return cast("np.ndarray", result.values)
                 return float(result.iloc[-1]) if not pd.isna(result.iloc[-1]) else None
             except Exception as e:
                 logger.debug(f"pandas-ta OBV failed, using fallback: {e}")
 
         # Native implementation
+        assert closes is not None
+        assert volumes is not None
         obv_values = np.zeros(len(closes))
         obv_values[0] = volumes[0]
 
@@ -998,7 +1028,7 @@ class TechnicalIndicators:
                 obv_values[i] = obv_values[i - 1]
 
         if return_array:
-            return obv_values
+            return cast("np.ndarray", obv_values)
         return float(obv_values[-1])
 
     # ========================================================================

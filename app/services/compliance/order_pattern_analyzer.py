@@ -18,6 +18,8 @@ Reference:
     https://www.esma.europa.eu/
 """
 
+from __future__ import annotations
+
 import logging
 from collections import deque
 from dataclasses import dataclass, field
@@ -383,9 +385,7 @@ class OrderPatternAnalyzer:
 
         # Look for high cancellation rate on large orders
         large_orders = [
-            o
-            for o in symbol_orders
-            if o.quantity > Decimal("100")  # Arbitrary threshold
+            o for o in symbol_orders if o.quantity > Decimal("100")  # Arbitrary threshold
         ]
 
         if not large_orders:

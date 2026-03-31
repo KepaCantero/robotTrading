@@ -6,6 +6,8 @@ NOTE: This file has high cyclomatic complexity due to Streamlit UI elements.
 This is expected and acceptable for dashboard code.
 """
 
+from __future__ import annotations
+
 # SKIP_RADON_CC: true - High complexity expected for Streamlit dashboard
 # CRÍTICO: Importar streamlit PRIMERO
 import streamlit as st
@@ -57,10 +59,15 @@ except (ValueError, TypeError, KeyError, AttributeError):
 ComprehensiveBacktestRunner = None
 
 # Importar librerías básicas
+import types as _types
+
+_yaml: _types.ModuleType | None = None
 try:
-    import yaml
+    import yaml as _yaml_loaded
+
+    _yaml = _yaml_loaded
 except OSError:
-    yaml = None
+    _yaml = None
 
 try:
     import plotly.express as px
@@ -151,9 +158,11 @@ def load_thresholds(config_path: Optional[str] = None) -> dict[str, dict[str, fl
     if not config_path:
         return default
 
+    if _yaml is None:
+        return default
     try:
         with open(config_path) as f:
-            config = yaml.safe_load(f)
+            config = _yaml.safe_load(f)
         if "thresholds" in config:
             return config["thresholds"]
     except (FileNotFoundError, ValueError, KeyError, TypeError) as e:
@@ -1094,29 +1103,25 @@ def main():
                     st.info(
                         "📋 No hay resultados cargados. Ejecuta tests o carga resultados existentes."
                     )
-                    st.markdown(
-                        """
+                    st.markdown("""
                     **💡 Para empezar:**
                     1. Ve al sidebar y selecciona tests (Baseline, Learning Engines, etc.)
                     2. Activa los learning engines que quieras probar
                     3. Haz clic en "🚀 EXECUTE SELECTED TESTS" (arriba o en el sidebar)
                     4. O carga resultados existentes desde la tab "📁 Load Results"
-                    """
-                    )
+                    """)
             except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
                 st.error(f"❌ Error cargando resultados: {e}")
                 st.exception(e)
                 logger.error(f"Error en dashboard: {e}", exc_info=True)
 
             # Show helpful message even on error
-            st.markdown(
-                """
+            st.markdown("""
             **🔧 Solución:**
             1. Verifica que el directorio `reports/comprehensive_backtest` existe
             2. Ejecuta algunos backtests primero desde el sidebar
             3. O carga resultados desde la tab "📁 Load Results"
-            """
-            )
+            """)
 
         # Tab 2: Individual Results
         with tabs[1]:
@@ -1454,9 +1459,7 @@ def main():
                                     else (
                                         return_imp
                                         if metric == "return_pct"
-                                        else winrate_imp
-                                        if metric == "win_rate"
-                                        else dd_imp
+                                        else winrate_imp if metric == "win_rate" else dd_imp
                                     )
                                 )
 
@@ -1743,13 +1746,11 @@ def main():
         # Tab 5: Integration Test Objectives
         with tabs[4]:
             st.header("🎯 Integration Test Objectives")
-            st.markdown(
-                """
+            st.markdown("""
             ### Objetivos de Métricas para Integration Tests
 
             Esta sección muestra qué estrategias con qué parámetros cumplen los objetivos establecidos para los integration tests.
-            """
-            )
+            """)
 
             # Load and display Meta Analysis results if available
             loader = ComprehensiveBacktestLoader()
@@ -2198,11 +2199,13 @@ def main():
                 )
 
                 # Load existing config
-                import yaml
+                if _yaml is None:
+                    st.error("❌ Error: yaml module not available")
+                    raise ImportError("yaml module not available")
 
                 try:
                     with open(config_path) as f:
-                        config = yaml.safe_load(f)
+                        config = _yaml.safe_load(f)
 
                     if config is None:
                         st.error(f"❌ Error: Config file is empty or invalid: {config_path}")
@@ -2344,7 +2347,8 @@ def main():
                     / "comprehensive_backtest_dashboard_temp.yaml"
                 )
                 with open(temp_config_path, "w") as f:
-                    yaml.dump(config, f, default_flow_style=False, sort_keys=False)
+                    if _yaml is not None:
+                        _yaml.dump(config, f, default_flow_style=False, sort_keys=False)
 
                 # Show execution summary
                 st.markdown("### 📋 Execution Summary")
@@ -2582,16 +2586,14 @@ def main():
         logger.error(f"Error crítico en dashboard main(): {e}", exc_info=True)
 
         # Show minimal working interface
-        st.markdown(
-            """
+        st.markdown("""
         ## 🔧 Dashboard en modo recuperación
 
         El dashboard encontró un error. Por favor:
         1. Recarga la página (F5 o Cmd+R)
         2. Si persiste, revisa los logs en `logs/errors.log`
         3. Intenta ejecutar el dashboard básico: `python run_dashboard.py`
-        """
-        )
+        """)
 
 
 # Streamlit ejecuta el script directamente, así que siempre llamamos main()

@@ -6,6 +6,8 @@ Supports customizable branding, layouts, and content sections for flexible
 report generation and delivery.
 """
 
+from __future__ import annotations
+
 import logging
 from dataclasses import dataclass
 from datetime import datetime
@@ -54,7 +56,7 @@ class ReportConfig:
     strategy_name: str = ""
     report_date: Optional[datetime] = None
     branding: Optional[BrandingConfig] = None
-    sections: list[ReportSection] = None
+    sections: Optional[list[ReportSection]] = None
     include_toc: bool = True  # Table of contents
     include_summary: bool = True
     include_disclaimers: bool = True
@@ -142,7 +144,7 @@ class HTMLTemplateEngine:
         """
         try:
             # Sort sections by order
-            sections = sorted(config.sections, key=lambda s: s.order)
+            sections = sorted(config.sections or [], key=lambda s: s.order)
 
             # Build HTML content
             html_parts = []

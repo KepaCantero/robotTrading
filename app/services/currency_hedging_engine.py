@@ -6,6 +6,8 @@ Provides core hedging logic independent of portfolio service.
 Uses centralized configuration for thresholds and parameters.
 """
 
+from __future__ import annotations
+
 import logging
 from decimal import Decimal
 from enum import Enum

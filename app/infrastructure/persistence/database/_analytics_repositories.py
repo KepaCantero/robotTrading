@@ -8,7 +8,7 @@ Contains MarketDataRepository, BacktestRepository, RiskMetricsRepository, System
 from __future__ import annotations
 
 from datetime import datetime, timedelta
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, NoReturn
 
 from sqlalchemy import and_
 from sqlalchemy.exc import (
@@ -26,10 +26,20 @@ from app.infrastructure.persistence.database.models import (
     RiskMetrics,
     SystemLog,
 )
-from app.shared.exceptions.exceptions import raise_database_error
+from app.shared.exceptions.exceptions import raise_database_error as _raise_database_error
 
 if TYPE_CHECKING:
     import uuid
+
+
+def _handle_db_error(
+    message: str,
+    operation: str,
+    table: str,
+) -> NoReturn:
+    """Type-safe wrapper that mypy can resolve without following imports."""
+    _raise_database_error(message, operation, table)
+    raise RuntimeError("unreachable")  # Safety net
 
 
 class MarketDataRepository(BaseRepository[MarketData]):
@@ -40,7 +50,7 @@ class MarketDataRepository(BaseRepository[MarketData]):
     ) -> list[MarketData]:
         """Get market data by asset and date range."""
         try:
-            result = (
+            result: list[MarketData] = (
                 self.session.query(MarketData)
                 .filter(
                     and_(
@@ -74,7 +84,7 @@ class MarketDataRepository(BaseRepository[MarketData]):
                 end_date=end_date.isoformat(),
                 error=str(e),
             )
-            raise_database_error(
+            _handle_db_error(
                 f"Failed to get market data by asset and date range: {e!s}",
                 "get_by_asset_and_date_range",
                 "market_data",
@@ -83,7 +93,7 @@ class MarketDataRepository(BaseRepository[MarketData]):
     def get_latest_price(self, asset_id: uuid.UUID) -> MarketData | None:
         """Get latest market data for an asset."""
         try:
-            result = (
+            result: MarketData | None = (
                 self.session.query(MarketData)
                 .filter(MarketData.asset_id == asset_id)
                 .order_by(MarketData.timestamp.desc())
@@ -107,7 +117,7 @@ class MarketDataRepository(BaseRepository[MarketData]):
                 asset_id=str(asset_id),
                 error=str(e),
             )
-            raise_database_error(
+            _handle_db_error(
                 f"Failed to get latest price: {e!s}",
                 "get_latest_price",
                 "market_data",
@@ -136,7 +146,7 @@ class MarketDataRepository(BaseRepository[MarketData]):
                 count=len(market_data_list),
                 error=str(e),
             )
-            raise_database_error(
+            _handle_db_error(
                 f"Failed to bulk insert market data: {e!s}",
                 "bulk_insert",
                 "market_data",
@@ -149,7 +159,7 @@ class BacktestRepository(BaseRepository[Backtest]):
     def get_by_portfolio(self, portfolio_id: uuid.UUID) -> list[Backtest]:
         """Get backtests by portfolio ID."""
         try:
-            result = (
+            result: list[Backtest] = (
                 self.session.query(Backtest)
                 .filter(Backtest.portfolio_id == portfolio_id)
                 .order_by(Backtest.created_at.desc())
@@ -173,7 +183,7 @@ class BacktestRepository(BaseRepository[Backtest]):
                 portfolio_id=str(portfolio_id),
                 error=str(e),
             )
-            raise_database_error(
+            _handle_db_error(
                 f"Failed to get backtests by portfolio: {e!s}",
                 "get_by_portfolio",
                 "backtests",
@@ -182,7 +192,7 @@ class BacktestRepository(BaseRepository[Backtest]):
     def get_by_strategy(self, strategy_name: str) -> list[Backtest]:
         """Get backtests by strategy name."""
         try:
-            result = (
+            result: list[Backtest] = (
                 self.session.query(Backtest)
                 .filter(Backtest.strategy_name == strategy_name)
                 .order_by(Backtest.created_at.desc())
@@ -206,7 +216,7 @@ class BacktestRepository(BaseRepository[Backtest]):
                 strategy_name=strategy_name,
                 error=str(e),
             )
-            raise_database_error(
+            _handle_db_error(
                 f"Failed to get backtests by strategy: {e!s}",
                 "get_by_strategy",
                 "backtests",
@@ -215,7 +225,7 @@ class BacktestRepository(BaseRepository[Backtest]):
     def get_completed_backtests(self) -> list[Backtest]:
         """Get all completed backtests."""
         try:
-            result = (
+            result: list[Backtest] = (
                 self.session.query(Backtest)
                 .filter(Backtest.status == "COMPLETED")
                 .order_by(Backtest.completed_at.desc())
@@ -237,7 +247,7 @@ class BacktestRepository(BaseRepository[Backtest]):
                 "get_completed_backtests_failed",
                 error=str(e),
             )
-            raise_database_error(
+            _handle_db_error(
                 f"Failed to get completed backtests: {e!s}",
                 "get_completed_backtests",
                 "backtests",
@@ -250,7 +260,7 @@ class RiskMetricsRepository(BaseRepository[RiskMetrics]):
     def get_latest_by_portfolio(self, portfolio_id: uuid.UUID) -> RiskMetrics | None:
         """Get latest risk metrics for a portfolio."""
         try:
-            result = (
+            result: RiskMetrics | None = (
                 self.session.query(RiskMetrics)
                 .filter(RiskMetrics.portfolio_id == portfolio_id)
                 .order_by(RiskMetrics.calculation_date.desc())
@@ -274,7 +284,7 @@ class RiskMetricsRepository(BaseRepository[RiskMetrics]):
                 portfolio_id=str(portfolio_id),
                 error=str(e),
             )
-            raise_database_error(
+            _handle_db_error(
                 f"Failed to get latest risk metrics: {e!s}",
                 "get_latest_by_portfolio",
                 "risk_metrics",
@@ -285,7 +295,7 @@ class RiskMetricsRepository(BaseRepository[RiskMetrics]):
     ) -> list[RiskMetrics]:
         """Get risk metrics by date range."""
         try:
-            result = (
+            result: list[RiskMetrics] = (
                 self.session.query(RiskMetrics)
                 .filter(
                     and_(
@@ -319,7 +329,7 @@ class RiskMetricsRepository(BaseRepository[RiskMetrics]):
                 end_date=end_date.isoformat(),
                 error=str(e),
             )
-            raise_database_error(
+            _handle_db_error(
                 f"Failed to get risk metrics by date range: {e!s}",
                 "get_by_date_range",
                 "risk_metrics",
@@ -339,7 +349,7 @@ class SystemLogRepository(BaseRepository[SystemLog]):
             )
             if limit:
                 query = query.limit(limit)
-            result = query.all()
+            result: list[SystemLog] = query.all()
             logger.debug(
                 "queried_logs_by_level",
                 level=level,
@@ -359,9 +369,7 @@ class SystemLogRepository(BaseRepository[SystemLog]):
                 level=level,
                 error=str(e),
             )
-            raise_database_error(
-                f"Failed to get logs by level: {e!s}", "get_by_level", "system_logs"
-            )
+            _handle_db_error(f"Failed to get logs by level: {e!s}", "get_by_level", "system_logs")
 
     def get_by_service(self, service: str, limit: int | None = None) -> list[SystemLog]:
         """Get logs by service."""
@@ -373,7 +381,7 @@ class SystemLogRepository(BaseRepository[SystemLog]):
             )
             if limit:
                 query = query.limit(limit)
-            result = query.all()
+            result: list[SystemLog] = query.all()
             logger.debug(
                 "queried_logs_by_service",
                 service=service,
@@ -393,7 +401,7 @@ class SystemLogRepository(BaseRepository[SystemLog]):
                 service=service,
                 error=str(e),
             )
-            raise_database_error(
+            _handle_db_error(
                 f"Failed to get logs by service: {e!s}",
                 "get_by_service",
                 "system_logs",
@@ -410,7 +418,7 @@ class SystemLogRepository(BaseRepository[SystemLog]):
             )
             if limit:
                 query = query.limit(limit)
-            result = query.all()
+            result: list[SystemLog] = query.all()
             logger.debug(
                 "queried_recent_logs",
                 hours=hours,
@@ -430,6 +438,4 @@ class SystemLogRepository(BaseRepository[SystemLog]):
                 hours=hours,
                 error=str(e),
             )
-            raise_database_error(
-                f"Failed to get recent logs: {e!s}", "get_recent_logs", "system_logs"
-            )
+            _handle_db_error(f"Failed to get recent logs: {e!s}", "get_recent_logs", "system_logs")

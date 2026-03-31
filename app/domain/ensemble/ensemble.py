@@ -5,6 +5,8 @@ This module implements various ensemble voting mechanisms to combine
 signals from multiple trading strategies into a single decision.
 """
 
+from __future__ import annotations
+
 # mypy: ignore-errors
 import logging
 from collections import Counter

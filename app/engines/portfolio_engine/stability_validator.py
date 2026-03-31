@@ -35,11 +35,9 @@ if TYPE_CHECKING:
 
 from app.backtesting.lopez_de_prado_metrics import (
     ConcentrationAnalyzer,
+    PortfolioStabilityValidator as LopeDePradoStabilityValidator,
     SharpeRatioCombinator,
     TurnoverAdjustedCalculator,
-)
-from app.backtesting.lopez_de_prado_metrics import (
-    PortfolioStabilityValidator as LopeDePradoStabilityValidator,
 )
 
 logger = logging.getLogger(__name__)

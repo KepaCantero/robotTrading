@@ -19,7 +19,8 @@ from __future__ import annotations
 import logging
 import math
 from datetime import datetime
-from typing import TYPE_CHECKING, Any
+from decimal import Decimal
+from typing import TYPE_CHECKING, Any, Callable
 
 import numpy as np
 
@@ -27,13 +28,19 @@ logger = logging.getLogger(__name__)
 
 from app.backtesting.core.error_handling import MutexError, TrainingError, train_with_retry
 from app.backtesting.core.executor import SimpleBacktestExecutor
-from app.backtesting.models import BacktestConfig
+from app.backtesting.models import BacktestConfig, BacktestResult
 from app.domain.strategies.momentum_modular.strategy import ModularMomentumStrategy
 
 if TYPE_CHECKING:
-    from decimal import Decimal
-
     from app.backtesting.core.memory_manager import AggressiveMemoryManager
+    from app.domain.models.market_data import Quote
+
+# Callback type aliases for helper functions passed from comprehensive runner
+ThresholdsHelper = Callable[[dict[str, Any]], dict[str, float]]
+StrategyNameHelper = Callable[[ModularMomentumStrategy], str]
+MetricsHelper = Callable[[BacktestResult, Decimal], dict[str, float]]
+AuditHelper = Callable[[dict[str, Any], str, ModularMomentumStrategy], None]
+CreateStrategyConfigHelper = Callable[[], dict[str, Any]]
 
 
 class BacktestExecutor:
@@ -52,7 +59,7 @@ class BacktestExecutor:
         backtest_config: BacktestConfig,
         memory_manager: AggressiveMemoryManager,
         raw_config: dict[str, Any],
-        quotes: list,
+        quotes: list[Quote],
         parallel_enabled: bool = False,
         max_workers: int | None = None,
     ):
@@ -77,10 +84,10 @@ class BacktestExecutor:
     def run_baseline_backtest(
         self,
         strategy_config: dict[str, Any],
-        thresholds_helper,
-        strategy_name_helper,
-        metrics_helper,
-        audit_helper,
+        thresholds_helper: ThresholdsHelper,
+        strategy_name_helper: StrategyNameHelper,
+        metrics_helper: MetricsHelper,
+        audit_helper: AuditHelper,
     ) -> list[dict[str, Any]]:
         """
         Execute baseline backtest with all modules active.
@@ -151,11 +158,11 @@ class BacktestExecutor:
 
     def run_learning_engines_backtest(
         self,
-        create_strategy_config_helper,
-        thresholds_helper,
-        strategy_name_helper,
-        metrics_helper,
-        audit_helper,
+        create_strategy_config_helper: CreateStrategyConfigHelper,
+        thresholds_helper: ThresholdsHelper,
+        strategy_name_helper: StrategyNameHelper,
+        metrics_helper: MetricsHelper,
+        audit_helper: AuditHelper,
     ) -> list[dict[str, Any]]:
         """
         Execute backtests for each learning engine individually.
@@ -211,11 +218,11 @@ class BacktestExecutor:
     def _test_learning_engine(
         self,
         engine_type: str,
-        create_strategy_config_helper,
-        thresholds_helper,
-        strategy_name_helper,
-        metrics_helper,
-        audit_helper,
+        create_strategy_config_helper: CreateStrategyConfigHelper,
+        thresholds_helper: ThresholdsHelper,
+        strategy_name_helper: StrategyNameHelper,
+        metrics_helper: MetricsHelper,
+        audit_helper: AuditHelper,
     ) -> dict[str, Any] | None:
         """
         Test a specific learning engine.
@@ -343,8 +350,8 @@ class BacktestExecutor:
 
     def run_monte_carlo_backtest(
         self,
-        create_strategy_config_helper,
-        thresholds_helper,
+        create_strategy_config_helper: CreateStrategyConfigHelper,
+        thresholds_helper: ThresholdsHelper,
         parallel: bool = False,
     ) -> list[dict[str, Any]]:
         """
@@ -440,7 +447,7 @@ class BacktestExecutor:
 
         return results
 
-    def _create_monte_carlo_quotes(self, volatility_multiplier: float) -> list:
+    def _create_monte_carlo_quotes(self, volatility_multiplier: float) -> list[Quote]:
         """
         Create quotes modified with realistic volatility for Monte Carlo.
 
@@ -464,12 +471,13 @@ class BacktestExecutor:
             )
 
             start_date = datetime.now()
-            return gen.generate_realistic_quotes(
+            quotes_result: list[Quote] = gen.generate_realistic_quotes(
                 symbol="SYNTH",
                 n_days=252,
                 start_date=start_date,
                 use_regime_switching=True,
             )
+            return quotes_result
 
         # Use realistic generator for Monte Carlo simulations
         gen = RealisticDataGenerator(
@@ -480,7 +488,7 @@ class BacktestExecutor:
 
         start_date = self.quotes[0].timestamp if self.quotes else datetime.now()
 
-        modified_quotes = gen.generate_realistic_quotes(
+        modified_quotes: list[Quote] = gen.generate_realistic_quotes(
             symbol=self.quotes[0].symbol if self.quotes else "SYNTH",
             n_days=len(self.quotes),
             start_date=start_date,
@@ -497,11 +505,11 @@ class BacktestExecutor:
 
     def run_walk_forward_backtest(
         self,
-        create_strategy_config_helper,
-        thresholds_helper,
-        strategy_name_helper,
-        metrics_helper,
-        audit_helper,
+        create_strategy_config_helper: CreateStrategyConfigHelper,
+        thresholds_helper: ThresholdsHelper,
+        strategy_name_helper: StrategyNameHelper,
+        metrics_helper: MetricsHelper,
+        audit_helper: AuditHelper,
     ) -> list[dict[str, Any]]:
         """
         Execute walk-forward backtest with rolling windows.
@@ -751,10 +759,10 @@ class BacktestExecutor:
     def run_backtest_with_quotes(
         self,
         strategy: ModularMomentumStrategy,
-        quotes: list,
+        quotes: list[Quote],
         initial_capital: Decimal,
-        strategy_name_helper,
-    ) -> Any:
+        strategy_name_helper: StrategyNameHelper,
+    ) -> BacktestResult:
         """
         Run backtest with specific quotes.
 

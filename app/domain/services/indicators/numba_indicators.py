@@ -28,8 +28,10 @@ Usage:
         pass
 """
 
+from __future__ import annotations
+
 import logging
-from typing import Optional, Union
+from typing import TYPE_CHECKING, cast
 
 import numpy as np
 
@@ -116,6 +118,8 @@ def _calculate_rsi_array_numba(prices: np.ndarray, period: int) -> np.ndarray:
     rsi_values = np.full(n, np.nan)
 
     if n < period + 1:
+        if TYPE_CHECKING:
+            return cast("np.ndarray", rsi_values)
         return rsi_values
 
     # Calculate price changes
@@ -155,6 +159,8 @@ def _calculate_rsi_array_numba(prices: np.ndarray, period: int) -> np.ndarray:
             rs = avg_gain / avg_loss
             rsi_values[i] = 100.0 - (100.0 / (1.0 + rs))
 
+    if TYPE_CHECKING:
+        return cast("np.ndarray", rsi_values)
     return rsi_values
 
 
@@ -165,6 +171,8 @@ def _calculate_ema_numba(prices: np.ndarray, period: int) -> np.ndarray:
     ema = np.full(n, np.nan)
 
     if n < period:
+        if TYPE_CHECKING:
+            return cast("np.ndarray", ema)
         return ema
 
     alpha = 2.0 / (period + 1.0)
@@ -180,6 +188,8 @@ def _calculate_ema_numba(prices: np.ndarray, period: int) -> np.ndarray:
     for i in range(period, n):
         ema[i] = alpha * prices[i] + (1.0 - alpha) * ema[i - 1]
 
+    if TYPE_CHECKING:
+        return cast("np.ndarray", ema)
     return ema
 
 
@@ -212,14 +222,23 @@ def _calculate_sma_numba(prices: np.ndarray, period: int) -> np.ndarray:
     sma = np.full(n, np.nan)
 
     if n < period:
+        if TYPE_CHECKING:
+            return cast("np.ndarray", sma)
         return sma
 
-    for i in range(period - 1, n):
-        window_sum = 0.0
-        for j in range(i - period + 1, i + 1):
-            window_sum += prices[j]
+    # Compute first window sum
+    window_sum = 0.0
+    for j in range(period):
+        window_sum += prices[j]
+    sma[period - 1] = window_sum / period
+
+    # Sliding window: O(n) instead of O(n*period)
+    for i in range(period, n):
+        window_sum += prices[i] - prices[i - period]
         sma[i] = window_sum / period
 
+    if TYPE_CHECKING:
+        return cast("np.ndarray", sma)
     return sma
 
 
@@ -287,6 +306,8 @@ def _calculate_atr_numba(
     atr = np.full(n, np.nan)
 
     if n < period + 1:
+        if TYPE_CHECKING:
+            return cast("np.ndarray", atr)
         return atr
 
     # Calculate True Range
@@ -309,6 +330,8 @@ def _calculate_atr_numba(
     for i in range(period + 1, n):
         atr[i] = (atr[i - 1] * (period - 1) + tr[i]) / period
 
+    if TYPE_CHECKING:
+        return cast("np.ndarray", atr)
     return atr
 
 
@@ -395,6 +418,8 @@ def _rolling_mean_numba(values: np.ndarray, window: int) -> np.ndarray:
     result = np.full(n, np.nan)
 
     if n < window:
+        if TYPE_CHECKING:
+            return cast("np.ndarray", result)
         return result
 
     window_sum = 0.0
@@ -406,6 +431,8 @@ def _rolling_mean_numba(values: np.ndarray, window: int) -> np.ndarray:
         window_sum = window_sum - values[i - window] + values[i]
         result[i] = window_sum / window
 
+    if TYPE_CHECKING:
+        return cast("np.ndarray", result)
     return result
 
 
@@ -416,6 +443,8 @@ def _rolling_std_numba(values: np.ndarray, window: int) -> np.ndarray:
     result = np.full(n, np.nan)
 
     if n < window:
+        if TYPE_CHECKING:
+            return cast("np.ndarray", result)
         return result
 
     for i in range(window - 1, n):
@@ -430,6 +459,8 @@ def _rolling_std_numba(values: np.ndarray, window: int) -> np.ndarray:
         variance = (window_sum_sq / window) - (mean * mean)
         result[i] = np.sqrt(variance) if variance > 0 else 0.0
 
+    if TYPE_CHECKING:
+        return cast("np.ndarray", result)
     return result
 
 
@@ -465,15 +496,15 @@ class NumbaIndicators:
                 "Calculations will use pure Python (slower)."
             )
 
-    def _to_array(self, data: Union[list, np.ndarray]) -> np.ndarray:
+    def _to_array(self, data: list | np.ndarray) -> np.ndarray:
         """Convert input to numpy array."""
         if isinstance(data, np.ndarray):
-            return data.astype(np.float64)
-        return np.array(data, dtype=np.float64)
+            return cast("np.ndarray", data.astype(np.float64))
+        return cast("np.ndarray", np.array(data, dtype=np.float64))
 
     def rsi(
-        self, prices: Union[list, np.ndarray], period: int = 14, return_array: bool = False
-    ) -> Union[Optional[float], Optional[np.ndarray]]:
+        self, prices: list | np.ndarray, period: int = 14, return_array: bool = False
+    ) -> float | None | np.ndarray | None:
         """
         Calculate RSI using Numba JIT.
 
@@ -488,16 +519,18 @@ class NumbaIndicators:
         arr = self._to_array(prices)
 
         if len(arr) < period + 1:
-            return np.full(len(arr), np.nan) if return_array else None
+            if return_array:
+                return cast("np.ndarray", np.full(len(arr), np.nan))
+            return None
 
         if return_array:
-            return _calculate_rsi_array_numba(arr, period)
+            return cast("np.ndarray", _calculate_rsi_array_numba(arr, period))
         result = _calculate_rsi_numba(arr, period)
         return float(result) if not np.isnan(result) else None
 
     def ema(
-        self, prices: Union[list, np.ndarray], period: int = 20, return_array: bool = False
-    ) -> Union[Optional[float], Optional[np.ndarray]]:
+        self, prices: list | np.ndarray, period: int = 20, return_array: bool = False
+    ) -> float | None | np.ndarray | None:
         """
         Calculate EMA using Numba JIT.
 
@@ -512,16 +545,18 @@ class NumbaIndicators:
         arr = self._to_array(prices)
 
         if len(arr) < period:
-            return np.full(len(arr), np.nan) if return_array else None
+            if return_array:
+                return cast("np.ndarray", np.full(len(arr), np.nan))
+            return None
 
         if return_array:
-            return _calculate_ema_numba(arr, period)
+            return cast("np.ndarray", _calculate_ema_numba(arr, period))
         result = _calculate_ema_single_numba(arr, period)
         return float(result) if not np.isnan(result) else None
 
     def sma(
-        self, prices: Union[list, np.ndarray], period: int = 20, return_array: bool = False
-    ) -> Union[Optional[float], Optional[np.ndarray]]:
+        self, prices: list | np.ndarray, period: int = 20, return_array: bool = False
+    ) -> float | None | np.ndarray | None:
         """
         Calculate SMA using Numba JIT.
 
@@ -536,21 +571,23 @@ class NumbaIndicators:
         arr = self._to_array(prices)
 
         if len(arr) < period:
-            return np.full(len(arr), np.nan) if return_array else None
+            if return_array:
+                return cast("np.ndarray", np.full(len(arr), np.nan))
+            return None
 
-        result = _calculate_sma_numba(arr, period)
+        result = cast("np.ndarray", _calculate_sma_numba(arr, period))
         if return_array:
             return result
         return float(result[-1]) if not np.isnan(result[-1]) else None
 
     def macd(
         self,
-        prices: Union[list, np.ndarray],
+        prices: list | np.ndarray,
         fast_period: int = 12,
         slow_period: int = 26,
         signal_period: int = 9,
         return_components: bool = True,
-    ) -> Union[Optional[float], tuple[Optional[float], Optional[float], Optional[float]]]:
+    ) -> float | None | tuple[float | None, float | None, float | None]:
         """
         Calculate MACD using Numba JIT.
 
@@ -585,12 +622,12 @@ class NumbaIndicators:
 
     def atr(
         self,
-        high: Union[list, np.ndarray],
-        low: Union[list, np.ndarray],
-        close: Union[list, np.ndarray],
+        high: list | np.ndarray,
+        low: list | np.ndarray,
+        close: list | np.ndarray,
         period: int = 14,
         return_array: bool = False,
-    ) -> Union[Optional[float], Optional[np.ndarray]]:
+    ) -> float | None | np.ndarray | None:
         """
         Calculate ATR using Numba JIT.
 
@@ -610,17 +647,19 @@ class NumbaIndicators:
 
         n = len(close_arr)
         if n < period + 1:
-            return np.full(n, np.nan) if return_array else None
+            if return_array:
+                return cast("np.ndarray", np.full(n, np.nan))
+            return None
 
-        result = _calculate_atr_numba(high_arr, low_arr, close_arr, period)
+        result = cast("np.ndarray", _calculate_atr_numba(high_arr, low_arr, close_arr, period))
 
         if return_array:
             return result
         return float(result[-1]) if not np.isnan(result[-1]) else None
 
     def bollinger_bands(
-        self, prices: Union[list, np.ndarray], period: int = 20, std_dev: float = 2.0
-    ) -> tuple[Optional[float], Optional[float], Optional[float]]:
+        self, prices: list | np.ndarray, period: int = 20, std_dev: float = 2.0
+    ) -> tuple[float | None, float | None, float | None]:
         """
         Calculate Bollinger Bands using Numba JIT.
 
@@ -647,12 +686,12 @@ class NumbaIndicators:
 
     def stochastic(
         self,
-        high: Union[list, np.ndarray],
-        low: Union[list, np.ndarray],
-        close: Union[list, np.ndarray],
+        high: list | np.ndarray,
+        low: list | np.ndarray,
+        close: list | np.ndarray,
         k_period: int = 14,
         d_period: int = 3,
-    ) -> tuple[Optional[float], Optional[float]]:
+    ) -> tuple[float | None, float | None]:
         """
         Calculate Stochastic Oscillator using Numba JIT.
 
@@ -682,19 +721,19 @@ class NumbaIndicators:
 
         return (k_val, d_val)
 
-    def rolling_mean(self, values: Union[list, np.ndarray], window: int) -> Optional[np.ndarray]:
+    def rolling_mean(self, values: list | np.ndarray, window: int) -> np.ndarray | None:
         """Calculate rolling mean using Numba JIT."""
         arr = self._to_array(values)
         if len(arr) < window:
             return None
-        return _rolling_mean_numba(arr, window)
+        return cast("np.ndarray", _rolling_mean_numba(arr, window))
 
-    def rolling_std(self, values: Union[list, np.ndarray], window: int) -> Optional[np.ndarray]:
+    def rolling_std(self, values: list | np.ndarray, window: int) -> np.ndarray | None:
         """Calculate rolling std using Numba JIT."""
         arr = self._to_array(values)
         if len(arr) < window:
             return None
-        return _rolling_std_numba(arr, window)
+        return cast("np.ndarray", _rolling_std_numba(arr, window))
 
 
 def get_numba_info() -> dict:

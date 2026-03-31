@@ -4,6 +4,8 @@ Portfolio, Signal, and Asset models and interfaces.
 This module exports the core portfolio, signal, and asset models and interfaces for the AlgoTrading system.
 """
 
+from __future__ import annotations
+
 # Optional imports - pydantic is a required dependency for momentum models
 try:
     from .momentum import (

@@ -15,6 +15,8 @@ Key features:
 Reference: Hull, Options, Futures, and Other Derivatives, Chapter 20
 """
 
+from __future__ import annotations
+
 import logging
 from typing import Any, Optional
 

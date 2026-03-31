@@ -11,8 +11,6 @@ import logging
 from decimal import Decimal
 from typing import Any
 
-import numpy as np
-
 from app.backtesting.models import BacktestConfig, Trade, TradeStatus
 
 logger = logging.getLogger(__name__)
@@ -164,10 +162,11 @@ class ProfitAndLossCalculator:
         # Calculate cost basis for the quantity being closed (not all open trades)
         cost_basis = avg_entry_price * quantity
 
-        # Calculate commission
+        # Calculate commission (pure Decimal arithmetic, no float conversion)
+        commissions_list = [t.commission for t in buy_trades if t.commission]
         avg_commission_per_buy = (
-            np.mean([t.commission for t in buy_trades if t.commission])
-            if buy_trades and any(t.commission for t in buy_trades)
+            sum(commissions_list) / len(commissions_list)
+            if commissions_list
             else self.config.commission_per_trade
         )
 
@@ -229,8 +228,11 @@ class ProfitAndLossCalculator:
         if not buy_trades:
             return None
 
-        total_cost = sum(t.entry_price * t.quantity for t in buy_trades)
-        total_quantity = sum(t.quantity for t in buy_trades)
+        total_cost = sum(
+            (Decimal(str(t.entry_price)) * Decimal(str(t.quantity)) for t in buy_trades),
+            Decimal("0"),
+        )
+        total_quantity = sum((Decimal(str(t.quantity)) for t in buy_trades), Decimal("0"))
 
         if total_quantity == 0:
             return None
@@ -249,7 +251,7 @@ class ProfitAndLossCalculator:
             Total round-trip commission
         """
         symbol_trades = [t for t in trades if t.symbol == symbol and t.commission]
-        return sum(t.commission for t in symbol_trades)
+        return sum((Decimal(str(t.commission)) for t in symbol_trades), Decimal("0"))
 
     def calculate_commission_ratio(
         self, position_value: Decimal, trades: list[Trade], symbol: str

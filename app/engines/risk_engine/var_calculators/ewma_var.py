@@ -22,6 +22,8 @@ Where lambda (lambda) is the decay factor:
 Reference: Hull, Options, Futures, and Other Derivatives, Chapter 18
 """
 
+from __future__ import annotations
+
 import logging
 from typing import Any, Optional
 

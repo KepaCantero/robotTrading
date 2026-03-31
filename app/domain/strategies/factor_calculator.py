@@ -20,6 +20,8 @@ SOLID Principles:
 - Open/Closed: Extensible with new factors
 """
 
+from __future__ import annotations
+
 import logging
 from datetime import datetime
 from decimal import Decimal

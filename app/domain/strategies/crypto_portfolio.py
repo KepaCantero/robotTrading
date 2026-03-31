@@ -11,12 +11,14 @@ momentum strategies, with specific considerations for crypto markets:
 - Risk management for extreme moves
 """
 
+from __future__ import annotations
+
 import logging
 from dataclasses import dataclass, field
 from datetime import date, datetime
 from decimal import Decimal
 from enum import Enum
-from typing import Any, Optional
+from typing import Any
 
 import numpy as np
 
@@ -40,10 +42,10 @@ class CryptoAsset:
     name: str
     asset_type: CryptoAssetType
     current_price: Decimal
-    market_cap: Optional[Decimal] = None
-    volume_24h: Optional[Decimal] = None
-    volatility_30d: Optional[Decimal] = None
-    volatility_90d: Optional[Decimal] = None
+    market_cap: Decimal | None = None
+    volume_24h: Decimal | None = None
+    volatility_30d: Decimal | None = None
+    volatility_90d: Decimal | None = None
     liquidity_score: Decimal = Decimal("100")  # Default to full liquidity
 
 
@@ -55,7 +57,7 @@ class CryptoMomentumScore:
     score: Decimal
     price_momentum: Decimal = Decimal("0")
     volume_momentum: Decimal = Decimal("0")
-    timestamp: Optional[datetime] = None
+    timestamp: datetime | None = None
 
     @property
     def final_score(self) -> Decimal:
@@ -85,7 +87,7 @@ class CryptoPosition:
     current_price: Decimal
     value: Decimal
     weight: Decimal
-    entry_date: Optional[date] = None
+    entry_date: date | None = None
 
     @property
     def unrealized_pnl(self) -> Decimal:
@@ -109,13 +111,13 @@ class CryptoPortfolio:
     cash: Decimal
     btc_weight: Decimal
     altcoin_weight: Decimal
-    last_rebalance: Optional[date] = None
+    last_rebalance: date | None = None
     rebalance_threshold: Decimal = Decimal("0.05")
-    expected_volatility: Optional[Decimal] = None
+    expected_volatility: Decimal | None = None
     metadata: dict[str, Any] = field(default_factory=dict)
 
     @property
-    def btc_position(self) -> Optional[CryptoPosition]:
+    def btc_position(self) -> CryptoPosition | None:
         """Get BTC position if exists."""
         for pos in self.positions:
             if pos.symbol == "BTC":
@@ -263,7 +265,7 @@ class CryptoPortfolioConstructor:
         asset: CryptoAsset,
         value: Decimal,
         target_weight: Decimal,
-        momentum_score: Optional[CryptoMomentumScore],
+        momentum_score: CryptoMomentumScore | None,
     ) -> CryptoPosition:
         """Create a portfolio position."""
         quantity = value / asset.current_price if asset.current_price > 0 else Decimal("0")

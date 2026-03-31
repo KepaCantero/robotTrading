@@ -1071,46 +1071,46 @@ class CachedFXRateProvider:
             return False
 
         timestamp = self._cache_timestamps[key]
-        return (time.time() - timestamp) < self._cache_ttl
+        return bool((time.time() - timestamp) < self._cache_ttl)
 
     def get_spot_rate(self, pair: FXPair, as_of: date) -> Decimal:
         """Get spot rate, using cache if available."""
         key = ("spot", pair, as_of)
 
         if key in self._spot_cache and self._is_cache_valid(key):
-            return self._spot_cache[key]
+            return Decimal(str(self._spot_cache[key]))
 
         rate = self._underlying.get_spot_rate(pair, as_of)
         self._spot_cache[key] = rate
         self._cache_timestamps[key] = time.time()
 
-        return rate
+        return Decimal(str(rate))
 
     def get_forward_rate(self, pair: FXPair, as_of: date, months: int) -> Decimal:
         """Get forward rate, using cache if available."""
         key = ("forward", pair, as_of, months)
 
         if key in self._forward_cache and self._is_cache_valid(key):
-            return self._forward_cache[key]
+            return Decimal(str(self._forward_cache[key]))
 
         rate = self._underlying.get_forward_rate(pair, as_of, months)
         self._forward_cache[key] = rate
         self._cache_timestamps[key] = time.time()
 
-        return rate
+        return Decimal(str(rate))
 
     def get_interest_rate(self, currency: str, as_of: date, months: int) -> Decimal:
         """Get interest rate, using cache if available."""
         key = ("rate", currency.upper(), as_of, months)
 
         if key in self._rate_cache and self._is_cache_valid(key):
-            return self._rate_cache[key]
+            return Decimal(str(self._rate_cache[key]))
 
         rate = self._underlying.get_interest_rate(currency, as_of, months)
         self._rate_cache[key] = rate
         self._cache_timestamps[key] = time.time()
 
-        return rate
+        return Decimal(str(rate))
 
     def get_available_pairs(self) -> list[FXPair]:
         """Get available pairs from underlying provider."""

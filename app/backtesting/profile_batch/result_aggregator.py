@@ -17,7 +17,7 @@ from __future__ import annotations
 import logging
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import TYPE_CHECKING, Union
+from typing import TYPE_CHECKING, Protocol, Union, runtime_checkable
 from uuid import uuid4
 
 from sqlalchemy import JSON, Boolean, Column, DateTime, Float, Integer, String, create_engine
@@ -28,8 +28,7 @@ from sqlalchemy.exc import (
     OperationalError,
     ProgrammingError,
 )
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import DeclarativeBase, sessionmaker
 
 if TYPE_CHECKING:
     from app.domain.models.input_profile import InputProfile
@@ -51,7 +50,17 @@ JsonDict = dict[
     ],
 ]
 
-Base = declarative_base()
+
+@runtime_checkable
+class OptimizedResult(Protocol):
+    """Protocol for optimized strategy results used in readiness evaluation."""
+
+    optimized_metrics: dict[str, float]
+    ready_for_paper_trading: bool
+
+
+class Base(DeclarativeBase):
+    """SQLAlchemy declarative base class."""
 
 
 class ProfileResultDB(Base):
@@ -142,7 +151,7 @@ class ProfileResult:
     optimization_results: JsonDict
     best_parameters: JsonDict
     improvement_metrics: dict[str, float]
-    comparison: object  # BaselineOptimizationComparison
+    comparison: object  # BaselineOptimizationComparison - using object due to circular import
     ready_for_paper_trading: bool
     recommendation: str
     created_at: datetime = field(default_factory=datetime.now)
@@ -378,25 +387,41 @@ class ResultAggregator:
         Returns:
             Dictionary of improvement percentages
         """
+        baseline_sharpe = baseline.get("sharpe_ratio", 0)
+        optimized_sharpe = optimized.get("sharpe_ratio", 0)
+        baseline_return = baseline.get("return_pct", 0)
+        optimized_return = optimized.get("return_pct", 0)
+        baseline_dd = baseline.get("max_drawdown", 0)
+        optimized_dd = optimized.get("max_drawdown", 0)
+        baseline_wr = baseline.get("win_rate", 0)
+        optimized_wr = optimized.get("win_rate", 0)
+
+        assert isinstance(baseline_sharpe, (int, float))
+        assert isinstance(optimized_sharpe, (int, float))
+        assert isinstance(baseline_return, (int, float))
+        assert isinstance(optimized_return, (int, float))
+        assert isinstance(baseline_dd, (int, float))
+        assert isinstance(optimized_dd, (int, float))
+        assert isinstance(baseline_wr, (int, float))
+        assert isinstance(optimized_wr, (int, float))
+
         return {
             "sharpe_improvement": self._pct_improvement(
-                baseline.get("sharpe_ratio", 0), optimized.get("sharpe_ratio", 0)
+                float(baseline_sharpe), float(optimized_sharpe)
             ),
             "return_improvement": self._pct_improvement(
-                baseline.get("return_pct", 0), optimized.get("return_pct", 0)
+                float(baseline_return), float(optimized_return)
             ),
             "max_dd_improvement": self._pct_improvement(
-                abs(baseline.get("max_drawdown", 0)), abs(optimized.get("max_drawdown", 0))
+                abs(float(baseline_dd)), abs(float(optimized_dd))
             ),
-            "win_rate_improvement": self._pct_improvement(
-                baseline.get("win_rate", 0), optimized.get("win_rate", 0)
-            ),
+            "win_rate_improvement": self._pct_improvement(float(baseline_wr), float(optimized_wr)),
         }
 
     def evaluate_readiness(
         self,
         profile: InputProfile,
-        optimized: object,
+        optimized: OptimizedResult,
         improvements: dict[str, float],
         acceptance_criteria: JsonDict,
     ) -> tuple[bool, str]:
@@ -412,10 +437,20 @@ class ResultAggregator:
         Returns:
             Tuple of (ready, recommendation)
         """
-        min_sharpe = acceptance_criteria.get("min_sharpe", 1.0)
-        min_return = acceptance_criteria.get("min_return", 0.10)
-        max_dd = acceptance_criteria.get("max_drawdown", -0.25)
-        revision_multiplier = acceptance_criteria.get("revision_multiplier", 0.8)
+        raw_min_sharpe = acceptance_criteria.get("min_sharpe", 1.0)
+        raw_min_return = acceptance_criteria.get("min_return", 0.10)
+        raw_max_dd = acceptance_criteria.get("max_drawdown", -0.25)
+        raw_revision_multiplier = acceptance_criteria.get("revision_multiplier", 0.8)
+
+        assert isinstance(raw_min_sharpe, (int, float))
+        assert isinstance(raw_min_return, (int, float))
+        assert isinstance(raw_max_dd, (int, float))
+        assert isinstance(raw_revision_multiplier, (int, float))
+
+        min_sharpe = float(raw_min_sharpe)
+        min_return = float(raw_min_return)
+        max_dd = float(raw_max_dd)
+        revision_multiplier = float(raw_revision_multiplier)
 
         sharpe = optimized.optimized_metrics.get("sharpe_ratio", 0)
         total_return = optimized.optimized_metrics.get("return_pct", 0)

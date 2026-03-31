@@ -4,6 +4,8 @@ Spain Dividend Tax Calculator
 Calcula retenciones de dividendos para residentes espanoles
 """
 
+from __future__ import annotations
+
 import logging
 from decimal import Decimal
 from typing import ClassVar
@@ -20,7 +22,7 @@ class SpainDividendTaxCalculator:
     """
 
     # Paises UE (codigos ISO)
-    EU_COUNTRY_CODES: ClassVar[dict] = {
+    EU_COUNTRY_CODES: ClassVar[set[str]] = {
         "AT",
         "BE",
         "BG",

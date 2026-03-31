@@ -10,6 +10,8 @@ Rules:
 - R27: Optimization (EUR50k+) -> 3% max risk, leverage allowed
 """
 
+from __future__ import annotations
+
 import logging
 from dataclasses import dataclass
 from decimal import Decimal

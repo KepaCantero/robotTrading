@@ -4,6 +4,8 @@ T7.1: PortfolioConstructor Models
 Data structures for portfolio construction and allocation.
 """
 
+from __future__ import annotations
+
 import logging
 from decimal import Decimal
 from typing import Optional

@@ -5,6 +5,8 @@ Implements multi-timeframe confirmation to validate signals across different tim
 (15m, 1h, 4h, daily) to increase signal quality and reduce false positives.
 """
 
+from __future__ import annotations
+
 import logging
 from collections import defaultdict
 from datetime import datetime, timedelta

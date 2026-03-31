@@ -12,11 +12,13 @@ from decimal import Decimal
 
 import pytest
 
-from app.maestro.phase_1 import (
-    CapitalTier,
+from app.application.orchestration.target_optimization.capital_tier_selector import (
     CapitalTierSelector,
     RiskProfileScaler,
     StrategyFeatureGatekeeper,
+)
+from app.application.orchestration.target_optimization.models import (
+    CapitalTier,
     StrategyFeatures,
 )
 

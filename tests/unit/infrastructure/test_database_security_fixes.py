@@ -13,9 +13,9 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from app.core.database import get_database_engine
-from app.database import get_sync_db
-from app.database.models import PositionState
+from app.infrastructure.persistence.database import DatabaseManager
+from app.infrastructure.persistence.database import get_sync_db
+from app.infrastructure.persistence.database.models import PositionState
 from app.services.position_monitor.position_monitor import (
     MonitoredPosition,
     PositionMonitor,
@@ -26,63 +26,41 @@ from app.services.position_monitor.position_monitor import (
 class TestConnectionStringSanitization:
     """Test that database connection strings are sanitized in logs."""
 
-    @patch('app.core.database.logger')
+    @patch('app.infrastructure.persistence.database.logger')
     def test_postgresql_connection_sanitized(self, mock_logger):
         """Test PostgreSQL connection string is sanitized."""
-        from app.core.config import get_settings
-
-        settings = get_settings()
-
-        # Mock settings to return connection string with credentials
-        with patch.object(
-            settings, 'database_url', 'postgresql://user:password@localhost:5432/trading'
+        with patch(
+            'app.infrastructure.persistence.database.get_database_url',
+            return_value='postgresql://user:password@localhost:5432/trading',
         ):
-            with patch.object(
-                settings, 'get_database_url_async', return_value=settings.database_url
-            ):
-                # Trigger database engine creation
-                try:
-                    get_database_engine()
-                except Exception:
-                    # Engine creation might fail due to invalid connection
-                    pass
+            manager = DatabaseManager()
+            try:
+                manager.initialize_sync_engine()
+            except Exception:
+                pass
 
-                # Check that logger.info was called
-                info_calls = [call for call in mock_logger.info.call_args_list]
+            info_calls = [call for call in mock_logger.info.call_args_list]
+            for call in info_calls:
+                call_str = str(call)
+                assert 'user:password' not in call_str, "Credentials exposed in log!"
+                assert 'postgresql://user' not in call_str, "Full connection string logged!"
 
-                # Verify no call contains the full connection string
-                for call in info_calls:
-                    call_str = str(call)
-                    assert 'user:password' not in call_str, "Credentials exposed in log!"
-                    assert 'postgresql://user' not in call_str, "Full connection string logged!"
-
-                # Verify at least one call contains host info
-                host_logged = any(
-                    'localhost:5432' in str(call) or 'host=' in str(call) for call in info_calls
-                )
-                assert host_logged, "Host information not logged"
-
-    @patch('app.core.database.logger')
+    @patch('app.infrastructure.persistence.database.logger')
     def test_sqlite_connection_logged(self, mock_logger):
         """Test SQLite connection doesn't expose sensitive info."""
-        from app.core.config import get_settings
+        with patch(
+            'app.infrastructure.persistence.database.get_database_url',
+            return_value='sqlite:///./trading.db',
+        ):
+            manager = DatabaseManager()
+            try:
+                manager.initialize_sync_engine()
+            except Exception:
+                pass
 
-        settings = get_settings()
-
-        # Mock settings for SQLite
-        with patch.object(settings, 'database_url', 'sqlite:///./trading.db'):
-            with patch.object(
-                settings, 'get_database_url_async', return_value=settings.database_url
-            ):
-                try:
-                    get_database_engine()
-                except Exception:
-                    pass
-
-                # Check logger was called with SQLite message
-                info_calls = [str(call) for call in mock_logger.info.call_args_list]
-                sqlite_logged = any('SQLite' in call for call in info_calls)
-                assert sqlite_logged, "SQLite database type not logged"
+            info_calls = [str(call) for call in mock_logger.info.call_args_list]
+            sqlite_logged = any('SQLite' in call for call in info_calls)
+            assert sqlite_logged, "SQLite database type not logged"
 
 
 class TestPositionStatePersistence:

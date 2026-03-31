@@ -16,9 +16,12 @@ from dataclasses import dataclass, field
 from datetime import date, datetime, timedelta, timezone
 from decimal import Decimal
 from enum import Enum
-from typing import Callable
+from typing import TYPE_CHECKING
 
 import aiosqlite
+
+if TYPE_CHECKING:
+    from collections.abc import Awaitable, Callable
 
 
 class TaskStatus(Enum):
@@ -53,7 +56,7 @@ def exponential_backoff(attempt: int, base_delay: float = 1.0, max_delay: float 
     Returns:
         Delay in seconds with exponential backoff
     """
-    delay = base_delay * (2**attempt)
+    delay: float = base_delay * float(2**attempt)
     return min(delay, max_delay)
 
 
@@ -78,7 +81,8 @@ def serialize_value(
     if isinstance(value, Decimal):
         return str(value)  # Store as string to preserve precision
     if isinstance(value, Enum):
-        return value.value
+        enum_val: str | int = value.value
+        return enum_val
     if hasattr(value, "__dict__"):
         return value.__dict__
     return value
@@ -88,7 +92,7 @@ def deserialize_payload(
     payload: dict[str, str | int | float | bool | None],
 ) -> dict[str, str | int | float | bool | datetime | Decimal | None]:
     """Deserialize payload values to their original types."""
-    result = {}
+    result: dict[str, str | int | float | bool | datetime | Decimal | None] = {}
     for key, value in payload.items():
         if isinstance(value, str):
             # Try to parse as datetime
@@ -147,9 +151,9 @@ class Task:
     error: str | None = None
     next_retry_at: datetime | None = None
 
-    def to_dict(self) -> dict[str, str | int | (str | None)]:
+    def to_dict(self) -> dict[str, str | int | None]:
         """Convert task to dictionary for database storage."""
-        data = {
+        data: dict[str, str | int | None] = {
             "task_id": self.task_id,
             "name": self.name,
             "payload": json.dumps({k: serialize_value(v) for k, v in self.payload.items()}),
@@ -168,30 +172,74 @@ class Task:
         return data
 
     @classmethod
-    def from_dict(cls, data: dict[str, str | int | (str | None)]) -> Task:
+    def from_dict(cls, data: dict[str, str | int | None]) -> Task:
         """Create task from database dictionary."""
-        payload = json.loads(data["payload"]) if data.get("payload") else {}
-        result = json.loads(data["result"]) if data.get("result") else None
+        raw_payload = data.get("payload")
+        payload: dict[str, str | int | float | bool | None]
+        if isinstance(raw_payload, str):
+            loaded = json.loads(raw_payload)
+            payload = loaded if isinstance(loaded, dict) else {}
+        else:
+            payload = {}
 
-        # Deserialize result if it's a dict
-        if isinstance(result, dict):
-            result = deserialize_payload(result)
+        raw_result = data.get("result")
+        task_result: str | int | float | bool | dict | list | None = None
+        if isinstance(raw_result, str):
+            loaded_result = json.loads(raw_result)
+            if isinstance(loaded_result, dict):
+                task_result = deserialize_payload(loaded_result)
+            else:
+                task_result = loaded_result
+
+        # Extract required fields with proper types
+        priority_val = data["priority"]
+        if not isinstance(priority_val, int):
+            priority_val = int(str(priority_val))
+        retry_count_val = data["retry_count"]
+        if not isinstance(retry_count_val, int):
+            retry_count_val = int(str(retry_count_val))
+        max_retries_val = data["max_retries"]
+        if not isinstance(max_retries_val, int):
+            max_retries_val = int(str(max_retries_val))
+        created_at_val = data["created_at"]
+        if not isinstance(created_at_val, str):
+            created_at_val = str(created_at_val)
+
+        created_at_dt = deserialize_datetime(created_at_val)
+        if created_at_dt is None:
+            created_at_dt = datetime.now(timezone.utc)
 
         return cls(
-            task_id=data["task_id"],
-            name=data["name"],
+            task_id=str(data["task_id"]),
+            name=str(data["name"]),
             payload=deserialize_payload(payload),
-            priority=TaskPriority(data["priority"]),
-            status=TaskStatus(data["status"]),
-            created_at=deserialize_datetime(data["created_at"]),
-            started_at=deserialize_datetime(data.get("started_at")),
-            completed_at=deserialize_datetime(data.get("completed_at")),
-            expires_at=deserialize_datetime(data.get("expires_at")),
-            retry_count=data["retry_count"],
-            max_retries=data["max_retries"],
-            result=result,
-            error=data.get("error"),
-            next_retry_at=deserialize_datetime(data.get("next_retry_at")),
+            priority=TaskPriority(priority_val),
+            status=TaskStatus(str(data["status"])),
+            created_at=created_at_dt,
+            started_at=(
+                deserialize_datetime(str(data.get("started_at")))
+                if data.get("started_at") is not None
+                else None
+            ),
+            completed_at=(
+                deserialize_datetime(str(data.get("completed_at")))
+                if data.get("completed_at") is not None
+                else None
+            ),
+            expires_at=(
+                deserialize_datetime(str(data.get("expires_at")))
+                if data.get("expires_at") is not None
+                else None
+            ),
+            retry_count=retry_count_val,
+            max_retries=max_retries_val,
+            result=task_result,
+            error=str(data.get("error")) if data.get("error") is not None else None,
+            next_retry_at=(
+                deserialize_datetime(str(data.get("next_retry_at")))
+                if data.get("next_retry_at") is not None
+                else None
+            ),
         )
 
     def should_retry(self) -> bool:
@@ -242,8 +290,7 @@ class PersistentTaskQueue:
     async def initialize(self) -> None:
         """Initialize database schema."""
         async with aiosqlite.connect(self.db_path) as db:
-            await db.execute(
-                """
+            await db.execute("""
                 CREATE TABLE IF NOT EXISTS tasks (
                     task_id TEXT PRIMARY KEY,
                     name TEXT NOT NULL,
@@ -260,8 +307,7 @@ class PersistentTaskQueue:
                     error TEXT,
                     next_retry_at TEXT
                 )
-            """
-            )
+            """)
             # Create indexes for common queries
             await db.execute(
                 "CREATE INDEX IF NOT EXISTS idx_status_priority ON tasks(status, priority DESC)"
@@ -430,15 +476,16 @@ class PersistentTaskQueue:
         """
         async with aiosqlite.connect(self.db_path) as db:
             # Serialize result to JSON string
-            result_str = None
+            result_str: str | None = None
             if result is not None:
-                if isinstance(result, (dict, list)):
-                    # For complex types, serialize values then JSON encode
-                    if isinstance(result, dict):
-                        serialized = {k: serialize_value(v) for k, v in result.items()}
-                    else:
-                        serialized = [serialize_value(v) for v in result]
-                    result_str = json.dumps(serialized)
+                if isinstance(result, dict):
+                    # For dict, serialize values then JSON encode
+                    serialized_dict = {k: serialize_value(v) for k, v in result.items()}
+                    result_str = json.dumps(serialized_dict)
+                elif isinstance(result, list):
+                    # For list, serialize values then JSON encode
+                    serialized_list = [serialize_value(v) for v in result]
+                    result_str = json.dumps(serialized_list)
                 else:
                     # For simple types, serialize and JSON encode
                     result_str = json.dumps(serialize_value(result))
@@ -541,7 +588,7 @@ class PersistentTaskQueue:
 
     async def process_queue(
         self,
-        handler: Callable[[Task], str | int | float | bool | dict | list | None],
+        handler: Callable[[Task], Awaitable[str | int | float | bool | dict | list | None]],
         max_concurrent: int = 5,
     ) -> None:
         """
@@ -585,7 +632,7 @@ class PersistentTaskQueue:
 
     async def _process_single_task(
         self,
-        handler: Callable[[Task], str | int | float | bool | dict | list | None],
+        handler: Callable[[Task], Awaitable[str | int | float | bool | dict | list | None]],
         task: Task,
     ) -> None:
         """
@@ -710,7 +757,7 @@ class PersistentTaskQueue:
                 (TaskStatus.EXPIRED.value, now, TaskStatus.PENDING.value, now),
             )
             await db.commit()
-            count = cursor.rowcount
+            count: int = cursor.rowcount
 
         if count > 0:
             self.logger.info(f"Marked {count} tasks as expired")
@@ -738,7 +785,7 @@ class PersistentTaskQueue:
                 (TaskStatus.PENDING.value, TaskStatus.FAILED.value, now),
             )
             await db.commit()
-            count = cursor.rowcount
+            count: int = cursor.rowcount
 
         if count > 0:
             self.logger.info(f"Queued {count} failed tasks for retry")
@@ -795,13 +842,11 @@ class PersistentTaskQueue:
         """
         async with aiosqlite.connect(self.db_path) as db:
             # Get count by status
-            cursor = await db.execute(
-                """
+            cursor = await db.execute("""
                 SELECT status, COUNT(*) as count
                 FROM tasks
                 GROUP BY status
-            """
-            )
+            """)
             rows = await cursor.fetchall()
 
             status_counts = {status.value: 0 for status in TaskStatus}
@@ -948,7 +993,7 @@ class PersistentTaskQueue:
         async with aiosqlite.connect(self.db_path) as db:
             cursor = await db.execute("DELETE FROM tasks WHERE task_id = ?", (task_id,))
             await db.commit()
-            deleted = cursor.rowcount > 0
+            deleted: bool = cursor.rowcount > 0
 
         if deleted:
             self.logger.info(f"Task {task_id} deleted")
@@ -983,7 +1028,7 @@ class PersistentTaskQueue:
                 )
 
             await db.commit()
-            count = cursor.rowcount
+            count: int = cursor.rowcount
 
         if count > 0:
             self.logger.info(f"Cleared {count} completed tasks")

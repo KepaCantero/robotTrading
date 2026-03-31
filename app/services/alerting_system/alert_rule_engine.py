@@ -8,6 +8,8 @@ Evaluates alert rules against incoming metrics with support for:
 - Severity assignment
 """
 
+from __future__ import annotations
+
 import logging
 from datetime import datetime
 from typing import Optional

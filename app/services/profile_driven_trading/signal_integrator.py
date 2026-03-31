@@ -5,6 +5,8 @@ Combines trading signals from multiple sources (RL, momentum, mean reversion)
 using confidence-weighted voting and produces a unified signal set.
 """
 
+from __future__ import annotations
+
 import logging
 from typing import Optional
 
@@ -257,7 +259,7 @@ class SignalIntegrator:
 
         quality_score = min(confidence + consensus_bonus + source_bonus, 1.0)
 
-        return quality_score
+        return float(quality_score)
 
     def filter_by_quality(
         self,

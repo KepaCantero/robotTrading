@@ -8,6 +8,8 @@ NOTE: For canonical PerformanceMetrics, use app.backtesting.models.PerformanceMe
 This module contains DashboardPerformanceMetrics which is dashboard-specific.
 """
 
+from __future__ import annotations
+
 from dataclasses import dataclass, field
 from datetime import datetime
 from decimal import Decimal

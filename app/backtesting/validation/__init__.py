@@ -54,14 +54,10 @@ from .cross_sectional_consistency import (
 )
 from .cross_validation import (
     PurgedCVConfig,
-    PurgedSplitResult,
-    cv_score,
-)
-from .cross_validation import (
     PurgedKFold as PurgedKFoldCV,
-)
-from .cross_validation import (
+    PurgedSplitResult,
     PurgedTimeSeriesSplit as PurgedTimeSeriesSplitCV,
+    cv_score,
 )
 from .cross_validation_methods import (
     CrossValidation,

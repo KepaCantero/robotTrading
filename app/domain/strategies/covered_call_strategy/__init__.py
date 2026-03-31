@@ -3,10 +3,8 @@
 from app.domain.strategies.covered_call_strategy.covered_call import (
     CallSignal,
     CoveredCallPortfolio,
-    OptionData,
-)
-from app.domain.strategies.covered_call_strategy.covered_call import (
     CoveredCallPosition as CoveredCallPositionData,
+    OptionData,
 )
 from app.domain.strategies.covered_call_strategy.greeks_calculator import GreeksCalculator
 from app.domain.strategies.covered_call_strategy.models import (

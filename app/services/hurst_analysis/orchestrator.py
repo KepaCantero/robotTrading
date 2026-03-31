@@ -162,4 +162,5 @@ class HurstExponentAnalyzer:
 
     def get_historical_hurst(self, symbol: str) -> list[tuple[datetime, float]]:
         """Get historical Hurst values for a symbol."""
-        return self.historian.get_history(symbol)
+        result: list[tuple[datetime, float]] = self.historian.get_history(symbol)
+        return result

@@ -5,6 +5,8 @@ Gestiona el ciclo de vida de las estrategias, incluyendo carga, descarga,
 activación y hot-swapping de estrategias.
 """
 
+from __future__ import annotations
+
 import logging
 from datetime import datetime
 from typing import Any, Optional

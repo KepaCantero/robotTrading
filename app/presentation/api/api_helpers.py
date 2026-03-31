@@ -5,6 +5,8 @@ This module provides utility functions for correlation IDs, rate limiting,
 timeout handling, and structured logging in API endpoints.
 """
 
+from __future__ import annotations
+
 import asyncio
 import logging
 import time
@@ -171,10 +173,7 @@ def with_timeout(
         @wraps(func)
         async def wrapper(*args: object, **kwargs: object) -> T:
             try:
-                return cast(
-                    "T",
-                    await asyncio.wait_for(func(*args, **kwargs), timeout=seconds),
-                )
+                return cast("T", await asyncio.wait_for(func(*args, **kwargs), timeout=seconds))
             except asyncio.TimeoutError as exc:
                 logger.error(
                     f"Function {func.__name__} exceeded {seconds}s timeout",
@@ -220,17 +219,16 @@ def with_rate_limit(
 
             # If no Request in args, check kwargs
             if request is None:
-                request = kwargs.get("request")
+                maybe_request = kwargs.get("request")
+                if isinstance(maybe_request, Request):
+                    request = maybe_request
 
             # Apply rate limiting if we have a request
-            if request:
-                key = (
-                    key_func(request)
-                    if key_func
-                    else request.client.host
-                    if request.client
-                    else "default"
-                )
+            if request is not None:
+                if request.client is not None:
+                    key = key_func(request) if key_func else request.client.host
+                else:
+                    key = "default"
                 limiter = get_rate_limiter()
 
                 if not limiter.is_allowed(
@@ -248,7 +246,7 @@ def with_rate_limit(
                         detail="Rate limit exceeded. Please try again later.",
                     )
 
-            return cast("T", await func(*args, **kwargs))
+            return await func(*args, **kwargs)
 
         return wrapper
 
@@ -290,7 +288,7 @@ def log_endpoint_call(
             )
 
             try:
-                result = cast("T", await func(*args, **kwargs))
+                result = await func(*args, **kwargs)
                 duration = (time.time() - start_time) * 1000
 
                 logger.info(

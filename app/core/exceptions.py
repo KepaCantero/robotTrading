@@ -4,8 +4,10 @@ Core Exceptions for AlgoTrading Application
 This module provides centralized exception definitions for the application.
 """
 
+from __future__ import annotations
+
 import logging
-from typing import Any, Optional
+from typing import Any, NoReturn, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -141,3 +143,123 @@ class AlgoTradingDatabaseError(AlgoTradingError):
     """Exception raised for database errors."""
 
     pass
+
+
+class APIError(AlgoTradingError):
+    """Exception raised for API-related errors."""
+
+    pass
+
+
+class BusinessLogicError(AlgoTradingError):
+    """Exception raised for business logic errors."""
+
+    pass
+
+
+# ---------------------------------------------------------------------------
+# Helper functions with input validation
+# ---------------------------------------------------------------------------
+
+
+def _validate_message(message: object) -> str:
+    """Validate that message is a non-empty, non-whitespace-only string.
+
+    Rejects messages that are empty, consist only of whitespace, or contain
+    only invisible Unicode characters (zero-width spaces, BOMs, etc.).
+    """
+    if not isinstance(message, str):
+        raise ValueError("message must be a non-empty string")
+    import unicodedata
+
+    # Strip all characters that are whitespace or Unicode format/control
+    # characters (category C*), leaving only visible meaningful content.
+    stripped = "".join(
+        ch
+        for ch in message
+        if not ch.isspace() and unicodedata.category(ch)[0] != "C"  # Cc, Cf, Cs, Co, Cn
+    )
+    if not stripped:
+        raise ValueError("message must be a non-empty string")
+    return message
+
+
+def _raise_error(
+    exc_class: type[AlgoTradingError],
+    message: str,
+    error_code: Optional[str] = None,
+    details: Optional[dict[str, Any]] = None,
+) -> NoReturn:
+    """Raise a typed error after validating the message."""
+    _validate_message(message)
+    logger.debug(
+        f"Raising {exc_class.__name__}",
+        extra={"message": message, "error_code": error_code, "details": details},
+    )
+    raise exc_class(message, error_code=error_code, details=details)
+
+
+# Convenience aliases -- callers import by name, not from the internal _raise_error.
+
+
+def raise_configuration_error(
+    message: str,
+    error_code: Optional[str] = None,
+    details: Optional[dict[str, Any]] = None,
+) -> NoReturn:
+    """Raise a ConfigurationError after validating the message."""
+    _raise_error(ConfigurationError, message, error_code, details)
+
+
+def raise_validation_error(
+    message: str,
+    error_code: Optional[str] = None,
+    details: Optional[dict[str, Any]] = None,
+) -> NoReturn:
+    """Raise a ValidationError after validating the message."""
+    _raise_error(ValidationError, message, error_code, details)
+
+
+def raise_business_logic_error(
+    message: str,
+    error_code: Optional[str] = None,
+    details: Optional[dict[str, Any]] = None,
+) -> NoReturn:
+    """Raise a BusinessLogicError after validating the message."""
+    _raise_error(BusinessLogicError, message, error_code, details)
+
+
+def raise_market_data_error(
+    message: str,
+    error_code: Optional[str] = None,
+    details: Optional[dict[str, Any]] = None,
+) -> NoReturn:
+    """Raise a MarketDataError after validating the message."""
+    _raise_error(MarketDataError, message, error_code, details)
+
+
+def raise_trading_error(
+    message: str,
+    error_code: Optional[str] = None,
+    details: Optional[dict[str, Any]] = None,
+) -> NoReturn:
+    """Raise a TradingError after validating the message."""
+    _raise_error(TradingError, message, error_code, details)
+
+
+def raise_database_error(
+    message: str,
+    error_code: Optional[str] = None,
+    details: Optional[dict[str, Any]] = None,
+) -> NoReturn:
+    """Raise an AlgoTradingDatabaseError after validating the message."""
+    _raise_error(AlgoTradingDatabaseError, message, error_code, details)
+
+
+def raise_authentication_error(
+    message: str,
+    error_code: Optional[str] = None,
+    details: Optional[dict[str, Any]] = None,
+) -> NoReturn:
+    """Raise an AuthenticationError after validating the message."""
+    _raise_error(AuthenticationError, message, error_code, details)

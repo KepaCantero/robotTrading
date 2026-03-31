@@ -7,7 +7,7 @@ import time
 import pytest
 from fastapi import HTTPException
 
-from app.security.csrf_protection import (
+from app.security.web_security.csrf_protection import (
     CSRFTokenManager,
     DoubleSubmitCookieCSRF,
     generate_csrf_token,

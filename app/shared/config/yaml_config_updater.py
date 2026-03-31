@@ -4,6 +4,8 @@ YAML Config Updater - Actualiza archivos YAML con parámetros optimizados.
 Crea backups automáticos antes de modificar y mantiene un historial de cambios.
 """
 
+from __future__ import annotations
+
 import logging
 import shutil
 from datetime import datetime

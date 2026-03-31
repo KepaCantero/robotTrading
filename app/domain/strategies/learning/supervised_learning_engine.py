@@ -5,6 +5,8 @@ Implements López de Prado's sample weights by uniqueness to account for
 overlapping samples in financial ML training (Chapter 4, "Advances in Financial Machine Learning").
 """
 
+from __future__ import annotations
+
 import logging
 from typing import Any, Optional
 

@@ -7,6 +7,8 @@ are safe and comply with risk management rules.
 Uses centralized configuration for all thresholds and parameters.
 """
 
+from __future__ import annotations
+
 import logging
 from decimal import Decimal
 from typing import Optional

@@ -12,12 +12,14 @@ from decimal import Decimal
 
 import pytest
 
-from app.maestro.phase_1 import (
-    AbsoluteReturnTarget,
+from app.application.orchestration.target_optimization.absolute_return_optimizer import (
     CapacityFadeAnalyzer,
     FeasibilityValidator,
     ParameterOptimizer,
     TargetAlphaCalculator,
+)
+from app.application.orchestration.target_optimization.models import (
+    AbsoluteReturnTarget,
 )
 
 

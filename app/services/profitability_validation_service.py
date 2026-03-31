@@ -6,6 +6,8 @@ después de todos los costos operativos, incluyendo comisiones, slippage,
 market impact e infraestructura.
 """
 
+from __future__ import annotations
+
 import logging
 import statistics
 from decimal import Decimal

@@ -8,9 +8,10 @@ scipy, numpy, and pandas.
 All fallback implementations log warnings to indicate they are being used.
 """
 
+from __future__ import annotations
+
 import logging
 import warnings
-from typing import Optional, Union
 
 import numpy as np
 import pandas as pd
@@ -35,8 +36,8 @@ def _log_fallback_warning(func_name: str, message: str = ""):
 
 
 def adfuller(
-    x: Union[np.ndarray, pd.Series],
-    maxlag: Optional[int] = None,
+    x: np.ndarray | pd.Series,
+    maxlag: int | None = None,
     regression: str = "c",
     autolag: str = "AIC",
     store: bool = False,
@@ -191,17 +192,17 @@ def adfuller(
         # Just return the results as a tuple for now
         pass
 
-    return adf_stat, pvalue, usedlag, critical_values, icbest
+    return float(adf_stat), float(pvalue), usedlag, critical_values, icbest
 
 
 def coint(
-    y1: Union[np.ndarray, pd.Series],
-    y2: Union[np.ndarray, pd.Series],
+    y1: np.ndarray | pd.Series,
+    y2: np.ndarray | pd.Series,
     trend: str = "c",
     method: str = "aeg",
-    maxlag: Optional[int] = None,
+    maxlag: int | None = None,
     return_results: bool = False,
-) -> Union[tuple[float, float, dict], object]:
+) -> tuple[float, float, dict] | object:
     """
     Test for no cointegration of a univariate equation - fallback implementation.
 
@@ -313,10 +314,10 @@ def coint(
 
 
 def seasonal_decompose(
-    x: Union[np.ndarray, pd.Series],
+    x: np.ndarray | pd.Series,
     model: str = "additive",
-    filt: Optional[np.ndarray] = None,
-    period: Optional[int] = None,
+    filt: np.ndarray | None = None,
+    period: int | None = None,
     two_sided: bool = True,
 ) -> object:
     """
@@ -429,13 +430,13 @@ def seasonal_decompose(
 
 
 def acorr_ljungbox(
-    x: Union[np.ndarray, pd.Series],
-    lags: Optional[Union[int, list]] = None,
+    x: np.ndarray | pd.Series,
+    lags: int | list | None = None,
     boxpierce: bool = False,
     model_df: int = 0,
-    period: Optional[int] = None,
+    period: int | None = None,
     return_df: bool = True,
-) -> Union[pd.DataFrame, dict]:
+) -> pd.DataFrame | dict:
     """
     Ljung-Box test for autocorrelation - fallback implementation.
 
@@ -490,17 +491,20 @@ def acorr_ljungbox(
     if lags is None:
         lags = min(10, nobs // 5)
 
+    lag_range: range
     if isinstance(lags, int):
-        lags = range(1, lags + 1)
+        lag_range = range(1, lags + 1)
     elif isinstance(lags, list):
-        lags = sorted(lags)
+        lag_range = range(1, max(lags) + 1)
+    else:
+        lag_range = range(1, 11)
 
     # Compute autocorrelations
     from scipy.stats import chi2
 
-    results = []
+    results: list[dict[str, float | int]] = []
 
-    for lag in lags:
+    for lag in lag_range:
         # Compute sample autocorrelations
         autocorrs = []
         for k in range(1, lag + 1):
@@ -616,7 +620,7 @@ class OLS:
             self.df_model = self._nvar - 1
 
             # Residual sum of squares
-            self.ssr = np.sum(self.resid**2)
+            self.ssr: float = np.sum(self.resid**2)
 
             # Estimate of error variance
             if self.df_resid > 0:
@@ -636,7 +640,7 @@ class OLS:
             # R-squared
             y_mean = np.mean(self.endog)
             if y_mean != 0:
-                self.sst = np.sum((self.endog - y_mean) ** 2)
+                self.sst: float = np.sum((self.endog - y_mean) ** 2)
                 self.rsquared = 1 - self.ssr / self.sst
                 self.rsquared_adj = 1 - (1 - self.rsquared) * (self._nobs - 1) / self.df_resid
             else:
@@ -931,7 +935,9 @@ def pacf(x, nlags=40, method="ywunbiased", alpha=None):
     return pacf_values
 
 
-def grangercausalitytests(x, maxlag, addconst=True, verbose=True):
+def grangercausalitytests(
+    x, maxlag, addconst=True, verbose=True
+) -> dict[int, dict[str, float] | None]:
     """
     Four tests for granger non causality of 2 time series - fallback implementation.
 
@@ -964,7 +970,7 @@ def grangercausalitytests(x, maxlag, addconst=True, verbose=True):
     if x.shape[1] != 2:
         raise ValueError("x must have exactly 2 columns")
 
-    results = {}
+    results: dict[int, dict[str, float] | None] = {}
 
     for lag in range(1, maxlag + 1):
         # Prepare data
@@ -1003,11 +1009,11 @@ def grangercausalitytests(x, maxlag, addconst=True, verbose=True):
         try:
             beta_r = np.linalg.lstsq(X_restricted, target, rcond=None)[0]
             resid_r = target - X_restricted @ beta_r
-            ssr_r = np.sum(resid_r**2)
+            ssr_r: float = np.sum(resid_r**2)
 
             beta_ur = np.linalg.lstsq(X_unrestricted, target, rcond=None)[0]
             resid_ur = target - X_unrestricted @ beta_ur
-            ssr_ur = np.sum(resid_ur**2)
+            ssr_ur: float = np.sum(resid_ur**2)
 
             # F-test
             nobs = len(target)
@@ -1062,9 +1068,9 @@ __all__ = [
 
 
 def kpss(
-    x: Union[np.ndarray, pd.Series],
+    x: np.ndarray | pd.Series,
     regression: str = "c",
-    nlags: str = "auto",
+    nlags: str | int = "auto",
     store: bool = False,
 ) -> tuple[float, float, int, dict[str, float]]:
     """
@@ -1120,7 +1126,11 @@ def kpss(
 
     # Determine number of lags
     if nlags == "auto":
-        nlags = int(12.0 * np.power(nobs / 100.0, 1 / 4.0))
+        nlags_int = int(12.0 * np.power(nobs / 100.0, 1 / 4.0))
+    elif isinstance(nlags, int):
+        nlags_int = nlags
+    else:
+        nlags_int = 1
 
     # Calculate residuals from regression
     if regression == "ct":
@@ -1147,11 +1157,11 @@ def kpss(
 
         # Calculate autocovariances
         gamma_j = 0.0
-        for j in range(1, nlags + 1):
+        for j in range(1, nlags_int + 1):
             if j < nobs:
                 autocov = np.sum(residuals[j:] * residuals[:-j]) / nobs
                 # Bartlett kernel weights
-                weight = 1 - j / (nlags + 1)
+                weight = 1 - j / (nlags_int + 1)
                 gamma_j += 2 * weight * autocov
 
         long_run_var = gamma0 + gamma_j
@@ -1190,6 +1200,6 @@ def kpss(
         else:
             critical_values = {"1%": 0.739, "5%": 0.463, "10%": 0.347}
 
-    lags = nlags if isinstance(nlags, int) else int(nlags)
+    lags = nlags_int
 
     return kpss_stat, pvalue, lags, critical_values

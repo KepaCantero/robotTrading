@@ -9,6 +9,8 @@ Implements comprehensive risk controls:
 - Circuit Breakers 3-5 Stops (TASK-RM-5)
 """
 
+from __future__ import annotations
+
 import logging
 from collections import defaultdict
 from datetime import datetime

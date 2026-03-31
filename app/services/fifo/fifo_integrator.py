@@ -19,6 +19,8 @@ Author: Claude (FIFO Database Integration - Phase 2.1)
 Date: 2026-01-25
 """
 
+from __future__ import annotations
+
 import asyncio
 import logging
 from dataclasses import dataclass, field

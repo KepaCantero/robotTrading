@@ -2,6 +2,8 @@
 HyperparameterOptimizer - Sistema de optimización automatizada para ModularMomentumStrategy.
 """
 
+from __future__ import annotations
+
 import json
 import logging
 import random
@@ -9,7 +11,7 @@ from datetime import datetime
 from decimal import Decimal
 from itertools import product
 from pathlib import Path
-from typing import Any, Optional
+from typing import TYPE_CHECKING, Any
 
 import numpy as np
 import pandas as pd
@@ -18,6 +20,9 @@ from app.backtesting.engine import SimpleBacktester
 from app.backtesting.models import BacktestConfig
 from app.domain.models.market_data import Quote
 from app.domain.strategies.momentum_modular.strategy import ModularMomentumStrategy
+
+if TYPE_CHECKING:
+    from app.shared.protocols.i_data_feed import IDataFeed
 
 logger = logging.getLogger(__name__)
 
@@ -35,10 +40,10 @@ class HyperparameterOptimizer:
         symbol: str,
         start_date: datetime,
         end_date: datetime,
-        initial_capital: Optional[Decimal] = None,
+        initial_capital: Decimal | None = None,
         optimization_metric: str = "sharpe_ratio",  # "sharpe_ratio", "total_pnl", "win_rate"
         optimization_method: str = "grid_search",  # "grid_search", "random_search", "bayesian"
-        data_feed_provider: Optional[Any] = None,
+        data_feed_provider: IDataFeed | None = None,
     ):
         """
         Inicializar optimizador.
@@ -63,7 +68,7 @@ class HyperparameterOptimizer:
         self._data_feed_provider = data_feed_provider
 
         self.results: list[dict[str, Any]] = []
-        self.best_config: Optional[dict[str, Any]] = None
+        self.best_config: dict[str, Any] | None = None
         self.best_score: float = float("-in")
 
         # Espacio de búsqueda de parámetros
@@ -104,7 +109,7 @@ class HyperparameterOptimizer:
         }
 
     def optimize(
-        self, max_iterations: int = 1000, random_seed: Optional[int] = None
+        self, max_iterations: int = 1000, random_seed: int | None = None
     ) -> dict[str, Any]:
         """
         Ejecutar optimización.
@@ -285,7 +290,7 @@ class HyperparameterOptimizer:
 
         return configs
 
-    def _run_backtest(self, config: dict[str, Any]) -> Optional[dict[str, Any]]:
+    def _run_backtest(self, config: dict[str, Any]) -> dict[str, Any] | None:
         """Ejecutar backtest con configuración específica."""
         try:
             # Crear configuración de estrategia
@@ -294,20 +299,12 @@ class HyperparameterOptimizer:
             # Crear estrategia
             strategy = ModularMomentumStrategy(strategy_config)
 
-            # Use injected data feed provider or create default (late import for DI)
+            # Use injected data feed provider (required - inject via constructor)
             if self._data_feed_provider is not None:
                 provider = self._data_feed_provider
             else:
-                from app.domain.models.market_data import DataFeedConfig, DataFeedType
-                from app.infrastructure.data.feeds import YahooFinanceFeed
-
-                feed_config = DataFeedConfig(
-                    feed_type=DataFeedType.YAHOO_FINANCE,
-                    api_key="",
-                    rate_limit=5,
-                    timeout_seconds=30,
-                )
-                provider = YahooFinanceFeed(feed_config)
+                msg = "data_feed_provider is required. Inject an IDataFeed via constructor."
+                raise ValueError(msg)
             # Run async method in sync context
             import asyncio
 
@@ -503,21 +500,21 @@ class HyperparameterOptimizer:
         return strategy_config
 
     def _calculate_score(self, result: dict[str, Any]) -> float:
-        """Calcular score basado en métrica objetivo."""
+        """Calcular score basado en metrica objetivo."""
         if self.optimization_metric == "sharpe_ratio":
-            return result.get("sharpe_ratio", 0.0)
+            return float(result.get("sharpe_ratio", 0.0))
         elif self.optimization_metric == "total_pnl":
-            return result.get("total_pnl", 0.0)
+            return float(result.get("total_pnl", 0.0))
         elif self.optimization_metric == "win_rate":
-            return result.get("win_rate", 0.0)
+            return float(result.get("win_rate", 0.0))
         elif self.optimization_metric == "combined":
             # Score combinado: Sharpe * 0.4 + PnL_norm * 0.3 + WinRate_norm * 0.3
-            sharpe = max(0, result.get("sharpe_ratio", 0.0))
-            pnl_norm = result.get("total_pnl", 0.0) / 10000.0  # Normalizar
-            win_rate_norm = result.get("win_rate", 0.0) / 100.0
+            sharpe = max(0.0, float(result.get("sharpe_ratio", 0.0)))
+            pnl_norm = float(result.get("total_pnl", 0.0)) / 10000.0  # Normalizar
+            win_rate_norm = float(result.get("win_rate", 0.0)) / 100.0
             return sharpe * 0.4 + pnl_norm * 0.3 + win_rate_norm * 0.3
         else:
-            return result.get("sharpe_ratio", 0.0)
+            return float(result.get("sharpe_ratio", 0.0))
 
     def _config_summary(self, config: dict[str, Any]) -> str:
         """Resumen de configuración para logging."""

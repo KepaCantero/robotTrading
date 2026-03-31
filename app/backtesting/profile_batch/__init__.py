@@ -20,7 +20,7 @@ Usage:
     ```python
     from app.backtesting.profile_batch import ProfileBatchBacktester
 
-    backtester = ProfileBatchBacktester("config/profile_batch_backtest.yaml")
+    backtester = ProfileBatchBacktester("config/portfolio/profile_batch_backtest.yaml")
     profiles = backtester.generate_all_profiles()
     results = backtester.run_all_profiles(parallel=True)
     ```

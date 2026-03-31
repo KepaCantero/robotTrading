@@ -5,8 +5,10 @@ Generates synthetic trading data using Generative Adversarial Networks (GANs)
 for training data augmentation and backtesting.
 """
 
+from __future__ import annotations
+
 import logging
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any, Optional
 
 import numpy as np
@@ -20,8 +22,8 @@ class GANConfig:
     """Configuration for GAN training."""
 
     # Network architecture
-    generator_layers: list[int] = None
-    discriminator_layers: list[int] = None
+    generator_layers: list[int] = field(default_factory=lambda: [128, 256, 512, 5])
+    discriminator_layers: list[int] = field(default_factory=lambda: [512, 256, 128, 1])
     latent_dim: int = 100
     output_dim: int = 5  # OHLCV data
 
@@ -49,11 +51,9 @@ class GANConfig:
     random_state: int = 42
 
     def __post_init__(self):
-        """Set default layer sizes if not provided."""
-        if self.generator_layers is None:
-            self.generator_layers = [128, 256, 512, self.output_dim]
-        if self.discriminator_layers is None:
-            self.discriminator_layers = [512, 256, 128, 1]
+        """Set default layer sizes based on output_dim."""
+        self.generator_layers = [128, 256, 512, self.output_dim]
+        self.discriminator_layers = [512, 256, 128, 1]
 
 
 class SyntheticDataGenerator:
@@ -73,10 +73,10 @@ class SyntheticDataGenerator:
         self.config = config or GANConfig()
         self.generator = None
         self.discriminator = None
-        self.training_data = None
-        self.training_history = []
+        self.training_data: Optional[np.ndarray] = None
+        self.training_history: list[dict[str, float]] = []
         self.connected = False
-        self.data_scaler = None
+        self.data_scaler: Optional[dict[str, np.ndarray]] = None
         # Reproducible random state
         self._rng = np.random.default_rng(self.config.random_state)
         logger.info("✅ SyntheticDataGenerator initialized with seed=%d", self.config.random_state)
@@ -205,7 +205,8 @@ class SyntheticDataGenerator:
             Generated synthetic data (shape: [num_samples, 5] for OHLCV)
         """
         if not self.connected:
-            return np.array([])
+            empty_result: np.ndarray = np.array([], dtype=np.float64)
+            return empty_result
 
         try:
             if noise is None:
@@ -214,7 +215,9 @@ class SyntheticDataGenerator:
             # In production: synthetic_data = self.generator.predict(noise)
 
             # Simulated synthetic data generation (reproducible OHLCV structure)
-            synthetic_data = self._rng.standard_normal((num_samples, self.config.output_dim))
+            synthetic_data: np.ndarray = self._rng.standard_normal(
+                (num_samples, self.config.output_dim)
+            )
 
             # Make it more realistic: High > Close > Low, Volume > 0
             # Pre-generate all random values for reproducibility
@@ -249,7 +252,8 @@ class SyntheticDataGenerator:
 
         except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.error(f"❌ Synthetic data generation failed: {e!s}")
-            return np.array([])
+            fallback: np.ndarray = np.array([], dtype=np.float64)
+            return fallback
 
     async def evaluate_quality(
         self,
@@ -358,7 +362,8 @@ class TimeSeriesGANGenerator:
             Synthetic sequences (shape: [num_sequences, sequence_length, 5])
         """
         if not self.connected:
-            return np.array([])
+            empty_arr: np.ndarray = np.array([], dtype=np.float64)
+            return empty_arr
 
         try:
             seq_len = sequence_length or self.sequence_length
@@ -367,7 +372,7 @@ class TimeSeriesGANGenerator:
             # synthetic_sequences = self.lstm_generator.predict(noise)
 
             # Simulated: generate realistic price sequences (reproducible)
-            synthetic_sequences = np.zeros((num_sequences, seq_len, 5))
+            synthetic_sequences: np.ndarray = np.zeros((num_sequences, seq_len, 5))
 
             # Pre-generate all random values for reproducibility
             total_steps = num_sequences * seq_len
@@ -403,7 +408,8 @@ class TimeSeriesGANGenerator:
 
         except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
             logger.error(f"❌ Sequence generation failed: {e!s}")
-            return np.array([])
+            seq_fallback: np.ndarray = np.array([], dtype=np.float64)
+            return seq_fallback
 
     def get_generator_status(self) -> dict[str, Any]:
         """Get generator status."""

@@ -9,6 +9,8 @@ Protects against memory leaks in 24/7 operation:
 - Alert on restart
 """
 
+from __future__ import annotations
+
 import asyncio
 import gc
 import logging

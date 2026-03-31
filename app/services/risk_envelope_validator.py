@@ -31,6 +31,8 @@ Addresses issue: Pairs Trading appears to violate exposure limits,
 causing large losses despite small nominal returns.
 """
 
+from __future__ import annotations
+
 import warnings
 
 warnings.warn(

@@ -12,6 +12,8 @@ Capital Levels: €1K, €5K, €10K, €50K, €100K
 SINGLE SOURCE OF TRUTH: All values from CentralizedConfig.
 """
 
+from __future__ import annotations
+
 import logging
 from dataclasses import dataclass, field
 from datetime import datetime

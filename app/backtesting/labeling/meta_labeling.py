@@ -24,11 +24,22 @@ from __future__ import annotations
 import logging
 from dataclasses import dataclass, field
 from datetime import datetime
+from typing import Protocol, runtime_checkable
 
 import numpy as np
 import pandas as pd
 
 logger = logging.getLogger(__name__)
+
+
+# Protocol for sklearn-like models used in meta-labeling
+@runtime_checkable
+class _MLModel(Protocol):
+    """Protocol for sklearn-like classifiers used in meta-labeling."""
+
+    def fit(self, X: np.ndarray, y: np.ndarray, **kwargs: object) -> object: ...
+    def predict(self, X: np.ndarray) -> np.ndarray: ...
+    def predict_proba(self, X: np.ndarray) -> np.ndarray: ...
 
 
 # Custom exceptions for meta-labeling (CC-006: Specific exception types)
@@ -160,8 +171,8 @@ class MetaLabeling:
             config: Configuration for meta-labeling
         """
         self.config = config or MetaLabelingConfig()
-        self.primary_model = None
-        self.meta_model = None
+        self.primary_model: _MLModel | None = None
+        self.meta_model: _MLModel | None = None
         self._is_fitted = False
 
     def fit(
@@ -201,6 +212,7 @@ class MetaLabeling:
         # Step 1: Train primary model
         logger.info("Training primary model...")
         self.primary_model = self._create_model(self.config.primary_model_type)
+        assert self.primary_model is not None
         self.primary_model.fit(
             X,
             y,
@@ -224,6 +236,7 @@ class MetaLabeling:
         # Step 4: Train meta-model
         logger.info("Training meta model...")
         self.meta_model = self._create_model(self.config.meta_model_type)
+        assert self.meta_model is not None
         self.meta_model.fit(
             X_meta,
             meta_labels,
@@ -282,6 +295,9 @@ class MetaLabeling:
             raise DataValidationError(
                 f"X has {X.shape[1]} features but model expects {self.n_features_}"
             )
+
+        assert self.primary_model is not None
+        assert self.meta_model is not None
 
         # Primary model predictions
         primary_pred = self.primary_model.predict(X)
@@ -351,16 +367,18 @@ class MetaLabeling:
             if isinstance(y_test, pd.Series):
                 y_test = y_test.values
 
-            result.primary_accuracy = np.mean(result.primary_predictions == y_test)
+            result.primary_accuracy = float(np.mean(result.primary_predictions == y_test))
 
             # Meta-labels for test set
             test_meta_labels = (result.primary_predictions == y_test).astype(int)
-            result.meta_accuracy = np.mean(result.meta_predictions == test_meta_labels)
+            result.meta_accuracy = float(np.mean(result.meta_predictions == test_meta_labels))
 
             # Combined accuracy: only count when meta-model says yes
             mask = result.meta_predictions == 1
             if mask.sum() > 0:
-                result.combined_accuracy = np.mean(result.primary_predictions[mask] == y_test[mask])
+                result.combined_accuracy = float(
+                    np.mean(result.primary_predictions[mask] == y_test[mask])
+                )
             else:
                 result.combined_accuracy = 0.0
 
@@ -370,7 +388,7 @@ class MetaLabeling:
 
         return result
 
-    def _create_model(self, model_type: str) -> object:
+    def _create_model(self, model_type: str) -> _MLModel:
         """
         Create ML model based on type.
 
@@ -442,7 +460,7 @@ class MetaLabeling:
         else:
             raise DataValidationError(f"Unknown model type: {model_type}")
 
-    def _get_proba(self, model: object, X: np.ndarray) -> np.ndarray:
+    def _get_proba(self, model: _MLModel, X: np.ndarray) -> np.ndarray:
         """
         Get probability predictions from model.
 
@@ -458,12 +476,12 @@ class MetaLabeling:
 
             # Handle binary and multi-class
             if proba.shape[1] == 2:
-                return proba[:, 1]  # Probability of positive class
+                return np.asarray(proba[:, 1])  # Probability of positive class
             else:
-                return proba.max(axis=1)  # Max probability for multi-class
+                return np.asarray(proba.max(axis=1))  # Max probability for multi-class
         else:
             # Fallback to binary predictions
-            return model.predict(X)
+            return np.asarray(model.predict(X))
 
     def _calculate_bet_sizes(self, meta_proba: np.ndarray) -> np.ndarray:
         """

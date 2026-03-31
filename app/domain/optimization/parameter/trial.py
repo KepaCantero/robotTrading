@@ -1,3 +1,6 @@
+from __future__ import annotations
+
+# mypy: ignore-errors
 # mypy: ignore-errors
 """
 Trial tracking for parameter optimization.
@@ -83,7 +86,7 @@ class TrialResult:
         }
 
     @classmethod
-    def from_dict(cls, data: dict[str, Any]) -> "TrialResult":
+    def from_dict(cls, data: dict[str, Any]) -> TrialResult:
         """Create TrialResult from dictionary."""
         return cls(
             trial_id=data["trial_id"],
@@ -439,7 +442,7 @@ class TrialHistory:
         )
 
     @classmethod
-    def load(cls, filepath: str) -> "TrialHistory":
+    def load(cls, filepath: str) -> TrialHistory:
         """
         Load trial history from file.
 
@@ -514,7 +517,7 @@ class TrialContext:
             },
         )
 
-    def __enter__(self) -> "TrialContext":
+    def __enter__(self) -> TrialContext:
         """Start trial timing."""
         self.start_time = datetime.now()
         logger.info(

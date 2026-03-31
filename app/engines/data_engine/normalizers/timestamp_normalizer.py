@@ -4,6 +4,8 @@ TimestampNormalizer - Normalización de timestamps.
 Convierte timestamps de diferentes formatos y timezones a UTC estándar.
 """
 
+from __future__ import annotations
+
 import contextlib
 import logging
 from datetime import datetime, timezone

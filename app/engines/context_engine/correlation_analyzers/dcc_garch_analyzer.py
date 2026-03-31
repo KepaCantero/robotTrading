@@ -4,6 +4,8 @@ DCCGARCHAnalyzer - Analizador de correlación condicional usando DCC-GARCH.
 Implementa Dynamic Conditional Correlation GARCH para correlaciones dinámicas.
 """
 
+from __future__ import annotations
+
 import logging
 from typing import Any, Optional
 

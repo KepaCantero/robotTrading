@@ -6,6 +6,8 @@ Implementa cálculo dinámico de slippage basado en volatilidad del mercado y li
 no solo 0.1% fijo.
 """
 
+from __future__ import annotations
+
 import logging
 from datetime import datetime, timedelta
 from decimal import Decimal

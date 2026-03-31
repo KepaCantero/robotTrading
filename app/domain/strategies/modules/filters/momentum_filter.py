@@ -2,6 +2,8 @@
 MomentumFilter - Filtro de momentum usando Rate of Change (ROC).
 """
 
+from __future__ import annotations
+
 import logging
 from typing import Optional
 

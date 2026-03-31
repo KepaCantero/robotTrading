@@ -10,6 +10,8 @@ Translates alert triggers into trading actions based on rules:
 Uses centralized configuration for all thresholds and parameters.
 """
 
+from __future__ import annotations
+
 import logging
 from dataclasses import dataclass, field
 from datetime import datetime
@@ -308,10 +310,10 @@ class AlertToTradeMapper:
 
 
 # Singleton instance
-_mapper_instance: Optional["AlertToTradeMapper"] = None
+_mapper_instance: Optional[AlertToTradeMapper] = None
 
 
-def get_alert_to_trade_mapper() -> "AlertToTradeMapper":
+def get_alert_to_trade_mapper() -> AlertToTradeMapper:
     """Get or create the alert-to-trade mapper singleton.
 
     Returns:

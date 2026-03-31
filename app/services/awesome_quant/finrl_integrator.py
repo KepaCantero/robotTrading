@@ -5,6 +5,8 @@ FinRL provides DRL algorithms (PPO, A2C, DDPG) for portfolio management
 and trading strategy learning.
 """
 
+from __future__ import annotations
+
 import logging
 from dataclasses import dataclass, field
 from datetime import datetime

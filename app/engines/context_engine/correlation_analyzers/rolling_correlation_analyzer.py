@@ -4,6 +4,8 @@ RollingCorrelationAnalyzer - Analizador de correlaciones rolling window.
 Calcula matrices de correlación en ventanas móviles.
 """
 
+from __future__ import annotations
+
 import logging
 from typing import Any, Optional
 

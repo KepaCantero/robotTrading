@@ -9,6 +9,8 @@ Provides rule-based alerting with webhook/email/Slack/Discord/Telegram integrati
 - Alerting orchestrator for lifecycle management
 """
 
+from __future__ import annotations
+
 from app.application.alerting.alerting_orchestrator import (
     AlertingHealth,
     AlertingOrchestrator,

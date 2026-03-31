@@ -5,6 +5,8 @@ Core data structures for execution planning, monitoring, and cost analysis.
 All models use Pydantic for validation with strict mode and type checking.
 """
 
+from __future__ import annotations
+
 import logging
 from dataclasses import dataclass
 from datetime import datetime, timedelta
@@ -148,7 +150,7 @@ class ExecutionPlan(BaseModel):
         return v
 
     @model_validator(mode="after")
-    def validate_plan_consistency(self) -> "ExecutionPlan":
+    def validate_plan_consistency(self) -> ExecutionPlan:
         """Validate that tranches sum to total_size (except for dynamic strategies like POI)."""
         # POI strategy leaves tranches empty for dynamic execution
         if self.strategy == "poi":

@@ -2,6 +2,8 @@
 VolumeFilter - Filtro de volumen para confirmar señales.
 """
 
+from __future__ import annotations
+
 import logging
 from typing import Optional
 

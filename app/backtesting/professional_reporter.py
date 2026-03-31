@@ -7,6 +7,8 @@ Generates professional reports including:
 - Performance, Risk, Trades, and Robustness tabs
 """
 
+from __future__ import annotations
+
 import logging
 from dataclasses import dataclass, field
 from datetime import datetime

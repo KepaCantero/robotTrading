@@ -4,6 +4,8 @@ T9.1: ReportingGenerator - Generate performance reports
 Creates detailed performance analysis and visual reports.
 """
 
+from __future__ import annotations
+
 import asyncio
 import logging
 from dataclasses import dataclass
@@ -133,7 +135,7 @@ class ReportingGenerator:
         if monthly_returns:
             avg_return = np.mean(monthly_returns)
             variance = np.mean([(r - avg_return) ** 2 for r in monthly_returns])
-            volatility = variance**0.5
+            volatility = float(variance**0.5)
         else:
             volatility = 0.0
 

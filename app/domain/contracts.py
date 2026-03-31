@@ -8,6 +8,8 @@ Author: AlgoTrading MVP Team
 Version: 1.0.0
 """
 
+from __future__ import annotations
+
 import functools
 import inspect
 import logging

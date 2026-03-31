@@ -18,7 +18,7 @@ import sys  # noqa: E402
 
 sys.path.insert(0, str(project_root))
 
-from app.optimization.robustness_scorer import (  # noqa: E402
+from app.domain.optimization.robustness_scorer import (  # noqa: E402
     ProductionReadiness,
     RiskLevel,
     RobustnessReport,

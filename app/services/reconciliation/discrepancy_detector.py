@@ -9,9 +9,10 @@ between broker and internal records.
 Uses centralized configuration for all tolerance thresholds.
 """
 
+from __future__ import annotations
+
 import logging
 from decimal import Decimal
-from typing import Optional
 
 from app.shared.config.centralized_config import get_config
 
@@ -63,9 +64,7 @@ class DiscrepancyDetector:
             },
         )
 
-    def detect_position_mismatch(
-        self, broker_qty: Decimal, internal_qty: Decimal
-    ) -> Optional[dict]:
+    def detect_position_mismatch(self, broker_qty: Decimal, internal_qty: Decimal) -> dict | None:
         """
         Detect quantity discrepancy in position (R16)
 
@@ -124,9 +123,7 @@ class DiscrepancyDetector:
 
         return None
 
-    def detect_price_mismatch(
-        self, broker_price: Decimal, internal_price: Decimal
-    ) -> Optional[dict]:
+    def detect_price_mismatch(self, broker_price: Decimal, internal_price: Decimal) -> dict | None:
         """
         Detect price discrepancy (R16)
 
@@ -202,9 +199,7 @@ class DiscrepancyDetector:
 
         return None
 
-    def detect_value_mismatch(
-        self, broker_value: Decimal, internal_value: Decimal
-    ) -> Optional[dict]:
+    def detect_value_mismatch(self, broker_value: Decimal, internal_value: Decimal) -> dict | None:
         """
         Detect market value discrepancy (R16)
 

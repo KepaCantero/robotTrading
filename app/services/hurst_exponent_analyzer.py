@@ -37,6 +37,8 @@ Version: 2.0.0 - NO FALLBACKS (Numba Required)
 Compliance: Ernest Chan Rule 2.2, Rule 19, Rule 3, Rule 32
 """
 
+from __future__ import annotations
+
 import logging
 from dataclasses import dataclass
 from datetime import datetime

@@ -5,10 +5,12 @@ Manages automated sector allocation, market type filtering, and strategy
 capital allocation based on portfolio.yaml configuration.
 """
 
+from __future__ import annotations
+
 import logging
 from decimal import Decimal
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any, Optional, cast
 
 import yaml
 
@@ -128,7 +130,10 @@ class PortfolioConfigManager:
 
             capital_config = strategy_config.get("capital_allocation", {})
 
-            if strategy_name in self.allocation_manager.strategy_allocations:
+            if (
+                self.allocation_manager is not None
+                and strategy_name in self.allocation_manager.strategy_allocations
+            ):
                 allocation = self.allocation_manager.strategy_allocations[strategy_name]
                 allocation.target_weight = Decimal(str(capital_config.get("target_weight", 0.25)))
                 allocation.min_weight = Decimal(str(capital_config.get("min_weight", 0.10)))
@@ -150,7 +155,7 @@ class PortfolioConfigManager:
             List of allowed sector names
         """
         strategy_config = self.config.get("strategy_allocations", {}).get(strategy_name, {})
-        return strategy_config.get("sectors", [])
+        return cast("list[str]", strategy_config.get("sectors", []))
 
     def get_strategy_market_types(self, strategy_name: str) -> list[str]:
         """
@@ -163,7 +168,7 @@ class PortfolioConfigManager:
             List of allowed market type names
         """
         strategy_config = self.config.get("strategy_allocations", {}).get(strategy_name, {})
-        return strategy_config.get("market_types", [])
+        return cast("list[str]", strategy_config.get("market_types", []))
 
     def get_strategy_symbols(self, strategy_name: str) -> list[str]:
         """
@@ -241,15 +246,15 @@ class PortfolioConfigManager:
         """
         if strategy_name:
             strategy_config = self.config.get("strategy_allocations", {}).get(strategy_name, {})
-            return strategy_config.get("rebalancing", {})
+            return cast("dict[str, Any]", strategy_config.get("rebalancing", {}))
         else:
             portfolio_config = self.config.get("portfolio", {})
-            return portfolio_config.get("global_rebalancing", {})
+            return cast("dict[str, Any]", portfolio_config.get("global_rebalancing", {}))
 
     def get_reporting_config(self) -> dict[str, Any]:
         """Get reporting configuration."""
         portfolio_config = self.config.get("portfolio", {})
-        return portfolio_config.get("reporting", {})
+        return cast("dict[str, Any]", portfolio_config.get("reporting", {}))
 
     def update_total_capital(self, new_capital: Decimal) -> None:
         """

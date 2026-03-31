@@ -1,3 +1,6 @@
+from __future__ import annotations
+
+# mypy: ignore-errors
 # mypy: ignore-errors
 """
 Multi-Objective Optimization - FASE 6.1 Extension
@@ -37,7 +40,7 @@ class ParetoSolution:
     crowding_distance: float = 0.0
     additional_metrics: dict[str, Any] = field(default_factory=dict)
 
-    def dominates(self, other: "ParetoSolution") -> bool:
+    def dominates(self, other: ParetoSolution) -> bool:
         """
         Check if this solution dominates another.
 

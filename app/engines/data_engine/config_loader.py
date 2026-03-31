@@ -5,6 +5,8 @@ Garantiza que todos los parámetros provengan de configuración,
 eliminando números mágicos del código.
 """
 
+from __future__ import annotations
+
 import logging
 from pathlib import Path
 from typing import Any, Optional
@@ -17,7 +19,7 @@ logger = logging.getLogger(__name__)
 class DataEngineConfigLoader:
     """Cargador de configuración para DataEngine."""
 
-    def __init__(self, config_path: str = "config/data_engine.yaml"):
+    def __init__(self, config_path: str = "config/market/data_engine.yaml"):
         """
         Inicializar cargador de configuración.
 

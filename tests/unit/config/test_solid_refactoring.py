@@ -22,7 +22,7 @@ from app.shared.config.validators import (
 )
 from app.shared.config.mergers import RecursiveConfigMerger, ReplaceConfigMerger
 from app.shared.config.cache import FileBasedConfigCache
-from app.shared.config.defaults import (
+from app.shared.config.base.defaults import (
     get_default_atr_multiplier,
     get_default_risk_per_trade,
     get_default_max_position_size,

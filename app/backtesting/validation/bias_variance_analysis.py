@@ -271,14 +271,14 @@ class BiasVarianceAnalyzer:
         # Irreducible error: σ²
         # Estimated as residual error after accounting for bias and variance
         total_mse = np.mean((predictions - y_test) ** 2)
-        irreducible_error = total_mse - bias_squared - variance
-        irreducible_error = max(0, irreducible_error)  # Ensure non-negative
+        irreducible_error_raw = total_mse - bias_squared - variance
+        irreducible_error = max(0.0, float(irreducible_error_raw))  # Ensure non-negative
 
-        total_error = bias_squared + variance + irreducible_error
+        total_error = float(bias_squared + variance + irreducible_error)
 
         # Calculate contributions
-        bias_contribution = (bias_squared / total_error * 100) if total_error > 0 else 0
-        variance_contribution = (variance / total_error * 100) if total_error > 0 else 0
+        bias_contribution = float(bias_squared / total_error * 100) if total_error > 0 else 0.0
+        variance_contribution = float(variance / total_error * 100) if total_error > 0 else 0.0
 
         # Determine complexity level
         if bias_contribution > 70:
@@ -291,13 +291,13 @@ class BiasVarianceAnalyzer:
         result = BiasVarianceResult(
             timestamp=datetime.now(),
             model_name=type(model).__name__,
-            bias_squared=bias_squared,
-            variance=variance,
-            irreducible_error=irreducible_error,
-            total_error=total_error,
+            bias_squared=float(bias_squared),
+            variance=float(variance),
+            irreducible_error=float(irreducible_error),
+            total_error=float(total_error),
             complexity_level=complexity,
-            bias_contribution=bias_contribution,
-            variance_contribution=variance_contribution,
+            bias_contribution=float(bias_contribution),
+            variance_contribution=float(variance_contribution),
             details={
                 "n_bootstrap": n_bootstrap,
                 "n_test_samples": n_test,
@@ -408,11 +408,11 @@ class BiasVarianceAnalyzer:
                 curve_points.append(
                     LearningCurvePoint(
                         train_size=train_size,
-                        train_score=np.mean(train_scores),
-                        test_score=np.mean(test_scores),
-                        fit_time=np.mean(fit_times),
-                        train_std=np.std(train_scores),
-                        test_std=np.std(test_scores),
+                        train_score=float(np.mean(train_scores)),
+                        test_score=float(np.mean(test_scores)),
+                        fit_time=float(np.mean(fit_times)),
+                        train_std=float(np.std(train_scores)),
+                        test_std=float(np.std(test_scores)),
                     )
                 )
 
@@ -576,8 +576,9 @@ class BiasVarianceAnalyzer:
         cv = np.std(scores) / (abs(mean_score) + 1e-8)
 
         # Stability criterion: CV < 0.2
-        is_stable = cv < 0.2
-        stability_score = max(0, 1 - cv)
+        cv_float = float(cv)
+        is_stable = cv_float < 0.2
+        stability_score = max(0.0, 1 - cv_float)
 
         result = StabilityTestResult(
             timestamp=datetime.now(),
@@ -585,8 +586,8 @@ class BiasVarianceAnalyzer:
             test_type="temporal_stability",
             is_stable=is_stable,
             stability_score=stability_score,
-            performance_variance=score_variance,
-            coefficient_of_variation=cv,
+            performance_variance=float(score_variance),
+            coefficient_of_variation=cv_float,
             details={
                 "n_windows": n_windows,
                 "mean_score": mean_score,
@@ -681,8 +682,9 @@ class BiasVarianceAnalyzer:
         cv = np.std(scores) / (abs(mean_score) + 1e-8)
 
         # Stability criterion: CV < 0.15 for bootstrap
-        is_stable = cv < 0.15
-        stability_score = max(0, 1 - cv / 0.15)
+        cv_float = float(cv)
+        is_stable = cv_float < 0.15
+        stability_score = max(0.0, 1 - cv_float / 0.15)
 
         result = StabilityTestResult(
             timestamp=datetime.now(),
@@ -690,8 +692,8 @@ class BiasVarianceAnalyzer:
             test_type="bootstrap_stability",
             is_stable=is_stable,
             stability_score=stability_score,
-            performance_variance=score_variance,
-            coefficient_of_variation=cv,
+            performance_variance=float(score_variance),
+            coefficient_of_variation=cv_float,
             details={
                 "n_bootstrap": n_bootstrap,
                 "mean_score": mean_score,
@@ -728,7 +730,9 @@ class BiasVarianceAnalyzer:
         Returns:
             Dict with all analysis results
         """
-        results = {
+        results: dict[
+            str, BiasVarianceResult | LearningCurveResult | StabilityTestResult | None
+        ] = {
             "bias_variance": None,
             "learning_curve": None,
             "temporal_stability": None,

@@ -7,11 +7,13 @@ including result management, parallel execution, and test coordination.
 SINGLE SOURCE OF TRUTH: All defaults from CentralizedConfig.
 """
 
+from __future__ import annotations
+
 import logging
 from collections import deque
 from decimal import Decimal
 from threading import Lock
-from typing import TYPE_CHECKING, Optional, Union
+from typing import TYPE_CHECKING, Union
 
 import numpy as np
 
@@ -27,7 +29,8 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 # Type alias for backtest results (can be BacktestResult or dict)
-BacktestResultItem = Union[BacktestResult, dict[str, Union[int, float, str, bool]]]
+ResultValue = Union[int, float, str, bool]
+BacktestResultItem = Union[BacktestResult, dict[str, ResultValue]]
 
 
 def _get_backtesting_config():
@@ -49,12 +52,14 @@ class BacktestDefaults:
     @property
     def commission(self) -> Decimal:
         """Default commission per trade."""
-        return _get_backtesting_config().default_commission_fixed
+        return Decimal(str(_get_backtesting_config().default_commission_fixed))
 
     @property
     def slippage(self) -> Decimal:
         """Default slippage percentage."""
-        return _get_backtesting_config().base_slippage_bps / Decimal("100")  # bps to %
+        return Decimal(str(_get_backtesting_config().base_slippage_bps)) / Decimal(
+            "100"
+        )  # bps to %
 
     @property
     def initial_capital(self) -> Decimal:
@@ -64,22 +69,26 @@ class BacktestDefaults:
     @property
     def max_position_size(self) -> Decimal:
         """Default max position size as % of capital."""
-        return _get_backtesting_config().default_max_position_size
+        return Decimal(str(_get_backtesting_config().default_max_position_size))
 
     @property
     def risk_free_rate(self) -> Decimal:
         """Default risk-free rate."""
-        return _get_backtesting_config().risk_free_rate
+        return Decimal(str(_get_backtesting_config().default_risk_free_rate))
 
     @property
     def stop_loss_percentage(self) -> Decimal:
         """Default stop loss percentage."""
-        return _get_backtesting_config().default_stop_loss_pct * Decimal("100")  # Convert to %
+        return Decimal(str(_get_backtesting_config().default_stop_loss_pct)) * Decimal(
+            "100"
+        )  # Convert to %
 
     @property
     def take_profit_percentage(self) -> Decimal:
         """Default take profit percentage."""
-        return _get_backtesting_config().default_take_profit_pct * Decimal("100")  # Convert to %
+        return Decimal(str(_get_backtesting_config().default_take_profit_pct)) * Decimal(
+            "100"
+        )  # Convert to %
 
     # Default metric thresholds (these are static)
     SHARPE_RATIO_EXCELLENT = 2.0
@@ -110,11 +119,11 @@ class BoundedResults:
         Args:
             maxlen: Maximum number of results to store
         """
-        self._results: deque = deque(maxlen=maxlen)
+        self._results: deque[dict[str, ResultValue]] = deque(maxlen=maxlen)
         self._lock = Lock()
         self._maxlen = maxlen
 
-    def add(self, result: dict[str, Union[int, float, str, bool]]) -> None:
+    def add(self, result: dict[str, ResultValue]) -> None:
         """
         Add result thread-safely.
 
@@ -123,9 +132,8 @@ class BoundedResults:
         """
         with self._lock:
             self._results.append(result)
-            self._cleanup_if_needed()
 
-    def extend(self, results: list[dict[str, Union[int, float, str, bool]]]) -> None:
+    def extend(self, results: list[dict[str, ResultValue]]) -> None:
         """
         Extend results thread-safely.
 
@@ -134,9 +142,8 @@ class BoundedResults:
         """
         with self._lock:
             self._results.extend(results)
-            self._cleanup_if_needed()
 
-    def get_all(self) -> list[dict[str, Union[int, float, str, bool]]]:
+    def get_all(self) -> list[dict[str, ResultValue]]:
         """
         Get all results.
 
@@ -146,7 +153,7 @@ class BoundedResults:
         with self._lock:
             return list(self._results)
 
-    def get_latest(self, n: int) -> list[dict[str, Union[int, float, str, bool]]]:
+    def get_latest(self, n: int) -> list[dict[str, ResultValue]]:
         """
         Get latest n results.
 
@@ -170,17 +177,6 @@ class BoundedResults:
         with self._lock:
             return len(self._results)
 
-    def _cleanup_if_needed(self) -> None:
-        """
-        Cleanup old results if needed.
-
-        This method ensures we don't exceed the configured maximum
-        number of results by removing oldest entries.
-        """
-        target_size = int(self._maxlen * 0.8)  # Keep at 80% capacity
-        while len(self._results) > target_size:
-            self._results.popleft()
-
 
 class OrchestrationResult:
     """
@@ -190,7 +186,7 @@ class OrchestrationResult:
     providing summary statistics and access to individual results.
     """
 
-    def __init__(self, results: list[BacktestResultItem], config: Optional[BacktestConfig] = None):
+    def __init__(self, results: list[BacktestResultItem], config: BacktestConfig | None = None):
         """
         Initialize orchestration result.
 
@@ -201,16 +197,16 @@ class OrchestrationResult:
         self.results = results
         self.total = len(results)
         self.config = config
-        self._summary = None
+        self._summary: dict[str, ResultValue] | None = None
 
     @property
-    def summary(self) -> dict[str, Union[int, float, str, bool]]:
+    def summary(self) -> dict[str, ResultValue]:
         """Get summary statistics."""
         if self._summary is None:
             self._summary = self._calculate_summary()
         return self._summary
 
-    def _calculate_summary(self) -> dict[str, Union[int, float, str, bool]]:
+    def _calculate_summary(self) -> dict[str, ResultValue]:
         """Calculate summary statistics from results."""
         if not self.results:
             return {
@@ -222,35 +218,35 @@ class OrchestrationResult:
         successful = [r for r in self.results if self._is_successful(r)]
         failed = self.total - len(successful)
 
-        summary = {
+        summary: dict[str, ResultValue] = {
             "total": self.total,
             "successful": len(successful),
             "failed": failed,
         }
 
         # Add metric statistics if we have BacktestResult objects
-        if successful and isinstance(successful[0], BacktestResult):
-            total_returns = [float(r.total_return) for r in successful]
-            sharpe_ratios = [
-                float(r.performance.sharpe_ratio)
-                for r in successful
-                if r.performance and r.performance.sharpe_ratio
-            ]
+        backtest_results = [r for r in successful if isinstance(r, BacktestResult)]
+        if backtest_results:
+            total_returns = [float(r.total_return) for r in backtest_results]
+            sharpe_ratios: list[float] = []
+            for r in backtest_results:
+                if r.performance is not None and r.performance.sharpe_ratio is not None:
+                    sharpe_ratios.append(float(r.performance.sharpe_ratio))
 
             if total_returns:
                 summary.update(
                     {
-                        "avg_return": np.mean(total_returns),
-                        "best_return": max(total_returns),
-                        "worst_return": min(total_returns),
+                        "avg_return": float(np.mean(total_returns)),
+                        "best_return": float(max(total_returns)),
+                        "worst_return": float(min(total_returns)),
                     }
                 )
 
             if sharpe_ratios:
                 summary.update(
                     {
-                        "avg_sharpe": np.mean(sharpe_ratios),
-                        "best_sharpe": max(sharpe_ratios),
+                        "avg_sharpe": float(np.mean(sharpe_ratios)),
+                        "best_sharpe": float(max(sharpe_ratios)),
                     }
                 )
 
@@ -262,13 +258,14 @@ class OrchestrationResult:
         # For dictionaries, any result is considered successful
         # unless explicitly marked as failed
         if isinstance(result, dict):
-            return result.get("final_capital", 0) > 0
+            final_capital_value = result.get("final_capital", 0)
+            return isinstance(final_capital_value, (int, float)) and final_capital_value > 0
         # For BacktestResult objects, check if capital is positive
         if isinstance(result, BacktestResult):
-            return result.final_capital > 0
+            return bool(result.final_capital > 0)
         return False
 
-    def get_best_result(self, metric: str = "sharpe_ratio") -> Optional[BacktestResultItem]:
+    def get_best_result(self, metric: str = "sharpe_ratio") -> BacktestResultItem | None:
         """
         Get best result by metric.
 
@@ -294,7 +291,7 @@ class OrchestrationResult:
 
         return max(self.results, key=get_metric)
 
-    def filter_results(self, **criteria) -> list[BacktestResultItem]:
+    def filter_results(self, **criteria: object) -> list[BacktestResultItem]:
         """
         Filter results by criteria.
 
@@ -304,10 +301,16 @@ class OrchestrationResult:
         Returns:
             Filtered list of results
         """
-        filtered = self.results
+        filtered = list(self.results)
 
         for key, value in criteria.items():
-            filtered = [r for r in filtered if isinstance(r, dict) and r.get(key) == value]
+            new_filtered: list[BacktestResultItem] = []
+            for r in filtered:
+                if (isinstance(r, dict) and r.get(key) == value) or (
+                    hasattr(r, key) and getattr(r, key) == value
+                ):
+                    new_filtered.append(r)
+            filtered = new_filtered
 
         return filtered
 
@@ -324,7 +327,7 @@ class BacktestOrchestrator:
     def __init__(
         self,
         config: BacktestConfig,
-        executor: Optional["BacktestExecutor"] = None,
+        executor: BacktestExecutor | None = None,
         max_results: int = 1000,
     ):
         """
@@ -446,7 +449,7 @@ class BacktestOrchestrator:
         return result
 
     @staticmethod
-    def _result_to_dict(result: BacktestResult) -> dict[str, Union[int, float, str, bool]]:
+    def _result_to_dict(result: BacktestResult) -> dict[str, ResultValue]:
         """Convert BacktestResult to dictionary."""
         if not isinstance(result, BacktestResult):
             return result if isinstance(result, dict) else {}

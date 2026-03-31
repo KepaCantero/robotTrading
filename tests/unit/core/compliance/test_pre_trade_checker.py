@@ -11,8 +11,8 @@ from decimal import Decimal
 import pandas as pd
 import pytest
 
-from app.core.compliance.pre_trade_checker import PreTradeComplianceChecker
-from app.core.compliance.results import PreTradeCheckResult
+from app.domain.services.compliance.pre_trade_checker import PreTradeComplianceChecker
+from app.domain.services.compliance.results import PreTradeCheckResult
 
 
 @pytest.fixture

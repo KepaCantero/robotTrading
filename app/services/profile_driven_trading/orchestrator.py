@@ -86,7 +86,7 @@ class ProfileDrivenTradingOrchestrator:
         self._profile_generator = None
         self._market_universe_orchestrator = None
         self._stock_allocator = None
-        self._rl_engine = None
+        self._rl_engine: object | None = None
         self._tax_optimizer = None
         self._risk_gates = None
         self._backtest_orchestrator = None
@@ -359,7 +359,7 @@ class ProfileDrivenTradingOrchestrator:
     # STAGE 1: PROFILE GENERATION
     # ============================================================================
 
-    async def stage_1_generate_profile(self, input_profile) -> Any:
+    async def stage_1_generate_profile(self, input_profile) -> object:
         """
         Stage 1: Generate InvestmentProfile from InputProfile.
 
@@ -714,7 +714,7 @@ class ProfileDrivenTradingOrchestrator:
     # STAGE 5: TAX OPTIMIZATION
     # ============================================================================
 
-    async def stage_5_optimize_taxes(self, allocation=None) -> Any:
+    async def stage_5_optimize_taxes(self, allocation=None) -> object:
         """
         Stage 5: Optimize portfolio for tax efficiency.
 
@@ -878,7 +878,7 @@ class ProfileDrivenTradingOrchestrator:
     # STAGE 7: BACKTEST VALIDATION
     # ============================================================================
 
-    async def stage_7_backtest_validate(self, profile=None, allocation=None) -> Any:
+    async def stage_7_backtest_validate(self, profile=None, allocation=None) -> object:
         """
         Stage 7: Validate strategy through backtesting.
 

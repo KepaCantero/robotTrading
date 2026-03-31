@@ -15,6 +15,8 @@ SOLID Principles:
 - Dependency Inversion: Depende de abstracciones (models)
 """
 
+from __future__ import annotations
+
 import logging
 import time
 from decimal import Decimal

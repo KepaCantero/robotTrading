@@ -5,6 +5,8 @@ Este módulo define los modelos de datos para validar que las estrategias
 generen rentabilidad neta positiva después de todos los costos operativos.
 """
 
+from __future__ import annotations
+
 import logging
 from datetime import date, datetime
 from decimal import Decimal

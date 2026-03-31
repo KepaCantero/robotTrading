@@ -14,6 +14,8 @@ Caracteristicas principales:
 - Gestion de riesgo especifica para arbitraje
 """
 
+from __future__ import annotations
+
 import logging
 from collections import defaultdict, deque
 from collections.abc import Sequence
@@ -269,7 +271,7 @@ class ArbitrageStrategyEngine(BaseStrategyEngine):
                 other_symbol = pair[1] if pair[0] == current_symbol else pair[0]
                 break
 
-        if pair_found is None:
+        if pair_found is None or other_symbol is None:
             return features
 
         features["pair"] = pair_found
@@ -441,7 +443,7 @@ class ArbitrageStrategyEngine(BaseStrategyEngine):
                     other_symbol = pair[1] if pair[0] == current_symbol else pair[0]
                     break
 
-            if pair_found is None:
+            if pair_found is None or other_symbol is None:
                 return []
 
             # Need history for both symbols

@@ -6,6 +6,8 @@ Este módulo proporciona un manejo unificado de errores específicos del trading
 integrando con el sistema existente de manejo de errores.
 """
 
+from __future__ import annotations
+
 import asyncio
 import logging
 from datetime import datetime
@@ -217,6 +219,8 @@ class TradingErrorHandler:
         if not isinstance(error, AlgoTradingError):
             error = self._convert_to_algotrading_error(error, context, metadata)
 
+        algo_error: AlgoTradingError = error
+
         # Get error handling rules for this context
         rules = self.error_rules.get(context.value, {})
 
@@ -247,14 +251,14 @@ class TradingErrorHandler:
             results["circuit_breaker"] = {"activated": True, "context": context.value}
 
         # Check for kill switch activation
-        if self._should_activate_kill_switch(error, context):
-            await self._activate_kill_switch(error, context, operation_id)
-            results["kill_switch"] = {"activated": True, "reason": error.message}
+        if self._should_activate_kill_switch(algo_error, context):
+            await self._activate_kill_switch(algo_error, context, operation_id)
+            results["kill_switch"] = {"activated": True, "reason": algo_error.message}
 
         return {
             "operation_id": operation_id,
             "context": context.value,
-            "error": error.to_dict(),
+            "error": algo_error.to_dict(),
             "actions_taken": results,
             "timestamp": datetime.now().isoformat(),
         }
@@ -267,7 +271,7 @@ class TradingErrorHandler:
         metadata: Optional[dict[str, Any]] = None,
         *args,
         **kwargs,
-    ) -> Any:
+    ) -> object:
         """
         Execute an operation with automatic retry on error.
 
@@ -286,7 +290,7 @@ class TradingErrorHandler:
         max_retries = rules.get("max_retries", 0)
         retry_delay = rules.get("retry_delay", 1.0)
 
-        last_error = None
+        last_error: Optional[BaseException] = None
 
         for attempt in range(max_retries + 1):
             try:
@@ -322,7 +326,9 @@ class TradingErrorHandler:
                     break
 
         # If we get here, all retries failed
-        raise last_error
+        if last_error is not None:
+            raise last_error
+        raise RuntimeError("All retries failed but no error was captured")
 
     def _convert_to_algotrading_error(
         self, error: Exception, context: ErrorContext, metadata: dict[str, Any]
@@ -567,7 +573,7 @@ class TradingErrorHandler:
     def _should_activate_circuit_breaker(self, context: ErrorContext, operation_id: str) -> bool:
         """Check if circuit breaker should be activated."""
         rules = self.error_rules.get(context.value, {})
-        threshold = rules.get("circuit_breaker_threshold", 5)
+        threshold: int = rules.get("circuit_breaker_threshold", 5)
 
         key = f"{context.value}_{ErrorCategory.SYSTEM.value}"
         error_count = self.error_counts.get(key, 0)
@@ -706,7 +712,7 @@ async def execute_with_retry(
     metadata: Optional[dict[str, Any]] = None,
     *args,
     **kwargs,
-) -> Any:
+) -> object:
     """Execute an operation with automatic retry on error."""
     return await trading_error_handler.handle_with_retry(
         operation, context, operation_id, metadata, *args, **kwargs

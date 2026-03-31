@@ -5,6 +5,8 @@ This module implements the paper trading service that simulates realistic tradin
 conditions including fees, slippage, and market impact for the algorithmic trading system.
 """
 
+from __future__ import annotations
+
 import asyncio
 import logging
 import random

@@ -13,7 +13,7 @@ class TestMockIntegration:
     @pytest.fixture
     def portfolio_provider(self):
         """Paper trading portfolio provider fixture."""
-        from app.providers.paper_trading import PaperTradingPortfolioProvider
+        from app.infrastructure.providers.paper_trading import PaperTradingPortfolioProvider
 
         return PaperTradingPortfolioProvider(initial_cash=Decimal("100000"))
 

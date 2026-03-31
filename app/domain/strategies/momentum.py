@@ -182,15 +182,13 @@ class MomentumStrategy(BaseStrategy):
     @property
     def signal_scoring_engine(self) -> SignalScoringEngineProtocol:
         """
-        Get signal scoring engine, lazily initialized if not injected.
+        Get signal scoring engine.
 
-        Uses late import to avoid domain layer depending on services layer.
+        Must be injected via constructor. Raises ValueError if not provided.
         """
         if self._signal_scoring_engine is None:
-            # Late import to avoid architecture violation
-            from app.services.signal_scoring_engine import get_signal_scoring_engine
-
-            self._signal_scoring_engine = get_signal_scoring_engine()
+            msg = "signal_scoring_engine is required. Inject a SignalScoringEngineProtocol via constructor."
+            raise ValueError(msg)
         return self._signal_scoring_engine
 
     def get_required_parameters(self) -> list[str]:

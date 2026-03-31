@@ -11,6 +11,8 @@ AUDIT-002: Audit logs include user context, timestamp, and action details
 AUDIT-003: Audit logs are written to a separate, immutable log file
 """
 
+from __future__ import annotations
+
 import threading
 from contextlib import contextmanager
 from datetime import datetime, timedelta

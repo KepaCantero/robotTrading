@@ -5,6 +5,8 @@ Validates profit and loss calculations to ensure accuracy
 and detect potential issues in backtesting results.
 """
 
+from __future__ import annotations
+
 import logging
 from decimal import Decimal
 from typing import Optional

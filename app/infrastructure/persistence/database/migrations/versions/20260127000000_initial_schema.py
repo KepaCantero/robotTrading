@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 """Initial database schema for AlgoTrading Platform
 
 This migration creates all core tables for the algorithmic trading system,

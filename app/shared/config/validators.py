@@ -7,6 +7,8 @@ Each validator has a single responsibility: validating specific config aspects.
 TASK-24: SRP Compliance - Separate validators for different aspects
 """
 
+from __future__ import annotations
+
 import logging
 from datetime import datetime
 from typing import Any

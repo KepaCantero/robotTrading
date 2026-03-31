@@ -380,8 +380,8 @@ class StrategyStockAllocator:
         Returns:
             Dictionary mapping ticker to assigned strategy
         """
-        strategy_assignments = {}
-        asset_pair_count = defaultdict(int)
+        strategy_assignments: dict[str, str] = {}
+        asset_pair_count: dict[str, int] = defaultdict(int)
 
         # Step 1: Prioritize Pairs Trading first
         pairs_assigned = self._assign_pairs_trading(strategy_assignments, asset_pair_count)

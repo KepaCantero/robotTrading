@@ -12,6 +12,8 @@ Key features:
 - Multi-currency P&L tracking
 """
 
+from __future__ import annotations
+
 import asyncio
 import logging
 from dataclasses import dataclass
@@ -65,7 +67,7 @@ class CurrencyExposure:
         }
 
     @classmethod
-    def from_dict(cls, data: dict) -> "CurrencyExposure":
+    def from_dict(cls, data: dict) -> CurrencyExposure:
         """Create from dictionary."""
         return cls(
             currency=data["currency"],
@@ -144,7 +146,7 @@ class ForexRiskTracker:
     """
 
     # Currency symbol suffixes for auto-detection
-    CURRENCY_SUFFIXES: ClassVar[dict] = {
+    CURRENCY_SUFFIXES: ClassVar[dict[str, list[str]]] = {
         "EUR": [".MC", ".PA", ".AS", ".DE", ".MI"],  # European exchanges
         "GBP": [".L"],  # London
         "CAD": [".TO"],
@@ -158,7 +160,7 @@ class ForexRiskTracker:
     }
 
     # Risk level thresholds for unhedged exposure
-    RISK_THRESHOLDS: ClassVar[dict] = {
+    RISK_THRESHOLDS: ClassVar[dict[str, Decimal]] = {
         "low": Decimal("0.05"),  # < 5% of portfolio
         "medium": Decimal("0.10"),  # 5-10% of portfolio
         "high": Decimal("0.20"),  # 10-20% of portfolio
@@ -211,10 +213,12 @@ class ForexRiskTracker:
 
         # Calculate totals
         total_portfolio_eur = portfolio.total_equity
-        total_exposure_eur = sum(e.exposure_eur for e in exposures.values())
+        total_exposure_eur: Decimal = sum(
+            (e.exposure_eur for e in exposures.values()), Decimal("0")
+        )
         total_unhedged_eur = self.calculate_unhedged_exposure(exposures)
         overall_hedge_ratio = self._calculate_overall_hedge_ratio(exposures, total_exposure_eur)
-        fx_pnl_eur = sum(e.unrealized_pnl_eur for e in exposures.values())
+        fx_pnl_eur: Decimal = sum((e.unrealized_pnl_eur for e in exposures.values()), Decimal("0"))
 
         # Get hedging recommendations
         recommendations = await self.get_hedging_recommendation(exposures)
@@ -399,8 +403,8 @@ class ForexRiskTracker:
                 recommendations.append(recommendation)
 
         # Sort by priority
-        priority_order = {"critical": 0, "high": 1, "medium": 2, "low": 3}
-        recommendations.sort(key=lambda r: priority_order.get(r["priority"], 99))
+        priority_order: dict[str, int] = {"critical": 0, "high": 1, "medium": 2, "low": 3}
+        recommendations.sort(key=lambda r: priority_order.get(str(r.get("priority", "")), 99))
 
         return recommendations
 
@@ -483,7 +487,7 @@ class ForexRiskTracker:
         """
         # First check explicit currency field
         if hasattr(position, "currency") and position.currency:
-            return position.currency.upper()
+            return str(position.currency).upper()
 
         # Detect from symbol suffix
         symbol = position.symbol.upper()
@@ -558,7 +562,8 @@ class ForexRiskTracker:
                 rates = self.forex_service.get_current_rates([pair_str])
 
                 if pair_str in rates:
-                    rate = rates[pair_str]
+                    rate_raw = rates[pair_str]
+                    rate = Decimal(str(rate_raw))
                     self._fx_rates[pair] = (rate, utc_now())
                     return rate
             except (ValueError, TypeError, KeyError, AttributeError) as e:
@@ -618,8 +623,9 @@ class ForexRiskTracker:
         if total_exposure_eur == 0:
             return Decimal("0")
 
-        total_hedged = sum(e.hedge_eur for e in exposures.values())
-        return safe_decimal_divide(total_hedged, total_exposure_eur, Decimal("0"))
+        total_hedged = sum((e.hedge_eur for e in exposures.values()), Decimal("0"))
+        result = safe_decimal_divide(total_hedged, total_exposure_eur, Decimal("0"))
+        return Decimal(str(result))
 
     def _determine_risk_level(
         self,

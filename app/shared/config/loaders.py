@@ -7,6 +7,8 @@ Each loader has a single responsibility: loading a specific format.
 TASK-24: SRP Compliance - Separate loaders for different formats
 """
 
+from __future__ import annotations
+
 import json
 import logging
 from pathlib import Path
@@ -147,4 +149,4 @@ class ConfigLoaderRegistry:
         loader = self.get_loader(config_path.suffix)
         if loader is None:
             raise ValueError(f"Unsupported config file type: {config_path.suffix}")
-        return loader.load(config_path)
+        return dict(loader.load(config_path))

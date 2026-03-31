@@ -6,6 +6,8 @@ Essential for 24/7 operation where network glitches are common.
 Uses centralized configuration for all timeout and backoff parameters.
 """
 
+from __future__ import annotations
+
 import asyncio
 import logging
 import random

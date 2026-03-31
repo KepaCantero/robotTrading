@@ -2,6 +2,8 @@
 Página Streamlit para Meta Dashboard - Control de Misión Quant.
 """
 
+from __future__ import annotations
+
 import asyncio
 import logging
 from pathlib import Path
@@ -80,8 +82,7 @@ def main() -> None:
         dashboard.render_dashboard()
     else:
         st.info("👈 Usa el sidebar para cargar y analizar resultados")
-        st.markdown(
-            """
+        st.markdown("""
         ### 📋 Instrucciones
 
         1. **Configura el directorio** con los resultados de backtests
@@ -96,8 +97,7 @@ def main() -> None:
         - **Indicadores Avanzados**: Stability Index, Profit Consistency, etc.
         - **Volatility Context**: Overlay de volatilidad vs drawdown
         - **Drilldown Panel**: Detalles por test individual
-        """
-        )
+        """)
 
 
 if __name__ == "__main__":

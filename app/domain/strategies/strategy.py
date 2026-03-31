@@ -2,6 +2,8 @@
 ModularMomentumStrategy - Estrategia de momentum completamente modular con learning engines integrado.
 """
 
+from __future__ import annotations
+
 import logging
 from collections import deque
 from datetime import datetime
@@ -1067,14 +1069,21 @@ class ModularMomentumStrategy(BaseStrategy):
                 padding = [prices[-1]] * (sequence_length - len(prices))
                 prices = padding + prices
             else:
-                prices = [0.0] * sequence_length
+                prices = [1.0] * sequence_length
 
         # Convertir a numpy array y normalizar (porcentaje de cambio)
         price_array = np.array(prices, dtype=np.float32)
 
-        # Calcular cambios porcentuales
+        # Calcular cambios porcentuales (safe division: 0/0 => 0)
         if len(price_array) > 1:
-            pct_changes = np.diff(price_array) / price_array[:-1]
+            numerators = np.diff(price_array)
+            denominators = price_array[:-1]
+            pct_changes = np.divide(
+                numerators,
+                denominators,
+                out=np.zeros_like(numerators),
+                where=denominators != 0,
+            )
             pct_changes = np.concatenate([[0.0], pct_changes])  # Primer elemento sin cambio
         else:
             pct_changes = np.array([0.0], dtype=np.float32)
@@ -1407,7 +1416,7 @@ class ModularMomentumStrategy(BaseStrategy):
         return round(cci, 2)
 
     def _calculate_williams_r(
-        self, highs: list, lows: list, prices: list, period: int = 14
+        self, highs: list[float], lows: list[float], prices: list[float], period: int = 14
     ) -> float:
         """
         Calculate Williams %R.
@@ -1518,15 +1527,17 @@ class ModularMomentumStrategy(BaseStrategy):
         max_position_size = Decimal(
             str(self.config.get("max_position_size", self._cfg.max_position_size_default))
         )
-        available_cash = portfolio.cash
+        available_cash = Decimal(str(portfolio.cash))
 
         if signal.signal_type == SignalType.BUY:
             max_position_value = available_cash * max_position_size
-            position_size = max_position_value / signal.price
-            return max(position_size, Decimal("1"))
+            position_size = max_position_value / Decimal(str(signal.price))
+            if position_size < Decimal("1"):
+                return Decimal("0")
+            return position_size
         else:
             # SELL: usar posición existente
             for pos in portfolio.positions:
                 if pos.symbol == signal.symbol:
-                    return pos.quantity
+                    return Decimal(str(pos.quantity))
             return Decimal("0")

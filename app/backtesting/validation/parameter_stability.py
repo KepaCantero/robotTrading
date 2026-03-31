@@ -161,7 +161,7 @@ class ParameterStabilityAnalyzer:
         os_params: list[dict[str, Any]],
     ) -> list[str]:
         """Get all unique parameter names."""
-        param_names = set()
+        param_names: set[str] = set()
 
         for params in is_params:
             param_names.update(params.keys())
@@ -284,7 +284,7 @@ class ParameterStabilityAnalyzer:
 
             # Test for significance (p < 0.05, two-tailed)
             # Critical value is approximately +/-1.96
-            return abs(z) > 1.96
+            return bool(abs(z) > 1.96)
 
         return False
 
@@ -455,7 +455,7 @@ class ParameterStabilityAnalyzer:
         self,
         params_history: list[dict[str, Any]],
         threshold: float = 0.9,
-    ) -> list[tuple[str, str]]:
+    ) -> list[tuple[Any, ...]]:
         """
         Find redundant parameters (highly correlated).
 
@@ -561,7 +561,7 @@ def detect_parameter_drift_simple(
     # Calculate percent change
     if early_mean != 0:
         change_pct = abs(late_mean - early_mean) / abs(early_mean) * 100
-        return change_pct > 20  # 20% change threshold
+        return bool(change_pct > 20)  # 20% change threshold
 
     return False
 

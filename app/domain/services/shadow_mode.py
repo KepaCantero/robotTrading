@@ -56,6 +56,8 @@ Author: SRE Architecture
 Date: 2025-01-25
 """
 
+from __future__ import annotations
+
 import asyncio
 import logging
 import uuid
@@ -894,7 +896,7 @@ class ShadowModeAwareBroker:
         self.real_broker = real_broker
         self.shadow_executor = shadow_executor
 
-    async def execute_order_with_wal(self, order: Order, dry_run: bool = False) -> Any:
+    async def execute_order_with_wal(self, order: Order, dry_run: bool = False) -> object:
         """
         Execute order with WAL, intercepting for shadow mode.
 
@@ -934,7 +936,7 @@ class ShadowModeAwareBroker:
         # Real execution
         return await self.real_broker.execute_order_with_wal(order, dry_run)
 
-    def __getattr__(self, name: str) -> Any:
+    def __getattr__(self, name: str) -> object:
         """Delegate all other calls to real broker."""
         return getattr(self.real_broker, name)
 

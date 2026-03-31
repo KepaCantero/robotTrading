@@ -55,9 +55,26 @@ import logging
 from concurrent.futures import ProcessPoolExecutor, as_completed
 from dataclasses import dataclass, field
 from datetime import datetime
+from typing import Protocol, cast, runtime_checkable
 
 import numpy as np
 import pandas as pd
+
+
+@runtime_checkable
+class SklearnModel(Protocol):
+    """Protocol for sklearn-like models with fit/predict interface."""
+
+    def fit(self, X: np.ndarray, y: np.ndarray, **kwargs: object) -> SklearnModel: ...
+    def predict(self, X: np.ndarray) -> np.ndarray: ...
+
+
+@runtime_checkable
+class SklearnModelWithProba(SklearnModel, Protocol):
+    """Protocol for sklearn-like models that also support predict_proba."""
+
+    def predict_proba(self, X: np.ndarray) -> np.ndarray: ...
+
 
 logger = logging.getLogger(__name__)
 
@@ -119,7 +136,7 @@ class ModelResult:
     """Result from a single model training."""
 
     model_name: str
-    model: object
+    model: SklearnModel
     predictions: np.ndarray
     probabilities: np.ndarray | None
     score: float
@@ -156,7 +173,7 @@ class EnsembleResult:
     ensemble_weights: dict[str, float]
     """Weights for each model in ensemble"""
 
-    stacking_model: object | None = None
+    stacking_model: SklearnModel | None = None
     """Stacking meta-model (if used)"""
 
     metadata: dict[str, str | int | float | bool | None] = field(default_factory=dict)
@@ -245,7 +262,9 @@ class ConcurrentModelTrainer:
         from .triple_barrier import calculate_sample_weights_uniqueness
 
         price_series = pd.Series(range(len(X)))
-        return calculate_sample_weights_uniqueness(events, labels, price_series).values
+        weights_series = calculate_sample_weights_uniqueness(events, labels, price_series)
+        result_values = weights_series.values
+        return cast("np.ndarray", np.array(result_values, dtype=np.float64))
 
     def _combine_sample_weights(
         self,
@@ -263,7 +282,8 @@ class ConcurrentModelTrainer:
             Combined weights or None
         """
         if uniqueness_weights is not None and sample_weights is not None:
-            return sample_weights * uniqueness_weights
+            combined = cast("np.ndarray", sample_weights * uniqueness_weights)
+            return combined
         elif uniqueness_weights is not None:
             return uniqueness_weights
         else:
@@ -271,7 +291,7 @@ class ConcurrentModelTrainer:
 
     def train_models_concurrent(
         self,
-        models: dict[str, object],
+        models: dict[str, SklearnModel],
         X: pd.DataFrame | np.ndarray,
         y: pd.Series | np.ndarray,
         events: pd.Series | None = None,
@@ -357,7 +377,7 @@ class ConcurrentModelTrainer:
     def _train_single_model(
         self,
         model_name: str,
-        model: object,
+        model: SklearnModel,
         X: np.ndarray,
         y: np.ndarray,
         sample_weights: np.ndarray | None,
@@ -387,14 +407,14 @@ class ConcurrentModelTrainer:
         predictions = model.predict(X)
 
         # Get probabilities if available
-        probabilities = None
-        if hasattr(model, "predict_proba"):
+        probabilities: np.ndarray | None = None
+        if isinstance(model, SklearnModelWithProba):
             probabilities = model.predict_proba(X)
             if probabilities.shape[1] == 2:
                 probabilities = probabilities[:, 1]
 
         # Calculate score
-        score = np.mean(predictions == y)
+        score = float(np.mean(predictions == y))
 
         # Get feature importance if available
         feature_importance = {}
@@ -451,7 +471,7 @@ class ConcurrentModelTrainer:
         ensemble_pred, ensemble_proba = self._ensemble_predict(model_results, X, ensemble_weights)
 
         # Calculate ensemble score
-        ensemble_score = np.mean(ensemble_pred == y)
+        ensemble_score = float(np.mean(ensemble_pred == y))
 
         # Stacking model if requested
         stacking_model = None
@@ -585,7 +605,7 @@ class ConcurrentModelTrainer:
             predictions_list.append(pred)
 
         predictions = np.array(
-            [np.bincount(preds.astype(int)).argmax() for preds in zip(*predictions_list)]
+            [np.bincount(np.array(preds, dtype=int)).argmax() for preds in zip(*predictions_list)]
         )
 
         return predictions, None
@@ -617,7 +637,7 @@ class ConcurrentModelTrainer:
             pred = result.model.predict(X)
             weighted_pred += weight * pred
 
-            if result.probabilities is not None:
+            if result.probabilities is not None and isinstance(result.model, SklearnModelWithProba):
                 proba = result.model.predict_proba(X)
                 if proba.shape[1] == 2:
                     weighted_proba += weight * proba[:, 1]
@@ -641,7 +661,7 @@ class ConcurrentModelTrainer:
         y: np.ndarray,
         events: pd.Series | None,
         labels: pd.DataFrame | None,
-    ) -> object:
+    ) -> SklearnModel:
         """
         Create stacking meta-model.
 
@@ -705,7 +725,7 @@ class ConcurrentModelTrainer:
         else:
             meta_model.fit(X_meta, y)
 
-        return meta_model
+        return cast("SklearnModel", meta_model)
 
 
 class SequentialModelTrainer:
@@ -739,26 +759,27 @@ class SequentialModelTrainer:
             y = y.values
         return X, y
 
-    def _get_feature_importance(self, model: object) -> dict[str, float]:
+    def _get_feature_importance(self, model: SklearnModel) -> dict[str, float]:
         """Extract feature importance from model if available."""
-        feature_importance = {}
+        feature_importance: dict[str, float] = {}
         if hasattr(model, "feature_importances_"):
             importances = model.feature_importances_
             for i, imp in enumerate(importances):
                 feature_importance[f"feature_{i}"] = float(imp)
         return feature_importance
 
-    def _get_probabilities(self, model: object, X: np.ndarray) -> np.ndarray | None:
+    def _get_probabilities(self, model: SklearnModel, X: np.ndarray) -> np.ndarray | None:
         """Get probabilities from model if available."""
-        if hasattr(model, "predict_proba"):
+        if isinstance(model, SklearnModelWithProba):
             probabilities = model.predict_proba(X)
             if probabilities.shape[1] == 2:
                 return probabilities[:, 1]
+            return probabilities
         return None
 
     def train_models_sequential(
         self,
-        models: dict[str, object],
+        models: dict[str, SklearnModel],
         X: pd.DataFrame | np.ndarray,
         y: pd.Series | np.ndarray,
         events: pd.Series | None = None,
@@ -780,8 +801,8 @@ class SequentialModelTrainer:
         # Convert to numpy arrays (ARCH-004: Use helper method)
         X, y = self._convert_to_numpy(X, y)
 
-        model_results = []
-        used_indices = set()
+        model_results: list[ModelResult] = []
+        used_indices: set[int] = set()
 
         for model_name, model in models.items():
             # Determine which samples to use
@@ -803,7 +824,7 @@ class SequentialModelTrainer:
             predictions = model.predict(X)
 
             # Calculate score
-            score = np.mean(predictions[train_indices] == y_train)
+            score = float(np.mean(predictions[train_indices] == y_train))
 
             # Get probabilities (ARCH-004: Use helper method)
             probabilities = self._get_probabilities(model, X)
@@ -853,7 +874,7 @@ class SequentialModelTrainer:
             ensemble_pred += weights[result.model_name] * result.predictions
 
         ensemble_pred = (ensemble_pred >= 0.5).astype(int)
-        ensemble_score = np.mean(ensemble_pred == y)
+        ensemble_score = float(np.mean(ensemble_pred == y))
 
         return EnsembleResult(
             model_results=model_results,
@@ -869,7 +890,7 @@ class SequentialModelTrainer:
 
 
 def train_models_concurrent(
-    models: dict[str, object],
+    models: dict[str, SklearnModel],
     X: pd.DataFrame | np.ndarray,
     y: pd.Series | np.ndarray,
     events: pd.Series | None = None,

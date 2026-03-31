@@ -5,6 +5,8 @@ Dagster for orchestrating data pipelines, backtests, and model training.
 Upgraded to use real Dagster server API for production-grade orchestration.
 """
 
+from __future__ import annotations
+
 import asyncio
 import logging
 from dataclasses import dataclass, field

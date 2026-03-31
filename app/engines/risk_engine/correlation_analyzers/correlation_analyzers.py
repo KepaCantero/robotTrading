@@ -7,6 +7,8 @@ Implementa análisis de correlaciones:
 - Diversification scoring
 """
 
+from __future__ import annotations
+
 import logging
 from abc import ABC, abstractmethod
 from datetime import datetime

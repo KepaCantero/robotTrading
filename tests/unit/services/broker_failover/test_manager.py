@@ -11,7 +11,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from app.core.timezone_utils import utc_now
+from app.shared.utils.timezone_utils import utc_now
 from app.services.broker_failover import (
     BrokerConfig,
     BrokerFailoverManager,

@@ -20,7 +20,7 @@ import sys  # noqa: E402
 
 sys.path.insert(0, str(project_root))
 
-from app.optimization.parameter_stability_metrics import (  # noqa: E402
+from app.domain.optimization.parameter_stability_metrics import (  # noqa: E402
     ParameterStabilityMetrics,
     ParameterStabilityResult,
     StabilityReport,
