@@ -8,6 +8,8 @@ Permite paralelizar:
 - Ablation tests
 """
 
+from __future__ import annotations
+
 import logging
 import multiprocessing
 from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor, as_completed

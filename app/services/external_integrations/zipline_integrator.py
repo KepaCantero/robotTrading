@@ -4,6 +4,8 @@ T17.1.4: ZiplineIntegrator - Advanced backtesting framework integration
 Zipline-Reloaded for sophisticated backtesting with realistic order execution.
 """
 
+from __future__ import annotations
+
 import logging
 from dataclasses import dataclass, field
 from datetime import datetime

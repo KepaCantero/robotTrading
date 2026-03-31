@@ -5,6 +5,8 @@ Manages order placement, execution tracking, cancellation, and error handling.
 Integrates with BrokerConnector for actual order operations.
 """
 
+from __future__ import annotations
+
 import asyncio
 import logging
 import uuid

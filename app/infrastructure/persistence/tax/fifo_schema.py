@@ -21,23 +21,26 @@ Date: 2025-01-25
 Status: DESIGN PHASE - Not implemented
 """
 
+from __future__ import annotations
+
 import logging
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from decimal import Decimal
 from enum import Enum
-from typing import Optional
+from typing import Optional, cast
 from uuid import UUID, uuid4
 
 logger = logging.getLogger(__name__)
 
 import sqlalchemy as sa
-from sqlalchemy.dialects.postgresql import JSONB
-from sqlalchemy.dialects.postgresql import UUID as PGUUID
-from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.dialects.postgresql import JSONB, UUID as PGUUID
 from sqlalchemy.ext.hybrid import hybrid_property
+from sqlalchemy.orm import DeclarativeBase
 
-Base = declarative_base()
+
+class Base(DeclarativeBase):
+    """SQLAlchemy declarative base for FIFO tax schema."""
 
 
 # ============================================================================
@@ -274,7 +277,8 @@ class Transaction(Base):
         elif self.tx_type == TransactionType.SELL:
             # Cost basis comes from closed lots
             # This is calculated during lot closure
-            return self.meta_data.get("cost_basis_from_lots", Decimal("0"))
+            raw_value = self.meta_data.get("cost_basis_from_lots", Decimal("0"))
+            return cast("Decimal", raw_value)
         else:
             return Decimal("0")
 
@@ -760,7 +764,7 @@ class Modelo721Generator:
                     BalanceSnapshot.account_id == account.id,
                     year_extract == year,
                 )
-                .order_by(BalanceSnapshot.captured_at.desc())
+                .order_by(sa.desc(BalanceSnapshot.captured_at))
                 .first()
             )
 
@@ -774,7 +778,7 @@ class Modelo721Generator:
         closed_lots = (
             self.session.query(Lot)
             .filter(
-                Lot.account_id.in_([a.id for a in crypto_accounts]),
+                Lot.__table__.c.account_id.in_([a.id for a in crypto_accounts]),
                 Lot.tax_year_closed == year,
                 Lot.status == LotStatus.CLOSED,
             )

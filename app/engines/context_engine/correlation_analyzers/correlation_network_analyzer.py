@@ -4,6 +4,8 @@ CorrelationNetworkAnalyzer - Network analysis de correlaciones.
 Usa teoría de grafos para analizar correlaciones entre activos.
 """
 
+from __future__ import annotations
+
 import logging
 from typing import Any, Optional
 

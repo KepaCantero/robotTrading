@@ -15,6 +15,8 @@ Author: SRE Feedback Integration
 Date: 2025-01-25
 """
 
+from __future__ import annotations
+
 import logging
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
@@ -121,8 +123,8 @@ class Order:
     status: OrderStatus = OrderStatus.PENDING
     filled_quantity: Decimal = Decimal("0")
     avg_fill_price: Optional[Decimal] = None
-    created_at: datetime = None
-    updated_at: datetime = None
+    created_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
 
     def __post_init__(self):
         if self.created_at is None:
@@ -141,7 +143,7 @@ class OrderResult:
     execution_price: Optional[Decimal] = None
     filled_quantity: Decimal = Decimal("0")
     fees: Decimal = Decimal("0")
-    timestamp: datetime = None
+    timestamp: Optional[datetime] = None
 
     def __post_init__(self):
         if self.timestamp is None:

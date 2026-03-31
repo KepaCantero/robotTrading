@@ -7,6 +7,8 @@ Now includes Purged K-Fold with Embargo cross-validation as described in:
 "Advances in Financial Machine Learning" by Marcos López de Prado
 """
 
+from __future__ import annotations
+
 import logging
 from datetime import datetime
 from typing import Optional

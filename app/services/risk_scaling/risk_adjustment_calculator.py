@@ -5,9 +5,11 @@ Determines position scaling and risk limits based on feasibility_ratio,
 capital tier, and market conditions.
 """
 
+from __future__ import annotations
+
 import logging
 from decimal import Decimal
-from typing import ClassVar, Optional
+from typing import Any, ClassVar, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -246,7 +248,7 @@ class RiskAdjustmentCalculator:
         volatility_multiplier = Decimal(str(volatility_multiplier))
 
         # Get widening factor for risk tolerance
-        widening_factor = self.STOP_LOSS_WIDENING.get(risk_tolerance, Decimal("1.1"))
+        widening_factor: Decimal = self.STOP_LOSS_WIDENING.get(risk_tolerance, Decimal("1.1"))
 
         # Apply volatility adjustment
         adjusted_stop = recommended_stop_loss_pct * widening_factor * volatility_multiplier
@@ -271,7 +273,7 @@ class RiskAdjustmentCalculator:
         capital_tier: str,
         risk_tolerance: int = 4,
         market_volatility: str = "normal",
-    ) -> dict[str, any]:
+    ) -> dict[str, Any]:
         """
         Calculate both position and leverage adjustments comprehensively.
 

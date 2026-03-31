@@ -5,6 +5,8 @@ Este módulo implementa el motor de evaluación de señales, separando la lógic
 de evaluación de la gestión de señales y ejecución.
 """
 
+from __future__ import annotations
+
 import logging
 from datetime import datetime
 from typing import Any, Optional
@@ -31,9 +33,9 @@ class SignalEvaluationEngine:
         self.config = get_config().trading
 
         # Thresholds de evaluación
-        self.min_signal_strength = self.config.min_signal_strength
-        self.min_signal_confidence = self.config.min_signal_confidence
-        self.min_liquidity_score = self.config.min_liquidity_score
+        self.min_signal_strength: float = float(self.config.min_signal_strength)
+        self.min_signal_confidence: float = float(self.config.min_signal_confidence)
+        self.min_liquidity_score: float = float(self.config.min_liquidity_score)
 
         # Métricas de rendimiento
         self.evaluations_count = 0
@@ -99,8 +101,8 @@ class SignalEvaluationEngine:
     def _calculate_strength_score(self, market_data: MarketData, metadata: dict[str, Any]) -> float:
         """Calcular score de fuerza de la señal."""
         # Implementación simplificada basada en volatilidad y volumen
-        volatility = metadata.get("volatility", 0.0)
-        volume_ratio = metadata.get("volume_ratio", 1.0)
+        volatility: float = float(metadata.get("volatility", 0.0))
+        volume_ratio: float = float(metadata.get("volume_ratio", 1.0))
 
         # Score basado en volatilidad (mayor volatilidad = mayor fuerza
         # potencial)
@@ -119,8 +121,8 @@ class SignalEvaluationEngine:
     ) -> float:
         """Calcular score de confianza de la señal."""
         # Implementación simplificada basada en consistencia de datos
-        data_quality = metadata.get("data_quality", 0.8)
-        trend_consistency = metadata.get("trend_consistency", 0.7)
+        data_quality: float = float(metadata.get("data_quality", 0.8))
+        trend_consistency: float = float(metadata.get("trend_consistency", 0.7))
 
         # Score de calidad de datos
         quality_score = data_quality * 100
@@ -138,12 +140,13 @@ class SignalEvaluationEngine:
     ) -> float:
         """Calcular score de liquidez."""
         # Implementación simplificada basada en spread y volumen
-        spread_pct = metadata.get("spread_pct", 0.01)
-        avg_volume = metadata.get("avg_volume", 1000000)
+        spread_pct: float = float(metadata.get("spread_pct", 0.01))
+        avg_volume: float = float(metadata.get("avg_volume", 1000000))
 
         # Score basado en spread (menor spread = mayor liquidez) - use config BPS multiplier
         tt = get_config().trading_thresholds
-        spread_score = max(0, 100 - (spread_pct * tt.bps_multiplier))
+        bps_multiplier: float = float(tt.bps_multiplier)
+        spread_score = max(0, 100 - (spread_pct * bps_multiplier))
 
         # Score basado en volumen promedio
         volume_score = min(avg_volume / 1000000 * 50, 100.0)

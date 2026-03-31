@@ -5,6 +5,8 @@ Handles the execution of the trading pipeline stages with proper error handling,
 state tracking, and rollback capabilities.
 """
 
+from __future__ import annotations
+
 import asyncio
 import logging
 from datetime import datetime

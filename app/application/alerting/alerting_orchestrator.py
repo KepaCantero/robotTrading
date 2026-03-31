@@ -6,11 +6,13 @@ Coordinates MetricsDrivenAlerter, AlertRuleEngine, AlertManager, and
 NotificationDispatcher for comprehensive real-time alert monitoring.
 """
 
+from __future__ import annotations
+
 import asyncio
 import logging
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Callable, Optional
+from typing import Callable, Optional, cast
 
 from app.services.alerting_system.alert_manager import AlertManager
 from app.services.alerting_system.alert_rule_engine import AlertRuleEngine
@@ -321,7 +323,7 @@ class AlertingOrchestrator:
             True if acknowledged, False otherwise
         """
         try:
-            return self.alert_manager.acknowledge_alert(alert_id)
+            return cast("bool", self.alert_manager.acknowledge_alert(alert_id))
         except (asyncio.TimeoutError, OSError) as e:
             self.logger.error(f"Error acknowledging alert: {e!s}")
             return False
@@ -337,7 +339,7 @@ class AlertingOrchestrator:
             True if resolved, False otherwise
         """
         try:
-            return self.alert_manager.resolve_alert(alert_id)
+            return cast("bool", self.alert_manager.resolve_alert(alert_id))
         except (ValueError, TypeError, KeyError, AttributeError) as e:
             self.logger.error(f"Error resolving alert: {e!s}")
             return False

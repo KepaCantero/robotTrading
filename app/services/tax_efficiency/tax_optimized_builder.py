@@ -5,6 +5,8 @@ Combines TaxLossHarvester, WashSaleDetector, and CapitalGainTracker to create
 tax-efficient portfolio allocations.
 """
 
+from __future__ import annotations
+
 import logging
 from dataclasses import dataclass
 from decimal import Decimal
@@ -240,7 +242,7 @@ class TaxOptimizedPortfolioBuilder:
         # Score: 50-100 based on LT percentage (100 = 100% LT)
         score = Decimal("50") + (lt_percentage * Decimal("50"))
 
-        return min(score, Decimal("100"))
+        return Decimal(min(score, Decimal("100")))
 
 
 # Singleton

@@ -9,9 +9,11 @@ Implementa diferentes métodos de optimización de portfolio:
 - Handcrafted Weights (Carver's methodology)
 """
 
+from __future__ import annotations
+
 import logging
 from abc import ABC, abstractmethod
-from typing import Any, Callable, Optional, Union
+from typing import Any, Optional, Union, cast
 
 import numpy as np
 
@@ -24,8 +26,8 @@ try:
     HANDCRAFTED_AVAILABLE = True
 except ImportError:
     HANDCRAFTED_AVAILABLE = False
-    HandcraftedWeightsOptimizer: Optional[type[Any]] = None
-    create_handcrafted_weights: Optional[Callable[..., dict[str, float]]] = None
+    HandcraftedWeightsOptimizer = None
+    create_handcrafted_weights = None
 
 # Import HRP optimizer from separate file
 try:
@@ -40,10 +42,10 @@ try:
     logger.info("Hierarchical Risk Parity (HRP) optimizer is available")
 except ImportError:
     HRP_AVAILABLE = False
-    HierarchicalRiskParity: Optional[type[Any]] = None
-    HRPOptimizer: Optional[type[Any]] = None
-    compute_hrp_weights: Optional[Callable[..., np.ndarray]] = None
-    plot_hrp_dendrogram: Optional[Callable[..., Any]] = None
+    HierarchicalRiskParity = None
+    HRPOptimizer = None
+    compute_hrp_weights = None
+    plot_hrp_dendrogram = None
     logger.warning(
         "Hierarchical Risk Parity (HRP) optimizer could not be imported. Check scipy installation."
     )
@@ -55,7 +57,7 @@ try:
     CVXPY_AVAILABLE = True
     logger.info("cvxpy is available for convex optimization")
 except ImportError:
-    cp: Optional[Any] = None
+    cp = None
     CVXPY_AVAILABLE = False
     logger.warning(
         "cvxpy is not installed. Portfolio optimization will use scipy-based fallbacks. "
@@ -69,7 +71,7 @@ try:
     PYPFOPT_AVAILABLE = True
     logger.info("PyPortfolioOpt is available for efficient frontier optimization")
 except ImportError:
-    EfficientFrontier: Optional[type[Any]] = None
+    EfficientFrontier = None
     PYPFOPT_AVAILABLE = False
     logger.warning(
         "PyPortfolioOpt is not installed. Portfolio optimization will use basic methods. "
@@ -83,7 +85,7 @@ try:
     SCIPY_AVAILABLE = True
     logger.info("scipy.optimize is available")
 except ImportError:
-    minimize: Optional[Callable[..., Any]] = None
+    minimize = None
     SCIPY_AVAILABLE = False
     logger.error(
         "scipy is not installed and is REQUIRED for optimization. "
@@ -301,7 +303,7 @@ class MarkowitzOptimizer(BaseOptimizer):
                 return -1e10  # Penalizar portfolios con muy baja volatilidad
 
             sharpe_ratio = portfolio_return / portfolio_volatility
-            return -sharpe_ratio
+            return float(-sharpe_ratio)
 
         # Gradiente del negativo del Sharpe ratio
         def _negative_sharpe_gradient(weights: np.ndarray) -> np.ndarray:
@@ -311,7 +313,7 @@ class MarkowitzOptimizer(BaseOptimizer):
             portfolio_volatility = np.sqrt(portfolio_variance)
 
             if portfolio_volatility < 1e-10:
-                return np.zeros(n)
+                return cast("np.ndarray", np.zeros(n))
 
             # Gradiente de Sharpe ratio:
             # dSR/dw = (mu * sigma_p - r_p * (1/sigma_p) * Sigma * w) / sigma_p^2
@@ -323,7 +325,7 @@ class MarkowitzOptimizer(BaseOptimizer):
                 - portfolio_return * sigma_w / portfolio_volatility
             ) / (portfolio_volatility**2)
 
-            return -grad_sharpe
+            return cast("np.ndarray", np.array(-grad_sharpe))
 
         # Restricciones
         bounds = [(min_weight, max_weight) for _ in range(n)]
@@ -515,7 +517,7 @@ class RiskParityOptimizer(BaseOptimizer):
             """Analytical gradient for faster convergence."""
             portfolio_var = weights @ cov_matrix @ weights
             if portfolio_var <= 0:
-                return np.zeros(n)
+                return cast("np.ndarray", np.array([0.0] * n))
 
             sigma_w = cov_matrix @ weights
             rc = weights * sigma_w / portfolio_var
@@ -533,7 +535,7 @@ class RiskParityOptimizer(BaseOptimizer):
                         drc_dw -= rc[i] * 2 * sigma_w[j] / portfolio_var
                     grad[j] += 2 * diff[i] * drc_dw
 
-            return grad
+            return cast("np.ndarray", np.array(grad))
 
         # Use scipy.optimize.minimize with SLSQP
         try:
@@ -553,12 +555,12 @@ class RiskParityOptimizer(BaseOptimizer):
 
             if result.success:
                 self.logger.debug(f"Risk parity converged: {result.message}")
-                return result.x
+                return cast("np.ndarray", result.x)
             else:
                 self.logger.warning(f"Scipy optimization warning: {result.message}")
                 # Still use result if it's reasonable
                 if result.fun < 1e-4:
-                    return result.x
+                    return cast("np.ndarray", result.x)
                 # Otherwise fall back to iterative method
                 weights = self._get_inverse_volatility_weights(cov_matrix)
                 return self._risk_parity_fallback(cov_matrix, weights, target_risk, constraints)
@@ -574,7 +576,8 @@ class RiskParityOptimizer(BaseOptimizer):
         variances = np.diag(cov_matrix)
         variances = np.maximum(variances, 1e-10)
         inv_vol = 1.0 / np.sqrt(variances)
-        return inv_vol / inv_vol.sum()
+        result = inv_vol / inv_vol.sum()
+        return cast("np.ndarray", result)
 
     def _risk_parity_fallback(
         self,
@@ -594,7 +597,7 @@ class RiskParityOptimizer(BaseOptimizer):
 
             marginal_risk = cov_matrix @ weights
             risk_contributions = weights * marginal_risk / portfolio_var
-            error = np.sum((risk_contributions - target_risk) ** 2)
+            error: float = float(np.sum((risk_contributions - target_risk) ** 2))
 
             if error < tolerance:
                 self.logger.debug(f"Risk parity fallback converged: iter={iteration + 1}")
@@ -616,7 +619,7 @@ class RiskParityOptimizer(BaseOptimizer):
         """Calculate risk contributions for each asset."""
         portfolio_var = weights @ cov_matrix @ weights
         if portfolio_var <= 0:
-            return np.zeros(len(weights))
+            return cast("np.ndarray", np.zeros(len(weights)))
 
         portfolio_vol = np.sqrt(portfolio_var)
         marginal_risk = (cov_matrix @ weights) / portfolio_vol
@@ -625,8 +628,8 @@ class RiskParityOptimizer(BaseOptimizer):
         # Normalize to percentage
         total = risk_contributions.sum()
         if total > 0:
-            return risk_contributions / total
-        return risk_contributions
+            return cast("np.ndarray", risk_contributions / total)
+        return cast("np.ndarray", risk_contributions)
 
     def _equal_weight_fallback(self, n: int) -> dict[str, Any]:
         """Fallback a pesos iguales."""

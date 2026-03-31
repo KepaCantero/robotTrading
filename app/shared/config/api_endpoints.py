@@ -19,6 +19,8 @@ Usage:
     url = APIEndpoints.get_yahoo_finance_url(symbol)
 """
 
+from __future__ import annotations
+
 import logging
 import os
 from dataclasses import dataclass
@@ -143,14 +145,14 @@ class EndpointRegistry:
     Provides EndpointConfig objects that include both URL and timeout settings.
     """
 
-    _instance: Optional["EndpointRegistry"] = None
+    _instance: Optional[EndpointRegistry] = None
     _endpoints: dict[str, EndpointConfig]
 
     def __init__(self) -> None:
         """Initialize the endpoint registry."""
         self._endpoints = {}
 
-    def __new__(cls) -> "EndpointRegistry":
+    def __new__(cls) -> EndpointRegistry:
         """Singleton pattern for consistent endpoint configuration."""
         if cls._instance is None:
             logger.info("Creating EndpointRegistry singleton instance")

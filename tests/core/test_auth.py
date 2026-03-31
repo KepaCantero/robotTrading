@@ -21,7 +21,7 @@ import pytest
 from fastapi import HTTPException, status
 
 from app.shared.audit import AuditLogger
-from app.core.auth import (  # TypedDict classes; Main classes; Singleton getters; Dependencies; Utilities
+from app.security.authentication.auth import (  # TypedDict classes; Main classes; Singleton getters; Dependencies; Utilities
     APIKeyDict,
     AuthAttemptTracker,
     FailedAttemptsDict,

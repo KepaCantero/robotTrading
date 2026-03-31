@@ -10,6 +10,8 @@ Strategy:
 - Integrate with SmartOrderRouter for cost optimization
 """
 
+from __future__ import annotations
+
 import logging
 from datetime import datetime, timedelta
 from decimal import Decimal

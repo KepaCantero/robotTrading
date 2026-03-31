@@ -9,6 +9,8 @@ Database layer for persisting:
 - Module parameters for reproducibility
 """
 
+from __future__ import annotations
+
 import logging
 from dataclasses import dataclass
 from datetime import datetime
@@ -192,7 +194,7 @@ class ConfigurationRepository:
 
     def get_storage_stats(self) -> dict:
         """Get storage statistics."""
-        config_types = {}
+        config_types: dict[str, int] = {}
         for config in self._storage.values():
             config_types[config.config_type] = config_types.get(config.config_type, 0) + 1
 

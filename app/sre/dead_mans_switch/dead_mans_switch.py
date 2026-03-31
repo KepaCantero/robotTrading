@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 # mypy: ignore-errors
 """
 Dead Man's Switch - Health Check Monitoring
@@ -6,7 +8,6 @@ Implements a dead man's switch that requires periodic health check pings.
 If pings are missed, triggers alerts and automatic recovery actions.
 """
 
-from __future__ import annotations
 
 import asyncio
 import contextlib
@@ -228,8 +229,7 @@ class DeadMansSwitch:
             db_path.parent.mkdir(parents=True, exist_ok=True)
 
             async with aiosqlite.connect(self.config.db_path) as db:
-                await db.execute(
-                    """
+                await db.execute("""
                     CREATE TABLE IF NOT EXISTS heartbeats (
                         id INTEGER PRIMARY KEY AUTOINCREMENT,
                         service_name TEXT NOT NULL,
@@ -240,11 +240,9 @@ class DeadMansSwitch:
                         metadata TEXT,
                         created_at TEXT NOT NULL DEFAULT (datetime('utc'))
                     )
-                """
-                )
+                """)
 
-                await db.execute(
-                    """
+                await db.execute("""
                     CREATE TABLE IF NOT EXISTS incidents (
                         incident_id TEXT PRIMARY KEY,
                         service_name TEXT NOT NULL,
@@ -257,23 +255,18 @@ class DeadMansSwitch:
                         root_cause TEXT,
                         created_at TEXT NOT NULL DEFAULT (datetime('utc'))
                     )
-                """
-                )
+                """)
 
                 # Indexes
-                await db.execute(
-                    """
+                await db.execute("""
                     CREATE INDEX IF NOT EXISTS idx_heartbeats_service_timestamp
                     ON heartbeats(service_name, timestamp)
-                """
-                )
+                """)
 
-                await db.execute(
-                    """
+                await db.execute("""
                     CREATE INDEX IF NOT EXISTS idx_incidents_service_status
                     ON incidents(service_name, status)
-                """
-                )
+                """)
 
                 await db.commit()
 

@@ -12,10 +12,12 @@ Tiers:
 - Large ($250k+): Aggressive, all features available
 """
 
+from __future__ import annotations
+
 import logging
 from decimal import Decimal
 from enum import Enum
-from typing import ClassVar, Optional
+from typing import ClassVar, Optional, Union
 
 logger = logging.getLogger(__name__)
 
@@ -38,7 +40,7 @@ class AccountConfiguration:
     """
 
     # Tier definitions with capital ranges
-    TIER_BOUNDARIES: ClassVar[dict] = {
+    TIER_BOUNDARIES: ClassVar[dict[AccountTier, tuple[Decimal, Decimal]]] = {
         AccountTier.MICRO: (Decimal("0"), Decimal("15000")),
         AccountTier.SMALL: (Decimal("15000"), Decimal("50000")),
         AccountTier.MEDIUM: (Decimal("50000"), Decimal("250000")),
@@ -46,7 +48,7 @@ class AccountConfiguration:
     }
 
     # Recommended configurations per tier
-    TIER_CONFIGS: ClassVar[dict] = {
+    TIER_CONFIGS: ClassVar[dict[AccountTier, dict[str, Union[Decimal, int, str, bool]]]] = {
         AccountTier.MICRO: {
             "position_size_pct": Decimal("0.02"),  # 2% per position
             "max_concurrent_trades": 1,
@@ -152,13 +154,15 @@ class AccountConfiguration:
         """
         tier = AccountConfiguration.get_tier(capital)
         config = AccountConfiguration.TIER_CONFIGS[tier]
-        max_position = capital * config["position_size_pct"]
+        position_size_pct = config["position_size_pct"]
+        assert isinstance(position_size_pct, Decimal)
+        max_position = capital * position_size_pct
 
         if position_size > max_position:
             return False, (
                 f"Position size ${position_size:,.0f} exceeds maximum "
                 f"${max_position:,.0f} for {tier.value} tier "
-                f"({config['position_size_pct']:.0%} of ${capital:,.0f})"
+                f"({position_size_pct:.0%} of ${capital:,.0f})"
             )
 
         return True, f"Position size ${position_size:,.0f} acceptable for {tier.value} tier"
@@ -211,13 +215,17 @@ class AccountConfiguration:
         """
         tier = AccountConfiguration.get_tier(capital)
         config = AccountConfiguration.TIER_CONFIGS[tier]
+        position_size_pct = config["position_size_pct"]
+        max_daily_loss_pct = config["max_daily_loss_pct"]
+        assert isinstance(position_size_pct, Decimal)
+        assert isinstance(max_daily_loss_pct, Decimal)
 
         return {
             "tier": tier.value,
             "max_concurrent_trades": config["max_concurrent_trades"],
-            "max_position_size": capital * config["position_size_pct"],
-            "max_daily_loss_dollars": capital * config["max_daily_loss_pct"],
-            "max_daily_loss_pct": float(config["max_daily_loss_pct"]),
+            "max_position_size": capital * position_size_pct,
+            "max_daily_loss_dollars": capital * max_daily_loss_pct,
+            "max_daily_loss_pct": float(max_daily_loss_pct),
             "max_positions": config["max_positions"],
             "rebalance_frequency_days": config["rebalance_frequency_days"],
             "risk_level": config["risk_level"],
@@ -240,9 +248,9 @@ class AccountConfiguration:
         tier = AccountConfiguration.get_tier(capital)
         config = AccountConfiguration.TIER_CONFIGS[tier]
 
-        feature_map = {
-            "learning": config.get("learning_enabled", False),
-            "expensive_modules": config.get("expensive_modules_enabled", False),
+        feature_map: dict[str, bool] = {
+            "learning": bool(config.get("learning_enabled", False)),
+            "expensive_modules": bool(config.get("expensive_modules_enabled", False)),
         }
 
         return feature_map.get(feature, False)

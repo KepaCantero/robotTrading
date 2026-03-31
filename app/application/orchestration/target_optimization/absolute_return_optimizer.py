@@ -52,7 +52,9 @@ class TargetAlphaCalculator:
         total_required = pre_tax_amount + annual_commissions
 
         # Calculate as percentage of capital
-        required_alpha_pct = (total_required / target.capital * 100).quantize(Decimal("0.01"))
+        required_alpha_pct = Decimal(
+            str((total_required / target.capital * 100).quantize(Decimal("0.01")))
+        )
 
         self.logger.info(
             f"📊 Required alpha: {required_alpha_pct}% annually "
@@ -129,19 +131,18 @@ class CapacityFadeAnalyzer:
         for i, threshold in enumerate(sorted_thresholds):
             if capital <= threshold:
                 if i == 0:
-                    return self.CAPACITY_FADE_CURVE[threshold]
+                    return Decimal(str(self.CAPACITY_FADE_CURVE[threshold]))
                 # Interpolate between two thresholds
                 prev_threshold = sorted_thresholds[i - 1]
-                prev_multiplier = self.CAPACITY_FADE_CURVE[prev_threshold]
-                curr_multiplier = self.CAPACITY_FADE_CURVE[threshold]
+                prev_multiplier = Decimal(str(self.CAPACITY_FADE_CURVE[prev_threshold]))
+                curr_multiplier = Decimal(str(self.CAPACITY_FADE_CURVE[threshold]))
 
                 ratio = (capital - prev_threshold) / (threshold - prev_threshold)
-                return (prev_multiplier + (curr_multiplier - prev_multiplier) * ratio).quantize(
-                    Decimal("0.001")
-                )
+                interpolated = prev_multiplier + (curr_multiplier - prev_multiplier) * ratio
+                return Decimal(str(interpolated)).quantize(Decimal("0.001"))
 
         # Capital exceeds maximum threshold, use last multiplier
-        return self.CAPACITY_FADE_CURVE[sorted_thresholds[-1]]
+        return Decimal(str(self.CAPACITY_FADE_CURVE[sorted_thresholds[-1]]))
 
 
 class ParameterOptimizer:
@@ -245,7 +246,7 @@ class ParameterOptimizer:
         """
         tier = CapitalTierSelector.detect_tier(capital)
         config = CapitalTierSelector.get_tier_config(tier)
-        max_leverage = config["risk_profile"].leverage_allowed
+        max_leverage = Decimal(str(config["risk_profile"].leverage_allowed))
 
         # No leverage needed if already exceeding target
         if achievable_alpha_without_leverage >= target_alpha_pct:
@@ -256,12 +257,12 @@ class ParameterOptimizer:
             return Decimal("1.0")
 
         # Calculate required leverage
-        required_leverage = (target_alpha_pct / achievable_alpha_without_leverage).quantize(
-            Decimal("0.01")
-        )
+        required_leverage: Decimal = (
+            target_alpha_pct / achievable_alpha_without_leverage
+        ).quantize(Decimal("0.01"))
 
         # Cap at tier maximum
-        optimal_leverage = min(required_leverage, max_leverage)
+        optimal_leverage: Decimal = min(required_leverage, max_leverage)
 
         if optimal_leverage > Decimal("1.0"):
             self.logger.warning(

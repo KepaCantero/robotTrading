@@ -12,7 +12,7 @@ from datetime import datetime, timedelta, timezone
 
 import pytest
 
-from app.core.timezone_utils import (
+from app.shared.utils.timezone_utils import (
     ensure_timezone_aware,
     format_for_display,
     format_market_time,

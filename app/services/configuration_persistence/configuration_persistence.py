@@ -4,6 +4,8 @@ T11.1: ConfigurationPersistence - Persist strategy configurations
 Stores configurations with versioning, search, and retrieval capabilities.
 """
 
+from __future__ import annotations
+
 import logging
 from datetime import datetime
 from typing import Optional

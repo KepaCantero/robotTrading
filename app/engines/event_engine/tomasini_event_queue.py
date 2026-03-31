@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import asyncio
 import contextlib
+import heapq
 import logging
 import uuid
 from collections import deque
@@ -165,8 +166,10 @@ class TomasiniEventQueue:
             processing_timeout: Timeout for event processing (seconds)
             enable_history: Whether to maintain event history
         """
-        # Priority queue (implemented with sorted list for simplicity)
-        self._queue: list[Event] = []
+        # Priority queue (binary min-heap via heapq; priority is negated
+        # so that higher-priority events come out first)
+        self._queue: list[tuple[int, int, Event]] = []
+        self._sequence: int = 0
         self._queue_lock = asyncio.Lock()
 
         # Event processing
@@ -181,12 +184,13 @@ class TomasiniEventQueue:
         self._history: deque = deque(maxlen=10000 if enable_history else 0)
         self._enable_history = enable_history
 
-        # Statistics
-        self._stats = {
+        # Statistics (processing_time_ms is bounded to prevent memory leak)
+        self._max_stats_entries: int = 5000
+        self._stats: dict[str, Any] = {
             "events_processed": 0,
             "events_failed": 0,
             "events_timeout": 0,
-            "processing_time_ms": [],
+            "processing_time_ms": deque(maxlen=self._max_stats_entries),
         }
 
         logger.info("TomasiniEventQueue initialized")
@@ -236,26 +240,11 @@ class TomasiniEventQueue:
             event: Event to add
         """
         async with self._queue_lock:
-            # Insert in sorted order (higher priority first)
-            # For same priority, FIFO order (older events first)
-            inserted = False
-            for i, existing in enumerate(self._queue):
-                if event.priority > existing.priority:
-                    self._queue.insert(i, event)
-                    inserted = True
-                    break
-                elif event.priority == existing.priority:
-                    # Same priority, FIFO - insert after existing events with same priority
-                    # Find the last event with same priority
-                    j = i
-                    while j < len(self._queue) and self._queue[j].priority == event.priority:
-                        j += 1
-                    self._queue.insert(j, event)
-                    inserted = True
-                    break
-
-            if not inserted:
-                self._queue.append(event)
+            # heapq is a min-heap: negate priority so higher values pop first.
+            # The monotonically increasing sequence number preserves FIFO order
+            # among events that share the same priority level.
+            self._sequence += 1
+            heapq.heappush(self._queue, (-event.priority, self._sequence, event))
 
         logger.debug(
             f"Event added to queue: {event.event_type.value} "
@@ -332,7 +321,8 @@ class TomasiniEventQueue:
         async with self._queue_lock:
             if not self._queue:
                 return None
-            return self._queue.pop(0)  # Pop from front (highest priority)
+            _neg_pri, _seq, event = heapq.heappop(self._queue)
+            return event
 
     async def _handle_event(self, event: Event) -> None:
         """
@@ -497,11 +487,12 @@ class OrderSubmitHandler(OrderEventHandler):
         # For example: send to broker API, update order status, etc.
 
         # Emit acknowledgement event
-        await self.order_queue.create_order_event(
-            event_type=EventType.ORDER_ACKNOWLEDGE,
-            order=self._get_order(event.order_id),
-            priority=EventPriority.HIGH,
-        )
+        if event.order_id is not None:
+            await self.order_queue.create_order_event(
+                event_type=EventType.ORDER_ACKNOWLEDGE,
+                order=self._get_order(event.order_id),
+                priority=EventPriority.HIGH,
+            )
 
     def _get_order(self, order_id: str) -> Order:
         """

@@ -9,7 +9,7 @@ from app.models.signal import SignalType
 from app.services.momentum_analysis import TechnicalIndicatorCalculator
 from app.domain.strategies.mean_reversion import MeanReversionStrategy
 from app.domain.strategies.momentum import MomentumStrategy
-from app.domain.strategies.pairs_trading import PairsTradingStrategy
+from app.domain.strategies.pairs_trading import PairsTrading as PairsTradingStrategy
 
 """
 BLOQUE 3 — Pruebas de Señales

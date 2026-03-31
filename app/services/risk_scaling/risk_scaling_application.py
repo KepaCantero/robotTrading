@@ -5,6 +5,8 @@ Integrates RiskAdjustmentCalculator and LimitAdjuster to provide
 comprehensive risk management for the trading pipeline.
 """
 
+from __future__ import annotations
+
 import logging
 from decimal import Decimal
 from typing import Optional

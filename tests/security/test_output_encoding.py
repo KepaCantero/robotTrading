@@ -3,7 +3,7 @@ Tests for app/security/output_encoding.py
 """
 
 
-from app.security.output_encoding import (
+from app.security.web_security.output_encoding import (
     ContentSecurityPolicy,
     OutputEncoder,
     encode_for_css,

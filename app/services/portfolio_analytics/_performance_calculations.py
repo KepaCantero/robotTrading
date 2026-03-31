@@ -96,7 +96,7 @@ class PerformanceCalculations:
         if not returns:
             return Decimal("0")
 
-        avg_return = sum(returns) / len(returns)
+        avg_return = sum(returns, Decimal("0")) / Decimal(len(returns))
 
         annualization_factors = {
             "DAILY": 252,
@@ -105,9 +105,9 @@ class PerformanceCalculations:
             "QUARTERLY": 4,
             "YEARLY": 1,
         }
-        factor = annualization_factors.get(period_value, 365)
+        factor = Decimal(str(annualization_factors.get(period_value, 365)))
 
-        return avg_return * factor * 100
+        return avg_return * factor * Decimal("100")
 
     def calculate_cumulative_return(self, returns: list[Decimal]) -> Decimal:
         """
@@ -141,10 +141,12 @@ class PerformanceCalculations:
         if len(returns) < 2:
             return Decimal("0")
 
-        mean_return = sum(returns) / len(returns)
-        variance = sum((r - mean_return) ** 2 for r in returns) / (len(returns) - 1)
+        mean_return = sum(returns, Decimal("0")) / Decimal(len(returns))
+        variance = sum(((r - mean_return) ** 2 for r in returns), Decimal("0")) / Decimal(
+            len(returns) - 1
+        )
 
-        return (variance ** Decimal("0.5")) * 100
+        return (variance ** Decimal("0.5")) * Decimal("100")
 
     def calculate_sharpe_ratio(self, returns: list[Decimal]) -> Decimal:
         """
@@ -159,13 +161,13 @@ class PerformanceCalculations:
         if not returns:
             return Decimal("0")
 
-        avg_return = sum(returns) / len(returns)
-        volatility = self.calculate_volatility(returns) / 100
+        avg_return = sum(returns, Decimal("0")) / Decimal(len(returns))
+        volatility = self.calculate_volatility(returns) / Decimal("100")
 
         if volatility == 0:
             return Decimal("0")
 
-        risk_free_daily = self._risk_free_rate / 252
+        risk_free_daily = self._risk_free_rate / Decimal("252")
         excess_return = avg_return - risk_free_daily
 
         sharpe = excess_return / volatility
@@ -184,7 +186,7 @@ class PerformanceCalculations:
         if not returns:
             return Decimal("0")
 
-        avg_return = sum(returns) / len(returns)
+        avg_return = sum(returns, Decimal("0")) / Decimal(len(returns))
         downside_returns = [r for r in returns if r < 0]
 
         if not downside_returns:
@@ -195,7 +197,7 @@ class PerformanceCalculations:
         if downside_deviation == 0:
             return Decimal("0")
 
-        return (avg_return - self._risk_free_rate / 252) / downside_deviation
+        return (avg_return - self._risk_free_rate / Decimal("252")) / downside_deviation
 
     def calculate_max_drawdown(self, values: list[Decimal]) -> Decimal:
         """
@@ -274,8 +276,8 @@ class PerformanceCalculations:
         if not returns:
             return Decimal("0")
 
-        avg_return = sum(returns) / len(returns)
-        benchmark_return = self._benchmark_return / 252
+        avg_return = sum(returns, Decimal("0")) / Decimal(len(returns))
+        benchmark_return = self._benchmark_return / Decimal("252")
 
         excess_return = avg_return - benchmark_return
         tracking_error = self.calculate_tracking_error(returns)
@@ -300,9 +302,9 @@ class PerformanceCalculations:
         if not returns or beta == 0:
             return Decimal("0")
 
-        avg_return = sum(returns) / len(returns)
+        avg_return = sum(returns, Decimal("0")) / Decimal(len(returns))
 
-        treynor = (avg_return - self._risk_free_rate / 252) / beta
+        treynor = (avg_return - self._risk_free_rate / Decimal("252")) / beta
         return max(min(treynor, Decimal("10")), Decimal("-10"))
 
     def calculate_jensen_alpha(self, returns: list[Decimal], beta: Decimal) -> Decimal:
@@ -319,11 +321,11 @@ class PerformanceCalculations:
         if not returns:
             return Decimal("0")
 
-        avg_return = sum(returns) / len(returns)
-        benchmark_return = self._benchmark_return / 252
+        avg_return = sum(returns, Decimal("0")) / Decimal(len(returns))
+        benchmark_return = self._benchmark_return / Decimal("252")
 
-        alpha = (avg_return - self._risk_free_rate / 252) - beta * (
-            benchmark_return - self._risk_free_rate / 252
+        alpha = (avg_return - self._risk_free_rate / Decimal("252")) - beta * (
+            benchmark_return - self._risk_free_rate / Decimal("252")
         )
         return max(min(alpha, Decimal("1")), Decimal("-1"))
 
@@ -340,10 +342,10 @@ class PerformanceCalculations:
         if not returns:
             return Decimal("0")
 
-        benchmark_return = self._benchmark_return / 252
+        benchmark_return = self._benchmark_return / Decimal("252")
         excess_returns = [r - benchmark_return for r in returns]
 
-        return self.calculate_volatility(excess_returns) / 100
+        return self.calculate_volatility(excess_returns) / Decimal("100")
 
     def calculate_realized_volatility(self, returns: list[Decimal]) -> Decimal:
         """

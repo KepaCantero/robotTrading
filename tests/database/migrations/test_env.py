@@ -17,7 +17,7 @@ from unittest.mock import AsyncMock, MagicMock, Mock, patch
 import pytest
 
 # Import the env module AFTER conftest has mocked alembic.context
-from database.migrations import env
+from app.infrastructure.persistence.database.migrations import env
 from sqlalchemy import pool
 from sqlalchemy.exc import SQLAlchemyError
 
@@ -31,8 +31,8 @@ class TestRunMigrationsOffline:
         self.mock_config = MagicMock()
         self.mock_config.get_main_option = Mock(return_value="sqlite:///test.db")
 
-    @patch("database.migrations.env.logger")
-    @patch("database.migrations.env.context")
+    @patch("app.infrastructure.persistence.database.migrations.env.logger")
+    @patch("app.infrastructure.persistence.database.migrations.env.context")
     def test_run_migrations_offline_success(self, mock_context, mock_logger):
         """Test successful offline migration execution."""
         # Arrange
@@ -58,8 +58,8 @@ class TestRunMigrationsOffline:
             mock_logger.info.assert_any_call("Starting offline migration")
             mock_logger.info.assert_any_call("Offline migration completed successfully")
 
-    @patch("database.migrations.env.logger")
-    @patch("database.migrations.env.context")
+    @patch("app.infrastructure.persistence.database.migrations.env.logger")
+    @patch("app.infrastructure.persistence.database.migrations.env.context")
     def test_run_migrations_offline_raises_value_error_when_url_is_none(
         self, mock_context, mock_logger
     ):
@@ -78,8 +78,8 @@ class TestRunMigrationsOffline:
             error_call = mock_logger.error.call_args_list[0]
             assert "Database URL not configured" in str(error_call)
 
-    @patch("database.migrations.env.logger")
-    @patch("database.migrations.env.context")
+    @patch("app.infrastructure.persistence.database.migrations.env.logger")
+    @patch("app.infrastructure.persistence.database.migrations.env.context")
     def test_run_migrations_offline_raises_value_error_when_url_is_empty(
         self, mock_context, mock_logger
     ):
@@ -96,8 +96,8 @@ class TestRunMigrationsOffline:
 
             mock_logger.error.assert_called()
 
-    @patch("database.migrations.env.logger")
-    @patch("database.migrations.env.context")
+    @patch("app.infrastructure.persistence.database.migrations.env.logger")
+    @patch("app.infrastructure.persistence.database.migrations.env.context")
     def test_run_migrations_offline_logs_partial_url_for_security(self, mock_context, mock_logger):
         """Test that only partial URL is logged for security."""
         # Arrange
@@ -131,8 +131,8 @@ class TestRunMigrationsOffline:
 
             assert url_log_found, "URL logging call not found"
 
-    @patch("database.migrations.env.logger")
-    @patch("database.migrations.env.context")
+    @patch("app.infrastructure.persistence.database.migrations.env.logger")
+    @patch("app.infrastructure.persistence.database.migrations.env.context")
     def test_run_migrations_offline_handles_exception(self, mock_context, mock_logger):
         """Test that exceptions are properly logged and re-raised."""
         # Arrange
@@ -155,8 +155,8 @@ class TestDoRunMigrations:
         """Set up test fixtures."""
         self.mock_connection = MagicMock()
 
-    @patch("database.migrations.env.logger")
-    @patch("database.migrations.env.context")
+    @patch("app.infrastructure.persistence.database.migrations.env.logger")
+    @patch("app.infrastructure.persistence.database.migrations.env.context")
     def test_do_run_migrations_success(self, mock_context, mock_logger):
         """Test successful migration execution with connection."""
         # Arrange
@@ -178,8 +178,8 @@ class TestDoRunMigrations:
         mock_context.run_migrations.assert_called_once()
         mock_logger.info.assert_any_call("Database migrations completed successfully")
 
-    @patch("database.migrations.env.logger")
-    @patch("database.migrations.env.context")
+    @patch("app.infrastructure.persistence.database.migrations.env.logger")
+    @patch("app.infrastructure.persistence.database.migrations.env.context")
     def test_do_run_migrations_handles_sqlalchemy_error(self, mock_context, mock_logger):
         """Test SQLAlchemyError handling in do_run_migrations."""
         # Arrange
@@ -193,8 +193,8 @@ class TestDoRunMigrations:
         error_call = mock_logger.error.call_args
         assert "Database migration failed" in str(error_call)
 
-    @patch("database.migrations.env.logger")
-    @patch("database.migrations.env.context")
+    @patch("app.infrastructure.persistence.database.migrations.env.logger")
+    @patch("app.infrastructure.persistence.database.migrations.env.context")
     def test_do_run_migrations_handles_generic_exception(self, mock_context, mock_logger):
         """Test generic exception handling in do_run_migrations."""
         # Arrange
@@ -212,9 +212,9 @@ class TestDoRunMigrations:
 class TestRunAsyncMigrations:
     """Test suite for run_async_migrations function."""
 
-    @patch("database.migrations.env.do_run_migrations")
-    @patch("database.migrations.env.async_engine_from_config")
-    @patch("database.migrations.env.logger")
+    @patch("app.infrastructure.persistence.database.migrations.env.do_run_migrations")
+    @patch("app.infrastructure.persistence.database.migrations.env.async_engine_from_config")
+    @patch("app.infrastructure.persistence.database.migrations.env.logger")
     @pytest.mark.asyncio
     async def test_run_async_migrations_success(
         self, mock_logger, mock_async_engine, mock_do_run_migrations
@@ -261,8 +261,8 @@ class TestRunAsyncMigrations:
             mock_logger.info.assert_any_call("Closing async connection")
             mock_logger.info.assert_any_call("Disposing async engine")
 
-    @patch("database.migrations.env.async_engine_from_config")
-    @patch("database.migrations.env.logger")
+    @patch("app.infrastructure.persistence.database.migrations.env.async_engine_from_config")
+    @patch("app.infrastructure.persistence.database.migrations.env.logger")
     @pytest.mark.asyncio
     async def test_run_async_migrations_closes_connection_on_error(
         self, mock_logger, mock_async_engine
@@ -298,9 +298,9 @@ class TestRunAsyncMigrations:
             # Assert - P0: Verify engine was still disposed despite error
             mock_engine.dispose.assert_called_once()
 
-    @patch("database.migrations.env.do_run_migrations")
-    @patch("database.migrations.env.async_engine_from_config")
-    @patch("database.migrations.env.logger")
+    @patch("app.infrastructure.persistence.database.migrations.env.do_run_migrations")
+    @patch("app.infrastructure.persistence.database.migrations.env.async_engine_from_config")
+    @patch("app.infrastructure.persistence.database.migrations.env.logger")
     @pytest.mark.asyncio
     async def test_run_async_migrations_handles_connection_close_error(
         self, mock_logger, mock_async_engine, mock_do_run_migrations
@@ -335,9 +335,9 @@ class TestRunAsyncMigrations:
             # Assert - Engine should still be disposed
             mock_engine.dispose.assert_called_once()
 
-    @patch("database.migrations.env.do_run_migrations")
-    @patch("database.migrations.env.async_engine_from_config")
-    @patch("database.migrations.env.logger")
+    @patch("app.infrastructure.persistence.database.migrations.env.do_run_migrations")
+    @patch("app.infrastructure.persistence.database.migrations.env.async_engine_from_config")
+    @patch("app.infrastructure.persistence.database.migrations.env.logger")
     @pytest.mark.asyncio
     async def test_run_async_migrations_handles_engine_dispose_error(
         self, mock_logger, mock_async_engine, mock_do_run_migrations
@@ -369,8 +369,8 @@ class TestRunAsyncMigrations:
             error_calls = [str(call) for call in mock_logger.error.call_args_list]
             assert any("Error disposing async engine" in call for call in error_calls)
 
-    @patch("database.migrations.env.async_engine_from_config")
-    @patch("database.migrations.env.logger")
+    @patch("app.infrastructure.persistence.database.migrations.env.async_engine_from_config")
+    @patch("app.infrastructure.persistence.database.migrations.env.logger")
     @pytest.mark.asyncio
     async def test_run_async_migrations_handles_timeout_error(self, mock_logger, mock_async_engine):
         """Test asyncio.TimeoutError handling in async migrations."""
@@ -402,9 +402,9 @@ class TestRunAsyncMigrations:
             error_call = mock_logger.error.call_args
             assert "Async migration timed out" in str(error_call)
 
-    @patch("database.migrations.env.do_run_migrations")
-    @patch("database.migrations.env.async_engine_from_config")
-    @patch("database.migrations.env.logger")
+    @patch("app.infrastructure.persistence.database.migrations.env.do_run_migrations")
+    @patch("app.infrastructure.persistence.database.migrations.env.async_engine_from_config")
+    @patch("app.infrastructure.persistence.database.migrations.env.logger")
     @pytest.mark.asyncio
     async def test_run_async_migrations_uses_null_pool(
         self, mock_logger, mock_async_engine, mock_do_run_migrations
@@ -440,9 +440,9 @@ class TestRunAsyncMigrations:
 class TestRunMigrationsOnline:
     """Test suite for run_migrations_online function."""
 
-    @patch("database.migrations.env.do_run_migrations")
-    @patch("database.migrations.env.engine_from_config")
-    @patch("database.migrations.env.logger")
+    @patch("app.infrastructure.persistence.database.migrations.env.do_run_migrations")
+    @patch("app.infrastructure.persistence.database.migrations.env.engine_from_config")
+    @patch("app.infrastructure.persistence.database.migrations.env.logger")
     def test_run_migrations_online_sync_success(
         self, mock_logger, mock_engine_from_config, mock_do_run_migrations
     ):
@@ -473,9 +473,9 @@ class TestRunMigrationsOnline:
             mock_engine.dispose.assert_called_once()
             mock_logger.info.assert_any_call("Online migration completed successfully")
 
-    @patch("database.migrations.env.run_async_migrations")
-    @patch("database.migrations.env.asyncio")
-    @patch("database.migrations.env.logger")
+    @patch("app.infrastructure.persistence.database.migrations.env.run_async_migrations")
+    @patch("app.infrastructure.persistence.database.migrations.env.asyncio")
+    @patch("app.infrastructure.persistence.database.migrations.env.logger")
     def test_run_migrations_online_async_driver(
         self, mock_logger, mock_asyncio, mock_run_async_migrations
     ):
@@ -495,7 +495,7 @@ class TestRunMigrationsOnline:
             # asyncio.run is called with the coroutine
             assert mock_asyncio.run.called
 
-    @patch("database.migrations.env.logger")
+    @patch("app.infrastructure.persistence.database.migrations.env.logger")
     def test_run_migrations_online_raises_value_error_when_db_url_is_none(self, mock_logger):
         """Test P0: ValueError is raised when db_url is None."""
         # Arrange
@@ -513,8 +513,8 @@ class TestRunMigrationsOnline:
             error_call = mock_logger.error.call_args_list[0]
             assert "Database URL not configured" in str(error_call)
 
-    @patch("database.migrations.env.engine_from_config")
-    @patch("database.migrations.env.logger")
+    @patch("app.infrastructure.persistence.database.migrations.env.engine_from_config")
+    @patch("app.infrastructure.persistence.database.migrations.env.logger")
     def test_run_migrations_online_raises_value_error_when_db_url_is_empty(
         self, mock_logger, mock_engine_from_config
     ):
@@ -535,8 +535,8 @@ class TestRunMigrationsOnline:
             with pytest.raises(KeyError, match="url"):
                 env.run_migrations_online()
 
-    @patch("database.migrations.env.engine_from_config")
-    @patch("database.migrations.env.logger")
+    @patch("app.infrastructure.persistence.database.migrations.env.engine_from_config")
+    @patch("app.infrastructure.persistence.database.migrations.env.logger")
     def test_run_migrations_online_handles_sqlalchemy_error(
         self, mock_logger, mock_engine_from_config
     ):
@@ -558,9 +558,9 @@ class TestRunMigrationsOnline:
             error_call = mock_logger.error.call_args
             assert "Online migration failed" in str(error_call)
 
-    @patch("database.migrations.env.do_run_migrations")
-    @patch("database.migrations.env.engine_from_config")
-    @patch("database.migrations.env.logger")
+    @patch("app.infrastructure.persistence.database.migrations.env.do_run_migrations")
+    @patch("app.infrastructure.persistence.database.migrations.env.engine_from_config")
+    @patch("app.infrastructure.persistence.database.migrations.env.logger")
     def test_run_migrations_online_disposes_engine_on_error(
         self, mock_logger, mock_engine_from_config, mock_do_run_migrations
     ):
@@ -590,8 +590,8 @@ class TestRunMigrationsOnline:
             # This is a known issue - dispose should be in a finally block
             mock_engine.dispose.assert_not_called()
 
-    @patch("database.migrations.env.engine_from_config")
-    @patch("database.migrations.env.logger")
+    @patch("app.infrastructure.persistence.database.migrations.env.engine_from_config")
+    @patch("app.infrastructure.persistence.database.migrations.env.logger")
     def test_run_migrations_online_detects_aiosqlite_driver(
         self, mock_logger, mock_engine_from_config
     ):
@@ -601,7 +601,7 @@ class TestRunMigrationsOnline:
         mock_config.get_main_option = Mock(return_value="sqlite+aiosqlite:///test.db")
 
         with patch.object(env, "config", mock_config):
-            with patch("database.migrations.env.asyncio.run") as mock_asyncio_run:
+            with patch("app.infrastructure.persistence.database.migrations.env.asyncio.run") as mock_asyncio_run:
                 # Act
                 env.run_migrations_online()
 
@@ -609,9 +609,9 @@ class TestRunMigrationsOnline:
                 mock_logger.info.assert_any_call("Detected async driver, running async migrations")
                 assert mock_asyncio_run.called
 
-    @patch("database.migrations.env.do_run_migrations")
-    @patch("database.migrations.env.engine_from_config")
-    @patch("database.migrations.env.logger")
+    @patch("app.infrastructure.persistence.database.migrations.env.do_run_migrations")
+    @patch("app.infrastructure.persistence.database.migrations.env.engine_from_config")
+    @patch("app.infrastructure.persistence.database.migrations.env.logger")
     def test_run_migrations_online_uses_null_pool_for_sync(
         self, mock_logger, mock_engine_from_config, mock_do_run_migrations
     ):
@@ -644,8 +644,8 @@ class TestRunMigrationsOnline:
 class TestErrorHandlingAndLogging:
     """Test suite for comprehensive error handling and logging."""
 
-    @patch("database.migrations.env.logger")
-    @patch("database.migrations.env.context")
+    @patch("app.infrastructure.persistence.database.migrations.env.logger")
+    @patch("app.infrastructure.persistence.database.migrations.env.context")
     def test_offline_migration_error_includes_error_type_and_message(
         self, mock_context, mock_logger
     ):
@@ -668,9 +668,9 @@ class TestErrorHandlingAndLogging:
             error_call = error_calls[0]
             assert error_call[1].get("exc_info") is True
 
-    @patch("database.migrations.env.do_run_migrations")
-    @patch("database.migrations.env.async_engine_from_config")
-    @patch("database.migrations.env.logger")
+    @patch("app.infrastructure.persistence.database.migrations.env.do_run_migrations")
+    @patch("app.infrastructure.persistence.database.migrations.env.async_engine_from_config")
+    @patch("app.infrastructure.persistence.database.migrations.env.logger")
     @pytest.mark.asyncio
     async def test_async_migration_sqlalchemy_error_includes_detailed_context(
         self, mock_logger, mock_async_engine, mock_do_run_migrations
@@ -712,8 +712,8 @@ class TestErrorHandlingAndLogging:
             assert "error_message" in extra
             assert "SQLAlchemyError" in extra.get("error_type", "")
 
-    @patch("database.migrations.env.logger")
-    @patch("database.migrations.env.context")
+    @patch("app.infrastructure.persistence.database.migrations.env.logger")
+    @patch("app.infrastructure.persistence.database.migrations.env.context")
     def test_do_run_migrations_logs_start_and_completion(self, mock_context, mock_logger):
         """Test that migration start and completion are logged."""
         # Arrange

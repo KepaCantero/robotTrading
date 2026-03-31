@@ -8,9 +8,11 @@ Dynamically selects strategy configuration based on available capital:
 - Configures leverage limits
 """
 
+from __future__ import annotations
+
 import logging
 from decimal import Decimal
-from typing import ClassVar, Optional
+from typing import Any, ClassVar, Optional
 
 from .models import CapitalTier, CapitalTierResult, RiskProfile, StrategyFeatures
 
@@ -30,7 +32,7 @@ class CapitalTierSelector:
         CapitalTier.LARGE: (Decimal("250000"), Decimal("999999999")),
     }
 
-    TIER_CONFIGS: ClassVar[dict] = {
+    TIER_CONFIGS: ClassVar[dict[CapitalTier, dict[str, Any]]] = {
         CapitalTier.MICRO: {
             "strategy_type": "CONSERVATIVE",
             "expected_alpha_range": (Decimal("2"), Decimal("5")),
@@ -155,9 +157,12 @@ class CapitalTierSelector:
         raise ValueError(f"Capital €{capital} exceeds maximum threshold")
 
     @classmethod
-    def get_tier_config(cls, tier: CapitalTier) -> dict:
+    def get_tier_config(cls, tier: CapitalTier) -> dict[str, Any]:
         """Get configuration for a specific tier."""
-        return cls.TIER_CONFIGS.get(tier)
+        config = cls.TIER_CONFIGS.get(tier)
+        if config is None:
+            raise ValueError(f"No configuration found for tier {tier}")
+        return config
 
     @classmethod
     def select_strategy(cls, capital: Decimal) -> CapitalTierResult:
@@ -283,7 +288,7 @@ class RiskProfileScaler:
         """
         tier = CapitalTierSelector.detect_tier(capital)
         config = CapitalTierSelector.get_tier_config(tier)
-        risk_profile = config["risk_profile"]
+        risk_profile: RiskProfile = config["risk_profile"]
 
         self.logger.info(
             f"📈 Risk profile for €{capital}: risk_level={risk_profile.risk_level}, "
@@ -296,17 +301,17 @@ class RiskProfileScaler:
     def get_risk_level(self, capital: Decimal) -> int:
         """Get risk level (1-7) for capital."""
         risk_profile = self.scale_risk_profile(capital)
-        return risk_profile.risk_level
+        return int(risk_profile.risk_level)
 
     def get_max_leverage(self, capital: Decimal) -> Decimal:
         """Get maximum allowed leverage for capital."""
         risk_profile = self.scale_risk_profile(capital)
-        return risk_profile.leverage_allowed
+        return Decimal(str(risk_profile.leverage_allowed))
 
     def get_max_position_size(self, capital: Decimal) -> Decimal:
         """Get maximum position size (as % of capital) for tier."""
         risk_profile = self.scale_risk_profile(capital)
-        return risk_profile.max_position_size
+        return Decimal(str(risk_profile.max_position_size))
 
     def get_max_position_size_eur(self, capital: Decimal) -> Decimal:
         """Get maximum position size in EUR for capital."""
@@ -316,4 +321,4 @@ class RiskProfileScaler:
     def get_max_daily_loss_eur(self, capital: Decimal) -> Decimal:
         """Get maximum acceptable daily loss in EUR."""
         risk_profile = self.scale_risk_profile(capital)
-        return risk_profile.max_daily_loss
+        return Decimal(str(risk_profile.max_daily_loss))

@@ -12,7 +12,6 @@ Endpoints:
 """
 
 # mypy: ignore-errors
-
 from __future__ import annotations
 
 import logging
@@ -21,8 +20,6 @@ from datetime import datetime, timedelta
 from fastapi import APIRouter, Depends, HTTPException, Query
 from requests.exceptions import (
     ConnectionError as RequestsConnectionError,
-)
-from requests.exceptions import (
     HTTPError,
     RequestException,
 )

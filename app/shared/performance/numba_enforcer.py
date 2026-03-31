@@ -17,6 +17,8 @@ Date: 2026-01-28
 Version: 2.0.0 - MANDATORY ENFORCEMENT
 """
 
+from __future__ import annotations
+
 import logging
 import os
 from typing import Callable, Optional
@@ -99,7 +101,7 @@ def get_numba_version() -> Optional[str]:
     try:
         import numba
 
-        return numba.__version__
+        return str(numba.__version__)
     except ImportError:
         return None
 

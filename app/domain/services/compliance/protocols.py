@@ -12,7 +12,7 @@ Date: 2026-02-03
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING, Protocol
+from typing import TYPE_CHECKING, Protocol, runtime_checkable
 
 if TYPE_CHECKING:
     from datetime import datetime
@@ -27,6 +27,7 @@ logger = logging.getLogger(__name__)
 # =============================================================================
 
 
+@runtime_checkable
 class ComplianceService(Protocol):
     """
     Base protocol for all compliance services.
@@ -55,6 +56,7 @@ class ComplianceService(Protocol):
 # =============================================================================
 
 
+@runtime_checkable
 class PreTradeCheckable(ComplianceService, Protocol):
     """
     Protocol for services that can perform pre-trade checks.
@@ -109,6 +111,7 @@ class PreTradeCheckable(ComplianceService, Protocol):
 # =============================================================================
 
 
+@runtime_checkable
 class PostTradeCheckable(ComplianceService, Protocol):
     """
     Protocol for services that can perform post-trade analysis.

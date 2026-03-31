@@ -10,6 +10,8 @@ Analyzes seasonal patterns in strategy returns:
 - Markdown report generation
 """
 
+from __future__ import annotations
+
 import logging
 from datetime import datetime
 from decimal import Decimal

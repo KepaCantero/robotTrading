@@ -11,6 +11,8 @@ This is a CRITICAL component for production trading.
 Uses centralized configuration for all thresholds.
 """
 
+from __future__ import annotations
+
 import asyncio
 import logging
 from dataclasses import dataclass, field

@@ -11,6 +11,8 @@ Capabilities:
 - Clear error messages for invalid inputs
 """
 
+from __future__ import annotations
+
 import logging
 from decimal import Decimal
 from enum import Enum

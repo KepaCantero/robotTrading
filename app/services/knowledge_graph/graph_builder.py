@@ -7,6 +7,8 @@ market correlations, and trading pattern discovery.
 Rule 28 Compliant: Uses environment variables for credentials.
 """
 
+from __future__ import annotations
+
 import logging
 import os
 from typing import Any, Optional

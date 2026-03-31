@@ -13,6 +13,8 @@ SOLID Principles:
 - Open/Closed: Extensible con nuevos modelos de pricing
 """
 
+from __future__ import annotations
+
 import logging
 import math
 from decimal import Decimal

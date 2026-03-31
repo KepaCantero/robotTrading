@@ -2,6 +2,8 @@
 FeatureExtractor - Extrae features completas para learning engines.
 """
 
+from __future__ import annotations
+
 import logging
 from datetime import datetime
 from typing import Any, Optional

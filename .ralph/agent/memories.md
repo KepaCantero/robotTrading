@@ -18,6 +18,10 @@
 
 ## Fixes
 
+### mem-1774897554-2d91
+> app/domain/tax/ was an orphan directory with unreferenced SQLAlchemy and aiohttp/aiosqlite files. Deleted in iteration 6. The canonical fifo_schema.py is at app/infrastructure/persistence/tax/fifo_schema.py. modelo_721_exporter.py had zero references anywhere.
+<!-- tags: architecture, dead-code, domain-purity | created: 2026-03-30 -->
+
 ### mem-1774707451-06d7
 > Fixed corrupted Depends/Query names (epends->Depends, uery->Query) in app/presentation/ files. Added extend-immutable-calls to .flake8 for FastAPI patterns (Depends, Query, Path, Security, Body, Field, Form, Header, Cookie, File) to properly handle B008 without noqa. auth.py Security() calls moved to module-level vars.
 <!-- tags: flake8, fastapi, B008 | created: 2026-03-28 -->

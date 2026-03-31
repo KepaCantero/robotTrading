@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import logging
 from datetime import datetime
-from typing import TYPE_CHECKING, Annotated
+from typing import TYPE_CHECKING
 
 from fastapi import APIRouter, HTTPException, Query
 from requests.exceptions import HTTPError, RequestException
@@ -113,8 +113,8 @@ async def get_deployment_decision(decision_id: str) -> dict:
 
 @router.get("/decisions")
 async def list_deployment_decisions(
-    limit: Annotated[int, Query(10, ge=1, le=100)],
-    offset: Annotated[int, Query(0, ge=0)],
+    limit: int = Query(default=10, ge=1, le=100),
+    offset: int = Query(default=0, ge=0),
 ) -> dict:
     """
     List recent deployment decisions.

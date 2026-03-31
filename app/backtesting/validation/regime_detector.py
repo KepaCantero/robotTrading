@@ -157,7 +157,7 @@ class RegimeDetector:
         Returns:
             List of MarketRegime objects representing regime history
         """
-        regimes = []
+        regimes: list[MarketRegime] = []
 
         # Use rolling window for regime detection
         window = self.config.lookback_period
@@ -361,9 +361,11 @@ class RegimeDetector:
 
             # Calculate R^2
             y_pred = slope * x + intercept
-            ss_res = np.sum((lookback_prices.values - y_pred) ** 2)
-            ss_tot = np.sum((lookback_prices.values - np.mean(lookback_prices.values)) ** 2)
-            r_squared = 1 - (ss_res / ss_tot) if ss_tot > 0 else 0
+            ss_res: float = float(np.sum((lookback_prices.values - y_pred) ** 2))
+            ss_tot: float = float(
+                np.sum((lookback_prices.values - np.mean(lookback_prices.values)) ** 2)
+            )
+            r_squared: float = float(1 - (ss_res / ss_tot)) if ss_tot > 0 else 0
         else:
             r_squared = 0
             slope = 0
@@ -434,7 +436,7 @@ class RegimeDetector:
             confidence_factors.append(max(1.0 - vol_cv, 0.5))
 
         # Return average confidence
-        return np.mean(confidence_factors)
+        return float(np.mean(confidence_factors))
 
     def _calculate_expected_duration(
         self,

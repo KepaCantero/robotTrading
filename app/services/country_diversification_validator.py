@@ -4,6 +4,8 @@ Country Diversification Validator - TASK-5.6-SECTOR-COUNTRY-DIVERSIFICATION
 Validates country/geographic concentration constraints and generates rebalancing recommendations.
 """
 
+from __future__ import annotations
+
 import logging
 from decimal import Decimal
 from typing import Any, Optional

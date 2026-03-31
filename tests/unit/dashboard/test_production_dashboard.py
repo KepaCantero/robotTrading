@@ -32,7 +32,7 @@ from typing import List, Optional
 import numpy as np
 import pytest
 
-from app.dashboard.production_dashboard import (
+from app.presentation.dashboard.production_dashboard import (
     DashboardMetrics,
     HistoricalDataPoint,
     ProductionDashboard,

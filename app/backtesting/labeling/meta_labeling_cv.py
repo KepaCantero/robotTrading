@@ -53,11 +53,22 @@ from __future__ import annotations
 import logging
 from dataclasses import dataclass, field
 from datetime import datetime
+from typing import TYPE_CHECKING, Protocol
 
 import numpy as np
 import pandas as pd
 
+if TYPE_CHECKING:
+    from collections.abc import Generator
+
 logger = logging.getLogger(__name__)
+
+
+class SklearnModel(Protocol):
+    """Protocol for sklearn-like models with fit/predict."""
+
+    def fit(self, X: np.ndarray, y: np.ndarray, **kwargs) -> object: ...
+    def predict(self, X: np.ndarray) -> np.ndarray: ...
 
 
 @dataclass
@@ -122,7 +133,7 @@ class CVResult:
 
     timestamp: datetime = field(default_factory=datetime.now)
 
-    def to_dict(self) -> dict[str, str | int | float | bool | list | None]:
+    def to_dict(self) -> dict[str, str | int | float | bool | list | dict | None]:
         """Convert to dictionary."""
         return {
             "fold_scores": self.fold_scores,
@@ -175,7 +186,7 @@ class PurgedKFold:
         events: pd.Series | None = None,
         labels: pd.DataFrame | None = None,
         y: pd.Series | np.ndarray | None = None,
-    ) -> tuple[np.ndarray, np.ndarray]:
+    ) -> Generator[tuple[np.ndarray, np.ndarray], None, None]:
         """
         Generate purged train/test splits.
 
@@ -297,7 +308,7 @@ class PurgedKFold:
             # Events are already in the dataframe index
             return np.arange(len(events))
         else:
-            return events.values
+            return np.asarray(events.values)
 
     def _label_overlaps_test(
         self,
@@ -325,7 +336,7 @@ class PurgedKFold:
         label_end = event_idx + int(holding_period)
 
         # Check if label overlaps with test set
-        return label_end > test_start and event_idx < test_end
+        return bool(label_end > test_start and event_idx < test_end)
 
 
 class MetaLabelingCV:
@@ -380,8 +391,8 @@ class MetaLabelingCV:
 
     def cross_validate(
         self,
-        primary_model: object,
-        meta_model: object,
+        primary_model: SklearnModel,
+        meta_model: SklearnModel,
         X: pd.DataFrame | np.ndarray,
         y: pd.Series | np.ndarray,
         events: pd.Series | None = None,
@@ -466,8 +477,8 @@ class MetaLabelingCV:
             logger.info(f"Fold {fold_idx + 1} score: {score:.4f}")
 
         # Calculate aggregate statistics
-        mean_score = np.mean(fold_scores)
-        std_score = np.std(fold_scores)
+        mean_score = float(np.mean(fold_scores))
+        std_score = float(np.std(fold_scores))
 
         return CVResult(
             fold_scores=fold_scores,
@@ -506,7 +517,7 @@ class MetaLabelingCV:
             # Combined accuracy: only count when meta-model says yes
             mask = meta_pred == 1
             if mask.sum() > 0:
-                return np.mean(primary_pred[mask] == y_true[mask])
+                return float(np.mean(primary_pred[mask] == y_true[mask]))
             else:
                 return 0.0
 
@@ -515,7 +526,7 @@ class MetaLabelingCV:
 
             # F1 score of meta-labels
             meta_labels_true = (primary_pred == y_true).astype(int)
-            return f1_score(meta_labels_true, meta_pred)
+            return float(f1_score(meta_labels_true, meta_pred))
 
         elif self.scoring == "roc_auc":
             from sklearn.metrics import roc_auc_score
@@ -526,18 +537,18 @@ class MetaLabelingCV:
             # Need probabilities for ROC AUC
             # For now, use binary predictions
             try:
-                return roc_auc_score(meta_labels_true, meta_pred)
+                return float(roc_auc_score(meta_labels_true, meta_pred))
             except ValueError:
                 # If only one class present
                 return 0.5
 
         else:
-            return np.mean(primary_pred == y_true)
+            return float(np.mean(primary_pred == y_true))
 
 
 def cv_score_meta_labeling(
-    primary_model: object,
-    meta_model: object,
+    primary_model: SklearnModel,
+    meta_model: SklearnModel,
     X: pd.DataFrame | np.ndarray,
     y: pd.Series | np.ndarray,
     events: pd.Series | None = None,
@@ -546,7 +557,7 @@ def cv_score_meta_labeling(
     purge_pct: float = 0.05,
     embargo_pct: float = 0.01,
     scoring: str = "accuracy",
-) -> dict[str, float]:
+) -> dict[str, float | list[float]]:
     """
     Calculate cross-validation score for meta-labeling.
 
@@ -634,7 +645,7 @@ class SequentialBootstrap:
         self,
         X: pd.DataFrame | np.ndarray,
         y: pd.Series | np.ndarray | None = None,
-    ) -> tuple[np.ndarray, np.ndarray]:
+    ) -> Generator[tuple[np.ndarray, np.ndarray], None, None]:
         """
         Generate sequential train/test splits.
 

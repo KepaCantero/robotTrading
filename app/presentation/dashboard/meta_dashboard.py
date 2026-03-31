@@ -9,6 +9,8 @@ Dashboard avanzado con:
 - Indicadores avanzados (Stability Index, Learning Retention, etc.)
 """
 
+from __future__ import annotations
+
 import logging
 from pathlib import Path
 from typing import Any, Optional

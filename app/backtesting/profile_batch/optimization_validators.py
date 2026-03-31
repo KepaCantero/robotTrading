@@ -16,7 +16,7 @@ from __future__ import annotations
 
 import logging
 import uuid
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Union
 
 import numpy as np
 import pandas as pd
@@ -26,6 +26,7 @@ from app.backtesting.comprehensive_backtest_runner import ComprehensiveBacktestR
 from app.backtesting.shared import MetricsDict, get_empty_metrics
 
 if TYPE_CHECKING:
+    from collections.abc import Mapping
     from pathlib import Path
 
     from app.domain.models.input_profile import InputProfile
@@ -34,8 +35,22 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 # Type aliases (additional ones not in shared module)
-ConfigDict = dict[str, Any]
-ValidationResultDict = dict[str, Any]  # Contains 'passed' bool and validation metrics
+ConfigDict = dict[str, object]
+ValidationResultDict = dict[str, Union[bool, int, float, str, object]]
+
+
+def _safe_float(value: float | int | str | bool | None, default: float = 0.0) -> float:
+    """Extract a float from a MetricsDict value, returning default if not numeric."""
+    if isinstance(value, (int, float)) and not isinstance(value, bool):
+        return float(value)
+    return default
+
+
+def _safe_int(value: float | int | str | bool | None, default: int = 0) -> int:
+    """Extract an int from a MetricsDict value, returning default if not numeric."""
+    if isinstance(value, (int, float)) and not isinstance(value, bool):
+        return int(value)
+    return default
 
 
 class WalkForwardValidator:
@@ -53,7 +68,7 @@ class WalkForwardValidator:
     def __init__(
         self,
         output_dir: Path,
-        validation_config: dict[str, Any],
+        validation_config: dict[str, object],
         profile_config_loader: ProfileConfigLoader | None = None,
     ):
         """
@@ -69,7 +84,7 @@ class WalkForwardValidator:
         self.profile_config_loader = profile_config_loader
 
     def validate(
-        self, profile: InputProfile, config: ConfigDict, params: dict[str, Any]
+        self, profile: InputProfile, config: ConfigDict, params: dict[str, object]
     ) -> ValidationResultDict:
         """
         Run walk-forward validation.
@@ -86,12 +101,19 @@ class WalkForwardValidator:
 
         # Load config
         wf_config = self.validation_config.get("walk_forward", {})
-        n_windows = wf_config.get("n_windows", 5)
-        train_pct = wf_config.get("train_percentage", 0.6)
+        n_windows = (
+            _safe_int(wf_config.get("n_windows", 5), 5) if isinstance(wf_config, dict) else 5
+        )
+        train_pct_raw = (
+            wf_config.get("train_percentage", 0.6) if isinstance(wf_config, dict) else 0.6
+        )
+        train_pct = _safe_float(train_pct_raw, 0.6)
 
         # Get dates
-        start_date = pd.Timestamp(config.get("input", {}).get("start_date", "2020-01-01"))
-        end_date = pd.Timestamp(config.get("input", {}).get("end_date", "2023-12-31"))
+        input_cfg = config.get("input", {})
+        input_dict = input_cfg if isinstance(input_cfg, dict) else {}
+        start_date = pd.Timestamp(input_dict.get("start_date", "2020-01-01"))
+        end_date = pd.Timestamp(input_dict.get("end_date", "2023-12-31"))
         total_days = (end_date - start_date).days
 
         if total_days < 365:
@@ -102,7 +124,7 @@ class WalkForwardValidator:
         train_size = int(window_size * train_pct)
         test_size = int(window_size * (1 - train_pct))
 
-        window_results = []
+        window_results: list[dict[str, float]] = []
         for i in range(n_windows):
             try:
                 window_start = start_date + pd.Timedelta(days=int(i * window_size))
@@ -112,26 +134,30 @@ class WalkForwardValidator:
                 if test_end > end_date:
                     test_end = end_date
 
-                window_config = config.copy()
-                window_config["input"]["start_date"] = window_start.strftime("%Y-%m-%d")
-                window_config["input"]["end_date"] = train_end.strftime("%Y-%m-%d")
+                window_config = dict(config)
+                window_config["input"] = {
+                    "start_date": window_start.strftime("%Y-%m-%d"),
+                    "end_date": train_end.strftime("%Y-%m-%d"),
+                }
 
-                test_config = config.copy()
-                test_config["input"]["start_date"] = train_end.strftime("%Y-%m-%d")
-                test_config["input"]["end_date"] = test_end.strftime("%Y-%m-%d")
+                test_config = dict(config)
+                test_config["input"] = {
+                    "start_date": train_end.strftime("%Y-%m-%d"),
+                    "end_date": test_end.strftime("%Y-%m-%d"),
+                }
 
                 train_results = self._run_backtest_with_params(profile, window_config, params)
                 test_results = self._run_backtest_with_params(profile, test_config, params)
 
-                train_sharpe = train_results.get("sharpe_ratio", 0)
-                test_sharpe = test_results.get("sharpe_ratio", 0)
+                train_sharpe = _safe_float(train_results.get("sharpe_ratio", 0))
+                test_sharpe = _safe_float(test_results.get("sharpe_ratio", 0))
 
                 window_results.append(
                     {
-                        "window": i,
+                        "window": float(i),
                         "train_sharpe": train_sharpe,
                         "test_sharpe": test_sharpe,
-                        "sharpe_decay": train_sharpe - test_sharpe if train_sharpe > 0 else 0,
+                        "sharpe_decay": train_sharpe - test_sharpe if train_sharpe > 0 else 0.0,
                     }
                 )
 
@@ -142,24 +168,27 @@ class WalkForwardValidator:
             return {"passed": False, "error": "All windows failed"}
 
         test_sharpes = [w["test_sharpe"] for w in window_results]
-        avg_sharpe = np.mean(test_sharpes)
-        std_sharpe = np.std(test_sharpes)
+        avg_sharpe = float(np.mean(test_sharpes))
+        std_sharpe = float(np.std(test_sharpes))
 
         passed = avg_sharpe >= 0.5
 
         return {
             "passed": passed,
-            "avg_sharpe": float(avg_sharpe),
-            "std_sharpe": float(std_sharpe),
-            "n_windows": len(window_results),
+            "avg_sharpe": avg_sharpe,
+            "std_sharpe": std_sharpe,
+            "n_windows": float(len(window_results)),
         }
 
     def _run_backtest_with_params(
-        self, profile: InputProfile, config: ConfigDict, params: dict[str, Any]
+        self, profile: InputProfile, config: ConfigDict, params: dict[str, object]
     ) -> MetricsDict:
         """Run backtest with specific parameters."""
-        updated_config = config.copy()
-        updated_config["strategy"].update(params)
+        updated_config = dict(config)
+        strategy_cfg = updated_config.get("strategy", {})
+        if isinstance(strategy_cfg, dict):
+            strategy_cfg.update(params)
+            updated_config["strategy"] = strategy_cfg
 
         temp_config_path = self.output_dir / f"temp_wf_{uuid.uuid4().hex[:8]}.yaml"
         with open(temp_config_path, "w") as f:
@@ -168,13 +197,24 @@ class WalkForwardValidator:
         try:
             runner = ComprehensiveBacktestRunner(str(temp_config_path))
             results = runner.run_baseline_backtest()
-            return results[0] if results else self._get_empty_metrics()
+            if results:
+                return self._coerce_to_metrics_dict(results[0])
+            return self._get_empty_metrics()
         except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
             logger.error(f"Backtest failed: {e}")
             return self._get_empty_metrics()
         finally:
             if temp_config_path.exists():
                 temp_config_path.unlink()
+
+    @staticmethod
+    def _coerce_to_metrics_dict(raw: Mapping[str, object]) -> MetricsDict:
+        """Coerce a ResultDict to MetricsDict by filtering values to valid types."""
+        out: MetricsDict = {}
+        for key, value in raw.items():
+            if isinstance(value, (float, int, str, bool)) or value is None:
+                out[key] = value
+        return out
 
     # Delegates to shared MetricsFactory (eliminates duplicate code)
     def _get_empty_metrics(self) -> MetricsDict:
@@ -197,7 +237,7 @@ class MonteCarloSimulator:
     def __init__(
         self,
         output_dir: Path,
-        validation_config: dict[str, Any],
+        validation_config: dict[str, object],
         profile_config_loader: ProfileConfigLoader | None = None,
     ):
         """
@@ -213,7 +253,7 @@ class MonteCarloSimulator:
         self.profile_config_loader = profile_config_loader
 
     def simulate(
-        self, profile: InputProfile, config: ConfigDict, params: dict[str, Any]
+        self, profile: InputProfile, config: ConfigDict, params: dict[str, object]
     ) -> ValidationResultDict:
         """
         Run Monte Carlo simulation.
@@ -229,21 +269,39 @@ class MonteCarloSimulator:
         logger.info("Running Monte Carlo simulation")
 
         mc_config = self.validation_config.get("monte_carlo", {})
-        n_simulations = mc_config.get("n_simulations", 1000)
-        min_profitable_pct = mc_config.get("min_profitable_pct", 0.95)
+        if not isinstance(mc_config, dict):
+            mc_config = {}
+        n_simulations = _safe_int(mc_config.get("n_simulations", 1000), 1000)
+        min_profitable_pct = _safe_float(mc_config.get("min_profitable_pct", 0.95), 0.95)
 
         # Get backtest results
+        returns_series: np.ndarray[tuple[int], np.dtype[np.float64]]
         try:
             backtest_results = self._run_backtest_with_params(profile, config, params)
-            returns_series = backtest_results.get("returns_series")
+            raw_returns = backtest_results.get("returns_series")
 
-            if returns_series is None or len(returns_series) == 0:
-                total_return = backtest_results.get("return_pct", 0)
-                total_trades = backtest_results.get("total_trades", 1)
+            if raw_returns is None or (
+                isinstance(raw_returns, (list, np.ndarray)) and len(raw_returns) == 0
+            ):
+                total_return = _safe_float(backtest_results.get("return_pct", 0))
+                total_trades = _safe_int(backtest_results.get("total_trades", 1))
 
                 if total_trades > 0:
                     avg_return = total_return / total_trades
-                    volatility = backtest_results.get("volatility", 0.15)
+                    volatility = _safe_float(backtest_results.get("volatility", 0.15), 0.15)
+                    returns_series = np.random.normal(avg_return, volatility, total_trades)
+                else:
+                    return {"passed": False, "error": "No trade data"}
+            elif isinstance(raw_returns, np.ndarray):
+                returns_series = raw_returns.astype(np.float64)
+            elif isinstance(raw_returns, (list, tuple)):
+                returns_series = np.array(raw_returns, dtype=np.float64)
+            else:
+                total_return = _safe_float(backtest_results.get("return_pct", 0))
+                total_trades = _safe_int(backtest_results.get("total_trades", 1))
+                if total_trades > 0:
+                    avg_return = total_return / total_trades
+                    volatility = _safe_float(backtest_results.get("volatility", 0.15), 0.15)
                     returns_series = np.random.normal(avg_return, volatility, total_trades)
                 else:
                     return {"passed": False, "error": "No trade data"}
@@ -252,32 +310,35 @@ class MonteCarloSimulator:
             return {"passed": False, "error": str(e)}
 
         # Bootstrap
-        simulated_returns = []
+        simulated_returns_list: list[float] = []
         sample_size = len(returns_series)
 
         for _ in range(n_simulations):
             bootstrapped_returns = np.random.choice(returns_series, size=sample_size, replace=True)
-            sim_cumulative_return = np.prod(1 + bootstrapped_returns) - 1
-            simulated_returns.append(sim_cumulative_return)
+            sim_cumulative_return = float(np.prod(1 + bootstrapped_returns) - 1)
+            simulated_returns_list.append(sim_cumulative_return)
 
-        simulated_returns = np.array(simulated_returns)
-        profitable_pct = np.sum(simulated_returns > 0) / n_simulations
+        simulated_returns_arr = np.array(simulated_returns_list)
+        profitable_pct = float(np.sum(simulated_returns_arr > 0)) / n_simulations
         passed = profitable_pct >= min_profitable_pct
 
         return {
             "passed": passed,
-            "n_simulations": n_simulations,
+            "n_simulations": float(n_simulations),
             "profitable_pct": profitable_pct,
-            "avg_return": float(np.mean(simulated_returns)),
-            "std_return": float(np.std(simulated_returns)),
+            "avg_return": float(np.mean(simulated_returns_arr)),
+            "std_return": float(np.std(simulated_returns_arr)),
         }
 
     def _run_backtest_with_params(
-        self, profile: InputProfile, config: ConfigDict, params: dict[str, Any]
+        self, profile: InputProfile, config: ConfigDict, params: dict[str, object]
     ) -> MetricsDict:
         """Run backtest with specific parameters."""
-        updated_config = config.copy()
-        updated_config["strategy"].update(params)
+        updated_config = dict(config)
+        strategy_cfg = updated_config.get("strategy", {})
+        if isinstance(strategy_cfg, dict):
+            strategy_cfg.update(params)
+            updated_config["strategy"] = strategy_cfg
 
         temp_config_path = self.output_dir / f"temp_mc_{uuid.uuid4().hex[:8]}.yaml"
         with open(temp_config_path, "w") as f:
@@ -286,13 +347,24 @@ class MonteCarloSimulator:
         try:
             runner = ComprehensiveBacktestRunner(str(temp_config_path))
             results = runner.run_baseline_backtest()
-            return results[0] if results else self._get_empty_metrics()
+            if results:
+                return self._coerce_to_metrics_dict(results[0])
+            return self._get_empty_metrics()
         except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
             logger.error(f"Backtest failed: {e}")
             return self._get_empty_metrics()
         finally:
             if temp_config_path.exists():
                 temp_config_path.unlink()
+
+    @staticmethod
+    def _coerce_to_metrics_dict(raw: Mapping[str, object]) -> MetricsDict:
+        """Coerce a ResultDict to MetricsDict by filtering values to valid types."""
+        out: MetricsDict = {}
+        for key, value in raw.items():
+            if isinstance(value, (float, int, str, bool)) or value is None:
+                out[key] = value
+        return out
 
     # Delegates to shared MetricsFactory (eliminates duplicate code)
     def _get_empty_metrics(self) -> MetricsDict:
@@ -311,7 +383,7 @@ class OutOfSampleValidator:
     def __init__(
         self,
         output_dir: Path,
-        validation_config: dict[str, Any],
+        validation_config: dict[str, object],
         profile_config_loader: ProfileConfigLoader | None = None,
     ):
         """
@@ -327,7 +399,7 @@ class OutOfSampleValidator:
         self.profile_config_loader = profile_config_loader
 
     def validate(
-        self, profile: InputProfile, config: ConfigDict, params: dict[str, Any]
+        self, profile: InputProfile, config: ConfigDict, params: dict[str, object]
     ) -> ValidationResultDict:
         """
         Run out-of-sample validation.
@@ -343,32 +415,40 @@ class OutOfSampleValidator:
         logger.info("Running out-of-sample validation")
 
         oos_config = self.validation_config.get("out_of_sample", {})
-        train_pct = oos_config.get("train_percentage", 0.7)
-        min_oos_sharpe = oos_config.get("min_oos_sharpe", 0.5)
-        max_performance_decay = oos_config.get("max_performance_decay", 0.3)
+        if not isinstance(oos_config, dict):
+            oos_config = {}
+        train_pct = _safe_float(oos_config.get("train_percentage", 0.7), 0.7)
+        min_oos_sharpe = _safe_float(oos_config.get("min_oos_sharpe", 0.5), 0.5)
+        max_performance_decay = _safe_float(oos_config.get("max_performance_decay", 0.3), 0.3)
 
-        start_date = pd.Timestamp(config.get("input", {}).get("start_date", "2020-01-01"))
-        end_date = pd.Timestamp(config.get("input", {}).get("end_date", "2023-12-31"))
+        input_cfg = config.get("input", {})
+        input_dict = input_cfg if isinstance(input_cfg, dict) else {}
+        start_date = pd.Timestamp(input_dict.get("start_date", "2020-01-01"))
+        end_date = pd.Timestamp(input_dict.get("end_date", "2023-12-31"))
         total_days = (end_date - start_date).days
 
         split_date = start_date + pd.Timedelta(days=int(total_days * train_pct))
 
-        train_config = config.copy()
-        train_config["input"]["start_date"] = start_date.strftime("%Y-%m-%d")
-        train_config["input"]["end_date"] = split_date.strftime("%Y-%m-%d")
+        train_config = dict(config)
+        train_config["input"] = {
+            "start_date": start_date.strftime("%Y-%m-%d"),
+            "end_date": split_date.strftime("%Y-%m-%d"),
+        }
 
-        oos_test_config = config.copy()
-        oos_test_config["input"]["start_date"] = split_date.strftime("%Y-%m-%d")
-        oos_test_config["input"]["end_date"] = end_date.strftime("%Y-%m-%d")
+        oos_test_config = dict(config)
+        oos_test_config["input"] = {
+            "start_date": split_date.strftime("%Y-%m-%d"),
+            "end_date": end_date.strftime("%Y-%m-%d"),
+        }
 
         try:
             train_results = self._run_backtest_with_params(profile, train_config, params)
             oos_results = self._run_backtest_with_params(profile, oos_test_config, params)
 
-            train_sharpe = train_results.get("sharpe_ratio", 0)
-            oos_sharpe = oos_results.get("sharpe_ratio", 0)
+            train_sharpe = _safe_float(train_results.get("sharpe_ratio", 0))
+            oos_sharpe = _safe_float(oos_results.get("sharpe_ratio", 0))
 
-            sharpe_decay = 0
+            sharpe_decay: float = 0.0
             if train_sharpe > 0:
                 sharpe_decay = (train_sharpe - oos_sharpe) / train_sharpe
 
@@ -380,20 +460,23 @@ class OutOfSampleValidator:
 
             return {
                 "passed": passed,
-                "train_sharpe": float(train_sharpe),
-                "oos_sharpe": float(oos_sharpe),
-                "sharpe_decay": float(sharpe_decay),
+                "train_sharpe": train_sharpe,
+                "oos_sharpe": oos_sharpe,
+                "sharpe_decay": sharpe_decay,
             }
         except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.error(f"OOS validation failed: {e}")
             return {"passed": False, "error": str(e)}
 
     def _run_backtest_with_params(
-        self, profile: InputProfile, config: ConfigDict, params: dict[str, Any]
+        self, profile: InputProfile, config: ConfigDict, params: dict[str, object]
     ) -> MetricsDict:
         """Run backtest with specific parameters."""
-        updated_config = config.copy()
-        updated_config["strategy"].update(params)
+        updated_config = dict(config)
+        strategy_cfg = updated_config.get("strategy", {})
+        if isinstance(strategy_cfg, dict):
+            strategy_cfg.update(params)
+            updated_config["strategy"] = strategy_cfg
 
         temp_config_path = self.output_dir / f"temp_oos_{uuid.uuid4().hex[:8]}.yaml"
         with open(temp_config_path, "w") as f:
@@ -402,13 +485,24 @@ class OutOfSampleValidator:
         try:
             runner = ComprehensiveBacktestRunner(str(temp_config_path))
             results = runner.run_baseline_backtest()
-            return results[0] if results else self._get_empty_metrics()
+            if results:
+                return self._coerce_to_metrics_dict(results[0])
+            return self._get_empty_metrics()
         except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
             logger.error(f"Backtest failed: {e}")
             return self._get_empty_metrics()
         finally:
             if temp_config_path.exists():
                 temp_config_path.unlink()
+
+    @staticmethod
+    def _coerce_to_metrics_dict(raw: Mapping[str, object]) -> MetricsDict:
+        """Coerce a ResultDict to MetricsDict by filtering values to valid types."""
+        out: MetricsDict = {}
+        for key, value in raw.items():
+            if isinstance(value, (float, int, str, bool)) or value is None:
+                out[key] = value
+        return out
 
     # Delegates to shared MetricsFactory (eliminates duplicate code)
     def _get_empty_metrics(self) -> MetricsDict:

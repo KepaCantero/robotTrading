@@ -5,6 +5,8 @@ Este módulo implementa el gestor de riesgos del portafolio, separando la lógic
 de gestión de riesgo de los servicios de portafolio.
 """
 
+from __future__ import annotations
+
 import asyncio
 import logging
 from datetime import datetime

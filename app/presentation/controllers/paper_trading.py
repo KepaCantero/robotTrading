@@ -275,9 +275,9 @@ async def close_session(
 
 @router.get("/sessions", response_model=list[SessionResponse])
 async def list_sessions(
-    portfolio_id: Annotated[UUID | None, Query(None, description="Filter by portfolio ID")],
-    is_active: Annotated[bool | None, Query(None, description="Filter by active status")],
-    service: Annotated[PaperTradingService, Depends(get_paper_trading_service)],
+    portfolio_id: UUID | None = Query(default=None, description="Filter by portfolio ID"),
+    is_active: bool | None = Query(default=None, description="Filter by active status"),
+    service: PaperTradingService = Depends(get_paper_trading_service),
 ) -> list[SessionResponse]:
     """List sessions with optional filters."""
     sessions = list(service.sessions.values())
@@ -296,8 +296,8 @@ async def list_sessions(
 async def execute_trade(
     portfolio_id: UUID,
     request: ExecuteTradeRequest,
-    session_id: Annotated[UUID | None, Query(None, description="Session ID")],
-    service: Annotated[PaperTradingService, Depends(get_paper_trading_service)],
+    session_id: UUID | None = Query(default=None, description="Session ID"),
+    service: PaperTradingService = Depends(get_paper_trading_service),
 ) -> TradeResponse:
     """Execute a paper trade."""
     logger.info(
@@ -350,11 +350,11 @@ async def execute_trade(
 @router.get("/portfolios/{portfolio_id}/trades", response_model=TradesResponse)
 async def get_trades(
     portfolio_id: UUID,
-    symbol: Annotated[str | None, Query(None, description="Filter by symbol")],
-    status: Annotated[TradeStatus | None, Query(None, description="Filter by status")],
-    session_id: Annotated[UUID | None, Query(None, description="Filter by session ID")],
-    limit: Annotated[int, Query(100, ge=1, le=1000, description="Maximum number of trades")],
-    service: Annotated[PaperTradingService, Depends(get_paper_trading_service)],
+    service: PaperTradingService = Depends(get_paper_trading_service),
+    symbol: str | None = Query(default=None, description="Filter by symbol"),
+    status: TradeStatus | None = Query(default=None, description="Filter by status"),
+    session_id: UUID | None = Query(default=None, description="Filter by session ID"),
+    limit: int = Query(default=100, ge=1, le=1000, description="Maximum number of trades"),
 ) -> TradesResponse:
     """Get trades for a portfolio with optional filters."""
     trades = await service.get_trades(

@@ -7,6 +7,8 @@ compound scoring, priority ranking, and portfolio signal filtering.
 Uses centralized configuration for all thresholds and parameters.
 """
 
+from __future__ import annotations
+
 import logging
 from collections import defaultdict
 from datetime import datetime, timedelta
@@ -142,7 +144,7 @@ class SignalCompoundScoreCalculator:
             "timing": timing,
         }
 
-        compound_score = sum(scores[k] * self.weights[k] for k in self.weights)
+        compound_score = float(sum(scores[k] * self.weights[k] for k in self.weights))
 
         # Scale to 0-100
         return round(compound_score * 100, 2)
@@ -152,13 +154,13 @@ class SignalCompoundScoreCalculator:
         if not metadata:
             return 0.5  # Neutral value if no data
 
-        volume_ratio = metadata.get("volume_ratio", 1.0)
+        volume_ratio: float = metadata.get("volume_ratio", 1.0)
         # Normalize: 1.0+ is good, <1.0 is below average
         # Map to 0-1 scale: 1.0 => 0.5, 2.0 => 1.0, 0.5 => 0.0
         if volume_ratio >= 1.0:
-            return min(1.0, 0.5 + (volume_ratio - 1.0) * 0.5)
+            return float(min(1.0, 0.5 + (volume_ratio - 1.0) * 0.5))
         else:
-            return max(0.0, 0.5 - (1.0 - volume_ratio))
+            return float(max(0.0, 0.5 - (1.0 - volume_ratio)))
 
     def _extract_volatility(self, signal: Signal, metadata: Optional[dict[str, Any]]) -> float:
         """Extract and normalize volatility from signal metadata."""

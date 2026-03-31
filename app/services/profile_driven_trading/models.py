@@ -5,6 +5,8 @@ Defines configuration, results, and intermediate data structures used
 throughout the trading lifecycle.
 """
 
+from __future__ import annotations
+
 import logging
 from dataclasses import dataclass, field
 from datetime import datetime

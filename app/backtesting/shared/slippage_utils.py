@@ -10,6 +10,8 @@ Usage:
     adjusted_price = apply_slippage(price, is_buy=True)
 """
 
+from __future__ import annotations
+
 from decimal import Decimal
 from typing import Optional
 

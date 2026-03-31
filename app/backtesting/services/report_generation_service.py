@@ -87,7 +87,7 @@ class ReportGenerationService:
         )
 
         # Aggregate parameter importance
-        param_importance = {}
+        param_importance: dict[str, list[float]] = {}
         for result in results_list:
             for param, imp in result.comparison.parameter_importance.items():
                 if param not in param_importance:
@@ -103,7 +103,7 @@ class ReportGenerationService:
 
         # Render template
         template = Template(template_str)
-        html = template.render(
+        html: str = template.render(
             timestamp=datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
             total_profiles=len(results_list),
             ready_count=ready_count,

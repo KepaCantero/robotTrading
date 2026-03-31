@@ -19,9 +19,9 @@ Author: Risk Management Team
 Version: 2.0.0 - NUMBA OPTIMIZED
 """
 
+import importlib.util
 import logging
 from abc import ABC, abstractmethod
-from typing import Any
 
 import numba
 import numpy as np
@@ -34,14 +34,7 @@ NUMBA_AVAILABLE = True
 NUMBA_VERSION = numba.__version__
 
 # Check for ARCH package
-try:
-    pass
-
-    ARCH_AVAILABLE = True
-except ImportError:
-    ARCH_AVAILABLE = False
-    logger = logging.getLogger(__name__)
-    logger.warning("arch no disponible. Modelos GARCH limitados.")
+ARCH_AVAILABLE = bool(importlib.util.find_spec("arch"))
 
 logger = logging.getLogger(__name__)
 
@@ -52,7 +45,7 @@ logger = logging.getLogger(__name__)
 
 
 @jit(nopython=True, cache=True)
-def calculate_percentile_numba(arr: np.ndarray, percentile: float) -> float:
+def calculate_percentile_numba(arr: np.ndarray, percentile: float):
     """
     Calculate percentile using Numba JIT.
 
@@ -143,9 +136,7 @@ def calculate_cvar_numba(arr: np.ndarray, var_value: float) -> float:
 
 
 @njit(parallel=True, cache=True)
-def monte_carlo_simulation_numba(
-    mean_return: float, std_return: float, n_simulations: int
-) -> np.ndarray:
+def monte_carlo_simulation_numba(mean_return: float, std_return: float, n_simulations: int):
     """
     Monte Carlo simulation using parallel Numba JIT.
 
@@ -222,7 +213,7 @@ def calculate_jarque_bera_numba(arr: np.ndarray) -> tuple:
 class BaseVaRCalculator(ABC):
     """Clase base para calculadores de VaR."""
 
-    def __init__(self, config: dict[str, Any]):
+    def __init__(self, config: dict[str, float]):
         """
         Inicializar VaR calculator.
 
@@ -230,14 +221,14 @@ class BaseVaRCalculator(ABC):
             config: Configuración del calculator
         """
         self.config = config
-        self.confidence_level = config.get("confidence_level", 0.95)  # 95% por defecto
-        self.time_horizon = config.get("time_horizon", 1)  # días
+        self.confidence_level: float = config.get("confidence_level", 0.95)  # 95% por defecto
+        self.time_horizon: int = int(config.get("time_horizon", 1))  # días
         self.logger = logging.getLogger(self.__class__.__name__)
 
     @abstractmethod
     def calculate_var(
         self, returns: np.ndarray, portfolio_value: float | None = None
-    ) -> dict[str, Any]:
+    ) -> dict[str, object]:
         """
         Calcular VaR.
 
@@ -265,7 +256,7 @@ class HistoricalVaRCalculator(BaseVaRCalculator):
 
     def calculate_var(
         self, returns: np.ndarray, portfolio_value: float | None = None
-    ) -> dict[str, Any]:
+    ) -> dict[str, object]:
         """
         Calcular VaR histórico (NUMBA-ACCELERATED).
 
@@ -331,7 +322,7 @@ class ParametricVaRCalculator(BaseVaRCalculator):
 
     def calculate_var(
         self, returns: np.ndarray, portfolio_value: float | None = None
-    ) -> dict[str, Any]:
+    ) -> dict[str, object]:
         """
         Calcular VaR paramétrico (NUMBA-ACCELERATED).
 
@@ -459,14 +450,14 @@ class MonteCarloVaRCalculator(BaseVaRCalculator):
     40-80x speedup with Numba JIT + parallel processing.
     """
 
-    def __init__(self, config: dict[str, Any]):
+    def __init__(self, config: dict[str, float]):
         """Inicializar Monte Carlo VaR calculator."""
         super().__init__(config)
-        self.n_simulations = config.get("n_simulations", 10000)
+        self.n_simulations: int = int(config.get("n_simulations", 10000))
 
     def calculate_var(
         self, returns: np.ndarray, portfolio_value: float | None = None
-    ) -> dict[str, Any]:
+    ) -> dict[str, object]:
         """
         Calcular VaR usando Monte Carlo (NUMBA-ACCELERATED with parallel processing).
 
@@ -497,8 +488,8 @@ class MonteCarloVaRCalculator(BaseVaRCalculator):
                 )
             else:
                 # Fallback to numpy (should not happen in production)
-                np.random.seed(42)
-                simulated_returns = np.random.normal(mean_return, std_return, self.n_simulations)
+                rng = np.random.default_rng(seed=42)
+                simulated_returns = rng.normal(mean_return, std_return, self.n_simulations)
 
             # Calcular percentil de simulaciones (NUMBA OPTIMIZED)
             percentile = (1 - self.confidence_level) * 100
@@ -548,7 +539,7 @@ class GARCHVaRCalculator(BaseVaRCalculator):
 
     def calculate_var(
         self, returns: np.ndarray, portfolio_value: float | None = None
-    ) -> dict[str, Any]:
+    ) -> dict[str, object]:
         """
         Calcular VaR usando modelo GARCH (NUMBA-ACCELERATED helpers).
 
@@ -647,7 +638,7 @@ def calculate_var(
     confidence_level: float = 0.95,
     portfolio_value: float | None = None,
     n_simulations: int = 10000,
-) -> dict[str, Any]:
+) -> dict[str, object]:
     """
     Calculate VaR using specified method (NUMBA OPTIMIZED).
 
@@ -668,12 +659,13 @@ def calculate_var(
         >>> result = calculate_var(returns, method='historical', confidence_level=0.95)
         >>> print(f"VaR: {result['var']:.2%}")
     """
-    config = {
+    config: dict[str, float] = {
         "confidence_level": confidence_level,
-        "time_horizon": 1,
-        "n_simulations": n_simulations,
+        "time_horizon": float(1),
+        "n_simulations": float(n_simulations),
     }
 
+    calculator: BaseVaRCalculator
     if method == "historical":
         calculator = HistoricalVaRCalculator(config)
     elif method == "parametric":
@@ -693,7 +685,7 @@ def calculate_var(
 # ============================================================================
 
 
-def get_var_calculators_info() -> dict[str, Any]:
+def get_var_calculators_info() -> dict[str, object]:
     """
     Get information about available VaR calculators.
 
@@ -750,7 +742,7 @@ class VaRBacktester:
         var_predictions: np.ndarray,
         actual_returns: np.ndarray,
         significance_level: float = 0.05,
-    ) -> dict[str, Any]:
+    ) -> dict[str, object]:
         """
         Perform Kupiec (1995) likelihood ratio test for VaR validation.
 
@@ -892,7 +884,7 @@ class VaRBacktester:
         var_predictions: np.ndarray,
         actual_returns: np.ndarray,
         significance_level: float = 0.05,
-    ) -> dict[str, Any]:
+    ) -> dict[str, object]:
         """
         Perform Christoffersen (1998) independence test for VaR validation.
 
@@ -948,44 +940,35 @@ class VaRBacktester:
             pi_11 = n_11 / n_1 if n_1 > 0 else 0
 
             # Overall exception probability
-            total_exceptions = np.sum(exception_series)
+            total_exceptions: float = np.sum(exception_series)
             pi = total_exceptions / n if n > 0 else 0
 
             # Likelihood ratio statistic
+            lr_statistic: float
+            log_l1: float
+            log_l0: float
             if n_0 > 0 and n_1 > 0 and 0 < pi < 1:
-                # Log-likelihood under alternative (unrestricted)
-                log_l1 = (
-                    n_00 * np.log(1 - pi_01)
-                    if n_00 > 0
-                    else (
-                        0 + n_01 * np.log(pi_01)
-                        if n_01 > 0
-                        else (
-                            0 + n_10 * np.log(1 - pi_11)
-                            if n_10 > 0
-                            else 0 + n_11 * np.log(pi_11)
-                            if n_11 > 0
-                            else 0
-                        )
-                    )
-                )
+                # Log-likelihood under alternative (unrestricted) - sum all terms
+                log_l1 = 0.0
+                if n_00 > 0:
+                    log_l1 += n_00 * np.log(1 - pi_01)
+                if n_01 > 0:
+                    log_l1 += n_01 * np.log(pi_01)
+                if n_10 > 0:
+                    log_l1 += n_10 * np.log(1 - pi_11)
+                if n_11 > 0:
+                    log_l1 += n_11 * np.log(pi_11)
 
-                # Log-likelihood under null (independent exceptions)
-                log_l0 = (
-                    n_00 * np.log(1 - pi)
-                    if n_00 > 0
-                    else (
-                        0 + n_01 * np.log(pi)
-                        if n_01 > 0
-                        else (
-                            0 + n_10 * np.log(1 - pi)
-                            if n_10 > 0
-                            else 0 + n_11 * np.log(pi)
-                            if n_11 > 0
-                            else 0
-                        )
-                    )
-                )
+                # Log-likelihood under null (independent exceptions) - sum all terms
+                log_l0 = 0.0
+                if n_00 > 0:
+                    log_l0 += n_00 * np.log(1 - pi)
+                if n_01 > 0:
+                    log_l0 += n_01 * np.log(pi)
+                if n_10 > 0:
+                    log_l0 += n_10 * np.log(1 - pi)
+                if n_11 > 0:
+                    log_l0 += n_11 * np.log(pi)
 
                 lr_statistic = 2 * (log_l1 - log_l0)
             else:
@@ -1071,7 +1054,7 @@ class VaRBacktester:
         self,
         var_predictions: np.ndarray,
         actual_returns: np.ndarray,
-    ) -> dict[str, Any]:
+    ) -> dict[str, object]:
         """
         Calculate detailed VaR exception statistics.
 
@@ -1147,7 +1130,7 @@ class VaRBacktester:
         var_predictions: np.ndarray,
         actual_returns: np.ndarray,
         significance_level: float = 0.05,
-    ) -> dict[str, Any]:
+    ) -> dict[str, object]:
         """
         Run comprehensive VaR backtest with all tests.
 
@@ -1222,7 +1205,7 @@ def run_var_backtest(
     actual_returns: np.ndarray,
     confidence_level: float = 0.95,
     significance_level: float = 0.05,
-) -> dict[str, Any]:
+) -> dict[str, object]:
     """
     Run comprehensive VaR backtest.
 

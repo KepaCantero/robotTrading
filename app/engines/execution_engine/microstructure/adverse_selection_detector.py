@@ -514,7 +514,7 @@ class AdverseSelectionDetector:
             detected=detected,
             confidence=confidence,
             adverse_move_rate=adverse_rate,
-            avg_adverse_cost_bps=avg_adverse_cost,
+            avg_adverse_cost_bps=float(avg_adverse_cost),
             vpin=vpin_result.vpin,
             toxicity=toxicity_result.toxicity_score,
             should_reduce_trading=should_reduce,
@@ -523,9 +523,9 @@ class AdverseSelectionDetector:
 
 
 # Global singletons
-_vpin_calculator: VPINCalculator = None
-_order_flow_toxicity: OrderFlowToxicity = None
-_adverse_selection_detector: AdverseSelectionDetector = None
+_vpin_calculator: VPINCalculator | None = None
+_order_flow_toxicity: OrderFlowToxicity | None = None
+_adverse_selection_detector: AdverseSelectionDetector | None = None
 
 
 def get_vpin_calculator(

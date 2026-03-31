@@ -12,6 +12,8 @@ Validates:
 5. Risk metrics (Sharpe, drawdown within acceptable ranges)
 """
 
+from __future__ import annotations
+
 import logging
 from datetime import datetime
 from decimal import Decimal

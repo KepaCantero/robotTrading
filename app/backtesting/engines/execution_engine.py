@@ -16,7 +16,8 @@ from __future__ import annotations
 
 import logging
 from decimal import Decimal
-from typing import TYPE_CHECKING
+from enum import Enum
+from typing import TYPE_CHECKING, Protocol, cast, runtime_checkable
 
 from app.backtesting.base_engine import (
     BaseBacktestEngine,
@@ -32,6 +33,39 @@ if TYPE_CHECKING:
     from datetime import datetime
 
     from app.domain.models.market_data import Quote
+
+
+class _SignalTypeProto(Protocol):
+    """Protocol for signal_type that may have a .value attribute."""
+
+    value: str
+
+
+@runtime_checkable
+class _HasTimestamp(Protocol):
+    """Protocol for objects with a timestamp attribute."""
+
+    timestamp: datetime
+
+
+class _MarketDataBar(Protocol):
+    """Protocol for market data objects used in execution engine."""
+
+    symbol: str
+    timestamp: datetime
+    close: Decimal
+    open: Decimal
+    high: Decimal
+    low: Decimal
+
+
+class _TradingSignal(Protocol):
+    """Protocol for signal objects used in execution engine."""
+
+    symbol: str
+    timestamp: datetime
+    signal_type: str | Enum
+
 
 logger = logging.getLogger(__name__)
 
@@ -150,17 +184,23 @@ class ExecutionBacktestEngine(BaseBacktestEngine[BacktestConfig, BacktestResult]
         self._reset_backtest()
         self._open_positions.clear()
 
+        # Cast to typed lists for attribute access
+        typed_market_data: list[_MarketDataBar] = cast("list[_MarketDataBar]", market_data)
+        typed_signals: list[_TradingSignal] = cast("list[_TradingSignal]", signals)
+
         # Process market data with pessimistic execution
         execution_results: list[ExecutionResult] = []
 
-        for i, md in enumerate(market_data):
+        for i, md in enumerate(typed_market_data):
             # Update last known price
             current_price = self._get_price(md)
             self.state.last_known_prices[md.symbol] = current_price
 
             # Process any signals for this timestamp
-            if signals:
-                signal_results = self._process_signals_with_delay(signals, market_data, i)
+            if typed_signals:
+                signal_results = self._process_signals_with_delay(
+                    typed_signals, typed_market_data, i
+                )
                 execution_results.extend(signal_results)
 
             # Check intra-bar execution for open positions
@@ -172,11 +212,11 @@ class ExecutionBacktestEngine(BaseBacktestEngine[BacktestConfig, BacktestResult]
             self.state.equity_curve.append((md.timestamp, self.state.capital))
 
         # Close remaining positions
-        self._close_all_positions_at_end(market_data[-1])
+        self._close_all_positions_at_end(typed_market_data[-1])
 
         # Calculate metrics
         return self._create_result_from_executions(
-            execution_results, market_data[0].timestamp, market_data[-1].timestamp
+            execution_results, typed_market_data[0].timestamp, typed_market_data[-1].timestamp
         )
 
     def _create_result(
@@ -299,7 +339,7 @@ class ExecutionBacktestEngine(BaseBacktestEngine[BacktestConfig, BacktestResult]
 
         sl_hit = False
         tp_hit = False
-        execution_price = None
+        execution_price: Decimal | None = None
 
         if position.side.lower() == "long":
             if position.stop_loss_price and bar_low <= position.stop_loss_price:
@@ -386,13 +426,13 @@ class ExecutionBacktestEngine(BaseBacktestEngine[BacktestConfig, BacktestResult]
         Returns:
             Dictionary with comparison metrics
         """
-        pessimistic_results = {
+        pessimistic_results: dict[str, int | Decimal] = {
             "total_trades": 0,
             "total_slippage": Decimal("0"),
             "sl_before_tp_count": 0,
         }
 
-        optimistic_results = {
+        optimistic_results: dict[str, int | Decimal] = {
             "total_trades": 0,
             "total_slippage": Decimal("0"),
             "sl_before_tp_count": 0,
@@ -424,12 +464,12 @@ class ExecutionBacktestEngine(BaseBacktestEngine[BacktestConfig, BacktestResult]
 
     def _process_signals_with_delay(
         self,
-        signals: list[object],
-        market_data: list[object],
+        signals: list[_TradingSignal],
+        market_data: list[_MarketDataBar],
         current_index: int,
     ) -> list[ExecutionResult]:
         """Process signals with next-day execution delay."""
-        results = []
+        results: list[ExecutionResult] = []
 
         if current_index >= len(market_data) - 1:
             return results
@@ -438,29 +478,26 @@ class ExecutionBacktestEngine(BaseBacktestEngine[BacktestConfig, BacktestResult]
         next_md = market_data[current_index + 1]
 
         for signal in signals:
-            if not hasattr(signal, "timestamp"):
-                continue
-
             if signal.timestamp != current_md.timestamp:
                 continue
 
-            if not hasattr(signal, "symbol") or signal.symbol != current_md.symbol:
+            if signal.symbol != current_md.symbol:
                 continue
 
             # Execute at next bar open
             if self.enable_next_day_execution:
                 signal_price = self._get_price(current_md)
-                next_open = getattr(next_md, "open", None) or getattr(
-                    next_md, "open_price", signal_price
+                next_open: Decimal = next_md.open
+
+                side: str = (
+                    signal.signal_type.value.lower()
+                    if isinstance(signal.signal_type, Enum)
+                    else str(signal.signal_type).lower()
                 )
 
                 result = self.execute_entry_order(
                     symbol=signal.symbol,
-                    side=(
-                        signal.signal_type.value.lower()
-                        if hasattr(signal.signal_type, "value")
-                        else str(signal.signal_type).lower()
-                    ),
+                    side=side,
                     quantity=Decimal("100"),  # Default quantity
                     signal_time=signal.timestamp,
                     signal_price=signal_price,
@@ -471,20 +508,20 @@ class ExecutionBacktestEngine(BaseBacktestEngine[BacktestConfig, BacktestResult]
 
         return results
 
-    def _check_intra_bar_execution(self, md: object) -> list[ExecutionResult]:
+    def _check_intra_bar_execution(self, md: _MarketDataBar) -> list[ExecutionResult]:
         """Check for intra-bar stop executions."""
-        results = []
+        results: list[ExecutionResult] = []
 
-        positions_to_remove = []
+        positions_to_remove: list[Position] = []
         for position in self._open_positions:
             if position.symbol != md.symbol:
                 continue
 
             result, remaining = self.process_intra_bar_execution(
                 position=position,
-                bar_open=getattr(md, "open", md.close) or getattr(md, "open_price", md.close),
-                bar_high=getattr(md, "high", md.close) or getattr(md, "high_price", md.close),
-                bar_low=getattr(md, "low", md.close) or getattr(md, "low_price", md.close),
+                bar_open=md.open,
+                bar_high=md.high,
+                bar_low=md.low,
                 bar_close=self._get_price(md),
                 bar_time=md.timestamp,
             )
@@ -500,7 +537,7 @@ class ExecutionBacktestEngine(BaseBacktestEngine[BacktestConfig, BacktestResult]
 
         return results
 
-    def _close_all_positions_at_end(self, final_md: object) -> None:
+    def _close_all_positions_at_end(self, final_md: _MarketDataBar) -> None:
         """Close all remaining positions at end of backtest."""
         for symbol, quantity in list(self.state.positions.items()):
             if quantity > 0:
@@ -610,8 +647,8 @@ def create_position_with_stops(
     Returns:
         Position with calculated stop prices
     """
-    stop_loss_price = None
-    take_profit_price = None
+    stop_loss_price: Decimal | None = None
+    take_profit_price: Decimal | None = None
 
     if side.lower() == "long":
         if stop_loss_pct:

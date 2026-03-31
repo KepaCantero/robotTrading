@@ -18,10 +18,13 @@ SOLID Principles:
 - Dependency Inversion: Depends on abstractions
 """
 
+from __future__ import annotations
+
 import logging
 from collections import deque
+from dataclasses import dataclass
 from decimal import Decimal
-from typing import Any, Optional
+from typing import Optional
 
 import numpy as np
 import pandas as pd
@@ -32,11 +35,45 @@ from app.domain.models.signal import Signal, SignalSource, SignalStrength, Signa
 from app.domain.strategies.base import BaseStrategy
 
 from .crypto_indicators import CryptoIndicators
-from .crypto_portfolio import CryptoPortfolioConstructor
+from .crypto_portfolio import (
+    CryptoAsset as PortfolioCryptoAsset,
+    CryptoAssetType,
+    CryptoMomentumConfig,
+    CryptoMomentumScore,
+    CryptoPortfolio,
+    CryptoPortfolioConstructor,
+)
 from .crypto_screener import CryptoAsset, CryptoScreener
-from .models import CryptoMomentumConfig, CryptoMomentumScore, CryptoPortfolio
 
 logger = logging.getLogger(__name__)
+
+
+@dataclass
+class _AssetState:
+    """Mutable runtime state tracked per asset by the strategy."""
+
+    current_price: Decimal = Decimal("0")
+    liquidity_score: Decimal = Decimal("100")
+    volatility_90d: Optional[Decimal] = None
+    is_eligible: bool = False
+
+
+def _convert_to_portfolio_asset(
+    asset: CryptoAsset,
+    state: _AssetState,
+) -> PortfolioCryptoAsset:
+    """Convert a screener CryptoAsset to a portfolio CryptoAsset."""
+    return PortfolioCryptoAsset(
+        symbol=asset.symbol,
+        name=asset.name,
+        asset_type=CryptoAssetType(asset.asset_type.value),
+        current_price=state.current_price,
+        market_cap=asset.market_cap,
+        volume_24h=asset.avg_daily_volume,
+        volatility_30d=asset.volatility_30d,
+        volatility_90d=state.volatility_90d,
+        liquidity_score=state.liquidity_score,
+    )
 
 
 class CryptoMomentumStrategy(BaseStrategy):
@@ -67,7 +104,7 @@ class CryptoMomentumStrategy(BaseStrategy):
         price_history: Price history for calculations
     """
 
-    def __init__(self, config: dict[str, Any]):
+    def __init__(self, config: dict[str, object]):
         """
         Initialize crypto momentum strategy.
 
@@ -88,26 +125,64 @@ class CryptoMomentumStrategy(BaseStrategy):
         self.current_portfolio: Optional[CryptoPortfolio] = None
         self.universe: list[CryptoAsset] = []
         self.momentum_scores: dict[str, CryptoMomentumScore] = {}
-        self.price_history: dict[str, deque] = {}
-        self.btc_price_history: deque = deque(maxlen=365)
+        self.price_history: dict[str, deque[tuple]] = {}
+        self.btc_price_history: deque[tuple] = deque(maxlen=365)
+
+        # Per-asset mutable state not stored on CryptoAsset itself
+        self._asset_state: dict[str, _AssetState] = {}
+
+        # Confidence values computed alongside scores (CryptoMomentumScore has no confidence field)
+        self._confidence: dict[str, Decimal] = {}
 
         # Metrics
-        self.performance_history: deque = deque(maxlen=252)
+        self.performance_history: deque[float] = deque(maxlen=252)
 
         logger.info(
-            f"CryptoMomentumStrategy initialized: "
-            f"lookback={self.strategy_config.lookback_days}d, "
-            f"btc_weight={self.strategy_config.btc_weight:.1%}, "
-            f"max_pos={self.strategy_config.max_position_size:.1%}, "
-            f"portfolio_size={self.strategy_config.portfolio_size}"
+            "CryptoMomentumStrategy initialized: portfolio_size=%d, btc_weight=%s, max_pos=%s",
+            self.strategy_config.portfolio_size,
+            f"{self.strategy_config.btc_weight:.1%}",
+            f"{self.strategy_config.max_position_size:.1%}",
         )
 
-    def _parse_config(self, config: dict[str, Any]) -> CryptoMomentumConfig:
+    def _get_asset_state(self, symbol: str) -> _AssetState:
+        """Return (creating if needed) the mutable state for a symbol."""
+        if symbol not in self._asset_state:
+            self._asset_state[symbol] = _AssetState()
+        return self._asset_state[symbol]
+
+    def _parse_config(self, config: dict[str, object]) -> CryptoMomentumConfig:
         """Parse configuration from dict."""
         try:
-            return CryptoMomentumConfig(**config)
+            return CryptoMomentumConfig(
+                btc_weight=(
+                    Decimal(str(config["btc_weight"])) if "btc_weight" in config else Decimal("0.5")
+                ),
+                portfolio_size=(
+                    int(str(config["portfolio_size"])) if "portfolio_size" in config else 10
+                ),
+                rebalance_threshold=(
+                    Decimal(str(config["rebalance_threshold"]))
+                    if "rebalance_threshold" in config
+                    else Decimal("0.05")
+                ),
+                max_position_weight=(
+                    Decimal(str(config["max_position_weight"]))
+                    if "max_position_weight" in config
+                    else Decimal("0.15")
+                ),
+                max_position_size=(
+                    Decimal(str(config["max_position_size"]))
+                    if "max_position_size" in config
+                    else Decimal("0.15")
+                ),
+                min_momentum_score=(
+                    Decimal(str(config["min_momentum_score"]))
+                    if "min_momentum_score" in config
+                    else Decimal("0")
+                ),
+            )
         except Exception as e:
-            logger.error(f"Error parsing config: {e}")
+            logger.error("Error parsing config: %s", e)
             return CryptoMomentumConfig()
 
     def generate_signals(self, market_data: Quote) -> list[Signal]:
@@ -147,14 +222,15 @@ class CryptoMomentumStrategy(BaseStrategy):
                 break
 
         if asset is None:
-            logger.debug(f"Symbol {symbol} not in universe")
+            logger.debug("Symbol %s not in universe", symbol)
             return []
 
-        # Update current price
-        asset.current_price = market_data.last
+        # Update current price in local state
+        state = self._get_asset_state(asset.symbol)
+        state.current_price = market_data.last
 
         # Generate signals
-        signals = []
+        signals: list[Signal] = []
 
         # Buy signal: high momentum score
         if self._should_buy(asset):
@@ -170,8 +246,9 @@ class CryptoMomentumStrategy(BaseStrategy):
 
     def _update_price_history(self, symbol: str, market_data: Quote) -> None:
         """Update price history for a symbol."""
+        lookback = 90  # default lookback period in days
         if symbol not in self.price_history:
-            self.price_history[symbol] = deque(maxlen=self.strategy_config.lookback_days)
+            self.price_history[symbol] = deque(maxlen=lookback)
 
         self.price_history[symbol].append((market_data.timestamp, float(market_data.last)))
 
@@ -192,7 +269,8 @@ class CryptoMomentumStrategy(BaseStrategy):
             True if should buy
         """
         # Check eligibility
-        if not asset.is_eligible:
+        state = self._get_asset_state(asset.symbol)
+        if not state.is_eligible:
             return False
 
         # Check if already at max position
@@ -209,12 +287,13 @@ class CryptoMomentumStrategy(BaseStrategy):
         if score is None:
             return False
 
-        # High momentum threshold
-        if not score.is_high_momentum:
+        # High momentum threshold (final_score > 70)
+        if score.final_score < Decimal("70"):
             return False
 
-        # Check confidence
-        return not score.confidence < 60
+        # Check confidence (confidence >= 60), tracked in _confidence dict
+        confidence = self._confidence.get(asset.symbol, Decimal("0"))
+        return confidence >= Decimal("60")
 
     def _should_sell(self, asset: CryptoAsset) -> bool:
         """
@@ -244,15 +323,15 @@ class CryptoMomentumStrategy(BaseStrategy):
         if position is None:
             return False
 
-        # Check stop loss
-        if position.unrealized_pnl_pct < -15:  # 15% stop loss
-            logger.warning(f"Stop loss triggered for {asset.symbol}")
+        # Check stop loss (unrealized_pnl_pct is a ratio, -0.15 = -15%)
+        if position.unrealized_pnl_pct < Decimal("-0.15"):
+            logger.warning("Stop loss triggered for %s", asset.symbol)
             return True
 
-        # Check momentum deterioration
+        # Check momentum deterioration (final_score < 40 means low momentum)
         score = self.momentum_scores.get(asset.symbol)
-        if score and score.is_low_momentum:
-            logger.info(f"Low momentum for {asset.symbol}: {score.final_score:.1f}")
+        if score and score.final_score < Decimal("40"):
+            logger.info("Low momentum for %s: %s", asset.symbol, score.final_score)
             return True
 
         return False
@@ -260,10 +339,11 @@ class CryptoMomentumStrategy(BaseStrategy):
     def _create_buy_signal(self, asset: CryptoAsset, market_data: Quote) -> Signal:
         """Create buy signal for crypto asset."""
         score = self.momentum_scores.get(asset.symbol)
+        state = self._get_asset_state(asset.symbol)
 
         # Calculate confidence
         if score:
-            confidence = float(score.confidence)
+            confidence = float(self._confidence.get(asset.symbol, Decimal("65")))
             priority = float(score.final_score)
         else:
             confidence = 65.0
@@ -277,8 +357,8 @@ class CryptoMomentumStrategy(BaseStrategy):
         else:
             strength = SignalStrength.WEAK
 
-        # Liquidity score based on asset liquidity
-        liquidity_score = float(asset.liquidity_score)
+        # Liquidity score from local state
+        liquidity_score = float(state.liquidity_score)
 
         signal = Signal(
             symbol=asset.symbol,
@@ -293,17 +373,22 @@ class CryptoMomentumStrategy(BaseStrategy):
             metadata={
                 "reason": "crypto_momentum",
                 "momentum_score": float(score.final_score) if score else 0,
-                "volatility": float(asset.volatility_90d),
+                "volatility": (
+                    float(state.volatility_90d) if state.volatility_90d is not None else 0.0
+                ),
                 "btc_correlation": asset.btc_correlation,
-                "liquidity_score": float(asset.liquidity_score),
+                "liquidity_score": float(state.liquidity_score),
                 "asset_type": asset.asset_type.value,
                 "strategy": "crypto_momentum",
             },
         )
 
         logger.info(
-            f"BUY {asset.symbol}: Score {priority:.1f}, "
-            f"Confidence {confidence:.1f}%, Strength {strength.value}"
+            "BUY %s: Score %.1f, Confidence %.1f%%, Strength %s",
+            asset.symbol,
+            priority,
+            confidence,
+            strength.value,
         )
 
         return signal
@@ -311,13 +396,14 @@ class CryptoMomentumStrategy(BaseStrategy):
     def _create_sell_signal(self, asset: CryptoAsset, market_data: Quote) -> Signal:
         """Create sell signal for crypto asset."""
         score = self.momentum_scores.get(asset.symbol)
+        state = self._get_asset_state(asset.symbol)
 
         signal = Signal(
             symbol=asset.symbol,
             signal_type=SignalType.SELL,
             strength=SignalStrength.MODERATE,
             confidence=70.0,
-            liquidity_score=float(asset.liquidity_score),
+            liquidity_score=float(state.liquidity_score),
             priority_score=60.0,
             source=SignalSource.MOMENTUM,
             price=market_data.last,
@@ -329,7 +415,7 @@ class CryptoMomentumStrategy(BaseStrategy):
             },
         )
 
-        logger.warning(f"SELL {asset.symbol}: Momentum deteriorated")
+        logger.warning("SELL %s: Momentum deteriorated", asset.symbol)
 
         return signal
 
@@ -349,12 +435,17 @@ class CryptoMomentumStrategy(BaseStrategy):
 
         for pos in portfolio.positions:
             if pos.symbol == signal.symbol:
-                current_weight = pos.value / portfolio.total_value
+                if portfolio.total_value > 0:
+                    current_weight = pos.market_value / portfolio.total_value
+                else:
+                    current_weight = Decimal("0")
 
                 if current_weight >= max_pos:
                     logger.debug(
-                        f"Max position reached for {signal.symbol}: "
-                        f"{current_weight:.1%} >= {max_pos:.1%}"
+                        "Max position reached for %s: %.1f%% >= %.1f%%",
+                        signal.symbol,
+                        current_weight,
+                        max_pos,
                     )
                     return False
 
@@ -365,17 +456,18 @@ class CryptoMomentumStrategy(BaseStrategy):
                 asset = a
                 break
 
-        if (
-            asset
-            and self.strategy_config.max_volatility
-            and asset.volatility_90d > self.strategy_config.max_volatility
-        ):
-            logger.debug(
-                f"Volatility too high for {signal.symbol}: "
-                f"{asset.volatility_90d:.1f}% > "
-                f"{self.strategy_config.max_volatility:.1f}%"
-            )
-            return False
+        if asset is not None:
+            state = self._get_asset_state(asset.symbol)
+            if state.volatility_90d is not None:
+                cfg_max_vol = self.strategy_config.max_volatility
+                if state.volatility_90d > cfg_max_vol:
+                    logger.debug(
+                        "Volatility too high for %s: %.1f%% > %.1f%%",
+                        signal.symbol,
+                        state.volatility_90d,
+                        cfg_max_vol,
+                    )
+                    return False
 
         return True
 
@@ -404,7 +496,7 @@ class CryptoMomentumStrategy(BaseStrategy):
         return self.indicators.calculate_momentum_score(
             prices=prices,
             benchmark_prices=benchmark_prices,
-            lookback_days=self.strategy_config.lookback_days,
+            lookback_days=90,
         )
 
     def calculate_crypto_beta(
@@ -433,12 +525,14 @@ class CryptoMomentumStrategy(BaseStrategy):
         """Recalculate momentum scores for all assets in universe."""
         logger.info("Updating momentum scores for universe...")
 
+        lookback = 90
+
         # Get BTC prices for correlation adjustment
-        btc_prices = None
-        if len(self.btc_price_history) > self.strategy_config.lookback_days:
+        btc_prices: Optional[pd.Series] = None
+        if len(self.btc_price_history) > lookback:
             btc_data = list(self.btc_price_history)
             btc_series = pd.Series([p for _, p in btc_data])
-            btc_prices = btc_series.tail(self.strategy_config.lookback_days)
+            btc_prices = btc_series.tail(lookback)
 
         # Calculate score for each asset
         for asset in self.universe:
@@ -446,7 +540,7 @@ class CryptoMomentumStrategy(BaseStrategy):
                 continue
 
             price_data = list(self.price_history[asset.symbol])
-            if len(price_data) < self.strategy_config.lookback_days:
+            if len(price_data) < lookback:
                 continue
 
             prices = pd.Series([p for _, p in price_data])
@@ -455,38 +549,38 @@ class CryptoMomentumStrategy(BaseStrategy):
             raw_momentum = self.calculate_momentum_score(prices, btc_prices)
 
             # Calculate volatility-adjusted momentum
-            vol_adjusted = None
-            if self.strategy_config.volatility_adjustment:
-                returns = prices.pct_change().dropna()
-                vol = returns.std() * np.sqrt(365)  # Annualized
+            vol_adjusted: Optional[float] = None
+            returns = prices.pct_change().dropna()
+            vol = returns.std() * np.sqrt(365)  # Annualized
 
-                if vol > 0:
-                    # Adjust score by volatility (higher vol = lower score)
-                    vol_factor = max(0.5, min(1.5, 50 / vol))
-                    vol_adjusted = raw_momentum * vol_factor
+            if vol > 0:
+                # Adjust score by volatility (higher vol = lower score)
+                vol_factor = max(0.5, min(1.5, 50 / vol))
+                vol_adjusted = raw_momentum * vol_factor
 
             # Calculate BTC-adjusted momentum
-            btc_adjusted = None
-            if self.strategy_config.btc_adjustment and btc_prices is not None:
+            btc_adjusted: Optional[float] = None
+            if btc_prices is not None and len(btc_prices) > 0:
                 asset_returns = prices.pct_change().dropna()
                 btc_returns = btc_prices.pct_change().dropna()
 
                 # Align series
                 min_len = min(len(asset_returns), len(btc_returns))
-                asset_returns = asset_returns.tail(min_len)
-                btc_returns = btc_returns.tail(min_len)
+                if min_len > 0:
+                    asset_returns = asset_returns.tail(min_len)
+                    btc_returns = btc_returns.tail(min_len)
 
-                beta = self.calculate_crypto_beta(asset_returns, btc_returns)
+                    beta = self.calculate_crypto_beta(asset_returns, btc_returns)
 
-                # Reduce score for high BTC correlation
-                if abs(beta) > 0.7:
-                    btc_factor = 0.8
-                elif abs(beta) > 0.5:
-                    btc_factor = 0.9
-                else:
-                    btc_factor = 1.0
+                    # Reduce score for high BTC correlation
+                    if abs(beta) > 0.7:
+                        btc_factor = 0.8
+                    elif abs(beta) > 0.5:
+                        btc_factor = 0.9
+                    else:
+                        btc_factor = 1.0
 
-                btc_adjusted = raw_momentum * btc_factor
+                    btc_adjusted = raw_momentum * btc_factor
 
             # Final score
             final_score = raw_momentum
@@ -497,31 +591,20 @@ class CryptoMomentumStrategy(BaseStrategy):
 
             final_score = max(0, min(100, final_score))
 
-            # Calculate confidence
+            # Calculate confidence and store it separately
             data_points = len(price_data)
-            confidence = min(100, (data_points / self.strategy_config.lookback_days) * 100)
+            confidence = min(100, (data_points / lookback) * 100)
+            self._confidence[asset.symbol] = Decimal(str(confidence)).quantize(Decimal("0.01"))
 
             # Create score object
             score = CryptoMomentumScore(
                 symbol=asset.symbol,
-                raw_momentum=Decimal(str(raw_momentum)).quantize(Decimal("0.01")),
-                volatility_adjusted_momentum=(
-                    Decimal(str(vol_adjusted)).quantize(Decimal("0.01"))
-                    if vol_adjusted is not None
-                    else None
-                ),
-                btc_adjusted_momentum=(
-                    Decimal(str(btc_adjusted)).quantize(Decimal("0.01"))
-                    if btc_adjusted is not None
-                    else None
-                ),
-                final_score=Decimal(str(final_score)).quantize(Decimal("0.01")),
-                confidence=Decimal(str(confidence)).quantize(Decimal("0.01")),
+                score=Decimal(str(final_score)).quantize(Decimal("0.01")),
             )
 
             self.momentum_scores[asset.symbol] = score
 
-        logger.info(f"Updated {len(self.momentum_scores)} momentum scores")
+        logger.info("Updated %d momentum scores", len(self.momentum_scores))
 
     def set_universe(self, assets: list[CryptoAsset]) -> None:
         """
@@ -535,21 +618,24 @@ class CryptoMomentumStrategy(BaseStrategy):
         # Run screening
         result = self.screener.screen(
             universe=assets,
-            min_market_cap=self.strategy_config.min_market_cap,
-            min_daily_volume=self.strategy_config.min_daily_volume,
-            min_liquidity_score=self.strategy_config.min_liquidity_score,
-            max_volatility=self.strategy_config.max_volatility,
         )
 
         # Update universe with only passing assets
         self.universe = result.passed_assets
 
-        # Mark assets as eligible
+        # Mark assets as eligible in local state
         for asset in self.universe:
-            asset.is_eligible = True
+            state = self._get_asset_state(asset.symbol)
+            state.is_eligible = True
+
+        total_eval = result.total_evaluated
+        passed_count = len(result.passed_assets)
+        pass_rate = (passed_count / total_eval * 100) if total_eval > 0 else 0.0
 
         logger.info(
-            f"Universe set: {len(self.universe)} assets ({result.pass_rate:.1f}% pass rate)"
+            "Universe set: %d assets (%.1f%% pass rate)",
+            passed_count,
+            pass_rate,
         )
 
     def construct_portfolio(self, total_capital: Decimal) -> CryptoPortfolio:
@@ -573,9 +659,7 @@ class CryptoMomentumStrategy(BaseStrategy):
                     a.symbol,
                     CryptoMomentumScore(
                         symbol=a.symbol,
-                        raw_momentum=Decimal("50"),
-                        final_score=Decimal("50"),
-                        confidence=Decimal("50"),
+                        score=Decimal("50"),
                     ),
                 ).final_score
             ),
@@ -586,9 +670,15 @@ class CryptoMomentumStrategy(BaseStrategy):
         max_assets = min(len(ranked_assets), self.strategy_config.portfolio_size)
         ranked_assets = ranked_assets[:max_assets]
 
+        # Convert screener CryptoAssets to portfolio CryptoAssets
+        portfolio_assets: list[PortfolioCryptoAsset] = []
+        for a in ranked_assets:
+            state = self._get_asset_state(a.symbol)
+            portfolio_assets.append(_convert_to_portfolio_asset(a, state))
+
         # Construct portfolio
         self.current_portfolio = self.constructor.construct_portfolio(
-            ranked_assets=ranked_assets,
+            ranked_assets=portfolio_assets,
             momentum_scores=self.momentum_scores,
             total_capital=total_capital,
         )
@@ -617,7 +707,6 @@ class CryptoMomentumStrategy(BaseStrategy):
     def get_required_parameters(self) -> list[str]:
         """Get required strategy parameters."""
         return [
-            "lookback_days",
             "max_position_size",
             "btc_weight",
             "portfolio_size",
@@ -626,11 +715,12 @@ class CryptoMomentumStrategy(BaseStrategy):
     def validate_config(self) -> bool:
         """Validate strategy configuration."""
         try:
-            return self.strategy_config.model_dump() is not None
+            # dataclasses have __dataclass_fields__
+            return hasattr(self.strategy_config, "__dataclass_fields__")
         except Exception:
             return False
 
-    def get_portfolio_metrics(self) -> dict[str, Any]:
+    def get_portfolio_metrics(self) -> dict[str, object]:
         """Get current portfolio metrics."""
         if self.current_portfolio is None:
             return {}

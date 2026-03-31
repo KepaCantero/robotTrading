@@ -8,6 +8,8 @@ Supports:
 - Discord
 """
 
+from __future__ import annotations
+
 import asyncio
 import logging
 from abc import ABC, abstractmethod

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 # mypy: ignore-errors
 """
 Boot-up Reconciliation System
@@ -212,8 +214,7 @@ class BootReconciler:
         """Fetch all open positions from local database."""
         try:
             async with aiosqlite.connect(self.db_path) as db:
-                cursor = await db.execute(
-                    """
+                cursor = await db.execute("""
                     SELECT
                         id, symbol, side, quantity, entry_price,
                         current_price, stop_loss_price, take_profit_price,
@@ -221,8 +222,7 @@ class BootReconciler:
                     FROM positions
                     WHERE status = 'OPEN'
                     ORDER BY created_at DESC
-                """
-                )
+                """)
                 rows = await cursor.fetchall()
 
                 return [

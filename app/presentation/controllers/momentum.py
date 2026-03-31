@@ -14,8 +14,6 @@ from typing import Any
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query
 from requests.exceptions import (
     ConnectionError as RequestsConnectionError,
-)
-from requests.exceptions import (
     HTTPError,
     RequestException,
 )
@@ -193,7 +191,7 @@ async def analyze_asset_momentum_post(
 @router.get("/analyze/{symbol}", response_model=dict[str, Any])
 async def analyze_asset_momentum(
     symbol: str,
-    timeframe: Timeframe = Query(Timeframe.DAILY, description="Analysis timeframe"),
+    timeframe: Timeframe = Query(default=Timeframe.DAILY, description="Analysis timeframe"),
     service: MomentumAnalysisService = Depends(get_momentum_analysis_service),
 ):
     """Analyze momentum for a specific asset."""
@@ -269,7 +267,12 @@ async def get_momentum_signals_for_symbol(
     """Get momentum signals for a specific asset."""
     logger.debug("Getting momentum signals for symbol", extra={"symbol": symbol})
     try:
-        signals = await service.get_momentum_signals_for_symbol(symbol.upper())
+        signals_filter = MomentumFilter(
+            symbols=[symbol.upper()],
+            momentum_types=None,
+            timeframes=None,
+        )
+        signals = await service.get_momentum_signals(signals_filter)
     except (RequestsConnectionError, TimeoutError, HTTPError, RequestException) as e:
         logger.error(
             "Error getting momentum signals",
@@ -320,17 +323,22 @@ async def get_momentum_signals_for_symbol(
 async def get_momentum_signals(
     momentum_types: list[MomentumType] | None = Query(None, description="Filter by momentum types"),
     timeframes: list[Timeframe] | None = Query(None, description="Filter by timeframes"),
-    min_strength: float = Query(50.0, ge=0, le=100, description="Minimum signal strength"),
-    min_confidence: float = Query(60.0, ge=0, le=100, description="Minimum signal confidence"),
-    active_only: bool = Query(True, description="Only active signals"),
-    max_age_hours: int = Query(MAX_24, ge=1, description="Maximum signal age in hours"),
-    limit: int = Query(50, ge=1, le=MAX_200, description="Maximum number of signals to return"),
+    min_strength: float = Query(default=50.0, ge=0, le=100, description="Minimum signal strength"),
+    min_confidence: float = Query(
+        default=60.0, ge=0, le=100, description="Minimum signal confidence"
+    ),
+    active_only: bool = Query(default=True, description="Only active signals"),
+    max_age_hours: int = Query(default=MAX_24, ge=1, description="Maximum signal age in hours"),
+    limit: int = Query(
+        default=50, ge=1, le=MAX_200, description="Maximum number of signals to return"
+    ),
     service: MomentumAnalysisService = Depends(get_momentum_analysis_service),
 ):
     """Get momentum signals with filtering options."""
     try:
         # Create filter criteria
         filter_criteria = MomentumFilter(
+            symbols=None,
             momentum_types=momentum_types,
             timeframes=timeframes,
             min_strength=min_strength,
@@ -395,7 +403,7 @@ async def get_momentum_signals(
 
 @router.get("/signals/top", response_model=dict[str, Any])
 async def get_top_momentum_signals(
-    limit: int = Query(10, ge=1, le=MAX_50, description="Number of top signals to return"),
+    limit: int = Query(default=10, ge=1, le=MAX_50, description="Number of top signals to return"),
     service: MomentumAnalysisService = Depends(get_momentum_analysis_service),
 ):
     """Get top momentum signals by momentum score."""
@@ -633,6 +641,11 @@ async def update_momentum_strategy(
         # Update strategy via service
         updated_strategy = await service.update_strategy(strategy_name, updated_fields)
 
+        if not updated_strategy:
+            raise HTTPException(
+                status_code=500, detail=f"Failed to update strategy {strategy_name}"
+            )
+
         return {
             "success": True,
             "strategy": {
@@ -807,7 +820,7 @@ async def get_strategy_signals(
 async def analyze_multiple_assets(
     symbols: list[str],
     background_tasks: BackgroundTasks,
-    timeframe: Timeframe = Query(Timeframe.DAILY, description="Analysis timeframe"),
+    timeframe: Timeframe = Query(default=Timeframe.DAILY, description="Analysis timeframe"),
     service: MomentumAnalysisService = Depends(get_momentum_analysis_service),
 ):
     """Analyze momentum for multiple assets."""
@@ -874,7 +887,7 @@ async def analyze_multiple_assets(
 @router.get("/indicators/{symbol}", response_model=dict[str, Any])
 async def get_technical_indicators(
     symbol: str,
-    timeframe: Timeframe = Query(Timeframe.DAILY, description="Indicator timeframe"),
+    timeframe: Timeframe = Query(default=Timeframe.DAILY, description="Indicator timeframe"),
     service: MomentumAnalysisService = Depends(get_momentum_analysis_service),
 ):
     """Get technical indicators for a specific asset."""

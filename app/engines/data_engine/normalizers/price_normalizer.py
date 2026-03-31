@@ -4,6 +4,8 @@ PriceNormalizer - Normalización de precios.
 Maneja ajustes por splits, dividendos y corporate actions.
 """
 
+from __future__ import annotations
+
 import logging
 from datetime import datetime
 from decimal import Decimal

@@ -8,6 +8,8 @@ Refactorización de MeanReversionStrategy como Strategy Engine con:
 - Métricas mejoradas
 """
 
+from __future__ import annotations
+
 import logging
 from collections import deque
 from collections.abc import Sequence
@@ -96,7 +98,7 @@ class MeanReversionStrategyEngine(BaseStrategyEngine):
         self.min_z_score = Decimal(str(min_z_score_value))
 
         # Price history
-        self.price_history = deque(maxlen=200)
+        self.price_history: deque[float] = deque(maxlen=200)
 
         # Technical indicator calculator
         self.indicator_calculator = TechnicalIndicatorCalculator()

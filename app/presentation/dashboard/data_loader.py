@@ -4,6 +4,8 @@ Data Loader for Dashboard
 Loads data from backtesting results and paper trading logs.
 """
 
+from __future__ import annotations
+
 import contextlib
 import json
 import logging

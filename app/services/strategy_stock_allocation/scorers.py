@@ -8,7 +8,7 @@ Pairs Trading strategies following Single Responsibility Principle.
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING, Callable
+from typing import TYPE_CHECKING, Callable, Protocol, runtime_checkable
 
 import numpy as np
 import pandas as pd
@@ -18,6 +18,17 @@ if TYPE_CHECKING:
     from app.shared.config.params.strategy_config import StockAllocationSettings
 
     from .calculators import HalfLifeCalculator, HurstCalculator
+
+
+@runtime_checkable
+class TechnicalIndicatorCalculator(Protocol):
+    """Protocol for technical indicator calculators."""
+
+    def calculate_rsi(self, prices: list[float], period: int) -> float | None: ...
+    def calculate_macd(
+        self, prices: list[float]
+    ) -> tuple[float | None, float | None, float | None]: ...
+    def calculate_roc(self, prices: list[float], period: int) -> float | None: ...
 
 
 logger = logging.getLogger(__name__)
@@ -53,6 +64,7 @@ except ImportError:
 
 
 def ols(*args: object, **kwargs: object) -> object:
+    """Create OLS regression model."""
     return _OLS_IMPL(*args, **kwargs)
 
 
@@ -76,7 +88,7 @@ class MomentumScorer:
         self,
         config: StockAllocationSettings,
         hurst_calculator: HurstCalculator,
-        technical_indicator_calculator: object,
+        technical_indicator_calculator: TechnicalIndicatorCalculator,
     ) -> None:
         """
         Initialize momentum scorer.
@@ -276,8 +288,8 @@ class MomentumScorer:
                     mse = np.mean((recent_prices - fitted) ** 2)
 
                     if mse < best_slope_mse:
-                        best_slope_mse = mse
-                        slope_pct = (
+                        best_slope_mse = float(mse)
+                        slope_pct = float(
                             (slope_coef / recent_prices[0]) * 100 if recent_prices[0] > 0 else 0
                         )
                         best_slope_pct = slope_pct
@@ -291,7 +303,7 @@ class MomentumScorer:
                             if len(returns_window) > 0:
                                 roc_error = np.var(returns_window)
                                 if roc_error < best_roc_mse:
-                                    best_roc_mse = roc_error
+                                    best_roc_mse = float(roc_error)
                                     best_roc = roc_window
                 except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
                     logger.debug(f"Error in dynamic window selection (window={window}): {e}")
@@ -652,7 +664,7 @@ class PairsTradingScorer:
             # Boost score with cointegration
             pairs_score *= 0.5 + cointegration_score * 0.5
 
-            result = {
+            result: dict[str, float | str | bool | None] = {
                 "score": float(pairs_score),
                 "correlation": float(correlation),
                 "cointegration_score": cointegration_score,
@@ -686,8 +698,10 @@ class PairsTradingScorer:
 
         try:
             # OLS regression: prices2 = alpha + beta * prices1
-            model = ols(prices2, prices1).fit()
-            hedge_ratio = float(model.params[0])
+            ols_model = _OLS_IMPL(prices2, prices1)
+            model = ols_model.fit()
+            params = model.params
+            hedge_ratio = float(params[0])
             residuals = model.resid
 
             # ADF test on residuals
@@ -792,13 +806,18 @@ class WCMScoreCalculator:
 
             # Score for momentum
             momentum_result = self.momentum_scorer.score(ticker, data)
-            scores["momentum"] = momentum_result.get("score", 0.0)
+            momentum_score = momentum_result.get("score", 0.0)
+            scores["momentum"] = (
+                float(momentum_score) if isinstance(momentum_score, (int, float)) else 0.0
+            )
 
             # Score for mean reversion
             mean_rev_result = self.mean_reversion_scorer.score(ticker, data)
+            mean_rev_score = mean_rev_result.get("score", 0.0)
+            mean_rev_rejected = mean_rev_result.get("rejected", False)
             scores["mean_reversion"] = (
-                mean_rev_result.get("score", 0.0)
-                if not mean_rev_result.get("rejected", False)
+                (float(mean_rev_score) if isinstance(mean_rev_score, (int, float)) else 0.0)
+                if not (isinstance(mean_rev_rejected, bool) and mean_rev_rejected)
                 else 0.0
             )
 

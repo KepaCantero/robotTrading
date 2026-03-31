@@ -16,13 +16,10 @@ from __future__ import annotations
 import logging
 from datetime import datetime, timedelta
 from decimal import Decimal
-from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from requests.exceptions import (
     ConnectionError as RequestsConnectionError,
-)
-from requests.exceptions import (
     HTTPError,
     RequestException,
 )
@@ -151,8 +148,10 @@ async def place_order(
         order_side = OrderSide(side.lower())
         order_type_enum = OrderType(order_type.lower())
         quantity_decimal = Decimal(str(quantity))
-        price_decimal: Optional[Decimal] = Decimal(str(price)) if price is not None else None
-        stop_price_decimal: Optional[Decimal] = Decimal(str(stop_price)) if stop_price is not None else None
+        price_decimal: Decimal | None = Decimal(str(price)) if price is not None else None
+        stop_price_decimal: Decimal | None = (
+            Decimal(str(stop_price)) if stop_price is not None else None
+        )
 
         order_id = await order_manager.place_order(
             symbol=symbol,
@@ -264,14 +263,21 @@ async def list_orders(
 
         return {
             "count": len(orders),
-            "orders": [o.to_dict() if hasattr(o, "to_dict") else {
-                "order_id": o.order_id,
-                "symbol": o.symbol,
-                "side": o.side.value,
-                "quantity": str(o.quantity),
-                "order_type": o.order_type.value,
-                "status": o.status.value,
-            } for o in orders[:limit]],
+            "orders": [
+                (
+                    o.to_dict()
+                    if hasattr(o, "to_dict")
+                    else {
+                        "order_id": o.order_id,
+                        "symbol": o.symbol,
+                        "side": o.side.value,
+                        "quantity": str(o.quantity),
+                        "order_type": o.order_type.value,
+                        "status": o.status.value,
+                    }
+                )
+                for o in orders[:limit]
+            ],
             "timestamp": datetime.utcnow().isoformat(),
         }
     except (RequestsConnectionError, TimeoutError, HTTPError, RequestException) as e:
@@ -388,7 +394,11 @@ async def validate_order_risk(
         quantity_decimal = Decimal(str(quantity))
 
         # Determine a price for validation (use equity-based conservative estimate)
-        price = account.portfolio_value / Decimal("100") if account.portfolio_value > 0 else Decimal("100")
+        price = (
+            account.portfolio_value / Decimal("100")
+            if account.portfolio_value > 0
+            else Decimal("100")
+        )
 
         result = await risk_gates.validate_order(
             symbol=symbol,
@@ -575,7 +585,9 @@ async def get_audit_trail(
             start = datetime.fromisoformat(start_date) if start_date else datetime.min
             end = datetime.fromisoformat(end_date) if end_date else datetime.now()
             event_dicts = [
-                e for e in event_dicts if start <= datetime.fromisoformat(e.get("timestamp", "")) <= end
+                e
+                for e in event_dicts
+                if start <= datetime.fromisoformat(e.get("timestamp", "")) <= end
             ]
 
         return {
@@ -602,9 +614,7 @@ async def get_compliance_report(
         end_date = datetime.utcnow()
         start_date = end_date - timedelta(days=days)
 
-        report = audit_trail.generate_compliance_report(
-            start_date=start_date, end_date=end_date
-        )
+        report = audit_trail.generate_compliance_report(start_date=start_date, end_date=end_date)
 
         return {
             "period": {
@@ -725,11 +735,7 @@ async def get_portfolio_history(
         start_date = end_date - timedelta(days=days)
 
         history = await account_sync.get_portfolio_history()
-        filtered = [
-            s
-            for s in history
-            if start_date <= s.timestamp <= end_date
-        ]
+        filtered = [s for s in history if start_date <= s.timestamp <= end_date]
 
         return {
             "period": {

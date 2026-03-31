@@ -5,6 +5,8 @@ Validates the Monte Carlo P5 Return criterion for strategy acceptance.
 Follows Single Responsibility Principle (SOL-001).
 """
 
+from __future__ import annotations
+
 from dataclasses import dataclass
 from typing import Optional
 

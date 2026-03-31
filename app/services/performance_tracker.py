@@ -4,6 +4,8 @@ TASK-MET-RUNTIME-1: Runtime Performance Tracking Service.
 Tracks performance metrics per cycle to monitor system efficiency and identify bottlenecks.
 """
 
+from __future__ import annotations
+
 import logging
 import time
 from typing import Any, Optional

@@ -65,6 +65,8 @@ Example:
     >>> print(f"Delta: {greeks['primary_greeks']['delta']:.4f}")
 """
 
+from __future__ import annotations
+
 import logging
 from datetime import datetime
 from typing import Any, Optional
@@ -282,9 +284,9 @@ class GreeksCalculator:
             ValueError: If option_type is invalid.
         """
         if option_type == "call":
-            return np.exp(-q * T) * norm.cdf(d1)
+            return float(np.exp(-q * T) * norm.cdf(d1))
         elif option_type == "put":
-            return np.exp(-q * T) * (norm.cdf(d1) - 1)
+            return float(np.exp(-q * T) * (norm.cdf(d1) - 1))
         else:
             raise ValueError(f"Unknown option type: {option_type}")
 
@@ -315,7 +317,7 @@ class GreeksCalculator:
         Returns:
             Gamma value as a float (always positive for long options).
         """
-        return norm.pdf(d1) / (S * sigma * np.sqrt(T))
+        return float(norm.pdf(d1) / (S * sigma * np.sqrt(T)))
 
     def _calculate_theta(
         self,
@@ -371,7 +373,7 @@ class GreeksCalculator:
         else:
             raise ValueError(f"Unknown option type: {option_type}")
 
-        return theta
+        return float(theta)
 
     def _calculate_vega(
         self,
@@ -396,7 +398,7 @@ class GreeksCalculator:
         Returns:
             Vega per 1% change in volatility (always positive for long options).
         """
-        return S * norm.pdf(d1) * np.sqrt(T) / 100  # Per 1% change
+        return float(S * norm.pdf(d1) * np.sqrt(T) / 100)  # Per 1% change
 
     def _calculate_rho(
         self,
@@ -436,7 +438,7 @@ class GreeksCalculator:
         else:
             raise ValueError(f"Unknown option type: {option_type}")
 
-        return rho / 100  # Per 1% change
+        return float(rho / 100)  # Per 1% change
 
     def _calculate_vanna(self, d1: float, d2: float, sigma: float) -> float:
         """
@@ -458,7 +460,7 @@ class GreeksCalculator:
         Returns:
             Vanna value as a float.
         """
-        return -norm.pdf(d1) * d2 / sigma
+        return float(-norm.pdf(d1) * d2 / sigma)
 
     def _calculate_vomma(self, d1: float, d2: float, sigma: float) -> float:
         """
@@ -480,7 +482,7 @@ class GreeksCalculator:
         Returns:
             Vomma value as a float.
         """
-        return norm.pdf(d1) * d1 * d2 / sigma
+        return float(norm.pdf(d1) * d1 * d2 / sigma)
 
     def _calculate_charm(
         self,
@@ -525,7 +527,7 @@ class GreeksCalculator:
         else:
             raise ValueError(f"Unknown option type: {option_type}")
 
-        return charm / 365  # Per day
+        return float(charm / 365)  # Per day
 
     def _calculate_veta(
         self,
@@ -555,7 +557,7 @@ class GreeksCalculator:
             Veta per day.
         """
         term = norm.pdf(d1) * (r - q + (d1 / (2 * T)) * sigma**2) / (sigma * T)
-        return term / 365  # Per day
+        return float(term / 365)  # Per day
 
     def _calculate_option_price(
         self,
@@ -601,7 +603,7 @@ class GreeksCalculator:
         else:
             raise ValueError(f"Unknown option type: {option_type}")
 
-        return price
+        return float(price)
 
     def _calculate_risk_metrics(
         self,
@@ -737,7 +739,7 @@ class GreeksCalculator:
             ... ])
         """
         try:
-            portfolio_greeks = {
+            portfolio_greeks: dict[str, Any] = {
                 "total_delta": 0.0,
                 "total_gamma": 0.0,
                 "total_theta": 0.0,
@@ -975,13 +977,17 @@ class GreeksCalculator:
 
         option_type = greeks_result.get("option_type")
 
-        # 1. Gamma should always be positive
+        # 1. Gamma: positive for long, negative for short options (both valid)
         if gamma is not None and gamma <= 0:
-            validation_issues.append(f"Gamma must be positive, got {gamma}")
+            warnings.append(
+                f"Negative gamma ({gamma}) indicates short option position - verify intent"
+            )
 
-        # 2. Vega should always be positive
+        # 2. Vega: positive for long, negative for short options (both valid)
         if vega is not None and vega <= 0:
-            validation_issues.append(f"Vega must be positive, got {vega}")
+            warnings.append(
+                f"Negative vega ({vega}) indicates short option position - verify intent"
+            )
 
         # 3. Delta range validation
         if delta is not None:
@@ -1559,6 +1565,8 @@ class GreeksCalculator:
                 vega = greeks["primary_greeks"]["vega"] * 100  # Convert back from per-1% basis
 
                 # Check convergence
+                if model_price is None:
+                    return {"error": f"Model price not available at iteration {i}"}
                 price_diff = model_price - option_price
                 if abs(price_diff) < tolerance:
                     break
@@ -1620,7 +1628,7 @@ class GreeksCalculator:
             Validation results comparing model to market
         """
         try:
-            validation_results = {
+            validation_results: dict[str, Any] = {
                 "options_validated": [],
                 "total_options": len(market_prices),
                 "within_tolerance": 0,
@@ -1645,6 +1653,14 @@ class GreeksCalculator:
                     continue
 
                 model_price = greeks.get("option_price")
+                if model_price is None:
+                    validation_results["options_validated"].append(
+                        {
+                            "option_type": option_type,
+                            "error": "Model price not available",
+                        }
+                    )
+                    continue
                 price_error = abs(model_price - market_price)
                 relative_error = price_error / market_price if market_price > 0 else 0
 

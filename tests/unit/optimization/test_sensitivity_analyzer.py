@@ -22,7 +22,7 @@ import sys  # noqa: E402
 
 sys.path.insert(0, str(project_root))
 
-from app.optimization.sensitivity_analyzer import (  # noqa: E402
+from app.domain.optimization.sensitivity_analyzer import (  # noqa: E402
     SensitivityAnalyzer,
     SensitivityReport,
     SensitivityResult,

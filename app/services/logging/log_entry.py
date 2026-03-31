@@ -4,6 +4,8 @@ Log Entry - Inmutable append-only log entry
 Cada entrada es inmutable y se anade al log append-only.
 """
 
+from __future__ import annotations
+
 import logging
 import uuid
 from dataclasses import dataclass
@@ -33,7 +35,7 @@ class LogEntry:
     metadata: dict[str, Any]
 
     @classmethod
-    def create(cls, event_type: str, data: dict, metadata: Optional[dict] = None) -> "LogEntry":
+    def create(cls, event_type: str, data: dict, metadata: Optional[dict] = None) -> LogEntry:
         """
         Crear nueva entrada de log con correlation ID unico
 
@@ -101,7 +103,7 @@ class LogEntry:
 
         return result
 
-    def with_correlation_id(self, correlation_id: str) -> "LogEntry":
+    def with_correlation_id(self, correlation_id: str) -> LogEntry:
         """
         Crear nueva entrada con correlation_id existente
 

@@ -16,8 +16,9 @@ Reference:
     Harris, L. (2003). Trading and Exchanges, Chapters 4-5.
 """
 
-# mypy: ignore-errors
+from __future__ import annotations
 
+# mypy: ignore-errors
 import logging
 import uuid
 from dataclasses import dataclass, field

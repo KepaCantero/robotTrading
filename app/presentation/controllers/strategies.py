@@ -17,9 +17,7 @@ if TYPE_CHECKING:
     from app.domain.strategies.protocols import (
         StrategyLoggerProto as StrategyLogger,
     )
-    from app.domain.strategies.protocols import (
-        StrategyRegistryProto as StrategyRegistry,
-    )
+    from app.domain.strategies.strategy_registry import StrategyRegistry
 
 # Constants
 DEFAULT_VALUE_31 = 31
@@ -42,9 +40,11 @@ def get_strategy_registry() -> StrategyRegistry:
     global _strategy_registry
     if _strategy_registry is None:
         # Lazy import to avoid circular dependencies
-        from app.domain.strategies.strategy_registry import StrategyRegistry
+        from app.domain.strategies.strategy_registry import (
+            StrategyRegistry as ConcreteStrategyRegistry,
+        )
 
-        _strategy_registry = StrategyRegistry()
+        _strategy_registry = ConcreteStrategyRegistry()
 
     return _strategy_registry
 
@@ -315,13 +315,15 @@ async def get_strategy(
         status_info = registry.get_strategy_status(strategy_name)
 
         return StrategyResponse(
-            name=status_info["name"],
-            is_active=status_info["is_active"],
-            is_currently_active=status_info["is_currently_active"],
-            version=status_info["version"],
-            description=status_info["description"],
-            created_at=status_info["created_at"],
-            parameters=status_info["parameters"],
+            name=str(status_info["name"]),
+            is_active=bool(status_info["is_active"]),
+            is_currently_active=bool(status_info["is_currently_active"]),
+            version=str(status_info["version"]),
+            description=str(status_info["description"]),
+            created_at=str(status_info["created_at"]),
+            parameters=(
+                status_info["parameters"] if isinstance(status_info["parameters"], dict) else {}
+            ),
         )
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e)) from e
@@ -370,17 +372,17 @@ async def get_strategy_metrics(
         metrics = logger_instance.get_strategy_metrics(strategy_name)
 
         return StrategyMetricsResponse(
-            strategy=metrics["strategy"],
-            signals_generated=metrics["signals_generated"],
-            signals_executed=metrics["signals_executed"],
-            signals_rejected=metrics["signals_rejected"],
-            execution_rate=metrics["execution_rate"],
-            rejection_rate=metrics["rejection_rate"],
-            error_count=metrics["error_count"],
-            error_rate=metrics["error_rate"],
-            total_logs=metrics["total_logs"],
-            first_log=metrics["first_log"],
-            last_log=metrics["last_log"],
+            strategy=str(metrics["strategy"]),
+            signals_generated=int(metrics["signals_generated"]),
+            signals_executed=int(metrics["signals_executed"]),
+            signals_rejected=int(metrics["signals_rejected"]),
+            execution_rate=float(metrics["execution_rate"]),
+            rejection_rate=float(metrics["rejection_rate"]),
+            error_count=int(metrics["error_count"]),
+            error_rate=float(metrics["error_rate"]),
+            total_logs=int(metrics["total_logs"]),
+            first_log=(str(metrics["first_log"]) if metrics["first_log"] is not None else None),
+            last_log=(str(metrics["last_log"]) if metrics["last_log"] is not None else None),
         )
     except Exception as e:
         logger.error(f"Error getting strategy metrics {strategy_name}: {e}")

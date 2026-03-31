@@ -11,6 +11,8 @@ Reference:
     López de Prado, M. (2020). Machine Learning for Asset Managers.
 """
 
+from __future__ import annotations
+
 import logging
 from datetime import datetime
 from decimal import Decimal
@@ -545,7 +547,10 @@ class MetricsCalculator:
         if not durations:
             return Decimal("0")
 
-        return safe_mean(durations)
+        result = safe_mean(durations)
+        if result is None:
+            return Decimal("0")
+        return Decimal(str(result))
 
     def calculate_cagr(
         self,
@@ -894,7 +899,7 @@ def calculate_classification_metrics_imbalanced(
             precision, recall, _ = precision_recall_curve(y_true, y_proba)
             metrics["pr_auc"] = float(auc(recall, precision))
         except Exception:
-            metrics["pr_auc"] = None
+            metrics["pr_auc"] = 0.0
 
     return metrics
 
@@ -934,6 +939,8 @@ def calculate_imbalanced_metrics_from_trades(
     # Add trade-specific metrics
     metrics["n_winning"] = len(winning_trades)
     metrics["n_losing"] = len(losing_trades)
+
+    return metrics
 
 
 # ============================================================================

@@ -209,9 +209,9 @@ class LookAheadValidator:
         Returns:
             ValidationResult with detailed findings
         """
-        issues = []
-        warnings = []
-        statistics = {}
+        issues: list[str] = []
+        warnings: list[str] = []
+        statistics: dict[str, Any] = {}
 
         logger.info("Starting look-ahead bias validation...")
 
@@ -250,7 +250,7 @@ class LookAheadValidator:
         # Add additional statistics
         statistics["total_issues"] = len(issues)
         statistics["total_warnings"] = len(warnings)
-        statistics["validation_timestamp"] = datetime.utcnow().isoformat()
+        statistics["validation_timestamp"] = str(datetime.utcnow().isoformat())
         statistics["signal_count"] = len(signals)
         statistics["data_points"] = len(market_data)
 
@@ -360,7 +360,7 @@ class LookAheadValidator:
         Returns:
             List of leakage issues found
         """
-        issues = []
+        issues: list[TimingIssue] = []
 
         if not isinstance(signals.index, pd.DatetimeIndex) or not isinstance(
             market_data.index, pd.DatetimeIndex
@@ -423,7 +423,7 @@ class LookAheadValidator:
         Returns:
             List of gap warnings
         """
-        warnings = []
+        warnings: list[str] = []
 
         if not isinstance(market_data.index, pd.DatetimeIndex) or len(market_data) < 2:
             return warnings
@@ -469,7 +469,7 @@ class LookAheadValidator:
         Returns:
             List of alignment issues
         """
-        issues = []
+        issues: list[str] = []
 
         if not isinstance(signals.index, pd.DatetimeIndex) or not isinstance(
             market_data.index, pd.DatetimeIndex

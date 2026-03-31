@@ -25,6 +25,8 @@ Design Principles:
 4. Audit Trail: Every decision logged with reasoning
 """
 
+from __future__ import annotations
+
 import logging
 from dataclasses import dataclass
 from decimal import Decimal

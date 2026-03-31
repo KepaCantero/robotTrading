@@ -481,7 +481,7 @@ class MarketRegimeDetector:
         # Remove NaN values
         features = features.dropna()
 
-        return features.values
+        return np.asarray(features.values)
 
     def _map_regimes_to_labels(
         self,

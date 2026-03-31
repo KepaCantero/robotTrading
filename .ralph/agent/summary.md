@@ -1,8 +1,8 @@
 # Loop Summary
 
-**Status:** Completed successfully
-**Iterations:** 10
-**Duration:** 3h 57m 19s
+**Status:** Failed: too many consecutive failures
+**Iterations:** 5
+**Duration:** 8h 52m 10s
 
 ## Tasks
 
@@ -14,4 +14,4 @@ _No events recorded._
 
 ## Final Commit
 
-8faa5822: chore: auto-commit before merge (loop primary)
+92c90ea6: continue with auditing

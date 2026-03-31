@@ -4,6 +4,8 @@ Base optimizer class and common utilities.
 Provides the abstract base class for all optimizers and shared functionality.
 """
 
+from __future__ import annotations
+
 import logging
 from abc import ABC, abstractmethod
 from concurrent.futures import ProcessPoolExecutor, as_completed
@@ -220,7 +222,7 @@ class OptimizationResult:
             json.dump(self.to_dict(), f, indent=2, default=str)
 
     @classmethod
-    def load(cls, filepath: str) -> "OptimizationResult":
+    def load(cls, filepath: str) -> OptimizationResult:
         """Load result from file."""
         import json
 

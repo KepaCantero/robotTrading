@@ -15,6 +15,8 @@ Reference:
     Harris, L. (2003). Trading and Exchanges, Chapters 4-6.
 """
 
+from __future__ import annotations
+
 import logging
 import uuid
 from dataclasses import dataclass

@@ -15,19 +15,22 @@ Incluye:
 9. YAML configuration support
 """
 
+from __future__ import annotations
+
 import logging
 import os
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
-from types import ModuleType
-from typing import Callable, Optional, Union
-
-from typing_extensions import TypeAlias
+from typing import TYPE_CHECKING, Protocol, Union, runtime_checkable
 
 import numpy as np
 from numpy.typing import NDArray
+from typing_extensions import TypeAlias
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable
 
 logger = logging.getLogger(__name__)
 
@@ -35,11 +38,81 @@ logger = logging.getLogger(__name__)
 ArrayLike: TypeAlias = Union[NDArray[np.floating], NDArray[np.integer]]
 FloatArray: TypeAlias = NDArray[np.floating]
 IntArray: TypeAlias = NDArray[np.integer]
-ModelType: TypeAlias = object  # ML models from sklearn/xgboost/etc - duck-typed
-ExplainerType: TypeAlias = object  # SHAP explainers - duck-typed
-SelectorType: TypeAlias = object  # sklearn selectors - duck-typed
 
-# Configuration types
+
+# ============================================================================
+# Protocol types for duck-typed ML objects
+# ============================================================================
+@runtime_checkable
+class Predictor(Protocol):
+    """Protocol for models with predict method."""
+
+    def predict(self, X: object, /) -> object: ...
+
+
+@runtime_checkable
+class TreeModel(Protocol):
+    """Protocol for tree-based models with feature_importances_."""
+
+    feature_importances_: np.ndarray
+    n_estimators: int
+
+    def fit(self, X: object, y: object, /) -> object: ...
+    def predict(self, X: object, /) -> object: ...
+
+
+@runtime_checkable
+class ShapExplainer(Protocol):
+    """Protocol for SHAP explainers."""
+
+    expected_value: object
+
+    def shap_values(self, X: object, /) -> object: ...
+
+
+@runtime_checkable
+class FeatureImportancesModel(Protocol):
+    """Protocol for models that expose feature_importances_."""
+
+    feature_importances_: np.ndarray
+
+
+@runtime_checkable
+class SklearnSelector(Protocol):
+    """Protocol for sklearn feature selectors."""
+
+    support_: np.ndarray
+    scores_: np.ndarray
+
+    def fit(self, X: object, y: object, /) -> object: ...
+    def get_support(self, indices: bool = False, /) -> np.ndarray: ...
+
+
+@runtime_checkable
+class RFESelector(Protocol):
+    """Protocol for RFE selectors."""
+
+    ranking_: np.ndarray
+    support_: np.ndarray
+
+    def fit(self, X: object, y: object, /) -> object: ...
+    def get_support(self, indices: bool = False, /) -> np.ndarray: ...
+
+
+@runtime_checkable
+class NamedModulesModel(Protocol):
+    """Protocol for models with named_modules."""
+
+    def named_modules(self) -> Iterable[tuple[str, object]]: ...
+    def eval(self) -> object: ...
+
+
+# Union types for flexible model/explainer/selector parameters
+ModelType = Union[Predictor, TreeModel, FeatureImportancesModel, NamedModulesModel, object]
+ExplainerType = Union[ShapExplainer, object]
+SelectorType = Union[SklearnSelector, RFESelector, object]
+
+# Configuration types - using object for flexible nested config
 ConfigValue = Union[str, int, float, bool]
 ConfigDict = dict[str, ConfigValue]
 NestedConfigDict = dict[str, Union[ConfigValue, ConfigDict]]
@@ -54,40 +127,90 @@ StabilityResultDict = dict[str, dict[str, Union[float, bool, str, int]]]
 ResultDict = dict[str, object]
 
 # ============================================================================
-# Optional Dependencies - Use proper Optional types
+# Optional Dependencies
 # ============================================================================
-try:
-    import shap
 
+
+if TYPE_CHECKING:
+    from types import ModuleType
+
+shap: ModuleType | None
+SHAP_AVAILABLE: bool
+_TreeExplainer: type | None
+_KernelExplainer: type | None
+_LinearExplainer: type | None
+_DeepExplainer: type | None
+try:
+    import shap as _shap
+
+    shap = _shap
+    _TreeExplainer = _shap.TreeExplainer
+    _KernelExplainer = _shap.KernelExplainer
+    _LinearExplainer = _shap.LinearExplainer
+    _DeepExplainer = _shap.DeepExplainer
     SHAP_AVAILABLE = True
 except (ImportError, OSError):
-    shap: Optional[ModuleType] = None
+    shap = None
+    _TreeExplainer = None
+    _KernelExplainer = None
+    _LinearExplainer = None
+    _DeepExplainer = None
     SHAP_AVAILABLE = False
 
-try:
-    from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
-    from sklearn.feature_selection import (
-        RFE,
-        SelectFromModel,
-        SelectKBest,
-        mutual_info_classif,
-        mutual_info_regression,
-    )
-    from sklearn.inspection import permutation_importance
-    from sklearn.metrics import f_classif, f_regression
 
+def _get_shap_module() -> ModuleType:
+    """Get the SHAP module, raising if unavailable."""
+    if shap is None:
+        raise RuntimeError("SHAP module is not available")
+    return shap
+
+
+SKLEARN_FEATURE_SELECTION_AVAILABLE: bool
+SelectKBest: type | None
+SelectFromModel: type | None
+RFE: type | None
+mutual_info_classif: object
+mutual_info_regression: object
+permutation_importance: object
+f_classif: object
+f_regression: object
+RandomForestClassifier: type | None
+RandomForestRegressor: type | None
+
+try:
+    from sklearn.ensemble import RandomForestClassifier as _RFClf, RandomForestRegressor as _RFReg
+    from sklearn.feature_selection import (
+        RFE as _RFE,
+        SelectFromModel as SelectFromModelAlias,
+        SelectKBest as SelectKBestAlias,
+        mutual_info_classif as _mic,
+        mutual_info_regression as _mir,
+    )
+    from sklearn.inspection import permutation_importance as _pi
+    from sklearn.metrics import f_classif as _fc, f_regression as _fr
+
+    SelectKBest = SelectKBestAlias
+    SelectFromModel = SelectFromModelAlias
+    RFE = _RFE
+    mutual_info_classif = _mic
+    mutual_info_regression = _mir
+    permutation_importance = _pi
+    f_classif = _fc
+    f_regression = _fr
+    RandomForestClassifier = _RFClf
+    RandomForestRegressor = _RFReg
     SKLEARN_FEATURE_SELECTION_AVAILABLE = True
 except (ImportError, OSError):
-    SelectKBest: Optional[type] = None
-    SelectFromModel: Optional[type] = None
-    RFE: Optional[type] = None
-    mutual_info_classif: Optional[Callable[..., object]] = None
-    mutual_info_regression: Optional[Callable[..., object]] = None
-    permutation_importance: Optional[Callable[..., object]] = None
-    f_classif: Optional[Callable[..., object]] = None
-    f_regression: Optional[Callable[..., object]] = None
-    RandomForestClassifier: Optional[type] = None
-    RandomForestRegressor: Optional[type] = None
+    SelectKBest = None
+    SelectFromModel = None
+    RFE = None
+    mutual_info_classif = None
+    mutual_info_regression = None
+    permutation_importance = None
+    f_classif = None
+    f_regression = None
+    RandomForestClassifier = None
+    RandomForestRegressor = None
     SKLEARN_FEATURE_SELECTION_AVAILABLE = False
 
 
@@ -95,8 +218,8 @@ except (ImportError, OSError):
 # Configuration Loading
 # ============================================================================
 def load_feature_importance_config(
-    config_path: Optional[str] = None,
-) -> NestedConfigDict:
+    config_path: str | None = None,
+) -> dict[str, object]:
     """
     Load feature importance configuration from YAML file.
 
@@ -109,8 +232,8 @@ def load_feature_importance_config(
     if config_path is None:
         # Try default locations
         possible_paths = [
-            Path("config/feature_importance.yaml"),
-            Path(__file__).parent.parent.parent.parent.parent / "config/feature_importance.yaml",
+            Path("config/learning/feature_importance.yaml"),
+            Path(__file__).parent.parent.parent.parent.parent / "config/learning/feature_importance.yaml",
         ]
         for path in possible_paths:
             if path.exists():
@@ -122,7 +245,7 @@ def load_feature_importance_config(
             import yaml
 
             with open(config_path) as f:
-                config = yaml.safe_load(f)
+                config: dict[str, object] = yaml.safe_load(f)
                 logger.info(f"Loaded feature importance config from {config_path}")
                 return config
         except OSError as e:
@@ -131,7 +254,7 @@ def load_feature_importance_config(
     return get_default_feature_importance_config()
 
 
-def get_default_feature_importance_config() -> NestedConfigDict:
+def get_default_feature_importance_config() -> dict[str, object]:
     """Get default feature importance configuration."""
     return {
         "enabled": True,
@@ -201,15 +324,13 @@ class FeatureImportanceResult:
     category: ImportanceCategory
     methods_used: list[str] = field(default_factory=list)
     method_scores: dict[str, float] = field(default_factory=dict)
-    stability_score: Optional[float] = None
-    correlation_with_target: Optional[float] = None
-    recommendation: Optional[str] = None
+    stability_score: float | None = None
+    correlation_with_target: float | None = None
+    recommendation: str | None = None
 
     def to_dict(
         self,
-    ) -> dict[
-        str, Union[str, int, float, list[str], dict[str, float], Optional[float], Optional[str]]
-    ]:
+    ) -> dict[str, str | int | float | list[str] | dict[str, float] | float | None | str | None]:
         """Convert to dictionary."""
         return {
             "feature_name": self.feature_name,
@@ -241,24 +362,7 @@ class ComprehensiveImportanceReport:
 
     def to_dict(
         self,
-    ) -> dict[
-        str,
-        Union[
-            str,
-            int,
-            list[str],
-            list[dict[str, Union[str, float]]],
-            float,
-            list[
-                dict[
-                    str,
-                    Union[
-                        str, int, float, list[str], dict[str, float], Optional[float], Optional[str]
-                    ],
-                ]
-            ],
-        ],
-    ]:
+    ) -> dict[str, object]:
         """Convert to dictionary."""
         return {
             "timestamp": self.timestamp.isoformat(),
@@ -290,7 +394,7 @@ class SHAPAnalyzer:
     - Neural networks (PyTorch, TensorFlow)
     """
 
-    def __init__(self, config: Optional[dict[str, Union[str, int, float, bool]]] = None):
+    def __init__(self, config: dict[str, object] | None = None):
         """
         Inicializar analizador SHAP.
 
@@ -298,9 +402,12 @@ class SHAPAnalyzer:
             config: Configuración
         """
         config = config or {}
-        self.sample_size = config.get("sample_size", 100)  # Para TreeExplainer
-        self.max_evals = config.get("max_evals", 100)  # Para KernelExplainer
-        self.use_background = config.get("use_background", True)
+        _sample_size = config.get("sample_size", 100)
+        self.sample_size = _sample_size if isinstance(_sample_size, int) else 100
+        _max_evals = config.get("max_evals", 100)
+        self.max_evals = _max_evals if isinstance(_max_evals, int) else 100
+        _use_bg = config.get("use_background", True)
+        self.use_background = _use_bg if isinstance(_use_bg, bool) else True
 
         if not SHAP_AVAILABLE:
             logger.warning("SHAP no disponible. Instala con: pip install shap")
@@ -309,9 +416,9 @@ class SHAPAnalyzer:
         self,
         model: ModelType,
         X: FloatArray,
-        feature_names: Optional[list[str]] = None,
+        feature_names: list[str] | None = None,
         model_type: str = "auto",
-    ) -> dict[str, Union[str, float, list[str], dict[str, float], FloatArray, Optional[list[str]]]]:
+    ) -> dict[str, str | float | list[str] | dict[str, float] | FloatArray | list[str] | None]:
         """
         Explicar modelo usando SHAP values.
 
@@ -331,7 +438,7 @@ class SHAPAnalyzer:
                 'summary_stats': Dict
             }
         """
-        if not SHAP_AVAILABLE:
+        if not SHAP_AVAILABLE or shap is None:
             return {"error": "SHAP not available", "message": "Install with: pip install shap"}
 
         try:
@@ -339,23 +446,13 @@ class SHAPAnalyzer:
             explainer = self._create_explainer(model, X, model_type)
 
             # Calcular SHAP values
-            if isinstance(explainer, shap.TreeExplainer):
-                # TreeExplainer es rápido y exacto para tree-based models
+            if isinstance(explainer, ShapExplainer):
                 shap_values = explainer.shap_values(X[: self.sample_size])
-                base_value = explainer.expected_value
-            elif isinstance(explainer, shap.KernelExplainer):
-                # KernelExplainer para modelos generales (más lento)
-                # Note: Newer SHAP versions don't accept nsamples in shap_values()
-                shap_values = explainer.shap_values(X[: min(self.sample_size, len(X))])
                 base_value = (
                     explainer.expected_value if hasattr(explainer, "expected_value") else 0.0
                 )
             else:
-                # LinearExplainer o DeepExplainer
-                shap_values = explainer.shap_values(X[: self.sample_size])
-                base_value = (
-                    explainer.expected_value if hasattr(explainer, "expected_value") else 0.0
-                )
+                return {"error": "Unknown explainer type"}
 
             # Si shap_values es una lista (multi-class), usar promedio
             if isinstance(shap_values, list):
@@ -392,7 +489,7 @@ class SHAPAnalyzer:
 
             return {
                 "shap_values": shap_values,
-                "base_value": float(base_value),
+                "base_value": float(base_value) if isinstance(base_value, (int, float)) else 0.0,
                 "feature_names": feature_names
                 or [f"feature_{i}" for i in range(len(feature_importance))],
                 "feature_importance": importance_dict,
@@ -403,7 +500,7 @@ class SHAPAnalyzer:
             logger.error(f"Error calculando SHAP values: {e}", exc_info=True)
             return {"error": str(e), "error_type": type(e).__name__}
 
-    def _create_explainer(self, model: ModelType, X: FloatArray, model_type: str) -> ExplainerType:
+    def _create_explainer(self, model: ModelType, X: FloatArray, model_type: str) -> object:
         """
         Crear explainer SHAP apropiado para el modelo.
 
@@ -424,21 +521,32 @@ class SHAPAnalyzer:
 
         if model_type == "tree":
             # Tree-based models (XGBoost, LightGBM, CatBoost, RandomForest)
-            return shap.TreeExplainer(model)
+            if _TreeExplainer is None:
+                raise RuntimeError("SHAP TreeExplainer not available")
+            return _TreeExplainer(model)
         elif model_type == "linear":
-            # Linear models
-            return shap.LinearExplainer(model, background)
+            if _LinearExplainer is None:
+                raise RuntimeError("SHAP LinearExplainer not available")
+            return _LinearExplainer(model, background)
         elif model_type == "neural":
             # Neural networks
             try:
                 # Intentar DeepExplainer primero
-                return shap.DeepExplainer(model, background)
+                if _DeepExplainer is None:
+                    raise RuntimeError("SHAP DeepExplainer not available")
+                return _DeepExplainer(model, background)
             except (ValueError, TypeError, KeyError, AttributeError):
                 # Fallback a KernelExplainer
-                return shap.KernelExplainer(model.predict, background)
+                if _KernelExplainer is None:
+                    raise RuntimeError("SHAP KernelExplainer not available") from None
+                predict_fn = model.predict if hasattr(model, "predict") else model
+                return _KernelExplainer(predict_fn, background)
         else:
             # Fallback genérico
-            return shap.KernelExplainer(model.predict, background)
+            if _KernelExplainer is None:
+                raise RuntimeError("SHAP KernelExplainer not available")
+            predict_fn = model.predict if hasattr(model, "predict") else model
+            return _KernelExplainer(predict_fn, background)
 
     def _detect_model_type(self, model: ModelType) -> str:
         """
@@ -466,8 +574,8 @@ class SHAPAnalyzer:
         model: ModelType,
         X: FloatArray,
         instance_idx: int,
-        feature_names: Optional[list[str]] = None,
-    ) -> dict[str, Union[str, dict[str, float], list[tuple[str, float]]]]:
+        feature_names: list[str] | None = None,
+    ) -> dict[str, str | dict[str, float] | list[tuple[str, float]]]:
         """
         Explicar una predicción individual.
 
@@ -480,7 +588,7 @@ class SHAPAnalyzer:
         Returns:
             Dict con explicación para esta instancia
         """
-        if not SHAP_AVAILABLE:
+        if not SHAP_AVAILABLE or shap is None:
             return {"error": "SHAP not available"}
 
         try:
@@ -489,11 +597,10 @@ class SHAPAnalyzer:
             # Calcular SHAP values para esta instancia
             instance = X[instance_idx : instance_idx + 1]
 
-            if isinstance(explainer, shap.TreeExplainer):
+            if isinstance(explainer, ShapExplainer):
                 shap_values = explainer.shap_values(instance)
             else:
-                # Note: Newer SHAP versions don't accept nsamples in shap_values()
-                shap_values = explainer.shap_values(instance)
+                return {"error": "Unknown explainer type"}
 
             # Si es lista (multi-class), usar la clase positiva
             if isinstance(shap_values, list):
@@ -531,7 +638,7 @@ class AttentionWeightsAnalyzer:
     de la secuencia temporal son más importantes.
     """
 
-    def __init__(self, config: Optional[dict[str, Union[str, bool]]] = None):
+    def __init__(self, config: dict[str, str | bool] | None = None):
         """
         Inicializar analizador de attention weights.
 
@@ -543,8 +650,8 @@ class AttentionWeightsAnalyzer:
         self.normalize = config.get("normalize", True)
 
     def extract_attention_weights(
-        self, model: ModelType, sequence: FloatArray, layer_idx: Optional[int] = None
-    ) -> dict[str, Union[str, Optional[FloatArray], FloatArray, dict[int, float], list[int], int]]:
+        self, model: ModelType, sequence: FloatArray, layer_idx: int | None = None
+    ) -> dict[str, str | FloatArray | None | FloatArray | dict[int, float] | list[int] | int]:
         """
         Extraer attention weights de un modelo Transformer.
 
@@ -631,8 +738,8 @@ class AttentionWeightsAnalyzer:
             return {"error": str(e)}
 
     def _get_attention_from_model(
-        self, model: ModelType, sequence: Union[FloatArray, object], layer_idx: Optional[int] = None
-    ) -> Optional[FloatArray]:
+        self, model: ModelType, sequence: FloatArray | object, layer_idx: int | None = None
+    ) -> FloatArray | None:
         """
         Extraer attention weights del modelo.
 
@@ -659,6 +766,8 @@ class AttentionWeightsAnalyzer:
                     pass
 
             # Buscar capas de transformer
+            if not isinstance(model, NamedModulesModel):
+                return None
             for name, module in model.named_modules():
                 if isinstance(module, nn.TransformerEncoderLayer) and (
                     layer_idx is None or name.endswith(f"[{layer_idx}]")
@@ -692,7 +801,7 @@ class FeatureSelector:
     - Model-based selection (SelectFromModel)
     """
 
-    def __init__(self, config: Optional[dict[str, Union[str, int, float, bool]]] = None):
+    def __init__(self, config: dict[str, object] | None = None):
         """
         Inicializar selector de features.
 
@@ -700,10 +809,14 @@ class FeatureSelector:
             config: Configuración
         """
         config = config or {}
-        self.method = config.get("method", "model_based")  # univariate, rfe, model_based
-        self.n_features = config.get("n_features", "auto")  # Número de features o "auto"
-        self.importance_threshold = config.get("importance_threshold", 0.01)
-        self.use_cross_validation = config.get("use_cross_validation", True)
+        _method = config.get("method", "model_based")
+        self.method = _method if isinstance(_method, str) else "model_based"
+        _nf = config.get("n_features", "auto")
+        self.n_features: str | int = _nf if isinstance(_nf, (str, int)) else "auto"
+        _it = config.get("importance_threshold", 0.01)
+        self.importance_threshold = float(_it) if isinstance(_it, (int, float)) else 0.01
+        _cv = config.get("use_cross_validation", True)
+        self.use_cross_validation = _cv if isinstance(_cv, bool) else True
 
         if not SKLEARN_FEATURE_SELECTION_AVAILABLE:
             logger.warning("sklearn feature selection no disponible.")
@@ -712,10 +825,10 @@ class FeatureSelector:
         self,
         X: FloatArray,
         y: FloatArray,
-        feature_names: Optional[list[str]] = None,
-        model: Optional[ModelType] = None,
+        feature_names: list[str] | None = None,
+        model: ModelType | None = None,
         task_type: str = "classification",  # classification o regression
-    ) -> dict[str, Union[str, list[int], list[str], dict[str, float], int, SelectorType]]:
+    ) -> dict[str, str | list[int] | list[str] | dict[str, float] | int | SelectorType]:
         """
         Seleccionar features más importantes.
 
@@ -813,6 +926,9 @@ class FeatureSelector:
         self, X: FloatArray, y: FloatArray, n_features: int, task_type: str
     ) -> tuple[SelectorType, FloatArray]:
         """Selección univariante usando SelectKBest."""
+        if SelectKBest is None or f_classif is None or f_regression is None:
+            raise RuntimeError("sklearn feature selection not available")
+
         score_func = f_classif if task_type == "classification" else f_regression
 
         selector = SelectKBest(score_func=score_func, k=n_features)
@@ -826,10 +942,13 @@ class FeatureSelector:
         X: FloatArray,
         y: FloatArray,
         n_features: int,
-        model: Optional[ModelType],
+        model: ModelType | None,
         task_type: str,
-    ) -> tuple[SelectorType, Optional[FloatArray]]:
+    ) -> tuple[SelectorType, FloatArray | None]:
         """Recursive Feature Elimination."""
+        if RFE is None or RandomForestClassifier is None or RandomForestRegressor is None:
+            raise RuntimeError("sklearn not available for RFE selection")
+
         # Crear modelo base si no se proporciona
         if model is None:
             if task_type == "classification":
@@ -845,16 +964,24 @@ class FeatureSelector:
         return selector, scores
 
     def _model_based_selection(
-        self, X: FloatArray, y: FloatArray, model: Optional[ModelType], task_type: str
-    ) -> tuple[SelectorType, Optional[FloatArray]]:
+        self, X: FloatArray, y: FloatArray, model: ModelType | None, task_type: str
+    ) -> tuple[SelectorType, FloatArray | None]:
         """Selección basada en importancia del modelo."""
+        if (
+            SelectFromModel is None
+            or RandomForestClassifier is None
+            or RandomForestRegressor is None
+        ):
+            raise RuntimeError("sklearn not available for model-based selection")
+
         # Crear modelo base si no se proporciona
         if model is None:
             if task_type == "classification":
                 model = RandomForestClassifier(n_estimators=100, random_state=42)
             else:
                 model = RandomForestRegressor(n_estimators=100, random_state=42)
-            model.fit(X, y)
+            if hasattr(model, "fit"):
+                model.fit(X, y)
 
         # Si el modelo ya está entrenado, usar directamente
         if not hasattr(model, "feature_importances_"):
@@ -864,7 +991,8 @@ class FeatureSelector:
                     model = RandomForestClassifier(n_estimators=100, random_state=42)
                 else:
                     model = RandomForestRegressor(n_estimators=100, random_state=42)
-            model.fit(X, y)
+            if hasattr(model, "fit"):
+                model.fit(X, y)
 
         # Usar SelectFromModel con threshold
         selector = SelectFromModel(estimator=model, threshold=self.importance_threshold)
@@ -885,9 +1013,7 @@ class FeatureImportanceAnalyzer:
 
     def __init__(
         self,
-        config: Optional[
-            dict[str, Union[str, int, float, bool, dict[str, Union[str, int, float, bool]]]]
-        ] = None,
+        config: dict[str, object] | None = None,
     ):
         """
         Inicializar analizador unificado.
@@ -896,21 +1022,26 @@ class FeatureImportanceAnalyzer:
             config: Configuración
         """
         config = config or {}
-        self.shap_analyzer = SHAPAnalyzer(config.get("shap_config", {}))
-        self.attention_analyzer = AttentionWeightsAnalyzer(config.get("attention_config", {}))
-        self.feature_selector = FeatureSelector(config.get("feature_selector_config", {}))
+        _shap_cfg = config.get("shap_config", {})
+        self.shap_analyzer = SHAPAnalyzer(_shap_cfg if isinstance(_shap_cfg, dict) else None)
+        _attn_cfg = config.get("attention_config", {})
+        self.attention_analyzer = AttentionWeightsAnalyzer(
+            _attn_cfg if isinstance(_attn_cfg, dict) else None
+        )
+        _fs_cfg = config.get("feature_selector_config", {})
+        self.feature_selector = FeatureSelector(_fs_cfg if isinstance(_fs_cfg, dict) else None)
 
     def analyze(
         self,
         model: ModelType,
         X: FloatArray,
-        y: Optional[FloatArray] = None,
-        feature_names: Optional[list[str]] = None,
+        y: FloatArray | None = None,
+        feature_names: list[str] | None = None,
         model_type: str = "auto",
         include_shap: bool = True,
         include_attention: bool = False,
         include_selection: bool = False,
-    ) -> dict[str, Union[list[str], Optional[dict[str, object]], dict[str, float]]]:
+    ) -> dict[str, list[str] | dict[str, object] | None | dict[str, float]]:
         """
         Análisis completo de importancia de features.
 
@@ -927,7 +1058,7 @@ class FeatureImportanceAnalyzer:
         Returns:
             Dict con análisis completo
         """
-        results = {
+        results: dict[str, list[str] | dict[str, object] | dict[str, float] | None] = {
             "feature_names": feature_names or [f"feature_{i}" for i in range(X.shape[-1])],
             "shap_analysis": None,
             "attention_analysis": None,
@@ -941,7 +1072,11 @@ class FeatureImportanceAnalyzer:
                 shap_results = self.shap_analyzer.explain_model(model, X, feature_names, model_type)
                 results["shap_analysis"] = shap_results
                 if "feature_importance" in shap_results:
-                    results["combined_importance"]["shap"] = shap_results["feature_importance"]
+                    _ci = results["combined_importance"]
+                    if isinstance(_ci, dict):
+                        _fi = shap_results["feature_importance"]
+                        if isinstance(_fi, dict):
+                            _ci["shap"] = _fi
             except (RuntimeError, ValueError, TypeError, KeyError) as e:
                 logger.warning(f"SHAP analysis failed: {e}")
 
@@ -964,19 +1099,23 @@ class FeatureImportanceAnalyzer:
                 logger.warning(f"Feature selection failed: {e}")
 
         # Combinar importancias
-        if results["combined_importance"]:
+        _ci_ref = results["combined_importance"]
+        if isinstance(_ci_ref, dict) and _ci_ref:
             # Promediar diferentes métodos de importancia
-            all_importances = []
-            for _method, importance_dict in results["combined_importance"].items():
-                all_importances.append(importance_dict)
+            all_importances: list[dict[str, float]] = []
+            for _method, importance_dict in _ci_ref.items():
+                if isinstance(importance_dict, dict):
+                    all_importances.append(importance_dict)
 
             # Promediar
-            combined = {}
+            combined: dict[str, list[float]] = {}
             for imp_dict in all_importances:
                 for name, value in imp_dict.items():
+                    if not isinstance(value, (int, float)):
+                        continue
                     if name not in combined:
                         combined[name] = []
-                    combined[name].append(value)
+                    combined[name].append(float(value))
 
             # Calcular promedio
             final_combined = {name: float(np.mean(values)) for name, values in combined.items()}
@@ -996,7 +1135,7 @@ class PermutationImportanceAnalyzer:
     the decrease in model performance. Works with any model.
     """
 
-    def __init__(self, config: Optional[dict[str, Union[str, int, float, bool]]] = None):
+    def __init__(self, config: dict[str, object] | None = None):
         """
         Initialize permutation importance analyzer.
 
@@ -1004,29 +1143,32 @@ class PermutationImportanceAnalyzer:
             config: Configuration dictionary
         """
         config = config or {}
-        self.n_repeats = config.get("n_repeats", 10)
-        self.n_jobs = config.get("n_jobs", -1)
-        self.random_state = config.get("random_state", 42)
-        self.max_samples = config.get("max_samples", 1000)
-        self.scoring = config.get("scoring", "auto")
+        _n_repeats = config.get("n_repeats", 10)
+        self.n_repeats = _n_repeats if isinstance(_n_repeats, int) else 10
+        _n_jobs = config.get("n_jobs", -1)
+        self.n_jobs = _n_jobs if isinstance(_n_jobs, int) else -1
+        _rs = config.get("random_state", 42)
+        self.random_state = _rs if isinstance(_rs, int) else 42
+        _ms = config.get("max_samples", 1000)
+        self.max_samples = _ms if isinstance(_ms, int) else 1000
+        _sc = config.get("scoring", "auto")
+        self.scoring = _sc if isinstance(_sc, str) else "auto"
 
     def calculate_importance(
         self,
         model: ModelType,
         X: FloatArray,
         y: FloatArray,
-        feature_names: Optional[list[str]] = None,
-        scoring: Optional[str] = None,
+        feature_names: list[str] | None = None,
+        scoring: str | None = None,
     ) -> dict[
         str,
-        Union[
-            str,
-            dict[str, float],
-            dict[str, dict[str, float]],
-            list[tuple[str, float]],
-            list[str],
-            int,
-        ],
+        str
+        | dict[str, float]
+        | dict[str, dict[str, float]]
+        | list[tuple[str, float]]
+        | list[str]
+        | int,
     ]:
         """
         Calculate permutation importance for all features.
@@ -1061,6 +1203,11 @@ class PermutationImportanceAnalyzer:
                 scoring = "accuracy" if unique_values <= 10 else "r2"
 
             # Calculate permutation importance
+            if not callable(permutation_importance):
+                return self._fallback_permutation_importance(
+                    model, X_sample, y_sample, feature_names
+                )
+
             result = permutation_importance(
                 model,
                 X_sample,
@@ -1116,8 +1263,8 @@ class PermutationImportanceAnalyzer:
         model: ModelType,
         X: FloatArray,
         y: FloatArray,
-        feature_names: Optional[list[str]] = None,
-    ) -> dict[str, Union[str, dict[str, float], list[tuple[str, float]]]]:
+        feature_names: list[str] | None = None,
+    ) -> dict[str, str | dict[str, float] | list[tuple[str, float]]]:
         """
         Fallback implementation without sklearn.inspection.
 
@@ -1134,6 +1281,10 @@ class PermutationImportanceAnalyzer:
             n_features = X.shape[1]
             feature_names = feature_names or [f"feature_{i}" for i in range(n_features)]
 
+            # Require model.predict
+            if not isinstance(model, Predictor):
+                return {"error": "Model does not have predict method"}
+
             # Get baseline score
             baseline_pred = model.predict(X)
             if hasattr(y, "dtype") and np.issubdtype(y.dtype, np.floating):
@@ -1144,11 +1295,11 @@ class PermutationImportanceAnalyzer:
                 baseline_score = np.mean(baseline_pred == y)
 
             # Calculate importance for each feature (with isolated random state)
-            importances = []
+            importances: list[float] = []
             rng = np.random.default_rng(self.random_state)
 
             for i in range(n_features):
-                scores = []
+                feat_scores: list[float] = []
                 for _ in range(self.n_repeats):
                     X_permuted = X.copy()
                     rng.shuffle(X_permuted[:, i])
@@ -1158,9 +1309,9 @@ class PermutationImportanceAnalyzer:
                         score = -np.mean((y - permuted_pred) ** 2)
                     else:
                         score = np.mean(permuted_pred == y)
-                    scores.append(baseline_score - score)
+                    feat_scores.append(float(baseline_score - score))
 
-                importances.append(np.mean(scores))
+                importances.append(float(np.mean(feat_scores)))
 
             # Normalize
             importances = np.array(importances)
@@ -1201,7 +1352,7 @@ class BuiltInImportanceAnalyzer:
     - CatBoost
     """
 
-    def __init__(self, config: Optional[dict[str, Union[str, int, float, bool]]] = None):
+    def __init__(self, config: dict[str, object] | None = None):
         """
         Initialize built-in importance analyzer.
 
@@ -1209,13 +1360,14 @@ class BuiltInImportanceAnalyzer:
             config: Configuration dictionary
         """
         config = config or {}
-        self.normalize = config.get("normalize", True)
+        _norm = config.get("normalize", True)
+        self.normalize = _norm if isinstance(_norm, bool) else True
 
     def calculate_importance(
         self,
         model: ModelType,
-        feature_names: Optional[list[str]] = None,
-    ) -> dict[str, Union[str, bool, dict[str, float], list[tuple[str, float]], list[str]]]:
+        feature_names: list[str] | None = None,
+    ) -> dict[str, str | bool | dict[str, float] | list[tuple[str, float]] | list[str]]:
         """
         Extract feature importance from model.
 
@@ -1309,7 +1461,7 @@ class CorrelationAnalyzer:
     - Mutual information
     """
 
-    def __init__(self, config: Optional[dict[str, Union[str, int, float, bool]]] = None):
+    def __init__(self, config: dict[str, object] | None = None):
         """
         Initialize correlation analyzer.
 
@@ -1317,27 +1469,31 @@ class CorrelationAnalyzer:
             config: Configuration dictionary
         """
         config = config or {}
-        self.target_method = config.get("target_correlation_method", "spearman")
-        self.feature_method = config.get("feature_correlation_method", "pearson")
-        self.multicollinearity_threshold = config.get("multicollinearity_threshold", 0.9)
-        self.calculate_mi = config.get("calculate_mutual_info", True)
-        self.n_neighbors = config.get("n_neighbors", 5)
+        _tm = config.get("target_correlation_method", "spearman")
+        self.target_method = _tm if isinstance(_tm, str) else "spearman"
+        _fm = config.get("feature_correlation_method", "pearson")
+        self.feature_method = _fm if isinstance(_fm, str) else "pearson"
+        _mt = config.get("multicollinearity_threshold", 0.9)
+        self.multicollinearity_threshold = float(_mt) if isinstance(_mt, (int, float)) else 0.9
+        _cmi = config.get("calculate_mutual_info", True)
+        self.calculate_mi = _cmi if isinstance(_cmi, bool) else True
+        _nn = config.get("n_neighbors", 5)
+        self.n_neighbors = _nn if isinstance(_nn, int) else 5
 
     def analyze(
         self,
         X: FloatArray,
         y: FloatArray,
-        feature_names: Optional[list[str]] = None,
+        feature_names: list[str] | None = None,
     ) -> dict[
         str,
-        Union[
-            str,
-            dict[str, float],
-            list[str],
-            list[tuple[str, str, float]],
-            dict[str, dict[str, float]],
-            Optional[dict[str, dict[str, float]]],
-        ],
+        str
+        | dict[str, float]
+        | list[str]
+        | list[tuple[str, str, float]]
+        | list[tuple[str, float]]
+        | dict[str, dict[str, float]]
+        | None,
     ]:
         """
         Perform comprehensive correlation analysis.
@@ -1353,7 +1509,16 @@ class CorrelationAnalyzer:
         n_features = X.shape[1]
         feature_names = feature_names or [f"feature_{i}" for i in range(n_features)]
 
-        results = {
+        results: dict[
+            str,
+            str
+            | dict[str, float]
+            | list[str]
+            | list[tuple[str, str, float]]
+            | list[tuple[str, float]]
+            | dict[str, dict[str, float]]
+            | None,
+        ] = {
             "target_correlations": {},
             "highly_correlated_pairs": [],
             "multicollinearity_warnings": [],
@@ -1385,12 +1550,14 @@ class CorrelationAnalyzer:
                 )
 
             # Rank features by absolute correlation
-            ranked_by_correlation = sorted(
-                results["target_correlations"].items(),
-                key=lambda x: abs(x[1]),
-                reverse=True,
-            )
-            results["ranked_by_correlation"] = ranked_by_correlation
+            _tc = results["target_correlations"]
+            if isinstance(_tc, dict):
+                ranked_by_correlation = sorted(
+                    _tc.items(),
+                    key=lambda x: abs(x[1]),
+                    reverse=True,
+                )
+                results["ranked_by_correlation"] = ranked_by_correlation
 
         except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.error(f"Error in correlation analysis: {e}")
@@ -1431,8 +1598,8 @@ class CorrelationAnalyzer:
     ) -> tuple[dict[str, dict[str, float]], list[tuple[str, str, float]]]:
         """Calculate feature-feature correlations and identify highly correlated pairs."""
         X.shape[1]
-        corr_matrix = {}
-        highly_correlated = []
+        corr_matrix: dict[str, dict[str, float]] = {}
+        highly_correlated: list[tuple[str, str, float]] = []
 
         # Calculate correlation matrix
         if self.feature_method == "spearman":
@@ -1501,7 +1668,7 @@ class FeatureStabilityTracker:
     - Trend detection (increasing/decreasing importance)
     """
 
-    def __init__(self, config: Optional[dict[str, Union[str, int, float, bool]]] = None):
+    def __init__(self, config: dict[str, object] | None = None):
         """
         Initialize stability tracker.
 
@@ -1509,9 +1676,12 @@ class FeatureStabilityTracker:
             config: Configuration dictionary
         """
         config = config or {}
-        self.window_size = config.get("window_size", 10)
-        self.stability_threshold = config.get("stability_threshold", 0.3)
-        self.importance_change_threshold = config.get("importance_change_threshold", 0.2)
+        _ws = config.get("window_size", 10)
+        self.window_size = _ws if isinstance(_ws, int) else 10
+        _st = config.get("stability_threshold", 0.3)
+        self.stability_threshold = float(_st) if isinstance(_st, (int, float)) else 0.3
+        _ict = config.get("importance_change_threshold", 0.2)
+        self.importance_change_threshold = float(_ict) if isinstance(_ict, (int, float)) else 0.2
 
         # History storage
         self._importance_history: list[dict[str, float]] = []
@@ -1521,7 +1691,7 @@ class FeatureStabilityTracker:
     def record_importance(
         self,
         importance_dict: dict[str, float],
-        timestamp: Optional[datetime] = None,
+        timestamp: datetime | None = None,
     ) -> None:
         """
         Record feature importance snapshot.
@@ -1549,7 +1719,7 @@ class FeatureStabilityTracker:
 
     def analyze_stability(
         self,
-    ) -> dict[str, Union[str, int, dict[str, dict[str, Union[float, bool, str, int]]], list[str]]]:
+    ) -> dict[str, str | int | dict[str, dict[str, float | bool | str | int]] | list[str]]:
         """
         Analyze feature importance stability.
 
@@ -1563,11 +1733,11 @@ class FeatureStabilityTracker:
             }
 
         # Get all feature names
-        all_features = set()
+        all_features: set[str] = set()
         for imp_dict in self._importance_history:
             all_features.update(imp_dict.keys())
 
-        stability_results = {}
+        stability_results: dict[str, dict[str, float | bool | str | int]] = {}
 
         for feature in all_features:
             # Get importance history for this feature
@@ -1702,9 +1872,9 @@ class ComprehensiveFeatureAnalyzer:
 
     def __init__(
         self,
-        config: Optional[
-            dict[str, Union[str, int, float, bool, dict[str, Union[str, int, float, bool]]]]
-        ] = None,
+        config: (
+            dict[str, str | int | float | bool | dict[str, str | int | float | bool]] | None
+        ) = None,
     ):
         """
         Initialize comprehensive analyzer.
@@ -1712,30 +1882,49 @@ class ComprehensiveFeatureAnalyzer:
         Args:
             config: Configuration dictionary (loaded from YAML if not provided)
         """
-        self.config = config or load_feature_importance_config()
+        self.config: dict[str, object] = config or load_feature_importance_config()
         self.enabled = self.config.get("enabled", True)
 
-        # Initialize analyzers
-        self.shap_analyzer = SHAPAnalyzer(self.config.get("shap", {}))
+        # Initialize analyzers with safe sub-config extraction
+        _shap_cfg = self.config.get("shap", {})
+        self.shap_analyzer = SHAPAnalyzer(_shap_cfg if isinstance(_shap_cfg, dict) else None)
+        _perm_cfg = self.config.get("permutation", {})
         self.permutation_analyzer = PermutationImportanceAnalyzer(
-            self.config.get("permutation", {})
+            _perm_cfg if isinstance(_perm_cfg, dict) else None
         )
-        self.builtin_analyzer = BuiltInImportanceAnalyzer(self.config.get("builtin", {}))
-        self.correlation_analyzer = CorrelationAnalyzer(self.config.get("correlation", {}))
-        self.stability_tracker = FeatureStabilityTracker(self.config.get("stability", {}))
-        self.feature_selector = FeatureSelector(self.config.get("selection", {}))
+        _builtin_cfg = self.config.get("builtin", {})
+        self.builtin_analyzer = BuiltInImportanceAnalyzer(
+            _builtin_cfg if isinstance(_builtin_cfg, dict) else None
+        )
+        _corr_cfg = self.config.get("correlation", {})
+        self.correlation_analyzer = CorrelationAnalyzer(
+            _corr_cfg if isinstance(_corr_cfg, dict) else None
+        )
+        _stab_cfg = self.config.get("stability", {})
+        self.stability_tracker = FeatureStabilityTracker(
+            _stab_cfg if isinstance(_stab_cfg, dict) else None
+        )
+        _sel_cfg = self.config.get("selection", {})
+        self.feature_selector = FeatureSelector(_sel_cfg if isinstance(_sel_cfg, dict) else None)
 
         # Category thresholds
-        self.category_thresholds = self.config.get("reporting", {}).get(
+        _reporting = self.config.get("reporting", {})
+        _reporting_dict = _reporting if isinstance(_reporting, dict) else {}
+        _categories = _reporting_dict.get(
             "categories", {"critical": 0.1, "important": 0.3, "moderate": 0.6, "low": 1.0}
+        )
+        self.category_thresholds = (
+            _categories
+            if isinstance(_categories, dict)
+            else {"critical": 0.1, "important": 0.3, "moderate": 0.6, "low": 1.0}
         )
 
     def analyze(
         self,
         model: ModelType,
         X: FloatArray,
-        y: Optional[FloatArray] = None,
-        feature_names: Optional[list[str]] = None,
+        y: FloatArray | None = None,
+        feature_names: list[str] | None = None,
         include_shap: bool = True,
         include_permutation: bool = True,
         include_builtin: bool = True,
@@ -1769,51 +1958,85 @@ class ComprehensiveFeatureAnalyzer:
 
         # Collect importance from all methods
         all_importances: dict[str, dict[str, float]] = {}
-        methods_used = []
+        methods_used: list[str] = []
 
         # SHAP analysis
-        if include_shap and self.config.get("shap", {}).get("enabled", True):
+        _shap_sub = self.config.get("shap", {})
+        _shap_enabled = (
+            (isinstance(_shap_sub, dict) and _shap_sub.get("enabled", True))
+            if include_shap
+            else False
+        )
+        if _shap_enabled:
             try:
                 shap_result = self.shap_analyzer.explain_model(model, X, feature_names)
                 if "feature_importance" in shap_result:
-                    all_importances["shap"] = shap_result["feature_importance"]
-                    methods_used.append("shap")
+                    _fi = shap_result["feature_importance"]
+                    if isinstance(_fi, dict):
+                        all_importances["shap"] = _fi
+                        methods_used.append("shap")
             except (FileNotFoundError, ValueError, KeyError, TypeError) as e:
                 logger.warning(f"SHAP analysis failed: {e}")
 
         # Permutation importance
-        if (
-            include_permutation
-            and y is not None
-            and self.config.get("permutation", {}).get("enabled", True)
-        ):
+        _perm_sub = self.config.get("permutation", {})
+        _perm_enabled = (
+            (isinstance(_perm_sub, dict) and _perm_sub.get("enabled", True))
+            if (include_permutation and y is not None)
+            else False
+        )
+        if _perm_enabled:
             try:
                 perm_result = self.permutation_analyzer.calculate_importance(
                     model, X, y, feature_names
                 )
                 if "feature_importance" in perm_result:
-                    all_importances["permutation"] = perm_result["feature_importance"]
-                    methods_used.append("permutation")
+                    _fi = perm_result["feature_importance"]
+                    if isinstance(_fi, dict):
+                        all_importances["permutation"] = _fi
+                        methods_used.append("permutation")
             except (FileNotFoundError, ValueError, KeyError, TypeError) as e:
                 logger.warning(f"Permutation importance failed: {e}")
 
         # Built-in importance
-        if include_builtin and self.config.get("builtin", {}).get("enabled", True):
+        _builtin_sub = self.config.get("builtin", {})
+        _builtin_enabled = (
+            (isinstance(_builtin_sub, dict) and _builtin_sub.get("enabled", True))
+            if include_builtin
+            else False
+        )
+        if _builtin_enabled:
             try:
                 builtin_result = self.builtin_analyzer.calculate_importance(model, feature_names)
                 if builtin_result.get("supported", False):
-                    all_importances["builtin"] = builtin_result["feature_importance"]
-                    methods_used.append("builtin")
+                    _fi = builtin_result.get("feature_importance")
+                    if isinstance(_fi, dict):
+                        all_importances["builtin"] = _fi
+                        methods_used.append("builtin")
             except (FileNotFoundError, ValueError, KeyError, TypeError) as e:
                 logger.warning(f"Built-in importance failed: {e}")
 
         # Correlation analysis
-        correlation_result = None
-        if (
-            include_correlation
-            and y is not None
-            and self.config.get("correlation", {}).get("enabled", True)
-        ):
+        correlation_result: (
+            dict[
+                str,
+                str
+                | dict[str, float]
+                | list[str]
+                | list[tuple[str, str, float]]
+                | dict[str, dict[str, float]]
+                | dict[str, dict[str, float]]
+                | None,
+            ]
+            | None
+        ) = None
+        _corr_sub = self.config.get("correlation", {})
+        _corr_enabled = (
+            (isinstance(_corr_sub, dict) and _corr_sub.get("enabled", True))
+            if (include_correlation and y is not None)
+            else False
+        )
+        if _corr_enabled:
             try:
                 correlation_result = self.correlation_analyzer.analyze(X, y, feature_names)
             except (FileNotFoundError, ValueError, KeyError, TypeError) as e:
@@ -1848,9 +2071,11 @@ class ComprehensiveFeatureAnalyzer:
         ]
 
         # Get highly correlated pairs
-        highly_correlated = []
-        if correlation_result and "highly_correlated_pairs" in correlation_result:
-            highly_correlated = correlation_result["highly_correlated_pairs"]
+        highly_correlated: list[tuple[str, str, float]] = []
+        if correlation_result is not None and "highly_correlated_pairs" in correlation_result:
+            _hcp = correlation_result["highly_correlated_pairs"]
+            if isinstance(_hcp, list):
+                highly_correlated = _hcp
 
         # Generate recommendations
         recommendations = self._generate_recommendations(
@@ -1900,21 +2125,21 @@ class ComprehensiveFeatureAnalyzer:
         self,
         combined_importance: dict[str, float],
         all_importances: dict[str, dict[str, float]],
-        correlation_result: Optional[
+        correlation_result: (
             dict[
                 str,
-                Union[
-                    str,
-                    dict[str, float],
-                    list[str],
-                    list[tuple[str, str, float]],
-                    dict[str, dict[str, float]],
-                    Optional[dict[str, dict[str, float]]],
-                ],
+                str
+                | dict[str, float]
+                | list[str]
+                | list[tuple[str, str, float]]
+                | dict[str, dict[str, float]]
+                | dict[str, dict[str, float]]
+                | None,
             ]
-        ],
+            | None
+        ),
         stability_result: dict[
-            str, Union[str, int, dict[str, dict[str, Union[float, bool, str, int]]], list[str]]
+            str, str | int | dict[str, dict[str, float | bool | str | int]] | list[str]
         ],
         feature_names: list[str],
     ) -> list[FeatureImportanceResult]:
@@ -1941,15 +2166,22 @@ class ComprehensiveFeatureAnalyzer:
                     methods_used.append(method)
 
             # Get correlation with target
-            correlation = None
-            if correlation_result and "target_correlations" in correlation_result:
-                correlation = correlation_result["target_correlations"].get(feature)
+            correlation: float | None = None
+            if correlation_result is not None and "target_correlations" in correlation_result:
+                _tc = correlation_result["target_correlations"]
+                if isinstance(_tc, dict):
+                    _val = _tc.get(feature)
+                    correlation = _val if isinstance(_val, (int, float)) else None
 
             # Get stability score
-            stability_score = None
+            stability_score: float | None = None
             if "feature_stability" in stability_result:
-                feat_stability = stability_result["feature_stability"].get(feature, {})
-                stability_score = feat_stability.get("stability_score")
+                _fs = stability_result["feature_stability"]
+                if isinstance(_fs, dict):
+                    feat_stability = _fs.get(feature, {})
+                    if isinstance(feat_stability, dict):
+                        _ss = feat_stability.get("stability_score")
+                        stability_score = _ss if isinstance(_ss, (int, float)) else None
 
             # Generate recommendation
             recommendation = self._get_feature_recommendation(
@@ -1995,8 +2227,8 @@ class ComprehensiveFeatureAnalyzer:
         importance: float,
         rank: int,
         category: ImportanceCategory,
-        stability_score: Optional[float],
-        correlation: Optional[float],
+        stability_score: float | None,
+        correlation: float | None,
     ) -> str:
         """Generate recommendation for a feature."""
         if category == ImportanceCategory.NEGLIGIBLE:
@@ -2019,7 +2251,7 @@ class ComprehensiveFeatureAnalyzer:
         feature_results: list[FeatureImportanceResult],
         highly_correlated: list[tuple[str, str, float]],
         stability_result: dict[
-            str, Union[str, int, dict[str, dict[str, Union[float, bool, str, int]]], list[str]]
+            str, str | int | dict[str, dict[str, float | bool | str | int]] | list[str]
         ],
     ) -> list[str]:
         """Generate overall recommendations."""
@@ -2045,7 +2277,8 @@ class ComprehensiveFeatureAnalyzer:
             )
 
         # Unstable features
-        unstable = stability_result.get("unstable_features", [])
+        _unstable_val = stability_result.get("unstable_features", [])
+        unstable: list[str] = _unstable_val if isinstance(_unstable_val, list) else []
         if unstable:
             recommendations.append(
                 f"{len(unstable)} features have unstable importance: "
@@ -2053,8 +2286,12 @@ class ComprehensiveFeatureAnalyzer:
             )
 
         # Trending features
-        trending_up = stability_result.get("trending_up", [])
-        trending_down = stability_result.get("trending_down", [])
+        _trending_up_val = stability_result.get("trending_up", [])
+        trending_up: list[str] = _trending_up_val if isinstance(_trending_up_val, list) else []
+        _trending_down_val = stability_result.get("trending_down", [])
+        trending_down: list[str] = (
+            _trending_down_val if isinstance(_trending_down_val, list) else []
+        )
         if trending_up:
             recommendations.append(
                 f"Features with increasing importance: {', '.join(trending_up[:3])}"

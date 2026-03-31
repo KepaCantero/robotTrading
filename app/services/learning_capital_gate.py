@@ -22,6 +22,8 @@ This gate enforces:
 4. Explicit warning when learning is disabled
 """
 
+from __future__ import annotations
+
 import logging
 from decimal import Decimal
 from typing import ClassVar, Optional

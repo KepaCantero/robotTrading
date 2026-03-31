@@ -358,7 +358,7 @@ class ProfileBatchBacktester:
 
 
 def create_profile_batch_backtester(
-    config_path: str = "config/profile_batch_backtest.yaml",
+    config_path: str = "config/portfolio/profile_batch_backtest.yaml",
 ) -> ProfileBatchBacktester:
     """
     Convenience function to create ProfileBatchBacktester.

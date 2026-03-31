@@ -7,11 +7,13 @@ Implementa diferentes tipos de stress testing:
 - Custom scenarios
 """
 
+from __future__ import annotations
+
 import logging
 from abc import ABC, abstractmethod
 from datetime import datetime
 from decimal import Decimal
-from typing import Any, Optional
+from typing import Optional, Union
 
 import numpy as np
 
@@ -23,7 +25,7 @@ logger = logging.getLogger(__name__)
 class BaseStressTester(ABC):
     """Clase base para stress testers."""
 
-    def __init__(self, config: dict[str, Any]):
+    def __init__(self, config: dict[str, Union[int, float, str, bool]]) -> None:
         """
         Inicializar stress tester.
 
@@ -34,7 +36,9 @@ class BaseStressTester(ABC):
         self.logger = logging.getLogger(self.__class__.__name__)
 
     @abstractmethod
-    def run_stress_test(self, portfolio: Portfolio, scenario: dict[str, Any]) -> dict[str, Any]:
+    def run_stress_test(
+        self, portfolio: Portfolio, scenario: dict[str, Union[int, float, str]]
+    ) -> dict[str, Union[int, float, str, bool, None]]:
         """
         Ejecutar stress test.
 
@@ -54,7 +58,7 @@ class StressTester:
     Ejecuta múltiples tipos de stress tests.
     """
 
-    def __init__(self, config: dict[str, Any]):
+    def __init__(self, config: dict[str, Union[int, float, str, bool]]) -> None:
         """Inicializar stress tester."""
         self.config = config
         self.logger = logging.getLogger(self.__class__.__name__)
@@ -63,9 +67,12 @@ class StressTester:
         self.historical_scenarios = self._load_historical_scenarios()
 
         # Configuración
-        self.n_monte_carlo_scenarios = config.get("n_monte_carlo_scenarios", 1000)
+        n_scenarios = config.get("n_monte_carlo_scenarios", 1000)
+        self.n_monte_carlo_scenarios: int = (
+            n_scenarios if isinstance(n_scenarios, int) else int(n_scenarios)
+        )
 
-    def _load_historical_scenarios(self) -> dict[str, dict[str, Any]]:
+    def _load_historical_scenarios(self) -> dict[str, dict[str, Union[int, float, str]]]:
         """Cargar escenarios históricos predefinidos."""
         return {
             "2008_crisis": {
@@ -100,7 +107,7 @@ class StressTester:
 
     def run_stress_tests(
         self, portfolio: Portfolio, scenario_types: Optional[list[str]] = None
-    ) -> dict[str, Any]:
+    ) -> dict[str, Union[int, float, str, bool, None, list, dict]]:
         """
         Ejecutar múltiples stress tests.
 
@@ -114,7 +121,7 @@ class StressTester:
         if scenario_types is None:
             scenario_types = ["historical", "monte_carlo"]
 
-        results = {}
+        results: dict[str, Union[int, float, str, bool, None, list, dict]] = {}
 
         # Stress tests históricos
         if "historical" in scenario_types:
@@ -129,9 +136,11 @@ class StressTester:
 
         return results
 
-    def _run_historical_stress_tests(self, portfolio: Portfolio) -> dict[str, Any]:
+    def _run_historical_stress_tests(
+        self, portfolio: Portfolio
+    ) -> dict[str, Union[int, float, str, bool, None, list, dict]]:
         """Ejecutar stress tests históricos."""
-        results = {}
+        results: dict[str, Union[int, float, str, bool, None, list, dict]] = {}
 
         for scenario_id, scenario in self.historical_scenarios.items():
             try:
@@ -147,29 +156,44 @@ class StressTester:
 
         return results
 
-    def _run_monte_carlo_stress_tests(self, portfolio: Portfolio) -> dict[str, Any]:
+    def _run_monte_carlo_stress_tests(
+        self, portfolio: Portfolio
+    ) -> dict[str, Union[int, float, str, bool, None, list, dict]]:
         """Ejecutar stress tests Monte Carlo."""
         try:
             # Simular múltiples escenarios aleatorios
-            scenarios = []
+            mc_scenario_type = dict[str, Union[int, float, str]]
+            stress_result_type = dict[str, Union[int, float, str, None, list, dict]]
+            scenario_entry_type = dict[str, Union[mc_scenario_type, stress_result_type]]
+
+            scenarios: list[scenario_entry_type] = []
+
+            rng = np.random.default_rng(seed=42)
 
             for i in range(self.n_monte_carlo_scenarios):
                 # Generar shock aleatorio
-                market_shock = np.random.normal(-0.1, 0.15)  # Distribución de shocks
-                volatility_multiplier = np.random.uniform(1.5, 4.0)
+                market_shock = rng.normal(-0.1, 0.15)  # Distribución de shocks
+                volatility_multiplier = rng.uniform(1.5, 4.0)
 
-                scenario = {
+                scenario: mc_scenario_type = {
                     "name": f"Monte Carlo Scenario {i + 1}",
                     "market_shock": float(market_shock),
                     "volatility_multiplier": float(volatility_multiplier),
-                    "correlation_increase": np.random.uniform(0.1, 0.3),
+                    "correlation_increase": float(rng.uniform(0.1, 0.3)),
                 }
 
                 result = self._apply_stress_scenario(portfolio, scenario)
-                scenarios.append({"scenario": scenario, "result": result})
+                entry: scenario_entry_type = {"scenario": scenario, "result": result}
+                scenarios.append(entry)
 
             # Estadísticas de los escenarios
-            portfolio_values = [s["result"]["stressed_portfolio_value"] for s in scenarios]
+            portfolio_values: list[float] = []
+            for s in scenarios:
+                res = s["result"]
+                if isinstance(res, dict):
+                    val = res.get("stressed_portfolio_value")
+                    if isinstance(val, (int, float)):
+                        portfolio_values.append(float(val))
 
             return {
                 "scenarios": scenarios[:10],  # Primeros 10 como ejemplo
@@ -188,8 +212,8 @@ class StressTester:
             return {"error": str(e)}
 
     def _apply_stress_scenario(
-        self, portfolio: Portfolio, scenario: dict[str, Any]
-    ) -> dict[str, Any]:
+        self, portfolio: Portfolio, scenario: dict[str, Union[int, float, str]]
+    ) -> dict[str, Union[int, float, str, None, list, dict]]:
         """
         Aplicar escenario de stress al portfolio.
 
@@ -204,24 +228,31 @@ class StressTester:
         initial_value = float(portfolio.total_equity)
 
         # Aplicar shocks a posiciones
-        stressed_positions = []
+        stressed_positions: list[dict[str, Union[float, str]]] = []
         total_stressed_value = Decimal("0")
 
-        market_shock = scenario.get("market_shock", 0.0)
-        volatility_multiplier = scenario.get("volatility_multiplier", 1.0)
+        raw_market_shock = scenario.get("market_shock", 0.0)
+        market_shock: float = (
+            raw_market_shock if isinstance(raw_market_shock, (int, float)) else 0.0
+        )
+
+        raw_vol_mult = scenario.get("volatility_multiplier", 1.0)
+        volatility_multiplier: float = (
+            raw_vol_mult if isinstance(raw_vol_mult, (int, float)) else 1.0
+        )
 
         for position in portfolio.positions:
             # Aplicar shock de mercado
             stressed_price = position.market_price * Decimal(str(1 + market_shock))
 
             # Crear posición estresada
-            stressed_position = {
+            stressed_position: dict[str, Union[float, str]] = {
                 "symbol": position.symbol,
                 "original_price": float(position.market_price),
                 "stressed_price": float(stressed_price),
                 "quantity": float(position.quantity),
                 "original_value": float(position.market_value),
-                "stressed_value": float(abs(position.quantity) * stressed_price),
+                "stressed_value": float(position.quantity * stressed_price),
             }
 
             stressed_positions.append(stressed_position)
@@ -242,9 +273,13 @@ class StressTester:
             "positions": stressed_positions,
         }
 
-    def _generate_summary(self, results: dict[str, Any], portfolio: Portfolio) -> dict[str, Any]:
+    def _generate_summary(
+        self,
+        results: dict[str, Union[int, float, str, bool, None, list, dict]],
+        portfolio: Portfolio,
+    ) -> dict[str, Union[int, float, str, bool, None, dict]]:
         """Generar resumen de resultados."""
-        summary = {
+        summary: dict[str, Union[int, float, str, bool, None, dict]] = {
             "initial_portfolio_value": float(portfolio.total_equity),
             "worst_case_scenario": None,
             "best_case_scenario": None,
@@ -256,32 +291,53 @@ class StressTester:
         # Analizar resultados históricos
         if "historical" in results:
             historical = results["historical"]
-            losses = []
+            if isinstance(historical, dict):
+                losses: list[dict[str, Union[int, float, str]]] = []
 
-            for scenario_id, result in historical.items():
-                if "loss_percentage" in result:
-                    losses.append(
-                        {
-                            "scenario": scenario_id,
-                            "loss_percentage": result["loss_percentage"],
-                            "loss": result.get("loss", 0),
-                        }
+                for scenario_id, result in historical.items():
+                    if isinstance(result, dict) and "loss_percentage" in result:
+                        raw_lp = result["loss_percentage"]
+                        lp_value: float = raw_lp if isinstance(raw_lp, (int, float)) else 0.0
+                        raw_loss = result.get("loss", 0)
+                        loss_value: float = raw_loss if isinstance(raw_loss, (int, float)) else 0.0
+
+                        losses.append(
+                            {
+                                "scenario": scenario_id,
+                                "loss_percentage": lp_value,
+                                "loss": loss_value,
+                            }
+                        )
+
+                if losses:
+                    worst = max(losses, key=lambda x: x["loss_percentage"])
+                    summary["worst_case_scenario"] = worst["scenario"]
+                    summary["max_loss"] = worst["loss_percentage"]
+                    summary["average_loss"] = float(
+                        np.mean([var_l["loss_percentage"] for var_l in losses])
                     )
 
-            if losses:
-                worst = max(losses, key=lambda x: x["loss_percentage"])
-                summary["worst_case_scenario"] = worst["scenario"]
-                summary["max_loss"] = worst["loss_percentage"]
-                summary["average_loss"] = np.mean([var_l["loss_percentage"] for var_l in losses])
-
         # Analizar resultados Monte Carlo
-        if "monte_carlo" in results and "statistics" in results["monte_carlo"]:
-            mc_stats = results["monte_carlo"]["statistics"]
-            summary["monte_carlo"] = {
-                "expected_loss": summary["initial_portfolio_value"]
-                - mc_stats["mean_portfolio_value"],
-                "worst_case_5pct": summary["initial_portfolio_value"] - mc_stats["percentile_5"],
-                "best_case_95pct": summary["initial_portfolio_value"] - mc_stats["percentile_95"],
-            }
+        if "monte_carlo" in results:
+            monte_carlo = results["monte_carlo"]
+            if isinstance(monte_carlo, dict) and "statistics" in monte_carlo:
+                mc_stats = monte_carlo["statistics"]
+                if isinstance(mc_stats, dict):
+                    raw_initial = summary["initial_portfolio_value"]
+                    initial_value: float = (
+                        raw_initial if isinstance(raw_initial, (int, float)) else 0.0
+                    )
+                    raw_mean = mc_stats["mean_portfolio_value"]
+                    mean_val: float = raw_mean if isinstance(raw_mean, (int, float)) else 0.0
+                    raw_p5 = mc_stats["percentile_5"]
+                    p5_val: float = raw_p5 if isinstance(raw_p5, (int, float)) else 0.0
+                    raw_p95 = mc_stats["percentile_95"]
+                    p95_val: float = raw_p95 if isinstance(raw_p95, (int, float)) else 0.0
+
+                    summary["monte_carlo"] = {
+                        "expected_loss": initial_value - mean_val,
+                        "worst_case_5pct": initial_value - p5_val,
+                        "best_case_95pct": initial_value - p95_val,
+                    }
 
         return summary

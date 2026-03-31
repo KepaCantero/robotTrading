@@ -9,6 +9,8 @@ SOLID Principles:
 - DIP: High-level modules depend on this abstraction
 """
 
+from __future__ import annotations
+
 import logging
 from typing import Optional
 

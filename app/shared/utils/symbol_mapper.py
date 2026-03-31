@@ -25,6 +25,8 @@ Date: 2026-01-25
 Status: PRODUCTION - Critical for Tax Compliance
 """
 
+from __future__ import annotations
+
 import logging
 import re
 from abc import abstractmethod
@@ -1026,7 +1028,7 @@ class SymbolMapperMixin:
         ```
     """
 
-    symbol_mapper: "SymbolMapper"
+    symbol_mapper: SymbolMapper
 
     @abstractmethod
     def get_broker_name(self) -> str:

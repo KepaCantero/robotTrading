@@ -5,6 +5,8 @@ This module provides a simplified interface to the backtesting system,
 hiding complexity and providing a clean API for running backtests.
 """
 
+from __future__ import annotations
+
 import logging
 import time
 from datetime import datetime, timezone
@@ -16,6 +18,7 @@ import pandas as pd
 from app.backtesting.core.config_loader import BacktestConfigLoader
 from app.backtesting.core.executor import BacktestExecutorFactory
 from app.backtesting.core.orchestrator import BoundedResults
+from app.backtesting.models import BacktestResult
 
 logger = logging.getLogger(__name__)
 
@@ -127,9 +130,10 @@ class BacktestRunnerFacade:
             portfolio_config=portfolio_config, data_loader=self.data_loader
         )
 
-        return await portfolio_builder.build_portfolio_quotes(
+        quotes: list[pd.DataFrame] = await portfolio_builder.build_portfolio_quotes(
             start_date=start_date, end_date=end_date
         )
+        return quotes
 
     def run_baseline(
         self, strategy: StrategyProtocol, strategy_name: Optional[str] = None
@@ -407,14 +411,18 @@ class BacktestRunnerFacade:
 
     def _get_best_result_summary(
         self, result: dict[str, Union[float, int, str]]
-    ) -> dict[str, Union[float, int, str, dict]]:
+    ) -> dict[str, Union[float, int, str, dict[str, Union[float, int, str]]]]:
         """Get summary of best result for logging."""
+        params_raw = result.get("parameters", {})
+        parameters: dict[str, Union[float, int, str]] = (
+            params_raw if isinstance(params_raw, dict) else {}
+        )
         return {
-            "test_name": result.get("test_name"),
+            "test_name": result.get("test_name", ""),
             "sharpe_ratio": float(result.get("sharpe_ratio", 0)),
             "total_pnl": float(result.get("total_pnl", 0)),
             "return_pct": float(result.get("return_pct", 0)),
-            "parameters": result.get("parameters", {}),
+            "parameters": parameters,
         }
 
     def get_results(self) -> pd.DataFrame:
@@ -507,32 +515,35 @@ class BacktestRunnerFacade:
             else 0.0
         )
 
-    def _get_total_trades(self, result) -> int:
+    def _get_total_trades(self, result: BacktestResult) -> int:
         """Get total trades from result."""
         return result.performance.total_trades if result.performance else 0
 
-    def _get_win_rate(self, result) -> float:
+    def _get_win_rate(self, result: BacktestResult) -> float:
         """Get win rate from result."""
         return float(result.performance.win_rate) if result.performance else 0.0
 
-    def _get_sharpe_ratio(self, result) -> float:
+    def _get_sharpe_ratio(self, result: BacktestResult) -> float:
         """Get Sharpe ratio from result."""
         if result.performance and result.performance.sharpe_ratio:
             return float(result.performance.sharpe_ratio)
         return 0.0
 
-    def _get_sortino_ratio(self, result) -> float:
+    def _get_sortino_ratio(self, result: BacktestResult) -> float:
         """Get Sortino ratio from result."""
         if result.performance and result.performance.sortino_ratio:
             return float(result.performance.sortino_ratio)
         return 0.0
 
-    def _get_max_drawdown(self, result) -> float:
+    def _get_max_drawdown(self, result: BacktestResult) -> float:
         """Get max drawdown from result."""
         return float(result.performance.max_drawdown_percentage) if result.performance else 0.0
 
     def _calculate_avg_trade_pnl(
-        self, initial_capital: float, final_capital: float, result
+        self,
+        initial_capital: float,
+        final_capital: float,
+        result: BacktestResult,
     ) -> float:
         """Calculate average trade PnL."""
         if result.performance and result.performance.total_trades > 0:

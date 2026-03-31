@@ -4,6 +4,8 @@ Configuration Persistence - T11.1
 Comprehensive strategy configuration storage with versioning.
 """
 
+from __future__ import annotations
+
 import logging
 from datetime import datetime
 from typing import Optional

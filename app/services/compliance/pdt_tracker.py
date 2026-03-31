@@ -15,6 +15,8 @@ Reference:
     Rule 4210 (Margin Requirements)
 """
 
+from __future__ import annotations
+
 import logging
 from collections import defaultdict
 from dataclasses import dataclass

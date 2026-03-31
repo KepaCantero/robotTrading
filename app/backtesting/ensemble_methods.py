@@ -26,7 +26,7 @@ import logging
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, NamedTuple, Union, cast
 
 import numpy as np
 from sklearn.ensemble import (
@@ -41,12 +41,33 @@ from sklearn.ensemble import (
 )
 from sklearn.tree import DecisionTreeRegressor
 from sklearn.utils.validation import check_is_fitted, check_X_y
+from typing_extensions import TypeAlias
 
 if TYPE_CHECKING:
     import pandas as pd
     from sklearn.base import BaseEstimator
 
+# Type aliases for the union types used across ensemble classes
+BaggingModel: TypeAlias = Union[BaggingClassifier, BaggingRegressor]
+BoostingModel: TypeAlias = Union[GradientBoostingClassifier, GradientBoostingRegressor]
+StackingModel: TypeAlias = Union[StackingClassifier, StackingRegressor]
+RFModel: TypeAlias = Union[RandomForestClassifier, RandomForestRegressor]
+
+
+class BaggingScores(NamedTuple):
+    """Typed container for bagging analysis scores."""
+
+    train: float
+    test: float
+    estimator_scores: list[float]
+
+
 logger = logging.getLogger(__name__)
+
+
+def _is_classification_target(y: np.ndarray) -> bool:
+    """Determine if the target variable suggests a classification task (<= 15 unique values)."""
+    return len(np.unique(y)) <= 15
 
 
 class EnsembleMethod(Enum):
@@ -81,9 +102,9 @@ class EnsembleResult:
     model_name: str
 
     # Additional info
-    details: dict[str, Any] = field(default_factory=dict)
+    details: dict[str, object] = field(default_factory=dict)
 
-    def to_dict(self) -> dict[str, Any]:
+    def to_dict(self) -> dict[str, object]:
         """Convert to dictionary."""
         return {
             "timestamp": self.timestamp.isoformat(),
@@ -178,7 +199,13 @@ class BaggingEnsemble:
         self.config = config
         self.estimator = estimator or DecisionTreeRegressor()
 
-        self.bagger_: BaggingRegressor | BaggingClassifier | None = None
+        self.bagger_: BaggingModel | None = None
+
+    def _ensure_fitted(self) -> BaggingModel:
+        """Check fitted status and return the non-None bagger model."""
+        check_is_fitted(self, ["bagger_"])
+        assert self.bagger_ is not None
+        return cast("BaggingModel", self.bagger_)
 
     def fit(
         self,
@@ -203,14 +230,15 @@ class BaggingEnsemble:
 
         return self
 
-    def _get_bagging_class(self, y: np.ndarray) -> type[BaggingClassifier | BaggingRegressor]:
+    def _get_bagging_class(self, y: np.ndarray) -> type[BaggingClassifier] | type[BaggingRegressor]:
         """Determine bagging class based on target type."""
-        if len(np.unique(y)) <= 15:
-            return BaggingClassifier
-        return BaggingRegressor
+        if _is_classification_target(y):
+            return cast("type[BaggingClassifier]", BaggingClassifier)
+        return cast("type[BaggingRegressor]", BaggingRegressor)
 
     def _create_bagger(
-        self, bagging_cls: type[BaggingClassifier | BaggingRegressor]
+        self,
+        bagging_cls: type[BaggingClassifier] | type[BaggingRegressor],
     ) -> BaggingClassifier | BaggingRegressor:
         """Create bagging estimator with configuration."""
         return bagging_cls(
@@ -234,8 +262,8 @@ class BaggingEnsemble:
         Returns:
             Predictions
         """
-        check_is_fitted(self, ["bagger_"])
-        return self.bagger_.predict(X)
+        result = self._ensure_fitted().predict(X)
+        return cast("np.ndarray", result)
 
     def score(
         self,
@@ -252,8 +280,7 @@ class BaggingEnsemble:
         Returns:
             Score (R^2 for regression, accuracy for classification)
         """
-        check_is_fitted(self, ["bagger_"])
-        return self.bagger_.score(X, y)
+        return float(self._ensure_fitted().score(X, y))
 
     def get_estimator_scores(
         self,
@@ -270,8 +297,9 @@ class BaggingEnsemble:
         Returns:
             List of individual scores
         """
-        check_is_fitted(self, ["bagger_"])
-        return [estimator.score(X, y) for estimator in self.bagger_.estimators_]
+        bagger = self._ensure_fitted()
+        estimators_list = bagger.estimators_
+        return [float(est.score(X, y)) for est in estimators_list]
 
     def get_oob_score(self) -> float | None:
         """
@@ -280,8 +308,8 @@ class BaggingEnsemble:
         Returns:
             OOB score if available, None otherwise
         """
-        check_is_fitted(self, ["bagger_"])
-        return getattr(self.bagger_, "oob_score_", None)
+        val = getattr(self._ensure_fitted(), "oob_score_", None)
+        return float(val) if val is not None else None
 
 
 class BoostingEnsemble:
@@ -335,6 +363,12 @@ class BoostingEnsemble:
 
         self.booster_: GradientBoostingClassifier | GradientBoostingRegressor | None = None
 
+    def _ensure_fitted(self) -> GradientBoostingClassifier | GradientBoostingRegressor:
+        """Check fitted status and return the non-None booster model."""
+        check_is_fitted(self, ["booster_"])
+        assert self.booster_ is not None
+        return self.booster_
+
     def fit(
         self,
         X: np.ndarray | pd.DataFrame,
@@ -361,7 +395,7 @@ class BoostingEnsemble:
     def _determine_task_type(self, y: np.ndarray) -> str:
         """Determine task type (classification or regression)."""
         if self.task_type == "auto":
-            return "classification" if len(np.unique(y)) <= 15 else "regression"
+            return "classification" if _is_classification_target(y) else "regression"
         return self.task_type
 
     def _create_booster(self, task: str) -> GradientBoostingClassifier | GradientBoostingRegressor:
@@ -388,8 +422,8 @@ class BoostingEnsemble:
         Returns:
             Predictions
         """
-        check_is_fitted(self, ["booster_"])
-        return self.booster_.predict(X)
+        result = self._ensure_fitted().predict(X)
+        return cast("np.ndarray", result)
 
     def staged_predict(self, X: np.ndarray | pd.DataFrame):
         """
@@ -401,8 +435,7 @@ class BoostingEnsemble:
         Yields:
             Predictions at each stage
         """
-        check_is_fitted(self, ["booster_"])
-        return self.booster_.staged_predict(X)
+        return self._ensure_fitted().staged_predict(X)
 
     def score(
         self,
@@ -419,8 +452,7 @@ class BoostingEnsemble:
         Returns:
             Score
         """
-        check_is_fitted(self, ["booster_"])
-        return self.booster_.score(X, y)
+        return float(self._ensure_fitted().score(X, y))
 
     def get_feature_importance(self) -> np.ndarray:
         """
@@ -429,8 +461,8 @@ class BoostingEnsemble:
         Returns:
             Feature importance array
         """
-        check_is_fitted(self, ["booster_"])
-        return self.booster_.feature_importances_
+        importance = self._ensure_fitted().feature_importances_
+        return cast("np.ndarray", importance)
 
 
 class StackingEnsemble:
@@ -477,6 +509,12 @@ class StackingEnsemble:
 
         self.stacker_: StackingClassifier | StackingRegressor | None = None
 
+    def _ensure_fitted(self) -> StackingClassifier | StackingRegressor:
+        """Check fitted status and return the non-None stacker model."""
+        check_is_fitted(self, ["stacker_"])
+        assert self.stacker_ is not None
+        return self.stacker_
+
     def fit(
         self,
         X: np.ndarray | pd.DataFrame,
@@ -506,7 +544,7 @@ class StackingEnsemble:
         if self.meta_estimator is not None:
             return
 
-        if len(np.unique(y)) <= 15:
+        if _is_classification_target(y):
             from sklearn.linear_model import LogisticRegression
 
             self.meta_estimator = LogisticRegression()
@@ -515,12 +553,17 @@ class StackingEnsemble:
 
             self.meta_estimator = Ridge()
 
-    def _get_stacking_class(self, y: np.ndarray) -> type[StackingClassifier | StackingRegressor]:
+    def _get_stacking_class(
+        self, y: np.ndarray
+    ) -> type[StackingClassifier] | type[StackingRegressor]:
         """Get stacking class based on target type."""
-        return StackingClassifier if len(np.unique(y)) <= 15 else StackingRegressor
+        if _is_classification_target(y):
+            return cast("type[StackingClassifier]", StackingClassifier)
+        return cast("type[StackingRegressor]", StackingRegressor)
 
     def _create_stacker(
-        self, stacking_cls: type[StackingClassifier | StackingRegressor]
+        self,
+        stacking_cls: type[StackingClassifier] | type[StackingRegressor],
     ) -> StackingClassifier | StackingRegressor:
         """Create stacking estimator."""
         return stacking_cls(
@@ -539,8 +582,8 @@ class StackingEnsemble:
         Returns:
             Predictions
         """
-        check_is_fitted(self, ["stacker_"])
-        return self.stacker_.predict(X)
+        result = self._ensure_fitted().predict(X)
+        return cast("np.ndarray", result)
 
     def score(
         self,
@@ -557,8 +600,7 @@ class StackingEnsemble:
         Returns:
             Score
         """
-        check_is_fitted(self, ["stacker_"])
-        return self.stacker_.score(X, y)
+        return float(self._ensure_fitted().score(X, y))
 
     def get_base_model_scores(
         self,
@@ -575,8 +617,9 @@ class StackingEnsemble:
         Returns:
             Dictionary mapping model names to scores
         """
-        check_is_fitted(self, ["stacker_"])
-        return {name: estimator.score(X, y) for name, estimator in self.stacker_.estimators_}
+        stacker = self._ensure_fitted()
+        estimators_list = stacker.estimators_
+        return {name: float(estimator.score(X, y)) for name, estimator in estimators_list}
 
 
 class RandomForestEnsemble:
@@ -639,6 +682,12 @@ class RandomForestEnsemble:
         self.random_state = random_state
         self.rf_: RandomForestClassifier | RandomForestRegressor | None = None
 
+    def _ensure_fitted(self) -> RandomForestClassifier | RandomForestRegressor:
+        """Check fitted status and return the non-None RF model."""
+        check_is_fitted(self, ["rf_"])
+        assert self.rf_ is not None
+        return self.rf_
+
     def fit(
         self,
         X: np.ndarray | pd.DataFrame,
@@ -662,12 +711,17 @@ class RandomForestEnsemble:
 
         return self
 
-    def _get_rf_class(self, y: np.ndarray) -> type[RandomForestClassifier | RandomForestRegressor]:
+    def _get_rf_class(
+        self, y: np.ndarray
+    ) -> type[RandomForestClassifier] | type[RandomForestRegressor]:
         """Determine Random Forest class based on target type."""
-        return RandomForestClassifier if len(np.unique(y)) <= 15 else RandomForestRegressor
+        if _is_classification_target(y):
+            return cast("type[RandomForestClassifier]", RandomForestClassifier)
+        return cast("type[RandomForestRegressor]", RandomForestRegressor)
 
     def _create_random_forest(
-        self, rf_cls: type[RandomForestClassifier | RandomForestRegressor]
+        self,
+        rf_cls: type[RandomForestClassifier] | type[RandomForestRegressor],
     ) -> RandomForestClassifier | RandomForestRegressor:
         """Create Random Forest estimator."""
         return rf_cls(
@@ -690,8 +744,8 @@ class RandomForestEnsemble:
         Returns:
             Predictions
         """
-        check_is_fitted(self, ["rf_"])
-        return self.rf_.predict(X)
+        result = self._ensure_fitted().predict(X)
+        return cast("np.ndarray", result)
 
     def score(
         self,
@@ -708,8 +762,7 @@ class RandomForestEnsemble:
         Returns:
             Score
         """
-        check_is_fitted(self, ["rf_"])
-        return self.rf_.score(X, y)
+        return float(self._ensure_fitted().score(X, y))
 
     def get_feature_importance(self) -> np.ndarray:
         """
@@ -718,8 +771,8 @@ class RandomForestEnsemble:
         Returns:
             Feature importance array
         """
-        check_is_fitted(self, ["rf_"])
-        return self.rf_.feature_importances_
+        importance = self._ensure_fitted().feature_importances_
+        return cast("np.ndarray", importance)
 
     def get_oob_score(self) -> float | None:
         """
@@ -728,8 +781,8 @@ class RandomForestEnsemble:
         Returns:
             OOB score if computed, None otherwise
         """
-        check_is_fitted(self, ["rf_"])
-        return getattr(self.rf_, "oob_score_", None)
+        val = getattr(self._ensure_fitted(), "oob_score_", None)
+        return float(val) if val is not None else None
 
 
 class EnsembleAnalyzer:
@@ -776,15 +829,24 @@ class EnsembleAnalyzer:
         scores = self._compute_bagging_scores(bagging, X_train, X_test, y_train, y_test)
 
         result = self._create_bagging_result(bagging, estimator, n_estimators, scores, X_test)
-        self._log_bagging_result(n_estimators, scores["test"], result.ensemble_improvement)
+        self._log_bagging_result(n_estimators, scores.test, result.ensemble_improvement)
 
         return result
 
-    def _split_data(self, X: np.ndarray | pd.DataFrame, y: np.ndarray | pd.Series) -> tuple:
+    def _split_data(self, X: np.ndarray | pd.DataFrame, y: np.ndarray | pd.Series) -> tuple[
+        np.ndarray | pd.DataFrame,
+        np.ndarray | pd.DataFrame,
+        np.ndarray | pd.Series,
+        np.ndarray | pd.Series,
+    ]:
         """Split data into train and test sets."""
         from sklearn.model_selection import train_test_split
 
-        return train_test_split(X, y, test_size=self.test_size, random_state=self.random_state)
+        result = train_test_split(X, y, test_size=self.test_size, random_state=self.random_state)
+        return cast(
+            "tuple[np.ndarray | pd.DataFrame, np.ndarray | pd.DataFrame, np.ndarray | pd.Series, np.ndarray | pd.Series]",
+            result,
+        )
 
     def _compute_bagging_scores(
         self,
@@ -793,29 +855,29 @@ class EnsembleAnalyzer:
         X_test: np.ndarray | pd.DataFrame,
         y_train: np.ndarray | pd.Series,
         y_test: np.ndarray | pd.Series,
-    ) -> dict[str, Any]:
+    ) -> BaggingScores:
         """Compute bagging scores."""
-        return {
-            "train": bagging.score(X_train, y_train),
-            "test": bagging.score(X_test, y_test),
-            "estimator_scores": bagging.get_estimator_scores(X_test, y_test),
-        }
+        return BaggingScores(
+            train=bagging.score(X_train, y_train),
+            test=bagging.score(X_test, y_test),
+            estimator_scores=bagging.get_estimator_scores(X_test, y_test),
+        )
 
     def _create_bagging_result(
         self,
         bagging: BaggingEnsemble,
         estimator: BaseEstimator,
         n_estimators: int,
-        scores: dict[str, Any],
+        scores: BaggingScores,
         X_test: np.ndarray | pd.DataFrame,
     ) -> EnsembleResult:
         """Create ensemble result for bagging."""
         result = self._create_ensemble_result(
             method=EnsembleMethod.BAGGING,
             n_estimators=n_estimators,
-            train_score=scores["train"],
-            test_score=scores["test"],
-            estimator_scores=scores["estimator_scores"],
+            train_score=scores.train,
+            test_score=scores.test,
+            estimator_scores=scores.estimator_scores,
             model_name=type(estimator).__name__,
             details={"oob_score": bagging.get_oob_score()},
         )
@@ -1003,21 +1065,28 @@ class EnsembleAnalyzer:
         if not correlations:
             return 0.0
 
-        return 1 - np.mean(correlations)
+        return float(1 - np.mean(correlations))
 
     def _get_ensemble_estimators(
         self, ensemble: BaggingEnsemble | RandomForestEnsemble
     ) -> list[BaseEstimator]:
         """Get estimators from fitted ensemble."""
-        if hasattr(ensemble, "bagger_"):
-            return ensemble.bagger_.estimators_
-        return ensemble.rf_.estimators_
+        if isinstance(ensemble, BaggingEnsemble):
+            bagger = ensemble.bagger_
+            assert bagger is not None
+            return list(bagger.estimators_)
+        rf = ensemble.rf_
+        assert rf is not None
+        return list(rf.estimators_)
 
     def _get_estimator_predictions(
         self, estimators: list[BaseEstimator], X: np.ndarray | pd.DataFrame
     ) -> np.ndarray:
         """Get predictions from all estimators."""
-        return np.array([estimator.predict(X) for estimator in estimators])
+        preds: list[np.ndarray] = [
+            cast("np.ndarray", estimator.predict(X)) for estimator in estimators
+        ]
+        return cast("np.ndarray", np.array(preds))
 
     def _compute_pairwise_correlations(self, predictions: np.ndarray) -> list[float]:
         """Compute pairwise correlations between predictions."""
@@ -1040,7 +1109,7 @@ class EnsembleAnalyzer:
         test_score: float,
         estimator_scores: list[float],
         model_name: str,
-        details: dict[str, Any],
+        details: dict[str, object],
     ) -> EnsembleResult:
         """Create ensemble result with computed metrics."""
         best_single = max(estimator_scores) if estimator_scores else test_score
@@ -1066,7 +1135,7 @@ class EnsembleAnalyzer:
         base_estimator: BaseEstimator | None = None,
         base_estimators: list[tuple[str, BaseEstimator]] | None = None,
         n_estimators: int = 100,
-    ) -> dict[str, EnsembleResult]:
+    ) -> dict[str, EnsembleResult | None]:
         """
         Compare different ensemble methods.
 

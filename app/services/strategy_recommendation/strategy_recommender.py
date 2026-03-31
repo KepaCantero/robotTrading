@@ -4,10 +4,14 @@ T19.1.3: StrategyRecommender - Generates personalized strategy recommendations
 Integrates scoring and ranking to provide comprehensive strategy recommendations.
 """
 
+from __future__ import annotations
+
 import logging
 from dataclasses import dataclass
 from decimal import Decimal
 from typing import Optional
+
+from .strategy_ranker import RankedStrategy
 
 logger = logging.getLogger(__name__)
 
@@ -46,7 +50,7 @@ class StrategyRecommender:
 
     async def recommend_strategy(
         self,
-        ranked_strategies: list,
+        ranked_strategies: list[RankedStrategy],
         objective: str = "balanced",
         risk_profile: str = "moderate",
     ) -> StrategyRecommendation:
@@ -114,7 +118,7 @@ class StrategyRecommender:
 
     async def _assess_suitability(
         self,
-        strategy,
+        strategy: RankedStrategy,
         objective: str,
         risk_profile: str,
     ) -> Decimal:
@@ -145,7 +149,7 @@ class StrategyRecommender:
 
     async def _determine_confidence(
         self,
-        strategy,
+        strategy: RankedStrategy,
         suitability: Decimal,
     ) -> str:
         """Determine confidence level."""
@@ -160,7 +164,7 @@ class StrategyRecommender:
 
     async def _generate_reasoning(
         self,
-        strategy,
+        strategy: RankedStrategy,
         objective: str,
         risk_profile: str,
     ) -> str:
@@ -199,37 +203,37 @@ class StrategyRecommender:
 
     async def _estimate_annual_return(
         self,
-        strategy,
+        strategy: RankedStrategy,
         objective: str,
     ) -> Decimal:
         """Estimate annual return based on strategy score."""
-        base_return = strategy.return_score / Decimal("10") * Decimal("0.015")
+        base_return: Decimal = strategy.return_score / Decimal("10") * Decimal("0.015")
 
         if objective == "growth":
-            return min(base_return * Decimal("1.2"), Decimal("0.20"))
+            return Decimal(str(min(base_return * Decimal("1.2"), Decimal("0.20"))))
         elif objective == "income":
-            return min(base_return * Decimal("0.8"), Decimal("0.10"))
+            return Decimal(str(min(base_return * Decimal("0.8"), Decimal("0.10"))))
         elif objective == "preservation":
-            return min(base_return * Decimal("0.5"), Decimal("0.05"))
+            return Decimal(str(min(base_return * Decimal("0.5"), Decimal("0.05"))))
         else:
             return base_return
 
     async def _estimate_max_drawdown(
         self,
-        strategy,
+        strategy: RankedStrategy,
         risk_profile: str,
     ) -> Decimal:
         """Estimate maximum expected drawdown."""
-        drawdown_estimate = (
+        drawdown_estimate: Decimal = (
             (Decimal("100") - strategy.risk_score) / Decimal("100") * Decimal("0.40")
         )
 
         if risk_profile == "conservative":
-            return -drawdown_estimate * Decimal("1.2")
+            return Decimal(str(-drawdown_estimate * Decimal("1.2")))
         else:
-            return -drawdown_estimate
+            return Decimal(str(-drawdown_estimate))
 
-    async def _assess_risk_level(self, strategy) -> str:
+    async def _assess_risk_level(self, strategy: RankedStrategy) -> str:
         """Assess risk level of strategy."""
         if strategy.risk_score >= Decimal("75"):
             return "low"

@@ -24,6 +24,8 @@ Version: 2.0.0 - MANDATORY NUMBA ENFORCEMENT
 Compliance: Rule 19, Rule 23 - High Performance Python
 """
 
+from __future__ import annotations
+
 import logging
 
 import numpy as np
@@ -35,9 +37,10 @@ import numpy as np
 # CRITICAL: Numba is REQUIRED for this module
 logger = logging.getLogger(__name__)
 
+from numba import jit as jit
+
 try:
     from numba import __version__ as numba_version
-    from numba import jit
 
     NUMBA_AVAILABLE = True
     NUMBA_VERSION = numba_version
@@ -124,7 +127,8 @@ def sample_std_numba(values: np.ndarray) -> float:
         variance += diff * diff
     variance /= n - 1
 
-    return np.sqrt(variance)
+    result: float = np.sqrt(variance)
+    return result
 
 
 # ============================================================================
@@ -159,9 +163,10 @@ def calculate_returns_numba(prices: np.ndarray) -> np.ndarray:
     n = len(prices)
     if n < 2:
         # Return empty array if insufficient data
-        return np.empty(0)
+        empty: np.ndarray = np.empty(0)
+        return empty
 
-    returns = np.empty(n - 1)
+    returns: np.ndarray = np.empty(n - 1)
 
     for i in range(n - 1):
         # Handle zero prices gracefully to avoid division by zero
@@ -196,7 +201,7 @@ def calculate_cumulative_returns_numba(returns: np.ndarray) -> np.ndarray:
     Note: This is a JIT-compiled function. Use validate_numeric_array() before calling.
     """
     n = len(returns)
-    cumulative = np.empty(n)
+    cumulative: np.ndarray = np.empty(n)
 
     # Calculate cumulative returns: (1+r1)(1+r2)...(1+rn) - 1
     cumulative_wealth = 1.0
@@ -221,9 +226,9 @@ def calculate_cagr_numba(final_value: float, initial_value: float, n_periods: fl
         CAGR as a decimal
     """
     if initial_value <= 0 or n_periods <= 0:
-        return np.nan
+        return float(np.nan)
 
-    return (final_value / initial_value) ** (1.0 / n_periods) - 1.0
+    return float((final_value / initial_value) ** (1.0 / n_periods) - 1.0)
 
 
 @jit(nopython=True, cache=False)
@@ -242,7 +247,7 @@ def calculate_log_returns_numba(prices: np.ndarray) -> np.ndarray:
         Array of log returns
     """
     n = len(prices)
-    log_returns = np.empty(n - 1)
+    log_returns: np.ndarray = np.empty(n - 1)
 
     for i in range(n - 1):
         log_returns[i] = np.log(prices[i + 1] / prices[i])
@@ -301,7 +306,8 @@ def calculate_sharpe_numba(
         return 0.0
 
     # Annualize
-    sharpe = mean_excess / std_excess * np.sqrt(periods_per_year)
+    sqrt_periods: float = np.sqrt(periods_per_year)
+    sharpe = mean_excess / std_excess * sqrt_periods
     return sharpe
 
 
@@ -331,7 +337,7 @@ def calculate_sortino_numba(
     excess_returns = returns - (risk_free_rate / periods_per_year)
 
     # Calculate mean
-    mean_excess = np.mean(excess_returns)
+    mean_excess = float(np.mean(excess_returns))
 
     # Calculate downside deviation (only negative returns)
     downside_returns = excess_returns[excess_returns < 0]
@@ -344,7 +350,8 @@ def calculate_sortino_numba(
         return 0.0
 
     # Annualize
-    sortino = mean_excess / downside_deviation * np.sqrt(periods_per_year)
+    sqrt_periods: float = np.sqrt(periods_per_year)
+    sortino = mean_excess / downside_deviation * sqrt_periods
     return sortino
 
 
@@ -369,14 +376,15 @@ def calculate_var_numba(returns: np.ndarray, confidence_level: float = 0.95) -> 
         return np.nan
 
     # Sort returns using Numba-compatible np.sort
-    sorted_returns = np.sort(returns.copy())
+    sorted_returns: np.ndarray = np.sort(returns.copy())
 
     # Calculate VaR at confidence level
     index = int((1.0 - confidence_level) * n)
     if index >= n:
         index = n - 1
 
-    return sorted_returns[index]
+    var_value = float(sorted_returns[index])
+    return var_value
 
 
 @jit(nopython=True, cache=False)
@@ -440,7 +448,7 @@ def calculate_drawdown_series_numba(equity_curve: np.ndarray) -> np.ndarray:
         Array of drawdown values (negative percentages)
     """
     n = len(equity_curve)
-    drawdowns = np.zeros(n)
+    drawdowns: np.ndarray = np.zeros(n)
 
     peak = equity_curve[0]
     for i in range(n):
@@ -471,7 +479,8 @@ def calculate_max_drawdown_numba(equity_curve: np.ndarray) -> float:
         Maximum drawdown (negative value)
     """
     drawdowns = calculate_drawdown_series_numba(equity_curve)
-    return np.min(drawdowns)
+    min_dd: float = np.min(drawdowns)
+    return min_dd
 
 
 @jit(nopython=True, cache=False)
@@ -662,7 +671,8 @@ def calculate_volatility_numba(returns: np.ndarray, periods_per_year: int) -> fl
         return np.nan
 
     std = sample_std_numba(returns)
-    return std * np.sqrt(periods_per_year)
+    sqrt_periods: float = np.sqrt(periods_per_year)
+    return std * sqrt_periods
 
 
 @jit(nopython=True, cache=False)
@@ -685,7 +695,7 @@ def calculate_rolling_volatility_numba(
         Array of rolling volatility values
     """
     n = len(returns)
-    rolling_vol = np.full(n, np.nan)
+    rolling_vol: np.ndarray = np.full(n, np.nan)
 
     if n < window:
         return rolling_vol
@@ -801,7 +811,8 @@ def calculate_skewness_numba(returns: np.ndarray) -> float:
         return 0.0
 
     # Calculate skewness
-    skewness = m3 / (m2 * np.sqrt(m2))
+    sqrt_m2: float = np.sqrt(m2)
+    skewness = m3 / (m2 * sqrt_m2)
     return skewness
 
 

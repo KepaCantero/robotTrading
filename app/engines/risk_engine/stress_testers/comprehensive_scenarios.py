@@ -18,6 +18,8 @@ Scenarios include:
 Reference: Hull, Options, Futures, and Other Derivatives, Chapter 20
 """
 
+from __future__ import annotations
+
 import logging
 from datetime import datetime
 from typing import Any, Optional

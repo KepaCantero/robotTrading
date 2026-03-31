@@ -46,7 +46,7 @@ class RegimeClassifier:
         self.config = config
         self.hurst_calculator = hurst_calculator
 
-    def classify(self, prices: np.ndarray) -> dict[str, float | None]:
+    def classify(self, prices: np.ndarray) -> dict[str, float | None | str]:
         """
         Classify market regime using Hurst exponent (short and long horizons).
 

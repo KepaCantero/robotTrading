@@ -22,12 +22,18 @@ Features:
 - Comprehensive caching
 """
 
+from __future__ import annotations
+
 import asyncio
 import logging
 import random
 import time
 from collections import OrderedDict
+from datetime import timedelta
+from decimal import Decimal
 from typing import ClassVar, Optional, Union
+
+import pandas as pd
 
 # REQUIRED: yfinance is REQUIRED - NO FALLBACKS
 
@@ -499,6 +505,340 @@ class MarketUniverseLoader:
             enable_circuit_breaker: Enable circuit breaker pattern
             max_concurrent_requests: Max concurrent yfinance requests
         """
+        self.min_avg_volume = min_avg_volume
+        self.min_price = min_price
+        self.max_volatility = max_volatility
+        self.cache_ttl = timedelta(hours=cache_ttl_hours)
+        self.enable_retry = enable_retry
+        self.enable_circuit_breaker = enable_circuit_breaker
+        self.max_concurrent_requests = max_concurrent_requests
+
+        cache_ttl_seconds = cache_ttl_hours * 3600
+        self._universe_cache = LRUCache(max_size=50, default_ttl_seconds=cache_ttl_seconds)
+        self._data_cache = LRUCache(max_size=100, default_ttl_seconds=cache_ttl_seconds)
+
+        if enable_circuit_breaker:
+            self._circuit_breaker = CircuitBreaker()
+        else:
+            self._circuit_breaker = None
+
+        if enable_retry:
+            self._retry_config = RetryConfig()
+        else:
+            self._retry_config = None
+
+        self._semaphore: Optional[asyncio.Semaphore] = None
+        self._max_concurrent_requests = max_concurrent_requests
+
+    async def get_sp500_universe(self) -> list[str]:
+        """Get S&P 500 ticker list (uses yfinance or fallback)."""
+        cache_key = "sp500_universe"
+        cached = self._get_cached_universe(cache_key)
+        if cached is not None:
+            return cached
+
+        tickers = self.SP500_FALLBACK
+
+        if YFINANCE_AVAILABLE:
+            try:
+                import yfinance as yf
+
+                ticker = yf.Ticker("^GSPC")
+                # Attempt to fetch constituents; not all yfinance versions support this
+                constituents = getattr(ticker, "info", None)
+                if constituents and isinstance(constituents, dict):
+                    holdings = constituents.get("holdings")
+                    if holdings is not None and hasattr(holdings, "index"):
+                        yf_tickers = list(holdings.index)
+                        if yf_tickers:
+                            tickers = yf_tickers
+            except Exception as exc:
+                logger.warning("yfinance S&P 500 fetch failed, using fallback: %s", exc)
+
+        self._cache_universe(cache_key, tickers)
+        return tickers
+
+    async def get_crypto_universe(self, top_n: int = 20) -> list[str]:
+        """Get top cryptocurrency tickers."""
+        cache_key = f"crypto_universe_{top_n}"
+        cached = self._get_cached_universe(cache_key)
+        if cached is not None:
+            return cached
+
+        tickers = self.CRYPTO_TOP20[:top_n]
+        self._cache_universe(cache_key, tickers)
+        return tickers
+
+    async def get_combined_universe(
+        self,
+        include_sp500: bool = True,
+        include_nasdaq100: bool = True,
+        include_ibex35: bool = False,
+        include_crypto: bool = False,
+    ) -> list[str]:
+        """Combine multiple universe sources into a deduplicated list."""
+        cache_key = (
+            f"combined_{include_sp500}_{include_nasdaq100}_{include_ibex35}_{include_crypto}"
+        )
+        cached = self._get_cached_universe(cache_key)
+        if cached is not None:
+            return cached
+
+        tickers: list[str] = []
+        seen: set[str] = set()
+
+        async def _add(source_coro):
+            result = await source_coro
+            for t in result:
+                if t not in seen:
+                    seen.add(t)
+                    tickers.append(t)
+
+        if include_sp500:
+            await _add(self.get_sp500_universe())
+        if include_nasdaq100:
+            for t in self.NASDAQ100_FALLBACK:
+                if t not in seen:
+                    seen.add(t)
+                    tickers.append(t)
+        if include_ibex35:
+            for t in self.IBEX35_FALLBACK:
+                if t not in seen:
+                    seen.add(t)
+                    tickers.append(t)
+        if include_crypto:
+            await _add(self.get_crypto_universe())
+
+        self._cache_universe(cache_key, tickers)
+        return tickers
+
+    async def download_universe_data(
+        self,
+        tickers: list[str],
+        period: str = "1mo",
+        interval: str = "1d",
+        progress: bool = False,
+    ) -> dict[str, pd.DataFrame]:
+        """Download OHLCV data for a list of tickers via yfinance."""
+        if not tickers:
+            return {}
+
+        cache_key = f"data_{'_'.join(sorted(tickers))}_{period}_{interval}"
+        cached = self._get_cached_data(cache_key)
+        if cached is not None:
+            return cached
+
+        if not YFINANCE_AVAILABLE:
+            logger.warning("yfinance not available; returning empty data dict")
+            return {}
+
+        try:
+            import yfinance as yf
+
+            async def _download():
+                return yf.download(
+                    tickers,
+                    period=period,
+                    interval=interval,
+                    progress=progress,
+                    group_by="ticker",
+                    auto_adjust=True,
+                )
+
+            if self._retry_config is not None:
+                raw = await retry_with_backoff(
+                    _download,
+                    retry_config=self._retry_config,
+                    operation_name="download_universe_data",
+                )
+            else:
+                raw = await _download()
+
+            result: dict[str, pd.DataFrame] = {}
+
+            if raw is None or raw.empty:
+                self._cache_data(cache_key, result)
+                return result
+
+            if len(tickers) == 1:
+                ticker = tickers[0]
+                df = self._normalize_dataframe(raw)
+                if df is not None and not df.empty:
+                    result[ticker] = df
+            else:
+                for ticker in tickers:
+                    if ticker in raw.columns.get_level_values(0):
+                        df = self._normalize_dataframe(raw[ticker])
+                        if df is not None and not df.empty:
+                            result[ticker] = df
+
+            self._cache_data(cache_key, result)
+            return result
+
+        except (asyncio.TimeoutError, OSError, ValueError) as exc:
+            logger.error("Failed to download universe data: %s", exc)
+            return {}
+
+    @staticmethod
+    def _normalize_dataframe(df: pd.DataFrame) -> Optional[pd.DataFrame]:
+        """Normalize a yfinance DataFrame to lowercase column names."""
+        if df is None or df.empty:
+            return None
+        df = df.copy()
+        df.columns = [c.lower() for c in df.columns]
+        return df
+
+    async def filter_by_liquidity_volatility(
+        self,
+        data: dict[str, pd.DataFrame],
+        min_avg_volume: Optional[int] = None,
+        min_price: Optional[float] = None,
+        max_volatility: Optional[float] = None,
+    ) -> dict[str, pd.DataFrame]:
+        """Filter downloaded data by average volume, price, and volatility."""
+        if not data:
+            return {}
+
+        vol_threshold = min_avg_volume if min_avg_volume is not None else self.min_avg_volume
+        price_threshold = min_price if min_price is not None else self.min_price
+        vol_cap = max_volatility if max_volatility is not None else self.max_volatility
+
+        filtered: dict[str, pd.DataFrame] = {}
+
+        for ticker, df in data.items():
+            if df is None or df.empty:
+                continue
+
+            close_col = "close" if "close" in df.columns else "Close"
+            volume_col = "volume" if "volume" in df.columns else "Volume"
+
+            if close_col not in df.columns or volume_col not in df.columns:
+                continue
+
+            # Need sufficient data points (at least 20) for meaningful stats
+            if len(df) < 20:
+                continue
+
+            avg_price = df[close_col].mean()
+            if avg_price < price_threshold:
+                continue
+
+            avg_volume = df[volume_col].mean()
+            if avg_volume < vol_threshold:
+                continue
+
+            returns = df[close_col].pct_change().dropna()
+            if len(returns) < 2:
+                continue
+            daily_vol = returns.std()
+            if daily_vol > vol_cap:
+                continue
+
+            filtered[ticker] = df
+
+        return filtered
+
+    async def fetch_and_filter(
+        self,
+        tickers: list[str],
+        period: str = "1mo",
+        interval: str = "1d",
+    ) -> dict[str, pd.DataFrame]:
+        """Convenience method: download data then filter by liquidity/volatility."""
+        data = await self.download_universe_data(tickers, period=period, interval=interval)
+        return await self.filter_by_liquidity_volatility(data)
+
+    async def get_assets_from_universe(
+        self,
+        tickers: list[str],
+        period: str = "1mo",
+    ) -> list:
+        """Convert tickers to Asset objects with liquidity scores."""
+        from app.domain.models.assets import Asset, AssetClass, Exchange
+
+        data = await self.download_universe_data(tickers, period=period)
+        if not data:
+            return []
+
+        assets: list[Asset] = []
+        for ticker, df in data.items():
+            if df is None or df.empty:
+                continue
+
+            close_col = "close" if "close" in df.columns else "Close"
+            volume_col = "volume" if "volume" in df.columns else "Volume"
+
+            if close_col not in df.columns or volume_col not in df.columns:
+                continue
+
+            avg_volume = df[volume_col].mean()
+            avg_spread = df[close_col].diff().abs().mean() if len(df) > 1 else 0.0
+
+            asset = Asset(
+                symbol=ticker,
+                name=ticker,
+                asset_class=AssetClass.EQUITY,
+                exchange=Exchange.NASDAQ,
+                avg_volume=Decimal(str(int(avg_volume))),
+                avg_spread=Decimal(str(round(avg_spread, 4))),
+            )
+            await self._calculate_liquidity_score(asset, df)
+            assets.append(asset)
+
+        return assets
+
+    async def _calculate_liquidity_score(self, asset, df: pd.DataFrame) -> None:
+        """Calculate and set the liquidity score on an Asset."""
+        close_col = "close" if "close" in df.columns else "Close"
+        volume_col = "volume" if "volume" in df.columns else "Volume"
+
+        volume_score = 0.0
+        spread_score = 50.0
+
+        if volume_col in df.columns and len(df) > 0:
+            avg_vol = float(df[volume_col].mean())
+            if avg_vol > 0:
+                import math
+
+                volume_score = min(100.0, max(0.0, (math.log10(avg_vol) - 2) * 20))
+
+        if close_col in df.columns and len(df) > 1:
+            spread_estimate = float(df[close_col].diff().abs().mean())
+            avg_price = float(df[close_col].mean())
+            if avg_price > 0:
+                spread_pct = spread_estimate / avg_price
+                spread_score = max(0.0, min(100.0, 100 - spread_pct * 1000))
+
+        score = volume_score * 0.6 + spread_score * 0.4
+        score = max(0.0, min(100.0, score))
+        asset.liquidity_score = score
+
+    def _get_cached_universe(self, key: str) -> Optional[list[str]]:
+        """Retrieve cached universe data or None."""
+        result = self._universe_cache.get(key)
+        if result is None:
+            return None
+        return result
+
+    def _cache_universe(self, key: str, data: list[str]) -> None:
+        """Store universe data in the universe cache."""
+        self._universe_cache.put(key, data)
+
+    def _get_cached_data(self, key: str) -> Optional[dict]:
+        """Retrieve cached downloaded data or None."""
+        result = self._data_cache.get(key)
+        if result is None:
+            return None
+        return result
+
+    def _cache_data(self, key: str, data: dict) -> None:
+        """Store downloaded data in the data cache."""
+        self._data_cache.put(key, data)
+
+    def clear_cache(self) -> None:
+        """Clear both universe and data caches."""
+        self._universe_cache.clear()
+        self._data_cache.clear()
 
 
 # Singleton instance

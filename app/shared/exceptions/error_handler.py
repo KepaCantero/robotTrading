@@ -3,6 +3,8 @@ Global Error Handler for AlgoTrading
 TASK-4: Sistema de manejo de errores unificado
 """
 
+from __future__ import annotations
+
 import logging
 import traceback
 from typing import Any, NoReturn, Optional, Union
@@ -15,8 +17,6 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 from app.services.centralized_logging import LogLevel, LogService, centralized_logger
 from app.shared.exceptions.trading_exceptions import (
     AlgoTradingDatabaseError as DatabaseError,
-)
-from app.shared.exceptions.trading_exceptions import (
     AlgoTradingError,
     BusinessLogicError,
     ConfigurationError,

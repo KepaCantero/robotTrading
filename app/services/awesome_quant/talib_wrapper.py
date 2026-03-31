@@ -4,6 +4,8 @@ FASE 4.4: TALibWrapper - TA-Lib technical analysis library integration
 TA-Lib provides 200+ technical indicators for price and volume analysis.
 """
 
+from __future__ import annotations
+
 import logging
 from decimal import Decimal
 from typing import Optional

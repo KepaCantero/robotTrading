@@ -15,7 +15,7 @@ from __future__ import annotations
 
 import logging
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 import yaml
 
@@ -56,7 +56,8 @@ class ConfigurationService:
         """
         try:
             with open(self.config_path) as f:
-                return yaml.safe_load(f)
+                loaded = yaml.safe_load(f)
+                return cast("ConfigDict", loaded if isinstance(loaded, dict) else {})
         except FileNotFoundError:
             logger.error(f"Configuration file not found: {self.config_path}")
             raise
@@ -109,39 +110,51 @@ class ConfigurationService:
 
     def get_capital_tiers(self) -> ConfigDict:
         """Get capital tiers configuration."""
-        return self.config.get("capital_tiers", {})
+        result = self.config.get("capital_tiers", {})
+        return result if isinstance(result, dict) else {}
 
     def get_horizons_config(self) -> ConfigDict:
         """Get investment horizons configuration."""
-        return self.config.get("investment_horizons", {})
+        result = self.config.get("investment_horizons", {})
+        return result if isinstance(result, dict) else {}
 
     def get_optimization_config(self) -> ConfigDict:
         """Get optimization configuration."""
-        return self.config.get("optimization", {})
+        result = self.config.get("optimization", {})
+        return result if isinstance(result, dict) else {}
 
     def get_validation_config(self) -> ConfigDict:
         """Get validation configuration."""
-        return self.config.get("validation", {})
+        result = self.config.get("validation", {})
+        return result if isinstance(result, dict) else {}
 
     def get_acceptance_criteria(self) -> ConfigDict:
         """Get acceptance criteria configuration."""
-        return self.config.get("acceptance_criteria", {})
+        result = self.config.get("acceptance_criteria", {})
+        return result if isinstance(result, dict) else {}
 
     def get_backtest_period(self) -> ConfigDict:
         """Get backtest period configuration."""
-        return self.config.get("backtest_period", {})
+        result = self.config.get("backtest_period", {})
+        return result if isinstance(result, dict) else {}
 
     def get_symbols(self) -> list[str]:
         """Get symbols configuration."""
-        return self.config.get("symbols", ["AAPL", "MSFT", "GOOGL", "AMZN", "TSLA"])
+        result = self.config.get("symbols", ["AAPL", "MSFT", "GOOGL", "AMZN", "TSLA"])
+        return result if isinstance(result, list) else ["AAPL", "MSFT", "GOOGL", "AMZN", "TSLA"]
 
     def get_output_dir(self) -> str:
         """Get output directory configuration."""
-        return self.config.get("output_dir", "results/profile_batch_backtesting")
+        result = self.config.get("output_dir", "results/profile_batch_backtesting")
+        return str(result) if result is not None else "results/profile_batch_backtesting"
 
     def get_database_url(self) -> str:
         """Get database URL configuration."""
-        return self.config.get("database", {}).get("url", "sqlite:///profile_backtest_results.db")
+        db_config = self.config.get("database", {})
+        if isinstance(db_config, dict):
+            url = db_config.get("url", "sqlite:///profile_backtest_results.db")
+            return str(url) if url is not None else "sqlite:///profile_backtest_results.db"
+        return "sqlite:///profile_backtest_results.db"
 
     def get_risk_parameters(self, risk_key: str) -> ConfigDict:
         """
@@ -153,7 +166,11 @@ class ConfigurationService:
         Returns:
             Risk parameters dictionary
         """
-        return self.config.get("risk_parameters", {}).get(risk_key, {})
+        params = self.config.get("risk_parameters", {})
+        if not isinstance(params, dict):
+            return {}
+        result = params.get(risk_key, {})
+        return result if isinstance(result, dict) else {}
 
     def get_objective_parameters(self, objective_key: str) -> ConfigDict:
         """
@@ -165,15 +182,21 @@ class ConfigurationService:
         Returns:
             Objective parameters dictionary
         """
-        return self.config.get("objective_parameters", {}).get(objective_key, {})
+        params = self.config.get("objective_parameters", {})
+        if not isinstance(params, dict):
+            return {}
+        result = params.get(objective_key, {})
+        return result if isinstance(result, dict) else {}
 
     def get_modules_config(self) -> ConfigDict:
         """Get modules configuration."""
-        return self.config.get("modules", {})
+        result = self.config.get("modules", {})
+        return result if isinstance(result, dict) else {}
 
     def get_reporting_config(self) -> ConfigDict:
         """Get reporting configuration."""
-        return self.config.get("reporting", {})
+        result = self.config.get("reporting", {})
+        return result if isinstance(result, dict) else {}
 
     def load_investment_horizons(self) -> list[int]:
         """

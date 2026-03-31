@@ -30,9 +30,11 @@ Reference:
     - Chan, E.P. (2013). Algorithmic Trading.
 """
 
+from __future__ import annotations
+
 import logging
 from decimal import Decimal
-from typing import Optional, Union
+from typing import Optional, Union, cast
 
 import numpy as np
 import pandas as pd
@@ -42,11 +44,9 @@ logger = logging.getLogger(__name__)
 # Import the consolidated domain implementation
 from app.domain.services.metrics.performance_metrics import (
     DrawdownResult,
+    PerformanceMetricsCalculator as _PerformanceMetricsCalculator,
     PerformanceResult,
     SharpeRatioResult,
-)
-from app.domain.services.metrics.performance_metrics import (
-    PerformanceMetricsCalculator as _PerformanceMetricsCalculator,
 )
 
 # Re-export dataclasses
@@ -92,7 +92,7 @@ class PerformanceMetricsCalculator(_PerformanceMetricsCalculator):
         risk_free_rate: Optional[float] = None,
         trading_days: Optional[int] = None,
         use_empyrical: bool = True,
-    ) -> "PerformanceMetricsCalculator":
+    ) -> PerformanceMetricsCalculator:
         """
         Create calculator with defaults from CentralizedConfig.
 
@@ -157,7 +157,7 @@ def _to_float_array(
             "nan_removed": len(arr) - len(result),
         },
     )
-    return result
+    return cast("np.ndarray", result)
 
 
 def sharpe_ratio(
@@ -193,7 +193,7 @@ def sharpe_ratio(
             "annualized": annualize,
         },
     )
-    return result
+    return float(result)
 
 
 def sortino_ratio(
@@ -215,8 +215,10 @@ def sortino_ratio(
         Sortino ratio (annualized if annualize=True)
     """
     calc = PerformanceMetricsCalculator.from_config(risk_free_rate=risk_free_rate)
-    return calc.sortino_ratio(
-        returns, risk_free_rate=risk_free_rate, target_return=target_return, annualize=annualize
+    return float(
+        calc.sortino_ratio(
+            returns, risk_free_rate=risk_free_rate, target_return=target_return, annualize=annualize
+        )
     )
 
 
@@ -235,7 +237,8 @@ def calmar_ratio(
         Calmar ratio or None if calculation not possible
     """
     calc = PerformanceMetricsCalculator.from_config()
-    return calc.calmar_ratio(returns, equity_curve)
+    result = calc.calmar_ratio(returns, equity_curve)
+    return float(result) if result is not None else None
 
 
 def omega_ratio(
@@ -253,7 +256,7 @@ def omega_ratio(
         Omega ratio (>1.0 indicates more upside than downside)
     """
     calc = PerformanceMetricsCalculator.from_config()
-    return calc.omega_ratio(returns, threshold)
+    return float(calc.omega_ratio(returns, threshold))
 
 
 def max_drawdown(
@@ -271,7 +274,7 @@ def max_drawdown(
         Maximum drawdown (negative value, e.g., -0.20 or -20.0)
     """
     calc = PerformanceMetricsCalculator.from_config()
-    return calc.max_drawdown(equity_curve, as_percentage)
+    return float(calc.max_drawdown(equity_curve, as_percentage))
 
 
 def ulcer_index(
@@ -287,7 +290,7 @@ def ulcer_index(
         Ulcer Index (lower is better)
     """
     calc = PerformanceMetricsCalculator.from_config()
-    return calc.ulcer_index(equity_curve)
+    return float(calc.ulcer_index(equity_curve))
 
 
 # Alias for domain calculator direct access

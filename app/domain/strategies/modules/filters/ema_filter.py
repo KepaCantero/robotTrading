@@ -2,6 +2,8 @@
 EMAFilter - Filtro de tendencia basado en cruces de EMA.
 """
 
+from __future__ import annotations
+
 import logging
 from typing import Optional
 

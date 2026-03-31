@@ -5,11 +5,13 @@ Implements exponential backoff with jitter and automatic retry logic
 for transient failures from external services (QuestDB, Dagster, MLFlow, Zipline).
 """
 
+from __future__ import annotations
+
 import asyncio
 import logging
 import random
 from decimal import Decimal
-from typing import Any, Callable, Optional, TypeVar
+from typing import Callable, Optional, TypeVar
 
 logger = logging.getLogger(__name__)
 
@@ -68,7 +70,7 @@ class RetryManager:
         operation_name: str = "operation",
         retryable_exceptions: tuple = (ConnectionError, TimeoutError),
         **kwargs,
-    ) -> Any:
+    ) -> object:
         """
         Execute a function with automatic retry on failure.
 

@@ -5,6 +5,8 @@ This module is run by Alembic to configure the migration environment.
 It provides the database connection and metadata for migration generation.
 """
 
+from __future__ import annotations
+
 import asyncio
 import logging
 import os

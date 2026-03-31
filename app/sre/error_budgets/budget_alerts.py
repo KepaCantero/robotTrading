@@ -22,6 +22,8 @@ from enum import Enum
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
+    import aiohttp
+
     from .error_budget_manager import ErrorBudgetState
 
 logger = logging.getLogger(__name__)
@@ -173,7 +175,7 @@ class BudgetAlertManager:
         self._lock = asyncio.Lock()
 
         # HTTP session for webhooks
-        self._session: object | None = None
+        self._session: aiohttp.ClientSession | None = None
 
         self.logger.info(f"BudgetAlertManager initialized for {service_name}")
 

@@ -192,7 +192,7 @@ class ExecutionEngine:
         for signal in signals:
             execution_price = execution_prices.get(signal.symbol, signal.price)
             success = self.execute_signal(signal, execution_price)
-            results[f"{signal.symbol}_{signal.direction}"] = success
+            results[f"{signal.symbol}_{signal.signal_type.value}"] = success
 
         logger.info(f"Executed {len(signals)} signals: {sum(results.values())} successful")
         return results
@@ -243,8 +243,8 @@ class ExecutionEngine:
                 logger.error("Market data missing symbol")
                 return False
 
-            if not market_data.price or market_data.price <= 0:
-                logger.error(f"Invalid price for {market_data.symbol}: {market_data.price}")
+            if not market_data.last or market_data.last <= 0:
+                logger.error(f"Invalid price for {market_data.symbol}: {market_data.last}")
                 return False
 
             if not market_data.volume or market_data.volume < 0:

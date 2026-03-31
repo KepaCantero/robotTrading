@@ -6,7 +6,6 @@ portfolios, including construction, rebalancing, and risk management.
 """
 
 # mypy: ignore-errors
-
 from __future__ import annotations
 
 import logging

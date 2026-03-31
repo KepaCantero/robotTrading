@@ -20,8 +20,8 @@ from unittest.mock import patch
 import pytest
 from pydantic import ConfigDict, ValidationError
 
-# Import directly from config.py file (not the config directory)
-config_py_path = Path(__file__).parent.parent.parent / "app" / "core" / "config.py"
+# Import directly from shared/config/config.py (was previously app/core/config.py)
+config_py_path = Path(__file__).parent.parent.parent / "app" / "shared" / "config" / "config.py"
 
 # Import the module directly using importlib to avoid the config/ directory
 import importlib.util

@@ -14,6 +14,8 @@ This provides more meaningful labels for ML that account for:
 - Realistic trading scenarios
 """
 
+from __future__ import annotations
+
 from dataclasses import dataclass, field
 from typing import Any, Optional
 
@@ -354,7 +356,7 @@ class TripleBarrierLabeler:
 
     def fit(
         self, prices: pd.Series, events: pd.Series, vol_scaling: bool = True
-    ) -> "TripleBarrierLabeler":
+    ) -> TripleBarrierLabeler:
         """
         Fit the labeler to price data and events.
 
@@ -580,8 +582,8 @@ def plot_triple_barrier(
     lower_barrier: float,
     vertical_barrier: int,
     label: int,
-    ax: Optional["Axes"] = None,
-) -> Optional["Axes"]:
+    ax: Optional[Axes] = None,
+) -> Optional[Axes]:
     """
     Visualize a triple barrier labeling event.
 

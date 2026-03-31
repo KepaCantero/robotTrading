@@ -49,11 +49,7 @@ class TradingThresholds(BaseModel):
     rsi_history_length: int = Field(default=14, description="RSI calculation period")
     atr_history_length: int = Field(default=14, description="ATR calculation period")
 
-    # ATR filter settings
-    min_atr_threshold: float = Field(
-        default=0.5, description="Minimum ATR threshold for volatility filter"
-    )
-    atr_filter_enabled: bool = Field(default=True, description="Enable ATR volatility filter")
+    # ATR filter settings (see ATR Volatility Filter section below for overrides)
     use_relative_atr: bool = Field(default=True, description="Use relative ATR (ATR/price)")
 
     # Position sizing
@@ -302,14 +298,6 @@ class TradingThresholds(BaseModel):
     )
     trailing_stop_r3_trailing_pct: float = Field(
         default=0.5, ge=0.3, le=0.8, description="Trailing stop percentage at R3"
-    )
-
-    # Mean Reversion parameters
-    min_z_score_default: float = Field(
-        default=-2.0, description="Default minimum z-score for mean reversion entry"
-    )
-    max_z_score_default: float = Field(
-        default=2.0, description="Default maximum z-score for mean reversion exit"
     )
 
     # Dividend strategy parameters

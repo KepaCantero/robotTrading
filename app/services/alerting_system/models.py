@@ -4,6 +4,8 @@ T18.2: Advanced Alerting System Models
 Data models for alert rules, events, and notification targets.
 """
 
+from __future__ import annotations
+
 import logging
 from dataclasses import dataclass, field
 from datetime import datetime

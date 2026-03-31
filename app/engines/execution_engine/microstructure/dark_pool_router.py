@@ -20,7 +20,7 @@ import logging
 from dataclasses import dataclass
 from decimal import Decimal
 from enum import Enum
-from typing import ClassVar
+from typing import Any, ClassVar
 
 logger = logging.getLogger(__name__)
 
@@ -96,7 +96,7 @@ class DarkPoolRouter:
         self.min_order_size_usd = min_order_size_usd
 
         # Available dark pools (example configuration)
-        self.dark_pools = {
+        self.dark_pools: dict[str, dict[str, Any]] = {
             "pool1": {
                 "name": "IBKR",
                 "avg_fill_rate": 0.15,
@@ -215,7 +215,7 @@ class DarkPoolRouter:
         adv: Decimal,
         order_value_usd: Decimal,
         participation_rate: Decimal,
-    ) -> dict[str, any]:
+    ) -> dict[str, Any]:
         """Evaluate size factor for dark pool decision."""
         if participation_rate >= self.min_participation_rate:
             return {
@@ -240,7 +240,7 @@ class DarkPoolRouter:
         self,
         risk_level: str,
         participation_rate: Decimal,
-    ) -> dict[str, any]:
+    ) -> dict[str, Any]:
         """Evaluate information leakage risk."""
         threshold = self.INFORMATION_LEAKAGE_THRESHOLDS.get(risk_level, 0.5)
 
@@ -264,7 +264,7 @@ class DarkPoolRouter:
         self,
         spread_bps: float,
         volatility_percentile: float,
-    ) -> dict[str, any]:
+    ) -> dict[str, Any]:
         """Evaluate market conditions for dark pool usage."""
         # Wide spread = dark pool attractive
         spread_factor = min(1.0, spread_bps / 20.0)  # 20 bps = max
@@ -361,6 +361,8 @@ class DarkPoolRouter:
         - Internalization (if applicable)
         """
         # Lit exchange cost
+        if adv <= 0:
+            raise ValueError("adv must be positive for venue comparison")
         participation_impact = float(order_size / adv) ** 0.5 * 10  # sqrt impact
         lit_cost_bps = current_spread_bps / 2 + participation_impact
 
@@ -439,7 +441,7 @@ class DarkPoolRouter:
 
 
 # Global singleton
-_dark_pool_router: DarkPoolRouter = None
+_dark_pool_router: DarkPoolRouter | None = None
 
 
 def get_dark_pool_router(

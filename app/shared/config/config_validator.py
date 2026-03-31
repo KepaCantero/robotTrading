@@ -33,6 +33,8 @@ Example:
             print(f"Error: {error.field} - {error.message}")
 """
 
+from __future__ import annotations
+
 import datetime
 import logging
 import os

@@ -654,7 +654,7 @@ class AlpacaAdapter:
         async_operation,
         *args,
         **kwargs,
-    ) -> Any:
+    ) -> object:
         """Execute operation with retry logic and exponential backoff.
 
         Args:

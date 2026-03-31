@@ -8,6 +8,8 @@ The tracker maintains a rolling history for each symbol to support
 regime change detection and analysis.
 """
 
+from __future__ import annotations
+
 import logging
 from collections import defaultdict
 from datetime import datetime

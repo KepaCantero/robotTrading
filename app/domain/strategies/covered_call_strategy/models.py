@@ -6,7 +6,7 @@ Pydantic models for the covered call strategy.
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from decimal import Decimal
 from enum import Enum
 from typing import TYPE_CHECKING
@@ -184,8 +184,10 @@ class CoveredCallPosition:
     opened_at: date
     assignment_probability: AssignmentProbability = AssignmentProbability.LOW
     current_price: Decimal | None = None
+    current_option_price: Decimal | None = None
     current_delta: Decimal | None = None
     expected_return: Decimal | None = None
+    metadata: dict[str, str] = field(default_factory=dict)
 
     @property
     def break_even_price(self) -> Decimal:
@@ -198,6 +200,18 @@ class CoveredCallPosition:
         if self.current_price is None or self.current_price == Decimal("0"):
             return Decimal("0")
         return self.premium_received / self.current_price
+
+    @property
+    def net_cost(self) -> Decimal:
+        """Calculate net cost of the position (average cost minus premium received)."""
+        return self.average_cost - self.premium_received
+
+    @property
+    def total_value(self) -> Decimal | None:
+        """Calculate total value of the position based on current price."""
+        if self.current_price is None:
+            return None
+        return self.current_price * self.shares_owned + self.total_premium
 
 
 @dataclass

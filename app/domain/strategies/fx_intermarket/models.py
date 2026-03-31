@@ -33,6 +33,7 @@ class RelationshipType(str, Enum):
     SAFE_HAVEN = "safe_haven"
     CARRY_TRADE = "carry_trade"
     COMMODITY_LINK = "commodity_link"
+    YIELD_DIFFERENTIAL = "yield_differential"
     RISK_ON_OFF = "risk_on_off"
     LEADING_INDICATOR = "leading_indicator"
     LAGGING_INDICATOR = "lagging_indicator"
@@ -111,6 +112,11 @@ class IntermarketRelationship:
         """Check if relationship is strong enough for trading."""
         return abs(self.correlation) >= Decimal("0.5") and self.significance >= Decimal("70")
 
+    @property
+    def is_active(self) -> bool:
+        """Check if relationship is currently active (actionable and not stale)."""
+        return self.is_actionable
+
 
 @dataclass
 class IntermarketSignal:
@@ -157,6 +163,32 @@ class IntermarketSignal:
             return "WEAK"
         return "NEGLIGIBLE"
 
+    @property
+    def is_actionable(self) -> bool:
+        """Check if signal is actionable (valid and not neutral)."""
+        return self.is_valid and self.signal_type != "NEUTRAL"
+
+    @property
+    def is_buy(self) -> bool:
+        """Check if this is a buy signal."""
+        return self.signal_type.upper() == "BUY"
+
+    @property
+    def relationship_type(self) -> RelationshipType:
+        """Return the relationship type from the underlying relationship."""
+        return self.relationship.relationship_type
+
+    @property
+    def rationale(self) -> str:
+        """Return a human-readable rationale for this signal."""
+        return (
+            f"{self.trigger_asset} moved {self.trigger_move:+.4f}. "
+            f"Based on {self.relationship.relationship_type.value} relationship "
+            f"(corr={self.relationship.correlation:.2f}, "
+            f"sig={self.relationship.significance:.0f}), "
+            f"expecting {self.fx_pair} to move {self.expected_move:+.4f}."
+        )
+
 
 @dataclass
 class FXIntermarketConfig:
@@ -167,18 +199,29 @@ class FXIntermarketConfig:
         correlation_lookback: Days for correlation calculation
         min_correlation: Minimum absolute correlation for relationship
         min_significance: Minimum significance score (0-100)
-        signal_threshold: Minimum expected move to generate signal
+        signal_threshold: Minimum confidence score to pass risk check (0-100)
+        min_signal_strength: Minimum signal strength to generate signal (0-100)
+        max_positions: Maximum number of concurrent positions
         max_relationships: Maximum tracked relationships per pair
         update_frequency: How often to recalculate (hours)
+        stop_loss: Stop loss as decimal fraction (e.g. 0.03)
+        take_profit: Take profit as decimal fraction (e.g. 0.08)
+        position_size: Position size as decimal fraction (e.g. 0.1)
         monitored_assets: Assets to monitor by class
+        monitored_pairs: FX pairs to monitor
     """
 
     correlation_lookback: int = 60
     min_correlation: Decimal = Decimal("0.6")
     min_significance: Decimal = Decimal("70")
-    signal_threshold: Decimal = Decimal("0.005")
+    signal_threshold: Decimal = Decimal("60")
+    min_signal_strength: Decimal = Decimal("65")
+    max_positions: int = 5
     max_relationships: int = 10
     update_frequency: int = 24
+    stop_loss: Decimal = Decimal("0.03")
+    take_profit: Decimal = Decimal("0.08")
+    position_size: Decimal = Decimal("0.1")
     monitored_assets: dict[AssetClass, list[str]] = field(
         default_factory=lambda: {
             AssetClass.EQUITY: ["SPX", "NDX", "DAX", "NKY"],
@@ -187,3 +230,26 @@ class FXIntermarketConfig:
             AssetClass.VOLATILITY: ["VIX"],
         }
     )
+    monitored_pairs: list[str] = field(
+        default_factory=lambda: [
+            "EUR/USD",
+            "GBP/USD",
+            "USD/JPY",
+            "USD/CHF",
+            "AUD/USD",
+            "NZD/USD",
+            "USD/CAD",
+        ]
+    )
+
+    def get_fx_pairs(self) -> list[str]:
+        """Return list of monitored FX pairs."""
+        return list(self.monitored_pairs)
+
+    def get_external_assets(self) -> dict[str, AssetClass]:
+        """Return dictionary mapping asset symbol to its asset class."""
+        result: dict[str, AssetClass] = {}
+        for asset_class, symbols in self.monitored_assets.items():
+            for symbol in symbols:
+                result[symbol] = asset_class
+        return result

@@ -5,6 +5,8 @@ Manages and loads parameter presets (Conservative/Aggressive/Balanced)
 with sensible ranges per indicator (TASK-PARAM-3).
 """
 
+from __future__ import annotations
+
 import logging
 from pathlib import Path
 from typing import Any, Optional
@@ -23,7 +25,7 @@ class ParameterPresetManager:
     with sensible indicator ranges (TASK-PARAM-3).
     """
 
-    def __init__(self, config_path: str = "config/parameter_presets.yaml"):
+    def __init__(self, config_path: str = "config/learning/parameter_presets.yaml"):
         self.config_path = Path(config_path)
         self.config: dict[str, Any] = {}
         self._load_config()

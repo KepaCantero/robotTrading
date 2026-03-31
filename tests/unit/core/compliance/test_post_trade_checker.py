@@ -10,8 +10,8 @@ from decimal import Decimal
 
 import pytest
 
-from app.core.compliance.post_trade_checker import PostTradeComplianceChecker
-from app.core.compliance.results import PostTradeCheckResult
+from app.domain.services.compliance.post_trade_checker import PostTradeComplianceChecker
+from app.domain.services.compliance.results import PostTradeCheckResult
 
 
 @pytest.fixture

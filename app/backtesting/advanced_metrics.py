@@ -11,6 +11,8 @@ Calculates sophisticated financial metrics including:
 - Value at Risk (VaR) & Conditional VaR (CVaR): Tail risk metrics
 """
 
+from __future__ import annotations
+
 import logging
 from decimal import Decimal
 from typing import Optional

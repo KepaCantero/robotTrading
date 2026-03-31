@@ -14,6 +14,8 @@ Crypto-specific indicators differ from traditional markets:
 - Fear & Greed index components
 """
 
+from __future__ import annotations
+
 import logging
 from decimal import Decimal
 from typing import Optional

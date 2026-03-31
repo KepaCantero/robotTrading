@@ -2,6 +2,8 @@
 TrainingDataPreparator - Prepara datos de entrenamiento completos para learning engines.
 """
 
+from __future__ import annotations
+
 import logging
 from datetime import datetime, timedelta
 from decimal import Decimal
@@ -378,9 +380,7 @@ class TrainingDataPreparator:
                     "price": (
                         float(quote.bid)
                         if hasattr(quote, "bid")
-                        else float(quote.close)
-                        if hasattr(quote, "close")
-                        else 0.0
+                        else float(quote.close) if hasattr(quote, "close") else 0.0
                     ),
                     "volume": float(getattr(quote, "volume", 0)),
                     "timestamp": quote.timestamp if hasattr(quote, "timestamp") else df.index[i],
@@ -401,9 +401,7 @@ class TrainingDataPreparator:
             price = (
                 float(quote.bid)
                 if hasattr(quote, "bid")
-                else float(quote.close)
-                if hasattr(quote, "close")
-                else 0.0
+                else float(quote.close) if hasattr(quote, "close") else 0.0
             )
             volume = float(getattr(quote, "volume", 0))
 

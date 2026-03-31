@@ -3,6 +3,8 @@ Custom Exceptions for AlgoTrading
 TASK-4: Sistema de manejo de errores unificado
 """
 
+from __future__ import annotations
+
 # mypy: ignore-errors
 import logging
 from enum import Enum

@@ -17,12 +17,15 @@ Scenarios implemented:
 Reference: Hull, Options, Futures, and Other Derivatives, Chapter 20
 """
 
+from __future__ import annotations
+
 import logging
-from typing import Any, Optional
+from typing import TYPE_CHECKING, Any, cast
 
 import numpy as np
 
-from app.domain.models.portfolio import Portfolio
+if TYPE_CHECKING:
+    from app.domain.models.portfolio import Portfolio
 
 logger = logging.getLogger(__name__)
 
@@ -34,7 +37,7 @@ class CorrelationStressTester:
     Tests portfolio resilience under correlation breakdown scenarios.
     """
 
-    def __init__(self, config: Optional[dict[str, Any]] = None):
+    def __init__(self, config: dict[str, Any] | None = None):
         """
         Initialize correlation stress tester.
 
@@ -88,7 +91,7 @@ class CorrelationStressTester:
         current_correlation_matrix: dict[str, dict[str, float]],
         returns_history: dict[str, list[float]],
         volatilities: dict[str, float],
-        scenario_names: Optional[list[str]] = None,
+        scenario_names: list[str] | None = None,
     ) -> dict[str, Any]:
         """
         Run correlation stress tests on portfolio.
@@ -202,7 +205,7 @@ class CorrelationStressTester:
     ) -> dict[str, dict[str, float]]:
         """Create stressed correlation matrix based on scenario."""
         portfolio_symbols = [pos.symbol for pos in portfolio.positions]
-        stressed_matrix = {}
+        stressed_matrix: dict[str, dict[str, float | None]] = {}
 
         # Initialize matrix
         for symbol1 in portfolio_symbols:
@@ -241,7 +244,7 @@ class CorrelationStressTester:
                     if symbol1 != symbol2:
                         stressed_matrix[symbol1][symbol2] = target_corr
 
-        return stressed_matrix
+        return cast("dict[str, dict[str, float]]", stressed_matrix)
 
     def _calculate_portfolio_variance(
         self,
@@ -319,7 +322,7 @@ class CorrelationStressTester:
         portfolio: Portfolio,
     ) -> dict[str, Any]:
         """Generate summary of stress test results."""
-        summary = {
+        summary: dict[str, Any] = {
             "worst_scenario": None,
             "best_scenario": None,
             "average_variance_increase": 0.0,
@@ -393,7 +396,7 @@ class CorrelationStressTester:
 
         # Create perfect correlation matrix
         symbols = [pos.symbol for pos in portfolio.positions]
-        perfect_correlation = {}
+        perfect_correlation: dict[str, dict[str, float]] = {}
 
         for symbol1 in symbols:
             perfect_correlation[symbol1] = {}
@@ -413,7 +416,7 @@ class CorrelationStressTester:
         breakdown_var = z_score * breakdown_volatility
 
         # Calculate current (uncorrelated) variance for comparison
-        uncorrelated_matrix = {}
+        uncorrelated_matrix: dict[str, dict[str, float]] = {}
         for symbol1 in symbols:
             uncorrelated_matrix[symbol1] = {}
             for symbol2 in symbols:

@@ -5,9 +5,11 @@ Validates drawdown calculations to ensure accuracy
 and detect potential issues in risk metrics.
 """
 
+from __future__ import annotations
+
 import logging
 from decimal import Decimal
-from typing import Optional
+from typing import Any, Optional
 
 import numpy as np
 
@@ -249,7 +251,7 @@ class DrawdownValidator:
         self,
         trades: list[Trade],
         initial_capital: Decimal,
-    ) -> dict[str, any]:
+    ) -> dict[str, Any]:
         """
         Get comprehensive drawdown statistics.
 

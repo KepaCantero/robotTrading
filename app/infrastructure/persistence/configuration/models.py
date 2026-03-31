@@ -4,6 +4,8 @@ Configuration Persistence Models - T11.1
 Data models for configuration storage and retrieval.
 """
 
+from __future__ import annotations
+
 import logging
 from datetime import datetime
 from typing import Any, Optional

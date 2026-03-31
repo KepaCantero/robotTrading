@@ -25,8 +25,8 @@ from sqlalchemy import create_engine
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session, sessionmaker
 
-from app.database import Base
-from app.database.models import (
+from app.infrastructure.persistence.database import Base
+from app.infrastructure.persistence.database.models import (
     APIKey,
     Asset,
     Backtest,

@@ -128,7 +128,9 @@ class AllocationResult:
 
     def get_total_allocated_capital(self) -> Decimal:
         """Calculate total allocated capital."""
-        total = sum(m.capital for m in self.allocations.values())
+        total = Decimal("0")
+        for m in self.allocations.values():
+            total += m.capital
         logger.debug(
             "Calculated total allocated capital",
             extra={"total_capital": float(total), "allocations_count": len(self.allocations)},
@@ -162,7 +164,9 @@ class AllocationResult:
                 ticker: metrics.to_dict() for ticker, metrics in self.allocations.items()
             },
             "pairs": [pair.to_dict() for pair in self.pairs],
-            "residual_capital": float(self.residual_capital),
+            "residual_capital": (
+                float(self.residual_capital) if self.residual_capital is not None else None
+            ),
             "decision_logs": self.decision_logs,
             "validation_passed": self.validation_passed,
             "validation_errors": self.validation_errors,

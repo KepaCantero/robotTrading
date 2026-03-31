@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-# Import StrategyStockAllocator from the renamed module
+# Import StrategyStockAllocator from the private implementation module
+# (underscore-prefixed to avoid shadowing by this package's __init__.py)
 from app.services._strategy_stock_allocator import StrategyStockAllocator
 
 # Re-export domain models for backward compatibility

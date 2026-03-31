@@ -235,12 +235,18 @@ class CostAnalysisService:
                 return self._create_empty_analysis_result(strategy_name)
 
             # Calculate aggregate metrics
-            total_commission = sum(bd.commission for bd in cost_breakdowns)
-            total_slippage = sum(bd.slippage for bd in cost_breakdowns)
-            total_market_impact = sum(bd.market_impact for bd in cost_breakdowns)
-            total_infrastructure = sum(bd.infrastructure_cost for bd in cost_breakdowns)
-            total_borrowing = sum(bd.borrowing_cost for bd in cost_breakdowns)
-            total_costs = (
+            total_commission: Decimal = sum((bd.commission for bd in cost_breakdowns), Decimal("0"))
+            total_slippage: Decimal = sum((bd.slippage for bd in cost_breakdowns), Decimal("0"))
+            total_market_impact: Decimal = sum(
+                (bd.market_impact for bd in cost_breakdowns), Decimal("0")
+            )
+            total_infrastructure: Decimal = sum(
+                (bd.infrastructure_cost for bd in cost_breakdowns), Decimal("0")
+            )
+            total_borrowing: Decimal = sum(
+                (bd.borrowing_cost for bd in cost_breakdowns), Decimal("0")
+            )
+            total_costs: Decimal = (
                 total_commission
                 + total_slippage
                 + total_market_impact
@@ -546,7 +552,7 @@ class CostAnalysisService:
     def _calculate_commission(self, trade: Trade, asset_class: str) -> Decimal:
         """Calculate commission for a trade."""
         commission_rate = self.commission_rates.get(asset_class, self.commission_rates["equity"])
-        trade_value = trade.quantity * trade.entry_price
+        trade_value = Decimal(str(trade.quantity)) * Decimal(str(trade.entry_price))
         return trade_value * commission_rate
 
     def _calculate_real_slippage(
@@ -583,16 +589,18 @@ class CostAnalysisService:
             slippage = base_slippage * volatility_multiplier * order_size_impact
 
             # Calculate slippage in dollar terms
-            trade_value = trade.quantity * trade.entry_price
+            trade_value = Decimal(str(trade.quantity)) * Decimal(str(trade.entry_price))
             slippage_amount = trade_value * slippage
 
-            return slippage_amount.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+            return Decimal(str(slippage_amount.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)))
 
         except (ValueError, KeyError, AttributeError, IndexError, TypeError):
             # Fallback to base slippage rate
             base_slippage = self.slippage_rates.get(asset_class, self.slippage_rates["equity"])
-            trade_value = trade.quantity * trade.entry_price
-            return (trade_value * base_slippage).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+            trade_value = Decimal(str(trade.quantity)) * Decimal(str(trade.entry_price))
+            return Decimal(
+                str((trade_value * base_slippage).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP))
+            )
 
     def _calculate_market_impact(self, trade: Trade, market_data: dict[str, Any]) -> Decimal:
         """
@@ -640,8 +648,10 @@ class CostAnalysisService:
             else:
                 impact_rate = small_order_rate
 
-            trade_value = trade.quantity * trade.entry_price
-            return (trade_value * impact_rate).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+            trade_value = Decimal(str(trade.quantity)) * Decimal(str(trade.entry_price))
+            return Decimal(
+                str((trade_value * impact_rate).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP))
+            )
 
         except (ValueError, TypeError, KeyError, AttributeError, IndexError):
             return Decimal("0")
@@ -660,10 +670,12 @@ class CostAnalysisService:
                 daily_rate = self.borrowing_cost_rate / Decimal("365")
 
                 # Calculate borrowing cost
-                position_value = trade.quantity * trade.entry_price
+                position_value = Decimal(str(trade.quantity)) * Decimal(str(trade.entry_price))
                 borrowing_cost = position_value * daily_rate * Decimal(str(duration_days))
 
-                return borrowing_cost.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+                return Decimal(
+                    str(borrowing_cost.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP))
+                )
 
             return Decimal("0")
 
@@ -691,12 +703,12 @@ class CostAnalysisService:
             )
 
         # Analyze cost components
-        avg_slippage = (
-            np.mean([bd.slippage for bd in cost_breakdowns]) if cost_breakdowns else Decimal("0")
-        )
-        avg_commission = (
-            np.mean([bd.commission for bd in cost_breakdowns]) if cost_breakdowns else Decimal("0")
-        )
+        if cost_breakdowns:
+            avg_slippage = Decimal(str(np.mean([float(bd.slippage) for bd in cost_breakdowns])))
+            avg_commission = Decimal(str(np.mean([float(bd.commission) for bd in cost_breakdowns])))
+        else:
+            avg_slippage = Decimal("0")
+            avg_commission = Decimal("0")
 
         if avg_slippage > avg_commission * Decimal("2"):
             recommendations.append(

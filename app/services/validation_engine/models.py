@@ -4,6 +4,8 @@ T5.1: ValidationEngine - Models
 Data models for validation requests and results.
 """
 
+from __future__ import annotations
+
 import logging
 from dataclasses import dataclass, field
 from datetime import datetime

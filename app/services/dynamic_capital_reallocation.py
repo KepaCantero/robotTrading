@@ -13,6 +13,8 @@ instead of static weights.
 Uses centralized configuration for all thresholds and parameters.
 """
 
+from __future__ import annotations
+
 import logging
 from datetime import datetime, timedelta
 from decimal import Decimal

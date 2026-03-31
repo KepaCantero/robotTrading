@@ -11,7 +11,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from app.domain.strategies.indicators.bollinger_bands import (
+from app.domain.strategies.bollinger_bands import (
     BollingerBandsConfig,
     BollingerBandsIndicator,
     BollingerBandsSignal,

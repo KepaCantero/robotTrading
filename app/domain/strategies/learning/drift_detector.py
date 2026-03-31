@@ -15,13 +15,15 @@ Detectores implementados:
 - MMD (Maximum Mean Discrepancy): Compara en RKHS
 """
 
+from __future__ import annotations
+
 import logging
 from collections import deque
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any, Optional, cast
 
 import numpy as np
 import yaml
@@ -34,7 +36,7 @@ logger = logging.getLogger(__name__)
 # ============================================================================
 
 
-def load_drift_config(config_path: str = "config/drift_detection.yaml") -> dict[str, Any]:
+def load_drift_config(config_path: str = "config/learning/drift_detection.yaml") -> dict[str, Any]:
     """Load drift detection configuration from YAML file."""
     path = Path(config_path)
     if not path.exists():
@@ -42,7 +44,8 @@ def load_drift_config(config_path: str = "config/drift_detection.yaml") -> dict[
         return get_default_drift_config()
 
     with open(path) as f:
-        return yaml.safe_load(f)
+        loaded = yaml.safe_load(f)
+        return cast("dict[str, Any]", loaded) if loaded is not None else get_default_drift_config()
 
 
 def get_default_drift_config() -> dict[str, Any]:
@@ -89,7 +92,7 @@ def get_default_drift_config() -> dict[str, Any]:
 
 
 def load_overfitting_config(
-    config_path: str = "config/overfitting_detection.yaml",
+    config_path: str = "config/learning/overfitting_detection.yaml",
 ) -> dict[str, Any]:
     """Load overfitting detection configuration from YAML file."""
     path = Path(config_path)
@@ -98,7 +101,12 @@ def load_overfitting_config(
         return get_default_overfitting_config()
 
     with open(path) as f:
-        return yaml.safe_load(f)
+        loaded = yaml.safe_load(f)
+        return (
+            cast("dict[str, Any]", loaded)
+            if loaded is not None
+            else get_default_overfitting_config()
+        )
 
 
 def get_default_overfitting_config() -> dict[str, Any]:
@@ -248,15 +256,21 @@ class PSIDetector:
             return 0.0, {"error": "insufficient_samples"}
 
         # Create buckets if not provided
+        effective_buckets: np.ndarray
         if buckets is None:
             # Use percentiles from expected distribution
-            buckets = np.percentile(expected, np.linspace(0, 100, self.n_bins + 1))
-            buckets[0] = -np.inf
-            buckets[-1] = np.inf
+            effective_buckets = np.array(
+                np.percentile(expected, np.linspace(0, 100, self.n_bins + 1)),
+                dtype=np.float64,
+            )
+            effective_buckets[0] = -np.inf
+            effective_buckets[-1] = np.inf
+        else:
+            effective_buckets = buckets
 
         # Calculate bucket percentages
-        expected_percents = self._calculate_bucket_percentages(expected, buckets)
-        actual_percents = self._calculate_bucket_percentages(actual, buckets)
+        expected_percents = self._calculate_bucket_percentages(expected, effective_buckets)
+        actual_percents = self._calculate_bucket_percentages(actual, effective_buckets)
 
         # Calculate PSI for each bucket
         psi_values = []
@@ -302,7 +316,7 @@ class PSIDetector:
         for i in range(len(buckets) - 1):
             lower = buckets[i]
             upper = buckets[i + 1]
-            count = np.sum((data >= lower) & (data < upper))
+            count: float = float(np.sum((data >= lower) & (data < upper)))
             percentages.append(count / n_total)
 
         return percentages
@@ -535,6 +549,10 @@ class ConceptDriftDetector:
 
         # History
         self.drift_history: list[DriftResult] = []
+
+        # Last drift state (set externally by AutoRetrainingTrigger)
+        self._last_drift_detected: bool = False
+        self._last_drift_severity: Optional[DriftSeverity] = None
 
     def update_reference(
         self,
@@ -1024,7 +1042,7 @@ class OverfittingDetector:
         self.min_epochs = config.get("min_epochs", 10)
 
         self.train_metrics_history: list[float] = []
-        self.val_metrics_history: list[float] = []
+        self.val_metrics_history: list[Optional[float]] = []
         self.epoch_history: list[int] = []
 
     def update_metrics(
@@ -1057,7 +1075,8 @@ class OverfittingDetector:
             }
 
         recent_train = [self.train_metrics_history[i] for i in valid_indices[-10:]]
-        recent_val = [self.val_metrics_history[i] for i in valid_indices[-10:]]
+        recent_val_raw = [self.val_metrics_history[i] for i in valid_indices[-10:]]
+        recent_val: list[float] = [v for v in recent_val_raw if v is not None]
 
         train_mean = np.mean(recent_train)
         val_mean = np.mean(recent_val)
@@ -1399,7 +1418,14 @@ class AdvancedOverfittingDetector:
             prev_m = recent[prev_idx]
 
             # Check if train improves but val worsens
-            if current_m.train_loss < prev_m.train_loss and current_m.val_loss > prev_m.val_loss:
+            current_val = current_m.val_loss
+            prev_val = prev_m.val_loss
+            if (
+                current_val is not None
+                and prev_val is not None
+                and current_m.train_loss < prev_m.train_loss
+                and current_val > prev_val
+            ):
                 return len(self.metrics_history) - len(recent) + current_idx
 
         return None
@@ -1904,7 +1930,7 @@ class ComprehensiveDriftDetector:
                 return False
 
         # Count detectors that found drift
-        drifts_detected = sum(1 for r in detector_results.values() if r and r.drift_detected)
+        drifts_detected = len([r for r in detector_results.values() if r and r.drift_detected])
 
         if self.auto_retrain_config.get("require_multiple_detectors", True):
             return drifts_detected >= 2

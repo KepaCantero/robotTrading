@@ -5,6 +5,8 @@ Negotiates commission rates based on account volume and asset class.
 Implements tiered commission structure: retail → semi_pro → pro → institutional
 """
 
+from __future__ import annotations
+
 import logging
 from decimal import Decimal
 from typing import ClassVar, Optional
@@ -90,7 +92,7 @@ class BrokerNegotiationEngine:
 
         # Apply asset-class adjustment
         adjustment = self.ASSET_CLASS_ADJUSTMENTS.get(asset_class, Decimal("1.0"))
-        final_rate = base_rate * adjustment
+        final_rate = Decimal(str(base_rate)) * Decimal(str(adjustment))
 
         logger.info(
             f"Commission negotiation: {symbol} €{volume_usd:,.0f} "
@@ -121,7 +123,7 @@ class BrokerNegotiationEngine:
         else:
             return "retail"
 
-    def get_all_tiers(self) -> dict[str, dict]:
+    def get_all_tiers(self) -> dict[str, dict[str, Decimal]]:
         """
         Get all available commission tiers.
 
@@ -142,7 +144,7 @@ class BrokerNegotiationEngine:
         symbol: str,
         volume_usd: Decimal,
         asset_class: str = "equity",
-    ) -> dict[str, Decimal]:
+    ) -> dict[str, dict[str, Decimal]]:
         """
         Compare commission costs across tiers.
 
@@ -173,7 +175,7 @@ class BrokerNegotiationEngine:
 
 
 # Global singleton
-_broker_negotiation_engine: BrokerNegotiationEngine = None
+_broker_negotiation_engine: Optional[BrokerNegotiationEngine] = None
 
 
 def get_broker_negotiation_engine() -> BrokerNegotiationEngine:

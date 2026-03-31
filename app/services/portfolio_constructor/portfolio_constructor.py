@@ -9,6 +9,8 @@ Uses multiple strategies for portfolio allocation:
 Fallback chain: Try efficient frontier -> risk parity -> equal weight
 """
 
+from __future__ import annotations
+
 import logging
 from datetime import datetime
 from decimal import Decimal

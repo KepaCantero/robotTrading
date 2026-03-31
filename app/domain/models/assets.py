@@ -5,6 +5,8 @@ This module defines the data models for assets, liquidity metrics,
 and asset universe management.
 """
 
+from __future__ import annotations
+
 import logging
 from datetime import datetime
 from decimal import Decimal

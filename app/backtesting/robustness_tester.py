@@ -13,7 +13,7 @@ import logging
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from decimal import Decimal
-from typing import Union
+from typing import Callable, Union
 
 import numpy as np
 from scipy.interpolate import griddata
@@ -155,7 +155,7 @@ class RobustnessTester:
         parameter_name: str,
         base_value: Union[int, float, Decimal],
         param_type: str,  # "int", "float", "decimal"
-        run_backtest_fn: callable,  # Function to run backtest with given param
+        run_backtest_fn: Callable,  # Function to run backtest with given param
         n_steps: int = 5,
     ) -> ParameterSensitivityResult:
         """
@@ -173,24 +173,28 @@ class RobustnessTester:
         Returns:
             ParameterSensitivityResult with sensitivity metrics
         """
-        # Calculate test range (base ± 20%)
+        # Calculate test range (base +/- 20%)
         if param_type == "int":
             base_num = float(base_value)
-            min_val = int(base_num * (1 - self.parameter_variation_pct))
-            max_val = int(base_num * (1 + self.parameter_variation_pct))
-            step_size = max(1, (max_val - min_val) // (n_steps - 1))
-            tested_values = list(range(min_val, max_val + 1, step_size))[:n_steps]
+            min_val_i = int(base_num * (1 - self.parameter_variation_pct))
+            max_val_i = int(base_num * (1 + self.parameter_variation_pct))
+            step_size = max(1, (max_val_i - min_val_i) // (n_steps - 1))
+            tested_values: list[Union[int, float, Decimal]] = []
+            for v in range(min_val_i, max_val_i + 1, step_size):
+                tested_values.append(v)
+            tested_values = tested_values[:n_steps]
         elif param_type == "float":
             base_num = float(base_value)
-            min_val = base_num * (1 - self.parameter_variation_pct)
-            max_val = base_num * (1 + self.parameter_variation_pct)
-            tested_values = np.linspace(min_val, max_val, n_steps).tolist()
+            min_val_f = base_num * (1 - self.parameter_variation_pct)
+            max_val_f = base_num * (1 + self.parameter_variation_pct)
+            float_vals = np.linspace(min_val_f, max_val_f, n_steps).tolist()
+            tested_values = [float(v) for v in float_vals]
         else:  # decimal
             base_num = float(base_value)
-            min_val = Decimal(str(base_num * (1 - self.parameter_variation_pct)))
-            max_val = Decimal(str(base_num * (1 + self.parameter_variation_pct)))
-            step = (max_val - min_val) / (n_steps - 1)
-            tested_values = [min_val + step * i for i in range(n_steps)]
+            min_val_d = Decimal(str(base_num * (1 - self.parameter_variation_pct)))
+            max_val_d = Decimal(str(base_num * (1 + self.parameter_variation_pct)))
+            step = (max_val_d - min_val_d) / (n_steps - 1)
+            tested_values = [min_val_d + step * i for i in range(n_steps)]
 
         logger.info(f"Testing parameter {parameter_name} with {len(tested_values)} values")
 
@@ -225,13 +229,13 @@ class RobustnessTester:
                 drawdowns.append(-1.0)
 
         # Calculate sensitivity metrics
-        return_std = np.std(returns) if len(returns) > 1 else 0.0
+        return_std: float = float(np.std(returns)) if len(returns) > 1 else 0.0
         return_range = max(returns) - min(returns) if returns else 0.0
-        sharpe_std = np.std(sharpes) if len(sharpes) > 1 else 0.0
+        sharpe_std: float = float(np.std(sharpes)) if len(sharpes) > 1 else 0.0
 
         # Assess stability
-        is_stable = return_std < (np.mean(np.abs(returns)) * 0.3 if returns else 1.0)
-        stability_score = max(0, 100 - (return_std * 100))
+        is_stable: bool = return_std < (float(np.mean(np.abs(returns))) * 0.3 if returns else 1.0)
+        stability_score: float = float(max(0, 100 - (return_std * 100)))
 
         return ParameterSensitivityResult(
             parameter_name=parameter_name,
@@ -253,7 +257,7 @@ class RobustnessTester:
         param1_range: tuple[float, float],
         param2_name: str,
         param2_range: tuple[float, float],
-        run_backtest_fn: callable,
+        run_backtest_fn: Callable,
         n_points_per_dim: int = 10,
     ) -> StabilityMapResult:
         """
@@ -277,7 +281,7 @@ class RobustnessTester:
         param2_values = np.linspace(param2_range[0], param2_range[1], n_points_per_dim)
 
         points = []
-        grid_data = {"x": [], "y": [], "return": [], "sharpe": []}
+        grid_data: dict[str, list[float]] = {"x": [], "y": [], "return": [], "sharpe": []}
 
         logger.info(
             f"Generating stability map: {len(param1_values) * len(param2_values)} combinations"
@@ -367,7 +371,7 @@ class RobustnessTester:
         config: BacktestConfig,
         start_date_base: datetime,
         end_date: datetime,
-        run_backtest_fn: callable,
+        run_backtest_fn: Callable,
     ) -> StartDateSensitivityResult:
         """
         Analyze sensitivity to start date (Req #14).
@@ -437,12 +441,12 @@ class RobustnessTester:
                 logger.warning(f"Start date sensitivity failed for {start_date}: {e}")
 
         # Calculate sensitivity metrics
-        return_std = np.std(returns) if len(returns) > 1 else 0.0
-        avg_return = np.mean(returns) if returns else 0.0
-        return_range_pct = (
+        return_std: float = float(np.std(returns)) if len(returns) > 1 else 0.0
+        avg_return: float = float(np.mean(returns)) if returns else 0.0
+        return_range_pct: float = (
             ((max(returns) - min(returns)) / abs(avg_return) * 100) if avg_return != 0 else 0.0
         )
-        sharpe_variation = np.std(sharpes) if len(sharpes) > 1 else 0.0
+        sharpe_variation: float = float(np.std(sharpes)) if len(sharpes) > 1 else 0.0
 
         # Robustness assessment (Req #14): variation < 20%
         is_robust = return_range_pct < (self.max_return_variation * 100)
@@ -500,12 +504,12 @@ class RobustnessTester:
         top_points = sorted_points[:top_n]
 
         return {
-            "avg_sharpe": np.mean([p.sharpe_ratio for p in top_points]),
-            "avg_return": np.mean([p.total_return for p in top_points]),
-            "param1_center": np.mean([p.param1_value for p in top_points]),
-            "param2_center": np.mean([p.param2_value for p in top_points]),
-            "param1_std": np.std([p.param1_value for p in top_points]),
-            "param2_std": np.std([p.param2_value for p in top_points]),
+            "avg_sharpe": float(np.mean([p.sharpe_ratio for p in top_points])),
+            "avg_return": float(np.mean([p.total_return for p in top_points])),
+            "param1_center": float(np.mean([p.param1_value for p in top_points])),
+            "param2_center": float(np.mean([p.param2_value for p in top_points])),
+            "param1_std": float(np.std([p.param1_value for p in top_points])),
+            "param2_std": float(np.std([p.param2_value for p in top_points])),
         }
 
     def generate_robustness_report(
@@ -543,16 +547,16 @@ class RobustnessTester:
             )
 
         # Calculate overall score
-        param_score = (
-            np.mean([p.stability_score for p in parameter_sensitivity])
+        param_score: float = (
+            float(np.mean([p.stability_score for p in parameter_sensitivity]))
             if parameter_sensitivity
-            else 50
+            else 50.0
         )
-        map_score = 100 if not no_plateau_maps else 50
+        map_score = 100.0 if not no_plateau_maps else 50.0
         date_score = start_date_sensitivity.robustness_score
 
-        overall_score = param_score * 0.4 + map_score * 0.3 + date_score * 0.3
-        is_robust = overall_score >= self.min_stability_score
+        overall_score: float = param_score * 0.4 + map_score * 0.3 + date_score * 0.3
+        is_robust: bool = overall_score >= self.min_stability_score
 
         return RobustnessReport(
             strategy_name=strategy_name,

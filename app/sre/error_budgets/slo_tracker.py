@@ -269,8 +269,7 @@ class SLOTracker:
             db_path.parent.mkdir(parents=True, exist_ok=True)
 
             async with aiosqlite.connect(self.db_path) as db:
-                await db.execute(
-                    """
+                await db.execute("""
                     CREATE TABLE IF NOT EXISTS slo_metrics (
                         id INTEGER PRIMARY KEY AUTOINCREMENT,
                         service_name TEXT NOT NULL,
@@ -281,11 +280,9 @@ class SLOTracker:
                         metadata TEXT,
                         created_at TEXT NOT NULL DEFAULT (datetime('utc'))
                     )
-                """
-                )
+                """)
 
-                await db.execute(
-                    """
+                await db.execute("""
                     CREATE TABLE IF NOT EXISTS slo_configs (
                         service_name TEXT NOT NULL,
                         slo_name TEXT NOT NULL,
@@ -299,11 +296,9 @@ class SLOTracker:
                         created_at TEXT NOT NULL DEFAULT (datetime('utc')),
                         UNIQUE(service_name, slo_name)
                     )
-                """
-                )
+                """)
 
-                await db.execute(
-                    """
+                await db.execute("""
                     CREATE TABLE IF NOT EXISTS slo_violations (
                         id INTEGER PRIMARY KEY AUTOINCREMENT,
                         service_name TEXT NOT NULL,
@@ -316,23 +311,18 @@ class SLOTracker:
                         resolved INTEGER NOT NULL DEFAULT 0,
                         created_at TEXT NOT NULL DEFAULT (datetime('utc'))
                     )
-                """
-                )
+                """)
 
                 # Indexes
-                await db.execute(
-                    """
+                await db.execute("""
                     CREATE INDEX IF NOT EXISTS idx_metrics_service_timestamp
                     ON slo_metrics(service_name, timestamp)
-                    """
-                )
+                    """)
 
-                await db.execute(
-                    """
+                await db.execute("""
                     CREATE INDEX IF NOT EXISTS idx_violations_service_active
                     ON slo_violations(service_name, resolved)
-                    """
-                )
+                    """)
 
                 await db.commit()
 

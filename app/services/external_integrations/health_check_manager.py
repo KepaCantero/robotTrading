@@ -5,6 +5,8 @@ Monitors the health of external services (QuestDB, Dagster, MLFlow, Zipline)
 and provides status information.
 """
 
+from __future__ import annotations
+
 import logging
 from datetime import datetime
 from enum import Enum

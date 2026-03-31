@@ -11,11 +11,7 @@
 # TIEMPO: ~6 horas
 #
 # FEATURES MODERNAS USADAS:
-# - reasoning: multi-step para GLM 5.0
 # - memories: aprendizaje entre sesiones
-# - hat_template: reutilización de templates
-# - shared_vars: variables compartidas entre hats
-# - critical_rules: reglas anti-fallback
 # ============================================================================
 #
 # ASPECTOS DE LA APP A CUBRIR:
@@ -38,51 +34,12 @@ event_loop:
   max_runtime_seconds: 21600  # 6 hours
   checkpoint_interval: 3
   starting_event: "arch_audit.start"
-  checkpoint_file: ".ralph/checkpoints/32_architecture_requirements_audit_checkpoint.json"
-  # GLM 5.0 - Multi-step reasoning
-  reasoning:
-    enabled: true
-    type: "multi-step"
 
 cli:
   backend: "claude"
-  model: "glm-5-turbo"  # GLM 5 Turbo
 
 core:
   specs_dir: "./specs/"
-
-# Variables compartidas entre todos los hats
-shared_vars:
-  OUTPUT_DIR: ".ralph/outputs"
-  RULES_DIR: "rules"
-  REQUIREMENTS_DIR: ".requirements"
-  TASK_PREFIX: "arch_audit"
-  TASK_NAME: "Architecture Requirements Audit"
-  TASK_ID: "32"
-
-# ============================================================================
-# CRITICAL RULES - NO FALLBACKS (GLM 5.0 best practice)
-# ============================================================================
-critical_rules: |
-  ## REGLAS CRÍTICAS - Architecture Audit
-
-  ### NO FALLBACKS:
-  - ❌ NO inventar reglas que no existen en rules/
-  - ❌ NO asumir cobertura sin verificar
-  - ✅ SÍ verificar cada regla leyendo el archivo
-  - ✅ SÍ FLAG gaps encontrados como `@gap: <description>`
-
-  ### FLAGs para Gaps:
-  ```markdown
-  <!-- @gap: No architecture rules for layer boundaries -->
-  <!-- @missing: FILE_SYSTEM_REQUIREMENTS.md not found -->
-  <!-- @partial: Trading rules only partially covered -->
-  ```
-
-  ### Validación:
-  - Si un requirement NO está en BASE_RULES.md → **FLAG as `@missing`**
-  - Si un requirement está parcial → **FLAG as `@partial`**
-  - Si hay ambigüedad → **FLAG as `@clarify`**
 
 # ============================================================================
 # HATS (AGENTES) - Sistema modular con hats especializados
@@ -94,7 +51,6 @@ hats:
   rules_scanner:
     name: "Rules Scanner"
     description: "Escanea todas las reglas en rules/ para identificar coverage"
-    hat_template: ".ralph/ralph_templates/hats/base_processor_hat.yml"
     triggers:
       - "arch_audit.start"
     publishes:
@@ -167,7 +123,6 @@ hats:
   structure_analyzer:
     name: "Project Structure Analyzer"
     description: "Analiza la estructura de directorios y archivos del proyecto"
-    hat_template: ".ralph/ralph_templates/hats/base_processor_hat.yml"
     triggers:
       - "arch_audit.rules_scanned"
     publishes:
@@ -253,7 +208,6 @@ hats:
   gap_analyzer:
     name: "Requirements Gap Analyzer"
     description: "Compara reglas con requirements existentes para identificar gaps"
-    hat_template: ".ralph/ralph_templates/hats/base_processor_hat.yml"
     triggers:
       - "arch_audit.structure_analyzed"
     publishes:
@@ -382,7 +336,6 @@ hats:
   arch_requirements_writer:
     name: "Architecture Requirements Writer"
     description: "Genera requirements.md a nivel de arquitectura y big picture"
-    hat_template: ".ralph/ralph_templates/hats/implementer_hat.yml"
     triggers:
       - "arch_audit.gaps_identified"
     publishes:
@@ -671,7 +624,6 @@ hats:
   validator:
     name: "Architecture Requirements Validator"
     description: "Valida que todos los requirements están completos"
-    hat_template: ".ralph/ralph_templates/hats/validation_hat.yml"
     triggers:
       - "arch_audit.requirements_written"
     publishes:
@@ -769,7 +721,6 @@ hats:
   base_rules_reviewer:
     name: "Base Rules Reviewer"
     description: "Revisa BASE_RULES.md y CRITICAL_RULES.md para cobertura completa"
-    hat_template: ".ralph/ralph_templates/hats/validation_hat.yml"
     triggers:
       - "arch_audit.validation_complete"
     publishes:
@@ -933,11 +884,11 @@ hats:
   final_reporter:
     name: "Final Reporter"
     description: "Genera reporte final consolidado de toda la auditoría"
-    hat_template: ".ralph/ralph_templates/hats/validation_hat.yml"
     triggers:
       - "arch_audit.base_rules_reviewed"
     publishes:
       - "ARCHITECTURE_REQUIREMENTS_AUDIT_COMPLETE"
+      - "arch_audit.final_report_generated"
       - "arch_audit.blocked"
     default_publishes: "ARCHITECTURE_REQUIREMENTS_AUDIT_COMPLETE"
 
@@ -1016,7 +967,6 @@ hats:
   file_requirements_updater:
     name: "File-Level Requirements Updater"
     description: "Actualiza los requirements.md de cada archivo con nuevas reglas de arquitectura"
-    hat_template: ".ralph/ralph_templates/hats/implementer_hat.yml"
     triggers:
       - "arch_audit.final_report_generated"
     publishes:
@@ -1188,10 +1138,28 @@ hats:
 
       Emitir "ARCHITECTURE_REQUIREMENTS_AUDIT_COMPLETE"
 
+  # ==========================================================================
+  # HAT 9: Error Handler - Recovers from blocked state
+  # ==========================================================================
+  error_handler:
+    name: "Error Handler"
+    triggers: ["arch_audit.blocked"]
+    publishes: ["arch_audit.start"]
+    default_publishes: "arch_audit.start"
+    max_activations: 5
+    instructions: |
+      ## ERROR HANDLER - Recover from blocked state
+
+      An architecture audit hat reported being blocked.
+
+      1. Read the blocked event details
+      2. Identify the specific hat that got blocked
+      3. Fix the underlying issue
+      4. Re-emit the starting event to retry the pipeline from that point
+
+      If unable to fix after 5 attempts, log the issue and stop.
+
 memories:
   enabled: true
   inject: auto
   budget: 5000
-
-checkpoint:
-  file: ".ralph/checkpoints/32_architecture_requirements_audit_checkpoint.json"

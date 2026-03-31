@@ -23,13 +23,13 @@ from __future__ import annotations
 import logging
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta
+from datetime import datetime, time, timedelta
 from decimal import Decimal
 from enum import Enum
 from typing import Any
 
+from app.services.transaction_costs import ExecutionAlgorithm  # Enum
 from app.services.transaction_costs import (
-    ExecutionAlgorithm,  # Enum
     MarketData,
     OrderSpecification,
     TransactionCostModel,
@@ -128,7 +128,7 @@ class IntradayVolumeProfile:
     """Historical intraday volume distribution for VWAP/TWAP."""
 
     symbol: str
-    time_bins: list[datetime.time]  # Time intervals
+    time_bins: list[time]  # Time intervals
     volume_distribution: list[float]  # % of volume at each interval
     total_daily_volume: Decimal
 
@@ -202,7 +202,7 @@ class ExecutionAlgoBase(ABC):
             return 0.0
 
         tt = get_config().trading_thresholds
-        shortfall = (
+        shortfall = float(
             float(execution_report.benchmark_price - execution_report.average_price)
             / float(execution_report.benchmark_price)
             * tt.bps_multiplier
@@ -375,7 +375,7 @@ class VWAPExecution(ExecutionAlgoBase):
 
         return slices
 
-    def _get_volume_percentage(self, time: datetime.time, profile: IntradayVolumeProfile) -> float:
+    def _get_volume_percentage(self, time: time, profile: IntradayVolumeProfile) -> float:
         """Get volume percentage for a given time."""
         for i, bin_time in enumerate(profile.time_bins):
             if (
@@ -394,12 +394,12 @@ class VWAPExecution(ExecutionAlgoBase):
         """Calculate limit price for VWAP child order."""
         # Set limit price near mid price with tolerance
         mid = market_data.mid_price
-        tolerance = market_data.spread * Decimal("0.5")
+        tolerance = Decimal(market_data.spread * Decimal("0.5"))
 
         if side == "buy":
-            return mid + tolerance  # Slightly above mid
+            return Decimal(mid + tolerance)  # Slightly above mid
         else:
-            return mid - tolerance  # Slightly below mid
+            return Decimal(mid - tolerance)  # Slightly below mid
 
 
 class TWAPExecution(ExecutionAlgoBase):
@@ -494,12 +494,12 @@ class TWAPExecution(ExecutionAlgoBase):
     def _calculate_twap_limit_price(self, market_data: MarketData, side: str) -> Decimal:
         """Calculate limit price for TWAP child order."""
         mid = market_data.mid_price
-        tolerance = market_data.spread * Decimal("0.5")
+        tolerance = Decimal(market_data.spread * Decimal("0.5"))
 
         if side == "buy":
-            return mid + tolerance
+            return Decimal(mid + tolerance)
         else:
-            return mid - tolerance
+            return Decimal(mid - tolerance)
 
 
 class POVExecution(ExecutionAlgoBase):
@@ -566,12 +566,12 @@ class POVExecution(ExecutionAlgoBase):
     def _calculate_pov_limit_price(self, market_data: MarketData, side: str) -> Decimal:
         """Calculate limit price for POV order."""
         mid = market_data.mid_price
-        tolerance = market_data.spread * Decimal("0.3")  # Tighter for POV
+        tolerance = Decimal(market_data.spread * Decimal("0.3"))  # Tighter for POV
 
         if side == "buy":
-            return mid - tolerance  # Slightly below mid for POV buy
+            return Decimal(mid - tolerance)  # Slightly below mid for POV buy
         else:
-            return mid + tolerance  # Slightly above mid for POV sell
+            return Decimal(mid + tolerance)  # Slightly above mid for POV sell
 
 
 class MarketExecution(ExecutionAlgoBase):
@@ -757,7 +757,7 @@ class ExecutionEngine:
         self, order: OrderSpecification, market_data: MarketData, child_orders: list[ChildOrder]
     ) -> ExecutionReport:
         """Generate a mock execution report for testing."""
-        total_quantity = sum(co.quantity for co in child_orders)
+        total_quantity = sum((co.quantity for co in child_orders), Decimal("0"))
 
         # Simulate execution price (near mid price with some slippage)
         slippage_bps = 5.0  # Assume 5 bps slippage
@@ -793,47 +793,41 @@ class ExecutionEngine:
 
         From Narang: Continuous monitoring of execution quality is essential.
         """
-        analysis = {
-            "is_good": True,
-            "issues": [],
-            "recommendations": [],
-        }
+        issues: list[str] = []
+        recommendations: list[str] = []
 
         # Check implementation shortfall
         if execution_report.implementation_shortfall_bps > 20:
-            analysis["is_good"] = False
-            analysis["issues"].append(
+            issues.append(
                 f"High implementation shortfall: {execution_report.implementation_shortfall_bps:.1f} bps"
             )
-            analysis["recommendations"].append(
+            recommendations.append(
                 "Consider using a more sophisticated execution algorithm (VWAP/POV)"
             )
 
         # Check market impact
         if execution_report.market_impact_bps > 15:
-            analysis["is_good"] = False
-            analysis["issues"].append(
-                f"High market impact: {execution_report.market_impact_bps:.1f} bps"
-            )
-            analysis["recommendations"].append(
-                "Reduce order size or extend execution time to reduce impact"
-            )
+            issues.append(f"High market impact: {execution_report.market_impact_bps:.1f} bps")
+            recommendations.append("Reduce order size or extend execution time to reduce impact")
 
         # Check fill rate
         if execution_report.fill_rate < 0.95:
-            analysis["is_good"] = False
-            analysis["issues"].append(f"Low fill rate: {execution_report.fill_rate:.1%}")
-            analysis["recommendations"].append(
+            issues.append(f"Low fill rate: {execution_report.fill_rate:.1%}")
+            recommendations.append(
                 "Review limit price placement or use market orders for small remaining quantities"
             )
 
         # Check execution duration
         if execution_report.execution_duration_seconds > 3600:  # > 1 hour
-            analysis["issues"].append(
+            issues.append(
                 f"Long execution duration: {execution_report.execution_duration_seconds / 60:.0f} minutes"
             )
 
-        return analysis
+        return {
+            "is_good": len(issues) == 0,
+            "issues": issues,
+            "recommendations": recommendations,
+        }
 
 
 def get_execution_engine(config: dict[str, Any]) -> ExecutionEngine:

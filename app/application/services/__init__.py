@@ -313,7 +313,8 @@ class GetPortfolioOrdersQuery(Query[list[Order]]):
         # Cast to access domain-specific repository method
 
         orders_repo = cast("OrderRepository", uow.orders)
-        return await orders_repo.find_by_portfolio(self.portfolio_id)
+        result = await orders_repo.find_by_portfolio(self.portfolio_id)
+        return cast("list[Order]", result)
 
 
 # Service
@@ -400,7 +401,7 @@ class OrderApplicationService(ApplicationService):
 
             return order_id
 
-        return await self._execute_in_transaction(_create)
+        return cast("str", await self._execute_in_transaction(_create))
 
     async def submit_order(self, command: SubmitOrderCommand) -> None:
         """
@@ -540,7 +541,7 @@ class PortfolioApplicationService(ApplicationService):
 
             return portfolio_id
 
-        return await self._execute_in_transaction(_create)
+        return cast("str", await self._execute_in_transaction(_create))
 
     async def add_position(
         self,
@@ -659,7 +660,10 @@ class ServiceOrchestrator:
             Workflow result
         """
         if workflow_name == "create_and_submit_order":
-            return await self._create_and_submit_order(**kwargs)
+            command = kwargs.get("order_command")
+            if isinstance(command, CreateOrderCommand):
+                return await self._create_and_submit_order(command)
+            raise ValueError("order_command must be a CreateOrderCommand instance")
         else:
             raise ValueError(f"Unknown workflow: {workflow_name}")
 

@@ -5,10 +5,11 @@ Provides contract creation utilities for trading Spanish stocks and indices
 through Interactive Brokers.
 """
 
+from __future__ import annotations
+
 import logging
 
-from ib_insync.contract import Contract as IBContract
-from ib_insync.contract import Stock
+from ib_insync.contract import Contract as IBContract, Stock
 
 logger = logging.getLogger(__name__)
 

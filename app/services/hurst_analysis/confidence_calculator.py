@@ -9,6 +9,8 @@ following López de Prado's methods (Rule 3). The current implementation
 uses a simplified approach based on sample size and distance from random walk.
 """
 
+from __future__ import annotations
+
 import logging
 
 import numpy as np

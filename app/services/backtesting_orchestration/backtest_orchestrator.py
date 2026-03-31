@@ -19,6 +19,8 @@ Feasibility Ratio Formula:
     If backtest yields 5.2%: feasibility_ratio = 5.2% / 3.84% = 1.35 ✅
 """
 
+from __future__ import annotations
+
 import logging
 from datetime import datetime
 from decimal import Decimal

@@ -21,7 +21,6 @@ Reference:
 
 import logging
 from dataclasses import dataclass
-from typing import Any
 
 import numpy as np
 import pandas as pd
@@ -220,7 +219,7 @@ class StationarityAnalyzer:
                 reason=f"Test error: {e}",
             )
 
-    def _adf_test(self, series: np.ndarray) -> dict[str, Any]:
+    def _adf_test(self, series: np.ndarray) -> dict[str, object]:
         """
         Perform Augmented Dickey-Fuller test for stationarity.
 
@@ -259,7 +258,7 @@ class StationarityAnalyzer:
             logger.warning("statsmodels not available, using simplified ADF test")
             return self._simplified_adf_test(series)
 
-    def _simplified_adf_test(self, series: np.ndarray) -> dict[str, Any]:
+    def _simplified_adf_test(self, series: np.ndarray) -> dict[str, object]:
         """
         Simplified ADF test implementation when statsmodels is not available.
 
@@ -454,7 +453,7 @@ class StationarityAnalyzer:
                     sub_mean = np.mean(sub_y)
                     sub_dev = sub_y - sub_mean
                     sub_z = np.cumsum(sub_dev)
-                    R = np.max(sub_z) - np.min(sub_z)
+                    R: float = float(np.max(sub_z) - np.min(sub_z))
 
                     # Standard deviation
                     S = np.std(sub_y)
@@ -879,7 +878,7 @@ class CointegrationAnalyzer:
         is_cointegrated: bool,
         p_value: float,
         hedge_ratio: float,
-        half_life: float,
+        half_life: float | None,
         asset1_name: str,
         asset2_name: str,
     ) -> str:
@@ -892,7 +891,7 @@ class CointegrationAnalyzer:
                 f"Hedge ratio: {hedge_ratio:.4f} (long 1 unit of {asset1_name}, short {hedge_ratio:.4f} units of {asset2_name})"
             )
 
-            if half_life < float("inf"):
+            if half_life is not None and half_life < float("inf"):
                 parts.append(f"Spread mean reverts with half-life of {half_life:.1f} periods")
         else:
             parts.append(f"{asset1_name} and {asset2_name} are not cointegrated (p={p_value:.4f})")

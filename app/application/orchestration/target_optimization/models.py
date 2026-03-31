@@ -8,6 +8,8 @@ Defines:
 - AbsoluteReturnTarget with feasibility validation
 """
 
+from __future__ import annotations
+
 import logging
 from decimal import Decimal
 from enum import Enum

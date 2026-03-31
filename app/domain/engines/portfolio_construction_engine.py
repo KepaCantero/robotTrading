@@ -4,6 +4,8 @@ Portfolio Construction Engine
 Engine for constructing and optimizing portfolios based on various strategies.
 """
 
+from __future__ import annotations
+
 import logging
 from typing import Any, Optional
 

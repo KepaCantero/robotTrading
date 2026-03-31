@@ -6,7 +6,7 @@ from decimal import Decimal
 
 import pytest
 
-from app.models.order import Order, OrderSide, OrderStatus, OrderType
+from app.domain.models.order import Order, OrderSide, OrderStatus, OrderType
 from app.services.fill_ratio_tracker import FillMetrics, FillRatioTracker
 
 

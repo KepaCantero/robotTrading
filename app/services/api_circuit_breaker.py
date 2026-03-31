@@ -8,6 +8,8 @@ opens/closes circuits based on configurable thresholds.
 Uses centralized configuration for all thresholds.
 """
 
+from __future__ import annotations
+
 import logging
 from dataclasses import dataclass
 from datetime import datetime, timedelta

@@ -17,6 +17,8 @@ Usage:
     indicators = get_indicator_calculator(backend='auto')
 """
 
+from __future__ import annotations
+
 import logging
 from enum import Enum
 from typing import Optional, Protocol, Union, runtime_checkable
@@ -139,7 +141,7 @@ class UnifiedIndicatorCalculator:
     def _select_backend(self, data: Union[pd.DataFrame, pd.Series, list, np.ndarray]) -> str:
         """Select the appropriate backend based on data characteristics."""
         if self.backend != IndicatorBackend.AUTO:
-            return self.backend.value
+            return str(self.backend.value)
 
         # Determine data size
         if isinstance(data, (pd.DataFrame, pd.Series, np.ndarray)):
@@ -149,9 +151,9 @@ class UnifiedIndicatorCalculator:
 
         # Use numba for large datasets if available
         if size >= self.auto_threshold and NUMBA_AVAILABLE:
-            return IndicatorBackend.NUMBA.value
+            return str(IndicatorBackend.NUMBA.value)
 
-        return IndicatorBackend.PANDAS.value
+        return str(IndicatorBackend.PANDAS.value)
 
     def _convert_to_array(
         self, data: Union[pd.DataFrame, pd.Series, list, np.ndarray]

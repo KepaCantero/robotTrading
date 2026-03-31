@@ -10,6 +10,8 @@ Elasticity = % change in Sharpe / % change in parameter
 - Elasticity < 0.5: ROBUST parameter (insensitive to changes)
 """
 
+from __future__ import annotations
+
 import json
 import logging
 from dataclasses import dataclass, field

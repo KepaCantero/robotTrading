@@ -51,6 +51,8 @@ Domain Design (DOM-001):
   * TomasiniWindowResult -> entity with invariants
 """
 
+from __future__ import annotations
+
 import logging
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
@@ -698,7 +700,7 @@ class TomasiniWalkForwardValidator:
             ]
 
             # Optimize parameters if grid provided
-            optimal_params = {}
+            optimal_params: dict[str, float] = {}
             if param_grid:
                 optimal_params, is_metrics = self.optimize_parameters(
                     train_quotes,
@@ -788,13 +790,13 @@ class TomasiniWalkForwardValidator:
                 is_sortino=is_metrics["sortino_ratio"],
                 is_max_drawdown=is_metrics["max_drawdown"],
                 is_volatility=is_metrics["volatility"],
-                is_trades=is_metrics["total_trades"],
+                is_trades=int(is_metrics["total_trades"]),
                 oos_return=oos_metrics["total_return"],
                 oos_sharpe=oos_metrics["sharpe_ratio"],
                 oos_sortino=oos_metrics["sortino_ratio"],
                 oos_max_drawdown=oos_metrics["max_drawdown"],
                 oos_volatility=oos_metrics["volatility"],
-                oos_trades=oos_metrics["total_trades"],
+                oos_trades=int(oos_metrics["total_trades"]),
                 consistency_ratio=consistency_ratio,
                 return_degradation=return_degradation,
                 sharpe_degradation=sharpe_degradation,
@@ -862,15 +864,19 @@ class TomasiniWalkForwardValidator:
         passed_windows = sum(1 for w in window_results if w.passed)
 
         # Aggregate metrics
-        avg_is_return = np.mean([w.is_return for w in window_results])
-        avg_oos_return = np.mean([w.oos_return for w in window_results])
-        avg_is_sharpe = np.mean([w.is_sharpe for w in window_results])
-        avg_oos_sharpe = np.mean([w.oos_sharpe for w in window_results])
+        avg_is_return: float = float(np.mean([w.is_return for w in window_results]))
+        avg_oos_return: float = float(np.mean([w.oos_return for w in window_results]))
+        avg_is_sharpe: float = float(np.mean([w.is_sharpe for w in window_results]))
+        avg_oos_sharpe: float = float(np.mean([w.oos_sharpe for w in window_results]))
 
         # Consistency metrics
-        avg_consistency_ratio = np.mean([w.consistency_ratio for w in window_results])
-        avg_return_degradation = np.mean([w.return_degradation for w in window_results])
-        avg_sharpe_degradation = np.mean([w.sharpe_degradation for w in window_results])
+        avg_consistency_ratio: float = float(np.mean([w.consistency_ratio for w in window_results]))
+        avg_return_degradation: float = float(
+            np.mean([w.return_degradation for w in window_results])
+        )
+        avg_sharpe_degradation: float = float(
+            np.mean([w.sharpe_degradation for w in window_results])
+        )
 
         # Parameter stability
         parameter_stability = self.calculate_parameter_stability(parameter_history)
@@ -879,12 +885,14 @@ class TomasiniWalkForwardValidator:
         regime_robustness = self._calculate_regime_robustness(window_results)
 
         # Scores
-        robustness_score = passed_windows / total_windows if total_windows > 0 else 0
-        parameter_stability_score = self._calculate_parameter_stability_score(parameter_stability)
-        consistency_score = avg_consistency_ratio
+        robustness_score: float = passed_windows / total_windows if total_windows > 0 else 0.0
+        parameter_stability_score: float = self._calculate_parameter_stability_score(
+            parameter_stability
+        )
+        consistency_score: float = float(avg_consistency_ratio)
 
         # Overall Tomasini score (0-100)
-        tomasini_score = (
+        tomasini_score: float = (
             robustness_score * 0.4 + parameter_stability_score * 0.3 + consistency_score * 0.3
         ) * 100
 
@@ -894,7 +902,7 @@ class TomasiniWalkForwardValidator:
             failure_reasons.extend(window.failure_reasons)
 
         # Overall pass/fail
-        passed = (
+        passed: bool = bool(
             passed_windows >= self.min_cycles
             and robustness_score >= 0.6
             and parameter_stability_score >= 0.6
@@ -943,7 +951,7 @@ class TomasiniWalkForwardValidator:
         stability_metrics = {}
 
         # Get all parameter names
-        param_names = set()
+        param_names: set[str] = set()
         for h in history:
             param_names.update(h.parameters.keys())
 
@@ -963,12 +971,12 @@ class TomasiniWalkForwardValidator:
             values = np.array(values)
 
             # Basic statistics
-            mean_value = np.mean(values)
-            std_value = np.std(values)
-            cv = std_value / mean_value if mean_value != 0 else float("inf")
+            mean_value: float = float(np.mean(values))
+            std_value: float = float(np.std(values))
+            cv: float = std_value / mean_value if mean_value != 0 else float("inf")
 
-            min_value = np.min(values)
-            max_value = np.max(values)
+            min_value: float = float(np.min(values))
+            max_value: float = float(np.max(values))
             range_pct = (max_value - min_value) / mean_value if mean_value != 0 else 0
 
             # Drift analysis (linear regression)
@@ -1042,7 +1050,7 @@ class TomasiniWalkForwardValidator:
     def _calculate_regime_robustness(self, windows: list[TomasiniWindowResult]) -> dict[str, float]:
         """Calculate robustness across different market regimes."""
 
-        regime_performance = {}  # regime -> list of returns
+        regime_performance: dict[str, list[float]] = {}  # regime -> list of returns
 
         for window in windows:
             regime = window.test_regime
@@ -1052,9 +1060,9 @@ class TomasiniWalkForwardValidator:
             regime_performance[regime].append(window.oos_return)
 
         # Calculate average performance by regime
-        regime_robustness = {}
+        regime_robustness: dict[str, float] = {}
         for regime, returns in regime_performance.items():
-            avg_return = np.mean(returns)
+            avg_return = float(np.mean(returns))
             regime_robustness[regime] = avg_return
 
         return regime_robustness

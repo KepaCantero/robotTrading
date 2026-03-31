@@ -17,7 +17,7 @@ from pandas import Series
 
 from app.models.signal import Signal, SignalSource, SignalStrength, SignalType
 from app.domain.strategies.fx_intermarket.correlation_analyzer import CorrelationAnalyzer
-from app.domain.strategies.fx_intermarket.fx_intermarket_strategy import (
+from app.domain.strategies.fx_intermarket_strategy import (
     FXIntermarketState,
     FXIntermarketStrategy,
 )

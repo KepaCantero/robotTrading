@@ -5,6 +5,8 @@ This module defines the core interfaces and models for portfolio management
 across different brokers (IBKR, Binance, Paper Trading).
 """
 
+from __future__ import annotations
+
 import logging
 from datetime import datetime
 from decimal import Decimal
@@ -78,7 +80,7 @@ class HedgingMetadata(BaseModel):
             )
             raise ValueError(f"Hedge cost exceeds maximum limit of {max_hedge_cost} bps, got {v}")
 
-        return v
+        return Decimal(str(v))
 
 
 class AssetClass(str, Enum):
@@ -148,7 +150,7 @@ class Position(BaseModel):
             )
             raise ValueError(f"Quantity below minimum limit of -1M shares, got {v}")
 
-        return v
+        return Decimal(str(v))
 
     @field_validator("avg_price", "market_price")
     @classmethod
@@ -164,7 +166,7 @@ class Position(BaseModel):
         if v > Decimal("1000000"):  # $1M per share limit
             raise ValueError(f"Price exceeds maximum limit of $1M, got {v}")
 
-        return v
+        return Decimal(str(v))
 
     @field_validator("unrealized_pnl", "realized_pnl")
     @classmethod
@@ -180,10 +182,10 @@ class Position(BaseModel):
         if v < Decimal("-1000000000"):  # -$1B limit
             raise ValueError(f"P&L below minimum limit of -$1B, got {v}")
 
-        return v
+        return Decimal(str(v))
 
     @model_validator(mode="after")
-    def validate_position_consistency(self) -> "Position":
+    def validate_position_consistency(self) -> Position:
         """Validate position consistency rules."""
         logger.debug(
             "Validating position consistency",

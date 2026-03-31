@@ -12,6 +12,8 @@ CRITICALITY: LIFE-THREATENING - System executes trades then forgets positions ex
 No stop-loss execution in production.
 """
 
+from __future__ import annotations
+
 import asyncio
 import json
 import logging
@@ -19,7 +21,7 @@ from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from decimal import Decimal
 from enum import Enum
-from typing import TYPE_CHECKING, Any, Callable, Optional
+from typing import TYPE_CHECKING, Any, Callable, Optional, TypedDict
 
 from requests.exceptions import HTTPError
 from sqlalchemy.exc import (
@@ -235,7 +237,7 @@ class MonitoredPosition:
         }
 
     @classmethod
-    def from_dict(cls, data: dict[str, Any]) -> "MonitoredPosition":
+    def from_dict(cls, data: dict[str, Any]) -> MonitoredPosition:
         """Create MonitoredPosition from dictionary."""
         return cls(
             position_id=data["position_id"],
@@ -267,6 +269,14 @@ class MonitoredPosition:
             ),
             check_count=data.get("check_count", 0),
         )
+
+
+class _MonitorStats(TypedDict):
+    monitor_start_time: Optional[datetime]
+    total_checks: int
+    stop_loss_triggered: int
+    take_profit_triggered: int
+    execution_failures: int
 
 
 class PositionMonitorConfig:
@@ -387,7 +397,7 @@ class PositionMonitor:
         self._audit_log: list[dict[str, Any]] = []
 
         # Statistics
-        self._stats = {
+        self._stats: _MonitorStats = {
             "monitor_start_time": None,
             "total_checks": 0,
             "stop_loss_triggered": 0,
@@ -658,7 +668,7 @@ class PositionMonitor:
             return
 
         # Fetch current prices for all symbols
-        symbols = {p.symbol for p in self._positions.values()}
+        symbols = list({p.symbol for p in self._positions.values()})
         prices = await self._fetch_current_prices(symbols)
 
         # Check each position (use list() to avoid dictionary changed size error)

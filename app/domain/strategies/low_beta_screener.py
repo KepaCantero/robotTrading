@@ -16,6 +16,8 @@ SOLID Principles:
 - Dependency Inversion: Depende de abstracciones (models)
 """
 
+from __future__ import annotations
+
 import logging
 import time
 from decimal import Decimal
@@ -28,6 +30,7 @@ from .models import (
     LowVolatilityStockResult,
     LowVolatilityStrategyConfig,
     SectorDefensiveLevel,
+    VolatilityMetrics,
 )
 
 logger = logging.getLogger(__name__)
@@ -45,7 +48,7 @@ class LowBetaScreener:
     """
 
     # Mapping de sectores a nivel defensivo
-    SECTOR_DEFENSIVE_LEVELS: ClassVar[dict] = {
+    SECTOR_DEFENSIVE_LEVELS: ClassVar[dict[str, SectorDefensiveLevel]] = {
         "Utilities": SectorDefensiveLevel.HIGHLY_DEFENSIVE,
         "Consumer Staples": SectorDefensiveLevel.HIGHLY_DEFENSIVE,
         "Healthcare": SectorDefensiveLevel.DEFENSIVE,
@@ -145,6 +148,30 @@ class LowBetaScreener:
 
         return result
 
+    @staticmethod
+    def _get_metrics(profile: LowVolatilityProfile) -> VolatilityMetrics:
+        """
+        Obtener las metricas de volatilidad de un perfil, garantizando que no sean None.
+
+        Args:
+            profile: Perfil de accion
+
+        Returns:
+            VolatilityMetrics del perfil (siempre inicializadas)
+        """
+        if profile.volatility_metrics is not None:
+            return profile.volatility_metrics
+        # Fallback: construir metricas desde campos del perfil
+        return VolatilityMetrics(
+            symbol=profile.symbol,
+            average_volatility=profile.daily_volatility,
+            annualized_volatility=profile.annualized_volatility,
+            beta=profile.beta,
+            downside_risk=profile.downside_deviation,
+            max_drawdown=profile.max_drawdown,
+            sortino_ratio=profile.sortino_ratio,
+        )
+
     def _evaluate_profile(self, profile: LowVolatilityProfile) -> list[str]:
         """
         Evaluar si un perfil pasa todos los filtros.
@@ -156,16 +183,17 @@ class LowBetaScreener:
             Lista de razones por las que falló (vacía si pasó)
         """
         failures: list[str] = []
+        metrics = self._get_metrics(profile)
 
         # 1. Volatilidad histórica check
-        avg_vol = profile.volatility_metrics.average_volatility
+        avg_vol = metrics.average_volatility
         if avg_vol is not None and avg_vol > self.criteria.max_volatility:
             failures.append(
                 f"Volatilidad muy alta: {avg_vol:.2f}% > {self.criteria.max_volatility}%"
             )
 
         # 2. Beta check
-        beta = profile.volatility_metrics.beta
+        beta = metrics.beta
         if beta is not None:
             if beta > self.criteria.max_beta:
                 failures.append(f"Beta muy alto: {beta:.2f} > {self.criteria.max_beta}")
@@ -174,7 +202,7 @@ class LowBetaScreener:
 
         # 3. Downside risk check
         if self.criteria.max_downside_risk is not None:
-            downside = profile.volatility_metrics.downside_risk
+            downside = metrics.downside_risk
             if downside is not None and downside > self.criteria.max_downside_risk:
                 failures.append(
                     f"Riesgo downside alto: {downside:.2f}% > {self.criteria.max_downside_risk}%"
@@ -182,13 +210,13 @@ class LowBetaScreener:
 
         # 4. Sortino ratio check
         if self.criteria.min_sortino is not None:
-            sortino = profile.volatility_metrics.sortino_ratio
+            sortino = metrics.sortino_ratio
             if sortino is not None and sortino < self.criteria.min_sortino:
                 failures.append(f"Sortino ratio bajo: {sortino:.2f} < {self.criteria.min_sortino}")
 
         # 5. Maximum drawdown check
         if self.criteria.max_drawdown is not None:
-            max_dd = profile.volatility_metrics.max_drawdown
+            max_dd = metrics.max_drawdown
             if max_dd is not None and max_dd < self.criteria.max_drawdown:
                 failures.append(
                     f"Max drawdown excedido: {max_dd:.2f}% < {self.criteria.max_drawdown}%"
@@ -336,10 +364,11 @@ class LowBetaScreener:
         Returns:
             Score 0-100
         """
-        vol_score = float(profile.volatility_metrics.volatility_score)
+        metrics = self._get_metrics(profile)
+        vol_score = float(metrics.volatility_score)
 
         # Ajustar por beta
-        beta = float(profile.volatility_metrics.beta or 1.0)
+        beta = float(metrics.beta or Decimal("1.0"))
         beta_adjustment = max(0, 100 - beta * 50)
 
         # Promedio
@@ -356,6 +385,7 @@ class LowBetaScreener:
             Score 0-100
         """
         score = 50.0  # Base score
+        metrics = self._get_metrics(profile)
 
         # Nivel defensivo del sector
         if profile.sector_defensive_level:
@@ -369,7 +399,7 @@ class LowBetaScreener:
             score = level_scores.get(profile.sector_defensive_level, 50)
 
         # Ajustar por correlación con el mercado
-        corr = profile.volatility_metrics.correlation_to_market
+        corr = metrics.correlation_to_market
         if corr is not None:
             corr_float = float(corr)
             # Menor correlación = más defensivo
@@ -393,9 +423,10 @@ class LowBetaScreener:
             Score 0-100
         """
         score = 50.0
+        metrics = self._get_metrics(profile)
 
         # Máximo drawdown (menor es mejor)
-        max_dd = profile.volatility_metrics.max_drawdown
+        max_dd = metrics.max_drawdown
         if max_dd is not None:
             dd_float = float(max_dd)
             if dd_float > -10:
@@ -406,7 +437,7 @@ class LowBetaScreener:
                 score -= 20
 
         # Sharpe ratio (mayor es mejor)
-        sharpe = profile.volatility_metrics.sharpe_ratio
+        sharpe = metrics.sharpe_ratio
         if sharpe is not None:
             sharpe_float = float(sharpe)
             if sharpe_float > 1.5:
@@ -417,7 +448,7 @@ class LowBetaScreener:
                 score -= 20
 
         # Sortino ratio
-        sortino = profile.volatility_metrics.sortino_ratio
+        sortino = metrics.sortino_ratio
         if sortino is not None:
             sortino_float = float(sortino)
             if sortino_float > 2.0:
@@ -483,8 +514,9 @@ class LowBetaScreener:
         Returns:
             Razón descriptiva
         """
-        vol = profile.volatility_metrics.average_volatility or 0
-        beta = profile.volatility_metrics.beta or 0
+        metrics = self._get_metrics(profile)
+        vol = float(metrics.average_volatility)
+        beta = float(metrics.beta)
 
         reason_parts = []
 

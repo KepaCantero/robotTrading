@@ -5,6 +5,8 @@ This module provides portfolio-level calculation functions for analytics
 including concentration metrics, diversification scores, and allocation analysis.
 """
 
+from __future__ import annotations
+
 from decimal import Decimal
 from typing import TYPE_CHECKING, Optional
 
@@ -16,7 +18,7 @@ if TYPE_CHECKING:
 class PortfolioCalculations:
     """Portfolio-level calculation utilities for analytics."""
 
-    def calculate_herfindahl_index(self, portfolio: "Portfolio") -> Decimal:
+    def calculate_herfindahl_index(self, portfolio: Portfolio) -> Decimal:
         """
         Calculate Herfindahl concentration index.
 
@@ -37,11 +39,11 @@ class PortfolioCalculations:
             return Decimal("0")
 
         weights = [pos.market_value / total_value for pos in portfolio.positions]
-        herfindahl = sum(w**2 for w in weights)
+        herfindahl = Decimal(str(sum(w**2 for w in weights)))
 
         return herfindahl
 
-    def calculate_effective_positions(self, portfolio: "Portfolio") -> Decimal:
+    def calculate_effective_positions(self, portfolio: Portfolio) -> Decimal:
         """
         Calculate effective number of positions.
 
@@ -61,7 +63,7 @@ class PortfolioCalculations:
 
         return Decimal("1") / herfindahl
 
-    def calculate_largest_position_weight(self, portfolio: "Portfolio") -> Decimal:
+    def calculate_largest_position_weight(self, portfolio: Portfolio) -> Decimal:
         """
         Calculate weight of largest position as percentage.
 
@@ -79,9 +81,9 @@ class PortfolioCalculations:
             return Decimal("0")
 
         largest_position = max(portfolio.positions, key=lambda p: p.market_value)
-        return largest_position.market_value / total_value * 100
+        return Decimal(str(largest_position.market_value / total_value * 100))
 
-    def calculate_diversification_ratio(self, portfolio: "Portfolio") -> Decimal:
+    def calculate_diversification_ratio(self, portfolio: Portfolio) -> Decimal:
         """
         Calculate diversification ratio.
 
@@ -102,7 +104,7 @@ class PortfolioCalculations:
 
         return effective_positions / actual_positions
 
-    def calculate_equity_allocation(self, portfolio: "Portfolio") -> Decimal:
+    def calculate_equity_allocation(self, portfolio: Portfolio) -> Decimal:
         """
         Calculate equity allocation as percentage.
 
@@ -117,9 +119,9 @@ class PortfolioCalculations:
             return Decimal("0")
 
         equity_value = sum(pos.market_value for pos in portfolio.positions)
-        return (equity_value / total_value) * 100
+        return Decimal(str(equity_value / total_value * 100))
 
-    def calculate_cash_allocation(self, portfolio: "Portfolio") -> Decimal:
+    def calculate_cash_allocation(self, portfolio: Portfolio) -> Decimal:
         """
         Calculate cash allocation as percentage.
 
@@ -133,9 +135,9 @@ class PortfolioCalculations:
         if total_value == 0:
             return Decimal("0")
 
-        return (portfolio.cash_balance / total_value) * 100
+        return Decimal(str(portfolio.cash_balance / total_value * 100))
 
-    def get_top_holdings(self, portfolio: "Portfolio", limit: int = 10) -> list[dict]:
+    def get_top_holdings(self, portfolio: Portfolio, limit: int = 10) -> list[dict]:
         """
         Get top holdings by market value.
 
@@ -170,8 +172,8 @@ class PortfolioCalculations:
 
     def estimate_rebalance_risk_impact(
         self,
-        current: "PortfolioAllocation",
-        target: "PortfolioAllocation",
+        current: PortfolioAllocation,
+        target: PortfolioAllocation,
         risk_impact_factor: Decimal,
     ) -> Decimal:
         """
@@ -186,12 +188,12 @@ class PortfolioCalculations:
             Estimated risk impact
         """
         equity_change = abs(current.equity_allocation - target.equity_allocation)
-        return equity_change * risk_impact_factor
+        return Decimal(str(equity_change * risk_impact_factor))
 
     def estimate_rebalance_return_impact(
         self,
-        current: "PortfolioAllocation",
-        target: "PortfolioAllocation",
+        current: PortfolioAllocation,
+        target: PortfolioAllocation,
         return_impact_factor: Decimal,
     ) -> Decimal:
         """
@@ -206,9 +208,9 @@ class PortfolioCalculations:
             Estimated return impact
         """
         equity_change = target.equity_allocation - current.equity_allocation
-        return equity_change * return_impact_factor
+        return Decimal(str(equity_change * return_impact_factor))
 
-    def calculate_liquidity_score(self, portfolio: "Portfolio") -> Decimal:
+    def calculate_liquidity_score(self, portfolio: Portfolio) -> Decimal:
         """
         Calculate liquidity score based on cash ratio.
 
@@ -227,7 +229,7 @@ class PortfolioCalculations:
         return min(cash_ratio * 100, Decimal("100"))
 
     def calculate_diversification_score(
-        self, portfolio: "Portfolio", well_diversified_threshold: Optional[Decimal] = None
+        self, portfolio: Portfolio, well_diversified_threshold: Optional[Decimal] = None
     ) -> Decimal:
         """
         Calculate diversification score (0-100).

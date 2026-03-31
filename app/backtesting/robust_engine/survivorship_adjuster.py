@@ -35,6 +35,7 @@ import pandas as pd
 from .models import DelistedStock, DelistingReason
 
 if TYPE_CHECKING:
+    from collections.abc import Generator
     from pathlib import Path
 
 logger = logging.getLogger(__name__)
@@ -272,7 +273,7 @@ class SurvivorshipAdjuster:
 
             # Add delisted return contribution
             if delisted_returns:
-                delisted_contribution = np.mean(list(delisted_returns.values()))
+                delisted_contribution = float(np.mean(list(delisted_returns.values())))
             else:
                 delisted_contribution = 0.0
 
@@ -290,9 +291,9 @@ class SurvivorshipAdjuster:
             result = SurvivorshipFreeResult(
                 original_returns=original_returns,
                 adjusted_returns=adjusted_returns,
-                bias_factor=adjustment["bias_factor"],
-                delisted_included=adjustment["delisted_count"],
-                delisted_return_contribution=delisted_contribution,
+                bias_factor=float(adjustment["bias_factor"]),
+                delisted_included=int(adjustment["delisted_count"]),
+                delisted_return_contribution=float(delisted_contribution),
                 warning=warning,
             )
 
@@ -398,7 +399,7 @@ class SurvivorshipAdjuster:
         self,
         backtest_start: date,
         backtest_end: date,
-    ) -> tuple[str, float]:
+    ) -> Generator[tuple[str, float], None, None]:
         """
         Generate returns for delisted stocks during the period.
 
@@ -417,7 +418,7 @@ class SurvivorshipAdjuster:
                 # Calculate return from listing to delisting
                 if stock.returns_daily:
                     daily_returns = [float(r) for _, r in stock.returns_daily]
-                    total_return = np.prod([1 + r for r in daily_returns]) - 1
+                    total_return = float(np.prod([1 + r for r in daily_returns]) - 1)
                 else:
                     # Use estimated return based on recovery rate
                     total_return = float(stock.recovery_rate) - 1.0
@@ -501,7 +502,7 @@ class SurvivorshipAdjuster:
         current_universe: list[str],
         backtest_start: date,
         backtest_end: date,
-    ) -> dict[str, int | float]:
+    ) -> dict[str, int | float | dict[str, int]]:
         """
         Calculate statistics about the survivorship bias.
 
@@ -523,7 +524,7 @@ class SurvivorshipAdjuster:
         delistings = self.get_delisting_events(backtest_start, backtest_end)
 
         # Count by reason
-        by_reason = defaultdict(int)
+        by_reason: dict[str, int] = defaultdict(int)
         for stock in delistings:
             by_reason[stock.reason.value] += 1
 

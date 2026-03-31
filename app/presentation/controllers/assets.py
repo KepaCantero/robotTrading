@@ -5,8 +5,9 @@ This module provides REST API endpoints for managing assets,
 identifying liquid assets, and retrieving asset rankings.
 """
 
-# mypy: ignore-errors
+from __future__ import annotations
 
+# mypy: ignore-errors
 import asyncio
 import logging
 from datetime import datetime
@@ -52,8 +53,8 @@ async def get_assets_overview(
 @router.get("/liquid/{asset_class}", response_model=dict[str, Any])
 async def get_liquid_assets(
     asset_class: AssetClass,
-    limit: Annotated[int, Query(20, ge=1, le=100, description="Number of assets to return")],
-    service: Annotated[AssetIdentificationService, Depends(get_asset_identification_service)],
+    service: AssetIdentificationService = Depends(get_asset_identification_service),
+    limit: int = Query(default=20, ge=1, le=100, description="Number of assets to return"),
 ):
     """Get top liquid assets for a specific asset class."""
     logger.debug("Getting liquid assets", extra={"asset_class": asset_class.value, "limit": limit})
@@ -202,8 +203,8 @@ async def get_liquidity_metrics(
 
 @router.get("/rankings", response_model=dict[str, Any])
 async def get_asset_rankings(
-    asset_class: Annotated[Optional[AssetClass], Query(None, description="Filter by asset class")],
-    service: Annotated[AssetIdentificationService, Depends(get_asset_identification_service)],
+    asset_class: Optional[AssetClass] = Query(default=None, description="Filter by asset class"),
+    service: AssetIdentificationService = Depends(get_asset_identification_service),
 ):
     """Get asset rankings."""
     try:
@@ -287,8 +288,8 @@ async def refresh_liquidity_data(
 
 @router.get("/universe", response_model=dict[str, Any])
 async def get_asset_universe(
-    asset_class: Annotated[Optional[AssetClass], Query(None, description="Filter by asset class")],
-    service: Annotated[AssetIdentificationService, Depends(get_asset_identification_service)],
+    asset_class: Optional[AssetClass] = Query(default=None, description="Filter by asset class"),
+    service: AssetIdentificationService = Depends(get_asset_identification_service),
 ):
     """Get asset universe."""
     try:
@@ -310,8 +311,8 @@ async def get_asset_universe(
 async def identify_liquid_assets(
     asset_class: AssetClass,
     background_tasks: BackgroundTasks,
-    service: Annotated[AssetIdentificationService, Depends(get_asset_identification_service)],
-    limit: Annotated[int, Query(20, ge=1, le=100, description="Number of assets to identify")],
+    service: AssetIdentificationService = Depends(get_asset_identification_service),
+    limit: int = Query(default=20, ge=1, le=100, description="Number of assets to identify"),
 ):
     """Identify and rank liquid assets for a specific asset class."""
     logger.debug(

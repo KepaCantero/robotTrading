@@ -18,7 +18,7 @@ import numpy as np
 project_root = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(project_root))
 
-from app.domain.strategies.momentum_modular.learning.drift_detector import (  # noqa: E402
+from app.domain.strategies.learning.drift_detector import (  # noqa: E402
     AutoRetrainingTrigger,
     ConceptDriftDetector,
     OverfittingDetector,

@@ -9,7 +9,7 @@ import logging
 
 import pytest
 
-from app.core.logging_config import (
+from app.infrastructure.logging.logging_config import (
     JSONFormatter,
     SensitiveDataFilter,
     TimedFormatter,
@@ -278,7 +278,7 @@ class TestCorrelationId:
     def test_get_correlation_id_generates_new_id(self):
         """Test that get_correlation_id generates a new ID if none exists."""
         # Clear the context variable
-        from app.core.logging_config import _correlation_id
+        from app.infrastructure.logging.logging_config import _correlation_id
 
         _correlation_id.set(None)
 

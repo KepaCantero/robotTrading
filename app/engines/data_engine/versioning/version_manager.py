@@ -4,6 +4,8 @@ DataVersionManager - Gestor de versionado de datos.
 Maneja versionado completo de datasets con rollback capabilities.
 """
 
+from __future__ import annotations
+
 import json
 import logging
 import shutil

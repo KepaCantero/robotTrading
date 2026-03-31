@@ -13,7 +13,9 @@ import logging
 from abc import ABC, abstractmethod
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from multiprocessing import Process, Queue
-from typing import TYPE_CHECKING, ClassVar, Literal, Optional, Union
+from typing import TYPE_CHECKING, ClassVar, Literal, Optional, Union, cast
+
+from typing_extensions import TypeAlias
 
 from app.domain.models.market_data import Quote
 from app.domain.models.signal import Signal
@@ -68,14 +70,18 @@ def _run_backtest_process(
         result_queue.put(("success", result))
     except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
         result_queue.put(("error", str(e)))
+    except Exception as e:
+        # Catch MemoryError, RuntimeError, ImportError etc. that would otherwise
+        # crash the subprocess without writing to the queue (parent deadlock).
+        result_queue.put(("error", f"{type(e).__name__}: {e}"))
 
 
 # Type aliases for better readability
-StrategyType = BaseStrategy
-QuotesType = list[Quote]
-SignalsType = list[Signal]
-MetricsDict = dict[str, Union[float, int, str]]
-OptionalMetrics = Optional[MetricsDict]
+StrategyType: TypeAlias = BaseStrategy
+QuotesType: TypeAlias = list[Quote]
+SignalsType: TypeAlias = list[Signal]
+MetricsDict: TypeAlias = dict[str, Union[float, int, str]]
+OptionalMetrics: TypeAlias = Optional[MetricsDict]
 
 
 class BacktestExecutor(ABC):
@@ -224,7 +230,11 @@ class SimpleBacktestExecutor(BacktestExecutor):
         from app.backtesting.engine import SimpleBacktester
 
         # Get strategy name
-        strategy_name: str = kwargs.get("strategy_name", getattr(strategy, "name", "unknown"))
+        strategy_name_default = getattr(strategy, "name", "unknown")
+        strategy_name_kw = kwargs.get("strategy_name", strategy_name_default)
+        strategy_name: str = (
+            strategy_name_kw if isinstance(strategy_name_kw, str) else str(strategy_name_kw)
+        )
 
         # Create backtester
         backtester = SimpleBacktester(
@@ -236,7 +246,10 @@ class SimpleBacktestExecutor(BacktestExecutor):
         )
 
         # Get or generate signals
-        signals: SignalsType | None = kwargs.get("signals")
+        signals_kw = kwargs.get("signals")
+        signals: SignalsType | None = (
+            signals_kw if isinstance(signals_kw, list) or signals_kw is None else None
+        )
         if signals is None:
             signals = []
             for quote in quotes:
@@ -325,10 +338,21 @@ class ParallelBacktestExecutor(BacktestExecutor):
         with ThreadPoolExecutor(max_workers=max_workers) as executor:
             futures = {executor.submit(run_single, s): s for s in strategies}
 
+            failed_strategies: list[str] = []
             for future in as_completed(futures):
-                result = future.result()
-                if result:
-                    results.append(result)
+                strategy_obj = futures[future]
+                try:
+                    result = future.result()
+                    if result:
+                        results.append(result)
+                    else:
+                        failed_strategies.append(
+                            strategy_obj.name
+                            if hasattr(strategy_obj, "name")
+                            else str(strategy_obj)
+                        )
+                except Exception as e:
+                    failed_strategies.append(f"{getattr(strategy_obj, 'name', strategy_obj)}: {e}")
 
         logger.info(
             "Parallel batch execution completed",
@@ -336,7 +360,8 @@ class ParallelBacktestExecutor(BacktestExecutor):
                 "operation": "parallel_batch_complete",
                 "total_strategies": len(strategies),
                 "successful_results": len(results),
-                "failed": len(strategies) - len(results),
+                "failed": len(failed_strategies),
+                "failed_strategies": failed_strategies,
             },
         )
 
@@ -455,7 +480,13 @@ class ProcessPoolBacktestExecutor(BacktestExecutor):
 
         result_queue: Queue = Queue()
 
-        strategy_name = kwargs.get("strategy_name", getattr(strategy, "name", "unknown"))
+        strategy_name_kw = kwargs.get("strategy_name", getattr(strategy, "name", "unknown"))
+        strategy_name = (
+            strategy_name_kw if isinstance(strategy_name_kw, str) else str(strategy_name_kw)
+        )
+
+        enable_risk_kw = kwargs.get("enable_risk_envelope", True)
+        enable_risk = bool(enable_risk_kw) if enable_risk_kw is not None else True
 
         p = Process(
             target=_run_backtest_process,
@@ -464,7 +495,7 @@ class ProcessPoolBacktestExecutor(BacktestExecutor):
                 quotes,
                 strategy,
                 strategy_name,
-                kwargs.get("enable_risk_envelope", True),
+                enable_risk,
                 result_queue,
             ),
         )
@@ -476,10 +507,16 @@ class ProcessPoolBacktestExecutor(BacktestExecutor):
             p.join()
             raise RuntimeError("Backtest execution timeout")
 
-        status, data = result_queue.get()
+        result_data = result_queue.get(timeout=30)
+
+        if not isinstance(result_data, tuple) or len(result_data) != 2:
+            raise RuntimeError("Unexpected result format from subprocess")
+
+        status, data = result_data
 
         if status == "success":
-            return data
+            # Data is a BacktestResult from the subprocess via pickle
+            return cast("BacktestResult", data)
         else:
             raise RuntimeError(f"Backtest execution failed: {data}")
 
@@ -541,12 +578,12 @@ class BacktestExecutorFactory:
             )
 
         if executor_type == "simple":
-            return executor_class(config)
+            return SimpleBacktestExecutor(config)
         elif executor_type == "parallel":
-            return executor_class(config, max_workers=max_workers)
+            return ParallelBacktestExecutor(config, max_workers=max_workers)
         elif executor_type == "process":
             # ProcessPoolBacktestExecutor uses max_processes parameter
-            return executor_class(config, max_processes=max_workers)
+            return ProcessPoolBacktestExecutor(config, max_processes=max_workers)
         else:
             return executor_class(config)
 

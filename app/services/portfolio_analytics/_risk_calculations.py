@@ -5,6 +5,8 @@ This module provides risk calculation functions for portfolio analytics
 including downside risk, tail risk, and volatility metrics.
 """
 
+from __future__ import annotations
+
 from decimal import Decimal
 from typing import Optional
 
@@ -27,7 +29,7 @@ class RiskCalculations:
         if not negative_returns:
             return Decimal("0")
 
-        return volatility_func(negative_returns)
+        return Decimal(str(volatility_func(negative_returns)))
 
     def calculate_semi_variance(self, returns: list[Decimal]) -> Decimal:
         """
@@ -39,13 +41,15 @@ class RiskCalculations:
         Returns:
             Semi-variance
         """
-        mean_return = sum(returns) / len(returns) if returns else Decimal("0")
+        mean_return = (
+            sum(returns, Decimal("0")) / Decimal(len(returns)) if returns else Decimal("0")
+        )
         negative_deviations = [(r - mean_return) ** 2 for r in returns if r < mean_return]
 
         if not negative_deviations:
             return Decimal("0")
 
-        return sum(negative_deviations) / len(negative_deviations)
+        return sum(negative_deviations, Decimal("0")) / Decimal(len(negative_deviations))
 
     def calculate_lower_partial_moment(
         self, returns: list[Decimal], target_return: Optional[Decimal] = None
@@ -68,7 +72,7 @@ class RiskCalculations:
         if not negative_deviations:
             return Decimal("0")
 
-        return sum(negative_deviations) / len(negative_deviations)
+        return sum(negative_deviations, Decimal("0")) / Decimal(len(negative_deviations))
 
     def calculate_skewness(self, returns: list[Decimal], volatility_func) -> Decimal:
         """
@@ -84,8 +88,8 @@ class RiskCalculations:
         if len(returns) < 3:
             return Decimal("0")
 
-        mean_return = sum(returns) / len(returns)
-        std_dev = volatility_func(returns) / 100
+        mean_return = sum(returns, Decimal("0")) / Decimal(len(returns))
+        std_dev = Decimal(str(volatility_func(returns))) / Decimal("100")
 
         if std_dev == 0:
             return Decimal("0")
@@ -107,8 +111,8 @@ class RiskCalculations:
         if len(returns) < 4:
             return Decimal("0")
 
-        mean_return = sum(returns) / len(returns)
-        std_dev = volatility_func(returns) / 100
+        mean_return = sum(returns, Decimal("0")) / Decimal(len(returns))
+        std_dev = Decimal(str(volatility_func(returns))) / Decimal("100")
 
         if std_dev == 0:
             return Decimal("0")
@@ -138,8 +142,8 @@ class RiskCalculations:
         upper_tail = sorted_returns[-tail_size:]
         lower_tail = sorted_returns[:tail_size]
 
-        upper_avg = sum(upper_tail) / len(upper_tail)
-        lower_avg = sum(lower_tail) / len(lower_tail)
+        upper_avg = sum(upper_tail, Decimal("0")) / Decimal(len(upper_tail))
+        lower_avg = sum(lower_tail, Decimal("0")) / Decimal(len(lower_tail))
 
         if lower_avg == 0:
             return Decimal("0")

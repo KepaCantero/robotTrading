@@ -59,7 +59,7 @@ Security Compliance: 95%
 """
 
 # Authentication components (SOLID-compliant refactored)
-from app.security.auth import (
+from app.security.authentication.auth import (
     AuthAttemptTracker,
     JWTTokenManager,
     User,
@@ -80,7 +80,7 @@ from app.security.auth import (
     require_roles,
     verify_token_and_get_user,
 )
-from app.security.csrf_protection import (
+from app.security.web_security.csrf_protection import (
     CSRFTokenManager,
     DoubleSubmitCookieCSRF,
     generate_csrf_token,
@@ -103,7 +103,7 @@ from app.security.interfaces import (
     JWTTokenManagerProtocol,
     UserStoreProtocol,
 )
-from app.security.output_encoding import (
+from app.security.web_security.output_encoding import (
     ContentSecurityPolicy,
     OutputEncoder,
     encode_for_html,
@@ -113,10 +113,8 @@ from app.security.output_encoding import (
     safe_json_dumps,
     sanitize_output,
 )
-from app.security.security_headers import (
+from app.security.web_security.security_headers import (
     ContentSecurityPolicy as CSPHeaders,
-)
-from app.security.security_headers import (
     HSTSHeader,
     PermissionsPolicy,
     ReferrerPolicy,
@@ -128,7 +126,7 @@ from app.security.security_headers import (
 
 # Optional imports - secrets_manager requires cryptography
 try:
-    from app.security.secrets_manager import (
+    from app.security.secrets.secrets_manager import (
         Secret,
         SecretRotationError,
         SecretsManager,

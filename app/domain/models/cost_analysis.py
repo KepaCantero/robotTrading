@@ -5,6 +5,8 @@ This module defines Pydantic models for cost analysis functionality
 including cost breakdown, profitability validation, and Cost Impact Ratio (CIR) analysis.
 """
 
+from __future__ import annotations
+
 import logging
 from datetime import datetime
 from decimal import Decimal

@@ -4,6 +4,8 @@ Trailing Stop Manager for Dynamic Exit Management.
 Implements trailing stop logic that follows price favorably to capture extended trends.
 """
 
+from __future__ import annotations
+
 import logging
 from decimal import Decimal
 from typing import Optional

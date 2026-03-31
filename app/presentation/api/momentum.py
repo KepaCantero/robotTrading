@@ -3,24 +3,17 @@ FastAPI endpoints for momentum analysis and strategy management.
 
 This module provides REST API endpoints for momentum analysis,
 technical indicators, and momentum strategy management.
-
-GAP Fixes:
-- API-002: Added structured logging with correlation IDs
-- API-009: Added audit logging
-- API-010: Added timeout configuration
 """
 
 from __future__ import annotations
 
 import logging
 from datetime import datetime
-from typing import Annotated, Any
+from typing import Annotated
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query
 from requests.exceptions import (
     ConnectionError as RequestsConnectionError,
-)
-from requests.exceptions import (
     HTTPError,
     RequestException,
 )
@@ -32,7 +25,7 @@ router = APIRouter(prefix="/momentum", tags=["momentum"])
 logger = logging.getLogger(__name__)
 
 
-@router.get("/", response_model=dict[str, Any])
+@router.get("/", response_model=dict[str, object])
 async def get_momentum_overview(
     service: Annotated[MomentumAnalysisService, Depends(get_momentum_analysis_service)],
 ):
@@ -65,15 +58,15 @@ async def get_momentum_overview(
         ) from e
 
 
-@router.post("/analyze", response_model=dict[str, Any])
+@router.post("/analyze", response_model=dict[str, object])
 async def analyze_asset_momentum_post(
-    request_data: dict[str, Any],
+    request_data: dict[str, object],
     service: Annotated[MomentumAnalysisService, Depends(get_momentum_analysis_service)],
 ):
     """Analyze momentum for a specific asset via POST request."""
     try:
-        symbol = request_data.get("symbol", "").upper()
-        timeframe_str = request_data.get("timeframe", "daily")
+        symbol = str(request_data.get("symbol", "")).upper()
+        timeframe_str = str(request_data.get("timeframe", "daily"))
         request_data.get("momentum_types", [])
 
         if not symbol:
@@ -152,11 +145,11 @@ async def analyze_asset_momentum_post(
         ) from e
 
 
-@router.get("/analyze/{symbol}", response_model=dict[str, Any])
+@router.get("/analyze/{symbol}", response_model=dict[str, object])
 async def analyze_asset_momentum(
     symbol: str,
-    timeframe: Annotated[Timeframe, Query(Timeframe.DAILY, description="Analysis timeframe")],
-    service: Annotated[MomentumAnalysisService, Depends(get_momentum_analysis_service)],
+    service: MomentumAnalysisService = Depends(get_momentum_analysis_service),
+    timeframe: Timeframe = Query(default=Timeframe.DAILY, description="Analysis timeframe"),
 ):
     """Analyze momentum for a specific asset."""
     try:
@@ -218,14 +211,19 @@ async def analyze_asset_momentum(
         ) from e
 
 
-@router.get("/signals/{symbol}", response_model=dict[str, Any])
+@router.get("/signals/{symbol}", response_model=dict[str, object])
 async def get_momentum_signals_for_symbol(
     symbol: str,
     service: Annotated[MomentumAnalysisService, Depends(get_momentum_analysis_service)],
 ):
     """Get momentum signals for a specific asset."""
     try:
-        signals = await service.get_momentum_signals_for_symbol(symbol.upper())
+        signals_filter = MomentumFilter(
+            symbols=[symbol.upper()],
+            momentum_types=None,
+            timeframes=None,
+        )
+        signals = await service.get_momentum_signals(signals_filter)
     except (RequestsConnectionError, TimeoutError, HTTPError, RequestException) as e:
         raise HTTPException(
             status_code=500,
@@ -263,29 +261,26 @@ async def get_momentum_signals_for_symbol(
     }
 
 
-@router.get("/signals", response_model=dict[str, Any])
+@router.get("/signals", response_model=dict[str, object])
 async def get_momentum_signals(
-    momentum_types: Annotated[
-        list[MomentumType] | None, Query(None, description="Filter by momentum types")
-    ],
-    timeframes: Annotated[list[Timeframe] | None, Query(None, description="Filter by timeframes")],
-    min_strength: Annotated[
-        float, Query(50.0, ge=0, le=100, description="Minimum signal strength")
-    ],
-    min_confidence: Annotated[
-        float, Query(60.0, ge=0, le=100, description="Minimum signal confidence")
-    ],
-    active_only: Annotated[bool, Query(True, description="Only active signals")],
-    max_age_hours: Annotated[int, Query(24, ge=1, description="Maximum signal age in hours")],
-    limit: Annotated[
-        int, Query(50, ge=1, le=200, description="Maximum number of signals to return")
-    ],
-    service: Annotated[MomentumAnalysisService, Depends(get_momentum_analysis_service)],
+    service: MomentumAnalysisService = Depends(get_momentum_analysis_service),
+    momentum_types: list[MomentumType] | None = Query(
+        default=None, description="Filter by momentum types"
+    ),
+    timeframes: list[Timeframe] | None = Query(default=None, description="Filter by timeframes"),
+    min_strength: float = Query(default=50.0, ge=0, le=100, description="Minimum signal strength"),
+    min_confidence: float = Query(
+        default=60.0, ge=0, le=100, description="Minimum signal confidence"
+    ),
+    active_only: bool = Query(default=True, description="Only active signals"),
+    max_age_hours: int = Query(default=24, ge=1, description="Maximum signal age in hours"),
+    limit: int = Query(default=50, ge=1, le=200, description="Maximum number of signals to return"),
 ):
     """Get momentum signals with filtering options."""
     try:
         # Create filter criteria
         filter_criteria = MomentumFilter(
+            symbols=None,
             momentum_types=momentum_types,
             timeframes=timeframes,
             min_strength=min_strength,
@@ -346,10 +341,10 @@ async def get_momentum_signals(
         raise HTTPException(status_code=500, detail=f"Error getting momentum signals: {e!s}") from e
 
 
-@router.get("/signals/top", response_model=dict[str, Any])
+@router.get("/signals/top", response_model=dict[str, object])
 async def get_top_momentum_signals(
-    limit: Annotated[int, Query(10, ge=1, le=50, description="Number of top signals to return")],
-    service: Annotated[MomentumAnalysisService, Depends(get_momentum_analysis_service)],
+    service: MomentumAnalysisService = Depends(get_momentum_analysis_service),
+    limit: int = Query(default=10, ge=1, le=50, description="Number of top signals to return"),
 ):
     """Get top momentum signals by momentum score."""
     try:
@@ -369,9 +364,9 @@ async def get_top_momentum_signals(
         ) from e
 
 
-@router.post("/strategies", response_model=dict[str, Any])
+@router.post("/strategies", response_model=dict[str, object])
 async def create_momentum_strategy(
-    strategy_data: dict[str, Any],
+    strategy_data: dict[str, object],
     service: Annotated[MomentumAnalysisService, Depends(get_momentum_analysis_service)],
 ):
     """Create a new momentum strategy."""
@@ -391,13 +386,13 @@ async def create_momentum_strategy(
                 raise HTTPException(status_code=422, detail=f"Missing required field: {field}")
 
         # Convert momentum_type string to enum
-        momentum_type_str = strategy_data.get("momentum_type", "price_momentum")
+        momentum_type_str = str(strategy_data.get("momentum_type", "price_momentum"))
 
         # Handle both "momentum_type" and "momentum_types" formats
         if "momentum_types" in strategy_data and "momentum_type" not in strategy_data:
             momentum_types_list = strategy_data["momentum_types"]
             if isinstance(momentum_types_list, list) and len(momentum_types_list) > 0:
-                momentum_type_str = momentum_types_list[0]
+                momentum_type_str = str(momentum_types_list[0])
 
         momentum_type_mapping = {
             "price": MomentumType.PRICE_MOMENTUM,
@@ -414,7 +409,7 @@ async def create_momentum_strategy(
             )
 
         # Convert timeframe string to enum
-        timeframe_str = strategy_data.get("timeframe", "daily")
+        timeframe_str = str(strategy_data.get("timeframe", "daily"))
         timeframe_mapping = {
             "daily": Timeframe.DAILY,
             "1d": Timeframe.DAILY,
@@ -430,23 +425,23 @@ async def create_momentum_strategy(
 
         # Create strategy object
         strategy = MomentumStrategy(
-            name=strategy_data["name"],
-            description=strategy_data["description"],
+            name=str(strategy_data["name"]),
+            description=str(strategy_data["description"]),
             momentum_type=momentum_type,
             timeframe=timeframe,
-            min_strength=strategy_data.get("min_strength", 0.5),
-            min_confidence=strategy_data.get("min_confidence", 0.7),
-            signal_duration=strategy_data.get("signal_duration", 24),
-            rsi_oversold=strategy_data.get("rsi_oversold", 30),
-            rsi_overbought=strategy_data.get("rsi_overbought", 70),
-            ema_short_period=strategy_data.get("ema_short_period", 9),
-            ema_long_period=strategy_data.get("ema_long_period", 21),
-            min_volume_ratio=strategy_data.get("min_volume_ratio", 1.2),
-            volume_spike_threshold=strategy_data.get("volume_spike_threshold", 2.0),
-            max_position_size=strategy_data.get("max_position_size", 10),
-            stop_loss_pct=strategy_data.get("stop_loss_pct", 0.05),
-            take_profit_pct=strategy_data.get("take_profit_pct", 0.10),
-            is_active=strategy_data.get("is_active", True),
+            min_strength=float(str(strategy_data.get("min_strength", 0.5))),
+            min_confidence=float(str(strategy_data.get("min_confidence", 0.7))),
+            signal_duration=int(str(strategy_data.get("signal_duration", 24))),
+            rsi_oversold=float(str(strategy_data.get("rsi_oversold", 30))),
+            rsi_overbought=float(str(strategy_data.get("rsi_overbought", 70))),
+            ema_short_period=int(str(strategy_data.get("ema_short_period", 9))),
+            ema_long_period=int(str(strategy_data.get("ema_long_period", 21))),
+            min_volume_ratio=float(str(strategy_data.get("min_volume_ratio", 1.2))),
+            volume_spike_threshold=float(str(strategy_data.get("volume_spike_threshold", 2.0))),
+            max_position_size=float(str(strategy_data.get("max_position_size", 10))),
+            stop_loss_pct=float(str(strategy_data.get("stop_loss_pct", 0.05))),
+            take_profit_pct=float(str(strategy_data.get("take_profit_pct", 0.10))),
+            is_active=bool(strategy_data.get("is_active", True)),
         )
 
         # Create strategy via service
@@ -484,7 +479,7 @@ async def create_momentum_strategy(
         ) from e
 
 
-@router.get("/strategies/{strategy_name}", response_model=dict[str, Any])
+@router.get("/strategies/{strategy_name}", response_model=dict[str, object])
 async def get_momentum_strategy(
     strategy_name: str,
     service: Annotated[MomentumAnalysisService, Depends(get_momentum_analysis_service)],
@@ -528,10 +523,10 @@ async def get_momentum_strategy(
         ) from e
 
 
-@router.put("/strategies/{strategy_name}", response_model=dict[str, Any])
+@router.put("/strategies/{strategy_name}", response_model=dict[str, object])
 async def update_momentum_strategy(
     strategy_name: str,
-    strategy_data: dict[str, Any],
+    strategy_data: dict[str, object],
     service: Annotated[MomentumAnalysisService, Depends(get_momentum_analysis_service)],
 ):
     """Update a momentum strategy."""
@@ -542,7 +537,7 @@ async def update_momentum_strategy(
             raise HTTPException(status_code=404, detail=f"Strategy {strategy_name} not found")
 
         # Update fields if provided
-        updated_fields = {}
+        updated_fields: dict[str, object] = {}
         for field in [
             "description",
             "min_strength",
@@ -564,6 +559,11 @@ async def update_momentum_strategy(
 
         # Update strategy via service
         updated_strategy = await service.update_strategy(strategy_name, updated_fields)
+
+        if not updated_strategy:
+            raise HTTPException(
+                status_code=500, detail=f"Failed to update strategy {strategy_name}"
+            )
 
         return {
             "success": True,
@@ -597,7 +597,7 @@ async def update_momentum_strategy(
         ) from e
 
 
-@router.delete("/strategies/{strategy_name}", response_model=dict[str, Any])
+@router.delete("/strategies/{strategy_name}", response_model=dict[str, object])
 async def delete_momentum_strategy(
     strategy_name: str,
     service: Annotated[MomentumAnalysisService, Depends(get_momentum_analysis_service)],
@@ -629,13 +629,13 @@ async def delete_momentum_strategy(
         ) from e
 
 
-@router.get("/strategies", response_model=dict[str, Any])
+@router.get("/strategies", response_model=dict[str, object])
 async def get_momentum_strategies(
     service: Annotated[MomentumAnalysisService, Depends(get_momentum_analysis_service)],
 ):
     """Get available momentum strategies."""
     try:
-        strategies = []
+        strategies: list[dict[str, object]] = []
 
         for _name, strategy in service.strategies.items():
             strategies.append(
@@ -675,7 +675,7 @@ async def get_momentum_strategies(
         ) from e
 
 
-@router.get("/strategies/{strategy_name}/signals", response_model=dict[str, Any])
+@router.get("/strategies/{strategy_name}/signals", response_model=dict[str, object])
 async def get_strategy_signals(
     strategy_name: str,
     service: Annotated[MomentumAnalysisService, Depends(get_momentum_analysis_service)],
@@ -726,20 +726,20 @@ async def get_strategy_signals(
         ) from e
 
 
-@router.post("/analyze/batch", response_model=dict[str, Any])
+@router.post("/analyze/batch", response_model=dict[str, object])
 async def analyze_multiple_assets(
     symbols: list[str],
-    timeframe: Annotated[Timeframe, Query(Timeframe.DAILY, description="Analysis timeframe")],
-    background_tasks: Annotated[BackgroundTasks, Depends()],
-    service: Annotated[MomentumAnalysisService, Depends(get_momentum_analysis_service)],
+    background_tasks: BackgroundTasks,
+    service: MomentumAnalysisService = Depends(get_momentum_analysis_service),
+    timeframe: Timeframe = Query(default=Timeframe.DAILY, description="Analysis timeframe"),
 ):
     """Analyze momentum for multiple assets."""
     try:
         if len(symbols) > 20:
             raise HTTPException(status_code=400, detail="Maximum 20 symbols allowed per batch")
 
-        analyses = []
-        errors = []
+        analyses: list[dict[str, object]] = []
+        errors: list[dict[str, object]] = []
 
         for symbol in symbols:
             try:
@@ -774,11 +774,11 @@ async def analyze_multiple_assets(
         ) from e
 
 
-@router.get("/indicators/{symbol}", response_model=dict[str, Any])
+@router.get("/indicators/{symbol}", response_model=dict[str, object])
 async def get_technical_indicators(
     symbol: str,
-    timeframe: Annotated[Timeframe, Query(Timeframe.DAILY, description="Indicator timeframe")],
-    service: Annotated[MomentumAnalysisService, Depends(get_momentum_analysis_service)],
+    service: MomentumAnalysisService = Depends(get_momentum_analysis_service),
+    timeframe: Timeframe = Query(default=Timeframe.DAILY, description="Indicator timeframe"),
 ):
     """Get technical indicators for a specific asset."""
     try:
@@ -820,7 +820,7 @@ async def get_technical_indicators(
     }
 
 
-@router.get("/health", response_model=dict[str, Any])
+@router.get("/health", response_model=dict[str, object])
 async def momentum_health_check():
     """Health check endpoint for momentum service."""
     try:
@@ -835,7 +835,7 @@ async def momentum_health_check():
         raise HTTPException(status_code=500, detail=f"Momentum health check failed: {e!s}") from e
 
 
-@router.get("/stats", response_model=dict[str, Any])
+@router.get("/stats", response_model=dict[str, object])
 async def get_momentum_stats(
     service: Annotated[MomentumAnalysisService, Depends(get_momentum_analysis_service)],
 ):
@@ -896,7 +896,7 @@ async def get_momentum_stats(
         raise HTTPException(status_code=500, detail=f"Error getting momentum stats: {e!s}") from e
 
 
-@router.get("/analyses", response_model=dict[str, Any])
+@router.get("/analyses", response_model=dict[str, object])
 async def get_momentum_analyses(
     service: Annotated[MomentumAnalysisService, Depends(get_momentum_analysis_service)],
 ):
@@ -904,7 +904,7 @@ async def get_momentum_analyses(
     try:
         analyses = await service.get_analyses()
 
-        analyses_data = []
+        analyses_data: list[dict[str, object]] = []
         for analysis in analyses:
             analyses_data.append(
                 {
@@ -963,7 +963,7 @@ async def get_momentum_analyses(
         ) from e
 
 
-@router.get("/analyses/{analysis_id}", response_model=dict[str, Any])
+@router.get("/analyses/{analysis_id}", response_model=dict[str, object])
 async def get_momentum_analysis(
     analysis_id: str,
     service: Annotated[MomentumAnalysisService, Depends(get_momentum_analysis_service)],
@@ -1027,7 +1027,7 @@ async def get_momentum_analysis(
         ) from e
 
 
-@router.delete("/analyses/{analysis_id}", response_model=dict[str, Any])
+@router.delete("/analyses/{analysis_id}", response_model=dict[str, object])
 async def delete_momentum_analysis(
     analysis_id: str,
     service: Annotated[MomentumAnalysisService, Depends(get_momentum_analysis_service)],

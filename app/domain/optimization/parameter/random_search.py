@@ -7,11 +7,13 @@ Implements random parameter sampling from parameter space with:
 - More efficient than grid for high dimensions
 """
 
+from __future__ import annotations
+
 import logging
 import random
 from datetime import datetime
 from math import exp, log
-from typing import Any, Callable
+from typing import Any, Callable, Union
 
 import numpy as np
 from tqdm import tqdm
@@ -220,7 +222,7 @@ class RandomSearchOptimizer(BaseOptimizer):
         # If no valid sample found, return without constraint checking
         return {p.name: self._sample_parameter(p) for p in param_grid.parameters}
 
-    def _sample_parameter(self, param: ParameterRange) -> Any:
+    def _sample_parameter(self, param: ParameterRange) -> Union[int, float, str]:
         """
         Sample a single parameter value.
 
@@ -244,13 +246,13 @@ class RandomSearchOptimizer(BaseOptimizer):
 
         raise ValueError(f"Unknown parameter type: {param.parameter_type}")
 
-    def _sample_categorical(self, param: ParameterRange) -> Any:
+    def _sample_categorical(self, param: ParameterRange) -> object:
         """Sample from categorical values."""
         if param.values is None:
             raise ValueError(f"Categorical parameter '{param.name}' has no values defined")
         return random.choice(param.values)
 
-    def _sample_discrete(self, param: ParameterRange) -> Any:
+    def _sample_discrete(self, param: ParameterRange) -> object:
         """Sample from discrete values."""
         if param.values is None:
             raise ValueError(f"Discrete parameter '{param.name}' has no values defined")

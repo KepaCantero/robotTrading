@@ -22,6 +22,7 @@ from datetime import date
 from decimal import Decimal
 
 from app.domain.strategies.base import BaseStrategy
+from app.domain.strategies.config.fx_carry_config import FXCarryTradeStrategyConfig
 from app.domain.strategies.fx_carry_trade.carry_calculator import (
     CarryCalculator,
     CarryTradeOpportunity,
@@ -36,7 +37,6 @@ from app.domain.strategies.fx_carry_trade.models import (
     FXCarryTradeConfig,
     FXPair,
 )
-from app.shared.config.centralized_config import get_config
 
 logger = logging.getLogger(__name__)
 
@@ -116,8 +116,7 @@ class FXCarryTradeStrategy(BaseStrategy):
             ValueError: If config is invalid
         """
         # Load modular strategy config for defaults
-        trading_config = get_config()
-        _cfg = trading_config.trading_thresholds.fx_carry  # Modular config
+        _cfg = FXCarryTradeStrategyConfig()
 
         # Handle dict config for BaseStrategy compatibility
         if isinstance(config, dict):
@@ -126,9 +125,9 @@ class FXCarryTradeStrategy(BaseStrategy):
                 min_carry_threshold=Decimal(
                     str(config.get("min_carry_threshold", _cfg.min_carry_threshold))
                 ),
-                max_positions=config.get("max_positions", _cfg.max_positions_default),
+                max_positions=int(config.get("max_positions", _cfg.max_positions_default)),
                 position_size=Decimal(str(config.get("position_size", _cfg.position_size_default))),
-                forward_months=config.get("forward_months", 3),
+                forward_months=int(str(config.get("forward_months", 3))),
                 stop_loss=Decimal(str(config.get("stop_loss", _cfg.stop_loss_default))),
                 take_profit=Decimal(str(config.get("take_profit", _cfg.take_profit_default))),
                 max_leverage=Decimal(str(config.get("max_leverage", _cfg.max_leverage))),
@@ -155,7 +154,9 @@ class FXCarryTradeStrategy(BaseStrategy):
             )
 
         self.config = strategy_config
-        self._cfg = _cfg  # Store modular config reference for use in methods
+        self._cfg: FXCarryTradeStrategyConfig = (
+            _cfg  # Store modular config reference for use in methods
+        )
         self.calculator = calculator or CarryCalculator(
             signal_threshold=strategy_config.min_carry_threshold,
         )
@@ -285,17 +286,17 @@ class FXCarryTradeStrategy(BaseStrategy):
         """
         # Base confidence from signal strength - use config multiplier
         signal_strength = abs(float(signal.signal))
-        base_confidence = min(
+        base_confidence: float = min(
             signal_strength * self._cfg.base_confidence_multiplier, self._cfg.carry_boost_max
         )
 
         # Boost for positive carry (positive expected return) - use config
         if signal.carry > 0:
-            carry_boost = min(
+            carry_boost: float = min(
                 float(signal.carry) * self._cfg.carry_boost_multiplier, self._cfg.carry_boost_max
             )
         else:
-            carry_boost = 0
+            carry_boost = 0.0
 
         return base_confidence + carry_boost
 
@@ -387,7 +388,7 @@ class FXCarryTradeStrategy(BaseStrategy):
             raise ValueError(f"Spot rate must be positive, got {signal.spot_rate}")
 
         # Base position using configured fraction
-        position_value = capital * self.config.position_size
+        position_value = Decimal(str(capital * self.config.position_size))
 
         # Volatility adjustment (higher vol = smaller position) - use config values
         # Normalize vol: configured baseline is baseline giving 1.0x adjustment
@@ -403,14 +404,14 @@ class FXCarryTradeStrategy(BaseStrategy):
         position_value = position_value * vol_adjustment
 
         # Apply leverage cap
-        max_position_value = capital * self.config.max_leverage
+        max_position_value = Decimal(str(capital * self.config.max_leverage))
         if position_value > max_position_value:
             position_value = max_position_value
 
         # Convert to currency units
         position_size = position_value / signal.spot_rate
 
-        return position_size.quantize(Decimal("0.01"))
+        return Decimal(str(position_size.quantize(Decimal("0.01"))))
 
     def _calculate_signal_volatility(self, signal: FXCarrySignal) -> Decimal:
         """
@@ -433,7 +434,7 @@ class FXCarryTradeStrategy(BaseStrategy):
         """
         # Use absolute forward premium as volatility proxy
         # Forward premium reflects market's expected price movement
-        base_volatility = abs(signal.forward_premium)
+        base_volatility = abs(Decimal(str(signal.forward_premium)))
 
         # Add minimum volatility floor - use config value
         min_volatility = Decimal(str(self._cfg.min_volatility))
@@ -641,7 +642,12 @@ class FXCarryTradeStrategy(BaseStrategy):
             "take_profit",
         ]
 
-    def get_portfolio_summary(self) -> dict[str, str | int | float | bool | None]:
+    def get_portfolio_summary(
+        self,
+    ) -> dict[
+        str,
+        str | int | float | bool | None | dict[str, str | float],
+    ]:
         """
         Get summary of current portfolio state.
 

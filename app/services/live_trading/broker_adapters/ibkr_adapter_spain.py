@@ -13,6 +13,8 @@ Protocol Compliance:
 - get_account() -> dict
 """
 
+from __future__ import annotations
+
 import asyncio
 import logging
 from datetime import datetime

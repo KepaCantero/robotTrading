@@ -4,7 +4,7 @@ Tests for environment configuration.
 
 from unittest.mock import patch
 
-from app.core.environment_config import APIConfig, CentralizedConfig as EnvConfig
+from app.shared.config.base.environment_config import APIConfig, CentralizedConfig as EnvConfig
 
 
 class TestAPIConfig:

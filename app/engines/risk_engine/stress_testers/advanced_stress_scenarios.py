@@ -11,6 +11,8 @@ Implements specialized stress testing scenarios for:
 Reference: Hull, Risk Management and Financial Institutions, Chapter 20
 """
 
+from __future__ import annotations
+
 import logging
 from datetime import datetime
 from typing import Any, Optional

@@ -11,6 +11,8 @@ Economics principle: If passive return (RF rate) > active strategy return,
 then the optimal action is to HOLD CASH, not trade.
 """
 
+from __future__ import annotations
+
 import logging
 from decimal import Decimal
 from typing import Optional

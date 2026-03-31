@@ -4,6 +4,8 @@ Alert Grouper - Groups similar alerts to reduce noise.
 Part of Alert Fatigue Prevention (SRE Rule 20.11).
 """
 
+from __future__ import annotations
+
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum

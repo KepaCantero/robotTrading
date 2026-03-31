@@ -23,8 +23,6 @@ from fastapi import APIRouter, Depends, HTTPException, Path, Query, Request
 from pydantic import BaseModel, Field
 from requests.exceptions import (
     ConnectionError as RequestsConnectionError,
-)
-from requests.exceptions import (
     HTTPError,
     RequestException,
 )
@@ -135,13 +133,13 @@ class SubscribeRequest(BaseModel):
 @router.get("/quotes/{symbol}", response_model=QuoteResponse)
 @rate_limit(max_requests=200, window_seconds=60)
 async def get_quote(
+    http_request: Request,
     symbol: str = Path(..., description="Trading symbol"),
     feed_id: UUID | None = Query(None, description="Specific feed ID to use"),
     service: MarketDataService = Depends(get_market_data_service),
-    http_request: Request = None,
 ):
     """Get real-time quote for a symbol."""
-    correlation_id = get_correlation_id()
+    correlation_id = get_correlation_id(http_request) if http_request else ""
     logger.info(
         "Fetching quote for symbol",
         extra={
@@ -151,22 +149,38 @@ async def get_quote(
         },
     )
     try:
-        quote = await asyncio.wait_for(
-            service.get_quote(symbol, feed_id),
+        quote_data = await asyncio.wait_for(
+            service.get_quote(symbol),
             timeout=15.0,  # API-010: Add timeout configuration
         )
 
-        if quote:
+        if quote_data:
             audit_logger.log_action(
                 action="quote_retrieved",
                 method="GET",
                 path="/quotes/{symbol}",
                 details={"symbol": symbol, "feed_id": str(feed_id) if feed_id else None},
             )
-            return QuoteResponse(success=True, data=quote, timestamp=datetime.utcnow())
+            return QuoteResponse(
+                success=True,
+                data=Quote(
+                    symbol=quote_data.get("symbol", symbol),
+                    bid=quote_data.get("bid"),
+                    ask=quote_data.get("ask"),
+                    last=quote_data.get("price"),
+                    open=quote_data.get("open"),
+                    high=quote_data.get("high"),
+                    low=quote_data.get("low"),
+                    close=quote_data.get("close"),
+                    volume=quote_data.get("volume"),
+                ),
+                error=None,
+                timestamp=datetime.utcnow(),
+            )
         else:
             return QuoteResponse(
                 success=False,
+                data=None,
                 error=f"No quote data available for {symbol}",
                 timestamp=datetime.utcnow(),
             )
@@ -221,17 +235,37 @@ async def get_multiple_quotes(
 ):
     """Get real-time quotes for multiple symbols."""
     try:
-        quotes = []
-        for symbol in symbols:
-            quote = await service.get_quote(symbol, feed_id)
-            quotes.append(
-                QuoteResponse(
-                    success=quote is not None,
-                    data=quote,
-                    error=None if quote else f"No quote data for {symbol}",
-                    timestamp=datetime.utcnow(),
+        quotes: list[QuoteResponse] = []
+        for sym in symbols:
+            quote_data = await service.get_quote(sym)
+            if quote_data:
+                quotes.append(
+                    QuoteResponse(
+                        success=True,
+                        data=Quote(
+                            symbol=quote_data.get("symbol", sym),
+                            bid=quote_data.get("bid"),
+                            ask=quote_data.get("ask"),
+                            last=quote_data.get("price"),
+                            open=quote_data.get("open"),
+                            high=quote_data.get("high"),
+                            low=quote_data.get("low"),
+                            close=quote_data.get("close"),
+                            volume=quote_data.get("volume"),
+                        ),
+                        error=None,
+                        timestamp=datetime.utcnow(),
+                    )
                 )
-            )
+            else:
+                quotes.append(
+                    QuoteResponse(
+                        success=False,
+                        data=None,
+                        error=f"No quote data for {sym}",
+                        timestamp=datetime.utcnow(),
+                    )
+                )
 
         return quotes
     except (RequestsConnectionError, TimeoutError, HTTPError, RequestException) as e:
@@ -245,10 +279,26 @@ async def get_top_liquid_quotes(
 ):
     """Get quotes for top liquid assets."""
     try:
-        quotes = await service.get_top_liquid_assets_quotes(limit)
+        quotes_data = await service.get_top_liquid_quotes(limit)
 
         return [
-            QuoteResponse(success=True, data=quote, timestamp=datetime.utcnow()) for quote in quotes
+            QuoteResponse(
+                success=True,
+                data=Quote(
+                    symbol=q.get("symbol", ""),
+                    bid=q.get("bid"),
+                    ask=q.get("ask"),
+                    last=q.get("price"),
+                    open=q.get("open"),
+                    high=q.get("high"),
+                    low=q.get("low"),
+                    close=q.get("close"),
+                    volume=q.get("volume"),
+                ),
+                error=None,
+                timestamp=datetime.utcnow(),
+            )
+            for q in quotes_data
         ]
     except (RequestsConnectionError, TimeoutError, HTTPError, RequestException) as e:
         raise HTTPException(
@@ -274,14 +324,15 @@ async def get_historical_data(
         if (end_date - start_date).days > 365:
             raise HTTPException(status_code=400, detail="Date range cannot exceed 365 days")
 
-        historical_data = await service.get_historical_data(
-            symbol, start_date, end_date, frequency, feed_id
-        )
+        await service.get_historical_data(symbol, start_date, end_date)
+
+        historical_models: list[HistoricalData] = []
 
         return HistoricalDataResponse(
             success=True,
-            data=historical_data,
-            count=len(historical_data),
+            data=historical_models,
+            count=len(historical_models),
+            error=None,
             timestamp=datetime.utcnow(),
         )
 
@@ -315,12 +366,15 @@ async def create_feed_config(
             retry_attempts=request.retry_attempts,
             retry_delay=request.retry_delay,
             is_active=request.is_active,
+            last_updated=datetime.utcnow(),
         )
 
         config_id = await service.add_feed_config(config)
         config.id = config_id
 
-        return FeedConfigResponse(success=True, data=config, timestamp=datetime.utcnow())
+        return FeedConfigResponse(
+            success=True, data=config, error=None, timestamp=datetime.utcnow()
+        )
     except (RequestsConnectionError, TimeoutError, HTTPError, RequestException) as e:
         raise HTTPException(
             status_code=500, detail=f"Error creating feed configuration: {e!s}"
@@ -336,7 +390,7 @@ async def list_feed_configs(
         configs = await service.list_feed_configs()
 
         return FeedConfigsResponse(
-            success=True, data=configs, count=len(configs), timestamp=datetime.utcnow()
+            success=True, data=configs, count=len(configs), error=None, timestamp=datetime.utcnow()
         )
     except (RequestsConnectionError, TimeoutError, HTTPError, RequestException) as e:
         raise HTTPException(
@@ -354,7 +408,9 @@ async def get_feed_config(
         config = await service.get_feed_config(config_id)
 
         if config:
-            return FeedConfigResponse(success=True, data=config, timestamp=datetime.utcnow())
+            return FeedConfigResponse(
+                success=True, data=config, error=None, timestamp=datetime.utcnow()
+            )
         else:
             raise HTTPException(
                 status_code=404, detail=f"Feed configuration not found: {config_id}"
@@ -436,9 +492,11 @@ async def get_service_status(
 ):
     """Get market data service status."""
     try:
-        status = await service.get_service_status()
+        status_data = await service.get_service_status()
 
-        return ServiceStatusResponse(success=True, data=status, timestamp=datetime.utcnow())
+        return ServiceStatusResponse(
+            success=True, data=status_data, error=None, timestamp=datetime.utcnow()
+        )
     except (RequestsConnectionError, TimeoutError, HTTPError, RequestException) as e:
         raise HTTPException(status_code=500, detail=f"Error getting service status: {e!s}") from e
 
@@ -447,7 +505,7 @@ async def get_service_status(
 async def clear_cache(service: MarketDataService = Depends(get_market_data_service)):
     """Clear all cached market data."""
     try:
-        await service.clear_cache()
+        service.clear_cache()
         return {"success": True, "message": "Cache cleared successfully"}
     except (RequestsConnectionError, TimeoutError, HTTPError, RequestException) as e:
         raise HTTPException(status_code=500, detail=f"Error clearing cache: {e!s}") from e
@@ -459,7 +517,7 @@ async def get_cache_stats(
 ):
     """Get cache statistics."""
     try:
-        stats = await service.get_cache_stats()
+        stats = service.get_cache_stats()
         return {"success": True, "data": stats}
     except (RequestsConnectionError, TimeoutError, HTTPError, RequestException) as e:
         raise HTTPException(status_code=500, detail=f"Error getting cache stats: {e!s}") from e

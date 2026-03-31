@@ -4,6 +4,8 @@ T11.1: ConfigurationPersistence - Models for configuration storage and retrieval
 Persists strategy configurations to in-memory store with optional persistence.
 """
 
+from __future__ import annotations
+
 import logging
 from datetime import datetime
 from decimal import Decimal

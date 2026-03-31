@@ -10,6 +10,8 @@ Responsibilities:
 - Metric aggregation and formatting
 """
 
+from __future__ import annotations
+
 import logging
 from datetime import datetime
 from decimal import Decimal

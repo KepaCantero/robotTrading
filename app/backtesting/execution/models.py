@@ -20,7 +20,7 @@ except ImportError:
     PYDANTIC_AVAILABLE = False
 
     # Create pydantic-like API using dataclasses
-    class Field:
+    class _FallbackField:
         """Fallback Field descriptor for dataclasses."""
 
         def __init__(self, default=None, default_factory=None, **kwargs):
@@ -28,12 +28,14 @@ except ImportError:
             self.default_factory = default_factory
             self.kwargs = kwargs
 
-    class BaseModel:
+    class _FallbackBaseModel:
         """Fallback base class using dataclasses."""
+
+        __dataclass_fields__: dict[str, object]
 
         def model_dump(self):
             """Convert to dictionary."""
-            result = {}
+            result: dict[str, object] = {}
             for key in self.__dataclass_fields__:
                 value = getattr(self, key)
                 if isinstance(value, Decimal):
@@ -48,6 +50,10 @@ except ImportError:
 
         def __init_subclass__(cls, **kwargs):
             dataclass(cls)
+
+    # Assign to names expected by module-level code
+    Field = _FallbackField
+    BaseModel = _FallbackBaseModel
 
     def field_validator(*args):
         """Fallback field validator decorator."""

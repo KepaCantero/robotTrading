@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 """Input Profile Router - Maps InputProfile to strategies and configurations.
 
 This module implements Brecha #1 from AUDIT_PLAN_COMPLETO.md section 4.1:

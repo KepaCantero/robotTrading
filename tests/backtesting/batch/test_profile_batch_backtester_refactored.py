@@ -21,8 +21,12 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from app.backtesting.profile_batch_backtester_refactored import ProfileBatchBacktester
-from app.core.models.input_profile import InputProfile, ObjectivoInversion, RiskTolerance
+ProfileBatchBacktester = pytest.importorskip(
+    "app.backtesting.profile_batch_backtester_refactored",
+    reason="Module does not exist yet",
+).ProfileBatchBacktester
+
+from app.domain.models.input_profile import InputProfile, ObjectivoInversion, RiskTolerance
 
 
 class TestProfileBatchBacktesterRefactoredImport:

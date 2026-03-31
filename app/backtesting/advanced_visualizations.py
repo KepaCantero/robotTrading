@@ -11,6 +11,8 @@ Provides:
 - Seasonality heatmaps
 """
 
+from __future__ import annotations
+
 import logging
 from pathlib import Path
 from typing import TYPE_CHECKING, Optional
@@ -92,7 +94,7 @@ class AdvancedVisualizer:
         threshold: float = 0.3,
         figsize: tuple[int, int] = (14, 10),
         output_file: Optional[str] = None,
-    ) -> "Optional[Figure]":
+    ) -> Optional[Figure]:
         """
         Plot correlation network using networkx.
 
@@ -344,7 +346,7 @@ class AdvancedVisualizer:
         equity_curve: pd.Series,
         figsize: tuple[int, int] = (14, 6),
         output_file: Optional[str] = None,
-    ) -> "Optional[Figure]":
+    ) -> Optional[Figure]:
         """
         Plot underwater (drawdown) chart.
 
@@ -414,7 +416,7 @@ class AdvancedVisualizer:
         window: Optional[int] = None,
         figsize: tuple[int, int] = (14, 8),
         output_file: Optional[str] = None,
-    ) -> "Optional[Figure]":
+    ) -> Optional[Figure]:
         """
         Plot rolling metrics (returns, sharpe, volatility).
 
@@ -510,7 +512,7 @@ class AdvancedVisualizer:
         regime_names: Optional[dict[int, str]] = None,
         figsize: tuple[int, int] = (12, 6),
         output_file: Optional[str] = None,
-    ) -> "Optional[Figure]":
+    ) -> Optional[Figure]:
         """
         Plot performance by regime.
 
@@ -627,7 +629,7 @@ class AdvancedVisualizer:
         returns: pd.Series,
         figsize: tuple[int, int] = (14, 8),
         output_file: Optional[str] = None,
-    ) -> "Optional[Figure]":
+    ) -> Optional[Figure]:
         """
         Plot seasonality heatmap (monthly returns by year).
 

@@ -6,6 +6,8 @@ must follow. It provides a consistent interface for tax calculations across
 different jurisdictions.
 """
 
+from __future__ import annotations
+
 import logging
 from abc import ABC, abstractmethod
 from decimal import Decimal

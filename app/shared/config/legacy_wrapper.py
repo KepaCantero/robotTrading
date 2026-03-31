@@ -7,6 +7,8 @@ Maintains existing API while delegating to new modular components.
 TASK-24: SRP Compliance - Legacy wrapper for backward compatibility
 """
 
+from __future__ import annotations
+
 import logging
 from typing import Optional
 
@@ -31,10 +33,10 @@ class Configuration:
     """
 
     def __init__(self, config_dict: dict[str, object]):
-        self._config = config_dict if config_dict is not None else {}
+        self._config: dict[str, object] = config_dict if config_dict is not None else {}
         self._lock = None  # For thread safety
 
-    def get(self, key: str, default: Optional[object] = None) -> Optional[object]:
+    def get(self, key: str, default: object = None) -> object:
         """
         Get configuration value by key (supports dot notation).
 
@@ -51,7 +53,7 @@ class Configuration:
             2.0
         """
         keys = key.split(".")
-        value = self._config
+        value: object = self._config
 
         for k in keys:
             if isinstance(value, dict) and k in value:
@@ -76,12 +78,16 @@ class Configuration:
             'value'
         """
         keys = key.split(".")
-        config = self._config
+        config: dict[str, object] = self._config
 
         for k in keys[:-1]:
             if k not in config:
                 config[k] = {}
-            config = config[k]
+            child = config[k]
+            if not isinstance(child, dict):
+                child = {}
+                config[k] = child
+            config = child
 
         config[keys[-1]] = value
 
@@ -100,7 +106,10 @@ class Configuration:
             >>> config.get_atr_multiplier('default_stop')
             2.0
         """
-        return self.get(f"risk_management.atr_multipliers.{multiplier_name}")
+        result = self.get(f"risk_management.atr_multipliers.{multiplier_name}")
+        if isinstance(result, (int, float)):
+            return float(result)
+        return None
 
     def set_atr_multiplier(self, multiplier_name: str, value: float) -> None:
         """
@@ -129,7 +138,8 @@ class Configuration:
             >>> config = Configuration({'risk_management': {'atr_multipliers': {...}}})
             >>> risk_config = config.get_risk_config()
         """
-        return self.get("risk_management", {})
+        result = self.get("risk_management", {})
+        return result if isinstance(result, dict) else {}
 
     def get_trading_symbols(self) -> list[str]:
         """
@@ -143,7 +153,8 @@ class Configuration:
             >>> config.get_trading_symbols()
             ['AAPL', 'MSFT']
         """
-        return self.get("trading.symbols", [])
+        result = self.get("trading.symbols", [])
+        return result if isinstance(result, list) else []
 
     def get_backtest_dates(self) -> dict[str, str]:
         """
@@ -158,7 +169,9 @@ class Configuration:
             >>> dates['start_date']
             '2020-01-01'
         """
+        start = self.get("backtesting.start_date", "")
+        end = self.get("backtesting.end_date", "")
         return {
-            "start_date": self.get("backtesting.start_date", ""),
-            "end_date": self.get("backtesting.end_date", ""),
+            "start_date": str(start) if start else "",
+            "end_date": str(end) if end else "",
         }

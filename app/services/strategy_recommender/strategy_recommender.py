@@ -15,6 +15,8 @@ Uses objective-driven weighting:
 - income_generation: 50% dividend + 30% consistency + 20% Sharpe
 """
 
+from __future__ import annotations
+
 import logging
 from datetime import datetime
 from decimal import Decimal
@@ -260,7 +262,7 @@ class StrategyRecommender:
         # Normalize by sum of weights
         total_weight = sum(score.weight for score in component_scores.values())
         if total_weight > Decimal("0"):
-            return total_contribution / total_weight
+            return Decimal(str(total_contribution)) / Decimal(str(total_weight))
         return Decimal("0")
 
     def _determine_recommendation_status(
@@ -410,7 +412,7 @@ class StrategyRecommender:
                 if r.success and r.overall_score > Decimal("0")
             ]
             if scores:
-                avg_score = np.mean(scores)
+                avg_score = Decimal(str(np.mean(scores)))
 
         return {
             "total_recommendations": total,

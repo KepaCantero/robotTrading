@@ -23,7 +23,7 @@ from app.models.portfolio_analytics import (
     RiskLevel,
     RiskMetrics,
 )
-from app.services.portfolio_analytics_service import PortfolioAnalyticsService
+from app.services.portfolio_analytics._portfolio_calculations import PortfolioCalculations as PortfolioAnalyticsService
 
 
 class TestPortfolioAnalyticsModels:

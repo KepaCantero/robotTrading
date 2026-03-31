@@ -158,39 +158,31 @@ _model_cache: dict = {}
 
 def _get_models_module():
     """
-    Lazily import the models module to avoid circular dependencies.
+    Lazily import the models.py module to avoid circular dependencies.
+
+    Note: This package (models/) coexists with models.py in the parent directory.
+    We must import from models.py directly, not from this package.
 
     Returns:
         The models module with all model classes
     """
     if "models_module" not in _model_cache:
-        # Import the parent models module
-        # Using direct import with deferred loading pattern
+        import importlib.util
         import sys
         from pathlib import Path
 
-        models_file = Path(__file__).parent.parent / "models.py"
-
-        # Check if already in sys.modules
+        models_file = Path(__file__).resolve().parent.parent / "models.py"
         module_name = "app.infrastructure.persistence.database.models_direct"
+
         if module_name in sys.modules:
             _model_cache["models_module"] = sys.modules[module_name]
         else:
-            # Try direct import first (preferred)
-            try:
-                from .. import models as models_module
-
+            spec = importlib.util.spec_from_file_location(module_name, models_file)
+            if spec and spec.loader:
+                models_module = importlib.util.module_from_spec(spec)
+                sys.modules[module_name] = models_module
+                spec.loader.exec_module(models_module)
                 _model_cache["models_module"] = models_module
-            except ImportError:
-                # Fallback to importlib if needed
-                import importlib.util
-
-                spec = importlib.util.spec_from_file_location(module_name, models_file)
-                if spec and spec.loader:
-                    models_module = importlib.util.module_from_spec(spec)
-                    sys.modules[module_name] = models_module
-                    spec.loader.exec_module(models_module)
-                    _model_cache["models_module"] = models_module
 
     return _model_cache["models_module"]
 

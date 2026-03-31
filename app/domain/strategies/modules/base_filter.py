@@ -2,6 +2,8 @@
 BaseFilter - Clase abstracta base para todos los filtros modulares.
 """
 
+from __future__ import annotations
+
 import logging
 from abc import ABC, abstractmethod
 from typing import Optional

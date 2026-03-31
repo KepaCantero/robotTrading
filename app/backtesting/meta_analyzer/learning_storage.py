@@ -7,6 +7,8 @@ Permite guardar y cargar pesos de learning engines para:
 - Aprendizaje incremental
 """
 
+from __future__ import annotations
+
 import json
 import logging
 from datetime import datetime
@@ -515,7 +517,7 @@ class LearningEngineStorage:
                             return getattr(mod, name)
                         except (ImportError, AttributeError):
                             pass
-                    raise pickle.UnpicklingError(
+                    raise pickle.UnpicklingError(  # nosemgrep: python.lang.security.deserialization.pickle.avoid-pickle - RestrictedUnpickler only allows basic Python/numpy types for safe legacy migration
                         f"Forbidden class during migration: {module}.{name}. "
                         f"Only basic Python and numpy types are allowed."
                     )

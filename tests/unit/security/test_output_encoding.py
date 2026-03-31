@@ -17,7 +17,7 @@ Tests:
 
 import pytest
 
-from app.security.output_encoding import (
+from app.security.web_security.output_encoding import (
     ContentSecurityPolicy,
     encode_for_css,
     encode_for_csv,

@@ -7,9 +7,11 @@ Métodos soportados:
 - Isolation Forest
 """
 
+from __future__ import annotations
+
 import logging
 from decimal import Decimal
-from typing import Any, Optional
+from typing import Any
 
 import numpy as np
 
@@ -27,7 +29,7 @@ class OutlierDetector:
     Detecta valores anómalos que pueden indicar errores de datos.
     """
 
-    def __init__(self, config: Optional[dict[str, Any]] = None):
+    def __init__(self, config: dict[str, Any] | None = None):
         """
         Inicializar detector.
 
@@ -40,7 +42,7 @@ class OutlierDetector:
         self.zscore_threshold = config.get("zscore_threshold", 3.0)
         self.isolation_contamination = config.get("isolation_contamination", 0.1)
 
-    def detect(self, values: list[Any], method: Optional[str] = None) -> dict[str, Any]:
+    def detect(self, values: list[Any], method: str | None = None) -> dict[str, Any]:
         """
         Detectar outliers en una lista de valores.
 
@@ -166,7 +168,7 @@ class OutlierDetector:
             return self._detect_zscore(values_array, original_values)
 
     def detect_in_ohlcv(
-        self, ohlcv_data: list[dict[str, Any]], check_fields: Optional[list[str]] = None
+        self, ohlcv_data: list[dict[str, Any]], check_fields: list[str] | None = None
     ) -> dict[str, Any]:
         """
         Detectar outliers en datos OHLCV.

@@ -28,6 +28,8 @@ SOLID Principles:
 - Dependency Inversion: Depend on abstractions
 """
 
+from __future__ import annotations
+
 import logging
 from collections import deque
 from datetime import date
@@ -642,7 +644,7 @@ class MultiFactorStrategy(BaseStrategy):
     # ASYNC EXECUTION
     # ==========================================================================
 
-    async def execute(self, *args, **kwargs) -> Any:
+    async def execute(self, *args, **kwargs) -> object:
         """
         Execute the strategy (async interface from registry).
 

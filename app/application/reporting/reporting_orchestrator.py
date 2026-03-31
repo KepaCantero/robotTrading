@@ -4,6 +4,8 @@ T9.1.3: ReportingOrchestrator - Orchestrate complete report generation
 Integrates templates, metrics, and portfolio data to generate comprehensive reports.
 """
 
+from __future__ import annotations
+
 import logging
 from datetime import datetime
 from typing import Optional

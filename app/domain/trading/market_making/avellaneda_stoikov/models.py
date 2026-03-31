@@ -1,10 +1,11 @@
+from __future__ import annotations
+
 """Data models for Avellaneda-Stoikov market making.
 
 This module defines the Pydantic data models used throughout the AS model implementation.
 All models use Decimal for financial precision and include comprehensive validation.
 """
 
-from __future__ import annotations
 
 import logging
 from dataclasses import dataclass

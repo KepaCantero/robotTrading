@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 """Tax Configuration model.
 
 Optimizes tax treatment based on investor's tax residence.

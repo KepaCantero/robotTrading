@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 """Utility functions for Hurst Analysis module.
 
 This module contains helper functions used across the hurst_analysis package.
@@ -5,7 +7,6 @@ Following the Single Responsibility Principle, these utilities are focused
 on specific tasks like data conversion and preparation.
 """
 
-from __future__ import annotations
 
 import logging
 
@@ -19,15 +20,14 @@ logger = logging.getLogger(__name__)
 
 def to_numpy_array(series: pd.Series | np.ndarray | list[float]) -> np.ndarray:
     """
-        Convert input to numpy array.
+    Convert input to numpy array.
 
-    from __future__ import annotations
 
-        Args:
-            series: Input time series
+    Args:
+        series: Input time series
 
-        Returns:
-            Numpy array
+    Returns:
+        Numpy array
     """
     if isinstance(series, pd.Series):
         return series.values

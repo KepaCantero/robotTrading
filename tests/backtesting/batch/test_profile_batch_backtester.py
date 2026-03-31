@@ -18,7 +18,7 @@ from app.backtesting.services.models import (
     ProfileResult,
     ProfileResultDB,
 )
-from app.core.models.input_profile import InputProfile, ObjectivoInversion, RiskTolerance
+from app.domain.models.input_profile import InputProfile, ObjectivoInversion, RiskTolerance
 
 
 class TestProfileBatchBacktesterImport:

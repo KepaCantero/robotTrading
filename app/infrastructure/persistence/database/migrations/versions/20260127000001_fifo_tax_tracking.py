@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 """Add FIFO tax tracking for Modelo 721 (Spain tax compliance)
 
 This migration adds tables for tracking cryptocurrency and asset trades

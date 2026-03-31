@@ -7,6 +7,8 @@ momentum_analysis.py while delegating to the new SOLID-compliant module.
 DEPRECATED: Import from app.services.momentum instead.
 """
 
+from __future__ import annotations
+
 import logging
 from typing import Optional
 

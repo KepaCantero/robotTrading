@@ -28,7 +28,12 @@ import logging
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Any, TypeVar
+from typing import TYPE_CHECKING, Any, TypeVar
+
+if TYPE_CHECKING:
+    from app.domain.models.market_data import Quote
+    from app.domain.models.portfolio import Portfolio
+    from app.domain.models.signal import Signal
 
 logger = logging.getLogger(__name__)
 
@@ -63,6 +68,8 @@ class BaseStrategy(ABC):
         ```
     """
 
+    is_active: bool = False
+
     def __init__(self, config: dict[str, Any]):
         """
         Initialize strategy with configuration.
@@ -78,7 +85,7 @@ class BaseStrategy(ABC):
         self.created_at = datetime.utcnow()
 
     @abstractmethod
-    async def execute(self, *args, **kwargs) -> Any:
+    async def execute(self, *args, **kwargs) -> object:
         """
         Execute the strategy algorithm.
 
@@ -130,6 +137,55 @@ class BaseStrategy(ABC):
             "module": self.__class__.__module__,
             "required_parameters": self.get_required_parameters(),
         }
+
+    def get_parameters(self) -> dict[str, Any]:
+        """
+        Get strategy parameters.
+
+        Returns:
+            Dictionary with strategy parameters
+        """
+        return dict(self.config)
+
+    def update_parameters(self, parameters: dict[str, Any]) -> None:
+        """
+        Update strategy parameters.
+
+        Args:
+            parameters: New parameters to merge into config
+        """
+        self.config.update(parameters)
+
+    def generate_signals(self, market_data: Quote) -> list[Signal]:
+        """
+        Generate trading signals from market data.
+
+        Default implementation returns empty list.
+        Subclasses should override this method.
+
+        Args:
+            market_data: Market data to analyze
+
+        Returns:
+            List of generated signals
+        """
+        return []
+
+    def risk_check(self, signal: Signal, portfolio: Portfolio) -> bool:
+        """
+        Check if signal passes risk validation.
+
+        Default implementation always passes.
+        Subclasses should override this method.
+
+        Args:
+            signal: Signal to validate
+            portfolio: Current portfolio state
+
+        Returns:
+            True if signal passes risk checks
+        """
+        return True
 
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}(name={self.name}, version={self.version})"
@@ -196,7 +252,7 @@ class StrategyContext:
         """
         return self._strategy
 
-    async def execute_strategy(self, *args, **kwargs) -> Any:
+    async def execute_strategy(self, *args, **kwargs) -> object:
         """
         Execute the current strategy.
 
@@ -318,7 +374,84 @@ class StrategyRegistry:
         """Initialize empty registry."""
         self._strategies: dict[str, StrategyMetadata] = {}
         self._instances: dict[str, BaseStrategy] = {}
+        self._active_strategy_name: str | None = None
         logger.info("StrategyRegistry initialized")
+
+    @property
+    def active_strategy(self) -> str | None:
+        """Name of the currently active strategy."""
+        return self._active_strategy_name
+
+    def get_active_strategy(self) -> BaseStrategy | None:
+        """Get the currently active strategy instance."""
+        if self._active_strategy_name and self._active_strategy_name in self._instances:
+            return self._instances[self._active_strategy_name]
+        return None
+
+    def get_all_strategies_status(self) -> dict[str, dict[str, object]]:
+        """Get status summary for all registered strategies."""
+        result: dict[str, dict[str, object]] = {}
+        for name, meta in self._strategies.items():
+            instance = self._instances.get(name)
+            result[name] = {
+                "name": meta.name,
+                "description": meta.description,
+                "version": meta.version,
+                "category": meta.category,
+                "enabled": meta.enabled,
+                "is_active": name == self._active_strategy_name,
+                "is_loaded": instance is not None,
+            }
+        return result
+
+    def list_available_strategies(self) -> list[str]:
+        """List names of all available (registered) strategies."""
+        return [meta.name for meta in self._strategies.values() if meta.enabled]
+
+    def list_loaded_strategies(self) -> list[str]:
+        """List names of all loaded (instantiated) strategies."""
+        return list(self._instances.keys())
+
+    def load_strategy(self, name: str, config: dict[str, object]) -> BaseStrategy:
+        """Load (create) a strategy instance by name with config."""
+        instance = self.create(name, config)
+        self._instances[name] = instance
+        return instance
+
+    def set_active_strategy(self, name: str) -> None:
+        """Set the currently active strategy by name."""
+        if name and name not in self._strategies:
+            raise ValueError(f"Strategy '{name}' not found in registry")
+        self._active_strategy_name = name if name else None
+        logger.info(f"Active strategy set to: {name or 'None'}")
+
+    def unload_strategy(self, name: str) -> None:
+        """Unload (remove) a loaded strategy instance."""
+        if name not in self._instances:
+            raise ValueError(f"Strategy '{name}' is not loaded")
+        if self._active_strategy_name == name:
+            self._active_strategy_name = None
+        del self._instances[name]
+        logger.info(f"Unloaded strategy: {name}")
+
+    def get_strategy_status(self, name: str) -> dict[str, object]:
+        """Get status information for a specific strategy."""
+        if name not in self._strategies:
+            raise ValueError(f"Strategy '{name}' not found")
+        meta = self._strategies[name]
+        instance = self._instances.get(name)
+        return {
+            "name": meta.name,
+            "is_active": name == self._active_strategy_name,
+            "version": meta.version,
+            "description": meta.description,
+            "created_at": meta.registered_at.isoformat() if meta.registered_at else "",
+            "parameters": instance.get_parameters() if instance else {},
+        }
+
+    def get_strategy(self, name: str) -> BaseStrategy | None:
+        """Get a strategy instance by name."""
+        return self._instances.get(name)
 
     def register(
         self,

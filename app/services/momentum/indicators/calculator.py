@@ -9,6 +9,8 @@ SOLID Principles:
 - DIP: Implements IndicatorCalculator protocol
 """
 
+from __future__ import annotations
+
 import logging
 from decimal import Decimal
 from typing import TYPE_CHECKING, Optional
@@ -709,7 +711,7 @@ class TechnicalIndicatorCalculator:
         highs: list[float],
         lows: list[float],
         volumes: list[Decimal],
-    ) -> "TechnicalIndicators":
+    ) -> TechnicalIndicators:
         """
         Calculate all technical indicators at once.
 

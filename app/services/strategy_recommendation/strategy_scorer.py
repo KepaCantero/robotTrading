@@ -4,6 +4,8 @@ T19.1.1: StrategyScorer - Scores strategies based on performance metrics and obj
 Calculates composite scores using objective-weighted metrics.
 """
 
+from __future__ import annotations
+
 import logging
 from dataclasses import dataclass
 from decimal import Decimal

@@ -1,11 +1,12 @@
+from __future__ import annotations
+
 import logging
 from decimal import Decimal
-from typing import TYPE_CHECKING, Optional
+from typing import Optional
 
 from pydantic import BaseModel, Field
 
-if TYPE_CHECKING:
-    from app.services.portfolio_constructor import AllocationWeight, PortfolioAllocation
+from app.services.portfolio_constructor.models import AllocationWeight, PortfolioAllocation
 
 logger = logging.getLogger(__name__)
 
@@ -21,7 +22,7 @@ class RiskScalingRequest(BaseModel):
 
     profile_id: str
     input_id: str
-    base_portfolio: "PortfolioAllocation"  # From T7.1
+    base_portfolio: PortfolioAllocation  # From T7.1
     market_regime: str  # bull/sideways/bear
     volatility_level: str  # low/normal/high
     current_drawdown_pct: Decimal = Field(ge=Decimal("0"))
@@ -53,7 +54,7 @@ class RiskAdjustedPortfolio(BaseModel):
     max_acceptable_drawdown_pct: Decimal
 
     # Original allocations
-    original_allocations: list["AllocationWeight"] = Field(default_factory=list)
+    original_allocations: list[AllocationWeight] = Field(default_factory=list)
 
     # Adjusted allocations (if scaling applied)
     adjusted_allocations: Optional[list[AdjustedAllocationWeight]] = None

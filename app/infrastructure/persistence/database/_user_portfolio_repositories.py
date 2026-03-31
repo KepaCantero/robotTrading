@@ -6,7 +6,7 @@ Split from repositories.py to improve maintainability index.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, NoReturn, cast
 
 from sqlalchemy import and_
 from sqlalchemy.exc import (
@@ -24,6 +24,12 @@ from app.shared.exceptions.exceptions import raise_database_error
 if TYPE_CHECKING:
     import uuid
     from decimal import Decimal
+
+
+def _raise_db_error(message: str, operation: str, table: str) -> NoReturn:
+    """Typed wrapper to ensure mypy knows this never returns."""
+    raise_database_error(message, operation, table)
+    raise AssertionError("unreachable")  # safeguard
 
 
 class UserRepository(BaseRepository[User]):
@@ -51,9 +57,7 @@ class UserRepository(BaseRepository[User]):
                 username=username,
                 error=str(e),
             )
-            raise_database_error(
-                f"Failed to get user by username: {e!s}", "get_by_username", "users"
-            )
+            _raise_db_error(f"Failed to get user by username: {e!s}", "get_by_username", "users")
 
     def get_by_email(self, email: str) -> User | None:
         """Get user by email."""
@@ -77,12 +81,12 @@ class UserRepository(BaseRepository[User]):
                 email=email,
                 error=str(e),
             )
-            raise_database_error(f"Failed to get user by email: {e!s}", "get_by_email", "users")
+            _raise_db_error(f"Failed to get user by email: {e!s}", "get_by_email", "users")
 
     def get_active_users(self) -> list[User]:
         """Get all active users."""
         try:
-            result = self.session.query(User).filter(User.is_active).all()
+            result = cast("list[User]", self.session.query(User).filter(User.is_active).all())
             logger.debug(
                 "queried_active_users",
                 count=len(result),
@@ -99,7 +103,7 @@ class UserRepository(BaseRepository[User]):
                 "get_active_users_failed",
                 error=str(e),
             )
-            raise_database_error(f"Failed to get active users: {e!s}", "get_active_users", "users")
+            _raise_db_error(f"Failed to get active users: {e!s}", "get_active_users", "users")
 
 
 class PortfolioRepository(BaseRepository[Portfolio]):
@@ -108,7 +112,10 @@ class PortfolioRepository(BaseRepository[Portfolio]):
     def get_by_user(self, user_id: uuid.UUID) -> list[Portfolio]:
         """Get portfolios by user ID."""
         try:
-            result = self.session.query(Portfolio).filter(Portfolio.user_id == user_id).all()
+            result = cast(
+                "list[Portfolio]",
+                self.session.query(Portfolio).filter(Portfolio.user_id == user_id).all(),
+            )
             logger.debug(
                 "queried_portfolios_by_user",
                 user_id=str(user_id),
@@ -127,7 +134,7 @@ class PortfolioRepository(BaseRepository[Portfolio]):
                 user_id=str(user_id),
                 error=str(e),
             )
-            raise_database_error(
+            _raise_db_error(
                 f"Failed to get portfolios by user: {e!s}",
                 "get_by_user",
                 "portfolios",
@@ -136,10 +143,13 @@ class PortfolioRepository(BaseRepository[Portfolio]):
     def get_active_by_user(self, user_id: uuid.UUID) -> list[Portfolio]:
         """Get active portfolios by user ID."""
         try:
-            result = (
-                self.session.query(Portfolio)
-                .filter(and_(Portfolio.user_id == user_id, Portfolio.is_active))
-                .all()
+            result = cast(
+                "list[Portfolio]",
+                (
+                    self.session.query(Portfolio)
+                    .filter(and_(Portfolio.user_id == user_id, Portfolio.is_active))
+                    .all()
+                ),
             )
             logger.debug(
                 "queried_active_portfolios_by_user",
@@ -159,7 +169,7 @@ class PortfolioRepository(BaseRepository[Portfolio]):
                 user_id=str(user_id),
                 error=str(e),
             )
-            raise_database_error(
+            _raise_db_error(
                 f"Failed to get active portfolios by user: {e!s}",
                 "get_active_by_user",
                 "portfolios",
@@ -191,7 +201,7 @@ class PortfolioRepository(BaseRepository[Portfolio]):
                 portfolio_id=str(portfolio_id),
                 error=str(e),
             )
-            raise_database_error(
+            _raise_db_error(
                 f"Failed to update portfolio total value: {e!s}",
                 "update_total_value",
                 "portfolios",
@@ -223,12 +233,15 @@ class AssetRepository(BaseRepository[Asset]):
                 symbol=symbol,
                 error=str(e),
             )
-            raise_database_error(f"Failed to get asset by symbol: {e!s}", "get_by_symbol", "assets")
+            _raise_db_error(f"Failed to get asset by symbol: {e!s}", "get_by_symbol", "assets")
 
     def get_by_asset_class(self, asset_class: str) -> list[Asset]:
         """Get assets by asset class."""
         try:
-            result = self.session.query(Asset).filter(Asset.asset_class == asset_class).all()
+            result = cast(
+                "list[Asset]",
+                self.session.query(Asset).filter(Asset.asset_class == asset_class).all(),
+            )
             logger.debug(
                 "queried_assets_by_class",
                 asset_class=asset_class,
@@ -247,7 +260,7 @@ class AssetRepository(BaseRepository[Asset]):
                 asset_class=asset_class,
                 error=str(e),
             )
-            raise_database_error(
+            _raise_db_error(
                 f"Failed to get assets by class: {e!s}",
                 "get_by_asset_class",
                 "assets",
@@ -256,7 +269,7 @@ class AssetRepository(BaseRepository[Asset]):
     def get_active_assets(self) -> list[Asset]:
         """Get all active assets."""
         try:
-            result = self.session.query(Asset).filter(Asset.is_active).all()
+            result = cast("list[Asset]", self.session.query(Asset).filter(Asset.is_active).all())
             logger.debug(
                 "queried_active_assets",
                 count=len(result),
@@ -273,14 +286,15 @@ class AssetRepository(BaseRepository[Asset]):
                 "get_active_assets_failed",
                 error=str(e),
             )
-            raise_database_error(
-                f"Failed to get active assets: {e!s}", "get_active_assets", "assets"
-            )
+            _raise_db_error(f"Failed to get active assets: {e!s}", "get_active_assets", "assets")
 
     def search_by_name(self, name_pattern: str) -> list[Asset]:
         """Search assets by name pattern."""
         try:
-            result = self.session.query(Asset).filter(Asset.name.ilike(f"%{name_pattern}%")).all()
+            result = cast(
+                "list[Asset]",
+                self.session.query(Asset).filter(Asset.name.ilike(f"%{name_pattern}%")).all(),
+            )
             logger.debug(
                 "searched_assets_by_name",
                 pattern=name_pattern,
@@ -299,9 +313,7 @@ class AssetRepository(BaseRepository[Asset]):
                 pattern=name_pattern,
                 error=str(e),
             )
-            raise_database_error(
-                f"Failed to search assets by name: {e!s}", "search_by_name", "assets"
-            )
+            _raise_db_error(f"Failed to search assets by name: {e!s}", "search_by_name", "assets")
 
 
 class PositionRepository(BaseRepository[Position]):
@@ -310,8 +322,9 @@ class PositionRepository(BaseRepository[Position]):
     def get_by_portfolio(self, portfolio_id: uuid.UUID) -> list[Position]:
         """Get positions by portfolio ID."""
         try:
-            result = (
-                self.session.query(Position).filter(Position.portfolio_id == portfolio_id).all()
+            result = cast(
+                "list[Position]",
+                self.session.query(Position).filter(Position.portfolio_id == portfolio_id).all(),
             )
             logger.debug(
                 "queried_positions_by_portfolio",
@@ -331,7 +344,7 @@ class PositionRepository(BaseRepository[Position]):
                 portfolio_id=str(portfolio_id),
                 error=str(e),
             )
-            raise_database_error(
+            _raise_db_error(
                 f"Failed to get positions by portfolio: {e!s}",
                 "get_by_portfolio",
                 "positions",
@@ -372,7 +385,7 @@ class PositionRepository(BaseRepository[Position]):
                 asset_id=str(asset_id),
                 error=str(e),
             )
-            raise_database_error(
+            _raise_db_error(
                 f"Failed to get position by portfolio and asset: {e!s}",
                 "get_by_portfolio_and_asset",
                 "positions",
@@ -381,15 +394,18 @@ class PositionRepository(BaseRepository[Position]):
     def get_open_positions(self, portfolio_id: uuid.UUID) -> list[Position]:
         """Get all open positions for a portfolio."""
         try:
-            result = (
-                self.session.query(Position)
-                .filter(
-                    and_(
-                        Position.portfolio_id == portfolio_id,
-                        Position.quantity > 0,
+            result = cast(
+                "list[Position]",
+                (
+                    self.session.query(Position)
+                    .filter(
+                        and_(
+                            Position.portfolio_id == portfolio_id,
+                            Position.quantity > 0,
+                        )
                     )
-                )
-                .all()
+                    .all()
+                ),
             )
             logger.debug(
                 "queried_open_positions",
@@ -409,7 +425,7 @@ class PositionRepository(BaseRepository[Position]):
                 portfolio_id=str(portfolio_id),
                 error=str(e),
             )
-            raise_database_error(
+            _raise_db_error(
                 f"Failed to get open positions: {e!s}",
                 "get_open_positions",
                 "positions",
@@ -441,7 +457,7 @@ class PositionRepository(BaseRepository[Position]):
                 position_id=str(position_id),
                 error=str(e),
             )
-            raise_database_error(
+            _raise_db_error(
                 f"Failed to update position price: {e!s}",
                 "update_position_price",
                 "positions",

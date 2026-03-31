@@ -16,11 +16,13 @@ Author: Risk Management Team
 Version: 2.0.0 - NUMBA OPTIMIZED
 """
 
+from __future__ import annotations
+
 import logging
 from abc import ABC, abstractmethod
 from datetime import datetime, timedelta
 from decimal import Decimal
-from typing import Any, Optional
+from typing import Any, Optional, cast
 
 import numba
 import numpy as np
@@ -433,7 +435,7 @@ class DrawdownController(BaseDrawdownController):
 
         # Estado de circuit breakers
         self.circuit_breaker_active = False
-        self.circuit_breaker_reason = None
+        self.circuit_breaker_reason: Optional[str] = None
         self.circuit_breaker_timestamp: Optional[datetime] = None
 
         self.strategy_circuit_breakers: dict[str, bool] = {}
@@ -541,17 +543,17 @@ class DrawdownController(BaseDrawdownController):
             [float(entry["portfolio_value"]) for entry in self.portfolio_value_history]
         )
 
-        # Calcular máximo acumulado (peak) usando NUMBA
-        peaks = calculate_running_peak_numba(values)
+        # Calcular maximo acumulado (peak) usando NUMBA
+        peaks = cast("np.ndarray", calculate_running_peak_numba(values))
 
         # Calcular drawdowns usando NUMBA
-        drawdowns = calculate_drawdown_from_peaks_numba(values, peaks)
+        drawdowns = cast("np.ndarray", calculate_drawdown_from_peaks_numba(values, peaks))
 
         # Drawdown actual
         current_drawdown = float(drawdowns[-1]) if len(drawdowns) > 0 else 0.0
 
         # Maximum drawdown usando NUMBA
-        max_drawdown = float(calculate_max_drawdown_numba(drawdowns))
+        max_drawdown = float(cast("float", calculate_max_drawdown_numba(drawdowns)))
 
         # Duración del máximo drawdown usando NUMBA
         max_drawdown_duration = calculate_drawdown_duration_numba(drawdowns)
@@ -583,13 +585,13 @@ class DrawdownController(BaseDrawdownController):
         )
 
         # Calculate rolling max drawdown using NUMBA
-        rolling_max_drawdown = calculate_rolling_max_drawdown_numba(
-            recent_values, self.rolling_window
+        rolling_max_drawdown = cast(
+            "float", calculate_rolling_max_drawdown_numba(recent_values, self.rolling_window)
         )
 
         # Calculate rolling avg drawdown using NUMBA
-        rolling_avg_drawdown = calculate_rolling_avg_drawdown_numba(
-            recent_values, self.rolling_window
+        rolling_avg_drawdown = cast(
+            "float", calculate_rolling_avg_drawdown_numba(recent_values, self.rolling_window)
         )
 
         return {
@@ -612,8 +614,8 @@ class DrawdownController(BaseDrawdownController):
         # Convertir a numpy array
         drawdowns_array = np.array(drawdowns)
 
-        # Calcular duración usando NUMBA
-        duration_bars = calculate_drawdown_duration_numba(drawdowns_array)
+        # Calcular duracion usando NUMBA
+        duration_bars = int(cast("int", calculate_drawdown_duration_numba(drawdowns_array)))
 
         # Convertir a días (asumiendo 1 bar por día)
         return duration_bars

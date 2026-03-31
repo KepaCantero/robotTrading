@@ -4,10 +4,12 @@ YAML Configuration Loader
 Loads configurations from YAML files with validation and fallback to default values.
 """
 
+from __future__ import annotations
+
 import os
 import threading
 from pathlib import Path
-from typing import Optional, Union
+from typing import Callable, Optional, Union
 
 import structlog
 import yaml
@@ -42,7 +44,7 @@ class YAMLConfigLoader:
         else:
             self.config_dir = config_dir or Path("config")
 
-        self._cache: dict[str, object] = {}
+        self._cache: dict[str, dict[str, object]] = {}
         # CFG-CACHE-001: Thread-safe cache with lock
         self._cache_lock = threading.RLock()
 
@@ -162,7 +164,7 @@ class YAMLConfigLoader:
             126
         """
         keys = key_path.split(separator)
-        value = config
+        value: object = config
 
         for key in keys:
             if isinstance(value, dict):
@@ -172,7 +174,9 @@ class YAMLConfigLoader:
             else:
                 return default
 
-        return value if value is not None else default
+        if value is not None and isinstance(value, (str, int, float, bool, dict, list)):
+            return value
+        return default
 
     def load_with_tier_override(
         self,
@@ -199,8 +203,12 @@ class YAMLConfigLoader:
         """
         config = self.load(filename)
 
-        if tier and "tiers" in config and tier in config["tiers"]:
-            tier_overrides = config["tiers"][tier]
+        tiers_data = config.get("tiers")
+        if tier and isinstance(tiers_data, dict) and tier in tiers_data:
+            tier_overrides_raw = tiers_data[tier]
+            if not isinstance(tier_overrides_raw, dict):
+                return config
+            tier_overrides: dict[str, object] = tier_overrides_raw
 
             # Apply tier overrides recursively
             config = self._apply_overrides(config, tier_overrides)
@@ -228,8 +236,9 @@ class YAMLConfigLoader:
         result = base.copy()
 
         for key, value in overrides.items():
-            if key in result and isinstance(result[key], dict) and isinstance(value, dict):
-                result[key] = self._apply_overrides(result[key], value)
+            base_val = result.get(key)
+            if isinstance(base_val, dict) and isinstance(value, dict):
+                result[key] = self._apply_overrides(base_val, value)
             else:
                 result[key] = value
 
@@ -314,7 +323,7 @@ class YAMLConfigLoader:
     def _validate_dict_values(
         self,
         config: dict[str, object],
-        validation_rules: dict[str, object],
+        validation_rules: dict[str, Callable[..., bool]],
         filename: str,
         path: str = "",
     ) -> dict[str, object]:
@@ -330,7 +339,7 @@ class YAMLConfigLoader:
         Returns:
             Validated configuration
         """
-        validated_config = {}
+        validated_config: dict[str, object] = {}
 
         for key, value in config.items():
             current_path = f"{path}.{key}" if path else key
@@ -361,8 +370,9 @@ class YAMLConfigLoader:
 
             # Recursively validate nested dictionaries
             if isinstance(value, dict):
+                nested_dict: dict[str, object] = {str(k): v for k, v in value.items()}
                 validated_config[key] = self._validate_dict_values(
-                    value, validation_rules, filename, current_path
+                    nested_dict, validation_rules, filename, current_path
                 )
             else:
                 validated_config[key] = value
@@ -481,11 +491,22 @@ def get_filter_config(
     config = load_momentum_filters_config(tier)
 
     # Get specific filter configuration
-    filter_config = config.get(filter_name, {})
+    filter_config_raw = config.get(filter_name, {})
+    if not isinstance(filter_config_raw, dict):
+        filter_config_raw = {}
+    filter_config: dict[str, object] = {str(k): v for k, v in filter_config_raw.items()}
 
     # Add preset thresholds
-    thresholds = filter_config.get("thresholds", {})
-    preset_thresholds = thresholds.get(preset, thresholds.get("balanced", {}))
+    thresholds_raw = filter_config.get("thresholds", {})
+    if not isinstance(thresholds_raw, dict):
+        thresholds_raw = {}
+    thresholds: dict[str, object] = {str(k): v for k, v in thresholds_raw.items()}
+
+    balanced_raw = thresholds.get("balanced", {})
+    preset_thresholds_raw = thresholds.get(preset, balanced_raw)
+    if not isinstance(preset_thresholds_raw, dict):
+        preset_thresholds_raw = {}
+    preset_thresholds: dict[str, object] = {str(k): v for k, v in preset_thresholds_raw.items()}
 
     result = filter_config.copy()
     result["preset_thresholds"] = preset_thresholds
@@ -508,7 +529,10 @@ def get_detector_config(
         Detector configuration
     """
     config = load_market_detectors_config(tier)
-    return config.get(detector_name, {})
+    raw_val = config.get(detector_name, {})
+    if isinstance(raw_val, dict):
+        return {str(k): v for k, v in raw_val.items()}
+    return {}
 
 
 def get_strategy_config(
@@ -526,4 +550,7 @@ def get_strategy_config(
         Strategy configuration
     """
     config = load_strategy_defaults_config(tier)
-    return config.get(strategy_name, {})
+    raw_val = config.get(strategy_name, {})
+    if isinstance(raw_val, dict):
+        return {str(k): v for k, v in raw_val.items()}
+    return {}

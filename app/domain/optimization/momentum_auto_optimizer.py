@@ -5,6 +5,8 @@ Automatically recalibrates RSI/EMA/MACD parameters monthly
 based on recent performance using walk-forward validation.
 """
 
+from __future__ import annotations
+
 import json
 import logging
 from datetime import datetime
@@ -32,7 +34,7 @@ class MomentumAutoOptimizer:
 
     def __init__(
         self,
-        preset_config_path: str = "config/parameter_presets.yaml",
+        preset_config_path: str = "config/learning/parameter_presets.yaml",
         optimization_history_path: str = "logs/optimization_history.json",
     ):
         self.preset_config_path = preset_config_path
@@ -57,7 +59,7 @@ class MomentumAutoOptimizer:
             return {}
 
         with open(config_file) as f:
-            return yaml.safe_load(f)
+            return dict(yaml.safe_load(f))
 
     def _load_history(self) -> list[dict[str, Any]]:
         """Load optimization history."""
@@ -66,7 +68,7 @@ class MomentumAutoOptimizer:
 
         try:
             with open(self.optimization_history_path) as f:
-                return json.load(f)
+                return list(json.load(f))
         except OSError as e:
             logger.error(f"Error loading history: {e}")
             return []
@@ -272,7 +274,7 @@ class MomentumAutoOptimizer:
 
         logger.info(f"Optimization complete: new Sharpe={best_score:.4f}, params={best_params}")
 
-        return best_params
+        return dict(best_params)
 
     def _check_stability(
         self, new_params: dict[str, Any], current_params: dict[str, Any]
@@ -347,4 +349,4 @@ class MomentumAutoOptimizer:
 
         # Use latest optimized parameters
         latest = self.history[-1]
-        return latest["parameters"]
+        return dict(latest["parameters"])

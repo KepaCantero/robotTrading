@@ -2,6 +2,8 @@
 YieldCurveAnalyzer - Analizador de yield curve (simplificado).
 """
 
+from __future__ import annotations
+
 import logging
 from typing import Any
 

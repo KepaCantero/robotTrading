@@ -8,6 +8,8 @@ TASK-10: Centralización de Configuración
 TASK-24: SRP Refactoring
 """
 
+from __future__ import annotations
+
 import logging
 from typing import Optional
 

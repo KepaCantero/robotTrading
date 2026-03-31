@@ -155,8 +155,7 @@ class BlastRadiusController:
             db_path.parent.mkdir(parents=True, exist_ok=True)
 
             async with aiosqlite.connect(self.db_path) as db:
-                await db.execute(
-                    """
+                await db.execute("""
                     CREATE TABLE IF NOT EXISTS blast_radius_containment (
                         id INTEGER PRIMARY KEY AUTOINCREMENT,
                         service_name TEXT NOT NULL,
@@ -173,15 +172,12 @@ class BlastRadiusController:
                         isolated_domains TEXT NOT NULL,
                         health_status TEXT NOT NULL
                     )
-                """
-                )
+                """)
 
-                await db.execute(
-                    """
+                await db.execute("""
                     CREATE INDEX IF NOT EXISTS idx_containment_service
                     ON blast_radius_containment(service_name)
-                """
-                )
+                """)
 
                 await db.commit()
 

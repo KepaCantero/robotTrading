@@ -10,10 +10,11 @@ Tracks:
 - Performance metrics
 """
 
+from __future__ import annotations
+
 import logging
 from datetime import datetime
 from decimal import Decimal
-from typing import Optional
 
 import numpy as np
 
@@ -37,6 +38,8 @@ class ExecutionCostMonitor:
     # Alert thresholds
     COST_OVERRUN_ALERT_THRESHOLD = Decimal("0.05")  # 5% overrun triggers warning
     COST_OVERRUN_CRITICAL_THRESHOLD = Decimal("0.10")  # 10% overrun triggers critical
+
+    MAX_MONITORED_EXECUTIONS = 1000
 
     def __init__(self):
         """Initialize cost monitor."""
@@ -75,6 +78,15 @@ class ExecutionCostMonitor:
         self.executions[execution_id] = monitoring
         self.tranche_costs[execution_id] = []
 
+        # Evict oldest completed executions if over limit
+        if len(self.executions) > self.MAX_MONITORED_EXECUTIONS:
+            completed = [
+                eid for eid, mon in self.executions.items() if mon.completed_at is not None
+            ]
+            for eid in completed[: len(completed) - self.MAX_MONITORED_EXECUTIONS // 2]:
+                del self.executions[eid]
+                del self.tranche_costs[eid]
+
         logger.info(
             f"Started monitoring execution {execution_id}: "
             f"Budget €{planned_cost_budget:,.2f}, {total_tranches} tranches"
@@ -90,7 +102,7 @@ class ExecutionCostMonitor:
         executed_size: Decimal,
         target_price: Decimal,
         executed_price: Decimal,
-        commission_cost: Optional[Decimal] = None,
+        commission_cost: Decimal | None = None,
     ) -> tuple[Decimal, dict]:
         """
         Record execution of a single tranche.
@@ -410,7 +422,7 @@ class ExecutionCostMonitor:
 
 
 # Global singleton
-_execution_cost_monitor: ExecutionCostMonitor = None
+_execution_cost_monitor: ExecutionCostMonitor | None = None
 
 
 def get_execution_cost_monitor() -> ExecutionCostMonitor:

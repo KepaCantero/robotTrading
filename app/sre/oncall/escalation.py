@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 # mypy: ignore-errors
 """
 Escalation Policies and Paths - SRE Rule 24
@@ -18,7 +20,6 @@ Domain Model (Cosmic Python - Rule 16):
 - EscalationIncident: Value object for tracked escalations
 """
 
-from __future__ import annotations
 
 import asyncio
 import contextlib
@@ -395,8 +396,7 @@ class EscalationManager:
 
             async with aiosqlite.connect(self.config.db_path) as db:
                 # Escalation paths table
-                await db.execute(
-                    """
+                await db.execute("""
                     CREATE TABLE IF NOT EXISTS escalation_paths (
                         path_id TEXT PRIMARY KEY,
                         name TEXT NOT NULL,
@@ -405,12 +405,10 @@ class EscalationManager:
                         is_active BOOLEAN NOT NULL DEFAULT 1,
                         created_at TEXT NOT NULL
                     )
-                """
-                )
+                """)
 
                 # Escalation levels table
-                await db.execute(
-                    """
+                await db.execute("""
                     CREATE TABLE IF NOT EXISTS escalation_levels (
                         id INTEGER PRIMARY KEY AUTOINCREMENT,
                         path_id TEXT NOT NULL,
@@ -425,12 +423,10 @@ class EscalationManager:
                         FOREIGN KEY (path_id) REFERENCES escalation_paths(path_id),
                         UNIQUE(path_id, level)
                     )
-                """
-                )
+                """)
 
                 # Escalation incidents table
-                await db.execute(
-                    """
+                await db.execute("""
                     CREATE TABLE IF NOT EXISTS escalation_incidents (
                         incident_id TEXT PRIMARY KEY,
                         escalation_path_id TEXT NOT NULL,
@@ -448,12 +444,10 @@ class EscalationManager:
                         metadata TEXT,
                         FOREIGN KEY (escalation_path_id) REFERENCES escalation_paths(path_id)
                     )
-                """
-                )
+                """)
 
                 # Contact history table
-                await db.execute(
-                    """
+                await db.execute("""
                     CREATE TABLE IF NOT EXISTS contact_history (
                         id INTEGER PRIMARY KEY AUTOINCREMENT,
                         incident_id TEXT NOT NULL,
@@ -464,28 +458,21 @@ class EscalationManager:
                         timestamp TEXT NOT NULL,
                         FOREIGN KEY (incident_id) REFERENCES escalation_incidents(incident_id)
                     )
-                """
-                )
+                """)
 
                 # Create indexes
-                await db.execute(
-                    """
+                await db.execute("""
                     CREATE INDEX IF NOT EXISTS idx_incidents_status
                     ON escalation_incidents(status)
-                """
-                )
-                await db.execute(
-                    """
+                """)
+                await db.execute("""
                     CREATE INDEX IF NOT EXISTS idx_incidents_service
                     ON escalation_incidents(service)
-                """
-                )
-                await db.execute(
-                    """
+                """)
+                await db.execute("""
                     CREATE INDEX IF NOT EXISTS idx_contact_incident
                     ON contact_history(incident_id)
-                """
-                )
+                """)
 
                 await db.commit()
 
@@ -499,8 +486,7 @@ class EscalationManager:
         """Load active incidents from database."""
         try:
             async with aiosqlite.connect(self.config.db_path) as db:
-                cursor = await db.execute(
-                    """
+                cursor = await db.execute("""
                     SELECT incident_id, escalation_path_id, severity, title,
                            description, service, current_level, status,
                            created_at, acknowledged_at, escalated_at, resolved_at,
@@ -508,8 +494,7 @@ class EscalationManager:
                     FROM escalation_incidents
                     WHERE status NOT IN ('resolved', 'cancelled')
                     ORDER BY created_at DESC
-                """
-                )
+                """)
 
                 rows = await cursor.fetchall()
                 self._incidents = {}

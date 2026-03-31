@@ -11,6 +11,8 @@ This module provides a comprehensive production dashboard with:
 - Mobile-responsive design
 """
 
+from __future__ import annotations
+
 import asyncio
 import logging
 from datetime import datetime, timedelta, timezone

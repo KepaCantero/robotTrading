@@ -4,6 +4,8 @@ FASE 6.1: XAI Explainer - SHAP and LIME integration for model interpretability
 Provides methods to explain model predictions using SHAP and LIME techniques.
 """
 
+from __future__ import annotations
+
 import logging
 from datetime import datetime
 from typing import Optional, Union

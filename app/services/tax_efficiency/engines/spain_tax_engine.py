@@ -12,12 +12,14 @@ Spain tax rules:
 Uses centralized configuration from SpainTaxConfig.
 """
 
+from __future__ import annotations
+
 import logging
 from decimal import Decimal
-from typing import Optional
+from typing import Optional, Union
 
 from app.shared.config.centralized_config import get_config
-from app.shared.utils.decimal_utils import to_decimal
+from app.shared.utils.decimal_utils import to_decimal_required
 
 from .base import TaxEngine
 
@@ -43,7 +45,7 @@ class SpainTaxEngine(TaxEngine):
     All tax rates and thresholds are loaded from centralized configuration.
     """
 
-    def __init__(self, config: Optional[dict] = None):
+    def __init__(self, config: Optional[dict[str, object]] = None) -> None:
         """
         Initialize Spain tax engine with centralized configuration.
 
@@ -56,31 +58,37 @@ class SpainTaxEngine(TaxEngine):
         spain_tax = get_config().spain_tax
 
         # Use config values as defaults, allow override via parameter
-        self.BRACKET_1_LIMIT = (
-            to_decimal(config.get("bracket_1_limit", "33007.99")) if config else Decimal("33007.99")
+        self.BRACKET_1_LIMIT: Decimal = (
+            to_decimal_required(config.get("bracket_1_limit", "33007.99"))
+            if config
+            else Decimal("33007.99")
         )
-        self.BRACKET_2_LIMIT = (
-            to_decimal(config.get("bracket_2_limit", "53407.99")) if config else Decimal("53407.99")
+        self.BRACKET_2_LIMIT: Decimal = (
+            to_decimal_required(config.get("bracket_2_limit", "53407.99"))
+            if config
+            else Decimal("53407.99")
         )
 
-        self.RATE_1 = (
-            to_decimal(config.get("rate_1", spain_tax.irpf_rate_19))
+        self.RATE_1: Decimal = (
+            to_decimal_required(config.get("rate_1", spain_tax.IRPF_RATE_19))
             if config
-            else Decimal(str(spain_tax.irpf_rate_19))
+            else Decimal(str(spain_tax.IRPF_RATE_19))
         )
-        self.RATE_2 = (
-            to_decimal(config.get("rate_2", spain_tax.irpf_rate_21))
+        self.RATE_2: Decimal = (
+            to_decimal_required(config.get("rate_2", spain_tax.IRPF_RATE_21))
             if config
-            else Decimal(str(spain_tax.irpf_rate_21))
+            else Decimal(str(spain_tax.IRPF_RATE_21))
         )
-        self.RATE_3 = (
-            to_decimal(config.get("rate_3", spain_tax.irpf_rate_23))
+        self.RATE_3: Decimal = (
+            to_decimal_required(config.get("rate_3", spain_tax.IRPF_RATE_23))
             if config
-            else Decimal(str(spain_tax.irpf_rate_23))
+            else Decimal(str(spain_tax.IRPF_RATE_23))
         )
 
-        self.MODELO_720_THRESHOLD = to_decimal(str(spain_tax.modelo_720_threshold_eur))
-        self.LOSS_CARRYFORWARD_YEARS = int(spain_tax.capital_loss_carry_forward_years)
+        self.MODELO_720_THRESHOLD: Decimal = to_decimal_required(
+            str(spain_tax.MODELO_720_THRESHOLD_EUR)
+        )
+        self.LOSS_CARRYFORWARD_YEARS: int = int(spain_tax.CAPITAL_LOSS_CARRY_FORWARD_YEARS)
 
     def calculate_capital_gains_tax(
         self,
@@ -218,8 +226,8 @@ class SpainTaxEngine(TaxEngine):
         """
         # Load withholding rates from config
         spain_tax = get_config().spain_tax
-        eu_withholding = Decimal(str(spain_tax.eu_dividend_withholding_pct))
-        non_eu_withholding = Decimal(str(spain_tax.non_eu_dividend_withholding_pct))
+        eu_withholding = Decimal(str(spain_tax.EU_DIVIDEND_WITHHOLDING_PCT))
+        non_eu_withholding = Decimal(str(spain_tax.NON_EU_DIVIDEND_WITHHOLDING_PCT))
 
         # EU/EEA countries with 0% withholding (Parent-Subsidiary Directive)
         eu_countries = {
@@ -293,7 +301,7 @@ class SpainTaxEngine(TaxEngine):
 
         return self.calculate_capital_gains_tax(taxable_income)
 
-    def get_tax_brackets(self) -> list[dict]:
+    def get_tax_brackets(self) -> list[dict[str, Union[int, float, str]]]:
         """
         Get all tax brackets for display purposes.
 
@@ -324,7 +332,7 @@ class SpainTaxEngine(TaxEngine):
     def check_modelo_720_threshold(
         self,
         foreign_assets_value: Decimal,
-    ) -> dict:
+    ) -> dict[str, Union[float, bool, str]]:
         """
         Check if foreign assets exceed Modelo 720 reporting threshold.
 
@@ -368,7 +376,7 @@ class SpainTaxEngine(TaxEngine):
         """
         total_gains = sum(gains)
         total_losses = sum(abs(loss) for loss in losses)
-        net_gain = max(total_gains - total_losses, Decimal("0"))
+        net_gain = Decimal(max(total_gains - total_losses, Decimal("0")))
 
         logger.info(
             f"Gain compensation: gains={total_gains}, losses={total_losses}, net={net_gain}"
@@ -380,7 +388,7 @@ class SpainTaxEngine(TaxEngine):
         self,
         unrealized_gains: Decimal,
         estimated_dividends: Optional[Decimal] = None,
-    ) -> dict:
+    ) -> dict[str, Union[float, str]]:
         """
         Estimate annual tax liability based on current positions.
 
@@ -395,25 +403,21 @@ class SpainTaxEngine(TaxEngine):
             estimated_dividends = Decimal("0")
         total_savings_income = unrealized_gains + estimated_dividends
 
+        estimated_tax = self.calculate_total_tax_liability(
+            capital_gains=unrealized_gains,
+            dividends=estimated_dividends,
+        )
+
+        effective_rate: Decimal = (
+            estimated_tax / total_savings_income if total_savings_income > 0 else Decimal("0")
+        )
+
         return {
             "unrealized_gains": float(unrealized_gains),
             "estimated_dividends": float(estimated_dividends),
             "total_income": float(total_savings_income),
-            "estimated_tax": float(
-                self.calculate_total_tax_liability(
-                    capital_gains=unrealized_gains,
-                    dividends=estimated_dividends,
-                )
-            ),
-            "effective_rate": float(
-                self.calculate_total_tax_liability(
-                    capital_gains=unrealized_gains,
-                    dividends=estimated_dividends,
-                )
-                / total_savings_income
-                if total_savings_income > 0
-                else Decimal("0")
-            ),
+            "estimated_tax": float(estimated_tax),
+            "effective_rate": float(effective_rate),
             "currency": "EUR",
         }
 

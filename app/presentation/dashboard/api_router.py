@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 """Production Dashboard API Router.
 
 Provides FastAPI endpoints for the production dashboard including:

@@ -14,6 +14,8 @@ REJECTION CRITERIA:
 - Flat or negative equity curve in last 2 years
 """
 
+from __future__ import annotations
+
 import logging
 from datetime import datetime
 from typing import Optional

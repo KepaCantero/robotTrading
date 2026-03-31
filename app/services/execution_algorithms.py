@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 """
 Ernest Chan - Quantitative Trading: Execution Algorithms Implementation
 
@@ -25,7 +27,6 @@ Date: 2026-01-28
 import logging
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from typing import Optional
 
 import numpy as np
 
@@ -43,7 +44,7 @@ class ExecutionPlan:
     symbol: str
     side: str  # 'buy' or 'sell'
     total_quantity: float
-    execution_slices: list["ExecutionSlice"]
+    execution_slices: list[ExecutionSlice]
     algorithm: str
     urgency: float  # 0 to 1, where 1 is most urgent
     expected_market_impact: float
@@ -60,9 +61,9 @@ class ExecutionSlice:
     slice_number: int
     quantity: float
     target_time: datetime
-    limit_price: Optional[float]
+    limit_price: float | None
     execution_algorithm: str
-    participation_rate: Optional[float] = None  # For POV/PoV algorithms
+    participation_rate: float | None = None  # For POV/PoV algorithms
 
 
 @dataclass
@@ -110,7 +111,7 @@ class VWAPExecutor:
 
     def __init__(
         self,
-        typical_volume_profile: Optional[dict[str, float]] = None,
+        typical_volume_profile: dict[str, float] | None = None,
     ):
         """
         Initialize VWAP Executor.
@@ -137,11 +138,11 @@ class VWAPExecutor:
         symbol: str,
         quantity: float,
         side: str,
-        start_time: Optional[datetime] = None,
-        end_time: Optional[datetime] = None,
+        start_time: datetime | None = None,
+        end_time: datetime | None = None,
         max_slices: int = 20,
         min_slice_pct: float = _DEFAULT_MIN_SLICE_PCT,  # Minimum 2% per slice
-        custom_volume_profile: Optional[dict[str, float]] = None,
+        custom_volume_profile: dict[str, float] | None = None,
     ) -> ExecutionPlan:
         """
         Create VWAP execution plan.
@@ -302,7 +303,7 @@ class VWAPExecutor:
 
         total_impact = permanent_impact + temporary_impact
 
-        return total_impact
+        return float(total_impact)
 
     def _calculate_timing_risk(
         self,
@@ -329,7 +330,7 @@ class VWAPExecutor:
         # Timing risk scales with sqrt(duration) * volatility
         timing_risk = daily_volatility * np.sqrt(duration) * 100  # bps
 
-        return timing_risk
+        return float(timing_risk)
 
 
 class TWAPExecutor:
@@ -362,7 +363,7 @@ class TWAPExecutor:
         symbol: str,
         quantity: float,
         side: str,
-        start_time: Optional[datetime] = None,
+        start_time: datetime | None = None,
         duration_minutes: int = 60,
         num_slices: int = 12,
         randomize_timing: bool = True,
@@ -489,7 +490,7 @@ class ImplementationShortfallExecutor:
 
     def __init__(
         self,
-        impact_model: Optional[MarketImpactModel] = None,
+        impact_model: MarketImpactModel | None = None,
     ):
         """
         Initialize Implementation Shortfall Executor.
@@ -513,7 +514,7 @@ class ImplementationShortfallExecutor:
         symbol: str,
         quantity: float,
         side: str,
-        start_time: Optional[datetime] = None,
+        start_time: datetime | None = None,
         urgency: float = 0.5,  # 0 to 1
         price: float = 100.0,
         daily_volume: float = 1_000_000,
@@ -703,12 +704,12 @@ class ImplementationShortfallExecutor:
 
         if decay_rate == 1.0:
             # Linear trajectory
-            trajectory = np.ones(n_slices) * quantity / n_slices
+            trajectory: np.ndarray = np.ones(n_slices, dtype=np.float64) * quantity / n_slices
         else:
             # Exponential trajectory
             weights = np.exp(-decay_rate * times)
             weights = weights / weights.sum() * quantity
-            trajectory = weights
+            trajectory = np.asarray(weights, dtype=np.float64)
 
         return trajectory
 
@@ -730,7 +731,7 @@ class ImplementationShortfallExecutor:
         temporary = self.impact_model.temporary_impact_coef * np.sqrt(avg_participation) * 100
         temporary *= 1 + daily_volatility * self.impact_model.volatility_impact_coef
 
-        return permanent + temporary
+        return float(permanent + temporary)
 
     def _calculate_timing_risk_optimized(
         self,
@@ -742,7 +743,7 @@ class ImplementationShortfallExecutor:
         duration_days = duration_minutes / 1440
         timing_risk = daily_volatility * np.sqrt(duration_days / 2) * 100  # bps
 
-        return timing_risk
+        return float(timing_risk)
 
 
 class POVExecutor:
@@ -776,7 +777,7 @@ class POVExecutor:
         quantity: float,
         side: str,
         participation_rate: float,  # e.g., 0.10 for 10% POV
-        start_time: Optional[datetime] = None,
+        start_time: datetime | None = None,
         max_duration_minutes: int = 240,
         min_slice_quantity: float = 100,
     ) -> ExecutionPlan:
@@ -911,7 +912,9 @@ def create_execution_plan(
         >>> print(plan.execution_slices)
     """
     if algorithm == "vwap":
-        executor = VWAPExecutor()
+        executor: VWAPExecutor | TWAPExecutor | ImplementationShortfallExecutor | POVExecutor = (
+            VWAPExecutor()
+        )
     elif algorithm == "twap":
         executor = TWAPExecutor()
     elif algorithm == "is":

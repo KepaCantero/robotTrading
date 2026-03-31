@@ -7,6 +7,8 @@ Incluye:
 3. Resource-aware tuning (GPU/CPU constraints)
 """
 
+from __future__ import annotations
+
 import logging
 import time
 from typing import Any, Callable, Optional
@@ -141,7 +143,7 @@ class ResourceAwareTuner:
         """
         config = config or {}
         self.max_trials = config.get("max_trials", 50)
-        self.max_time_seconds = config.get("max_time_seconds", 3600)  # 1 hora default
+        self.max_time_seconds: float = float(config.get("max_time_seconds", 3600))  # 1 hora default
         self.max_memory_gb = config.get("max_memory_gb", 8.0)
 
         self.start_time: Optional[float] = None
@@ -157,7 +159,8 @@ class ResourceAwareTuner:
         if not PYTORCH_AVAILABLE:
             return False
         try:
-            return torch.cuda.is_available()
+            result = torch.cuda.is_available()
+            return bool(result)
         except (FileNotFoundError, ValueError, KeyError, TypeError):
             return False
 
@@ -281,6 +284,8 @@ class HyperparameterTuner:
         if self.training_callback is None:
             raise ValueError("training_callback debe estar configurado")
 
+        training_callback = self.training_callback
+
         n_trials = n_trials or self.resource_manager.max_trials
         timeout = timeout or self.resource_manager.max_time_seconds
 
@@ -297,7 +302,7 @@ class HyperparameterTuner:
 
             # Entrenar modelo y obtener score
             try:
-                score = self.training_callback(trial, params)
+                score = training_callback(trial, params)
 
                 # Actualizar early stopping
                 should_stop = self.early_stopping(score)
@@ -373,7 +378,7 @@ class HyperparameterTuner:
         """Obtener mejores parámetros encontrados."""
         if len(self.study.trials) == 0:
             return {}
-        return self.study.best_trial.params
+        return dict(self.study.best_trial.params)
 
     def get_trial_history(self) -> list[dict[str, Any]]:
         """Obtener historial de trials."""
@@ -470,7 +475,7 @@ class LearningEngineTuner:
 
             # Retornar métrica a optimizar (ej: accuracy, f1_score, o neg_sharpe)
             metric_name = self.tuner.config.get("optimize_metric", "accuracy")
-            score = metrics.get(metric_name, 0.0)
+            score = float(metrics.get(metric_name, 0.0))
 
             # Si direction es 'maximize', retornar score tal cual
             # Si es 'minimize', retornar negativo
@@ -480,7 +485,8 @@ class LearningEngineTuner:
             return score
 
         except (FileNotFoundError, ValueError, KeyError, TypeError) as e:
-            logger.error(f"Error entrenando en trial {trial.number}: {e}")
+            trial_num = getattr(trial, "number", 0)
+            logger.error(f"Error entrenando en trial {trial_num}: {e}")
             raise optuna.TrialPruned() from e
 
     def tune(

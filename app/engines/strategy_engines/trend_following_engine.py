@@ -11,6 +11,8 @@ Características principales:
 - Extiende BaseStrategyEngine para futura integración con Learning Engines.
 """
 
+from __future__ import annotations
+
 import logging
 from collections import deque
 from collections.abc import Sequence
@@ -21,7 +23,7 @@ from app.domain.models.market_data import Quote
 from app.domain.models.portfolio import Portfolio
 from app.domain.models.signal import Signal, SignalSource, SignalStrength, SignalType
 from app.domain.services.analysis.momentum import TechnicalIndicatorCalculator
-from app.domain.services.signals.scoring import get_signal_scoring_engine
+from app.services.signal_scoring_engine import get_signal_scoring_engine
 from app.shared.config.centralized_config import get_config
 
 from .base import BaseStrategyEngine

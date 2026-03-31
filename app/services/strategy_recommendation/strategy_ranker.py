@@ -4,6 +4,8 @@ T19.1.2: StrategyRanker - Ranks and compares multiple strategies
 Provides ranking and comparison of strategies based on scored metrics.
 """
 
+from __future__ import annotations
+
 import logging
 from dataclasses import dataclass
 from decimal import Decimal
@@ -49,7 +51,7 @@ class StrategyRanker:
 
     async def rank_strategies(
         self,
-        scores: list["StrategyScore"],  # From StrategyScorer
+        scores: list[StrategyScore],  # From StrategyScorer
         metric: str = "overall_score",
     ) -> list[RankedStrategy]:
         """

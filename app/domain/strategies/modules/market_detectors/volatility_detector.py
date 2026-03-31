@@ -2,6 +2,8 @@
 VolatilityDetector - Módulo independiente para detectar régimen de volatilidad.
 """
 
+from __future__ import annotations
+
 import bisect
 import logging
 from typing import Optional

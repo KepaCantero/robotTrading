@@ -5,10 +5,8 @@ This package contains concrete implementations of repository interfaces
 defined in the domain layer.
 """
 
-from .file_backtest_repository import FileBacktestRepository
-from .in_memory_backtest_repository import InMemoryBacktestRepository
+from app.infrastructure.persistence.database import Base
 
 __all__ = [
-    "FileBacktestRepository",
-    "InMemoryBacktestRepository",
+    "Base",
 ]

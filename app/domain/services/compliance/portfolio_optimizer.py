@@ -178,6 +178,9 @@ class PortfolioComplianceOptimizer:
         result: OptimizeResult,
     ) -> None:
         """Apply equal weights as fallback."""
+        if not symbols:
+            result.reasons.append("No symbols provided for optimization")
+            return
         equal_weight = 1.0 / len(symbols)
         result.weights = dict.fromkeys(symbols, equal_weight)
         result.expected_return = 0.0

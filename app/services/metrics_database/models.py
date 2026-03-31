@@ -4,6 +4,8 @@ T18.1: Real-Time Metrics Database Models
 Data models for time-series metrics storage and querying.
 """
 
+from __future__ import annotations
+
 import asyncio
 import logging
 from dataclasses import dataclass, field

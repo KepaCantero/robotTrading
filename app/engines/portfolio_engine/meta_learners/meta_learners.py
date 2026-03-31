@@ -7,10 +7,12 @@ Implementa meta-learning para optimizar asignación de capital entre estrategias
 - Aprendizaje de pesos óptimos entre estrategias
 """
 
+from __future__ import annotations
+
 import logging
 from abc import ABC, abstractmethod
 from datetime import datetime, timedelta
-from typing import Any, Optional
+from typing import Any, Optional, Union
 
 import numpy as np
 
@@ -29,7 +31,7 @@ class BaseMetaLearner(ABC):
         Inicializar meta-learner.
 
         Args:
-            config: Configuración del meta-learner
+            config: Configuracion del meta-learner
         """
         self.config = config
         self.logger = logging.getLogger(self.__class__.__name__)
@@ -86,7 +88,9 @@ class HistoricalPerformanceLearner(BaseMetaLearner):
         self.use_drawdown = config.get("use_drawdown", False)
 
         # Historial de performance
-        self.performance_history: dict[str, list[dict[str, float]]] = {}
+        self.performance_history: dict[
+            str, list[dict[str, Union[datetime, dict[str, float], float]]]
+        ] = {}
 
     def learn_weights(
         self,
@@ -347,7 +351,7 @@ class ReinforcementLearningLearner(BaseMetaLearner):
         while len(features) < self.input_size:
             features.append(0.0)
 
-        return np.array(features[: self.input_size])
+        return np.array(features[: self.input_size], dtype=np.float64)
 
     def update(
         self,
@@ -406,8 +410,8 @@ class EnsembleMetaLearner(BaseMetaLearner):
         """Inicializar ensemble meta-learner."""
         super().__init__(config)
 
-        # Crear múltiples learners
-        self.learners = []
+        # Crear multiples learners
+        self.learners: list[BaseMetaLearner] = []
 
         if config.get("use_historical", True):
             self.learners.append(HistoricalPerformanceLearner(config))
@@ -417,8 +421,8 @@ class EnsembleMetaLearner(BaseMetaLearner):
             self.learners.append(ReinforcementLearningLearner(config))
 
         # Pesos del ensemble
-        self.learner_weights = config.get("learner_weights")
-        if self.learner_weights is None:
+        self.learner_weights: dict[str, float] = config.get("learner_weights", {})
+        if not self.learner_weights:
             # Pesos iguales por defecto
             self.learner_weights = {
                 type(learner).__name__: 1.0 / len(self.learners) for learner in self.learners
@@ -462,8 +466,8 @@ class EnsembleMetaLearner(BaseMetaLearner):
             return dict.fromkeys(strategy_performance.keys(), 1.0 / n)
 
         # Combinar pesos usando weighted average
-        combined_weights = {}
-        all_strategies = set()
+        combined_weights: dict[str, float] = {}
+        all_strategies: set[str] = set()
         for weights in all_weights:
             all_strategies.update(weights.keys())
 

@@ -2,6 +2,8 @@
 MarketAnalyzer - Orquesta módulos detectores de régimen de mercado.
 """
 
+from __future__ import annotations
+
 import logging
 from collections import deque
 

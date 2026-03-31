@@ -27,119 +27,12 @@ event_loop:
   max_runtime_seconds: 432000  # 5 days
   checkpoint_interval: 3
   starting_event: "production_audit.start"
-  checkpoint_file: ".ralph/checkpoints/31_production_audit_checkpoint.json"
-  # GLM 5.1 - Multi-step reasoning
-  reasoning:
-    enabled: true
-    type: "multi-step"
 
 cli:
   backend: "claude"
-  model: "glm-5-turbo"  # GLM 5 Turbo
 
 core:
   specs_dir: "./specs/"
-
-# Variables compartidas entre todos los hats
-shared_vars:
-  OUTPUT_DIR: ".ralph/outputs"
-  APP_DIR: "app"
-  TASK_PREFIX: "production_audit"
-  TASK_NAME: "Production Code Audit & Fix"
-  TASK_ID: "31"
-  VALIDATE_SCRIPT: "scripts/validate_file_complete.sh"
-  # ============================================================================
-  # REQUIREMENTS DIRECTORY - IMPORTANT
-  # ============================================================================
-  # Los archivos de requirements se encuentran en el directorio .requirements/
-  # y pueden estar en dos formatos:
-  #   - .md  → Markdown (ej: .requirements/app/core/config/settings.requirements.md)
-  #   - .txt → Texto plano (ej: .requirements/app/core/config/settings.requirements.txt)
-  # Para cada archivo fuente en app/ puede existir su requirements correspondiente
-  # en AMBOS o en cualquiera de los dos formatos.
-  # ============================================================================
-  REQUIREMENTS_DIR: ".requirements"
-  REQUIREMENTS_FORMATS: [".md", ".txt"]  # Both formats are supported
-  # Architecture & File System Requirements (global rules)
-  ARCHITECTURE_REQUIREMENTS: ".requirements/ARCHITECTURE_REQUIREMENTS.md"
-  FILE_SYSTEM_REQUIREMENTS: ".requirements/FILE_SYSTEM_REQUIREMENTS.md"
-  BASE_RULES: ".requirements/BASE_RULES.md"
-  CRITICAL_RULES: ".requirements/CRITICAL_RULES.md"
-
-# ============================================================================
-# CRITICAL RULES - ANTI-FALLBACK (Best Practices 2026)
-# ============================================================================
-critical_rules: |
-  ## REGLAS CRÍTICAS - Production Audit
-
-  ### FORBIDDEN PATTERNS (Usage = BLOCK):
-  - `# type: ignore` → REMOVE and add proper type
-  - `# pylint: disable` → REMOVE and fix the issue
-  - `# noqa` → REMOVE and fix the issue
-  - `# nosec` → REMOVE and fix the security issue
-  - `: Any` → REPLACE with proper type hint
-  - `pass` in production code → IMPLEMENT or raise NotImplementedError
-
-  ### NO SHORTCUTS:
-  - ❌ "I'll process 50 files for now" → Process ALL files
-  - ❌ "This is too many files" → Use checkpoints, resume later
-  - ❌ Skip large directories → Process one at a time, checkpoint each
-  - ❌ Batch files → Process individually for quality
-
-  ### VALIDATION REQUIREMENTS:
-  - ✅ Run validate_file_complete.sh for EVERY file
-  - ✅ Fix DEEPLY - no shallow fixes
-  - ✅ Check against requirements (.md/.txt) BEFORE marking complete
-  - ✅ Each fix attempt must be DIFFERENT approach
-
-  ### FLAGS FOR BLOCKED FILES:
-  ```markdown
-  <!-- @blocked: CC=18 after 5 refactoring attempts -->
-  <!-- @blocked: External dependency missing -->
-  <!-- @blocked: Requires architectural change -->
-  ```
-
-# ============================================================================
-# EXCLUDE PATTERNS
-# ============================================================================
-exclude:
-  directory_patterns:
-    - "tests/"
-    - "test/"
-    - "__pycache__/"
-    - "migrations/"
-    - "venv/"
-    - ".venv/"
-    - ".pytest_cache/"
-    - ".mypy_cache/"
-    - "integration/"
-    - "integrations/"
-    - "*_test.py"
-    - "test_*.py"
-    - "conftest.py"
-
-# ============================================================================
-# SUBAGENTS - Especialistas
-# ============================================================================
-subagents:
-  enabled: true
-  path: ~/.claude/agents/awesome-claude-agents
-  useful_for_production_audit:
-    - code-archaeologist     # Deep codebase exploration
-    - python-expert          # Python modern patterns
-    - code-reviewer          # Security-aware reviews
-    - performance-optimizer  # When slow code detected
-
-# ============================================================================
-# QUALITY GATES - Backpressure
-# ============================================================================
-quality:
-  enforce_solid: true
-  enforce_tests: true
-  enforce_typecheck: true
-  enforce_lint: true
-  enforce_requirements: true  # NEW: Check against requirements (.md/.txt)
-  min_coverage: 80
 
 # ============================================================================
 # HATS - Sistema modular con hats especializados
@@ -151,7 +44,7 @@ hats:
   discovery:
     name: "Discovery & Requirements"
     description: "Descubre archivos y verifica requirements (.md o .txt) existen en .requirements/"
-    hat_template: ".ralph/ralph_templates/hats/base_processor_hat.yml"
+
     triggers: ["production_audit.start"]
     publishes: ["files.discovered", "requirements.needed"]
     default_publishes: "files.discovered"
@@ -253,7 +146,6 @@ hats:
   requirements_generator:
     name: "Requirements Generator"
     description: "Genera requirements (.md o .txt) faltantes antes de auditar - guarda en .requirements/"
-    hat_template: ".ralph/ralph_templates/hats/implementer_hat.yml"
     triggers: ["requirements.needed"]
     publishes: ["requirements.generated"]
     default_publishes: "requirements.generated"
@@ -351,8 +243,8 @@ hats:
   initial_audit:
     name: "Initial Audit"
     description: "Ejecuta validación completa en todos los archivos"
-    hat_template: ".ralph/ralph_templates/hats/base_processor_hat.yml"
-    triggers: ["files.discovered", "requirements.generated"]
+
+    triggers: ["requirements.generated"]
     publishes: ["audit.initial_complete"]
     default_publishes: "audit.initial_complete"
 
@@ -432,7 +324,6 @@ hats:
   requirements_checker:
     name: "Requirements Compliance"
     description: "Verifica cumplimiento contra requirements (.md o .txt) en .requirements/"
-    hat_template: ".ralph/ralph_templates/hats/validation_hat.yml"
     triggers: ["audit.initial_complete"]
     publishes: ["requirements.checked"]
     default_publishes: "requirements.checked"
@@ -506,7 +397,6 @@ hats:
   architecture_compliance:
     name: "Architecture Compliance"
     description: "Verifica cumplimiento de ARCHITECTURE_REQUIREMENTS.md y FILE_SYSTEM_REQUIREMENTS.md"
-    hat_template: ".ralph/ralph_templates/hats/validation_hat.yml"
     triggers: ["requirements.checked"]
     publishes: ["architecture.checked", "architecture.violations_found"]
     default_publishes: "architecture.checked"
@@ -718,7 +608,6 @@ hats:
   code_fixer:
     name: "Code Fixer"
     description: "Arregla archivos con DEEP fixes - NO SHORTCUTS"
-    hat_template: ".ralph/ralph_templates/hats/implementer_hat.yml"
     triggers: ["architecture.checked"]
     publishes: ["files.fixed"]
     default_publishes: "files.fixed"
@@ -838,7 +727,6 @@ hats:
   anti_pattern_scanner:
     name: "Anti-Pattern Scanner"
     description: "Escanea TODOS los archivos buscando patrones prohibidos"
-    hat_template: ".ralph/ralph_templates/hats/validation_hat.yml"
     triggers: ["files.fixed"]
     publishes: ["anti_patterns.scanned", "anti_patterns.found"]
     default_publishes: "anti_patterns.scanned"
@@ -909,7 +797,6 @@ hats:
   cross_model_qa:
     name: "Cross-Model QA"
     description: "Revisión con contexto fresco - detecta errores sesgados"
-    hat_template: ".ralph/ralph_templates/hats/validation_hat.yml"
     triggers: ["anti_patterns.scanned"]
     publishes: ["qa.cross_model_complete", "qa.issues_found"]
     default_publishes: "qa.cross_model_complete"
@@ -986,7 +873,6 @@ hats:
   test_validator:
     name: "Test Structure Validator"
     description: "Verifica que tests espejean estructura de source"
-    hat_template: ".ralph/ralph_templates/hats/validation_hat.yml"
     triggers: ["qa.cross_model_complete"]
     publishes: ["tests.validated"]
     default_publishes: "tests.validated"
@@ -1052,7 +938,6 @@ hats:
   final_validator:
     name: "Final Quality Validator"
     description: "Validación final de todos los archivos"
-    hat_template: ".ralph/ralph_templates/hats/validation_hat.yml"
     triggers: ["tests.validated"]
     publishes: ["PRODUCTION_AUDIT_COMPLETE", "production_audit.blocked"]
     default_publishes: "PRODUCTION_AUDIT_COMPLETE"
@@ -1163,17 +1048,27 @@ hats:
 # ============================================================================
 # MEMORIES - Aprendizaje persistente
 # ============================================================================
+  # ==========================================================================
+  # ERROR HANDLER - Recover from dead events
+  # ==========================================================================
+  error_handler:
+    name: "Error Handler"
+    triggers: ["architecture.violations_found", "anti_patterns.found", "qa.issues_found"]
+    publishes: ["files.fixed"]
+    default_publishes: "files.fixed"
+    max_activations: 20
+    instructions: |
+      ## ERROR HANDLER - Fix issues found by scanners
+
+      Read the relevant error report and fix the identified issues.
+
+      1. For architecture.violations_found: Fix layer boundary violations
+      2. For anti_patterns.found: Remove forbidden patterns
+      3. For qa.issues_found: Fix quality issues identified by cross-model QA
+
+      After fixing, re-run validation and emit "files.fixed" to continue pipeline.
+
 memories:
   enabled: true
   inject: auto
   budget: 10000
-  file: .ralph/agent/memories.md
-  consolidation:
-    enabled: true
-    interval: 10
-
-# ============================================================================
-# CHECKPOINT
-# ============================================================================
-checkpoint:
-  file: ".ralph/checkpoints/31_production_audit_checkpoint.json"

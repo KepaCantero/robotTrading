@@ -6,7 +6,6 @@ generen rentabilidad neta positiva después de todos los costos operativos.
 """
 
 # mypy: ignore-errors
-
 from __future__ import annotations
 
 import logging

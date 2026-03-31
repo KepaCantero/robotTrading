@@ -168,6 +168,7 @@ class PyramidingManager:
         # Registrar adición
         from datetime import datetime
 
+        assert result.size_to_add is not None
         addition = PyramidingAddition(
             addition_number=self.current_additions + 1,
             size=result.size_to_add,
@@ -192,7 +193,7 @@ class PyramidingManager:
 
     def get_total_added(self) -> Decimal:
         """Obtener total de acciones añadidas."""
-        return sum(a.size for a in self.addition_history)
+        return sum((a.size for a in self.addition_history), Decimal("0"))
 
     def reset(self, initial_size: Decimal) -> None:
         """

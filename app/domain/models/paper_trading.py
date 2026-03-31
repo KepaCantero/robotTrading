@@ -5,6 +5,8 @@ This module defines models for paper trading simulation, virtual portfolio manag
 and trade execution simulation for the algorithmic trading system.
 """
 
+from __future__ import annotations
+
 import logging
 from datetime import datetime
 from decimal import Decimal
@@ -121,7 +123,7 @@ class PaperTrade(BaseModel):
         return v
 
     @model_validator(mode="after")
-    def validate_trade_consistency(self) -> "PaperTrade":
+    def validate_trade_consistency(self) -> PaperTrade:
         """Validate trade consistency."""
         if self.filled_quantity > self.quantity:
             logger.error(
@@ -251,7 +253,7 @@ class PaperPosition(BaseModel):
         return v
 
     @model_validator(mode="after")
-    def calculate_metrics(self) -> "PaperPosition":
+    def calculate_metrics(self) -> PaperPosition:
         """Calculate position metrics."""
         # Calculate market value
         self.market_value = abs(self.quantity) * self.current_price
@@ -395,7 +397,7 @@ class PaperPortfolio(BaseModel):
         return v
 
     @model_validator(mode="after")
-    def calculate_portfolio_metrics(self) -> "PaperPortfolio":
+    def calculate_portfolio_metrics(self) -> PaperPortfolio:
         """Calculate portfolio metrics."""
         # Calculate total equity
         positions_value = sum(pos.market_value for pos in self.positions)
@@ -561,7 +563,7 @@ class PaperTradingSession(BaseModel):
         return v
 
     @model_validator(mode="after")
-    def validate_session_timing(self) -> "PaperTradingSession":
+    def validate_session_timing(self) -> PaperTradingSession:
         """Validate session timing."""
         if self.ended_at and self.ended_at < self.started_at:
             logger.error(

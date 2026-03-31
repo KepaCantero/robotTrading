@@ -9,6 +9,8 @@ SOLID Principles:
 - DIP: Depends on StorageBackend protocol
 """
 
+from __future__ import annotations
+
 import logging
 from datetime import datetime
 from typing import Any, Optional
@@ -48,7 +50,7 @@ class StrategyManager:
         """
         self.storage = storage
         self.strategies: dict[str, MomentumStrategy] = {}
-        self._initialize_default_strategies()
+        self.initialize_default_strategies()
 
     def initialize_default_strategies(self) -> None:
         """Initialize default momentum strategies using centralized configuration."""
@@ -230,7 +232,7 @@ class StrategyManager:
         Returns:
             List of top momentum assets with their metrics
         """
-        asset_signals = {}
+        asset_signals: dict[str, MomentumSignal] = {}
         for signal in all_signals:
             if (
                 signal.symbol not in asset_signals

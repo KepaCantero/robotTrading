@@ -10,6 +10,8 @@ Rules:
 - R27: Optimization phase (50k+ EUR) - Aggressive risk with leverage
 """
 
+from __future__ import annotations
+
 import logging
 from dataclasses import dataclass
 from datetime import datetime

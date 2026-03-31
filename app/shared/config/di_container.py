@@ -7,6 +7,8 @@ application dependencies and their lifecycles.
 Reference: Rule 05-architecture.md, Rule 11-enterprise-architecture.md
 """
 
+from __future__ import annotations
+
 import inspect
 import logging
 from typing import TYPE_CHECKING, Callable, Optional, TypeVar, Union
@@ -86,7 +88,7 @@ class DIContainer:
         )
         self._transient[interface] = implementation
 
-    def register_factory(self, name: str, factory: Callable[["DIContainer"], T]) -> None:
+    def register_factory(self, name: str, factory: Callable[[DIContainer], T]) -> None:
         """
         Register a factory function.
 
@@ -339,7 +341,7 @@ _strategy_logger_instance = None
 _execution_engine_instance = None
 
 
-def get_strategy_registry() -> "StrategyRegistry":
+def get_strategy_registry() -> StrategyRegistry:
     """
     Get StrategyRegistry singleton as a FastAPI dependency.
 
@@ -369,7 +371,7 @@ def get_strategy_registry() -> "StrategyRegistry":
     return _strategy_registry_instance
 
 
-def get_strategy_config_loader() -> "StrategyConfigLoader":
+def get_strategy_config_loader() -> StrategyConfigLoader:
     """
     Get StrategyConfigLoader singleton as a FastAPI dependency.
 
@@ -399,7 +401,7 @@ def get_strategy_config_loader() -> "StrategyConfigLoader":
     return _strategy_config_loader_instance
 
 
-def get_strategy_logger() -> "StrategyLogger":
+def get_strategy_logger() -> StrategyLogger:
     """
     Get StrategyLogger singleton as a FastAPI dependency.
 
@@ -429,7 +431,7 @@ def get_strategy_logger() -> "StrategyLogger":
     return _strategy_logger_instance
 
 
-def get_execution_engine() -> "ExecutionEngine":
+def get_execution_engine() -> ExecutionEngine:
     """
     Get ExecutionEngine singleton as a FastAPI dependency.
 

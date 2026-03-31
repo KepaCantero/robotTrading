@@ -12,6 +12,8 @@ Coordinates:
 Returns ExecutionPlan with optimized tranches and cost budgets.
 """
 
+from __future__ import annotations
+
 import logging
 from decimal import Decimal
 from typing import Optional
@@ -335,7 +337,7 @@ class SmartOrderRouter:
 
 
 # Global singleton
-_smart_order_router: SmartOrderRouter = None
+_smart_order_router: Optional[SmartOrderRouter] = None
 
 
 def get_smart_order_router() -> SmartOrderRouter:

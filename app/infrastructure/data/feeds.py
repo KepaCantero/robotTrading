@@ -5,6 +5,8 @@ This module defines abstract interfaces and concrete implementations for
 market data feeds from various providers.
 """
 
+from __future__ import annotations
+
 import asyncio
 import logging
 from abc import ABC, abstractmethod

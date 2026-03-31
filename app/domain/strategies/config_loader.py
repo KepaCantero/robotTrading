@@ -5,6 +5,8 @@ Permite cargar configuración de estrategias desde archivos YAML/JSON,
 validar la configuración y proporcionar acceso a parámetros específicos.
 """
 
+from __future__ import annotations
+
 import json
 import logging
 from datetime import datetime

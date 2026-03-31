@@ -2,6 +2,8 @@
 VIXAnalyzer - Analizador de VIX (simplificado).
 """
 
+from __future__ import annotations
+
 import logging
 from typing import Any
 

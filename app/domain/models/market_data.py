@@ -5,6 +5,8 @@ This module defines models for market data feeds, quotes, and real-time data
 for the algorithmic trading system.
 """
 
+from __future__ import annotations
+
 import logging
 from datetime import datetime
 from decimal import Decimal
@@ -96,11 +98,14 @@ class Quote(BaseModel):
 
     @field_validator("bid", "ask", "last")
     @classmethod
-    def validate_required_price_fields(cls, v) -> Decimal:
+    def validate_required_price_fields(cls, v: object) -> Decimal:
         """Validate required price fields are positive and within reasonable limits."""
+        result: Decimal
         if isinstance(v, (int, float)):
-            v = Decimal(str(v))
-        elif not isinstance(v, Decimal):
+            result = Decimal(str(v))
+        elif isinstance(v, Decimal):
+            result = v
+        else:
             logger.error(
                 "Price field validation failed - not a number",
                 extra={
@@ -111,53 +116,59 @@ class Quote(BaseModel):
             )
             raise ValueError("Price fields must be numbers")
 
-        if v <= 0:
+        if result <= 0:
             logger.warning(
                 "Price field validation failed - non-positive value",
                 extra={
                     "component": "market_data",
                     "action": "price_validation_warning",
-                    "value": str(v),
+                    "value": str(result),
                 },
             )
-            raise ValueError(f"Required price fields must be positive, got {v}")
-        if v > Decimal("1000000"):  # $1M limit
+            raise ValueError(f"Required price fields must be positive, got {result}")
+        if result > Decimal("1000000"):  # $1M limit
             logger.warning(
                 "Price exceeds maximum limit",
                 extra={
                     "component": "market_data",
                     "action": "price_validation_warning",
-                    "value": str(v),
+                    "value": str(result),
                     "limit": "1000000",
                 },
             )
-            raise ValueError(f"Price exceeds maximum limit of $1M, got {v}")
+            raise ValueError(f"Price exceeds maximum limit of $1M, got {result}")
 
-        return v
+        return result
 
     @field_validator("open", "high", "low", "close")
     @classmethod
-    def validate_optional_price_fields(cls, v) -> Decimal:
+    def validate_optional_price_fields(cls, v: object) -> Decimal:
         """Validate optional price fields are non-negative and within reasonable limits."""
+        result: Decimal
         if isinstance(v, (int, float)):
-            v = Decimal(str(v))
-        elif not isinstance(v, Decimal):
+            result = Decimal(str(v))
+        elif isinstance(v, Decimal):
+            result = v
+        else:
             raise ValueError("Price fields must be numbers")
 
-        if v < 0:
-            raise ValueError(f"Price fields must be non-negative, got {v}")
-        if v > Decimal("1000000"):  # $1M limit
-            raise ValueError(f"Price exceeds maximum limit of $1M, got {v}")
+        if result < 0:
+            raise ValueError(f"Price fields must be non-negative, got {result}")
+        if result > Decimal("1000000"):  # $1M limit
+            raise ValueError(f"Price exceeds maximum limit of $1M, got {result}")
 
-        return v
+        return result
 
     @field_validator("volume")
     @classmethod
-    def validate_volume(cls, v) -> Decimal:
+    def validate_volume(cls, v: object) -> Decimal:
         """Validate volume is non-negative and within reasonable limits."""
+        result: Decimal
         if isinstance(v, (int, float)):
-            v = Decimal(str(v))
-        elif not isinstance(v, Decimal):
+            result = Decimal(str(v))
+        elif isinstance(v, Decimal):
+            result = v
+        else:
             logger.error(
                 "Volume validation failed - not a number",
                 extra={
@@ -168,50 +179,53 @@ class Quote(BaseModel):
             )
             raise ValueError("Volume must be a number")
 
-        if v < 0:
+        if result < 0:
             logger.warning(
                 "Volume validation failed - negative value",
                 extra={
                     "component": "market_data",
                     "action": "volume_validation_warning",
-                    "value": str(v),
+                    "value": str(result),
                 },
             )
-            raise ValueError(f"Volume must be non-negative, got {v}")
+            raise ValueError(f"Volume must be non-negative, got {result}")
         # Increased limit to 10B shares to accommodate high-volume stocks (NVDA, TSLA, etc.)
         # Some stocks can have daily volumes exceeding 1B shares during high volatility periods
-        if v > Decimal("10000000000"):  # 10B shares limit
+        if result > Decimal("10000000000"):  # 10B shares limit
             logger.warning(
                 "Volume exceeds maximum limit",
                 extra={
                     "component": "market_data",
                     "action": "volume_validation_warning",
-                    "value": str(v),
+                    "value": str(result),
                     "limit": "10000000000",
                 },
             )
-            raise ValueError(f"Volume exceeds maximum limit of 10B shares, got {v}")
+            raise ValueError(f"Volume exceeds maximum limit of 10B shares, got {result}")
 
-        return v
+        return result
 
     @field_validator("spread")
     @classmethod
-    def validate_spread(cls, v) -> Decimal:
+    def validate_spread(cls, v: object) -> Decimal:
         """Validate spread is non-negative and reasonable."""
+        result: Decimal
         if isinstance(v, (int, float)):
-            v = Decimal(str(v))
-        elif not isinstance(v, Decimal):
+            result = Decimal(str(v))
+        elif isinstance(v, Decimal):
+            result = v
+        else:
             raise ValueError("Spread must be a number")
 
-        if v < 0:
-            raise ValueError(f"Spread must be non-negative, got {v}")
-        if v > Decimal("1000"):  # $1000 spread limit
-            raise ValueError(f"Spread exceeds maximum limit of $1000, got {v}")
+        if result < 0:
+            raise ValueError(f"Spread must be non-negative, got {result}")
+        if result > Decimal("1000"):  # $1000 spread limit
+            raise ValueError(f"Spread exceeds maximum limit of $1000, got {result}")
 
-        return v
+        return result
 
     @model_validator(mode="after")
-    def validate_quote_consistency(self) -> "Quote":
+    def validate_quote_consistency(self) -> Quote:
         """Validate consistency between price fields."""
         if self.high < self.low:
             logger.error(
@@ -332,23 +346,26 @@ class HistoricalData(BaseModel):
 
     @field_validator("open", "high", "low", "close", "adjusted_close")
     @classmethod
-    def validate_price_fields(cls, v) -> Decimal:
+    def validate_price_fields(cls, v: object) -> Optional[Decimal]:
         """Validate price fields are positive."""
         if v is None:
-            return v
+            return None
 
+        result: Decimal
         if isinstance(v, (int, float)):
-            v = Decimal(str(v))
-        elif not isinstance(v, Decimal):
+            result = Decimal(str(v))
+        elif isinstance(v, Decimal):
+            result = v
+        else:
             raise ValueError("Price fields must be numbers")
 
-        if v <= 0:
-            raise ValueError(f"Price fields must be positive, got {v}")
+        if result <= 0:
+            raise ValueError(f"Price fields must be positive, got {result}")
 
-        return v
+        return result
 
     @model_validator(mode="after")
-    def validate_ohlc_consistency(self) -> "HistoricalData":
+    def validate_ohlc_consistency(self) -> HistoricalData:
         """Validate OHLC consistency."""
         if self.high < self.low:
             logger.error(

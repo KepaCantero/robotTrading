@@ -18,6 +18,8 @@ This filter now uses centralized configuration from config/indicators.yaml:
 - Period settings are loaded from config
 """
 
+from __future__ import annotations
+
 import logging
 from typing import Callable, ClassVar, Optional
 

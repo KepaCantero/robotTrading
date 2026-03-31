@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 """Black-Litterman Portfolio Optimization Implementation.
 
 This module implements the Black-Litterman model for portfolio optimization,
@@ -24,7 +26,6 @@ Implementation based on:
     - Walters' "The Black-Litterman Model in Detail" (2014)
 """
 
-from __future__ import annotations
 
 import logging
 from dataclasses import dataclass

@@ -11,6 +11,8 @@ GAP Fixes:
 - API-010: Added timeout configuration to all endpoints calling service async methods
 """
 
+from __future__ import annotations
+
 import asyncio
 import logging
 import traceback

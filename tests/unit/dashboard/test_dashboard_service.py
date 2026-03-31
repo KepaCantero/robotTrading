@@ -5,8 +5,8 @@ import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
 from decimal import Decimal
 
-from app.dashboard.dashboard_service import DashboardService
-from app.dashboard.dashboard_data import (
+from app.presentation.dashboard.dashboard_service import DashboardService
+from app.presentation.dashboard.dashboard_data import (
     DashboardSnapshot,
     PerformanceMetrics,
     SystemStatus,
@@ -158,7 +158,7 @@ async def test_broker_error_handling(dashboard_service):
 @pytest.mark.asyncio
 async def test_get_dashboard_service_singleton():
     """Test that get_dashboard_service returns singleton instance."""
-    from app.dashboard.dashboard_service import get_dashboard_service
+    from app.presentation.dashboard.dashboard_service import get_dashboard_service
 
     # First call creates instance
     service1 = get_dashboard_service()

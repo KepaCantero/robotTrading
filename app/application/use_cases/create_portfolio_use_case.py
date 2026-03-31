@@ -2,6 +2,8 @@
 Create Portfolio Use Case - Create a new portfolio
 """
 
+from __future__ import annotations
+
 import logging
 from decimal import Decimal
 from typing import Optional

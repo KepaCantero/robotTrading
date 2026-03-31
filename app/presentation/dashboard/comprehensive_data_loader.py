@@ -4,6 +4,8 @@ Data Loader para Comprehensive Backtest Results
 Carga resultados de comprehensive_backtest para el dashboard principal.
 """
 
+from __future__ import annotations
+
 import json
 import logging
 from datetime import datetime
@@ -37,15 +39,11 @@ class ComprehensiveBacktestLoader:
             ]
 
             # Usar el primer directorio que exista o crear el primero
-            self.results_dir = None
+            self.results_dir = possible_dirs[0]
             for dir_path in possible_dirs:
                 if dir_path.exists():
                     self.results_dir = dir_path
                     break
-
-            if self.results_dir is None:
-                # Si ninguno existe, usar el primero y crearlo
-                self.results_dir = possible_dirs[0]
 
         self.results_dir.mkdir(parents=True, exist_ok=True)
 

@@ -10,6 +10,8 @@ Extiende BaseStrategy con funcionalidades adicionales para:
 - Integración con DataEngine y ContextEngine (Módulos 1 y 2)
 """
 
+from __future__ import annotations
+
 import asyncio
 import contextlib
 import logging
@@ -17,7 +19,7 @@ from abc import ABC, abstractmethod
 from collections.abc import Sequence
 from datetime import datetime
 from decimal import Decimal
-from typing import TYPE_CHECKING, Any, Callable, Optional
+from typing import TYPE_CHECKING, Any, Callable, Optional, Union, cast
 
 from app.domain.models.market_data import Quote
 from app.domain.models.signal import Signal
@@ -29,37 +31,57 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 # Optional imports for engine integration
-try:
-    from app.engines.data_engine.data_engine import DataEngine
+_DataEngineImpl: Optional[type] = None
+_ContextEngineImpl: Optional[type] = None
+_PortfolioEngineImpl: Optional[type] = None
+_RiskEngineImpl: Optional[type] = None
 
+try:
+    from app.engines.data_engine.data_engine import DataEngine as _DataEngineImport
+
+    _DataEngineImpl = _DataEngineImport
     DATA_ENGINE_AVAILABLE = True
 except ImportError:
     DATA_ENGINE_AVAILABLE = False
-    DataEngine: Optional[type[object]] = None
 
 try:
-    from app.engines.context_engine.context_engine import ContextEngine
+    from app.engines.context_engine.context_engine import ContextEngine as _ContextEngineImport
 
+    _ContextEngineImpl = _ContextEngineImport
     CONTEXT_ENGINE_AVAILABLE = True
 except ImportError:
     CONTEXT_ENGINE_AVAILABLE = False
-    ContextEngine: Optional[type[object]] = None
 
 try:
-    from app.engines.portfolio_engine.portfolio_engine import PortfolioEngine
+    from app.engines.portfolio_engine.portfolio_engine import (
+        PortfolioEngine as _PortfolioEngineImport,
+    )
 
+    _PortfolioEngineImpl = _PortfolioEngineImport
     PORTFOLIO_ENGINE_AVAILABLE = True
 except ImportError:
     PORTFOLIO_ENGINE_AVAILABLE = False
-    PortfolioEngine: Optional[type[object]] = None
 
 try:
-    from app.engines.risk_engine.risk_engine import RiskEngine
+    from app.engines.risk_engine.risk_engine import RiskEngine as _RiskEngineImport
 
+    _RiskEngineImpl = _RiskEngineImport
     RISK_ENGINE_AVAILABLE = True
 except ImportError:
     RISK_ENGINE_AVAILABLE = False
-    RiskEngine: Optional[type[object]] = None
+
+
+class _HasInitialize:
+    """Protocol-like helper for engines that have an initialize() method."""
+
+    def initialize(self) -> None: ...
+
+
+class _HasGetStatus:
+    """Protocol-like helper for engines that have a get_status() method."""
+
+    def get_status(self) -> dict[str, Any]:
+        return {}
 
 
 class BaseStrategyEngine(BaseStrategy, ABC):
@@ -84,66 +106,74 @@ class BaseStrategyEngine(BaseStrategy, ABC):
         super().__init__(config)
 
         # Learning Engine integration
-        self.learning_engine = None  # Se inicializará si está disponible
-        self.learning_enabled = config.get("learning_enabled", False)
-        self.learning_config = config.get("learning_engine", {})
+        self.learning_engine: Optional[BaseLearningEngine] = None
+        self.learning_enabled: bool = config.get("learning_enabled", False)
+        self.learning_config: dict[str, Any] = config.get("learning_engine", {})
 
-        # DataEngine integration (Módulo 1)
-        self.data_engine = None
-        self.data_engine_enabled = config.get("data_engine_enabled", False)
+        # DataEngine integration (Modulo 1)
+        self.data_engine: Optional[object] = None
+        self.data_engine_enabled: bool = config.get("data_engine_enabled", False)
         if DATA_ENGINE_AVAILABLE and self.data_engine_enabled:
             data_engine_config = config.get("data_engine_config", {})
             try:
-                self.data_engine = DataEngine(data_engine_config)
+                assert _DataEngineImpl is not None
+                self.data_engine = _DataEngineImpl(data_engine_config)
                 logger.info(f"{self.__class__.__name__}: DataEngine habilitado")
             except (FileNotFoundError, ValueError, KeyError, TypeError) as e:
                 logger.warning(f"No se pudo inicializar DataEngine: {e}")
 
-        # ContextEngine integration (Módulo 2)
-        self.context_engine = None
-        self.context_engine_enabled = config.get("context_engine_enabled", False)
+        # ContextEngine integration (Modulo 2)
+        self.context_engine: Optional[object] = None
+        self.context_engine_enabled: bool = config.get("context_engine_enabled", False)
         if CONTEXT_ENGINE_AVAILABLE and self.context_engine_enabled:
             context_engine_config = config.get("context_engine_config", {})
             try:
-                self.context_engine = ContextEngine(context_engine_config)
+                assert _ContextEngineImpl is not None
+                self.context_engine = _ContextEngineImpl(context_engine_config)
                 logger.info(f"{self.__class__.__name__}: ContextEngine habilitado")
             except (FileNotFoundError, ValueError, KeyError, TypeError) as e:
                 logger.warning(f"No se pudo inicializar ContextEngine: {e}")
 
-        # PortfolioEngine integration (Fase 3, Módulo 5)
-        self.portfolio_engine = None
-        self.portfolio_engine_enabled = config.get("portfolio_engine_enabled", False)
+        # PortfolioEngine integration (Fase 3, Modulo 5)
+        self.portfolio_engine: Optional[Union[_HasInitialize, _HasGetStatus, object]] = None
+        self.portfolio_engine_enabled: bool = config.get("portfolio_engine_enabled", False)
         if PORTFOLIO_ENGINE_AVAILABLE and self.portfolio_engine_enabled:
             portfolio_engine_config = config.get("portfolio_engine_config", {})
             try:
-                self.portfolio_engine = PortfolioEngine(portfolio_engine_config)
-                self.portfolio_engine.initialize()
+                assert _PortfolioEngineImpl is not None
+                raw_engine = _PortfolioEngineImpl(portfolio_engine_config)
+                self.portfolio_engine = cast("_HasInitialize", raw_engine)
+                if isinstance(self.portfolio_engine, _HasInitialize):
+                    self.portfolio_engine.initialize()
                 logger.info(f"{self.__class__.__name__}: PortfolioEngine habilitado")
             except (FileNotFoundError, ValueError, KeyError, TypeError) as e:
                 logger.warning(f"No se pudo inicializar PortfolioEngine: {e}")
 
-        # RiskEngine integration (Fase 3, Módulo 6)
-        self.risk_engine = None
-        self.risk_engine_enabled = config.get("risk_engine_enabled", False)
+        # RiskEngine integration (Fase 3, Modulo 6)
+        self.risk_engine: Optional[Union[_HasInitialize, _HasGetStatus, object]] = None
+        self.risk_engine_enabled: bool = config.get("risk_engine_enabled", False)
         if RISK_ENGINE_AVAILABLE and self.risk_engine_enabled:
             risk_engine_config = config.get("risk_engine_config", {})
             try:
-                self.risk_engine = RiskEngine(risk_engine_config)
-                self.risk_engine.initialize()
+                assert _RiskEngineImpl is not None
+                raw_engine = _RiskEngineImpl(risk_engine_config)
+                self.risk_engine = cast("_HasInitialize", raw_engine)
+                if isinstance(self.risk_engine, _HasInitialize):
+                    self.risk_engine.initialize()
                 logger.info(f"{self.__class__.__name__}: RiskEngine habilitado")
             except (FileNotFoundError, ValueError, KeyError, TypeError) as e:
                 logger.warning(f"No se pudo inicializar RiskEngine: {e}")
 
         # Feature extraction
-        self.feature_extractors = []  # Lista de extractores de features
+        self.feature_extractors: list[Callable[..., dict[str, Any]]] = []
 
         # Callbacks para aprendizaje continuo
-        self.on_signal_generated_callbacks: list[Callable] = []
-        self.on_trade_executed_callbacks: list[Callable] = []
-        self.on_market_data_callbacks: list[Callable] = []
+        self.on_signal_generated_callbacks: list[Callable[..., None]] = []
+        self.on_trade_executed_callbacks: list[Callable[..., None]] = []
+        self.on_market_data_callbacks: list[Callable[..., None]] = []
 
-        # Métricas y tracking
-        self.metrics: dict[str, Any] = {
+        # Metricas y tracking
+        self.metrics: dict[str, Union[int, Optional[datetime]]] = {
             "signals_generated": 0,
             "trades_executed": 0,
             "learning_adjustments_applied": 0,
@@ -153,8 +183,8 @@ class BaseStrategyEngine(BaseStrategy, ABC):
         }
 
         # Ensemble support (si este engine es parte de un ensemble)
-        self.is_ensemble_component = False
-        self.ensemble_weight = Decimal("1.0")  # Peso en ensemble (default: único engine)
+        self.is_ensemble_component: bool = False
+        self.ensemble_weight: Decimal = Decimal("1.0")
 
         logger.info(
             "BaseStrategyEngine initialized",
@@ -169,7 +199,7 @@ class BaseStrategyEngine(BaseStrategy, ABC):
             },
         )
 
-    # ===== Métodos abstractos adicionales =====
+    # ===== Metodos abstractos adicionales =====
 
     @abstractmethod
     def extract_features(
@@ -195,9 +225,9 @@ class BaseStrategyEngine(BaseStrategy, ABC):
             String identificando el tipo de estrategia
         """
 
-    # ===== Métodos concretos para Learning Engine integration =====
+    # ===== Metodos concretos para Learning Engine integration =====
 
-    def set_learning_engine(self, learning_engine: "BaseLearningEngine") -> None:
+    def set_learning_engine(self, learning_engine: Optional[BaseLearningEngine]) -> None:
         """
         Establecer Learning Engine para este strategy engine.
 
@@ -219,14 +249,14 @@ class BaseStrategyEngine(BaseStrategy, ABC):
         self, market_data: Quote, historical_data: Optional[Sequence[Quote]] = None
     ) -> Optional[dict[str, Any]]:
         """
-        Obtener predicción del Learning Engine (si está disponible).
+        Obtener prediccion del Learning Engine (si esta disponible).
 
         Args:
             market_data: Datos de mercado actuales
             historical_data: Historial opcional
 
         Returns:
-            Diccionario con predicción o None si no hay Learning Engine
+            Diccionario con prediccion o None si no hay Learning Engine
         """
         if not self.learning_enabled or self.learning_engine is None:
             return None
@@ -236,41 +266,41 @@ class BaseStrategyEngine(BaseStrategy, ABC):
             prediction = self.learning_engine.predict(features)
 
             # Track learning usage
-            self.metrics["learning_adjustments_applied"] += 1
+            self.metrics["learning_adjustments_applied"] = (
+                cast("int", self.metrics["learning_adjustments_applied"]) + 1
+            )
 
-            return prediction
-        except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
+            return cast("dict[str, Any]", prediction)
+        except (ValueError, KeyError, AttributeError, IndexError, TypeError):
             logger.warning(
-                "Error obteniendo predicción de Learning Engine",
+                "Error obteniendo prediccion de Learning Engine",
                 extra={
                     "strategy_name": self.name,
                     "strategy_class": self.__class__.__name__,
-                    "error_type": type(e).__name__,
                 },
             )
             return None
 
     def apply_learning_adjustments(self, prediction: dict[str, Any], signal: Signal) -> Signal:
         """
-        Aplicar ajustes sugeridos por Learning Engine a una señal.
+        Aplicar ajustes sugeridos por Learning Engine a una senal.
 
         Args:
-            prediction: Predicción del Learning Engine
-            signal: Señal a ajustar
+            prediction: Prediccion del Learning Engine
+            signal: Senal a ajustar
 
         Returns:
-            Señal ajustada (puede ser la misma o una nueva)
+            Senal ajustada (puede ser la misma o una nueva)
         """
         if not prediction:
             return signal
 
-        # Ajustar confidence basado en predicción
+        # Ajustar confidence basado en prediccion
         if "confidence" in prediction:
             signal.confidence = min(100.0, max(0.0, float(prediction["confidence"]) * 100))
 
-        # Ajustar strength si está disponible
+        # Ajustar strength si esta disponible
         if "recommended_action" in prediction:
-            # Puede sugerir modificar la señal o su fuerza
             pass
 
         return signal
@@ -279,10 +309,10 @@ class BaseStrategyEngine(BaseStrategy, ABC):
 
     def register_signal_callback(self, callback: Callable[[Signal, Quote], None]) -> None:
         """
-        Registrar callback para cuando se genera una señal.
+        Registrar callback para cuando se genera una senal.
 
         Args:
-            callback: Función que recibe (signal, market_data)
+            callback: Funcion que recibe (signal, market_data)
         """
         self.on_signal_generated_callbacks.append(callback)
 
@@ -291,7 +321,7 @@ class BaseStrategyEngine(BaseStrategy, ABC):
         Registrar callback para cuando se ejecuta un trade.
 
         Args:
-            callback: Función que recibe (signal, execution_result)
+            callback: Funcion que recibe (signal, execution_result)
         """
         self.on_trade_executed_callbacks.append(callback)
 
@@ -300,17 +330,17 @@ class BaseStrategyEngine(BaseStrategy, ABC):
         Registrar callback para cuando se reciben datos de mercado.
 
         Args:
-            callback: Función que recibe (market_data)
+            callback: Funcion que recibe (market_data)
         """
         self.on_market_data_callbacks.append(callback)
 
     def _trigger_signal_callbacks(self, signal: Signal, market_data: Quote) -> None:
-        """Ejecutar callbacks de señal generada."""
+        """Ejecutar callbacks de senal generada."""
         for callback in self.on_signal_generated_callbacks:
             try:
                 callback(signal, market_data)
             except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
-                logger.warning(f"{self.__class__.__name__}: Error en callback de señal: {e}")
+                logger.warning(f"{self.__class__.__name__}: Error en callback de senal: {e}")
 
     def _trigger_trade_callbacks(self, signal: Signal, execution_result: object) -> None:
         """Ejecutar callbacks de trade ejecutado."""
@@ -328,16 +358,15 @@ class BaseStrategyEngine(BaseStrategy, ABC):
             except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
                 logger.warning(f"{self.__class__.__name__}: Error en callback de market data: {e}")
 
-    # ===== Métodos para composición (ensembles) =====
+    # ===== Metodos para composicion (ensembles) =====
 
-    def set_ensemble_weight(self, weight: Decimal) -> None:
+    def set_ensemble_weight(self, weight: Union[Decimal, float, str]) -> None:
         """
         Establecer peso de este engine en un ensemble.
 
         Args:
-            weight: Peso del engine (normalmente entre 0 y 1) - puede ser Decimal o float
+            weight: Peso del engine (normalmente entre 0 y 1)
         """
-        # Convertir a Decimal si es necesario
         if not isinstance(weight, Decimal):
             weight = Decimal(str(weight))
         self.ensemble_weight = weight
@@ -350,41 +379,47 @@ class BaseStrategyEngine(BaseStrategy, ABC):
 
     def get_context_analysis(self, prices: list[float]) -> Optional[dict[str, Any]]:
         """
-        Obtener análisis de contexto de mercado usando ContextEngine.
+        Obtener analisis de contexto de mercado usando ContextEngine.
 
         Args:
-            prices: Lista de precios históricos
+            prices: Lista de precios historicos
 
         Returns:
-            Dict con análisis de contexto o None si ContextEngine no está disponible
+            Dict con analisis de contexto o None si ContextEngine no esta disponible
         """
         if not self.context_engine or not self.context_engine_enabled:
             return None
 
         try:
-            self.metrics["context_analysis_calls"] += 1
-            return self.context_engine.get_current_regime(prices, method="ensemble")
+            self.metrics["context_analysis_calls"] = (
+                cast("int", self.metrics["context_analysis_calls"]) + 1
+            )
+            engine = cast("Any", self.context_engine)
+            result = engine.get_current_regime(prices, method="ensemble")
+            return result if isinstance(result, dict) else None
         except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
             logger.error(f"Error obteniendo contexto: {e}")
             return None
 
     def get_volatility_regime(self, prices: list[float]) -> Optional[dict[str, Any]]:
         """
-        Obtener régimen de volatilidad usando ContextEngine.
+        Obtener regimen de volatilidad usando ContextEngine.
 
         Args:
-            prices: Lista de precios históricos
+            prices: Lista de precios historicos
 
         Returns:
-            Dict con régimen de volatilidad o None
+            Dict con regimen de volatilidad o None
         """
         if not self.context_engine or not self.context_engine_enabled:
             return None
 
         try:
-            return self.context_engine.get_volatility_regime(prices)
+            engine = cast("Any", self.context_engine)
+            result = engine.get_volatility_regime(prices)
+            return result if isinstance(result, dict) else None
         except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
-            logger.error(f"Error obteniendo régimen de volatilidad: {e}")
+            logger.error(f"Error obteniendo regimen de volatilidad: {e}")
             return None
 
     def get_market_data_from_engine(
@@ -394,27 +429,36 @@ class BaseStrategyEngine(BaseStrategy, ABC):
         Obtener datos de mercado usando DataEngine.
 
         Args:
-            symbol: Símbolo del instrumento
+            symbol: Simbolo del instrumento
             start_date: Fecha de inicio
             end_date: Fecha de fin
-            source: Fuente específica (opcional)
+            source: Fuente especifica (opcional)
 
         Returns:
-            Lista de Quotes o lista vacía si DataEngine no está disponible
+            Lista de Quotes o lista vacia si DataEngine no esta disponible
         """
         if not self.data_engine or not self.data_engine_enabled:
             return []
 
         try:
-            # Obtener datos OHLCV del DataEngine
-            ohlcv_data = asyncio.run(
-                self.data_engine.get_ohlcv(symbol, start_date, end_date, source=source)
-            )
+            engine = cast("Any", self.data_engine)
+            coro = engine.get_ohlcv(symbol, start_date, end_date, source=source)
+            try:
+                loop = asyncio.get_running_loop()
+            except RuntimeError:
+                loop = None
 
-            self.metrics["data_engine_calls"] += 1
+            if loop and loop.is_running():
+                import concurrent.futures
 
-            # Convertir a Quotes
-            quotes = []
+                with concurrent.futures.ThreadPoolExecutor(max_workers=1) as pool:
+                    ohlcv_data = pool.submit(asyncio.run, coro).result()
+            else:
+                ohlcv_data = asyncio.run(coro)
+
+            self.metrics["data_engine_calls"] = cast("int", self.metrics["data_engine_calls"]) + 1
+
+            quotes: list[Quote] = []
             for data in ohlcv_data:
                 quote = Quote(
                     symbol=symbol,
@@ -436,7 +480,7 @@ class BaseStrategyEngine(BaseStrategy, ABC):
             logger.error(f"Error obteniendo datos de DataEngine: {e}")
             return []
 
-    def set_data_engine(self, data_engine: "DataEngine") -> None:
+    def set_data_engine(self, data_engine: object) -> None:
         """
         Configurar DataEngine externo.
 
@@ -453,7 +497,7 @@ class BaseStrategyEngine(BaseStrategy, ABC):
             },
         )
 
-    def set_context_engine(self, context_engine: "ContextEngine") -> None:
+    def set_context_engine(self, context_engine: object) -> None:
         """
         Configurar ContextEngine externo.
 
@@ -470,9 +514,9 @@ class BaseStrategyEngine(BaseStrategy, ABC):
             },
         )
 
-    def set_portfolio_engine(self, portfolio_engine: "PortfolioEngine") -> None:
+    def set_portfolio_engine(self, portfolio_engine: object) -> None:
         """
-        Configurar PortfolioEngine externo (Fase 3, Módulo 5).
+        Configurar PortfolioEngine externo (Fase 3, Modulo 5).
 
         Args:
             portfolio_engine: Instancia de PortfolioEngine
@@ -487,9 +531,9 @@ class BaseStrategyEngine(BaseStrategy, ABC):
             },
         )
 
-    def set_risk_engine(self, risk_engine: "RiskEngine") -> None:
+    def set_risk_engine(self, risk_engine: object) -> None:
         """
-        Configurar RiskEngine externo (Fase 3, Módulo 6).
+        Configurar RiskEngine externo (Fase 3, Modulo 6).
 
         Args:
             risk_engine: Instancia de RiskEngine
@@ -504,30 +548,30 @@ class BaseStrategyEngine(BaseStrategy, ABC):
             },
         )
 
-    # ===== Métodos mejorados de generate_signals =====
+    # ===== Metodos mejorados de generate_signals =====
 
     def generate_signals(self, market_data: Quote) -> list[Signal]:
         """
-        Generar señales (método wrapper que añade callbacks y learning).
+        Generar senales (metodo wrapper que anade callbacks y learning).
 
-        Este método llama a _generate_signals_impl() (implementación específica)
-        y añade funcionalidades de callbacks y learning integration.
+        Este metodo llama a _generate_signals_impl() (implementacion especifica)
+        y anade funcionalidades de callbacks y learning integration.
 
         Args:
             market_data: Datos de mercado actuales
 
         Returns:
-            Lista de señales generadas
+            Lista de senales generadas
         """
         # Trigger market data callbacks
         self._trigger_market_data_callbacks(market_data)
 
-        # Generar señales (implementación específica)
+        # Generar senales (implementacion especifica)
         signals = self._generate_signals_impl(market_data)
 
-        # Aplicar ajustes de Learning Engine si está disponible
+        # Aplicar ajustes de Learning Engine si esta disponible
         if self.learning_enabled:
-            adjusted_signals = []
+            adjusted_signals: list[Signal] = []
             for signal in signals:
                 prediction = self.get_learning_prediction(market_data)
                 if prediction:
@@ -538,7 +582,7 @@ class BaseStrategyEngine(BaseStrategy, ABC):
         # Trigger signal callbacks
         for signal in signals:
             self._trigger_signal_callbacks(signal, market_data)
-            self.metrics["signals_generated"] += 1
+            self.metrics["signals_generated"] = cast("int", self.metrics["signals_generated"]) + 1
 
         self.metrics["last_update"] = datetime.utcnow()
         return signals
@@ -546,30 +590,30 @@ class BaseStrategyEngine(BaseStrategy, ABC):
     @abstractmethod
     def _generate_signals_impl(self, market_data: Quote) -> list[Signal]:
         """
-        Implementación específica de generación de señales.
+        Implementacion especifica de generacion de senales.
 
-        Este método debe ser implementado por cada strategy engine.
+        Este metodo debe ser implementado por cada strategy engine.
 
         Args:
             market_data: Datos de mercado actuales
 
         Returns:
-            Lista de señales generadas
+            Lista de senales generadas
         """
 
-    # ===== Métricas y estado =====
+    # ===== Metricas y estado =====
 
     def get_metrics(self) -> dict[str, Any]:
         """
-        Obtener métricas del engine.
+        Obtener metricas del engine.
 
         Returns:
-            Diccionario con métricas actuales
+            Diccionario con metricas actuales
         """
         return self.metrics.copy()
 
     def reset_metrics(self) -> None:
-        """Resetear métricas del engine."""
+        """Resetear metricas del engine."""
         self.metrics = {
             "signals_generated": 0,
             "trades_executed": 0,
@@ -584,7 +628,7 @@ class BaseStrategyEngine(BaseStrategy, ABC):
         Returns:
             Diccionario con estado del engine
         """
-        status = {
+        status: dict[str, Any] = {
             "name": self.name,
             "type": self.get_strategy_type(),
             "version": self.version,
@@ -599,10 +643,11 @@ class BaseStrategyEngine(BaseStrategy, ABC):
             "metrics": self.get_metrics(),
         }
 
-        # Agregar estado de engines si están disponibles
+        # Agregar estado de engines si estan disponibles
         if self.data_engine:
             with contextlib.suppress(ValueError, TypeError, KeyError, AttributeError, IndexError):
-                status["data_engine_status"] = self.data_engine.get_status()
+                engine = cast("Any", self.data_engine)
+                status["data_engine_status"] = engine.get_status()
 
         if self.context_engine:
             with contextlib.suppress(ValueError, TypeError, KeyError, AttributeError, IndexError):
@@ -610,16 +655,18 @@ class BaseStrategyEngine(BaseStrategy, ABC):
 
         if self.portfolio_engine:
             with contextlib.suppress(ValueError, TypeError, KeyError, AttributeError, IndexError):
-                status["portfolio_engine_status"] = self.portfolio_engine.get_status()
+                engine = cast("Any", self.portfolio_engine)
+                status["portfolio_engine_status"] = engine.get_status()
 
         if self.risk_engine:
             with contextlib.suppress(ValueError, TypeError, KeyError, AttributeError, IndexError):
-                status["risk_engine_status"] = self.risk_engine.get_status()
+                engine = cast("Any", self.risk_engine)
+                status["risk_engine_status"] = engine.get_status()
 
         return status
 
     def __repr__(self) -> str:
-        """Representación detallada del engine."""
+        """Representacion detallada del engine."""
         return (
             f"{self.__class__.__name__}("
             f"name='{self.name}', "

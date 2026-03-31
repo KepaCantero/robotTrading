@@ -3,6 +3,8 @@
 Enfocado en validación de métricas y cumplimiento de límites
 """
 
+from __future__ import annotations
+
 # CRÍTICO: Importar streamlit PRIMERO
 import streamlit as st
 
@@ -491,8 +493,7 @@ def main():
         with st.sidebar:
             st.header("⚙ Configuración")
             st.markdown("---")
-            st.info(
-                """
+            st.info("""
             **Objetivos de Métricas:**
             - Max Drawdown: < 20%
             - Sharpe Ratio: > 1.2
@@ -500,8 +501,7 @@ def main():
             - Volatilidad: 10-15%
             - Profit Factor: > 1.4
             - Win Rate: 45-60%
-            """
-            )
+            """)
 
             if st.button("🔄 Recargar Resultados", use_container_width=True):
                 st.cache_data.clear()
@@ -512,16 +512,14 @@ def main():
             df = load_results()
 
         if df is None or df.empty:
-            st.warning(
-                """
+            st.warning("""
             ⚠ No se encontraron resultados de backtesting.
 
             Ejecuta algunos backtests primero:
             ```bash
             python scripts/run_comprehensive_backtest.py baseline grid_search
             ```
-            """
-            )
+            """)
             return
 
         st.success(f"✅ {len(df)} resultado(s) cargado(s)")

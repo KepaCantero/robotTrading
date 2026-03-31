@@ -7,7 +7,7 @@ from datetime import datetime, timedelta
 
 import pytest
 
-from app.security.secrets_manager import (
+from app.security.secrets.secrets_manager import (
     Secret,
     SecretsManager,
     SecretValidationError,

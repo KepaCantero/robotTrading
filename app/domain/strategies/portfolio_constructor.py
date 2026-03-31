@@ -16,10 +16,12 @@ SOLID Principles:
 - Open/Closed: Extensible with new optimization objectives
 """
 
+from __future__ import annotations
+
 import logging
 from datetime import datetime, timedelta
 from decimal import Decimal
-from typing import Any, Optional
+from typing import Any, Optional, Protocol, runtime_checkable
 
 import numpy as np
 from scipy.optimize import Bounds, minimize
@@ -36,6 +38,18 @@ from .models import (
 )
 
 logger = logging.getLogger(__name__)
+
+
+@runtime_checkable
+class FactorScores(Protocol):
+    """Protocol for factor score objects used in portfolio construction."""
+
+    value_score: Optional[float]
+    profitability_score: Optional[float]
+    momentum_score: Optional[float]
+    size_score: Optional[float]
+    investment_score: Optional[float]
+    factor_momentum_score: Optional[float]
 
 
 class FactorPortfolioConstructor:
@@ -206,7 +220,7 @@ class FactorPortfolioConstructor:
 
     def _calculate_composite_score(
         self,
-        factor_scores: object,
+        factor_scores: FactorScores,
         profile: FactorProfile,
     ) -> float:
         """
@@ -319,7 +333,7 @@ class FactorPortfolioConstructor:
             portfolio_return = w @ expected_returns
 
             # Concentration penalty (Herfindahl index)
-            concentration = np.sum(w**2)
+            concentration: float = float(np.sum(w**2))
 
             return -(portfolio_return - 0.5 * concentration)
 

@@ -10,6 +10,8 @@ This gate prevents systematic capital erosion from execution costs
 that exceed strategy alpha, especially on small accounts.
 """
 
+from __future__ import annotations
+
 import logging
 from collections import deque
 from decimal import Decimal

@@ -4,6 +4,8 @@ Tax Optimization Engine
 Engine for optimizing portfolios with tax efficiency considerations.
 """
 
+from __future__ import annotations
+
 import logging
 from typing import Any, Optional
 

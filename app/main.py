@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import logging
 import os
 import platform
@@ -22,14 +24,16 @@ from app.presentation.api import AuditMiddleware
 # CRITICAL: Enforce Numba availability BEFORE any other imports
 # This ensures 100% Numba acceleration for all performance-critical code
 # ============================================================================
-try:
-    from app.shared.performance.numba_enforcer import enforce_numba_available
+# Skip enforcement in test environments - tests should not sys.exit on import
+if os.environ.get("NUMBA_ENFORCE", "1") != "0" and not os.environ.get("PYTEST_CURRENT_TEST"):
+    try:
+        from app.shared.performance.numba_enforcer import enforce_numba_available
 
-    enforce_numba_available()  # Will raise RuntimeError if Numba not available
-except RuntimeError as e:
-    # Print the error and exit immediately (logger not available yet)
-    print(str(e), file=sys.stderr)
-    sys.exit(1)
+        enforce_numba_available()  # Will raise RuntimeError if Numba not available
+    except RuntimeError as e:
+        # Print the error and exit immediately (logger not available yet)
+        print(str(e), file=sys.stderr)
+        sys.exit(1)
 
 import asyncio
 
@@ -114,10 +118,10 @@ os.environ["TORCH_USE_CUDA_DSA"] = "0"
 logger = logging.getLogger(__name__)
 
 # Module-level settings cache for lazy loading
-_settings: Optional["Settings"] = None
+_settings: Optional[Settings] = None
 
 
-def get_app_settings() -> "Settings":
+def get_app_settings() -> Settings:
     """Get application settings with lazy loading."""
     global _settings
     if _settings is None:
@@ -173,11 +177,13 @@ app = FastAPI(
     openapi_url="/openapi.json",
 )
 
-# Configure CORS middleware (will be updated when settings are loaded)
+# Configure CORS middleware
+# NOTE: allow_origins=["*"] with allow_credentials=True is rejected by browsers.
+# Use allow_credentials=False when allowing all origins.
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
-    allow_credentials=True,
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )

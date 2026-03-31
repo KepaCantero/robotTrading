@@ -12,6 +12,8 @@ This factory provides a clean interface for getting the appropriate
 tax engine based on the investor's country of tax residence.
 """
 
+from __future__ import annotations
+
 import logging
 from typing import Optional
 

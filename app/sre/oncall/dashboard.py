@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 # mypy: ignore-errors
 """
 On-Call Status Dashboard - SRE Rule 24
@@ -18,7 +20,6 @@ Domain Model (Cosmic Python - Rule 16):
 - DashboardView: Domain entity for presentation
 """
 
-from __future__ import annotations
 
 import asyncio
 import contextlib
@@ -220,51 +221,41 @@ class OncallDashboard:
 
             async with aiosqlite.connect(self.config.db_path) as db:
                 # Dashboard cache table
-                await db.execute(
-                    """
+                await db.execute("""
                     CREATE TABLE IF NOT EXISTS dashboard_cache (
                         key TEXT PRIMARY KEY,
                         value TEXT NOT NULL,
                         updated_at TEXT NOT NULL DEFAULT (datetime('utc'))
                     )
-                """
-                )
+                """)
 
                 # Status history table
-                await db.execute(
-                    """
+                await db.execute("""
                     CREATE TABLE IF NOT EXISTS status_history (
                         id INTEGER PRIMARY KEY AUTOINCREMENT,
                         status_data TEXT NOT NULL,
                         created_at TEXT NOT NULL DEFAULT (datetime('utc'))
                     )
-                """
-                )
+                """)
 
                 # Metrics history table
-                await db.execute(
-                    """
+                await db.execute("""
                     CREATE TABLE IF NOT EXISTS metrics_history (
                         id INTEGER PRIMARY KEY AUTOINCREMENT,
                         metrics_data TEXT NOT NULL,
                         created_at TEXT NOT NULL DEFAULT (datetime('utc'))
                     )
-                """
-                )
+                """)
 
                 # Create indexes
-                await db.execute(
-                    """
+                await db.execute("""
                     CREATE INDEX IF NOT EXISTS idx_status_history_created
                     ON status_history(created_at)
-                """
-                )
-                await db.execute(
-                    """
+                """)
+                await db.execute("""
                     CREATE INDEX IF NOT EXISTS idx_metrics_history_created
                     ON metrics_history(created_at)
-                """
-                )
+                """)
 
                 await db.commit()
 

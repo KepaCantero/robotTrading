@@ -15,8 +15,8 @@ Date: 2026-01-25
 
 import pytest
 
-from app.core.interfaces.broker_base import BrokerType
-from app.core.symbol_mapper import (
+from app.shared.interfaces.broker_base import BrokerType
+from app.shared.utils.symbol_mapper import (
     BrokerMappingTables,
     SymbolMapper,
     SymbolMapperMixin,

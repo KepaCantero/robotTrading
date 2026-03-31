@@ -13,6 +13,8 @@ If profit goal is unreachable, system disables trading and recommends action.
 Uses centralized configuration for all thresholds.
 """
 
+from __future__ import annotations
+
 import logging
 from decimal import Decimal
 from typing import Optional

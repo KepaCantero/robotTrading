@@ -17,10 +17,41 @@ Economics principle: Fail-fast by default. Better to reject trading on underfund
 accounts than to slowly bleed capital on infrastructure costs that exceed returns.
 """
 
+from __future__ import annotations
+
 import logging
 from decimal import Decimal
 from enum import Enum
-from typing import Optional
+from typing import Optional, TypedDict
+
+
+class _GateResult(TypedDict, total=False):
+    passed: bool
+    severity: str
+    reason: str
+    estimated_cost_per_trade: object
+    cost_ratio: object
+    learning_recommended: bool
+    learning_cost_monthly: Decimal
+    cost_benefit_ratio: Decimal
+    enabled_module_count: int
+    total_module_count: int
+    total_cost_monthly: Decimal
+    recommendation: str
+
+
+class _AnalysisDict(TypedDict, total=False):
+    account_id: Optional[str]
+    capital: Decimal
+    monthly_profit_goal: Decimal
+    expected_monthly_alpha: Decimal
+    capital_tier: str
+    status: str
+    gates: dict[str, _GateResult]
+    issues: list[str]
+    warnings: list[str]
+    recommendations: list[str]
+
 
 from app.services.capital_viability_gate import CapitalViabilityValidator
 from app.services.execution_cost_analyzer import ExecutionCostAnalyzer
@@ -62,7 +93,7 @@ class DeploymentValidator:
         learning_enabled: bool = True,
         expensive_modules_enabled: bool = True,
         account_id: Optional[str] = None,
-    ) -> tuple[DeploymentStatus, dict]:
+    ) -> tuple[DeploymentStatus, _AnalysisDict]:
         """
         Run all capital gates to determine if account is safe for live deployment.
 
@@ -93,7 +124,7 @@ class DeploymentValidator:
         if commission_per_trade is None:
             commission_per_trade = Decimal("15")
 
-        analysis = {
+        analysis: _AnalysisDict = {
             "account_id": account_id,
             "capital": capital,
             "monthly_profit_goal": monthly_profit_goal,
@@ -265,7 +296,7 @@ class DeploymentValidator:
             return "large"
 
     @staticmethod
-    def _log_deployment_decision(analysis: dict, status: DeploymentStatus) -> None:
+    def _log_deployment_decision(analysis: _AnalysisDict, status: DeploymentStatus) -> None:
         """Log deployment validation decision"""
         account_id = analysis.get("account_id", "UNKNOWN")
         capital = analysis.get("capital", Decimal("0"))

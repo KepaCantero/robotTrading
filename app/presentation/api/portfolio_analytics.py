@@ -305,12 +305,10 @@ async def calculate_performance_metrics(
 @router.get("/performance-metrics/{portfolio_id}", response_model=PerformanceMetricsResponse)
 async def get_performance_metrics(
     portfolio_id: UUID,
-    period: Annotated[PerformancePeriod, Query(default=PerformancePeriod.MONTHLY)],
-    start_date: Annotated[datetime | None, Query(None)],
-    end_date: Annotated[datetime | None, Query(None)],
-    analytics_service: Annotated[
-        PortfolioAnalyticsService, Depends(get_portfolio_analytics_service)
-    ],
+    period: PerformancePeriod = Query(default=PerformancePeriod.MONTHLY),
+    start_date: datetime | None = Query(None),
+    end_date: datetime | None = Query(None),
+    analytics_service: PortfolioAnalyticsService = Depends(get_portfolio_analytics_service),
 ):
     """Get performance metrics for a portfolio."""
     try:

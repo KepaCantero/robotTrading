@@ -1,3 +1,6 @@
+from __future__ import annotations
+
+"""Strategy cycle protocols"""
 """Strategy cycle protocols"""
 
 from typing import TYPE_CHECKING, Protocol
@@ -11,7 +14,7 @@ if TYPE_CHECKING:
 class IStrategyCycleRunner(Protocol):
     """Ejecuta ciclos de estrategia - Máximo 5 métodos"""
 
-    async def run_cycle(self, signals: list["TradeSignal"]) -> "CycleResult":
+    async def run_cycle(self, signals: list[TradeSignal]) -> CycleResult:
         """Ejecutar ciclo completo"""
         ...
 

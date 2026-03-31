@@ -353,7 +353,7 @@ class TestEmergencyCloser:
 
     def test_get_last_close_time(self, emergency_closer):
         """Test getting last close time."""
-        from app.core.timezone_utils import utc_now
+        from app.shared.utils.timezone_utils import utc_now
 
         test_time = utc_now()
         emergency_closer._last_close_time = test_time

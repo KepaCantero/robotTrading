@@ -5,6 +5,8 @@ This module provides convenient factory functions for creating configured
 instances of Hurst analysis components with sensible defaults.
 """
 
+from __future__ import annotations
+
 import logging
 
 from app.services.hurst_analysis.change_detector import RegimeChangeDetector

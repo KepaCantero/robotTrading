@@ -18,7 +18,7 @@ import math
 from datetime import datetime, timedelta
 from decimal import Decimal
 from pathlib import Path
-from typing import ClassVar
+from typing import ClassVar, cast
 
 import numpy as np
 import pandas as pd
@@ -482,7 +482,12 @@ class ComprehensiveBacktestRunner:
         Returns:
             Lista de resultados por ventana walk-forward
         """
-        wf_results = [r for r in results if "walk_forward" in r.get("test_type", "")]
+        wf_results = [
+            r
+            for r in results
+            if isinstance(r.get("test_type", ""), str)
+            and "walk_forward" in cast("str", r.get("test_type", ""))
+        ]
         windows = []
 
         for r in wf_results:
@@ -751,7 +756,7 @@ class ComprehensiveBacktestRunner:
             result_dict = {
                 "test_type": f"learning_engine_{engine_type}",
                 "test_name": f"Learning Engine - {engine_type.capitalize()}",
-                "modules_active": list(strategy_config.get("modules", {}).keys()),
+                "modules_active": list(cast("dict", strategy_config.get("modules", {})).keys()),
                 "learning_engine": engine_type,
                 "thresholds": self._extract_thresholds(strategy_config),
                 "total_pnl": consistent_metrics["total_pnl"],
@@ -904,10 +909,11 @@ class ComprehensiveBacktestRunner:
         Returns:
             Lista de quotes modificados con datos realistas
         """
-        return self.monte_carlo_simulator.create_monte_carlo_quotes(
+        result: list = self.monte_carlo_simulator.create_monte_carlo_quotes(
             base_quotes=self.quotes,
             volatility_multiplier=volatility_multiplier,
         )
+        return result
 
     def run_walk_forward_backtest(
         self,
@@ -1275,7 +1281,7 @@ class ComprehensiveBacktestRunner:
 
             # Step 6: Create optimized strategy with best parameters
             optimized_config = self._create_strategy_config()
-            optimized_config["thresholds"].update(best_params)
+            cast("dict", optimized_config["thresholds"]).update(best_params)
 
             optimized_strategy = ModularMomentumStrategy(optimized_config)
 
@@ -1868,18 +1874,19 @@ class ComprehensiveBacktestRunner:
                     if "thresholds" not in strategy_config:
                         strategy_config["thresholds"] = {}
 
+                    thresholds = cast("dict", strategy_config["thresholds"])
                     for param_name, param_value in params.items():
-                        strategy_config["thresholds"][param_name] = param_value
+                        thresholds[param_name] = param_value
 
                     # Also update presets if they exist
                     if (
                         "presets" in strategy_config
-                        and "custom" in strategy_config["presets"]
+                        and "custom" in cast("dict", strategy_config["presets"])
                         and "min_confidence" in params
                     ):
-                        strategy_config["presets"]["custom"]["min_confidence"] = params[
+                        cast("dict", cast("dict", strategy_config["presets"])["custom"])[
                             "min_confidence"
-                        ]
+                        ] = params["min_confidence"]
 
                     # Create strategy instance
                     strategy = ModularMomentumStrategy(strategy_config)
@@ -1991,7 +1998,10 @@ class ComprehensiveBacktestRunner:
                 return []
 
             # Step 6: Select best parameters based on validation Sharpe ratio
-            best_result = max(results, key=lambda x: x["val_sharpe"])
+            best_result = max(
+                results,
+                key=lambda x: cast("float", x["val_sharpe"]),
+            )
 
             logger.info("\n" + "-" * 80)
             logger.info("BEST PARAMETERS SELECTED")
@@ -2012,17 +2022,19 @@ class ComprehensiveBacktestRunner:
             if "thresholds" not in strategy_config:
                 strategy_config["thresholds"] = {}
 
-            for param_name, param_value in best_result["params"].items():
-                strategy_config["thresholds"][param_name] = param_value
+            best_params_dict = cast("dict", best_result["params"])
+            thresholds = cast("dict", strategy_config["thresholds"])
+            for param_name, param_value in best_params_dict.items():
+                thresholds[param_name] = param_value
 
             if (
                 "presets" in strategy_config
-                and "custom" in strategy_config["presets"]
-                and "min_confidence" in best_result["params"]
+                and "custom" in cast("dict", strategy_config["presets"])
+                and "min_confidence" in best_params_dict
             ):
-                strategy_config["presets"]["custom"]["min_confidence"] = best_result["params"][
+                cast("dict", cast("dict", strategy_config["presets"])["custom"])[
                     "min_confidence"
-                ]
+                ] = best_params_dict["min_confidence"]
 
             best_strategy = ModularMomentumStrategy(strategy_config)
 
@@ -2057,16 +2069,14 @@ class ComprehensiveBacktestRunner:
             )
 
             # Step 9: Calculate performance degradation
+            val_sharpe = cast("float", best_result["val_sharpe"])
+            val_return = cast("float", best_result["val_return"])
             sharpe_degradation = (
-                (best_result["val_sharpe"] - test_sharpe) / abs(best_result["val_sharpe"]) * 100
-                if best_result["val_sharpe"] != 0
-                else 0.0
+                (val_sharpe - test_sharpe) / abs(val_sharpe) * 100 if val_sharpe != 0 else 0.0
             )
 
             return_degradation = (
-                (best_result["val_return"] - test_return) / abs(best_result["val_return"]) * 100
-                if best_result["val_return"] != 0
-                else 0.0
+                (val_return - test_return) / abs(val_return) * 100 if val_return != 0 else 0.0
             )
 
             logger.info("\nPerformance degradation:")
@@ -2302,7 +2312,7 @@ class ComprehensiveBacktestRunner:
 
                     # Get the result metric
                     result = results[0] if isinstance(results[0], dict) else {}
-                    value = result.get(metric, 0) or 0
+                    value = cast("float", result.get(metric, 0) or 0)
 
                     # Store trial result
                     trial_result = {
@@ -2417,10 +2427,12 @@ class ComprehensiveBacktestRunner:
                 "total_trades": baseline_metrics.get("total_trades", 0),
             },
             "improvement": {
-                "pnl_diff": (best_result.get("total_pnl", 0) if best_result else 0)
-                - baseline_metrics.get("total_pnl", 0),
-                "sharpe_diff": (best_result.get("sharpe_ratio", 0) if best_result else 0)
-                - baseline_metrics.get("sharpe_ratio", 0),
+                "pnl_diff": cast("float", best_result.get("total_pnl", 0) if best_result else 0)
+                - cast("float", baseline_metrics.get("total_pnl", 0)),
+                "sharpe_diff": cast(
+                    "float", best_result.get("sharpe_ratio", 0) if best_result else 0
+                )
+                - cast("float", baseline_metrics.get("sharpe_ratio", 0)),
             },
             "all_trials": trial_results[:20],  # First 20 trials
             "optimization_history": [
@@ -2891,7 +2903,11 @@ class ComprehensiveBacktestRunner:
         self.memory_manager.add_result(result_dict)
         self.memory_manager.add_backtest_object("out_of_sample", oos_result)
 
-        self._save_test_audit_and_weights(result_dict, "out_of_sample", strategy)
+        self._save_test_audit_and_weights(
+            cast("dict[str, str | int | float | bool | list | dict]", result_dict),
+            "out_of_sample",
+            strategy,
+        )
 
         logger.info("\n" + "=" * 80)
         logger.info("OUT-OF-SAMPLE BACKTEST COMPLETE")
@@ -2904,7 +2920,7 @@ class ComprehensiveBacktestRunner:
         )
         logger.info("=" * 80)
 
-        return [result_dict]
+        return [cast("dict[str, str | int | float | bool | list | dict]", result_dict)]
 
     def run_multi_strategy_backtest(
         self,
@@ -3132,7 +3148,7 @@ class ComprehensiveBacktestRunner:
         Returns:
             Diccionario con configuración de filtros
         """
-        filters_config = {}
+        filters_config: dict[str, str | int | float | bool | list | dict] = {}
 
         if "modules" in self.raw_config and "filters" in self.raw_config["modules"]:
             filters = self.raw_config["modules"]["filters"]
@@ -3452,15 +3468,15 @@ class ComprehensiveBacktestRunner:
             )
 
             logger.info("Regime transition probabilities:")
-            for from_regime, transitions in transition_analysis.get(
-                "transition_probabilities", {}
-            ).items():
+            transition_probs = cast("dict", transition_analysis.get("transition_probabilities", {}))
+            for from_regime, transitions in transition_probs.items():
                 logger.info(f"  From {from_regime}:")
-                for to_regime, prob in transitions.items():
+                for to_regime, prob in cast("dict", transitions).items():
                     logger.info(f"    -> {to_regime}: {prob:.3f}")
 
             logger.info("Regime duration statistics:")
-            for regime_name, stats in transition_analysis.get("duration_statistics", {}).items():
+            duration_stats = cast("dict", transition_analysis.get("duration_statistics", {}))
+            for regime_name, stats in duration_stats.items():
                 logger.info(f"  {regime_name}:")
                 logger.info(f"    Mean duration: {stats['mean_duration']:.1f} periods")
                 logger.info(f"    Median duration: {stats['median_duration']:.1f} periods")
@@ -3824,7 +3840,7 @@ class ComprehensiveBacktestRunner:
             logger.error("No parameter combinations completed successfully")
             return {"success": False, "error": "All parameter combinations failed"}
 
-        best_result = max(results, key=lambda x: x["val_sharpe"])
+        best_result = max(results, key=lambda x: cast("float", x["val_sharpe"]))
 
         logger.info(
             f"Best parameters selected: train_sharpe={best_result['train_sharpe']:.3f}, "
@@ -3833,7 +3849,7 @@ class ComprehensiveBacktestRunner:
 
         # Test on held-out test set
         strategy_config = self._create_strategy_config()
-        strategy_config.update(best_result["params"])
+        strategy_config.update(cast("dict", best_result["params"]))
         strategy = strategy_class(strategy_config)
 
         test_result = self._backtest_with_quotes(
@@ -3927,7 +3943,7 @@ class ComprehensiveBacktestRunner:
             "expectancy": (
                 float(result.performance.expectancy)
                 if result.performance and result.performance.expectancy
-                else None
+                else 0.0
             ),
         }
 
@@ -4004,7 +4020,10 @@ class ComprehensiveBacktestRunner:
                 },
             }
 
-        return StrategyFactory.create_baseline_config(self.raw_config)
+        config: dict[str, str | int | float | bool | list | dict] = (
+            StrategyFactory.create_baseline_config(self.raw_config)
+        )
+        return config
 
     def _extract_filter_thresholds(self) -> dict[str, str | int | float | bool | list | dict]:
         """
@@ -4034,7 +4053,8 @@ class ComprehensiveBacktestRunner:
 
         Phase 5: Now delegates to StrategyFactory.
         """
-        return StrategyFactory.get_strategy_name(strategy)
+        name: str = StrategyFactory.get_strategy_name(strategy)
+        return name
 
     def _extract_thresholds(
         self, strategy_config: dict[str, str | int | float | bool | list | dict]
@@ -4044,7 +4064,10 @@ class ComprehensiveBacktestRunner:
 
         Phase 5: Now delegates to StrategyFactory.
         """
-        return StrategyFactory.extract_thresholds(strategy_config)
+        result: dict[str, str | int | float | bool | list | dict] = (
+            StrategyFactory.extract_thresholds(strategy_config)
+        )
+        return result
 
     def _calculate_consistent_metrics(
         self, result: BacktestResult, initial_capital: Decimal
@@ -4250,7 +4273,10 @@ class ComprehensiveBacktestRunner:
         Returns:
             Lista de resultados
         """
-        return self.memory_manager.get_results()
+        results: list[dict[str, str | int | float | bool | list | dict]] = (
+            self.memory_manager.get_results()
+        )
+        return results
 
     def get_memory_stats(self) -> dict[str, str | int | float | bool | list | dict]:
         """
@@ -4259,7 +4285,8 @@ class ComprehensiveBacktestRunner:
         Returns:
             Diccionario con estadísticas
         """
-        return self.memory_manager.get_stats()
+        stats: dict[str, str | int | float | bool | list | dict] = self.memory_manager.get_stats()
+        return stats
 
     def _extract_transformer_predictions(
         self, strategy: ModularMomentumStrategy, quotes: list
@@ -4287,9 +4314,11 @@ class ComprehensiveBacktestRunner:
 
         except Exception as e:
             logger.warning(f"Error extracting Transformer predictions: {e}")
-            return np.array([])
+            empty_arr: np.ndarray = np.array([])
+            return empty_arr
 
-        return np.array(predictions)
+        result_arr: np.ndarray = np.array(predictions)
+        return result_arr
 
     def _optimize_transformer_parameters(
         self,
@@ -4338,7 +4367,7 @@ class ComprehensiveBacktestRunner:
 
             # Create strategy with these parameters
             config = self._create_strategy_config()
-            config["thresholds"].update(params)
+            cast("dict", config["thresholds"]).update(params)
 
             strategy = ModularMomentumStrategy(config)
 
@@ -4542,7 +4571,8 @@ class ComprehensiveBacktestRunner:
         Returns:
             Array of regime labels (0=Bear, 1=Neutral, 2=Bull)
         """
-        return self.regime_analyzer.detect_simple_regimes(returns)
+        regimes: np.ndarray = self.regime_analyzer.detect_simple_regimes(returns)
+        return regimes
 
     def _get_regime_name_mapping(
         self, regime_labels: np.ndarray, returns: pd.Series
@@ -4559,7 +4589,10 @@ class ComprehensiveBacktestRunner:
         Returns:
             Dictionary mapping regime indices to names
         """
-        return self.regime_analyzer.get_regime_name_mapping(regime_labels, returns)
+        mapping: dict[int, str] = self.regime_analyzer.get_regime_name_mapping(
+            regime_labels, returns
+        )
+        return mapping
 
     def _analyze_regime_transitions(
         self, regime_labels: np.ndarray, regime_names: dict[int, str]
@@ -4576,4 +4609,7 @@ class ComprehensiveBacktestRunner:
         Returns:
             Dictionary with transition analysis results
         """
-        return self.regime_analyzer.analyze_regime_transitions(regime_labels, regime_names)
+        transitions: dict[str, str | int | float | bool | list | dict] = (
+            self.regime_analyzer.analyze_regime_transitions(regime_labels, regime_names)
+        )
+        return transitions

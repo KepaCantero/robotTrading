@@ -4,6 +4,8 @@ SchemaVersioner - Sistema de versionado de schemas.
 Maneja cambios en estructura de datos y migraciones.
 """
 
+from __future__ import annotations
+
 import json
 import logging
 from datetime import datetime

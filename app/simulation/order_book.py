@@ -179,8 +179,8 @@ class PriceLevel:
     """
 
     price: Decimal
-    orders: deque = field(default_factory=deque)
-    total_quantity: Decimal | None = None
+    orders: deque[Order] = field(default_factory=deque)
+    total_quantity: Decimal = Decimal("0")
 
     def add_order(self, order: Order) -> None:
         """
@@ -580,11 +580,11 @@ class LimitOrderBook:
             ask_price, _ = snapshot.asks[i]
             spreads.append(ask_price - bid_price)
 
-        avg_spread = np.mean(spreads) if spreads else Decimal("0")
+        avg_spread = Decimal(str(np.mean(spreads))) if spreads else Decimal("0")
 
         # Calculate cumulative depth
-        cumulative_bid_depth = sum(qty for _, qty in snapshot.bids[:10])
-        cumulative_ask_depth = sum(qty for _, qty in snapshot.asks[:10])
+        cumulative_bid_depth = Decimal(sum(qty for _, qty in snapshot.bids[:10]))
+        cumulative_ask_depth = Decimal(sum(qty for _, qty in snapshot.asks[:10]))
 
         return {
             "best_bid": snapshot.best_bid or Decimal("0"),
@@ -623,7 +623,7 @@ class LimitOrderBook:
         Returns:
             List of trades generated
         """
-        trades = []
+        trades: list[Trade] = []
         remaining_qty = order.remaining_quantity
 
         if remaining_qty == 0:
@@ -734,6 +734,8 @@ class LimitOrderBook:
     def _add_to_book(self, order: Order) -> None:
         """Add an order to the book."""
         price = order.price
+        if price is None:
+            raise ValueError("Cannot add order to book without a price")
 
         if order.is_buy:
             if price not in self._bids:
@@ -747,23 +749,27 @@ class LimitOrderBook:
             self._asks[price].add_order(order)
 
     def _add_bid_level(self, price: Decimal) -> None:
-        """Add a new bid price level."""
+        """Add a new bid price level in descending sorted order."""
         self._bids[price] = PriceLevel(price=price)
-        # Insert in sorted position (descending)
-        import bisect
-
-        prices = [-float(p) for p in self._bid_prices]
-        bisect.insort(prices, -float(price))
-        self._bid_prices = [Decimal(str(-p)) for p in prices]
+        # Insert in descending order: negate comparison via reversed bisect
+        # bisect works on ascending; for descending we find insertion point
+        # by searching for -price in a list of negated values conceptually.
+        # Instead, use linear scan (Decimal comparison is exact, no float loss).
+        pos = 0
+        for i, existing in enumerate(self._bid_prices):
+            if price > existing:
+                pos = i
+                break
+            pos = i + 1
+        self._bid_prices.insert(pos, price)
 
     def _add_ask_level(self, price: Decimal) -> None:
-        """Add a new ask price level."""
-        self._asks[price] = PriceLevel(price=price)
-        # Insert in sorted position (ascending)
+        """Add a new ask price level in ascending sorted order."""
         import bisect
 
-        bisect.insort(self._ask_prices, float(price))
-        self._ask_prices = [Decimal(str(p)) for p in self._ask_prices]
+        self._asks[price] = PriceLevel(price=price)
+        # Decimal supports native ordering; use bisect directly
+        bisect.insort(self._ask_prices, price)
 
     def _remove_bid_level(self, price: Decimal) -> None:
         """Remove a bid price level."""

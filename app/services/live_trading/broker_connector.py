@@ -9,12 +9,14 @@ Uses adapter pattern to support multiple brokers:
 - PaperAdapter: Paper trading for testing/simulation
 """
 
+from __future__ import annotations
+
 import logging
 from dataclasses import dataclass, field
 from datetime import datetime
 from decimal import Decimal
 from enum import Enum
-from typing import Optional, Union
+from typing import Optional, Protocol, Union, runtime_checkable
 
 from app.infrastructure.resilience.reconnection_manager import (
     ReconnectionConfig,
@@ -117,6 +119,55 @@ class BrokerOrder:
     client_order_id: Optional[str] = None  # SEC-005: Idempotency key
 
 
+@runtime_checkable
+class BrokerAdapter(Protocol):
+    """Protocol defining the interface that all broker adapters must implement."""
+
+    account: Optional[BrokerAccount]
+    positions: dict[str, BrokerPosition]
+    orders: dict[str, BrokerOrder]
+    is_connected: bool
+
+    async def connect(
+        self,
+        api_key: Optional[str] = None,
+        api_secret: Optional[str] = None,
+        account_id: Optional[str] = None,
+        **kwargs: object,
+    ) -> bool: ...
+
+    async def disconnect(self) -> bool: ...
+
+    async def get_account_info(self) -> Optional[BrokerAccount]: ...
+
+    async def get_positions(self) -> list[BrokerPosition]: ...
+
+    async def get_position(self, symbol: str) -> Optional[BrokerPosition]: ...
+
+    async def place_order(
+        self,
+        symbol: str,
+        side: OrderSide,
+        quantity: Decimal,
+        order_type: OrderType = OrderType.MARKET,
+        price: Optional[Decimal] = None,
+        stop_price: Optional[Decimal] = None,
+        client_order_id: Optional[str] = None,
+    ) -> str: ...
+
+    async def cancel_order(self, order_id: str) -> bool: ...
+
+    async def get_order_status(self, order_id: str) -> OrderStatus: ...
+
+    async def update_positions(self) -> dict[str, BrokerPosition]: ...
+
+    async def sync_account_balance(self) -> bool: ...
+
+    async def calculate_portfolio_value(self) -> Optional[Decimal]: ...
+
+    def is_paper_trading(self) -> bool: ...
+
+
 class BrokerConnector:
     """
     Unified broker API connector.
@@ -137,15 +188,17 @@ class BrokerConnector:
         self.broker_type = broker_type
 
         # Create broker-specific adapter
+        adapter: BrokerAdapter
         if broker_type == BrokerType.ALPACA:
             from .broker_adapters.alpaca_adapter import AlpacaAdapter
 
-            self.adapter: object = AlpacaAdapter()
+            adapter = AlpacaAdapter()
         else:
             # Default to paper trading for all other types
             from .broker_adapters.paper_adapter import PaperAdapter
 
-            self.adapter: object = PaperAdapter()
+            adapter = PaperAdapter()
+        self.adapter = adapter
 
         # Initialize reconnection manager
         self.reconnection_manager = self._create_reconnection_manager()
@@ -276,7 +329,7 @@ class BrokerConnector:
         result = await self.reconnection_manager.connect_with_backoff(_connect)
         return result is not False
 
-    def get_connection_stats(self) -> dict[str, Union[str, int, float, bool]]:
+    def get_connection_stats(self) -> dict[str, Union[str, int, float, bool, None]]:
         return self.reconnection_manager.get_stats()
 
     async def disconnect(self) -> bool:

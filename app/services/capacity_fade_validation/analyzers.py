@@ -7,6 +7,8 @@ Sub-components for capacity fade analysis:
 - AlphaDecayEstimator: Projects alpha at target capital using decay models
 """
 
+from __future__ import annotations
+
 import logging
 from decimal import Decimal
 from typing import Optional

@@ -7,7 +7,7 @@ ensuring correct strategy selection, risk configuration, and tax optimization.
 from decimal import Decimal
 
 from app.application.routers.input_profile_router import InputProfileRouter
-from app.core.models.input_profile import (
+from app.domain.models.input_profile import (
     InputProfile,
     ObjectivoInversion,
     RiskTolerance,

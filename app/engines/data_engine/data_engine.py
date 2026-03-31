@@ -15,7 +15,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 
 import numpy as np
 
@@ -63,7 +63,7 @@ class DataEngine:
 
         # Cargar configuración desde YAML
         self.config_loader = DataEngineConfigLoader(
-            config.get("config_path", "config/data_engine.yaml")
+            config.get("config_path", "config/market/data_engine.yaml")
         )
 
         # Obtener configuración de entorno si está disponible
@@ -229,7 +229,7 @@ class DataEngine:
             cached_data = await self.cache.get(cache_key)
             if cached_data:
                 logger.debug(f"Datos OHLCV obtenidos del cache para {symbol}")
-                return cached_data
+                return cast("list[dict[str, Any]]", cached_data)
 
         # Determinar fuente
         ohlcv_source = None
@@ -292,7 +292,7 @@ class DataEngine:
         if self.streaming_enabled and self.streaming_manager:
             await self.streaming_manager.broadcast_ohlcv(symbol, raw_data)
 
-        return raw_data
+        return cast("list[dict[str, Any]]", raw_data)
 
     async def get_fundamentals(
         self,
@@ -321,7 +321,7 @@ class DataEngine:
             cached_data = await self.cache.get(cache_key)
             if cached_data:
                 logger.debug(f"Datos fundamentales obtenidos del cache para {symbol}")
-                return cached_data
+                return cast("dict[str, Any]", cached_data)
 
         # Determinar fuente
         fundamental_source = None
@@ -428,23 +428,29 @@ class DataEngine:
                 "sources": {},
             }
 
-        # Obtener sentimiento de cada fuente
+        # Obtener sentimiento de cada fuente concurrently
         sentiment_results = {}
 
-        for source_name in sentiment_sources_to_use:
+        async def _fetch_sentiment(source_name: str) -> tuple[str, dict[str, object] | None]:
             sentiment_source = self.sources[source_name]
-
             if not sentiment_source.is_connected:
                 await sentiment_source.connect()
-
             try:
                 if hasattr(sentiment_source, "get_sentiment"):
                     result = await sentiment_source.get_sentiment(symbol, max_results=max_results)
-                    sentiment_results[source_name] = result
-                else:
-                    logger.warning(f"Fuente {source_name} no implementa get_sentiment")
+                    return (source_name, result)
+                logger.warning(f"Fuente {source_name} no implementa get_sentiment")
+                return (source_name, None)
             except (asyncio.TimeoutError, OSError) as e:
                 logger.error(f"Error obteniendo sentimiento de {source_name}: {e}")
+                return (source_name, None)
+
+        fetch_results = await asyncio.gather(
+            *[_fetch_sentiment(name) for name in sentiment_sources_to_use]
+        )
+        for name, result in fetch_results:
+            if result is not None:
+                sentiment_results[name] = result
 
         # Agregar sentimientos
         sentiment_config = self.config_loader.get_sentiment_config()
@@ -486,7 +492,9 @@ class DataEngine:
 
         try:
             if hasattr(source, "get_option_chain"):
-                return await source.get_option_chain(symbol, expiry_date)
+                return cast(
+                    "list[dict[str, Any]]", await source.get_option_chain(symbol, expiry_date)
+                )
         except (asyncio.TimeoutError, OSError) as e:
             logger.error(f"Error obteniendo option chain: {e}")
 
@@ -516,7 +524,9 @@ class DataEngine:
 
         try:
             if hasattr(source, "get_volatility_surface"):
-                return await source.get_volatility_surface(symbol, expiry_dates)
+                return cast(
+                    "dict[str, Any]", await source.get_volatility_surface(symbol, expiry_dates)
+                )
         except (asyncio.TimeoutError, OSError) as e:
             logger.error(f"Error obteniendo volatility surface: {e}")
 

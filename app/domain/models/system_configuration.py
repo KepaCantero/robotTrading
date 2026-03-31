@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 """System Configuration model.
 
 Complete configuration derived from InputProfile.

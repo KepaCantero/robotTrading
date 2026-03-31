@@ -14,6 +14,8 @@ Formula:
 Uses centralized configuration for trading calendar constants.
 """
 
+from __future__ import annotations
+
 import logging
 import math
 import statistics
@@ -301,7 +303,7 @@ class SharpeRatioMonitor:
 
         # Calculate if change is significant (>30%)
         if mean_prior != Decimal("0"):
-            percent_change = ((mean_recent - mean_prior) / mean_prior).abs()
+            percent_change = abs((mean_recent - mean_prior) / mean_prior)
             is_significant = percent_change > Decimal("0.3")
 
             direction = "improvement" if mean_recent > mean_prior else "deterioration"

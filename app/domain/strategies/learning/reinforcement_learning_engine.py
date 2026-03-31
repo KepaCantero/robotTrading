@@ -2,6 +2,8 @@
 ReinforcementLearningEngine - Aprende políticas óptimas de trading con RL.
 """
 
+from __future__ import annotations
+
 import logging
 from typing import TYPE_CHECKING, Any, Optional
 

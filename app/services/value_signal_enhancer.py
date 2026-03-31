@@ -237,15 +237,15 @@ class ValueSignalEnhancer:
         is_expensive = value_rank > self.expensive_threshold
 
         # Risk adjustment (simple volatility adjustment)
-        risk_adjusted_score = self._risk_adjust_value_score(value_score, asset_data)
+        risk_adjusted_score = self._risk_adjust_value_score(float(value_score), asset_data)
 
         result = ValueSignalResult(
             timestamp=datetime.now(),
             asset=asset,
-            value_score=value_score,
+            value_score=float(value_score),
             value_rank=value_rank,
             value_percentile=value_percentile,
-            z_score=z_score,
+            z_score=float(z_score),
             is_cheap=is_cheap,
             is_expensive=is_expensive,
             metric_contributions=metric_contributions,
@@ -293,14 +293,18 @@ class ValueSignalEnhancer:
         dispersion = std_score / (abs(mean_score) + 1e-8)
 
         # Count cheap and expensive
-        cheap_count = np.sum(
-            data.index.isin(
-                [a for a in data.index if self.calculate_value_signal(data, a).is_cheap]
+        cheap_count: int = int(
+            np.sum(
+                data.index.isin(
+                    [a for a in data.index if self.calculate_value_signal(data, a).is_cheap]
+                )
             )
         )
-        expensive_count = np.sum(
-            data.index.isin(
-                [a for a in data.index if self.calculate_value_signal(data, a).is_expensive]
+        expensive_count: int = int(
+            np.sum(
+                data.index.isin(
+                    [a for a in data.index if self.calculate_value_signal(data, a).is_expensive]
+                )
             )
         )
 
@@ -326,9 +330,9 @@ class ValueSignalEnhancer:
         result = CrossSectionalValueResult(
             timestamp=datetime.now(),
             universe_size=len(data),
-            mean_value_score=mean_score,
-            std_value_score=std_score,
-            value_dispersion=dispersion,
+            mean_value_score=float(mean_score),
+            std_value_score=float(std_score),
+            value_dispersion=float(dispersion),
             cheap_count=cheap_count,
             expensive_count=expensive_count,
             value_spread=value_spread,

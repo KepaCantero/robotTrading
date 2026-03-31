@@ -5,6 +5,8 @@ TASK-DEFAULT_VALUE_14: Unificación de Error Handling
 API endpoints para gestionar el manejo unificado de errores del trading.
 """
 
+from __future__ import annotations
+
 # mypy: ignore-errors
 import logging
 from datetime import datetime

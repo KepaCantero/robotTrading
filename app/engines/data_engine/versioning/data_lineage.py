@@ -4,6 +4,8 @@ DataLineage - Tracking de lineage de datos.
 Rastrea el origen y transformaciones de datos.
 """
 
+from __future__ import annotations
+
 import json
 import logging
 from datetime import datetime

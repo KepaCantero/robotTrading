@@ -13,6 +13,8 @@ This module provides:
 - Convenience methods for common parameter access patterns
 """
 
+from __future__ import annotations
+
 import logging
 from pathlib import Path
 from typing import Optional, Union
@@ -163,11 +165,10 @@ class ProfileConfigLoader:
             # container defaults.
             return self._resolve_path(key_path, default)
 
-        return self.yaml_loader.get_nested(self.config, key_path, default)
+        result: _ConfigValue = self.yaml_loader.get_nested(self.config, key_path, default)
+        return result
 
-    def _resolve_path(
-        self, key_path: str, default: _ConfigValue
-    ) -> _ConfigValue:
+    def _resolve_path(self, key_path: str, default: _ConfigValue) -> _ConfigValue:
         """Manually resolve a dot-separated key path, returning *default* if not found."""
         keys = key_path.split(".")
         value: _ConfigValue = self.config
@@ -207,14 +208,18 @@ class ProfileConfigLoader:
             return value
         return default
 
-    def _get_dict(self, key_path: str, default: Optional[dict[str, _ConfigValue]] = None) -> dict[str, _ConfigValue]:
+    def _get_dict(
+        self, key_path: str, default: Optional[dict[str, _ConfigValue]] = None
+    ) -> dict[str, _ConfigValue]:
         """Retrieve a config value that must be a dict."""
         value = self.get(key_path, default if default is not None else {})
         if isinstance(value, dict):
             return value
         return default if default is not None else {}
 
-    def _get_list(self, key_path: str, default: Optional[list[_ConfigValue]] = None) -> list[_ConfigValue]:
+    def _get_list(
+        self, key_path: str, default: Optional[list[_ConfigValue]] = None
+    ) -> list[_ConfigValue]:
         """Retrieve a config value that must be a list."""
         value = self.get(key_path, default if default is not None else [])
         if isinstance(value, list):
@@ -454,21 +459,21 @@ class ProfileConfigLoader:
         min_val = param_config.get(min_key)
         max_val = param_config.get(max_key)
 
-        if isinstance(min_val, (int, float)) and not isinstance(min_val, bool):
-            if value < min_val:
-                logger.warning(f"Value {value} below minimum {min_val} for {key_path}")
-                return False
+        if isinstance(min_val, (int, float)) and not isinstance(min_val, bool) and value < min_val:
+            logger.warning(f"Value {value} below minimum {min_val} for {key_path}")
+            return False
 
-        if isinstance(max_val, (int, float)) and not isinstance(max_val, bool):
-            if value > max_val:
-                logger.warning(f"Value {value} above maximum {max_val} for {key_path}")
-                return False
+        if isinstance(max_val, (int, float)) and not isinstance(max_val, bool) and value > max_val:
+            logger.warning(f"Value {value} above maximum {max_val} for {key_path}")
+            return False
 
         return True
 
     def get_parameter_range(
         self, key_path: str, min_key: str = "min", max_key: str = "max"
-    ) -> tuple[Optional[Union[int, float]], Optional[Union[int, float]], Optional[Union[int, float]]]:
+    ) -> tuple[
+        Optional[Union[int, float]], Optional[Union[int, float]], Optional[Union[int, float]]
+    ]:
         """
         Get parameter range from configuration.
 

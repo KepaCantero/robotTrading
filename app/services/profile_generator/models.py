@@ -5,6 +5,8 @@ Dataclasses for investment profiles and related structures.
 Uses centralized configuration for default values.
 """
 
+from __future__ import annotations
+
 import logging
 from dataclasses import dataclass, field
 from datetime import datetime

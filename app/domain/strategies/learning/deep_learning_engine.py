@@ -2,9 +2,11 @@
 DeepLearningEngine - Det parte patrones complejos con LSTM, GRU o Transformers.
 """
 
+from __future__ import annotations
+
 import logging
 import os
-from typing import Optional, Union
+from typing import Optional
 
 # ============================================================================
 # CRÍTICO: Configurar variables de entorno ANTES de importar numpy/pandas/PyTorch
@@ -29,7 +31,7 @@ os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
 # Ahora importar numpy y pandas DESPUÉS de configurar variables
 import numpy as np
 
-from app.security.secure_serialization import sign_and_dump, verify_and_load
+from app.security.secrets.secure_serialization import sign_and_dump, verify_and_load
 
 from .base_learning_engine import BaseLearningEngine
 
@@ -189,8 +191,7 @@ class DeepLearningEngine(BaseLearningEngine):
             torch.set_num_interop_threads(1)
 
         # Import Dataset and DataLoader from torch.utils.data
-        from torch.utils.data import DataLoader as _DataLoader
-        from torch.utils.data import Dataset as _Dataset
+        from torch.utils.data import DataLoader as _DataLoader, Dataset as _Dataset
 
         # Definir TimeSeriesDataset lazy dentro de este contexto (después de configurar threading)
         class TimeSeriesDataset(_Dataset):
@@ -620,7 +621,8 @@ class DeepLearningEngine(BaseLearningEngine):
                 # Guardar modelo (solo pesos)
                 import torch
 
-                torch.save(engine.model.state_dict(), model_path)
+                if engine.model is not None:
+                    torch.save(engine.model.state_dict(), model_path)
 
                 # Retornar métricas y ruta del modelo
                 result_queue.put({"success": True, "metrics": metrics, "model_path": model_path})
@@ -675,7 +677,7 @@ class DeepLearningEngine(BaseLearningEngine):
 
                     # Recrear modelo con la misma arquitectura
                     # (necesitamos recrear la estructura del modelo)
-                    metrics = result["metrics"]
+                    metrics: dict[str, float] = dict(result["metrics"])
                     model_path = result["model_path"]
 
                     # Cargar pesos (necesitamos crear el modelo primero)
@@ -752,7 +754,7 @@ class DeepLearningEngine(BaseLearningEngine):
         if not self.is_ready():
             return {"predicted_direction": 0.5, "predicted_price_change": 0.0, "confidence": 0.0}
 
-        sequence = features["sequence"]
+        sequence = np.asarray(features["sequence"])
 
         # Normalizar
         if self.scaler:
@@ -765,8 +767,6 @@ class DeepLearningEngine(BaseLearningEngine):
         self.model.eval()
         with torch.no_grad():
             # Usar from_numpy en lugar de FloatTensor
-            import numpy as np
-
             sequence_np = np.array([sequence], dtype=np.float32)
             sequence_t = torch.from_numpy(sequence_np).clone()
             prediction = self.model(sequence_t).item()
@@ -809,8 +809,7 @@ class DeepLearningEngine(BaseLearningEngine):
         # PyTorch es REQUIRED - ya importado al inicio del módulo
 
         # Import Dataset and DataLoader from torch.utils.data
-        from torch.utils.data import DataLoader as _DataLoader
-        from torch.utils.data import Dataset as _Dataset
+        from torch.utils.data import DataLoader as _DataLoader, Dataset as _Dataset
 
         # Definir TimeSeriesDataset lazy
         class TimeSeriesDatasetEval(_Dataset):

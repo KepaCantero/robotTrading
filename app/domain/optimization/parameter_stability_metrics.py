@@ -14,6 +14,8 @@ Stable = parameter value doesn't change much across windows (low variance)
 Unstable = parameter value bounces around across windows (high variance, curve-fitted)
 """
 
+from __future__ import annotations
+
 import json
 import logging
 from dataclasses import dataclass, field

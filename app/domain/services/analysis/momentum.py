@@ -20,8 +20,10 @@ Recommended (new code):
     rsi = indicators.rsi(prices, period=14)
 """
 
+from __future__ import annotations
+
 import logging
-from typing import Any, Optional, Union
+from typing import Any, Optional, Union, cast
 
 import numpy as np
 import pandas as pd
@@ -78,7 +80,8 @@ class TechnicalIndicatorCalculator:
         Returns:
             RSI value (0-100) or None if insufficient data.
         """
-        return self._indicators.rsi(prices, period=period)
+        result = self._indicators.rsi(prices, period=period)
+        return cast("Optional[float]", result)
 
     def calculate_ema(
         self, prices: Union[list, np.ndarray, pd.Series], period: int = 20
@@ -93,7 +96,8 @@ class TechnicalIndicatorCalculator:
         Returns:
             EMA value or None if insufficient data.
         """
-        return self._indicators.ema(prices, period=period)
+        result = self._indicators.ema(prices, period=period)
+        return cast("Optional[float]", result)
 
     def calculate_sma(
         self, prices: Union[list, np.ndarray, pd.Series], period: int = 20
@@ -108,7 +112,8 @@ class TechnicalIndicatorCalculator:
         Returns:
             SMA value or None if insufficient data.
         """
-        return self._indicators.sma(prices, period=period)
+        result = self._indicators.sma(prices, period=period)
+        return cast("Optional[float]", result)
 
     def calculate_macd(
         self,
@@ -161,7 +166,8 @@ class TechnicalIndicatorCalculator:
         Returns:
             ATR value or None if insufficient data.
         """
-        return self._indicators.atr(highs, lows, closes, period=period)
+        result = self._indicators.atr(highs, lows, closes, period=period)
+        return cast("Optional[float]", result)
 
     def calculate_bollinger_bands(
         self, prices: Union[list, np.ndarray, pd.Series], period: int = 20, std_dev: float = 2.0
@@ -177,9 +183,10 @@ class TechnicalIndicatorCalculator:
         Returns:
             Dictionary with 'upper', 'middle', 'lower', 'width', 'position'.
         """
-        return self._indicators.bollinger_bands(
+        result = self._indicators.bollinger_bands(
             prices, period=period, std_dev=std_dev, return_components=False
         )
+        return cast("dict[str, Optional[float]]", result)
 
     def calculate_roc(
         self, prices: Union[list, np.ndarray, pd.Series], period: int = 14
@@ -194,7 +201,8 @@ class TechnicalIndicatorCalculator:
         Returns:
             ROC value (as decimal) or None.
         """
-        return self._indicators.roc(prices, period=period)
+        result = self._indicators.roc(prices, period=period)
+        return cast("Optional[float]", result)
 
     def calculate_stochastic(
         self,
@@ -239,9 +247,12 @@ class TechnicalIndicatorCalculator:
         Returns:
             Tuple of (StochRSI %K, StochRSI %D) or (None, None) if insufficient data.
         """
-        return self._indicators.stochrsi(
+        result = self._indicators.stochrsi(
             rsi_values, period=period, k_period=smooth_k, d_period=smooth_k
         )
+        k_val: Optional[float] = result[0] if result else None
+        d_val: Optional[float] = result[1] if result else None
+        return k_val, d_val
 
     def calculate_adx(
         self,
@@ -290,7 +301,8 @@ class TechnicalIndicatorCalculator:
         Returns:
             CCI value or None.
         """
-        return self._indicators.cci(highs, lows, closes, period=period)
+        result = self._indicators.cci(highs, lows, closes, period=period)
+        return cast("Optional[float]", result)
 
     def calculate_obv(
         self,
@@ -307,7 +319,8 @@ class TechnicalIndicatorCalculator:
         Returns:
             OBV value or None.
         """
-        return self._indicators.obv(closes, volumes)
+        result = self._indicators.obv(closes, volumes)
+        return cast("Optional[float]", result)
 
     def calculate_williams_r(
         self,
@@ -328,7 +341,8 @@ class TechnicalIndicatorCalculator:
         Returns:
             Williams %R value (-100 to 0) or None.
         """
-        return self._indicators.williams_r(highs, lows, closes, period=period)
+        result = self._indicators.williams_r(highs, lows, closes, period=period)
+        return cast("Optional[float]", result)
 
     def calculate_all_indicators(
         self, df: pd.DataFrame, indicators: Optional[list[str]] = None
@@ -343,7 +357,8 @@ class TechnicalIndicatorCalculator:
         Returns:
             Dictionary with all calculated indicator values.
         """
-        return self._indicators.calculate_all(df, indicators)
+        result = self._indicators.calculate_all(df, indicators)
+        return cast("dict[str, Any]", result)
 
 
 # Also export for backward compatibility with old imports

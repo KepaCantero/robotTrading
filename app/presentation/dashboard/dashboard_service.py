@@ -5,6 +5,8 @@ Provides methods to fetch current positions, performance metrics,
 and system status for dashboard display.
 """
 
+from __future__ import annotations
+
 import asyncio
 import logging
 from datetime import datetime, timezone

@@ -9,6 +9,8 @@ Implements dynamic capital allocation across multiple strategies:
 With dynamic rebalancing based on rolling 30-day performance.
 """
 
+from __future__ import annotations
+
 import logging
 from datetime import datetime, timedelta
 from decimal import Decimal

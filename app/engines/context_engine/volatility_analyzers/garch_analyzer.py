@@ -4,8 +4,10 @@ GARCHAnalyzer - Analizador de volatilidad usando modelos GARCH.
 Detecta volatility clustering usando modelos GARCH.
 """
 
+from __future__ import annotations
+
 import logging
-from typing import Any, Optional
+from typing import Any
 
 import numpy as np
 
@@ -176,7 +178,7 @@ class GARCHAnalyzer:
     Detecta volatility clustering y predice volatilidad futura.
     """
 
-    def __init__(self, config: Optional[dict[str, Any]] = None):
+    def __init__(self, config: dict[str, Any] | None = None):
         """
         Inicializar analizador GARCH.
 
@@ -189,8 +191,8 @@ class GARCHAnalyzer:
         self.q = config.get("q", 1)  # GARCH order
         self.dist = config.get("dist", "normal")  # normal, t, skewt
 
-        self.model = None
-        self.fitted_model = None
+        self.model: SimpleGARCHModel | None = None
+        self.fitted_model: SimpleGARCHFitResult | None = None
         self.using_fallback = not ARCH_AVAILABLE
 
         if self.using_fallback:
@@ -300,6 +302,8 @@ class GARCHAnalyzer:
 
         try:
             # Obtener parámetros del modelo
+            if self.fitted_model is None:
+                return {"clustering_detected": False, "persistence": None, "confidence": 0.0}
             params = self.fitted_model.params
 
             # Calcular persistencia (suma de parámetros ARCH y GARCH)

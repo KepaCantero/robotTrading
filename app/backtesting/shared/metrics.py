@@ -8,6 +8,8 @@ Eliminates 6+ duplicate implementations of _get_empty_metrics across:
 - optimization_validators.py (3 copies in same file!)
 """
 
+from __future__ import annotations
+
 from typing import Any, Optional
 
 from app.backtesting.shared.types import MetricKeys

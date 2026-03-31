@@ -293,6 +293,9 @@ class BacktestOptimizer:
 
             # Execute grid search (parallel or sequential)
             if self.parallel_enabled and total_combinations > 10:
+                if self.config_path is None:
+                    logger.error("config_path is required for parallel grid search")
+                    return []
                 logger.info(
                     f"Running grid search in parallel (max_workers={self.max_workers or 'auto'})"
                 )
@@ -301,7 +304,7 @@ class BacktestOptimizer:
                     future_to_params = {
                         executor.submit(
                             self._evaluate_param_set_static,
-                            self.config_path,
+                            self.config_path or "",
                             params,
                             idx,
                             len(train_quotes),

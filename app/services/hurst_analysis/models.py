@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 """Data models for Hurst Exponent analysis.
 
 This module contains all data classes and enums used throughout
@@ -5,7 +7,6 @@ the hurst_analysis module. All models are immutable value objects
 following the Single Responsibility Principle.
 """
 
-from __future__ import annotations
 
 import logging
 from dataclasses import dataclass
@@ -20,19 +21,18 @@ logger = logging.getLogger(__name__)
 
 class MarketRegime(Enum):
     """
-        Market regime classification based on Hurst Exponent.
+    Market regime classification based on Hurst Exponent.
 
-    from __future__ import annotations
 
-        According to Ernest Chan (Algorithmic Trading, Rule 2.2):
-        - MEAN_REVERTING: H < 0.5 (anti-persistent behavior)
-        - RANDOM_WALK: H approx 0.5 (efficient market, no predictability)
-        - TRENDING: H > 0.5 (persistent behavior)
+    According to Ernest Chan (Algorithmic Trading, Rule 2.2):
+    - MEAN_REVERTING: H < 0.5 (anti-persistent behavior)
+    - RANDOM_WALK: H approx 0.5 (efficient market, no predictability)
+    - TRENDING: H > 0.5 (persistent behavior)
 
-        Attributes:
-            MEAN_REVERTING: Market exhibits mean-reversion
-            RANDOM_WALK: Market follows random walk
-            TRENDING: Market exhibits trending behavior
+    Attributes:
+        MEAN_REVERTING: Market exhibits mean-reversion
+        RANDOM_WALK: Market follows random walk
+        TRENDING: Market exhibits trending behavior
     """
 
     MEAN_REVERTING = "mean_reverting"

@@ -11,6 +11,8 @@ This service monitors and validates system time.
 Phase 2.7: Time Sync Monitor Implementation
 """
 
+from __future__ import annotations
+
 import asyncio
 import contextlib
 import logging

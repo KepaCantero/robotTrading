@@ -5,6 +5,8 @@ MLflow for tracking model training, metrics, and versioning.
 Upgraded to use real MLflow server for production-grade experiment tracking.
 """
 
+from __future__ import annotations
+
 import asyncio
 import contextlib
 import logging
@@ -169,7 +171,9 @@ class MLflowTracker:
                             f"⚠️ MLflow experiment creation failed (HTTP {resp.status}), using local tracking"
                         )
             except (asyncio.TimeoutError, OSError) as e:
-                logger.warning(f"⚠️ Failed to create MLflow experiment: {e!s}, using local tracking")
+                logger.warning(
+                    f"⚠️ Failed to create MLflow experiment: {e!s}, using local tracking"
+                )
 
         # Always store locally as backup
         experiment = Experiment(
@@ -371,7 +375,9 @@ class MLflowTracker:
                             f"⚠️ MLflow model registration failed (HTTP {resp.status}), using local tracking"
                         )
             except (ValueError, TypeError, KeyError, AttributeError) as e:
-                logger.warning(f"⚠️ Failed to register model in MLflow: {e!s}, using local tracking")
+                logger.warning(
+                    f"⚠️ Failed to register model in MLflow: {e!s}, using local tracking"
+                )
 
         # Always store locally
         model = MLModel(

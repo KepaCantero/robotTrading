@@ -5,6 +5,8 @@ Alphalens provides comprehensive factor analysis tools for evaluating
 alpha generation sources and factor performance.
 """
 
+from __future__ import annotations
+
 import logging
 from datetime import datetime
 from decimal import Decimal

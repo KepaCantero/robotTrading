@@ -27,6 +27,8 @@ Integration Points:
 - Respects: Risk limits as hard constraints (not optional)
 """
 
+from __future__ import annotations
+
 import logging
 from dataclasses import dataclass, field
 from decimal import Decimal

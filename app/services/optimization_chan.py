@@ -289,10 +289,10 @@ class RiskParityOptimizer:
         """
         try:
             # Calculate inputs
-            mu = returns.mean().values * 252
-            sigma = returns.cov().values * 252
+            mu: np.ndarray = np.asarray(returns.mean().values * 252, dtype=np.float64)
+            sigma: np.ndarray = np.asarray(returns.cov().values * 252, dtype=np.float64)
 
-            n_assets = len(mu)
+            n_assets: int = int(mu.shape[0])
 
             # Set constraints
             constraints = weight_constraints or {}
@@ -322,24 +322,26 @@ class RiskParityOptimizer:
 
             def _risk_parity_gradient(weights: np.ndarray) -> np.ndarray:
                 """Analytical gradient for faster convergence."""
-                portfolio_var = weights @ sigma @ weights
+                n_local = int(n_assets)
+                portfolio_var: float = float(weights @ sigma @ weights)
                 if portfolio_var <= 0:
-                    return np.zeros(n_assets)
+                    zeros: np.ndarray = np.zeros(n_local, dtype=np.float64)
+                    return zeros
 
-                sigma_w = sigma @ weights
-                rc = weights * sigma_w / portfolio_var
-                diff = rc - target_risk
+                sigma_w: np.ndarray = np.asarray(sigma @ weights)
+                rc: np.ndarray = np.asarray(weights * sigma_w / portfolio_var)
+                diff: np.ndarray = np.asarray(rc - target_risk)
 
                 # Gradient
-                grad = np.zeros(n_assets)
+                grad: np.ndarray = np.zeros(n_assets, dtype=np.float64)
                 for i in range(n_assets):
                     for j in range(n_assets):
                         if i == j:
                             drc_dw = (sigma_w[i] + weights[i] * sigma[i, i]) / portfolio_var
-                            drc_dw -= rc[i] * 2 * sigma_w[j] / portfolio_var
+                            drc_dw -= float(rc[i]) * 2 * sigma_w[j] / portfolio_var
                         else:
                             drc_dw = weights[i] * sigma[i, j] / portfolio_var
-                            drc_dw -= rc[i] * 2 * sigma_w[j] / portfolio_var
+                            drc_dw -= float(rc[i]) * 2 * sigma_w[j] / portfolio_var
                         grad[j] += 2 * diff[i] * drc_dw
 
                 return grad
@@ -542,7 +544,7 @@ class HierarchicalRiskParityOptimizer:
         # scipy.cluster.hierarchy.dendrogram and extract the order
 
         dendro = dendrogram(linkage_matrix, no_plot=True)
-        return dendro["leaves"]
+        return list(dendro["leaves"])
 
     def _hrp_allocation(
         self,
@@ -595,7 +597,7 @@ class HierarchicalRiskParityOptimizer:
         _bisect_allocation(order, weights)
 
         # Reorder weights to original asset order
-        ordered_weights = np.zeros(n)
+        ordered_weights: np.ndarray = np.zeros(n)
         ordered_weights[order] = weights
 
         return ordered_weights
@@ -901,6 +903,13 @@ def optimize_portfolio(
         >>> result = optimize_portfolio(returns, method='hrp')
         >>> print(result.weights)
     """
+    optimizer: (
+        MeanVarianceOptimizer
+        | RiskParityOptimizer
+        | HierarchicalRiskParityOptimizer
+        | MaximumDiversificationOptimizer
+        | CVaROptimizer
+    )
     if method == "mean_variance":
         optimizer = MeanVarianceOptimizer()
     elif method == "risk_parity":

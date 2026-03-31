@@ -5,6 +5,8 @@ Contains configuration for technical indicators, windows,
 and analysis parameters.
 """
 
+from __future__ import annotations
+
 import logging
 
 from pydantic import Field

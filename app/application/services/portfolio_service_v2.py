@@ -10,6 +10,8 @@ This version demonstrates proper dependency injection following SOLID principles
 Reference: Rule 03-solid-principles.md, Rule 05-architecture.md
 """
 
+from __future__ import annotations
+
 import logging
 from decimal import Decimal
 from typing import Optional

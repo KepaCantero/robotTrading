@@ -4,9 +4,11 @@ HMMRegimeDetector - Detección de régimen usando Hidden Markov Models.
 Usa HMM para detectar regímenes de mercado (bull, bear, sideways).
 """
 
+from __future__ import annotations
+
 import importlib.util
 import logging
-from typing import Any, Optional
+from typing import Any
 
 import numpy as np
 
@@ -108,7 +110,7 @@ class HMMRegimeDetector:
     Detecta regímenes ocultos basados en observaciones de precios y volatilidad.
     """
 
-    def __init__(self, config: Optional[dict[str, Any]] = None):
+    def __init__(self, config: dict[str, Any] | None = None):
         """
         Inicializar detector HMM.
 
@@ -121,7 +123,7 @@ class HMMRegimeDetector:
         self.window_size = config.get("window_size", 100)
         self.min_samples = config.get("min_samples", 50)
 
-        self.model = None
+        self.model: HMMFallback | None = None
         self.scaler = StandardScaler()
         self.regime_labels = (
             ["bear", "sideways", "bull"]
@@ -211,6 +213,14 @@ class HMMRegimeDetector:
                 observations = self.scaler.transform(observations)
 
             # Predecir régimen
+            if self.model is None:
+                return {
+                    "regime": "unknown",
+                    "probability": 0.0,
+                    "regime_probabilities": {},
+                    "confidence": 0.0,
+                }
+
             states = self.model.predict(observations)
             current_state = states[-1]
 
@@ -255,7 +265,7 @@ class HMMRegimeDetector:
         """Calcular volatilidad rolling."""
         if len(returns) < window:
             # Si no hay suficientes datos, usar volatilidad completa
-            volatility = np.full(len(returns), np.std(returns))
+            volatility: np.ndarray = np.full(len(returns), np.std(returns))
         else:
             # Rolling std
             volatility = np.zeros(len(returns))
@@ -266,14 +276,16 @@ class HMMRegimeDetector:
 
         return volatility
 
-    def get_transition_matrix(self) -> Optional[np.ndarray]:
+    def get_transition_matrix(self) -> np.ndarray | None:
         """Obtener matriz de transición entre regímenes."""
-        if self.model:
-            return self.model.transmat_
+        if self.model is not None:
+            result: np.ndarray = np.array(self.model.transmat_)
+            return result
         return None
 
-    def get_regime_means(self) -> Optional[np.ndarray]:
+    def get_regime_means(self) -> np.ndarray | None:
         """Obtener medias de cada régimen."""
-        if self.model:
-            return self.model.means_
+        if self.model is not None:
+            result: np.ndarray = np.array(self.model.means_)
+            return result
         return None

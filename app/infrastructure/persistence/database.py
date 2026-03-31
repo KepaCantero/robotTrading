@@ -5,10 +5,12 @@ This module provides async PostgreSQL database connection using SQLAlchemy 2.0
 with asyncpg driver, including session management and connection pooling.
 """
 
+from __future__ import annotations
+
 import logging
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager, contextmanager
-from typing import Any, Optional
+from typing import Optional
 
 from sqlalchemy import MetaData
 from sqlalchemy.exc import (
@@ -17,8 +19,6 @@ from sqlalchemy.exc import (
     DisconnectionError,
     IntegrityError,
     OperationalError,
-)
-from sqlalchemy.exc import (
     TimeoutError as SQLAlchemyTimeoutError,
 )
 from sqlalchemy.ext.asyncio import (
@@ -349,7 +349,7 @@ async def execute_query(query: str, params: Optional[dict] = None) -> list:
             raise
 
 
-async def execute_scalar(query: str, params: Optional[dict] = None) -> Any:
+async def execute_scalar(query: str, params: Optional[dict] = None) -> object:
     """
     Execute a scalar query (returns single value).
 

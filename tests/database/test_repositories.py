@@ -42,8 +42,8 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
 from app.core.exceptions import AlgoTradingDatabaseError as DatabaseError
-from app.database import Base
-from app.database.models import (
+from app.infrastructure.persistence.database import Base
+from app.infrastructure.persistence.database.models import (
     Asset,
     Backtest,
     MarketData,
@@ -55,10 +55,10 @@ from app.database.models import (
     Trade,
     User,
 )
-from app.database.repositories import (
+from app.infrastructure.persistence.database._base_repository import BaseRepository
+from app.infrastructure.persistence.database.repositories import (
     AssetRepository,
     BacktestRepository,
-    BaseRepository,
     MarketDataRepository,
     PortfolioRepository,
     PositionRepository,

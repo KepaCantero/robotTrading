@@ -470,7 +470,7 @@ class DevelopmentGate:
                 timestamp=datetime.utcnow(),
             )
 
-    async def _create_blocker(self, decisions: list[GateDecision]) -> DeploymentBlocker:
+    async def _create_blocker(self, decisions: list[GateDecision]) -> DeploymentBlocker | None:
         """Create deployment blocker from failed decisions."""
         failed_decisions = [d for d in decisions if d.status == GateStatus.FAIL]
 

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 """Protocol interfaces for Hurst Analysis components.
 
 This module defines all Protocol interfaces used throughout the hurst_analysis module.
@@ -9,7 +11,6 @@ All protocols use structural subtyping (duck typing) - any class implementing
 the required methods automatically satisfies the protocol.
 """
 
-from __future__ import annotations
 
 import logging
 from typing import TYPE_CHECKING, Protocol
@@ -31,13 +32,12 @@ if TYPE_CHECKING:
 
 class HurstCalculator(Protocol):
     """
-        Protocol for Hurst exponent calculation methods.
+    Protocol for Hurst exponent calculation methods.
 
-    from __future__ import annotations
 
-        Any class that implements calculate() can be used as a Hurst calculator.
-        This follows the Open/Closed Principle - new calculation methods can be
-        added without modifying existing code.
+    Any class that implements calculate() can be used as a Hurst calculator.
+    This follows the Open/Closed Principle - new calculation methods can be
+    added without modifying existing code.
     """
 
     def calculate(self, series: np.ndarray) -> tuple[float, list[float] | None, list[int] | None]:

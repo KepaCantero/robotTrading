@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 """Markowitz Mean-Variance Portfolio Optimization Implementation.
 
 This module implements the Modern Portfolio Theory (MPT) by Harry Markowitz (1952),
@@ -19,7 +21,6 @@ Reference:
     https://doi.org/10.1111/j.1540-6261.1952.tb01525.x
 """
 
-from __future__ import annotations
 
 import logging
 from dataclasses import dataclass

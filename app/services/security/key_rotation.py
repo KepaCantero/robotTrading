@@ -11,6 +11,8 @@ This module provides automated key rotation with:
 R29: Security Hardening
 """
 
+from __future__ import annotations
+
 import logging
 from dataclasses import dataclass
 from datetime import datetime, timedelta

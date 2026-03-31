@@ -4,6 +4,8 @@ StructuralChangeDetector - Detección de cambios estructurales.
 Implementa CUSUM y Chow test para detectar cambios estructurales en series temporales.
 """
 
+from __future__ import annotations
+
 import logging
 from typing import Any, Optional
 

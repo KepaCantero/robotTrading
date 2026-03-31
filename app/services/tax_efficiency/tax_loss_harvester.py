@@ -6,6 +6,8 @@ calculates tax benefits, and suggests replacement positions to maintain
 portfolio exposure while locking in losses.
 """
 
+from __future__ import annotations
+
 import logging
 from dataclasses import dataclass
 from decimal import Decimal
@@ -220,7 +222,7 @@ class TaxLossHarvester:
         """
         if capital_losses_carryforward is None:
             capital_losses_carryforward = Decimal("0")
-        total_loss = sum(p.unrealized_loss for p in harvestable_positions)
+        total_loss = sum((p.unrealized_loss for p in harvestable_positions), Decimal("0"))
         total_loss_amount = abs(total_loss)
 
         # For individuals, max €3000/year of capital losses against ordinary income

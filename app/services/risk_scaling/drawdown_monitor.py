@@ -15,6 +15,8 @@ Reset: When equity reaches new all-time high
 Uses centralized configuration for all thresholds and scaling factors.
 """
 
+from __future__ import annotations
+
 import logging
 from dataclasses import dataclass
 from datetime import datetime

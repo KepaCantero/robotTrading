@@ -11,6 +11,8 @@ Author: AlgoTrading System
 Created: 2025-01-23
 """
 
+from __future__ import annotations
+
 import logging
 from typing import Optional
 

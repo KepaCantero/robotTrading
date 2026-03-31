@@ -4,6 +4,8 @@ Drawdown Validator (R2)
 Valida que el drawdown no exceda 15% (kill switch)
 """
 
+from __future__ import annotations
+
 import logging
 from dataclasses import dataclass
 from datetime import datetime

@@ -357,8 +357,7 @@ class OncallRotation:
 
             async with aiosqlite.connect(self.config.db_path) as db:
                 # Rotation slots table
-                await db.execute(
-                    """
+                await db.execute("""
                     CREATE TABLE IF NOT EXISTS rotation_slots (
                         slot_id TEXT PRIMARY KEY,
                         start_datetime TEXT NOT NULL,
@@ -372,12 +371,10 @@ class OncallRotation:
                         FOREIGN KEY (primary_engineer_id) REFERENCES engineers(engineer_id),
                         FOREIGN KEY (backup_engineer_id) REFERENCES engineers(engineer_id)
                     )
-                """
-                )
+                """)
 
                 # Engineers table
-                await db.execute(
-                    """
+                await db.execute("""
                     CREATE TABLE IF NOT EXISTS engineers (
                         engineer_id TEXT PRIMARY KEY,
                         name TEXT NOT NULL,
@@ -396,12 +393,10 @@ class OncallRotation:
                         created_at TEXT NOT NULL DEFAULT (datetime('utc')),
                         updated_at TEXT NOT NULL DEFAULT (datetime('utc'))
                     )
-                """
-                )
+                """)
 
                 # Unavailable periods table
-                await db.execute(
-                    """
+                await db.execute("""
                     CREATE TABLE IF NOT EXISTS unavailable_periods (
                         id INTEGER PRIMARY KEY AUTOINCREMENT,
                         engineer_id TEXT NOT NULL,
@@ -411,12 +406,10 @@ class OncallRotation:
                         created_at TEXT NOT NULL DEFAULT (datetime('utc')),
                         FOREIGN KEY (engineer_id) REFERENCES engineers(engineer_id)
                     )
-                """
-                )
+                """)
 
                 # Swap requests table
-                await db.execute(
-                    """
+                await db.execute("""
                     CREATE TABLE IF NOT EXISTS swap_requests (
                         swap_id TEXT PRIMARY KEY,
                         requester_id TEXT NOT NULL,
@@ -430,28 +423,21 @@ class OncallRotation:
                         FOREIGN KEY (target_id) REFERENCES engineers(engineer_id),
                         FOREIGN KEY (slot_id) REFERENCES rotation_slots(slot_id)
                     )
-                """
-                )
+                """)
 
                 # Create indexes
-                await db.execute(
-                    """
+                await db.execute("""
                     CREATE INDEX IF NOT EXISTS idx_slots_start_time
                     ON rotation_slots(start_datetime)
-                """
-                )
-                await db.execute(
-                    """
+                """)
+                await db.execute("""
                     CREATE INDEX IF NOT EXISTS idx_slots_engineer
                     ON rotation_slots(primary_engineer_id)
-                """
-                )
-                await db.execute(
-                    """
+                """)
+                await db.execute("""
                     CREATE INDEX IF NOT EXISTS idx_unavailable_engineer
                     ON unavailable_periods(engineer_id)
-                """
-                )
+                """)
 
                 await db.commit()
 
@@ -465,16 +451,14 @@ class OncallRotation:
         """Load existing rotation slots."""
         try:
             async with aiosqlite.connect(self.config.db_path) as db:
-                cursor = await db.execute(
-                    """
+                cursor = await db.execute("""
                     SELECT slot_id, start_datetime, end_datetime,
                            primary_engineer_id, backup_engineer_id,
                            rotation_type, is_active, notes, created_at
                     FROM rotation_slots
                     WHERE end_datetime >= datetime('utc')
                     ORDER BY start_datetime ASC
-                """
-                )
+                """)
 
                 rows = await cursor.fetchall()
                 self._slots = []

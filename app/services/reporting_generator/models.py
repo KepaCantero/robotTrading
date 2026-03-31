@@ -4,6 +4,8 @@ T9.1: ReportingGenerator - Models for performance reporting
 Generates comprehensive performance reports with visualizations and metrics.
 """
 
+from __future__ import annotations
+
 import logging
 from datetime import datetime
 from decimal import Decimal

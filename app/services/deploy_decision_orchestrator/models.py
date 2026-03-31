@@ -8,6 +8,8 @@ Orchestrates final decision to deploy strategy or not based on:
 - Portfolio metrics
 """
 
+from __future__ import annotations
+
 import logging
 from datetime import datetime
 from decimal import Decimal

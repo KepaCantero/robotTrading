@@ -5,6 +5,8 @@ Builds a diversified portfolio based on portfolio configuration with multiple sy
 from different sectors, allocated according to strategy percentages.
 """
 
+from __future__ import annotations
+
 import asyncio
 import logging
 from datetime import datetime

@@ -328,9 +328,9 @@ class AlphaModel(ABC):
             # Simple linear regression: log(y) = log(a) - b*x
             # Decay rate is -b
             coeffs = np.polyfit(valid_days, log_powers, 1)
-            decay_rate = -coeffs[0]  # Negative slope
+            decay_rate = float(-coeffs[0])  # Negative slope
 
-            return max(0.0, decay_rate)
+            return max(0.0, float(decay_rate))
 
         except (ValueError, TypeError, np.linalg.LinAlgError):
             return 0.0
@@ -348,14 +348,14 @@ class AlphaModel(ABC):
 
         # For exponential decay, use half-life as guideline
         if decay_metrics.decay_regime == AlphaDecayRegime.EXPONENTIAL:
-            return max(self.min_holding_period, int(decay_metrics.half_life_days * 0.8))
+            return int(max(self.min_holding_period, int(decay_metrics.half_life_days * 0.8)))
 
         # For linear decay, exit when predictive power drops below threshold
         if decay_metrics.decay_regime == AlphaDecayRegime.LINEAR:
             threshold_power = max(decay_metrics.predictive_power_by_day.values()) * 0.5
             for day, power in sorted(decay_metrics.predictive_power_by_day.items()):
                 if power < threshold_power:
-                    return max(self.min_holding_period, day)
+                    return int(max(self.min_holding_period, int(day)))
 
         # For step decay, exit just before step
         if decay_metrics.decay_regime == AlphaDecayRegime.STEP:
@@ -364,7 +364,7 @@ class AlphaModel(ABC):
                 day, power = sorted_days[i]
                 _next_day, next_power = sorted_days[i + 1]
                 if next_power < power * 0.7:  # Significant drop
-                    return max(self.min_holding_period, day - 1)
+                    return int(max(self.min_holding_period, int(day - 1)))
 
         return default_days
 

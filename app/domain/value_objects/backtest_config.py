@@ -31,8 +31,8 @@ class BacktestConfigValue:
 
     # Data configuration
     symbols: list[str] = field(default_factory=list)
-    start_date: datetime = None
-    end_date: datetime = None
+    start_date: datetime | None = None
+    end_date: datetime | None = None
     initial_capital: Decimal = Decimal("100000")
 
     # Backtest type
@@ -79,7 +79,11 @@ class BacktestConfigValue:
         if self.slippage < 0:
             raise ValueError("Slippage cannot be negative")
 
-        if self.start_date and self.end_date and self.start_date >= self.end_date:
+        if (
+            self.start_date is not None
+            and self.end_date is not None
+            and self.start_date >= self.end_date
+        ):
             raise ValueError("Start date must be before end date")
 
         if self.parallel_workers is not None and self.parallel_workers <= 0:

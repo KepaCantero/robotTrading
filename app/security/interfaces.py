@@ -37,7 +37,7 @@ class UserStoreProtocol(Protocol):
         """
         ...
 
-    def get_user(self, username: str) -> Any | None:
+    def get_user(self, username: str) -> object | None:
         """
         Get user by username.
 
@@ -49,7 +49,7 @@ class UserStoreProtocol(Protocol):
         """
         ...
 
-    def get_user_by_id(self, user_id: str) -> Any | None:
+    def get_user_by_id(self, user_id: str) -> object | None:
         """
         Get user by ID.
 

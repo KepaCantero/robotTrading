@@ -13,11 +13,9 @@ from .asset_identification import AssetIdentificationService, get_asset_identifi
 from .circuit_breaker_manager import (
     CircuitBreakerConfig,
     CircuitBreakerLevel,
+    CircuitBreakerManager as MarketHaltManager,
     MarketState,
     TradingStatus,
-)
-from .circuit_breaker_manager import (
-    CircuitBreakerManager as MarketHaltManager,
 )
 from .market_universe_loader import MarketUniverseLoader, get_market_universe_loader
 from .market_universe_orchestrator import (

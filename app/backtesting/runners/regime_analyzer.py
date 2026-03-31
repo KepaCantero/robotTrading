@@ -9,6 +9,8 @@ Provides regime detection and analysis functionality for backtesting:
 - Regime transition analysis using Markov chains
 """
 
+from __future__ import annotations
+
 import logging
 from typing import Any, Optional
 

@@ -155,7 +155,7 @@ class HurstCalculator:
                     cum_deviations = np.cumsum(deviations)
 
                     # Calculate range (R)
-                    R = np.max(cum_deviations) - np.min(cum_deviations)
+                    R: float = float(np.max(cum_deviations) - np.min(cum_deviations))
 
                     # Calculate standard deviation (S)
                     S = np.std(window_returns)
@@ -331,7 +331,7 @@ class StationarityTester:
         Returns:
             Dictionary with test results and stationarity type
         """
-        result = {
+        result: dict[str, Any] = {
             "adf_pvalue": None,
             "adf_stationary": False,
             "kpss_pvalue": None,

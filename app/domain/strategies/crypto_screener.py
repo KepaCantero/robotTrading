@@ -11,6 +11,8 @@ Crypto markets differ significantly from traditional markets:
 - Exchange listings affect liquidity and accessibility
 """
 
+from __future__ import annotations
+
 import logging
 import time
 from decimal import Decimal

@@ -5,6 +5,8 @@ This module defines Pydantic models for ensemble configuration,
 Pareto front solutions, and portfolio combination metrics.
 """
 
+from __future__ import annotations
+
 import logging
 from datetime import datetime
 from decimal import Decimal

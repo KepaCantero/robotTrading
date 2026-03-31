@@ -18,8 +18,9 @@ Date: 2025-01-28
 Version: 1.0.0
 """
 
+from __future__ import annotations
+
 import logging
-from typing import Optional
 
 import numba
 import numpy as np
@@ -96,7 +97,7 @@ def calculate_rsi_numba(prices: np.ndarray, period: int = 14) -> float:
     rs = avg_gain / avg_loss
     rsi = 100.0 - (100.0 / (1.0 + rs))
 
-    return rsi
+    return float(rsi)
 
 
 @jit(nopython=True, cache=True)
@@ -116,19 +117,19 @@ def calculate_rsi_array_numba(prices: np.ndarray, period: int = 14) -> np.ndarra
         Array of RSI values
     """
     n = len(prices)
-    rsi_values = np.full(n, np.nan)
+    rsi_values: np.ndarray = np.full(n, np.nan)
 
     if n < period + 1:
         return rsi_values
 
     # Calculate price changes
-    deltas = np.empty(n - 1)
+    deltas: np.ndarray = np.empty(n - 1)
     for i in range(n - 1):
         deltas[i] = prices[i + 1] - prices[i]
 
     # Separate gains and losses
-    gains = np.empty(n - 1)
-    losses = np.empty(n - 1)
+    gains: np.ndarray = np.empty(n - 1)
+    losses: np.ndarray = np.empty(n - 1)
     for i in range(n - 1):
         if deltas[i] > 0:
             gains[i] = deltas[i]
@@ -138,8 +139,8 @@ def calculate_rsi_array_numba(prices: np.ndarray, period: int = 14) -> np.ndarra
             losses[i] = -deltas[i]
 
     # Calculate initial average gain and loss
-    avg_gain = np.mean(gains[:period])
-    avg_loss = np.mean(losses[:period])
+    avg_gain = float(np.mean(gains[:period]))
+    avg_loss = float(np.mean(losses[:period]))
 
     if avg_loss == 0:
         rsi_values[period] = 100.0
@@ -183,7 +184,7 @@ def calculate_ema_numba(prices: np.ndarray, period: int) -> np.ndarray:
         Array of EMA values
     """
     n = len(prices)
-    ema = np.full(n, np.nan)
+    ema: np.ndarray = np.full(n, np.nan)
 
     if n < period:
         return ema
@@ -344,7 +345,7 @@ def calculate_atr_numba(
         Array of ATR values
     """
     n = len(close)
-    atr = np.full(n, np.nan)
+    atr: np.ndarray = np.full(n, np.nan)
 
     if n < period + 1:
         return atr
@@ -392,8 +393,8 @@ def calculate_atr_single_numba(
     Returns:
         Last ATR value
     """
-    atr_array = calculate_atr_numba(high, low, close, period)
-    return atr_array[-1]
+    atr_array: np.ndarray = calculate_atr_numba(high, low, close, period)
+    return float(atr_array[-1])
 
 
 # ============================================================================
@@ -418,7 +419,7 @@ def rolling_mean_numba(values: np.ndarray, window: int) -> np.ndarray:
         Array of rolling mean values
     """
     n = len(values)
-    result = np.full(n, np.nan)
+    result: np.ndarray = np.full(n, np.nan)
 
     if n < window:
         return result
@@ -454,7 +455,7 @@ def rolling_std_numba(values: np.ndarray, window: int) -> np.ndarray:
         Array of rolling std values
     """
     n = len(values)
-    result = np.full(n, np.nan)
+    result: np.ndarray = np.full(n, np.nan)
 
     if n < window:
         return result
@@ -492,7 +493,7 @@ def rolling_min_numba(values: np.ndarray, window: int) -> np.ndarray:
         Array of rolling minimum values
     """
     n = len(values)
-    result = np.full(n, np.nan)
+    result: np.ndarray = np.full(n, np.nan)
 
     if n < window:
         return result
@@ -524,7 +525,7 @@ def rolling_max_numba(values: np.ndarray, window: int) -> np.ndarray:
         Array of rolling maximum values
     """
     n = len(values)
-    result = np.full(n, np.nan)
+    result: np.ndarray = np.full(n, np.nan)
 
     if n < window:
         return result
@@ -688,7 +689,7 @@ def calculate_skewness_numba(returns: np.ndarray) -> float:
         return 0.0
 
     # Calculate skewness
-    skewness = m3 / (m2 * np.sqrt(m2))
+    skewness: float = float(m3 / (m2 * np.sqrt(m2)))
     return skewness
 
 
@@ -757,21 +758,15 @@ def calculate_var_numba(returns: np.ndarray, confidence_level: float = 0.95) -> 
     if n < 2:
         return np.nan
 
-    # Sort returns (using simple bubble sort for numba compatibility)
-    sorted_returns = returns.copy()
-    for i in range(n):
-        for j in range(i + 1, n):
-            if sorted_returns[i] > sorted_returns[j]:
-                temp = sorted_returns[i]
-                sorted_returns[i] = sorted_returns[j]
-                sorted_returns[j] = temp
+    # Sort returns
+    sorted_returns = np.sort(returns)
 
     # Calculate VaR at confidence level
     index = int((1.0 - confidence_level) * n)
     if index >= n:
         index = n - 1
 
-    return sorted_returns[index]
+    return float(sorted_returns[index])
 
 
 @jit(nopython=True, cache=True)
@@ -795,13 +790,7 @@ def calculate_cvar_numba(returns: np.ndarray, confidence_level: float = 0.95) ->
         return np.nan
 
     # Sort returns
-    sorted_returns = returns.copy()
-    for i in range(n):
-        for j in range(i + 1, n):
-            if sorted_returns[i] > sorted_returns[j]:
-                temp = sorted_returns[i]
-                sorted_returns[i] = sorted_returns[j]
-                sorted_returns[j] = temp
+    sorted_returns = np.sort(returns)
 
     # Calculate VaR threshold
     var_index = int((1.0 - confidence_level) * n)
@@ -842,9 +831,10 @@ def array_differences_numba(values: np.ndarray) -> np.ndarray:
     """
     n = len(values)
     if n < 2:
-        return np.array([])
+        empty: np.ndarray = np.empty(0, dtype=np.float64)
+        return empty
 
-    differences = np.empty(n - 1)
+    differences: np.ndarray = np.empty(n - 1)
     for i in range(n - 1):
         differences[i] = values[i + 1] - values[i]
 
@@ -867,12 +857,13 @@ def cumulative_returns_numba(returns: np.ndarray) -> np.ndarray:
         Array of cumulative returns
     """
     n = len(returns)
-    cumulative = np.ones(n + 1)
+    cumulative: np.ndarray = np.ones(n + 1)
 
     for i in range(n):
         cumulative[i + 1] = cumulative[i] * (1.0 + returns[i])
 
-    return cumulative[1:]
+    result_cumulative: np.ndarray = cumulative[1:]
+    return result_cumulative
 
 
 @jit(nopython=True, cache=True)
@@ -891,7 +882,7 @@ def drawdown_series_numba(equity_curve: np.ndarray) -> np.ndarray:
         Array of drawdown values (negative percentages)
     """
     n = len(equity_curve)
-    drawdowns = np.zeros(n)
+    drawdowns: np.ndarray = np.zeros(n)
 
     peak = equity_curve[0]
     for i in range(n):
@@ -928,7 +919,7 @@ def calculate_transition_matrix_numba(regime_labels: np.ndarray, n_regimes: int)
         Transition probability matrix
     """
     n = len(regime_labels)
-    transition_matrix = np.zeros((n_regimes, n_regimes))
+    transition_matrix: np.ndarray = np.zeros((n_regimes, n_regimes))
 
     # Count transitions
     for i in range(n - 1):
@@ -975,7 +966,7 @@ def generate_benchmark_curve_numba(
     Returns:
         Array of benchmark values
     """
-    benchmark_values = np.empty(n_periods)
+    benchmark_values: np.ndarray = np.empty(n_periods)
 
     for i in range(n_periods):
         benchmark_values[i] = initial_value * (1.0 + benchmark_return) ** (i / n_periods)
@@ -988,7 +979,7 @@ def generate_benchmark_curve_numba(
 # ============================================================================
 
 
-def calculate_rsi(prices: list, period: int = 14) -> Optional[float]:
+def calculate_rsi(prices: list, period: int = 14) -> float | None:
     """
     Wrapper for RSI calculation that handles Python lists.
 
@@ -1011,7 +1002,7 @@ def calculate_rsi(prices: list, period: int = 14) -> Optional[float]:
     return float(rsi_value)
 
 
-def calculate_ema(prices: list, period: int) -> Optional[float]:
+def calculate_ema(prices: list, period: int) -> float | None:
     """
     Wrapper for EMA calculation that handles Python lists.
 
@@ -1036,7 +1027,7 @@ def calculate_ema(prices: list, period: int) -> Optional[float]:
 
 def calculate_macd(
     prices: list, fast_period: int = 12, slow_period: int = 26, signal_period: int = 9
-) -> tuple[Optional[float], Optional[float], Optional[float]]:
+) -> tuple[float | None, float | None, float | None]:
     """
     Wrapper for MACD calculation that handles Python lists.
 
@@ -1064,7 +1055,7 @@ def calculate_macd(
     return macd_val, signal_val, hist_val
 
 
-def calculate_atr(high: list, low: list, close: list, period: int = 14) -> Optional[float]:
+def calculate_atr(high: list, low: list, close: list, period: int = 14) -> float | None:
     """
     Wrapper for ATR calculation that handles Python lists.
 
@@ -1094,7 +1085,7 @@ def calculate_atr(high: list, low: list, close: list, period: int = 14) -> Optio
 
 def calculate_bollinger_bands(
     prices: list, period: int = 20, num_std: float = 2.0
-) -> tuple[Optional[float], Optional[float], Optional[float]]:
+) -> tuple[float | None, float | None, float | None]:
     """
     Wrapper for Bollinger Bands calculation that handles Python lists.
 
@@ -1121,7 +1112,7 @@ def calculate_bollinger_bands(
 
 def calculate_stochastic(
     high: list, low: list, close: list, k_period: int = 14, d_period: int = 3
-) -> tuple[Optional[float], Optional[float]]:
+) -> tuple[float | None, float | None]:
     """
     Wrapper for Stochastic calculation that handles Python lists.
 
@@ -1152,7 +1143,7 @@ def calculate_stochastic(
     return k_val, d_val
 
 
-def calculate_skewness(returns: list) -> Optional[float]:
+def calculate_skewness(returns: list) -> float | None:
     """
     Wrapper for skewness calculation that handles Python lists.
 
@@ -1174,7 +1165,7 @@ def calculate_skewness(returns: list) -> Optional[float]:
     return float(skewness_value)
 
 
-def calculate_kurtosis(returns: list) -> Optional[float]:
+def calculate_kurtosis(returns: list) -> float | None:
     """
     Wrapper for kurtosis calculation that handles Python lists.
 
@@ -1196,7 +1187,7 @@ def calculate_kurtosis(returns: list) -> Optional[float]:
     return float(kurtosis_value)
 
 
-def calculate_var(returns: list, confidence_level: float = 0.95) -> Optional[float]:
+def calculate_var(returns: list, confidence_level: float = 0.95) -> float | None:
     """
     Wrapper for VaR calculation that handles Python lists.
 
@@ -1219,7 +1210,7 @@ def calculate_var(returns: list, confidence_level: float = 0.95) -> Optional[flo
     return float(var_value)
 
 
-def calculate_cvar(returns: list, confidence_level: float = 0.95) -> Optional[float]:
+def calculate_cvar(returns: list, confidence_level: float = 0.95) -> float | None:
     """
     Wrapper for CVaR calculation that handles Python lists.
 

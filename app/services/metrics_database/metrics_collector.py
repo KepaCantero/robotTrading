@@ -10,6 +10,8 @@ Collects metrics from:
 - Any custom metric sources
 """
 
+from __future__ import annotations
+
 import asyncio
 import contextlib
 import logging

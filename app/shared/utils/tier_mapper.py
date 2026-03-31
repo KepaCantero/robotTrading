@@ -35,6 +35,8 @@ Usage:
     yaml_tier = TierMapper.to_yaml_tier("medium")  # Returns "medium"
 """
 
+from __future__ import annotations
+
 import logging
 from decimal import Decimal
 from enum import Enum

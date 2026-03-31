@@ -12,7 +12,6 @@ GAP Fixes:
 from __future__ import annotations
 
 import logging
-import traceback
 from typing import TYPE_CHECKING, Annotated, Any
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
@@ -22,14 +21,8 @@ from pydantic import BaseModel
 # These are imported to avoid circular dependencies
 from app.shared.config.di_container import (
     get_execution_engine as di_get_execution_engine,
-)
-from app.shared.config.di_container import (
     get_strategy_config_loader as di_get_strategy_config_loader,
-)
-from app.shared.config.di_container import (
     get_strategy_logger as di_get_strategy_logger,
-)
-from app.shared.config.di_container import (
     get_strategy_registry as di_get_strategy_registry,
 )
 
@@ -37,10 +30,9 @@ from . import audit_logger, get_correlation_id
 from .security import audit_log, rate_limit, require_auth
 
 if TYPE_CHECKING:
+    from app.domain.strategies.execution_engine import ExecutionEngine
     from app.domain.strategies.protocols import (
         StrategyLoggerProto as StrategyLogger,
-    )
-    from app.domain.strategies.protocols import (
         StrategyRegistryProto as StrategyRegistry,
     )
 
@@ -50,7 +42,7 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/strategies", tags=["Strategies"])
 
 
-def get_strategy_registry() -> StrategyRegistry:
+def get_strategy_registry_dep() -> StrategyRegistry:
     """Obtener instancia del registry de estrategias desde el contenedor de DI."""
     return di_get_strategy_registry()
 
@@ -60,12 +52,12 @@ def get_config_loader():
     return di_get_strategy_config_loader()
 
 
-def get_strategy_logger() -> StrategyLogger:
+def get_strategy_logger_dep() -> StrategyLogger:
     """Obtener instancia del logger de estrategias desde el contenedor de DI."""
     return di_get_strategy_logger()
 
 
-def get_execution_engine():
+def get_execution_engine_dep() -> ExecutionEngine:
     """Obtener instancia del motor de ejecución desde el contenedor de DI."""
     return di_get_execution_engine()
 
@@ -140,14 +132,26 @@ class ExecutionStatsResponse(BaseModel):
 
 
 @router.get("/", response_model=dict[str, Any])
-@rate_limit(max_requests=100, window_seconds=60)
+@rate_limit(max_requests=30, window_seconds=60)
+@require_auth(roles=["admin", "user"])
+@audit_log("strategies_overview")
 async def get_strategies_overview(
-    registry: Annotated[StrategyRegistry, Depends(get_strategy_registry)],
+    request: Request,
+    registry: Annotated[StrategyRegistry, Depends(get_strategy_registry_dep)],
 ):
     """Obtener resumen de todas las estrategias."""
+    correlation_id = get_correlation_id(request)
     try:
+        audit_logger.info(
+            "strategies_overview_requested",
+            extra={"correlation_id": correlation_id},
+        )
         return registry.get_all_strategies_status()
     except Exception as e:
+        audit_logger.error(
+            "strategies_overview_error",
+            extra={"correlation_id": correlation_id, "error": str(e)},
+        )
         logger.error(f"Error getting strategies overview: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -156,13 +160,26 @@ async def get_strategies_overview(
 
 
 @router.get("/available", response_model=list[str])
+@rate_limit(max_requests=30, window_seconds=60)
+@require_auth(roles=["admin", "user"])
+@audit_log("available_strategies_listed")
 async def get_available_strategies(
-    registry: Annotated[StrategyRegistry, Depends(get_strategy_registry)],
+    request: Request,
+    registry: Annotated[StrategyRegistry, Depends(get_strategy_registry_dep)],
 ):
     """Obtener lista de estrategias disponibles."""
+    correlation_id = get_correlation_id(request)
     try:
+        audit_logger.info(
+            "available_strategies_requested",
+            extra={"correlation_id": correlation_id},
+        )
         return registry.list_available_strategies()
     except Exception as e:
+        audit_logger.error(
+            "available_strategies_error",
+            extra={"correlation_id": correlation_id, "error": str(e)},
+        )
         logger.error(f"Error getting available strategies: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -171,13 +188,26 @@ async def get_available_strategies(
 
 
 @router.get("/loaded", response_model=list[str])
+@rate_limit(max_requests=30, window_seconds=60)
+@require_auth(roles=["admin", "user"])
+@audit_log("loaded_strategies_listed")
 async def get_loaded_strategies(
-    registry: Annotated[StrategyRegistry, Depends(get_strategy_registry)],
+    request: Request,
+    registry: Annotated[StrategyRegistry, Depends(get_strategy_registry_dep)],
 ):
     """Obtener lista de estrategias cargadas."""
+    correlation_id = get_correlation_id(request)
     try:
+        audit_logger.info(
+            "loaded_strategies_requested",
+            extra={"correlation_id": correlation_id},
+        )
         return registry.list_loaded_strategies()
     except Exception as e:
+        audit_logger.error(
+            "loaded_strategies_error",
+            extra={"correlation_id": correlation_id, "error": str(e)},
+        )
         logger.error(f"Error getting loaded strategies: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -186,69 +216,42 @@ async def get_loaded_strategies(
 
 
 @router.post("/load", response_model=StrategyResponse)
-@rate_limit(max_requests=20, window_seconds=60)
-@require_auth(roles=["admin", "trader"])
-@audit_log("strategy_loaded", log_args=True)
+@rate_limit(max_requests=10, window_seconds=60)
+@require_auth(roles=["admin"])
+@audit_log("strategy_loaded")
 async def load_strategy(
-    request: StrategyLoadRequest,
-    http_request: Request,
-    registry: Annotated[StrategyRegistry, Depends(get_strategy_registry)],
-    logger_instance: Annotated[StrategyLogger, Depends(get_strategy_logger)],
+    request: Request,
+    load_request: StrategyLoadRequest,
+    registry: Annotated[StrategyRegistry, Depends(get_strategy_registry_dep)],
+    logger_instance: Annotated[StrategyLogger, Depends(get_strategy_logger_dep)],
 ):
     """Cargar una estrategia."""
-    correlation_id = get_correlation_id()
-    logger.info(
-        "Loading strategy",
-        extra={"correlation_id": correlation_id, "strategy_name": request.name},
-    )
+    correlation_id = get_correlation_id(request)
     try:
-        strategy = registry.load_strategy(request.name, request.config)
-        logger_instance.log_strategy_loaded(request.name, request.config)
-
-        audit_logger.log_action(
-            action="strategy_loaded",
-            method=http_request.method,
-            path=http_request.url.path,
-            details={"strategy_name": request.name},
+        audit_logger.info(
+            "strategy_load_requested",
+            extra={"correlation_id": correlation_id, "strategy": load_request.name},
         )
+        strategy = registry.load_strategy(load_request.name, load_request.config)
+        logger_instance.log_strategy_loaded(load_request.name, load_request.config)
 
         return StrategyResponse(
             name=strategy.name,
             is_active=strategy.is_active,
-            is_currently_active=registry.active_strategy == request.name,
+            is_currently_active=registry.active_strategy == load_request.name,
             version=strategy.version,
             description=strategy.description,
             created_at=strategy.created_at.isoformat(),
             parameters=strategy.get_parameters(),
         )
     except ValueError as e:
-        logger.warning(
-            "Validation error loading strategy",
-            extra={
-                "correlation_id": correlation_id,
-                "strategy_name": request.name,
-                "error": str(e),
-            },
-        )
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e)) from e
     except Exception as e:
-        logger.error(
-            "Error loading strategy",
-            extra={
-                "correlation_id": correlation_id,
-                "strategy_name": request.name,
-                "error_type": type(e).__name__,
-                "error": str(e),
-                "stack_trace": traceback.format_exc(),
-            },
+        audit_logger.error(
+            "strategy_load_error",
+            extra={"correlation_id": correlation_id, "error": str(e)},
         )
-        audit_logger.log_error(
-            method=http_request.method,
-            path=http_request.url.path,
-            error_type=type(e).__name__,
-            error_message=str(e),
-            stack_trace=traceback.format_exc(),
-        )
+        logger.error(f"Error loading strategy {load_request.name}: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error loading strategy: {e!s}",
@@ -256,24 +259,34 @@ async def load_strategy(
 
 
 @router.post("/activate", response_model=dict[str, str])
-@rate_limit(max_requests=30, window_seconds=60)
-@require_auth(roles=["admin", "trader"])
-@audit_log("strategy_activated", log_args=True)
+@rate_limit(max_requests=10, window_seconds=60)
+@require_auth(roles=["admin"])
+@audit_log("strategy_activated")
 async def activate_strategy(
-    request: StrategyActivateRequest,
-    registry: Annotated[StrategyRegistry, Depends(get_strategy_registry)],
-    logger_instance: Annotated[StrategyLogger, Depends(get_strategy_logger)],
+    request: Request,
+    activate_request: StrategyActivateRequest,
+    registry: Annotated[StrategyRegistry, Depends(get_strategy_registry_dep)],
+    logger_instance: Annotated[StrategyLogger, Depends(get_strategy_logger_dep)],
 ):
     """Activar una estrategia."""
+    correlation_id = get_correlation_id(request)
     try:
-        registry.set_active_strategy(request.name)
-        logger_instance.log_strategy_activated(request.name)
+        audit_logger.info(
+            "strategy_activate_requested",
+            extra={"correlation_id": correlation_id, "strategy": activate_request.name},
+        )
+        registry.set_active_strategy(activate_request.name)
+        logger_instance.log_strategy_activated(activate_request.name)
 
-        return {"message": f"Strategy '{request.name}' activated successfully"}
+        return {"message": f"Strategy '{activate_request.name}' activated successfully"}
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e)) from e
     except Exception as e:
-        logger.error(f"Error activating strategy {request.name}: {e}")
+        audit_logger.error(
+            "strategy_activate_error",
+            extra={"correlation_id": correlation_id, "error": str(e)},
+        )
+        logger.error(f"Error activating strategy {activate_request.name}: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error activating strategy: {e!s}",
@@ -281,15 +294,21 @@ async def activate_strategy(
 
 
 @router.post("/deactivate", response_model=dict[str, str])
-@rate_limit(max_requests=30, window_seconds=60)
-@require_auth(roles=["admin", "trader"])
+@rate_limit(max_requests=10, window_seconds=60)
+@require_auth(roles=["admin"])
 @audit_log("strategy_deactivated")
 async def deactivate_strategy(
-    registry: Annotated[StrategyRegistry, Depends(get_strategy_registry)],
-    logger_instance: Annotated[StrategyLogger, Depends(get_strategy_logger)],
+    request: Request,
+    registry: Annotated[StrategyRegistry, Depends(get_strategy_registry_dep)],
+    logger_instance: Annotated[StrategyLogger, Depends(get_strategy_logger_dep)],
 ):
     """Desactivar estrategia activa."""
+    correlation_id = get_correlation_id(request)
     try:
+        audit_logger.info(
+            "strategy_deactivate_requested",
+            extra={"correlation_id": correlation_id},
+        )
         active_strategy = registry.get_active_strategy()
         if not active_strategy:
             raise HTTPException(
@@ -305,6 +324,10 @@ async def deactivate_strategy(
     except HTTPException:
         raise
     except Exception as e:
+        audit_logger.error(
+            "strategy_deactivate_error",
+            extra={"correlation_id": correlation_id, "error": str(e)},
+        )
         logger.error(f"Error deactivating strategy: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -313,16 +336,22 @@ async def deactivate_strategy(
 
 
 @router.delete("/unload/{strategy_name}", response_model=dict[str, str])
-@rate_limit(max_requests=20, window_seconds=60)
-@require_auth(roles=["admin", "trader"])
-@audit_log("strategy_unloaded", log_args=True)
+@rate_limit(max_requests=10, window_seconds=60)
+@require_auth(roles=["admin"])
+@audit_log("strategy_unloaded")
 async def unload_strategy(
     strategy_name: str,
-    registry: Annotated[StrategyRegistry, Depends(get_strategy_registry)],
-    logger_instance: Annotated[StrategyLogger, Depends(get_strategy_logger)],
+    request: Request,
+    registry: Annotated[StrategyRegistry, Depends(get_strategy_registry_dep)],
+    logger_instance: Annotated[StrategyLogger, Depends(get_strategy_logger_dep)],
 ):
     """Descargar una estrategia."""
+    correlation_id = get_correlation_id(request)
     try:
+        audit_logger.info(
+            "strategy_unload_requested",
+            extra={"correlation_id": correlation_id, "strategy": strategy_name},
+        )
         registry.unload_strategy(strategy_name)
         logger_instance.log_strategy_unloaded(strategy_name)
 
@@ -330,6 +359,10 @@ async def unload_strategy(
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e)) from e
     except Exception as e:
+        audit_logger.error(
+            "strategy_unload_error",
+            extra={"correlation_id": correlation_id, "error": str(e)},
+        )
         logger.error(f"Error unloading strategy {strategy_name}: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -338,25 +371,41 @@ async def unload_strategy(
 
 
 @router.get("/{strategy_name}", response_model=StrategyResponse)
+@rate_limit(max_requests=30, window_seconds=60)
+@require_auth(roles=["admin", "user"])
+@audit_log("strategy_details")
 async def get_strategy(
-    strategy_name: str, registry: Annotated[StrategyRegistry, Depends(get_strategy_registry)]
+    strategy_name: str,
+    request: Request,
+    registry: Annotated[StrategyRegistry, Depends(get_strategy_registry_dep)],
 ):
     """Obtener información de una estrategia."""
+    correlation_id = get_correlation_id(request)
     try:
+        audit_logger.info(
+            "strategy_details_requested",
+            extra={"correlation_id": correlation_id, "strategy": strategy_name},
+        )
         status_info = registry.get_strategy_status(strategy_name)
 
         return StrategyResponse(
-            name=status_info["name"],
-            is_active=status_info["is_active"],
-            is_currently_active=status_info["is_currently_active"],
-            version=status_info["version"],
-            description=status_info["description"],
-            created_at=status_info["created_at"],
-            parameters=status_info["parameters"],
+            name=str(status_info["name"]),
+            is_active=bool(status_info["is_active"]),
+            is_currently_active=bool(status_info["is_currently_active"]),
+            version=str(status_info["version"]),
+            description=str(status_info["description"]),
+            created_at=str(status_info["created_at"]),
+            parameters=(
+                status_info["parameters"] if isinstance(status_info["parameters"], dict) else {}
+            ),
         )
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e)) from e
     except Exception as e:
+        audit_logger.error(
+            "strategy_details_error",
+            extra={"correlation_id": correlation_id, "error": str(e)},
+        )
         logger.error(f"Error getting strategy {strategy_name}: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -365,13 +414,22 @@ async def get_strategy(
 
 
 @router.put("/{strategy_name}/parameters", response_model=dict[str, str])
+@rate_limit(max_requests=10, window_seconds=60)
+@require_auth(roles=["admin"])
+@audit_log("strategy_parameters_updated")
 async def update_strategy_parameters(
     strategy_name: str,
-    request: StrategyUpdateRequest,
-    registry: Annotated[StrategyRegistry, Depends(get_strategy_registry)],
+    request: Request,
+    update_request: StrategyUpdateRequest,
+    registry: Annotated[StrategyRegistry, Depends(get_strategy_registry_dep)],
 ):
     """Actualizar parámetros de una estrategia."""
+    correlation_id = get_correlation_id(request)
     try:
+        audit_logger.info(
+            "strategy_parameters_update_requested",
+            extra={"correlation_id": correlation_id, "strategy": strategy_name},
+        )
         strategy = registry.get_strategy(strategy_name)
         if not strategy:
             raise HTTPException(
@@ -379,12 +437,16 @@ async def update_strategy_parameters(
                 detail=f"Strategy '{strategy_name}' not found",
             )
 
-        strategy.update_parameters(request.parameters)
+        strategy.update_parameters(update_request.parameters)
 
         return {"message": f"Parameters updated for strategy '{strategy_name}'"}
     except HTTPException:
         raise
     except Exception as e:
+        audit_logger.error(
+            "strategy_parameters_update_error",
+            extra={"correlation_id": correlation_id, "error": str(e)},
+        )
         logger.error(f"Error updating strategy parameters {strategy_name}: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -393,25 +455,29 @@ async def update_strategy_parameters(
 
 
 @router.get("/{strategy_name}/metrics", response_model=StrategyMetricsResponse)
+@rate_limit(max_requests=30, window_seconds=60)
+@require_auth(roles=["admin", "user"])
+@audit_log("strategy_metrics")
 async def get_strategy_metrics(
-    strategy_name: str, logger_instance: Annotated[StrategyLogger, Depends(get_strategy_logger)]
+    strategy_name: str,
+    logger_instance: Annotated[StrategyLogger, Depends(get_strategy_logger_dep)],
 ):
     """Obtener métricas de una estrategia."""
     try:
         metrics = logger_instance.get_strategy_metrics(strategy_name)
 
         return StrategyMetricsResponse(
-            strategy=metrics["strategy"],
-            signals_generated=metrics["signals_generated"],
-            signals_executed=metrics["signals_executed"],
-            signals_rejected=metrics["signals_rejected"],
-            execution_rate=metrics["execution_rate"],
-            rejection_rate=metrics["rejection_rate"],
-            error_count=metrics["error_count"],
-            error_rate=metrics["error_rate"],
-            total_logs=metrics["total_logs"],
-            first_log=metrics["first_log"],
-            last_log=metrics["last_log"],
+            strategy=str(metrics["strategy"]),
+            signals_generated=int(metrics["signals_generated"]),
+            signals_executed=int(metrics["signals_executed"]),
+            signals_rejected=int(metrics["signals_rejected"]),
+            execution_rate=float(metrics["execution_rate"]),
+            rejection_rate=float(metrics["rejection_rate"]),
+            error_count=int(metrics["error_count"]),
+            error_rate=float(metrics["error_rate"]),
+            total_logs=int(metrics["total_logs"]),
+            first_log=(str(metrics["first_log"]) if metrics["first_log"] is not None else None),
+            last_log=(str(metrics["last_log"]) if metrics["last_log"] is not None else None),
         )
     except Exception as e:
         logger.error(f"Error getting strategy metrics {strategy_name}: {e}")
@@ -423,7 +489,7 @@ async def get_strategy_metrics(
 
 @router.get("/metrics/all", response_model=dict[str, Any])
 async def get_all_metrics(
-    logger_instance: Annotated[StrategyLogger, Depends(get_strategy_logger)],
+    logger_instance: Annotated[StrategyLogger, Depends(get_strategy_logger_dep)],
 ):
     """Obtener métricas de todas las estrategias."""
     try:
@@ -437,7 +503,9 @@ async def get_all_metrics(
 
 
 @router.get("/execution/stats", response_model=ExecutionStatsResponse)
-async def get_execution_stats(engine: Annotated[Any, Depends(get_execution_engine)]):
+async def get_execution_stats(
+    engine: Annotated[ExecutionEngine, Depends(get_execution_engine_dep)],
+):
     """Obtener estadísticas del motor de ejecución."""
     try:
         stats = engine.get_execution_stats()
@@ -464,7 +532,7 @@ async def get_execution_stats(engine: Annotated[Any, Depends(get_execution_engin
 @require_auth(roles=["admin"])
 @audit_log("execution_engine_started")
 async def start_execution_engine(
-    engine: Annotated[Any, Depends(get_execution_engine)],
+    engine: Annotated[ExecutionEngine, Depends(get_execution_engine_dep)],
 ):
     """Iniciar motor de ejecución."""
     try:
@@ -483,7 +551,7 @@ async def start_execution_engine(
 @require_auth(roles=["admin"])
 @audit_log("execution_engine_stopped")
 async def stop_execution_engine(
-    engine: Annotated[Any, Depends(get_execution_engine)],
+    engine: Annotated[ExecutionEngine, Depends(get_execution_engine_dep)],
 ):
     """Detener motor de ejecución."""
     try:
@@ -502,7 +570,7 @@ async def stop_execution_engine(
 @require_auth(roles=["admin"])
 @audit_log("execution_stats_reset")
 async def reset_execution_stats(
-    engine: Annotated[Any, Depends(get_execution_engine)],
+    engine: Annotated[ExecutionEngine, Depends(get_execution_engine_dep)],
 ):
     """Resetear estadísticas del motor de ejecución."""
     try:

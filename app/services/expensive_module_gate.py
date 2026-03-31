@@ -27,6 +27,8 @@ or expected returns. Better to use simple, deterministic strategies on small
 accounts and upgrade modules only when capital and trading volume increase.
 """
 
+from __future__ import annotations
+
 import logging
 from decimal import Decimal
 from enum import Enum
@@ -408,8 +410,6 @@ class ExpensiveModuleGate:
             "recommendation": (
                 "COST_ACCEPTABLE"
                 if cost_ratio < Decimal("0.50")
-                else "COST_HIGH"
-                if cost_ratio < Decimal("1.0")
-                else "COST_CRITICAL"
+                else "COST_HIGH" if cost_ratio < Decimal("1.0") else "COST_CRITICAL"
             ),
         }

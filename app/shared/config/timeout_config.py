@@ -24,6 +24,8 @@ Usage:
         ...
 """
 
+from __future__ import annotations
+
 import logging
 import os
 from dataclasses import dataclass
@@ -131,25 +133,6 @@ class TimeoutConfig:
     api_deployment: float = 60.0
     api_signals: float = 10.0
     api_assets: float = 30.0
-
-    # ==================== Messaging/Queue Timeouts ====================
-    messaging_socket_connect: float = 5.0
-    messaging_socket_timeout: float = 5.0
-    queue_get_timeout: float = 60.0
-    process_join_timeout: float = 5.0
-
-    # ==================== Strategy/Learning Timeouts ====================
-    strategy_subprocess: float = 300.0  # 5 minutes for subprocess operations
-    strategy_training: float = 600.0  # 10 minutes for model training
-    strategy_optimization: float = 300.0  # 5 minutes for optimization
-
-    # ==================== API Endpoint Timeouts ====================
-    api_health_check: float = 5.0
-    api_portfolio_analytics: float = 30.0
-    api_optimization: float = 300.0  # 5 minutes for optimization endpoint
-    api_deployment: float = 60.0
-    api_signals: float = 10.0
-    api_assets: float = 30.0
     api_paper_trading: float = 15.0
     api_cost_analysis: float = 10.0
     api_profitability_validation: float = 30.0
@@ -210,7 +193,7 @@ class TimeoutConfig:
         return self.http_connect + self.http_read
 
     @classmethod
-    def from_env(cls) -> "TimeoutConfig":
+    def from_env(cls) -> TimeoutConfig:
         """
         Load timeout configuration from environment variables.
 
@@ -345,7 +328,8 @@ class TimeoutManager:
         Raises:
             AttributeError: If operation name not found
         """
-        return getattr(self._config, operation)
+        value = getattr(self._config, operation)
+        return float(value)
 
     @classmethod
     def get_timeout_for_service(cls, service: str, operation: str = "read") -> float:
@@ -363,14 +347,15 @@ class TimeoutManager:
         attr_name = f"{service.lower()}_{operation.lower()}"
 
         if hasattr(config, attr_name):
-            return getattr(config, attr_name)
+            return float(getattr(config, attr_name))
 
         # Fallback to general HTTP timeout
-        return {
+        fallback: dict[str, float] = {
             "connect": config.http_connect,
             "read": config.http_read,
             "write": config.http_write,
-        }.get(operation, config.http_timeout)
+        }
+        return fallback.get(operation, config.http_timeout)
 
 
 # Module-level convenience

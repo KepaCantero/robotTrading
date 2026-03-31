@@ -4,12 +4,13 @@ T18.1.2: RebalancingEngine - Dynamic portfolio rebalancing
 Executes periodic and threshold-based portfolio rebalancing with cost tracking.
 """
 
+from __future__ import annotations
+
 import logging
 from dataclasses import dataclass, field
 from datetime import datetime
 from decimal import Decimal
 from enum import Enum
-from typing import Optional
 
 logger = logging.getLogger(__name__)
 
@@ -65,9 +66,9 @@ class RebalancingEngine:
     def __init__(
         self,
         frequency: RebalancingFrequency = RebalancingFrequency.MONTHLY,
-        drift_threshold: Optional[Decimal] = None,
-        min_trade_value: Optional[Decimal] = None,
-        transaction_cost_rate: Optional[Decimal] = None,  # 0.1%
+        drift_threshold: Decimal | None = None,
+        min_trade_value: Decimal | None = None,
+        transaction_cost_rate: Decimal | None = None,  # 0.1%
     ):
         """
         Initialize rebalancing engine.
@@ -88,7 +89,7 @@ class RebalancingEngine:
         self.drift_threshold = drift_threshold
         self.min_trade_value = min_trade_value
         self.transaction_cost_rate = transaction_cost_rate
-        self.last_rebalance: Optional[datetime] = None
+        self.last_rebalance: datetime | None = None
         self.rebalancing_events: list[RebalancingEvent] = []
         self.event_counter = 0
         logger.info(f"✅ RebalancingEngine initialized ({frequency.value} rebalancing)")
@@ -175,7 +176,10 @@ class RebalancingEngine:
 
         event.num_trades = len(event.trades)
         event.total_transaction_cost = total_cost
-        event.total_trade_value = sum(abs(t.delta_weight * portfolio_value) for t in event.trades)
+        event.total_trade_value = sum(
+            (abs(t.delta_weight * portfolio_value) for t in event.trades),
+            Decimal("0"),
+        )
         event.status = "pending"
 
         logger.info(f"✅ Rebalancing plan created: {event.num_trades} trades, cost=${total_cost}")
@@ -242,7 +246,7 @@ class RebalancingEngine:
         Returns:
             Total estimated cost (transaction + slippage)
         """
-        return sum(t.estimated_cost for t in trades)
+        return sum((t.estimated_cost for t in trades), Decimal("0"))
 
     async def get_rebalancing_statistics(self) -> dict:
         """Get rebalancing statistics."""
@@ -270,7 +274,7 @@ class RebalancingEngine:
 
     async def get_rebalancing_history(
         self,
-        limit: Optional[int] = None,
+        limit: int | None = None,
     ) -> list[RebalancingEvent]:
         """
         Get rebalancing event history.
@@ -298,12 +302,12 @@ class RebalancingEngine:
 
 
 # Singleton
-_engine: Optional[RebalancingEngine] = None
+_engine: RebalancingEngine | None = None
 
 
 def get_rebalancing_engine(
     frequency: RebalancingFrequency = RebalancingFrequency.MONTHLY,
-    drift_threshold: Optional[Decimal] = None,
+    drift_threshold: Decimal | None = None,
 ) -> RebalancingEngine:
     """Get or create singleton RebalancingEngine."""
     if drift_threshold is None:

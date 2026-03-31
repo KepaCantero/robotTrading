@@ -10,6 +10,8 @@ This service handles the mapping between flat optimization parameters
 and the nested YAML configuration structure used by strategies.
 """
 
+from __future__ import annotations
+
 import copy
 from typing import ClassVar, Optional, Union
 

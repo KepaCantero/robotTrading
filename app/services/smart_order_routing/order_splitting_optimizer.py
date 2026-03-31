@@ -7,6 +7,8 @@ Implements intelligent order splitting algorithms:
 - POI (Percentage of Involvement)
 """
 
+from __future__ import annotations
+
 import logging
 from datetime import datetime, timedelta
 from decimal import Decimal
@@ -102,7 +104,7 @@ class OrderSplittingOptimizer:
 
         logger.info(f"Creating VWAP split for {symbol}: €{total_size:,.0f}")
 
-        tranches = []
+        tranches: list[OrderTranche] = []
         remaining = total_size
         current_time = datetime.now()
 
@@ -269,7 +271,7 @@ class OrderSplittingOptimizer:
 
 
 # Global singleton
-_order_splitting_optimizer: OrderSplittingOptimizer = None
+_order_splitting_optimizer: Optional[OrderSplittingOptimizer] = None
 
 
 def get_order_splitting_optimizer() -> OrderSplittingOptimizer:

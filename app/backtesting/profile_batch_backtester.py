@@ -23,7 +23,7 @@ Usage:
     from app.domain.models.input_profile import InputProfile
 
     # Create backtester
-    backtester = ProfileBatchBacktester(config_path="config/profile_batch_backtest.yaml")
+    backtester = ProfileBatchBacktester(config_path="config/portfolio/profile_batch_backtest.yaml")
 
     # Generate all profiles (180 combinations)
     profiles = backtester.generate_all_profiles()
@@ -50,7 +50,7 @@ from __future__ import annotations
 
 import logging
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 from uuid import uuid4
 
 import numpy as np
@@ -220,7 +220,7 @@ class ProfileBatchBacktester:
             - profile_strategy_mapper_fallback_count: Times ProfileStrategyMapper failed/None
             - config_key_mismatch_count: Times config keys didn't exist
         """
-        return self.fallback_tracker.get_fallback_metrics()
+        return cast("dict[str, int]", self.fallback_tracker.get_fallback_metrics())
 
     def log_fallback_summary(self) -> None:
         """
@@ -254,7 +254,7 @@ class ProfileBatchBacktester:
             >>> print(f"Generated {len(profiles)} profiles")
         """
         horizons = self.config_service.load_investment_horizons()
-        return self.profile_gen_service.generate_all_profiles(horizons)
+        return cast("list[InputProfile]", self.profile_gen_service.generate_all_profiles(horizons))
 
     # ========================================================================
     # Public API - Batch Execution
@@ -280,9 +280,10 @@ class ProfileBatchBacktester:
             >>> print(f"Completed {len(results)} profiles")
         """
         profiles = self.generate_all_profiles()
-        results = self.batch_exec_service.run_all_profiles(
+        raw_results = self.batch_exec_service.run_all_profiles(
             profiles, ProfileBatchBacktester, parallel, max_workers
         )
+        results = cast("dict[str, ProfileResult]", raw_results)
         self.results = results
 
         # Generate batch summary with fallback metrics
@@ -407,7 +408,7 @@ class ProfileBatchBacktester:
             >>> with open("report.html", "w") as f:
             ...     f.write(html)
         """
-        return self.report_service.generate_comparison_report(self.results)
+        return cast("str", self.report_service.generate_comparison_report(self.results))
 
     def export_results(self, output_format: str = "json") -> Path:
         """
@@ -428,7 +429,7 @@ class ProfileBatchBacktester:
             >>> path = backtester.export_results(output_format="excel")
             >>> print(f"Results exported to: {path}")
         """
-        return self.report_service.export_results(self.results, output_format)
+        return cast("Path", self.report_service.export_results(self.results, output_format))
 
     # ========================================================================
     # Internal Methods - Orchestration (kept in main class)
@@ -713,8 +714,13 @@ class ProfileBatchBacktester:
                     profile, config, params, multi_strategy=multi_strategy
                 )
                 if multi_strategy and "combined" in metrics:
-                    return metrics["combined"].get("sharpe_ratio", -1.0)
-                return metrics.get("sharpe_ratio", -1.0)
+                    combined = metrics["combined"]
+                    return (
+                        float(combined.get("sharpe_ratio", -1.0))
+                        if isinstance(combined, dict)
+                        else -1.0
+                    )
+                return float(metrics.get("sharpe_ratio", -1.0))
             except Exception as e:
                 logger.warning(f"Trial failed: {e}")
                 return -1.0
@@ -1281,13 +1287,16 @@ class ProfileBatchBacktester:
             voting_breakdown["buy_weight"] = buy_weight
             voting_breakdown["sell_weight"] = sell_weight
         elif ensemble_mode == "regime_selector":
-            best_signal = max(
-                per_strategy_signals.items(),
-                key=lambda x: x[1].get("confidence", 0.0),
-                default=(None, {"action": "hold", "confidence": 0.0}),
-            )
-            action = best_signal[1].get("action", "hold")
-            confidence = best_signal[1].get("confidence", 0.0)
+            if per_strategy_signals:
+                best_signal_name = max(
+                    per_strategy_signals,
+                    key=lambda k: per_strategy_signals[k].get("confidence", 0.0),
+                )
+                best_signal_data = per_strategy_signals[best_signal_name]
+            else:
+                best_signal_data = {"action": "hold", "confidence": 0.0}
+            action = str(best_signal_data.get("action", "hold"))
+            confidence = float(best_signal_data.get("confidence", 0.0))
             if action not in ["buy", "sell"] or confidence < min_confidence:
                 action = "hold"
                 confidence = 0.0
@@ -1362,7 +1371,7 @@ class ProfileBatchBacktester:
 
             # Update YAML config files
             updater = YAMLConfigUpdater(config_dir=Path("config"))
-            success = updater.update_from_optimization_results(yaml_format, tier=tier)
+            success = bool(updater.update_from_optimization_results(yaml_format, tier=tier))
 
             if success:
                 logger.info(
@@ -1516,7 +1525,7 @@ class ProfileBatchBacktester:
 # Convenience Functions
 # ============================================================================
 def create_profile_batch_backtester(
-    config_path: str = "config/profile_batch_backtest.yaml",
+    config_path: str = "config/portfolio/profile_batch_backtest.yaml",
 ) -> ProfileBatchBacktester:
     """
     Convenience function to create ProfileBatchBacktester.

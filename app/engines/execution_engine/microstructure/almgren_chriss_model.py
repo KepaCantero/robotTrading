@@ -188,7 +188,9 @@ class AlmgrenChrissModel:
 
         # Temporary impact: eta * sigma * (size / ADV) / (1 + execution_time_factor)
         # This is the walking the book cost that recovers
-        time_factor = np.sqrt(execution_time_seconds / 86400)  # Normalize to day
+        # Guard against zero execution time (IOC/market orders) by clamping to 1 second
+        effective_time = max(execution_time_seconds, 1.0)
+        time_factor = np.sqrt(effective_time / 86400)  # Normalize to day
         temporary_impact = self.eta * volatility * participation_rate / time_factor
 
         # Total impact
@@ -376,6 +378,12 @@ class AlmgrenChrissModel:
 
         # Calculate participation rate
         df = historical_executions.copy()
+        # Filter out zero-ADV rows to prevent inf participation rates
+        df = df[df[adv_col] > 0].copy()
+        if len(df) < 3:
+            raise ValueError(
+                "Not enough valid (non-zero ADV) historical executions for calibration"
+            )
         df["participation"] = df[size_col] / df[adv_col]
         df["sqrt_participation"] = np.sqrt(df["participation"])
 
@@ -423,17 +431,17 @@ class AlmgrenChrissModel:
     ) -> float:
         """Calculate R-squared for regression fit."""
         y_pred = X @ coefficients
-        ss_res = np.sum((y - y_pred) ** 2)
-        ss_tot = np.sum((y - np.mean(y)) ** 2)
+        ss_res: float = float(np.sum((y - y_pred) ** 2))
+        ss_tot: float = float(np.sum((y - np.mean(y)) ** 2))
 
         if ss_tot == 0:
             return 0.0
 
-        return 1 - (ss_res / ss_tot)
+        return float(1 - (ss_res / ss_tot))
 
 
 # Global singleton
-_almgren_chriss_model: AlmgrenChrissModel = None
+_almgren_chriss_model: AlmgrenChrissModel | None = None
 
 
 def get_almgren_chriss_model(
@@ -441,8 +449,18 @@ def get_almgren_chriss_model(
     eta: float | None = None,
     asset_class: str = "equity",
 ) -> AlmgrenChrissModel:
-    """Get or create global AlmgrenChrissModel instance."""
+    """Get or create global AlmgrenChrissModel instance.
+
+    Creates a new instance if parameters differ from the cached singleton.
+    """
     global _almgren_chriss_model
+    if _almgren_chriss_model is not None and (
+        _almgren_chriss_model.gamma != gamma
+        or _almgren_chriss_model.eta != eta
+        or _almgren_chriss_model.asset_class != asset_class
+    ):
+        _almgren_chriss_model = None
+
     if _almgren_chriss_model is None:
         _almgren_chriss_model = AlmgrenChrissModel(
             gamma=gamma,

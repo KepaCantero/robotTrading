@@ -1,10 +1,11 @@
+from __future__ import annotations
+
 """Quote Generator for Avellaneda-Stoikov Market Making.
 
 This module provides the quote generator that combines the AS model with
 practical constraints like inventory limits, spread limits, and quote enabling/disabling.
 """
 
-from __future__ import annotations
 
 import logging
 from decimal import Decimal

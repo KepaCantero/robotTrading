@@ -12,7 +12,7 @@ import pytest
 
 from app.shared.config.centralized_config import SectorCountryDiversificationConfig, get_config
 from app.domain.models.portfolio import AssetClass, Portfolio, Position
-from app.providers.paper_trading import PaperTradingPortfolioProvider
+from app.infrastructure.providers.paper_trading import PaperTradingPortfolioProvider
 from app.services.country_diversification_validator import CountryDiversificationValidator
 from app.services.portfolio_service import PortfolioService
 from app.services.sector_diversification_validator import SectorDiversificationValidator

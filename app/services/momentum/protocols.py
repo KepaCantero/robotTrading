@@ -7,6 +7,8 @@ Following SOLID principles:
 - Open/Closed: Extensible through protocol implementations
 """
 
+from __future__ import annotations
+
 import logging
 from decimal import Decimal
 from typing import Any, Optional, Protocol
@@ -222,11 +224,15 @@ class StrategyManager(Protocol):
         """Delete a momentum strategy."""
         ...
 
-    async def get_strategy_signals(self, strategy_name: str) -> list[MomentumSignal]:
+    async def get_strategy_signals(
+        self, strategy_name: str, all_signals: list[MomentumSignal]
+    ) -> list[MomentumSignal]:
         """Get signals for a specific strategy."""
         ...
 
-    async def get_top_momentum_assets(self, limit: int = 10) -> list[dict[str, Any]]:
+    async def get_top_momentum_assets(
+        self, all_signals: list[MomentumSignal], limit: int = 10
+    ) -> list[dict[str, Any]]:
         """Get top momentum assets."""
         ...
 

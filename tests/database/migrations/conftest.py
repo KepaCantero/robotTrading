@@ -9,6 +9,14 @@ import pytest
 # Add parent directory to path FIRST
 sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent / "app"))
 
+# Make Base available from app.infrastructure.persistence so that
+# env.py's "from app.infrastructure.persistence import Base" succeeds.
+import app.infrastructure.persistence.database as _db_mod
+
+import app.infrastructure.persistence as _persistence_mod
+
+if not hasattr(_persistence_mod, "Base"):
+    _persistence_mod.Base = _db_mod.Base
 
 # Mock alembic.context BEFORE any imports
 mock_context = MagicMock()

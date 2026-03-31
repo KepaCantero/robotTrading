@@ -32,7 +32,7 @@ from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from decimal import Decimal
 from enum import Enum
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 import aiosqlite
 
@@ -76,13 +76,13 @@ class ChaosExperiment:
     created_at: datetime
     started_at: datetime | None = None
     completed_at: datetime | None = None
-    blast_radius_config: dict[str, Any] | None = None
+    blast_radius_config: dict[str, object] | None = None
     validation_result: ValidationResult | None = None
-    metrics: dict[str, Any] = field(default_factory=dict)
-    incidents: list[dict[str, Any]] = field(default_factory=list)
+    metrics: dict[str, object] = field(default_factory=dict)
+    incidents: list[dict[str, object]] = field(default_factory=list)
     rollback_actions: list[str] = field(default_factory=list)
 
-    def to_dict(self) -> dict[str, Any]:
+    def to_dict(self) -> dict[str, object]:
         """Convert to dictionary."""
         return {
             "id": self.id,
@@ -150,7 +150,7 @@ class ChaosOrchestrator:
     def __init__(
         self,
         service_name: str,
-        failure_injectors: dict[str, Any],
+        failure_injectors: dict[str, object],
         blast_radius_controller: BlastRadiusController,
         hypothesis_validator: HypothesisValidator,
         metrics_collector: object | None = None,
@@ -205,8 +205,7 @@ class ChaosOrchestrator:
             db_path.parent.mkdir(parents=True, exist_ok=True)
 
             async with aiosqlite.connect(self.config.db_path) as db:
-                await db.execute(
-                    """
+                await db.execute("""
                     CREATE TABLE IF NOT EXISTS chaos_experiments (
                         id TEXT PRIMARY KEY,
                         service_name TEXT NOT NULL,
@@ -225,15 +224,12 @@ class ChaosOrchestrator:
                         incidents TEXT,
                         rollback_actions TEXT
                     )
-                """
-                )
+                """)
 
-                await db.execute(
-                    """
+                await db.execute("""
                     CREATE INDEX IF NOT EXISTS idx_experiments_service_status
                     ON chaos_experiments(service_name, status)
-                """
-                )
+                """)
 
                 await db.commit()
 
@@ -290,7 +286,7 @@ class ChaosOrchestrator:
         injectors: list[str],
         duration_minutes: int = 30,
         description: str = "",
-        blast_radius_config: dict[str, Any] | None = None,
+        blast_radius_config: dict[str, object] | None = None,
         approved_by: str | None = None,
     ) -> ChaosExperiment:
         """
@@ -455,7 +451,7 @@ class ChaosOrchestrator:
             await self._save_experiment(experiment)
             raise
 
-    async def _collect_baseline_metrics(self) -> dict[str, Any]:
+    async def _collect_baseline_metrics(self) -> dict[str, object]:
         """Collect baseline metrics before chaos."""
         if not self.metrics_collector:
             return {}
@@ -552,7 +548,7 @@ class ChaosOrchestrator:
     async def _validate_hypothesis(
         self,
         experiment: ChaosExperiment,
-        baseline_metrics: dict[str, Any],
+        baseline_metrics: dict[str, object],
     ) -> ValidationResult:
         """Validate experiment hypothesis."""
         try:
@@ -677,7 +673,7 @@ class ChaosOrchestrator:
         self.logger.info(f"Cancelled experiment: {experiment.name}")
         return True
 
-    async def get_summary(self) -> dict[str, Any]:
+    async def get_summary(self) -> dict[str, object]:
         """Get chaos orchestrator summary."""
         active = list(self._active_experiments.values())
 

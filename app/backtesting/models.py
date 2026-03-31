@@ -8,6 +8,8 @@ REQUIREMENT: pydantic>=2.0 is a hard dependency for this module.
 The fallback pattern has been removed to ensure consistent validation behavior.
 """
 
+from __future__ import annotations
+
 from datetime import datetime
 from decimal import Decimal
 from enum import Enum
@@ -94,7 +96,7 @@ class Trade(BaseModel):
         return v.lower()
 
     @model_validator(mode="after")
-    def validate_trade_logic(self) -> "Trade":
+    def validate_trade_logic(self) -> Trade:
         """Validate trade logic."""
         if self.status == TradeStatus.CLOSED:
             if self.exit_price is None:
@@ -300,7 +302,7 @@ class PerformanceMetrics(BaseModel):
     starting_capital: Optional[Decimal] = Field(None, description="Starting capital")
 
     @model_validator(mode="after")
-    def validate_metrics_consistency(self) -> "PerformanceMetrics":
+    def validate_metrics_consistency(self) -> PerformanceMetrics:
         """Validate metrics consistency - only validate if fields are set."""
         # Only validate trade counts if they are non-zero (indicates they were explicitly set)
         if (
@@ -369,7 +371,7 @@ class BacktestConfig(BaseModel):
         return v
 
     @model_validator(mode="after")
-    def validate_config_logic(self) -> "BacktestConfig":
+    def validate_config_logic(self) -> BacktestConfig:
         """Validate configuration logic."""
         if (
             self.stop_loss_percentage is not None
@@ -402,7 +404,7 @@ class BacktestResult(BaseModel):
     )
 
     @model_validator(mode="after")
-    def validate_result_consistency(self) -> "BacktestResult":
+    def validate_result_consistency(self) -> BacktestResult:
         """Validate result consistency."""
         if self.end_date < self.start_date:
             raise ValueError("End date cannot be before start date")

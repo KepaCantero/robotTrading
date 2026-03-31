@@ -9,6 +9,8 @@ companies, ignoring those that failed. This inflates performance metrics
 because failed companies are systematically excluded from historical data.
 """
 
+from __future__ import annotations
+
 import logging
 from datetime import datetime
 from decimal import Decimal

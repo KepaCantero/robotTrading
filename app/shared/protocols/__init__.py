@@ -7,6 +7,7 @@ the application for dependency inversion and interface segregation.
 
 from app.shared.protocols.i_alert_processor import IAlertProcessor
 from app.shared.protocols.i_broker_adapter import IBrokerAdapter
+from app.shared.protocols.i_data_feed import IDataFeed
 from app.shared.protocols.i_kill_switch_monitor import IKillSwitchMonitor
 from app.shared.protocols.i_post_trade_analyzer import IPostTradeAnalyzer
 from app.shared.protocols.i_pre_trade_validator import IPreTradeValidator
@@ -18,6 +19,7 @@ from app.shared.protocols.i_trading_decision_logger import ITradingDecisionLogge
 __all__ = [
     "IAlertProcessor",
     "IBrokerAdapter",
+    "IDataFeed",
     "IKillSwitchMonitor",
     "IPostTradeAnalyzer",
     "IPreTradeValidator",

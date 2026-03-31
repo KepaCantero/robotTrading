@@ -3,6 +3,8 @@ Centralized Logging Service for AlgoTrading
 TASK-3: Configuración de logging centralizado
 """
 
+from __future__ import annotations
+
 import json
 import logging
 import os

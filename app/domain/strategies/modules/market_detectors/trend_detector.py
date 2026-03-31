@@ -4,6 +4,8 @@ TrendDetector - Módulo independiente para detectar tendencias.
 VECTORIZADO: Usa numpy para todos los cálculos. Sin bucles Python.
 """
 
+from __future__ import annotations
+
 import logging
 from typing import Optional, Union
 

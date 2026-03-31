@@ -8,6 +8,8 @@ Provides:
 - Retry logic with exponential backoff
 """
 
+from __future__ import annotations
+
 import asyncio
 import logging
 from abc import ABC, abstractmethod
@@ -89,7 +91,7 @@ class FallbackStrategy(ABC):
     """Abstract base class for fallback strategies."""
 
     @abstractmethod
-    async def execute(self, context: dict[str, Any]) -> Any:
+    async def execute(self, context: dict[str, Any]) -> dict[str, Any]:
         """Execute fallback strategy."""
 
     @abstractmethod
@@ -225,7 +227,7 @@ class ErrorHandler:
 
     async def with_fallback(
         self, async_fn: Callable, *args, fallback_context: Optional[dict[str, Any]] = None, **kwargs
-    ) -> Any:
+    ) -> object:
         """
         Execute async function with fallback strategy on exception.
 
@@ -270,7 +272,7 @@ class ErrorHandler:
 
     async def with_retry(
         self, async_fn: Callable, *args, max_retries: int = 3, initial_delay: float = 0.5, **kwargs
-    ) -> Any:
+    ) -> object:
         """
         Execute async function with exponential backoff retry.
 
@@ -311,7 +313,7 @@ class ErrorHandler:
 
     async def with_timeout(
         self, async_fn: Callable, timeout_seconds: float = 30.0, *args, **kwargs
-    ) -> Any:
+    ) -> object:
         """
         Execute async function with timeout protection.
 

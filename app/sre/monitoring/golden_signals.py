@@ -478,8 +478,7 @@ class GoldenSignalsMonitor:
             db_path.parent.mkdir(parents=True, exist_ok=True)
 
             async with aiosqlite.connect(self.config.db_path) as db:
-                await db.execute(
-                    """
+                await db.execute("""
                     CREATE TABLE IF NOT EXISTS golden_signals_history (
                         id INTEGER PRIMARY KEY AUTOINCREMENT,
                         service_name TEXT NOT NULL,
@@ -495,15 +494,12 @@ class GoldenSignalsMonitor:
                         health_status TEXT NOT NULL,
                         created_at TEXT NOT NULL DEFAULT (datetime('utc'))
                     )
-                """
-                )
+                """)
 
-                await db.execute(
-                    """
+                await db.execute("""
                     CREATE INDEX IF NOT EXISTS idx_signals_service_timestamp
                     ON golden_signals_history(service_name, timestamp)
-                """
-                )
+                """)
 
                 await db.commit()
 
@@ -748,7 +744,7 @@ class GoldenSignalsMonitor:
                 "timestamp": time.time(),
             }
 
-            return min(utilization, 100.0)
+            return float(min(utilization, 100.0))
 
         except Exception as e:
             self.logger.warning(f"Error calculating network utilization: {e}")
@@ -926,7 +922,8 @@ class GoldenSignalsMonitor:
         """Get most recent metrics."""
         async with self._lock:
             if self._metrics_history:
-                return self._metrics_history[-1]
+                last: GoldenSignalMetrics = self._metrics_history[-1]
+                return last
             return None
 
     async def get_metrics_history(
