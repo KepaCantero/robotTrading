@@ -17,9 +17,10 @@ import logging
 from dataclasses import dataclass, field
 from datetime import datetime
 from decimal import Decimal
-from typing import Optional
+from typing import TYPE_CHECKING
 
-from .limit_adjuster import AdjustedLimit, LimitBreach
+if TYPE_CHECKING:
+    from .limit_adjuster import AdjustedLimit, LimitBreach
 
 logger = logging.getLogger(__name__)
 
@@ -300,7 +301,7 @@ class RealTimeMonitor:
         self,
         breaches: list[LimitBreach],
         current_scaling_factor: Decimal,
-    ) -> Optional[MonitoringAlert]:
+    ) -> MonitoringAlert | None:
         """
         Recommend scaling adjustment based on breach patterns.
 
@@ -439,7 +440,7 @@ class RealTimeMonitor:
         previous_status: str,
         current_status: str,
         timestamp: datetime,
-    ) -> Optional[MonitoringAlert]:
+    ) -> MonitoringAlert | None:
         """Generate alert for status transition."""
         if current_status == previous_status:
             return None
@@ -504,7 +505,7 @@ class RealTimeMonitor:
 
 
 # Singleton instance
-_monitor: Optional[RealTimeMonitor] = None
+_monitor: RealTimeMonitor | None = None
 
 
 def get_realtime_monitor() -> RealTimeMonitor:

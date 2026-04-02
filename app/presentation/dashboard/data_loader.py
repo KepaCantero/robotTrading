@@ -10,7 +10,6 @@ import contextlib
 import json
 import logging
 from pathlib import Path
-from typing import Optional
 
 logger = logging.getLogger(__name__)
 
@@ -23,7 +22,7 @@ class DashboardDataLoader:
         self.backtest_path = Path("reports/backtesting")
         self.paper_trading_path = Path("app/providers/paper_trading.py")
 
-    def load_backtest_results(self, strategy_name: str) -> Optional[dict]:
+    def load_backtest_results(self, strategy_name: str) -> dict | None:
         """
         Load backtest results for a strategy.
 

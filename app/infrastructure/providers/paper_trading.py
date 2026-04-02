@@ -11,7 +11,7 @@ import logging
 import random
 from datetime import datetime
 from decimal import Decimal
-from typing import Any, Optional
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -29,7 +29,7 @@ from app.shared.config.centralized_config import get_config
 class PaperTradingPortfolioProvider:
     """Paper trading portfolio provider for testing and simulation."""
 
-    def __init__(self, initial_cash: Optional[Decimal] = None):
+    def __init__(self, initial_cash: Decimal | None = None):
         """Initialize paper trading provider with initial cash."""
         if initial_cash is None:
             initial_cash = Decimal("100000")
@@ -127,7 +127,7 @@ class PaperTradingPortfolioProvider:
         )
         return portfolio
 
-    async def get_position(self, symbol: str) -> Optional[Position]:
+    async def get_position(self, symbol: str) -> Position | None:
         """Get specific position by symbol."""
         return self.positions.get(symbol.upper())
 
@@ -135,7 +135,7 @@ class PaperTradingPortfolioProvider:
         """Get supported asset universe for this provider."""
         return self.asset_universes
 
-    async def get_market_regime(self, symbol: str) -> Optional[MarketRegimeData]:
+    async def get_market_regime(self, symbol: str) -> MarketRegimeData | None:
         """Get market regime data for a symbol."""
         # Simple market regime detection based on price movement
         if symbol not in self.market_prices:
@@ -166,7 +166,7 @@ class PaperTradingPortfolioProvider:
         )
 
     async def simulate_trade(
-        self, symbol: str, quantity: Decimal, price: Optional[Decimal] = None
+        self, symbol: str, quantity: Decimal, price: Decimal | None = None
     ) -> bool:
         """Simulate a trade execution."""
         logger.info(

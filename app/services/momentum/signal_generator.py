@@ -14,7 +14,6 @@ from __future__ import annotations
 import logging
 from datetime import datetime, timedelta
 from decimal import Decimal
-from typing import Optional
 
 from app.domain.models.momentum import (
     MomentumFilter,
@@ -85,7 +84,7 @@ class SignalGenerator:
 
     async def create_price_momentum_signal(
         self, symbol: str, indicators: TechnicalIndicators, timeframe: Timeframe
-    ) -> Optional[MomentumSignal]:
+    ) -> MomentumSignal | None:
         """
         Create price momentum signal with correct RSI logic.
 
@@ -150,7 +149,7 @@ class SignalGenerator:
 
     async def create_volume_momentum_signal(
         self, symbol: str, indicators: TechnicalIndicators, timeframe: Timeframe
-    ) -> Optional[MomentumSignal]:
+    ) -> MomentumSignal | None:
         """
         Create volume momentum signal.
 
@@ -198,7 +197,7 @@ class SignalGenerator:
         indicators: TechnicalIndicators,
         timeframe: Timeframe,
         existing_signals: list[MomentumSignal],
-    ) -> Optional[MomentumSignal]:
+    ) -> MomentumSignal | None:
         """
         Create combined momentum signal.
 
@@ -259,7 +258,7 @@ class SignalGenerator:
         )
 
     def filter_signals(
-        self, signals: list[MomentumSignal], filter_criteria: Optional[MomentumFilter]
+        self, signals: list[MomentumSignal], filter_criteria: MomentumFilter | None
     ) -> list[MomentumSignal]:
         """
         Filter signals based on criteria.

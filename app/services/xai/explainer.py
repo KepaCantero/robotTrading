@@ -8,7 +8,6 @@ from __future__ import annotations
 
 import logging
 from datetime import datetime
-from typing import Optional, Union
 
 import numpy as np
 from requests.exceptions import HTTPError, RequestException
@@ -23,7 +22,7 @@ class SHAPExplainer:
         self,
         model: object,
         data: np.ndarray,
-        config: Optional[dict[str, Union[float, int, str, bool]]] = None,
+        config: dict[str, float | int | str | bool] | None = None,
     ):
         """
         Initialize SHAP explainer.
@@ -56,9 +55,9 @@ class SHAPExplainer:
         self,
         sample: np.ndarray,
         feature_names: list[str],
-        prediction_id: Optional[str] = None,
-        model_name: Optional[str] = None,
-    ) -> dict[str, Union[str, float, list[dict[str, Union[str, float, bool]]]]]:
+        prediction_id: str | None = None,
+        model_name: str | None = None,
+    ) -> dict[str, str | float | list[dict[str, str | float | bool]]]:
         """
         Explain a single prediction using SHAP.
 
@@ -110,8 +109,8 @@ class SHAPExplainer:
         self,
         samples: np.ndarray,
         feature_names: list[str],
-        model_name: Optional[str] = None,
-    ) -> list[dict[str, Union[str, float, list[dict[str, Union[str, float, bool]]]]]]:
+        model_name: str | None = None,
+    ) -> list[dict[str, str | float | list[dict[str, str | float | bool]]]]:
         """
         Explain multiple predictions using SHAP.
 
@@ -144,7 +143,7 @@ class SHAPExplainer:
             logger.error(f"❌ Batch SHAP explanation failed: {e!s}")
             return []
 
-    def get_explainer_status(self) -> dict[str, Union[bool, str, int]]:
+    def get_explainer_status(self) -> dict[str, bool | str | int]:
         """Get explainer status."""
         return {
             "connected": self.connected,
@@ -160,7 +159,7 @@ class LIMEExplainer:
         self,
         model: object,
         data: np.ndarray,
-        config: Optional[dict[str, Union[float, int, str, bool]]] = None,
+        config: dict[str, float | int | str | bool] | None = None,
     ):
         """
         Initialize LIME explainer.
@@ -196,9 +195,9 @@ class LIMEExplainer:
         self,
         sample: np.ndarray,
         feature_names: list[str],
-        prediction_id: Optional[str] = None,
+        prediction_id: str | None = None,
         num_features: int = 10,
-    ) -> dict[str, Union[str, float, bool, int, list[dict[str, Union[str, float, bool]]]]]:
+    ) -> dict[str, str | float | bool | int | list[dict[str, str | float | bool]]]:
         """
         Explain a single prediction using LIME.
 
@@ -254,7 +253,7 @@ class LIMEExplainer:
             logger.error(f"❌ LIME explanation failed: {e!s}")
             return {}
 
-    def get_explainer_status(self) -> dict[str, Union[bool, str, int]]:
+    def get_explainer_status(self) -> dict[str, bool | str | int]:
         """Get explainer status."""
         return {
             "connected": self.connected,
@@ -382,7 +381,7 @@ class FeatureImportanceCalculator:
             logger.error(f"❌ All importance calculation failed: {e!s}")
             return {}
 
-    def get_calculator_status(self) -> dict[str, Union[int, tuple]]:
+    def get_calculator_status(self) -> dict[str, int | tuple]:
         """Get calculator status."""
         return {
             "num_features": self.X_data.shape[1],
@@ -392,15 +391,15 @@ class FeatureImportanceCalculator:
 
 
 # Singleton instances
-_shap_explainer: Optional[SHAPExplainer] = None
-_lime_explainer: Optional[LIMEExplainer] = None
-_importance_calculator: Optional[FeatureImportanceCalculator] = None
+_shap_explainer: SHAPExplainer | None = None
+_lime_explainer: LIMEExplainer | None = None
+_importance_calculator: FeatureImportanceCalculator | None = None
 
 
 def get_shap_explainer(
     model: object,
     data: np.ndarray,
-    config: Optional[dict[str, Union[float, int, str, bool]]] = None,
+    config: dict[str, float | int | str | bool] | None = None,
 ) -> SHAPExplainer:
     """Get or create singleton SHAP explainer."""
     global _shap_explainer
@@ -413,7 +412,7 @@ def get_shap_explainer(
 def get_lime_explainer(
     model: object,
     data: np.ndarray,
-    config: Optional[dict[str, Union[float, int, str, bool]]] = None,
+    config: dict[str, float | int | str | bool] | None = None,
 ) -> LIMEExplainer:
     """Get or create singleton LIME explainer."""
     global _lime_explainer

@@ -11,7 +11,7 @@ import logging
 from datetime import datetime
 from decimal import Decimal
 from enum import Enum
-from typing import Any, Optional
+from typing import Any
 
 import numpy as np
 from pydantic import BaseModel, Field, field_validator
@@ -59,13 +59,13 @@ class Asset(BaseModel):
     name: str = Field(..., description="Full asset name")
     asset_class: AssetClass = Field(..., description="Asset class category")
     exchange: Exchange = Field(..., description="Primary exchange")
-    sector: Optional[str] = Field(
+    sector: str | None = Field(
         default=None, description="Sector classification (e.g., technology, energy, healthcare)"
     )
-    country: Optional[str] = Field(
+    country: str | None = Field(
         default=None, description="Country or region code where asset is listed/from"
     )
-    primary_exchange: Optional[str] = Field(
+    primary_exchange: str | None = Field(
         default=None, description="Primary exchange for this asset"
     )
 
@@ -75,7 +75,7 @@ class Asset(BaseModel):
     )
     avg_volume: Decimal = Field(..., description="Average daily volume")
     avg_spread: Decimal = Field(..., description="Average bid-ask spread")
-    market_cap: Optional[Decimal] = Field(None, ge=0, description="Market capitalization")
+    market_cap: Decimal | None = Field(None, ge=0, description="Market capitalization")
 
     # Trading characteristics
     min_trade_size: Decimal = Field(default=Decimal("0.01"), ge=0, description="Minimum trade size")
@@ -197,9 +197,7 @@ class AssetUniverse(BaseModel):
     avg_liquidity_score: float = Field(
         default=0.0, ge=0, le=100, description="Average liquidity score"
     )
-    total_market_cap: Optional[Decimal] = Field(
-        None, ge=0, description="Total market cap of universe"
-    )
+    total_market_cap: Decimal | None = Field(None, ge=0, description="Total market cap of universe")
 
     def __init__(self, **data):
         super().__init__(**data)
@@ -305,7 +303,7 @@ class AssetUniverse(BaseModel):
         )
         return False
 
-    def get_top_liquid_assets(self, n: Optional[int] = None) -> list[Asset]:
+    def get_top_liquid_assets(self, n: int | None = None) -> list[Asset]:
         """Get top N most liquid assets."""
         if n is None:
             n = self.top_n
@@ -323,7 +321,7 @@ class AssetUniverse(BaseModel):
         )
         return result
 
-    def get_asset_by_symbol(self, symbol: str) -> Optional[Asset]:
+    def get_asset_by_symbol(self, symbol: str) -> Asset | None:
         """Get asset by symbol."""
         for asset in self.assets:
             if asset.symbol == symbol:
@@ -473,13 +471,13 @@ class AssetRanking(BaseModel):
 class AssetFilter(BaseModel):
     """Asset filtering criteria."""
 
-    asset_class: Optional[AssetClass] = Field(None, description="Filter by asset class")
+    asset_class: AssetClass | None = Field(None, description="Filter by asset class")
     min_liquidity_score: float = Field(
         default=50.0, ge=0, le=100, description="Minimum liquidity score"
     )
     min_volume: Decimal = Field(default=Decimal("100000"), ge=0, description="Minimum daily volume")
     max_spread: Decimal = Field(default=Decimal("0.01"), ge=0, description="Maximum spread")
-    exchanges: Optional[list[Exchange]] = Field(None, description="Allowed exchanges")
+    exchanges: list[Exchange] | None = Field(None, description="Allowed exchanges")
     active_only: bool = Field(default=True, description="Only active assets")
 
     def matches(self, asset: Asset) -> bool:

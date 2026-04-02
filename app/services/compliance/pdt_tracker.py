@@ -23,7 +23,6 @@ from dataclasses import dataclass
 from datetime import date, datetime, timedelta
 from decimal import Decimal
 from enum import Enum
-from typing import Optional
 
 from app.shared.utils.timezone_utils import utc_now
 
@@ -73,8 +72,8 @@ class PDTStatus:
     account_equity: Decimal
     min_equity_required: Decimal
     is_restricted: bool
-    restriction_reason: Optional[str] = None
-    days_until_reset: Optional[int] = None
+    restriction_reason: str | None = None
+    days_until_reset: int | None = None
 
     def to_dict(self) -> dict:
         """Convert to dictionary."""
@@ -149,8 +148,8 @@ class PDTTracker:
     def check_pdt_limit(
         self,
         account_equity: Decimal,
-        symbol: Optional[str] = None,
-        side: Optional[str] = None,
+        symbol: str | None = None,
+        side: str | None = None,
     ) -> tuple[bool, str]:
         """
         Check if account would violate PDT rule with a new trade.

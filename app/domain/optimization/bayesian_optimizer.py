@@ -517,19 +517,19 @@ class BayesianOptimizer(BaseOptimizer[SearchSpace]):
 
             if param_type == ParameterType.CATEGORICAL:
                 params[name] = trial.suggest_categorical(
-                    name, cast("list[Union[str, int, float, bool]]", defn["choices"])
+                    name, cast("list[str | int | float | bool]", defn["choices"])
                 )
 
             elif param_type == ParameterType.DISCRETE:
                 params[name] = trial.suggest_categorical(
-                    name, cast("list[Union[str, int, float, bool]]", defn["values"])
+                    name, cast("list[str | int | float | bool]", defn["values"])
                 )
 
             elif param_type == ParameterType.INTEGER:
-                min_val = int(cast("Union[int, float]", defn["min"]))
-                max_val = int(cast("Union[int, float]", defn["max"]))
+                min_val = int(cast("int | float", defn["min"]))
+                max_val = int(cast("int | float", defn["max"]))
                 step_raw = defn.get("step", 1)
-                step = int(cast("Union[int, float]", step_raw))
+                step = int(cast("int | float", step_raw))
 
                 if step == 1:
                     params[name] = trial.suggest_int(name, min_val, max_val)
@@ -538,8 +538,8 @@ class BayesianOptimizer(BaseOptimizer[SearchSpace]):
                     params[name] = trial.suggest_categorical(name, values)
 
             elif param_type == ParameterType.CONTINUOUS:
-                min_val_float = float(cast("Union[int, float]", defn["min"]))
-                max_val_float = float(cast("Union[int, float]", defn["max"]))
+                min_val_float = float(cast("int | float", defn["min"]))
+                max_val_float = float(cast("int | float", defn["max"]))
                 log = defn.get("log", False)
 
                 params[name] = trial.suggest_float(name, min_val_float, max_val_float, log=log)
@@ -629,17 +629,17 @@ class BayesianOptimizer(BaseOptimizer[SearchSpace]):
                 param_type = defn.get("type", ParameterType.CONTINUOUS)
 
                 if param_type == ParameterType.CATEGORICAL:
-                    choices = cast("list[Union[str, int, float, bool]]", defn["choices"])
+                    choices = cast("list[str | int | float | bool]", defn["choices"])
                     params[name] = random.choice(choices)
                 elif param_type == ParameterType.INTEGER:
                     params[name] = random.randint(
-                        int(cast("Union[int, float]", defn["min"])),
-                        int(cast("Union[int, float]", defn["max"])),
+                        int(cast("int | float", defn["min"])),
+                        int(cast("int | float", defn["max"])),
                     )
                 elif param_type == ParameterType.CONTINUOUS:
                     params[name] = random.uniform(
-                        float(cast("Union[int, float]", defn["min"])),
-                        float(cast("Union[int, float]", defn["max"])),
+                        float(cast("int | float", defn["min"])),
+                        float(cast("int | float", defn["max"])),
                     )
 
             try:
@@ -778,19 +778,19 @@ class MultiObjectiveBayesianOptimizer(BaseOptimizer[SearchSpace]):
 
                 if param_type == ParameterType.CATEGORICAL:
                     params[name] = trial.suggest_categorical(
-                        name, cast("list[Union[str, int, float, bool]]", defn["choices"])
+                        name, cast("list[str | int | float | bool]", defn["choices"])
                     )
                 elif param_type == ParameterType.INTEGER:
                     params[name] = trial.suggest_int(
                         name,
-                        int(cast("Union[int, float]", defn["min"])),
-                        int(cast("Union[int, float]", defn["max"])),
+                        int(cast("int | float", defn["min"])),
+                        int(cast("int | float", defn["max"])),
                     )
                 elif param_type == ParameterType.CONTINUOUS:
                     params[name] = trial.suggest_float(
                         name,
-                        float(cast("Union[int, float]", defn["min"])),
-                        float(cast("Union[int, float]", defn["max"])),
+                        float(cast("int | float", defn["min"])),
+                        float(cast("int | float", defn["max"])),
                     )
 
             # Evaluate all objectives

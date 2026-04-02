@@ -10,7 +10,6 @@ import logging
 from dataclasses import dataclass, field
 from datetime import datetime
 from decimal import Decimal
-from typing import Optional
 
 logger = logging.getLogger(__name__)
 
@@ -55,8 +54,8 @@ class ZiplineOrder:
     order_id: str
     symbol: str
     amount: int  # Zipline uses integers
-    limit_price: Optional[Decimal] = None
-    stop_price: Optional[Decimal] = None
+    limit_price: Decimal | None = None
+    stop_price: Decimal | None = None
     order_type: str = "market"  # market, limit, stop
 
 
@@ -75,7 +74,7 @@ class ZiplineIntegrator:
     def __init__(self):
         """Initialize Zipline integrator."""
         self.backtests: dict[str, BacktestResult] = {}
-        self.active_backtest: Optional[str] = None
+        self.active_backtest: str | None = None
         self.orders: dict[str, list[ZiplineOrder]] = {}
         logger.info("✅ ZiplineIntegrator initialized")
 
@@ -109,7 +108,7 @@ class ZiplineIntegrator:
         symbol: str,
         amount: int,
         order_type: str = "market",
-        limit_price: Optional[Decimal] = None,
+        limit_price: Decimal | None = None,
     ) -> ZiplineOrder:
         """
         Place order in backtest.
@@ -169,7 +168,7 @@ class ZiplineIntegrator:
 
         return result
 
-    async def get_backtest_result(self, backtest_id: str) -> Optional[BacktestResult]:
+    async def get_backtest_result(self, backtest_id: str) -> BacktestResult | None:
         """Get backtest result."""
         return self.backtests.get(backtest_id)
 
@@ -253,7 +252,7 @@ class ZiplineIntegrator:
 
 
 # Singleton
-_integrator: Optional[ZiplineIntegrator] = None
+_integrator: ZiplineIntegrator | None = None
 
 
 def get_zipline_integrator() -> ZiplineIntegrator:

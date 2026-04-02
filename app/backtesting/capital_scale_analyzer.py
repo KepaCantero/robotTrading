@@ -18,17 +18,19 @@ import logging
 from dataclasses import dataclass, field
 from datetime import datetime
 from decimal import Decimal
-from typing import Any, Optional
+from typing import TYPE_CHECKING, Any
 
 import numpy as np
 
 from app.backtesting.engine import SimpleBacktester
 from app.backtesting.models import BacktestConfig, BacktestResult, PerformanceMetrics
 from app.backtesting.services.transaction_cost_model import BrokerType, TransactionCostModel
-from app.domain.models.market_data import Quote
 
 # SINGLE SOURCE OF TRUTH: Use CentralizedConfig instead of constants.py
 from app.shared.config.centralized_config import get_config
+
+if TYPE_CHECKING:
+    from app.domain.models.market_data import Quote
 
 logger = logging.getLogger(__name__)
 
@@ -52,7 +54,7 @@ class CapitalLevelResult:
     total_return: Decimal
     total_return_pct: Decimal
     cagr: Decimal
-    sharpe_ratio: Optional[Decimal]
+    sharpe_ratio: Decimal | None
     max_drawdown_pct: Decimal
     total_trades: int
     win_rate: Decimal
@@ -62,7 +64,7 @@ class CapitalLevelResult:
     commission_impact_ratio: Decimal  # Commissions / Gross Return
     partial_fills: int  # Number of trades reduced by ADV rule
     rejected_orders: int  # Number of orders rejected (< 50% fill)
-    performance_metrics: Optional[PerformanceMetrics] = None
+    performance_metrics: PerformanceMetrics | None = None
     equity_curve: list[tuple[datetime, Decimal]] = field(default_factory=list)
 
 
@@ -97,8 +99,8 @@ class CapitalScaleAnalyzer:
 
     def __init__(
         self,
-        capital_levels: Optional[list[Decimal]] = None,
-        adv_limit_pct: Optional[Decimal] = None,  # Uses config default if None
+        capital_levels: list[Decimal] | None = None,
+        adv_limit_pct: Decimal | None = None,  # Uses config default if None
         enable_adv_rule: bool = True,
         enable_adaptive_commission: bool = True,
     ):
@@ -219,7 +221,7 @@ class CapitalScaleAnalyzer:
         signals: list[Any],
         base_config: BacktestConfig,
         capital_level: Decimal,
-        adv_data: Optional[dict[str, Decimal]] = None,
+        adv_data: dict[str, Decimal] | None = None,
     ) -> CapitalLevelResult:
         """
         Simulate strategy for a single capital level.
@@ -313,7 +315,7 @@ class CapitalScaleAnalyzer:
         config: BacktestConfig,
         start_date: datetime,
         end_date: datetime,
-        adv_data: Optional[dict[str, Decimal]] = None,
+        adv_data: dict[str, Decimal] | None = None,
     ) -> CapitalScaleAnalysisReport:
         """
         Run complete multi-scale capital analysis.

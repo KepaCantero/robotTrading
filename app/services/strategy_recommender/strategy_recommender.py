@@ -20,7 +20,7 @@ from __future__ import annotations
 import logging
 from datetime import datetime
 from decimal import Decimal
-from typing import ClassVar, Optional
+from typing import ClassVar
 
 import numpy as np
 
@@ -390,7 +390,7 @@ class StrategyRecommender:
 
     async def get_recommendation_history(
         self,
-        limit: Optional[int] = None,
+        limit: int | None = None,
     ) -> list[StrategyRecommendation]:
         """Get recommendation history."""
         results = self.recommendation_history
@@ -424,7 +424,7 @@ class StrategyRecommender:
 
 
 # Singleton
-_recommender: Optional[StrategyRecommender] = None
+_recommender: StrategyRecommender | None = None
 
 
 def get_strategy_recommender() -> StrategyRecommender:

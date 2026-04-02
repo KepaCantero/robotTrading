@@ -11,7 +11,7 @@ import asyncio
 import logging
 import random
 from decimal import Decimal
-from typing import Callable, Optional, TypeVar
+from typing import Callable, TypeVar
 
 logger = logging.getLogger(__name__)
 
@@ -26,8 +26,8 @@ class RetryConfig:
         max_retries: int = 3,
         initial_delay_ms: int = 100,
         max_delay_ms: int = 10000,
-        exponential_base: Optional[Decimal] = None,
-        jitter_factor: Optional[Decimal] = None,
+        exponential_base: Decimal | None = None,
+        jitter_factor: Decimal | None = None,
     ):
         """
         Initialize retry configuration.
@@ -53,7 +53,7 @@ class RetryConfig:
 class RetryManager:
     """Manages retries with exponential backoff for external service calls."""
 
-    def __init__(self, config: Optional[RetryConfig] = None):
+    def __init__(self, config: RetryConfig | None = None):
         """
         Initialize retry manager.
 
@@ -149,7 +149,7 @@ class RetryManager:
 
 
 # Default instance
-_retry_manager: Optional[RetryManager] = None
+_retry_manager: RetryManager | None = None
 
 
 def get_retry_manager() -> RetryManager:

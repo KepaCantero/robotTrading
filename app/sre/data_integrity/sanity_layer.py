@@ -46,7 +46,6 @@ from datetime import datetime, timedelta, timezone
 from decimal import Decimal
 from enum import Enum
 from pathlib import Path
-from typing import Optional, Union
 
 import aiosqlite
 
@@ -69,9 +68,9 @@ class PriceValidation:
     symbol: str
     price: Decimal
     result: SanityCheckResult
-    deviation_pct: Optional[Decimal] = None
-    confirmed_by_secondary: Optional[bool] = None
-    reason: Optional[str] = None
+    deviation_pct: Decimal | None = None
+    confirmed_by_secondary: bool | None = None
+    reason: str | None = None
     timestamp: datetime = None
 
     def __post_init__(self):
@@ -99,10 +98,10 @@ class DataSanityLayer:
     def __init__(
         self,
         primary_source: object,
-        secondary_source: Optional[object] = None,
-        db_path: Optional[str] = None,
-        max_deviation_pct: Optional[Decimal] = None,
-        confirmation_threshold_pct: Optional[Decimal] = None,
+        secondary_source: object | None = None,
+        db_path: str | None = None,
+        max_deviation_pct: Decimal | None = None,
+        confirmation_threshold_pct: Decimal | None = None,
         staleness_seconds: int = 60,
         min_samples: int = 5,
     ):
@@ -124,7 +123,7 @@ class DataSanityLayer:
             confirmation_threshold_pct = Decimal("20.0")
         self.primary_source = primary_source
         self.secondary_source = secondary_source
-        self._temp_dir: Optional[str] = None
+        self._temp_dir: str | None = None
         self.db_path = db_path
         self.max_deviation_pct = max_deviation_pct
         self.confirmation_threshold_pct = confirmation_threshold_pct
@@ -292,14 +291,16 @@ class DataSanityLayer:
         try:
             async with aiosqlite.connect(self._get_db_path()) as db:
                 # Create table if not exists
-                await db.execute("""
+                await db.execute(
+                    """
                     CREATE TABLE IF NOT EXISTS price_cache (
                         symbol TEXT,
                         price REAL,
                         timestamp TEXT,
                         PRIMARY KEY (symbol, timestamp)
                     )
-                """)
+                """
+                )
 
                 # Get recent prices
                 cutoff = (datetime.now(timezone.utc) - timedelta(minutes=minutes)).isoformat()
@@ -442,7 +443,7 @@ class SafeStopLossExecutor:
         self.broker = broker_client
 
     async def execute_stop_loss(
-        self, position: dict[str, Union[str, int, float, Decimal, None]], stop_price: Decimal
+        self, position: dict[str, str | int | float | Decimal | None], stop_price: Decimal
     ) -> bool:
         """
         Execute stop-loss with price validation.

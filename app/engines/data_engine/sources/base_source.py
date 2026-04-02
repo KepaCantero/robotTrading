@@ -6,7 +6,7 @@ from __future__ import annotations
 
 import logging
 from abc import ABC, abstractmethod
-from typing import Any, Optional
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -28,7 +28,7 @@ class BaseDataSource(ABC):
         self.config = config
         self.name = self.__class__.__name__
         self.is_connected = False
-        self.last_error: Optional[str] = None
+        self.last_error: str | None = None
 
     @abstractmethod
     async def connect(self) -> bool:

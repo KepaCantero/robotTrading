@@ -10,10 +10,12 @@ TODO: Complete implementation in PHASE 4
 from __future__ import annotations
 
 from datetime import datetime
-from decimal import Decimal
-from typing import Optional
+from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, Field
+
+if TYPE_CHECKING:
+    from decimal import Decimal
 
 
 class DeploymentInput(BaseModel):
@@ -55,19 +57,19 @@ class DeploymentInput(BaseModel):
     max_acceptable_drawdown_pct: Decimal = Field(..., description="User max acceptable drawdown %")
 
     # T4.1: Capacity fade validation results (optional, added in PHASE 6)
-    capacity_fade_feasible: Optional[bool] = Field(
+    capacity_fade_feasible: bool | None = Field(
         default=None, description="T4.1 capacity fade feasibility"
     )
-    estimated_alpha_at_scale: Optional[Decimal] = Field(
+    estimated_alpha_at_scale: Decimal | None = Field(
         default=None, description="T4.1 estimated alpha at target capital"
     )
-    capacity_fade_assessment: Optional[str] = Field(
+    capacity_fade_assessment: str | None = Field(
         default=None, description="T4.1 capacity fade assessment details"
     )
-    current_capital: Optional[Decimal] = Field(
+    current_capital: Decimal | None = Field(
         default=None, description="Current capital (for capacity fade analysis)"
     )
-    target_capital: Optional[Decimal] = Field(
+    target_capital: Decimal | None = Field(
         default=None, description="Target capital (for capacity fade analysis)"
     )
 

@@ -13,11 +13,12 @@ import logging
 from abc import ABC, abstractmethod
 from datetime import datetime
 from decimal import Decimal
-from typing import Optional, Union
+from typing import TYPE_CHECKING, Union
 
 import numpy as np
 
-from app.domain.models.portfolio import Portfolio
+if TYPE_CHECKING:
+    from app.domain.models.portfolio import Portfolio
 
 logger = logging.getLogger(__name__)
 
@@ -25,7 +26,7 @@ logger = logging.getLogger(__name__)
 class BaseStressTester(ABC):
     """Clase base para stress testers."""
 
-    def __init__(self, config: dict[str, Union[int, float, str, bool]]) -> None:
+    def __init__(self, config: dict[str, int | float | str | bool]) -> None:
         """
         Inicializar stress tester.
 
@@ -37,8 +38,8 @@ class BaseStressTester(ABC):
 
     @abstractmethod
     def run_stress_test(
-        self, portfolio: Portfolio, scenario: dict[str, Union[int, float, str]]
-    ) -> dict[str, Union[int, float, str, bool, None]]:
+        self, portfolio: Portfolio, scenario: dict[str, int | float | str]
+    ) -> dict[str, int | float | str | bool | None]:
         """
         Ejecutar stress test.
 
@@ -58,7 +59,7 @@ class StressTester:
     Ejecuta múltiples tipos de stress tests.
     """
 
-    def __init__(self, config: dict[str, Union[int, float, str, bool]]) -> None:
+    def __init__(self, config: dict[str, int | float | str | bool]) -> None:
         """Inicializar stress tester."""
         self.config = config
         self.logger = logging.getLogger(self.__class__.__name__)
@@ -72,7 +73,7 @@ class StressTester:
             n_scenarios if isinstance(n_scenarios, int) else int(n_scenarios)
         )
 
-    def _load_historical_scenarios(self) -> dict[str, dict[str, Union[int, float, str]]]:
+    def _load_historical_scenarios(self) -> dict[str, dict[str, int | float | str]]:
         """Cargar escenarios históricos predefinidos."""
         return {
             "2008_crisis": {
@@ -106,8 +107,8 @@ class StressTester:
         }
 
     def run_stress_tests(
-        self, portfolio: Portfolio, scenario_types: Optional[list[str]] = None
-    ) -> dict[str, Union[int, float, str, bool, None, list, dict]]:
+        self, portfolio: Portfolio, scenario_types: list[str] | None = None
+    ) -> dict[str, int | float | str | bool | None | list | dict]:
         """
         Ejecutar múltiples stress tests.
 
@@ -121,7 +122,7 @@ class StressTester:
         if scenario_types is None:
             scenario_types = ["historical", "monte_carlo"]
 
-        results: dict[str, Union[int, float, str, bool, None, list, dict]] = {}
+        results: dict[str, int | float | str | bool | None | list | dict] = {}
 
         # Stress tests históricos
         if "historical" in scenario_types:
@@ -138,9 +139,9 @@ class StressTester:
 
     def _run_historical_stress_tests(
         self, portfolio: Portfolio
-    ) -> dict[str, Union[int, float, str, bool, None, list, dict]]:
+    ) -> dict[str, int | float | str | bool | None | list | dict]:
         """Ejecutar stress tests históricos."""
-        results: dict[str, Union[int, float, str, bool, None, list, dict]] = {}
+        results: dict[str, int | float | str | bool | None | list | dict] = {}
 
         for scenario_id, scenario in self.historical_scenarios.items():
             try:
@@ -158,7 +159,7 @@ class StressTester:
 
     def _run_monte_carlo_stress_tests(
         self, portfolio: Portfolio
-    ) -> dict[str, Union[int, float, str, bool, None, list, dict]]:
+    ) -> dict[str, int | float | str | bool | None | list | dict]:
         """Ejecutar stress tests Monte Carlo."""
         try:
             # Simular múltiples escenarios aleatorios
@@ -212,8 +213,8 @@ class StressTester:
             return {"error": str(e)}
 
     def _apply_stress_scenario(
-        self, portfolio: Portfolio, scenario: dict[str, Union[int, float, str]]
-    ) -> dict[str, Union[int, float, str, None, list, dict]]:
+        self, portfolio: Portfolio, scenario: dict[str, int | float | str]
+    ) -> dict[str, int | float | str | None | list | dict]:
         """
         Aplicar escenario de stress al portfolio.
 
@@ -228,7 +229,7 @@ class StressTester:
         initial_value = float(portfolio.total_equity)
 
         # Aplicar shocks a posiciones
-        stressed_positions: list[dict[str, Union[float, str]]] = []
+        stressed_positions: list[dict[str, float | str]] = []
         total_stressed_value = Decimal("0")
 
         raw_market_shock = scenario.get("market_shock", 0.0)
@@ -246,7 +247,7 @@ class StressTester:
             stressed_price = position.market_price * Decimal(str(1 + market_shock))
 
             # Crear posición estresada
-            stressed_position: dict[str, Union[float, str]] = {
+            stressed_position: dict[str, float | str] = {
                 "symbol": position.symbol,
                 "original_price": float(position.market_price),
                 "stressed_price": float(stressed_price),
@@ -275,11 +276,11 @@ class StressTester:
 
     def _generate_summary(
         self,
-        results: dict[str, Union[int, float, str, bool, None, list, dict]],
+        results: dict[str, int | float | str | bool | None | list | dict],
         portfolio: Portfolio,
-    ) -> dict[str, Union[int, float, str, bool, None, dict]]:
+    ) -> dict[str, int | float | str | bool | None | dict]:
         """Generar resumen de resultados."""
-        summary: dict[str, Union[int, float, str, bool, None, dict]] = {
+        summary: dict[str, int | float | str | bool | None | dict] = {
             "initial_portfolio_value": float(portfolio.total_equity),
             "worst_case_scenario": None,
             "best_case_scenario": None,
@@ -292,7 +293,7 @@ class StressTester:
         if "historical" in results:
             historical = results["historical"]
             if isinstance(historical, dict):
-                losses: list[dict[str, Union[int, float, str]]] = []
+                losses: list[dict[str, int | float | str]] = []
 
                 for scenario_id, result in historical.items():
                     if isinstance(result, dict) and "loss_percentage" in result:

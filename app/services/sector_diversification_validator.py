@@ -8,10 +8,11 @@ from __future__ import annotations
 
 import logging
 from decimal import Decimal
-from typing import Any, Optional
+from typing import TYPE_CHECKING, Any
 
-from app.domain.models.portfolio import Portfolio, Position
-from app.shared.config.centralized_config import SectorCountryDiversificationConfig
+if TYPE_CHECKING:
+    from app.domain.models.portfolio import Portfolio, Position
+    from app.shared.config.centralized_config import SectorCountryDiversificationConfig
 
 logger = logging.getLogger(__name__)
 
@@ -81,7 +82,7 @@ class SectorDiversificationValidator:
 
     def validate_new_position_sector(
         self, portfolio: Portfolio, position: Position
-    ) -> tuple[bool, Optional[str]]:
+    ) -> tuple[bool, str | None]:
         """
         Check if adding position would violate sector limits.
 

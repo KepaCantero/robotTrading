@@ -17,7 +17,7 @@ from __future__ import annotations
 
 import logging
 from decimal import Decimal
-from typing import TYPE_CHECKING, Any, Optional
+from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from app.shared.config.params.backtest_config import BacktestingConfig as BacktestConfig
@@ -41,7 +41,7 @@ class SubsystemConfigFactory:
     - Single source of truth for subsystem configs
     """
 
-    _instance: Optional[SubsystemConfigFactory] = None
+    _instance: SubsystemConfigFactory | None = None
     _initialized: bool
 
     def __new__(cls) -> SubsystemConfigFactory:
@@ -278,7 +278,7 @@ class SubsystemConfigFactory:
     # GENERIC GETTER
     # ==========================================================================
 
-    def get_config(self, subsystem_name: str) -> Optional[Any]:
+    def get_config(self, subsystem_name: str) -> Any | None:
         """
         Get configuration for a specific subsystem by name.
 
@@ -324,7 +324,7 @@ class SubsystemConfigFactory:
 
 
 # Singleton instance for convenience
-_factory: Optional[SubsystemConfigFactory] = None
+_factory: SubsystemConfigFactory | None = None
 
 
 def get_subsystem_config_factory() -> SubsystemConfigFactory:

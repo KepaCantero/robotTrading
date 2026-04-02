@@ -21,7 +21,7 @@ import logging
 from dataclasses import dataclass, field
 from datetime import date, datetime, time
 from enum import Enum
-from typing import Any, Callable, Optional
+from typing import Any, Callable
 
 import pytz
 
@@ -57,10 +57,10 @@ class MarketSchedule:
 
     market_type: MarketType
     timezone_str: str
-    open_time: Optional[time] = None  # None for 24/7
-    close_time: Optional[time] = None  # None for 24/7
-    lunch_start: Optional[time] = None
-    lunch_end: Optional[time] = None
+    open_time: time | None = None  # None for 24/7
+    close_time: time | None = None  # None for 24/7
+    lunch_start: time | None = None
+    lunch_end: time | None = None
     weekends: bool = False  # Trades on weekends
     holidays: list[date] = field(default_factory=list)
 
@@ -123,7 +123,7 @@ class ScheduledTask:
     handler: Callable
     run_when_closed: bool = False
     enabled: bool = True
-    last_run: Optional[datetime] = None
+    last_run: datetime | None = None
     run_count: int = 0
     error_count: int = 0
 
@@ -148,7 +148,7 @@ class MarketScheduler:
 
     def __init__(
         self,
-        schedules: Optional[dict[MarketType, MarketSchedule]] = None,
+        schedules: dict[MarketType, MarketSchedule] | None = None,
         check_interval_24_7: float = 60.0,
         check_interval_scheduled: float = 60.0,
     ):
@@ -574,7 +574,7 @@ class MarketScheduler:
             return True
         return False
 
-    def get_task_info(self, task_id: str) -> Optional[dict[str, Any]]:
+    def get_task_info(self, task_id: str) -> dict[str, Any] | None:
         """
         Get information about a scheduled task.
 
@@ -603,7 +603,7 @@ class MarketScheduler:
             "error_count": task.error_count,
         }
 
-    def list_tasks(self, market_type: Optional[MarketType] = None) -> list[dict[str, Any]]:
+    def list_tasks(self, market_type: MarketType | None = None) -> list[dict[str, Any]]:
         """
         List all scheduled tasks, optionally filtered by market type.
 
@@ -656,7 +656,7 @@ class MarketScheduler:
             logger.error(f"Error running task {task_id}: {e}", exc_info=True)
             return False
 
-    def get_market_schedule(self, market_type: MarketType) -> Optional[MarketSchedule]:
+    def get_market_schedule(self, market_type: MarketType) -> MarketSchedule | None:
         """
         Get the schedule for a market type.
 

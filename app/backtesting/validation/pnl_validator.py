@@ -9,7 +9,6 @@ from __future__ import annotations
 
 import logging
 from decimal import Decimal
-from typing import Optional
 
 from app.backtesting.models import Trade, TradeStatus
 
@@ -19,7 +18,7 @@ logger = logging.getLogger(__name__)
 class PnLValidationError(Exception):
     """Exception raised when P&L validation fails."""
 
-    def __init__(self, message: str, details: Optional[dict] = None):
+    def __init__(self, message: str, details: dict | None = None):
         super().__init__(message)
         self.details = details or {}
 
@@ -41,8 +40,8 @@ class PnLValidator:
 
     def __init__(
         self,
-        max_difference_bps: Optional[Decimal] = None,
-        max_commission_pct: Optional[Decimal] = None,
+        max_difference_bps: Decimal | None = None,
+        max_commission_pct: Decimal | None = None,
     ):
         """
         Initialize P&L Validator.

@@ -9,7 +9,7 @@ from __future__ import annotations
 import logging
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Any, Optional
+from typing import Any
 from uuid import uuid4
 
 logger = logging.getLogger(__name__)
@@ -45,7 +45,7 @@ class ConfigurationRepository:
         )
 
     def save(
-        self, config_type: str, data: dict[str, Any], metadata: Optional[dict[str, Any]] = None
+        self, config_type: str, data: dict[str, Any], metadata: dict[str, Any] | None = None
     ) -> str:
         """Save a configuration and return its ID."""
         config_id = f"config_{uuid4().hex[:8]}"
@@ -72,7 +72,7 @@ class ConfigurationRepository:
         )
         return config_id
 
-    def load(self, config_id: str) -> Optional[StoredConfiguration]:
+    def load(self, config_id: str) -> StoredConfiguration | None:
         """Load a configuration by ID."""
         config = self._store.get(config_id)
         logger.debug(
@@ -120,7 +120,7 @@ class ConfigurationRepository:
         )
         return False
 
-    def update(self, config_id: str, data: dict[str, Any]) -> Optional[StoredConfiguration]:
+    def update(self, config_id: str, data: dict[str, Any]) -> StoredConfiguration | None:
         """Update a configuration's data."""
         if config_id not in self._store:
             logger.warning(

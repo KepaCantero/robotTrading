@@ -9,15 +9,17 @@ TASK-24: OCP Compliance - Protocol interfaces for configuration
 
 from __future__ import annotations
 
-from pathlib import Path
-from typing import Optional, Protocol, runtime_checkable
+from typing import TYPE_CHECKING, Protocol, runtime_checkable
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 
 @runtime_checkable
 class ConfigProvider(Protocol):
     """Protocol for configuration providers."""
 
-    def get(self, key: str, default: Optional[object] = None) -> Optional[object]:
+    def get(self, key: str, default: object | None = None) -> object | None:
         """Get configuration value by key."""
         ...
 
@@ -69,7 +71,7 @@ class ConfigMerger(Protocol):
 class ConfigCache(Protocol):
     """Protocol for configuration caching."""
 
-    def get_cached(self, config_path: Path) -> Optional[dict[str, object]]:
+    def get_cached(self, config_path: Path) -> dict[str, object] | None:
         """Get cached configuration if available and valid."""
         ...
 

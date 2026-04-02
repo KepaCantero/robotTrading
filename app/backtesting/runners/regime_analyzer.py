@@ -12,7 +12,7 @@ Provides regime detection and analysis functionality for backtesting:
 from __future__ import annotations
 
 import logging
-from typing import Any, Optional
+from typing import Any
 
 import numpy as np
 import pandas as pd
@@ -33,9 +33,7 @@ class RegimeAnalyzer:
     # Default window for rolling calculations
     DEFAULT_WINDOW = 20
 
-    def detect_simple_regimes(
-        self, returns: np.ndarray, window: Optional[int] = None
-    ) -> np.ndarray:
+    def detect_simple_regimes(self, returns: np.ndarray, window: int | None = None) -> np.ndarray:
         """
         Simple regime detection based on returns and volatility.
 

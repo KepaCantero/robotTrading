@@ -24,10 +24,8 @@ import logging
 from collections import deque
 from datetime import date
 from decimal import Decimal
-from typing import Any, ClassVar, Optional
+from typing import TYPE_CHECKING, Any, ClassVar
 
-from app.domain.models.market_data import Quote
-from app.domain.models.portfolio import Portfolio
 from app.domain.models.signal import Signal, SignalSource, SignalStrength, SignalType
 from app.domain.strategies.base import BaseStrategy
 
@@ -41,6 +39,10 @@ from .models import (
 )
 from .portfolio_constructor import LowVolatilityPortfolio, LowVolatilityPortfolioConstructor
 from .volatility_calculator import VolatilityCalculator
+
+if TYPE_CHECKING:
+    from app.domain.models.market_data import Quote
+    from app.domain.models.portfolio import Portfolio
 
 logger = logging.getLogger(__name__)
 
@@ -102,8 +104,8 @@ class LowVolatilityStrategy(BaseStrategy):
         self.constructor = LowVolatilityPortfolioConstructor(self.strategy_config)
 
         # Estado interno
-        self.current_portfolio: Optional[LowVolatilityPortfolio] = None
-        self.last_rebalance_date: Optional[date] = None
+        self.current_portfolio: LowVolatilityPortfolio | None = None
+        self.last_rebalance_date: date | None = None
         self.universe: list[LowVolatilityProfile] = []
 
         # Métricas de rendimiento
@@ -494,7 +496,7 @@ class LowVolatilityStrategy(BaseStrategy):
 
         return True
 
-    def _get_sector_for_symbol(self, symbol: str) -> Optional[str]:
+    def _get_sector_for_symbol(self, symbol: str) -> str | None:
         """Obtener sector para un símbolo."""
         for profile in self.universe:
             if profile.symbol == symbol:
@@ -567,7 +569,7 @@ class LowVolatilityStrategy(BaseStrategy):
         self,
         stocks: list[LowVolatilityStock],
         total_capital: Decimal,
-        returns_matrix: Optional[Any] = None,
+        returns_matrix: Any | None = None,
     ) -> LowVolatilityPortfolio:
         """
         Construir portafolio de baja volatilidad.
@@ -596,7 +598,7 @@ class LowVolatilityStrategy(BaseStrategy):
         self,
         new_stocks: list[LowVolatilityStock],
         total_capital: Decimal,
-        returns_matrix: Optional[Any] = None,
+        returns_matrix: Any | None = None,
     ) -> LowVolatilityPortfolio:
         """
         Rebalancear portafolio existente.

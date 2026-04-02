@@ -16,13 +16,15 @@ from __future__ import annotations
 
 import logging
 from decimal import Decimal
-from typing import Optional
+from typing import TYPE_CHECKING
 
 from .broker_negotiation_engine import get_broker_negotiation_engine
 from .execution_cost_monitor import get_execution_cost_monitor
 from .market_impact_estimator import get_market_impact_estimator
-from .models import ExecutionPlan
 from .order_splitting_optimizer import get_order_splitting_optimizer
+
+if TYPE_CHECKING:
+    from .models import ExecutionPlan
 
 logger = logging.getLogger(__name__)
 
@@ -65,14 +67,14 @@ class SmartOrderRouter:
         self,
         symbol: str,
         total_size: Decimal,
-        target_vwap: Optional[Decimal] = None,
-        daily_volume: Optional[Decimal] = None,
-        current_spread_bps: Optional[Decimal] = None,
+        target_vwap: Decimal | None = None,
+        daily_volume: Decimal | None = None,
+        current_spread_bps: Decimal | None = None,
         volatility_percentile: int = 50,
         max_execution_time_ms: int = 300_000,
-        max_accepted_slippage_bps: Optional[Decimal] = None,
+        max_accepted_slippage_bps: Decimal | None = None,
         asset_class: str = "equity",
-        account_tier: Optional[str] = None,
+        account_tier: str | None = None,
         strategy: str = "vwap",
     ) -> ExecutionPlan:
         """
@@ -337,7 +339,7 @@ class SmartOrderRouter:
 
 
 # Global singleton
-_smart_order_router: Optional[SmartOrderRouter] = None
+_smart_order_router: SmartOrderRouter | None = None
 
 
 def get_smart_order_router() -> SmartOrderRouter:

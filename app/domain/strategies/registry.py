@@ -9,10 +9,12 @@ from __future__ import annotations
 
 import logging
 from datetime import datetime
-from typing import Any, Optional
+from typing import TYPE_CHECKING, Any
 
-from .base import BaseStrategy
 from .factory import StrategyFactory
+
+if TYPE_CHECKING:
+    from .base import BaseStrategy
 
 logger = logging.getLogger(__name__)
 
@@ -24,7 +26,7 @@ class StrategyRegistry:
         """Inicializar registry con factory y estado vacío."""
         self.strategies: dict[str, BaseStrategy] = {}
         self.factory = StrategyFactory()
-        self.active_strategy: Optional[str] = None
+        self.active_strategy: str | None = None
         self.created_at = datetime.utcnow()
 
     def load_strategy(self, name: str, config: dict[str, Any]) -> BaseStrategy:
@@ -79,7 +81,7 @@ class StrategyRegistry:
         del self.strategies[name]
         logger.info(f"Unloaded strategy: {name}")
 
-    def get_strategy(self, name: str) -> Optional[BaseStrategy]:
+    def get_strategy(self, name: str) -> BaseStrategy | None:
         """
         Obtener estrategia cargada.
 
@@ -114,7 +116,7 @@ class StrategyRegistry:
         self.active_strategy = name
         logger.info(f"Activated strategy: {name}")
 
-    def get_active_strategy(self) -> Optional[BaseStrategy]:
+    def get_active_strategy(self) -> BaseStrategy | None:
         """
         Obtener estrategia activa.
 

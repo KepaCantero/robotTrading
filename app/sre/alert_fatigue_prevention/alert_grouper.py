@@ -9,7 +9,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import Any, Optional
+from typing import Any
 
 
 class GroupingStrategy(str, Enum):
@@ -29,7 +29,7 @@ class AlertCluster:
     alerts: list[dict[str, Any]] = field(default_factory=list)
     created_at: datetime = field(default_factory=datetime.utcnow)
     updated_at: datetime = field(default_factory=datetime.utcnow)
-    representative_alert: Optional[dict[str, Any]] = None
+    representative_alert: dict[str, Any] | None = None
     metadata: dict[str, Any] = field(default_factory=dict)
 
 
@@ -73,6 +73,6 @@ class AlertGrouper:
             self._clusters[cluster_id].alerts.append(alert)
             self._clusters[cluster_id].updated_at = datetime.utcnow()
 
-    def get_cluster(self, cluster_id: str) -> Optional[AlertCluster]:
+    def get_cluster(self, cluster_id: str) -> AlertCluster | None:
         """Get a cluster by ID."""
         return self._clusters.get(cluster_id)

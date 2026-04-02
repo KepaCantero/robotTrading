@@ -7,7 +7,7 @@ Engine for optimizing portfolios with tax efficiency considerations.
 from __future__ import annotations
 
 import logging
-from typing import Any, Optional
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -20,7 +20,7 @@ class TaxOptimizationEngine:
     and optimizing portfolio changes for tax efficiency.
     """
 
-    def __init__(self, tax_residence: str = "ES", config: Optional[dict[str, Any]] = None):
+    def __init__(self, tax_residence: str = "ES", config: dict[str, Any] | None = None):
         """
         Initialize the Tax Optimization Engine.
 

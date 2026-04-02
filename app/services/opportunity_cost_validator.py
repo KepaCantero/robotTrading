@@ -15,7 +15,6 @@ from __future__ import annotations
 
 import logging
 from decimal import Decimal
-from typing import Optional
 
 logger = logging.getLogger(__name__)
 
@@ -38,11 +37,11 @@ class OpportunityCostValidator:
     @staticmethod
     def is_active_trading_worthwhile(
         capital: Decimal,
-        monthly_risk_free_rate: Optional[Decimal] = None,
-        expected_monthly_alpha: Optional[Decimal] = None,
+        monthly_risk_free_rate: Decimal | None = None,
+        expected_monthly_alpha: Decimal | None = None,
         expected_trades_per_month: int = 10,
-        commission_per_trade: Optional[Decimal] = None,
-        cost_of_capital_pct: Optional[Decimal] = None,
+        commission_per_trade: Decimal | None = None,
+        cost_of_capital_pct: Decimal | None = None,
     ) -> tuple[bool, dict]:
         """
         Compare passive (risk-free) return vs active trading return.
@@ -164,9 +163,9 @@ class OpportunityCostValidator:
     @staticmethod
     def get_minimum_alpha_for_trading(
         capital: Decimal,
-        monthly_risk_free_rate: Optional[Decimal] = None,
+        monthly_risk_free_rate: Decimal | None = None,
         expected_trades_per_month: int = 10,
-        commission_per_trade: Optional[Decimal] = None,
+        commission_per_trade: Decimal | None = None,
     ) -> Decimal:
         """
         Calculate minimum alpha needed to justify trading vs passive holding.
@@ -199,10 +198,10 @@ class OpportunityCostValidator:
 
     @staticmethod
     def capital_inflection_point(
-        monthly_risk_free_rate: Optional[Decimal] = None,
+        monthly_risk_free_rate: Decimal | None = None,
         expected_trades_per_month: int = 10,
-        commission_per_trade: Optional[Decimal] = None,
-        target_alpha_pct_monthly: Optional[Decimal] = None,  # 2% monthly
+        commission_per_trade: Decimal | None = None,
+        target_alpha_pct_monthly: Decimal | None = None,  # 2% monthly
     ) -> Decimal:
         """
         Calculate the capital amount where trading becomes viable.
@@ -249,7 +248,7 @@ class OpportunityCostValidator:
     def analyze_capital_tier_viability(
         capital: Decimal,
         expected_trades_per_month: int = 10,
-        commission_per_trade: Optional[Decimal] = None,
+        commission_per_trade: Decimal | None = None,
     ) -> dict:
         """
         Analyze viability of trading for a given capital tier.
@@ -307,7 +306,7 @@ class OpportunityCostValidator:
     def log_opportunity_cost_decision(
         capital: Decimal,
         analysis: dict,
-        account_id: Optional[str] = None,
+        account_id: str | None = None,
     ):
         """Log opportunity cost analysis for audit trail"""
 

@@ -69,7 +69,7 @@ from __future__ import annotations
 
 import logging
 from datetime import datetime
-from typing import Any, Optional
+from typing import Any
 
 import numpy as np
 from scipy.stats import norm
@@ -120,7 +120,7 @@ class GreeksCalculator:
         methods would be required.
     """
 
-    def __init__(self, config: Optional[dict[str, Any]] = None):
+    def __init__(self, config: dict[str, Any] | None = None):
         """
         Initialize Greeks calculator with optional configuration.
 
@@ -144,8 +144,8 @@ class GreeksCalculator:
         strike_price: float,
         time_to_expiry: float,  # In years
         volatility: float,  # Annualized
-        risk_free_rate: Optional[float] = None,
-        dividend_yield: Optional[float] = None,
+        risk_free_rate: float | None = None,
+        dividend_yield: float | None = None,
     ) -> dict[str, Any]:
         """
         Calculate all Greeks for an option using Black-Scholes-Merton model.
@@ -1049,7 +1049,7 @@ class GreeksCalculator:
     def validate_greeks_risk_limits(
         self,
         portfolio_greeks: dict[str, Any],
-        limits: Optional[dict[str, float]] = None,
+        limits: dict[str, float] | None = None,
     ) -> dict[str, Any]:
         """
         Validate portfolio Greeks against risk limits.
@@ -1256,7 +1256,7 @@ class GreeksCalculator:
     def calculate_greeks_sensitivity_analysis(
         self,
         option_params: dict[str, Any],
-        shock_scenarios: Optional[dict[str, float]] = None,
+        shock_scenarios: dict[str, float] | None = None,
     ) -> dict[str, Any]:
         """
         Perform sensitivity analysis on Greeks by shocking underlying parameters.
@@ -1700,7 +1700,7 @@ class GreeksCalculator:
             return {"error": str(e)}
 
 
-def get_greeks_calculator(config: Optional[dict[str, Any]] = None) -> GreeksCalculator:
+def get_greeks_calculator(config: dict[str, Any] | None = None) -> GreeksCalculator:
     """
     Factory function to get a GreeksCalculator instance.
 

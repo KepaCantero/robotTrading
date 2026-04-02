@@ -15,18 +15,21 @@ from __future__ import annotations
 
 import logging
 from collections import deque
-from collections.abc import Sequence
 from decimal import Decimal
-from typing import Any, Optional
+from typing import TYPE_CHECKING, Any
 
-from app.domain.models.market_data import Quote
-from app.domain.models.portfolio import Portfolio
 from app.domain.models.signal import Signal, SignalSource, SignalStrength, SignalType
 from app.domain.services.analysis.momentum import TechnicalIndicatorCalculator
 from app.services.signal_scoring_engine import get_signal_scoring_engine
 from app.shared.config.centralized_config import get_config
 
 from .base import BaseStrategyEngine
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
+
+    from app.domain.models.market_data import Quote
+    from app.domain.models.portfolio import Portfolio
 
 logger = logging.getLogger(__name__)
 
@@ -154,7 +157,7 @@ class TrendFollowingStrategyEngine(BaseStrategyEngine):
     def extract_features(
         self,
         market_data: Quote,
-        historical_data: Optional[Sequence[Quote]] = None,
+        historical_data: Sequence[Quote] | None = None,
     ) -> dict[str, Any]:
         """
         Extraer features estandarizados para Learning Engine.
@@ -467,7 +470,7 @@ class TrendFollowingStrategyEngine(BaseStrategyEngine):
             "volume_lookback",
         ]
 
-    def risk_check(self, signal: Signal, portfolio: Optional[Portfolio] = None) -> bool:
+    def risk_check(self, signal: Signal, portfolio: Portfolio | None = None) -> bool:
         """
         Verificar si la señal pasa los checks de riesgo.
 

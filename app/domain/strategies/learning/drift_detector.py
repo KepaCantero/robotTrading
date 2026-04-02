@@ -23,7 +23,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
-from typing import Any, Optional, cast
+from typing import Any, cast
 
 import numpy as np
 import yaml
@@ -166,11 +166,11 @@ class DriftResult:
     drift_detected: bool
     detector_name: str
     statistic: float
-    p_value: Optional[float] = None
+    p_value: float | None = None
     threshold: float = 0.0
     severity: DriftSeverity = DriftSeverity.NONE
     details: dict[str, Any] = field(default_factory=dict)
-    timestamp: Optional[datetime] = None
+    timestamp: datetime | None = None
 
     def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
@@ -206,7 +206,7 @@ class ComprehensiveDriftReport:
     overall_severity: DriftSeverity
     recommendation: str  # 'ok', 'monitor', 'retrain'
     feature_reports: list[FeatureDriftReport]
-    prediction_drift: Optional[DriftResult]
+    prediction_drift: DriftResult | None
     detector_results: dict[str, DriftResult]
     should_retrain: bool
 
@@ -228,7 +228,7 @@ class PSIDetector:
     - PSI >= 0.25: Cambio significativo (requiere investigación)
     """
 
-    def __init__(self, config: Optional[dict[str, Any]] = None):
+    def __init__(self, config: dict[str, Any] | None = None):
         """Initialize PSI detector."""
         config = config or {}
         self.threshold = config.get("threshold", 0.25)
@@ -239,7 +239,7 @@ class PSIDetector:
         self,
         expected: np.ndarray,
         actual: np.ndarray,
-        buckets: Optional[np.ndarray] = None,
+        buckets: np.ndarray | None = None,
     ) -> tuple[float, dict[str, Any]]:
         """
         Calculate Population Stability Index.
@@ -325,7 +325,7 @@ class PSIDetector:
         self,
         expected: np.ndarray,
         actual: np.ndarray,
-        timestamp: Optional[datetime] = None,
+        timestamp: datetime | None = None,
     ) -> DriftResult:
         """
         Detect drift using PSI.
@@ -382,7 +382,7 @@ class ADWINDetector:
     with adaptive windowing.
     """
 
-    def __init__(self, config: Optional[dict[str, Any]] = None):
+    def __init__(self, config: dict[str, Any] | None = None):
         """Initialize ADWIN detector."""
         config = config or {}
         self.delta = config.get("delta", 0.002)  # Confidence parameter
@@ -461,7 +461,7 @@ class ADWINDetector:
     def detect(
         self,
         data: np.ndarray,
-        timestamp: Optional[datetime] = None,
+        timestamp: datetime | None = None,
     ) -> DriftResult:
         """
         Detect drift in a batch of data.
@@ -533,7 +533,7 @@ class ConceptDriftDetector:
     - Maximum Mean Discrepancy (MMD): Compara distribuciones en RKHS
     """
 
-    def __init__(self, config: Optional[dict[str, Any]] = None):
+    def __init__(self, config: dict[str, Any] | None = None):
         """Initialize detector."""
         config = config or {}
         self.window_size = config.get("window_size", 500)
@@ -545,19 +545,19 @@ class ConceptDriftDetector:
 
         # Reference data
         self.reference_data: deque = deque(maxlen=self.window_size)
-        self.reference_timestamp: Optional[datetime] = None
+        self.reference_timestamp: datetime | None = None
 
         # History
         self.drift_history: list[DriftResult] = []
 
         # Last drift state (set externally by AutoRetrainingTrigger)
         self._last_drift_detected: bool = False
-        self._last_drift_severity: Optional[DriftSeverity] = None
+        self._last_drift_severity: DriftSeverity | None = None
 
     def update_reference(
         self,
         data: np.ndarray,
-        timestamp: Optional[datetime] = None,
+        timestamp: datetime | None = None,
     ) -> None:
         """Update reference data."""
         if data.ndim == 1:
@@ -573,7 +573,7 @@ class ConceptDriftDetector:
     def detect_drift_ks(
         self,
         current_data: np.ndarray,
-        timestamp: Optional[datetime] = None,
+        timestamp: datetime | None = None,
     ) -> DriftResult:
         """Detect drift using Kolmogorov-Smirnov test."""
         if len(self.reference_data) < self.min_samples:
@@ -639,7 +639,7 @@ class ConceptDriftDetector:
     def detect_drift_mmd(
         self,
         current_data: np.ndarray,
-        timestamp: Optional[datetime] = None,
+        timestamp: datetime | None = None,
     ) -> DriftResult:
         """Detect drift using Maximum Mean Discrepancy."""
         if len(self.reference_data) < self.min_samples:
@@ -706,7 +706,7 @@ class ConceptDriftDetector:
     def detect(
         self,
         current_data: np.ndarray,
-        timestamp: Optional[datetime] = None,
+        timestamp: datetime | None = None,
     ) -> dict[str, DriftResult]:
         """Run all configured detectors."""
         results = {}
@@ -722,7 +722,7 @@ class ConceptDriftDetector:
     def detect_drift(
         self,
         current_data: np.ndarray,
-        timestamp: Optional[datetime] = None,
+        timestamp: datetime | None = None,
     ) -> dict[str, Any]:
         """
         Detect drift and return results as a dictionary.
@@ -792,7 +792,7 @@ class FeatureDriftMonitor:
     are causing drift.
     """
 
-    def __init__(self, config: Optional[dict[str, Any]] = None):
+    def __init__(self, config: dict[str, Any] | None = None):
         """Initialize feature drift monitor."""
         config = config or {}
         self.feature_names: list[str] = []
@@ -818,7 +818,7 @@ class FeatureDriftMonitor:
     def set_reference(
         self,
         data: np.ndarray,
-        feature_names: Optional[list[str]] = None,
+        feature_names: list[str] | None = None,
     ) -> None:
         """
         Set reference data for all features.
@@ -846,7 +846,7 @@ class FeatureDriftMonitor:
     def detect_feature_drift(
         self,
         current_data: np.ndarray,
-        timestamp: Optional[datetime] = None,
+        timestamp: datetime | None = None,
     ) -> list[FeatureDriftReport]:
         """
         Detect drift for all features.
@@ -939,23 +939,23 @@ class OverfittingMetrics:
 
     epoch: int
     train_loss: float
-    val_loss: Optional[float]
+    val_loss: float | None
     train_metric: float  # accuracy/f1/r2 depending on task
-    val_metric: Optional[float]
-    test_loss: Optional[float] = None
-    test_metric: Optional[float] = None
-    l1_regularization: Optional[float] = None
-    l2_regularization: Optional[float] = None
-    model_params_count: Optional[int] = None
-    timestamp: Optional[datetime] = None
+    val_metric: float | None
+    test_loss: float | None = None
+    test_metric: float | None = None
+    l1_regularization: float | None = None
+    l2_regularization: float | None = None
+    model_params_count: int | None = None
+    timestamp: datetime | None = None
 
-    def generalization_gap(self) -> Optional[float]:
+    def generalization_gap(self) -> float | None:
         """Calculate generalization gap (val - train loss)."""
         if self.val_loss is None or self.train_loss is None:
             return None
         return self.val_loss - self.train_loss
 
-    def gap_ratio(self) -> Optional[float]:
+    def gap_ratio(self) -> float | None:
         """Calculate gap ratio for normalization."""
         gap = self.generalization_gap()
         if gap is None or self.train_loss == 0:
@@ -973,13 +973,13 @@ class OverfittingResult:
     gap_ratio: float  # Normalized train/val gap
     generalization_gap: float  # Absolute gap
     learning_curve_trend: str  # diverging, converging, plateau
-    cross_validation_std: Optional[float] = None
+    cross_validation_std: float | None = None
     root_causes: list[str] = field(default_factory=list)
     recommendations: list[str] = field(default_factory=list)
-    divergence_point: Optional[int] = None  # Epoch where overfitting starts
-    optimal_stopping_point: Optional[int] = None
+    divergence_point: int | None = None  # Epoch where overfitting starts
+    optimal_stopping_point: int | None = None
     details: dict[str, Any] = field(default_factory=dict)
-    timestamp: Optional[datetime] = None
+    timestamp: datetime | None = None
 
     def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
@@ -1035,21 +1035,21 @@ class OverfittingReport:
 class OverfittingDetector:
     """Detects overfitting using train/val gap and learning curves."""
 
-    def __init__(self, config: Optional[dict[str, Any]] = None):
+    def __init__(self, config: dict[str, Any] | None = None):
         """Initialize detector."""
         config = config or {}
         self.overfitting_threshold = config.get("overfitting_threshold", 0.1)
         self.min_epochs = config.get("min_epochs", 10)
 
         self.train_metrics_history: list[float] = []
-        self.val_metrics_history: list[Optional[float]] = []
+        self.val_metrics_history: list[float | None] = []
         self.epoch_history: list[int] = []
 
     def update_metrics(
         self,
         epoch: int,
         train_metric: float,
-        val_metric: Optional[float] = None,
+        val_metric: float | None = None,
     ) -> None:
         """Update training metrics."""
         self.epoch_history.append(epoch)
@@ -1156,7 +1156,7 @@ class AdvancedOverfittingDetector:
     7. Actionable recommendations
     """
 
-    def __init__(self, config: Optional[dict[str, Any]] = None):
+    def __init__(self, config: dict[str, Any] | None = None):
         """
         Initialize advanced overfitting detector.
 
@@ -1206,14 +1206,14 @@ class AdvancedOverfittingDetector:
         self,
         epoch: int,
         train_loss: float,
-        val_loss: Optional[float] = None,
+        val_loss: float | None = None,
         train_metric: float = 0.0,
-        val_metric: Optional[float] = None,
-        test_loss: Optional[float] = None,
-        test_metric: Optional[float] = None,
-        l1_regularization: Optional[float] = None,
-        l2_regularization: Optional[float] = None,
-        model_params_count: Optional[int] = None,
+        val_metric: float | None = None,
+        test_loss: float | None = None,
+        test_metric: float | None = None,
+        l1_regularization: float | None = None,
+        l2_regularization: float | None = None,
+        model_params_count: int | None = None,
     ) -> None:
         """
         Update metrics for a training epoch.
@@ -1399,7 +1399,7 @@ class AdvancedOverfittingDetector:
         else:
             return "unstable"
 
-    def _detect_divergence_point(self) -> Optional[int]:
+    def _detect_divergence_point(self) -> int | None:
         """Detect where overfitting divergence starts."""
         if len(self.metrics_history) < 5:
             return None
@@ -1434,7 +1434,7 @@ class AdvancedOverfittingDetector:
         self,
         gap_ratio: float,
         lc_trend: str,
-        divergence_point: Optional[int],
+        divergence_point: int | None,
     ) -> dict[str, bool]:
         """Detect multiple overfitting signals."""
         return {
@@ -1443,7 +1443,7 @@ class AdvancedOverfittingDetector:
             "has_divergence_point": divergence_point is not None,
         }
 
-    def _analyze_cross_validation_stability(self) -> Optional[float]:
+    def _analyze_cross_validation_stability(self) -> float | None:
         """Analyze cross-validation score stability."""
         if not self.cv_scores_history or not self.cross_validation_enabled:
             return None
@@ -1459,7 +1459,7 @@ class AdvancedOverfittingDetector:
     def _identify_root_causes(
         self,
         overfitting_signals: dict[str, bool],
-        cv_std: Optional[float],
+        cv_std: float | None,
     ) -> list[str]:
         """Identify root causes of overfitting."""
         causes = []
@@ -1494,8 +1494,8 @@ class AdvancedOverfittingDetector:
         self,
         gap_ratio: float,
         lc_trend: str,
-        cv_std: Optional[float],
-        divergence_point: Optional[int],
+        cv_std: float | None,
+        divergence_point: int | None,
     ) -> float:
         """
         Calculate overfitting score (0-100).
@@ -1593,7 +1593,7 @@ class AdvancedOverfittingDetector:
 
         return list(set(recommendations))  # Remove duplicates
 
-    def _estimate_optimal_stopping_point(self) -> Optional[int]:
+    def _estimate_optimal_stopping_point(self) -> int | None:
         """Estimate optimal epoch to stop training."""
         if len(self.metrics_history) < 5:
             return None
@@ -1715,7 +1715,7 @@ class ComprehensiveDriftDetector:
     - Auto-retraining triggers
     """
 
-    def __init__(self, config: Optional[dict[str, Any]] = None):
+    def __init__(self, config: dict[str, Any] | None = None):
         """
         Initialize comprehensive drift detector.
 
@@ -1758,16 +1758,16 @@ class ComprehensiveDriftDetector:
         )
 
         # State
-        self.last_check_timestamp: Optional[datetime] = None
-        self.last_retrain_timestamp: Optional[datetime] = None
-        self.reference_data: Optional[np.ndarray] = None
-        self.reference_predictions: Optional[np.ndarray] = None
+        self.last_check_timestamp: datetime | None = None
+        self.last_retrain_timestamp: datetime | None = None
+        self.reference_data: np.ndarray | None = None
+        self.reference_predictions: np.ndarray | None = None
 
     def set_reference(
         self,
         data: np.ndarray,
-        predictions: Optional[np.ndarray] = None,
-        feature_names: Optional[list[str]] = None,
+        predictions: np.ndarray | None = None,
+        feature_names: list[str] | None = None,
     ) -> None:
         """
         Set reference data for drift detection.
@@ -1793,8 +1793,8 @@ class ComprehensiveDriftDetector:
     def update_reference(
         self,
         data: np.ndarray,
-        predictions: Optional[np.ndarray] = None,
-        feature_names: Optional[list[str]] = None,
+        predictions: np.ndarray | None = None,
+        feature_names: list[str] | None = None,
     ) -> None:
         """
         Update reference data for drift detection (alias for set_reference).
@@ -1809,8 +1809,8 @@ class ComprehensiveDriftDetector:
     def detect(
         self,
         current_data: np.ndarray,
-        current_predictions: Optional[np.ndarray] = None,
-        timestamp: Optional[datetime] = None,
+        current_predictions: np.ndarray | None = None,
+        timestamp: datetime | None = None,
     ) -> ComprehensiveDriftReport:
         """
         Run comprehensive drift detection.
@@ -1937,7 +1937,7 @@ class ComprehensiveDriftDetector:
         else:
             return drifts_detected >= 1
 
-    def record_retrain(self, timestamp: Optional[datetime] = None) -> None:
+    def record_retrain(self, timestamp: datetime | None = None) -> None:
         """Record that a retrain was performed."""
         self.last_retrain_timestamp = timestamp or datetime.now()
 
@@ -1961,7 +1961,7 @@ class AutoRetrainingTrigger:
     Combina detección de drift y overfitting para decidir cuándo reentrenar.
     """
 
-    def __init__(self, config: Optional[dict[str, Any]] = None):
+    def __init__(self, config: dict[str, Any] | None = None):
         """Initialize trigger system."""
         config = config or {}
 
@@ -1977,18 +1977,18 @@ class AutoRetrainingTrigger:
         )
 
         # State
-        self.last_retrain_timestamp: Optional[datetime] = None
+        self.last_retrain_timestamp: datetime | None = None
         self.performance_history: list[dict[str, Any]] = []
         self.retrain_history: list[dict[str, Any]] = []
-        self._last_drift_event: Optional[dict[str, Any]] = None
-        self._last_overfitting_event: Optional[dict[str, Any]] = None
+        self._last_drift_event: dict[str, Any] | None = None
+        self._last_overfitting_event: dict[str, Any] | None = None
 
     def should_retrain(
         self,
-        current_data: Optional[np.ndarray] = None,
-        current_predictions: Optional[np.ndarray] = None,
-        current_performance: Optional[dict[str, float]] = None,
-        timestamp: Optional[datetime] = None,
+        current_data: np.ndarray | None = None,
+        current_predictions: np.ndarray | None = None,
+        current_performance: dict[str, float] | None = None,
+        timestamp: datetime | None = None,
     ) -> dict[str, Any]:
         """
         Decide if model should be retrained.
@@ -2103,8 +2103,8 @@ class AutoRetrainingTrigger:
 
     def record_retrain(
         self,
-        timestamp: Optional[datetime] = None,
-        metadata: Optional[dict] = None,
+        timestamp: datetime | None = None,
+        metadata: dict | None = None,
     ) -> None:
         """Record that a retrain was performed."""
         timestamp = timestamp or datetime.now()
@@ -2120,7 +2120,7 @@ class AutoRetrainingTrigger:
     def record_performance(
         self,
         performance: dict[str, float],
-        timestamp: Optional[datetime] = None,
+        timestamp: datetime | None = None,
     ) -> None:
         """Record current performance."""
         self.performance_history.append(
@@ -2135,7 +2135,7 @@ class AutoRetrainingTrigger:
         drift_detected: bool,
         severity: DriftSeverity,
         detectors_triggered: list[str],
-        timestamp: Optional[datetime] = None,
+        timestamp: datetime | None = None,
     ) -> None:
         """
         Record drift detection event for trigger decision.
@@ -2161,7 +2161,7 @@ class AutoRetrainingTrigger:
         self,
         overfitting_detected: bool,
         train_val_gap: float,
-        timestamp: Optional[datetime] = None,
+        timestamp: datetime | None = None,
     ) -> None:
         """
         Record overfitting detection event for trigger decision.

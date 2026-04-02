@@ -23,11 +23,12 @@ Reference: Hull, Options, Futures, and Other Derivatives, Chapter 18
 from __future__ import annotations
 
 import logging
-from typing import Any, Optional
+from typing import TYPE_CHECKING, Any
 
 import numpy as np
 
-from app.domain.models.portfolio import Portfolio
+if TYPE_CHECKING:
+    from app.domain.models.portfolio import Portfolio
 
 logger = logging.getLogger(__name__)
 
@@ -40,7 +41,7 @@ class ComponentVaRCalculator:
     and position-level risk management.
     """
 
-    def __init__(self, config: Optional[dict[str, Any]] = None):
+    def __init__(self, config: dict[str, Any] | None = None):
         """
         Initialize Component VaR calculator.
 
@@ -298,7 +299,7 @@ class ComponentVaRCalculator:
     def generate_risk_budget_report(
         self,
         component_var_result: dict[str, Any],
-        risk_budget: Optional[dict[str, float]] = None,
+        risk_budget: dict[str, float] | None = None,
     ) -> dict[str, Any]:
         """
         Generate risk budget report comparing actual vs target risk contributions.

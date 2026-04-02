@@ -7,7 +7,6 @@ Provides advanced performance metrics using QuantStats library.
 from __future__ import annotations
 
 import logging
-from typing import Optional
 
 import numpy as np
 import pandas as pd
@@ -44,7 +43,7 @@ class QuantStatsIntegration:
     def calculate_advanced_metrics(
         self,
         returns: pd.Series,
-        benchmark_returns: Optional[pd.Series] = None,
+        benchmark_returns: pd.Series | None = None,
         periods_per_year: int = 252,
     ) -> dict[str, float]:
         """
@@ -171,7 +170,7 @@ class QuantStatsIntegration:
     def get_metrics_summary(
         self,
         returns: pd.Series,
-        benchmark_returns: Optional[pd.Series] = None,
+        benchmark_returns: pd.Series | None = None,
     ) -> dict:
         """
         Get comprehensive metrics summary (REQUIRED).
@@ -196,7 +195,7 @@ class QuantStatsIntegration:
 
 
 # Singleton
-_integration: Optional[QuantStatsIntegration] = None
+_integration: QuantStatsIntegration | None = None
 
 
 def get_quantstats_integration() -> QuantStatsIntegration:

@@ -10,13 +10,15 @@ configuration for the trading system.
 """
 
 from decimal import Decimal
-from typing import Optional
+from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from app.domain.models.risk_config import RiskConfig
 from app.domain.models.strategy_type import StrategyType
-from app.domain.models.tax_config import TaxConfig
+
+if TYPE_CHECKING:
+    from app.domain.models.risk_config import RiskConfig
+    from app.domain.models.tax_config import TaxConfig
 
 
 class SystemConfiguration(BaseModel):
@@ -51,7 +53,7 @@ class SystemConfiguration(BaseModel):
     )
 
     # Tax configuration
-    tax_config: Optional[TaxConfig] = Field(
+    tax_config: TaxConfig | None = Field(
         default=None,
         description="Tax optimization parameters (if tax residence provided)",
     )
@@ -84,12 +86,12 @@ class SystemConfiguration(BaseModel):
     )
 
     # Optional constraints
-    sector_limits: Optional[dict[str, Decimal]] = Field(
+    sector_limits: dict[str, Decimal] | None = Field(
         default=None,
         description="Optional sector-specific limits",
     )
 
-    exclude_symbols: Optional[set[str]] = Field(
+    exclude_symbols: set[str] | None = Field(
         default=None,
         description="Symbols to exclude from trading",
     )

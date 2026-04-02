@@ -19,7 +19,6 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass
-from typing import Optional
 
 import numpy as np
 import pandas as pd
@@ -94,7 +93,7 @@ class FamaFrenchFactorModel:
         """
         self.model_type = model_type
         self.fitted = False
-        self.last_result: Optional[FactorModelResult] = None
+        self.last_result: FactorModelResult | None = None
 
         logger.info(f"FamaFrenchFactorModel initialized: model_type={model_type}")
 
@@ -104,9 +103,9 @@ class FamaFrenchFactorModel:
         market_returns: pd.Series,
         smb_returns: pd.Series,
         hml_returns: pd.Series,
-        rmw_returns: Optional[pd.Series] = None,
-        cma_returns: Optional[pd.Series] = None,
-        momentum_returns: Optional[pd.Series] = None,
+        rmw_returns: pd.Series | None = None,
+        cma_returns: pd.Series | None = None,
+        momentum_returns: pd.Series | None = None,
         risk_free_rate: float = 0.0,
     ) -> FactorModelResult:
         """
@@ -352,9 +351,9 @@ class APTModel:
         """
         self.n_factors = n_factors
         self.fitted = False
-        self.factor_loadings: Optional[np.ndarray] = None
-        self.factor_returns: Optional[np.ndarray] = None
-        self.eigenvalues: Optional[np.ndarray] = None
+        self.factor_loadings: np.ndarray | None = None
+        self.factor_returns: np.ndarray | None = None
+        self.eigenvalues: np.ndarray | None = None
 
         logger.info(f"APTModel initialized: n_factors={n_factors}")
 
@@ -592,7 +591,7 @@ class StatisticalArbitrage:
         self,
         asset_returns: pd.DataFrame,
         factor_returns: pd.DataFrame,
-        signals: Optional[pd.DataFrame] = None,
+        signals: pd.DataFrame | None = None,
     ) -> tuple[np.ndarray, dict[str, float]]:
         """
         Construct factor-neutral portfolio from multiple assets.

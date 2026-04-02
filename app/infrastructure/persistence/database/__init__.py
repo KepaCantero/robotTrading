@@ -7,8 +7,7 @@ from __future__ import annotations
 
 import contextlib
 import logging
-from collections.abc import AsyncGenerator
-from typing import Optional
+from typing import TYPE_CHECKING
 
 from sqlalchemy import MetaData, create_engine, event, text
 from sqlalchemy.exc import (
@@ -26,6 +25,9 @@ from sqlalchemy.pool import QueuePool
 from app.shared.config.base.environment_config import get_config
 from app.shared.exceptions.exceptions import raise_database_error
 
+if TYPE_CHECKING:
+    from collections.abc import AsyncGenerator
+
 logger = logging.getLogger(__name__)
 
 # Base class for all models
@@ -35,10 +37,10 @@ Base = declarative_base()
 metadata = MetaData()
 
 # Global database engines
-_sync_engine: Optional[object] = None
-_async_engine: Optional[object] = None
-_session_factory: Optional[sessionmaker] = None
-_async_session_factory: Optional[async_sessionmaker] = None
+_sync_engine: object | None = None
+_async_engine: object | None = None
+_session_factory: sessionmaker | None = None
+_async_session_factory: async_sessionmaker | None = None
 
 
 class DatabaseManager:
@@ -244,7 +246,7 @@ class DatabaseManager:
 
 
 # Global database manager instance (lazy initialization)
-_db_manager: Optional[DatabaseManager] = None
+_db_manager: DatabaseManager | None = None
 
 
 def _get_db_manager() -> DatabaseManager:

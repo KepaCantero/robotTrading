@@ -18,7 +18,6 @@ from __future__ import annotations
 import logging
 from dataclasses import dataclass
 from decimal import Decimal
-from typing import Optional
 
 import numpy as np
 
@@ -71,7 +70,7 @@ class DividendSustainabilityMetrics:
     payout_trend: str  # "improving", "stable", "declining"
     fcf_trend: str  # "improving", "stable", "declining"
     earnings_stability: Decimal  # 0-100
-    dividend_buffer: Optional[Decimal] = None  # FCF / dividendos - 1
+    dividend_buffer: Decimal | None = None  # FCF / dividendos - 1
 
 
 class DividendAnalyzer:
@@ -141,7 +140,7 @@ class DividendAnalyzer:
     def analyze_sustainability(
         self,
         profile: DividendProfile,
-        historical_data: Optional[dict[str, list[Decimal]]] = None,
+        historical_data: dict[str, list[Decimal]] | None = None,
     ) -> DividendSustainabilityMetrics:
         """
         Analizar sostenibilidad del dividendo.
@@ -319,7 +318,7 @@ class DividendAnalyzer:
         else:
             return Decimal("0")
 
-    def _get_sector_for_symbol(self, symbol: str) -> Optional[str]:
+    def _get_sector_for_symbol(self, symbol: str) -> str | None:
         """
         Obtener sector para un símbolo.
 
@@ -432,7 +431,7 @@ class DividendAnalyzer:
 
         return min(Decimal("100"), max(Decimal("0"), base))
 
-    def _analyze_payout_trend(self, historical_data: Optional[dict[str, list[Decimal]]]) -> str:
+    def _analyze_payout_trend(self, historical_data: dict[str, list[Decimal]] | None) -> str:
         """Analizar tendencia de payout ratio."""
         if historical_data is None or "payout_ratio" not in historical_data:
             return "stable"
@@ -452,7 +451,7 @@ class DividendAnalyzer:
         else:
             return "stable"
 
-    def _analyze_fcf_trend(self, historical_data: Optional[dict[str, list[Decimal]]]) -> str:
+    def _analyze_fcf_trend(self, historical_data: dict[str, list[Decimal]] | None) -> str:
         """Analizar tendencia de FCF."""
         if historical_data is None or "fcf" not in historical_data:
             return "stable"
@@ -481,7 +480,7 @@ class DividendAnalyzer:
             return "stable"
 
     def _calculate_earnings_stability(
-        self, historical_data: Optional[dict[str, list[Decimal]]]
+        self, historical_data: dict[str, list[Decimal]] | None
     ) -> Decimal:
         """
         Calcular estabilidad de earnings (0-100).
@@ -510,7 +509,7 @@ class DividendAnalyzer:
 
         return Decimal(str(min(100, max(0, score))))
 
-    def _calculate_dividend_buffer(self, profile: DividendProfile) -> Optional[Decimal]:
+    def _calculate_dividend_buffer(self, profile: DividendProfile) -> Decimal | None:
         """
         Calcular buffer de dividendos.
 
@@ -554,7 +553,7 @@ class DividendAnalyzer:
         profile: DividendProfile,
         investment_amount: Decimal,
         years: int = 10,
-        growth_rate: Optional[Decimal] = None,
+        growth_rate: Decimal | None = None,
     ) -> list[tuple[int, Decimal, Decimal]]:
         """
         Proyectar ingreso por dividendos futuro.

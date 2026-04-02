@@ -31,9 +31,10 @@ import time
 from collections import OrderedDict
 from datetime import timedelta
 from decimal import Decimal
-from typing import ClassVar, Optional, Union
+from typing import TYPE_CHECKING, ClassVar
 
-import pandas as pd
+if TYPE_CHECKING:
+    import pandas as pd
 
 # REQUIRED: yfinance is REQUIRED - NO FALLBACKS
 
@@ -72,9 +73,9 @@ class RetryConfig:
 
 async def retry_with_backoff(
     func,
-    retry_config: Optional[RetryConfig] = None,
+    retry_config: RetryConfig | None = None,
     operation_name: str = "operation",
-) -> Union[str, int, float, bool, dict, list, None]:
+) -> str | int | float | bool | dict | list | None:
     """
     Execute function with retry and exponential backoff.
 
@@ -164,7 +165,7 @@ class CircuitBreaker:
 
         self._state = CircuitBreakerState.CLOSED
         self._failures = 0
-        self._last_failure_time: Optional[float] = None
+        self._last_failure_time: float | None = None
         self._half_open_calls = 0
 
     def is_open(self) -> bool:
@@ -234,7 +235,7 @@ class LRUCache:
         self._hits = 0
         self._misses = 0
 
-    def get(self, key: str) -> Optional[Union[str, int, float, bool, dict, list]]:
+    def get(self, key: str) -> str | int | float | bool | dict | list | None:
         """Get value from cache."""
         if key not in self._cache:
             self._misses += 1
@@ -254,8 +255,8 @@ class LRUCache:
     def put(
         self,
         key: str,
-        value: Union[str, int, float, bool, dict, list],
-        ttl_seconds: Optional[float] = None,
+        value: str | int | float | bool | dict | list,
+        ttl_seconds: float | None = None,
     ):
         """Put value in cache."""
         # Remove if exists
@@ -296,7 +297,7 @@ class LRUCache:
         self._cache.pop(key, None)
         self._timestamps.pop(key, None)
 
-    def get_stats(self) -> dict[str, Union[str, int, float, bool]]:
+    def get_stats(self) -> dict[str, str | int | float | bool]:
         """Get cache statistics."""
         total = self._hits + self._misses
         hit_rate = self._hits / total if total > 0 else 0
@@ -527,7 +528,7 @@ class MarketUniverseLoader:
         else:
             self._retry_config = None
 
-        self._semaphore: Optional[asyncio.Semaphore] = None
+        self._semaphore: asyncio.Semaphore | None = None
         self._max_concurrent_requests = max_concurrent_requests
 
     async def get_sp500_universe(self) -> list[str]:
@@ -680,7 +681,7 @@ class MarketUniverseLoader:
             return {}
 
     @staticmethod
-    def _normalize_dataframe(df: pd.DataFrame) -> Optional[pd.DataFrame]:
+    def _normalize_dataframe(df: pd.DataFrame) -> pd.DataFrame | None:
         """Normalize a yfinance DataFrame to lowercase column names."""
         if df is None or df.empty:
             return None
@@ -691,9 +692,9 @@ class MarketUniverseLoader:
     async def filter_by_liquidity_volatility(
         self,
         data: dict[str, pd.DataFrame],
-        min_avg_volume: Optional[int] = None,
-        min_price: Optional[float] = None,
-        max_volatility: Optional[float] = None,
+        min_avg_volume: int | None = None,
+        min_price: float | None = None,
+        max_volatility: float | None = None,
     ) -> dict[str, pd.DataFrame]:
         """Filter downloaded data by average volume, price, and volatility."""
         if not data:
@@ -813,7 +814,7 @@ class MarketUniverseLoader:
         score = max(0.0, min(100.0, score))
         asset.liquidity_score = score
 
-    def _get_cached_universe(self, key: str) -> Optional[list[str]]:
+    def _get_cached_universe(self, key: str) -> list[str] | None:
         """Retrieve cached universe data or None."""
         result = self._universe_cache.get(key)
         if result is None:
@@ -824,7 +825,7 @@ class MarketUniverseLoader:
         """Store universe data in the universe cache."""
         self._universe_cache.put(key, data)
 
-    def _get_cached_data(self, key: str) -> Optional[dict]:
+    def _get_cached_data(self, key: str) -> dict | None:
         """Retrieve cached downloaded data or None."""
         result = self._data_cache.get(key)
         if result is None:
@@ -842,7 +843,7 @@ class MarketUniverseLoader:
 
 
 # Singleton instance
-_market_universe_loader_instance: Optional[MarketUniverseLoader] = None
+_market_universe_loader_instance: MarketUniverseLoader | None = None
 
 
 def get_market_universe_loader(

@@ -17,7 +17,7 @@ from __future__ import annotations
 import logging
 from decimal import Decimal
 from enum import Enum
-from typing import ClassVar, Optional, Union
+from typing import ClassVar
 
 logger = logging.getLogger(__name__)
 
@@ -48,7 +48,7 @@ class AccountConfiguration:
     }
 
     # Recommended configurations per tier
-    TIER_CONFIGS: ClassVar[dict[AccountTier, dict[str, Union[Decimal, int, str, bool]]]] = {
+    TIER_CONFIGS: ClassVar[dict[AccountTier, dict[str, Decimal | int | str | bool]]] = {
         AccountTier.MICRO: {
             "position_size_pct": Decimal("0.02"),  # 2% per position
             "max_concurrent_trades": 1,
@@ -256,7 +256,7 @@ class AccountConfiguration:
         return feature_map.get(feature, False)
 
     @staticmethod
-    def log_configuration(capital: Decimal, account_id: Optional[str] = None) -> str:
+    def log_configuration(capital: Decimal, account_id: str | None = None) -> str:
         """Log account configuration recommendation"""
         tier = AccountConfiguration.get_tier(capital)
         config = AccountConfiguration.TIER_CONFIGS[tier]

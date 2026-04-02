@@ -12,7 +12,7 @@ from __future__ import annotations
 
 import logging
 from decimal import Decimal
-from typing import Any, Optional
+from typing import Any
 
 import pandas as pd
 
@@ -26,7 +26,7 @@ class GapInterpolator:
     Rellena valores faltantes en series temporales.
     """
 
-    def __init__(self, config: Optional[dict[str, Any]] = None):
+    def __init__(self, config: dict[str, Any] | None = None):
         """
         Inicializar interpolador.
 
@@ -46,7 +46,7 @@ class GapInterpolator:
         self,
         data: list[dict[str, Any]],
         timestamp_field: str = "timestamp",
-        value_fields: Optional[list[str]] = None,
+        value_fields: list[str] | None = None,
     ) -> list[dict[str, Any]]:
         """
         Interpolar gaps en datos temporales.

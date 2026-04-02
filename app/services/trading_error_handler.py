@@ -12,7 +12,7 @@ import asyncio
 import logging
 from datetime import datetime
 from enum import Enum
-from typing import Any, Callable, Optional
+from typing import Any, Callable
 
 from app.services.centralized_logging import LogLevel, LogService, centralized_logger
 from app.shared.config.centralized_config import get_config
@@ -197,8 +197,8 @@ class TradingErrorHandler:
         self,
         error: Exception,
         context: ErrorContext,
-        operation_id: Optional[str] = None,
-        metadata: Optional[dict[str, Any]] = None,
+        operation_id: str | None = None,
+        metadata: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         """
         Handle an error with unified processing.
@@ -267,8 +267,8 @@ class TradingErrorHandler:
         self,
         operation: Callable,
         context: ErrorContext,
-        operation_id: Optional[str] = None,
-        metadata: Optional[dict[str, Any]] = None,
+        operation_id: str | None = None,
+        metadata: dict[str, Any] | None = None,
         *args,
         **kwargs,
     ) -> object:
@@ -290,7 +290,7 @@ class TradingErrorHandler:
         max_retries = rules.get("max_retries", 0)
         retry_delay = rules.get("retry_delay", 1.0)
 
-        last_error: Optional[BaseException] = None
+        last_error: BaseException | None = None
 
         for attempt in range(max_retries + 1):
             try:
@@ -698,8 +698,8 @@ trading_error_handler = TradingErrorHandler()
 async def handle_trading_error(
     error: Exception,
     context: ErrorContext,
-    operation_id: Optional[str] = None,
-    metadata: Optional[dict[str, Any]] = None,
+    operation_id: str | None = None,
+    metadata: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     """Handle a trading error with unified processing."""
     return await trading_error_handler.handle_error(error, context, operation_id, metadata)
@@ -708,8 +708,8 @@ async def handle_trading_error(
 async def execute_with_retry(
     operation: Callable,
     context: ErrorContext,
-    operation_id: Optional[str] = None,
-    metadata: Optional[dict[str, Any]] = None,
+    operation_id: str | None = None,
+    metadata: dict[str, Any] | None = None,
     *args,
     **kwargs,
 ) -> object:

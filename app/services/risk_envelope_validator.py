@@ -44,7 +44,6 @@ warnings.warn(
 
 import logging
 from decimal import Decimal
-from typing import Optional
 
 logger = logging.getLogger(__name__)
 
@@ -58,9 +57,9 @@ class RiskEnvelopeValidator:
 
     def __init__(
         self,
-        max_total_exposure_pct: Optional[Decimal] = None,  # 20% max per symbol
-        max_strategy_exposure_pct: Optional[Decimal] = None,  # 70% max per strategy
-        max_portfolio_exposure_pct: Optional[Decimal] = None,  # 95% max total portfolio
+        max_total_exposure_pct: Decimal | None = None,  # 20% max per symbol
+        max_strategy_exposure_pct: Decimal | None = None,  # 70% max per strategy
+        max_portfolio_exposure_pct: Decimal | None = None,  # 95% max total portfolio
     ):
         """
         Initialize risk envelope validator.

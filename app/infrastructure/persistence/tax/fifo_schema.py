@@ -28,7 +28,7 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 from decimal import Decimal
 from enum import Enum
-from typing import Optional, cast
+from typing import cast
 from uuid import UUID, uuid4
 
 logger = logging.getLogger(__name__)
@@ -124,21 +124,21 @@ class Account(Base):
     currency: str = sa.Column(sa.String(10), nullable=False)  # "BTC", "ETH", "EUR", "USD"
 
     # Account details (encrypted at rest)
-    api_key_encrypted: Optional[str] = sa.Column(sa.Text, nullable=True)
-    api_secret_encrypted: Optional[str] = sa.Column(sa.Text, nullable=True)
-    wallet_address: Optional[str] = sa.Column(sa.String(255), nullable=True)  # For DEX/Wallets
+    api_key_encrypted: str | None = sa.Column(sa.Text, nullable=True)
+    api_secret_encrypted: str | None = sa.Column(sa.Text, nullable=True)
+    wallet_address: str | None = sa.Column(sa.String(255), nullable=True)  # For DEX/Wallets
 
     # Balance tracking
     balance_cached: Decimal = sa.Column(sa.Numeric(36, 18), default=Decimal("0"))
-    balance_updated_at: Optional[datetime] = sa.Column(sa.TIMESTAMP(timezone=True), nullable=True)
-    last_sync_at: Optional[datetime] = sa.Column(sa.TIMESTAMP(timezone=True), nullable=True)
+    balance_updated_at: datetime | None = sa.Column(sa.TIMESTAMP(timezone=True), nullable=True)
+    last_sync_at: datetime | None = sa.Column(sa.TIMESTAMP(timezone=True), nullable=True)
 
     # Metadata
     is_active: bool = sa.Column(sa.Boolean, default=True)
     created_at: datetime = sa.Column(
         sa.TIMESTAMP(timezone=True), default=lambda: datetime.now(timezone.utc)
     )
-    closed_at: Optional[datetime] = sa.Column(sa.TIMESTAMP(timezone=True), nullable=True)
+    closed_at: datetime | None = sa.Column(sa.TIMESTAMP(timezone=True), nullable=True)
 
     # JSONB for extra fields
     meta_data: dict = sa.Column(JSONB, default=dict)
@@ -175,9 +175,7 @@ class Transaction(Base):
 
     # External ID (from exchange) - PREVENTS DUPLICATES
     external_id: str = sa.Column(sa.String(255), nullable=False, index=True)
-    exchange_tx_id: Optional[str] = sa.Column(
-        sa.String(255), nullable=True
-    )  # Raw TX hash for crypto
+    exchange_tx_id: str | None = sa.Column(sa.String(255), nullable=True)  # Raw TX hash for crypto
 
     # Account
     account_id: UUID = sa.Column(PGUUID(as_uuid=True), sa.ForeignKey("accounts.id"), nullable=False)
@@ -191,17 +189,15 @@ class Transaction(Base):
 
     # Transaction details
     tx_type: TransactionType = sa.Column(sa.Enum(TransactionType), nullable=False)
-    side: Optional[str] = sa.Column(sa.String(10), nullable=True)  # "BUY", "SELL" (for trades)
+    side: str | None = sa.Column(sa.String(10), nullable=True)  # "BUY", "SELL" (for trades)
 
     # Quantities - ALWAYS DECIMAL
     quantity: Decimal = sa.Column(sa.Numeric(36, 18), nullable=False)
     quantity_symbol: str = sa.Column(sa.String(20), nullable=False)  # "BTC", "USD"
 
     # Prices - ALWAYS DECIMAL
-    price: Optional[Decimal] = sa.Column(sa.Numeric(36, 18), nullable=True)  # Unit price
-    total_value: Optional[Decimal] = sa.Column(
-        sa.Numeric(36, 18), nullable=True
-    )  # quantity * price
+    price: Decimal | None = sa.Column(sa.Numeric(36, 18), nullable=True)  # Unit price
+    total_value: Decimal | None = sa.Column(sa.Numeric(36, 18), nullable=True)  # quantity * price
 
     # Fees - CRITICAL FOR TAX BASIS
     fee_amount: Decimal = sa.Column(sa.Numeric(36, 18), default=Decimal("0"))
@@ -215,13 +211,11 @@ class Transaction(Base):
     )
 
     # Settlement (for stocks/forex)
-    settled_at: Optional[datetime] = sa.Column(sa.TIMESTAMP(timezone=True), nullable=True)
-    settlement_date: Optional[datetime] = sa.Column(sa.DATE, nullable=True)
+    settled_at: datetime | None = sa.Column(sa.TIMESTAMP(timezone=True), nullable=True)
+    settlement_date: datetime | None = sa.Column(sa.DATE, nullable=True)
 
     # FIFO linking
-    lot_id: Optional[UUID] = sa.Column(
-        PGUUID(as_uuid=True), sa.ForeignKey("lots.id"), nullable=True
-    )
+    lot_id: UUID | None = sa.Column(PGUUID(as_uuid=True), sa.ForeignKey("lots.id"), nullable=True)
     lot = sa.orm.relationship(
         "Lot", back_populates="transactions", foreign_keys="Transaction.lot_id"
     )
@@ -233,17 +227,17 @@ class Transaction(Base):
     )  # For Modelo 721 annual filtering
 
     # Counterparty (for transfers)
-    from_account_id: Optional[UUID] = sa.Column(
+    from_account_id: UUID | None = sa.Column(
         PGUUID(as_uuid=True), sa.ForeignKey("accounts.id"), nullable=True
     )
-    to_account_id: Optional[UUID] = sa.Column(
+    to_account_id: UUID | None = sa.Column(
         PGUUID(as_uuid=True), sa.ForeignKey("accounts.id"), nullable=True
     )
-    from_address: Optional[str] = sa.Column(sa.String(255), nullable=True)  # Crypto address
-    to_address: Optional[str] = sa.Column(sa.String(255), nullable=True)  # Crypto address
+    from_address: str | None = sa.Column(sa.String(255), nullable=True)  # Crypto address
+    to_address: str | None = sa.Column(sa.String(255), nullable=True)  # Crypto address
 
     # Metadata
-    notes: Optional[str] = sa.Column(sa.Text, nullable=True)
+    notes: str | None = sa.Column(sa.Text, nullable=True)
     meta_data: dict = sa.Column(JSONB, default=dict)
 
     # Audit fields
@@ -318,18 +312,18 @@ class Lot(Base):
     status: LotStatus = sa.Column(sa.Enum(LotStatus), default=LotStatus.OPEN, nullable=False)
 
     # Realized gains (when closed)
-    realized_gain: Optional[Decimal] = sa.Column(sa.Numeric(36, 18), nullable=True)
-    realized_loss: Optional[Decimal] = sa.Column(sa.Numeric(36, 18), nullable=True)
+    realized_gain: Decimal | None = sa.Column(sa.Numeric(36, 18), nullable=True)
+    realized_loss: Decimal | None = sa.Column(sa.Numeric(36, 18), nullable=True)
 
     # Dates
     opened_at: datetime = sa.Column(sa.TIMESTAMP(timezone=True), nullable=False)
-    closed_at: Optional[datetime] = sa.Column(sa.TIMESTAMP(timezone=True), nullable=True)
+    closed_at: datetime | None = sa.Column(sa.TIMESTAMP(timezone=True), nullable=True)
 
     # Holding period (for tax classification)
-    holding_period_days: Optional[int] = sa.Column(sa.Integer, nullable=True)
+    holding_period_days: int | None = sa.Column(sa.Integer, nullable=True)
 
     # Tax year (when closed)
-    tax_year_closed: Optional[int] = sa.Column(sa.Integer, nullable=True)
+    tax_year_closed: int | None = sa.Column(sa.Integer, nullable=True)
 
     # Relationships
     transactions = sa.orm.relationship(
@@ -349,7 +343,7 @@ class Lot(Base):
     )
 
     @hybrid_property
-    def is_long_term(self) -> Optional[bool]:
+    def is_long_term(self) -> bool | None:
         """True if holding period > 1 year (for Spain LT tax rate)"""
         if self.closed_at is None:
             return None
@@ -422,14 +416,14 @@ class TaxReport(Base):
     # Status
     status: str = sa.Column(sa.String(20), default="draft")  # "draft", "final", "filed"
     is_amended: bool = sa.Column(sa.Boolean, default=False)
-    amended_from_id: Optional[UUID] = sa.Column(PGUUID(as_uuid=True), nullable=True)
+    amended_from_id: UUID | None = sa.Column(PGUUID(as_uuid=True), nullable=True)
 
     # Dates
     report_date: datetime = sa.Column(sa.TIMESTAMP(timezone=True), nullable=False)  # As of date
     generated_at: datetime = sa.Column(
         sa.TIMESTAMP(timezone=True), default=lambda: datetime.now(timezone.utc)
     )
-    filed_at: Optional[datetime] = sa.Column(sa.TIMESTAMP(timezone=True), nullable=True)
+    filed_at: datetime | None = sa.Column(sa.TIMESTAMP(timezone=True), nullable=True)
 
     # Validation
     checksum: str = sa.Column(sa.String(64), nullable=True)  # SHA-256 of report_data

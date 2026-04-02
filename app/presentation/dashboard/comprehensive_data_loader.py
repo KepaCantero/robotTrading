@@ -10,7 +10,7 @@ import json
 import logging
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 import pandas as pd
 
@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 class ComprehensiveBacktestLoader:
     """Cargador de resultados de comprehensive backtests."""
 
-    def __init__(self, results_dir: Optional[str] = None):
+    def __init__(self, results_dir: str | None = None):
         """
         Inicializar cargador.
 
@@ -237,7 +237,7 @@ class ComprehensiveBacktestLoader:
         )
         return results
 
-    def load_latest_results(self) -> Optional[dict[str, Any]]:
+    def load_latest_results(self) -> dict[str, Any] | None:
         """
         Cargar los resultados más recientes.
 
@@ -286,7 +286,7 @@ class ComprehensiveBacktestLoader:
         all_results = self.load_all_results()
         return [r for r in all_results if r.get("test_type") == test_type]
 
-    def get_best_result(self, metric: str = "sharpe_ratio") -> Optional[dict[str, Any]]:
+    def get_best_result(self, metric: str = "sharpe_ratio") -> dict[str, Any] | None:
         """
         Obtener el mejor resultado según una métrica.
 
@@ -344,7 +344,7 @@ class ComprehensiveBacktestLoader:
 
         return stats
 
-    def load_meta_analysis_results(self) -> Optional[dict[str, Any]]:
+    def load_meta_analysis_results(self) -> dict[str, Any] | None:
         """
         Cargar resultados del meta análisis (si existen).
 
@@ -383,7 +383,7 @@ class ComprehensiveBacktestLoader:
             logger.warning(f"Error cargando meta análisis {latest_file.name}: {e}")
             return None
 
-    def get_meta_analysis_summary(self) -> Optional[dict[str, Any]]:
+    def get_meta_analysis_summary(self) -> dict[str, Any] | None:
         """
         Obtener resumen del meta análisis.
 

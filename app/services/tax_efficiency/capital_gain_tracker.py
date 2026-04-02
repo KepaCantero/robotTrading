@@ -11,7 +11,6 @@ import logging
 from dataclasses import dataclass
 from datetime import datetime
 from decimal import Decimal
-from typing import Optional
 
 logger = logging.getLogger(__name__)
 
@@ -293,8 +292,8 @@ class CapitalGainTracker:
 
     def project_annual_tax(
         self,
-        marginal_tax_rate_st: Optional[Decimal] = None,  # Short-term
-        marginal_tax_rate_lt: Optional[Decimal] = None,  # Long-term
+        marginal_tax_rate_st: Decimal | None = None,  # Short-term
+        marginal_tax_rate_lt: Decimal | None = None,  # Long-term
     ) -> Decimal:
         """
         Project annual tax liability from realized gains.
@@ -355,7 +354,7 @@ class CapitalGainTracker:
 
 
 # Singleton
-_tracker: Optional[CapitalGainTracker] = None
+_tracker: CapitalGainTracker | None = None
 
 
 def get_capital_gain_tracker() -> CapitalGainTracker:

@@ -15,7 +15,6 @@ from __future__ import annotations
 
 import logging
 from decimal import Decimal
-from typing import Optional
 
 import numpy as np
 from scipy import stats
@@ -28,7 +27,7 @@ logger = logging.getLogger(__name__)
 class AdvancedMetricsCalculator:
     """Calculator for advanced financial metrics."""
 
-    def __init__(self, risk_free_rate: Optional[Decimal] = None, confidence_level: float = 0.95):
+    def __init__(self, risk_free_rate: Decimal | None = None, confidence_level: float = 0.95):
         """
         Initialize advanced metrics calculator.
 
@@ -44,7 +43,7 @@ class AdvancedMetricsCalculator:
         self.confidence_level = confidence_level
         self._annual_trading_days = get_config().backtesting.annual_trading_days
 
-    def calculate_calmar_ratio(self, cagr: Decimal, max_drawdown: Decimal) -> Optional[Decimal]:
+    def calculate_calmar_ratio(self, cagr: Decimal, max_drawdown: Decimal) -> Decimal | None:
         """
         Calculate Calmar Ratio.
 
@@ -77,7 +76,7 @@ class AdvancedMetricsCalculator:
 
     def calculate_omega_ratio(
         self, returns: list[Decimal], threshold: float = 0.0
-    ) -> Optional[Decimal]:
+    ) -> Decimal | None:
         """
         Calculate Omega Ratio.
 
@@ -124,7 +123,7 @@ class AdvancedMetricsCalculator:
 
     def calculate_ulcer_index(
         self, equity_curve: list[Decimal], rolling_window: int = 14
-    ) -> Optional[Decimal]:
+    ) -> Decimal | None:
         """
         Calculate Ulcer Index.
 
@@ -161,7 +160,7 @@ class AdvancedMetricsCalculator:
             logger.error(f"Error calculating Ulcer index: {e}")
             return None
 
-    def calculate_annualized_volatility(self, returns: list[Decimal]) -> Optional[Decimal]:
+    def calculate_annualized_volatility(self, returns: list[Decimal]) -> Decimal | None:
         """
         Calculate Annualized Volatility.
 
@@ -194,7 +193,7 @@ class AdvancedMetricsCalculator:
 
     def calculate_recovery_factor(
         self, total_pnl: Decimal, max_drawdown: Decimal
-    ) -> Optional[Decimal]:
+    ) -> Decimal | None:
         """
         Calculate Recovery Factor.
 
@@ -225,9 +224,7 @@ class AdvancedMetricsCalculator:
             logger.error(f"Error calculating Recovery factor: {e}")
             return None
 
-    def calculate_profit_factor(
-        self, gross_profit: Decimal, gross_loss: Decimal
-    ) -> Optional[Decimal]:
+    def calculate_profit_factor(self, gross_profit: Decimal, gross_loss: Decimal) -> Decimal | None:
         """
         Calculate Profit Factor.
 
@@ -259,7 +256,7 @@ class AdvancedMetricsCalculator:
             logger.error(f"Error calculating Profit factor: {e}")
             return None
 
-    def calculate_skewness(self, returns: list[Decimal]) -> Optional[Decimal]:
+    def calculate_skewness(self, returns: list[Decimal]) -> Decimal | None:
         """
         Calculate Skewness of Returns.
 
@@ -287,7 +284,7 @@ class AdvancedMetricsCalculator:
             logger.error(f"Error calculating Skewness: {e}")
             return None
 
-    def calculate_kurtosis(self, returns: list[Decimal]) -> Optional[Decimal]:
+    def calculate_kurtosis(self, returns: list[Decimal]) -> Decimal | None:
         """
         Calculate Kurtosis of Returns (Excess Kurtosis).
 
@@ -317,8 +314,8 @@ class AdvancedMetricsCalculator:
             return None
 
     def calculate_var(
-        self, returns: list[Decimal], confidence: Optional[float] = None
-    ) -> Optional[Decimal]:
+        self, returns: list[Decimal], confidence: float | None = None
+    ) -> Decimal | None:
         """
         Calculate Value at Risk (VaR).
 
@@ -351,8 +348,8 @@ class AdvancedMetricsCalculator:
             return None
 
     def calculate_cvar(
-        self, returns: list[Decimal], confidence: Optional[float] = None
-    ) -> Optional[Decimal]:
+        self, returns: list[Decimal], confidence: float | None = None
+    ) -> Decimal | None:
         """
         Calculate Conditional Value at Risk (CVaR) / Expected Shortfall.
 
@@ -396,7 +393,7 @@ class AdvancedMetricsCalculator:
 
     def calculate_sortino_modified(
         self, returns: list[Decimal], target_return: float = 0.0
-    ) -> Optional[Decimal]:
+    ) -> Decimal | None:
         """
         Calculate Modified Sortino Ratio.
 
@@ -436,7 +433,7 @@ class AdvancedMetricsCalculator:
             logger.error(f"Error calculating Modified Sortino: {e}")
             return None
 
-    def calculate_tail_ratio(self, returns: list[Decimal]) -> Optional[Decimal]:
+    def calculate_tail_ratio(self, returns: list[Decimal]) -> Decimal | None:
         """
         Calculate Tail Ratio (Req #6 - Advanced Metrics).
 
@@ -479,8 +476,8 @@ class AdvancedMetricsCalculator:
             return None
 
     def calculate_sqn(
-        self, returns: list[Decimal], number_of_trades: Optional[int] = None
-    ) -> Optional[Decimal]:
+        self, returns: list[Decimal], number_of_trades: int | None = None
+    ) -> Decimal | None:
         """
         Calculate System Quality Number (SQN) (Req #6 - Advanced Metrics).
 

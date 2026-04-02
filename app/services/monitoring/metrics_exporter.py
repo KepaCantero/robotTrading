@@ -11,7 +11,6 @@ import asyncio
 import json
 import logging
 from datetime import datetime
-from typing import Optional
 
 import aiohttp
 from requests.exceptions import HTTPError, RequestException
@@ -40,8 +39,8 @@ class MetricsExporter:
 
     def __init__(
         self,
-        prometheus_url: Optional[str] = None,
-        pushgateway_url: Optional[str] = None,
+        prometheus_url: str | None = None,
+        pushgateway_url: str | None = None,
     ):
         """
         Initialize metrics exporter.
@@ -52,7 +51,7 @@ class MetricsExporter:
         """
         self.prometheus_url = prometheus_url or "http://localhost:9090"
         self.pushgateway_url = pushgateway_url or "http://localhost:9091"
-        self.session: Optional[aiohttp.ClientSession] = None
+        self.session: aiohttp.ClientSession | None = None
         self.export_history: list[dict] = []
         logger.info(
             f"✅ MetricsExporter initialized "
@@ -142,7 +141,7 @@ class MetricsExporter:
             logger.error(f"❌ Failed to push metrics: {e!s}")
             return False
 
-    async def query_prometheus(self, query: str, time: Optional[str] = None) -> Optional[dict]:
+    async def query_prometheus(self, query: str, time: str | None = None) -> dict | None:
         """
         Query Prometheus for metric data.
 
@@ -184,7 +183,7 @@ class MetricsExporter:
         start: str,
         end: str,
         step: str = "1m",
-    ) -> Optional[dict]:
+    ) -> dict | None:
         """
         Query Prometheus for time series data.
 
@@ -327,12 +326,12 @@ class MetricsExporter:
 
 
 # Singleton
-_exporter: Optional[MetricsExporter] = None
+_exporter: MetricsExporter | None = None
 
 
 def get_metrics_exporter(
-    prometheus_url: Optional[str] = None,
-    pushgateway_url: Optional[str] = None,
+    prometheus_url: str | None = None,
+    pushgateway_url: str | None = None,
 ) -> MetricsExporter:
     """
     Get or create singleton MetricsExporter.

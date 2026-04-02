@@ -10,7 +10,6 @@ TASK-24: SRP Compliance - Legacy wrapper for backward compatibility
 from __future__ import annotations
 
 import logging
-from typing import Optional
 
 logger = logging.getLogger(__name__)
 
@@ -91,7 +90,7 @@ class Configuration:
 
         config[keys[-1]] = value
 
-    def get_atr_multiplier(self, multiplier_name: str) -> Optional[float]:
+    def get_atr_multiplier(self, multiplier_name: str) -> float | None:
         """
         Get ATR multiplier value.
 

@@ -10,7 +10,7 @@ import logging
 from dataclasses import dataclass, field
 from decimal import Decimal
 from enum import Enum
-from typing import Any, Callable, Optional, Union
+from typing import Any, Callable, Union
 
 from pydantic import BaseModel, ConfigDict, field_validator
 
@@ -82,10 +82,10 @@ class ParameterRange:
 
     name: str
     parameter_type: ParameterType = ParameterType.CONTINUOUS
-    values: Optional[ParameterValuesList] = None
-    min_value: Optional[Union[float, Decimal]] = None
-    max_value: Optional[Union[float, Decimal]] = None
-    step: Optional[Union[float, Decimal]] = None
+    values: ParameterValuesList | None = None
+    min_value: float | Decimal | None = None
+    max_value: float | Decimal | None = None
+    step: float | Decimal | None = None
     scale: ParameterScale = ParameterScale.LINEAR
     log_base: float = 10.0
 
@@ -554,10 +554,10 @@ class PydanticParameterRange(BaseModel):
 
     name: str
     parameter_type: ParameterType
-    values: Optional[ParameterValuesList] = None
-    min_value: Optional[float] = None
-    max_value: Optional[float] = None
-    step: Optional[float] = None
+    values: ParameterValuesList | None = None
+    min_value: float | None = None
+    max_value: float | None = None
+    step: float | None = None
     scale: ParameterScale = ParameterScale.LINEAR
     log_base: float = 10.0
 

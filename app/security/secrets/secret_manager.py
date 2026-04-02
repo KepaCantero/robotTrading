@@ -36,7 +36,7 @@ import secrets
 import time
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import ClassVar, Optional
+from typing import ClassVar
 
 import numpy as np
 
@@ -62,8 +62,8 @@ class SecretDefinition:
     category: SecretCategory
     description: str
     required_in_production: bool = True
-    default_value: Optional[str] = None
-    validation_pattern: Optional[str] = None
+    default_value: str | None = None
+    validation_pattern: str | None = None
     min_length: int = 0
     max_length: int = 256
     requires_uppercase: bool = True
@@ -81,7 +81,7 @@ class SecretMetadata:
     created_at: float
     last_rotated: float
     rotation_count: int = 0
-    last_hash: Optional[str] = None
+    last_hash: str | None = None
     last_validated: float = 0
 
 
@@ -364,7 +364,7 @@ class SecretManager:
         """Detect if running in production."""
         return os.getenv("ENVIRONMENT", "development").lower() in ["production", "prod"]
 
-    def get(self, key: str, default: Optional[str] = None, mask: bool = True) -> Optional[str]:
+    def get(self, key: str, default: str | None = None, mask: bool = True) -> str | None:
         """
         Get secret from environment with caching.
 
@@ -644,7 +644,7 @@ class SecretManager:
 
         return "".join(secrets.choice(charset) for _ in range(length))
 
-    def check_rotation_needed(self, secret_name: str, rotation_days: Optional[int] = None) -> bool:
+    def check_rotation_needed(self, secret_name: str, rotation_days: int | None = None) -> bool:
         """
         Check if a secret needs rotation.
 
@@ -673,7 +673,7 @@ class SecretManager:
         days_since_rotation = (time.time() - metadata.last_rotated) / 86400
         return days_since_rotation > rotation_days
 
-    def get_secret_metadata(self, secret_name: str) -> Optional[SecretMetadata]:
+    def get_secret_metadata(self, secret_name: str) -> SecretMetadata | None:
         """
         Get metadata for a secret.
 
@@ -744,7 +744,7 @@ class SecretManager:
 _secret_manager = SecretManager()
 
 
-def get_secret(key: str, default: Optional[str] = None, mask: bool = True) -> Optional[str]:
+def get_secret(key: str, default: str | None = None, mask: bool = True) -> str | None:
     """
     Get secret from environment (convenience function).
 

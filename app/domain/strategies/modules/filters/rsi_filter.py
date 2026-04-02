@@ -21,7 +21,7 @@ This filter now uses centralized configuration from config/indicators.yaml:
 from __future__ import annotations
 
 import logging
-from typing import Callable, ClassVar, Optional
+from typing import Callable, ClassVar
 
 from ..base_filter import BaseFilter
 
@@ -29,7 +29,7 @@ from ..base_filter import BaseFilter
 ConfigLoaderFunc = Callable[..., dict]
 
 # Initialize get_config as None, then try to import
-get_config: Optional[ConfigLoaderFunc] = None
+get_config: ConfigLoaderFunc | None = None
 HAS_CONFIG_LOADER = False
 
 try:
@@ -63,9 +63,9 @@ class RSIFilter(BaseFilter):
 
     def __init__(
         self,
-        config: Optional[dict] = None,
+        config: dict | None = None,
         preset: str = "balanced",
-        tier: Optional[str] = None,
+        tier: str | None = None,
         use_yaml: bool = True,
     ):
         """Inicializar filtro RSI."""
@@ -110,7 +110,7 @@ class RSIFilter(BaseFilter):
                 "unknown": {"buy_threshold": 35, "sell_threshold": 70},  # Lowered from 40/75
             }
 
-    def _get_previous_rsi(self, symbol: str) -> Optional[float]:
+    def _get_previous_rsi(self, symbol: str) -> float | None:
         """
         Get previous RSI value for a symbol.
 
@@ -133,7 +133,7 @@ class RSIFilter(BaseFilter):
         self._rsi_history[symbol] = rsi
 
     @classmethod
-    def clear_rsi_history(cls, symbol: Optional[str] = None) -> None:
+    def clear_rsi_history(cls, symbol: str | None = None) -> None:
         """
         Clear RSI history. Useful for testing or resetting state.
 

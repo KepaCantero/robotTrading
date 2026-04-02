@@ -11,7 +11,7 @@ from __future__ import annotations
 
 import logging
 import os
-from typing import Any, Optional
+from typing import Any
 
 from requests.exceptions import HTTPError, RequestException
 
@@ -23,9 +23,9 @@ class KnowledgeGraphBuilder:
 
     def __init__(
         self,
-        graph_uri: Optional[str] = None,
-        user: Optional[str] = None,
-        password: Optional[str] = None,
+        graph_uri: str | None = None,
+        user: str | None = None,
+        password: str | None = None,
     ):
         """
         Initialize knowledge graph builder.
@@ -504,13 +504,13 @@ class KnowledgeGraphBuilder:
 
 
 # Singleton instance
-_graph_builder: Optional[KnowledgeGraphBuilder] = None
+_graph_builder: KnowledgeGraphBuilder | None = None
 
 
 def get_knowledge_graph_builder(
-    graph_uri: Optional[str] = None,
-    user: Optional[str] = None,
-    password: Optional[str] = None,
+    graph_uri: str | None = None,
+    user: str | None = None,
+    password: str | None = None,
 ) -> KnowledgeGraphBuilder:
     """Get or create singleton knowledge graph builder.
 

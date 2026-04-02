@@ -14,7 +14,7 @@ USE ComplianceEngine FOR EVERYTHING.
 from __future__ import annotations
 
 import logging
-from typing import Callable, Union
+from typing import Callable
 
 logger = logging.getLogger(__name__)
 
@@ -40,14 +40,14 @@ from app.shared.utils.timezone_utils import (
 # THE ONLY COMPLIANCE ENGINE - USE THIS FOR EVERYTHING
 # =============================================================================
 # Initialize fallback values first, then attempt import
-ComplianceEngine: Union[type, None] = None
-PreTradeAnalysis: Union[type, None] = None
-PostTradeAnalysis: Union[type, None] = None
-PortfolioOptimization: Union[type, None] = None
-get_compliance_engine: Union[Callable[..., object], None] = None
-quick_check: Union[Callable[..., object], None] = None
-get_execution_plan: Union[Callable[..., object], None] = None
-SystemAvailability: Union[type, None] = None
+ComplianceEngine: type | None = None
+PreTradeAnalysis: type | None = None
+PostTradeAnalysis: type | None = None
+PortfolioOptimization: type | None = None
+get_compliance_engine: Callable[..., object] | None = None
+quick_check: Callable[..., object] | None = None
+get_execution_plan: Callable[..., object] | None = None
+SystemAvailability: type | None = None
 _compliance_engine_available = False
 
 try:
@@ -71,10 +71,10 @@ except ImportError:
 # =============================================================================
 # LEGACY SUPPORT (DEPRECATED - use ComplianceEngine instead)
 # =============================================================================
-ComplianceIntegrationEngineDeprecated: Union[type, None] = None
-get_compliance_integration_engine_deprecated: Union[Callable[..., object], None] = None
-quick_pre_trade_check: Union[Callable[..., object], None] = None
-get_execution_recommendation: Union[Callable[..., object], None] = None
+ComplianceIntegrationEngineDeprecated: type | None = None
+get_compliance_integration_engine_deprecated: Callable[..., object] | None = None
+quick_pre_trade_check: Callable[..., object] | None = None
+get_execution_recommendation: Callable[..., object] | None = None
 _compliance_integration_available = False
 
 try:

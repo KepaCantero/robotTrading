@@ -22,11 +22,10 @@ from __future__ import annotations
 import logging
 from datetime import datetime, timedelta
 from decimal import Decimal
-from typing import Any, Optional
+from typing import TYPE_CHECKING, Any
 
 import numpy as np
 
-from .base_learning_engine import BaseLearningEngine
 from .drift_detector import (
     AutoRetrainingTrigger,
     ComprehensiveDriftDetector,
@@ -38,10 +37,13 @@ from .feature_importance import ComprehensiveFeatureAnalyzer, load_feature_impor
 from .training_data_preparator import TrainingDataPreparator
 from .transfer_learning import TransferLearningManager
 
+if TYPE_CHECKING:
+    from .base_learning_engine import BaseLearningEngine
+
 logger = logging.getLogger(__name__)
 
 
-def load_transfer_learning_config(config_path: Optional[str] = None) -> dict[str, Any]:
+def load_transfer_learning_config(config_path: str | None = None) -> dict[str, Any]:
     """
     Load Transfer Learning configuration from YAML file.
 
@@ -57,7 +59,8 @@ def load_transfer_learning_config(config_path: Optional[str] = None) -> dict[str
 
         possible_paths = [
             Path("config/learning/transfer_learning.yaml"),
-            Path(__file__).parent.parent.parent.parent.parent / "config/learning/transfer_learning.yaml",
+            Path(__file__).parent.parent.parent.parent.parent
+            / "config/learning/transfer_learning.yaml",
         ]
         for path in possible_paths:
             if path.exists():
@@ -118,7 +121,7 @@ class LearningEngineUpdater:
         rebalance_frequency_days: int = 7,
         min_trades_for_retrain: int = 20,
         lookahead_window_days: int = 10,
-        drift_config: Optional[dict[str, Any]] = None,
+        drift_config: dict[str, Any] | None = None,
     ):
         """
         Inicializar updater.
@@ -135,7 +138,7 @@ class LearningEngineUpdater:
         self.min_trades_for_retrain = min_trades_for_retrain
         self.lookahead_window_days = lookahead_window_days
 
-        self.last_retrain_date: Optional[datetime] = None
+        self.last_retrain_date: datetime | None = None
         self.trade_history: list[dict[str, Any]] = []
         self.market_history: list[dict[str, Any]] = []
 
@@ -153,7 +156,7 @@ class LearningEngineUpdater:
             self._retrain_trigger = AutoRetrainingTrigger(
                 self._drift_config.get("auto_retrain", {})
             )
-            self._reference_features: Optional[np.ndarray] = None
+            self._reference_features: np.ndarray | None = None
             self._drift_history: list[ComprehensiveDriftReport] = []
             logger.info("Drift detection enabled for LearningEngineUpdater")
         else:
@@ -170,7 +173,7 @@ class LearningEngineUpdater:
         if self._feature_importance_enabled:
             self._feature_analyzer = ComprehensiveFeatureAnalyzer(self._feature_importance_config)
             self._feature_importance_history: list[dict[str, Any]] = []
-            self._last_feature_analysis: Optional[dict[str, Any]] = None
+            self._last_feature_analysis: dict[str, Any] | None = None
             logger.info("Feature importance analysis enabled for LearningEngineUpdater")
         else:
             self._feature_analyzer = None
@@ -191,7 +194,7 @@ class LearningEngineUpdater:
                 }
                 self._transfer_manager = TransferLearningManager(config=tl_config)
                 self._transfer_history: list[dict[str, Any]] = []
-                self._last_transfer_operation: Optional[dict[str, Any]] = None
+                self._last_transfer_operation: dict[str, Any] | None = None
                 logger.info("Transfer Learning enabled for LearningEngineUpdater")
             except (FileNotFoundError, ValueError, KeyError, TypeError) as e:
                 logger.warning(f"Failed to initialize Transfer Learning: {e}, disabling TL")
@@ -237,7 +240,7 @@ class LearningEngineUpdater:
 
         return False
 
-    def check_drift(self, current_features: np.ndarray) -> Optional[ComprehensiveDriftReport]:
+    def check_drift(self, current_features: np.ndarray) -> ComprehensiveDriftReport | None:
         """
         Check for drift in current features against reference.
 
@@ -318,7 +321,7 @@ class LearningEngineUpdater:
         epoch: int,
         train_loss: float,
         val_loss: float,
-    ) -> Optional[dict[str, Any]]:
+    ) -> dict[str, Any] | None:
         """
         Record training metrics for overfitting detection.
 
@@ -471,7 +474,7 @@ class LearningEngineUpdater:
 
     def _execute_transfer_learning_step(
         self, training_data: dict[str, Any], current_date: datetime
-    ) -> Optional[dict[str, Any]]:
+    ) -> dict[str, Any] | None:
         """
         Execute transfer learning step before training.
 
@@ -565,7 +568,7 @@ class LearningEngineUpdater:
             )
             return None
 
-    def retrain_if_needed(self, current_date: datetime, quotes: Optional[list] = None) -> bool:
+    def retrain_if_needed(self, current_date: datetime, quotes: list | None = None) -> bool:
         """
         Reentrenar learning engine si es necesario.
 
@@ -667,8 +670,8 @@ class LearningEngineUpdater:
             return False
 
     def _prepare_training_data_from_history(
-        self, quotes: Optional[list] = None
-    ) -> Optional[dict[str, Any]]:
+        self, quotes: list | None = None
+    ) -> dict[str, Any] | None:
         """
         Preparar datos de entrenamiento desde historial de trades y market data.
 
@@ -1037,7 +1040,7 @@ class LearningEngineUpdater:
             logger.debug(f"Failed to register model (non-critical): {type(e).__name__}: {e}")
             # Model registration is non-critical, continue regardless
 
-    def get_last_feature_importance_analysis(self) -> Optional[dict[str, Any]]:
+    def get_last_feature_importance_analysis(self) -> dict[str, Any] | None:
         """
         Obtener último análisis de importancia de features.
 
@@ -1097,7 +1100,7 @@ class LearningEngineUpdater:
             ),
         }
 
-    def get_last_transfer_operation(self) -> Optional[dict[str, Any]]:
+    def get_last_transfer_operation(self) -> dict[str, Any] | None:
         """
         Get details of last transfer learning operation (fine-tune or registration).
 
@@ -1115,7 +1118,7 @@ class LearningEngineUpdater:
         """
         return self._transfer_history.copy()
 
-    def get_available_pretrained_models(self, regime: Optional[str] = None) -> dict[str, Any]:
+    def get_available_pretrained_models(self, regime: str | None = None) -> dict[str, Any]:
         """
         Get available pre-trained models, optionally filtered by market regime.
 

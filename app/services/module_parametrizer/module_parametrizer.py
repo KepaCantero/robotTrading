@@ -16,7 +16,7 @@ import logging
 from datetime import datetime
 from decimal import Decimal
 from pathlib import Path
-from typing import ClassVar, Optional
+from typing import ClassVar
 
 import yaml
 
@@ -51,7 +51,7 @@ class ModuleParametrizer:
         "reinforcement_learning": Decimal("250000"),  # Large+ accounts
     }
 
-    def __init__(self, config_path: Optional[str] = None):
+    def __init__(self, config_path: str | None = None):
         """
         Initialize module parametrizer.
 
@@ -199,7 +199,7 @@ class ModuleParametrizer:
         capital_tier: str,
         risk_profile: str,
         priority: int,
-    ) -> Optional[ModuleParameterConfig]:
+    ) -> ModuleParameterConfig | None:
         """
         Generate parameters for a single module.
 
@@ -348,9 +348,7 @@ class ModuleParametrizer:
             parameter_set.total_modules_enabled > 0
             and len(parameter_set.high_priority_modules) == 0
         ):
-            warnings.append(
-                "⚠️  No high-priority modules enabled - may affect strategy consistency"
-            )
+            warnings.append("⚠️  No high-priority modules enabled - may affect strategy consistency")
 
         # Check estimated cost
         if parameter_set.total_estimated_cost_usd > Decimal("1000"):
@@ -363,7 +361,7 @@ class ModuleParametrizer:
 
     async def get_parametrization_history(
         self,
-        limit: Optional[int] = None,
+        limit: int | None = None,
     ) -> list[ParameterizationResult]:
         """Get parametrization history."""
         results = self.parametrization_history
@@ -385,10 +383,10 @@ class ModuleParametrizer:
 
 
 # Singleton
-_parametrizer: Optional[ModuleParametrizer] = None
+_parametrizer: ModuleParametrizer | None = None
 
 
-def get_module_parametrizer(config_path: Optional[str] = None) -> ModuleParametrizer:
+def get_module_parametrizer(config_path: str | None = None) -> ModuleParametrizer:
     """Get or create singleton ModuleParametrizer."""
     global _parametrizer
     if _parametrizer is None:

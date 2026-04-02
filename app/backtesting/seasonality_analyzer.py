@@ -15,7 +15,6 @@ from __future__ import annotations
 import logging
 from datetime import datetime
 from decimal import Decimal
-from typing import Optional
 
 import numpy as np
 import pandas as pd
@@ -48,9 +47,7 @@ class SeasonalityAnalyzer:
         self.min_data_points = min_data_points
         self.analysis_performed = False
 
-    def analyze_monthly_returns(
-        self, equity_curve: list[tuple[datetime, Decimal]]
-    ) -> Optional[dict]:
+    def analyze_monthly_returns(self, equity_curve: list[tuple[datetime, Decimal]]) -> dict | None:
         """
         Analyze monthly return patterns.
 
@@ -120,7 +117,7 @@ class SeasonalityAnalyzer:
 
     def analyze_quarterly_returns(
         self, equity_curve: list[tuple[datetime, Decimal]]
-    ) -> Optional[dict]:
+    ) -> dict | None:
         """
         Analyze quarterly return patterns.
 
@@ -192,7 +189,7 @@ class SeasonalityAnalyzer:
 
     def get_best_worst_months(
         self, equity_curve: list[tuple[datetime, Decimal]]
-    ) -> Optional[dict[str, list]]:
+    ) -> dict[str, list] | None:
         """
         Get ranking of best and worst months for the strategy.
 
@@ -228,7 +225,7 @@ class SeasonalityAnalyzer:
 
     def get_seasonality_strength(
         self, equity_curve: list[tuple[datetime, Decimal]]
-    ) -> Optional[Decimal]:
+    ) -> Decimal | None:
         """
         Calculate seasonality strength index (0-1).
 
@@ -281,7 +278,7 @@ class SeasonalityAnalyzer:
 
     def decompose_returns(
         self, equity_curve: list[tuple[datetime, Decimal]], method: str = "additive"
-    ) -> Optional[dict]:
+    ) -> dict | None:
         """
         Decompose returns into trend, seasonal, and residual components.
 

@@ -17,7 +17,7 @@ import asyncio
 import logging
 from datetime import datetime, timedelta, timezone
 from decimal import Decimal
-from typing import Any, ClassVar, Optional
+from typing import Any, ClassVar
 
 from fastapi import WebSocket, WebSocketDisconnect
 from pydantic import BaseModel, Field
@@ -98,7 +98,7 @@ class AlertHistoryItem(BaseModel):
     severity: str = Field(..., description="Alert severity level")
     message: str = Field(..., description="Alert message")
     triggered_at: str = Field(..., description="Alert trigger timestamp")
-    resolved_at: Optional[str] = Field(default=None, description="Alert resolution timestamp")
+    resolved_at: str | None = Field(default=None, description="Alert resolution timestamp")
     status: str = Field(..., description="Alert status")
 
 
@@ -159,8 +159,8 @@ class ProductionDashboard:
         self._websocket_connections: list[WebSocket] = []
 
         # Metrics cache
-        self._metrics_cache: Optional[DashboardMetrics] = None
-        self._last_update: Optional[datetime] = None
+        self._metrics_cache: DashboardMetrics | None = None
+        self._last_update: datetime | None = None
 
         # Historical data cache
         self._historical_cache: dict[str, list[HistoricalDataPoint]] = {
@@ -634,7 +634,7 @@ class ProductionDashboard:
 
 
 # Singleton instance for production use
-_production_dashboard_instance: Optional[ProductionDashboard] = None
+_production_dashboard_instance: ProductionDashboard | None = None
 
 
 def get_production_dashboard(

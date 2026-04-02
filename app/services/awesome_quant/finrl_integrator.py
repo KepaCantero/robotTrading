@@ -11,7 +11,6 @@ import logging
 from dataclasses import dataclass, field
 from datetime import datetime
 from decimal import Decimal
-from typing import Optional
 
 logger = logging.getLogger(__name__)
 
@@ -70,8 +69,8 @@ class FinRLIntegrator:
 
     def __init__(
         self,
-        env_config: Optional[RLEnvironmentConfig] = None,
-        training_config: Optional[RLTrainingConfig] = None,
+        env_config: RLEnvironmentConfig | None = None,
+        training_config: RLTrainingConfig | None = None,
     ):
         """
         Initialize FinRL integrator.
@@ -131,7 +130,7 @@ class FinRLIntegrator:
     async def train_model(
         self,
         training_data: dict,
-        validation_data: Optional[dict] = None,
+        validation_data: dict | None = None,
     ) -> dict:
         """
         Train RL model on historical data.
@@ -220,7 +219,7 @@ class FinRLIntegrator:
     async def generate_trading_signals(
         self,
         market_data: dict,
-        model_name: Optional[str] = None,
+        model_name: str | None = None,
     ) -> dict:
         """
         Generate trading signals from trained model.
@@ -293,7 +292,7 @@ class FinRLIntegrator:
         """Get training history."""
         return self.training_history
 
-    def get_model_info(self) -> Optional[dict]:
+    def get_model_info(self) -> dict | None:
         """Get trained model information."""
         if self.trained_model is None:
             return None
@@ -320,12 +319,12 @@ class FinRLIntegrator:
 
 
 # Singleton
-_integrator: Optional[FinRLIntegrator] = None
+_integrator: FinRLIntegrator | None = None
 
 
 def get_finrl_integrator(
-    env_config: Optional[RLEnvironmentConfig] = None,
-    training_config: Optional[RLTrainingConfig] = None,
+    env_config: RLEnvironmentConfig | None = None,
+    training_config: RLTrainingConfig | None = None,
 ) -> FinRLIntegrator:
     """Get or create singleton FinRLIntegrator."""
     global _integrator

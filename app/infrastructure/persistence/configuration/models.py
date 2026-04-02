@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import logging
 from datetime import datetime
-from typing import Any, Optional
+from typing import Any
 
 from pydantic import BaseModel, Field
 
@@ -41,23 +41,23 @@ class ConfigurationSaveRequest(BaseModel):
 
     strategy_name: str
     parameters: dict[str, Any]
-    version: Optional[str] = None
-    metadata: Optional[dict[str, Any]] = None
+    version: str | None = None
+    metadata: dict[str, Any] | None = None
 
 
 class ConfigurationLoadRequest(BaseModel):
     """Request to load a configuration."""
 
     strategy_name: str
-    version: Optional[str] = None
+    version: str | None = None
 
 
 class ConfigurationLoadResponse(BaseModel):
     """Response from loading a configuration."""
 
     success: bool
-    configuration: Optional[StrategyConfiguration] = None
-    message: Optional[str] = None
+    configuration: StrategyConfiguration | None = None
+    message: str | None = None
 
 
 class ConfigurationListResponse(BaseModel):

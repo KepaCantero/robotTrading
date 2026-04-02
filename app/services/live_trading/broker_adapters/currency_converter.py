@@ -11,7 +11,7 @@ import asyncio
 import logging
 from datetime import datetime, timedelta
 from decimal import Decimal
-from typing import ClassVar, Optional
+from typing import ClassVar
 
 from ib_insync import IB, util
 
@@ -36,7 +36,7 @@ class CurrencyConverter:
         ("USD", "EUR"): Decimal("0.93"),
     }
 
-    def __init__(self, ib_connection: Optional[IB] = None):
+    def __init__(self, ib_connection: IB | None = None):
         """
         Initialize currency converter.
 
@@ -45,7 +45,7 @@ class CurrencyConverter:
         """
         self.ib = ib_connection
         self._rates_cache: dict[tuple, tuple] = {}  # (base, quote) -> (rate, timestamp)
-        self._last_update: Optional[datetime] = None
+        self._last_update: datetime | None = None
 
     def _is_rate_valid(self, timestamp: datetime) -> bool:
         """Check if cached rate is still valid."""
@@ -92,7 +92,7 @@ class CurrencyConverter:
 
         raise ValueError(f"Cannot get exchange rate for {base}/{quote}")
 
-    async def _fetch_live_rate(self, base: str, quote: str) -> Optional[Decimal]:
+    async def _fetch_live_rate(self, base: str, quote: str) -> Decimal | None:
         """
         Fetch live exchange rate from IB.
 
@@ -190,7 +190,7 @@ class CurrencyConverter:
 
         self._last_update = datetime.now()
 
-    def get_last_update_time(self) -> Optional[datetime]:
+    def get_last_update_time(self) -> datetime | None:
         """Get timestamp of last successful rate update."""
         return self._last_update
 
@@ -210,10 +210,10 @@ class CurrencyConverter:
 
 
 # Singleton instance
-_converter_instance: Optional[CurrencyConverter] = None
+_converter_instance: CurrencyConverter | None = None
 
 
-def get_currency_converter(ib_connection: Optional[IB] = None) -> CurrencyConverter:
+def get_currency_converter(ib_connection: IB | None = None) -> CurrencyConverter:
     """
     Get the singleton currency converter instance.
 

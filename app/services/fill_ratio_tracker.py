@@ -10,7 +10,7 @@ import logging
 from collections import defaultdict
 from datetime import datetime
 from decimal import Decimal
-from typing import Any, Optional
+from typing import Any
 
 from app.domain.models.order import Order, OrderStatus
 
@@ -27,11 +27,11 @@ class FillMetrics:
         self.filled_quantity: Decimal = Decimal("0")
         self.fill_ratio: float = 0.0
         self.requested_price: Decimal = Decimal("0")
-        self.filled_price: Optional[Decimal] = None
-        self.slippage: Optional[Decimal] = None
+        self.filled_price: Decimal | None = None
+        self.slippage: Decimal | None = None
         self.status: OrderStatus = OrderStatus.PENDING
         self.timestamp: datetime = datetime.utcnow()
-        self.fill_time_ms: Optional[float] = None
+        self.fill_time_ms: float | None = None
 
 
 class FillRatioTracker:
@@ -142,9 +142,7 @@ class FillRatioTracker:
         if metrics:
             metrics.status = status
 
-    def get_fill_ratio_stats(
-        self, symbol: Optional[str] = None, last_n: int = 100
-    ) -> dict[str, Any]:
+    def get_fill_ratio_stats(self, symbol: str | None = None, last_n: int = 100) -> dict[str, Any]:
         """
         Get fill ratio statistics.
 
@@ -199,7 +197,7 @@ class FillRatioTracker:
             "avg_slippage": round(avg_slippage, 6),
         }
 
-    def find_metrics(self, order_id: str) -> Optional[FillMetrics]:
+    def find_metrics(self, order_id: str) -> FillMetrics | None:
         """Find metrics for an order."""
         for metrics in reversed(self.fill_metrics):
             if metrics.order_id == order_id:
@@ -208,7 +206,7 @@ class FillRatioTracker:
 
 
 # Global tracker instance
-_fill_tracker: Optional[FillRatioTracker] = None
+_fill_tracker: FillRatioTracker | None = None
 
 
 def get_fill_ratio_tracker() -> FillRatioTracker:

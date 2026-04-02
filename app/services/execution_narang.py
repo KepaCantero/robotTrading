@@ -28,8 +28,8 @@ from decimal import Decimal
 from enum import Enum
 from typing import Any
 
-from app.services.transaction_costs import ExecutionAlgorithm  # Enum
 from app.services.transaction_costs import (
+    ExecutionAlgorithm,
     MarketData,
     OrderSpecification,
     TransactionCostModel,

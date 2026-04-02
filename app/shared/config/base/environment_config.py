@@ -9,7 +9,7 @@ import logging
 import os
 from enum import Enum
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings
@@ -48,7 +48,7 @@ class DatabaseConfig(BaseSettings):
     db_name: str = Field(default="algotrading", env="DB_NAME")
     db_user: str = Field(default="postgres", env="DB_USER")
     db_password: str = Field(default="", env="DB_PASSWORD")
-    db_url: Optional[str] = Field(default=None)
+    db_url: str | None = Field(default=None)
 
     # Connection pool
     db_pool_size: int = Field(default=10, env="DB_POOL_SIZE")
@@ -57,9 +57,9 @@ class DatabaseConfig(BaseSettings):
 
     # SSL
     db_ssl_mode: str = Field(default="prefer", env="DB_SSL_MODE")
-    db_ssl_cert: Optional[str] = Field(default=None)
-    db_ssl_key: Optional[str] = Field(default=None)
-    db_ssl_root_cert: Optional[str] = Field(default=None)
+    db_ssl_cert: str | None = Field(default=None)
+    db_ssl_key: str | None = Field(default=None)
+    db_ssl_root_cert: str | None = Field(default=None)
 
     @field_validator("db_port")
     @classmethod
@@ -116,9 +116,9 @@ class RedisConfig(BaseSettings):
 
     redis_host: str = Field(default="localhost", env="REDIS_HOST")
     redis_port: int = Field(default=6379, env="REDIS_PORT")
-    redis_password: Optional[str] = Field(default=None)
+    redis_password: str | None = Field(default=None)
     redis_db: int = Field(default=0, env="REDIS_DB")
-    redis_url: Optional[str] = Field(default=None)
+    redis_url: str | None = Field(default=None)
 
     # Connection settings
     redis_max_connections: int = Field(default=10, env="REDIS_MAX_CONNECTIONS")
@@ -239,13 +239,13 @@ class TradingConfig(BaseSettings):
 
     # Market data
     market_data_provider: str = Field(default="yahoo", env="MARKET_DATA_PROVIDER")
-    market_data_api_key: Optional[str] = Field(default=None)
+    market_data_api_key: str | None = Field(default=None)
     market_data_rate_limit: int = Field(default=1000, env="MARKET_DATA_RATE_LIMIT")
 
     # Broker settings
     broker_name: str = Field(default="paper", env="BROKER_NAME")
-    broker_api_key: Optional[str] = Field(default=None)
-    broker_secret_key: Optional[str] = Field(default=None)
+    broker_api_key: str | None = Field(default=None)
+    broker_secret_key: str | None = Field(default=None)
     broker_sandbox: bool = Field(default=True, env="BROKER_SANDBOX")
 
     @field_validator("max_position_size")
@@ -332,8 +332,8 @@ class MonitoringConfig(BaseSettings):
 
     # Alerts
     alerts_enabled: bool = Field(default=False, env="ALERTS_ENABLED")
-    alerts_webhook_url: Optional[str] = Field(default=None)
-    alerts_email: Optional[str] = Field(default=None)
+    alerts_webhook_url: str | None = Field(default=None)
+    alerts_email: str | None = Field(default=None)
 
     @field_validator("prometheus_port")
     @classmethod
@@ -477,7 +477,7 @@ class CentralizedConfig(BaseSettings):
 
 
 # Global configuration instance
-_config: Optional[CentralizedConfig] = None
+_config: CentralizedConfig | None = None
 
 
 def get_config() -> CentralizedConfig:

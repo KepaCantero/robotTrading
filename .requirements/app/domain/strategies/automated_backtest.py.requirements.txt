@@ -25,15 +25,9 @@ Generated: 2026-03-09
 
 ## 3. Core Components
 ### Classes
-- `PortfolioAnalyzer`
-- `AutomatedBacktestRunner`
+
 ### Public Functions
-- `run_automated_backtest()`
-- `select_best_stock()`
-- `run_baseline_backtest()`
-- `run_ablation_study()`
-- `run_learning_engines_backtest()`
-- `generate_summary_report()`
+
 
 ## 4. SOLID Principles (from rules/python/03-solid-principles.md)
 

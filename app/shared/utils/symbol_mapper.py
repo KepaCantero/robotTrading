@@ -33,12 +33,13 @@ from abc import abstractmethod
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import ClassVar, Optional
+from typing import TYPE_CHECKING, ClassVar
 from uuid import UUID, uuid4
 
-from sqlalchemy.ext.asyncio import AsyncSession
-
 from app.shared.interfaces.broker_base import BrokerType
+
+if TYPE_CHECKING:
+    from sqlalchemy.ext.asyncio import AsyncSession
 
 # Configure logging
 logger = logging.getLogger(__name__)
@@ -275,7 +276,7 @@ class BrokerMappingTables:
     }
 
     @classmethod
-    def get_default_mapping(cls, broker_name: str, internal_symbol: str) -> Optional[str]:
+    def get_default_mapping(cls, broker_name: str, internal_symbol: str) -> str | None:
         """
         Get default broker symbol for a given internal symbol.
 
@@ -564,7 +565,7 @@ class SymbolMapper:
         Database operations use transactions to ensure consistency.
     """
 
-    def __init__(self, db_session: Optional[AsyncSession] = None):
+    def __init__(self, db_session: AsyncSession | None = None):
         """
         Initialize the Symbol Mapper.
 
@@ -734,7 +735,7 @@ class SymbolMapper:
         broker_type: BrokerType,
         asset_class: str = "crypto",
         is_verified: bool = False,
-        metadata: Optional[dict] = None,
+        metadata: dict | None = None,
     ) -> SymbolMapping:
         """
         Add a new symbol mapping to the database.
@@ -866,7 +867,7 @@ class SymbolMapper:
 
     def validate_mapping(
         self, internal_symbol: str, broker_symbol: str, broker_name: str
-    ) -> tuple[bool, Optional[str]]:
+    ) -> tuple[bool, str | None]:
         """
         Validate that a mapping is correct.
 
@@ -1051,7 +1052,7 @@ class SymbolMapperMixin:
 
     def validate_symbol_mapping(
         self, internal_symbol: str, broker_symbol: str
-    ) -> tuple[bool, Optional[str]]:
+    ) -> tuple[bool, str | None]:
         """Validate a symbol mapping."""
         return self.symbol_mapper.validate_mapping(
             internal_symbol, broker_symbol, self.get_broker_name()
@@ -1063,7 +1064,7 @@ class SymbolMapperMixin:
 # ============================================================================
 
 
-def create_symbol_mapper(db_session: Optional[AsyncSession] = None) -> SymbolMapper:
+def create_symbol_mapper(db_session: AsyncSession | None = None) -> SymbolMapper:
     """
     Factory function to create a SymbolMapper instance.
 
@@ -1081,7 +1082,7 @@ async def get_or_create_mapping(
     broker_symbol: str,
     broker_name: str,
     broker_type: BrokerType,
-    db_session: Optional[AsyncSession] = None,
+    db_session: AsyncSession | None = None,
 ) -> SymbolMapping:
     """
     Get existing mapping or create new one.

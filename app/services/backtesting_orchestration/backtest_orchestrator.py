@@ -22,15 +22,18 @@ Feasibility Ratio Formula:
 from __future__ import annotations
 
 import logging
-from datetime import datetime
 from decimal import Decimal
-from typing import Optional
+from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, Field
 
 from app.backtesting.models import BacktestConfig, BacktestResult
-from app.domain.models.investment_profile import InvestmentProfile
-from app.services.parametrization.module_parametrizer import ModuleParameterSet
+
+if TYPE_CHECKING:
+    from datetime import datetime
+
+    from app.domain.models.investment_profile import InvestmentProfile
+    from app.services.parametrization.module_parametrizer import ModuleParameterSet
 
 logger = logging.getLogger(__name__)
 
@@ -51,7 +54,7 @@ class FeasibilityMetrics(BaseModel):
         ...,
         description="APPROVED (≥1.0) | CONDITIONAL (0.7-1.0) | REJECTED (<0.7)",
     )
-    risk_adjusted_return: Optional[Decimal] = Field(
+    risk_adjusted_return: Decimal | None = Field(
         None, description="Return adjusted for risk (sharpe-weighted)"
     )
     confidence_level: str = Field(
@@ -62,13 +65,13 @@ class FeasibilityMetrics(BaseModel):
 class ExtendedBacktestResult(BacktestResult):
     """BacktestResult extended with feasibility metrics from T4.1."""
 
-    feasibility_metrics: Optional[FeasibilityMetrics] = Field(
+    feasibility_metrics: FeasibilityMetrics | None = Field(
         None, description="Feasibility analysis metrics"
     )
-    parameter_set: Optional[ModuleParameterSet] = Field(
+    parameter_set: ModuleParameterSet | None = Field(
         None, description="Module parameters used in backtest"
     )
-    investment_profile: Optional[InvestmentProfile] = Field(
+    investment_profile: InvestmentProfile | None = Field(
         None, description="Investment profile used"
     )
 
@@ -90,7 +93,7 @@ class BacktestOrchestrator:
     rather than building from scratch (DRY principle).
     """
 
-    def __init__(self, config_path: Optional[str] = None):
+    def __init__(self, config_path: str | None = None):
         """
         Initialize BacktestOrchestrator.
 
@@ -108,7 +111,7 @@ class BacktestOrchestrator:
         module_parameters: ModuleParameterSet,
         data_start_date: datetime,
         data_end_date: datetime,
-        target_euros_per_month: Optional[Decimal] = None,
+        target_euros_per_month: Decimal | None = None,
     ) -> ExtendedBacktestResult:
         """
         Execute backtest with parametrized modules.

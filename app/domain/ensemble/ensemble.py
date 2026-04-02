@@ -10,12 +10,14 @@ from __future__ import annotations
 # mypy: ignore-errors
 import logging
 from collections import Counter
-from typing import Any, Optional
+from typing import TYPE_CHECKING, Any
 
 import numpy as np
 
 from app.domain.ensemble.models import EnsembleConfig, EnsembleMethod, EnsembleSignal
-from app.domain.models.signal import Signal, SignalType
+
+if TYPE_CHECKING:
+    from app.domain.models.signal import Signal, SignalType
 
 logger = logging.getLogger(__name__)
 
@@ -66,7 +68,7 @@ class EnsembleVoting:
             logger.error("Invalid ensemble configuration", exc_info=True)
             raise ValueError(f"Invalid ensemble configuration: {e}") from e
 
-    def combine_signals(self, signals: list[Signal]) -> Optional[EnsembleSignal]:
+    def combine_signals(self, signals: list[Signal]) -> EnsembleSignal | None:
         """Combine multiple signals into a single ensemble decision.
 
         Args:

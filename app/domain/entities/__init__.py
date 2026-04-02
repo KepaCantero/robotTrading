@@ -1,2 +1,2 @@
-from .order import Order
-from .portfolio import Portfolio
+from .order import Order as Order
+from .portfolio import Portfolio as Portfolio

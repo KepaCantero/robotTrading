@@ -10,7 +10,7 @@ Provides comprehensive financial metrics using AWESOME-QUANT libraries:
 from __future__ import annotations
 
 import logging
-from typing import Optional, TypedDict
+from typing import TypedDict
 
 import numpy as np
 import pandas as pd
@@ -79,9 +79,9 @@ class QuantstatsMetrics(TypedDict):
     profit_factor: float
     payoff_ratio: float
     recovery_factor: float
-    beta: Optional[float]
-    alpha: Optional[float]
-    correlation: Optional[float]
+    beta: float | None
+    alpha: float | None
+    correlation: float | None
 
 
 class EmpyricalMetrics(TypedDict, total=False):
@@ -103,9 +103,9 @@ class EmpyricalMetrics(TypedDict, total=False):
     cvar_95: float
     skewness: float
     kurtosis: float
-    alpha: Optional[float]
-    beta: Optional[float]
-    information_ratio: Optional[float]
+    alpha: float | None
+    beta: float | None
+    information_ratio: float | None
 
 
 class PyfolioMetrics(TypedDict, total=False):
@@ -156,15 +156,15 @@ class FallbackMetrics(TypedDict, total=False):
     cvar_95: float
     skewness: float
     kurtosis: float
-    best_day: Optional[float]
-    worst_day: Optional[float]
-    avg_win: Optional[float]
-    avg_loss: Optional[float]
-    profit_factor: Optional[float]
-    return_pct: Optional[float]
-    beta: Optional[float]
-    alpha: Optional[float]
-    information_ratio: Optional[float]
+    best_day: float | None
+    worst_day: float | None
+    avg_win: float | None
+    avg_loss: float | None
+    profit_factor: float | None
+    return_pct: float | None
+    beta: float | None
+    alpha: float | None
+    information_ratio: float | None
 
 
 # ============================================================================
@@ -175,7 +175,7 @@ class FallbackMetrics(TypedDict, total=False):
 class AwesomeQuantIntegrator:
     """Integrate AWESOME-QUANT libraries for advanced metrics and analysis."""
 
-    def __init__(self, risk_free_rate: Optional[float] = None):
+    def __init__(self, risk_free_rate: float | None = None):
         """
         Initialize AWESOME-QUANT integrator.
 
@@ -212,7 +212,7 @@ class AwesomeQuantIntegrator:
     # =========================================================================
 
     def calculate_quantstats_metrics(
-        self, returns: pd.Series, benchmark_returns: Optional[pd.Series] = None
+        self, returns: pd.Series, benchmark_returns: pd.Series | None = None
     ) -> dict[str, float]:
         """
         Calculate comprehensive metrics using quantstats.
@@ -294,7 +294,7 @@ class AwesomeQuantIntegrator:
     # =========================================================================
 
     def calculate_empyrical_metrics(
-        self, returns: pd.Series, benchmark_returns: Optional[pd.Series] = None
+        self, returns: pd.Series, benchmark_returns: pd.Series | None = None
     ) -> dict[str, float]:
         """
         Calculate metrics using empyrical library.
@@ -375,8 +375,8 @@ class AwesomeQuantIntegrator:
     def calculate_pyfolio_metrics(
         self,
         returns: pd.Series,
-        positions: Optional[pd.DataFrame] = None,
-        transactions: Optional[pd.DataFrame] = None,
+        positions: pd.DataFrame | None = None,
+        transactions: pd.DataFrame | None = None,
     ) -> PyfolioMetrics:
         """
         Calculate portfolio metrics using pyfolio.
@@ -446,9 +446,9 @@ class AwesomeQuantIntegrator:
     def calculate_all_awesome_quant_metrics(
         self,
         returns: pd.Series,
-        benchmark_returns: Optional[pd.Series] = None,
-        positions: Optional[pd.DataFrame] = None,
-        transactions: Optional[pd.DataFrame] = None,
+        benchmark_returns: pd.Series | None = None,
+        positions: pd.DataFrame | None = None,
+        transactions: pd.DataFrame | None = None,
     ) -> AwesomeQuantMetricsDict:
         """
         Calculate all available AWESOME-QUANT metrics.
@@ -477,7 +477,7 @@ class AwesomeQuantIntegrator:
     def get_unified_metrics(
         self,
         returns: pd.Series,
-        benchmark_returns: Optional[pd.Series] = None,
+        benchmark_returns: pd.Series | None = None,
     ) -> dict[str, float]:
         """
         Get unified view of key metrics across all libraries.
@@ -537,7 +537,7 @@ class AwesomeQuantIntegrator:
         return available
 
     def _calculate_fallback_metrics(
-        self, returns: pd.Series, benchmark_returns: Optional[pd.Series] = None
+        self, returns: pd.Series, benchmark_returns: pd.Series | None = None
     ) -> FallbackMetrics:
         """
         Calculate financial metrics using fallback numpy/scipy implementations.

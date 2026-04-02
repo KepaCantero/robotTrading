@@ -25,7 +25,7 @@ Reference: Hull, Options, Futures, and Other Derivatives, Chapter 18
 from __future__ import annotations
 
 import logging
-from typing import Any, Optional
+from typing import Any
 
 import numpy as np
 
@@ -39,7 +39,7 @@ class EWMAVaRCalculator:
     Calculates VaR using Exponentially Weighted Moving Average volatility estimation.
     """
 
-    def __init__(self, config: Optional[dict[str, Any]] = None):
+    def __init__(self, config: dict[str, Any] | None = None):
         """
         Initialize EWMA VaR calculator.
 
@@ -55,7 +55,7 @@ class EWMAVaRCalculator:
     def calculate_ewma_var(
         self,
         returns: list[float],
-        portfolio_value: Optional[float] = None,
+        portfolio_value: float | None = None,
     ) -> dict[str, Any]:
         """
         Calculate VaR using EWMA volatility estimation.

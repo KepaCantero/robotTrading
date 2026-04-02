@@ -246,7 +246,8 @@ class GameDay:
             db_path.parent.mkdir(parents=True, exist_ok=True)
 
             async with aiosqlite.connect(self.config.db_path) as db:
-                await db.execute("""
+                await db.execute(
+                    """
                     CREATE TABLE IF NOT EXISTS game_days (
                         id INTEGER PRIMARY KEY AUTOINCREMENT,
                         name TEXT NOT NULL,
@@ -262,9 +263,11 @@ class GameDay:
                         action_items TEXT,
                         created_at TEXT NOT NULL DEFAULT (datetime('utc'))
                     )
-                """)
+                """
+                )
 
-                await db.execute("""
+                await db.execute(
+                    """
                     CREATE TABLE IF NOT EXISTS game_day_scenarios (
                         id INTEGER PRIMARY KEY AUTOINCREMENT,
                         game_day_name TEXT NOT NULL,
@@ -283,13 +286,16 @@ class GameDay:
                         lessons_learned TEXT,
                         created_at TEXT NOT NULL DEFAULT (datetime('utc'))
                     )
-                """)
+                """
+                )
 
                 # Indexes
-                await db.execute("""
+                await db.execute(
+                    """
                     CREATE INDEX IF NOT EXISTS idx_game_days_name
                     ON game_days(name)
-                """)
+                """
+                )
 
                 await db.commit()
 

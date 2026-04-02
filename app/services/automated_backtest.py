@@ -8,14 +8,16 @@ import logging
 from datetime import datetime, timedelta
 from decimal import Decimal
 from pathlib import Path
-from typing import Any, Optional
+from typing import TYPE_CHECKING, Any
 
 import numpy as np
 import pandas as pd
 
 from app.backtesting.data_loader import DataLoader
 from app.backtesting.engine import SimpleBacktester
-from app.domain.models.market_data import Quote
+
+if TYPE_CHECKING:
+    from app.domain.models.market_data import Quote
 
 # Los módulos y learning engines se importan internamente por ModularMomentumStrategy
 # No necesitamos importarlos aquí directamente
@@ -201,8 +203,8 @@ class AutomatedBacktestRunner:
         symbol: str,
         start_date: datetime,
         end_date: datetime,
-        initial_capital: Optional[Decimal] = None,
-        config_path: Optional[str] = None,
+        initial_capital: Decimal | None = None,
+        config_path: str | None = None,
     ):
         """Inicializar runner de backtest."""
         if initial_capital is None:
@@ -437,8 +439,8 @@ class AutomatedBacktestRunner:
         self,
         disable_modules: list[str],
         enable_learning: bool = False,
-        learning_engine_type: Optional[str] = None,
-        learning_algorithm: Optional[str] = None,
+        learning_engine_type: str | None = None,
+        learning_algorithm: str | None = None,
     ):
         """Crear estrategia con módulos específicos activados/desactivados."""
         from app.domain.strategies.momentum_modular.strategy import ModularMomentumStrategy
@@ -574,11 +576,11 @@ class AutomatedBacktestRunner:
 
 
 def run_automated_backtest(
-    symbol: Optional[str] = None,
+    symbol: str | None = None,
     criteria: str = "momentum_signal",
-    start_date: Optional[datetime] = None,
-    end_date: Optional[datetime] = None,
-    initial_capital: Optional[Decimal] = None,
+    start_date: datetime | None = None,
+    end_date: datetime | None = None,
+    initial_capital: Decimal | None = None,
 ):
     """
     Ejecutar backtest automatizado completo.

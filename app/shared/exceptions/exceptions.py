@@ -6,7 +6,7 @@ Independent exception definitions to avoid circular imports
 from __future__ import annotations
 
 import logging
-from typing import Any, NoReturn, Optional
+from typing import Any, NoReturn
 
 logger = logging.getLogger(__name__)
 
@@ -17,8 +17,8 @@ class AlgoTradingError(Exception):
     def __init__(
         self,
         message: str,
-        error_code: Optional[str] = None,
-        details: Optional[dict[str, Any]] = None,
+        error_code: str | None = None,
+        details: dict[str, Any] | None = None,
     ):
         super().__init__(message)
         self.message = message
@@ -77,8 +77,8 @@ class AuthenticationError(AlgoTradingError):
 def _raise_error(
     exc_class: type[AlgoTradingError],
     message: str,
-    error_code: Optional[str] = None,
-    details: Optional[dict[str, Any]] = None,
+    error_code: str | None = None,
+    details: dict[str, Any] | None = None,
 ) -> NoReturn:
     """Raise a typed error after validating the message."""
     logger.debug(
@@ -97,8 +97,8 @@ def _raise_error(
 
 def raise_configuration_error(
     message: str,
-    error_code: Optional[str] = None,
-    details: Optional[dict[str, Any]] = None,
+    error_code: str | None = None,
+    details: dict[str, Any] | None = None,
 ) -> NoReturn:
     """Helper function to raise configuration errors."""
     _raise_error(ConfigurationError, message, error_code, details)
@@ -106,8 +106,8 @@ def raise_configuration_error(
 
 def raise_validation_error(
     message: str,
-    error_code: Optional[str] = None,
-    details: Optional[dict[str, Any]] = None,
+    error_code: str | None = None,
+    details: dict[str, Any] | None = None,
 ) -> NoReturn:
     """Helper function to raise validation errors."""
     _raise_error(ValidationError, message, error_code, details)
@@ -115,8 +115,8 @@ def raise_validation_error(
 
 def raise_business_logic_error(
     message: str,
-    error_code: Optional[str] = None,
-    details: Optional[dict[str, Any]] = None,
+    error_code: str | None = None,
+    details: dict[str, Any] | None = None,
 ) -> NoReturn:
     """Helper function to raise business logic errors."""
     _raise_error(BusinessLogicError, message, error_code, details)
@@ -124,8 +124,8 @@ def raise_business_logic_error(
 
 def raise_market_data_error(
     message: str,
-    error_code: Optional[str] = None,
-    details: Optional[dict[str, Any]] = None,
+    error_code: str | None = None,
+    details: dict[str, Any] | None = None,
 ) -> NoReturn:
     """Helper function to raise market data errors."""
     _raise_error(MarketDataError, message, error_code, details)
@@ -133,8 +133,8 @@ def raise_market_data_error(
 
 def raise_trading_error(
     message: str,
-    error_code: Optional[str] = None,
-    details: Optional[dict[str, Any]] = None,
+    error_code: str | None = None,
+    details: dict[str, Any] | None = None,
 ) -> NoReturn:
     """Helper function to raise trading errors."""
     _raise_error(TradingError, message, error_code, details)
@@ -142,8 +142,8 @@ def raise_trading_error(
 
 def raise_database_error(
     message: str,
-    error_code: Optional[str] = None,
-    details: Optional[dict[str, Any]] = None,
+    error_code: str | None = None,
+    details: dict[str, Any] | None = None,
 ) -> NoReturn:
     """Helper function to raise database errors."""
     _raise_error(AlgoTradingDatabaseError, message, error_code, details)
@@ -151,8 +151,8 @@ def raise_database_error(
 
 def raise_authentication_error(
     message: str,
-    error_code: Optional[str] = None,
-    details: Optional[dict[str, Any]] = None,
+    error_code: str | None = None,
+    details: dict[str, Any] | None = None,
 ) -> NoReturn:
     """Helper function to raise authentication errors."""
     _raise_error(AuthenticationError, message, error_code, details)

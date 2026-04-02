@@ -12,7 +12,7 @@ import logging
 from abc import ABC, abstractmethod
 from datetime import datetime
 from decimal import Decimal
-from typing import Any, Optional
+from typing import Any
 
 import aiohttp
 from aiohttp import ClientError
@@ -35,7 +35,7 @@ class DataFeedInterface(ABC):
 
     def __init__(self, config: DataFeedConfig):
         self.config = config
-        self.session: Optional[aiohttp.ClientSession] = None
+        self.session: aiohttp.ClientSession | None = None
         self._rate_limiter = asyncio.Semaphore(config.rate_limit)
 
     async def __aenter__(self):
@@ -56,7 +56,7 @@ class DataFeedInterface(ABC):
         """Disconnect from the data feed."""
 
     @abstractmethod
-    async def get_quote(self, symbol: str) -> Optional[Quote]:
+    async def get_quote(self, symbol: str) -> Quote | None:
         """Get real-time quote for a symbol."""
 
     @abstractmethod
@@ -73,9 +73,7 @@ class DataFeedInterface(ABC):
     async def subscribe_to_symbols(self, symbols: list[str]) -> bool:
         """Subscribe to real-time updates for symbols."""
 
-    async def _make_request(
-        self, url: str, params: Optional[dict[str, Any]] = None
-    ) -> dict[str, Any]:
+    async def _make_request(self, url: str, params: dict[str, Any] | None = None) -> dict[str, Any]:
         """Make HTTP request with rate limiting and error handling."""
         logger.debug(
             "Making HTTP request",
@@ -180,7 +178,7 @@ class AlphaVantageFeed(DataFeedInterface):
             logger.info("Disconnected from Alpha Vantage API", extra={"connected": False})
         return True
 
-    async def get_quote(self, symbol: str) -> Optional[Quote]:
+    async def get_quote(self, symbol: str) -> Quote | None:
         """Get real-time quote from Alpha Vantage."""
         logger.debug(
             "Getting quote from Alpha Vantage",
@@ -369,7 +367,7 @@ class YahooFinanceFeed(DataFeedInterface):
             logger.info("Disconnected from Yahoo Finance API", extra={"connected": False})
         return True
 
-    async def get_quote(self, symbol: str) -> Optional[Quote]:
+    async def get_quote(self, symbol: str) -> Quote | None:
         """Get real-time quote from Yahoo Finance."""
         logger.debug(
             "Getting quote from Yahoo Finance",
@@ -570,7 +568,7 @@ class PolygonFeed(DataFeedInterface):
             )
         return True
 
-    async def get_quote(self, symbol: str) -> Optional[Quote]:
+    async def get_quote(self, symbol: str) -> Quote | None:
         """Get real-time quote from Massive.com (Polygon.io)."""
         logger.debug(
             "Getting quote from Massive.com (Polygon.io)",

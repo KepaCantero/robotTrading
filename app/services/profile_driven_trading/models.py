@@ -11,7 +11,7 @@ import logging
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import Any, Optional
+from typing import Any
 
 import numpy as np
 
@@ -78,8 +78,8 @@ class OrchestratorConfig:
     enable_tax_loss_harvesting: bool = True
 
     # Backtest validation parameters
-    backtest_start_date: Optional[str] = None  # Auto-detected if None
-    backtest_end_date: Optional[str] = None  # Auto-detected if None
+    backtest_start_date: str | None = None  # Auto-detected if None
+    backtest_end_date: str | None = None  # Auto-detected if None
     min_feasibility_ratio: float = 0.80  # 80% of target return
 
     # Logging and monitoring
@@ -116,7 +116,7 @@ class StageResult:
 
     stage_type: StageType
     success: bool
-    data: Optional[Any] = None
+    data: Any | None = None
     message: str = ""
     duration_ms: float = 0.0
     errors: list[str] = field(default_factory=list)
@@ -332,22 +332,22 @@ class TradingResult:
 
     success: bool
     profile_id: str = ""
-    allocation: Optional[dict[str, Any]] = None
-    signals: Optional[SignalSet] = None
-    execution_result: Optional[ExecutionResult] = None
+    allocation: dict[str, Any] | None = None
+    signals: SignalSet | None = None
+    execution_result: ExecutionResult | None = None
     stage_results: list[StageResult] = field(default_factory=list)
     errors: list[str] = field(default_factory=list)
     warnings: list[str] = field(default_factory=list)
     execution_time_ms: float = 0.0
     started_at: datetime = field(default_factory=datetime.utcnow)
-    completed_at: Optional[datetime] = None
+    completed_at: datetime | None = None
 
     # Optional intermediate results
-    investment_profile: Optional[Any] = None
-    universe_data: Optional[dict[str, Any]] = None
-    tax_optimized_allocation: Optional[Any] = None
-    risk_validation: Optional[RiskValidationResult] = None
-    backtest_result: Optional[Any] = None
+    investment_profile: Any | None = None
+    universe_data: dict[str, Any] | None = None
+    tax_optimized_allocation: Any | None = None
+    risk_validation: RiskValidationResult | None = None
+    backtest_result: Any | None = None
 
     def __post_init__(self):
         """Log trading result."""
@@ -363,7 +363,7 @@ class TradingResult:
             },
         )
 
-    def get_stage_result(self, stage_type: StageType) -> Optional[StageResult]:
+    def get_stage_result(self, stage_type: StageType) -> StageResult | None:
         """Get result for a specific stage."""
         for result in self.stage_results:
             if result.stage_type == stage_type:

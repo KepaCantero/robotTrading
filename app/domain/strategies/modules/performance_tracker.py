@@ -8,7 +8,6 @@ import logging
 from collections import deque
 from datetime import datetime
 from decimal import Decimal
-from typing import Optional
 
 logger = logging.getLogger(__name__)
 
@@ -57,7 +56,7 @@ class FilterPerformanceTracker:
         market_context: dict,
         metadata: dict,
         led_to_trade: bool = False,
-        trade_result: Optional[dict] = None,
+        trade_result: dict | None = None,
     ) -> None:
         """
         Registrar una señal evaluada por el filtro.

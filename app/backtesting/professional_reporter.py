@@ -12,14 +12,15 @@ from __future__ import annotations
 import logging
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Optional, TypedDict, Union
+from typing import TYPE_CHECKING, TypedDict
 
 import numpy as np
 
-from app.backtesting.acceptance_criteria import AcceptanceReport
-from app.backtesting.capital_scale_analyzer import CapitalScaleAnalysisReport
-from app.backtesting.models import BacktestResult
-from app.backtesting.walk_forward_validator import ValidationWindow
+if TYPE_CHECKING:
+    from app.backtesting.acceptance_criteria import AcceptanceReport
+    from app.backtesting.capital_scale_analyzer import CapitalScaleAnalysisReport
+    from app.backtesting.models import BacktestResult
+    from app.backtesting.walk_forward_validator import ValidationWindow
 
 logger = logging.getLogger(__name__)
 
@@ -72,17 +73,17 @@ class ProfessionalReport:
     period_end: datetime
 
     # Core results
-    backtest_result: Optional[BacktestResult] = None
-    walk_forward_results: Optional[list[ValidationWindow]] = None
-    capital_scale_results: Optional[CapitalScaleAnalysisReport] = None
-    acceptance_report: Optional[AcceptanceReport] = None
+    backtest_result: BacktestResult | None = None
+    walk_forward_results: list[ValidationWindow] | None = None
+    capital_scale_results: CapitalScaleAnalysisReport | None = None
+    acceptance_report: AcceptanceReport | None = None
 
     # Report sections
-    executive_summary: Optional[ReportSection] = None
-    performance_section: Optional[ReportSection] = None
-    risk_section: Optional[ReportSection] = None
-    trades_section: Optional[ReportSection] = None
-    robustness_section: Optional[ReportSection] = None
+    executive_summary: ReportSection | None = None
+    performance_section: ReportSection | None = None
+    risk_section: ReportSection | None = None
+    trades_section: ReportSection | None = None
+    robustness_section: ReportSection | None = None
 
     # Warnings and notes
     survivorship_bias_warning: bool = False
@@ -102,7 +103,7 @@ class ProfessionalReporter:
         self,
         include_pdf: bool = True,
         include_html: bool = True,
-        pdf_template_path: Optional[str] = None,
+        pdf_template_path: str | None = None,
     ):
         """
         Initialize reporter.
@@ -217,8 +218,8 @@ class ProfessionalReporter:
         self,
         backtest_result: BacktestResult,
         acceptance_report: AcceptanceReport,
-        walk_forward_results: Optional[list[ValidationWindow]] = None,
-        capital_scale_results: Optional[CapitalScaleAnalysisReport] = None,
+        walk_forward_results: list[ValidationWindow] | None = None,
+        capital_scale_results: CapitalScaleAnalysisReport | None = None,
         benchmark_return: float = 0.0,
     ) -> ProfessionalReport:
         """
@@ -334,8 +335,8 @@ class ProfessionalReporter:
 
     def _generate_robustness_section(
         self,
-        walk_forward: Optional[Union[list[ValidationWindow], dict]],
-        capital_scale: Optional[CapitalScaleAnalysisReport],
+        walk_forward: list[ValidationWindow] | dict | None,
+        capital_scale: CapitalScaleAnalysisReport | None,
     ) -> ReportSection:
         """Generate robustness analysis section."""
         content = "## Robustness Analysis\n\n"
@@ -516,7 +517,7 @@ class ProfessionalReporter:
 
         return "\n".join(result)
 
-    def _section_to_html(self, section: Optional[ReportSection]) -> str:
+    def _section_to_html(self, section: ReportSection | None) -> str:
         """Convert section to HTML."""
         if not section:
             return ""

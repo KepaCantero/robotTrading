@@ -25,12 +25,14 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass
-from datetime import date, datetime
 from decimal import Decimal
 from enum import Enum
-from typing import Callable, Optional, Union
+from typing import TYPE_CHECKING, Callable
 
 from app.shared.utils.timezone_utils import utc_now
+
+if TYPE_CHECKING:
+    from datetime import date, datetime
 
 logger = logging.getLogger(__name__)
 
@@ -57,15 +59,15 @@ class CorporateAction:
     action_type: CorporateActionType
     symbol: str
     ex_date: date
-    ratio: Optional[Decimal] = None  # For splits, mergers, spinoffs
-    amount: Optional[Decimal] = None  # For dividends
-    new_symbol: Optional[str] = None  # For mergers, symbol changes
-    description: Optional[str] = None
-    record_date: Optional[date] = None
-    payable_date: Optional[date] = None
-    processed_at: Optional[datetime] = None
+    ratio: Decimal | None = None  # For splits, mergers, spinoffs
+    amount: Decimal | None = None  # For dividends
+    new_symbol: str | None = None  # For mergers, symbol changes
+    description: str | None = None
+    record_date: date | None = None
+    payable_date: date | None = None
+    processed_at: datetime | None = None
 
-    def to_dict(self) -> dict[str, Optional[str]]:
+    def to_dict(self) -> dict[str, str | None]:
         """Convert to dictionary."""
         return {
             "action_type": self.action_type.value,
@@ -130,7 +132,7 @@ class CorporateActionsHandler:
         self,
         broker=None,
         position_monitor=None,
-        on_action: Optional[Callable[[CorporateAction], None]] = None,
+        on_action: Callable[[CorporateAction], None] | None = None,
     ):
         """
         Initialize corporate actions handler.
@@ -164,8 +166,8 @@ class CorporateActionsHandler:
         symbol: str,
         ratio: Decimal,
         ex_date: date,
-        record_date: Optional[date] = None,
-    ) -> dict[str, Union[str, int, list[dict[str, str]]]]:
+        record_date: date | None = None,
+    ) -> dict[str, str | int | list[dict[str, str]]]:
         """
         Adjust positions for stock split.
 
@@ -268,9 +270,9 @@ class CorporateActionsHandler:
         symbol: str,
         amount: Decimal,
         ex_date: date,
-        record_date: Optional[date] = None,
-        payable_date: Optional[date] = None,
-    ) -> dict[str, Optional[str]]:
+        record_date: date | None = None,
+        payable_date: date | None = None,
+    ) -> dict[str, str | None]:
         """
         Record dividend payment.
 
@@ -342,8 +344,8 @@ class CorporateActionsHandler:
         acquire_symbol: str,
         ratio: Decimal,
         ex_date: date,
-        record_date: Optional[date] = None,
-    ) -> dict[str, Union[str, int, list[dict[str, str]]]]:
+        record_date: date | None = None,
+    ) -> dict[str, str | int | list[dict[str, str]]]:
         """
         Convert positions to acquiring company.
 
@@ -453,9 +455,9 @@ class CorporateActionsHandler:
         self,
         symbol: str,
         delist_date: date,
-        reason: Optional[str] = None,
+        reason: str | None = None,
         force_close: bool = True,
-    ) -> dict[str, Optional[Union[str, int, list[dict[str, Optional[str]]]]]]:
+    ) -> dict[str, str | int | list[dict[str, str | None]] | None]:
         """
         Handle delisting - close positions.
 
@@ -571,8 +573,8 @@ class CorporateActionsHandler:
         spinoff_symbol: str,
         ratio: Decimal,
         ex_date: date,
-        record_date: Optional[date] = None,
-    ) -> dict[str, Union[str, int, list[dict[str, str]]]]:
+        record_date: date | None = None,
+    ) -> dict[str, str | int | list[dict[str, str]]]:
         """
         Handle spin-off - create new positions.
 
@@ -676,7 +678,7 @@ class CorporateActionsHandler:
         old_symbol: str,
         new_symbol: str,
         ex_date: date,
-    ) -> dict[str, Union[str, int, list[dict[str, str]]]]:
+    ) -> dict[str, str | int | list[dict[str, str]]]:
         """
         Handle symbol change (ticker rename).
 
@@ -779,9 +781,9 @@ class CorporateActionsHandler:
     async def _update_position(
         self,
         position: object,
-        symbol: Optional[str] = None,
-        quantity: Optional[Decimal] = None,
-        avg_price: Optional[Decimal] = None,
+        symbol: str | None = None,
+        quantity: Decimal | None = None,
+        avg_price: Decimal | None = None,
     ) -> None:
         """
         Update position with new values.

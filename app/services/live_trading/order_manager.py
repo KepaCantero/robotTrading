@@ -13,7 +13,7 @@ import uuid
 from dataclasses import dataclass, field
 from datetime import datetime
 from decimal import Decimal
-from typing import Optional
+from typing import TYPE_CHECKING
 
 from fastapi import Depends
 
@@ -25,7 +25,9 @@ from .broker_connector import (
     OrderType,
     get_broker_connector,
 )
-from .risk_gates import RiskCheckResult, RiskGates
+
+if TYPE_CHECKING:
+    from .risk_gates import RiskCheckResult, RiskGates
 
 logger = logging.getLogger(__name__)
 
@@ -73,8 +75,8 @@ class OrderManager:
 
     def __init__(
         self,
-        broker: Optional[BrokerConnector] = None,
-        risk_gates: Optional[RiskGates] = None,
+        broker: BrokerConnector | None = None,
+        risk_gates: RiskGates | None = None,
     ):
         """Initialize order manager with risk validation."""
         self.broker = broker or get_broker_connector()
@@ -98,10 +100,10 @@ class OrderManager:
         side: OrderSide,
         quantity: Decimal,
         order_type: OrderType = OrderType.MARKET,
-        price: Optional[Decimal] = None,
-        stop_price: Optional[Decimal] = None,
+        price: Decimal | None = None,
+        stop_price: Decimal | None = None,
         timeout_seconds: int = 60,
-    ) -> Optional[BrokerOrder]:
+    ) -> BrokerOrder | None:
         """
         Place order with broker.
 
@@ -278,7 +280,7 @@ class OrderManager:
         logger.info(f"✅ Canceled {canceled_count} orders")
         return canceled_count
 
-    async def get_order_status(self, order_id: str) -> Optional[OrderStatus]:
+    async def get_order_status(self, order_id: str) -> OrderStatus | None:
         """
         Get current order status.
 
@@ -304,7 +306,7 @@ class OrderManager:
         order_id: str,
         max_polls: int = 60,
         max_wait_seconds: int = 30,
-    ) -> Optional[BrokerOrder]:
+    ) -> BrokerOrder | None:
         """
         Poll order status until execution or timeout.
 
@@ -369,7 +371,7 @@ class OrderManager:
         quantity: Decimal,
         price: Decimal,
         fees: Decimal = _DEFAULT_FEES,
-    ) -> Optional[OrderExecution]:
+    ) -> OrderExecution | None:
         """
         Record order execution.
 
@@ -398,7 +400,7 @@ class OrderManager:
         logger.info(f"✅ Recorded execution: {order_id} - {quantity} {symbol} @ {price}")
         return execution
 
-    async def get_pending_orders(self, symbol: Optional[str] = None) -> list[BrokerOrder]:
+    async def get_pending_orders(self, symbol: str | None = None) -> list[BrokerOrder]:
         """
         Get pending orders.
 
@@ -413,7 +415,7 @@ class OrderManager:
             orders = [o for o in orders if o.symbol == symbol]
         return orders
 
-    async def get_executed_orders(self, symbol: Optional[str] = None) -> list[BrokerOrder]:
+    async def get_executed_orders(self, symbol: str | None = None) -> list[BrokerOrder]:
         """
         Get executed orders.
 
@@ -428,7 +430,7 @@ class OrderManager:
             orders = [o for o in orders if o.symbol == symbol]
         return orders
 
-    async def get_order_history(self, symbol: Optional[str] = None) -> list[BrokerOrder]:
+    async def get_order_history(self, symbol: str | None = None) -> list[BrokerOrder]:
         """
         Get complete order history.
 
@@ -445,8 +447,8 @@ class OrderManager:
 
     async def get_execution_history(
         self,
-        symbol: Optional[str] = None,
-        since: Optional[datetime] = None,
+        symbol: str | None = None,
+        since: datetime | None = None,
     ) -> list[OrderExecution]:
         """
         Get execution history.
@@ -498,7 +500,7 @@ class OrderManager:
         logger.warning(f"⚠️ Order error {error_code}: {error_message}")
         return error
 
-    async def get_order_errors(self, symbol: Optional[str] = None) -> list[OrderError]:
+    async def get_order_errors(self, symbol: str | None = None) -> list[OrderError]:
         """
         Get recorded order errors.
 
@@ -530,7 +532,7 @@ class OrderManager:
 # import pandas as pd  # F401 unused
 
 # Singleton
-_manager: Optional[OrderManager] = None
+_manager: OrderManager | None = None
 
 
 _DEFAULT_BROKER_DEPENDS = Depends(get_broker_connector)

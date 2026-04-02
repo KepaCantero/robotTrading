@@ -17,7 +17,6 @@ import logging
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Optional
 
 logger = logging.getLogger(__name__)
 
@@ -42,7 +41,7 @@ class RotationSchedule:
     next_rotation: datetime
     grace_period_days: int = 7
     rotation_status: RotationStatus = RotationStatus.PENDING
-    old_key_id: Optional[str] = None  # Previous key ID for rollback
+    old_key_id: str | None = None  # Previous key ID for rollback
 
     def is_due(self) -> bool:
         """Check if rotation is due."""
@@ -61,11 +60,11 @@ class RotationResult:
     """Result of a key rotation operation."""
 
     key_id: str
-    old_key_id: Optional[str]
-    new_key_id: Optional[str]
+    old_key_id: str | None
+    new_key_id: str | None
     rotated_at: datetime
     success: bool
-    error_message: Optional[str] = None
+    error_message: str | None = None
     status: RotationStatus = RotationStatus.COMPLETED
 
 
@@ -93,7 +92,7 @@ class KeyRotationManager:
         key_id: str,
         interval_days: int,
         grace_period_days: int = 7,
-        start_from: Optional[datetime] = None,
+        start_from: datetime | None = None,
     ) -> RotationSchedule:
         """
         Schedule automatic rotation for a key.
@@ -156,7 +155,7 @@ class KeyRotationManager:
     def rotate_key(
         self,
         key_id: str,
-        new_value: Optional[str] = None,
+        new_value: str | None = None,
         api_key_manager=None,
         secrets_manager=None,
     ) -> RotationResult:
@@ -300,7 +299,7 @@ class KeyRotationManager:
         logger.info(f"Rolled back rotation for key {key_id}")
         return True
 
-    def get_rotation_schedule(self, key_id: str) -> Optional[RotationSchedule]:
+    def get_rotation_schedule(self, key_id: str) -> RotationSchedule | None:
         """
         Get the rotation schedule for a key.
 
@@ -321,7 +320,7 @@ class KeyRotationManager:
         """
         return list(self._schedules.values())
 
-    def get_rotation_history(self, key_id: Optional[str] = None) -> list[RotationResult]:
+    def get_rotation_history(self, key_id: str | None = None) -> list[RotationResult]:
         """
         Get rotation history.
 
@@ -355,8 +354,8 @@ class KeyRotationManager:
     def update_schedule(
         self,
         key_id: str,
-        interval_days: Optional[int] = None,
-        grace_period_days: Optional[int] = None,
+        interval_days: int | None = None,
+        grace_period_days: int | None = None,
     ) -> bool:
         """
         Update an existing rotation schedule.

@@ -18,11 +18,12 @@ from contextlib import contextmanager
 from datetime import datetime, timedelta
 from enum import Enum
 from pathlib import Path
-from typing import Any, Optional
-
-from fastapi import Request
+from typing import TYPE_CHECKING, Any
 
 from app.infrastructure.logging.logging_config import get_correlation_id, get_logger
+
+if TYPE_CHECKING:
+    from fastapi import Request
 
 logger = get_logger(__name__)
 
@@ -121,7 +122,7 @@ class AuditLogger:
 
     def cleanup_old_logs(
         self,
-        retention_days: Optional[int] = None,
+        retention_days: int | None = None,
     ) -> int:
         """
         Remove audit log files older than the retention period.
@@ -236,10 +237,10 @@ class AuditLogger:
 
     def _validate_string_param(
         self,
-        value: Optional[str],
+        value: str | None,
         param_name: str,
         allow_empty: bool = False,
-    ) -> Optional[str]:
+    ) -> str | None:
         """
         Validate a string parameter.
 
@@ -273,11 +274,11 @@ class AuditLogger:
     def _validate_log_params(
         self,
         action: AuditAction,
-        user_id: Optional[str],
-        username: Optional[str],
-        resource_type: Optional[str],
-        resource_id: Optional[str],
-        ip_address: Optional[str],
+        user_id: str | None,
+        username: str | None,
+        resource_type: str | None,
+        resource_id: str | None,
+        ip_address: str | None,
     ) -> None:
         """
         Validate log parameters.
@@ -323,15 +324,15 @@ class AuditLogger:
     def log(
         self,
         action: AuditAction,
-        user_id: Optional[str] = None,
-        username: Optional[str] = None,
-        resource_type: Optional[str] = None,
-        resource_id: Optional[str] = None,
-        details: Optional[dict[str, Any]] = None,
-        ip_address: Optional[str] = None,
-        user_agent: Optional[str] = None,
+        user_id: str | None = None,
+        username: str | None = None,
+        resource_type: str | None = None,
+        resource_id: str | None = None,
+        details: dict[str, Any] | None = None,
+        ip_address: str | None = None,
+        user_agent: str | None = None,
         success: bool = True,
-        error_message: Optional[str] = None,
+        error_message: str | None = None,
         validate: bool = True,
     ):
         """
@@ -427,13 +428,13 @@ class AuditLogger:
         symbol: str,
         side: str,
         quantity: float,
-        price: Optional[float] = None,
-        trade_id: Optional[str] = None,
-        user_id: Optional[str] = None,
-        username: Optional[str] = None,
-        portfolio_id: Optional[str] = None,
+        price: float | None = None,
+        trade_id: str | None = None,
+        user_id: str | None = None,
+        username: str | None = None,
+        portfolio_id: str | None = None,
         success: bool = True,
-        error_message: Optional[str] = None,
+        error_message: str | None = None,
         **kwargs,
     ):
         """Log a trading action."""
@@ -466,13 +467,13 @@ class AuditLogger:
         self,
         action: AuditAction,
         strategy_name: str,
-        decision_id: Optional[str] = None,
-        status: Optional[str] = None,
-        scores: Optional[dict[str, float]] = None,
-        user_id: Optional[str] = None,
-        username: Optional[str] = None,
+        decision_id: str | None = None,
+        status: str | None = None,
+        scores: dict[str, float] | None = None,
+        user_id: str | None = None,
+        username: str | None = None,
         success: bool = True,
-        error_message: Optional[str] = None,
+        error_message: str | None = None,
         **kwargs,
     ):
         """Log a deployment action."""
@@ -505,11 +506,11 @@ class AuditLogger:
     def log_portfolio(
         self,
         action: AuditAction,
-        portfolio_id: Optional[str] = None,
-        user_id: Optional[str] = None,
-        username: Optional[str] = None,
+        portfolio_id: str | None = None,
+        user_id: str | None = None,
+        username: str | None = None,
         success: bool = True,
-        error_message: Optional[str] = None,
+        error_message: str | None = None,
         **kwargs,
     ):
         """Log a portfolio action."""
@@ -528,13 +529,13 @@ class AuditLogger:
         self,
         action: AuditAction,
         request: Request,
-        resource_type: Optional[str] = None,
-        resource_id: Optional[str] = None,
-        details: Optional[dict[str, Any]] = None,
+        resource_type: str | None = None,
+        resource_id: str | None = None,
+        details: dict[str, Any] | None = None,
         success: bool = True,
-        error_message: Optional[str] = None,
-        user_id: Optional[str] = None,
-        username: Optional[str] = None,
+        error_message: str | None = None,
+        user_id: str | None = None,
+        username: str | None = None,
     ):
         """Log an audit event from a FastAPI request."""
         # Extract request context
@@ -556,7 +557,7 @@ class AuditLogger:
 
 
 # Global audit logger instance
-_audit_logger: Optional[AuditLogger] = None
+_audit_logger: AuditLogger | None = None
 
 
 def get_audit_logger() -> AuditLogger:
@@ -586,11 +587,11 @@ def get_audit_logger() -> AuditLogger:
 @contextmanager
 def audit_context(
     action: AuditAction,
-    user_id: Optional[str] = None,
-    username: Optional[str] = None,
-    resource_type: Optional[str] = None,
-    resource_id: Optional[str] = None,
-    details: Optional[dict[str, Any]] = None,
+    user_id: str | None = None,
+    username: str | None = None,
+    resource_type: str | None = None,
+    resource_id: str | None = None,
+    details: dict[str, Any] | None = None,
     auto_log: bool = True,
 ):
     """
@@ -621,13 +622,13 @@ def audit_context(
             self.error = None
             self.extra_details = {}
 
-        def mark_success(self, details: Optional[dict[str, Any]] = None):
+        def mark_success(self, details: dict[str, Any] | None = None):
             """Mark the operation as successful."""
             self.success = True
             if details:
                 self.extra_details.update(details)
 
-        def mark_failure(self, error_message: str, details: Optional[dict[str, Any]] = None):
+        def mark_failure(self, error_message: str, details: dict[str, Any] | None = None):
             """Mark the operation as failed."""
             self.success = False
             self.error = error_message
@@ -661,13 +662,13 @@ def log_trade_execution(
     symbol: str,
     side: str,
     quantity: float,
-    price: Optional[float] = None,
-    trade_id: Optional[str] = None,
-    user_id: Optional[str] = None,
-    username: Optional[str] = None,
-    portfolio_id: Optional[str] = None,
+    price: float | None = None,
+    trade_id: str | None = None,
+    user_id: str | None = None,
+    username: str | None = None,
+    portfolio_id: str | None = None,
     success: bool = True,
-    error_message: Optional[str] = None,
+    error_message: str | None = None,
 ):
     """Log a trade execution."""
     get_audit_logger().log_trade(
@@ -687,13 +688,13 @@ def log_trade_execution(
 
 def log_deployment_decision(
     strategy_name: str,
-    decision_id: Optional[str] = None,
-    status: Optional[str] = None,
-    scores: Optional[dict[str, float]] = None,
-    user_id: Optional[str] = None,
-    username: Optional[str] = None,
+    decision_id: str | None = None,
+    status: str | None = None,
+    scores: dict[str, float] | None = None,
+    user_id: str | None = None,
+    username: str | None = None,
     success: bool = True,
-    error_message: Optional[str] = None,
+    error_message: str | None = None,
 ):
     """Log a deployment decision."""
     get_audit_logger().log_deployment(
@@ -710,7 +711,7 @@ def log_deployment_decision(
 
 
 def cleanup_audit_logs(
-    retention_days: Optional[int] = None,
+    retention_days: int | None = None,
 ) -> int:
     """
     Clean up old audit log files.

@@ -23,7 +23,6 @@ import logging
 from dataclasses import dataclass
 from decimal import Decimal
 from enum import Enum
-from typing import Optional
 
 from fastapi import Depends
 
@@ -109,7 +108,7 @@ class RiskGates:
     - Maximum drawdown protection
     """
 
-    def __init__(self, broker: Optional[BrokerConnector] = None):
+    def __init__(self, broker: BrokerConnector | None = None):
         """Initialize risk gates with centralized configuration."""
         self.broker = broker or get_broker_connector()
 
@@ -372,7 +371,7 @@ class RiskGates:
         self,
         symbol: str,
         target_quantity: Decimal,
-    ) -> tuple[bool, Optional[Decimal]]:
+    ) -> tuple[bool, Decimal | None]:
         """
         Check if target position quantity is within limits.
 
@@ -392,9 +391,7 @@ class RiskGates:
 
         if target_quantity > max_qty:
             adjusted_qty = max_qty
-            logger.warning(
-                f"⚠️ Adjusted {symbol} quantity from {target_quantity} to {adjusted_qty}"
-            )
+            logger.warning(f"⚠️ Adjusted {symbol} quantity from {target_quantity} to {adjusted_qty}")
             return False, adjusted_qty
 
         return True, target_quantity
@@ -479,7 +476,7 @@ class RiskGates:
 
 
 # Singleton
-_gates: Optional[RiskGates] = None
+_gates: RiskGates | None = None
 
 
 def get_risk_gates(

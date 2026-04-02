@@ -5,7 +5,6 @@ VolumeFilter - Filtro de volumen para confirmar señales.
 from __future__ import annotations
 
 import logging
-from typing import Optional
 
 from ..base_filter import BaseFilter
 
@@ -21,9 +20,9 @@ class VolumeFilter(BaseFilter):
 
     def __init__(
         self,
-        config: Optional[dict] = None,
+        config: dict | None = None,
         preset: str = "balanced",
-        tier: Optional[str] = None,
+        tier: str | None = None,
         use_yaml: bool = True,
     ):
         """Inicializar filtro de volumen."""

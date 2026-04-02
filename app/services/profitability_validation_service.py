@@ -11,7 +11,7 @@ from __future__ import annotations
 import logging
 import statistics
 from decimal import Decimal
-from typing import Any, Optional
+from typing import Any
 
 from app.domain.models.profitability_validation import (
     CostBreakdown,
@@ -204,7 +204,7 @@ class ProfitabilityCalculator:
 
         return max_dd
 
-    def _calculate_sharpe_ratio(self, trades_data: list[dict[str, Any]]) -> Optional[Decimal]:
+    def _calculate_sharpe_ratio(self, trades_data: list[dict[str, Any]]) -> Decimal | None:
         """Calcular Sharpe ratio simplificado."""
 
         if len(trades_data) < 2:

@@ -14,7 +14,7 @@ from __future__ import annotations
 import logging
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Callable, ClassVar, Optional
+from typing import Callable, ClassVar
 
 logger = logging.getLogger(__name__)
 
@@ -176,7 +176,7 @@ class CircuitBreaker:
         self.state = self.CLOSED
         self.failure_count = 0
         self.success_count = 0
-        self.last_failure_time: Optional[datetime] = None
+        self.last_failure_time: datetime | None = None
 
     def record_success(self) -> None:
         """Record successful API call."""
@@ -285,7 +285,7 @@ class PositionSyncRecovery:
         """
         self.max_retries = max_retries
         self.timeout = timeout_seconds
-        self.last_successful_sync: Optional[datetime] = None
+        self.last_successful_sync: datetime | None = None
         self.sync_failure_count = 0
 
     def record_sync_success(self) -> None:
@@ -342,9 +342,9 @@ class ErrorRecoveryManager:
         self.classifier = AlpacaErrorClassifier()
 
         # Callbacks
-        self.on_circuit_open: Optional[Callable[[], None]] = None
-        self.on_sync_needed: Optional[Callable[[], None]] = None
-        self.on_manual_intervention: Optional[Callable[[str], None]] = None
+        self.on_circuit_open: Callable[[], None] | None = None
+        self.on_sync_needed: Callable[[], None] | None = None
+        self.on_manual_intervention: Callable[[str], None] | None = None
 
     def should_allow_request(self) -> bool:
         """Check if request should be allowed.
@@ -373,9 +373,7 @@ class ErrorRecoveryManager:
         error_type = self.classifier.classify(error)
         strategy = self.classifier.get_strategy(error_type)
 
-        logger.warning(
-            f"⚠️  API error [{error_type.value}]: {error!s} → Strategy: {strategy.value}"
-        )
+        logger.warning(f"⚠️  API error [{error_type.value}]: {error!s} → Strategy: {strategy.value}")
 
         if strategy == ErrorRecoveryStrategy.ALERT and self.on_manual_intervention is not None:
             self.on_manual_intervention(str(error))

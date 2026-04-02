@@ -11,13 +11,15 @@ from __future__ import annotations
 import logging
 from decimal import Decimal
 from enum import Enum
-from typing import Optional
+from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, Field
 
-from app.domain.models.portfolio import Portfolio
 from app.services.forex_data_service import get_forex_fetcher
 from app.shared.config.centralized_config import get_config
+
+if TYPE_CHECKING:
+    from app.domain.models.portfolio import Portfolio
 
 logger = logging.getLogger(__name__)
 
@@ -57,7 +59,7 @@ class CurrencyHedgingEngine:
     Uses centralized configuration for all thresholds and parameters.
     """
 
-    def __init__(self, config: Optional[dict] = None):
+    def __init__(self, config: dict | None = None):
         """
         Initialize hedging engine.
 

@@ -23,7 +23,6 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from decimal import Decimal
 from enum import Enum
-from typing import Optional
 
 import numpy as np
 
@@ -82,7 +81,7 @@ class CostBreakdown:
     total_cost: Decimal = Decimal("0")
     total_cost_bps: Decimal = Decimal("0")
     effective_spread: Decimal = Decimal("0")
-    realized_spread: Optional[Decimal] = None
+    realized_spread: Decimal | None = None
     implementation_shortfall: Decimal = Decimal("0")
     saving_vs_benchmark: Decimal = Decimal("0")
 
@@ -123,7 +122,7 @@ class ExecutionQualityMetrics:
     price_improvement_bps: Decimal = Decimal("0")
     timing_cost_bps: Decimal = Decimal("0")
     market_impact_bps: Decimal = Decimal("0")
-    implementation_shortfall_bps: Optional[Decimal] = None
+    implementation_shortfall_bps: Decimal | None = None
     execution_score: float = 0.0
 
     @property
@@ -160,7 +159,7 @@ class MarketImpactModel:
     def __init__(
         self,
         model_type: ImpactModel = ImpactModel.SQUARE_ROOT,
-        daily_volume: Optional[float] = None,
+        daily_volume: float | None = None,
         alpha: float = 0.5,
         k_temporary: float = 0.1,
         k_permanent: float = 0.05,
@@ -185,8 +184,8 @@ class MarketImpactModel:
         self,
         order_quantity: float,
         current_price: float,
-        adv: Optional[float] = None,
-        volatility: Optional[float] = None,
+        adv: float | None = None,
+        volatility: float | None = None,
     ) -> tuple[float, float]:
         """
         Calculate market impact for an order.
@@ -266,7 +265,7 @@ class BidAskSpreadAnalyzer:
         spread = ask - bid
         self._spread_history.append((timestamp, spread, (bid + ask) / 2))
 
-    def get_average_spread(self, window: Optional[int] = None) -> Optional[Decimal]:
+    def get_average_spread(self, window: int | None = None) -> Decimal | None:
         """Get average spread over window."""
         if not self._spread_history:
             return None
@@ -360,7 +359,7 @@ class TimingRiskCalculator:
         execution_price: Decimal,
         volatility: float,
         execution_period_hours: float,
-        arrival_price: Optional[Decimal] = None,
+        arrival_price: Decimal | None = None,
     ) -> dict[str, Decimal]:
         """
         Calculate timing risk for an execution.
@@ -450,8 +449,8 @@ class TradingCostAnalyzer:
 
     def __init__(
         self,
-        market_impact_model: Optional[MarketImpactModel] = None,
-        spread_analyzer: Optional[BidAskSpreadAnalyzer] = None,
+        market_impact_model: MarketImpactModel | None = None,
+        spread_analyzer: BidAskSpreadAnalyzer | None = None,
     ):
         """
         Initialize the trading cost analyzer.
@@ -473,14 +472,14 @@ class TradingCostAnalyzer:
         quantity: Decimal,
         execution_price: Decimal,
         benchmark_price: Decimal,
-        arrival_price: Optional[Decimal] = None,
-        decision_price: Optional[Decimal] = None,
-        commission: Optional[Decimal] = None,
-        fees: Optional[Decimal] = None,
-        adv: Optional[float] = None,
-        volatility: Optional[float] = None,
-        bid_at_arrival: Optional[Decimal] = None,
-        ask_at_arrival: Optional[Decimal] = None,
+        arrival_price: Decimal | None = None,
+        decision_price: Decimal | None = None,
+        commission: Decimal | None = None,
+        fees: Decimal | None = None,
+        adv: float | None = None,
+        volatility: float | None = None,
+        bid_at_arrival: Decimal | None = None,
+        ask_at_arrival: Decimal | None = None,
         execution_period_hours: float = 0.5,
     ) -> CostBreakdown:
         """
@@ -603,9 +602,9 @@ class TradingCostAnalyzer:
     def evaluate_execution_quality(
         self,
         cost_breakdown: CostBreakdown,
-        fill_rate: Optional[Decimal] = None,
-        peer_fill_rate: Optional[Decimal] = None,
-        market_conditions: Optional[dict[str, float]] = None,
+        fill_rate: Decimal | None = None,
+        peer_fill_rate: Decimal | None = None,
+        market_conditions: dict[str, float] | None = None,
     ) -> ExecutionQualityMetrics:
         """
         Evaluate execution quality on a 0-100 scale.
@@ -695,7 +694,7 @@ class TradingCostAnalyzer:
 
 def create_trading_cost_analyzer(
     impact_model: ImpactModel = ImpactModel.SQUARE_ROOT,
-    daily_volume: Optional[float] = None,
+    daily_volume: float | None = None,
 ) -> TradingCostAnalyzer:
     """
     Factory function to create a TradingCostAnalyzer.

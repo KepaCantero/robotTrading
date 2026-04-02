@@ -17,7 +17,6 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from decimal import Decimal
 from enum import Enum
-from typing import Optional
 
 from app.services.alerting_system import AlertSeverity
 from app.shared.config.centralized_config import get_config
@@ -68,7 +67,7 @@ class AlertToTradeRule:
     )  # Uses centralized config
     # Time-based rules
     quiet_period_minutes: int = 0  # Cooldown between trades
-    last_triggered_at: Optional[datetime] = None
+    last_triggered_at: datetime | None = None
     created_at: datetime = field(default_factory=datetime.utcnow)
 
 
@@ -84,9 +83,9 @@ class TradeSignal:
     order_side: OrderSide
     order_type: OrderType
     quantity: Decimal
-    price: Optional[Decimal] = None
-    stop_loss: Optional[Decimal] = None
-    take_profit: Optional[Decimal] = None
+    price: Decimal | None = None
+    stop_loss: Decimal | None = None
+    take_profit: Decimal | None = None
     severity: AlertSeverity = AlertSeverity.WARNING
     reason: str = ""
     created_at: datetime = field(default_factory=datetime.utcnow)
@@ -164,7 +163,7 @@ class AlertToTradeMapper:
         severity: AlertSeverity,
         current_price: Decimal,
         portfolio_value: Decimal,
-    ) -> Optional[TradeSignal]:
+    ) -> TradeSignal | None:
         """
         Map alert to trade signal.
 
@@ -258,7 +257,7 @@ class AlertToTradeMapper:
 
         return signal
 
-    def get_signal(self, signal_id: str) -> Optional[TradeSignal]:
+    def get_signal(self, signal_id: str) -> TradeSignal | None:
         """
         Get trade signal by ID.
 
@@ -270,7 +269,7 @@ class AlertToTradeMapper:
         """
         return self.signals.get(signal_id)
 
-    def get_pending_signals(self, alert_rule_id: Optional[str] = None) -> list[TradeSignal]:
+    def get_pending_signals(self, alert_rule_id: str | None = None) -> list[TradeSignal]:
         """
         Get all pending (unmapped to orders) trade signals.
 
@@ -310,7 +309,7 @@ class AlertToTradeMapper:
 
 
 # Singleton instance
-_mapper_instance: Optional[AlertToTradeMapper] = None
+_mapper_instance: AlertToTradeMapper | None = None
 
 
 def get_alert_to_trade_mapper() -> AlertToTradeMapper:

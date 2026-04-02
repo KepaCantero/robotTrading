@@ -382,7 +382,7 @@ class TransactionCostModel:
         participation_rate = min(participation_rate, self.config.max_participation_rate)
 
         # Volatility adjustment (use default if not provided)
-        vol = volatility or _backtest_config.default_volatility
+        vol = volatility or _backtest_config.default_annual_volatility
 
         # Temporary impact (scales with participation rate)
         temp_impact = (

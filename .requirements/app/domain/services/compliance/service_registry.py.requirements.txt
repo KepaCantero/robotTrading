@@ -36,17 +36,9 @@ Generated: 2026-03-09
 
 ## 3. Core Components
 ### Classes
-- `ComplianceServiceRegistry`
+
 ### Public Functions
-- `get_service_registry()`
-- `get_service()`
-- `getInstance()`
-- `resetInstance()`
-- `register_service()`
-- `get_service()`
-- `is_available()`
-- `get_all_services()`
-- `get_availability_report()`
+
 
 ## 4. SOLID Principles (from rules/python/03-solid-principles.md)
 

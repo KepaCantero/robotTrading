@@ -32,8 +32,8 @@ from typing_extensions import TypedDict
 
 from app.shared.audit import AuditAction, AuditLogger, get_audit_logger
 
-from .auth_attempt_tracker import AuthAttemptTracker, get_attempt_tracker
 from ..interfaces import AuthAttemptTrackerProtocol, JWTTokenManagerProtocol, UserStoreProtocol
+from .auth_attempt_tracker import AuthAttemptTracker, get_attempt_tracker
 from .jwt_token_manager import JWTTokenManager, get_token_manager
 from .user import User, UserRoles
 from .user_store import UserStore, get_user_store

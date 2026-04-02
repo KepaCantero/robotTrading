@@ -16,7 +16,6 @@ from __future__ import annotations
 import logging
 from decimal import Decimal
 from enum import Enum
-from typing import Optional
 from uuid import uuid4
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
@@ -70,7 +69,7 @@ class TaxResidence(BaseModel):
         max_length=2,
         description="ISO 3166-1 alpha-2 country code (ES, US, UK, etc.)",
     )
-    country_name: Optional[str] = Field(default=None, description="Full country name")
+    country_name: str | None = Field(default=None, description="Full country name")
 
     # Tax rates (can be overridden with custom values)
     capital_gains_rate_short: Decimal = Field(
@@ -119,7 +118,7 @@ class TaxResidence(BaseModel):
         default=True,
         description="Whether losses can be carried forward",
     )
-    loss_carryforward_years: Optional[int] = Field(
+    loss_carryforward_years: int | None = Field(
         default=4,
         ge=0,
         description="Number of years losses can be carried forward",
@@ -136,7 +135,7 @@ class TaxResidence(BaseModel):
         default=False,
         description="Whether currency hedging is recommended",
     )
-    regulatory_authority: Optional[str] = Field(
+    regulatory_authority: str | None = Field(
         default=None,
         description="Main regulatory authority (CNMV, SEC, FCA, etc.)",
     )
@@ -185,12 +184,12 @@ class InputProfile(BaseModel):
     )
 
     # Optional Parameters
-    constraints: Optional[dict] = Field(
+    constraints: dict | None = Field(
         default=None, description="Optional constraints (sector limits, etc.)"
     )
 
     # Tax Residence (CRITICAL for multi-market trading)
-    tax_residence: Optional[TaxResidence] = Field(
+    tax_residence: TaxResidence | None = Field(
         default=None,
         description="Tax residence configuration (country, rates, currency)",
     )

@@ -21,10 +21,8 @@ from __future__ import annotations
 
 import logging
 from decimal import Decimal
-from typing import TYPE_CHECKING, Optional, Union
+from typing import TYPE_CHECKING
 
-from app.domain.models.market_data import Quote
-from app.domain.models.portfolio import Portfolio
 from app.domain.models.signal import Signal, SignalSource, SignalStrength, SignalType
 from app.domain.strategies.base import BaseStrategy
 from app.shared.config.centralized_config import get_config
@@ -43,6 +41,9 @@ from .roll_analyzer import RollAnalyzer
 
 if TYPE_CHECKING:
     from datetime import date
+
+    from app.domain.models.market_data import Quote
+    from app.domain.models.portfolio import Portfolio
 
 logger = logging.getLogger(__name__)
 
@@ -69,7 +70,7 @@ class CoveredCallStrategy(BaseStrategy):
         greeks_calculator: Calculador de Greeks
     """
 
-    def __init__(self, config: dict[str, Union[str, int, float, Decimal, bool]]):
+    def __init__(self, config: dict[str, str | int | float | Decimal | bool]):
         """
         Inicializar estrategia de covered calls.
 
@@ -117,7 +118,7 @@ class CoveredCallStrategy(BaseStrategy):
 
         # Estado interno
         self.available_options: dict[str, list[CallOption]] = {}
-        self.last_scan_date: Optional[date] = None
+        self.last_scan_date: date | None = None
 
         # Métricas de rendimiento
         self.total_premium_collected = Decimal("0")
@@ -133,7 +134,7 @@ class CoveredCallStrategy(BaseStrategy):
         )
 
     def _parse_config(
-        self, raw_config: dict[str, Union[str, int, float, Decimal, bool]]
+        self, raw_config: dict[str, str | int | float | Decimal | bool]
     ) -> CoveredCallConfig:
         """
         Parsear configuración desde dict.
@@ -269,7 +270,7 @@ class CoveredCallStrategy(BaseStrategy):
 
         return signals
 
-    def _evaluate_open_position(self, market_data: Quote) -> Optional[Signal]:
+    def _evaluate_open_position(self, market_data: Quote) -> Signal | None:
         """
         Evaluar si abrir nueva posición covered call.
 
@@ -574,9 +575,9 @@ class CoveredCallStrategy(BaseStrategy):
         shares_owned: int,
         average_cost: Decimal,
         current_price: Decimal,
-        strike: Optional[Decimal] = None,
-        dte: Optional[int] = None,
-    ) -> Optional[CoveredCallPosition]:
+        strike: Decimal | None = None,
+        dte: int | None = None,
+    ) -> CoveredCallPosition | None:
         """
         Crear una posición covered call.
 
@@ -670,7 +671,7 @@ class CoveredCallStrategy(BaseStrategy):
             logger.error(f"Error creando posición: {e}")
             return None
 
-    def get_position_summary(self) -> dict[str, Union[int, float, list[str], dict[str, float]]]:
+    def get_position_summary(self) -> dict[str, int | float | list[str] | dict[str, float]]:
         """
         Obtener resumen de posiciones.
 
@@ -693,9 +694,7 @@ class CoveredCallStrategy(BaseStrategy):
         self,
         symbol: str,
         current_price: Decimal,
-    ) -> list[
-        dict[str, Union[str, int, bool, list[dict[str, Union[str, float, int, None]]], None]]
-    ]:
+    ) -> list[dict[str, str | int | bool | list[dict[str, str | float | int | None]] | None]]:
         """
         Analizar oportunidades de rolling para un símbolo.
 

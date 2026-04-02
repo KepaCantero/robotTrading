@@ -34,56 +34,9 @@ structlog>=23.0.0          # Structured logging
 
 ## 3. Core Components
 ### Classes
-- `BaseRepository`
-- `UserRepository`
-- `PortfolioRepository`
-- `AssetRepository`
-- `PositionRepository`
-- `TradeRepository`
-- `MarketDataRepository`
-- `SignalRepository`
-- `BacktestRepository`
-- `RiskMetricsRepository`
-- `SystemLogRepository`
+
 ### Public Functions
-- `create()`
-- `get_by_id()`
-- `get_all()`
-- `update()`
-- `delete()`
-- `count()`
-- `get_by_username()`
-- `get_by_email()`
-- `get_active_users()`
-- `get_by_user()`
-- `get_active_by_user()`
-- `update_total_value()`
-- `get_by_symbol()`
-- `get_by_asset_class()`
-- `get_active_assets()`
-- `search_by_name()`
-- `get_by_portfolio()`
-- `get_by_portfolio_and_asset()`
-- `get_non_zero_positions()`
-- `update_position_price()`
-- `get_by_portfolio()`
-- `get_by_asset()`
-- `get_by_date_range()`
-- `get_trade_summary()`
-- `get_by_asset_and_date_range()`
-- `get_latest_price()`
-- `bulk_insert()`
-- `get_by_strategy()`
-- `get_by_asset()`
-- `get_recent_signals()`
-- `get_by_portfolio()`
-- `get_by_strategy()`
-- `get_completed_backtests()`
-- `get_latest_by_portfolio()`
-- `get_by_date_range()`
-- `get_by_level()`
-- `get_by_service()`
-- `get_recent_logs()`
+
 
 ## 4. SOLID Principles (from rules/python/03-solid-principles.md)
 

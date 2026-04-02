@@ -14,7 +14,7 @@ from __future__ import annotations
 import logging
 from datetime import datetime
 from decimal import Decimal
-from typing import ClassVar, Optional
+from typing import ClassVar
 
 import numpy as np
 
@@ -539,7 +539,7 @@ class PortfolioConstructor:
 
     async def get_construction_history(
         self,
-        limit: Optional[int] = None,
+        limit: int | None = None,
     ) -> list[PortfolioAllocation]:
         """Get portfolio construction history."""
         results = self.construction_history
@@ -573,7 +573,7 @@ class PortfolioConstructor:
 
 
 # Singleton
-_constructor: Optional[PortfolioConstructor] = None
+_constructor: PortfolioConstructor | None = None
 
 
 def get_portfolio_constructor() -> PortfolioConstructor:

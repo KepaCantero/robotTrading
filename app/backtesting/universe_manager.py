@@ -14,7 +14,7 @@ from __future__ import annotations
 import logging
 from datetime import datetime
 from decimal import Decimal
-from typing import Any, Optional
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -75,7 +75,7 @@ class UniverseManager:
     strategy performance that would have been achievable in real-time.
     """
 
-    def __init__(self, universe_config: Optional[dict] = None):
+    def __init__(self, universe_config: dict | None = None):
         """
         Initialize universe manager.
 
@@ -185,9 +185,9 @@ class UniverseManager:
     def filter_by_market_cap(
         self,
         symbols: list[str],
-        min_market_cap: Optional[Decimal] = None,
-        max_market_cap: Optional[Decimal] = None,
-        historical_date: Optional[datetime] = None,
+        min_market_cap: Decimal | None = None,
+        max_market_cap: Decimal | None = None,
+        historical_date: datetime | None = None,
     ) -> list[str]:
         """
         Filter symbols by market cap.

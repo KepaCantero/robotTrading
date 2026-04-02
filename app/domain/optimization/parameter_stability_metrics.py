@@ -20,10 +20,12 @@ import json
 import logging
 from dataclasses import dataclass, field
 from datetime import datetime
-from pathlib import Path
-from typing import Any, Optional, Union
+from typing import TYPE_CHECKING, Any
 
 import numpy as np
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
@@ -32,12 +34,12 @@ logger = logging.getLogger(__name__)
 class WindowOptimalValue:
     """Optimal parameter value for a single window/fold/period."""
 
-    window_id: Union[int, str]
+    window_id: int | str
     parameter_name: str
-    optimal_value: Union[float, int]
+    optimal_value: float | int
     performance_metric: float  # Sharpe, return, etc. at this optimal value
-    window_start: Optional[Any] = None
-    window_end: Optional[Any] = None
+    window_start: Any | None = None
+    window_end: Any | None = None
     confidence: float = 1.0  # How confident are we in this value (0-1)
 
 
@@ -100,7 +102,7 @@ class StabilityReport:
             },
         }
 
-    def to_json(self, filepath: Optional[Path] = None) -> str:
+    def to_json(self, filepath: Path | None = None) -> str:
         """Serialize to JSON string or file."""
         json_str = json.dumps(self.to_dict(), indent=2)
         if filepath:
@@ -119,7 +121,7 @@ class ParameterStabilityMetrics:
     periods or validation folds. Unstable parameters suggest curve-fitting.
     """
 
-    def __init__(self, config: Optional[dict[str, Any]] = None):
+    def __init__(self, config: dict[str, Any] | None = None):
         """
         Initialize parameter stability metrics analyzer.
 

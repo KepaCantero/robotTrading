@@ -12,8 +12,10 @@ uses a simplified approach based on sample size and distance from random walk.
 from __future__ import annotations
 
 import logging
+from typing import TYPE_CHECKING
 
-import numpy as np
+if TYPE_CHECKING:
+    import numpy as np
 
 logger = logging.getLogger(__name__)
 

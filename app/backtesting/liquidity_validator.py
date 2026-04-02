@@ -18,7 +18,6 @@ from __future__ import annotations
 import logging
 from dataclasses import dataclass
 from decimal import Decimal
-from typing import Optional
 
 # SINGLE SOURCE OF TRUTH: Use CentralizedConfig for all values
 from app.shared.config.centralized_config import get_config
@@ -39,9 +38,9 @@ class FillResult:
     filled_quantity: Decimal
     fill_price: Decimal
     fill_status: str  # "FILLED", "PARTIAL", "REJECTED"
-    rejection_reason: Optional[str] = None
-    avg_fill_price: Optional[Decimal] = None
-    market_impact: Optional[Decimal] = None
+    rejection_reason: str | None = None
+    avg_fill_price: Decimal | None = None
+    market_impact: Decimal | None = None
 
     def __post_init__(self):
         """Set avg_fill_price to fill_price if not provided."""
@@ -70,9 +69,9 @@ class LiquidityValidator:
     def __init__(
         self,
         enable_partial_fills: bool = True,
-        max_order_pct_of_volume: Optional[Decimal] = None,
-        warning_order_pct_of_volume: Optional[Decimal] = None,
-        partial_fill_pct: Optional[Decimal] = None,
+        max_order_pct_of_volume: Decimal | None = None,
+        warning_order_pct_of_volume: Decimal | None = None,
+        partial_fill_pct: Decimal | None = None,
     ):
         """
         Initialize liquidity validator.
@@ -265,7 +264,7 @@ class LiquidityValidator:
                     market_impact=Decimal("0"),
                 )
 
-    def _calculate_buy_fill_price(self, current_bar, quantity: Optional[Decimal] = None) -> Decimal:
+    def _calculate_buy_fill_price(self, current_bar, quantity: Decimal | None = None) -> Decimal:
         """
         Calculate realistic buy fill price with slippage and market impact.
 
@@ -313,9 +312,7 @@ class LiquidityValidator:
 
         return execution_price
 
-    def _calculate_sell_fill_price(
-        self, current_bar, quantity: Optional[Decimal] = None
-    ) -> Decimal:
+    def _calculate_sell_fill_price(self, current_bar, quantity: Decimal | None = None) -> Decimal:
         """
         Calculate realistic sell fill price with slippage and market impact.
 
@@ -403,7 +400,7 @@ class LiquidityValidator:
 
         return market_impact
 
-    def get_liquidity_metrics(self, current_bar, order_quantity: Optional[Decimal] = None) -> dict:
+    def get_liquidity_metrics(self, current_bar, order_quantity: Decimal | None = None) -> dict:
         """
         Get liquidity metrics for current market conditions.
 

@@ -13,13 +13,16 @@ Reference: Rule 03-solid-principles.md, Rule 05-architecture.md
 from __future__ import annotations
 
 import logging
-from decimal import Decimal
-from typing import Optional
+from typing import TYPE_CHECKING
 
-from app.domain.entities.portfolio import Portfolio
 from app.domain.factories import AbstractEntityFactory
 from app.domain.repositories.portfolio_repository import PortfolioRepository
-from app.shared.config.di_container import DIContainer
+
+if TYPE_CHECKING:
+    from decimal import Decimal
+
+    from app.domain.entities.portfolio import Portfolio
+    from app.shared.config.di_container import DIContainer
 
 logger = logging.getLogger(__name__)
 
@@ -49,7 +52,7 @@ class PortfolioServiceV2:
         self,
         repository: PortfolioRepository,
         factory: AbstractEntityFactory,
-        di_container: Optional[DIContainer] = None,
+        di_container: DIContainer | None = None,
     ) -> None:
         """
         Initialize service with injected dependencies.
@@ -63,7 +66,7 @@ class PortfolioServiceV2:
         self._factory = factory
         self._container = di_container
 
-    async def get_portfolio(self, portfolio_id: str) -> Optional[Portfolio]:
+    async def get_portfolio(self, portfolio_id: str) -> Portfolio | None:
         """
         Get portfolio by ID.
 

@@ -16,13 +16,15 @@ import logging
 from abc import ABC, abstractmethod
 from datetime import datetime
 from decimal import Decimal
-from typing import Optional, Union
+from typing import TYPE_CHECKING
 
 from app.domain.models.portfolio import Portfolio, PortfolioProvider
-from app.engines.portfolio_engine.meta_learners.meta_learners import BaseMetaLearner
-from app.engines.portfolio_engine.optimizers.base import BaseOptimizer
-from app.engines.portfolio_engine.rebalancers.rebalancers import BaseRebalancer
 from app.services.portfolio_service import PortfolioService
+
+if TYPE_CHECKING:
+    from app.engines.portfolio_engine.meta_learners.meta_learners import BaseMetaLearner
+    from app.engines.portfolio_engine.optimizers.base import BaseOptimizer
+    from app.engines.portfolio_engine.rebalancers.rebalancers import BaseRebalancer
 
 logger = logging.getLogger(__name__)
 
@@ -53,10 +55,10 @@ class BasePortfolioEngine(ABC):
         """Inicializar el engine."""
 
     @abstractmethod
-    def process(self, input_data: object) -> Optional[Portfolio]:
+    def process(self, input_data: object) -> Portfolio | None:
         """Procesar datos de entrada."""
 
-    def health_check(self) -> dict[str, Union[bool, str]]:
+    def health_check(self) -> dict[str, bool | str]:
         """Verificar salud del engine."""
         return {
             "status": "healthy" if self.enabled else "disabled",
@@ -77,7 +79,7 @@ class PortfolioEngine(BasePortfolioEngine):
     - Rebalanceo dinámico
     """
 
-    def __init__(self, config: dict[str, object], provider: Optional[PortfolioProvider] = None):
+    def __init__(self, config: dict[str, object], provider: PortfolioProvider | None = None):
         """
         Inicializar Portfolio Engine.
 
@@ -97,7 +99,7 @@ class PortfolioEngine(BasePortfolioEngine):
         self.meta_learner = None
 
         # Estado del engine
-        self.current_portfolio: Optional[Portfolio] = None
+        self.current_portfolio: Portfolio | None = None
         self.allocation_history: list[dict[str, object]] = []
         self.rebalance_history: list[dict[str, object]] = []
 
@@ -126,7 +128,7 @@ class PortfolioEngine(BasePortfolioEngine):
             self.logger.error(f"Error inicializando PortfolioEngine: {e}", exc_info=True)
             self._initialized = False
 
-    def process(self, input_data: object) -> Optional[Portfolio]:
+    def process(self, input_data: object) -> Portfolio | None:
         """
         Procesar datos de entrada.
 
@@ -145,7 +147,7 @@ class PortfolioEngine(BasePortfolioEngine):
 
         return self._process_portfolio(input_data)
 
-    def _process_portfolio(self, portfolio_data: object) -> Optional[Portfolio]:
+    def _process_portfolio(self, portfolio_data: object) -> Portfolio | None:
         """Procesar datos de portfolio."""
         try:
             if isinstance(portfolio_data, Portfolio):
@@ -162,7 +164,7 @@ class PortfolioEngine(BasePortfolioEngine):
             self.logger.error(f"Error procesando portfolio: {e}", exc_info=True)
             return None
 
-    async def get_portfolio(self) -> Optional[Portfolio]:
+    async def get_portfolio(self) -> Portfolio | None:
         """
         Obtener portfolio actual.
 
@@ -218,7 +220,7 @@ class PortfolioEngine(BasePortfolioEngine):
 
     def get_allocation_by_asset_class(
         self,
-    ) -> dict[str, dict[str, Union[Decimal, float, int, list[str], str]]]:
+    ) -> dict[str, dict[str, Decimal | float | int | list[str] | str]]:
         """
         Obtener asignación agrupada por clase de activo.
 
@@ -258,7 +260,7 @@ class PortfolioEngine(BasePortfolioEngine):
 
         return allocation
 
-    def get_status(self) -> dict[str, Union[bool, str, int, None, dict[str, int]]]:
+    def get_status(self) -> dict[str, bool | str | int | None | dict[str, int]]:
         """
         Obtener estado del engine.
 

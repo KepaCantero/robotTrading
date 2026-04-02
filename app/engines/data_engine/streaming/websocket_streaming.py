@@ -15,7 +15,7 @@ import contextlib
 import json
 import logging
 from datetime import datetime
-from typing import Any, Optional
+from typing import Any
 
 from fastapi import WebSocket, WebSocketDisconnect
 from fastapi.routing import APIRouter
@@ -31,7 +31,7 @@ class WebSocketStreamingManager:
     Gestiona conexiones WebSocket y broadcasting de datos.
     """
 
-    def __init__(self, config: Optional[dict[str, Any]] = None):
+    def __init__(self, config: dict[str, Any] | None = None):
         """
         Inicializar streaming manager.
 

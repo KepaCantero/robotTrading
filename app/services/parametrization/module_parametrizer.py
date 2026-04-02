@@ -18,9 +18,10 @@ import logging
 from dataclasses import dataclass, field
 from decimal import Decimal
 from enum import Enum
-from typing import Any, Optional
+from typing import TYPE_CHECKING, Any
 
-from app.domain.models.investment_profile import CapitalTier, InvestmentProfile
+if TYPE_CHECKING:
+    from app.domain.models.investment_profile import CapitalTier, InvestmentProfile
 
 logger = logging.getLogger(__name__)
 
@@ -112,7 +113,7 @@ class ModuleParameterSet:
         """Add parameters for a single module."""
         self.modules[module_params.module_name] = module_params
 
-    def get_module(self, module_name: str) -> Optional[ModuleParameters]:
+    def get_module(self, module_name: str) -> ModuleParameters | None:
         """Get parameters for a specific module."""
         return self.modules.get(module_name)
 

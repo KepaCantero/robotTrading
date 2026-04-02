@@ -17,7 +17,7 @@ import threading
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 import numpy as np
 import pandas as pd
@@ -54,7 +54,7 @@ class BacktestMetaAnalyzer:
     """
 
     def __init__(
-        self, data_dir: str, output_dir: Optional[str] = None, enable_visualizations: bool = True
+        self, data_dir: str, output_dir: str | None = None, enable_visualizations: bool = True
     ):
         """
         Inicializar analizador meta.
@@ -72,14 +72,14 @@ class BacktestMetaAnalyzer:
         # Thread-safe state management with RLock
         self._lock = threading.RLock()
         self.results: list[dict[str, Any]] = []
-        self.df_results: Optional[pd.DataFrame] = None
+        self.df_results: pd.DataFrame | None = None
         self.analysis_results: dict[str, Any] = {}
 
         logger.info(
             f"BacktestMetaAnalyzer inicializado: data_dir={data_dir}, output_dir={self.output_dir}"
         )
 
-    async def load_results(self, path: Optional[str] = None) -> int:
+    async def load_results(self, path: str | None = None) -> int:
         """
         Cargar resultados automáticamente desde directorio.
 
@@ -130,7 +130,7 @@ class BacktestMetaAnalyzer:
     async def _load_json_files_async(self, files: list[Path]) -> list[dict[str, Any]]:
         """Cargar archivos JSON en paralelo."""
 
-        async def load_file(file_path: Path) -> Optional[dict[str, Any]]:
+        async def load_file(file_path: Path) -> dict[str, Any] | None:
             try:
                 with open(file_path) as f:
                     data = json.load(f)
@@ -152,7 +152,7 @@ class BacktestMetaAnalyzer:
     async def _load_csv_files_async(self, files: list[Path]) -> list[dict[str, Any]]:
         """Cargar archivos CSV en paralelo."""
 
-        async def load_file(file_path: Path) -> Optional[list[dict[str, Any]]]:
+        async def load_file(file_path: Path) -> list[dict[str, Any]] | None:
             try:
                 df = pd.read_csv(file_path)
                 # Convertir a lista de dicts
@@ -291,7 +291,7 @@ class BacktestMetaAnalyzer:
         return category_analysis
 
     def detect_clusters(
-        self, n_clusters: int = 3, features: Optional[list[str]] = None
+        self, n_clusters: int = 3, features: list[str] | None = None
     ) -> dict[str, Any]:
         """
         Detectar clusters de resultados similares usando KMeans.
@@ -389,7 +389,7 @@ class BacktestMetaAnalyzer:
         return result
 
     def suggest_optimal_combinations(
-        self, top_n: int = 10, criteria: Optional[dict[str, float]] = None
+        self, top_n: int = 10, criteria: dict[str, float] | None = None
     ) -> list[dict[str, Any]]:
         """
         Sugerir combinaciones óptimas de parámetros o estrategias.
@@ -458,7 +458,7 @@ class BacktestMetaAnalyzer:
 
         return [s["row"] for s in suggestions]
 
-    def export_report(self, output_path: Optional[str] = None, output_format: str = "json") -> str:
+    def export_report(self, output_path: str | None = None, output_format: str = "json") -> str:
         """
         Exportar reporte completo de análisis.
 

@@ -23,7 +23,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from decimal import Decimal
 from enum import Enum
-from typing import Any, Optional
+from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
@@ -78,59 +78,53 @@ class FactorScores(BaseModel):
     symbol: str = Field(..., description="Stock symbol")
 
     # Value factor metrics
-    book_to_market: Optional[Decimal] = Field(None, description="Book-to-Market ratio")
-    value_score: Optional[Decimal] = Field(
+    book_to_market: Decimal | None = Field(None, description="Book-to-Market ratio")
+    value_score: Decimal | None = Field(
         None, ge=-3, le=3, description="Value factor score (standardized)"
     )
 
     # Size factor metrics
-    market_cap: Optional[Decimal] = Field(
-        None, ge=0, description="Market capitalization (millions)"
-    )
-    log_market_cap: Optional[Decimal] = Field(None, description="Log of market cap")
-    size_score: Optional[Decimal] = Field(
+    market_cap: Decimal | None = Field(None, ge=0, description="Market capitalization (millions)")
+    log_market_cap: Decimal | None = Field(None, description="Log of market cap")
+    size_score: Decimal | None = Field(
         None, ge=-3, le=3, description="Size factor score (standardized)"
     )
 
     # Profitability factor metrics
-    operating_profitability: Optional[Decimal] = Field(
+    operating_profitability: Decimal | None = Field(
         None, description="Operating profitability (ROA)"
     )
-    roe: Optional[Decimal] = Field(None, description="Return on Equity")
-    roa: Optional[Decimal] = Field(None, description="Return on Assets")
-    profitability_score: Optional[Decimal] = Field(
+    roe: Decimal | None = Field(None, description="Return on Equity")
+    roa: Decimal | None = Field(None, description="Return on Assets")
+    profitability_score: Decimal | None = Field(
         None, ge=-3, le=3, description="Profitability factor score"
     )
 
     # Investment factor metrics
-    asset_growth: Optional[Decimal] = Field(None, description="Asset growth rate")
-    investment_score: Optional[Decimal] = Field(
+    asset_growth: Decimal | None = Field(None, description="Asset growth rate")
+    investment_score: Decimal | None = Field(
         None, ge=-3, le=3, description="Investment factor score (conservative = positive)"
     )
 
     # Momentum factor metrics
-    momentum_12m: Optional[Decimal] = Field(
+    momentum_12m: Decimal | None = Field(
         None, description="12-month momentum (excluding last month)"
     )
-    momentum_6m: Optional[Decimal] = Field(None, description="6-month momentum")
-    momentum_score: Optional[Decimal] = Field(
-        None, ge=-3, le=3, description="Momentum factor score"
-    )
+    momentum_6m: Decimal | None = Field(None, description="6-month momentum")
+    momentum_score: Decimal | None = Field(None, ge=-3, le=3, description="Momentum factor score")
 
     # Composite scores
-    composite_quality_score: Optional[Decimal] = Field(
+    composite_quality_score: Decimal | None = Field(
         None, ge=0, le=100, description="Composite quality score"
     )
-    factor_momentum_score: Optional[Decimal] = Field(
+    factor_momentum_score: Decimal | None = Field(
         None, ge=0, le=100, description="Factor momentum score"
     )
 
     # Factor model fit
-    predicted_return: Optional[Decimal] = Field(
-        None, description="Predicted return from factor model"
-    )
-    residual_return: Optional[Decimal] = Field(None, description="Residual (idiosyncratic) return")
-    r_squared: Optional[Decimal] = Field(None, ge=0, le=1, description="R-squared of factor model")
+    predicted_return: Decimal | None = Field(None, description="Predicted return from factor model")
+    residual_return: Decimal | None = Field(None, description="Residual (idiosyncratic) return")
+    r_squared: Decimal | None = Field(None, ge=0, le=1, description="R-squared of factor model")
 
     calculated_at: datetime = Field(
         default_factory=datetime.utcnow, description="When scores were calculated"
@@ -152,74 +146,72 @@ class FactorProfile(BaseModel):
     )
 
     symbol: str = Field(..., description="Stock symbol")
-    company_name: Optional[str] = Field(None, description="Company name")
-    sector: Optional[str] = Field(None, description="GICS sector")
-    industry: Optional[str] = Field(None, description="GICS industry")
+    company_name: str | None = Field(None, description="Company name")
+    sector: str | None = Field(None, description="GICS sector")
+    industry: str | None = Field(None, description="GICS industry")
 
     # Market data
     current_price: Decimal = Field(..., gt=0, description="Current market price")
-    market_cap: Optional[Decimal] = Field(None, ge=0, description="Market cap (millions)")
-    shares_outstanding: Optional[Decimal] = Field(None, ge=0, description="Shares outstanding")
+    market_cap: Decimal | None = Field(None, ge=0, description="Market cap (millions)")
+    shares_outstanding: Decimal | None = Field(None, ge=0, description="Shares outstanding")
 
     # Value metrics
-    book_value_per_share: Optional[Decimal] = Field(None, ge=0, description="Book value per share")
-    book_to_market: Optional[Decimal] = Field(None, ge=0, description="Book-to-market ratio")
-    pe_ratio: Optional[Decimal] = Field(None, ge=0, description="P/E ratio (TTM)")
-    pb_ratio: Optional[Decimal] = Field(None, ge=0, description="P/B ratio")
-    ps_ratio: Optional[Decimal] = Field(None, ge=0, description="P/S ratio")
-    ev_ebitda: Optional[Decimal] = Field(None, ge=0, description="EV/EBITDA")
+    book_value_per_share: Decimal | None = Field(None, ge=0, description="Book value per share")
+    book_to_market: Decimal | None = Field(None, ge=0, description="Book-to-market ratio")
+    pe_ratio: Decimal | None = Field(None, ge=0, description="P/E ratio (TTM)")
+    pb_ratio: Decimal | None = Field(None, ge=0, description="P/B ratio")
+    ps_ratio: Decimal | None = Field(None, ge=0, description="P/S ratio")
+    ev_ebitda: Decimal | None = Field(None, ge=0, description="EV/EBITDA")
 
     # Profitability metrics
-    revenue: Optional[Decimal] = Field(None, ge=0, description="Total revenue (TTM)")
-    ebitda: Optional[Decimal] = Field(None, ge=0, description="EBITDA (TTM)")
-    operating_income: Optional[Decimal] = Field(None, ge=0, description="Operating income (TTM)")
-    net_income: Optional[Decimal] = Field(None, ge=0, description="Net income (TTM)")
-    roe: Optional[Decimal] = Field(None, description="Return on Equity (%)")
-    roa: Optional[Decimal] = Field(None, description="Return on Assets (%)")
-    roic: Optional[Decimal] = Field(None, description="Return on Invested Capital (%)")
-    gross_margin: Optional[Decimal] = Field(None, ge=0, le=100, description="Gross margin (%)")
-    operating_margin: Optional[Decimal] = Field(
-        None, ge=0, le=100, description="Operating margin (%)"
-    )
-    net_margin: Optional[Decimal] = Field(None, ge=0, le=100, description="Net margin (%)")
+    revenue: Decimal | None = Field(None, ge=0, description="Total revenue (TTM)")
+    ebitda: Decimal | None = Field(None, ge=0, description="EBITDA (TTM)")
+    operating_income: Decimal | None = Field(None, ge=0, description="Operating income (TTM)")
+    net_income: Decimal | None = Field(None, ge=0, description="Net income (TTM)")
+    roe: Decimal | None = Field(None, description="Return on Equity (%)")
+    roa: Decimal | None = Field(None, description="Return on Assets (%)")
+    roic: Decimal | None = Field(None, description="Return on Invested Capital (%)")
+    gross_margin: Decimal | None = Field(None, ge=0, le=100, description="Gross margin (%)")
+    operating_margin: Decimal | None = Field(None, ge=0, le=100, description="Operating margin (%)")
+    net_margin: Decimal | None = Field(None, ge=0, le=100, description="Net margin (%)")
 
     # Investment metrics
-    total_assets: Optional[Decimal] = Field(None, ge=0, description="Total assets")
-    total_assets_py: Optional[Decimal] = Field(None, ge=0, description="Total assets prior year")
-    asset_growth: Optional[Decimal] = Field(None, description="Asset growth rate (%)")
-    capex: Optional[Decimal] = Field(None, ge=0, description="Capital expenditures")
-    capex_py: Optional[Decimal] = Field(None, ge=0, description="Capex prior year")
+    total_assets: Decimal | None = Field(None, ge=0, description="Total assets")
+    total_assets_py: Decimal | None = Field(None, ge=0, description="Total assets prior year")
+    asset_growth: Decimal | None = Field(None, description="Asset growth rate (%)")
+    capex: Decimal | None = Field(None, ge=0, description="Capital expenditures")
+    capex_py: Decimal | None = Field(None, ge=0, description="Capex prior year")
 
     # Price history for momentum
-    price_1m_ago: Optional[Decimal] = Field(None, gt=0, description="Price 1 month ago")
-    price_3m_ago: Optional[Decimal] = Field(None, gt=0, description="Price 3 months ago")
-    price_6m_ago: Optional[Decimal] = Field(None, gt=0, description="Price 6 months ago")
-    price_12m_ago: Optional[Decimal] = Field(None, gt=0, description="Price 12 months ago")
+    price_1m_ago: Decimal | None = Field(None, gt=0, description="Price 1 month ago")
+    price_3m_ago: Decimal | None = Field(None, gt=0, description="Price 3 months ago")
+    price_6m_ago: Decimal | None = Field(None, gt=0, description="Price 6 months ago")
+    price_12m_ago: Decimal | None = Field(None, gt=0, description="Price 12 months ago")
 
     # Momentum calculations
-    momentum_1m: Optional[Decimal] = Field(None, description="1-month return")
-    momentum_3m: Optional[Decimal] = Field(None, description="3-month return")
-    momentum_6m: Optional[Decimal] = Field(None, description="6-month return")
-    momentum_12m: Optional[Decimal] = Field(None, description="12-month return")
+    momentum_1m: Decimal | None = Field(None, description="1-month return")
+    momentum_3m: Decimal | None = Field(None, description="3-month return")
+    momentum_6m: Decimal | None = Field(None, description="6-month return")
+    momentum_12m: Decimal | None = Field(None, description="12-month return")
 
     # Volatility and risk
-    beta: Optional[Decimal] = Field(None, description="Beta (5-year monthly)")
-    volatility_1y: Optional[Decimal] = Field(None, ge=0, description="1-year volatility")
-    max_drawdown_1y: Optional[Decimal] = Field(None, le=0, description="1-year max drawdown")
+    beta: Decimal | None = Field(None, description="Beta (5-year monthly)")
+    volatility_1y: Decimal | None = Field(None, ge=0, description="1-year volatility")
+    max_drawdown_1y: Decimal | None = Field(None, le=0, description="1-year max drawdown")
 
     # Factor scores (calculated)
-    factor_scores: Optional[FactorScores] = Field(None, description="Calculated factor scores")
+    factor_scores: FactorScores | None = Field(None, description="Calculated factor scores")
 
     # Composite scores
-    overall_factor_score: Optional[Decimal] = Field(
+    overall_factor_score: Decimal | None = Field(
         None, ge=0, le=100, description="Overall factor score"
     )
-    quality_score: Optional[Decimal] = Field(None, ge=0, le=100, description="Quality score")
-    value_score: Optional[Decimal] = Field(None, ge=0, le=100, description="Value score")
-    growth_score: Optional[Decimal] = Field(None, ge=0, le=100, description="Growth score")
+    quality_score: Decimal | None = Field(None, ge=0, le=100, description="Quality score")
+    value_score: Decimal | None = Field(None, ge=0, le=100, description="Value score")
+    growth_score: Decimal | None = Field(None, ge=0, le=100, description="Growth score")
 
     @property
-    def momentum_excluding_last_month(self) -> Optional[Decimal]:
+    def momentum_excluding_last_month(self) -> Decimal | None:
         """Calculate 12-month momentum excluding last month (standard Fama-French momentum)."""
         if self.price_12m_ago and self.price_1m_ago and self.current_price:
             # (P_t / P_{t-12}) - 1, excluding last month
@@ -290,14 +282,14 @@ class FactorStrategyConfig(BaseModel):
     objetivo_inversion: str = Field(default="BALANCED_GROWTH", description="Investment objective")
 
     # Universe and screening
-    min_market_cap: Optional[Decimal] = Field(
+    min_market_cap: Decimal | None = Field(
         None, ge=0, description="Minimum market cap (millions, None = no filter)"
     )
-    max_market_cap: Optional[Decimal] = Field(
+    max_market_cap: Decimal | None = Field(
         None, ge=0, description="Maximum market cap (millions, None = no filter)"
     )
     min_price: Decimal = Field(Decimal("5"), ge=0, description="Minimum stock price")
-    min_daily_volume: Optional[Decimal] = Field(
+    min_daily_volume: Decimal | None = Field(
         None, ge=0, description="Minimum daily volume (shares)"
     )
 
@@ -361,10 +353,10 @@ class FactorStrategyConfig(BaseModel):
     )
 
     # Risk management
-    max_beta: Optional[Decimal] = Field(
+    max_beta: Decimal | None = Field(
         None, ge=0, description="Maximum portfolio beta (None = no constraint)"
     )
-    max_volatility: Optional[Decimal] = Field(
+    max_volatility: Decimal | None = Field(
         None, ge=0, description="Maximum portfolio volatility (None = no constraint)"
     )
     stop_loss_factor: Decimal = Field(
@@ -527,10 +519,8 @@ class FactorPosition(BaseModel):
     factor_exposure: dict[str, Decimal] = Field(
         default_factory=dict, description="Factor exposures"
     )
-    expected_return: Optional[Decimal] = Field(
-        None, description="Expected return from factor model"
-    )
-    sector: Optional[str] = Field(None, description="Sector classification")
+    expected_return: Decimal | None = Field(None, description="Expected return from factor model")
+    sector: str | None = Field(None, description="Sector classification")
 
 
 class FactorPortfolio(BaseModel):
@@ -546,7 +536,7 @@ class FactorPortfolio(BaseModel):
     total_value: Decimal = Field(..., ge=0, description="Total portfolio value")
     cash: Decimal = Field(Decimal("0"), ge=0, description="Cash balance")
     created_at: datetime = Field(default_factory=datetime.utcnow, description="Creation timestamp")
-    rebalance_at: Optional[datetime] = Field(None, description="Next rebalance date")
+    rebalance_at: datetime | None = Field(None, description="Next rebalance date")
 
     # Factor exposures
     factor_exposures: dict[str, Decimal] = Field(
@@ -637,15 +627,15 @@ class DividendData:
 
     dividend_yield: Decimal
     annual_dividend: Decimal
-    payout_ratio: Optional[Decimal] = None
-    dividend_growth_rate_3y: Optional[Decimal] = None
-    dividend_growth_rate_5y: Optional[Decimal] = None
+    payout_ratio: Decimal | None = None
+    dividend_growth_rate_3y: Decimal | None = None
+    dividend_growth_rate_5y: Decimal | None = None
     years_consecutive_increases: int = 0
     safety: DividendSafety = DividendSafety.MODERATE
-    earnings_per_share: Optional[Decimal] = None
-    free_cash_flow_per_share: Optional[Decimal] = None
-    dividend_coverage_ratio: Optional[Decimal] = None
-    next_ex_dividend_date: Optional[datetime] = None
+    earnings_per_share: Decimal | None = None
+    free_cash_flow_per_share: Decimal | None = None
+    dividend_coverage_ratio: Decimal | None = None
+    next_ex_dividend_date: datetime | None = None
 
 
 @dataclass
@@ -656,18 +646,18 @@ class DividendProfile:
     company_name: str
     dividend_data: DividendData
     current_price: Decimal = Decimal("0")
-    market_cap: Optional[Decimal] = None
-    sector: Optional[str] = None
-    quality_score: Optional[Decimal] = None
-    sustainability_score: Optional[Decimal] = None
+    market_cap: Decimal | None = None
+    sector: str | None = None
+    quality_score: Decimal | None = None
+    sustainability_score: Decimal | None = None
     is_dividend_trap: bool = False
-    pe_ratio: Optional[Decimal] = None
-    pb_ratio: Optional[Decimal] = None
-    beta: Optional[Decimal] = None
-    roe: Optional[Decimal] = None
-    debt_to_equity: Optional[Decimal] = None
-    ex_dividend_date: Optional[datetime] = None
-    payment_date: Optional[datetime] = None
+    pe_ratio: Decimal | None = None
+    pb_ratio: Decimal | None = None
+    beta: Decimal | None = None
+    roe: Decimal | None = None
+    debt_to_equity: Decimal | None = None
+    ex_dividend_date: datetime | None = None
+    payment_date: datetime | None = None
     safety_rating: DividendSafety = DividendSafety.MODERATE
     dividend_yield: Decimal = Decimal("0")
     annual_dividend: Decimal = Decimal("0")
@@ -757,11 +747,9 @@ class DividendStrategyConfig(BaseModel):
     excluded_sectors: list[str] = Field(default_factory=list, description="Sectors to exclude")
     exclude_reits: bool = Field(default=False, description="Exclude REITs from screening")
     exclude_mlps: bool = Field(default=False, description="Exclude MLPs from screening")
-    max_pe_ratio: Optional[Decimal] = Field(
-        default=Decimal("25.0"), description="Maximum P/E ratio"
-    )
-    max_pb_ratio: Optional[Decimal] = Field(default=Decimal("3.0"), description="Maximum P/B ratio")
-    max_beta: Optional[Decimal] = Field(default=Decimal("1.2"), description="Maximum beta")
+    max_pe_ratio: Decimal | None = Field(default=Decimal("25.0"), description="Maximum P/E ratio")
+    max_pb_ratio: Decimal | None = Field(default=Decimal("3.0"), description="Maximum P/B ratio")
+    max_beta: Decimal | None = Field(default=Decimal("1.2"), description="Maximum beta")
     # Scoring weights
     yield_weight: Decimal = Field(default=Decimal("0.3"), description="Yield score weight")
     growth_weight: Decimal = Field(default=Decimal("0.25"), description="Growth score weight")
@@ -815,16 +803,16 @@ class VolatilityMetrics:
     max_drawdown: Decimal = Decimal("0.10")  # Maximum drawdown (%)
     sortino_ratio: Decimal = Decimal("1.0")  # Sortino ratio
     volatility_regime: VolatilityRegime = VolatilityRegime.NORMAL  # Current regime
-    calculated_at: Optional[datetime] = None
+    calculated_at: datetime | None = None
     # Extended volatility metrics
-    historical_volatility_20d: Optional[Decimal] = None  # 20-day historical volatility (%)
-    historical_volatility_60d: Optional[Decimal] = None  # 60-day historical volatility (%)
-    historical_volatility_252d: Optional[Decimal] = None  # 252-day historical volatility (%)
-    sharpe_ratio: Optional[Decimal] = None  # Sharpe ratio
-    correlation_to_market: Optional[Decimal] = None  # Correlation with market
-    idiosyncratic_volatility: Optional[Decimal] = None  # Idiosyncratic volatility (%)
-    skewness: Optional[Decimal] = None  # Return distribution skewness
-    kurtosis: Optional[Decimal] = None  # Return distribution kurtosis
+    historical_volatility_20d: Decimal | None = None  # 20-day historical volatility (%)
+    historical_volatility_60d: Decimal | None = None  # 60-day historical volatility (%)
+    historical_volatility_252d: Decimal | None = None  # 252-day historical volatility (%)
+    sharpe_ratio: Decimal | None = None  # Sharpe ratio
+    correlation_to_market: Decimal | None = None  # Correlation with market
+    idiosyncratic_volatility: Decimal | None = None  # Idiosyncratic volatility (%)
+    skewness: Decimal | None = None  # Return distribution skewness
+    kurtosis: Decimal | None = None  # Return distribution kurtosis
     volatility_score: Decimal = Decimal("50")  # Composite volatility score (0-100)
 
     # __post_init__ removed: all fields already have non-None defaults in the
@@ -838,7 +826,7 @@ class LowVolatilityProfile:
     symbol: str
     company_name: str = ""
     sector: str = ""
-    current_price: Optional[Decimal] = None
+    current_price: Decimal | None = None
     daily_volatility: Decimal = Decimal("0")
     annualized_volatility: Decimal = Decimal("0")
     beta: Decimal = Decimal("1.0")
@@ -847,18 +835,18 @@ class LowVolatilityProfile:
     sharpe_ratio: Decimal = Decimal("0")
     sortino_ratio: Decimal = Decimal("0")
     percentile_rank: Decimal = Decimal("0.5")  # Volatility rank (0-1)
-    volatility_metrics: Optional[VolatilityMetrics] = None
-    low_vol_score: Optional[Decimal] = None
-    defensive_score: Optional[Decimal] = None
-    stability_score: Optional[Decimal] = None
-    overall_score: Optional[Decimal] = None
+    volatility_metrics: VolatilityMetrics | None = None
+    low_vol_score: Decimal | None = None
+    defensive_score: Decimal | None = None
+    stability_score: Decimal | None = None
+    overall_score: Decimal | None = None
     is_defensive_stock: bool = False
-    market_cap: Optional[Decimal] = None  # Market capitalization
-    pe_ratio: Optional[Decimal] = None  # Price-to-Earnings ratio
-    pb_ratio: Optional[Decimal] = None  # Price-to-Book ratio
-    debt_to_equity: Optional[Decimal] = None  # Debt-to-Equity ratio
-    roe: Optional[Decimal] = None  # Return on Equity
-    sector_defensive_level: Optional[SectorDefensiveLevel] = None  # Sector defensive classification
+    market_cap: Decimal | None = None  # Market capitalization
+    pe_ratio: Decimal | None = None  # Price-to-Earnings ratio
+    pb_ratio: Decimal | None = None  # Price-to-Book ratio
+    debt_to_equity: Decimal | None = None  # Debt-to-Equity ratio
+    roe: Decimal | None = None  # Return on Equity
+    sector_defensive_level: SectorDefensiveLevel | None = None  # Sector defensive classification
 
     def __post_init__(self):
         """Initialize volatility_metrics with default values if not provided."""
@@ -938,13 +926,13 @@ class LowVolatilityStrategyConfig(BaseModel):
     )
     max_downside_risk: Decimal = Field(default=Decimal("0.20"), description="Maximum downside risk")
     max_max_drawdown: Decimal = Field(default=Decimal("0.30"), description="Maximum drawdown limit")
-    target_volatility: Optional[Decimal] = Field(
+    target_volatility: Decimal | None = Field(
         default=None, description="Target portfolio volatility"
     )
 
     # Performance thresholds
     min_sharpe_ratio: Decimal = Field(default=Decimal("0.5"), description="Minimum Sharpe ratio")
-    min_sortino_ratio: Optional[Decimal] = Field(default=None, description="Minimum Sortino ratio")
+    min_sortino_ratio: Decimal | None = Field(default=None, description="Minimum Sortino ratio")
 
     # Score thresholds
     min_low_vol_score: Decimal = Field(default=Decimal("60.0"), description="Minimum low vol score")
@@ -987,12 +975,12 @@ class LowVolatilityStrategyConfig(BaseModel):
     rebalance_threshold: Decimal = Field(default=Decimal("0.05"), description="Rebalance threshold")
 
     # Universe settings
-    min_market_cap: Optional[Decimal] = Field(default=None, description="Minimum market cap")
+    min_market_cap: Decimal | None = Field(default=None, description="Minimum market cap")
 
     # Valuation constraints
-    max_pe_ratio: Optional[Decimal] = Field(default=None, description="Maximum P/E ratio")
-    max_pb_ratio: Optional[Decimal] = Field(default=None, description="Maximum P/B ratio")
-    max_debt_to_equity: Optional[Decimal] = Field(
+    max_pe_ratio: Decimal | None = Field(default=None, description="Maximum P/E ratio")
+    max_pb_ratio: Decimal | None = Field(default=None, description="Maximum P/B ratio")
+    max_debt_to_equity: Decimal | None = Field(
         default=None, description="Maximum debt-to-equity ratio"
     )
 
@@ -1034,7 +1022,7 @@ class DividendScreeningCriteria(BaseModel):
     min_yield: Decimal = Field(default=Decimal("2.0"), description="Minimum yield")
     max_yield: Decimal = Field(default=Decimal("10.0"), description="Maximum yield")
     max_payout: Decimal = Field(default=Decimal("75.0"), description="Maximum payout")
-    min_growth: Optional[Decimal] = Field(default=None, description="Minimum growth")
+    min_growth: Decimal | None = Field(default=None, description="Minimum growth")
     min_years: int = Field(default=3, description="Minimum years")
     min_quality: Decimal = Field(default=Decimal("50.0"), description="Minimum quality score")
     min_sustainability: Decimal = Field(
@@ -1050,7 +1038,7 @@ class LowVolatilityScreeningCriteria(BaseModel):
 
     model_config = ConfigDict(extra="ignore")  # Allow extra fields for flexibility
 
-    min_market_cap: Optional[Decimal] = Field(
+    min_market_cap: Decimal | None = Field(
         default=Decimal("1000000000"), description="Minimum market cap"
     )
     max_volatility_percentile: Decimal = Field(
@@ -1064,7 +1052,7 @@ class LowVolatilityScreeningCriteria(BaseModel):
         default=Decimal("0.15"), description="Maximum downside deviation"
     )
     max_drawdown: Decimal = Field(default=Decimal("0.30"), description="Maximum drawdown")
-    min_sortino: Optional[Decimal] = Field(default=None, description="Minimum Sortino ratio")
+    min_sortino: Decimal | None = Field(default=None, description="Minimum Sortino ratio")
     min_sharpe_ratio: Decimal = Field(default=Decimal("0.0"), description="Minimum Sharpe ratio")
     min_avg_volume: Decimal = Field(default=Decimal("500000"), description="Minimum average volume")
     min_low_vol_score: Decimal = Field(default=Decimal("60.0"), description="Minimum low vol score")
@@ -1179,34 +1167,34 @@ class CallOption:
 
     # Basic option data
     symbol: str  # Underlying symbol
-    option_symbol: Optional[str]  # Option ticker/symbol
+    option_symbol: str | None  # Option ticker/symbol
     strike: Decimal  # Strike price
     expiry: datetime  # Expiration date
     option_type: str = "call"  # Option type (call/put)
 
     # Price data
-    bid: Optional[Decimal] = None  # Bid price
-    ask: Optional[Decimal] = None  # Ask price
-    last_price: Optional[Decimal] = None  # Last trade price
-    mid_price: Optional[Decimal] = None  # Mid price (bid+ask)/2
+    bid: Decimal | None = None  # Bid price
+    ask: Decimal | None = None  # Ask price
+    last_price: Decimal | None = None  # Last trade price
+    mid_price: Decimal | None = None  # Mid price (bid+ask)/2
 
     # Greeks and metrics
-    implied_volatility: Optional[Decimal] = None  # Implied volatility
-    delta: Optional[Decimal] = None  # Option delta
-    gamma: Optional[Decimal] = None  # Option gamma
-    theta: Optional[Decimal] = None  # Option theta
-    vega: Optional[Decimal] = None  # Option vega
+    implied_volatility: Decimal | None = None  # Implied volatility
+    delta: Decimal | None = None  # Option delta
+    gamma: Decimal | None = None  # Option gamma
+    theta: Decimal | None = None  # Option theta
+    vega: Decimal | None = None  # Option vega
 
     # Liquidity metrics
-    volume: Optional[int] = None  # Trading volume
-    open_interest: Optional[int] = None  # Open interest
+    volume: int | None = None  # Trading volume
+    open_interest: int | None = None  # Open interest
 
     # Calculated fields
     days_to_expiry: int = 0  # Days until expiration
-    underlying_price: Optional[Decimal] = None  # Current underlying price
+    underlying_price: Decimal | None = None  # Current underlying price
     moneyness: Moneyness = Moneyness.ATM  # Moneyness classification
-    intrinsic_value: Optional[Decimal] = None  # Intrinsic value
-    time_value: Optional[Decimal] = None  # Time value
+    intrinsic_value: Decimal | None = None  # Intrinsic value
+    time_value: Decimal | None = None  # Time value
     metadata: dict[str, Any] = field(default_factory=dict)  # Additional metadata
 
     def __post_init__(self):
@@ -1263,8 +1251,8 @@ class OptionScreeningCriteria:
     min_volume: int = 10  # Minimum daily volume
 
     # Greeks (optional)
-    target_delta: Optional[Decimal] = None  # Target delta (e.g., 0.30)
-    max_theta_decay: Optional[Decimal] = None  # Maximum theta decay
+    target_delta: Decimal | None = None  # Target delta (e.g., 0.30)
+    max_theta_decay: Decimal | None = None  # Maximum theta decay
 
     # Risk management
     avoid_earnings: bool = True  # Avoid options before earnings
@@ -1291,7 +1279,7 @@ class OptionScreenerResult:
         return (len(self.options_passed) / self.total_evaluated) * 100.0
 
     @property
-    def best_option(self) -> Optional[CallOption]:
+    def best_option(self) -> CallOption | None:
         """Get the best option from passed options."""
         if not self.options_passed:
             return None
@@ -1321,15 +1309,15 @@ class OnChainMetrics:
     """
 
     symbol: str
-    active_addresses: Optional[int] = None
-    transaction_count: Optional[int] = None
-    transaction_volume: Optional[Decimal] = None
-    nvt_ratio: Optional[Decimal] = None
-    network_health_score: Optional[Decimal] = None
-    hash_rate: Optional[Decimal] = None
-    staking_ratio: Optional[Decimal] = None
-    token_velocity: Optional[Decimal] = None
-    timestamp: Optional[datetime] = None
+    active_addresses: int | None = None
+    transaction_count: int | None = None
+    transaction_volume: Decimal | None = None
+    nvt_ratio: Decimal | None = None
+    network_health_score: Decimal | None = None
+    hash_rate: Decimal | None = None
+    staking_ratio: Decimal | None = None
+    token_velocity: Decimal | None = None
+    timestamp: datetime | None = None
 
 
 class CryptoAssetType(str, Enum):
@@ -1392,10 +1380,10 @@ class CryptoAsset:
     price: Decimal
     avg_daily_volume: Decimal
     exchanges: list[CryptoExchange]
-    btc_correlation: Optional[float] = None
-    volatility_30d: Optional[Decimal] = None
-    circulating_supply: Optional[Decimal] = None
-    total_supply: Optional[Decimal] = None
+    btc_correlation: float | None = None
+    volatility_30d: Decimal | None = None
+    circulating_supply: Decimal | None = None
+    total_supply: Decimal | None = None
 
 
 @dataclass
@@ -1417,9 +1405,9 @@ class CryptoScreeningResult:
     failed_assets: dict[str, list[str]]
     total_evaluated: int
     screening_time_ms: float
-    min_market_cap: Optional[Decimal] = None
-    min_daily_volume: Optional[Decimal] = None
-    min_liquidity_score: Optional[Decimal] = None
+    min_market_cap: Decimal | None = None
+    min_daily_volume: Decimal | None = None
+    min_liquidity_score: Decimal | None = None
 
 
 @dataclass
@@ -1466,14 +1454,14 @@ class CryptoMomentumScore:
     raw_momentum: Decimal
     final_score: Decimal
     confidence: Decimal
-    volatility_adjusted_momentum: Optional[Decimal] = None
-    btc_adjusted_momentum: Optional[Decimal] = None
-    price_momentum: Optional[Decimal] = None
-    volume_momentum: Optional[Decimal] = None
-    on_chain_momentum: Optional[Decimal] = None
-    social_momentum: Optional[Decimal] = None
-    composite_score: Optional[Decimal] = None
-    rank: Optional[int] = None
+    volatility_adjusted_momentum: Decimal | None = None
+    btc_adjusted_momentum: Decimal | None = None
+    price_momentum: Decimal | None = None
+    volume_momentum: Decimal | None = None
+    on_chain_momentum: Decimal | None = None
+    social_momentum: Decimal | None = None
+    composite_score: Decimal | None = None
+    rank: int | None = None
 
 
 @dataclass
@@ -1497,7 +1485,7 @@ class CryptoPortfolio:
     eth_weight: Decimal
     altcoin_weight: Decimal
     cash_weight: Decimal
-    last_rebalanced: Optional[datetime] = None
+    last_rebalanced: datetime | None = None
 
 
 class RollType(str, Enum):
@@ -1558,8 +1546,8 @@ class CoveredCallPosition:
     expiry: datetime
     premium_received: Decimal
     contracts: int
-    position_value: Optional[Decimal] = None
-    unrealized_pnl: Optional[Decimal] = None
+    position_value: Decimal | None = None
+    unrealized_pnl: Decimal | None = None
     status: str = "active"
 
 
@@ -1578,10 +1566,10 @@ class RollDecision:
     """
 
     should_roll: bool
-    roll_type: Optional[RollType] = None
-    new_strike: Optional[Decimal] = None
-    new_expiry: Optional[datetime] = None
-    estimated_credit: Optional[Decimal] = None
+    roll_type: RollType | None = None
+    new_strike: Decimal | None = None
+    new_expiry: datetime | None = None
+    estimated_credit: Decimal | None = None
     reasoning: str = ""
 
 
@@ -1608,6 +1596,6 @@ class RollOpportunity:
     new_strike: Decimal
     new_expiry: datetime
     estimated_credit: Decimal
-    annualized_return: Optional[Decimal] = None
-    days_to_expiry: Optional[int] = None
-    probability_itm: Optional[Decimal] = None
+    annualized_return: Decimal | None = None
+    days_to_expiry: int | None = None
+    probability_itm: Decimal | None = None

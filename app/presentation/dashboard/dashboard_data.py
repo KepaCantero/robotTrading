@@ -11,9 +11,11 @@ This module contains DashboardPerformanceMetrics which is dashboard-specific.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from datetime import datetime
 from decimal import Decimal
-from typing import Any, Optional
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from datetime import datetime
 
 
 @dataclass
@@ -62,7 +64,7 @@ class DashboardPerformanceMetrics:
     win_rate: float
     max_drawdown: float
     current_drawdown: float
-    sharpe_ratio: Optional[float] = None
+    sharpe_ratio: float | None = None
     portfolio_value: Decimal = Decimal("0")
     starting_capital: Decimal = Decimal("0")
 

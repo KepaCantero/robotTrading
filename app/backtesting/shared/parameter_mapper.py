@@ -13,7 +13,7 @@ and the nested YAML configuration structure used by strategies.
 from __future__ import annotations
 
 import copy
-from typing import ClassVar, Optional, Union
+from typing import ClassVar, Union
 
 from app.backtesting.shared.types import ConfigKeys
 
@@ -59,7 +59,7 @@ class ParameterMappingService:
     VOLUME_PRESETS: ClassVar[list[str]] = ["conservative", "balanced", "aggressive"]
 
     # Parameter to config path mappings
-    PARAMETER_MAPPINGS: ClassVar[dict[str, dict[str, Union[list[str], str]]]] = {
+    PARAMETER_MAPPINGS: ClassVar[dict[str, dict[str, list[str] | str]]] = {
         "rsi_threshold": {
             "path": ["modules", "rsi_filter", "adaptive_thresholds"],
             "contexts": RSI_CONTEXTS,
@@ -92,7 +92,7 @@ class ParameterMappingService:
     def map_params_to_strategy_config(
         cls,
         params: ParamDict,
-        base_config: Optional[ConfigDict] = None,
+        base_config: ConfigDict | None = None,
     ) -> ConfigDict:
         """
         Map optimization parameters to nested strategy configuration.
@@ -131,7 +131,7 @@ class ParameterMappingService:
 
     @classmethod
     def _apply_mapping(
-        cls, strategy: ConfigDict, mapping: dict[str, Union[list[str], str]], value: ParamValue
+        cls, strategy: ConfigDict, mapping: dict[str, list[str] | str], value: ParamValue
     ) -> None:
         """
         Apply a parameter mapping to the strategy config.
@@ -269,7 +269,7 @@ class ParameterMappingService:
 
 
 # Convenience function for backward compatibility
-def map_params_to_config(params: ParamDict, base_config: Optional[ConfigDict] = None) -> ConfigDict:
+def map_params_to_config(params: ParamDict, base_config: ConfigDict | None = None) -> ConfigDict:
     """
     Convenience function for backward compatibility.
 

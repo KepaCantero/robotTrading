@@ -11,7 +11,7 @@ from __future__ import annotations
 
 import inspect
 import logging
-from typing import TYPE_CHECKING, Callable, Optional, TypeVar, Union
+from typing import TYPE_CHECKING, Callable, TypeVar
 
 logger = logging.getLogger(__name__)
 
@@ -105,7 +105,7 @@ class DIContainer:
         )
         self._factories[name] = factory
 
-    def get(self, key: Union[type, str]) -> object:
+    def get(self, key: type | str) -> object:
         """
         Get a dependency by key.
 
@@ -185,7 +185,7 @@ class DIContainer:
         logger.debug("instance_created", extra={"class": cls.__name__})
         return instance
 
-    def get_optional(self, key: Union[type, str]) -> Optional[object]:
+    def get_optional(self, key: type | str) -> object | None:
         """
         Get a dependency, returning None if not found.
 
@@ -205,7 +205,7 @@ class DIContainer:
 
 
 # Global container instance
-_container: Optional[DIContainer] = None
+_container: DIContainer | None = None
 
 
 def get_container() -> DIContainer:

@@ -12,10 +12,12 @@ import logging
 from datetime import datetime
 from decimal import Decimal
 from enum import Enum
-from typing import Any, Optional
+from typing import TYPE_CHECKING, Any
 
-from app.domain.models.portfolio import Portfolio, Position
 from app.shared.config.centralized_config import get_config
+
+if TYPE_CHECKING:
+    from app.domain.models.portfolio import Portfolio, Position
 
 logger = logging.getLogger(__name__)
 
@@ -94,12 +96,12 @@ class PortfolioRiskManager:
 
         # Real-time correlation analyzer (Phase 2.4)
         self.correlation_analyzer = correlation_analyzer
-        self._correlation_cache: Optional[Any] = None
-        self._correlation_cache_time: Optional[datetime] = None
+        self._correlation_cache: Any | None = None
+        self._correlation_cache_time: datetime | None = None
         self._correlation_cache_ttl = 3600  # 1 hour cache
 
     def assess_portfolio_risk(
-        self, portfolio: Portfolio, new_position: Optional[Position] = None
+        self, portfolio: Portfolio, new_position: Position | None = None
     ) -> dict[str, Any]:
         """
         Evaluar riesgo del portafolio.
@@ -160,7 +162,7 @@ class PortfolioRiskManager:
         return risk_assessment
 
     async def _calculate_risk_metrics_async(
-        self, portfolio: Portfolio, new_position: Optional[Position]
+        self, portfolio: Portfolio, new_position: Position | None
     ) -> dict[str, Any]:
         """Calcular métricas de riesgo (async version for correlation)."""
         # Calcular exposición total
@@ -196,7 +198,7 @@ class PortfolioRiskManager:
         }
 
     def _calculate_risk_metrics(
-        self, portfolio: Portfolio, new_position: Optional[Position]
+        self, portfolio: Portfolio, new_position: Position | None
     ) -> dict[str, Any]:
         """Calcular métricas de riesgo (synchronous fallback)."""
         # Calcular exposición total
@@ -358,7 +360,7 @@ class PortfolioRiskManager:
         return recommendations
 
     def _calculate_total_exposure(
-        self, portfolio: Portfolio, new_position: Optional[Position]
+        self, portfolio: Portfolio, new_position: Position | None
     ) -> Decimal:
         """Calcular exposición total."""
         total_exposure = Decimal("0")
@@ -374,7 +376,7 @@ class PortfolioRiskManager:
         return total_exposure / total_capital if total_capital > 0 else Decimal("0")
 
     def _calculate_sector_exposures(
-        self, portfolio: Portfolio, new_position: Optional[Position]
+        self, portfolio: Portfolio, new_position: Position | None
     ) -> dict[str, Decimal]:
         """Calcular exposición por sector."""
         sector_exposures = {}
@@ -400,7 +402,7 @@ class PortfolioRiskManager:
         return sector_exposures
 
     async def _calculate_correlations_async(
-        self, portfolio: Portfolio, new_position: Optional[Position]
+        self, portfolio: Portfolio, new_position: Position | None
     ) -> dict[str, float]:
         """
         Calcular correlaciones entre posiciones usando real-time correlation matrix.
@@ -498,7 +500,7 @@ class PortfolioRiskManager:
         return 0.1
 
     def _calculate_correlations(
-        self, portfolio: Portfolio, new_position: Optional[Position]
+        self, portfolio: Portfolio, new_position: Position | None
     ) -> dict[str, float]:
         """Calcular correlaciones entre posiciones (synchronous fallback)."""
         correlations = {}
@@ -568,7 +570,7 @@ class PortfolioRiskManager:
         }
 
     def _calculate_currency_exposure(
-        self, portfolio: Portfolio, new_position: Optional[Position]
+        self, portfolio: Portfolio, new_position: Position | None
     ) -> dict[str, Any]:
         """
         Calcular exposición de moneda extranjera [TASK-5.5].

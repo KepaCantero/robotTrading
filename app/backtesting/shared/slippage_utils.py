@@ -13,7 +13,6 @@ Usage:
 from __future__ import annotations
 
 from decimal import Decimal
-from typing import Optional
 
 from app.shared.config.centralized_config import get_config
 
@@ -21,7 +20,7 @@ from app.shared.config.centralized_config import get_config
 def apply_slippage(
     price: Decimal,
     is_buy: bool,
-    slippage_pct: Optional[Decimal] = None,
+    slippage_pct: Decimal | None = None,
     is_stop: bool = False,
     is_volatile: bool = False,
 ) -> Decimal:

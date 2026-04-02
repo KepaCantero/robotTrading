@@ -12,8 +12,10 @@ from __future__ import annotations
 import logging
 import os
 import time
-from pathlib import Path
-from typing import Any, Optional
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
@@ -28,7 +30,7 @@ class FileBasedConfigCache:
         self._cache: dict[Path, dict[str, Any]] = {}
         self._timestamps: dict[Path, float] = {}
 
-    def get_cached(self, config_path: Path) -> Optional[dict[str, Any]]:
+    def get_cached(self, config_path: Path) -> dict[str, Any] | None:
         """
         Get cached configuration if available and valid.
 

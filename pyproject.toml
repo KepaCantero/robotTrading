@@ -176,6 +176,8 @@ ignore-names = ["X", "X_train", "X_test", "X_val", "X_array", "X_scaled", "X_tra
 
 [tool.ruff.lint.isort]
 known-first-party = ["app"]
+combine-as-imports = true
+split-on-trailing-comma = false
 
 [tool.mypy]
 python_version = "3.9"

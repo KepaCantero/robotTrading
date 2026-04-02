@@ -18,19 +18,22 @@ from __future__ import annotations
 
 import logging
 from collections import defaultdict, deque
-from collections.abc import Sequence
 from decimal import Decimal
-from typing import Any, Optional
+from typing import TYPE_CHECKING, Any
 
 import numpy as np
 
-from app.domain.models.market_data import Quote
-from app.domain.models.portfolio import Portfolio
 from app.domain.models.signal import Signal, SignalSource, SignalStrength, SignalType
 from app.domain.services.analysis.momentum import TechnicalIndicatorCalculator
 from app.shared.config.centralized_config import get_config
 
 from .base import BaseStrategyEngine
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
+
+    from app.domain.models.market_data import Quote
+    from app.domain.models.portfolio import Portfolio
 
 logger = logging.getLogger(__name__)
 
@@ -234,7 +237,7 @@ class ArbitrageStrategyEngine(BaseStrategyEngine):
     def extract_features(
         self,
         market_data: Quote,
-        historical_data: Optional[Sequence[Quote]] = None,
+        historical_data: Sequence[Quote] | None = None,
     ) -> dict[str, Any]:
         """
         Extraer features estandarizados para Learning Engine.
@@ -373,7 +376,7 @@ class ArbitrageStrategyEngine(BaseStrategyEngine):
 
         return features
 
-    def _estimate_half_life(self, spreads: list[float]) -> Optional[float]:
+    def _estimate_half_life(self, spreads: list[float]) -> float | None:
         """
         Estimar half-life de la reversion a la media del spread.
 
@@ -974,7 +977,7 @@ class ArbitrageStrategyEngine(BaseStrategyEngine):
         """Obtener posiciones de arbitraje activas."""
         return self.active_arbitrage_positions.copy()
 
-    def get_spread_statistics(self, pair_key: str) -> Optional[dict[str, float]]:
+    def get_spread_statistics(self, pair_key: str) -> dict[str, float] | None:
         """
         Obtener estadisticas del spread para un par.
 

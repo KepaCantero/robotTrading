@@ -14,9 +14,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
 
 if TYPE_CHECKING:
-    from app.domain.strategies.protocols import (
-        StrategyLoggerProto as StrategyLogger,
-    )
+    from app.domain.strategies.protocols import StrategyLoggerProto as StrategyLogger
     from app.domain.strategies.strategy_registry import StrategyRegistry
 
 # Constants

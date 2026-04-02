@@ -25,7 +25,6 @@ from datetime import datetime, timezone
 from decimal import Decimal
 from enum import Enum
 from pathlib import Path
-from typing import Optional
 
 import numpy as np
 
@@ -59,15 +58,15 @@ class AuditEvent:
     event_id: str
     event_type: AuditEventType
     timestamp: datetime = field(default_factory=utc_now)
-    alert_id: Optional[str] = None
-    order_id: Optional[str] = None
-    symbol: Optional[str] = None
-    quantity: Optional[Decimal] = None
+    alert_id: str | None = None
+    order_id: str | None = None
+    symbol: str | None = None
+    quantity: Decimal | None = None
     user: str = "system"
-    ip_address: Optional[str] = None
+    ip_address: str | None = None
     details: dict = field(default_factory=dict)
     is_compliant: bool = True
-    risk_level: Optional[str] = None
+    risk_level: str | None = None
 
     def to_dict(self) -> dict:
         """Convert to dictionary for serialization."""
@@ -132,7 +131,7 @@ class AuditPersistence:
     PRODUCTION: WAL mode for concurrent access, thread-safe.
     """
 
-    def __init__(self, db_path: Optional[Path] = None):
+    def __init__(self, db_path: Path | None = None):
         """
         Initialize audit persistence.
 
@@ -162,7 +161,8 @@ class AuditPersistence:
     def _init_database(self) -> None:
         """Initialize database schema."""
         conn = self._get_connection()
-        conn.execute("""
+        conn.execute(
+            """
             CREATE TABLE IF NOT EXISTS audit_events (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 event_id TEXT UNIQUE NOT NULL,
@@ -179,7 +179,8 @@ class AuditPersistence:
                 risk_level TEXT,
                 created_at TEXT DEFAULT CURRENT_TIMESTAMP
             )
-        """)
+        """
+        )
         # Indices for fast queries (MiFID II compliance queries)
         conn.execute("CREATE INDEX IF NOT EXISTS idx_audit_timestamp ON audit_events(timestamp)")
         conn.execute("CREATE INDEX IF NOT EXISTS idx_audit_alert_id ON audit_events(alert_id)")
@@ -238,9 +239,9 @@ class AuditPersistence:
         self,
         limit: int = 1000,
         offset: int = 0,
-        event_type: Optional[str] = None,
-        start_date: Optional[datetime] = None,
-        end_date: Optional[datetime] = None,
+        event_type: str | None = None,
+        start_date: datetime | None = None,
+        end_date: datetime | None = None,
     ) -> list[dict]:
         """
         Get audit events from database.
@@ -287,8 +288,8 @@ class AuditPersistence:
 
     def get_event_count(
         self,
-        start_date: Optional[datetime] = None,
-        end_date: Optional[datetime] = None,
+        start_date: datetime | None = None,
+        end_date: datetime | None = None,
     ) -> int:
         """Get total event count for date range."""
         try:
@@ -352,10 +353,10 @@ class AuditPersistence:
 
 
 # Singleton persistence instance
-_audit_persistence: Optional[AuditPersistence] = None
+_audit_persistence: AuditPersistence | None = None
 
 
-def get_audit_persistence(db_path: Optional[Path] = None) -> AuditPersistence:
+def get_audit_persistence(db_path: Path | None = None) -> AuditPersistence:
     """Get or create singleton AuditPersistence."""
     global _audit_persistence
     if _audit_persistence is None:
@@ -383,8 +384,8 @@ class TradingAuditTrail:
     def __init__(
         self,
         max_events: int = 10000,
-        persistence: Optional[AuditPersistence] = None,
-        db_path: Optional[Path] = None,
+        persistence: AuditPersistence | None = None,
+        db_path: Path | None = None,
     ):
         """
         Initialize audit trail with persistence.
@@ -423,7 +424,7 @@ class TradingAuditTrail:
         except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.error(f"Error loading from persistence: {e}")
 
-    def _dict_to_audit_event(self, data: dict) -> Optional[AuditEvent]:
+    def _dict_to_audit_event(self, data: dict) -> AuditEvent | None:
         """Convert dictionary to AuditEvent."""
         try:
             # Parse timestamp
@@ -464,13 +465,13 @@ class TradingAuditTrail:
     def log_event(
         self,
         event_type: AuditEventType,
-        alert_id: Optional[str] = None,
-        order_id: Optional[str] = None,
-        symbol: Optional[str] = None,
-        quantity: Optional[Decimal] = None,
-        details: Optional[dict] = None,
+        alert_id: str | None = None,
+        order_id: str | None = None,
+        symbol: str | None = None,
+        quantity: Decimal | None = None,
+        details: dict | None = None,
         is_compliant: bool = True,
-        risk_level: Optional[str] = None,
+        risk_level: str | None = None,
         user: str = "system",
     ) -> AuditEvent:
         """
@@ -516,7 +517,7 @@ class TradingAuditTrail:
         logger.info(f"📝 Audit event: {event_type.value} (event_id={event.event_id})")
         return event
 
-    def get_event(self, event_id: str) -> Optional[AuditEvent]:
+    def get_event(self, event_id: str) -> AuditEvent | None:
         """
         Get audit event by ID.
 
@@ -692,7 +693,7 @@ class TradingAuditTrail:
 
 
 # Singleton instance
-_audit_trail_instance: Optional[TradingAuditTrail] = None
+_audit_trail_instance: TradingAuditTrail | None = None
 
 
 def get_trading_audit_trail() -> TradingAuditTrail:

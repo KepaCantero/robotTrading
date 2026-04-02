@@ -21,7 +21,7 @@ from __future__ import annotations
 
 import logging
 from enum import Enum
-from typing import Optional, Protocol, Union, runtime_checkable
+from typing import Protocol, runtime_checkable
 
 import numpy as np
 import pandas as pd
@@ -46,60 +46,60 @@ class IndicatorCalculator(Protocol):
 
     def rsi(
         self,
-        data: Union[pd.DataFrame, pd.Series, list, np.ndarray],
+        data: pd.DataFrame | pd.Series | list | np.ndarray,
         period: int = 14,
         return_array: bool = False,
-    ) -> Union[Optional[float], Optional[np.ndarray]]: ...
+    ) -> float | None | np.ndarray | None: ...
 
     def ema(
         self,
-        data: Union[pd.DataFrame, pd.Series, list, np.ndarray],
+        data: pd.DataFrame | pd.Series | list | np.ndarray,
         period: int = 20,
         return_array: bool = False,
-    ) -> Union[Optional[float], Optional[np.ndarray]]: ...
+    ) -> float | None | np.ndarray | None: ...
 
     def sma(
         self,
-        data: Union[pd.DataFrame, pd.Series, list, np.ndarray],
+        data: pd.DataFrame | pd.Series | list | np.ndarray,
         period: int = 20,
         return_array: bool = False,
-    ) -> Union[Optional[float], Optional[np.ndarray]]: ...
+    ) -> float | None | np.ndarray | None: ...
 
     def macd(
         self,
-        data: Union[pd.DataFrame, pd.Series, list, np.ndarray],
+        data: pd.DataFrame | pd.Series | list | np.ndarray,
         fast_period: int = 12,
         slow_period: int = 26,
         signal_period: int = 9,
         return_components: bool = True,
-    ) -> Union[Optional[float], tuple]: ...
+    ) -> float | None | tuple: ...
 
     def atr(
         self,
-        high: Union[pd.DataFrame, pd.Series, list, np.ndarray],
-        low: Union[pd.DataFrame, pd.Series, list, np.ndarray],
-        close: Union[pd.DataFrame, pd.Series, list, np.ndarray],
+        high: pd.DataFrame | pd.Series | list | np.ndarray,
+        low: pd.DataFrame | pd.Series | list | np.ndarray,
+        close: pd.DataFrame | pd.Series | list | np.ndarray,
         period: int = 14,
         return_array: bool = False,
-    ) -> Union[Optional[float], Optional[np.ndarray]]: ...
+    ) -> float | None | np.ndarray | None: ...
 
     def bollinger_bands(
         self,
-        data: Union[pd.DataFrame, pd.Series, list, np.ndarray],
+        data: pd.DataFrame | pd.Series | list | np.ndarray,
         period: int = 20,
         std_dev: float = 2.0,
         return_components: bool = True,
-    ) -> Union[tuple, dict]: ...
+    ) -> tuple | dict: ...
 
     def stochastic(
         self,
-        high: Union[pd.DataFrame, pd.Series, list, np.ndarray],
-        low: Union[pd.DataFrame, pd.Series, list, np.ndarray],
-        close: Union[pd.DataFrame, pd.Series, list, np.ndarray],
+        high: pd.DataFrame | pd.Series | list | np.ndarray,
+        low: pd.DataFrame | pd.Series | list | np.ndarray,
+        close: pd.DataFrame | pd.Series | list | np.ndarray,
         k_period: int = 14,
         d_period: int = 3,
         return_components: bool = True,
-    ) -> Union[Optional[float], tuple]: ...
+    ) -> float | None | tuple: ...
 
 
 class UnifiedIndicatorCalculator:
@@ -112,7 +112,7 @@ class UnifiedIndicatorCalculator:
 
     def __init__(
         self,
-        backend: Union[str, IndicatorBackend] = IndicatorBackend.PANDAS,
+        backend: str | IndicatorBackend = IndicatorBackend.PANDAS,
         auto_threshold: int = 1000,
     ):
         """
@@ -138,7 +138,7 @@ class UnifiedIndicatorCalculator:
             )
             self.backend = IndicatorBackend.PANDAS
 
-    def _select_backend(self, data: Union[pd.DataFrame, pd.Series, list, np.ndarray]) -> str:
+    def _select_backend(self, data: pd.DataFrame | pd.Series | list | np.ndarray) -> str:
         """Select the appropriate backend based on data characteristics."""
         if self.backend != IndicatorBackend.AUTO:
             return str(self.backend.value)
@@ -155,9 +155,7 @@ class UnifiedIndicatorCalculator:
 
         return str(IndicatorBackend.PANDAS.value)
 
-    def _convert_to_array(
-        self, data: Union[pd.DataFrame, pd.Series, list, np.ndarray]
-    ) -> np.ndarray:
+    def _convert_to_array(self, data: pd.DataFrame | pd.Series | list | np.ndarray) -> np.ndarray:
         """Convert data to numpy array for numba backend."""
         if isinstance(data, pd.DataFrame):
             if "close" in data.columns:
@@ -176,16 +174,16 @@ class UnifiedIndicatorCalculator:
         return self._pandas_calculator
 
     @property
-    def numba(self) -> Optional[NumbaIndicators]:
+    def numba(self) -> NumbaIndicators | None:
         """Get numba calculator directly."""
         return self._numba_calculator
 
     def rsi(
         self,
-        data: Union[pd.DataFrame, pd.Series, list, np.ndarray],
+        data: pd.DataFrame | pd.Series | list | np.ndarray,
         period: int = 14,
         return_array: bool = False,
-    ) -> Union[Optional[float], Optional[np.ndarray]]:
+    ) -> float | None | np.ndarray | None:
         """Calculate RSI."""
         backend = self._select_backend(data)
 
@@ -195,10 +193,10 @@ class UnifiedIndicatorCalculator:
 
     def ema(
         self,
-        data: Union[pd.DataFrame, pd.Series, list, np.ndarray],
+        data: pd.DataFrame | pd.Series | list | np.ndarray,
         period: int = 20,
         return_array: bool = False,
-    ) -> Union[Optional[float], Optional[np.ndarray]]:
+    ) -> float | None | np.ndarray | None:
         """Calculate EMA."""
         backend = self._select_backend(data)
 
@@ -208,10 +206,10 @@ class UnifiedIndicatorCalculator:
 
     def sma(
         self,
-        data: Union[pd.DataFrame, pd.Series, list, np.ndarray],
+        data: pd.DataFrame | pd.Series | list | np.ndarray,
         period: int = 20,
         return_array: bool = False,
-    ) -> Union[Optional[float], Optional[np.ndarray]]:
+    ) -> float | None | np.ndarray | None:
         """Calculate SMA."""
         backend = self._select_backend(data)
 
@@ -221,12 +219,12 @@ class UnifiedIndicatorCalculator:
 
     def macd(
         self,
-        data: Union[pd.DataFrame, pd.Series, list, np.ndarray],
+        data: pd.DataFrame | pd.Series | list | np.ndarray,
         fast_period: int = 12,
         slow_period: int = 26,
         signal_period: int = 9,
         return_components: bool = True,
-    ) -> Union[Optional[float], tuple]:
+    ) -> float | None | tuple:
         """Calculate MACD."""
         backend = self._select_backend(data)
 
@@ -244,12 +242,12 @@ class UnifiedIndicatorCalculator:
 
     def atr(
         self,
-        high: Union[pd.DataFrame, pd.Series, list, np.ndarray],
-        low: Union[pd.DataFrame, pd.Series, list, np.ndarray],
-        close: Union[pd.DataFrame, pd.Series, list, np.ndarray],
+        high: pd.DataFrame | pd.Series | list | np.ndarray,
+        low: pd.DataFrame | pd.Series | list | np.ndarray,
+        close: pd.DataFrame | pd.Series | list | np.ndarray,
         period: int = 14,
         return_array: bool = False,
-    ) -> Union[Optional[float], Optional[np.ndarray]]:
+    ) -> float | None | np.ndarray | None:
         """Calculate ATR."""
         backend = self._select_backend(close)
 
@@ -265,11 +263,11 @@ class UnifiedIndicatorCalculator:
 
     def bollinger_bands(
         self,
-        data: Union[pd.DataFrame, pd.Series, list, np.ndarray],
+        data: pd.DataFrame | pd.Series | list | np.ndarray,
         period: int = 20,
         std_dev: float = 2.0,
         return_components: bool = True,
-    ) -> Union[tuple, dict]:
+    ) -> tuple | dict:
         """Calculate Bollinger Bands."""
         backend = self._select_backend(data)
 
@@ -281,24 +279,24 @@ class UnifiedIndicatorCalculator:
 
     def adx(
         self,
-        high: Union[pd.DataFrame, pd.Series, list, np.ndarray],
-        low: Union[pd.DataFrame, pd.Series, list, np.ndarray],
-        close: Union[pd.DataFrame, pd.Series, list, np.ndarray],
+        high: pd.DataFrame | pd.Series | list | np.ndarray,
+        low: pd.DataFrame | pd.Series | list | np.ndarray,
+        close: pd.DataFrame | pd.Series | list | np.ndarray,
         period: int = 14,
         return_components: bool = True,
-    ) -> Union[Optional[float], tuple]:
+    ) -> float | None | tuple:
         """Calculate ADX (uses pandas backend only)."""
         return self._pandas_calculator.adx(high, low, close, period, return_components)
 
     def stochastic(
         self,
-        high: Union[pd.DataFrame, pd.Series, list, np.ndarray],
-        low: Union[pd.DataFrame, pd.Series, list, np.ndarray],
-        close: Union[pd.DataFrame, pd.Series, list, np.ndarray],
+        high: pd.DataFrame | pd.Series | list | np.ndarray,
+        low: pd.DataFrame | pd.Series | list | np.ndarray,
+        close: pd.DataFrame | pd.Series | list | np.ndarray,
         k_period: int = 14,
         d_period: int = 3,
         return_components: bool = True,
-    ) -> Union[Optional[float], tuple]:
+    ) -> float | None | tuple:
         """Calculate Stochastic Oscillator."""
         backend = self._select_backend(close)
 
@@ -316,50 +314,50 @@ class UnifiedIndicatorCalculator:
 
     def cci(
         self,
-        high: Union[pd.DataFrame, pd.Series, list, np.ndarray],
-        low: Union[pd.DataFrame, pd.Series, list, np.ndarray],
-        close: Union[pd.DataFrame, pd.Series, list, np.ndarray],
+        high: pd.DataFrame | pd.Series | list | np.ndarray,
+        low: pd.DataFrame | pd.Series | list | np.ndarray,
+        close: pd.DataFrame | pd.Series | list | np.ndarray,
         period: int = 20,
-    ) -> Optional[float]:
+    ) -> float | None:
         """Calculate CCI (uses pandas backend only)."""
         return self._pandas_calculator.cci(high, low, close, period)
 
     def obv(
         self,
-        close: Union[pd.DataFrame, pd.Series, list, np.ndarray],
-        volume: Union[pd.DataFrame, pd.Series, list, np.ndarray],
+        close: pd.DataFrame | pd.Series | list | np.ndarray,
+        volume: pd.DataFrame | pd.Series | list | np.ndarray,
         return_array: bool = False,
-    ) -> Union[Optional[float], Optional[np.ndarray]]:
+    ) -> float | None | np.ndarray | None:
         """Calculate OBV (uses pandas backend only)."""
         return self._pandas_calculator.obv(close, volume, return_array)
 
     def williams_r(
         self,
-        high: Union[pd.DataFrame, pd.Series, list, np.ndarray],
-        low: Union[pd.DataFrame, pd.Series, list, np.ndarray],
-        close: Union[pd.DataFrame, pd.Series, list, np.ndarray],
+        high: pd.DataFrame | pd.Series | list | np.ndarray,
+        low: pd.DataFrame | pd.Series | list | np.ndarray,
+        close: pd.DataFrame | pd.Series | list | np.ndarray,
         period: int = 14,
-    ) -> Optional[float]:
+    ) -> float | None:
         """Calculate Williams %R (uses pandas backend only)."""
         return self._pandas_calculator.williams_r(high, low, close, period)
 
     def roc(
-        self, data: Union[pd.DataFrame, pd.Series, list, np.ndarray], period: int = 14
-    ) -> Optional[float]:
+        self, data: pd.DataFrame | pd.Series | list | np.ndarray, period: int = 14
+    ) -> float | None:
         """Calculate ROC (uses pandas backend only)."""
         return self._pandas_calculator.roc(data, period)
 
-    def calculate_all(self, df: pd.DataFrame, indicators: Optional[list] = None) -> dict:
+    def calculate_all(self, df: pd.DataFrame, indicators: list | None = None) -> dict:
         """Calculate multiple indicators (uses pandas backend only)."""
         return self._pandas_calculator.calculate_all(df, indicators)
 
 
 # Singleton instance for convenience
-_default_calculator: Optional[UnifiedIndicatorCalculator] = None
+_default_calculator: UnifiedIndicatorCalculator | None = None
 
 
 def get_indicator_calculator(
-    backend: Union[str, IndicatorBackend] = IndicatorBackend.PANDAS,
+    backend: str | IndicatorBackend = IndicatorBackend.PANDAS,
     auto_threshold: int = 1000,
     use_singleton: bool = True,
 ) -> UnifiedIndicatorCalculator:
@@ -454,24 +452,24 @@ def get_available_backends() -> dict:
 
 
 # For backward compatibility with existing code
-def calculate_rsi(prices: list, period: int = 14) -> Union[Optional[float], Optional[np.ndarray]]:
+def calculate_rsi(prices: list, period: int = 14) -> float | None | np.ndarray | None:
     """Convenience function for RSI calculation."""
     return get_indicator_calculator().rsi(prices, period)
 
 
-def calculate_ema(prices: list, period: int = 20) -> Union[Optional[float], Optional[np.ndarray]]:
+def calculate_ema(prices: list, period: int = 20) -> float | None | np.ndarray | None:
     """Convenience function for EMA calculation."""
     return get_indicator_calculator().ema(prices, period)
 
 
-def calculate_sma(prices: list, period: int = 20) -> Union[Optional[float], Optional[np.ndarray]]:
+def calculate_sma(prices: list, period: int = 20) -> float | None | np.ndarray | None:
     """Convenience function for SMA calculation."""
     return get_indicator_calculator().sma(prices, period)
 
 
 def calculate_macd(
     prices: list, fast_period: int = 12, slow_period: int = 26, signal_period: int = 9
-) -> Union[Optional[float], tuple]:
+) -> float | None | tuple:
     """Convenience function for MACD calculation."""
     return get_indicator_calculator().macd(
         prices, fast_period, slow_period, signal_period, return_components=True
@@ -480,13 +478,11 @@ def calculate_macd(
 
 def calculate_atr(
     high: list, low: list, close: list, period: int = 14
-) -> Union[Optional[float], Optional[np.ndarray]]:
+) -> float | None | np.ndarray | None:
     """Convenience function for ATR calculation."""
     return get_indicator_calculator().atr(high, low, close, period)
 
 
-def calculate_bollinger_bands(
-    prices: list, period: int = 20, std_dev: float = 2.0
-) -> Union[tuple, dict]:
+def calculate_bollinger_bands(prices: list, period: int = 20, std_dev: float = 2.0) -> tuple | dict:
     """Convenience function for Bollinger Bands calculation."""
     return get_indicator_calculator().bollinger_bands(prices, period, std_dev)

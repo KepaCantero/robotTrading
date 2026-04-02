@@ -15,10 +15,12 @@ import json
 import logging
 import time
 from datetime import datetime
-from pathlib import Path
-from typing import Optional, TypedDict
+from typing import TYPE_CHECKING, TypedDict
 
-from app.backtesting.models import BacktestConfig, BacktestResult, PerformanceMetrics
+if TYPE_CHECKING:
+    from pathlib import Path
+
+    from app.backtesting.models import BacktestConfig, BacktestResult, PerformanceMetrics
 
 logger = logging.getLogger(__name__)
 
@@ -37,15 +39,15 @@ class ConfigInfoDict(TypedDict, total=False):
     initial_capital: float
     commission: float
     slippage: float
-    stop_loss: Optional[float]
-    take_profit: Optional[float]
+    stop_loss: float | None
+    take_profit: float | None
 
 
 class ReturnsDict(TypedDict, total=False):
     """TypedDict for return metrics."""
 
     total: float
-    annualized: Optional[float]
+    annualized: float | None
     final_capital: float
 
 
@@ -56,18 +58,18 @@ class PerformanceDict(TypedDict, total=False):
     winning_trades: int
     losing_trades: int
     win_rate: float
-    profit_factor: Optional[float]
-    expectancy: Optional[float]
+    profit_factor: float | None
+    expectancy: float | None
 
 
 class RiskDict(TypedDict, total=False):
     """TypedDict for risk metrics."""
 
-    sharpe: Optional[float]
-    sortino: Optional[float]
-    calmar: Optional[float]
+    sharpe: float | None
+    sortino: float | None
+    calmar: float | None
     max_drawdown: float
-    volatility: Optional[float]
+    volatility: float | None
 
 
 class DetailedMetrics(TypedDict, total=False):

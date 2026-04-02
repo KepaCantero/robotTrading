@@ -18,7 +18,6 @@ from __future__ import annotations
 import logging
 import math
 from decimal import Decimal
-from typing import Optional
 
 from .models import CallOption, OptionGreeks
 
@@ -66,8 +65,8 @@ class BlackScholesGreeks:
     def calculate_greeks(
         self,
         option: CallOption,
-        underlying_price: Optional[Decimal] = None,
-        volatility: Optional[float] = None,
+        underlying_price: Decimal | None = None,
+        volatility: float | None = None,
     ) -> OptionGreeks:
         """
         Calcular Greeks para una opción call.
@@ -285,7 +284,7 @@ class BlackScholesGreeks:
         self,
         option: CallOption,
         market_price: float,
-        underlying_price: Optional[Decimal] = None,
+        underlying_price: Decimal | None = None,
         max_iterations: int = 100,
         tolerance: float = 1e-6,
     ) -> float:
@@ -376,7 +375,7 @@ class BlackScholesGreeks:
     def estimate_assignment_probability(
         self,
         option: CallOption,
-        current_price: Optional[Decimal] = None,
+        current_price: Decimal | None = None,
     ) -> str:
         """
         Estimar probabilidad de assignment.
@@ -478,8 +477,8 @@ class GreeksCalculator:
     def calculate(
         self,
         option: CallOption,
-        underlying_price: Optional[Decimal] = None,
-        volatility: Optional[float] = None,
+        underlying_price: Decimal | None = None,
+        volatility: float | None = None,
     ) -> OptionGreeks:
         """
         Calcular Greeks.
@@ -497,7 +496,7 @@ class GreeksCalculator:
     def estimate_probability(
         self,
         option: CallOption,
-        current_price: Optional[Decimal] = None,
+        current_price: Decimal | None = None,
     ) -> str:
         """
         Estimar probabilidad de assignment.

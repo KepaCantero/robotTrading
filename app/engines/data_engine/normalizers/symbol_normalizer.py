@@ -8,7 +8,6 @@ from __future__ import annotations
 
 import logging
 import re
-from typing import Optional, Union
 
 logger = logging.getLogger(__name__)
 
@@ -20,7 +19,7 @@ class SymbolNormalizer:
     Convierte símbolos a formato estándar y maneja variaciones.
     """
 
-    def __init__(self, config: Optional[dict[str, Union[str, int, float, bool]]] = None):
+    def __init__(self, config: dict[str, str | int | float | bool] | None = None):
         """
         Inicializar normalizador.
 
@@ -42,7 +41,7 @@ class SymbolNormalizer:
         )
         self.exchange_mappings: dict[str, dict[str, str]] = config.get("exchange_mappings", {})
 
-    def normalize(self, symbol: Union[str, int, float], source: Optional[str] = None) -> str:
+    def normalize(self, symbol: str | int | float, source: str | None = None) -> str:
         """
         Normalizar símbolo a formato estándar.
 
@@ -85,7 +84,7 @@ class SymbolNormalizer:
             logger.error(f"Error normalizando símbolo {symbol}: {e}")
             return str(symbol).strip().upper()
 
-    def normalize_batch(self, symbols: list, source: Optional[str] = None) -> list:
+    def normalize_batch(self, symbols: list, source: str | None = None) -> list:
         """
         Normalizar múltiples símbolos.
 

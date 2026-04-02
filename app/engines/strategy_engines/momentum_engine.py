@@ -12,12 +12,9 @@ from __future__ import annotations
 
 import logging
 from collections import deque
-from collections.abc import Sequence
 from decimal import Decimal
-from typing import TYPE_CHECKING, Any, Optional, Union
+from typing import TYPE_CHECKING, Any
 
-from app.domain.models.market_data import Quote
-from app.domain.models.portfolio import Portfolio
 from app.domain.models.signal import Signal, SignalSource, SignalStrength, SignalType
 from app.domain.services.analysis.momentum import TechnicalIndicatorCalculator
 from app.services.signal_scoring_engine import get_signal_scoring_engine
@@ -26,7 +23,11 @@ from app.shared.config.centralized_config import get_config
 from .base import BaseStrategyEngine
 
 if TYPE_CHECKING:
+    from collections.abc import Sequence
     from datetime import datetime
+
+    from app.domain.models.market_data import Quote
+    from app.domain.models.portfolio import Portfolio
 
 logger = logging.getLogger(__name__)
 
@@ -143,7 +144,7 @@ class MomentumStrategyEngine(BaseStrategyEngine):
         return "momentum"
 
     def extract_features(
-        self, market_data: Quote, historical_data: Optional[Sequence[Quote]] = None
+        self, market_data: Quote, historical_data: Sequence[Quote] | None = None
     ) -> dict[str, Any]:
         """
         Extraer features estandarizados para Learning Engine.
@@ -158,7 +159,7 @@ class MomentumStrategyEngine(BaseStrategyEngine):
         # Use local typed variables for numeric values to keep mypy happy
         current_price: float = float(market_data.close or market_data.bid or market_data.last or 0)
 
-        features: dict[str, Union[float, str, datetime, None, bool]] = {
+        features: dict[str, float | str | datetime | None | bool] = {
             "timestamp": market_data.timestamp,
             "symbol": market_data.symbol,
             "price": current_price,

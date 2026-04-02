@@ -10,7 +10,7 @@ from __future__ import annotations
 import logging
 from decimal import Decimal
 from pathlib import Path
-from typing import Any, Optional, cast
+from typing import Any, cast
 
 import yaml
 
@@ -86,8 +86,8 @@ class PortfolioConfigManager:
         """
         self.config_path = Path(config_path)
         self.config: dict[str, Any] = {}
-        self.sector_filter: Optional[SectorFilter] = None
-        self.allocation_manager: Optional[MultiStrategyAllocationManager] = None
+        self.sector_filter: SectorFilter | None = None
+        self.allocation_manager: MultiStrategyAllocationManager | None = None
 
         if self.config_path.exists():
             self.load_config()
@@ -234,7 +234,7 @@ class PortfolioConfigManager:
 
         return self.allocation_manager
 
-    def get_rebalancing_config(self, strategy_name: Optional[str] = None) -> dict[str, Any]:
+    def get_rebalancing_config(self, strategy_name: str | None = None) -> dict[str, Any]:
         """
         Get rebalancing configuration.
 
@@ -285,7 +285,7 @@ class PortfolioConfigManager:
 
 
 # Global instance
-_portfolio_config_manager: Optional[PortfolioConfigManager] = None
+_portfolio_config_manager: PortfolioConfigManager | None = None
 
 
 def get_portfolio_config_manager(

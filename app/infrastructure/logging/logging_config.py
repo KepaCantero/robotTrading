@@ -11,7 +11,6 @@ from contextvars import ContextVar
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
 from re import Pattern
-from typing import Optional, Union
 
 """
 Logging Configuration Module
@@ -43,7 +42,7 @@ def get_logger(name: str) -> logging.Logger:
 
 
 # LOG-002: Context variable for correlation ID tracking
-_correlation_id: ContextVar[Optional[str]] = ContextVar("correlation_id", default=None)
+_correlation_id: ContextVar[str | None] = ContextVar("correlation_id", default=None)
 
 
 def get_correlation_id() -> str:
@@ -199,8 +198,8 @@ class SensitiveDataFilter(logging.Filter):
         return redacted
 
     def _redact_dict(
-        self, data: dict[str, Union[str, int, float, bool, list, dict, None]]
-    ) -> dict[str, Union[str, int, float, bool, list, dict, None]]:
+        self, data: dict[str, str | int | float | bool | list | dict | None]
+    ) -> dict[str, str | int | float | bool | list | dict | None]:
         """
         Redact sensitive values from a dictionary.
 
@@ -213,7 +212,7 @@ class SensitiveDataFilter(logging.Filter):
         if not isinstance(data, dict):
             return {}
 
-        redacted: dict[str, Union[str, int, float, bool, list, dict, None]] = {}
+        redacted: dict[str, str | int | float | bool | list | dict | None] = {}
         for key, value in data.items():
             key_lower = key.lower().replace("-", "_").replace(".", "")
 
@@ -364,7 +363,7 @@ class JSONFormatter(logging.Formatter):
         timing_ms = (time.time() - self._start_time) * 1000
 
         # Create structured log data
-        log_data: dict[str, Union[str, int, float, list, dict, None]] = {
+        log_data: dict[str, str | int | float | list | dict | None] = {
             "timestamp": self.formatTime(record, self.datefmt),
             "level": record.levelname,
             "logger": record.name,
@@ -400,7 +399,7 @@ class TimedFormatter(logging.Formatter):
     LOG-006: Adds timing information to log messages.
     """
 
-    def __init__(self, fmt: Optional[str] = None, datefmt: Optional[str] = None) -> None:
+    def __init__(self, fmt: str | None = None, datefmt: str | None = None) -> None:
         super().__init__(fmt, datefmt)
         self._start_time: float = time.time()
         self._last_time: float = self._start_time
@@ -446,7 +445,7 @@ def setup_file_logging(
     log_dir: str = "logs",
     root_level: int = logging.INFO,
     file_level: int = logging.WARNING,
-    console_level: Optional[int] = logging.INFO,
+    console_level: int | None = logging.INFO,
     use_json: bool = False,
 ) -> None:
     """

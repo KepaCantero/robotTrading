@@ -12,7 +12,7 @@ from __future__ import annotations
 import logging
 from collections import defaultdict
 from datetime import datetime, timedelta
-from typing import Any, Optional
+from typing import Any
 
 from app.domain.models.signal import Signal, SignalType
 from app.shared.config.centralized_config import get_config
@@ -28,7 +28,7 @@ class SignalCooldownManager:
     Uses centralized configuration for cooldown period.
     """
 
-    def __init__(self, default_cooldown_minutes: Optional[int] = None):
+    def __init__(self, default_cooldown_minutes: int | None = None):
         """
         Initialize cooldown manager.
 
@@ -42,7 +42,7 @@ class SignalCooldownManager:
         self.cooldowns: dict[str, datetime] = {}  # symbol -> last_signal_time
         self.custom_cooldowns: dict[str, int] = {}  # symbol -> custom_cooldown_minutes
 
-    def set_cooldown(self, symbol: str, minutes: Optional[int] = None) -> None:
+    def set_cooldown(self, symbol: str, minutes: int | None = None) -> None:
         """
         Set cooldown for a symbol.
 
@@ -110,7 +110,7 @@ class SignalCompoundScoreCalculator:
     def calculate_compound_score(
         self,
         signal: Signal,
-        metadata: Optional[dict[str, Any]] = None,
+        metadata: dict[str, Any] | None = None,
     ) -> float:
         """
         Calculate compound score for a signal.
@@ -149,7 +149,7 @@ class SignalCompoundScoreCalculator:
         # Scale to 0-100
         return round(compound_score * 100, 2)
 
-    def _extract_volume_ratio(self, signal: Signal, metadata: Optional[dict[str, Any]]) -> float:
+    def _extract_volume_ratio(self, signal: Signal, metadata: dict[str, Any] | None) -> float:
         """Extract and normalize volume ratio from signal metadata."""
         if not metadata:
             return 0.5  # Neutral value if no data
@@ -162,7 +162,7 @@ class SignalCompoundScoreCalculator:
         else:
             return float(max(0.0, 0.5 - (1.0 - volume_ratio)))
 
-    def _extract_volatility(self, signal: Signal, metadata: Optional[dict[str, Any]]) -> float:
+    def _extract_volatility(self, signal: Signal, metadata: dict[str, Any] | None) -> float:
         """Extract and normalize volatility from signal metadata."""
         if not metadata:
             return 0.5  # Neutral value if no data
@@ -207,8 +207,8 @@ class SignalPriorityRanker:
 
     def __init__(
         self,
-        high_threshold: Optional[float] = None,
-        medium_threshold: Optional[float] = None,
+        high_threshold: float | None = None,
+        medium_threshold: float | None = None,
     ):
         """
         Initialize priority ranker.
@@ -351,7 +351,7 @@ class SignalScoringEngine:
     Uses centralized configuration for all parameters.
     """
 
-    def __init__(self, default_cooldown_minutes: Optional[int] = None):
+    def __init__(self, default_cooldown_minutes: int | None = None):
         """
         Initialize signal scoring engine.
 
@@ -428,10 +428,10 @@ class SignalScoringEngine:
 
 
 # Global engine instance
-_signal_scoring_engine: Optional[SignalScoringEngine] = None
+_signal_scoring_engine: SignalScoringEngine | None = None
 
 
-def get_signal_scoring_engine(cooldown_minutes: Optional[int] = None) -> SignalScoringEngine:
+def get_signal_scoring_engine(cooldown_minutes: int | None = None) -> SignalScoringEngine:
     """Get global signal scoring engine instance. Uses config if cooldown_minutes is None."""
     global _signal_scoring_engine
     if _signal_scoring_engine is None:

@@ -7,7 +7,6 @@ Provides professional HTML templates for strategy performance reports.
 from __future__ import annotations
 
 import logging
-from typing import Optional
 
 logger = logging.getLogger(__name__)
 
@@ -317,12 +316,14 @@ class ReportTemplates:
             if value is not None:
                 # formatter is a callable lambda function from metric_definitions
                 formatted = formatter(value)
-                rows.append(f"""
+                rows.append(
+                    f"""
                 <tr>
                     <td>{label}</td>
                     <td class="number">{formatted}</td>
                 </tr>
-                """)
+                """
+                )
 
         html += "".join(rows)
         html += """
@@ -359,12 +360,14 @@ class ReportTemplates:
             if value is not None:
                 # formatter is a callable lambda function from risk_definitions
                 formatted = formatter(value)
-                rows.append(f"""
+                rows.append(
+                    f"""
                 <tr>
                     <td>{label}</td>
                     <td class="number">{formatted}</td>
                 </tr>
-                """)
+                """
+                )
 
         html += "".join(rows)
         html += """
@@ -394,7 +397,8 @@ class ReportTemplates:
         for asset, weight in sorted_allocation:
             weight_pct = weight * 100
             bar_width = weight_pct * 2
-            rows.append(f"""
+            rows.append(
+                f"""
             <tr>
                 <td><strong>{asset}</strong></td>
                 <td class="number">{weight_pct:.1f}%</td>
@@ -402,7 +406,8 @@ class ReportTemplates:
                     <div class="allocation-bar" style="width: {bar_width}px;"></div>
                 </td>
             </tr>
-            """)
+            """
+            )
 
         html += "".join(rows)
         html += """
@@ -441,7 +446,7 @@ class ReportTemplates:
 
 
 # Singleton
-_templates: Optional[ReportTemplates] = None
+_templates: ReportTemplates | None = None
 
 
 def get_report_templates() -> ReportTemplates:

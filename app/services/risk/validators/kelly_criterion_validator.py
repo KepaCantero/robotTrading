@@ -11,7 +11,6 @@ from __future__ import annotations
 import logging
 from dataclasses import dataclass
 from decimal import Decimal
-from typing import Optional
 
 logger = logging.getLogger(__name__)
 
@@ -168,9 +167,9 @@ class KellyCriterionValidator:
 
     def update_parameters(
         self,
-        win_rate: Optional[float] = None,
-        avg_win: Optional[float] = None,
-        avg_loss: Optional[float] = None,
+        win_rate: float | None = None,
+        avg_win: float | None = None,
+        avg_loss: float | None = None,
     ) -> None:
         """
         Actualizar parametros con nuevos datos historicos

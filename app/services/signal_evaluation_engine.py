@@ -9,10 +9,12 @@ from __future__ import annotations
 
 import logging
 from datetime import datetime
-from typing import Any, Optional
+from typing import TYPE_CHECKING, Any
 
-from app.domain.models.signal import MarketData, SignalType
 from app.shared.config.centralized_config import get_config
+
+if TYPE_CHECKING:
+    from app.domain.models.signal import MarketData, SignalType
 
 logger = logging.getLogger(__name__)
 
@@ -200,9 +202,9 @@ class SignalEvaluationEngine:
 
     def update_thresholds(
         self,
-        min_strength: Optional[float] = None,
-        min_confidence: Optional[float] = None,
-        min_liquidity: Optional[float] = None,
+        min_strength: float | None = None,
+        min_confidence: float | None = None,
+        min_liquidity: float | None = None,
     ) -> None:
         """Actualizar thresholds de evaluación."""
         if min_strength is not None:

@@ -18,7 +18,7 @@ from __future__ import annotations
 
 import logging
 from datetime import datetime
-from typing import Optional
+from typing import TYPE_CHECKING
 
 from app.backtesting.acceptance import (
     BenchmarkComparisonValidator,
@@ -33,7 +33,9 @@ from app.backtesting.acceptance import (
 
 # Import models for backward compatibility (they're now in acceptance/models.py)
 from app.backtesting.acceptance.models import AcceptanceReport, CriterionResult, VerdictStatus
-from app.backtesting.models import BacktestResult
+
+if TYPE_CHECKING:
+    from app.backtesting.models import BacktestResult
 
 logger = logging.getLogger(__name__)
 
@@ -74,14 +76,14 @@ class AcceptanceCriteria:
         min_monte_carlo_p5: float = MIN_MONTE_CARLO_P5,
         min_excess_return: float = MIN_EXCESS_RETURN_VS_BENCHMARK,
         # Injected validator services (for testing/customization)
-        sharpe_validator: Optional[SharpeValidator] = None,
-        drawdown_validator: Optional[DrawdownValidator] = None,
-        profit_factor_validator: Optional[ProfitFactorValidator] = None,
-        monte_carlo_validator: Optional[MonteCarloValidator] = None,
-        benchmark_validator: Optional[BenchmarkComparisonValidator] = None,
-        rejection_checker: Optional[RejectionCriteriaChecker] = None,
-        scoring_service: Optional[ScoringService] = None,
-        verdict_determiner: Optional[VerdictDeterminer] = None,
+        sharpe_validator: SharpeValidator | None = None,
+        drawdown_validator: DrawdownValidator | None = None,
+        profit_factor_validator: ProfitFactorValidator | None = None,
+        monte_carlo_validator: MonteCarloValidator | None = None,
+        benchmark_validator: BenchmarkComparisonValidator | None = None,
+        rejection_checker: RejectionCriteriaChecker | None = None,
+        scoring_service: ScoringService | None = None,
+        verdict_determiner: VerdictDeterminer | None = None,
     ):
         """Initialize acceptance criteria with custom thresholds and validators."""
         # Store thresholds for backward compatibility
@@ -113,10 +115,10 @@ class AcceptanceCriteria:
         self,
         backtest_result: BacktestResult,
         benchmark_return: float,
-        monte_carlo_p5_return: Optional[float] = None,
-        commission_impact: Optional[float] = None,
-        failed_regimes: Optional[int] = None,
-        equity_curve_last_years: Optional[list[float]] = None,
+        monte_carlo_p5_return: float | None = None,
+        commission_impact: float | None = None,
+        failed_regimes: int | None = None,
+        equity_curve_last_years: list[float] | None = None,
     ) -> AcceptanceReport:
         """
         Validate strategy against all acceptance criteria (Req #17).
@@ -172,10 +174,10 @@ class AcceptanceCriteria:
         self,
         metrics: dict,
         benchmark_return: float,
-        monte_carlo_p5_return: Optional[float],
-        commission_impact: Optional[float],
-        failed_regimes: Optional[int],
-        equity_curve_last_years: Optional[list[float]],
+        monte_carlo_p5_return: float | None,
+        commission_impact: float | None,
+        failed_regimes: int | None,
+        equity_curve_last_years: list[float] | None,
     ) -> dict:
         """Perform all validation steps."""
         criteria_results = self._validate_basic_criteria(
@@ -244,7 +246,7 @@ class AcceptanceCriteria:
         sharpe: float,
         max_dd: float,
         profit_factor: float,
-        monte_carlo_p5_return: Optional[float],
+        monte_carlo_p5_return: float | None,
         strategy_return: float,
         benchmark_return: float,
     ) -> list[CriterionResult]:

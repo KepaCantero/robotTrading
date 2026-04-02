@@ -25,7 +25,6 @@ from __future__ import annotations
 import logging
 from datetime import datetime
 from decimal import Decimal
-from typing import Optional
 
 import numpy as np
 from scipy import stats
@@ -388,7 +387,7 @@ class FactorCalculator:
         avg_momentum = np.mean(momentum_components)
         return Decimal(str(max(0, min(100, avg_momentum))))
 
-    def _log_cap(self, market_cap: Optional[Decimal]) -> Optional[Decimal]:
+    def _log_cap(self, market_cap: Decimal | None) -> Decimal | None:
         """Calculate log of market cap."""
         if market_cap is None or market_cap <= 0:
             return None

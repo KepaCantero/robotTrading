@@ -8,7 +8,6 @@ from __future__ import annotations
 
 import logging
 from decimal import Decimal
-from typing import Optional
 
 logger = logging.getLogger(__name__)
 
@@ -37,8 +36,8 @@ class TrailingStopManager:
         symbol: str,
         current_price: Decimal,
         direction: str,
-        initial_stop: Optional[Decimal] = None,
-    ) -> Optional[Decimal]:
+        initial_stop: Decimal | None = None,
+    ) -> Decimal | None:
         """
         Update trailing stop for a position.
 
@@ -97,7 +96,7 @@ class TrailingStopManager:
 
         return self.trailing_stops[symbol]
 
-    def get_current_stop(self, symbol: str) -> Optional[Decimal]:
+    def get_current_stop(self, symbol: str) -> Decimal | None:
         """Get current trailing stop price for a symbol."""
         return self.trailing_stops.get(symbol)
 

@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass, field
-from typing import Any, Optional
+from typing import Any
 
 import numpy as np
 from requests.exceptions import HTTPError, RequestException
@@ -63,7 +63,7 @@ class SyntheticDataGenerator:
     REPRODUCIBILITY: Uses np.random.default_rng for all random operations.
     """
 
-    def __init__(self, config: Optional[GANConfig] = None):
+    def __init__(self, config: GANConfig | None = None):
         """
         Initialize synthetic data generator.
 
@@ -73,10 +73,10 @@ class SyntheticDataGenerator:
         self.config = config or GANConfig()
         self.generator = None
         self.discriminator = None
-        self.training_data: Optional[np.ndarray] = None
+        self.training_data: np.ndarray | None = None
         self.training_history: list[dict[str, float]] = []
         self.connected = False
-        self.data_scaler: Optional[dict[str, np.ndarray]] = None
+        self.data_scaler: dict[str, np.ndarray] | None = None
         # Reproducible random state
         self._rng = np.random.default_rng(self.config.random_state)
         logger.info("✅ SyntheticDataGenerator initialized with seed=%d", self.config.random_state)
@@ -102,7 +102,7 @@ class SyntheticDataGenerator:
     async def train(
         self,
         training_data: np.ndarray,
-        labels: Optional[np.ndarray] = None,
+        labels: np.ndarray | None = None,
     ) -> dict[str, Any]:
         """
         Train GAN on historical market data.
@@ -190,8 +190,8 @@ class SyntheticDataGenerator:
     async def generate_samples(
         self,
         num_samples: int,
-        noise: Optional[np.ndarray] = None,
-        conditions: Optional[np.ndarray] = None,
+        noise: np.ndarray | None = None,
+        conditions: np.ndarray | None = None,
     ) -> np.ndarray:
         """
         Generate synthetic market data.
@@ -320,7 +320,7 @@ class SyntheticDataGenerator:
 class TimeSeriesGANGenerator:
     """GAN generator specialized for time series data."""
 
-    def __init__(self, config: Optional[GANConfig] = None):
+    def __init__(self, config: GANConfig | None = None):
         """
         Initialize time series GAN generator.
 
@@ -349,7 +349,7 @@ class TimeSeriesGANGenerator:
     async def generate_sequences(
         self,
         num_sequences: int,
-        sequence_length: Optional[int] = None,
+        sequence_length: int | None = None,
     ) -> np.ndarray:
         """
         Generate synthetic time series sequences.
@@ -421,11 +421,11 @@ class TimeSeriesGANGenerator:
 
 
 # Singleton instances
-_gan_generator: Optional[SyntheticDataGenerator] = None
-_ts_gan_generator: Optional[TimeSeriesGANGenerator] = None
+_gan_generator: SyntheticDataGenerator | None = None
+_ts_gan_generator: TimeSeriesGANGenerator | None = None
 
 
-def get_gan_generator(config: Optional[GANConfig] = None) -> SyntheticDataGenerator:
+def get_gan_generator(config: GANConfig | None = None) -> SyntheticDataGenerator:
     """Get or create singleton GAN generator."""
     global _gan_generator
     if _gan_generator is None:
@@ -434,7 +434,7 @@ def get_gan_generator(config: Optional[GANConfig] = None) -> SyntheticDataGenera
     return _gan_generator
 
 
-def get_ts_gan_generator(config: Optional[GANConfig] = None) -> TimeSeriesGANGenerator:
+def get_ts_gan_generator(config: GANConfig | None = None) -> TimeSeriesGANGenerator:
     """Get or create singleton TimeSeriesGAN generator."""
     global _ts_gan_generator
     if _ts_gan_generator is None:

@@ -10,7 +10,7 @@ from __future__ import annotations
 import logging
 from datetime import datetime, timedelta
 from decimal import Decimal
-from typing import Any, Optional
+from typing import TYPE_CHECKING, Any
 
 from app.domain.models.signal import (
     MarketData,
@@ -21,11 +21,13 @@ from app.domain.models.signal import (
     SignalStrength,
     SignalType,
 )
-from app.services.portfolio_service import PortfolioService
 from app.services.position_sizing_engine import PositionSizingEngine
 from app.services.signal_evaluation_engine import SignalEvaluationEngine
 from app.services.signal_execution_engine import SignalExecutionEngine
 from app.shared.config.centralized_config import get_config
+
+if TYPE_CHECKING:
+    from app.services.portfolio_service import PortfolioService
 
 logger = logging.getLogger(__name__)
 
@@ -69,7 +71,7 @@ class SignalScorerService:
         signal_type: SignalType,
         market_data: MarketData,
         metadata: dict[str, Any],
-    ) -> Optional[Signal]:
+    ) -> Signal | None:
         """
         Evaluar señal usando el motor de evaluación especializado.
         """
@@ -236,7 +238,7 @@ class SignalScorerService:
             self.signal_history = self.signal_history[-self.max_history_size :]
 
     # Métodos de compatibilidad mantenidos
-    async def get_next_actionable_signal(self) -> Optional[Signal]:
+    async def get_next_actionable_signal(self) -> Signal | None:
         """Obtener siguiente señal accionable."""
         if self.priority_queue.is_empty():
             return None
@@ -261,9 +263,9 @@ class SignalScorerService:
 
     def update_thresholds(
         self,
-        min_strength: Optional[float] = None,
-        min_confidence: Optional[float] = None,
-        min_liquidity: Optional[float] = None,
+        min_strength: float | None = None,
+        min_confidence: float | None = None,
+        min_liquidity: float | None = None,
     ) -> None:
         """Actualizar thresholds de evaluación."""
         self.evaluation_engine.update_thresholds(min_strength, min_confidence, min_liquidity)

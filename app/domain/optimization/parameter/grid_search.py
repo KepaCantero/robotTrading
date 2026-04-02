@@ -15,14 +15,16 @@ import logging
 from concurrent.futures import ProcessPoolExecutor, as_completed
 from datetime import datetime
 from itertools import product
-from typing import Any, Callable, Optional
+from typing import TYPE_CHECKING, Any, Callable
 
 import numpy as np
 from tqdm import tqdm
 
 from .base_optimizer import BaseOptimizer, OptimizationConfig, OptimizationResult
-from .models import ParameterGrid
 from .trial import TrialHistory, TrialResult, TrialStatus, create_trial_id
+
+if TYPE_CHECKING:
+    from .models import ParameterGrid
 
 logger = logging.getLogger(__name__)
 
@@ -76,7 +78,7 @@ class GridSearchOptimizer(BaseOptimizer):
             config: Optimization configuration
         """
         super().__init__(config)
-        self._total_combinations: Optional[int] = None
+        self._total_combinations: int | None = None
         self._evaluated_combinations: int = 0
 
     async def optimize(

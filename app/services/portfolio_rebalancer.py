@@ -11,7 +11,7 @@ from __future__ import annotations
 import logging
 from datetime import datetime
 from decimal import Decimal
-from typing import Any, Optional
+from typing import Any
 
 from app.shared.config.centralized_config import get_config
 
@@ -35,7 +35,7 @@ class RebalancingTarget:
         """
         self.strategy_name = strategy_name
         self.target_weight = target_weight
-        self.last_rebalance: Optional[datetime] = None
+        self.last_rebalance: datetime | None = None
 
     def needs_rebalance(self, rebalance_frequency_days: int = 30) -> bool:
         """
@@ -67,9 +67,9 @@ class DynamicCapitalAdjuster:
 
     def __init__(
         self,
-        min_allocation: Optional[Decimal] = None,
-        max_allocation: Optional[Decimal] = None,
-        adjustment_factor: Optional[Decimal] = None,
+        min_allocation: Decimal | None = None,
+        max_allocation: Decimal | None = None,
+        adjustment_factor: Decimal | None = None,
     ):
         """
         Initialize capital adjuster.
@@ -132,7 +132,7 @@ class DynamicCapitalAdjuster:
         self,
         consecutive_losses: int,
         recent_performance: Decimal,
-        threshold_losses: Optional[int] = None,
+        threshold_losses: int | None = None,
     ) -> bool:
         """
         Determine if allocation should be reduced.
@@ -166,8 +166,8 @@ class PortfolioRebalancer:
 
     def __init__(
         self,
-        rebalance_frequency_days: Optional[int] = None,
-        drift_threshold: Optional[Decimal] = None,
+        rebalance_frequency_days: int | None = None,
+        drift_threshold: Decimal | None = None,
     ):
         """
         Initialize rebalancer.
@@ -303,7 +303,7 @@ class PortfolioRebalancer:
 
 
 # Global rebalancer instance
-_portfolio_rebalancer: Optional[PortfolioRebalancer] = None
+_portfolio_rebalancer: PortfolioRebalancer | None = None
 
 
 def get_portfolio_rebalancer() -> PortfolioRebalancer:

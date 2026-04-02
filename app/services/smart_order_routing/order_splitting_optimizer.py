@@ -12,7 +12,7 @@ from __future__ import annotations
 import logging
 from datetime import datetime, timedelta
 from decimal import Decimal
-from typing import ClassVar, Optional
+from typing import ClassVar
 
 from .models import ExecutionPlan, OrderTranche, TimeWindow
 
@@ -51,7 +51,7 @@ class OrderSplittingOptimizer:
         total_size: Decimal,
         strategy: str = "vwap",
         max_exec_time: int = 300_000,  # 5 minutes default
-        constraints: Optional[dict[str, Decimal]] = None,
+        constraints: dict[str, Decimal] | None = None,
     ) -> ExecutionPlan:
         """
         Create optimal execution plan using specified strategy.
@@ -271,7 +271,7 @@ class OrderSplittingOptimizer:
 
 
 # Global singleton
-_order_splitting_optimizer: Optional[OrderSplittingOptimizer] = None
+_order_splitting_optimizer: OrderSplittingOptimizer | None = None
 
 
 def get_order_splitting_optimizer() -> OrderSplittingOptimizer:

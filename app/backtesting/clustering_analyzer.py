@@ -14,7 +14,6 @@ Advanced clustering and dimensionality reduction techniques:
 from __future__ import annotations
 
 import logging
-from typing import Optional
 
 import numpy as np
 from sklearn.cluster import DBSCAN, AgglomerativeClustering
@@ -43,7 +42,7 @@ class AdvancedClusteringAnalyzer:
 
     def hierarchical_clustering(
         self, data: list[list[float]], n_clusters: int = 3, linkage_method: str = "ward"
-    ) -> Optional[dict]:
+    ) -> dict | None:
         """
         Perform hierarchical clustering with dendrogram.
 
@@ -93,7 +92,7 @@ class AdvancedClusteringAnalyzer:
 
     def dbscan_clustering(
         self, data: list[list[float]], eps: float = 0.5, min_samples: int = 5
-    ) -> Optional[dict]:
+    ) -> dict | None:
         """
         Perform DBSCAN density-based clustering.
 
@@ -154,9 +153,9 @@ class AdvancedClusteringAnalyzer:
     def pca_analysis(
         self,
         data: list[list[float]],
-        n_components: Optional[int] = None,
+        n_components: int | None = None,
         variance_threshold: float = 0.95,
-    ) -> Optional[dict]:
+    ) -> dict | None:
         """
         Perform Principal Component Analysis.
 
@@ -212,9 +211,9 @@ class AdvancedClusteringAnalyzer:
     def ica_analysis(
         self,
         data: list[list[float]],
-        n_components: Optional[int] = None,
+        n_components: int | None = None,
         algorithm: str = "parallel",
-    ) -> Optional[dict]:
+    ) -> dict | None:
         """
         Perform Independent Component Analysis.
 
@@ -274,7 +273,7 @@ class AdvancedClusteringAnalyzer:
         n_components: int = 2,
         perplexity: int = 30,
         n_iter: int = 1000,
-    ) -> Optional[dict]:
+    ) -> dict | None:
         """
         Perform t-SNE dimensionality reduction for visualization.
 
@@ -351,7 +350,7 @@ class AdvancedClusteringAnalyzer:
             logger.error(f"Error in t-SNE analysis: {e}")
             return None
 
-    def silhouette_analysis(self, data: list[list[float]], labels: list[int]) -> Optional[dict]:
+    def silhouette_analysis(self, data: list[list[float]], labels: list[int]) -> dict | None:
         """
         Analyze cluster quality using silhouette scores.
 
@@ -410,7 +409,7 @@ class AdvancedClusteringAnalyzer:
         data: list[list[float]],
         k_range: tuple[int, int] = (2, 10),
         method: str = "silhouette",
-    ) -> Optional[dict]:
+    ) -> dict | None:
         """
         Find optimal number of clusters using silhouette or elbow method.
 

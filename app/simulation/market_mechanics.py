@@ -25,7 +25,7 @@ from dataclasses import dataclass, field
 from datetime import datetime, time
 from decimal import Decimal
 from enum import Enum
-from typing import Any, Optional
+from typing import Any
 
 from .order_book import LimitOrderBook, Order, OrderType, Trade
 
@@ -74,7 +74,7 @@ class AuctionResult:
 
     auction_type: AuctionType
     symbol: str
-    auction_price: Optional[Decimal]
+    auction_price: Decimal | None
     total_volume: Decimal
     buy_volume: Decimal
     sell_volume: Decimal
@@ -175,8 +175,8 @@ class AuctionMechanism:
         self,
         symbol: str,
         auction_type: AuctionType,
-        order_book: Optional[LimitOrderBook] = None,
-        price_tick: Optional[Decimal] = None,
+        order_book: LimitOrderBook | None = None,
+        price_tick: Decimal | None = None,
         max_iterations: int = 100,
     ):
         """
@@ -228,7 +228,7 @@ class AuctionMechanism:
             f"Submitted {order.side.value} order to auction: {order.quantity} @ {order.price}"
         )
 
-    def get_auction_indicative_price(self) -> Optional[Decimal]:
+    def get_auction_indicative_price(self) -> Decimal | None:
         """
         Get current indicative clearing price (without executing).
 
@@ -338,7 +338,7 @@ class AuctionMechanism:
             execution_quality=execution_quality,
         )
 
-    def _find_clearing_price(self) -> tuple[Optional[Decimal], Decimal]:
+    def _find_clearing_price(self) -> tuple[Decimal | None, Decimal]:
         """
         Find the clearing price that maximizes executable volume.
 
@@ -514,7 +514,7 @@ class AuctionMechanism:
             ),
         }
 
-    def _find_order(self, order_id: str) -> Optional[Order]:
+    def _find_order(self, order_id: str) -> Order | None:
         """Find an order by ID."""
         for orders in self._buy_orders.values():
             for order in orders:
@@ -597,23 +597,23 @@ class ContinuousTrading:
         """Cancel an order."""
         return self.order_book.cancel_order(order_id)
 
-    def get_best_bid(self) -> Optional[Decimal]:
+    def get_best_bid(self) -> Decimal | None:
         """Get current best bid."""
         return self.order_book.best_bid
 
-    def get_best_ask(self) -> Optional[Decimal]:
+    def get_best_ask(self) -> Decimal | None:
         """Get current best ask."""
         return self.order_book.best_ask
 
-    def get_spread(self) -> Optional[Decimal]:
+    def get_spread(self) -> Decimal | None:
         """Get current bid-ask spread."""
         return self.order_book.spread
 
-    def get_mid_price(self) -> Optional[Decimal]:
+    def get_mid_price(self) -> Decimal | None:
         """Get current mid price."""
         return self.order_book.mid_price
 
-    def calculate_vwap(self, window_ms: int = 1000) -> Optional[Decimal]:
+    def calculate_vwap(self, window_ms: int = 1000) -> Decimal | None:
         """
         Calculate volume-weighted average price over recent trades.
 
@@ -642,7 +642,7 @@ class ContinuousTrading:
 
         return total_value / total_volume
 
-    def calculate_twap(self, window_ms: int = 1000) -> Optional[Decimal]:
+    def calculate_twap(self, window_ms: int = 1000) -> Decimal | None:
         """
         Calculate time-weighted average price over recent trades.
 
@@ -694,7 +694,7 @@ class MarketMechanicsEngine:
         self,
         symbol: str,
         tick_size: float = 0.01,
-        regular_session: Optional[TradingSession] = None,
+        regular_session: TradingSession | None = None,
     ):
         """
         Initialize the market mechanics engine.
@@ -813,7 +813,7 @@ class MarketMechanicsEngine:
         else:
             raise RuntimeError(f"Cannot submit orders in {self._current_phase.value}")
 
-    def execute_opening_auction(self) -> Optional[AuctionResult]:
+    def execute_opening_auction(self) -> AuctionResult | None:
         """Execute the opening auction."""
         if self._opening_auction is None:
             logger.warning("Opening auction not initialized")
@@ -830,7 +830,7 @@ class MarketMechanicsEngine:
 
         return result
 
-    def execute_closing_auction(self) -> Optional[AuctionResult]:
+    def execute_closing_auction(self) -> AuctionResult | None:
         """Execute the closing auction."""
         if self._closing_auction is None:
             logger.warning("Closing auction not initialized")

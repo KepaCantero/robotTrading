@@ -5,7 +5,7 @@ This test demonstrates the complete workflow for robust backtesting with all thr
 critical improvements integrated together.
 """
 
-from datetime import datetime
+from datetime import datetime, timedelta
 from decimal import Decimal
 
 from app.backtesting.data_split import (
@@ -15,6 +15,13 @@ from app.backtesting.data_split import (
 )
 from app.backtesting.metrics import calculate_expectancy
 from app.backtesting.models import Trade, TradeStatus
+
+# The Trade model uses `from __future__ import annotations` and imports datetime
+# only under TYPE_CHECKING. Pydantic therefore treats datetime as an unresolved
+# forward reference at runtime. We must rebuild the model so Pydantic can resolve
+# the annotation strings against the real types available in this module's scope.
+Trade.model_rebuild()
+
 from app.backtesting.universe_manager import UniverseManager
 
 
@@ -186,8 +193,8 @@ class TestRecommendationsIntegration:
             full_universe_returns=full_universe_returns,
         )
 
-        # Bias should be detected
-        assert bias_metrics["bias_detected"] == True
+        # Bias should be detected (numpy.bool_ so use truthy check, not `is True`)
+        assert bias_metrics["bias_detected"]
         assert bias_metrics["survivor_cagr"] > bias_metrics["full_universe_cagr"]
 
         # Bias percentage should be significant
@@ -244,7 +251,3 @@ class TestRecommendationsIntegration:
             status=TradeStatus.CLOSED,
             pnl=Decimal(str(pnl)),
         )
-
-
-# Import timedelta
-from datetime import timedelta

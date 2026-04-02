@@ -8,7 +8,7 @@ overlapping samples in financial ML training (Chapter 4, "Advances in Financial 
 from __future__ import annotations
 
 import logging
-from typing import Any, Optional
+from typing import Any
 
 import numpy as np
 import pandas as pd
@@ -77,14 +77,14 @@ class SupervisedLearningEngine(BaseLearningEngine):
         )
 
         # López de Prado sample weights (Chapter 4)
-        self.sample_weights_: Optional[np.ndarray] = (
+        self.sample_weights_: np.ndarray | None = (
             None  # Stores sample weights from uniqueness calculation
         )
 
     def train(
         self,
-        training_data: Optional[dict[str, Any]] = None,
-        validation_data: Optional[dict[str, Any]] = None,
+        training_data: dict[str, Any] | None = None,
+        validation_data: dict[str, Any] | None = None,
     ) -> dict[str, float]:
         """
         Entrenar modelo supervisado.

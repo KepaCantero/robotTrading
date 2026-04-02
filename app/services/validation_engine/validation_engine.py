@@ -17,7 +17,6 @@ from __future__ import annotations
 import logging
 from datetime import datetime
 from decimal import Decimal
-from typing import Optional
 
 from .models import (
     CapitalViabilityAnalysis,
@@ -376,7 +375,7 @@ class ValidationEngine:
 
     async def get_validation_history(
         self,
-        limit: Optional[int] = None,
+        limit: int | None = None,
     ) -> list[ValidationResult]:
         """Get validation history."""
         results = self.validation_history
@@ -398,7 +397,7 @@ class ValidationEngine:
 
 
 # Singleton
-_engine: Optional[ValidationEngine] = None
+_engine: ValidationEngine | None = None
 
 
 def get_validation_engine() -> ValidationEngine:

@@ -7,7 +7,7 @@ Helper utilities for setting up and testing Telegram bot integration.
 from __future__ import annotations
 
 import logging
-from typing import Optional, cast
+from typing import cast
 
 import httpx
 
@@ -59,7 +59,7 @@ class TelegramBotHelper:
             return {"valid": False, "error": str(e)}
 
     @classmethod
-    async def get_chat_id(cls, bot_token: str) -> Optional[int]:
+    async def get_chat_id(cls, bot_token: str) -> int | None:
         """
         Get the chat_id by sending a test message and polling updates.
 
@@ -87,7 +87,7 @@ class TelegramBotHelper:
                     if updates:
                         # Get the most recent message's chat_id
                         chat_id = updates[-1].get("message", {}).get("chat", {}).get("id")
-                        return cast("Optional[int]", chat_id)
+                        return cast("int | None", chat_id)
 
             return None
 

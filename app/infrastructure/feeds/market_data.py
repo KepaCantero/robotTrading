@@ -9,8 +9,10 @@ from __future__ import annotations
 import logging
 from datetime import datetime
 from decimal import Decimal
-from typing import Any, Optional
-from uuid import UUID
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from uuid import UUID
 
 logger = logging.getLogger(__name__)
 
@@ -24,7 +26,7 @@ class MarketDataService:
         self._feed_configs: dict[UUID, Any] = {}
         self._subscriptions: set[str] = set()
 
-    async def get_quote(self, symbol: str) -> Optional[dict[str, Any]]:
+    async def get_quote(self, symbol: str) -> dict[str, Any] | None:
         """Get current quote for a symbol."""
         # Return cached quote if available
         if symbol in self._cache:
@@ -78,7 +80,7 @@ class MarketDataService:
         """List all feed configurations."""
         return list(self._feed_configs.values())
 
-    async def get_feed_config(self, config_id: UUID) -> Optional[object]:
+    async def get_feed_config(self, config_id: UUID) -> object | None:
         """Get a specific feed configuration."""
         return self._feed_configs.get(config_id)
 
@@ -97,9 +99,7 @@ class MarketDataService:
             return True
         return False
 
-    async def subscribe_to_symbols(
-        self, symbols: list[str], feed_id: Optional[UUID] = None
-    ) -> bool:
+    async def subscribe_to_symbols(self, symbols: list[str], feed_id: UUID | None = None) -> bool:
         """Subscribe to real-time updates for symbols."""
         self._subscriptions.update(symbols)
         return True
@@ -115,7 +115,7 @@ class MarketDataService:
 
 
 # Singleton instance
-_market_data_service: Optional[MarketDataService] = None
+_market_data_service: MarketDataService | None = None
 
 
 def get_market_data_service() -> MarketDataService:

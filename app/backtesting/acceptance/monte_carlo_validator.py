@@ -8,7 +8,6 @@ Follows Single Responsibility Principle (SOL-001).
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Optional
 
 from app.backtesting.acceptance.models import CriterionResult
 
@@ -23,7 +22,7 @@ class MonteCarloValidator:
 
     min_monte_carlo_p5: float = -0.20
 
-    def validate(self, monte_carlo_p5_return: Optional[float]) -> CriterionResult:
+    def validate(self, monte_carlo_p5_return: float | None) -> CriterionResult:
         """
         Validate Monte Carlo P5 Return against threshold.
 

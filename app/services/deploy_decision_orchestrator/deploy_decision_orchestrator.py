@@ -15,7 +15,7 @@ from __future__ import annotations
 import logging
 from datetime import datetime
 from decimal import Decimal
-from typing import ClassVar, Optional
+from typing import ClassVar
 
 import numpy as np
 
@@ -376,7 +376,7 @@ class DeployDecisionOrchestrator:
         validation: Decimal,
         recommendation: Decimal,
         risk: Decimal,
-        capacity_fade: Optional[Decimal] = None,
+        capacity_fade: Decimal | None = None,
     ) -> Decimal:
         """
         Calculate weighted overall score.
@@ -429,7 +429,7 @@ class DeployDecisionOrchestrator:
         recommendation_status: str,
         validation_passed: bool,
         feasibility_ratio: Decimal,
-        capacity_fade_feasible: Optional[bool] = None,
+        capacity_fade_feasible: bool | None = None,
     ) -> tuple:
         """
         Determine deployment status and confidence level.
@@ -706,7 +706,7 @@ class DeployDecisionOrchestrator:
 
     async def get_decision_history(
         self,
-        limit: Optional[int] = None,
+        limit: int | None = None,
     ) -> list[DeploymentDecision]:
         """Get decision history."""
         results = self.decision_history
@@ -739,7 +739,7 @@ class DeployDecisionOrchestrator:
 
 
 # Singleton
-_orchestrator: Optional[DeployDecisionOrchestrator] = None
+_orchestrator: DeployDecisionOrchestrator | None = None
 
 
 def get_deploy_orchestrator() -> DeployDecisionOrchestrator:

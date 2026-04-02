@@ -7,7 +7,7 @@ Implementa CUSUM y Chow test para detectar cambios estructurales en series tempo
 from __future__ import annotations
 
 import logging
-from typing import Any, Optional
+from typing import Any
 
 import numpy as np
 from scipy import stats
@@ -35,7 +35,7 @@ class StructuralChangeDetector:
     en la distribución de retornos.
     """
 
-    def __init__(self, config: Optional[dict[str, Any]] = None):
+    def __init__(self, config: dict[str, Any] | None = None):
         """
         Inicializar detector.
 
@@ -106,7 +106,7 @@ class StructuralChangeDetector:
             }
 
     def detect_chow_test(
-        self, prices: list[float], split_point: Optional[int] = None
+        self, prices: list[float], split_point: int | None = None
     ) -> dict[str, Any]:
         """
         Detectar cambios estructurales usando Chow test.

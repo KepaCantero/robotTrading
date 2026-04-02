@@ -14,7 +14,6 @@ from __future__ import annotations
 import logging
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Optional
 
 logger = logging.getLogger(__name__)
 
@@ -48,7 +47,7 @@ class ConfigurationRepository:
         self,
         profile_id: str,
         profile_data: dict,
-        metadata: Optional[dict] = None,
+        metadata: dict | None = None,
     ) -> str:
         """Save investment profile."""
         return await self._save_config(
@@ -62,7 +61,7 @@ class ConfigurationRepository:
         self,
         config_id: str,
         config_data: dict,
-        metadata: Optional[dict] = None,
+        metadata: dict | None = None,
     ) -> str:
         """Save backtest configuration."""
         return await self._save_config(
@@ -76,7 +75,7 @@ class ConfigurationRepository:
         self,
         result_id: str,
         result_data: dict,
-        metadata: Optional[dict] = None,
+        metadata: dict | None = None,
     ) -> str:
         """Save backtest result with feasibility metrics."""
         return await self._save_config(
@@ -90,7 +89,7 @@ class ConfigurationRepository:
         self,
         report_id: str,
         report_data: dict,
-        metadata: Optional[dict] = None,
+        metadata: dict | None = None,
     ) -> str:
         """Save validation report from T5.1."""
         return await self._save_config(
@@ -104,7 +103,7 @@ class ConfigurationRepository:
         self,
         decision_id: str,
         decision_data: dict,
-        metadata: Optional[dict] = None,
+        metadata: dict | None = None,
     ) -> str:
         """Save deployment decision from T10.1."""
         return await self._save_config(
@@ -114,7 +113,7 @@ class ConfigurationRepository:
             metadata=metadata or {},
         )
 
-    async def load_configuration(self, config_id: str) -> Optional[StoredConfiguration]:
+    async def load_configuration(self, config_id: str) -> StoredConfiguration | None:
         """Load configuration by ID."""
         try:
             if config_id in self._storage:

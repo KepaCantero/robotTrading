@@ -24,7 +24,6 @@ from __future__ import annotations
 import logging
 import os
 from dataclasses import dataclass
-from typing import Optional
 
 logger = logging.getLogger(__name__)
 
@@ -145,7 +144,7 @@ class EndpointRegistry:
     Provides EndpointConfig objects that include both URL and timeout settings.
     """
 
-    _instance: Optional[EndpointRegistry] = None
+    _instance: EndpointRegistry | None = None
     _endpoints: dict[str, EndpointConfig]
 
     def __init__(self) -> None:

@@ -17,7 +17,7 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 from decimal import Decimal
 from enum import Enum
-from typing import Any, Callable, Optional
+from typing import Any, Callable
 
 from app.shared.utils.timezone_utils import utc_now
 
@@ -47,7 +47,7 @@ class NewsEvent:
     event_type: NewsEventType
     published_at: datetime
     source: str
-    url: Optional[str] = None
+    url: str | None = None
 
     def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
@@ -69,7 +69,7 @@ class SentimentUpdate:
 
     symbol: str
     sentiment_score: Decimal
-    previous_score: Optional[Decimal]
+    previous_score: Decimal | None
     change: Decimal
     timestamp: datetime
     news_count: int = 1
@@ -101,7 +101,7 @@ class NewsEventHandler:
     def __init__(
         self,
         marketaux_client=None,
-        on_trade_trigger: Optional[Callable[[str, Decimal], None]] = None,
+        on_trade_trigger: Callable[[str, Decimal], None] | None = None,
         cache_ttl_seconds: float = 300.0,  # 5 minutes
     ):
         """
@@ -162,7 +162,7 @@ class NewsEventHandler:
     async def subscribe_to_news(
         self,
         symbols: list[str],
-        webhook_url: Optional[str] = None,
+        webhook_url: str | None = None,
     ) -> None:
         """
         Subscribe to news webhooks for symbols.
@@ -363,11 +363,11 @@ class NewsEventHandler:
 
         return NewsEventType.OTHER
 
-    def get_sentiment(self, symbol: str) -> Optional[SentimentUpdate]:
+    def get_sentiment(self, symbol: str) -> SentimentUpdate | None:
         """Get cached sentiment for symbol."""
         return self._sentiment_cache.get(symbol)
 
-    def get_recent_events(self, symbol: Optional[str] = None, limit: int = 50) -> list[NewsEvent]:
+    def get_recent_events(self, symbol: str | None = None, limit: int = 50) -> list[NewsEvent]:
         """Get recent news events."""
         if symbol:
             return [e for e in self._event_history if e.symbol == symbol][-limit:]

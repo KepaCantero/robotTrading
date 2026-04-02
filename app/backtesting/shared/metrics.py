@@ -10,7 +10,7 @@ Eliminates 6+ duplicate implementations of _get_empty_metrics across:
 
 from __future__ import annotations
 
-from typing import Any, Optional
+from typing import Any
 
 from app.backtesting.shared.types import MetricKeys
 
@@ -124,7 +124,7 @@ class MetricsFactory:
 
     @staticmethod
     def safe_extract_first(
-        results: Optional[list[dict[str, Any]]], context: str = "unknown"
+        results: list[dict[str, Any]] | None, context: str = "unknown"
     ) -> dict[str, Any]:
         """
         Safely extract first result from results list.

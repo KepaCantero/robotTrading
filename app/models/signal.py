@@ -13,7 +13,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from decimal import Decimal
 from enum import Enum
-from typing import Any, Optional
+from typing import Any
 
 import numpy as np
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
@@ -563,7 +563,7 @@ class SignalPriorityQueue:
         """Check if queue is empty."""
         return len(self.queue) == 0
 
-    def get_next_signal(self) -> Optional[Signal]:
+    def get_next_signal(self) -> Signal | None:
         """Get next highest priority signal."""
         if not self.queue:
             return None
@@ -571,7 +571,7 @@ class SignalPriorityQueue:
         _, _, signal = heapq.heappop(self.queue)
         return signal if isinstance(signal, Signal) else None
 
-    def get_highest_priority_signal(self) -> Optional[Signal]:
+    def get_highest_priority_signal(self) -> Signal | None:
         """Get highest priority signal without removing it."""
         if not self.queue:
             return None
@@ -579,7 +579,7 @@ class SignalPriorityQueue:
         _, _, signal = self.queue[0]
         return signal if isinstance(signal, Signal) else None
 
-    def peek_next_signal(self) -> Optional[Signal]:
+    def peek_next_signal(self) -> Signal | None:
         """Peek at next highest priority signal without removing."""
         if not self.queue:
             return None

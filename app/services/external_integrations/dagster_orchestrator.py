@@ -12,7 +12,6 @@ import logging
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import Optional
 from urllib.parse import urljoin
 
 import aiohttp
@@ -39,10 +38,10 @@ class DagsterJob:
     job_type: str  # backtest, data_fetch, train_model, etc.
     status: JobStatus = JobStatus.PENDING
     created_at: datetime = field(default_factory=datetime.now)
-    started_at: Optional[datetime] = None
-    completed_at: Optional[datetime] = None
-    error_message: Optional[str] = None
-    result: Optional[dict] = None
+    started_at: datetime | None = None
+    completed_at: datetime | None = None
+    error_message: str | None = None
+    result: dict | None = None
     run_count: int = 0
 
 
@@ -81,7 +80,7 @@ class DagsterOrchestrator:
         self.host = host
         self.port = port
         self.base_url = f"http://{host}:{port}"
-        self.session: Optional[aiohttp.ClientSession] = None
+        self.session: aiohttp.ClientSession | None = None
         self.connected = False
 
         # Local job tracking for when Dagster server is unavailable
@@ -130,7 +129,7 @@ class DagsterOrchestrator:
         self,
         name: str,
         job_type: str,
-        config: Optional[dict] = None,
+        config: dict | None = None,
     ) -> DagsterJob:
         """
         Create a new job in Dagster or local tracking.
@@ -221,7 +220,7 @@ class DagsterOrchestrator:
     async def complete_job(
         self,
         job_id: str,
-        result: Optional[dict] = None,
+        result: dict | None = None,
     ) -> bool:
         """
         Mark job as complete.
@@ -387,7 +386,7 @@ class DagsterOrchestrator:
 
         return True
 
-    async def get_job_status(self, job_id: str) -> Optional[JobStatus]:
+    async def get_job_status(self, job_id: str) -> JobStatus | None:
         """Get job status from Dagster or local tracking."""
         # Try to get status from Dagster if connected
         if self.connected and self.session:
@@ -407,7 +406,7 @@ class DagsterOrchestrator:
         job = self.jobs.get(job_id)
         return job.status if job else None
 
-    async def get_job_result(self, job_id: str) -> Optional[dict]:
+    async def get_job_result(self, job_id: str) -> dict | None:
         """Get job result from Dagster or local tracking."""
         # Try to get result from Dagster if connected
         if self.connected and self.session:
@@ -427,7 +426,7 @@ class DagsterOrchestrator:
 
     async def list_jobs(
         self,
-        status: Optional[JobStatus] = None,
+        status: JobStatus | None = None,
     ) -> list[DagsterJob]:
         """List jobs from Dagster or local tracking."""
         jobs = []
@@ -517,7 +516,7 @@ class DagsterOrchestrator:
 
 
 # Singleton
-_orchestrator: Optional[DagsterOrchestrator] = None
+_orchestrator: DagsterOrchestrator | None = None
 
 
 def get_dagster_orchestrator() -> DagsterOrchestrator:

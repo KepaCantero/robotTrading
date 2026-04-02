@@ -19,7 +19,7 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 from decimal import Decimal
 from enum import Enum
-from typing import TYPE_CHECKING, Any, Optional
+from typing import TYPE_CHECKING, Any
 
 from app.shared.utils.decimal_utils import to_decimal
 
@@ -45,12 +45,12 @@ class StopExecutionResult:
     symbol: str
     quantity: Decimal
     requested_price: Decimal
-    executed_price: Optional[Decimal] = None
-    order_id: Optional[str] = None
-    error_message: Optional[str] = None
-    executed_at: Optional[datetime] = None
-    execution_time_ms: Optional[int] = None
-    broker_response: Optional[dict[str, Any]] = None
+    executed_price: Decimal | None = None
+    order_id: str | None = None
+    error_message: str | None = None
+    executed_at: datetime | None = None
+    execution_time_ms: int | None = None
+    broker_response: dict[str, Any] | None = None
 
     def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for serialization."""
@@ -264,7 +264,7 @@ class StopExecutor:
         quantity: Decimal,
         order_type: str,
         stop_type: StopType,
-        requested_price: Optional[Decimal],
+        requested_price: Decimal | None,
         current_price: Decimal,
     ) -> StopExecutionResult:
         """

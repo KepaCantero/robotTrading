@@ -10,7 +10,7 @@ Combina:
 from __future__ import annotations
 
 import logging
-from typing import Any, Optional
+from typing import Any
 
 from .gap_interpolator import GapInterpolator
 from .outlier_detector import OutlierDetector
@@ -29,7 +29,7 @@ class DataCleaningPipeline:
     3. Validación de calidad
     """
 
-    def __init__(self, config: Optional[dict[str, Any]] = None):
+    def __init__(self, config: dict[str, Any] | None = None):
         """
         Inicializar pipeline.
 

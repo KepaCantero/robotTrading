@@ -13,7 +13,6 @@ import logging
 from dataclasses import dataclass, field
 from datetime import datetime
 from decimal import Decimal
-from typing import Optional
 from urllib.parse import urljoin
 
 import aiohttp
@@ -47,7 +46,7 @@ class Experiment:
     description: str
     runs: list[dict] = field(default_factory=list)
     created_at: datetime = field(default_factory=datetime.now)
-    best_run: Optional[dict] = None
+    best_run: dict | None = None
 
 
 class MLflowTracker:
@@ -75,14 +74,14 @@ class MLflowTracker:
         self.host = host
         self.port = port
         self.base_url = f"http://{host}:{port}"
-        self.session: Optional[aiohttp.ClientSession] = None
+        self.session: aiohttp.ClientSession | None = None
         self.connected = False
 
         # Local tracking for when MLflow server is unavailable
         self.experiments: dict[str, Experiment] = {}
         self.models: dict[str, MLModel] = {}
-        self.active_run: Optional[dict] = None
-        self.active_run_id: Optional[str] = None
+        self.active_run: dict | None = None
+        self.active_run_id: str | None = None
 
         logger.info(f"✅ MLflowTracker initialized ({host}:{port})")
 
@@ -171,9 +170,7 @@ class MLflowTracker:
                             f"⚠️ MLflow experiment creation failed (HTTP {resp.status}), using local tracking"
                         )
             except (asyncio.TimeoutError, OSError) as e:
-                logger.warning(
-                    f"⚠️ Failed to create MLflow experiment: {e!s}, using local tracking"
-                )
+                logger.warning(f"⚠️ Failed to create MLflow experiment: {e!s}, using local tracking")
 
         # Always store locally as backup
         experiment = Experiment(
@@ -375,9 +372,7 @@ class MLflowTracker:
                             f"⚠️ MLflow model registration failed (HTTP {resp.status}), using local tracking"
                         )
             except (ValueError, TypeError, KeyError, AttributeError) as e:
-                logger.warning(
-                    f"⚠️ Failed to register model in MLflow: {e!s}, using local tracking"
-                )
+                logger.warning(f"⚠️ Failed to register model in MLflow: {e!s}, using local tracking")
 
         # Always store locally
         model = MLModel(
@@ -450,7 +445,7 @@ class MLflowTracker:
         models.sort(key=lambda m: m.metrics.get(metrics_key, Decimal("0")), reverse=True)
         return models
 
-    async def get_best_model(self, metric: str = "f1_score") -> Optional[MLModel]:
+    async def get_best_model(self, metric: str = "f1_score") -> MLModel | None:
         """Get best model by metric."""
         models = await self.compare_models(metric)
         return models[0] if models else None
@@ -478,7 +473,7 @@ class MLflowTracker:
 
 
 # Singleton
-_tracker: Optional[MLflowTracker] = None
+_tracker: MLflowTracker | None = None
 
 
 def get_mlflow_tracker(host: str = "localhost", port: int = 5000) -> MLflowTracker:

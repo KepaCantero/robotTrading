@@ -11,9 +11,10 @@ from __future__ import annotations
 
 import logging
 from datetime import datetime
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from app.shared.config.protocols import ConfigValidator
+if TYPE_CHECKING:
+    from app.shared.config.protocols import ConfigValidator
 
 logger = logging.getLogger(__name__)
 

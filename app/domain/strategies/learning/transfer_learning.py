@@ -13,11 +13,14 @@ import json
 import logging
 from datetime import datetime
 from pathlib import Path
-from types import ModuleType
-from typing import ClassVar, Optional, Protocol, Union, cast, runtime_checkable
+from typing import TYPE_CHECKING, ClassVar, Protocol, Union, cast, runtime_checkable
 
 import numpy as np
-from numpy.typing import NDArray
+
+if TYPE_CHECKING:
+    from types import ModuleType
+
+    from numpy.typing import NDArray
 
 # Type alias for training metrics (heterogeneous dict with floats, lists, and strings)
 TrainingMetrics = dict[str, Union[float, list[float], str]]
@@ -51,9 +54,9 @@ logger = logging.getLogger(__name__)
 # ============================================================================
 # Type aliases for optional modules - use object for runtime flexibility
 # when the actual module is not available
-_torch_module: Optional[ModuleType] = None
-_joblib_module: Optional[ModuleType] = None
-_msgpack_module: Optional[ModuleType] = None
+_torch_module: ModuleType | None = None
+_joblib_module: ModuleType | None = None
+_msgpack_module: ModuleType | None = None
 
 try:
     import torch
@@ -137,8 +140,8 @@ class ModelRegistry:
         regime: str,
         model_type: str,
         algorithm: str,
-        metadata: Optional[dict[str, _RegistryValue]] = None,
-        tags: Optional[list[str]] = None,
+        metadata: dict[str, _RegistryValue] | None = None,
+        tags: list[str] | None = None,
     ) -> bool:
         """
         Registrar un modelo pre-entrenado usando serializacion segura.
@@ -158,9 +161,9 @@ class ModelRegistry:
         try:
             # SECURITY: Use joblib for sklearn models, torch.save for PyTorch
             # Avoid pickle for security reasons
-            model_path: Optional[str] = None
+            model_path: str | None = None
             model_saved = False
-            model_format: Optional[str] = None
+            model_format: str | None = None
 
             try:
                 self.models_dir.mkdir(parents=True, exist_ok=True)
@@ -286,7 +289,7 @@ class ModelRegistry:
         with open(path, "wb") as f:
             f.write(buffer.read())
 
-    def get_model(self, model_id: str) -> Optional[dict[str, _RegistryValue]]:
+    def get_model(self, model_id: str) -> dict[str, _RegistryValue] | None:
         """
         Obtener informacion de un modelo por ID.
 
@@ -306,10 +309,10 @@ class ModelRegistry:
 
     def list_models(
         self,
-        regime: Optional[str] = None,
-        model_type: Optional[str] = None,
-        algorithm: Optional[str] = None,
-        tags: Optional[list[str]] = None,
+        regime: str | None = None,
+        model_type: str | None = None,
+        algorithm: str | None = None,
+        tags: list[str] | None = None,
     ) -> list[dict[str, _RegistryValue]]:
         """
         Listar modelos que coinciden con criterios.
@@ -349,9 +352,9 @@ class ModelRegistry:
     def _matches_filters(
         self,
         model_entry: dict[str, _RegistryValue],
-        model_type: Optional[str],
-        algorithm: Optional[str],
-        tags: Optional[list[str]],
+        model_type: str | None,
+        algorithm: str | None,
+        tags: list[str] | None,
     ) -> bool:
         """Verificar si un modelo coincide con los filtros."""
         if model_type and model_entry.get("model_type") != model_type:
@@ -365,7 +368,7 @@ class ModelRegistry:
                 return False
         return True
 
-    def load_model(self, model_id: str) -> Optional[object]:
+    def load_model(self, model_id: str) -> object | None:
         """
         Cargar modelo desde registry usando serializacion segura.
 
@@ -462,9 +465,7 @@ class ModelRegistry:
         else:
             return data
 
-    def _migrate_pkl_model(
-        self, pkl_path: Path, entry: dict[str, _RegistryValue]
-    ) -> Optional[object]:
+    def _migrate_pkl_model(self, pkl_path: Path, entry: dict[str, _RegistryValue]) -> object | None:
         """
         Migrate old .pkl model to secure format (one-time migration).
 
@@ -483,7 +484,7 @@ class ModelRegistry:
             class _MigrationUnpickler(pickle.Unpickler):
                 """Restrict pickle deserialization to known safe classes for migration."""
 
-                ALLOWED_CLASSES: ClassVar[dict[tuple[str, str], Optional[type]]] = {
+                ALLOWED_CLASSES: ClassVar[dict[tuple[str, str], type | None]] = {
                     ("builtins", "dict"): dict,
                     ("builtins", "list"): list,
                     ("builtins", "tuple"): tuple,
@@ -506,7 +507,7 @@ class ModelRegistry:
                 def find_class(self, module: str, name: str) -> type:
                     key = (module, name)
                     if key in self.ALLOWED_CLASSES:
-                        cls: Optional[type] = self.ALLOWED_CLASSES[key]
+                        cls: type | None = self.ALLOWED_CLASSES[key]
                         if cls is not None:
                             return cls
                         try:
@@ -561,7 +562,7 @@ class FineTuner:
     - Adaptacion a nuevos regimenes de mercado
     """
 
-    def __init__(self, config: Optional[dict[str, _RegistryValue]] = None):
+    def __init__(self, config: dict[str, _RegistryValue] | None = None):
         """
         Inicializar fine-tuner.
 
@@ -587,7 +588,7 @@ class FineTuner:
         self,
         base_model: object,
         training_data: dict[str, object],
-        validation_data: Optional[dict[str, object]] = None,
+        validation_data: dict[str, object] | None = None,
         model_type: str = "auto",
     ) -> tuple[object, TrainingMetrics]:
         """
@@ -631,7 +632,7 @@ class FineTuner:
         self,
         model: object,
         training_data: dict[str, object],
-        validation_data: Optional[dict[str, object]] = None,
+        validation_data: dict[str, object] | None = None,
     ) -> tuple[object, TrainingMetrics]:
         """
         Fine-tune modelo PyTorch.
@@ -770,7 +771,7 @@ class FineTuner:
         self,
         model: object,
         training_data: dict[str, object],
-        validation_data: Optional[dict[str, object]] = None,
+        validation_data: dict[str, object] | None = None,
     ) -> tuple[object, TrainingMetrics]:
         """
         Fine-tune modelo tree-based (continuar entrenamiento).
@@ -826,7 +827,7 @@ class KnowledgeDistiller:
     Util para comprimir modelos o transferir conocimiento entre regimenes.
     """
 
-    def __init__(self, config: Optional[dict[str, _RegistryValue]] = None):
+    def __init__(self, config: dict[str, _RegistryValue] | None = None):
         """
         Inicializar distiller.
 
@@ -849,7 +850,7 @@ class KnowledgeDistiller:
         teacher_model: object,
         student_model: object,
         training_data: dict[str, object],
-        validation_data: Optional[dict[str, object]] = None,
+        validation_data: dict[str, object] | None = None,
     ) -> tuple[object, TrainingMetrics]:
         """
         Distilar conocimiento de teacher a student.
@@ -899,7 +900,7 @@ class KnowledgeDistiller:
         teacher: object,
         student: object,
         training_data: dict[str, object],
-        validation_data: Optional[dict[str, object]] = None,
+        validation_data: dict[str, object] | None = None,
     ) -> tuple[object, TrainingMetrics]:
         """
         Distillation para modelos PyTorch.
@@ -1031,7 +1032,7 @@ class KnowledgeDistiller:
         teacher: object,
         student: object,
         training_data: dict[str, object],
-        validation_data: Optional[dict[str, object]] = None,
+        validation_data: dict[str, object] | None = None,
     ) -> tuple[object, TrainingMetrics]:
         """
         Distillation para modelos tree-based.
@@ -1121,7 +1122,7 @@ class TransferLearningManager:
     Combina ModelRegistry, FineTuner y KnowledgeDistiller.
     """
 
-    def __init__(self, config: Optional[dict[str, _RegistryValue]] = None):
+    def __init__(self, config: dict[str, _RegistryValue] | None = None):
         """
         Inicializar manager.
 
@@ -1147,9 +1148,9 @@ class TransferLearningManager:
         regime: str,
         model_type: str,
         algorithm: str,
-        metadata: Optional[dict[str, _RegistryValue]] = None,
-        tags: Optional[list[str]] = None,
-    ) -> Optional[str]:
+        metadata: dict[str, _RegistryValue] | None = None,
+        tags: list[str] | None = None,
+    ) -> str | None:
         """
         Crear y registrar un modelo pre-entrenado.
 
@@ -1181,7 +1182,7 @@ class TransferLearningManager:
         self,
         model_id: str,
         training_data: dict[str, object],
-        validation_data: Optional[dict[str, object]] = None,
+        validation_data: dict[str, object] | None = None,
     ) -> tuple[object, TrainingMetrics]:
         """
         Cargar modelo pre-entrenado y hacer fine-tuning.
@@ -1214,8 +1215,8 @@ class TransferLearningManager:
         return fine_tuned_model, metrics
 
     def find_best_model(
-        self, regime: str, model_type: str, algorithm: Optional[str] = None
-    ) -> Optional[str]:
+        self, regime: str, model_type: str, algorithm: str | None = None
+    ) -> str | None:
         """
         Encontrar el mejor modelo pre-entrenado para un regimen.
 
@@ -1235,7 +1236,7 @@ class TransferLearningManager:
             return None
 
         # Seleccionar por mejor metrica en metadata
-        best_model: Optional[str] = None
+        best_model: str | None = None
         best_score = -float("inf")
 
         for model_entry in models:
@@ -1270,7 +1271,7 @@ class TransferLearningManager:
         teacher_model_id: str,
         student_model: object,
         training_data: dict[str, object],
-        validation_data: Optional[dict[str, object]] = None,
+        validation_data: dict[str, object] | None = None,
     ) -> tuple[object, TrainingMetrics]:
         """
         Distilar conocimiento de un modelo teacher a student.

@@ -14,7 +14,7 @@ from __future__ import annotations
 import logging
 from datetime import datetime, timedelta
 from decimal import Decimal
-from typing import Any, Optional
+from typing import Any
 
 from app.shared.config.centralized_config import get_config
 
@@ -388,12 +388,12 @@ class DynamicPortfolioSelector:
 
 
 # Global manager instance
-_multi_strategy_manager: Optional[MultiStrategyAllocationManager] = None
-_dynamic_selector: Optional[DynamicPortfolioSelector] = None
+_multi_strategy_manager: MultiStrategyAllocationManager | None = None
+_dynamic_selector: DynamicPortfolioSelector | None = None
 
 
 def get_multi_strategy_manager(
-    total_capital: Optional[Decimal] = None,
+    total_capital: Decimal | None = None,
 ) -> MultiStrategyAllocationManager:
     """Get global multi-strategy allocation manager."""
     if total_capital is None:

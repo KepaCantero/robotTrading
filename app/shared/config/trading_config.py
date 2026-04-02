@@ -21,7 +21,7 @@ from __future__ import annotations
 import logging
 from decimal import Decimal
 from pathlib import Path
-from typing import Any, ClassVar, Optional
+from typing import Any, ClassVar
 
 import yaml
 from pydantic import BaseModel, Field
@@ -1927,7 +1927,7 @@ class CentralizedConfig(SettingsBase):
                 except (FileNotFoundError, ValueError, KeyError, TypeError) as e:
                     logger.warning(f"Could not load strategy config from {strategy_file}: {e}")
 
-    def get_strategy_config(self, strategy_name: str) -> Optional[StrategyConfig]:
+    def get_strategy_config(self, strategy_name: str) -> StrategyConfig | None:
         """Get configuration for a specific strategy."""
         return self.strategies.get(strategy_name)
 
@@ -2000,7 +2000,7 @@ class CentralizedConfig(SettingsBase):
 # GLOBAL CONFIG INSTANCE AND HELPER FUNCTIONS
 # =============================================================================
 
-_config: Optional[CentralizedConfig] = None
+_config: CentralizedConfig | None = None
 
 
 def get_config() -> CentralizedConfig:
@@ -2024,7 +2024,7 @@ def reload_config() -> CentralizedConfig:
     return _config
 
 
-def get_trading_threshold(threshold_name: Optional[str] = None) -> object:
+def get_trading_threshold(threshold_name: str | None = None) -> object:
     """Get trading thresholds or specific threshold."""
     if threshold_name is None:
         return get_config().trading
@@ -2032,7 +2032,7 @@ def get_trading_threshold(threshold_name: Optional[str] = None) -> object:
         return get_config().get_trading_threshold(threshold_name)
 
 
-def get_strategy_config(strategy_name: str) -> Optional[StrategyConfig]:
+def get_strategy_config(strategy_name: str) -> StrategyConfig | None:
     """Get configuration for a specific strategy."""
     return get_config().strategies.get(strategy_name)
 

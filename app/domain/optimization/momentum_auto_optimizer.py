@@ -12,14 +12,16 @@ import logging
 from datetime import datetime
 from decimal import Decimal
 from pathlib import Path
-from typing import Any, Optional
+from typing import TYPE_CHECKING, Any
 
 import numpy as np
 import yaml
 
 from app.backtesting.walk_forward_validator import WalkForwardValidator
-from app.domain.models.market_data import Quote
 from app.domain.strategies.momentum import MomentumStrategy
+
+if TYPE_CHECKING:
+    from app.domain.models.market_data import Quote
 
 logger = logging.getLogger(__name__)
 
@@ -49,7 +51,7 @@ class MomentumAutoOptimizer:
         self.history = self._load_history()
 
         # Current parameters
-        self.current_params: Optional[dict[str, Any]] = None
+        self.current_params: dict[str, Any] | None = None
 
     def _load_config(self) -> dict[str, Any]:
         """Load preset configuration."""
@@ -115,7 +117,7 @@ class MomentumAutoOptimizer:
         quotes: list[Quote],
         start_date: datetime,
         end_date: datetime,
-        current_params: Optional[dict[str, Any]] = None,
+        current_params: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         """
         Optimize momentum parameters using walk-forward validation.

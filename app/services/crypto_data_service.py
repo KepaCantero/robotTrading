@@ -15,7 +15,7 @@ import asyncio
 import logging
 from datetime import datetime, timedelta
 from decimal import Decimal
-from typing import Any, ClassVar, Optional
+from typing import Any, ClassVar
 
 from requests.exceptions import HTTPError, RequestException
 
@@ -232,7 +232,7 @@ class CryptoDataFetcher:
             # Try to fetch from API with reconnection manager
             try:
 
-                async def _fetch_price(trading_pair: str = pair) -> Optional[Decimal]:
+                async def _fetch_price(trading_pair: str = pair) -> Decimal | None:
                     """Internal fetch function."""
                     return self._fetch_price_from_api(trading_pair)
 
@@ -253,7 +253,7 @@ class CryptoDataFetcher:
 
     def get_historical_ohlcv(
         self, symbol: str, interval: str = "1h", limit: int = 100
-    ) -> Optional[list[dict]]:
+    ) -> list[dict] | None:
         """
         Get historical OHLCV data for a cryptocurrency.
 
@@ -278,7 +278,7 @@ class CryptoDataFetcher:
         # Try to fetch from API with reconnection manager
         try:
 
-            async def _fetch_ohlcv() -> Optional[list[dict]]:
+            async def _fetch_ohlcv() -> list[dict] | None:
                 """Internal fetch function."""
                 return self._fetch_ohlcv_from_api(pair, interval, limit)
 
@@ -355,7 +355,7 @@ class CryptoDataFetcher:
             self.ohlcv_cache.clear()
             logger.info("Cleared crypto OHLCV cache")
 
-    def _fetch_price_from_api(self, pair: str) -> Optional[Decimal]:
+    def _fetch_price_from_api(self, pair: str) -> Decimal | None:
         """
         Fetch current price from exchange API (Binance, Coinbase, etc.).
 
@@ -375,7 +375,7 @@ class CryptoDataFetcher:
         # 3. WebSocket for real-time updates
         # For now, implicitly return None to trigger fallback pricing
 
-    def _fetch_ohlcv_from_api(self, pair: str, interval: str, limit: int) -> Optional[list[dict]]:
+    def _fetch_ohlcv_from_api(self, pair: str, interval: str, limit: int) -> list[dict] | None:
         """
         Fetch historical OHLCV data from exchange API.
 
@@ -437,7 +437,7 @@ class CryptoDataFetcher:
 
 
 # Global instance for shared access
-_crypto_fetcher: Optional[CryptoDataFetcher] = None
+_crypto_fetcher: CryptoDataFetcher | None = None
 
 
 def get_crypto_fetcher() -> CryptoDataFetcher:

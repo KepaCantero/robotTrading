@@ -15,7 +15,6 @@ import contextlib
 import logging
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
-from typing import Optional
 
 import numpy as np
 import pandas as pd
@@ -69,7 +68,7 @@ class CorrelationAnalyzer:
     def __init__(
         self,
         data_service,
-        config: Optional[CorrelationConfig] = None,
+        config: CorrelationConfig | None = None,
     ):
         """
         Initialize correlation analyzer.
@@ -82,11 +81,11 @@ class CorrelationAnalyzer:
         self.config = config or CorrelationConfig()
 
         # Cache storage
-        self._cache: Optional[CorrelationCache] = None
+        self._cache: CorrelationCache | None = None
         self._cache_lock = asyncio.Lock()
 
         # Background update task
-        self._update_task: Optional[asyncio.Task] = None
+        self._update_task: asyncio.Task | None = None
         self._update_loop_running = False
 
         # Statistics
@@ -108,7 +107,7 @@ class CorrelationAnalyzer:
     async def calculate_correlation_matrix(
         self,
         symbols: list[str],
-        lookback_days: Optional[int] = None,
+        lookback_days: int | None = None,
     ) -> pd.DataFrame:
         """
         Calculate correlation matrix from historical returns.
@@ -247,7 +246,7 @@ class CorrelationAnalyzer:
             self._fallback_used += 1
             return self._get_fallback_correlation(symbol1, symbol2)
 
-    def get_cached_matrix(self) -> Optional[pd.DataFrame]:
+    def get_cached_matrix(self) -> pd.DataFrame | None:
         """
         Get cached correlation matrix.
 
@@ -308,9 +307,9 @@ class CorrelationAnalyzer:
     def set_symbol_metadata(
         self,
         symbol: str,
-        sector: Optional[str] = None,
-        market: Optional[str] = None,
-        asset_class: Optional[str] = None,
+        sector: str | None = None,
+        market: str | None = None,
+        asset_class: str | None = None,
     ) -> None:
         """
         Set metadata for a symbol for fallback correlation calculation.

@@ -11,7 +11,7 @@ TASK-24: SRP Refactoring
 from __future__ import annotations
 
 import logging
-from typing import Any, Optional, Union, cast
+from typing import Any, Union, cast
 
 from pydantic import BaseModel, Field, field_validator
 from pydantic_settings import BaseSettings
@@ -32,13 +32,13 @@ class StrategyConfig(BaseModel):
     )
 
     # Risk parameters
-    max_position_size: Optional[float] = Field(
+    max_position_size: float | None = Field(
         default=0.1, description="Maximum position size for this strategy"
     )
-    stop_loss_pct: Optional[float] = Field(
+    stop_loss_pct: float | None = Field(
         default=0.05, description="Stop loss percentage for this strategy"
     )
-    take_profit_pct: Optional[float] = Field(
+    take_profit_pct: float | None = Field(
         default=0.15, description="Take profit percentage for this strategy"
     )
 
@@ -347,7 +347,7 @@ class StockAllocationSettings(BaseSettings):
         return v
 
     @classmethod
-    def from_yaml(cls, tier: Optional[str] = None) -> StockAllocationSettings:
+    def from_yaml(cls, tier: str | None = None) -> StockAllocationSettings:
         """
         Create StockAllocationSettings from YAML configuration.
 
@@ -371,7 +371,7 @@ class StockAllocationSettings(BaseSettings):
         config = cast("dict[str, _section]", raw_config)
 
         # Extract parameters from YAML and create instance
-        kwargs: dict[str, Union[int, float, bool, str, _weights_section]] = {}
+        kwargs: dict[str, int | float | bool | str | _weights_section] = {}
 
         # Data validation
         if "data_validation" in config:

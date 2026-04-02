@@ -11,7 +11,7 @@ import logging
 from datetime import datetime
 from decimal import Decimal
 from enum import Enum
-from typing import Optional, Protocol
+from typing import Protocol
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
@@ -33,7 +33,7 @@ class HedgingMetadata(BaseModel):
     is_hedge: bool = Field(
         default=False, description="Whether this position is a hedge (not a base position)"
     )
-    base_position_id: Optional[str] = Field(
+    base_position_id: str | None = Field(
         default=None, description="ID of the position being hedged (if is_hedge=True)"
     )
     hedge_ratio: Decimal = Field(
@@ -42,16 +42,16 @@ class HedgingMetadata(BaseModel):
         le=Decimal("1.0"),
         description="Ratio of position being hedged (0-1)",
     )
-    hedge_currency_pair: Optional[str] = Field(
+    hedge_currency_pair: str | None = Field(
         default=None, description="Forex pair used for hedging (e.g., EUR/USD)"
     )
     hedge_cost_bps: Decimal = Field(
         default=Decimal("0"), ge=Decimal("0"), description="Hedging cost in basis points"
     )
-    hedge_created_at: Optional[datetime] = Field(
+    hedge_created_at: datetime | None = Field(
         default=None, description="When the hedge was created"
     )
-    hedge_expires_at: Optional[datetime] = Field(
+    hedge_expires_at: datetime | None = Field(
         default=None, description="When rolling hedge expires (if applicable)"
     )
 
@@ -112,10 +112,10 @@ class Position(BaseModel):
     unrealized_pnl: Decimal = Field(..., description="Unrealized profit/loss")
     realized_pnl: Decimal = Field(default=Decimal("0"), description="Realized profit/loss")
     currency: str = Field(default="USD", description="Position currency")
-    sector: Optional[str] = Field(
+    sector: str | None = Field(
         default=None, description="Sector classification (e.g., technology, energy, healthcare)"
     )
-    country: Optional[str] = Field(
+    country: str | None = Field(
         default=None, description="Country or region code (e.g., US, UK, JP, EU)"
     )
     broker: str = Field(..., description="Broker identifier")
@@ -343,8 +343,8 @@ class AssetUniverse(BaseModel):
     broker: str = Field(..., description="Broker identifier")
     asset_class: AssetClass = Field(..., description="Asset class")
     symbols: list[str] = Field(..., description="List of supported symbols")
-    min_volume: Optional[Decimal] = Field(None, description="Minimum daily volume requirement")
-    max_spread: Optional[Decimal] = Field(None, description="Maximum bid-ask spread")
+    min_volume: Decimal | None = Field(None, description="Minimum daily volume requirement")
+    max_spread: Decimal | None = Field(None, description="Maximum bid-ask spread")
 
     def is_supported(self, symbol: str) -> bool:
         """Check if a symbol is supported in this universe."""
@@ -368,8 +368,8 @@ class CircuitBreaker(BaseModel):
     )
     error_count: int = Field(default=0, description="Consecutive error count")
     max_errors: int = Field(default=3, description="Maximum errors before triggering")
-    last_error_time: Optional[datetime] = Field(None, description="Last error timestamp")
-    last_success_time: Optional[datetime] = Field(None, description="Last success timestamp")
+    last_error_time: datetime | None = Field(None, description="Last error timestamp")
+    last_success_time: datetime | None = Field(None, description="Last success timestamp")
     cooldown_seconds: int = Field(default=300, description="Cooldown period in seconds")
     success_count: int = Field(default=0, description="Consecutive success count")
     success_threshold: int = Field(
@@ -452,7 +452,7 @@ class PortfolioProvider(Protocol):
         """Get current portfolio state."""
         ...
 
-    async def get_position(self, symbol: str) -> Optional[Position]:
+    async def get_position(self, symbol: str) -> Position | None:
         """Get specific position by symbol."""
         ...
 
@@ -460,7 +460,7 @@ class PortfolioProvider(Protocol):
         """Get supported asset universe for this provider."""
         ...
 
-    async def get_market_regime(self, symbol: str) -> Optional[MarketRegimeData]:
+    async def get_market_regime(self, symbol: str) -> MarketRegimeData | None:
         """Get market regime data for a symbol."""
         ...
 
@@ -469,7 +469,7 @@ class TradingClientInterface(Protocol):
     """Common interface for all trading clients."""
 
     async def place_order(
-        self, symbol: str, quantity: Decimal, price: Optional[Decimal] = None
+        self, symbol: str, quantity: Decimal, price: Decimal | None = None
     ) -> str:
         """Place a trading order."""
         ...

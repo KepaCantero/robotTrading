@@ -11,7 +11,6 @@ import logging
 from dataclasses import dataclass, field
 from datetime import datetime
 from decimal import Decimal
-from typing import Optional
 
 from app.shared.config.centralized_config import get_config
 
@@ -551,7 +550,7 @@ class DeploymentDecisionOrchestrator:
         metrics["decisions"].append(decision.decision_id)
 
     async def get_decision_history(
-        self, limit: Optional[int] = None, status_filter: Optional[str] = None
+        self, limit: int | None = None, status_filter: str | None = None
     ) -> list[DeploymentDecision]:
         """
         Get decision history with optional filtering.
@@ -619,7 +618,7 @@ class DeploymentDecisionOrchestrator:
 
 
 # Singleton
-_orchestrator: Optional[DeploymentDecisionOrchestrator] = None
+_orchestrator: DeploymentDecisionOrchestrator | None = None
 
 
 def get_deployment_decision_orchestrator() -> DeploymentDecisionOrchestrator:

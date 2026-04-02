@@ -12,10 +12,12 @@ from __future__ import annotations
 
 import logging
 from datetime import datetime
-from decimal import Decimal
-from typing import Optional
+from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, Field
+
+if TYPE_CHECKING:
+    from decimal import Decimal
 
 logger = logging.getLogger(__name__)
 
@@ -57,19 +59,19 @@ class DeploymentInput(BaseModel):
     max_acceptable_drawdown_pct: Decimal = Field(..., description="User max acceptable drawdown %")
 
     # T4.1: Capacity fade validation results (optional, added in PHASE 6)
-    capacity_fade_feasible: Optional[bool] = Field(
+    capacity_fade_feasible: bool | None = Field(
         default=None, description="T4.1 capacity fade feasibility"
     )
-    estimated_alpha_at_scale: Optional[Decimal] = Field(
+    estimated_alpha_at_scale: Decimal | None = Field(
         default=None, description="T4.1 estimated alpha at target capital"
     )
-    capacity_fade_assessment: Optional[str] = Field(
+    capacity_fade_assessment: str | None = Field(
         default=None, description="T4.1 capacity fade assessment details"
     )
-    current_capital: Optional[Decimal] = Field(
+    current_capital: Decimal | None = Field(
         default=None, description="Current capital (for capacity fade analysis)"
     )
-    target_capital: Optional[Decimal] = Field(
+    target_capital: Decimal | None = Field(
         default=None, description="Target capital (for capacity fade analysis)"
     )
 
@@ -86,7 +88,7 @@ class DeploymentRationale(BaseModel):
     recommendation_assessment: str = Field(..., description="Recommendation analysis")
     risk_assessment: str = Field(..., description="Risk assessment")
     diversification_assessment: str = Field(..., description="Diversification assessment")
-    capacity_fade_assessment: Optional[str] = Field(
+    capacity_fade_assessment: str | None = Field(
         default=None, description="T4.1 capacity fade analysis (PHASE 6)"
     )
     overall_assessment: str = Field(..., description="Overall decision rationale")
@@ -116,7 +118,7 @@ class DeploymentDecision(BaseModel):
     validation_score: Decimal = Field(..., description="Validation score (0-100)")
     recommendation_score: Decimal = Field(..., description="Recommendation score (0-100)")
     risk_score: Decimal = Field(..., description="Risk assessment score (0-100)")
-    capacity_fade_score: Optional[Decimal] = Field(
+    capacity_fade_score: Decimal | None = Field(
         default=None, description="T4.1 Capacity fade score (0-100, PHASE 6)"
     )
     overall_score: Decimal = Field(..., description="Overall decision score (0-100)")
@@ -137,7 +139,7 @@ class DeploymentDecision(BaseModel):
         default_factory=datetime.utcnow, description="Decision time"
     )
 
-    error_message: Optional[str] = Field(None, description="Error if any")
+    error_message: str | None = Field(None, description="Error if any")
 
 
 logger.debug(

@@ -16,7 +16,7 @@ from __future__ import annotations
 import logging
 from datetime import datetime
 from decimal import Decimal
-from typing import Any, Optional
+from typing import Any
 
 import numpy as np
 
@@ -71,7 +71,7 @@ def _ensure_empyrical():
 class MetricsCalculator:
     """Calculator for backtesting performance metrics."""
 
-    def __init__(self, risk_free_rate: Optional[Decimal] = None):
+    def __init__(self, risk_free_rate: Decimal | None = None):
         """
         Initialize metrics calculator.
 
@@ -87,10 +87,10 @@ class MetricsCalculator:
         self._annual_trading_days = config.backtesting.annual_trading_days
 
         # Initialize López de Prado metrics components
-        self._sharpe_combiner: Optional[SharpeRatioCombinator] = None
-        self._stability_validator: Optional[PortfolioStabilityValidator] = None
-        self._turnover_calculator: Optional[TurnoverAdjustedCalculator] = None
-        self._concentration_analyzer: Optional[ConcentrationAnalyzer] = None
+        self._sharpe_combiner: SharpeRatioCombinator | None = None
+        self._stability_validator: PortfolioStabilityValidator | None = None
+        self._turnover_calculator: TurnoverAdjustedCalculator | None = None
+        self._concentration_analyzer: ConcentrationAnalyzer | None = None
 
     def calculate_all_metrics(
         self,
@@ -372,7 +372,7 @@ class MetricsCalculator:
 
         return returns
 
-    def _calculate_sharpe_ratio(self, returns: list[Decimal]) -> Optional[Decimal]:
+    def _calculate_sharpe_ratio(self, returns: list[Decimal]) -> Decimal | None:
         """Calculate Sharpe ratio using empyrical if available, otherwise manual."""
         if not returns or len(returns) < 2:
             return None
@@ -429,7 +429,7 @@ class MetricsCalculator:
             logger.error(f"Error calculating Sharpe ratio: {e}")
             return None
 
-    def _calculate_sortino_ratio(self, returns: list[Decimal]) -> Optional[Decimal]:
+    def _calculate_sortino_ratio(self, returns: list[Decimal]) -> Decimal | None:
         """Calculate Sortino ratio using empyrical if available, otherwise manual."""
         if not returns or len(returns) < 2:
             return None
@@ -501,7 +501,7 @@ class MetricsCalculator:
             logger.error(f"Error calculating Sortino ratio: {e}")
             return None
 
-    def _calculate_risk_reward_ratio(self, trades: list[Trade]) -> Optional[Decimal]:
+    def _calculate_risk_reward_ratio(self, trades: list[Trade]) -> Decimal | None:
         """
         Calculate average risk/reward ratio per trade (TASK-MET-2).
 
@@ -836,7 +836,7 @@ def calculate_matthews_corrcoef(y_true: np.ndarray, y_pred: np.ndarray) -> float
 
 
 def calculate_classification_metrics_imbalanced(
-    y_true: np.ndarray, y_pred: np.ndarray, y_proba: Optional[np.ndarray] = None
+    y_true: np.ndarray, y_pred: np.ndarray, y_proba: np.ndarray | None = None
 ) -> dict[str, float]:
     """
     Calculate comprehensive classification metrics for imbalanced data.
@@ -907,7 +907,7 @@ def calculate_classification_metrics_imbalanced(
 def calculate_imbalanced_metrics_from_trades(
     winning_trades: list[Trade],
     losing_trades: list[Trade],
-    predictions: Optional[np.ndarray] = None,
+    predictions: np.ndarray | None = None,
 ) -> dict[str, float]:
     """
     Calculate imbalanced classification metrics from trade results.
@@ -964,7 +964,7 @@ class LopezDePradoMetricsCalculator:
 
     def __init__(
         self,
-        risk_free_rate: Optional[float] = None,
+        risk_free_rate: float | None = None,
         stability_threshold: float = 70.0,
         transaction_cost_bps: float = 10.0,
     ):
@@ -1044,7 +1044,7 @@ class LopezDePradoMetricsCalculator:
     def validate_portfolio_stability(
         self,
         weights_history: list[np.ndarray],
-        returns_history: Optional[np.ndarray] = None,
+        returns_history: np.ndarray | None = None,
         period_length_days: int = 30,
     ) -> PortfolioStabilityMetrics:
         """
@@ -1313,7 +1313,7 @@ class LopezDePradoMetricsCalculator:
 
 # Convenience function for creating López de Prado calculator
 def create_lopez_de_prado_calculator(
-    risk_free_rate: Optional[float] = None,
+    risk_free_rate: float | None = None,
     stability_threshold: float = 70.0,
     transaction_cost_bps: float = 10.0,
 ) -> LopezDePradoMetricsCalculator:

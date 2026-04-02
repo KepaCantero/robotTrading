@@ -12,13 +12,16 @@ import contextlib
 import logging
 from dataclasses import dataclass, field
 from datetime import datetime
-from decimal import Decimal
-from typing import Any, Optional
+from typing import TYPE_CHECKING, Any
 from uuid import uuid4
 
-from app.services.alerting_system.alert_manager import AlertManager
-from app.services.alerting_system.alert_rule_engine import AlertRuleEngine
 from app.services.alerting_system.models import AlertEvent, AlertRule, AlertState, ChangeRule
+
+if TYPE_CHECKING:
+    from decimal import Decimal
+
+    from app.services.alerting_system.alert_manager import AlertManager
+    from app.services.alerting_system.alert_rule_engine import AlertRuleEngine
 
 logger = logging.getLogger(__name__)
 
@@ -41,7 +44,7 @@ class EvaluationStatistics:
     evaluation_errors: int = 0
     total_evaluations: int = 0
     avg_evaluation_time_ms: float = 0.0
-    last_evaluation_at: Optional[datetime] = None
+    last_evaluation_at: datetime | None = None
     evaluation_start_time: datetime = field(default_factory=datetime.utcnow)
 
     def add_evaluation(self, triggered: bool, duration_ms: float, error: bool = False):
@@ -110,7 +113,7 @@ class MetricsDrivenAlerter:
         self.metric_query_configs: dict[str, MetricQueryConfig] = {}
         self.evaluation_stats = EvaluationStatistics()
         self.is_running = False
-        self._evaluation_task: Optional[asyncio.Task] = None
+        self._evaluation_task: asyncio.Task | None = None
         self.logger = logging.getLogger(self.__class__.__name__)
 
     def register_metric_alert_rule(

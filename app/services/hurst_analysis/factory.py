@@ -8,22 +8,25 @@ instances of Hurst analysis components with sensible defaults.
 from __future__ import annotations
 
 import logging
+from typing import TYPE_CHECKING
 
 from app.services.hurst_analysis.change_detector import RegimeChangeDetector
 from app.services.hurst_analysis.confidence_calculator import ConfidenceCalculator
 from app.services.hurst_analysis.historian import HistoricalDataTracker
 from app.services.hurst_analysis.orchestrator import HurstExponentAnalyzer
-from app.services.hurst_analysis.protocols import (
-    ChangeDetectorProtocol,
-    ConfidenceCalculatorProtocol,
-    HistoricalTrackerProtocol,
-    HurstCalculator,
-    RegimeClassifierProtocol,
-    StrategyRecommenderProtocol,
-)
 from app.services.hurst_analysis.regime_classifier import RegimeClassifier
 from app.services.hurst_analysis.rs_calculator import RSMethodCalculator
 from app.services.hurst_analysis.strategy_recommender import StrategyRecommender
+
+if TYPE_CHECKING:
+    from app.services.hurst_analysis.protocols import (
+        ChangeDetectorProtocol,
+        ConfidenceCalculatorProtocol,
+        HistoricalTrackerProtocol,
+        HurstCalculator,
+        RegimeClassifierProtocol,
+        StrategyRecommenderProtocol,
+    )
 
 logger = logging.getLogger(__name__)
 

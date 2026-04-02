@@ -6,7 +6,6 @@ from __future__ import annotations
 
 import logging
 from abc import ABC, abstractmethod
-from typing import Optional
 
 logger = logging.getLogger(__name__)
 
@@ -24,9 +23,9 @@ class BaseFilter(ABC):
     def __init__(
         self,
         name: str,
-        config: Optional[dict] = None,
+        config: dict | None = None,
         preset: str = "balanced",
-        tier: Optional[str] = None,
+        tier: str | None = None,
         use_yaml: bool = True,
     ):
         """

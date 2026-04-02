@@ -11,7 +11,6 @@ from __future__ import annotations
 import logging
 from dataclasses import dataclass
 from decimal import Decimal
-from typing import Optional
 
 logger = logging.getLogger(__name__)
 
@@ -44,7 +43,7 @@ class HarvestingOpportunity:
     """Complete tax-harvesting opportunity."""
 
     position: HarvestablePosition
-    replacement: Optional[ReplacementPosition]
+    replacement: ReplacementPosition | None
     total_tax_benefit: Decimal
     recommendation: str
 
@@ -77,7 +76,7 @@ class TaxLossHarvester:
         cost_basis: dict[str, Decimal],  # symbol -> total_cost
         quantities: dict[str, Decimal],  # symbol -> quantity
         current_prices: dict[str, Decimal],  # symbol -> price
-        min_loss_threshold: Optional[Decimal] = None,  # Minimum loss to consider
+        min_loss_threshold: Decimal | None = None,  # Minimum loss to consider
     ) -> list[HarvestablePosition]:
         """
         Identify positions with unrealized losses eligible for harvesting.
@@ -202,7 +201,7 @@ class TaxLossHarvester:
         self,
         harvestable_positions: list[HarvestablePosition],
         marginal_tax_rate: Decimal,
-        capital_losses_carryforward: Optional[Decimal] = None,
+        capital_losses_carryforward: Decimal | None = None,
     ) -> dict:
         """
         Estimate total annual tax benefit from all harvestable positions.
@@ -293,7 +292,7 @@ class TaxLossHarvester:
 
 
 # Singleton
-_harvester: Optional[TaxLossHarvester] = None
+_harvester: TaxLossHarvester | None = None
 
 
 def get_tax_loss_harvester() -> TaxLossHarvester:

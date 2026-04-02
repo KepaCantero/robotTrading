@@ -9,16 +9,18 @@ from __future__ import annotations
 
 import logging
 import warnings
-from typing import Optional
+from typing import TYPE_CHECKING
 
 logger = logging.getLogger(__name__)
 
 import matplotlib.pyplot as plt
 import numpy as np
-import pandas as pd
 import seaborn as sns
 
 from .fractional_differentiation import FractionalDifferentiation
+
+if TYPE_CHECKING:
+    import pandas as pd
 
 warnings.filterwarnings("ignore")
 
@@ -30,7 +32,7 @@ plt.rcParams["font.size"] = 10
 
 def plot_frac_diff_comparison(
     series: pd.Series,
-    d_values: Optional[list[float]] = None,
+    d_values: list[float] | None = None,
     figsize: tuple[int, int] = (14, 10),
     title: str = "Fractional Differentiation Comparison",
 ) -> plt.Figure:
@@ -150,7 +152,7 @@ def plot_weights(
 
 def plot_memory_preservation(
     series: pd.Series,
-    d_values: Optional[list[float]] = None,
+    d_values: list[float] | None = None,
     max_lag: int = 20,
     figsize: tuple[int, int] = (12, 8),
 ) -> plt.Figure:
@@ -430,7 +432,7 @@ def plot_optimal_d_search(
 
 def plot_multi_feature_analysis(
     df: pd.DataFrame,
-    features: Optional[list[str]] = None,
+    features: list[str] | None = None,
     d: float = 0.5,
     figsize: tuple[int, int] = (14, 10),
 ) -> plt.Figure:
@@ -492,7 +494,7 @@ def plot_multi_feature_analysis(
 
 
 def create_summary_report(
-    series: pd.Series, d_values: Optional[list[float]] = None, save_path: Optional[str] = None
+    series: pd.Series, d_values: list[float] | None = None, save_path: str | None = None
 ) -> plt.Figure:
     """
     Create a comprehensive summary report for fractional differentiation analysis.

@@ -21,7 +21,7 @@ from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from decimal import Decimal
 from enum import Enum
-from typing import TYPE_CHECKING, Any, Callable, Optional, TypedDict
+from typing import TYPE_CHECKING, Any, Callable, TypedDict
 
 from requests.exceptions import HTTPError
 from sqlalchemy.exc import (
@@ -82,10 +82,10 @@ class MonitoredPosition:
     entry_price: Decimal
     quantity: Decimal
     current_price: Decimal
-    stop_loss_price: Optional[Decimal] = None
-    stop_loss_pct: Optional[Decimal] = None
-    take_profit_price: Optional[Decimal] = None
-    take_profit_pct: Optional[Decimal] = None
+    stop_loss_price: Decimal | None = None
+    stop_loss_pct: Decimal | None = None
+    take_profit_price: Decimal | None = None
+    take_profit_pct: Decimal | None = None
     status: PositionStatus = PositionStatus.ACTIVE
     opened_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
     last_checked: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
@@ -127,7 +127,7 @@ class MonitoredPosition:
         else:  # SHORT
             return self.current_price <= self.take_profit_price
 
-    def calculate_stop_loss_price(self) -> Optional[Decimal]:
+    def calculate_stop_loss_price(self) -> Decimal | None:
         """
         Calculate stop-loss price from percentage if not set.
 
@@ -148,7 +148,7 @@ class MonitoredPosition:
 
         return None
 
-    def calculate_take_profit_price(self) -> Optional[Decimal]:
+    def calculate_take_profit_price(self) -> Decimal | None:
         """
         Calculate take-profit price from percentage if not set.
 
@@ -195,7 +195,7 @@ class MonitoredPosition:
         else:
             return (self.entry_price - self.current_price) * self.quantity
 
-    def calculate_pnl_percentage(self) -> Optional[Decimal]:
+    def calculate_pnl_percentage(self) -> Decimal | None:
         """
         Calculate P&L as percentage of entry price.
 
@@ -272,7 +272,7 @@ class MonitoredPosition:
 
 
 class _MonitorStats(TypedDict):
-    monitor_start_time: Optional[datetime]
+    monitor_start_time: datetime | None
     total_checks: int
     stop_loss_triggered: int
     take_profit_triggered: int
@@ -298,7 +298,7 @@ class PositionMonitorConfig:
         stop_execution_timeout_seconds: Timeout for stop order execution (uses centralized config)
     """
 
-    def __init__(self, custom_config: Optional[dict] = None):
+    def __init__(self, custom_config: dict | None = None):
         """
         Initialize PositionMonitorConfig with centralized config values.
 
@@ -365,8 +365,8 @@ class PositionMonitor:
     def __init__(
         self,
         broker,
-        config: Optional[PositionMonitorConfig] = None,
-        on_stop_triggered: Optional[Callable[[MonitoredPosition], None]] = None,
+        config: PositionMonitorConfig | None = None,
+        on_stop_triggered: Callable[[MonitoredPosition], None] | None = None,
     ):
         """
         Initialize position monitor.
@@ -387,8 +387,8 @@ class PositionMonitor:
 
         # State
         self.is_running = False
-        self._monitor_task: Optional[asyncio.Task] = None
-        self._state_sync_task: Optional[asyncio.Task] = None
+        self._monitor_task: asyncio.Task | None = None
+        self._state_sync_task: asyncio.Task | None = None
 
         # Monitored positions (in-memory cache)
         self._positions: dict[str, MonitoredPosition] = {}
@@ -933,7 +933,7 @@ class PositionMonitor:
         """Get list of active positions only."""
         return [p for p in self._positions.values() if p.status == PositionStatus.ACTIVE]
 
-    def get_position(self, position_id: str) -> Optional[MonitoredPosition]:
+    def get_position(self, position_id: str) -> MonitoredPosition | None:
         """Get a specific monitored position."""
         return self._positions.get(position_id)
 

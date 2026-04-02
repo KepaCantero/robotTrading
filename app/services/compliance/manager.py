@@ -40,7 +40,6 @@ import logging
 from dataclasses import dataclass, field
 from datetime import date, datetime
 from decimal import Decimal
-from typing import Optional
 
 from app.services.compliance.order_pattern_analyzer import OrderPatternAnalyzer
 from app.services.compliance.pdt_tracker import Country, PDTStatus, PDTTracker
@@ -58,7 +57,7 @@ class TradeRecord:
     quantity: Decimal
     price: Decimal
     trade_date: date
-    order_id: Optional[str] = None
+    order_id: str | None = None
     is_day_trade: bool = False
 
     def to_dict(self) -> dict:
@@ -82,7 +81,7 @@ class ComplianceViolation:
     severity: str  # INFO, WARNING, CRITICAL
     description: str
     timestamp: datetime
-    trade_reference: Optional[str] = None
+    trade_reference: str | None = None
 
     def to_dict(self) -> dict:
         """Convert to dictionary."""
@@ -101,7 +100,7 @@ class ComplianceReport:
 
     country: str
     account_equity: Decimal
-    pdt_status: Optional[PDTStatus] = None
+    pdt_status: PDTStatus | None = None
     wash_sale_count: int = 0
     wash_sale_disallowed_loss: Decimal = Decimal("0")
     order_pattern_alerts: int = 0
@@ -148,7 +147,7 @@ class ComplianceManager:
     def __init__(
         self,
         country: Country = Country.ES,
-        account_equity: Optional[Decimal] = None,
+        account_equity: Decimal | None = None,
     ):
         """
         Initialize compliance manager.
@@ -176,7 +175,7 @@ class ComplianceManager:
     def check_trade_allowed(
         self,
         trade: TradeRecord,
-        account_equity: Optional[Decimal] = None,
+        account_equity: Decimal | None = None,
     ) -> tuple[bool, list[str]]:
         """
         Check if trade is allowed under compliance rules.
@@ -373,7 +372,7 @@ class ComplianceManager:
 
     def get_violations(
         self,
-        severity: Optional[str] = None,
+        severity: str | None = None,
     ) -> list[ComplianceViolation]:
         """
         Get compliance violations.
@@ -408,7 +407,7 @@ class ComplianceManager:
         violation_type: str,
         severity: str,
         description: str,
-        trade_reference: Optional[str] = None,
+        trade_reference: str | None = None,
     ) -> None:
         """Record a compliance violation."""
         violation = ComplianceViolation(

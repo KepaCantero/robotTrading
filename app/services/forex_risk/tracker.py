@@ -17,13 +17,16 @@ from __future__ import annotations
 import asyncio
 import logging
 from dataclasses import dataclass
-from datetime import datetime
 from decimal import Decimal
-from typing import Any, ClassVar, Optional
+from typing import TYPE_CHECKING, Any, ClassVar
 
-from app.domain.models.portfolio import Portfolio, Position
 from app.shared.utils.decimal_utils import calculate_percentage, safe_decimal_divide, to_decimal
 from app.shared.utils.timezone_utils import utc_now
+
+if TYPE_CHECKING:
+    from datetime import datetime
+
+    from app.domain.models.portfolio import Portfolio, Position
 
 logger = logging.getLogger(__name__)
 
@@ -170,8 +173,8 @@ class ForexRiskTracker:
     def __init__(
         self,
         base_currency: str = "EUR",
-        forex_service: Optional[Any] = None,
-        min_hedge_threshold: Optional[Decimal] = None,
+        forex_service: Any | None = None,
+        min_hedge_threshold: Decimal | None = None,
     ):
         """
         Initialize forex risk tracker.
@@ -533,7 +536,7 @@ class ForexRiskTracker:
 
         return amount / rate
 
-    async def _get_fx_rate(self, currency: str) -> Optional[Decimal]:
+    async def _get_fx_rate(self, currency: str) -> Decimal | None:
         """
         Get FX rate for a currency.
 

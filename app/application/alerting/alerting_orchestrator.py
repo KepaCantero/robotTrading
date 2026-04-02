@@ -12,7 +12,7 @@ import asyncio
 import logging
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Callable, Optional, cast
+from typing import TYPE_CHECKING, Callable, cast
 
 from app.services.alerting_system.alert_manager import AlertManager
 from app.services.alerting_system.alert_rule_engine import AlertRuleEngine
@@ -21,9 +21,11 @@ from app.services.alerting_system.metrics_driven_alerter import (
     MetricQueryConfig,
     MetricsDrivenAlerter,
 )
-from app.services.alerting_system.models import AlertEvent, AlertRule, AlertSeverity
 from app.services.alerting_system.notification_channels import NotificationDispatcher
 from app.services.alerting_system.rule_templates import AlertRuleTemplates
+
+if TYPE_CHECKING:
+    from app.services.alerting_system.models import AlertEvent, AlertRule, AlertSeverity
 
 logger = logging.getLogger(__name__)
 
@@ -38,7 +40,7 @@ class AlertingHealth:
     enabled_rules: int
     total_alerts_triggered: int
     total_alerts_resolved: int
-    last_evaluation_at: Optional[datetime] = None
+    last_evaluation_at: datetime | None = None
     evaluation_errors: int = 0
     avg_evaluation_time_ms: float = 0.0
     components_status: dict[str, bool] = field(default_factory=dict)
@@ -99,12 +101,12 @@ class AlertingOrchestrator:
         self.alert_rule_engine = AlertRuleEngine()
         self.alert_manager = AlertManager()
         self.notification_dispatcher = NotificationDispatcher()
-        self.metrics_alerter: Optional[MetricsDrivenAlerter] = None
+        self.metrics_alerter: MetricsDrivenAlerter | None = None
 
         # System state
         self.registered_rules: dict[str, AlertRule] = {}
         self.statistics = AlertingStatistics()
-        self._evaluation_task: Optional[asyncio.Task] = None
+        self._evaluation_task: asyncio.Task | None = None
         self._lock = asyncio.Lock()
 
         self.logger.info("AlertingOrchestrator initialized")
@@ -228,7 +230,7 @@ class AlertingOrchestrator:
     async def start(
         self,
         evaluation_interval_seconds: int = 60,
-        metric_query_fn: Optional[Callable] = None,
+        metric_query_fn: Callable | None = None,
     ) -> None:
         """
         Start the alerting system.
@@ -419,7 +421,7 @@ class AlertingOrchestrator:
         """Get all registered rules."""
         return dict(self.registered_rules)
 
-    def get_rule_by_id(self, rule_id: str) -> Optional[AlertRule]:
+    def get_rule_by_id(self, rule_id: str) -> AlertRule | None:
         """Get a specific rule by ID."""
         return self.registered_rules.get(rule_id)
 

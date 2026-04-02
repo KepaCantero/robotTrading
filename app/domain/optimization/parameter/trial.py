@@ -12,7 +12,7 @@ import logging
 import traceback
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Any, Optional
+from typing import Any
 
 import numpy as np
 
@@ -35,11 +35,11 @@ class TrialResult:
     objective_value: float
     status: TrialStatus = TrialStatus.COMPLETED
     metrics: dict[str, float] = field(default_factory=dict)
-    start_time: Optional[datetime] = None
-    end_time: Optional[datetime] = None
+    start_time: datetime | None = None
+    end_time: datetime | None = None
     duration_seconds: float = 0.0
-    error_message: Optional[str] = None
-    traceback: Optional[str] = None
+    error_message: str | None = None
+    traceback: str | None = None
     iteration: int = 0
     additional_info: dict[str, Any] = field(default_factory=dict)
 
@@ -114,8 +114,8 @@ class TrialHistory:
     """
 
     trials: list[TrialResult] = field(default_factory=list)
-    start_time: Optional[datetime] = None
-    end_time: Optional[datetime] = None
+    start_time: datetime | None = None
+    end_time: datetime | None = None
 
     def __post_init__(self):
         """Initialize start time if not set."""
@@ -141,7 +141,7 @@ class TrialHistory:
             },
         )
 
-    def get_best_trial(self) -> Optional[TrialResult]:
+    def get_best_trial(self) -> TrialResult | None:
         """
         Get the best trial so far.
 
@@ -172,7 +172,7 @@ class TrialHistory:
         )
         return best
 
-    def get_best_params(self) -> Optional[dict[str, Any]]:
+    def get_best_params(self) -> dict[str, Any] | None:
         """
         Get best parameters from all trials.
 
@@ -251,7 +251,7 @@ class TrialHistory:
         self,
         patience: int = 10,
         min_improvement: float = 0.001,
-    ) -> Optional[int]:
+    ) -> int | None:
         """
         Get iteration where optimization converged.
 
@@ -504,9 +504,9 @@ class TrialContext:
         self.trial_id = trial_id
         self.params = params
         self.iteration = iteration
-        self.start_time: Optional[datetime] = None
-        self.end_time: Optional[datetime] = None
-        self.error: Optional[Exception] = None
+        self.start_time: datetime | None = None
+        self.end_time: datetime | None = None
+        self.error: Exception | None = None
 
         logger.debug(
             "TrialContext created",
@@ -564,8 +564,8 @@ class TrialContext:
     def create_result(
         self,
         objective_value: float,
-        metrics: Optional[dict[str, float]] = None,
-        additional_info: Optional[dict[str, Any]] = None,
+        metrics: dict[str, float] | None = None,
+        additional_info: dict[str, Any] | None = None,
     ) -> TrialResult:
         """
         Create TrialResult from this context.

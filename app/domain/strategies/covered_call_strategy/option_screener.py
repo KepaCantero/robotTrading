@@ -22,7 +22,6 @@ from __future__ import annotations
 import logging
 import time
 from decimal import Decimal
-from typing import Optional
 
 from .greeks_calculator import GreeksCalculator
 from .models import (
@@ -51,7 +50,7 @@ class OptionScreener:
     def __init__(
         self,
         criteria: OptionScreeningCriteria,
-        greeks_calculator: Optional[GreeksCalculator] = None,
+        greeks_calculator: GreeksCalculator | None = None,
     ):
         """
         Inicializar screener.

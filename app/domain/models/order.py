@@ -11,7 +11,7 @@ import logging
 from datetime import datetime, timedelta
 from decimal import Decimal
 from enum import Enum
-from typing import Any, Optional
+from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
@@ -59,20 +59,20 @@ class Order(BaseModel):
     )
 
     id: str = Field(..., description="Unique order identifier")
-    order_id: Optional[str] = Field(None, description="Broker-specific order ID")
+    order_id: str | None = Field(None, description="Broker-specific order ID")
     symbol: str = Field(..., description="Trading symbol")
     side: OrderSide = Field(..., description="Order side (buy/sell)")
     order_type: OrderType = Field(..., description="Order type")
     quantity: Decimal = Field(..., description="Order quantity")
-    price: Optional[Decimal] = Field(None, description="Order price (for limit orders)")
-    stop_price: Optional[Decimal] = Field(None, description="Stop price (for stop orders)")
+    price: Decimal | None = Field(None, description="Order price (for limit orders)")
+    stop_price: Decimal | None = Field(None, description="Stop price (for stop orders)")
     status: OrderStatus = Field(default=OrderStatus.PENDING, description="Order status")
     timestamp: datetime = Field(default_factory=datetime.utcnow, description="Order timestamp")
     filled_quantity: Decimal = Field(default=Decimal("0"), description="Filled quantity")
-    filled_price: Optional[Decimal] = Field(None, description="Average filled price")
-    filled_at: Optional[datetime] = Field(None, description="Timestamp when order was filled")
-    cancelled_at: Optional[datetime] = Field(None, description="Timestamp when order was cancelled")
-    rejected_reason: Optional[str] = Field(None, description="Reason for order rejection")
+    filled_price: Decimal | None = Field(None, description="Average filled price")
+    filled_at: datetime | None = Field(None, description="Timestamp when order was filled")
+    cancelled_at: datetime | None = Field(None, description="Timestamp when order was cancelled")
+    rejected_reason: str | None = Field(None, description="Reason for order rejection")
     commission: Decimal = Field(default=Decimal("0"), description="Commission paid")
     metadata: dict[str, Any] = Field(default_factory=dict, description="Additional order metadata")
 
@@ -118,7 +118,7 @@ class Order(BaseModel):
 
     @field_validator("price", "stop_price", "filled_price")
     @classmethod
-    def validate_price_fields(cls, v) -> Optional[Decimal]:
+    def validate_price_fields(cls, v) -> Decimal | None:
         """Validate price fields are positive - use config limit."""
         if v is None:
             return v
@@ -355,14 +355,14 @@ class Order(BaseModel):
         return self.quantity - self.filled_quantity
 
     @property
-    def total_value(self) -> Optional[Decimal]:
+    def total_value(self) -> Decimal | None:
         """Calculate total order value."""
         if self.price is None:
             return None
         return self.quantity * self.price
 
     @property
-    def filled_value(self) -> Optional[Decimal]:
+    def filled_value(self) -> Decimal | None:
         """Calculate filled value."""
         if self.filled_price is None:
             return None
@@ -379,13 +379,13 @@ class MarketData(BaseModel):
     low_price: Decimal = Field(..., description="Low price")
     close_price: Decimal = Field(..., description="Closing price")
     volume: Decimal = Field(..., description="Trading volume")
-    bid: Optional[Decimal] = Field(None, description="Best bid price")
-    ask: Optional[Decimal] = Field(None, description="Best ask price")
+    bid: Decimal | None = Field(None, description="Best bid price")
+    ask: Decimal | None = Field(None, description="Best ask price")
     metadata: dict[str, Any] = Field(default_factory=dict, description="Additional market data")
 
     @field_validator("open_price", "high_price", "low_price", "close_price", "volume", "bid", "ask")
     @classmethod
-    def validate_price_fields(cls, v) -> Optional[Decimal]:
+    def validate_price_fields(cls, v) -> Decimal | None:
         """Validate price fields are positive."""
         if v is None:
             return v
@@ -572,21 +572,21 @@ class MarketData(BaseModel):
         return self
 
     @property
-    def mid_price(self) -> Optional[Decimal]:
+    def mid_price(self) -> Decimal | None:
         """Calculate mid price from bid-ask."""
         if self.bid is not None and self.ask is not None:
             return (self.bid + self.ask) / 2
         return None
 
     @property
-    def spread(self) -> Optional[Decimal]:
+    def spread(self) -> Decimal | None:
         """Calculate bid-ask spread."""
         if self.bid is not None and self.ask is not None:
             return self.ask - self.bid
         return None
 
     @property
-    def spread_percentage(self) -> Optional[Decimal]:
+    def spread_percentage(self) -> Decimal | None:
         """Calculate spread as percentage of mid price."""
         if self.mid_price is not None and self.mid_price > 0:
             return (self.spread / self.mid_price) * 100

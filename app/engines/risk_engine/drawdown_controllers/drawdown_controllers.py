@@ -22,7 +22,7 @@ import logging
 from abc import ABC, abstractmethod
 from datetime import datetime, timedelta
 from decimal import Decimal
-from typing import Any, Optional, cast
+from typing import TYPE_CHECKING, Any, cast
 
 import numba
 import numpy as np
@@ -30,7 +30,8 @@ import numpy as np
 # Import Numba for JIT compilation (REQUIRED for 50-100x speedup)
 from numba import jit
 
-from app.domain.models.portfolio import Portfolio
+if TYPE_CHECKING:
+    from app.domain.models.portfolio import Portfolio
 
 NUMBA_AVAILABLE = True
 NUMBA_VERSION = numba.__version__
@@ -293,13 +294,13 @@ class CircuitBreakerController(BaseDrawdownController):
         # Circuit breaker configuration
         self.circuit_breaker_threshold = config.get("circuit_breaker_threshold", 0.15)  # 15%
         self.circuit_breaker_active = False
-        self.circuit_breaker_timestamp: Optional[datetime] = None
+        self.circuit_breaker_timestamp: datetime | None = None
         self.circuit_breaker_count = 0
 
     def assess_drawdown(
         self,
         portfolio: Portfolio,
-        strategy_performance: Optional[dict[str, dict[str, Any]]] = None,
+        strategy_performance: dict[str, dict[str, Any]] | None = None,
         **kwargs,
     ) -> dict[str, Any]:
         """
@@ -354,13 +355,13 @@ class PeakDrawdownController(BaseDrawdownController):
         super().__init__(config)
 
         self.peak_drawdown = 0.0
-        self.peak_drawdown_date: Optional[datetime] = None
+        self.peak_drawdown_date: datetime | None = None
         self.drawdown_history: list[dict[str, Any]] = []
 
     def assess_drawdown(
         self,
         portfolio: Portfolio,
-        strategy_performance: Optional[dict[str, dict[str, Any]]] = None,
+        strategy_performance: dict[str, dict[str, Any]] | None = None,
         **kwargs,
     ) -> dict[str, Any]:
         """
@@ -435,14 +436,14 @@ class DrawdownController(BaseDrawdownController):
 
         # Estado de circuit breakers
         self.circuit_breaker_active = False
-        self.circuit_breaker_reason: Optional[str] = None
-        self.circuit_breaker_timestamp: Optional[datetime] = None
+        self.circuit_breaker_reason: str | None = None
+        self.circuit_breaker_timestamp: datetime | None = None
 
         self.strategy_circuit_breakers: dict[str, bool] = {}
 
         # Estado de recovery
         self.recovery_mode = False
-        self.recovery_start_value: Optional[Decimal] = None
+        self.recovery_start_value: Decimal | None = None
 
         # Configuración de tracking
         self.lookback_period = config.get("lookback_period", 252)  # 1 año de trading
@@ -457,7 +458,7 @@ class DrawdownController(BaseDrawdownController):
     def assess_drawdown(
         self,
         portfolio: Portfolio,
-        strategy_performance: Optional[dict[str, dict[str, Any]]] = None,
+        strategy_performance: dict[str, dict[str, Any]] | None = None,
         **kwargs,
     ) -> dict[str, Any]:
         """
@@ -732,7 +733,7 @@ class DrawdownController(BaseDrawdownController):
             "recovery_threshold": self.recovery_threshold,
         }
 
-    def reset_circuit_breaker(self, strategy: Optional[str] = None) -> bool:
+    def reset_circuit_breaker(self, strategy: str | None = None) -> bool:
         """
         Resetear circuit breaker manualmente.
 

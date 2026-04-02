@@ -5,7 +5,6 @@ MomentumFilter - Filtro de momentum usando Rate of Change (ROC).
 from __future__ import annotations
 
 import logging
-from typing import Optional
 
 from ..base_filter import BaseFilter
 
@@ -21,9 +20,9 @@ class MomentumFilter(BaseFilter):
 
     def __init__(
         self,
-        config: Optional[dict] = None,
+        config: dict | None = None,
         preset: str = "balanced",
-        tier: Optional[str] = None,
+        tier: str | None = None,
         use_yaml: bool = True,
     ):
         """Inicializar filtro de momentum."""

@@ -10,7 +10,6 @@ import logging
 from dataclasses import dataclass, field
 from datetime import datetime
 from decimal import Decimal
-from typing import Optional
 
 logger = logging.getLogger(__name__)
 
@@ -23,8 +22,8 @@ class ModuleViabilityAnalysis:
     enabled: bool
     reason: str
     recommendation: str
-    cost_monthly: Optional[Decimal] = None
-    cost_ratio: Optional[Decimal] = None
+    cost_monthly: Decimal | None = None
+    cost_ratio: Decimal | None = None
 
 
 @dataclass
@@ -70,10 +69,10 @@ class ValidationRequest:
     input_id: str
     initial_capital: Decimal
     target_monthly_return_eur: Decimal
-    module_parameter_set_id: Optional[str] = None
-    backtest_feasibility_ratio: Optional[Decimal] = None
-    backtest_sharpe_ratio: Optional[Decimal] = None
-    backtest_max_drawdown_pct: Optional[Decimal] = None
+    module_parameter_set_id: str | None = None
+    backtest_feasibility_ratio: Decimal | None = None
+    backtest_sharpe_ratio: Decimal | None = None
+    backtest_max_drawdown_pct: Decimal | None = None
     expected_trades_per_month: int = 10
     tax_rate: Decimal = Decimal("0.35")
     commission_per_trade: Decimal = Decimal("15")
@@ -94,15 +93,15 @@ class ValidationResult:
     warnings: list[str] = field(default_factory=list)
 
     # Detailed analyses
-    capital_viability: Optional[CapitalViabilityAnalysis] = None
-    feasibility: Optional[FeasibilityAnalysis] = None
-    learning_viability: Optional[LearningViabilityAnalysis] = None
+    capital_viability: CapitalViabilityAnalysis | None = None
+    feasibility: FeasibilityAnalysis | None = None
+    learning_viability: LearningViabilityAnalysis | None = None
     module_viabilities: dict[str, ModuleViabilityAnalysis] = field(default_factory=dict)
 
     # Overall recommendation
     overall_recommendation: str = "PENDING"  # APPROVE, CONDITIONAL, REJECT, REVIEW_REQUIRED
     confidence_level: str = "high"  # high, medium, low
-    error_message: Optional[str] = None
+    error_message: str | None = None
 
 
 logger.debug(

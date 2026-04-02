@@ -18,7 +18,6 @@ from __future__ import annotations
 import logging
 from datetime import datetime, timedelta
 from decimal import Decimal
-from typing import Optional
 
 import numpy as np
 
@@ -33,7 +32,7 @@ class PerformanceMetrics:
     def __init__(
         self,
         returns: list[Decimal],
-        sharpe_ratio: Optional[float],
+        sharpe_ratio: float | None,
         max_drawdown: float,
         win_rate: float,
         volatility: float,
@@ -96,12 +95,12 @@ class DynamicCapitalReallocationEngine:
 
     def __init__(
         self,
-        rebalance_frequency_days: Optional[int] = None,
-        rolling_window_days: Optional[int] = None,
-        min_weight: Optional[Decimal] = None,
-        max_weight: Optional[Decimal] = None,
-        volatility_target: Optional[float] = None,
-        min_trades_threshold: Optional[int] = None,
+        rebalance_frequency_days: int | None = None,
+        rolling_window_days: int | None = None,
+        min_weight: Decimal | None = None,
+        max_weight: Decimal | None = None,
+        volatility_target: float | None = None,
+        min_trades_threshold: int | None = None,
     ):
         """
         Initialize reallocation engine.
@@ -149,7 +148,7 @@ class DynamicCapitalReallocationEngine:
         self.performance_history: dict[str, list[tuple[datetime, PerformanceMetrics]]] = {}
 
         # Last rebalance date
-        self.last_rebalance_date: Optional[datetime] = None
+        self.last_rebalance_date: datetime | None = None
 
     def update_strategy_performance(
         self,
@@ -199,7 +198,7 @@ class DynamicCapitalReallocationEngine:
         strategy_name: str,
         timestamp: datetime,
         returns: list[Decimal],
-        sharpe_ratio: Optional[float],
+        sharpe_ratio: float | None,
         max_drawdown: float,
         win_rate: float,
         volatility: float,
@@ -228,7 +227,7 @@ class DynamicCapitalReallocationEngine:
 
     def calculate_rolling_metrics(
         self, strategy_name: str, current_date: datetime
-    ) -> Optional[PerformanceMetrics]:
+    ) -> PerformanceMetrics | None:
         """
         Calculate rolling performance metrics for a strategy.
 

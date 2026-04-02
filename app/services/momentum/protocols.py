@@ -10,8 +10,7 @@ Following SOLID principles:
 from __future__ import annotations
 
 import logging
-from decimal import Decimal
-from typing import Any, Optional, Protocol
+from typing import TYPE_CHECKING, Any, Protocol
 
 logger = logging.getLogger(__name__)
 
@@ -24,6 +23,9 @@ from app.domain.models.momentum import (
     Timeframe,
 )
 
+if TYPE_CHECKING:
+    from decimal import Decimal
+
 
 class IndicatorCalculator(Protocol):
     """
@@ -33,11 +35,11 @@ class IndicatorCalculator(Protocol):
     Interface Segregation: Focused on indicator calculations only
     """
 
-    def calculate_rsi(self, prices: list[float], period: int = 14) -> Optional[float]:
+    def calculate_rsi(self, prices: list[float], period: int = 14) -> float | None:
         """Calculate Relative Strength Index."""
         ...
 
-    def calculate_ema(self, prices: list[float], period: int = 9) -> Optional[float]:
+    def calculate_ema(self, prices: list[float], period: int = 9) -> float | None:
         """Calculate Exponential Moving Average."""
         ...
 
@@ -47,51 +49,51 @@ class IndicatorCalculator(Protocol):
         fast_period: int = 12,
         slow_period: int = 26,
         signal_period: int = 9,
-    ) -> tuple[Optional[float], Optional[float], Optional[float]]:
+    ) -> tuple[float | None, float | None, float | None]:
         """Calculate MACD indicator."""
         ...
 
-    def calculate_roc(self, prices: list[float], period: int = 12) -> Optional[float]:
+    def calculate_roc(self, prices: list[float], period: int = 12) -> float | None:
         """Calculate Rate of Change."""
         ...
 
     def calculate_stochastic_rsi(
         self, rsi_values: list[float], period: int = 14, smooth_k: int = 3
-    ) -> tuple[Optional[float], Optional[float]]:
+    ) -> tuple[float | None, float | None]:
         """Calculate Stochastic RSI."""
         ...
 
     def calculate_atr(
         self, highs: list[float], lows: list[float], closes: list[float], period: int = 14
-    ) -> Optional[float]:
+    ) -> float | None:
         """Calculate Average True Range."""
         ...
 
     def calculate_adx(
         self, highs: list[float], lows: list[float], closes: list[float], period: int = 14
-    ) -> Optional[float]:
+    ) -> float | None:
         """Calculate Average Directional Index."""
         ...
 
-    def calculate_volume_sma(self, volumes: list[Decimal], period: int = 20) -> Optional[Decimal]:
+    def calculate_volume_sma(self, volumes: list[Decimal], period: int = 20) -> Decimal | None:
         """Calculate Volume Simple Moving Average."""
         ...
 
     def calculate_vwap(
-        self, prices: list[float], volumes: list[float], period: Optional[int] = None
-    ) -> Optional[float]:
+        self, prices: list[float], volumes: list[float], period: int | None = None
+    ) -> float | None:
         """Calculate Volume-Weighted Average Price."""
         ...
 
     def calculate_zscore(
         self, prices: list[float], period: int = 30, std: float = 1.0
-    ) -> Optional[float]:
+    ) -> float | None:
         """Calculate Z-score."""
         ...
 
     def calculate_volatility(
         self, prices: list[float], tf: str = "days", returns: bool = False, log: bool = False
-    ) -> Optional[float]:
+    ) -> float | None:
         """Calculate volatility."""
         ...
 
@@ -101,13 +103,13 @@ class IndicatorCalculator(Protocol):
         losing_trades: int,
         avg_win_amount: float,
         avg_loss_amount: float,
-    ) -> Optional[float]:
+    ) -> float | None:
         """Calculate expectancy metric."""
         ...
 
     def detect_macd_divergence(
         self, prices: list[float], macd_histograms: list[float], lookback: int = 5
-    ) -> Optional[str]:
+    ) -> str | None:
         """Detect MACD divergence patterns."""
         ...
 
@@ -167,13 +169,13 @@ class SignalGenerator(Protocol):
 
     async def create_price_momentum_signal(
         self, symbol: str, indicators: TechnicalIndicators, timeframe: Timeframe
-    ) -> Optional[MomentumSignal]:
+    ) -> MomentumSignal | None:
         """Create price momentum signal."""
         ...
 
     async def create_volume_momentum_signal(
         self, symbol: str, indicators: TechnicalIndicators, timeframe: Timeframe
-    ) -> Optional[MomentumSignal]:
+    ) -> MomentumSignal | None:
         """Create volume momentum signal."""
         ...
 
@@ -183,12 +185,12 @@ class SignalGenerator(Protocol):
         indicators: TechnicalIndicators,
         timeframe: Timeframe,
         existing_signals: list[MomentumSignal],
-    ) -> Optional[MomentumSignal]:
+    ) -> MomentumSignal | None:
         """Create combined momentum signal."""
         ...
 
     def filter_signals(
-        self, signals: list[MomentumSignal], filter_criteria: Optional[MomentumFilter]
+        self, signals: list[MomentumSignal], filter_criteria: MomentumFilter | None
     ) -> list[MomentumSignal]:
         """Filter signals based on criteria."""
         ...
@@ -210,13 +212,13 @@ class StrategyManager(Protocol):
         """Create a new momentum strategy."""
         ...
 
-    async def get_strategy(self, strategy_name: str) -> Optional[MomentumStrategy]:
+    async def get_strategy(self, strategy_name: str) -> MomentumStrategy | None:
         """Get a momentum strategy by name."""
         ...
 
     async def update_strategy(
         self, strategy_name: str, updated_fields: dict[str, Any]
-    ) -> Optional[MomentumStrategy]:
+    ) -> MomentumStrategy | None:
         """Update a momentum strategy."""
         ...
 
@@ -250,7 +252,7 @@ class StorageBackend(Protocol):
         """Save momentum analysis."""
         ...
 
-    async def get_analysis(self, analysis_id: str) -> Optional[MomentumAnalysis]:
+    async def get_analysis(self, analysis_id: str) -> MomentumAnalysis | None:
         """Get momentum analysis by ID."""
         ...
 

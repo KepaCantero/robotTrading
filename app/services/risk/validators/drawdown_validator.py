@@ -10,7 +10,6 @@ import logging
 from dataclasses import dataclass
 from datetime import datetime
 from decimal import Decimal
-from typing import Optional
 
 logger = logging.getLogger(__name__)
 
@@ -36,10 +35,10 @@ class DrawdownValidator:
     MAX_DRAWDOWN_PCT = Decimal("0.15")  # 15% maximo
 
     def __init__(self):
-        self._peak_equity: Optional[Decimal] = None
-        self._current_equity: Optional[Decimal] = None
+        self._peak_equity: Decimal | None = None
+        self._current_equity: Decimal | None = None
         self._kill_switch_active = False
-        self._kill_switch_activated_at: Optional[datetime] = None
+        self._kill_switch_activated_at: datetime | None = None
 
         logger.info(
             "DrawdownValidator initialized",

@@ -30,7 +30,7 @@ from datetime import datetime, timezone
 from decimal import Decimal
 from enum import Enum
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 import aiofiles
 import aiosqlite
@@ -63,10 +63,10 @@ class OrderLog:
     symbol: str
     side: str  # 'BUY' or 'SELL'
     quantity: Decimal
-    price: Optional[Decimal] = None
-    error: Optional[str] = None
-    broker_order_id: Optional[str] = None
-    metadata: Optional[dict[str, Any]] = None
+    price: Decimal | None = None
+    error: str | None = None
+    broker_order_id: str | None = None
+    metadata: dict[str, Any] | None = None
 
     def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for JSON serialization."""
@@ -119,7 +119,8 @@ class OrderStateMachine:
     async def initialize(self):
         """Create database schema."""
         async with aiosqlite.connect(self.db_path) as db:
-            await db.execute("""
+            await db.execute(
+                """
                 CREATE TABLE IF NOT EXISTS order_wal (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     order_id TEXT NOT NULL,
@@ -134,15 +135,20 @@ class OrderStateMachine:
                     metadata TEXT,
                     created_at TEXT DEFAULT CURRENT_TIMESTAMP
                 )
-            """)
-            await db.execute("""
+            """
+            )
+            await db.execute(
+                """
                 CREATE INDEX IF NOT EXISTS idx_order_id
                 ON order_wal(order_id)
-            """)
-            await db.execute("""
+            """
+            )
+            await db.execute(
+                """
                 CREATE INDEX IF NOT EXISTS idx_state
                 ON order_wal(state)
-            """)
+            """
+            )
             await db.commit()
 
     async def write_state(self, log: OrderLog) -> bool:
@@ -308,7 +314,7 @@ class WALOrderManager:
         symbol: str,
         side: str,
         quantity: Decimal,
-        price: Optional[Decimal] = None,
+        price: Decimal | None = None,
         order_type: str = "MARKET",
     ) -> dict[str, Any]:
         """

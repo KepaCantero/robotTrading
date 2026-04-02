@@ -16,7 +16,7 @@ import asyncio
 import logging
 from datetime import datetime
 from decimal import Decimal
-from typing import Any, Optional
+from typing import Any
 
 import aiohttp
 from aiohttp import ClientError
@@ -164,7 +164,7 @@ class BinanceSource(BaseDataSource):
         super().__init__(config)
         self.base_url = config.get("base_url", "https://api.binance.com")
         self._timeouts = get_timeouts()
-        self._session: Optional[aiohttp.ClientSession] = None
+        self._session: aiohttp.ClientSession | None = None
 
     async def connect(self) -> bool:
         """Conectar a Binance API."""
@@ -276,7 +276,7 @@ class AlpacaSource(BaseDataSource):
         self.api_secret = config.get("api_secret")
         self.base_url = config.get("base_url", "https://paper-api.alpaca.markets")
         self._timeouts = get_timeouts()
-        self._session: Optional[aiohttp.ClientSession] = None
+        self._session: aiohttp.ClientSession | None = None
 
     async def connect(self) -> bool:
         """Conectar a Alpaca API."""
@@ -392,7 +392,7 @@ class PolygonSource(BaseDataSource):
         self.api_key = config.get("api_key")
         self.base_url = config.get("base_url", "https://api.polygon.io")
         self._timeouts = get_timeouts()
-        self._session: Optional[aiohttp.ClientSession] = None
+        self._session: aiohttp.ClientSession | None = None
 
     async def connect(self) -> bool:
         """Conectar a Polygon API."""
@@ -502,7 +502,7 @@ class YahooFinanceSource(BaseDataSource):
         super().__init__(config)
         self.base_url = config.get("base_url", "https://query1.finance.yahoo.com/v8/finance/chart")
         self._timeouts = get_timeouts()
-        self._session: Optional[aiohttp.ClientSession] = None
+        self._session: aiohttp.ClientSession | None = None
 
     async def connect(self) -> bool:
         """Conectar a Yahoo Finance API."""

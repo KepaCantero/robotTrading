@@ -13,7 +13,7 @@ from __future__ import annotations
 
 import logging
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 import numpy as np
 import pandas as pd
@@ -52,7 +52,7 @@ class MetaDashboard:
     """
 
     def __init__(
-        self, results_dir: str = "reports/comprehensive_backtest", config_path: Optional[str] = None
+        self, results_dir: str = "reports/comprehensive_backtest", config_path: str | None = None
     ):
         """
         Inicializar dashboard meta.
@@ -68,9 +68,9 @@ class MetaDashboard:
         self.thresholds = self._load_thresholds()
 
         # Meta analyzer
-        self.analyzer: Optional[BacktestMetaAnalyzer] = None
+        self.analyzer: BacktestMetaAnalyzer | None = None
         self.analysis_results: dict[str, Any] = {}
-        self.df_results: Optional[pd.DataFrame] = None
+        self.df_results: pd.DataFrame | None = None
 
         logger.info(f"MetaDashboard inicializado: results_dir={results_dir}")
 

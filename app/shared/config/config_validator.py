@@ -41,7 +41,7 @@ import os
 import re
 import sys
 from pathlib import Path
-from typing import ClassVar, Optional, Union
+from typing import ClassVar
 
 import yaml
 from pydantic import BaseModel, Field, ValidationError, field_validator
@@ -86,7 +86,7 @@ class ProfileOptimizationConfigValidator(BaseModel):
     common_cv_folds: int = Field(default=5)
 
     # Threading
-    threading_max_workers: Optional[int] = Field(default=None)
+    threading_max_workers: int | None = Field(default=None)
     threading_worker_multiplier: float = Field(default=0.75)
     threading_batch_size: int = Field(default=32)
 
@@ -352,7 +352,7 @@ class DatabaseConfigValidator(BaseModel):
     path: str = Field(description="Database path")
     backup_enabled: bool = Field(default=True)
     backup_interval_seconds: int = Field(default=300)
-    backup_dir: Optional[str] = Field(default=None)
+    backup_dir: str | None = Field(default=None)
     retention_hours: int = Field(default=24)
 
     @field_validator("backup_interval_seconds")
@@ -487,7 +487,7 @@ class ConfigValidator:
         "compliance",
     ]
 
-    def __init__(self, config_dir: Optional[Path] = None):
+    def __init__(self, config_dir: Path | None = None):
         """
         Initialize the configuration validator.
 
@@ -650,7 +650,7 @@ class ConfigValidator:
         return True
 
     def validate_environment_variables(
-        self, config: dict[str, object], env_file: Optional[Path] = None
+        self, config: dict[str, object], env_file: Path | None = None
     ) -> bool:
         """
         Validate that referenced environment variables are defined.
@@ -777,7 +777,7 @@ class ConfigValidator:
             field = ".".join(str(x) for x in error["loc"])
             self.result.add_error(f"{prefix}.{field}", error["msg"])
 
-    def validate_production_config(self, env_file: Optional[Path] = None) -> ValidationResult:
+    def validate_production_config(self, env_file: Path | None = None) -> ValidationResult:
         """
         Validate production configuration file.
 
@@ -851,7 +851,7 @@ class ConfigValidator:
         return self.result
 
     def _extract_env_references(
-        self, config: Union[dict[str, object], list[object], str, int, float, bool]
+        self, config: dict[str, object] | list[object] | str | int | float | bool
     ) -> list[str]:
         """
         Extract environment variable references from configuration.
@@ -911,7 +911,7 @@ class ConfigValidator:
     # ========================================================================
 
     def validate_profile_optimization_config(
-        self, config_path: Optional[Path] = None
+        self, config_path: Path | None = None
     ) -> ValidationResult:
         """
         Validate profile_optimization.yaml configuration.
@@ -1090,9 +1090,7 @@ class ConfigValidator:
     # BATCH BACKTEST CONFIG VALIDATION
     # ========================================================================
 
-    def validate_batch_backtest_config(
-        self, config_path: Optional[Path] = None
-    ) -> ValidationResult:
+    def validate_batch_backtest_config(self, config_path: Path | None = None) -> ValidationResult:
         """
         Validate profile_batch_backtest.yaml configuration.
 

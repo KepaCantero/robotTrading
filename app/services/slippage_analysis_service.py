@@ -9,13 +9,12 @@ from __future__ import annotations
 
 import logging
 from decimal import Decimal
-from typing import Optional
+from typing import TYPE_CHECKING
 
 import numpy as np
 
 logger = logging.getLogger(__name__)
 
-from app.domain.models.market_data import Quote
 from app.domain.models.slippage_analysis import (
     DynamicSlippageAnalysis,
     LiquidityMetrics,
@@ -28,6 +27,9 @@ from app.domain.models.slippage_analysis import (
     VolatilityMetrics,
 )
 from app.shared.config.centralized_config import get_config
+
+if TYPE_CHECKING:
+    from app.domain.models.market_data import Quote
 
 
 class VolatilityCalculator:
@@ -259,7 +261,7 @@ class OrderSizeCalculator:
 class DynamicSlippageService:
     """Servicio principal para análisis de slippage dinámico."""
 
-    def __init__(self, params: Optional[SlippageCalculationParams] = None):
+    def __init__(self, params: SlippageCalculationParams | None = None):
         logger.debug("Initializing DynamicSlippageService")
         self.params = params or SlippageCalculationParams()
         self.volatility_calculator = VolatilityCalculator(self.params.volatility_lookback_days)
@@ -505,18 +507,18 @@ class DynamicSlippageService:
 
         self.slippage_history[analysis.asset_symbol].add_analysis(analysis)
 
-    def get_slippage_history(self, asset_symbol: str) -> Optional[SlippageHistory]:
+    def get_slippage_history(self, asset_symbol: str) -> SlippageHistory | None:
         """Obtener historial de slippage para un activo."""
         logger.debug("Getting slippage history", extra={"asset_symbol": asset_symbol})
         return self.slippage_history.get(asset_symbol)
 
-    def get_average_slippage(self, asset_symbol: str, days: int = 7) -> Optional[Decimal]:
+    def get_average_slippage(self, asset_symbol: str, days: int = 7) -> Decimal | None:
         """Obtener slippage promedio para un activo."""
         logger.debug("Getting average slippage", extra={"asset_symbol": asset_symbol, "days": days})
         history = self.get_slippage_history(asset_symbol)
         if history:
             raw_avg = history.get_average_slippage(days)
-            avg_slippage: Optional[Decimal] = Decimal(str(raw_avg)) if raw_avg is not None else None
+            avg_slippage: Decimal | None = Decimal(str(raw_avg)) if raw_avg is not None else None
             logger.debug(
                 "Average slippage retrieved",
                 extra={

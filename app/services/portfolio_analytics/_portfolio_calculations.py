@@ -8,7 +8,7 @@ including concentration metrics, diversification scores, and allocation analysis
 from __future__ import annotations
 
 from decimal import Decimal
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from app.domain.models.portfolio import Portfolio
@@ -229,7 +229,7 @@ class PortfolioCalculations:
         return min(cash_ratio * 100, Decimal("100"))
 
     def calculate_diversification_score(
-        self, portfolio: Portfolio, well_diversified_threshold: Optional[Decimal] = None
+        self, portfolio: Portfolio, well_diversified_threshold: Decimal | None = None
     ) -> Decimal:
         """
         Calculate diversification score (0-100).

@@ -10,7 +10,7 @@ from __future__ import annotations
 import asyncio
 import logging
 from decimal import Decimal
-from typing import Any, Optional
+from typing import Any
 
 from app.domain.models.assets import (
     Asset,
@@ -449,8 +449,8 @@ class AssetIdentificationService:
             return []
 
     async def get_asset_by_symbol(
-        self, symbol: str, asset_class: Optional[AssetClass] = None
-    ) -> Optional[Asset]:
+        self, symbol: str, asset_class: AssetClass | None = None
+    ) -> Asset | None:
         """Get asset by symbol."""
         try:
             if asset_class:
@@ -649,7 +649,7 @@ class AssetIdentificationService:
 
 
 # Global service instance
-_asset_service: Optional[AssetIdentificationService] = None
+_asset_service: AssetIdentificationService | None = None
 
 
 def get_asset_identification_service() -> AssetIdentificationService:

@@ -19,7 +19,6 @@ Reference papers:
 """
 
 from decimal import Decimal
-from typing import Optional
 
 import structlog
 
@@ -238,7 +237,7 @@ class InputProfileRouter:
 
         return config
 
-    def _create_tax_config(self, tax_residence: Optional[TaxResidence]) -> Optional[TaxConfig]:
+    def _create_tax_config(self, tax_residence: TaxResidence | None) -> TaxConfig | None:
         """Create tax configuration from tax residence.
 
         Extracts tax optimization parameters from TaxResidence model.

@@ -15,7 +15,7 @@ import logging
 from abc import ABC, abstractmethod
 from datetime import datetime
 from functools import wraps
-from typing import Any, Callable, Optional, TypeVar
+from typing import Any, Callable, TypeVar
 
 from app.shared.config.centralized_config import get_config
 
@@ -226,7 +226,7 @@ class ErrorHandler:
         self.logger.info(f"📝 Registered fallback strategy: {strategy.__class__.__name__}")
 
     async def with_fallback(
-        self, async_fn: Callable, *args, fallback_context: Optional[dict[str, Any]] = None, **kwargs
+        self, async_fn: Callable, *args, fallback_context: dict[str, Any] | None = None, **kwargs
     ) -> object:
         """
         Execute async function with fallback strategy on exception.
@@ -357,7 +357,7 @@ class ErrorHandler:
 # =============================================================================
 
 
-def service_error_handler(fallback_context: Optional[dict[str, Any]] = None):
+def service_error_handler(fallback_context: dict[str, Any] | None = None):
     """
     Decorator for wrapping service methods with error handling.
 

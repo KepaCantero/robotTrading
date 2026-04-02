@@ -10,11 +10,13 @@ from __future__ import annotations
 import json
 import logging
 from datetime import datetime
-from decimal import Decimal
 from pathlib import Path
-from typing import Any, Optional
+from typing import TYPE_CHECKING, Any
 
-from app.domain.models.signal import Signal
+if TYPE_CHECKING:
+    from decimal import Decimal
+
+    from app.domain.models.signal import Signal
 
 logger = logging.getLogger(__name__)
 
@@ -126,7 +128,7 @@ class StrategyLogger:
         self,
         strategy_name: str,
         signal: Signal,
-        execution_price: Optional[Decimal] = None,
+        execution_price: Decimal | None = None,
     ) -> None:
         """
         Log de señal ejecutada.
@@ -148,7 +150,7 @@ class StrategyLogger:
         logger.info(f"Strategy '{strategy_name}' executed signal: {signal.symbol}")
 
     def log_strategy_error(
-        self, strategy_name: str, error: str, error_type: Optional[str] = None
+        self, strategy_name: str, error: str, error_type: str | None = None
     ) -> None:
         """
         Log de error de estrategia.

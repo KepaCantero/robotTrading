@@ -10,7 +10,6 @@ from __future__ import annotations
 import logging
 from dataclasses import dataclass
 from decimal import Decimal
-from typing import Optional
 
 from .capital_gain_tracker import get_capital_gain_tracker
 from .tax_loss_harvester import get_tax_loss_harvester
@@ -56,8 +55,8 @@ class TaxOptimizedPortfolioBuilder:
         cost_basis: dict[str, Decimal],  # symbol → total cost
         quantities: dict[str, Decimal],  # symbol → shares owned
         current_prices: dict[str, Decimal],  # symbol → price per share
-        marginal_tax_rate: Optional[Decimal] = None,
-        capital: Optional[Decimal] = None,
+        marginal_tax_rate: Decimal | None = None,
+        capital: Decimal | None = None,
     ) -> TaxOptimizedAllocation:
         """
         Optimize portfolio for tax efficiency.
@@ -161,9 +160,9 @@ class TaxOptimizedPortfolioBuilder:
         gross_return_pct: Decimal,
         realized_gains: Decimal,
         realized_losses: Decimal,
-        long_term_percentage: Optional[Decimal] = None,  # 60% LT, 40% ST
-        marginal_tax_rate_st: Optional[Decimal] = None,
-        marginal_tax_rate_lt: Optional[Decimal] = None,
+        long_term_percentage: Decimal | None = None,  # 60% LT, 40% ST
+        marginal_tax_rate_st: Decimal | None = None,
+        marginal_tax_rate_lt: Decimal | None = None,
     ) -> Decimal:
         """
         Calculate after-tax return accounting for capital gains taxes.
@@ -246,7 +245,7 @@ class TaxOptimizedPortfolioBuilder:
 
 
 # Singleton
-_builder: Optional[TaxOptimizedPortfolioBuilder] = None
+_builder: TaxOptimizedPortfolioBuilder | None = None
 
 
 def get_tax_optimized_builder() -> TaxOptimizedPortfolioBuilder:

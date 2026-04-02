@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import logging
 from decimal import Decimal
-from typing import Any, Optional
+from typing import Any
 
 import numpy as np
 
@@ -87,7 +87,7 @@ class StrategyCombiner:
     def calculate_allocation(
         self,
         returns_data: dict[str, np.ndarray],
-        regime: Optional[MarketRegime] = None,
+        regime: MarketRegime | None = None,
     ) -> list[StrategyAllocation]:
         """Calculate optimal strategy allocation.
 
@@ -271,7 +271,7 @@ class StrategyCombiner:
     def _regime_dependent_allocation(
         self,
         returns_data: dict[str, np.ndarray],
-        regime: Optional[MarketRegime] = None,
+        regime: MarketRegime | None = None,
     ) -> dict[str, float]:
         """Calculate regime-dependent allocation.
 

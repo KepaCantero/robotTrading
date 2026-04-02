@@ -32,7 +32,7 @@ from dataclasses import dataclass, field
 from datetime import date, datetime, timezone
 from decimal import Decimal
 from pathlib import Path
-from typing import Any, Optional
+from typing import TYPE_CHECKING, Any
 from uuid import UUID
 
 from sqlalchemy import extract, select
@@ -43,7 +43,6 @@ from sqlalchemy.exc import (
     OperationalError,
     ProgrammingError,
 )
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.infrastructure.persistence import database as db_module
 
@@ -58,6 +57,9 @@ from app.infrastructure.persistence.tax.fifo_schema import (
     Transaction,
     TransactionType,
 )
+
+if TYPE_CHECKING:
+    from sqlalchemy.ext.asyncio import AsyncSession
 
 logger = logging.getLogger(__name__)
 
@@ -84,7 +86,7 @@ class TransactionDetail:
     quantity: Decimal
     total_value_eur: Decimal
     exchange_name: str
-    tx_hash: Optional[str] = None
+    tx_hash: str | None = None
 
 
 @dataclass
@@ -171,7 +173,7 @@ class Modelo721Generator:
         csv_path = await generator.export_to_csv(report, "/path/to/output.csv")
     """
 
-    def __init__(self, user_id: Optional[UUID] = None):
+    def __init__(self, user_id: UUID | None = None):
         """
         Initialize Modelo 721 generator.
 
@@ -741,10 +743,10 @@ class Modelo721Generator:
 
 
 # Singleton instance
-_modelo_721_generator_instance: Optional[Modelo721Generator] = None
+_modelo_721_generator_instance: Modelo721Generator | None = None
 
 
-def get_modelo_721_generator(user_id: Optional[UUID] = None) -> Modelo721Generator:
+def get_modelo_721_generator(user_id: UUID | None = None) -> Modelo721Generator:
     """
     Get or create the Modelo 721 generator singleton.
 

@@ -10,7 +10,7 @@ from __future__ import annotations
 import asyncio
 import logging
 from datetime import datetime
-from typing import Any, Callable, Optional
+from typing import Any, Callable
 
 from .models import StageResult, StageType
 
@@ -36,7 +36,7 @@ class PipelineResult:
         self.total_duration_ms = total_duration_ms
         self.error_message = error_message
 
-    def get_stage_by_type(self, stage_type: StageType) -> Optional[StageResult]:
+    def get_stage_by_type(self, stage_type: StageType) -> StageResult | None:
         """Get result for a specific stage type."""
         for result in self.stage_results:
             if result.stage_type == stage_type:

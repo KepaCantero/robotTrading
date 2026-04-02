@@ -11,7 +11,6 @@ import logging
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import Optional
 
 import aiohttp
 import numpy as np
@@ -57,26 +56,26 @@ class AlertRule:
     enabled: bool = True
 
     # Threshold-based conditions
-    threshold_value: Optional[float] = None
+    threshold_value: float | None = None
     comparison_op: str = ">"  # >, <, >=, <=, ==, !=
 
     # Change-based conditions
-    change_percent: Optional[float] = None
+    change_percent: float | None = None
     change_period_sec: int = 300  # 5 minutes default
 
     # Anomaly conditions
-    baseline_value: Optional[float] = None
+    baseline_value: float | None = None
     std_dev_multiplier: float = 2.0
 
     # Evaluation window
     for_duration_sec: int = 60  # Alert fires if condition true for this duration
 
     # Webhook callback
-    webhook_url: Optional[str] = None
+    webhook_url: str | None = None
     webhook_enabled: bool = False
 
     created_at: datetime = field(default_factory=datetime.now)
-    last_fired_at: Optional[datetime] = None
+    last_fired_at: datetime | None = None
     fire_count: int = 0
 
 
@@ -92,9 +91,9 @@ class Alert:
     metric_value: float
     condition_desc: str
     triggered_at: datetime
-    resolved_at: Optional[datetime] = None
+    resolved_at: datetime | None = None
     webhook_delivered: bool = False
-    error_message: Optional[str] = None
+    error_message: str | None = None
 
 
 class AlertingRulesEngine:
@@ -136,7 +135,7 @@ class AlertingRulesEngine:
         self.active_alerts: dict[str, Alert] = {}  # rule_id -> Alert
         self.metric_history: dict[str, list[tuple]] = {}  # metric_name -> [(timestamp, value)]
         self.history_size = 1000  # Keep last N values per metric
-        self.session: Optional[aiohttp.ClientSession] = None
+        self.session: aiohttp.ClientSession | None = None
         self._initialize_default_rules()
         logger.info("✅ AlertingRulesEngine initialized")
 
@@ -475,7 +474,7 @@ class AlertingRulesEngine:
 
 
 # Singleton
-_engine: Optional[AlertingRulesEngine] = None
+_engine: AlertingRulesEngine | None = None
 
 
 def get_alerting_engine() -> AlertingRulesEngine:

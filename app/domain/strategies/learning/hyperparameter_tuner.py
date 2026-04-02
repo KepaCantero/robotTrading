@@ -11,7 +11,7 @@ from __future__ import annotations
 
 import logging
 import time
-from typing import Any, Callable, Optional
+from typing import Any, Callable
 
 import numpy as np
 
@@ -41,7 +41,7 @@ class EarlyStoppingAdaptive:
     Early stopping adaptativo que ajusta patience basado en mejoras.
     """
 
-    def __init__(self, config: Optional[dict[str, Any]] = None):
+    def __init__(self, config: dict[str, Any] | None = None):
         """
         Inicializar early stopping adaptativo.
 
@@ -54,7 +54,7 @@ class EarlyStoppingAdaptive:
         self.mode = config.get("mode", "min")  # 'min' o 'max'
         self.adaptive_patience = config.get("adaptive_patience", True)
 
-        self.best_score: Optional[float] = None
+        self.best_score: float | None = None
         self.best_epoch = 0
         self.current_epoch = 0
         self.wait = 0
@@ -120,7 +120,7 @@ class EarlyStoppingAdaptive:
         self.stopped_epoch = 0
         self.improvement_history = []
 
-    def get_best_score(self) -> Optional[float]:
+    def get_best_score(self) -> float | None:
         """Obtener mejor score."""
         return self.best_score
 
@@ -134,7 +134,7 @@ class ResourceAwareTuner:
     Tuner que considera recursos disponibles (GPU/CPU, memoria, tiempo).
     """
 
-    def __init__(self, config: Optional[dict[str, Any]] = None):
+    def __init__(self, config: dict[str, Any] | None = None):
         """
         Inicializar resource-aware tuner.
 
@@ -146,7 +146,7 @@ class ResourceAwareTuner:
         self.max_time_seconds: float = float(config.get("max_time_seconds", 3600))  # 1 hora default
         self.max_memory_gb = config.get("max_memory_gb", 8.0)
 
-        self.start_time: Optional[float] = None
+        self.start_time: float | None = None
         self.trials_run = 0
         self.gpu_available = self._check_gpu()
 
@@ -194,7 +194,7 @@ class ResourceAwareTuner:
         """Registrar que un trial se ejecutó."""
         self.trials_run += 1
 
-    def get_remaining_time(self) -> Optional[float]:
+    def get_remaining_time(self) -> float | None:
         """Obtener tiempo restante en segundos."""
         if self.start_time is None:
             return None
@@ -253,7 +253,7 @@ class HyperparameterTuner:
         self.resource_manager = ResourceAwareTuner(config.get("resource_config", {}))
 
         # Callback para training
-        self.training_callback: Optional[Callable[..., float]] = None
+        self.training_callback: Callable[..., float] | None = None
 
     def set_training_callback(self, callback: Callable) -> None:
         """
@@ -266,9 +266,9 @@ class HyperparameterTuner:
 
     def optimize(
         self,
-        n_trials: Optional[int] = None,
-        timeout: Optional[float] = None,
-        search_space: Optional[dict[str, Any]] = None,
+        n_trials: int | None = None,
+        timeout: float | None = None,
+        search_space: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         """
         Optimizar hiperparámetros.
@@ -394,7 +394,7 @@ class HyperparameterTuner:
             )
         return history
 
-    def visualize_optimization(self, output_path: Optional[str] = None) -> None:
+    def visualize_optimization(self, output_path: str | None = None) -> None:
         """
         Visualizar proceso de optimización.
 
@@ -492,9 +492,9 @@ class LearningEngineTuner:
     def tune(
         self,
         training_data: dict[str, Any],
-        validation_data: Optional[dict[str, Any]] = None,
-        search_space: Optional[dict[str, Any]] = None,
-        n_trials: Optional[int] = None,
+        validation_data: dict[str, Any] | None = None,
+        search_space: dict[str, Any] | None = None,
+        n_trials: int | None = None,
     ) -> dict[str, Any]:
         """
         Tunear learning engine.

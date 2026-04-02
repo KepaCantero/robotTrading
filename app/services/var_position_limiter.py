@@ -17,7 +17,7 @@ import logging
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from decimal import Decimal
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING
 
 import numpy as np
 
@@ -37,7 +37,7 @@ logger = logging.getLogger(__name__)
 class VaRConfig:
     """Configuration for VaR-based position limits using centralized config."""
 
-    def __init__(self, custom_config: Optional[dict] = None):
+    def __init__(self, custom_config: dict | None = None):
         """Initialize config with centralized values."""
         tt = get_config().trading
 
@@ -65,7 +65,7 @@ class ValidationResult:
     current_var: Decimal
     projected_var: Decimal
     var_limit: Decimal
-    excess_var: Optional[Decimal] = None
+    excess_var: Decimal | None = None
     utilization_pct: Decimal = Decimal("0")
     warnings: list[str] = None
 
@@ -104,8 +104,8 @@ class VaRPositionLimiter:
     def __init__(
         self,
         portfolio,
-        correlation_analyzer: Optional[CorrelationAnalyzer] = None,
-        config: Optional[VaRConfig] = None,
+        correlation_analyzer: CorrelationAnalyzer | None = None,
+        config: VaRConfig | None = None,
     ):
         """
         Initialize VaR position limiter.
@@ -558,7 +558,7 @@ class VaRPositionLimiter:
         symbol: str,
         current_price: Decimal,
         side: str = "LONG",
-        target_utilization: Optional[Decimal] = None,
+        target_utilization: Decimal | None = None,
     ) -> Decimal:
         """
         Calculate maximum position size that stays within VaR limits.
@@ -631,8 +631,8 @@ class VaRPositionLimiter:
 
 def get_var_position_limiter(
     portfolio,
-    correlation_analyzer: Optional[CorrelationAnalyzer] = None,
-    config: Optional[VaRConfig] = None,
+    correlation_analyzer: CorrelationAnalyzer | None = None,
+    config: VaRConfig | None = None,
 ) -> VaRPositionLimiter:
     """
     Factory function to get a VaR position limiter instance.

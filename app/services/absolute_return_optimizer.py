@@ -32,7 +32,7 @@ from __future__ import annotations
 import logging
 from dataclasses import dataclass, field
 from decimal import Decimal
-from typing import ClassVar, Optional
+from typing import ClassVar
 
 from app.services.account_configuration import AccountConfiguration, AccountTier
 from app.services.capital_tier_strategy_selector import RiskProfile
@@ -259,8 +259,8 @@ class AlphaTargetCalculator:
     @staticmethod
     def calculate_required_alpha(
         monthly_profit_goal: Decimal,
-        tax_rate: Optional[Decimal] = None,
-        commission_per_trade: Optional[Decimal] = None,
+        tax_rate: Decimal | None = None,
+        commission_per_trade: Decimal | None = None,
         expected_trades_per_month: int = 10,
     ) -> AlphaTarget:
         """
@@ -360,7 +360,7 @@ class CapacityFadeAnalyzer:
         capital: Decimal,
         base_monthly_alpha: Decimal,
         tier: AccountTier = None,
-        current_capital_reference: Optional[Decimal] = None,
+        current_capital_reference: Decimal | None = None,
     ) -> CapacityFadeEstimate:
         """
         Estimate alpha decay from current to target capital.
@@ -533,8 +533,8 @@ class ReturnDistributionValidator:
     def validate_achievability(
         target_monthly_return: Decimal,
         expected_monthly_alpha: Decimal,
-        historical_mean: Optional[Decimal] = None,
-        historical_std: Optional[Decimal] = None,
+        historical_mean: Decimal | None = None,
+        historical_std: Decimal | None = None,
     ) -> tuple[bool, str]:
         """
         Check if target is statistically reasonable.
@@ -572,9 +572,9 @@ class MonthlyProfitForecaster:
     def forecast_profit(
         position_size: Decimal,
         expected_win_rate: Decimal,
-        avg_win_loss_ratio: Optional[Decimal] = None,
+        avg_win_loss_ratio: Decimal | None = None,
         expected_monthly_trades: int = 15,
-        sharpe_ratio: Optional[Decimal] = None,
+        sharpe_ratio: Decimal | None = None,
     ) -> MonthlyProfitForecast:
         """
         Forecast monthly profit given trading parameters.
@@ -662,7 +662,7 @@ class AbsoluteReturnOptimizer:
         )
     """
 
-    def __init__(self, capital: Decimal, account_id: Optional[str] = None):
+    def __init__(self, capital: Decimal, account_id: str | None = None):
         """
         Initialize Absolute Return Optimizer.
 
@@ -689,9 +689,9 @@ class AbsoluteReturnOptimizer:
         self,
         monthly_profit_goal: Decimal,
         expected_monthly_alpha: Decimal,
-        risk_profile: Optional[RiskProfile] = None,
-        tax_rate: Optional[Decimal] = None,
-        commission_per_trade: Optional[Decimal] = None,
+        risk_profile: RiskProfile | None = None,
+        tax_rate: Decimal | None = None,
+        commission_per_trade: Decimal | None = None,
     ) -> tuple[OptimizedParameters, FeasibilityReport]:
         """
         Optimize parameters to achieve monthly profit goal.
@@ -854,7 +854,7 @@ class AbsoluteReturnOptimizer:
         self,
         position_size: Decimal,
         expected_win_rate: Decimal,
-        avg_win_loss_ratio: Optional[Decimal] = None,
+        avg_win_loss_ratio: Decimal | None = None,
         expected_monthly_trades: int = 15,
     ) -> MonthlyProfitForecast:
         """

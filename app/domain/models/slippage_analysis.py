@@ -12,7 +12,6 @@ import logging
 from datetime import datetime, timedelta
 from decimal import Decimal
 from enum import Enum
-from typing import Optional
 
 from pydantic import BaseModel, Field, field_validator
 
@@ -144,7 +143,7 @@ class DynamicSlippageAnalysis(BaseModel):
             raise ValueError("Total slippage cannot exceed 15%")
         return v
 
-    def get_slippage_by_type(self, slippage_type: SlippageType) -> Optional[SlippageComponent]:
+    def get_slippage_by_type(self, slippage_type: SlippageType) -> SlippageComponent | None:
         """Obtener componente de slippage por tipo."""
         logger.debug(
             "Looking up slippage component",
@@ -254,7 +253,7 @@ class SlippageHistory(BaseModel):
             },
         )
 
-    def get_latest_analysis(self) -> Optional[DynamicSlippageAnalysis]:
+    def get_latest_analysis(self) -> DynamicSlippageAnalysis | None:
         """Obtener el análisis más reciente."""
         if not self.analyses:
             logger.debug("No analyses available", extra={"asset_symbol": self.asset_symbol})
@@ -270,7 +269,7 @@ class SlippageHistory(BaseModel):
         )
         return latest
 
-    def get_average_slippage(self, days: int = 7) -> Optional[Decimal]:
+    def get_average_slippage(self, days: int = 7) -> Decimal | None:
         """Obtener slippage promedio de los últimos N días."""
         cutoff_date = datetime.now() - timedelta(days=days)
         recent_analyses = [a for a in self.analyses if a.calculation_timestamp >= cutoff_date]

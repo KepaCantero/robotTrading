@@ -9,9 +9,11 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from datetime import datetime
 from decimal import Decimal
-from typing import Optional
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from datetime import datetime
 
 logger = logging.getLogger(__name__)
 
@@ -112,7 +114,7 @@ class QlibConnector:
         symbols: list[str],
         start_date: datetime,
         end_date: datetime,
-        fields: Optional[list[str]] = None,
+        fields: list[str] | None = None,
     ) -> dict:
         """
         Download market data using Qlib.
@@ -244,7 +246,7 @@ class QlibConnector:
             logger.error(f"❌ Failed to prepare backtest data: {e!s}")
             return {}
 
-    def get_factor_list(self, category: Optional[str] = None) -> dict:
+    def get_factor_list(self, category: str | None = None) -> dict:
         """Get available factors."""
         if category:
             return self.available_factors.get(category, {})
@@ -262,7 +264,7 @@ class QlibConnector:
 
 
 # Singleton
-_connector: Optional[QlibConnector] = None
+_connector: QlibConnector | None = None
 
 
 def get_qlib_connector(

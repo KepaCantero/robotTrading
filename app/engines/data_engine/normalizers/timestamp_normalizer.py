@@ -9,7 +9,7 @@ from __future__ import annotations
 import contextlib
 import logging
 from datetime import datetime, timezone
-from typing import Any, Optional, Union
+from typing import Any
 
 import pytz
 
@@ -23,7 +23,7 @@ class TimestampNormalizer:
     Convierte timestamps a UTC y maneja diferentes formatos y timezones.
     """
 
-    def __init__(self, config: Optional[dict[str, Any]] = None):
+    def __init__(self, config: dict[str, Any] | None = None):
         """
         Inicializar normalizador.
 
@@ -36,7 +36,7 @@ class TimestampNormalizer:
         self.assume_local_if_naive = config.get("assume_local_if_naive", False)
 
     def normalize(
-        self, timestamp: Union[datetime, int, float, str], source_timezone: Optional[str] = None
+        self, timestamp: datetime | int | float | str, source_timezone: str | None = None
     ) -> datetime:
         """
         Normalizar timestamp a UTC.
@@ -119,7 +119,7 @@ class TimestampNormalizer:
 
         raise ValueError(f"No se pudo parsear timestamp string: {timestamp_str}")
 
-    def normalize_batch(self, timestamps: list, source_timezone: Optional[str] = None) -> list:
+    def normalize_batch(self, timestamps: list, source_timezone: str | None = None) -> list:
         """
         Normalizar múltiples timestamps.
 

@@ -5,7 +5,7 @@ ReinforcementLearningEngine - Aprende políticas óptimas de trading con RL.
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING, Any, Optional
+from typing import TYPE_CHECKING, Any
 
 import numpy as np
 
@@ -267,7 +267,7 @@ class TradingEnv:
 
         return float(reward)
 
-    def _get_observation(self, market_data: Optional[dict] = None) -> np.ndarray:
+    def _get_observation(self, market_data: dict | None = None) -> np.ndarray:
         """Obtener observación del entorno."""
         obs = np.zeros(self.observation_dim, dtype=np.float32)
 
@@ -332,13 +332,13 @@ class ReinforcementLearningEngine(BaseLearningEngine):
         self.training_steps = config.get("training_steps", 100000)
         self.learning_rate = config.get("learning_rate", 3e-4)
 
-        self.env: Optional[TradingEnv] = None
-        self.agent: Optional[BaseAlgorithm] = None
+        self.env: TradingEnv | None = None
+        self.agent: BaseAlgorithm | None = None
 
     def train(
         self,
-        training_data: Optional[dict[str, Any]] = None,
-        validation_data: Optional[dict[str, Any]] = None,
+        training_data: dict[str, Any] | None = None,
+        validation_data: dict[str, Any] | None = None,
     ) -> dict[str, float]:
         """
         Entrenar agente RL.

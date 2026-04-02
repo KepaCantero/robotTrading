@@ -12,7 +12,7 @@ import asyncio
 import logging
 from datetime import datetime, timedelta
 from decimal import Decimal
-from typing import Any, ClassVar, Optional
+from typing import Any, ClassVar
 
 from requests.exceptions import HTTPError, RequestException
 
@@ -81,7 +81,7 @@ class ForexDataFetcher:
     def __init__(self):
         """Initialize forex data fetcher with caching and reconnection manager."""
         self.rate_cache: dict[str, tuple[Decimal, datetime]] = {}
-        self.correlation_cache: Optional[tuple[dict[str, Decimal], datetime]] = None
+        self.correlation_cache: tuple[dict[str, Decimal], datetime] | None = None
         self.rate_cache_duration = timedelta(minutes=60)
         self.correlation_cache_duration = timedelta(days=7)
         self.api_timeout_seconds = 30
@@ -162,7 +162,7 @@ class ForexDataFetcher:
         # Try to fetch from API with reconnection manager (not implemented - would call OANDA/FXCM)
         try:
 
-            async def _fetch_correlations() -> Optional[dict[str, Decimal]]:
+            async def _fetch_correlations() -> dict[str, Decimal] | None:
                 """Internal fetch function."""
                 return self._fetch_correlations_from_api(base_currency)
 
@@ -208,7 +208,7 @@ class ForexDataFetcher:
             # Try to fetch from API with reconnection manager
             try:
 
-                async def _fetch_rate(p: str = pair) -> Optional[Decimal]:
+                async def _fetch_rate(p: str = pair) -> Decimal | None:
                     """Internal fetch function."""
                     return self._fetch_rate_from_api(p)
 
@@ -259,7 +259,7 @@ class ForexDataFetcher:
         """Get reconnection statistics."""
         return self.reconnection_manager.get_stats()
 
-    def _fetch_correlations_from_api(self, base_currency: str) -> Optional[dict[str, Decimal]]:
+    def _fetch_correlations_from_api(self, base_currency: str) -> dict[str, Decimal] | None:
         """
         Fetch correlation matrix from OANDA/FXCM API.
 
@@ -279,7 +279,7 @@ class ForexDataFetcher:
         # 3. Correlation calculation using pandas/numpy
         # For now, implicitly return None to trigger fallback to DEFAULT_CORRELATIONS
 
-    def _fetch_rate_from_api(self, pair: str) -> Optional[Decimal]:
+    def _fetch_rate_from_api(self, pair: str) -> Decimal | None:
         """
         Fetch current exchange rate from OANDA/FXCM API.
 
@@ -326,7 +326,7 @@ class ForexDataFetcher:
 
 
 # Global instance for shared access
-_forex_fetcher: Optional[ForexDataFetcher] = None
+_forex_fetcher: ForexDataFetcher | None = None
 
 
 def get_forex_fetcher() -> ForexDataFetcher:

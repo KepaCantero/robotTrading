@@ -7,7 +7,6 @@ VECTORIZADO: Usa numpy para todos los cálculos. Sin bucles Python.
 from __future__ import annotations
 
 import logging
-from typing import Union
 
 import numpy as np
 
@@ -37,7 +36,7 @@ class RangeDetector(BaseMarketDetector):
         self.squeeze_threshold = range_config.get("squeeze_threshold", 0.1)
         self.max_range_pct = range_config.get("max_range_pct", 0.03)  # 3%
 
-    def detect(self, price_history: Union[list[float], np.ndarray], **kwargs) -> dict:
+    def detect(self, price_history: list[float] | np.ndarray, **kwargs) -> dict:
         """
         Detectar si el mercado está en rango.
 

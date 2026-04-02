@@ -22,7 +22,7 @@ from collections import deque
 from dataclasses import dataclass
 from datetime import date, timedelta
 from decimal import Decimal
-from typing import ClassVar, Optional
+from typing import ClassVar
 
 from app.services.compliance.pdt_tracker import Country
 
@@ -38,8 +38,8 @@ class WashSale:
     sale_price: Decimal
     loss_amount: Decimal
     disallowed_loss: Decimal
-    replacement_buy_date: Optional[date] = None
-    replacement_price: Optional[Decimal] = None
+    replacement_buy_date: date | None = None
+    replacement_price: Decimal | None = None
 
     def to_dict(self) -> dict:
         """Convert to dictionary."""
@@ -280,7 +280,7 @@ class WashSaleTracker:
 
         return True, disallowed_loss, deductible_loss
 
-    def get_wash_sales(self, start_date: Optional[date] = None) -> list[WashSale]:
+    def get_wash_sales(self, start_date: date | None = None) -> list[WashSale]:
         """
         Get list of wash sales.
 

@@ -15,7 +15,6 @@ from __future__ import annotations
 import logging
 from collections import deque
 from decimal import Decimal
-from typing import Optional
 
 import numpy as np
 
@@ -35,9 +34,9 @@ class ExecutionCostAnalyzer:
     def __init__(
         self,
         lookback_days: int = 30,
-        max_cost_ratio: Optional[Decimal] = None,
-        base_slippage: Optional[Decimal] = None,  # 0.1%
-        commission_per_trade: Optional[Decimal] = None,
+        max_cost_ratio: Decimal | None = None,
+        base_slippage: Decimal | None = None,  # 0.1%
+        commission_per_trade: Decimal | None = None,
     ):
         """
         Args:
@@ -61,7 +60,7 @@ class ExecutionCostAnalyzer:
         self.cost_regime_history = deque(maxlen=lookback_days)
         self.current_cost_regime = "normal"  # normal | elevated | extreme
 
-    def add_trade_slippage(self, slippage_pct: Decimal, timestamp: Optional[str] = None):
+    def add_trade_slippage(self, slippage_pct: Decimal, timestamp: str | None = None):
         """
         Record actual slippage from a completed trade.
 
@@ -272,7 +271,7 @@ class ExecutionCostAnalyzer:
             "has_history": True,
         }
 
-    def detect_cost_regime_shift(self, window_size: int = 10) -> Optional[dict]:
+    def detect_cost_regime_shift(self, window_size: int = 10) -> dict | None:
         """
         Detect if cost regime has shifted significantly.
 
@@ -315,7 +314,7 @@ class ExecutionCostAnalyzer:
         position_size: Decimal,
         expected_alpha: Decimal,
         analysis: dict,
-        account_id: Optional[str] = None,
+        account_id: str | None = None,
     ):
         """Log trade cost analysis for audit trail"""
 

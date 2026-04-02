@@ -13,7 +13,7 @@ import logging
 from datetime import datetime
 from decimal import Decimal
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 import pandas as pd
 
@@ -35,8 +35,8 @@ except ImportError:
     # Create a wrapper that adapts yfinance to match yahoo_fin interface
     def yahoo_fin_get_data(
         ticker: str,
-        start_date: Optional[str] = None,
-        end_date: Optional[str] = None,
+        start_date: str | None = None,
+        end_date: str | None = None,
         index_as_date: bool = True,
         interval: str = "1d",
     ) -> pd.DataFrame:
@@ -88,7 +88,7 @@ except ImportError:
 class DataLoader:
     """Loader for historical market data from various sources."""
 
-    def __init__(self, base_path: Optional[Path] = None) -> None:
+    def __init__(self, base_path: Path | None = None) -> None:
         """
         Initialize the data loader.
 

@@ -21,12 +21,14 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass
-from typing import Optional
+from typing import TYPE_CHECKING
 
 import numpy as np
 
 from .factor_calculator import FactorCalculator
-from .models import FactorScores
+
+if TYPE_CHECKING:
+    from .models import FactorScores
 
 logger = logging.getLogger(__name__)
 
@@ -36,22 +38,22 @@ class FactorModelResult:
     """Result from factor model regression."""
 
     # Factor coefficients (betas)
-    beta_market: Optional[float] = None
-    beta_size: Optional[float] = None
-    beta_value: Optional[float] = None
-    beta_profitability: Optional[float] = None
-    beta_investment: Optional[float] = None
-    beta_momentum: Optional[float] = None
+    beta_market: float | None = None
+    beta_size: float | None = None
+    beta_value: float | None = None
+    beta_profitability: float | None = None
+    beta_investment: float | None = None
+    beta_momentum: float | None = None
 
     # Model statistics
-    alpha: Optional[float] = None  # Intercept (abnormal return)
-    r_squared: Optional[float] = None  # Goodness of fit
-    p_value: Optional[float] = None  # Overall significance
-    standard_error: Optional[float] = None  # Residual standard error
+    alpha: float | None = None  # Intercept (abnormal return)
+    r_squared: float | None = None  # Goodness of fit
+    p_value: float | None = None  # Overall significance
+    standard_error: float | None = None  # Residual standard error
 
     # Diagnostics
-    residuals_mean: Optional[float] = None
-    residuals_std: Optional[float] = None
+    residuals_mean: float | None = None
+    residuals_std: float | None = None
 
     # Model info
     model_name: str = ""

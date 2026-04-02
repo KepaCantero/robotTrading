@@ -10,10 +10,12 @@ Now includes Purged K-Fold with Embargo cross-validation as described in:
 from __future__ import annotations
 
 import logging
-from datetime import datetime
-from typing import Optional
+from typing import TYPE_CHECKING
 
 import numpy as np
+
+if TYPE_CHECKING:
+    from datetime import datetime
 
 logger = logging.getLogger(__name__)
 
@@ -69,7 +71,7 @@ class TrainValTestSplitter:
     and prevent look-ahead bias.
     """
 
-    def __init__(self, split_config: Optional[DataSplit] = None):
+    def __init__(self, split_config: DataSplit | None = None):
         """
         Initialize train/validation/test splitter.
 
@@ -81,8 +83,8 @@ class TrainValTestSplitter:
     def split_data(
         self,
         market_data: list,
-        start_date: Optional[datetime] = None,
-        end_date: Optional[datetime] = None,
+        start_date: datetime | None = None,
+        end_date: datetime | None = None,
     ) -> tuple[list, list, list]:
         """
         Split market data into train/validation/test sets.

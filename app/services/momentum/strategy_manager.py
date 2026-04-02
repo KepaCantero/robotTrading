@@ -13,7 +13,7 @@ from __future__ import annotations
 
 import logging
 from datetime import datetime
-from typing import Any, Optional
+from typing import TYPE_CHECKING, Any
 
 from app.domain.models.momentum import (
     MomentumFilter,
@@ -22,8 +22,10 @@ from app.domain.models.momentum import (
     MomentumType,
     Timeframe,
 )
-from app.services.momentum.protocols import StorageBackend
 from app.shared.config.centralized_config import get_config
+
+if TYPE_CHECKING:
+    from app.services.momentum.protocols import StorageBackend
 
 logger = logging.getLogger(__name__)
 
@@ -134,7 +136,7 @@ class StrategyManager:
         logger.info(f"Created momentum strategy: {strategy.name}")
         return strategy
 
-    async def get_strategy(self, strategy_name: str) -> Optional[MomentumStrategy]:
+    async def get_strategy(self, strategy_name: str) -> MomentumStrategy | None:
         """
         Get a momentum strategy by name.
 
@@ -148,7 +150,7 @@ class StrategyManager:
 
     async def update_strategy(
         self, strategy_name: str, updated_fields: dict[str, Any]
-    ) -> Optional[MomentumStrategy]:
+    ) -> MomentumStrategy | None:
         """
         Update a momentum strategy.
 

@@ -9,7 +9,7 @@ from __future__ import annotations
 import logging
 from dataclasses import dataclass
 from decimal import Decimal
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from .strategy_scorer import StrategyScore
@@ -129,13 +129,13 @@ class StrategyRanker:
         """
         return self.current_ranking[-n:]
 
-    async def get_best_strategy(self) -> Optional[RankedStrategy]:
+    async def get_best_strategy(self) -> RankedStrategy | None:
         """Get best ranked strategy."""
         if self.current_ranking:
             return self.current_ranking[0]
         return None
 
-    async def get_worst_strategy(self) -> Optional[RankedStrategy]:
+    async def get_worst_strategy(self) -> RankedStrategy | None:
         """Get worst ranked strategy."""
         if self.current_ranking:
             return self.current_ranking[-1]
@@ -207,7 +207,7 @@ class StrategyRanker:
         self,
         strategy1: str,
         strategy2: str,
-    ) -> Optional[dict]:
+    ) -> dict | None:
         """
         Compare two strategies pairwise.
 
@@ -244,7 +244,7 @@ class StrategyRanker:
 
 
 # Singleton
-_ranker: Optional[StrategyRanker] = None
+_ranker: StrategyRanker | None = None
 
 
 def get_strategy_ranker() -> StrategyRanker:

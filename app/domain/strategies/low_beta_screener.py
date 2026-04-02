@@ -21,7 +21,7 @@ from __future__ import annotations
 import logging
 import time
 from decimal import Decimal
-from typing import ClassVar, Optional
+from typing import ClassVar
 
 from .models import (
     LowVolatilityProfile,
@@ -566,7 +566,7 @@ class LowBetaScreener:
             f"Low Vol Score ≥{self.criteria.min_low_vol_score}"
         )
 
-    def get_sector_defensive_level(self, sector: Optional[str]) -> SectorDefensiveLevel:
+    def get_sector_defensive_level(self, sector: str | None) -> SectorDefensiveLevel:
         """
         Obtener nivel defensivo de un sector.
 

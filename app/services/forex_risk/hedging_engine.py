@@ -18,12 +18,14 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass, field
-from datetime import datetime
 from decimal import Decimal
 from enum import Enum
-from typing import Any, ClassVar, Optional
+from typing import TYPE_CHECKING, Any, ClassVar
 
 from app.shared.utils.decimal_utils import calculate_percentage
+
+if TYPE_CHECKING:
+    from datetime import datetime
 
 logger = logging.getLogger(__name__)
 
@@ -68,9 +70,9 @@ class HedgeInstrument:
     contract_size: Decimal
     liquidity: int  # 0-100
     typical_spread_bps: Decimal
-    symbol: Optional[str] = None
-    tick_size: Optional[Decimal] = None
-    tick_value: Optional[Decimal] = None
+    symbol: str | None = None
+    tick_size: Decimal | None = None
+    tick_value: Decimal | None = None
     tenor_options: list[int] = field(default_factory=lambda: [1, 3, 6, 12])
     is_exchange_traded: bool = False
 
@@ -116,12 +118,12 @@ class HedgeRecommendation:
     amount_eur: Decimal
     optimal_ratio: Decimal
     instrument: HedgeInstrument
-    contracts: Optional[int]
+    contracts: int | None
     tenor_months: int
     expected_cost_eur: Decimal
     expected_cost_bps: Decimal
     effectiveness: Decimal
-    roll_schedule: Optional[str]
+    roll_schedule: str | None
     reasoning: str
     priority: str
 
@@ -280,7 +282,7 @@ class HedgingEngine:
 
     def __init__(
         self,
-        forex_service: Optional[Any] = None,
+        forex_service: Any | None = None,
         base_currency: str = "EUR",
     ):
         """
@@ -303,9 +305,9 @@ class HedgingEngine:
         exposure_eur: Decimal,
         currency: str,
         method: str = "minimum_variance",
-        correlation: Optional[Decimal] = None,
-        volatility_asset: Optional[Decimal] = None,
-        volatility_fx: Optional[Decimal] = None,
+        correlation: Decimal | None = None,
+        volatility_asset: Decimal | None = None,
+        volatility_fx: Decimal | None = None,
     ) -> Decimal:
         """
         Calculate optimal hedge ratio for a currency exposure.
@@ -376,7 +378,7 @@ class HedgingEngine:
         self,
         exposure_eur: Decimal,
         currency: str,
-        risk_tolerance: Optional[Decimal] = None,
+        risk_tolerance: Decimal | None = None,
         preferred_tenor_months: int = 3,
         method: str = "minimum_variance",
     ) -> HedgeRecommendation:
@@ -640,7 +642,7 @@ class HedgingEngine:
         self,
         instrument: HedgeInstrument,
         amount_eur: Decimal,
-    ) -> Optional[int]:
+    ) -> int | None:
         """
         Calculate number of contracts needed.
 
@@ -766,7 +768,7 @@ class HedgingEngine:
             return "medium"
         return "low"
 
-    def clear_effectiveness_history(self, currency: Optional[str] = None) -> None:
+    def clear_effectiveness_history(self, currency: str | None = None) -> None:
         """
         Clear effectiveness history.
 

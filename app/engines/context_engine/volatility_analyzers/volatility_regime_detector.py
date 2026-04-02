@@ -7,7 +7,7 @@ Clasifica volatilidad en high/normal/low usando percentiles.
 from __future__ import annotations
 
 import logging
-from typing import Any, Optional
+from typing import Any
 
 import numpy as np
 from scipy import stats
@@ -22,7 +22,7 @@ class VolatilityRegimeDetector:
     Clasifica volatilidad en high/normal/low basado en percentiles históricos.
     """
 
-    def __init__(self, config: Optional[dict[str, Any]] = None):
+    def __init__(self, config: dict[str, Any] | None = None):
         """
         Inicializar detector.
 
@@ -46,7 +46,7 @@ class VolatilityRegimeDetector:
         return float(np.std(returns))
 
     def detect(
-        self, prices: list[float], volatility_history: Optional[list[float]] = None
+        self, prices: list[float], volatility_history: list[float] | None = None
     ) -> dict[str, Any]:
         """
         Detectar régimen de volatilidad.

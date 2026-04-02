@@ -17,10 +17,12 @@ import logging
 from dataclasses import dataclass, field
 from decimal import Decimal
 from enum import Enum
-from typing import Optional
+from typing import TYPE_CHECKING
 
 from app.domain.models.investment_profile import CapitalTier, InvestmentProfile
-from app.services.backtesting_orchestration import ExtendedBacktestResult
+
+if TYPE_CHECKING:
+    from app.services.backtesting_orchestration import ExtendedBacktestResult
 
 logger = logging.getLogger(__name__)
 
@@ -43,7 +45,7 @@ class GateResult:
     message: str
     severity: str = "info"  # info, warning, critical
     details: dict = field(default_factory=dict)
-    recommendation: Optional[str] = None
+    recommendation: str | None = None
 
 
 @dataclass
@@ -70,7 +72,7 @@ class ValidationReport:
 
     # Metadata
     validation_timestamp: str = ""
-    extended_result_id: Optional[str] = None
+    extended_result_id: str | None = None
 
     def to_dict(self) -> dict:
         """Convert to dictionary for serialization."""

@@ -13,7 +13,6 @@ from __future__ import annotations
 import logging
 from datetime import datetime
 from decimal import Decimal
-from typing import Optional
 
 from .models import (
     BacktestConfig,
@@ -327,7 +326,7 @@ class BacktestOrchestrator:
 
     async def get_execution_history(
         self,
-        limit: Optional[int] = None,
+        limit: int | None = None,
     ) -> list[BacktestOrchestrationResult]:
         """Get execution history."""
         results = self.execution_history
@@ -349,7 +348,7 @@ class BacktestOrchestrator:
 
 
 # Singleton
-_orchestrator: Optional[BacktestOrchestrator] = None
+_orchestrator: BacktestOrchestrator | None = None
 
 
 def get_backtest_orchestrator() -> BacktestOrchestrator:

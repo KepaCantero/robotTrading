@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import logging
 from decimal import Decimal
-from typing import ClassVar, Optional
+from typing import ClassVar
 
 logger = logging.getLogger(__name__)
 
@@ -62,7 +62,7 @@ class BrokerNegotiationEngine:
         symbol: str,
         volume_usd: Decimal,
         asset_class: str = "equity",
-        account_tier: Optional[str] = None,
+        account_tier: str | None = None,
     ) -> Decimal:
         """
         Get negotiated commission rate for a trade.
@@ -175,7 +175,7 @@ class BrokerNegotiationEngine:
 
 
 # Global singleton
-_broker_negotiation_engine: Optional[BrokerNegotiationEngine] = None
+_broker_negotiation_engine: BrokerNegotiationEngine | None = None
 
 
 def get_broker_negotiation_engine() -> BrokerNegotiationEngine:

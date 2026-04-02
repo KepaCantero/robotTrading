@@ -34,7 +34,7 @@ from __future__ import annotations
 import logging
 from decimal import Decimal
 from pathlib import Path
-from typing import Optional, Union, cast
+from typing import cast
 
 logger = logging.getLogger(__name__)
 
@@ -55,7 +55,7 @@ class StrategyConfigLoader:
     - Caching for performance
     """
 
-    def __init__(self, config_dir: Optional[Path] = None):
+    def __init__(self, config_dir: Path | None = None):
         """
         Initialize the strategy config loader.
 
@@ -107,8 +107,8 @@ class StrategyConfigLoader:
             return {}
 
     def _get_nested(
-        self, data: dict[str, object], key_path: str, default: Optional[object] = None
-    ) -> Optional[object]:
+        self, data: dict[str, object], key_path: str, default: object | None = None
+    ) -> object | None:
         """
         Get a nested value from a dictionary using dot notation.
 
@@ -391,7 +391,7 @@ class StrategyConfigLoader:
             "institutional": cast("int", thresholds.get("large_institutional", 1000000)),
         }
 
-    def get_tier_from_capital(self, capital: Union[int, float, Decimal]) -> str:
+    def get_tier_from_capital(self, capital: int | float | Decimal) -> str:
         """
         Determine tier from capital amount.
 
@@ -430,8 +430,8 @@ class StrategyConfigLoader:
             return "institutional"
 
     def get_tier_config_value(
-        self, tier: str, key_path: str, default: Optional[object] = None
-    ) -> Optional[object]:
+        self, tier: str, key_path: str, default: object | None = None
+    ) -> object | None:
         """
         Get a configuration value for a specific tier.
 
@@ -489,10 +489,10 @@ class StrategyConfigLoader:
 # SINGLETON INSTANCE
 # ============================================================================
 
-_config_loader: Optional[StrategyConfigLoader] = None
+_config_loader: StrategyConfigLoader | None = None
 
 
-def get_strategy_config(config_dir: Optional[Path] = None) -> StrategyConfigLoader:
+def get_strategy_config(config_dir: Path | None = None) -> StrategyConfigLoader:
     """
     Get the global strategy configuration loader instance.
 

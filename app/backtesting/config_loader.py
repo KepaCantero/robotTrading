@@ -36,7 +36,7 @@ from __future__ import annotations
 
 import logging
 from pathlib import Path
-from typing import Any, Optional, cast
+from typing import Any, cast
 
 import yaml
 from pydantic import BaseModel, ConfigDict, Field, field_validator
@@ -257,7 +257,7 @@ class MetaAnalyzerConfig(BaseModel):
 class ConfigLoader:
     """Load and manage meta-analyzer configuration from YAML file."""
 
-    def __init__(self, config_path: Optional[str] = None):
+    def __init__(self, config_path: str | None = None):
         """
         Initialize configuration loader.
 
@@ -265,7 +265,7 @@ class ConfigLoader:
             config_path: Path to config YAML file. If None, uses default location.
         """
         self.config_path = Path(config_path or "config/learning/meta_analyzer_config.yaml")
-        self._pydantic_config: Optional[MetaAnalyzerConfig] = None
+        self._pydantic_config: MetaAnalyzerConfig | None = None
         self._load_config()
 
     def _load_config(self) -> None:
@@ -296,7 +296,7 @@ class ConfigLoader:
         default = MetaAnalyzerConfig()
         return dict(default.model_dump())
 
-    def get(self, key: str, default: Optional[object] = None) -> Optional[object]:
+    def get(self, key: str, default: object | None = None) -> object | None:
         """
         Get configuration value by dot-separated key.
 
@@ -392,7 +392,7 @@ class ConfigLoader:
         result = self.get("analysis.walk_forward", {})
         return dict(result) if isinstance(result, dict) else {}
 
-    def get_alert_threshold(self, metric: str, level: str = "warning") -> Optional[float]:
+    def get_alert_threshold(self, metric: str, level: str = "warning") -> float | None:
         """
         Get alert threshold for a metric at specific level.
 
@@ -454,10 +454,10 @@ class ConfigLoader:
 
 
 # Global configuration instance
-_global_config: Optional[ConfigLoader] = None
+_global_config: ConfigLoader | None = None
 
 
-def get_config(config_path: Optional[str] = None) -> ConfigLoader:
+def get_config(config_path: str | None = None) -> ConfigLoader:
     """
     Get global configuration instance (singleton pattern).
 

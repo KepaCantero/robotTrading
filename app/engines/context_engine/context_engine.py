@@ -13,7 +13,7 @@ from __future__ import annotations
 
 import logging
 from datetime import datetime, timedelta
-from typing import Any, Optional
+from typing import Any
 
 import numpy as np
 
@@ -42,7 +42,7 @@ class ContextEngine:
     una visión completa del contexto de mercado.
     """
 
-    def __init__(self, config: Optional[dict[str, Any]] = None):
+    def __init__(self, config: dict[str, Any] | None = None):
         """
         Inicializar Context Engine.
 
@@ -139,7 +139,7 @@ class ContextEngine:
         return result
 
     def get_volatility_regime(
-        self, prices: list[float], volatility_history: Optional[list[float]] = None
+        self, prices: list[float], volatility_history: list[float] | None = None
     ) -> dict[str, Any]:
         """
         Obtener régimen de volatilidad.
@@ -258,7 +258,7 @@ class ContextEngine:
         return {"regime": regime, "confidence": confidence}
 
     def get_context_summary(
-        self, prices: list[float], price_data: Optional[dict[str, list[float]]] = None
+        self, prices: list[float], price_data: dict[str, list[float]] | None = None
     ) -> dict[str, Any]:
         """
         Obtener resumen completo de contexto.

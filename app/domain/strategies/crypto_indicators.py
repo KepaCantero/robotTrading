@@ -18,12 +18,13 @@ from __future__ import annotations
 
 import logging
 from decimal import Decimal
-from typing import Optional
+from typing import TYPE_CHECKING
 
 import numpy as np
 import pandas as pd
 
-from .models import OnChainMetrics
+if TYPE_CHECKING:
+    from .models import OnChainMetrics
 
 logger = logging.getLogger(__name__)
 
@@ -214,7 +215,7 @@ class CryptoIndicators:
     def calculate_momentum_score(
         self,
         prices: pd.Series,
-        benchmark_prices: Optional[pd.Series] = None,
+        benchmark_prices: pd.Series | None = None,
         lookback_days: int = 90,
     ) -> float:
         """
@@ -308,7 +309,7 @@ class CryptoIndicators:
 
         return beta
 
-    def calculate_network_health_score(self, on_chain_metrics: OnChainMetrics) -> Optional[Decimal]:
+    def calculate_network_health_score(self, on_chain_metrics: OnChainMetrics) -> Decimal | None:
         """
         Calculate network health score from on-chain metrics.
 

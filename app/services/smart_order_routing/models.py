@@ -11,7 +11,6 @@ import logging
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from decimal import Decimal
-from typing import Optional
 from uuid import uuid4
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
@@ -56,14 +55,14 @@ class OrderTranche(BaseModel):
         ..., gt=Decimal("0"), description="Size of this tranche in currency units (€)"
     )
     execution_time: datetime = Field(..., description="Scheduled execution time")
-    execution_window: Optional[TimeWindow] = Field(
+    execution_window: TimeWindow | None = Field(
         None, description="Time window constraints for execution"
     )
-    target_price: Optional[Decimal] = Field(None, description="Target execution price (optional)")
+    target_price: Decimal | None = Field(None, description="Target execution price (optional)")
     status: str = Field(
         default="pending", description="pending | submitted | filled | partial | rejected"
     )
-    actual_price: Optional[Decimal] = Field(
+    actual_price: Decimal | None = Field(
         None, description="Actual execution price (filled after execution)"
     )
     actual_size: Decimal = Field(
@@ -124,13 +123,13 @@ class ExecutionPlan(BaseModel):
     strategy: str = Field(
         ..., description="Execution strategy: vwap | twap | poi | intraday_phased"
     )
-    cost_budget: Optional[Decimal] = Field(
+    cost_budget: Decimal | None = Field(
         None, ge=Decimal("0"), description="Max allowed execution cost in €"
     )
     max_execution_time_ms: int = Field(
         default=300_000, gt=0, description="Max execution time in milliseconds"
     )
-    estimated_avg_price: Optional[Decimal] = Field(
+    estimated_avg_price: Decimal | None = Field(
         None, gt=Decimal("0"), description="Estimated average fill price"
     )
     constraints: dict[str, Decimal] = Field(
@@ -259,7 +258,7 @@ class ExecutionMonitoring(BaseModel):
     started_at: datetime = Field(
         default_factory=datetime.now, description="Execution start timestamp"
     )
-    completed_at: Optional[datetime] = Field(None, description="Execution completion timestamp")
+    completed_at: datetime | None = Field(None, description="Execution completion timestamp")
 
     @property
     def cost_overrun(self) -> Decimal:
@@ -286,7 +285,7 @@ class ExecutionMonitoring(BaseModel):
         return (Decimal(self.tranches_completed) / Decimal(self.tranches_total)) * Decimal("100")
 
     @property
-    def execution_duration(self) -> Optional[timedelta]:
+    def execution_duration(self) -> timedelta | None:
         """Calculate execution duration."""
         if self.completed_at is None:
             return None
@@ -326,7 +325,7 @@ class CommissionTier(BaseModel):
     min_volume: Decimal = Field(
         ..., ge=Decimal("0"), description="Minimum volume to qualify for this tier"
     )
-    max_volume: Optional[Decimal] = Field(None, description="Maximum volume (None = unlimited)")
+    max_volume: Decimal | None = Field(None, description="Maximum volume (None = unlimited)")
     commission_rate: Decimal = Field(
         ...,
         ge=Decimal("0"),
@@ -336,7 +335,7 @@ class CommissionTier(BaseModel):
 
     @field_validator("max_volume")
     @classmethod
-    def validate_volume_range(cls, v: Optional[Decimal], info) -> Optional[Decimal]:
+    def validate_volume_range(cls, v: Decimal | None, info) -> Decimal | None:
         """Validate max >= min."""
         if v is None:
             return None

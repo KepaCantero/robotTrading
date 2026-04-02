@@ -21,7 +21,6 @@ import logging
 from dataclasses import dataclass
 from datetime import datetime
 from decimal import ROUND_HALF_UP, Decimal
-from typing import Optional
 
 import numpy as np
 
@@ -49,7 +48,7 @@ class DrawdownMonitor:
         should_halt = monitor.should_halt_trading(current_dd)
     """
 
-    def __init__(self, max_drawdown_limit: Optional[Decimal] = None):
+    def __init__(self, max_drawdown_limit: Decimal | None = None):
         """
         Initialize drawdown monitor.
 
@@ -64,7 +63,7 @@ class DrawdownMonitor:
         self.peak_equity = Decimal("0")
         self.current_drawdown = Decimal("0")
         self.max_drawdown_recorded = Decimal("0")
-        self.halt_triggered_at: Optional[datetime] = None
+        self.halt_triggered_at: datetime | None = None
 
     def calculate_drawdown(
         self,
@@ -123,7 +122,7 @@ class DrawdownMonitor:
     def calculate_drawdown_scale(
         self,
         current_drawdown: Decimal,
-        max_drawdown_limit: Optional[Decimal] = None,
+        max_drawdown_limit: Decimal | None = None,
     ) -> Decimal:
         """
         Return position sizing scale based on drawdown.
@@ -168,7 +167,7 @@ class DrawdownMonitor:
     def should_halt_trading(
         self,
         current_drawdown: Decimal,
-        halt_threshold: Optional[Decimal] = None,
+        halt_threshold: Decimal | None = None,
     ) -> bool:
         """
         Check if should halt trading (circuit breaker activated).

@@ -9,11 +9,14 @@ from __future__ import annotations
 import asyncio
 import logging
 from datetime import datetime, timedelta
-from decimal import Decimal
-from typing import Optional
+from typing import TYPE_CHECKING
 
 from .models import AggregatedMetrics, AggregationType, MetricPoint, MetricType, TimeSeriesQuery
-from .questdb_connector import QuestDBConnector
+
+if TYPE_CHECKING:
+    from decimal import Decimal
+
+    from .questdb_connector import QuestDBConnector
 
 logger = logging.getLogger(__name__)
 
@@ -48,8 +51,8 @@ class MetricsQueryEngine:
         metric_type: MetricType,
         start_time: datetime,
         end_time: datetime,
-        symbol: Optional[str] = None,
-        portfolio_id: Optional[str] = None,
+        symbol: str | None = None,
+        portfolio_id: str | None = None,
         limit: int = 10000,
     ) -> list[MetricPoint]:
         """
@@ -110,9 +113,9 @@ class MetricsQueryEngine:
     async def query_latest(
         self,
         metric_type: MetricType,
-        symbol: Optional[str] = None,
+        symbol: str | None = None,
         lookback_minutes: int = 60,
-    ) -> Optional[MetricPoint]:
+    ) -> MetricPoint | None:
         """
         Get the latest metric value.
 
@@ -151,7 +154,7 @@ class MetricsQueryEngine:
         start_time: datetime,
         end_time: datetime,
         interval_minutes: int = 5,
-        symbol: Optional[str] = None,
+        symbol: str | None = None,
     ) -> list[AggregatedMetrics]:
         """
         Query OHLC (candle) data for a metric.
@@ -189,8 +192,8 @@ class MetricsQueryEngine:
         metric_type: MetricType,
         start_time: datetime,
         end_time: datetime,
-        symbol: Optional[str] = None,
-    ) -> Optional[dict]:
+        symbol: str | None = None,
+    ) -> dict | None:
         """
         Get statistics for a metric over a time range.
 
@@ -222,8 +225,8 @@ class MetricsQueryEngine:
         metric_type: MetricType,
         start_time: datetime,
         end_time: datetime,
-        symbol: Optional[str] = None,
-    ) -> Optional[Decimal]:
+        symbol: str | None = None,
+    ) -> Decimal | None:
         """
         Calculate percentage change for a metric.
 
@@ -275,7 +278,7 @@ class MetricsQueryEngine:
         metric_types: list[MetricType],
         start_time: datetime,
         end_time: datetime,
-        symbol: Optional[str] = None,
+        symbol: str | None = None,
     ) -> dict[str, list[MetricPoint]]:
         """
         Query multiple metrics at once.
@@ -368,7 +371,7 @@ class MetricsQueryEngine:
         self,
         start_time: datetime,
         end_time: datetime,
-        symbol: Optional[str] = None,
+        symbol: str | None = None,
     ) -> dict:
         """
         Get summary of all metrics for a time range.

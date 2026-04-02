@@ -9,7 +9,6 @@ from __future__ import annotations
 
 import logging
 import os
-from typing import Optional
 
 from pydantic import ConfigDict, Field, ValidationInfo, field_validator
 from pydantic_settings import BaseSettings
@@ -70,7 +69,7 @@ class Settings(BaseSettings):
         default="redis://localhost:6379/0",
         description="Redis URL for caching and task queue",
     )
-    redis_password: Optional[str] = Field(default=None, description="Redis password (optional)")
+    redis_password: str | None = Field(default=None, description="Redis password (optional)")
     redis_db: int = Field(default=0, description="Redis database number")
     redis_max_connections: int = Field(default=10, description="Redis connection pool size")
 
@@ -89,12 +88,12 @@ class Settings(BaseSettings):
 
     # Trading API Keys (for production, these should be loaded from secure vault)
     # Interactive Brokers
-    ib_api_key: Optional[str] = Field(default=None, description="Interactive Brokers API key")
-    ib_secret: Optional[str] = Field(default=None, description="Interactive Brokers API secret")
+    ib_api_key: str | None = Field(default=None, description="Interactive Brokers API key")
+    ib_secret: str | None = Field(default=None, description="Interactive Brokers API secret")
 
     # Alpaca
-    alpaca_api_key: Optional[str] = Field(default=None, description="Alpaca API key")
-    alpaca_api_secret: Optional[str] = Field(default=None, description="Alpaca API secret")
+    alpaca_api_key: str | None = Field(default=None, description="Alpaca API key")
+    alpaca_api_secret: str | None = Field(default=None, description="Alpaca API secret")
     alpaca_base_url: str = Field(
         default="https://paper-api.alpaca.markets",
         description="Alpaca API base URL (paper or live)",
@@ -102,14 +101,14 @@ class Settings(BaseSettings):
     alpaca_paper_trading: bool = Field(default=True, description="Use Alpaca paper trading account")
 
     # Binance
-    binance_api_key: Optional[str] = Field(default=None, description="Binance API key")
-    binance_secret: Optional[str] = Field(default=None, description="Binance API secret")
+    binance_api_key: str | None = Field(default=None, description="Binance API key")
+    binance_secret: str | None = Field(default=None, description="Binance API secret")
 
     # Alpha Vantage (Market Data)
-    alpha_vantage_api_key: Optional[str] = Field(
+    alpha_vantage_api_key: str | None = Field(
         default=None, description="Alpha Vantage API key for market data"
     )
-    polygon_api_key: Optional[str] = Field(
+    polygon_api_key: str | None = Field(
         default=None, description="Polygon.io API key for real-time market data"
     )
 
@@ -136,7 +135,7 @@ class Settings(BaseSettings):
         default="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
         description="Logging format",
     )
-    log_file: Optional[str] = Field(default=None, description="Log file path (optional)")
+    log_file: str | None = Field(default=None, description="Log file path (optional)")
 
     # CORS Settings
     cors_origins: list[str] = Field(default=["*"], description="CORS allowed origins")
@@ -302,7 +301,7 @@ class Settings(BaseSettings):
 
 
 # Global settings instance (will be created lazily to avoid validation issues)
-_settings_instance: Optional[Settings] = None
+_settings_instance: Settings | None = None
 
 
 def get_global_settings() -> Settings:

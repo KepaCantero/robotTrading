@@ -16,7 +16,6 @@ PERFORMANCE OPTIMIZATIONS:
 from __future__ import annotations
 
 import logging
-from typing import Optional
 
 import numpy as np
 import pandas as pd
@@ -77,7 +76,7 @@ class TechnicalIndicatorCalculatorOptimized:
     """
 
     @staticmethod
-    def calculate_rsi(prices: list[float], period: int = 14) -> Optional[float]:
+    def calculate_rsi(prices: list[float], period: int = 14) -> float | None:
         """
         Calculate Relative Strength Index using Numba JIT compilation.
 
@@ -114,7 +113,7 @@ class TechnicalIndicatorCalculatorOptimized:
             raise
 
     @staticmethod
-    def calculate_ema(prices: list[float], period: int) -> Optional[float]:
+    def calculate_ema(prices: list[float], period: int) -> float | None:
         """
         Calculate Exponential Moving Average using Numba JIT compilation.
 
@@ -160,7 +159,7 @@ class TechnicalIndicatorCalculatorOptimized:
         fast_period: int = 12,
         slow_period: int = 26,
         signal_period: int = 9,
-    ) -> tuple[Optional[float], Optional[float], Optional[float]]:
+    ) -> tuple[float | None, float | None, float | None]:
         """
         Calculate MACD using Numba JIT compilation.
 
@@ -234,7 +233,7 @@ class TechnicalIndicatorCalculatorOptimized:
     @staticmethod
     def calculate_atr(
         highs: list[float], lows: list[float], closes: list[float], period: int = 14
-    ) -> Optional[float]:
+    ) -> float | None:
         """
         Calculate Average True Range using Numba JIT compilation.
 
@@ -275,7 +274,7 @@ class TechnicalIndicatorCalculatorOptimized:
     @staticmethod
     def calculate_bollinger_bands(
         prices: list[float], period: int = 20, num_std: float = 2.0
-    ) -> tuple[Optional[float], Optional[float], Optional[float]]:
+    ) -> tuple[float | None, float | None, float | None]:
         """
         Calculate Bollinger Bands using Numba JIT compilation.
 
@@ -344,7 +343,7 @@ class TechnicalIndicatorCalculatorOptimized:
         closes: list[float],
         k_period: int = 14,
         d_period: int = 3,
-    ) -> tuple[Optional[float], Optional[float]]:
+    ) -> tuple[float | None, float | None]:
         """
         Calculate Stochastic Oscillator using Numba JIT compilation.
 
@@ -401,7 +400,7 @@ class TechnicalIndicatorCalculatorOptimized:
             return None, None
 
     @staticmethod
-    def calculate_skewness(returns: list[float]) -> Optional[float]:
+    def calculate_skewness(returns: list[float]) -> float | None:
         """
         Calculate skewness using Numba JIT compilation.
 
@@ -424,7 +423,7 @@ class TechnicalIndicatorCalculatorOptimized:
         return float(skewness_value)
 
     @staticmethod
-    def calculate_kurtosis(returns: list[float]) -> Optional[float]:
+    def calculate_kurtosis(returns: list[float]) -> float | None:
         """
         Calculate kurtosis using Numba JIT compilation.
 
@@ -447,7 +446,7 @@ class TechnicalIndicatorCalculatorOptimized:
         return float(kurtosis_value)
 
     @staticmethod
-    def calculate_var(returns: list[float], confidence_level: float = 0.95) -> Optional[float]:
+    def calculate_var(returns: list[float], confidence_level: float = 0.95) -> float | None:
         """
         Calculate Value at Risk using Numba JIT compilation.
 
@@ -467,7 +466,7 @@ class TechnicalIndicatorCalculatorOptimized:
         return float(np.percentile(returns, (1 - confidence_level) * 100))
 
     @staticmethod
-    def calculate_cvar(returns: list[float], confidence_level: float = 0.95) -> Optional[float]:
+    def calculate_cvar(returns: list[float], confidence_level: float = 0.95) -> float | None:
         """
         Calculate Conditional VaR using Numba JIT compilation.
 

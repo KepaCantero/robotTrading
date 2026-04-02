@@ -7,9 +7,11 @@ Detecta y aplica splits, dividendos, y otras corporate actions.
 from __future__ import annotations
 
 import logging
-from datetime import datetime
 from decimal import Decimal
-from typing import Any, Optional
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from datetime import datetime
 
 logger = logging.getLogger(__name__)
 
@@ -21,7 +23,7 @@ class CorporateActionsHandler:
     Detecta, almacena y aplica corporate actions (splits, dividendos, etc.)
     """
 
-    def __init__(self, config: Optional[dict[str, Any]] = None):
+    def __init__(self, config: dict[str, Any] | None = None):
         """
         Inicializar handler.
 
@@ -33,7 +35,7 @@ class CorporateActionsHandler:
         self.auto_detect = config.get("auto_detect", False)
 
     def register_split(
-        self, symbol: str, date: datetime, ratio: float, description: Optional[str] = None
+        self, symbol: str, date: datetime, ratio: float, description: str | None = None
     ) -> None:
         """
         Registrar un stock split.
@@ -58,7 +60,7 @@ class CorporateActionsHandler:
         logger.info(f"Split registrado: {symbol} {ratio}:1 en {date}")
 
     def register_dividend(
-        self, symbol: str, date: datetime, amount: Decimal, description: Optional[str] = None
+        self, symbol: str, date: datetime, amount: Decimal, description: str | None = None
     ) -> None:
         """
         Registrar un dividendo.
@@ -85,9 +87,9 @@ class CorporateActionsHandler:
     def get_actions(
         self,
         symbol: str,
-        action_type: Optional[str] = None,
-        start_date: Optional[datetime] = None,
-        end_date: Optional[datetime] = None,
+        action_type: str | None = None,
+        start_date: datetime | None = None,
+        end_date: datetime | None = None,
     ) -> list[dict[str, Any]]:
         """
         Obtener corporate actions para un símbolo.

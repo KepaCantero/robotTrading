@@ -6,7 +6,6 @@ from __future__ import annotations
 
 import logging
 import os
-from typing import Optional
 
 # ============================================================================
 # CRÍTICO: Configurar variables de entorno ANTES de importar numpy/pandas/PyTorch
@@ -72,8 +71,8 @@ class DeepLearningEngine(BaseLearningEngine):
     """
 
     # Type annotations for instance attributes
-    model: Optional[nn.Module]
-    scaler: Optional[dict[str, float]]
+    model: nn.Module | None
+    scaler: dict[str, float] | None
 
     def __init__(self, config: dict, defer_pytorch_init: bool = False):
         """
@@ -139,8 +138,8 @@ class DeepLearningEngine(BaseLearningEngine):
 
     def train(
         self,
-        training_data: Optional[dict[str, object]] = None,
-        validation_data: Optional[dict[str, object]] = None,
+        training_data: dict[str, object] | None = None,
+        validation_data: dict[str, object] | None = None,
         use_subprocess: bool = False,
     ) -> dict[str, float]:
         """
@@ -562,7 +561,7 @@ class DeepLearningEngine(BaseLearningEngine):
         }
 
     def _train_in_subprocess(
-        self, training_data: dict[str, object], validation_data: Optional[dict[str, object]] = None
+        self, training_data: dict[str, object], validation_data: dict[str, object] | None = None
     ) -> dict[str, float]:
         """
         Entrenar modelo en un proceso hijo aislado para evitar deadlocks globales.

@@ -14,13 +14,15 @@ Provides multi-objective optimization capabilities:
 
 import logging
 from dataclasses import dataclass, field
-from typing import Any, Callable, Optional
+from typing import TYPE_CHECKING, Any, Callable
 
 import numpy as np
 
-from .base_optimizer import OptimizationConfig, OptimizationResult
-from .models import ParameterGrid
 from .trial import TrialHistory
+
+if TYPE_CHECKING:
+    from .base_optimizer import OptimizationConfig, OptimizationResult
+    from .models import ParameterGrid
 
 logger = logging.getLogger(__name__)
 
@@ -191,7 +193,7 @@ class ParetoFront:
 
         return self.fronts[0] if self.fronts else []
 
-    def get_best_by_objective(self, objective_index: int = 0) -> Optional[ParetoSolution]:
+    def get_best_by_objective(self, objective_index: int = 0) -> ParetoSolution | None:
         """
         Get best solution for a specific objective.
 
@@ -208,8 +210,8 @@ class ParetoFront:
 
     def get_best_by_weighted_criteria(
         self,
-        weights: Optional[list[float]] = None,
-    ) -> Optional[ParetoSolution]:
+        weights: list[float] | None = None,
+    ) -> ParetoSolution | None:
         """
         Get best solution by weighted sum of objectives.
 
@@ -246,7 +248,7 @@ class ParetoFront:
 
         return best_solution
 
-    def get_knee_point(self) -> Optional[ParetoSolution]:
+    def get_knee_point(self) -> ParetoSolution | None:
         """
         Find the knee point on the Pareto front.
 
@@ -379,7 +381,7 @@ class MultiObjectiveOptimizer:
     def __init__(
         self,
         config: OptimizationConfig,
-        objective_names: Optional[list[str]] = None,
+        objective_names: list[str] | None = None,
     ):
         """
         Initialize multi-objective optimizer.
@@ -556,7 +558,7 @@ class ScalarizationOptimizer:
         self,
         config: OptimizationConfig,
         scalarization_method: str = "weighted_sum",
-        weights: Optional[list[float]] = None,
+        weights: list[float] | None = None,
     ):
         """
         Initialize scalarization optimizer.
@@ -576,7 +578,7 @@ class ScalarizationOptimizer:
     def scalarize(
         self,
         objectives: tuple[float, ...],
-        ideal_point: Optional[tuple[float, ...]] = None,
+        ideal_point: tuple[float, ...] | None = None,
     ) -> float:
         """
         Convert multiple objectives to single value.
@@ -630,7 +632,7 @@ class ScalarizationOptimizer:
         self,
         objectives: list[Callable[[dict[str, Any]], float]],
         param_grid: ParameterGrid,
-        weights: Optional[list[float]] = None,
+        weights: list[float] | None = None,
     ) -> OptimizationResult:
         """
         Optimize using scalarization.

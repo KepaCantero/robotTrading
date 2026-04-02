@@ -7,7 +7,6 @@ Contains configuration for database, Redis, API, logging, and monitoring.
 from __future__ import annotations
 
 import logging
-from typing import Optional
 
 from pydantic import Field, field_validator
 
@@ -88,7 +87,7 @@ class RedisConfig(ConfigBase):
 
     host: str = Field(default="localhost", description="Redis host")
     port: int = Field(default=6379, description="Redis port")
-    password: Optional[str] = Field(default=None, description="Redis password")
+    password: str | None = Field(default=None, description="Redis password")
     db: int = Field(default=0, description="Redis database number")
 
     # Connection settings

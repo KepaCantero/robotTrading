@@ -25,7 +25,7 @@ import platform
 import traceback
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any, Optional
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -53,9 +53,9 @@ class SubprocessRequest:
     operation: EngineOperation
     engine_type: str
     config: dict[str, Any]
-    data: Optional[dict[str, Any]] = None
-    features: Optional[dict[str, Any]] = None
-    model_path: Optional[str] = None
+    data: dict[str, Any] | None = None
+    features: dict[str, Any] | None = None
+    model_path: str | None = None
 
 
 @dataclass
@@ -63,8 +63,8 @@ class SubprocessResponse:
     """Response from the subprocess."""
 
     success: bool
-    result: Optional[Any] = None
-    error: Optional[str] = None
+    result: Any | None = None
+    error: str | None = None
 
 
 def _worker_process(
@@ -198,9 +198,9 @@ class SubprocessLearningEngineWrapper:
         self.is_trained = False
 
         # Subprocess management
-        self._process: Optional[mp.process.BaseProcess] = None
-        self._request_queue: Optional[mp.Queue] = None
-        self._response_queue: Optional[mp.Queue] = None
+        self._process: mp.process.BaseProcess | None = None
+        self._request_queue: mp.Queue | None = None
+        self._response_queue: mp.Queue | None = None
 
         # Check if we need subprocess mode
         self._use_subprocess = self._should_use_subprocess()
@@ -275,7 +275,7 @@ class SubprocessLearningEngineWrapper:
 
         return sanitized
 
-    def _create_engine_direct(self) -> Optional[Any]:
+    def _create_engine_direct(self) -> Any | None:
         """Create engine directly (for non-macOS systems)."""
         try:
             if self.engine_type == "deep":
@@ -451,8 +451,8 @@ class SubprocessLearningEngineWrapper:
 
     def train(
         self,
-        training_data: Optional[dict[str, Any]] = None,
-        validation_data: Optional[dict[str, Any]] = None,
+        training_data: dict[str, Any] | None = None,
+        validation_data: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         """
         Train the model.
@@ -542,7 +542,7 @@ class SubprocessLearningEngineWrapper:
 
         return {"error": response.error or "Unknown error"}
 
-    def load_model(self, path: Optional[str] = None) -> bool:
+    def load_model(self, path: str | None = None) -> bool:
         """
         Load a trained model.
 
@@ -567,7 +567,7 @@ class SubprocessLearningEngineWrapper:
 
         return False
 
-    def save_model(self, path: Optional[str] = None) -> bool:
+    def save_model(self, path: str | None = None) -> bool:
         """
         Save the trained model.
 
@@ -591,7 +591,7 @@ class SubprocessLearningEngineWrapper:
         """Check if the engine is ready to use."""
         return self.enabled and self.is_trained
 
-    def explain(self, features: dict[str, Any], prediction: Optional[dict[str, Any]] = None) -> str:
+    def explain(self, features: dict[str, Any], prediction: dict[str, Any] | None = None) -> str:
         """Generate explanation for prediction."""
         if prediction is None:
             prediction = self.predict(features)

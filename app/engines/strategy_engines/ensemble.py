@@ -19,17 +19,20 @@ import contextlib
 import logging
 from abc import abstractmethod
 from collections import defaultdict
-from collections.abc import Sequence
 from datetime import datetime
 from decimal import Decimal
-from typing import Any, Optional
+from typing import TYPE_CHECKING, Any
 
 import numpy as np
 
-from app.domain.models.market_data import Quote
 from app.domain.models.signal import Signal, SignalSource, SignalStrength, SignalType
 
 from .base import BaseStrategyEngine
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
+
+    from app.domain.models.market_data import Quote
 
 logger = logging.getLogger(__name__)
 
@@ -104,7 +107,7 @@ class BaseStrategyEnsemble(BaseStrategyEngine):
     def extract_features(
         self,
         market_data: Quote,
-        historical_data: Optional[Sequence[Quote]] = None,
+        historical_data: Sequence[Quote] | None = None,
     ) -> dict[str, Any]:
         """
         Extraer features combinados de todas las estrategias.

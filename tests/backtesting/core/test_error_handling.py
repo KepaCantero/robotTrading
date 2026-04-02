@@ -7,11 +7,15 @@ Tests error handling functionality including:
 - Subprocess fallback
 - Safe execution wrappers
 """
+
 from __future__ import annotations
 
 from unittest.mock import Mock, patch
 
 import pytest
+
+# SQLAlchemy exception types - safe_execute only catches these
+from sqlalchemy.exc import OperationalError
 
 from app.backtesting.core.error_handling import (
     MutexError,
@@ -120,9 +124,12 @@ class TestTrainingRetry:
         strategy = Mock()
         strategy.learning_engine = Mock()
 
-        # First call raises mutex error, second succeeds
+        # First call raises a caught exception type with mutex keyword,
+        # second succeeds. The production code catches
+        # (ValueError, TypeError, KeyError, AttributeError, IndexError)
+        # and converts mutex-like ones to MutexError for tenacity retry.
         strategy.learning_engine.train.side_effect = [
-            RuntimeError("mutex lock failed"),
+            ValueError("mutex lock failed"),
             None,
         ]
 
@@ -136,8 +143,11 @@ class TestTrainingRetry:
         strategy = Mock()
         strategy.learning_engine = Mock()
 
-        # Always fail with mutex error
-        strategy.learning_engine.train.side_effect = RuntimeError("mutex lock failed")
+        # Always fail with a caught exception type containing mutex keyword.
+        # The production code catches (ValueError, TypeError, KeyError,
+        # AttributeError, IndexError) and converts mutex-like ones to
+        # MutexError, which tenacity retries up to 3 times before reraising.
+        strategy.learning_engine.train.side_effect = ValueError("mutex lock failed")
 
         with pytest.raises(MutexError):
             train_with_retry(strategy, 'supervised')
@@ -278,7 +288,8 @@ class TestSafeExecute:
         """Test exception handling with default return."""
 
         def func() -> None:
-            raise ValueError("Test error")
+            # safe_execute only catches SQLAlchemy exceptions
+            raise OperationalError("statement", {}, "Test error")
 
         result = safe_execute(func, default_return=42)
         assert result == 42
@@ -287,7 +298,7 @@ class TestSafeExecute:
         """Test exception handling without default return."""
 
         def func() -> None:
-            raise ValueError("Test error")
+            raise OperationalError("statement", {}, "Test error")
 
         result = safe_execute(func)
         assert result is None
@@ -296,7 +307,7 @@ class TestSafeExecute:
         """Test error logging."""
 
         def func() -> None:
-            raise ValueError("Test error")
+            raise OperationalError("statement", {}, "Test error")
 
         with patch('app.backtesting.core.error_handling.logger') as mock_logger:
             safe_execute(func, log_errors=True)
@@ -307,7 +318,7 @@ class TestSafeExecute:
         """Test suppressing error logging."""
 
         def func() -> None:
-            raise ValueError("Test error")
+            raise OperationalError("statement", {}, "Test error")
 
         with patch('app.backtesting.core.error_handling.logger') as mock_logger:
             safe_execute(func, log_errors=False)

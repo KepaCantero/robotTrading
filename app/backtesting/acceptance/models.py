@@ -7,9 +7,11 @@ Data classes for acceptance criteria validation.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from datetime import datetime
 from enum import Enum
-from typing import Optional
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from datetime import datetime
 
 
 class VerdictStatus(str, Enum):
@@ -54,8 +56,8 @@ class AcceptanceReport:
     recommendations: list[str] = field(default_factory=list)
 
     # Detailed metrics
-    sharpe_ratio: Optional[float] = None
-    max_drawdown: Optional[float] = None
-    profit_factor: Optional[float] = None
-    commission_impact: Optional[float] = None
-    monte_carlo_p5: Optional[float] = None
+    sharpe_ratio: float | None = None
+    max_drawdown: float | None = None
+    profit_factor: float | None = None
+    commission_impact: float | None = None
+    monte_carlo_p5: float | None = None

@@ -713,11 +713,13 @@ if execute_button:
                     # Show link to summary
                     st.markdown("---")
                     st.success("📄 **Backend Test Result Summary Generated**")
-                    st.markdown(f"""
+                    st.markdown(
+                        f"""
                     **Location:** `{summary_file.relative_to(project_root)}`
 
                     **To view:** Open the file in your editor or download it.
-                    """)
+                    """
+                    )
 
                     # Add download button
                     with open(summary_file) as f:
@@ -835,13 +837,15 @@ if selected_module in module_info or selected_module == "all":
         info = module_info[selected_module]
 
         # Show static module info
-        st.info(f"""
+        st.info(
+            f"""
 **Description**: {info["description"]}
 
 **Metrics**: {info["metrics"]}
 
 **Good Indicators**: {info["indicators"]}
-        """)
+        """
+        )
 
         # Count available results for this module
         if "backtest_results" in session_state and session_state.backtest_results:
