@@ -23,10 +23,8 @@ from __future__ import annotations
 import logging
 from datetime import date
 from decimal import Decimal
-from typing import TYPE_CHECKING, Any, Optional
+from typing import TYPE_CHECKING, Any
 
-from app.domain.models.market_data import Quote
-from app.domain.models.portfolio import Portfolio
 from app.domain.models.signal import Signal, SignalSource, SignalStrength, SignalType
 from app.domain.strategies.base import BaseStrategy
 from app.shared.config.centralized_config import get_config
@@ -38,6 +36,9 @@ from .models import DividendProfile, DividendStock, DividendStrategyConfig, ExDi
 
 if TYPE_CHECKING:
     from collections import deque
+
+    from app.domain.models.market_data import Quote
+    from app.domain.models.portfolio import Portfolio
 
 logger = logging.getLogger(__name__)
 
@@ -90,8 +91,8 @@ class DividendStrategy(BaseStrategy):
         # Estado interno
         self.dividend_calendar: dict[str, ExDividendDate] = {}
         self.yield_on_cost_history: dict[str, deque] = {}
-        self.current_portfolio: Optional[DividendPortfolio] = None
-        self.last_rebalance_date: Optional[date] = None
+        self.current_portfolio: DividendPortfolio | None = None
+        self.last_rebalance_date: date | None = None
 
         # Universo de acciones (se llena con datos)
         self.universe: list[DividendProfile] = []
@@ -324,7 +325,7 @@ class DividendStrategy(BaseStrategy):
 
     def _evaluate_dividend_capture(
         self, profile: DividendProfile, market_data: Quote
-    ) -> Optional[Signal]:
+    ) -> Signal | None:
         """
         Evaluar oportunidad de captura de dividendo.
 
@@ -555,11 +556,11 @@ class DividendStrategy(BaseStrategy):
 
         return True
 
-    def _get_sector_for_symbol(self, symbol: str) -> Optional[str]:
+    def _get_sector_for_symbol(self, symbol: str) -> str | None:
         """Obtener sector para un símbolo."""
         for profile in self.universe:
             if profile.symbol == symbol:
-                sector: Optional[str] = profile.sector
+                sector: str | None = profile.sector
                 return sector
         return None
 

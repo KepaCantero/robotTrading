@@ -62,7 +62,7 @@ import logging
 from datetime import datetime
 from decimal import Decimal
 from pathlib import Path
-from typing import Any, Optional, Union
+from typing import Any
 
 from pydantic import BaseModel, Field
 
@@ -84,8 +84,8 @@ class TestMetadata(BaseModel):
         ...,
         description="Test type (unit, integration, functional)",
     )
-    test_id: Optional[str] = Field(None, description="Unique test identifier")
-    author: Optional[str] = Field(None, description="Test author")
+    test_id: str | None = Field(None, description="Unique test identifier")
+    author: str | None = Field(None, description="Test author")
     tags: list[str] = Field(default_factory=list, description="Test tags")
     created_at: datetime = Field(default_factory=datetime.now, description="Creation timestamp")
 
@@ -98,11 +98,9 @@ class InputDataSummary(BaseModel):
     data_points: int = Field(..., ge=0, description="Number of data points")
     market_regime: str = Field(..., description="Market regime description")
     data_source: str = Field(..., description="Data source description")
-    price_range: Optional[tuple[Decimal, Decimal]] = Field(
-        None, description="Price range (min, max)"
-    )
-    volume_stats: Optional[dict[str, Decimal]] = Field(None, description="Volume statistics")
-    volatility: Optional[Decimal] = Field(None, description="Volatility measure")
+    price_range: tuple[Decimal, Decimal] | None = Field(None, description="Price range (min, max)")
+    volume_stats: dict[str, Decimal] | None = Field(None, description="Volume statistics")
+    volatility: Decimal | None = Field(None, description="Volatility measure")
     notes: list[str] = Field(default_factory=list, description="Additional notes about data")
 
 
@@ -114,9 +112,7 @@ class TestConfig(BaseModel):
     slippage: Decimal = Field(..., ge=0, description="Slippage percentage")
     strategy: str = Field(..., description="Strategy name")
     strategy_params: dict[str, Any] = Field(default_factory=dict, description="Strategy parameters")
-    risk_management: Optional[dict[str, Decimal]] = Field(
-        None, description="Risk management settings"
-    )
+    risk_management: dict[str, Decimal] | None = Field(None, description="Risk management settings")
     additional_params: dict[str, Any] = Field(
         default_factory=dict, description="Additional parameters"
     )
@@ -128,28 +124,28 @@ class OutputMetrics(BaseModel):
     # Basic metrics
     final_capital: Decimal = Field(..., description="Final capital")
     total_pnl: Decimal = Field(..., description="Total profit/loss")
-    total_pnl_percentage: Optional[Decimal] = Field(None, description="Total P&L percentage")
+    total_pnl_percentage: Decimal | None = Field(None, description="Total P&L percentage")
 
     # Risk metrics
-    sharpe_ratio: Optional[Decimal] = Field(None, description="Sharpe ratio")
-    sortino_ratio: Optional[Decimal] = Field(None, description="Sortino ratio")
-    max_drawdown: Optional[Decimal] = Field(None, description="Maximum drawdown")
-    max_drawdown_percentage: Optional[Decimal] = Field(None, description="Max drawdown percentage")
+    sharpe_ratio: Decimal | None = Field(None, description="Sharpe ratio")
+    sortino_ratio: Decimal | None = Field(None, description="Sortino ratio")
+    max_drawdown: Decimal | None = Field(None, description="Maximum drawdown")
+    max_drawdown_percentage: Decimal | None = Field(None, description="Max drawdown percentage")
 
     # Trade metrics
-    win_rate: Optional[Decimal] = Field(None, description="Win rate percentage")
+    win_rate: Decimal | None = Field(None, description="Win rate percentage")
     total_trades: int = Field(..., ge=0, description="Total number of trades")
     winning_trades: int = Field(0, ge=0, description="Number of winning trades")
     losing_trades: int = Field(0, ge=0, description="Number of losing trades")
 
     # Advanced metrics
-    calmar_ratio: Optional[Decimal] = Field(None, description="Calmar ratio")
-    omega_ratio: Optional[Decimal] = Field(None, description="Omega ratio")
-    profit_factor: Optional[Decimal] = Field(None, description="Profit factor")
-    expectancy: Optional[Decimal] = Field(None, description="Expectancy per trade")
+    calmar_ratio: Decimal | None = Field(None, description="Calmar ratio")
+    omega_ratio: Decimal | None = Field(None, description="Omega ratio")
+    profit_factor: Decimal | None = Field(None, description="Profit factor")
+    expectancy: Decimal | None = Field(None, description="Expectancy per trade")
 
     # Additional metrics
-    additional_metrics: dict[str, Union[Decimal, float, int, str]] = Field(
+    additional_metrics: dict[str, Decimal | float | int | str] = Field(
         default_factory=dict, description="Additional metrics"
     )
 
@@ -158,11 +154,11 @@ class ValidationCriteria(BaseModel):
     """Validation criteria for test results."""
 
     criteria_name: str = Field(..., description="Criteria name")
-    expected_value: Union[Decimal, float, int, str, bool] = Field(..., description="Expected value")
-    actual_value: Union[Decimal, float, int, str, bool] = Field(..., description="Actual value")
+    expected_value: Decimal | float | int | str | bool = Field(..., description="Expected value")
+    actual_value: Decimal | float | int | str | bool = Field(..., description="Actual value")
     passed: bool = Field(..., description="Whether criteria passed")
-    tolerance: Optional[Decimal] = Field(None, description="Tolerance for comparison")
-    reason: Optional[str] = Field(None, description="Reason for failure if not passed")
+    tolerance: Decimal | None = Field(None, description="Tolerance for comparison")
+    reason: str | None = Field(None, description="Reason for failure if not passed")
 
 
 class TestSummaryReport(BaseModel):
@@ -187,7 +183,7 @@ class TestSummaryReport(BaseModel):
 
     # Test status
     passed: bool = Field(..., description="Whether test passed")
-    pass_reason: Optional[str] = Field(None, description="Reason for pass/fail")
+    pass_reason: str | None = Field(None, description="Reason for pass/fail")
 
     # Warnings and anomalies
     warnings: list[str] = Field(default_factory=list, description="Warnings generated during test")
@@ -195,8 +191,8 @@ class TestSummaryReport(BaseModel):
 
     # Timing information
     start_time: datetime = Field(default_factory=datetime.now, description="Test start time")
-    end_time: Optional[datetime] = Field(None, description="Test end time")
-    duration_seconds: Optional[float] = Field(None, description="Test duration in seconds")
+    end_time: datetime | None = Field(None, description="Test end time")
+    duration_seconds: float | None = Field(None, description="Test duration in seconds")
 
     # Additional information
     notes: list[str] = Field(default_factory=list, description="Additional notes")
@@ -220,10 +216,10 @@ class TestSummaryReporter:
 
     def __init__(
         self,
-        output_dir: Optional[Path] = None,
-        test_name: Optional[str] = None,
-        test_description: Optional[str] = None,
-        test_file: Optional[str] = None,
+        output_dir: Path | None = None,
+        test_name: str | None = None,
+        test_description: str | None = None,
+        test_file: str | None = None,
         test_type: str = "integration",
     ):
         """
@@ -252,9 +248,9 @@ class TestSummaryReporter:
         )
 
         # Initialize placeholders
-        self.input_data: Optional[InputDataSummary] = None
-        self.config: Optional[TestConfig] = None
-        self.output: Optional[OutputMetrics] = None
+        self.input_data: InputDataSummary | None = None
+        self.config: TestConfig | None = None
+        self.output: OutputMetrics | None = None
         self.validation_criteria: list[ValidationCriteria] = []
         self.warnings: list[str] = []
         self.anomalies: list[str] = []
@@ -263,9 +259,9 @@ class TestSummaryReporter:
 
         # Timing
         self.start_time = datetime.now()
-        self.end_time: Optional[datetime] = None
-        self.passed: Optional[bool] = None
-        self.pass_reason: Optional[str] = None
+        self.end_time: datetime | None = None
+        self.passed: bool | None = None
+        self.pass_reason: str | None = None
 
     def add_input_data(
         self,
@@ -274,10 +270,10 @@ class TestSummaryReporter:
         data_points: int,
         market_regime: str,
         data_source: str,
-        price_range: Optional[tuple[Decimal, Decimal]] = None,
-        volume_stats: Optional[dict[str, Decimal]] = None,
-        volatility: Optional[Decimal] = None,
-        notes: Optional[list[str]] = None,
+        price_range: tuple[Decimal, Decimal] | None = None,
+        volume_stats: dict[str, Decimal] | None = None,
+        volatility: Decimal | None = None,
+        notes: list[str] | None = None,
     ) -> None:
         """
         Add input data summary.
@@ -312,8 +308,8 @@ class TestSummaryReporter:
         commission: Decimal,
         slippage: Decimal,
         strategy: str,
-        strategy_params: Optional[dict[str, Any]] = None,
-        risk_management: Optional[dict[str, Decimal]] = None,
+        strategy_params: dict[str, Any] | None = None,
+        risk_management: dict[str, Decimal] | None = None,
         **kwargs,
     ) -> None:
         """
@@ -343,19 +339,19 @@ class TestSummaryReporter:
         self,
         final_capital: Decimal,
         total_pnl: Decimal,
-        total_pnl_percentage: Optional[Decimal] = None,
-        sharpe_ratio: Optional[Decimal] = None,
-        sortino_ratio: Optional[Decimal] = None,
-        max_drawdown: Optional[Decimal] = None,
-        max_drawdown_percentage: Optional[Decimal] = None,
-        win_rate: Optional[Decimal] = None,
+        total_pnl_percentage: Decimal | None = None,
+        sharpe_ratio: Decimal | None = None,
+        sortino_ratio: Decimal | None = None,
+        max_drawdown: Decimal | None = None,
+        max_drawdown_percentage: Decimal | None = None,
+        win_rate: Decimal | None = None,
         total_trades: int = 0,
         winning_trades: int = 0,
         losing_trades: int = 0,
-        calmar_ratio: Optional[Decimal] = None,
-        omega_ratio: Optional[Decimal] = None,
-        profit_factor: Optional[Decimal] = None,
-        expectancy: Optional[Decimal] = None,
+        calmar_ratio: Decimal | None = None,
+        omega_ratio: Decimal | None = None,
+        profit_factor: Decimal | None = None,
+        expectancy: Decimal | None = None,
         **kwargs,
     ) -> None:
         """
@@ -402,11 +398,11 @@ class TestSummaryReporter:
     def add_validation_criteria(
         self,
         criteria_name: str,
-        expected_value: Union[Decimal, float, int, str, bool],
-        actual_value: Union[Decimal, float, int, str, bool],
+        expected_value: Decimal | float | int | str | bool,
+        actual_value: Decimal | float | int | str | bool,
         passed: bool,
-        tolerance: Optional[Decimal] = None,
-        reason: Optional[str] = None,
+        tolerance: Decimal | None = None,
+        reason: str | None = None,
     ) -> None:
         """
         Add validation criteria result.
@@ -448,7 +444,7 @@ class TestSummaryReporter:
         """Add an attachment path (e.g., chart image)."""
         self.attachments.append(path)
 
-    def mark_passed(self, reason: Optional[str] = None) -> None:
+    def mark_passed(self, reason: str | None = None) -> None:
         """Mark test as passed."""
         self.passed = True
         self.pass_reason = reason or "Test passed successfully"

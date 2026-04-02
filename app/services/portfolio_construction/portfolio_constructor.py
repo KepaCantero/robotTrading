@@ -10,7 +10,6 @@ import asyncio
 import logging
 from dataclasses import dataclass
 from enum import Enum
-from typing import Optional
 
 logger = logging.getLogger(__name__)
 
@@ -60,9 +59,9 @@ class PortfolioConstructor:
         assets: list[str],
         returns: dict[str, float],
         volatilities: dict[str, float],
-        correlation_matrix: Optional[dict[str, dict[str, float]]] = None,
+        correlation_matrix: dict[str, dict[str, float]] | None = None,
         method: str = "mean_variance",
-        target_return: Optional[float] = None,
+        target_return: float | None = None,
     ) -> PortfolioAllocation:
         """
         Construct optimal portfolio allocation.
@@ -127,8 +126,8 @@ class PortfolioConstructor:
         assets: list[str],
         returns: dict[str, float],
         volatilities: dict[str, float],
-        correlation_matrix: Optional[dict[str, dict[str, float]]] = None,
-        target_return: Optional[float] = None,
+        correlation_matrix: dict[str, dict[str, float]] | None = None,
+        target_return: float | None = None,
     ) -> PortfolioAllocation:
         """
         Mean-variance portfolio optimization.
@@ -207,7 +206,7 @@ class PortfolioConstructor:
         assets: list[str],
         returns: dict[str, float],
         volatilities: dict[str, float],
-        correlation_matrix: Optional[dict[str, dict[str, float]]] = None,
+        correlation_matrix: dict[str, dict[str, float]] | None = None,
     ) -> PortfolioAllocation:
         """
         Maximum Sharpe ratio optimization.

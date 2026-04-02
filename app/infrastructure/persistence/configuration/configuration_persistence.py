@@ -8,7 +8,6 @@ from __future__ import annotations
 
 import logging
 from datetime import datetime
-from typing import Optional
 from uuid import uuid4
 
 logger = logging.getLogger(__name__)
@@ -108,7 +107,7 @@ class ConfigurationPersistence:
             message=f"Configuration not found for strategy: {request.strategy_name}",
         )
 
-    def list_configurations(self, strategy_name: Optional[str] = None) -> ConfigurationListResponse:
+    def list_configurations(self, strategy_name: str | None = None) -> ConfigurationListResponse:
         """List all configurations, optionally filtered by strategy."""
         logger.debug("Listing configurations", extra={"strategy_name_filter": strategy_name})
 
@@ -162,7 +161,7 @@ class ConfigurationPersistence:
 
 
 # Singleton instance
-_configuration_persistence: Optional[ConfigurationPersistence] = None
+_configuration_persistence: ConfigurationPersistence | None = None
 
 
 def get_configuration_persistence() -> ConfigurationPersistence:

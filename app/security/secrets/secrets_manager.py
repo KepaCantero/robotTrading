@@ -24,7 +24,7 @@ import os
 import secrets
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Any, ClassVar, Optional
+from typing import Any, ClassVar
 
 from cryptography.fernet import Fernet
 from cryptography.hazmat.primitives import hashes
@@ -59,11 +59,11 @@ class Secret:
         self,
         name: str,
         value: str,
-        created_at: Optional[datetime] = None,
-        rotated_at: Optional[datetime] = None,
-        expires_at: Optional[datetime] = None,
+        created_at: datetime | None = None,
+        rotated_at: datetime | None = None,
+        expires_at: datetime | None = None,
         version: int = 1,
-        metadata: Optional[dict[str, Any]] = None,
+        metadata: dict[str, Any] | None = None,
     ):
         self.name = name
         self.value = value
@@ -133,8 +133,8 @@ class SecretsManager:
 
     def __init__(
         self,
-        encryption_key: Optional[str] = None,
-        secrets_dir: Optional[Path] = None,
+        encryption_key: str | None = None,
+        secrets_dir: Path | None = None,
         auto_rotate: bool = True,
         rotation_period_days: int = 90,
     ):
@@ -267,7 +267,7 @@ class SecretsManager:
 
         return True
 
-    def get_secret(self, name: str, default: Optional[str] = None) -> Optional[str]:
+    def get_secret(self, name: str, default: str | None = None) -> str | None:
         """
         Get secret value from environment or storage.
 
@@ -313,8 +313,8 @@ class SecretsManager:
         self,
         name: str,
         value: str,
-        expires_in_days: Optional[int] = None,
-        metadata: Optional[dict[str, Any]] = None,
+        expires_in_days: int | None = None,
+        metadata: dict[str, Any] | None = None,
     ) -> Secret:
         """
         Store a secret securely.
@@ -369,7 +369,7 @@ class SecretsManager:
         logger.info(f"Secret {name} created (version {version})")
         return secret
 
-    def rotate_secret(self, name: str, new_value: Optional[str] = None) -> Secret:
+    def rotate_secret(self, name: str, new_value: str | None = None) -> Secret:
         """
         Rotate a secret with new value.
 
@@ -574,7 +574,7 @@ class SecretsManager:
 
     def get_audit_log(
         self,
-        action: Optional[str] = None,
+        action: str | None = None,
         limit: int = 100,
     ) -> list[dict[str, Any]]:
         """
@@ -611,7 +611,7 @@ class SecretsManager:
 
 
 # Global secrets manager instance
-_secrets_manager: Optional[SecretsManager] = None
+_secrets_manager: SecretsManager | None = None
 
 
 def get_secrets_manager() -> SecretsManager:
@@ -636,7 +636,7 @@ def validate_secrets() -> bool:
     return manager.validate_environment()
 
 
-def get_secret(name: str, default: Optional[str] = None) -> Optional[str]:
+def get_secret(name: str, default: str | None = None) -> str | None:
     """
     Get a secret value.
 
@@ -654,7 +654,7 @@ def get_secret(name: str, default: Optional[str] = None) -> Optional[str]:
 def set_secret(
     name: str,
     value: str,
-    expires_in_days: Optional[int] = None,
+    expires_in_days: int | None = None,
 ) -> Secret:
     """
     Store a secret.
@@ -671,7 +671,7 @@ def set_secret(
     return manager.set_secret(name, value, expires_in_days)
 
 
-def rotate_secret(name: str, new_value: Optional[str] = None) -> Secret:
+def rotate_secret(name: str, new_value: str | None = None) -> Secret:
     """
     Rotate a secret.
 

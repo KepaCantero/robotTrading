@@ -25,7 +25,6 @@ import logging
 import os
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Optional
 
 import aiohttp
 import pandas as pd
@@ -110,7 +109,7 @@ class RealMarketDataFetcher:
 
     def __init__(
         self,
-        api_key: Optional[str] = None,
+        api_key: str | None = None,
         cache_dir: str = "data/historical",
         rate_limit_calls: int = 5,
         rate_limit_period: int = 60,  # seconds
@@ -153,7 +152,7 @@ class RealMarketDataFetcher:
         self.call_timestamps: list[datetime] = []
 
         # Session for HTTP requests
-        self.session: Optional[aiohttp.ClientSession] = None
+        self.session: aiohttp.ClientSession | None = None
 
         logger.info(
             "RealMarketDataFetcher initialized successfully",
@@ -235,7 +234,7 @@ class RealMarketDataFetcher:
                 # Clean up old timestamps after waiting
                 self.call_timestamps = []
 
-    async def _fetch_from_alpha_vantage(self, symbol: str) -> Optional[dict]:
+    async def _fetch_from_alpha_vantage(self, symbol: str) -> dict | None:
         """
         Fetch daily time series data from Alpha Vantage.
 
@@ -312,7 +311,7 @@ class RealMarketDataFetcher:
         """Get cache file path for a symbol."""
         return self.cache_dir / f"{symbol}_daily.json"
 
-    def _load_from_cache(self, symbol: str) -> Optional[pd.DataFrame]:
+    def _load_from_cache(self, symbol: str) -> pd.DataFrame | None:
         """
         Load data from cache if available.
 
@@ -397,7 +396,7 @@ class RealMarketDataFetcher:
                 extra={"symbol": symbol, "error_type": type(e).__name__},
             )
 
-    def _parse_alpha_vantage_data(self, data: dict, symbol: str) -> Optional[pd.DataFrame]:
+    def _parse_alpha_vantage_data(self, data: dict, symbol: str) -> pd.DataFrame | None:
         """
         Parse Alpha Vantage time series data into DataFrame.
 
@@ -458,10 +457,10 @@ class RealMarketDataFetcher:
     async def fetch_symbol_data(
         self,
         symbol: str,
-        start_date: Optional[datetime] = None,
-        end_date: Optional[datetime] = None,
+        start_date: datetime | None = None,
+        end_date: datetime | None = None,
         use_cache: bool = True,
-    ) -> Optional[pd.DataFrame]:
+    ) -> pd.DataFrame | None:
         """
         Fetch historical data for a single symbol.
 
@@ -529,8 +528,8 @@ class RealMarketDataFetcher:
     def _filter_by_date(
         self,
         df: pd.DataFrame,
-        start_date: Optional[datetime],
-        end_date: Optional[datetime],
+        start_date: datetime | None,
+        end_date: datetime | None,
     ) -> pd.DataFrame:
         """Filter DataFrame by date range."""
         if start_date is not None:
@@ -542,8 +541,8 @@ class RealMarketDataFetcher:
     async def fetch_multiple_symbols(
         self,
         symbols: list[str],
-        start_date: Optional[datetime] = None,
-        end_date: Optional[datetime] = None,
+        start_date: datetime | None = None,
+        end_date: datetime | None = None,
         use_cache: bool = True,
         show_progress: bool = True,
     ) -> dict[str, pd.DataFrame]:
@@ -614,8 +613,8 @@ class RealMarketDataFetcher:
     async def fetch_sp500_top_n(
         self,
         n: int = 50,
-        start_date: Optional[datetime] = None,
-        end_date: Optional[datetime] = None,
+        start_date: datetime | None = None,
+        end_date: datetime | None = None,
         use_cache: bool = True,
     ) -> dict[str, pd.DataFrame]:
         """
@@ -663,7 +662,7 @@ class RealMarketDataFetcher:
 
         return stats
 
-    def clear_cache(self, symbol: Optional[str] = None):
+    def clear_cache(self, symbol: str | None = None):
         """
         Clear cached data.
 

@@ -10,10 +10,8 @@ from __future__ import annotations
 import logging
 from datetime import datetime, timedelta
 from decimal import Decimal
-from typing import Optional
-from uuid import UUID
+from typing import TYPE_CHECKING
 
-from app.domain.models.portfolio import Portfolio
 from app.domain.models.portfolio_analytics import (
     ExtendedPortfolio,
     PerformanceMetrics,
@@ -29,6 +27,11 @@ from app.services.portfolio_analytics._performance_calculations import Performan
 from app.services.portfolio_analytics._portfolio_calculations import PortfolioCalculations
 from app.services.portfolio_analytics._risk_calculations import RiskCalculations
 from app.shared.config.trading_config import get_config
+
+if TYPE_CHECKING:
+    from uuid import UUID
+
+    from app.domain.models.portfolio import Portfolio
 
 logger = logging.getLogger(__name__)
 
@@ -73,8 +76,8 @@ class PortfolioAnalyticsService:
         self,
         portfolio: ExtendedPortfolio,
         period: PerformancePeriod = PerformancePeriod.MONTHLY,
-        start_date: Optional[datetime] = None,
-        end_date: Optional[datetime] = None,
+        start_date: datetime | None = None,
+        end_date: datetime | None = None,
     ) -> PerformanceMetrics:
         """
         Calculate comprehensive performance metrics for a portfolio.
@@ -378,8 +381,8 @@ class PortfolioAnalyticsService:
     async def generate_rebalance_recommendation(
         self,
         portfolio: ExtendedPortfolio,
-        target_allocation: Optional[PortfolioAllocation] = None,
-    ) -> Optional[PortfolioRebalance]:
+        target_allocation: PortfolioAllocation | None = None,
+    ) -> PortfolioRebalance | None:
         """
         Generate portfolio rebalancing recommendations.
 
@@ -578,7 +581,7 @@ class PortfolioAnalyticsService:
 
     async def _get_benchmark_return(
         self, start_date: datetime, end_date: datetime
-    ) -> Optional[Decimal]:
+    ) -> Decimal | None:
         """Get benchmark return for the period."""
         days = (end_date - start_date).days
         return self._benchmark_return * days / 365

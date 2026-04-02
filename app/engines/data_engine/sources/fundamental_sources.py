@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from typing import Any, Optional
+from typing import Any
 
 # REQUIRED: No fallbacks - aiohttp is required for async HTTP requests
 import aiohttp
@@ -52,7 +52,7 @@ class FinancialModelingPrepSource(BaseDataSource):
             logger.warning("FMP API key no configurado")
         # Use centralized endpoint configuration
         self.base_url = config.get("base_url", APIEndpoints.FINANCIAL_MODELING_PREP)
-        self.session: Optional[aiohttp.ClientSession] = None
+        self.session: aiohttp.ClientSession | None = None
 
     async def connect(self) -> bool:
         """Conectar a FMP API."""
@@ -96,7 +96,7 @@ class FinancialModelingPrepSource(BaseDataSource):
         except (asyncio.TimeoutError, OSError):
             return False
 
-    async def get_company_profile(self, symbol: str) -> Optional[dict[str, Any]]:
+    async def get_company_profile(self, symbol: str) -> dict[str, Any] | None:
         """
         Obtener perfil de la compañía.
 
@@ -204,7 +204,7 @@ class AlphaVantageFundamentalSource(BaseDataSource):
             logger.warning("Alpha Vantage API key no configurado")
         # Use centralized endpoint configuration
         self.base_url = config.get("base_url", APIEndpoints.ALPHA_VANTAGE)
-        self.session: Optional[aiohttp.ClientSession] = None
+        self.session: aiohttp.ClientSession | None = None
 
     async def connect(self) -> bool:
         """Conectar a Alpha Vantage API."""
@@ -248,7 +248,7 @@ class AlphaVantageFundamentalSource(BaseDataSource):
         except (ValueError, KeyError, AttributeError, IndexError, TypeError):
             return False
 
-    async def get_company_overview(self, symbol: str) -> Optional[dict[str, Any]]:
+    async def get_company_overview(self, symbol: str) -> dict[str, Any] | None:
         """
         Obtener overview de la compañía.
 
@@ -283,7 +283,7 @@ class AlphaVantageFundamentalSource(BaseDataSource):
             logger.error(f"Error obteniendo overview de {symbol}: {e}")
             return None
 
-    async def get_earnings(self, symbol: str) -> Optional[dict[str, Any]]:
+    async def get_earnings(self, symbol: str) -> dict[str, Any] | None:
         """
         Obtener earnings de la compañía.
 

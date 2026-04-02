@@ -10,7 +10,6 @@ import asyncio
 import logging
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Optional
 
 import numpy as np
 
@@ -30,7 +29,7 @@ class PerformanceReport:
     allocation: dict[str, float]
     monthly_returns: list[float]
     html_report: str
-    pdf_report: Optional[str] = None
+    pdf_report: str | None = None
 
 
 class ReportingGenerator:
@@ -56,7 +55,7 @@ class ReportingGenerator:
         backtest_result: dict,
         allocation: dict[str, float],
         monthly_returns: list[float],
-        recommendation: Optional[dict] = None,
+        recommendation: dict | None = None,
     ) -> PerformanceReport:
         """
         Generate comprehensive performance report.

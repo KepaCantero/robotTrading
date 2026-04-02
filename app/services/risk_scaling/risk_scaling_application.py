@@ -9,7 +9,6 @@ from __future__ import annotations
 
 import logging
 from decimal import Decimal
-from typing import Optional
 
 from app.services.risk_scaling.limit_adjuster import get_limit_adjuster
 from app.services.risk_scaling.risk_adjustment_calculator import get_risk_adjustment_calculator
@@ -230,7 +229,7 @@ class RiskScalingApplication:
 
 
 # Singleton
-_application: Optional[RiskScalingApplication] = None
+_application: RiskScalingApplication | None = None
 
 
 def get_risk_scaling_application() -> RiskScalingApplication:

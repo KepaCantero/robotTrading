@@ -11,7 +11,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from typing import Any, Optional
+from typing import Any
 
 # REQUIRED: No fallbacks - aiohttp is required for async HTTP requests
 import aiohttp
@@ -66,7 +66,7 @@ class TwitterSentimentSource(BaseDataSource):
         self.use_tweepy = config.get("use_tweepy", False)
         # Use centralized endpoint configuration
         self.base_url = config.get("base_url", APIEndpoints.TWITTER_API)
-        self.session: Optional[aiohttp.ClientSession] = None
+        self.session: aiohttp.ClientSession | None = None
         self._tweepy_client = None
 
     async def connect(self) -> bool:
@@ -111,7 +111,7 @@ class TwitterSentimentSource(BaseDataSource):
         return bool(self.is_connected)
 
     async def get_sentiment(
-        self, symbol: str, query: Optional[str] = None, max_results: int = 100
+        self, symbol: str, query: str | None = None, max_results: int = 100
     ) -> dict[str, Any]:
         """
         Obtener sentimiento de Twitter para un símbolo.
@@ -227,8 +227,8 @@ class RedditSentimentSource(BaseDataSource):
         self._timeouts = get_timeouts()
         self.base_url = config.get("base_url", APIEndpoints.REDDIT_API)
         self.token_url = config.get("token_url", APIEndpoints.REDDIT_TOKEN)
-        self.session: Optional[aiohttp.ClientSession] = None
-        self._access_token: Optional[str] = None
+        self.session: aiohttp.ClientSession | None = None
+        self._access_token: str | None = None
 
     async def connect(self) -> bool:
         """Conectar a Reddit API."""
@@ -293,7 +293,7 @@ class RedditSentimentSource(BaseDataSource):
             return False
 
     async def get_sentiment(
-        self, symbol: str, subreddits: Optional[list[str]] = None, max_posts: int = 50
+        self, symbol: str, subreddits: list[str] | None = None, max_posts: int = 50
     ) -> dict[str, Any]:
         """
         Obtener sentimiento de Reddit para un símbolo.
@@ -405,7 +405,7 @@ class NewsSentimentSource(BaseDataSource):
         self.api_key = config.get("api_key")
         self.provider = config.get("provider", "newsapi")
         self.base_url = self._get_base_url()
-        self.session: Optional[aiohttp.ClientSession] = None
+        self.session: aiohttp.ClientSession | None = None
 
     def _get_base_url(self) -> str:
         """Obtener base URL según provider."""

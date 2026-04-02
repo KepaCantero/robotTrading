@@ -15,7 +15,6 @@ from __future__ import annotations
 import logging
 from datetime import datetime
 from decimal import Decimal
-from typing import Optional
 
 import numpy as np
 from scipy import stats
@@ -35,9 +34,9 @@ class AdvancedMetrics:
         cvar_95: Decimal,
         omega_ratio: Decimal,
         sortino_ratio: Decimal,
-        information_ratio: Optional[Decimal] = None,
-        kurtosis: Optional[Decimal] = None,
-        skewness: Optional[Decimal] = None,
+        information_ratio: Decimal | None = None,
+        kurtosis: Decimal | None = None,
+        skewness: Decimal | None = None,
     ):
         """Initialize advanced metrics."""
         self.calmar_ratio = calmar_ratio
@@ -85,7 +84,7 @@ class StatisticsReport:
         worst_day_pct: Decimal,
         best_month_pct: Decimal,
         worst_month_pct: Decimal,
-        monthly_return_distribution: Optional[dict] = None,
+        monthly_return_distribution: dict | None = None,
     ):
         """Initialize statistics report."""
         self.report_date = report_date
@@ -149,8 +148,8 @@ class QuantStatsIntegrator:
     def calculate_advanced_metrics(
         self,
         returns: list[Decimal],
-        benchmark_returns: Optional[list[Decimal]] = None,
-        max_drawdown_pct: Optional[Decimal] = None,
+        benchmark_returns: list[Decimal] | None = None,
+        max_drawdown_pct: Decimal | None = None,
     ) -> AdvancedMetrics:
         """
         Calculate advanced performance metrics.
@@ -237,7 +236,7 @@ class QuantStatsIntegrator:
         max_drawdown_pct: Decimal,
         win_rate_pct: Decimal,
         num_trades: int,
-        benchmark_returns: Optional[list[Decimal]] = None,
+        benchmark_returns: list[Decimal] | None = None,
     ) -> StatisticsReport:
         """
         Generate comprehensive statistics report.
@@ -311,7 +310,7 @@ class QuantStatsIntegrator:
     def _calculate_calmar_ratio(
         self,
         returns: np.ndarray,
-        max_drawdown_pct: Optional[Decimal] = None,
+        max_drawdown_pct: Decimal | None = None,
     ) -> Decimal:
         """
         Calculate Calmar ratio (annual return / max drawdown).
@@ -554,7 +553,7 @@ class QuantStatsIntegrator:
 
 
 # Singleton instance
-_integrator: Optional[QuantStatsIntegrator] = None
+_integrator: QuantStatsIntegrator | None = None
 
 
 def get_quantstats_integrator() -> QuantStatsIntegrator:

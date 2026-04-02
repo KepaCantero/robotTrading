@@ -7,7 +7,6 @@ VECTORIZADO: Usa numpy para todos los cálculos. Sin bucles Python.
 from __future__ import annotations
 
 import logging
-from typing import Optional, Union
 
 import numpy as np
 
@@ -28,9 +27,7 @@ class TrendDetector(BaseMarketDetector):
     NOTA: Todas las implementaciones están vectorizadas con numpy.
     """
 
-    def __init__(
-        self, config: Optional[dict] = None, tier: Optional[str] = None, use_yaml: bool = True
-    ):
+    def __init__(self, config: dict | None = None, tier: str | None = None, use_yaml: bool = True):
         """Inicializar detector de tendencias."""
         super().__init__("trend_detector", config, tier, use_yaml)
 
@@ -46,7 +43,7 @@ class TrendDetector(BaseMarketDetector):
             "min_trend_strength", trend_config.get("min_trend_strength", 0.6)
         )
 
-    def detect(self, price_history: Union[list[float], np.ndarray], **kwargs) -> dict:
+    def detect(self, price_history: list[float] | np.ndarray, **kwargs) -> dict:
         """
         Detectar tendencia.
 
@@ -334,7 +331,7 @@ class TrendDetector(BaseMarketDetector):
             return self._detect_ema_cross(prices)
 
     @staticmethod
-    def _ema_vectorized(data: np.ndarray, period: int) -> Optional[np.ndarray]:
+    def _ema_vectorized(data: np.ndarray, period: int) -> np.ndarray | None:
         """
         Calculate EMA using numpy - FULLY VECTORIZED.
 
@@ -363,7 +360,7 @@ class TrendDetector(BaseMarketDetector):
         return result
 
     @staticmethod
-    def _wilder_smooth(data: np.ndarray, period: int) -> Optional[np.ndarray]:
+    def _wilder_smooth(data: np.ndarray, period: int) -> np.ndarray | None:
         """
         Wilder's smoothing method - VECTORIZED.
 

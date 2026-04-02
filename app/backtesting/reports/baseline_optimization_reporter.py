@@ -19,12 +19,13 @@ import logging
 from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
-from typing import Optional, Union
+from typing import TYPE_CHECKING, Union
 
 import numpy as np
 from jinja2 import Template
 
-from app.domain.models.input_profile import InputProfile
+if TYPE_CHECKING:
+    from app.domain.models.input_profile import InputProfile
 
 # Recursive type for nested JSON-like data structures used in report dicts
 JsonValue = Union[int, float, str, bool, list["JsonValue"], dict[str, "JsonValue"], None]
@@ -63,8 +64,8 @@ class ComparisonMetrics:
     omega_ratio: tuple[float, float]
 
     # Out-of-sample metrics (if available)
-    oos_sharpe: Optional[tuple[float, float]] = None
-    is_oos_ratio: Optional[float] = None
+    oos_sharpe: tuple[float, float] | None = None
+    is_oos_ratio: float | None = None
 
 
 @dataclass
@@ -72,10 +73,10 @@ class ParameterChange:
     """A parameter that changed between baseline and optimization."""
 
     name: str
-    before: Union[int, float, str, bool]
-    after: Union[int, float, str, bool]
-    impact: Optional[str] = None
-    sensitivity: Optional[float] = None
+    before: int | float | str | bool
+    after: int | float | str | bool
+    impact: str | None = None
+    sensitivity: float | None = None
 
 
 @dataclass
@@ -114,7 +115,7 @@ class BaselineOptimizationReporter:
     - Implementation recommendations
     """
 
-    def __init__(self, template_path: Optional[str] = None):
+    def __init__(self, template_path: str | None = None):
         """
         Initialize reporter.
 
@@ -145,9 +146,9 @@ class BaselineOptimizationReporter:
         profile: InputProfile,
         baseline_results: dict[str, JsonValue],
         optimization_results: dict[str, JsonValue],
-        comparison: Optional[dict[str, JsonValue]] = None,
-        walk_forward_results: Optional[dict[str, JsonValue]] = None,
-        sensitivity_results: Optional[dict[str, JsonValue]] = None,
+        comparison: dict[str, JsonValue] | None = None,
+        walk_forward_results: dict[str, JsonValue] | None = None,
+        sensitivity_results: dict[str, JsonValue] | None = None,
     ) -> str:
         """
         Generate HTML comparison report.
@@ -326,7 +327,7 @@ class BaselineOptimizationReporter:
             )
             raise
 
-    def generate_pdf(self, html: str, output_path: Optional[str] = None) -> bytes:
+    def generate_pdf(self, html: str, output_path: str | None = None) -> bytes:
         """
         Generate PDF from HTML report.
 
@@ -616,7 +617,7 @@ class BaselineOptimizationReporter:
         baseline_metrics: dict[str, float],
         optimized_metrics: dict[str, float],
         comparison: dict[str, JsonValue],
-        walk_forward_results: Optional[dict[str, JsonValue]],
+        walk_forward_results: dict[str, JsonValue] | None,
     ) -> Recommendation:
         """
         Generate recommendation with confidence score.
@@ -720,8 +721,8 @@ class BaselineOptimizationReporter:
         self,
         baseline_results: dict,
         optimized_results: dict,
-        walk_forward_results: Optional[dict] = None,
-        sensitivity_results: Optional[dict] = None,
+        walk_forward_results: dict | None = None,
+        sensitivity_results: dict | None = None,
     ) -> ChartDict:
         """Prepare Plotly chart data."""
         chart_data = {
@@ -990,7 +991,7 @@ class BaselineOptimizationReporter:
         baseline: dict[str, float],
         optimized: dict[str, float],
         significance_tests: dict[str, StatisticalTest],
-    ) -> list[dict[str, Union[str, bool]]]:
+    ) -> list[dict[str, str | bool]]:
         """Prepare key metrics table data."""
         metrics_config = [
             ("Sharpe Ratio", "sharpe_ratio", "{:.2f}"),

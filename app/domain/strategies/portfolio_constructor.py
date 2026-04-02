@@ -21,7 +21,7 @@ from __future__ import annotations
 import logging
 from datetime import datetime, timedelta
 from decimal import Decimal
-from typing import Any, Optional, Protocol, runtime_checkable
+from typing import Any, Protocol, runtime_checkable
 
 import numpy as np
 from scipy.optimize import Bounds, minimize
@@ -44,12 +44,12 @@ logger = logging.getLogger(__name__)
 class FactorScores(Protocol):
     """Protocol for factor score objects used in portfolio construction."""
 
-    value_score: Optional[float]
-    profitability_score: Optional[float]
-    momentum_score: Optional[float]
-    size_score: Optional[float]
-    investment_score: Optional[float]
-    factor_momentum_score: Optional[float]
+    value_score: float | None
+    profitability_score: float | None
+    momentum_score: float | None
+    size_score: float | None
+    investment_score: float | None
+    factor_momentum_score: float | None
 
 
 class FactorPortfolioConstructor:
@@ -864,10 +864,10 @@ class LowVolatilityPosition:
         self,
         symbol: str,
         weight: Decimal,
-        shares: Optional[Decimal] = None,
+        shares: Decimal | None = None,
         sector: str = "",
-        beta: Optional[Decimal] = None,
-        volatility: Optional[Decimal] = None,
+        beta: Decimal | None = None,
+        volatility: Decimal | None = None,
     ):
         if shares is None:
             shares = Decimal("0")
@@ -888,9 +888,9 @@ class LowVolatilityPortfolio:
 
     def __init__(
         self,
-        total_value: Optional[Decimal] = None,
-        expected_volatility: Optional[Decimal] = None,
-        portfolio_beta: Optional[Decimal] = None,
+        total_value: Decimal | None = None,
+        expected_volatility: Decimal | None = None,
+        portfolio_beta: Decimal | None = None,
     ):
         if total_value is None:
             total_value = Decimal("0")
@@ -931,7 +931,7 @@ class LowVolatilityPortfolioConstructor:
         self,
         stocks: list[Any],  # List[LowVolatilityStock]
         total_capital: Decimal,
-        returns_matrix: Optional[np.ndarray] = None,
+        returns_matrix: np.ndarray | None = None,
     ) -> LowVolatilityPortfolio:
         """
         Construct a minimum variance portfolio.
@@ -1011,7 +1011,7 @@ class LowVolatilityPortfolioConstructor:
         current_portfolio: LowVolatilityPortfolio,
         new_stocks: list[Any],
         total_capital: Decimal,
-        returns_matrix: Optional[np.ndarray] = None,
+        returns_matrix: np.ndarray | None = None,
     ) -> LowVolatilityPortfolio:
         """
         Rebalance existing portfolio.

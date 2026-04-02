@@ -11,7 +11,7 @@ from __future__ import annotations
 
 import logging
 from collections import defaultdict
-from typing import Any, Optional
+from typing import Any
 
 import numpy as np
 import pandas as pd
@@ -171,7 +171,7 @@ class MultiTaskModel(nn.Module):
                 backbone_output_dim, hidden_dims, output_dim, task_type
             )
 
-    def forward(self, x: torch.Tensor, task_name: Optional[str] = None) -> dict[str, torch.Tensor]:
+    def forward(self, x: torch.Tensor, task_name: str | None = None) -> dict[str, torch.Tensor]:
         """
         Forward pass.
 
@@ -202,7 +202,7 @@ class MultiObjectiveOptimizer:
     - Drawdown (minimizar)
     """
 
-    def __init__(self, config: Optional[dict[str, Any]] = None):
+    def __init__(self, config: dict[str, Any] | None = None):
         """
         Inicializar optimizador multi-objetivo.
 
@@ -319,8 +319,8 @@ class MultiTaskLearningEngine:
             config: Configuración
         """
         self.config = config
-        self.model: Optional[MultiTaskModel] = None
-        self.optimizer: Optional[Any] = None  # optim.Adam when torch is available
+        self.model: MultiTaskModel | None = None
+        self.optimizer: Any | None = None  # optim.Adam when torch is available
         self.multi_objective_optimizer = MultiObjectiveOptimizer(
             config.get("multi_objective_config", {})
         )
@@ -383,7 +383,7 @@ class MultiTaskLearningEngine:
         return features_tensor, targets_dict
 
     def train(
-        self, training_data: dict[str, Any], validation_data: Optional[dict[str, Any]] = None
+        self, training_data: dict[str, Any], validation_data: dict[str, Any] | None = None
     ) -> dict[str, Any]:
         """
         Entrenar modelo multi-tarea.

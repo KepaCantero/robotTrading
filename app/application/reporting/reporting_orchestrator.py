@@ -8,13 +8,15 @@ from __future__ import annotations
 
 import logging
 from datetime import datetime
-from typing import Optional
+from typing import TYPE_CHECKING
 
 import numpy as np
-import pandas as pd
 
 from app.application.reporting.quantstats_integration import get_quantstats_integration
 from app.application.reporting.report_templates import get_report_templates
+
+if TYPE_CHECKING:
+    import pandas as pd
 
 logger = logging.getLogger(__name__)
 
@@ -41,8 +43,8 @@ class ReportingOrchestrator:
         strategy_name: str,
         backtest_result: dict,
         portfolio_allocation: dict[str, float],
-        returns: Optional[pd.Series] = None,
-        recommendation: Optional[dict] = None,
+        returns: pd.Series | None = None,
+        recommendation: dict | None = None,
     ) -> dict:
         """
         Generate complete performance report.
@@ -191,7 +193,7 @@ class ReportingOrchestrator:
 
 
 # Singleton
-_orchestrator: Optional[ReportingOrchestrator] = None
+_orchestrator: ReportingOrchestrator | None = None
 
 
 def get_reporting_orchestrator() -> ReportingOrchestrator:

@@ -12,7 +12,6 @@ import logging
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from decimal import Decimal
-from typing import Optional
 
 logger = logging.getLogger(__name__)
 
@@ -76,8 +75,8 @@ class WashSaleDetector:
         self,
         sell_trade: Trade,
         buy_trades: list[Trade],
-        substantially_identical_symbols: Optional[list[str]] = None,
-    ) -> Optional[WashSaleViolation]:
+        substantially_identical_symbols: list[str] | None = None,
+    ) -> WashSaleViolation | None:
         """
         Detect wash-sale violation for a sell transaction.
 
@@ -200,7 +199,7 @@ class WashSaleDetector:
         self,
         symbol1: str,
         symbol2: str,
-        price_correlation: Optional[Decimal] = None,  # threshold
+        price_correlation: Decimal | None = None,  # threshold
     ) -> bool:
         """
         Check if two symbols are substantially identical for tax purposes.
@@ -238,7 +237,7 @@ class WashSaleDetector:
         return (symbol1, symbol2) in identical_pairs or (symbol2, symbol1) in identical_pairs
 
     def get_cost_basis_per_share(
-        self, symbol: str, quantity_owned: Optional[Decimal] = None
+        self, symbol: str, quantity_owned: Decimal | None = None
     ) -> Decimal:
         """
         Get adjusted cost basis per share.
@@ -301,7 +300,7 @@ class WashSaleDetector:
 
 
 # Singleton
-_detector: Optional[WashSaleDetector] = None
+_detector: WashSaleDetector | None = None
 
 
 def get_wash_sale_detector() -> WashSaleDetector:

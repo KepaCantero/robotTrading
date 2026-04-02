@@ -11,7 +11,7 @@ import logging
 import shutil
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Optional, Union
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -26,7 +26,7 @@ class DataVersionManager:
     - Historial de cambios
     """
 
-    def __init__(self, config: Optional[dict[str, Any]] = None):
+    def __init__(self, config: dict[str, Any] | None = None):
         """
         Inicializar version manager.
 
@@ -62,9 +62,9 @@ class DataVersionManager:
     def create_version(
         self,
         dataset_id: str,
-        data: Union[list, dict, str],
-        version_tag: Optional[str] = None,
-        metadata: Optional[dict[str, Any]] = None,
+        data: list | dict | str,
+        version_tag: str | None = None,
+        metadata: dict[str, Any] | None = None,
     ) -> str:
         """
         Crear nueva versión de un dataset.
@@ -134,7 +134,7 @@ class DataVersionManager:
         logger.info(f"Versión creada: {version_id}")
         return version_id
 
-    def get_version(self, dataset_id: str, version_id: str) -> Optional[dict[str, Any]]:
+    def get_version(self, dataset_id: str, version_id: str) -> dict[str, Any] | None:
         """
         Obtener datos de una versión específica.
 
@@ -190,7 +190,7 @@ class DataVersionManager:
 
         return self.version_history[dataset_id]
 
-    def get_latest_version(self, dataset_id: str) -> Optional[str]:
+    def get_latest_version(self, dataset_id: str) -> str | None:
         """
         Obtener ID de la versión más reciente.
 

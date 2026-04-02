@@ -11,7 +11,7 @@ import logging
 from datetime import datetime
 from decimal import Decimal
 from enum import Enum
-from typing import Optional, Union
+from typing import Union
 from uuid import UUID, uuid4
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
@@ -87,7 +87,7 @@ class Quote(BaseModel):
     # Additional metrics
     change: Decimal = Field(default=Decimal("0"), description="Price change")
     change_percent: Decimal = Field(default=Decimal("0"), description="Price change percentage")
-    volatility: Optional[Decimal] = Field(None, ge=0, description="Price volatility")
+    volatility: Decimal | None = Field(None, ge=0, description="Price volatility")
 
     # Metadata
     feed_type: DataFeedType = Field(
@@ -335,9 +335,9 @@ class HistoricalData(BaseModel):
     volume: Decimal = Field(..., ge=0, description="Trading volume")
 
     # Additional metrics
-    adjusted_close: Optional[Decimal] = Field(None, gt=0, description="Adjusted closing price")
-    dividend_amount: Optional[Decimal] = Field(None, ge=0, description="Dividend amount")
-    split_coefficient: Optional[Decimal] = Field(None, gt=0, description="Stock split coefficient")
+    adjusted_close: Decimal | None = Field(None, gt=0, description="Adjusted closing price")
+    dividend_amount: Decimal | None = Field(None, ge=0, description="Dividend amount")
+    split_coefficient: Decimal | None = Field(None, gt=0, description="Stock split coefficient")
 
     # Metadata
     feed_type: DataFeedType = Field(..., description="Data feed source")
@@ -346,7 +346,7 @@ class HistoricalData(BaseModel):
 
     @field_validator("open", "high", "low", "close", "adjusted_close")
     @classmethod
-    def validate_price_fields(cls, v: object) -> Optional[Decimal]:
+    def validate_price_fields(cls, v: object) -> Decimal | None:
         """Validate price fields are positive."""
         if v is None:
             return None
@@ -435,7 +435,7 @@ class DataFeedConfig(BaseModel):
     feed_type: DataFeedType = Field(..., description="Type of data feed")
 
     # API configuration
-    api_key: Optional[str] = Field(None, description="API key for the feed")
+    api_key: str | None = Field(None, description="API key for the feed")
     base_url: str = Field(..., description="Base URL for the API")
     rate_limit: int = Field(default=60, ge=1, le=3600, description="Rate limit per minute")
 
@@ -459,7 +459,7 @@ class DataFeedConfig(BaseModel):
 
     # Status
     is_active: bool = Field(default=True, description="Whether the feed is active")
-    last_updated: Optional[datetime] = Field(None, description="Last successful update")
+    last_updated: datetime | None = Field(None, description="Last successful update")
     error_count: int = Field(default=0, ge=0, description="Number of consecutive errors")
 
     # Metadata
@@ -485,8 +485,8 @@ class MarketDataSubscription(BaseModel):
     created_at: datetime = Field(
         default_factory=datetime.utcnow, description="Subscription creation time"
     )
-    last_update: Optional[datetime] = Field(None, description="Last data update")
-    expires_at: Optional[datetime] = Field(None, description="Subscription expiration time")
+    last_update: datetime | None = Field(None, description="Last data update")
+    expires_at: datetime | None = Field(None, description="Subscription expiration time")
 
     # Statistics
     total_updates: int = Field(default=0, ge=0, description="Total number of updates received")
@@ -506,7 +506,7 @@ class MarketDataCache(BaseModel):
     data_type: str = Field(..., description="Type of cached data (quote, historical)")
 
     # Cache data
-    data: Union[MetadataDict, list[MetadataDict]] = Field(
+    data: MetadataDict | list[MetadataDict] = Field(
         ..., description="Cached market data (dict or list of dicts)"
     )
     timestamp: datetime = Field(default_factory=datetime.utcnow, description="Cache timestamp")

@@ -11,7 +11,7 @@ import logging
 import time
 from datetime import datetime
 from enum import Enum
-from typing import Any, Optional
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -33,8 +33,8 @@ class PrometheusMetric:
         name: str,
         metric_type: MetricType,
         description: str,
-        labels: Optional[list[str]] = None,
-        buckets: Optional[list[float]] = None,
+        labels: list[str] | None = None,
+        buckets: list[float] | None = None,
     ):
         """
         Initialize a Prometheus metric.
@@ -258,7 +258,7 @@ class PrometheusMetricsCollector:
         name: str,
         metric_type: MetricType,
         description: str,
-        buckets: Optional[list[float]] = None,
+        buckets: list[float] | None = None,
     ) -> None:
         """Register a new metric."""
         metric = PrometheusMetric(
@@ -275,7 +275,7 @@ class PrometheusMetricsCollector:
         self,
         metric_name: str,
         value: float,
-        labels: Optional[dict[str, str]] = None,
+        labels: dict[str, str] | None = None,
     ) -> bool:
         """
         Set gauge metric value.
@@ -308,7 +308,7 @@ class PrometheusMetricsCollector:
         self,
         metric_name: str,
         value: float = 1.0,
-        labels: Optional[dict[str, str]] = None,
+        labels: dict[str, str] | None = None,
     ) -> bool:
         """
         Increment counter metric.
@@ -342,7 +342,7 @@ class PrometheusMetricsCollector:
         self,
         metric_name: str,
         value: float,
-        labels: Optional[dict[str, str]] = None,
+        labels: dict[str, str] | None = None,
     ) -> bool:
         """
         Record histogram observation.
@@ -377,7 +377,7 @@ class PrometheusMetricsCollector:
         logger.debug(f"✅ Observed histogram {metric_name}: {value}")
         return True
 
-    def _build_key(self, metric_name: str, labels: Optional[dict[str, str]] = None) -> str:
+    def _build_key(self, metric_name: str, labels: dict[str, str] | None = None) -> str:
         """Build metric key with labels."""
         if not labels:
             return metric_name
@@ -388,8 +388,8 @@ class PrometheusMetricsCollector:
     def get_metric_value(
         self,
         metric_name: str,
-        labels: Optional[dict[str, str]] = None,
-    ) -> Optional[float]:
+        labels: dict[str, str] | None = None,
+    ) -> float | None:
         """Get current metric value."""
         if metric_name not in self.metrics:
             return None
@@ -485,7 +485,7 @@ class PrometheusMetricsCollector:
 
 
 # Singleton
-_collector: Optional[PrometheusMetricsCollector] = None
+_collector: PrometheusMetricsCollector | None = None
 
 
 def get_prometheus_collector() -> PrometheusMetricsCollector:

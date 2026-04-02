@@ -25,10 +25,10 @@ Generated: 2026-03-09
 - `StrategyMetricsResponse`
 - `ExecutionStatsResponse`
 ### Public Functions
-- `get_strategy_registry()`
+- `get_strategy_registry_dep()`
 - `get_config_loader()`
-- `get_strategy_logger()`
-- `get_execution_engine()`
+- `get_strategy_logger_dep()`
+- `get_execution_engine_dep()`
 - `get_strategies_overview()`
 - `get_available_strategies()`
 - `get_loaded_strategies()`

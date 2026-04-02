@@ -12,7 +12,6 @@ from __future__ import annotations
 
 import logging
 from datetime import datetime
-from typing import Optional
 
 from .models import (
     AlertEvaluationContext,
@@ -74,7 +73,7 @@ class AlertRuleEngine:
 
     def evaluate_rule(
         self, rule: AlertRule, context: AlertEvaluationContext
-    ) -> tuple[bool, Optional[AlertEvent]]:
+    ) -> tuple[bool, AlertEvent | None]:
         """
         Evaluate single rule against context.
 
@@ -233,8 +232,8 @@ class AlertRuleEngine:
         rule_id: str,
         context: AlertEvaluationContext,
         triggered: bool,
-        event: Optional[AlertEvent],
-        error: Optional[str] = None,
+        event: AlertEvent | None,
+        error: str | None = None,
     ) -> None:
         """Record rule evaluation in history."""
         record = {

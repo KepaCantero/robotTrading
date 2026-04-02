@@ -24,7 +24,6 @@ from __future__ import annotations
 
 import logging
 from decimal import ROUND_HALF_UP, Decimal
-from typing import Optional
 
 from app.services.risk_scaling.drawdown_monitor import DrawdownMonitor
 from app.services.risk_scaling.loss_monitor import LossMonitor, TradeResult
@@ -68,7 +67,7 @@ class RiskScalingOrchestrator:
         atr_period: int = 14,
         sharpe_window_days: int = 30,
         loss_reset_threshold: int = 3,
-        max_drawdown_limit: Optional[Decimal] = None,
+        max_drawdown_limit: Decimal | None = None,
     ):
         """Initialize orchestrator with all monitors."""
         if max_drawdown_limit is None:
@@ -87,8 +86,8 @@ class RiskScalingOrchestrator:
         symbol: str,
         prices: list[PriceData],
         daily_returns: list[Decimal],
-        trade_results: Optional[list[TradeResult]] = None,
-        equity_curve: Optional[list[Decimal]] = None,
+        trade_results: list[TradeResult] | None = None,
+        equity_curve: list[Decimal] | None = None,
     ) -> RiskScalingFactors:
         """
         Calculate all scaling factors from 4 dimensions.
@@ -244,9 +243,9 @@ class RiskScalingOrchestrator:
         self,
         signal: dict,
         base_position_size: Decimal,
-        stop_loss_price: Optional[Decimal],
+        stop_loss_price: Decimal | None,
         scaling_factors: RiskScalingFactors,
-        current_price: Optional[Decimal] = None,
+        current_price: Decimal | None = None,
     ) -> AdjustedSignal:
         """
         Apply scaling factors to a trade signal.
@@ -318,10 +317,10 @@ class RiskScalingOrchestrator:
         self,
         portfolio_id: str,
         symbol: str,
-        prices: Optional[list[PriceData]] = None,
-        daily_returns: Optional[list[Decimal]] = None,
-        trade_results: Optional[list[TradeResult]] = None,
-        equity_curve: Optional[list[Decimal]] = None,
+        prices: list[PriceData] | None = None,
+        daily_returns: list[Decimal] | None = None,
+        trade_results: list[TradeResult] | None = None,
+        equity_curve: list[Decimal] | None = None,
     ) -> RiskScalingState:
         """
         Get complete risk scaling state snapshot.
@@ -440,7 +439,7 @@ class RiskScalingOrchestrator:
         alert_type: RiskAlertType,
         severity: RiskLevel,
         message: str,
-        metadata: Optional[dict[str, str]] = None,
+        metadata: dict[str, str] | None = None,
     ) -> RiskAlert:
         """Generate and store a risk alert."""
         alert = RiskAlert(
@@ -488,9 +487,9 @@ class RiskScalingOrchestrator:
         avg_win: Decimal,
         avg_loss: Decimal,
         current_price: Decimal,
-        max_position_pct: Optional[Decimal] = None,
-        min_position_value: Optional[Decimal] = None,
-        scaling_factors: Optional[RiskScalingFactors] = None,
+        max_position_pct: Decimal | None = None,
+        min_position_value: Decimal | None = None,
+        scaling_factors: RiskScalingFactors | None = None,
     ) -> Decimal:
         """
         Calculate optimal position size using Kelly Criterion adjusted for risk.
@@ -597,9 +596,9 @@ class RiskScalingOrchestrator:
         capital: Decimal,
         current_price: Decimal,
         atr: Decimal,
-        risk_per_trade_pct: Optional[Decimal] = None,
-        atr_multiplier: Optional[Decimal] = None,
-        max_position_pct: Optional[Decimal] = None,
+        risk_per_trade_pct: Decimal | None = None,
+        atr_multiplier: Decimal | None = None,
+        max_position_pct: Decimal | None = None,
     ) -> Decimal:
         """
         Calculate position size based on ATR (Average True Range) volatility.

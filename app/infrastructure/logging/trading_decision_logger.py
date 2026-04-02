@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import logging
 from datetime import datetime
-from typing import Any, Optional
+from typing import Any
 
 from app.infrastructure.logging.append_only_log import AppendOnlyLog
 from app.services.logging.log_entry import LogEntry
@@ -36,7 +36,7 @@ class TradingDecisionLogger:
             extra={"log_dir": log_dir},
         )
 
-    def log_signal(self, signal: dict, metadata: Optional[dict] = None) -> str:
+    def log_signal(self, signal: dict, metadata: dict | None = None) -> str:
         """
         Log signal con correlation ID
 
@@ -120,7 +120,7 @@ class TradingDecisionLogger:
         )
 
     def log_validation_result(
-        self, correlation_id: str, validator: str, passed: bool, details: Optional[dict] = None
+        self, correlation_id: str, validator: str, passed: bool, details: dict | None = None
     ) -> None:
         """
         Log validation result

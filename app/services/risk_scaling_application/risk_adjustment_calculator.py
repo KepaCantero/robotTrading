@@ -14,11 +14,12 @@ from __future__ import annotations
 
 import logging
 from decimal import Decimal
-from typing import ClassVar
-
-from app.services.portfolio_constructor import AllocationWeight
+from typing import TYPE_CHECKING, ClassVar
 
 from .models import AdjustedAllocationWeight
+
+if TYPE_CHECKING:
+    from app.services.portfolio_constructor import AllocationWeight
 
 logger = logging.getLogger(__name__)
 

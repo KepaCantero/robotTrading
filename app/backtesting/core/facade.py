@@ -11,14 +11,16 @@ import logging
 import time
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Callable, Optional, Protocol, TypeVar, Union
+from typing import TYPE_CHECKING, Callable, Protocol, TypeVar
 
 import pandas as pd
 
 from app.backtesting.core.config_loader import BacktestConfigLoader
 from app.backtesting.core.executor import BacktestExecutorFactory
 from app.backtesting.core.orchestrator import BoundedResults
-from app.backtesting.models import BacktestResult
+
+if TYPE_CHECKING:
+    from app.backtesting.models import BacktestResult
 
 logger = logging.getLogger(__name__)
 
@@ -76,7 +78,7 @@ class BacktestRunnerFacade:
 
         # Data loading (delegated)
         self.quotes: list[pd.DataFrame] = []
-        self.data_loader: Optional[DataLoaderProtocol] = None
+        self.data_loader: DataLoaderProtocol | None = None
 
         logger.info(
             "BacktestRunnerFacade initialized",
@@ -87,7 +89,7 @@ class BacktestRunnerFacade:
         )
 
     async def load_data(
-        self, start_date: Optional[datetime] = None, end_date: Optional[datetime] = None
+        self, start_date: datetime | None = None, end_date: datetime | None = None
     ) -> None:
         """
         Load market data for backtesting.
@@ -136,8 +138,8 @@ class BacktestRunnerFacade:
         return quotes
 
     def run_baseline(
-        self, strategy: StrategyProtocol, strategy_name: Optional[str] = None
-    ) -> dict[str, Union[float, int, str]]:
+        self, strategy: StrategyProtocol, strategy_name: str | None = None
+    ) -> dict[str, float | int | str]:
         """
         Run baseline backtest.
 
@@ -191,7 +193,7 @@ class BacktestRunnerFacade:
         execution_time: float,
         test_type: str,
         strategy_name: str,
-        result_dict: dict[str, Union[float, int, str]],
+        result_dict: dict[str, float | int | str],
     ) -> None:
         """Log backtest execution completion with results summary."""
         results_summary = self._get_results_summary(result_dict)
@@ -215,8 +217,8 @@ class BacktestRunnerFacade:
         }
 
     def _get_results_summary(
-        self, result_dict: dict[str, Union[float, int, str]]
-    ) -> dict[str, Union[float, int]]:
+        self, result_dict: dict[str, float | int | str]
+    ) -> dict[str, float | int]:
         """Get results summary for logging."""
         return {
             "total_pnl": float(result_dict["total_pnl"]),
@@ -227,7 +229,7 @@ class BacktestRunnerFacade:
             "max_drawdown": float(result_dict["max_drawdown"]),
         }
 
-    def _store_result(self, result_dict: dict[str, Union[float, int, str]], result) -> None:
+    def _store_result(self, result_dict: dict[str, float | int | str], result) -> None:
         """Store result in both storage containers."""
         self.results.add(result_dict)
         self.backtest_results_objects.append((result_dict["test_name"], result))
@@ -237,8 +239,8 @@ class BacktestRunnerFacade:
         strategy: StrategyProtocol,
         test_name: str,
         test_type: str = "custom",
-        **metadata: Union[str, int, float],
-    ) -> dict[str, Union[float, int, str]]:
+        **metadata: str | int | float,
+    ) -> dict[str, float | int | str]:
         """
         Run custom strategy backtest.
 
@@ -298,9 +300,9 @@ class BacktestRunnerFacade:
     def run_parameter_sweep(
         self,
         strategy_factory: StrategyFactory,
-        parameters: dict[str, list[Union[str, int, float]]],
+        parameters: dict[str, list[str | int | float]],
         test_name_prefix: str = "param_sweep",
-    ) -> list[dict[str, Union[float, int, str]]]:
+    ) -> list[dict[str, float | int | str]]:
         """
         Run parameter sweep across multiple parameter combinations.
 
@@ -337,7 +339,7 @@ class BacktestRunnerFacade:
         timestamp: str,
         test_name_prefix: str,
         total_combinations: int,
-        parameters: dict[str, list[Union[str, int, float]]],
+        parameters: dict[str, list[str | int | float]],
     ) -> None:
         """Log parameter sweep start with structured context."""
         param_names = list(parameters.keys())
@@ -357,10 +359,10 @@ class BacktestRunnerFacade:
         self,
         strategy_factory: StrategyFactory,
         param_names: list[str],
-        param_values: list[list[Union[str, int, float]]],
+        param_values: list[list[str | int | float]],
         test_name_prefix: str,
         total_combinations: int,
-    ) -> list[dict[str, Union[float, int, str]]]:
+    ) -> list[dict[str, float | int | str]]:
         """Execute all parameter combinations and return results."""
         import itertools
 
@@ -391,7 +393,7 @@ class BacktestRunnerFacade:
         self,
         execution_time: float,
         test_name_prefix: str,
-        results: list[dict[str, Union[float, int, str]]],
+        results: list[dict[str, float | int | str]],
     ) -> None:
         """Log parameter sweep completion with summary."""
         best_result = max(results, key=lambda r: r.get("sharpe_ratio", 0)) if results else None
@@ -410,11 +412,11 @@ class BacktestRunnerFacade:
         )
 
     def _get_best_result_summary(
-        self, result: dict[str, Union[float, int, str]]
-    ) -> dict[str, Union[float, int, str, dict[str, Union[float, int, str]]]]:
+        self, result: dict[str, float | int | str]
+    ) -> dict[str, float | int | str | dict[str, float | int | str]]:
         """Get summary of best result for logging."""
         params_raw = result.get("parameters", {})
-        parameters: dict[str, Union[float, int, str]] = (
+        parameters: dict[str, float | int | str] = (
             params_raw if isinstance(params_raw, dict) else {}
         )
         return {
@@ -444,7 +446,7 @@ class BacktestRunnerFacade:
 
         return df
 
-    def save_results(self, output_formats: Optional[list[str]] = None) -> None:
+    def save_results(self, output_formats: list[str] | None = None) -> None:
         """
         Save results to files.
 
@@ -477,7 +479,7 @@ class BacktestRunnerFacade:
 
     def _result_to_dict(
         self, result, test_type: str, test_name: str
-    ) -> dict[str, Union[float, int, str]]:
+    ) -> dict[str, float | int | str]:
         """Convert BacktestResult to dictionary."""
         from app.backtesting.core.error_handling import BacktestResultError
         from app.backtesting.models import BacktestResult
@@ -550,9 +552,7 @@ class BacktestRunnerFacade:
             return (final_capital - initial_capital) / result.performance.total_trades
         return 0.0
 
-    def get_best_result(
-        self, metric: str = "sharpe_ratio"
-    ) -> Optional[dict[str, Union[float, int, str]]]:
+    def get_best_result(self, metric: str = "sharpe_ratio") -> dict[str, float | int | str] | None:
         """
         Get best result by metric.
 

@@ -6,7 +6,7 @@ import traceback
 import uuid
 from datetime import datetime
 from decimal import Decimal
-from typing import Any, Optional
+from typing import Any
 
 from fastapi import APIRouter, BackgroundTasks, HTTPException, Request
 from pydantic import BaseModel, Field
@@ -107,7 +107,7 @@ class ProcessInputRequest(BaseModel):
     objetivo_inversion: str = Field(..., description="Investment objective")
     risk_tolerance: str = Field(..., description="Risk tolerance level")
     investment_horizon: int = Field(..., ge=1, le=600, description="Investment horizon in months")
-    constraints: Optional[dict[str, Any]] = Field(None, description="Optional constraints")
+    constraints: dict[str, Any] | None = Field(None, description="Optional constraints")
 
 
 class ProcessInputResponse(BaseModel):
@@ -169,9 +169,9 @@ class ExecuteBacktestResponse(BaseModel):
 
     job_id: str
     status: str
-    total_return: Optional[float] = None
-    sharpe_ratio: Optional[float] = None
-    feasibility_ratio: Optional[float] = None
+    total_return: float | None = None
+    sharpe_ratio: float | None = None
+    feasibility_ratio: float | None = None
     timestamp: str
 
 
@@ -180,9 +180,9 @@ class BacktestStatusResponse(BaseModel):
 
     job_id: str
     status: str  # "pending", "running", "completed", "failed"
-    progress: Optional[int] = None
-    result: Optional[dict[str, Any]] = None
-    error: Optional[str] = None
+    progress: int | None = None
+    result: dict[str, Any] | None = None
+    error: str | None = None
     timestamp: str
 
 
@@ -193,7 +193,7 @@ class CompleteWorkflowRequest(BaseModel):
     objetivo_inversion: str
     risk_tolerance: str
     investment_horizon: int
-    constraints: Optional[dict[str, Any]] = None
+    constraints: dict[str, Any] | None = None
 
 
 class DeploymentDecisionResponse(BaseModel):
@@ -221,8 +221,8 @@ class CompleteWorkflowResponse(BaseModel):
     investment_profile: GenerateProfileResponse
     module_parameters: ParametrizeModulesResponse
     backtest_result: ExecuteBacktestResponse
-    deployment_decision: Optional[DeploymentDecisionResponse] = None
-    report_id: Optional[str] = None
+    deployment_decision: DeploymentDecisionResponse | None = None
+    report_id: str | None = None
     timestamp: str
 
 

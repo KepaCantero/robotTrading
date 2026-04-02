@@ -18,7 +18,6 @@ import uuid
 from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
-from typing import Optional
 
 from cryptography.fernet import Fernet
 
@@ -42,8 +41,8 @@ class ApiKey:
     encrypted_key: str
     permission: KeyPermission
     created_at: datetime
-    expires_at: Optional[datetime] = None
-    last_used: Optional[datetime] = None
+    expires_at: datetime | None = None
+    last_used: datetime | None = None
     is_active: bool = True
 
     def is_expired(self) -> bool:
@@ -67,7 +66,7 @@ class ApiKeyManager:
     validation, revocation, and expiration tracking.
     """
 
-    def __init__(self, encryption_key: Optional[bytes] = None):
+    def __init__(self, encryption_key: bytes | None = None):
         """
         Initialize the API key manager.
 
@@ -122,7 +121,7 @@ class ApiKeyManager:
         key_name: str,
         api_key: str,
         permission: KeyPermission,
-        expires_in_days: Optional[int] = None,
+        expires_in_days: int | None = None,
     ) -> str:
         """
         Add a new API key.
@@ -165,7 +164,7 @@ class ApiKeyManager:
 
         return key_id
 
-    def get_key(self, key_id: str) -> Optional[ApiKey]:
+    def get_key(self, key_id: str) -> ApiKey | None:
         """
         Get an API key by ID.
 
@@ -177,7 +176,7 @@ class ApiKeyManager:
         """
         return self._keys.get(key_id)
 
-    def get_key_by_name(self, key_name: str) -> Optional[ApiKey]:
+    def get_key_by_name(self, key_name: str) -> ApiKey | None:
         """
         Get an API key by name.
 
@@ -274,7 +273,7 @@ class ApiKeyManager:
                 logger.warning(f"API key '{key.key_name}' with ID {key_id} has expired")
         return expired_ids
 
-    def get_decrypted_key(self, key_id: str) -> Optional[str]:
+    def get_decrypted_key(self, key_id: str) -> str | None:
         """
         Get the decrypted key value (use with caution).
 

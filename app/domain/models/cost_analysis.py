@@ -11,14 +11,16 @@ import logging
 from datetime import datetime
 from decimal import Decimal
 from enum import Enum
-from typing import Any, Optional
+from typing import TYPE_CHECKING, Any
 
 from pydantic import BaseModel, Field, field_validator
 
 logger = logging.getLogger(__name__)
 
 from app.backtesting.models import TradeStatus
-from app.domain.models.order import OrderSide, OrderType
+
+if TYPE_CHECKING:
+    from app.domain.models.order import OrderSide, OrderType
 
 
 class CostType(str, Enum):
@@ -285,14 +287,14 @@ class TradeCostAnalysisRequest(BaseModel):
     order_type: OrderType = Field(..., description="Order type", env="ORDER_TYPE")
     quantity: Decimal = Field(..., gt=0, description="Trade quantity", env="QUANTITY")
     entry_price: Decimal = Field(..., gt=0, description="Entry price", env="ENTRY_PRICE")
-    exit_price: Optional[Decimal] = Field(None, description="Exit price")
+    exit_price: Decimal | None = Field(None, description="Exit price")
     entry_time: datetime = Field(..., description="Entry time", env="ENTRY_TIME")
-    exit_time: Optional[datetime] = Field(None, description="Exit time")
-    pnl: Optional[Decimal] = Field(None, description="Profit/Loss")
+    exit_time: datetime | None = Field(None, description="Exit time")
+    pnl: Decimal | None = Field(None, description="Profit/Loss")
     status: TradeStatus = Field(
         default=TradeStatus.CLOSED, description="Trade status", env="STATUS"
     )
-    commission: Optional[Decimal] = Field(None, ge=0, description="Commission paid")
+    commission: Decimal | None = Field(None, ge=0, description="Commission paid")
     metadata: dict[str, Any] = Field(default_factory=dict, description="Additional metadata")
     market_data: dict[str, Any] = Field(
         default_factory=dict, description="Market data for cost calculation"
@@ -417,8 +419,8 @@ class CostAnalysisResponse(BaseModel):
     """Response model for cost analysis."""
 
     success: bool = Field(..., description="Whether analysis was successful", env="SUCCESS")
-    data: Optional[CostAnalysisResultModel] = Field(None, description="Analysis result data")
-    error: Optional[str] = Field(None, description="Error message if analysis failed")
+    data: CostAnalysisResultModel | None = Field(None, description="Analysis result data")
+    error: str | None = Field(None, description="Error message if analysis failed")
     timestamp: datetime = Field(
         default_factory=datetime.utcnow,
         description="Response timestamp",

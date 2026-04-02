@@ -6,7 +6,7 @@ from __future__ import annotations
 
 import logging
 from decimal import Decimal
-from typing import Any, Optional
+from typing import Any
 
 from .corporate_actions_handler import CorporateActionsHandler
 from .price_normalizer import PriceNormalizer
@@ -27,7 +27,7 @@ class UnifiedNormalizer:
     - Corporate actions handling
     """
 
-    def __init__(self, config: Optional[dict[str, Any]] = None):
+    def __init__(self, config: dict[str, Any] | None = None):
         """
         Inicializar normalizador unificado.
 
@@ -47,7 +47,7 @@ class UnifiedNormalizer:
         self.price_normalizer.corporate_actions_db = self.corporate_actions_handler.actions_db
 
     def normalize_ohlcv_data(
-        self, data: list[dict[str, Any]], symbol: str, source: Optional[str] = None
+        self, data: list[dict[str, Any]], symbol: str, source: str | None = None
     ) -> list[dict[str, Any]]:
         """
         Normalizar datos OHLCV completos.
@@ -124,7 +124,7 @@ class UnifiedNormalizer:
         return normalized_data
 
     def normalize_quote(
-        self, quote_data: dict[str, Any], symbol: str, source: Optional[str] = None
+        self, quote_data: dict[str, Any], symbol: str, source: str | None = None
     ) -> dict[str, Any]:
         """
         Normalizar quote en tiempo real.

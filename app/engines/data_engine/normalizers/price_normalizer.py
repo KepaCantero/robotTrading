@@ -9,7 +9,7 @@ from __future__ import annotations
 import logging
 from datetime import datetime
 from decimal import Decimal
-from typing import Any, Optional, Union
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -21,7 +21,7 @@ class PriceNormalizer:
     Ajusta precios históricos por splits, dividendos y otras corporate actions.
     """
 
-    def __init__(self, config: Optional[dict[str, Any]] = None):
+    def __init__(self, config: dict[str, Any] | None = None):
         """
         Inicializar normalizador.
 
@@ -35,7 +35,7 @@ class PriceNormalizer:
 
     def normalize(
         self,
-        price: Union[Decimal, int, float, str],
+        price: Decimal | int | float | str,
         symbol: str,
         timestamp: datetime,
         adjust_for_splits: bool = True,

@@ -8,7 +8,6 @@ using confidence-weighted voting and produces a unified signal set.
 from __future__ import annotations
 
 import logging
-from typing import Optional
 
 import numpy as np
 
@@ -65,9 +64,9 @@ class SignalIntegrator:
 
     def combine_signals(
         self,
-        rl_signals: Optional[dict[str, tuple[str, float]]] = None,
-        momentum_signals: Optional[dict[str, tuple[str, float]]] = None,
-        mean_reversion_signals: Optional[dict[str, tuple[str, float]]] = None,
+        rl_signals: dict[str, tuple[str, float]] | None = None,
+        momentum_signals: dict[str, tuple[str, float]] | None = None,
+        mean_reversion_signals: dict[str, tuple[str, float]] | None = None,
     ) -> SignalSet:
         """
         Combine signals from multiple sources using confidence-weighted voting.

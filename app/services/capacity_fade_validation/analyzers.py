@@ -11,7 +11,6 @@ from __future__ import annotations
 
 import logging
 from decimal import Decimal
-from typing import Optional
 
 from .models import LiquidityReport
 
@@ -101,7 +100,7 @@ class LiquidityHeadroom:
         self,
         position_size_usd: Decimal,
         daily_volume_usd: Decimal,
-        max_allowed_pct: Optional[Decimal] = None,
+        max_allowed_pct: Decimal | None = None,
     ) -> LiquidityReport:
         """
         Calculate liquidity headroom for a position.
@@ -174,7 +173,7 @@ class AlphaDecayEstimator:
         current_capital_usd: Decimal,
         target_capital_usd: Decimal,
         fade_model: str = "sqrt",
-        liquidity_penalty_pct: Optional[Decimal] = None,
+        liquidity_penalty_pct: Decimal | None = None,
     ) -> dict:
         """
         Estimate alpha at target capital using decay model.

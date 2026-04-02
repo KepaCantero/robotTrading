@@ -21,7 +21,6 @@ import hmac
 import logging
 import secrets
 import time
-from typing import Optional
 
 from fastapi import HTTPException, Request, Response
 
@@ -43,7 +42,7 @@ class CSRFTokenManager:
         self,
         token_length: int = 32,
         token_expiry: int = 3600,  # 1 hour
-        secret_key: Optional[str] = None,
+        secret_key: str | None = None,
     ):
         """
         Initialize CSRF token manager.
@@ -67,7 +66,7 @@ class CSRFTokenManager:
 
         logger.info("CSRFTokenManager initialized")
 
-    def generate_token(self, user_id: Optional[str] = None) -> str:
+    def generate_token(self, user_id: str | None = None) -> str:
         """
         Generate a new CSRF token.
 
@@ -97,7 +96,7 @@ class CSRFTokenManager:
         return base64.urlsafe_b64encode(token_data).decode()
 
     def validate_token(
-        self, token: str, user_id: Optional[str] = None, max_age: Optional[int] = None
+        self, token: str, user_id: str | None = None, max_age: int | None = None
     ) -> bool:
         """
         Validate a CSRF token.
@@ -169,7 +168,7 @@ class CSRFTokenManager:
             logger.error(f"CSRF token validation error: {e}")
             raise HTTPException(status_code=403, detail="Invalid CSRF token") from e
 
-    def rotate_token(self, old_token: str, user_id: Optional[str] = None) -> str:
+    def rotate_token(self, old_token: str, user_id: str | None = None) -> str:
         """
         Rotate an existing CSRF token.
 
@@ -215,7 +214,7 @@ class DoubleSubmitCookieCSRF:
         logger.info("DoubleSubmitCookieCSRF initialized")
 
     def generate_token_for_request(
-        self, user_id: Optional[str] = None, response: Optional[Response] = None
+        self, user_id: str | None = None, response: Response | None = None
     ) -> str:
         """
         Generate CSRF token and add to response cookie.
@@ -356,8 +355,8 @@ class SameSiteCookieMiddleware:
 
 
 # Global instances
-_token_manager: Optional[CSRFTokenManager] = None
-_csrf_protection: Optional[DoubleSubmitCookieCSRF] = None
+_token_manager: CSRFTokenManager | None = None
+_csrf_protection: DoubleSubmitCookieCSRF | None = None
 
 
 def get_csrf_token_manager() -> CSRFTokenManager:
@@ -393,7 +392,7 @@ def require_csrf(request: Request) -> bool:
     return protection.validate_request(request)
 
 
-def generate_csrf_token(user_id: Optional[str] = None) -> str:
+def generate_csrf_token(user_id: str | None = None) -> str:
     """
     Generate a new CSRF token.
 
@@ -407,7 +406,7 @@ def generate_csrf_token(user_id: Optional[str] = None) -> str:
     return manager.generate_token(user_id)
 
 
-def validate_csrf_token(token: str, user_id: Optional[str] = None) -> bool:
+def validate_csrf_token(token: str, user_id: str | None = None) -> bool:
     """
     Validate a CSRF token.
 

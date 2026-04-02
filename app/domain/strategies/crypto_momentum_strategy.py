@@ -24,13 +24,11 @@ import logging
 from collections import deque
 from dataclasses import dataclass
 from decimal import Decimal
-from typing import Optional
+from typing import TYPE_CHECKING
 
 import numpy as np
 import pandas as pd
 
-from app.domain.models.market_data import Quote
-from app.domain.models.portfolio import Portfolio
 from app.domain.models.signal import Signal, SignalSource, SignalStrength, SignalType
 from app.domain.strategies.base import BaseStrategy
 
@@ -45,6 +43,10 @@ from .crypto_portfolio import (
 )
 from .crypto_screener import CryptoAsset, CryptoScreener
 
+if TYPE_CHECKING:
+    from app.domain.models.market_data import Quote
+    from app.domain.models.portfolio import Portfolio
+
 logger = logging.getLogger(__name__)
 
 
@@ -54,7 +56,7 @@ class _AssetState:
 
     current_price: Decimal = Decimal("0")
     liquidity_score: Decimal = Decimal("100")
-    volatility_90d: Optional[Decimal] = None
+    volatility_90d: Decimal | None = None
     is_eligible: bool = False
 
 
@@ -122,7 +124,7 @@ class CryptoMomentumStrategy(BaseStrategy):
         self.constructor = CryptoPortfolioConstructor(self.strategy_config)
 
         # State
-        self.current_portfolio: Optional[CryptoPortfolio] = None
+        self.current_portfolio: CryptoPortfolio | None = None
         self.universe: list[CryptoAsset] = []
         self.momentum_scores: dict[str, CryptoMomentumScore] = {}
         self.price_history: dict[str, deque[tuple]] = {}
@@ -474,7 +476,7 @@ class CryptoMomentumStrategy(BaseStrategy):
     def calculate_momentum_score(
         self,
         prices: pd.Series,
-        benchmark_prices: Optional[pd.Series] = None,
+        benchmark_prices: pd.Series | None = None,
     ) -> float:
         """
         Calculate volatility-adjusted momentum score.
@@ -528,7 +530,7 @@ class CryptoMomentumStrategy(BaseStrategy):
         lookback = 90
 
         # Get BTC prices for correlation adjustment
-        btc_prices: Optional[pd.Series] = None
+        btc_prices: pd.Series | None = None
         if len(self.btc_price_history) > lookback:
             btc_data = list(self.btc_price_history)
             btc_series = pd.Series([p for _, p in btc_data])
@@ -549,7 +551,7 @@ class CryptoMomentumStrategy(BaseStrategy):
             raw_momentum = self.calculate_momentum_score(prices, btc_prices)
 
             # Calculate volatility-adjusted momentum
-            vol_adjusted: Optional[float] = None
+            vol_adjusted: float | None = None
             returns = prices.pct_change().dropna()
             vol = returns.std() * np.sqrt(365)  # Annualized
 
@@ -559,7 +561,7 @@ class CryptoMomentumStrategy(BaseStrategy):
                 vol_adjusted = raw_momentum * vol_factor
 
             # Calculate BTC-adjusted momentum
-            btc_adjusted: Optional[float] = None
+            btc_adjusted: float | None = None
             if btc_prices is not None and len(btc_prices) > 0:
                 asset_returns = prices.pct_change().dropna()
                 btc_returns = btc_prices.pct_change().dropna()

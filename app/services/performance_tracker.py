@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import logging
 import time
-from typing import Any, Optional
+from typing import Any
 
 import numpy as np
 
@@ -21,12 +21,12 @@ class CycleMetrics:
     def __init__(self):
         self.cycle_id: int = 0
         self.start_time: float = time.time()
-        self.end_time: Optional[float] = None
+        self.end_time: float | None = None
         self.duration_ms: float = 0.0
         self.signals_generated: int = 0
         self.trades_executed: int = 0
-        self.cpu_usage: Optional[float] = None
-        self.memory_usage_mb: Optional[float] = None
+        self.cpu_usage: float | None = None
+        self.memory_usage_mb: float | None = None
         self.errors_count: int = 0
         self.warnings_count: int = 0
 
@@ -52,7 +52,7 @@ class PerformanceTracker:
         self.max_history = max_history
         self.cycle_metrics: list[CycleMetrics] = []
         self.total_cycles: int = 0
-        self.current_cycle: Optional[CycleMetrics] = None
+        self.current_cycle: CycleMetrics | None = None
 
     def start_cycle(self) -> int:
         """
@@ -67,7 +67,7 @@ class PerformanceTracker:
         self.total_cycles += 1
         return cycle_metrics.cycle_id
 
-    def end_cycle(self) -> Optional[dict[str, Any]]:
+    def end_cycle(self) -> dict[str, Any] | None:
         """
         End the current cycle and return metrics.
 
@@ -156,7 +156,7 @@ class PerformanceTracker:
 
 
 # Global tracker instance
-_performance_tracker: Optional[PerformanceTracker] = None
+_performance_tracker: PerformanceTracker | None = None
 
 
 def get_performance_tracker() -> PerformanceTracker:

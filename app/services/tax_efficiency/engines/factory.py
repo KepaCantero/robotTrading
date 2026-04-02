@@ -15,7 +15,6 @@ tax engine based on the investor's country of tax residence.
 from __future__ import annotations
 
 import logging
-from typing import Optional
 
 from app.services.tax_efficiency.engines.base import TaxEngine
 from app.services.tax_efficiency.engines.spain_tax_engine import SpainTaxEngine
@@ -36,7 +35,7 @@ TAX_ENGINES: dict[str, type] = {
 
 def get_tax_engine(
     country_code: str = "ES",
-    config: Optional[dict] = None,
+    config: dict | None = None,
 ) -> TaxEngine:
     """
     Get tax engine for specified country.

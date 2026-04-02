@@ -30,7 +30,6 @@ from __future__ import annotations
 import logging
 from enum import Enum
 from pathlib import Path
-from typing import Optional, Union
 
 import yaml
 from pydantic import Field
@@ -217,7 +216,7 @@ class CentralizedConfig(BaseSettings):
     # Public API Methods
     # =========================================================================
 
-    def get_strategy_config(self, strategy_name: str) -> Optional[StrategyConfig]:
+    def get_strategy_config(self, strategy_name: str) -> StrategyConfig | None:
         """Get configuration for a specific strategy."""
         return self.strategies.get(strategy_name)
 
@@ -226,7 +225,7 @@ class CentralizedConfig(BaseSettings):
         """Alias for trading property - backwards compatibility."""
         return self.trading
 
-    def get_trading_threshold(self, threshold_name: str) -> Union[int, float, str, bool]:
+    def get_trading_threshold(self, threshold_name: str) -> int | float | str | bool:
         """Get a specific trading threshold value."""
         if not hasattr(self.trading, threshold_name):
             raise AttributeError(f"Trading threshold '{threshold_name}' does not exist")
@@ -312,7 +311,7 @@ class CentralizedConfig(BaseSettings):
 # =============================================================================
 
 # Global configuration instance
-_config: Optional[CentralizedConfig] = None
+_config: CentralizedConfig | None = None
 
 # Modular components (OCP)
 _loader_registry = ConfigLoaderRegistry()
@@ -332,8 +331,8 @@ def get_config() -> CentralizedConfig:
 
 
 def get_trading_threshold(
-    threshold_name: Optional[str] = None,
-) -> Union[int, float, str, bool, TradingThresholds]:
+    threshold_name: str | None = None,
+) -> int | float | str | bool | TradingThresholds:
     """Get trading thresholds or specific threshold."""
     if threshold_name is None:
         return get_config().trading
@@ -341,7 +340,7 @@ def get_trading_threshold(
         return get_config().get_trading_threshold(threshold_name)
 
 
-def get_strategy_config(strategy_name: str) -> Optional[StrategyConfig]:
+def get_strategy_config(strategy_name: str) -> StrategyConfig | None:
     """Get configuration for a specific strategy."""
     return get_config().strategies.get(strategy_name)
 
@@ -351,7 +350,7 @@ def get_compliance_config() -> ComplianceConfig:
     return get_config().compliance
 
 
-def get_strategy_stock_allocator_config(tier: Optional[str] = None) -> dict[str, object]:
+def get_strategy_stock_allocator_config(tier: str | None = None) -> dict[str, object]:
     """
     Get Strategy Stock Allocator configuration.
 
@@ -673,7 +672,7 @@ def update_atr_multiplier(config: Configuration, multiplier_name: str, value: fl
 def update_nested_value(
     config: Configuration,
     key_path: str,
-    value: Union[str, int, float, bool, dict[str, object], list[object]],
+    value: str | int | float | bool | dict[str, object] | list[object],
 ) -> None:
     """
     Update nested configuration value.

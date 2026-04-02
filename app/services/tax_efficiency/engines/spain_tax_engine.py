@@ -16,7 +16,6 @@ from __future__ import annotations
 
 import logging
 from decimal import Decimal
-from typing import Optional, Union
 
 from app.shared.config.centralized_config import get_config
 from app.shared.utils.decimal_utils import to_decimal_required
@@ -45,7 +44,7 @@ class SpainTaxEngine(TaxEngine):
     All tax rates and thresholds are loaded from centralized configuration.
     """
 
-    def __init__(self, config: Optional[dict[str, object]] = None) -> None:
+    def __init__(self, config: dict[str, object] | None = None) -> None:
         """
         Initialize Spain tax engine with centralized configuration.
 
@@ -188,7 +187,7 @@ class SpainTaxEngine(TaxEngine):
     def calculate_tax_with_deductions(
         self,
         gain: Decimal,
-        deductions: Optional[Decimal] = None,
+        deductions: Decimal | None = None,
     ) -> Decimal:
         """
         Calculate tax with allowable deductions.
@@ -273,8 +272,8 @@ class SpainTaxEngine(TaxEngine):
         self,
         capital_gains: Decimal,
         dividends: Decimal,
-        other_income: Optional[Decimal] = None,
-        deductions: Optional[Decimal] = None,
+        other_income: Decimal | None = None,
+        deductions: Decimal | None = None,
     ) -> Decimal:
         """
         Calculate total tax liability for a year.
@@ -301,7 +300,7 @@ class SpainTaxEngine(TaxEngine):
 
         return self.calculate_capital_gains_tax(taxable_income)
 
-    def get_tax_brackets(self) -> list[dict[str, Union[int, float, str]]]:
+    def get_tax_brackets(self) -> list[dict[str, int | float | str]]:
         """
         Get all tax brackets for display purposes.
 
@@ -332,7 +331,7 @@ class SpainTaxEngine(TaxEngine):
     def check_modelo_720_threshold(
         self,
         foreign_assets_value: Decimal,
-    ) -> dict[str, Union[float, bool, str]]:
+    ) -> dict[str, float | bool | str]:
         """
         Check if foreign assets exceed Modelo 720 reporting threshold.
 
@@ -387,8 +386,8 @@ class SpainTaxEngine(TaxEngine):
     def estimate_annual_tax(
         self,
         unrealized_gains: Decimal,
-        estimated_dividends: Optional[Decimal] = None,
-    ) -> dict[str, Union[float, str]]:
+        estimated_dividends: Decimal | None = None,
+    ) -> dict[str, float | str]:
         """
         Estimate annual tax liability based on current positions.
 

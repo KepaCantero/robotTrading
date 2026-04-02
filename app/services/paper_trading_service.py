@@ -12,13 +12,11 @@ import logging
 import random
 from datetime import datetime
 from decimal import Decimal
-from typing import Any, Optional
-from uuid import UUID
+from typing import TYPE_CHECKING, Any
 
 logger = logging.getLogger(__name__)
 
 from app.domain.models.market_data import Quote
-from app.domain.models.order import Order
 from app.domain.models.paper_trading import (
     OrderSide,
     OrderType,
@@ -33,6 +31,11 @@ from app.domain.models.paper_trading import (
 from app.domain.models.slippage_analysis import SlippageCalculationParams
 from app.services.slippage_analysis_service import DynamicSlippageService
 from app.shared.config.centralized_config import get_config
+
+if TYPE_CHECKING:
+    from uuid import UUID
+
+    from app.domain.models.order import Order
 
 
 class PaperTradingService:
@@ -91,8 +94,8 @@ class PaperTradingService:
     async def create_portfolio(
         self,
         name: str,
-        config_id: Optional[UUID] = None,
-        initial_cash: Optional[Decimal] = None,
+        config_id: UUID | None = None,
+        initial_cash: Decimal | None = None,
     ) -> PaperPortfolio:
         """Create a new paper trading portfolio."""
         logger.debug(
@@ -130,8 +133,8 @@ class PaperTradingService:
         self,
         portfolio_id: UUID,
         name: str,
-        description: Optional[str] = None,
-        config_id: Optional[UUID] = None,
+        description: str | None = None,
+        config_id: UUID | None = None,
     ) -> PaperTradingSession:
         """Create a new paper trading session."""
         logger.debug(
@@ -165,10 +168,10 @@ class PaperTradingService:
         side: OrderSide,
         order_type: OrderType,
         quantity: Decimal,
-        price: Optional[Decimal] = None,
-        session_id: Optional[UUID] = None,
-        strategy_id: Optional[str] = None,
-        signal_id: Optional[UUID] = None,
+        price: Decimal | None = None,
+        session_id: UUID | None = None,
+        strategy_id: str | None = None,
+        signal_id: UUID | None = None,
     ) -> PaperTrade:
         """Execute a paper trade with realistic simulation."""
         logger.debug(
@@ -255,7 +258,7 @@ class PaperTradingService:
         )
         return trade
 
-    async def _get_current_price(self, symbol: str) -> Optional[Decimal]:
+    async def _get_current_price(self, symbol: str) -> Decimal | None:
         """Get current market price for symbol."""
         if symbol in self.market_data_cache:
             quote = self.market_data_cache[symbol]
@@ -497,20 +500,20 @@ class PaperTradingService:
             # Recalculate portfolio metrics
             await self._update_portfolio_metrics(portfolio)
 
-    async def get_portfolio(self, portfolio_id: UUID) -> Optional[PaperPortfolio]:
+    async def get_portfolio(self, portfolio_id: UUID) -> PaperPortfolio | None:
         """Get portfolio by ID."""
         return self.portfolios.get(portfolio_id)
 
-    async def get_session(self, session_id: UUID) -> Optional[PaperTradingSession]:
+    async def get_session(self, session_id: UUID) -> PaperTradingSession | None:
         """Get session by ID."""
         return self.sessions.get(session_id)
 
     async def get_trades(
         self,
-        portfolio_id: Optional[UUID] = None,
-        session_id: Optional[UUID] = None,
-        symbol: Optional[str] = None,
-        status: Optional[TradeStatus] = None,
+        portfolio_id: UUID | None = None,
+        session_id: UUID | None = None,
+        symbol: str | None = None,
+        status: TradeStatus | None = None,
     ) -> list[PaperTrade]:
         """Get trades with optional filters."""
         trades = list(self.trades.values())
@@ -712,7 +715,7 @@ class PaperTradingService:
 
 
 # Global service instance
-_paper_trading_service: Optional[PaperTradingService] = None
+_paper_trading_service: PaperTradingService | None = None
 
 
 def get_paper_trading_service() -> PaperTradingService:

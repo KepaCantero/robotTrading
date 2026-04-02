@@ -15,11 +15,12 @@ from __future__ import annotations
 
 import logging
 from datetime import datetime
-from typing import Any, Optional
+from typing import TYPE_CHECKING, Any
 
 import numpy as np
 
-from app.domain.models.portfolio import Portfolio
+if TYPE_CHECKING:
+    from app.domain.models.portfolio import Portfolio
 
 logger = logging.getLogger(__name__)
 
@@ -31,7 +32,7 @@ class LiquidityRiskStressTester:
     Tests portfolio resilience under various liquidity crisis scenarios.
     """
 
-    def __init__(self, config: Optional[dict[str, Any]] = None):
+    def __init__(self, config: dict[str, Any] | None = None):
         """
         Initialize liquidity risk stress tester.
 
@@ -214,7 +215,7 @@ class LiquidityRiskStressTester:
         self,
         portfolio: Portfolio,
         base_var: float,
-        scenario_names: Optional[list[str]] = None,
+        scenario_names: list[str] | None = None,
     ) -> dict[str, Any]:
         """
         Run comprehensive liquidity stress tests.
@@ -307,7 +308,7 @@ class CounterpartyRiskStressTester:
     Tests portfolio exposure to counterparty defaults.
     """
 
-    def __init__(self, config: Optional[dict[str, Any]] = None):
+    def __init__(self, config: dict[str, Any] | None = None):
         """Initialize counterparty risk stress tester."""
         config = config or {}
         self.config = config
@@ -471,7 +472,7 @@ class OperationalRiskStressTester:
     Tests portfolio resilience to operational failures.
     """
 
-    def __init__(self, config: Optional[dict[str, Any]] = None):
+    def __init__(self, config: dict[str, Any] | None = None):
         """Initialize operational risk stress tester."""
         config = config or {}
         self.config = config
@@ -688,7 +689,7 @@ class AdvancedStressTestOrchestrator:
     Combines liquidity, counterparty, and operational risk stress tests.
     """
 
-    def __init__(self, config: Optional[dict[str, Any]] = None):
+    def __init__(self, config: dict[str, Any] | None = None):
         """Initialize advanced stress test orchestrator."""
         config = config or {}
         self.config = config
@@ -703,7 +704,7 @@ class AdvancedStressTestOrchestrator:
         portfolio: Portfolio,
         base_var: float,
         portfolio_volatility: float,
-        counterparty_data: Optional[dict[str, dict[str, Any]]] = None,
+        counterparty_data: dict[str, dict[str, Any]] | None = None,
     ) -> dict[str, Any]:
         """
         Run all advanced stress tests.
@@ -852,7 +853,7 @@ class AdvancedStressTestOrchestrator:
 AdvancedStressTester = AdvancedStressTestOrchestrator
 
 
-def get_advanced_stress_tester(config: Optional[dict[str, Any]] = None) -> AdvancedStressTester:
+def get_advanced_stress_tester(config: dict[str, Any] | None = None) -> AdvancedStressTester:
     """
     Get an AdvancedStressTester instance for Hull's advanced stress testing.
 

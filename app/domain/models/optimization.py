@@ -11,7 +11,7 @@ import logging
 from datetime import date, datetime
 from decimal import Decimal
 from enum import Enum
-from typing import Any, Optional, Union
+from typing import Any
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
@@ -40,9 +40,9 @@ class ParameterType(str, Enum):
 class ParameterConstraint(BaseModel):
     """Constraints for parameter optimization."""
 
-    min_value: Union[float, int] = Field(..., description="Minimum value for the parameter")
-    max_value: Union[float, int] = Field(..., description="Maximum value for the parameter")
-    step_size: Optional[Union[float, int]] = Field(None, description="Step size for optimization")
+    min_value: float | int = Field(..., description="Minimum value for the parameter")
+    max_value: float | int = Field(..., description="Maximum value for the parameter")
+    step_size: float | int | None = Field(None, description="Step size for optimization")
     parameter_type: ParameterType = Field(..., description="Type of parameter")
 
     @model_validator(mode="after")
@@ -75,9 +75,9 @@ class OptimizationParameter(BaseModel):
     """Parameter to be optimized."""
 
     name: str = Field(..., description="Name of the parameter")
-    current_value: Union[float, int] = Field(..., description="Current value of the parameter")
+    current_value: float | int = Field(..., description="Current value of the parameter")
     constraints: ParameterConstraint = Field(..., description="Constraints for optimization")
-    description: Optional[str] = Field(None, description="Description of the parameter")
+    description: str | None = Field(None, description="Description of the parameter")
 
     @model_validator(mode="after")
     def validate_current_value(self):
@@ -123,7 +123,7 @@ class WalkForwardConfig(BaseModel):
         ge=30,
         description="Minimum training period in days",
     )
-    max_train_period: Optional[int] = Field(None, description="Maximum training period in days")
+    max_train_period: int | None = Field(None, description="Maximum training period in days")
     purged_period: int = Field(
         0,
         ge=0,
@@ -180,10 +180,10 @@ class OptimizationConfig(BaseModel):
     """Configuration for parameter optimization."""
 
     method: OptimizationMethod = Field(..., description="Optimization method to use")
-    walk_forward_config: Optional[WalkForwardConfig] = Field(
+    walk_forward_config: WalkForwardConfig | None = Field(
         None, description="Walk-forward configuration"
     )
-    purged_k_fold_config: Optional[PurgedKFoldConfig] = Field(
+    purged_k_fold_config: PurgedKFoldConfig | None = Field(
         None, description="Purged K-Fold configuration"
     )
     max_iterations: int = Field(
@@ -198,7 +198,7 @@ class OptimizationConfig(BaseModel):
         le=0.1,
         description="Convergence threshold",
     )
-    random_seed: Optional[int] = Field(None, description="Random seed for reproducibility")
+    random_seed: int | None = Field(None, description="Random seed for reproducibility")
 
     @field_validator("walk_forward_config")
     @classmethod
@@ -242,7 +242,7 @@ class OptimizationConfig(BaseModel):
 class OptimizationResult(BaseModel):
     """Result of parameter optimization."""
 
-    optimized_parameters: dict[str, Union[float, int]] = Field(
+    optimized_parameters: dict[str, float | int] = Field(
         ..., description="Optimized parameter values"
     )
     best_score: float = Field(..., description="Best optimization score")
@@ -263,7 +263,7 @@ class OutOfSampleTest(BaseModel):
     test_end_date: date = Field(..., description="End date for out-of-sample testing")
     train_start_date: date = Field(..., description="Start date for training data")
     train_end_date: date = Field(..., description="End date for training data")
-    parameters: dict[str, Union[float, int]] = Field(..., description="Parameters to test")
+    parameters: dict[str, float | int] = Field(..., description="Parameters to test")
     strategy_name: str = Field(..., description="Name of the strategy to test")
 
     @model_validator(mode="after")

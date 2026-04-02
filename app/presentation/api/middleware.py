@@ -153,7 +153,7 @@ class AuthMiddleware(BaseHTTPMiddleware):
 
         # Development mode: accept any token starting with "dev-"
         if self.debug_mode and token.startswith("dev-"):
-            logger.debug(f"Accepted dev token: {token[:10]}...")
+            logger.debug("Accepted dev token (debug mode)")
             return True
 
         # Check if it matches a known API key format

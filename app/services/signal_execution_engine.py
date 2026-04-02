@@ -10,13 +10,16 @@ from __future__ import annotations
 import asyncio
 import logging
 from datetime import datetime
-from decimal import Decimal
-from typing import Any, Optional
+from typing import TYPE_CHECKING, Any
 
 from app.domain.models.order import Order, OrderSide, OrderStatus, OrderType
-from app.domain.models.portfolio import Portfolio
 from app.domain.models.signal import Signal, SignalType
 from app.shared.config.centralized_config import get_config
+
+if TYPE_CHECKING:
+    from decimal import Decimal
+
+    from app.domain.models.portfolio import Portfolio
 
 logger = logging.getLogger(__name__)
 
@@ -61,7 +64,7 @@ class SignalExecutionEngine:
         signal: Signal,
         position_size: Decimal,
         portfolio: Portfolio,
-        execution_callback: Optional[callable] = None,
+        execution_callback: callable | None = None,
     ) -> tuple[bool, dict[str, Any]]:
         """
         Ejecutar una señal de trading.
@@ -193,7 +196,7 @@ class SignalExecutionEngine:
         self,
         order: Order,
         portfolio: Portfolio,
-        execution_callback: Optional[callable] = None,
+        execution_callback: callable | None = None,
     ) -> dict[str, Any]:
         """Ejecutar orden."""
         try:

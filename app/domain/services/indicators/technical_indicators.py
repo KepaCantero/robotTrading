@@ -24,7 +24,7 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass, field
-from typing import Any, Callable, ClassVar, Optional, Union, cast
+from typing import Any, Callable, ClassVar, cast
 
 import numpy as np
 import pandas as pd
@@ -48,8 +48,8 @@ except ImportError:
 class IndicatorResult:
     """Container for indicator calculation results."""
 
-    value: Optional[float] = None
-    values: Optional[np.ndarray] = None
+    value: float | None = None
+    values: np.ndarray | None = None
     metadata: dict[str, Any] = field(default_factory=dict)
 
     @property
@@ -106,10 +106,10 @@ class TechnicalIndicators:
 
     def _validate_input(
         self,
-        data: Union[pd.DataFrame, pd.Series, list, np.ndarray],
+        data: pd.DataFrame | pd.Series | list | np.ndarray,
         min_length: int = 1,
         name: str = "data",
-    ) -> tuple[bool, Optional[np.ndarray]]:
+    ) -> tuple[bool, np.ndarray | None]:
         """
         Validate input data and convert to numpy array.
 
@@ -146,8 +146,8 @@ class TechnicalIndicators:
         return True, arr
 
     def _get_column(
-        self, df: pd.DataFrame, column: str, default: Optional[str] = None
-    ) -> Optional[pd.Series]:
+        self, df: pd.DataFrame, column: str, default: str | None = None
+    ) -> pd.Series | None:
         """Get a column from DataFrame with fallback."""
         if column in df.columns:
             return df[column]
@@ -161,10 +161,10 @@ class TechnicalIndicators:
 
     def rsi(
         self,
-        data: Union[pd.DataFrame, pd.Series, list, np.ndarray],
+        data: pd.DataFrame | pd.Series | list | np.ndarray,
         period: int = 14,
         return_array: bool = False,
-    ) -> Union[Optional[float], Optional[np.ndarray]]:
+    ) -> float | None | np.ndarray | None:
         """
         Calculate Relative Strength Index (RSI).
 
@@ -201,7 +201,7 @@ class TechnicalIndicators:
 
     def _rsi_native(
         self, prices: np.ndarray, period: int, return_array: bool
-    ) -> Union[Optional[float], Optional[np.ndarray]]:
+    ) -> float | None | np.ndarray | None:
         """Native pandas implementation of RSI."""
         deltas = np.diff(prices)
         gains = np.where(deltas > 0, deltas, 0.0)
@@ -241,10 +241,10 @@ class TechnicalIndicators:
 
     def ema(
         self,
-        data: Union[pd.DataFrame, pd.Series, list, np.ndarray],
+        data: pd.DataFrame | pd.Series | list | np.ndarray,
         period: int = 20,
         return_array: bool = False,
-    ) -> Union[Optional[float], Optional[np.ndarray]]:
+    ) -> float | None | np.ndarray | None:
         """
         Calculate Exponential Moving Average (EMA).
 
@@ -279,7 +279,7 @@ class TechnicalIndicators:
 
     def _ema_native(
         self, prices: np.ndarray, period: int, return_array: bool
-    ) -> Union[Optional[float], Optional[np.ndarray]]:
+    ) -> float | None | np.ndarray | None:
         """Native implementation of EMA."""
         alpha = 2.0 / (period + 1.0)
         ema_values = np.full(len(prices), np.nan)
@@ -301,10 +301,10 @@ class TechnicalIndicators:
 
     def sma(
         self,
-        data: Union[pd.DataFrame, pd.Series, list, np.ndarray],
+        data: pd.DataFrame | pd.Series | list | np.ndarray,
         period: int = 20,
         return_array: bool = False,
-    ) -> Union[Optional[float], Optional[np.ndarray]]:
+    ) -> float | None | np.ndarray | None:
         """
         Calculate Simple Moving Average (SMA).
 
@@ -348,16 +348,17 @@ class TechnicalIndicators:
 
     def macd(
         self,
-        data: Union[pd.DataFrame, pd.Series, list, np.ndarray],
+        data: pd.DataFrame | pd.Series | list | np.ndarray,
         fast_period: int = 12,
         slow_period: int = 26,
         signal_period: int = 9,
         return_components: bool = False,
-    ) -> Union[
-        Optional[float],
-        tuple[Optional[float], Optional[float], Optional[float]],
-        tuple[Optional[np.ndarray], Optional[np.ndarray], Optional[np.ndarray]],
-    ]:
+    ) -> (
+        float
+        | None
+        | tuple[float | None, float | None, float | None]
+        | tuple[np.ndarray | None, np.ndarray | None, np.ndarray | None]
+    ):
         """
         Calculate MACD (Moving Average Convergence Divergence).
 
@@ -461,12 +462,12 @@ class TechnicalIndicators:
 
     def atr(
         self,
-        high: Union[pd.DataFrame, pd.Series, list, np.ndarray],
-        low: Union[pd.DataFrame, pd.Series, list, np.ndarray],
-        close: Union[pd.DataFrame, pd.Series, list, np.ndarray],
+        high: pd.DataFrame | pd.Series | list | np.ndarray,
+        low: pd.DataFrame | pd.Series | list | np.ndarray,
+        close: pd.DataFrame | pd.Series | list | np.ndarray,
         period: int = 14,
         return_array: bool = False,
-    ) -> Union[Optional[float], Optional[np.ndarray]]:
+    ) -> float | None | np.ndarray | None:
         """
         Calculate Average True Range (ATR).
 
@@ -508,7 +509,7 @@ class TechnicalIndicators:
 
     def _atr_native(
         self, high: np.ndarray, low: np.ndarray, close: np.ndarray, period: int, return_array: bool
-    ) -> Union[Optional[float], Optional[np.ndarray]]:
+    ) -> float | None | np.ndarray | None:
         """Native implementation of ATR."""
         n = len(close)
         tr = np.empty(n)
@@ -539,13 +540,11 @@ class TechnicalIndicators:
 
     def bollinger_bands(
         self,
-        data: Union[pd.DataFrame, pd.Series, list, np.ndarray],
+        data: pd.DataFrame | pd.Series | list | np.ndarray,
         period: int = 20,
         std_dev: float = 2.0,
         return_components: bool = True,
-    ) -> Union[
-        tuple[Optional[float], Optional[float], Optional[float]], dict[str, Optional[float]]
-    ]:
+    ) -> tuple[float | None, float | None, float | None] | dict[str, float | None]:
         """
         Calculate Bollinger Bands.
 
@@ -584,11 +583,11 @@ class TechnicalIndicators:
 
                     # Calculate width and position
                     if upper is not None and lower is not None and middle is not None:
-                        width: Optional[float] = (upper - lower) / middle
+                        width: float | None = (upper - lower) / middle
                     else:
                         width = None
                     if upper is not None and lower is not None:
-                        position: Optional[float] = (
+                        position: float | None = (
                             (float(prices[-1]) - lower) / (upper - lower) if upper != lower else 0.5
                         )
                     else:
@@ -630,12 +629,12 @@ class TechnicalIndicators:
 
     def adx(
         self,
-        high: Union[pd.DataFrame, pd.Series, list, np.ndarray],
-        low: Union[pd.DataFrame, pd.Series, list, np.ndarray],
-        close: Union[pd.DataFrame, pd.Series, list, np.ndarray],
+        high: pd.DataFrame | pd.Series | list | np.ndarray,
+        low: pd.DataFrame | pd.Series | list | np.ndarray,
+        close: pd.DataFrame | pd.Series | list | np.ndarray,
         period: int = 14,
         return_components: bool = True,
-    ) -> Union[Optional[float], tuple[Optional[float], Optional[float], Optional[float]]]:
+    ) -> float | None | tuple[float | None, float | None, float | None]:
         """
         Calculate Average Directional Index (ADX).
 
@@ -744,13 +743,13 @@ class TechnicalIndicators:
 
     def stochastic(
         self,
-        high: Union[pd.DataFrame, pd.Series, list, np.ndarray],
-        low: Union[pd.DataFrame, pd.Series, list, np.ndarray],
-        close: Union[pd.DataFrame, pd.Series, list, np.ndarray],
+        high: pd.DataFrame | pd.Series | list | np.ndarray,
+        low: pd.DataFrame | pd.Series | list | np.ndarray,
+        close: pd.DataFrame | pd.Series | list | np.ndarray,
         k_period: int = 14,
         d_period: int = 3,
         return_components: bool = True,
-    ) -> Union[Optional[float], tuple[Optional[float], Optional[float]]]:
+    ) -> float | None | tuple[float | None, float | None]:
         """
         Calculate Stochastic Oscillator.
 
@@ -824,11 +823,11 @@ class TechnicalIndicators:
 
     def stochrsi(
         self,
-        rsi_values: Union[pd.Series, list, np.ndarray],
+        rsi_values: pd.Series | list | np.ndarray,
         period: int = 14,
         k_period: int = 3,
         d_period: int = 3,
-    ) -> tuple[Optional[float], Optional[float]]:
+    ) -> tuple[float | None, float | None]:
         """
         Calculate Stochastic RSI from pre-calculated RSI values.
 
@@ -919,11 +918,11 @@ class TechnicalIndicators:
 
     def cci(
         self,
-        high: Union[pd.DataFrame, pd.Series, list, np.ndarray],
-        low: Union[pd.DataFrame, pd.Series, list, np.ndarray],
-        close: Union[pd.DataFrame, pd.Series, list, np.ndarray],
+        high: pd.DataFrame | pd.Series | list | np.ndarray,
+        low: pd.DataFrame | pd.Series | list | np.ndarray,
+        close: pd.DataFrame | pd.Series | list | np.ndarray,
         period: int = 20,
-    ) -> Optional[float]:
+    ) -> float | None:
         """
         Calculate Commodity Channel Index (CCI).
 
@@ -978,10 +977,10 @@ class TechnicalIndicators:
 
     def obv(
         self,
-        close: Union[pd.DataFrame, pd.Series, list, np.ndarray],
-        volume: Union[pd.DataFrame, pd.Series, list, np.ndarray],
+        close: pd.DataFrame | pd.Series | list | np.ndarray,
+        volume: pd.DataFrame | pd.Series | list | np.ndarray,
         return_array: bool = False,
-    ) -> Union[Optional[float], Optional[np.ndarray]]:
+    ) -> float | None | np.ndarray | None:
         """
         Calculate On-Balance Volume (OBV).
 
@@ -1037,11 +1036,11 @@ class TechnicalIndicators:
 
     def williams_r(
         self,
-        high: Union[pd.DataFrame, pd.Series, list, np.ndarray],
-        low: Union[pd.DataFrame, pd.Series, list, np.ndarray],
-        close: Union[pd.DataFrame, pd.Series, list, np.ndarray],
+        high: pd.DataFrame | pd.Series | list | np.ndarray,
+        low: pd.DataFrame | pd.Series | list | np.ndarray,
+        close: pd.DataFrame | pd.Series | list | np.ndarray,
         period: int = 14,
-    ) -> Optional[float]:
+    ) -> float | None:
         """
         Calculate Williams %R.
 
@@ -1091,8 +1090,8 @@ class TechnicalIndicators:
     # ========================================================================
 
     def roc(
-        self, data: Union[pd.DataFrame, pd.Series, list, np.ndarray], period: int = 14
-    ) -> Optional[float]:
+        self, data: pd.DataFrame | pd.Series | list | np.ndarray, period: int = 14
+    ) -> float | None:
         """
         Calculate Rate of Change (ROC).
 
@@ -1130,17 +1129,13 @@ class TechnicalIndicators:
     # Convenience Methods
     # ========================================================================
 
-    def _calculate_rsi_indicator(
-        self, df: pd.DataFrame
-    ) -> dict[str, Optional[Union[float, np.ndarray]]]:
+    def _calculate_rsi_indicator(self, df: pd.DataFrame) -> dict[str, float | np.ndarray | None]:
         """Calculate RSI indicator if data permits."""
         if "close" not in df.columns:
             return {}
         return {"rsi": self.rsi(df["close"])}
 
-    def _calculate_ema_indicators(
-        self, df: pd.DataFrame
-    ) -> dict[str, Optional[Union[float, np.ndarray]]]:
+    def _calculate_ema_indicators(self, df: pd.DataFrame) -> dict[str, float | np.ndarray | None]:
         """Calculate EMA indicators if data permits."""
         if "close" not in df.columns:
             return {}
@@ -1149,17 +1144,13 @@ class TechnicalIndicators:
             "ema_50": self.ema(df["close"], period=50),
         }
 
-    def _calculate_sma_indicators(
-        self, df: pd.DataFrame
-    ) -> dict[str, Optional[Union[float, np.ndarray]]]:
+    def _calculate_sma_indicators(self, df: pd.DataFrame) -> dict[str, float | np.ndarray | None]:
         """Calculate SMA indicators if data permits."""
         if "close" not in df.columns:
             return {}
         return {"sma_20": self.sma(df["close"], period=20)}
 
-    def _calculate_macd_indicator(
-        self, df: pd.DataFrame
-    ) -> dict[str, Optional[Union[float, np.ndarray]]]:
+    def _calculate_macd_indicator(self, df: pd.DataFrame) -> dict[str, float | np.ndarray | None]:
         """Calculate MACD indicator if data permits."""
         if "close" not in df.columns:
             return {}
@@ -1172,15 +1163,13 @@ class TechnicalIndicators:
             }
         return {}
 
-    def _calculate_atr_indicator(
-        self, df: pd.DataFrame
-    ) -> dict[str, Optional[Union[float, np.ndarray]]]:
+    def _calculate_atr_indicator(self, df: pd.DataFrame) -> dict[str, float | np.ndarray | None]:
         """Calculate ATR indicator if OHLC data is available."""
         if not all(col in df.columns for col in self.REQUIRED_OHLC):
             return {}
         return {"atr": self.atr(df["high"], df["low"], df["close"])}
 
-    def _calculate_bollinger_indicator(self, df: pd.DataFrame) -> dict[str, Optional[float]]:
+    def _calculate_bollinger_indicator(self, df: pd.DataFrame) -> dict[str, float | None]:
         """Calculate Bollinger Bands if data permits."""
         if "close" not in df.columns:
             return {}
@@ -1189,9 +1178,7 @@ class TechnicalIndicators:
             return bands
         return {}
 
-    def _calculate_adx_indicator(
-        self, df: pd.DataFrame
-    ) -> dict[str, Optional[Union[float, np.ndarray]]]:
+    def _calculate_adx_indicator(self, df: pd.DataFrame) -> dict[str, float | np.ndarray | None]:
         """Calculate ADX indicator if OHLC data is available."""
         if not all(col in df.columns for col in self.REQUIRED_OHLC):
             return {}
@@ -1206,7 +1193,7 @@ class TechnicalIndicators:
 
     def _calculate_stochastic_indicator(
         self, df: pd.DataFrame
-    ) -> dict[str, Optional[Union[float, np.ndarray]]]:
+    ) -> dict[str, float | np.ndarray | None]:
         """Calculate Stochastic indicator if OHLC data is available."""
         if not all(col in df.columns for col in self.REQUIRED_OHLC):
             return {}
@@ -1215,9 +1202,7 @@ class TechnicalIndicators:
             return {"stoch_k": stoch_result[0], "stoch_d": stoch_result[1]}
         return {}
 
-    def _calculate_cci_indicator(
-        self, df: pd.DataFrame
-    ) -> dict[str, Optional[Union[float, np.ndarray]]]:
+    def _calculate_cci_indicator(self, df: pd.DataFrame) -> dict[str, float | np.ndarray | None]:
         """Calculate CCI indicator if OHLC data is available."""
         if not all(col in df.columns for col in self.REQUIRED_OHLC):
             return {}
@@ -1225,30 +1210,26 @@ class TechnicalIndicators:
 
     def _calculate_williams_r_indicator(
         self, df: pd.DataFrame
-    ) -> dict[str, Optional[Union[float, np.ndarray]]]:
+    ) -> dict[str, float | np.ndarray | None]:
         """Calculate Williams %R indicator if OHLC data is available."""
         if not all(col in df.columns for col in self.REQUIRED_OHLC):
             return {}
         return {"williams_r": self.williams_r(df["high"], df["low"], df["close"])}
 
-    def _calculate_obv_indicator(
-        self, df: pd.DataFrame
-    ) -> dict[str, Optional[Union[float, np.ndarray]]]:
+    def _calculate_obv_indicator(self, df: pd.DataFrame) -> dict[str, float | np.ndarray | None]:
         """Calculate OBV indicator if close and volume data is available."""
         if "close" not in df.columns or "volume" not in df.columns:
             return {}
         return {"obv": self.obv(df["close"], df["volume"])}
 
-    def _calculate_roc_indicator(
-        self, df: pd.DataFrame
-    ) -> dict[str, Optional[Union[float, np.ndarray]]]:
+    def _calculate_roc_indicator(self, df: pd.DataFrame) -> dict[str, float | np.ndarray | None]:
         """Calculate ROC indicator if data permits."""
         if "close" not in df.columns:
             return {}
         return {"roc": self.roc(df["close"])}
 
     def calculate_all(
-        self, df: pd.DataFrame, indicators: Optional[list[str]] = None
+        self, df: pd.DataFrame, indicators: list[str] | None = None
     ) -> dict[str, Any]:
         """
         Calculate multiple indicators at once.
@@ -1295,7 +1276,7 @@ class TechnicalIndicators:
             "roc": self._calculate_roc_indicator,
         }
 
-        results: dict[str, Optional[Union[float, np.ndarray]]] = {}
+        results: dict[str, float | np.ndarray | None] = {}
         processed_calculators: set = set()
 
         for indicator in indicators_to_calc:

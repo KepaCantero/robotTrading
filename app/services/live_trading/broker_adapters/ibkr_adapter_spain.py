@@ -18,10 +18,9 @@ from __future__ import annotations
 import asyncio
 import logging
 from datetime import datetime
-from typing import Any, Optional
+from typing import TYPE_CHECKING, Any
 
 from ib_insync import IB, LimitOrder, MarketOrder, StopOrder, util
-from ib_insync.contract import Contract as IBContract
 
 from app.infrastructure.resilience.reconnection_manager import (
     ReconnectionConfig,
@@ -30,6 +29,9 @@ from app.infrastructure.resilience.reconnection_manager import (
 
 from .currency_converter import get_currency_converter
 from .ibex35_contracts import create_stock_contract
+
+if TYPE_CHECKING:
+    from ib_insync.contract import Contract as IBContract
 
 util.patchAsyncio()
 
@@ -56,7 +58,7 @@ class IBKRSpainAdapter:
     CONNECTION_TIMEOUT = 10
     RECONNECT_DELAY = 5
 
-    def __init__(self, config: Optional[dict[str, Any]] = None, ib_instance: Optional[IB] = None):
+    def __init__(self, config: dict[str, Any] | None = None, ib_instance: IB | None = None):
         """
         Initialize IBKR Spain adapter.
 
@@ -123,7 +125,7 @@ class IBKRSpainAdapter:
         return ReconnectionManager("IBKRSpainAdapter", config)
 
     def _on_error(
-        self, reqId: int, errorCode: int, errorString: str, contract: Optional[IBContract]
+        self, reqId: int, errorCode: int, errorString: str, contract: IBContract | None
     ) -> None:
         """Handle IB errors."""
         # Ignore informational messages
@@ -463,7 +465,7 @@ class IBKRSpainAdapter:
         return self._connected and self.ib.isConnected()
 
 
-def get_ibkr_spain_adapter(config: Optional[dict[str, Any]] = None) -> IBKRSpainAdapter:
+def get_ibkr_spain_adapter(config: dict[str, Any] | None = None) -> IBKRSpainAdapter:
     """
     Get or create IBKR Spain adapter instance.
 

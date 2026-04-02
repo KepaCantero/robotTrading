@@ -34,10 +34,8 @@ import logging
 from collections import deque
 from datetime import date
 from decimal import Decimal
-from typing import Any, Optional
+from typing import TYPE_CHECKING, Any
 
-from app.domain.models.market_data import Quote
-from app.domain.models.portfolio import Portfolio
 from app.domain.models.signal import Signal, SignalSource, SignalStrength, SignalType
 
 # Import both BaseStrategy classes - inherit from app's BaseStrategy
@@ -49,6 +47,10 @@ from .factor_calculator import FactorCalculator
 from .factor_models import FactorModelManager
 from .models import FactorPortfolio, FactorProfile, FactorStrategyConfig
 from .portfolio_constructor import FactorPortfolioConstructor
+
+if TYPE_CHECKING:
+    from app.domain.models.market_data import Quote
+    from app.domain.models.portfolio import Portfolio
 
 logger = logging.getLogger(__name__)
 
@@ -111,9 +113,9 @@ class MultiFactorStrategy(BaseStrategy):
 
         # State
         self.universe: list[FactorProfile] = []
-        self.current_portfolio: Optional[FactorPortfolio] = None
+        self.current_portfolio: FactorPortfolio | None = None
         self.factor_scores_dict: dict[str, Any] = {}
-        self.last_rebalance_date: Optional[date] = None
+        self.last_rebalance_date: date | None = None
         self.rebalance_count = 0
 
         # Performance tracking - use config value
@@ -583,7 +585,7 @@ class MultiFactorStrategy(BaseStrategy):
 
         return True
 
-    def _get_sector_for_symbol(self, symbol: str) -> Optional[str]:
+    def _get_sector_for_symbol(self, symbol: str) -> str | None:
         """Get sector for a symbol."""
         for profile in self.universe:
             if profile.symbol == symbol:
@@ -693,7 +695,7 @@ class MultiFactorStrategy(BaseStrategy):
 
     def rebalance_portfolio(
         self,
-        total_capital: Optional[Decimal] = None,
+        total_capital: Decimal | None = None,
     ) -> FactorPortfolio:
         """
         Rebalance the portfolio.

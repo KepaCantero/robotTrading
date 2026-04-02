@@ -8,7 +8,6 @@ from __future__ import annotations
 
 import logging
 from datetime import datetime
-from typing import Optional
 
 from .models import (
     ConfigurationListResponse,
@@ -156,8 +155,8 @@ class ConfigurationPersistence:
 
     async def list_configurations(
         self,
-        profile_id: Optional[str] = None,
-        objective: Optional[str] = None,
+        profile_id: str | None = None,
+        objective: str | None = None,
         active_only: bool = True,
     ) -> ConfigurationListResponse:
         """
@@ -259,8 +258,8 @@ class ConfigurationPersistence:
 
     async def search_configurations(
         self,
-        strategy_name: Optional[str] = None,
-        deployment_status: Optional[str] = None,
+        strategy_name: str | None = None,
+        deployment_status: str | None = None,
     ) -> list[StrategyConfiguration]:
         """
         Search configurations by criteria.
@@ -305,7 +304,7 @@ class ConfigurationPersistence:
 
 
 # Singleton
-_persistence: Optional[ConfigurationPersistence] = None
+_persistence: ConfigurationPersistence | None = None
 
 
 def get_configuration_persistence() -> ConfigurationPersistence:

@@ -12,7 +12,6 @@ from __future__ import annotations
 
 import logging
 from datetime import datetime, timedelta
-from typing import Optional
 from uuid import uuid4
 
 from .models import AlertEvent, AlertHistory, AlertRule, AlertState
@@ -115,8 +114,8 @@ class AlertManager:
         return event
 
     def resolve_alert(
-        self, rule_id: str, event_id: Optional[str] = None, reason: str = ""
-    ) -> Optional[AlertEvent]:
+        self, rule_id: str, event_id: str | None = None, reason: str = ""
+    ) -> AlertEvent | None:
         """
         Resolve an alert (move to RESOLVED state).
 
@@ -175,9 +174,9 @@ class AlertManager:
     def acknowledge_alert(
         self,
         rule_id: str,
-        event_id: Optional[str] = None,
+        event_id: str | None = None,
         acknowledged_by: str = "system",
-    ) -> Optional[AlertEvent]:
+    ) -> AlertEvent | None:
         """
         Acknowledge an alert.
 
@@ -258,7 +257,7 @@ class AlertManager:
 
         return False
 
-    def get_active_alerts(self, rule_id: Optional[str] = None) -> list[AlertEvent]:
+    def get_active_alerts(self, rule_id: str | None = None) -> list[AlertEvent]:
         """
         Get list of active alerts.
 
@@ -275,7 +274,7 @@ class AlertManager:
 
         return alerts
 
-    def get_alert_by_id(self, event_id: str) -> Optional[AlertEvent]:
+    def get_alert_by_id(self, event_id: str) -> AlertEvent | None:
         """
         Get alert event by ID.
 
@@ -327,7 +326,7 @@ class AlertManager:
         return stats
 
     def get_alert_history(
-        self, event_id: Optional[str] = None, limit: int = 100
+        self, event_id: str | None = None, limit: int = 100
     ) -> list[AlertHistory]:
         """
         Get alert history.

@@ -11,12 +11,14 @@ from __future__ import annotations
 
 import json
 import logging
-from pathlib import Path
-from typing import Any, Optional
+from typing import TYPE_CHECKING, Any
 
 import yaml
 
-from app.shared.config.protocols import FileConfigLoader
+if TYPE_CHECKING:
+    from pathlib import Path
+
+    from app.shared.config.protocols import FileConfigLoader
 
 logger = logging.getLogger(__name__)
 
@@ -126,7 +128,7 @@ class ConfigLoaderRegistry:
         """Register a configuration loader."""
         self._loaders.append(loader)
 
-    def get_loader(self, file_extension: str) -> Optional[FileConfigLoader]:
+    def get_loader(self, file_extension: str) -> FileConfigLoader | None:
         """Get appropriate loader for file extension."""
         for loader in self._loaders:
             if loader.supports(file_extension):

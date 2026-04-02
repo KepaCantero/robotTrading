@@ -80,15 +80,6 @@ from app.security.authentication.auth import (
     require_roles,
     verify_token_and_get_user,
 )
-from app.security.web_security.csrf_protection import (
-    CSRFTokenManager,
-    DoubleSubmitCookieCSRF,
-    generate_csrf_token,
-    get_csrf_protection,
-    get_csrf_token_manager,
-    require_csrf,
-    validate_csrf_token,
-)
 from app.security.input_validation import (
     DictValidator,
     InputSanitizer,
@@ -102,6 +93,15 @@ from app.security.interfaces import (
     AuthAttemptTrackerProtocol,
     JWTTokenManagerProtocol,
     UserStoreProtocol,
+)
+from app.security.web_security.csrf_protection import (
+    CSRFTokenManager,
+    DoubleSubmitCookieCSRF,
+    generate_csrf_token,
+    get_csrf_protection,
+    get_csrf_token_manager,
+    require_csrf,
+    validate_csrf_token,
 )
 from app.security.web_security.output_encoding import (
     ContentSecurityPolicy,

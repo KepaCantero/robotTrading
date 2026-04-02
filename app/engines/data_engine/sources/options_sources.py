@@ -11,7 +11,7 @@ import asyncio
 import logging
 from datetime import datetime
 from decimal import Decimal
-from typing import Any, Optional
+from typing import Any
 
 # REQUIRED: No fallbacks - aiohttp is required for async HTTP requests
 import aiohttp
@@ -53,7 +53,7 @@ class OptionsVolatilitySource(BaseDataSource):
         self.api_key = config.get("api_key")
         # Use centralized endpoint configuration
         self.base_url = self._get_base_url()
-        self.session: Optional[aiohttp.ClientSession] = None
+        self.session: aiohttp.ClientSession | None = None
 
     def _get_base_url(self) -> str:
         """Obtener base URL según provider using centralized configuration."""
@@ -96,7 +96,7 @@ class OptionsVolatilitySource(BaseDataSource):
         return not (not self.is_connected or not self.session)
 
     async def get_option_chain(
-        self, symbol: str, expiry_date: Optional[datetime] = None
+        self, symbol: str, expiry_date: datetime | None = None
     ) -> list[dict[str, Any]]:
         """
         Obtener cadena de opciones para un símbolo.
@@ -124,7 +124,7 @@ class OptionsVolatilitySource(BaseDataSource):
             return []
 
     async def _get_polygon_option_chain(
-        self, symbol: str, expiry_date: Optional[datetime]
+        self, symbol: str, expiry_date: datetime | None
     ) -> list[dict[str, Any]]:
         """Obtener option chain de Polygon."""
         if not self.api_key:
@@ -175,7 +175,7 @@ class OptionsVolatilitySource(BaseDataSource):
             return []
 
     async def get_volatility_surface(
-        self, symbol: str, expiry_dates: Optional[list[datetime]] = None
+        self, symbol: str, expiry_dates: list[datetime] | None = None
     ) -> dict[str, Any]:
         """
         Obtener volatility surface (IV por strike/expiry).

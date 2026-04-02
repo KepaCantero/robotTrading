@@ -10,7 +10,7 @@ import json
 import logging
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -22,7 +22,7 @@ class SchemaVersioner:
     Trackea cambios en estructura de datos y permite migraciones.
     """
 
-    def __init__(self, config: Optional[dict[str, Any]] = None):
+    def __init__(self, config: dict[str, Any] | None = None):
         """
         Inicializar versioner.
 
@@ -92,9 +92,7 @@ class SchemaVersioner:
         self._save_registry()
         logger.info(f"Schema registrado: {schema_name} v{version}")
 
-    def get_schema(
-        self, schema_name: str, version: Optional[str] = None
-    ) -> Optional[dict[str, Any]]:
+    def get_schema(self, schema_name: str, version: str | None = None) -> dict[str, Any] | None:
         """
         Obtener schema.
 
@@ -117,7 +115,7 @@ class SchemaVersioner:
 
         return None
 
-    def get_latest_version(self, schema_name: str) -> Optional[str]:
+    def get_latest_version(self, schema_name: str) -> str | None:
         """Obtener versión más reciente de un schema."""
         if self.versions.get(schema_name):
             return self.versions[schema_name][-1]

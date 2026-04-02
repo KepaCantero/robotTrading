@@ -12,7 +12,7 @@ from __future__ import annotations
 
 import logging
 from datetime import datetime
-from typing import Any, Callable, Optional
+from typing import Any, Callable
 
 from tqdm import tqdm
 
@@ -89,8 +89,8 @@ class BayesianOptimizer(BaseOptimizer):
         self,
         config: OptimizationConfig,
         n_trials: int = 100,
-        pruner: Optional[str] = "median",
-        sampler: Optional[str] = "tpe",
+        pruner: str | None = "median",
+        sampler: str | None = "tpe",
         multivariate: bool = True,
         n_startup_trials: int = 10,
     ):
@@ -260,7 +260,7 @@ class BayesianOptimizer(BaseOptimizer):
                 multivariate=self.multivariate,
             )
 
-    def _create_pruner(self) -> Optional[optuna.pruners.BasePruner]:
+    def _create_pruner(self) -> optuna.pruners.BasePruner | None:
         """Create Optuna pruner."""
         if not OPTUNA_AVAILABLE:
             return None
@@ -454,7 +454,7 @@ class MultiObjectiveBayesianOptimizer(BaseOptimizer):
         self,
         config: OptimizationConfig,
         n_trials: int = 100,
-        objectives: Optional[list[str]] = None,
+        objectives: list[str] | None = None,
     ):
         """
         Initialize multi-objective Bayesian optimizer.
@@ -609,7 +609,7 @@ class ParetoFront:
         self.n_trials = n_trials
         self.fronts: list[list[int]] = []
 
-    def get_best_solution(self, objective_index: int = 0) -> Optional[ParetoSolution]:
+    def get_best_solution(self, objective_index: int = 0) -> ParetoSolution | None:
         """Get best solution for a specific objective."""
         if not self.solutions:
             return None
@@ -618,8 +618,8 @@ class ParetoFront:
 
     def get_solution_by_criteria(
         self,
-        weights: Optional[tuple[float, ...]] = None,
-    ) -> Optional[ParetoSolution]:
+        weights: tuple[float, ...] | None = None,
+    ) -> ParetoSolution | None:
         """
         Get solution by weighted criteria.
 

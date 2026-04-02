@@ -10,9 +10,11 @@ import asyncio
 import logging
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
-from decimal import Decimal
 from enum import Enum
-from typing import Any, Callable, Optional
+from typing import TYPE_CHECKING, Any, Callable
+
+if TYPE_CHECKING:
+    from decimal import Decimal
 
 logger = logging.getLogger(__name__)
 
@@ -74,8 +76,8 @@ class MetricPoint:
     timestamp: datetime
     metric_type: MetricType
     value: Decimal
-    symbol: Optional[str] = None
-    portfolio_id: Optional[str] = None
+    symbol: str | None = None
+    portfolio_id: str | None = None
     tags: dict[str, str] = field(default_factory=dict)
 
     def to_dict(self) -> dict:
@@ -97,11 +99,11 @@ class TimeSeriesQuery:
     metric_type: MetricType
     start_time: datetime
     end_time: datetime
-    symbol: Optional[str] = None
-    portfolio_id: Optional[str] = None
-    aggregation_type: Optional[AggregationType] = None
+    symbol: str | None = None
+    portfolio_id: str | None = None
+    aggregation_type: AggregationType | None = None
     aggregation_interval_minutes: int = 5  # Default: 5-minute candles
-    tags_filter: Optional[dict[str, str]] = None
+    tags_filter: dict[str, str] | None = None
 
     def validate(self) -> bool:
         """Validate query parameters."""
@@ -115,24 +117,24 @@ class AggregatedMetrics:
     """Aggregated metrics for a time period."""
 
     metric_type: MetricType
-    symbol: Optional[str]
-    portfolio_id: Optional[str]
+    symbol: str | None
+    portfolio_id: str | None
     period_start: datetime
     period_end: datetime
     aggregation_type: AggregationType
 
     # Aggregated values
-    open_value: Optional[Decimal] = None
-    high_value: Optional[Decimal] = None
-    low_value: Optional[Decimal] = None
-    close_value: Optional[Decimal] = None
-    first_value: Optional[Decimal] = None
-    last_value: Optional[Decimal] = None
-    min_value: Optional[Decimal] = None
-    max_value: Optional[Decimal] = None
-    avg_value: Optional[Decimal] = None
-    sum_value: Optional[Decimal] = None
-    stddev_value: Optional[Decimal] = None
+    open_value: Decimal | None = None
+    high_value: Decimal | None = None
+    low_value: Decimal | None = None
+    close_value: Decimal | None = None
+    first_value: Decimal | None = None
+    last_value: Decimal | None = None
+    min_value: Decimal | None = None
+    max_value: Decimal | None = None
+    avg_value: Decimal | None = None
+    sum_value: Decimal | None = None
+    stddev_value: Decimal | None = None
     count: int = 0
 
     def to_dict(self) -> dict:
@@ -208,31 +210,31 @@ class MetricStatistics:
     """Statistical metrics for a time period."""
 
     metric_type: MetricType
-    symbol: Optional[str]
-    portfolio_id: Optional[str]
+    symbol: str | None
+    portfolio_id: str | None
     period_start: datetime
     period_end: datetime
 
     # Aggregated statistics
     count: int = 0
-    min_value: Optional[Decimal] = None
-    max_value: Optional[Decimal] = None
-    avg_value: Optional[Decimal] = None
-    stddev_value: Optional[Decimal] = None
-    sum_value: Optional[Decimal] = None
+    min_value: Decimal | None = None
+    max_value: Decimal | None = None
+    avg_value: Decimal | None = None
+    stddev_value: Decimal | None = None
+    sum_value: Decimal | None = None
 
     # Percentiles
-    p25_value: Optional[Decimal] = None
-    p50_value: Optional[Decimal] = None
-    p75_value: Optional[Decimal] = None
-    p95_value: Optional[Decimal] = None
-    p99_value: Optional[Decimal] = None
+    p25_value: Decimal | None = None
+    p50_value: Decimal | None = None
+    p75_value: Decimal | None = None
+    p95_value: Decimal | None = None
+    p99_value: Decimal | None = None
 
     # Change metrics
-    first_value: Optional[Decimal] = None
-    last_value: Optional[Decimal] = None
-    change_value: Optional[Decimal] = None
-    change_percent: Optional[Decimal] = None
+    first_value: Decimal | None = None
+    last_value: Decimal | None = None
+    change_value: Decimal | None = None
+    change_percent: Decimal | None = None
 
     def to_dict(self) -> dict:
         """Convert to dictionary."""
@@ -266,8 +268,8 @@ class CandlePoint:
 
     timestamp: datetime
     metric_type: MetricType
-    symbol: Optional[str]
-    portfolio_id: Optional[str]
+    symbol: str | None
+    portfolio_id: str | None
     period: str  # "1m", "5m", "15m", "1h", "1d", etc.
 
     open_value: Decimal

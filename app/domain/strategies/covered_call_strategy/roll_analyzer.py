@@ -23,7 +23,6 @@ from __future__ import annotations
 import logging
 from datetime import date, timedelta
 from decimal import Decimal
-from typing import Optional
 
 from .greeks_calculator import GreeksCalculator
 from .models import (
@@ -51,8 +50,8 @@ class RollAnalyzer:
 
     def __init__(
         self,
-        greeks_calculator: Optional[GreeksCalculator] = None,
-        min_premium_benefit: Optional[Decimal] = None,  # 0.5% mínimo
+        greeks_calculator: GreeksCalculator | None = None,
+        min_premium_benefit: Decimal | None = None,  # 0.5% mínimo
     ):
         """
         Inicializar analizador de rolls.
@@ -361,7 +360,7 @@ class RollAnalyzer:
         position: CoveredCallPosition,
         current_price: Decimal,
         opportunities: list[RollOpportunity],
-    ) -> tuple[bool, Optional[RollOpportunity]]:
+    ) -> tuple[bool, RollOpportunity | None]:
         """
         Determinar si se debe hacer roll y cuál es la mejor oportunidad.
 

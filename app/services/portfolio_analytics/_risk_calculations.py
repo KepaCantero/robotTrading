@@ -8,7 +8,6 @@ including downside risk, tail risk, and volatility metrics.
 from __future__ import annotations
 
 from decimal import Decimal
-from typing import Optional
 
 
 class RiskCalculations:
@@ -52,7 +51,7 @@ class RiskCalculations:
         return sum(negative_deviations, Decimal("0")) / Decimal(len(negative_deviations))
 
     def calculate_lower_partial_moment(
-        self, returns: list[Decimal], target_return: Optional[Decimal] = None
+        self, returns: list[Decimal], target_return: Decimal | None = None
     ) -> Decimal:
         """
         Calculate lower partial moment (squared deviations below target).

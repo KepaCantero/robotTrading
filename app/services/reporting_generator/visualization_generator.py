@@ -11,10 +11,12 @@ import json
 import logging
 from dataclasses import dataclass
 from datetime import datetime
-from decimal import Decimal
-from typing import Any, Optional
+from typing import TYPE_CHECKING, Any
 
 import numpy as np
+
+if TYPE_CHECKING:
+    from decimal import Decimal
 
 logger = logging.getLogger(__name__)
 
@@ -105,7 +107,7 @@ class AdvancedVisualizationGenerator:
         self,
         returns: list[Decimal],
         title: str = "Cumulative Returns",
-        benchmark_returns: Optional[list[Decimal]] = None,
+        benchmark_returns: list[Decimal] | None = None,
     ) -> PlotlyChart:
         """
         Generate cumulative returns line chart.
@@ -603,7 +605,7 @@ class AdvancedVisualizationGenerator:
 # ============================================================================
 
 
-_viz_generator_instance: Optional[AdvancedVisualizationGenerator] = None
+_viz_generator_instance: AdvancedVisualizationGenerator | None = None
 
 
 def get_visualization_generator() -> AdvancedVisualizationGenerator:

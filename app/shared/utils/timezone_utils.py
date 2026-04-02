@@ -14,7 +14,6 @@ from __future__ import annotations
 
 import logging
 from datetime import datetime, timezone
-from typing import Optional
 
 logger = logging.getLogger(__name__)
 
@@ -167,7 +166,7 @@ def get_market_timezone(market: str) -> timezone:
     return MARKET_TIMEZONES.get(market.lower(), timezone.utc)
 
 
-def is_market_open(market: str, dt: Optional[datetime] = None) -> bool:
+def is_market_open(market: str, dt: datetime | None = None) -> bool:
     """
     Check if market is open at given time.
 
@@ -203,7 +202,7 @@ def is_market_open(market: str, dt: Optional[datetime] = None) -> bool:
 
 
 def get_market_open_close_time(
-    market: str, dt: Optional[datetime] = None
+    market: str, dt: datetime | None = None
 ) -> tuple[datetime, datetime]:
     """
     Get market open and close times for a given date.
@@ -373,7 +372,7 @@ def get_db_timestamp_onupdate():
 # ============================================================================
 
 
-def to_local_timezone(dt: datetime, local_tz: Optional[timezone] = None) -> datetime:
+def to_local_timezone(dt: datetime, local_tz: timezone | None = None) -> datetime:
     """
     Convert datetime to local timezone for display.
 
@@ -402,7 +401,7 @@ def to_local_timezone(dt: datetime, local_tz: Optional[timezone] = None) -> date
     return dt_utc.astimezone(local_tz)
 
 
-def format_for_display(dt: datetime, local_tz: Optional[timezone] = None) -> str:
+def format_for_display(dt: datetime, local_tz: timezone | None = None) -> str:
     """
     Format datetime for user display in local timezone.
 

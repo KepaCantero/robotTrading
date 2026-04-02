@@ -10,7 +10,7 @@ from __future__ import annotations
 import logging
 from collections import defaultdict
 from datetime import datetime, timedelta
-from typing import Any, Optional
+from typing import Any
 
 from app.domain.models.signal import Signal, SignalType
 
@@ -120,7 +120,7 @@ class MultiTimeframeConfirmation:
         return False
 
     def get_confirmed_signals(
-        self, symbol: Optional[str] = None, recent_only: bool = True
+        self, symbol: str | None = None, recent_only: bool = True
     ) -> list[dict[str, Any]]:
         """
         Get confirmed signals.
@@ -167,7 +167,7 @@ class MultiTimeframeConfirmation:
 
 
 # Global service instance
-_multi_timeframe_service: Optional[MultiTimeframeConfirmation] = None
+_multi_timeframe_service: MultiTimeframeConfirmation | None = None
 
 
 def get_multi_timeframe_service() -> MultiTimeframeConfirmation:

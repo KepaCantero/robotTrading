@@ -15,7 +15,7 @@ Generated: 2026-03-09
 ## 3. Core Components
 ### Classes
 - `TradingDecisionLogger`
-- `ITradingDecisionLogger`
+- `TradingDecisionLogger`
 ### Public Functions
 - `log_signal()`
 - `log_execution()`

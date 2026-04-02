@@ -17,7 +17,7 @@ This provides more meaningful labels for ML that account for:
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Any, Optional
+from typing import Any
 
 import numpy as np
 import pandas as pd
@@ -341,7 +341,7 @@ class TripleBarrierLabeler:
         >>> print(labels['label'].value_counts())
     """
 
-    def __init__(self, config: Optional[TripleBarrierConfig] = None):
+    def __init__(self, config: TripleBarrierConfig | None = None):
         """
         Initialize the Triple Barrier labeler.
 
@@ -349,10 +349,10 @@ class TripleBarrierLabeler:
             config: Configuration for labeling. If None, uses defaults.
         """
         self.config = config or TripleBarrierConfig()
-        self.prices: Optional[pd.Series] = None
-        self.events: Optional[pd.Series] = None
-        self.labels_: Optional[pd.DataFrame] = None
-        self.barrier_info_: Optional[dict] = None
+        self.prices: pd.Series | None = None
+        self.events: pd.Series | None = None
+        self.labels_: pd.DataFrame | None = None
+        self.barrier_info_: dict | None = None
 
     def fit(
         self, prices: pd.Series, events: pd.Series, vol_scaling: bool = True
@@ -582,8 +582,8 @@ def plot_triple_barrier(
     lower_barrier: float,
     vertical_barrier: int,
     label: int,
-    ax: Optional[Axes] = None,
-) -> Optional[Axes]:
+    ax: Axes | None = None,
+) -> Axes | None:
     """
     Visualize a triple barrier labeling event.
 

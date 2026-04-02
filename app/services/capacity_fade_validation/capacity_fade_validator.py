@@ -11,7 +11,6 @@ from __future__ import annotations
 
 import logging
 from decimal import Decimal
-from typing import Optional
 
 from .analyzers import AlphaDecayEstimator, HistoricalCapacityAnalyzer, LiquidityHeadroom
 from .models import (
@@ -374,7 +373,7 @@ class CapacityFadeValidator:
 
 
 # Singleton instance
-_validator: Optional[CapacityFadeValidator] = None
+_validator: CapacityFadeValidator | None = None
 
 
 def get_capacity_fade_validator() -> CapacityFadeValidator:

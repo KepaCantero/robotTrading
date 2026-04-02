@@ -12,6 +12,7 @@ SOLID Principles:
 from __future__ import annotations
 
 import logging
+from typing import TYPE_CHECKING
 
 import numpy as np
 
@@ -21,7 +22,9 @@ from app.domain.models.momentum import (
     TechnicalIndicators,
     Timeframe,
 )
-from app.services.momentum.protocols import IndicatorCalculator, PriceDataProvider
+
+if TYPE_CHECKING:
+    from app.services.momentum.protocols import IndicatorCalculator, PriceDataProvider
 
 logger = logging.getLogger(__name__)
 

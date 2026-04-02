@@ -14,7 +14,7 @@ import json
 import logging
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Optional, Union
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -24,7 +24,7 @@ class SuccessfulConfigManager:
     Gestiona configuraciones de backtests que han demostrado buena performance.
     """
 
-    def __init__(self, storage_dir: Optional[Union[str, Path]] = None) -> None:
+    def __init__(self, storage_dir: str | Path | None = None) -> None:
         """
         Inicializar gestor de configuraciones exitosas.
 
@@ -68,11 +68,11 @@ class SuccessfulConfigManager:
         name: str,
         config: dict[str, Any],
         metrics: dict[str, Any],
-        description: Optional[str] = None,
-        tags: Optional[list[str]] = None,
-        before_training_metrics: Optional[dict[str, Any]] = None,
-        after_training_metrics: Optional[dict[str, Any]] = None,
-        improvement_pct: Optional[dict[str, float]] = None,
+        description: str | None = None,
+        tags: list[str] | None = None,
+        before_training_metrics: dict[str, Any] | None = None,
+        after_training_metrics: dict[str, Any] | None = None,
+        improvement_pct: dict[str, float] | None = None,
     ) -> str:
         """
         Guardar una configuración exitosa.
@@ -137,8 +137,8 @@ class SuccessfulConfigManager:
         return config_id
 
     def load_config(
-        self, config_id: Optional[str] = None, name: Optional[str] = None
-    ) -> Optional[dict[str, Any]]:
+        self, config_id: str | None = None, name: str | None = None
+    ) -> dict[str, Any] | None:
         """
         Cargar una configuración guardada.
 
@@ -163,11 +163,11 @@ class SuccessfulConfigManager:
 
     def list_configs(
         self,
-        min_sharpe: Optional[float] = None,
-        min_return: Optional[float] = None,
-        tags: Optional[list[str]] = None,
+        min_sharpe: float | None = None,
+        min_return: float | None = None,
+        tags: list[str] | None = None,
         sort_by: str = "sharpe_ratio",
-        limit: Optional[int] = None,
+        limit: int | None = None,
     ) -> list[dict[str, Any]]:
         """
         Listar configuraciones guardadas con filtros opcionales.
@@ -219,7 +219,7 @@ class SuccessfulConfigManager:
 
         return filtered
 
-    def delete_config(self, config_id: Optional[str] = None, name: Optional[str] = None) -> bool:
+    def delete_config(self, config_id: str | None = None, name: str | None = None) -> bool:
         """
         Eliminar una configuración guardada.
 
@@ -255,8 +255,8 @@ class SuccessfulConfigManager:
         return removed
 
     def get_config_for_runner(
-        self, config_id: Optional[str] = None, name: Optional[str] = None
-    ) -> Optional[dict[str, Any]]:
+        self, config_id: str | None = None, name: str | None = None
+    ) -> dict[str, Any] | None:
         """
         Obtener configuración en formato para ComprehensiveBacktestRunner.
 

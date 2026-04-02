@@ -22,11 +22,12 @@ from __future__ import annotations
 
 import logging
 from datetime import datetime
-from typing import Any, Optional
+from typing import TYPE_CHECKING, Any
 
 import numpy as np
 
-from app.domain.models.portfolio import Portfolio
+if TYPE_CHECKING:
+    from app.domain.models.portfolio import Portfolio
 
 logger = logging.getLogger(__name__)
 
@@ -38,7 +39,7 @@ class ComprehensiveStressScenarios:
     Implements a wide range of stress scenarios for robust risk assessment.
     """
 
-    def __init__(self, config: Optional[dict[str, Any]] = None):
+    def __init__(self, config: dict[str, Any] | None = None):
         """
         Initialize comprehensive stress scenarios.
 
@@ -311,7 +312,7 @@ class ComprehensiveStressScenarios:
     def run_comprehensive_stress_tests(
         self,
         portfolio: Portfolio,
-        scenario_categories: Optional[list[str]] = None,
+        scenario_categories: list[str] | None = None,
     ) -> dict[str, Any]:
         """
         Run comprehensive stress tests across multiple categories.
@@ -542,7 +543,7 @@ class ComprehensiveStressScenarios:
             "total_scenarios": len(all_scenarios),
         }
 
-    def get_scenario_description(self, scenario_id: str) -> Optional[dict[str, Any]]:
+    def get_scenario_description(self, scenario_id: str) -> dict[str, Any] | None:
         """
         Get detailed description of a specific scenario.
 

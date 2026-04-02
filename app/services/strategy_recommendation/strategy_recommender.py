@@ -9,9 +9,10 @@ from __future__ import annotations
 import logging
 from dataclasses import dataclass
 from decimal import Decimal
-from typing import Optional
+from typing import TYPE_CHECKING
 
-from .strategy_ranker import RankedStrategy
+if TYPE_CHECKING:
+    from .strategy_ranker import RankedStrategy
 
 logger = logging.getLogger(__name__)
 
@@ -244,7 +245,7 @@ class StrategyRecommender:
 
     async def get_all_recommendations(
         self,
-        limit: Optional[int] = None,
+        limit: int | None = None,
     ) -> list[StrategyRecommendation]:
         """
         Get recommendation history.
@@ -276,7 +277,7 @@ class StrategyRecommender:
 
 
 # Singleton
-_recommender: Optional[StrategyRecommender] = None
+_recommender: StrategyRecommender | None = None
 
 
 def get_strategy_recommender() -> StrategyRecommender:

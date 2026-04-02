@@ -11,7 +11,7 @@ from __future__ import annotations
 import asyncio
 import logging
 from datetime import datetime
-from typing import Annotated, Any, Optional
+from typing import Annotated, Any
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query
 from requests.exceptions import HTTPError, RequestException
@@ -203,7 +203,7 @@ async def get_liquidity_metrics(
 
 @router.get("/rankings", response_model=dict[str, Any])
 async def get_asset_rankings(
-    asset_class: Optional[AssetClass] = Query(default=None, description="Filter by asset class"),
+    asset_class: AssetClass | None = Query(default=None, description="Filter by asset class"),
     service: AssetIdentificationService = Depends(get_asset_identification_service),
 ):
     """Get asset rankings."""
@@ -288,7 +288,7 @@ async def refresh_liquidity_data(
 
 @router.get("/universe", response_model=dict[str, Any])
 async def get_asset_universe(
-    asset_class: Optional[AssetClass] = Query(default=None, description="Filter by asset class"),
+    asset_class: AssetClass | None = Query(default=None, description="Filter by asset class"),
     service: AssetIdentificationService = Depends(get_asset_identification_service),
 ):
     """Get asset universe."""

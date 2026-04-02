@@ -8,7 +8,6 @@ from __future__ import annotations
 
 import logging
 from decimal import Decimal
-from typing import Optional
 
 from requests.exceptions import HTTPError, RequestException
 
@@ -363,7 +362,7 @@ class TALibWrapper:
             logger.error(f"❌ Indicator calculation failed: {e!s}")
             return {}
 
-    def get_indicator_list(self, category: Optional[str] = None) -> dict:
+    def get_indicator_list(self, category: str | None = None) -> dict:
         """Get available indicators."""
         if category:
             return {category: self.available_indicators.get(category, [])}
@@ -380,7 +379,7 @@ class TALibWrapper:
 
 
 # Singleton
-_wrapper: Optional[TALibWrapper] = None
+_wrapper: TALibWrapper | None = None
 
 
 def get_talib_wrapper() -> TALibWrapper:

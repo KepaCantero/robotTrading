@@ -10,7 +10,7 @@ import logging
 import shutil
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 import yaml
 
@@ -30,7 +30,7 @@ class YAMLConfigUpdater:
     - Validación de parámetros de entrada (GAP fix)
     """
 
-    def __init__(self, config_dir: Optional[Path] = None, backup_dir: Optional[Path] = None):
+    def __init__(self, config_dir: Path | None = None, backup_dir: Path | None = None):
         """
         Inicializar updater.
 
@@ -163,8 +163,8 @@ class YAMLConfigUpdater:
         self,
         filter_name: str,
         optimized_params: dict[str, float],
-        tier: Optional[str] = None,
-        preset: Optional[str] = None,
+        tier: str | None = None,
+        preset: str | None = None,
     ) -> bool:
         """
         Actualiza thresholds de filtros en momentum_filters.yaml.
@@ -263,7 +263,7 @@ class YAMLConfigUpdater:
         self,
         detector_name: str,
         optimized_params: dict[str, Any],
-        tier: Optional[str] = None,
+        tier: str | None = None,
     ) -> bool:
         """
         Actualiza parámetros de detectores en market_detectors.yaml.
@@ -343,7 +343,7 @@ class YAMLConfigUpdater:
         self,
         strategy_name: str,
         optimized_params: dict[str, Any],
-        tier: Optional[str] = None,
+        tier: str | None = None,
     ) -> bool:
         """
         Actualiza parámetros de estrategia en strategy_defaults.yaml.
@@ -423,7 +423,7 @@ class YAMLConfigUpdater:
         self,
         section: str,
         optimized_params: dict[str, Any],
-        tier: Optional[str] = None,
+        tier: str | None = None,
     ) -> bool:
         """
         Actualiza parámetros de learning en learning_parameters.yaml.
@@ -506,7 +506,7 @@ class YAMLConfigUpdater:
     # ========================================================================
 
     def update_multiple_filters(
-        self, filter_updates: dict[str, dict[str, float]], tier: Optional[str] = None
+        self, filter_updates: dict[str, dict[str, float]], tier: str | None = None
     ) -> dict[str, bool]:
         """
         Actualiza múltiples filtros en una sola operación.
@@ -527,7 +527,7 @@ class YAMLConfigUpdater:
         return results
 
     def update_from_optimization_results(
-        self, optimization_results: dict[str, Any], tier: Optional[str] = None
+        self, optimization_results: dict[str, Any], tier: str | None = None
     ) -> bool:
         """
         Actualiza configs desde resultados de optimización completos.
@@ -617,7 +617,7 @@ class YAMLConfigUpdater:
             return False
 
     def _register_change(
-        self, file: str, section: str, params: dict, tier: Optional[str] = None
+        self, file: str, section: str, params: dict, tier: str | None = None
     ) -> None:
         """
         Registra un cambio en el historial.
@@ -636,7 +636,7 @@ class YAMLConfigUpdater:
         """Retorna el historial de cambios."""
         return self._change_history.copy()
 
-    def save_change_history(self, output_path: Optional[Path] = None) -> Path:
+    def save_change_history(self, output_path: Path | None = None) -> Path:
         """
         Guarda el historial de cambios a archivo JSON.
 

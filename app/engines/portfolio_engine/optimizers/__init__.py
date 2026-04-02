@@ -13,7 +13,7 @@ from __future__ import annotations
 
 import logging
 from abc import ABC, abstractmethod
-from typing import Any, Optional, Union, cast
+from typing import Any, cast
 
 import numpy as np
 
@@ -111,7 +111,7 @@ class BaseOptimizer(ABC):
         self,
         expected_returns: np.ndarray,
         cov_matrix: np.ndarray,
-        constraints: Optional[dict[str, Any]] = None,
+        constraints: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         """
         Optimizar asignación de capital.
@@ -137,7 +137,7 @@ class MarkowitzOptimizer(BaseOptimizer):
         self,
         expected_returns: np.ndarray,
         cov_matrix: np.ndarray,
-        constraints: Optional[dict[str, Any]] = None,
+        constraints: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         """
         Optimizar usando teoría de Markowitz.
@@ -421,7 +421,7 @@ class RiskParityOptimizer(BaseOptimizer):
         self,
         expected_returns: np.ndarray,
         cov_matrix: np.ndarray,
-        constraints: Optional[dict[str, Any]] = None,
+        constraints: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         """
         Optimizar usando Risk Parity.
@@ -659,7 +659,7 @@ class BlackLittermanOptimizer(BaseOptimizer):
         self,
         expected_returns: np.ndarray,
         cov_matrix: np.ndarray,
-        constraints: Optional[dict[str, Any]] = None,
+        constraints: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         """
         Optimizar usando modelo Black-Litterman.
@@ -820,7 +820,7 @@ class BlackLittermanOptimizer(BaseOptimizer):
 
         return P, Q, Omega
 
-    def _parse_asset_index(self, key: Union[str, int], n: int) -> Optional[int]:
+    def _parse_asset_index(self, key: str | int, n: int) -> int | None:
         """Parse asset key to index."""
         try:
             if isinstance(key, int):
@@ -861,7 +861,7 @@ class KellyCriterionOptimizer(BaseOptimizer):
         self,
         expected_returns: np.ndarray,
         cov_matrix: np.ndarray,
-        constraints: Optional[dict[str, Any]] = None,
+        constraints: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         """
         Optimizar usando Kelly Criterion adaptativo.

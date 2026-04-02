@@ -10,7 +10,7 @@ import logging
 import uuid
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Any, Optional
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -35,7 +35,7 @@ class LogEntry:
     metadata: dict[str, Any]
 
     @classmethod
-    def create(cls, event_type: str, data: dict, metadata: Optional[dict] = None) -> LogEntry:
+    def create(cls, event_type: str, data: dict, metadata: dict | None = None) -> LogEntry:
         """
         Crear nueva entrada de log con correlation ID unico
 

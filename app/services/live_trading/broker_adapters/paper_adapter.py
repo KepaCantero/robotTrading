@@ -13,7 +13,6 @@ from __future__ import annotations
 import logging
 from datetime import datetime
 from decimal import Decimal
-from typing import Optional
 from uuid import uuid4
 
 from app.services.live_trading.broker_connector import (
@@ -32,7 +31,7 @@ logger = logging.getLogger(__name__)
 class PaperAdapter:
     """Adapter that simulates broker for paper trading."""
 
-    def __init__(self, initial_cash: Optional[Decimal] = None, auto_fill_orders: bool = False):
+    def __init__(self, initial_cash: Decimal | None = None, auto_fill_orders: bool = False):
         """Initialize paper trading adapter.
 
         Args:
@@ -41,7 +40,7 @@ class PaperAdapter:
         """
         if initial_cash is None:
             initial_cash = Decimal("100000")
-        self.account: Optional[BrokerAccount] = None
+        self.account: BrokerAccount | None = None
         self.positions: dict[str, BrokerPosition] = {}
         self.orders: dict[str, BrokerOrder] = {}
         self.is_connected = False
@@ -50,9 +49,9 @@ class PaperAdapter:
 
     async def connect(
         self,
-        api_key: Optional[str] = None,
-        api_secret: Optional[str] = None,
-        account_id: Optional[str] = None,
+        api_key: str | None = None,
+        api_secret: str | None = None,
+        account_id: str | None = None,
         **kwargs,
     ) -> bool:
         """Connect to paper trading (simulated).
@@ -100,9 +99,9 @@ class PaperAdapter:
         side: OrderSide,
         quantity: Decimal,
         order_type: OrderType = OrderType.MARKET,
-        price: Optional[Decimal] = None,
-        stop_price: Optional[Decimal] = None,
-        client_order_id: Optional[str] = None,
+        price: Decimal | None = None,
+        stop_price: Decimal | None = None,
+        client_order_id: str | None = None,
     ) -> str:
         """Place an order in paper trading (simulated).
 
@@ -215,7 +214,7 @@ class PaperAdapter:
 
         return OrderStatus.PENDING
 
-    async def get_account_info(self) -> Optional[BrokerAccount]:
+    async def get_account_info(self) -> BrokerAccount | None:
         """Get account information from paper trading.
 
         Returns:
@@ -238,7 +237,7 @@ class PaperAdapter:
         """
         return list(self.positions.values())
 
-    async def get_position(self, symbol: str) -> Optional[BrokerPosition]:
+    async def get_position(self, symbol: str) -> BrokerPosition | None:
         """Get a specific position in paper trading.
 
         Args:
@@ -265,7 +264,7 @@ class PaperAdapter:
         """
         return True
 
-    async def calculate_portfolio_value(self) -> Optional[Decimal]:
+    async def calculate_portfolio_value(self) -> Decimal | None:
         """Calculate current portfolio value.
 
         Returns:

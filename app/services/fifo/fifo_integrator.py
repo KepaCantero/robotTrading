@@ -24,13 +24,11 @@ from __future__ import annotations
 import asyncio
 import logging
 from dataclasses import dataclass, field
-from datetime import datetime
 from decimal import Decimal
-from typing import Any, Optional
+from typing import TYPE_CHECKING, Any
 from uuid import UUID, uuid4
 
 from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.infrastructure.persistence.database import get_db_transaction
 from app.infrastructure.persistence.tax.fifo_schema import (
@@ -44,6 +42,11 @@ from app.infrastructure.persistence.tax.fifo_schema import (
     TransactionType,
 )
 from app.shared.config import get_settings
+
+if TYPE_CHECKING:
+    from datetime import datetime
+
+    from sqlalchemy.ext.asyncio import AsyncSession
 
 logger = logging.getLogger(__name__)
 
@@ -60,8 +63,8 @@ class Trade:
     execution_time: datetime
     commission: Decimal = Decimal("0")
     broker_name: str = "alpaca"
-    broker_trade_id: Optional[str] = None
-    order_id: Optional[str] = None
+    broker_trade_id: str | None = None
+    order_id: str | None = None
     fill_type: str = "FULL"  # FULL or PARTIAL
     metadata: dict[str, Any] = field(default_factory=dict)
 
@@ -91,9 +94,9 @@ class LotInfo:
     average_cost: Decimal
     opened_at: datetime
     status: LotStatus
-    holding_period_days: Optional[int] = None
-    realized_gain: Optional[Decimal] = None
-    realized_loss: Optional[Decimal] = None
+    holding_period_days: int | None = None
+    realized_gain: Decimal | None = None
+    realized_loss: Decimal | None = None
 
 
 class FIFOIntegrator:
@@ -117,7 +120,7 @@ class FIFOIntegrator:
         cost_basis = await integrator.get_cost_basis("AAPL")
     """
 
-    def __init__(self, user_id: Optional[UUID] = None):
+    def __init__(self, user_id: UUID | None = None):
         """
         Initialize FIFO integrator.
 
@@ -511,7 +514,7 @@ class FIFOIntegrator:
             return Decimal("0")
 
     async def get_realized_gains_losses(
-        self, symbol: Optional[str] = None, year: Optional[int] = None
+        self, symbol: str | None = None, year: int | None = None
     ) -> dict[str, Any]:
         """
         Get realized gains and losses summary.
@@ -630,10 +633,10 @@ class FIFOIntegrator:
 
 
 # Singleton instance
-_fifo_integrator_instance: Optional[FIFOIntegrator] = None
+_fifo_integrator_instance: FIFOIntegrator | None = None
 
 
-def get_fifo_integrator(user_id: Optional[UUID] = None) -> FIFOIntegrator:
+def get_fifo_integrator(user_id: UUID | None = None) -> FIFOIntegrator:
     """
     Get or create the FIFO integrator singleton.
 

@@ -11,7 +11,7 @@ import logging
 from datetime import datetime, timedelta
 from decimal import Decimal
 from enum import Enum
-from typing import Any, Optional
+from typing import Any
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
@@ -61,13 +61,13 @@ class MomentumSignal(BaseModel):
     confidence: float = Field(ge=0, le=100, description="Signal confidence (0-100)")
 
     # Technical indicators
-    rsi: Optional[float] = Field(None, ge=0, le=100, description="RSI value")
-    ema_short: Optional[float] = Field(None, ge=0, description="Short EMA value")
-    ema_long: Optional[float] = Field(None, ge=0, description="Long EMA value")
-    macd: Optional[float] = Field(None, description="MACD value")
-    macd_signal: Optional[float] = Field(None, description="MACD signal line")
-    macd_histogram: Optional[float] = Field(None, description="MACD histogram")
-    macd_divergence: Optional[str] = Field(
+    rsi: float | None = Field(None, ge=0, le=100, description="RSI value")
+    ema_short: float | None = Field(None, ge=0, description="Short EMA value")
+    ema_long: float | None = Field(None, ge=0, description="Long EMA value")
+    macd: float | None = Field(None, description="MACD value")
+    macd_signal: float | None = Field(None, description="MACD signal line")
+    macd_histogram: float | None = Field(None, description="MACD histogram")
+    macd_divergence: str | None = Field(
         None, description="TASK-IND-3: MACD divergence detected (bullish/bearish)"
     )
 
@@ -80,8 +80,8 @@ class MomentumSignal(BaseModel):
     volume_change_pct: float = Field(description="Volume change percentage")
 
     # Volatility metrics
-    atr: Optional[Decimal] = Field(None, ge=0, description="Average True Range")
-    volatility: Optional[float] = Field(None, ge=0, description="Price volatility")
+    atr: Decimal | None = Field(None, ge=0, description="Average True Range")
+    volatility: float | None = Field(None, ge=0, description="Price volatility")
 
     # Signal metadata
     timestamp: datetime = Field(default_factory=datetime.utcnow, description="Signal timestamp")
@@ -318,37 +318,37 @@ class TechnicalIndicators(BaseModel):
     )
 
     # Price indicators
-    rsi: Optional[float] = Field(None, ge=0, le=100, description="Relative Strength Index")
-    ema_9: Optional[float] = Field(None, ge=0, description="9-period EMA")
-    ema_21: Optional[float] = Field(None, ge=0, description="21-period EMA")
-    ema_50: Optional[float] = Field(None, ge=0, description="50-period EMA")
-    ema_200: Optional[float] = Field(None, ge=0, description="200-period EMA")
+    rsi: float | None = Field(None, ge=0, le=100, description="Relative Strength Index")
+    ema_9: float | None = Field(None, ge=0, description="9-period EMA")
+    ema_21: float | None = Field(None, ge=0, description="21-period EMA")
+    ema_50: float | None = Field(None, ge=0, description="50-period EMA")
+    ema_200: float | None = Field(None, ge=0, description="200-period EMA")
 
     # MACD indicators
-    macd: Optional[float] = Field(None, description="MACD line")
-    macd_signal: Optional[float] = Field(None, description="MACD signal line")
-    macd_histogram: Optional[float] = Field(None, description="MACD histogram")
+    macd: float | None = Field(None, description="MACD line")
+    macd_signal: float | None = Field(None, description="MACD signal line")
+    macd_histogram: float | None = Field(None, description="MACD histogram")
 
     # Stochastic indicators
-    stoch_k: Optional[float] = Field(None, ge=0, le=100, description="Stochastic %K")
-    stoch_d: Optional[float] = Field(None, ge=0, le=100, description="Stochastic %D")
+    stoch_k: float | None = Field(None, ge=0, le=100, description="Stochastic %K")
+    stoch_d: float | None = Field(None, ge=0, le=100, description="Stochastic %D")
 
     # Bollinger Bands
-    bb_upper: Optional[float] = Field(None, ge=0, description="Bollinger Band upper")
-    bb_middle: Optional[float] = Field(None, ge=0, description="Bollinger Band middle")
-    bb_lower: Optional[float] = Field(None, ge=0, description="Bollinger Band lower")
-    bb_width: Optional[float] = Field(None, ge=0, description="Bollinger Band width")
+    bb_upper: float | None = Field(None, ge=0, description="Bollinger Band upper")
+    bb_middle: float | None = Field(None, ge=0, description="Bollinger Band middle")
+    bb_lower: float | None = Field(None, ge=0, description="Bollinger Band lower")
+    bb_width: float | None = Field(None, ge=0, description="Bollinger Band width")
 
     # Volatility indicators
-    atr: Optional[float] = Field(None, ge=0, description="Average True Range")
-    adx: Optional[float] = Field(
+    atr: float | None = Field(None, ge=0, description="Average True Range")
+    adx: float | None = Field(
         None, ge=0, le=100, description="Average Directional Index (>25=strong trend)"
     )
-    volatility: Optional[float] = Field(None, ge=0, description="Price volatility")
+    volatility: float | None = Field(None, ge=0, description="Price volatility")
 
     # Volume indicators
-    volume_sma_20: Optional[Decimal] = Field(None, ge=0, description="20-period volume SMA")
-    volume_ratio: Optional[float] = Field(None, ge=0, description="Volume ratio vs average")
+    volume_sma_20: Decimal | None = Field(None, ge=0, description="20-period volume SMA")
+    volume_ratio: float | None = Field(None, ge=0, description="Volume ratio vs average")
 
     @field_validator("symbol")
     @classmethod
@@ -357,7 +357,7 @@ class TechnicalIndicators(BaseModel):
         return v.strip().upper()
 
     @property
-    def ema_trend(self) -> Optional[str]:
+    def ema_trend(self) -> str | None:
         """Determine EMA trend."""
         if not all([self.ema_9, self.ema_21, self.ema_50]):
             return None
@@ -370,7 +370,7 @@ class TechnicalIndicators(BaseModel):
             return "NEUTRAL"
 
     @property
-    def rsi_signal(self) -> Optional[str]:
+    def rsi_signal(self) -> str | None:
         """Determine RSI signal."""
         if self.rsi is None:
             return None
@@ -383,7 +383,7 @@ class TechnicalIndicators(BaseModel):
             return "NEUTRAL"
 
     @property
-    def macd_signal_indicator(self) -> Optional[str]:
+    def macd_signal_indicator(self) -> str | None:
         """Determine MACD signal."""
         if self.macd_histogram is None:
             return None
@@ -534,11 +534,9 @@ class MomentumAnalysis(BaseModel):
 class MomentumFilter(BaseModel):
     """Filter criteria for momentum analysis."""
 
-    symbols: Optional[list[str]] = Field(None, description="Filter by symbols")
-    momentum_types: Optional[list[MomentumType]] = Field(
-        None, description="Filter by momentum types"
-    )
-    timeframes: Optional[list[Timeframe]] = Field(None, description="Filter by timeframes")
+    symbols: list[str] | None = Field(None, description="Filter by symbols")
+    momentum_types: list[MomentumType] | None = Field(None, description="Filter by momentum types")
+    timeframes: list[Timeframe] | None = Field(None, description="Filter by timeframes")
     min_strength: float = Field(default=50.0, ge=0, le=100, description="Minimum signal strength")
     min_confidence: float = Field(
         default=60.0, ge=0, le=100, description="Minimum signal confidence"

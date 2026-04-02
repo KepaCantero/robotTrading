@@ -15,7 +15,7 @@ from __future__ import annotations
 import logging
 from datetime import datetime, timedelta
 from decimal import Decimal
-from typing import ClassVar, Optional
+from typing import ClassVar
 
 from app.services.smart_order_routing.models import ExecutionPlan, OrderTranche, TimeWindow
 
@@ -167,9 +167,9 @@ class LargePositionBuilder:
         self,
         symbol: str,
         target_size: Decimal,
-        target_avg_price: Optional[Decimal] = None,
+        target_avg_price: Decimal | None = None,
         max_execution_hours: int = 6,
-        num_tranches: Optional[int] = None,
+        num_tranches: int | None = None,
     ) -> ExecutionPlan:
         """
         Create phased execution plan for large position.
@@ -281,7 +281,7 @@ class LargePositionBuilder:
         symbol: str,
         total_size: Decimal,
         windows: list[TimeWindow],
-        target_price: Optional[Decimal] = None,
+        target_price: Decimal | None = None,
     ) -> list[OrderTranche]:
         """
         Allocate position size across execution windows.

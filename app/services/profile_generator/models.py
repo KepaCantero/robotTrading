@@ -12,7 +12,6 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from decimal import Decimal
 from enum import Enum
-from typing import Optional
 
 logger = logging.getLogger(__name__)
 
@@ -98,12 +97,12 @@ class InvestmentProfile:
     enabled_modules: list[ModuleConfig] = field(default_factory=list)
 
     # MAESTRO PHASE 1 Integration: Absolute Return Optimization
-    required_annual_return_pct: Optional[Decimal] = None  # From EUR target
-    required_alpha_pct: Optional[Decimal] = None  # After tax and commission
-    capacity_fade_adjusted_alpha: Optional[Decimal] = None  # Alpha at this capital scale
-    position_size_pct: Optional[Decimal] = None  # Optimized position size
-    concurrent_positions: Optional[int] = None  # Optimized concurrent positions
-    feasibility_validation: Optional[dict] = None  # AbsoluteReturnValidation results
+    required_annual_return_pct: Decimal | None = None  # From EUR target
+    required_alpha_pct: Decimal | None = None  # After tax and commission
+    capacity_fade_adjusted_alpha: Decimal | None = None  # Alpha at this capital scale
+    position_size_pct: Decimal | None = None  # Optimized position size
+    concurrent_positions: int | None = None  # Optimized concurrent positions
+    feasibility_validation: dict | None = None  # AbsoluteReturnValidation results
 
     # Risk and leverage - use centralized config for defaults
     max_leverage: Decimal = field(default_factory=_get_default_max_leverage)
@@ -246,7 +245,7 @@ class ProfileGenerationResult:
     """Result of profile generation."""
 
     success: bool
-    profile: Optional[InvestmentProfile] = None
+    profile: InvestmentProfile | None = None
     error_message: str = ""
     warnings: list[str] = field(default_factory=list)
     generation_time_ms: float = 0.0

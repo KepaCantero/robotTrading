@@ -21,7 +21,7 @@ from __future__ import annotations
 
 import logging
 import os
-from typing import Callable, Optional
+from typing import Callable
 
 logger = logging.getLogger(__name__)
 
@@ -91,7 +91,7 @@ def enforce_numba_available() -> None:
     raise RuntimeError(error_message)
 
 
-def get_numba_version() -> Optional[str]:
+def get_numba_version() -> str | None:
     """
     Get the installed Numba version.
 

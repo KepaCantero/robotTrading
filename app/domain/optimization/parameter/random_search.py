@@ -13,7 +13,7 @@ import logging
 import random
 from datetime import datetime
 from math import exp, log
-from typing import Any, Callable, Union
+from typing import Any, Callable
 
 import numpy as np
 from tqdm import tqdm
@@ -222,7 +222,7 @@ class RandomSearchOptimizer(BaseOptimizer):
         # If no valid sample found, return without constraint checking
         return {p.name: self._sample_parameter(p) for p in param_grid.parameters}
 
-    def _sample_parameter(self, param: ParameterRange) -> Union[int, float, str]:
+    def _sample_parameter(self, param: ParameterRange) -> int | float | str:
         """
         Sample a single parameter value.
 

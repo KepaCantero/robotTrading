@@ -20,13 +20,15 @@ from __future__ import annotations
 import logging
 import uuid
 from dataclasses import dataclass
-from datetime import datetime
 from decimal import Decimal
 from enum import Enum
-from typing import Any, Callable, Optional
+from typing import TYPE_CHECKING, Any, Callable
 
 from .market_mechanics import MarketMechanicsEngine
 from .order_book import LimitOrderBook, Order, OrderSide, OrderStatus, OrderType, Trade
+
+if TYPE_CHECKING:
+    from datetime import datetime
 
 logger = logging.getLogger(__name__)
 
@@ -74,7 +76,7 @@ class ExecutionQuality:
     execution_price: Decimal
     benchmark_price: Decimal
     effective_spread: Decimal
-    realized_spread: Optional[Decimal] = None
+    realized_spread: Decimal | None = None
     price_improvement: Decimal = Decimal("0")
     timing_cost: Decimal = Decimal("0")
     market_impact: Decimal = Decimal("0")
@@ -121,7 +123,7 @@ class TradeExecution:
     venue: str = "SIMULATED_EXCHANGE"
     liquidity_taker: bool = True
     commission: Decimal = Decimal("0")
-    fees: Optional[Decimal] = None
+    fees: Decimal | None = None
 
 
 class OrderMatchingEngine:
@@ -148,7 +150,7 @@ class OrderMatchingEngine:
         self,
         order_book: LimitOrderBook,
         algorithm: OrderMatchingAlgorithm = OrderMatchingAlgorithm.PRICE_TIME,
-        trade_callback: Optional[Callable[[Trade], None]] = None,
+        trade_callback: Callable[[Trade], None] | None = None,
     ):
         """
         Initialize the matching engine.
@@ -325,11 +327,11 @@ class MarketMakerStrategy:
     def __init__(
         self,
         symbol: str,
-        max_position: Optional[Decimal] = None,
+        max_position: Decimal | None = None,
         risk_tolerance: float = 0.02,
         spread_strategy: SpreadStrategy = SpreadStrategy.ADAPTIVE_VOLATILITY,
         base_spread_bps: float = 10.0,
-        inventory_target: Optional[Decimal] = None,
+        inventory_target: Decimal | None = None,
         volatility_window: int = 100,
     ):
         """
@@ -370,8 +372,8 @@ class MarketMakerStrategy:
     def calculate_spread(
         self,
         current_price: Decimal,
-        volatility: Optional[float] = None,
-        order_imbalance: Optional[float] = None,
+        volatility: float | None = None,
+        order_imbalance: float | None = None,
     ) -> tuple[Decimal, Decimal]:
         """
         Calculate optimal bid and ask quotes.
@@ -438,7 +440,7 @@ class MarketMakerStrategy:
     def get_quote_size(
         self,
         side: OrderSide,
-        default_size: Optional[Decimal] = None,
+        default_size: Decimal | None = None,
     ) -> Decimal:
         """
         Get appropriate quote size based on inventory.
@@ -484,8 +486,8 @@ class MarketMakerStrategy:
     def _calculate_half_spread(
         self,
         current_price: Decimal,
-        volatility: Optional[float],
-        order_imbalance: Optional[float],
+        volatility: float | None,
+        order_imbalance: float | None,
     ) -> Decimal:
         """Calculate half-spread based on strategy."""
         if self.spread_strategy == SpreadStrategy.FIXED_TICK:
@@ -629,22 +631,22 @@ class Exchange:
         logger.info(f"Initialized exchange '{name}' for {symbol}")
 
     @property
-    def best_bid(self) -> Optional[Decimal]:
+    def best_bid(self) -> Decimal | None:
         """Get current best bid."""
         return self.order_book.best_bid
 
     @property
-    def best_ask(self) -> Optional[Decimal]:
+    def best_ask(self) -> Decimal | None:
         """Get current best ask."""
         return self.order_book.best_ask
 
     @property
-    def spread(self) -> Optional[Decimal]:
+    def spread(self) -> Decimal | None:
         """Get current bid-ask spread."""
         return self.order_book.spread
 
     @property
-    def mid_price(self) -> Optional[Decimal]:
+    def mid_price(self) -> Decimal | None:
         """Get current mid price."""
         return self.order_book.mid_price
 

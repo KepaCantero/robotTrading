@@ -11,7 +11,7 @@ Provides:
 from __future__ import annotations
 
 import logging
-from typing import Any, Optional
+from typing import Any
 
 import numpy as np
 import pandas as pd
@@ -43,9 +43,9 @@ class RegimeAnalyzer:
         self.n_regimes = n_regimes
         self.window = window
         self.random_state = random_state
-        self.kmeans_model: Optional[KMeans] = None
-        self.scaler: Optional[StandardScaler] = None
-        self.regime_labels: Optional[pd.Series] = None
+        self.kmeans_model: KMeans | None = None
+        self.scaler: StandardScaler | None = None
+        self.regime_labels: pd.Series | None = None
 
         logger.info(
             f"RegimeAnalyzer initialized: n_regimes={n_regimes}, window={window}, random_state={random_state}"
@@ -134,7 +134,7 @@ class RegimeAnalyzer:
             return pd.Series([0] * len(returns), index=returns.index)
 
     def analyze_regime_performance(
-        self, returns: pd.Series, regime_labels: Optional[pd.Series] = None
+        self, returns: pd.Series, regime_labels: pd.Series | None = None
     ) -> dict[str, Any]:
         """
         Analyze strategy performance for each regime.
@@ -289,7 +289,7 @@ class RegimeAnalyzer:
             return {}
 
     def out_of_sample_regime_robustness(
-        self, returns: pd.Series, test_periods: int = 5, train_window: Optional[int] = None
+        self, returns: pd.Series, test_periods: int = 5, train_window: int | None = None
     ) -> dict[str, Any]:
         """
         Walk-forward regime detection robustness testing.
@@ -393,6 +393,6 @@ class RegimeAnalyzer:
         """Get mapping of regime indices to names."""
         return {0: "Bear Market", 1: "Neutral Market", 2: "Bull Market"}
 
-    def get_regime_labels(self) -> Optional[pd.Series]:
+    def get_regime_labels(self) -> pd.Series | None:
         """Get last detected regime labels."""
         return self.regime_labels

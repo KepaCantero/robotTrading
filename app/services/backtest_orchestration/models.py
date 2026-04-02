@@ -12,7 +12,6 @@ from dataclasses import dataclass, field
 from datetime import date, datetime
 from decimal import Decimal
 from enum import Enum
-from typing import Optional
 
 logger = logging.getLogger(__name__)
 
@@ -170,10 +169,10 @@ class BacktestResult:
     error_message: str = ""
 
     # Configuration reference
-    config: Optional[BacktestConfig] = None
+    config: BacktestConfig | None = None
 
     # Performance metrics
-    metrics: Optional[BacktestMetrics] = None
+    metrics: BacktestMetrics | None = None
 
     # Feasibility calculation
     required_annual_return_pct: Decimal = field(default=Decimal("0.0"))
@@ -257,7 +256,7 @@ class BacktestOrchestrationResult:
     """Result of backtest orchestration."""
 
     success: bool
-    backtest_result: Optional[BacktestResult] = None
+    backtest_result: BacktestResult | None = None
     error_message: str = ""
     warnings: list[str] = field(default_factory=list)
     feasibility_ratio: Decimal = field(default=Decimal("0.0"))

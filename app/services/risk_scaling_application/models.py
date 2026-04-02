@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import logging
 from decimal import Decimal
-from typing import Optional
 
 from pydantic import BaseModel, Field
 
@@ -57,11 +56,11 @@ class RiskAdjustedPortfolio(BaseModel):
     original_allocations: list[AllocationWeight] = Field(default_factory=list)
 
     # Adjusted allocations (if scaling applied)
-    adjusted_allocations: Optional[list[AdjustedAllocationWeight]] = None
+    adjusted_allocations: list[AdjustedAllocationWeight] | None = None
 
     adjustment_rationale: str = ""
     expected_return_adjustment_pct: Decimal = Decimal("0")  # Impact on expected return
-    error_message: Optional[str] = None
+    error_message: str | None = None
 
 
 # Import from T7.1 models for type hints

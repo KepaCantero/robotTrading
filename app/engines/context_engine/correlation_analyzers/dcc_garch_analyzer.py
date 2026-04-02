@@ -7,7 +7,7 @@ Implementa Dynamic Conditional Correlation GARCH para correlaciones dinámicas.
 from __future__ import annotations
 
 import logging
-from typing import Any, Optional
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 class DCCGARCHAnalyzer:
     """Analizador de correlación condicional DCC-GARCH."""
 
-    def __init__(self, config: Optional[dict[str, Any]] = None):
+    def __init__(self, config: dict[str, Any] | None = None):
         config = config or {}
         self.window_size = config.get("window_size", 100)
         logger.warning("DCC-GARCH requiere implementación avanzada. Usando método simplificado.")

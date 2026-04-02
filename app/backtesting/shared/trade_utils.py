@@ -11,7 +11,6 @@ Usage:
 from __future__ import annotations
 
 from decimal import Decimal
-from typing import Optional
 
 from app.shared.config.centralized_config import get_config
 
@@ -83,8 +82,8 @@ def build_trade_reason(signal: object, market_data: object = None) -> str:
 def calculate_position_size(
     capital: Decimal,
     price: Decimal,
-    risk_pct: Optional[Decimal] = None,
-    max_position_pct: Optional[Decimal] = None,
+    risk_pct: Decimal | None = None,
+    max_position_pct: Decimal | None = None,
 ) -> Decimal:
     """
     Calculate position size based on capital and risk parameters.
@@ -165,8 +164,8 @@ def validate_trade(
     shares: Decimal,
     price: Decimal,
     capital: Decimal,
-    symbol: Optional[str] = None,
-) -> tuple[bool, Optional[str]]:
+    symbol: str | None = None,
+) -> tuple[bool, str | None]:
     """
     Validate a trade against position limits.
 

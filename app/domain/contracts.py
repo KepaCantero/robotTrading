@@ -13,11 +13,13 @@ from __future__ import annotations
 import functools
 import inspect
 import logging
-from datetime import datetime
 from decimal import Decimal
-from typing import Any, Callable, Optional
+from typing import TYPE_CHECKING, Any, Callable
 
 from pydantic import BaseModel, Field, ValidationError, field_validator
+
+if TYPE_CHECKING:
+    from datetime import datetime
 
 logger = logging.getLogger(__name__)
 
@@ -193,10 +195,10 @@ class PositionContract(TradingDataContract):
 
 
 def contract(
-    preconditions: Optional[list[Callable]] = None,
-    postconditions: Optional[list[Callable]] = None,
-    invariants: Optional[list[Callable]] = None,
-    data_contract: Optional[type[TradingDataContract]] = None,
+    preconditions: list[Callable] | None = None,
+    postconditions: list[Callable] | None = None,
+    invariants: list[Callable] | None = None,
+    data_contract: type[TradingDataContract] | None = None,
 ):
     """
     Decorator for implementing Design by Contract.

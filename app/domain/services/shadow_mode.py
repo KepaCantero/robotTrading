@@ -66,15 +66,17 @@ from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
 from decimal import Decimal
 from enum import Enum
-from typing import Any, Optional
+from typing import TYPE_CHECKING, Any
 
 import aiofiles
 import numpy as np
 
 from app.shared.config.centralized_config import get_config
-from app.shared.interfaces.broker_base import Order
 from app.sre.data_integrity.sanity_layer import DataSanityLayer, SanityCheckResult
 from app.sre.state_machine.wal_persistence import OrderLog, OrderState, OrderStateMachine
+
+if TYPE_CHECKING:
+    from app.shared.interfaces.broker_base import Order
 
 logger = logging.getLogger(__name__)
 
@@ -101,7 +103,7 @@ class ShadowModeConfig:
     enable_comparison: bool = True  # Track shadow vs real comparisons
     comparison_window_minutes: int = None  # Will be loaded from centralized config
     max_shadow_orders_per_day: int = None  # Will be loaded from centralized config
-    audit_log_path: Optional[str] = None  # Path to audit log file
+    audit_log_path: str | None = None  # Path to audit log file
 
     def __post_init__(self):
         """Load defaults from centralized config and validate."""
@@ -141,14 +143,14 @@ class ShadowExecutionResult:
     symbol: str
     side: str
     quantity: Decimal
-    requested_price: Optional[Decimal]
-    simulated_fill_price: Optional[Decimal]
+    requested_price: Decimal | None
+    simulated_fill_price: Decimal | None
     simulated_fill_quantity: Decimal
     status: str
     execution_time_ms: int
-    slippage_bps: Optional[int] = None
+    slippage_bps: int | None = None
     was_rejected: bool = False
-    rejection_reason: Optional[str] = None
+    rejection_reason: str | None = None
     was_partial_fill: bool = False
     wal_recorded: bool = True
     timestamp: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
@@ -185,15 +187,15 @@ class ShadowRealComparison:
 
     symbol: str
     shadow_order_id: str
-    real_order_id: Optional[str]
-    shadow_price: Optional[Decimal]
-    real_price: Optional[Decimal]
+    real_order_id: str | None
+    shadow_price: Decimal | None
+    real_price: Decimal | None
     shadow_fill_time_ms: int
-    real_fill_time_ms: Optional[int]
-    price_difference_bps: Optional[int]
-    timing_difference_ms: Optional[int]
+    real_fill_time_ms: int | None
+    price_difference_bps: int | None
+    timing_difference_ms: int | None
     shadow_status: str
-    real_status: Optional[str]
+    real_status: str | None
     timestamp: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
 
 
@@ -220,8 +222,8 @@ class ShadowModeExecutor:
         self,
         broker_client: object,
         wal_manager: OrderStateMachine,
-        sanity_layer: Optional[DataSanityLayer] = None,
-        config: Optional[ShadowModeConfig] = None,
+        sanity_layer: DataSanityLayer | None = None,
+        config: ShadowModeConfig | None = None,
     ):
         """
         Initialize Shadow Mode executor.
@@ -259,9 +261,9 @@ class ShadowModeExecutor:
         symbol: str,
         side: str,
         quantity: Decimal,
-        price: Optional[Decimal] = None,
+        price: Decimal | None = None,
         order_type: str = "MARKET",
-        metadata: Optional[dict[str, Any]] = None,
+        metadata: dict[str, Any] | None = None,
     ) -> ShadowExecutionResult:
         """
         Execute order in shadow mode.
@@ -439,7 +441,7 @@ class ShadowModeExecutor:
         symbol: str,
         side: str,
         quantity: Decimal,
-        price: Optional[Decimal],
+        price: Decimal | None,
         order_type: str,
     ) -> None:
         """
@@ -483,7 +485,7 @@ class ShadowModeExecutor:
         symbol: str,
         side: str,
         quantity: Decimal,
-        price: Optional[Decimal],
+        price: Decimal | None,
         order_type: str,
     ) -> ShadowExecutionResult:
         """

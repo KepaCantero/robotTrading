@@ -11,7 +11,7 @@ import json
 import logging
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 import yaml
 
@@ -30,7 +30,7 @@ class StrategyConfigLoader:
         """
         self.config_path = Path(config_path)
         self.config: dict[str, Any] = {}
-        self.last_loaded: Optional[datetime] = None
+        self.last_loaded: datetime | None = None
         self._validate_config_path()
 
     def _validate_config_path(self) -> None:
@@ -77,7 +77,7 @@ class StrategyConfigLoader:
             logger.error(f"Failed to load config from {self.config_path}: {e!s}")
             raise
 
-    def save_config(self, config: Optional[dict[str, Any]] = None) -> None:
+    def save_config(self, config: dict[str, Any] | None = None) -> None:
         """
         Guardar configuración en archivo.
 

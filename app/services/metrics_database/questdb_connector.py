@@ -12,7 +12,6 @@ import json
 import logging
 from datetime import datetime, timedelta
 from decimal import Decimal
-from typing import Optional
 
 from .models import (
     AggregatedMetrics,
@@ -44,10 +43,10 @@ class QuestDBConnector:
 
     def __init__(
         self,
-        host: Optional[str] = None,
-        port: Optional[int] = None,
-        user: Optional[str] = None,
-        password: Optional[str] = None,
+        host: str | None = None,
+        port: int | None = None,
+        user: str | None = None,
+        password: str | None = None,
         pool_size: int = 10,
         batch_size: int = 1000,
         retention_days: int = 90,
@@ -139,7 +138,8 @@ class QuestDBConnector:
                 # Test connection and create table if needed
                 async with self._connection_pool.acquire() as conn:
                     # Create metrics table if not exists
-                    await conn.execute("""
+                    await conn.execute(
+                        """
                         CREATE TABLE IF NOT EXISTS metrics (
                             timestamp TIMESTAMP,
                             metric_type SYMBOL,
@@ -147,7 +147,8 @@ class QuestDBConnector:
                             value DOUBLE,
                             metadata STRING
                         ) TIMESTAMP(timestamp) PARTITION BY DAY;
-                    """)
+                    """
+                    )
 
                 self._is_connected = True
                 self._use_real_db = True
@@ -402,7 +403,7 @@ class QuestDBConnector:
         end_time: datetime,
         aggregation_type: AggregationType,
         interval_minutes: int = 5,
-        symbol: Optional[str] = None,
+        symbol: str | None = None,
     ) -> list[AggregatedMetrics]:
         """
         Query aggregated metrics (OHLC candles).
@@ -440,8 +441,8 @@ class QuestDBConnector:
             return []
 
     async def get_latest_value(
-        self, metric_type: MetricType, symbol: Optional[str] = None
-    ) -> Optional[Decimal]:
+        self, metric_type: MetricType, symbol: str | None = None
+    ) -> Decimal | None:
         """
         Get latest value for a metric.
 
@@ -498,8 +499,8 @@ class QuestDBConnector:
         metric_type: MetricType,
         start_time: datetime,
         end_time: datetime,
-        symbol: Optional[str] = None,
-    ) -> Optional[dict]:
+        symbol: str | None = None,
+    ) -> dict | None:
         """
         Get statistics for metrics in time range.
 
@@ -529,7 +530,7 @@ class QuestDBConnector:
             logger.error(f"Failed to get statistics: {e}")
             return None
 
-    async def delete_old_metrics(self, days: Optional[int] = None) -> int:
+    async def delete_old_metrics(self, days: int | None = None) -> int:
         """
         Delete metrics older than specified days (retention policy).
 
@@ -559,7 +560,7 @@ class QuestDBConnector:
             logger.error(f"Failed to delete old metrics: {e}")
             return 0
 
-    async def get_storage_stats(self) -> Optional[MetricsStorageStats]:
+    async def get_storage_stats(self) -> MetricsStorageStats | None:
         """
         Get storage statistics for database.
 

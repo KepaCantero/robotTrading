@@ -16,10 +16,12 @@ import json
 import logging
 from dataclasses import dataclass, field
 from datetime import datetime
-from pathlib import Path
-from typing import Any, Callable, Optional, Union
+from typing import TYPE_CHECKING, Any, Callable
 
 import numpy as np
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
@@ -29,11 +31,11 @@ class SensitivityResult:
     """Result of sensitivity analysis for a single parameter."""
 
     parameter_name: str
-    base_value: Union[float, int]
+    base_value: float | int
     variations_tested: dict[str, dict[str, Any]] = field(default_factory=dict)
     elasticity_score: float = 0.0
     sensitivity_level: str = "UNKNOWN"  # ROBUST, NORMAL, CRITICAL
-    optimal_value: Optional[Union[float, int]] = None
+    optimal_value: float | int | None = None
     plateau_width: float = 0.0  # Width of good performance zone around optimal
     confidence_interval_95: tuple[float, float] = (0.0, 0.0)
     monte_carlo_results: dict[str, Any] = field(default_factory=dict)
@@ -83,7 +85,7 @@ class SensitivityReport:
             "overall_robustness_score": float(self.overall_robustness_score),
         }
 
-    def to_json(self, filepath: Optional[Path] = None) -> str:
+    def to_json(self, filepath: Path | None = None) -> str:
         """Serialize to JSON string or file."""
         json_str = json.dumps(self.to_dict(), indent=2)
         if filepath:
@@ -104,8 +106,8 @@ class SensitivityAnalyzer:
 
     def __init__(
         self,
-        config: Optional[dict[str, Any]] = None,
-        backtest_function: Optional[Callable] = None,
+        config: dict[str, Any] | None = None,
+        backtest_function: Callable | None = None,
     ):
         """
         Initialize sensitivity analyzer.
@@ -144,7 +146,7 @@ class SensitivityAnalyzer:
 
     def analyze_parameter_sensitivity(
         self,
-        initial_params: dict[str, Union[float, int]],
+        initial_params: dict[str, float | int],
         performance_metric: str = "sharpe_ratio",
     ) -> SensitivityReport:
         """
@@ -199,8 +201,8 @@ class SensitivityAnalyzer:
     def _analyze_single_parameter(
         self,
         param_name: str,
-        param_value: Union[float, int],
-        base_params: dict[str, Union[float, int]],
+        param_value: float | int,
+        base_params: dict[str, float | int],
         variation_steps: list[float],
         performance_metric: str,
     ) -> SensitivityResult:
@@ -212,13 +214,13 @@ class SensitivityAnalyzer:
         """
         result = SensitivityResult(parameter_name=param_name, base_value=param_value)
         performances: dict[float, float] = {}
-        varied_values: dict[float, Union[float, int]] = {}
+        varied_values: dict[float, float | int] = {}
 
         # Test each variation level
         for variation_pct in variation_steps:
             # Calculate varied value
             if isinstance(param_value, int):
-                varied_value: Union[float, int] = int(param_value * (1 + variation_pct))
+                varied_value: float | int = int(param_value * (1 + variation_pct))
             else:
                 varied_value = float(param_value) * (1 + variation_pct)
 
@@ -297,7 +299,7 @@ class SensitivityAnalyzer:
         return result
 
     def _calculate_elasticity(
-        self, performances: dict[float, float], varied_values: dict[float, Union[float, int]]
+        self, performances: dict[float, float], varied_values: dict[float, float | int]
     ) -> float:
         """
         Calculate elasticity: % change in performance / % change in parameter.
@@ -353,7 +355,7 @@ class SensitivityAnalyzer:
     def _calculate_plateau_width(
         self,
         performances: dict[float, float],
-        varied_values: dict[float, Union[float, int]],
+        varied_values: dict[float, float | int],
         base_perf: float,
     ) -> float:
         """
@@ -385,8 +387,8 @@ class SensitivityAnalyzer:
     def _run_monte_carlo_sensitivity(
         self,
         param_name: str,
-        param_value: Union[float, int],
-        base_params: dict[str, Union[float, int]],
+        param_value: float | int,
+        base_params: dict[str, float | int],
         performance_metric: str,
     ) -> dict[str, Any]:
         """

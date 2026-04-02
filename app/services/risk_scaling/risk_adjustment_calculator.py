@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import logging
 from decimal import Decimal
-from typing import Any, ClassVar, Optional
+from typing import Any, ClassVar
 
 logger = logging.getLogger(__name__)
 
@@ -229,7 +229,7 @@ class RiskAdjustmentCalculator:
         self,
         recommended_stop_loss_pct: Decimal,
         risk_tolerance: int,
-        volatility_multiplier: Optional[Decimal] = None,
+        volatility_multiplier: Decimal | None = None,
     ) -> Decimal:
         """
         Calculate volatility-adjusted stop loss.
@@ -322,7 +322,7 @@ class RiskAdjustmentCalculator:
 
 
 # Singleton
-_calculator: Optional[RiskAdjustmentCalculator] = None
+_calculator: RiskAdjustmentCalculator | None = None
 
 
 def get_risk_adjustment_calculator() -> RiskAdjustmentCalculator:

@@ -21,7 +21,7 @@ Version: 3.0.0 - NUMBA OPTIMIZED
 from __future__ import annotations
 
 import warnings
-from typing import Optional, Union, cast
+from typing import cast
 
 import numpy as np
 import pandas as pd
@@ -271,7 +271,7 @@ class FractionalDifferentiation:
         self,
         threshold: float = 1e-3,
         adfuller_alpha: float = 0.05,
-        max_lookback: Optional[int] = None,
+        max_lookback: int | None = None,
         use_parallel: bool = False,
         numba_enabled: bool = True,
     ):
@@ -297,7 +297,7 @@ class FractionalDifferentiation:
 
             logging.warning("Numba not available. Fractional differentiation will be slow.")
 
-    def get_weights(self, d: float, threshold: Optional[float] = None) -> np.ndarray:
+    def get_weights(self, d: float, threshold: float | None = None) -> np.ndarray:
         """
         Calculate weights for fractional differentiation (NUMBA-ACCELERATED).
 
@@ -357,7 +357,7 @@ class FractionalDifferentiation:
         return weights_array
 
     def fractional_diff(
-        self, series: Union[pd.Series, np.ndarray], d: float, threshold: Optional[float] = None
+        self, series: pd.Series | np.ndarray, d: float, threshold: float | None = None
     ) -> pd.Series:
         """
         Apply fractional differentiation to a series (NUMBA-ACCELERATED).
@@ -417,7 +417,7 @@ class FractionalDifferentiation:
         return pd.Series(result, index=series.index)
 
     def fractional_diff_ffd(
-        self, series: Union[pd.Series, np.ndarray], d: float, threshold: Optional[float] = None
+        self, series: pd.Series | np.ndarray, d: float, threshold: float | None = None
     ) -> pd.Series:
         """
         Apply Fractionally Fitted Differentiation (FFD) - NUMBA OPTIMIZED.
@@ -466,11 +466,11 @@ class FractionalDifferentiation:
 
     def find_optimal_d(
         self,
-        series: Union[pd.Series, np.ndarray],
+        series: pd.Series | np.ndarray,
         min_d: float = 0.0,
         max_d: float = 1.0,
         step: float = 0.05,
-        adfuller_alpha: Optional[float] = None,
+        adfuller_alpha: float | None = None,
         method: str = "binary",
     ) -> tuple[float, float, dict[str, object]]:
         """
@@ -666,7 +666,7 @@ class FractionalDifferentiation:
         }
 
     def compare_d_values(
-        self, series: pd.Series, d_values: Optional[list[float]] = None
+        self, series: pd.Series, d_values: list[float] | None = None
     ) -> pd.DataFrame:
         """
         Compare different d values on the same series (NUMBA OPTIMIZED).
@@ -767,10 +767,10 @@ class FractionalDiffTransformer:
             use_parallel=use_parallel,
             numba_enabled=numba_enabled,
         )
-        self.optimal_d_: Optional[float] = None
-        self.feature_names_in_: Optional[list[str]] = None
+        self.optimal_d_: float | None = None
+        self.feature_names_in_: list[str] | None = None
 
-    def fit(self, X: Union[pd.DataFrame, np.ndarray], y=None):
+    def fit(self, X: pd.DataFrame | np.ndarray, y=None):
         """
         Fit the transformer.
 
@@ -799,7 +799,7 @@ class FractionalDiffTransformer:
 
         return self
 
-    def transform(self, X: Union[pd.DataFrame, np.ndarray]) -> pd.DataFrame:
+    def transform(self, X: pd.DataFrame | np.ndarray) -> pd.DataFrame:
         """
         Transform features using fractional differentiation (NUMBA OPTIMIZED).
 
@@ -825,9 +825,7 @@ class FractionalDiffTransformer:
 
         return result
 
-    def fit_transform(
-        self, X: Union[pd.DataFrame, np.ndarray], y=None, **fit_params
-    ) -> pd.DataFrame:
+    def fit_transform(self, X: pd.DataFrame | np.ndarray, y=None, **fit_params) -> pd.DataFrame:
         """
         Fit and transform in one step.
 
@@ -841,7 +839,7 @@ class FractionalDiffTransformer:
         """
         return self.fit(X, y).transform(X)
 
-    def get_feature_names_out(self, input_features: Optional[list[str]] = None) -> np.ndarray:
+    def get_feature_names_out(self, input_features: list[str] | None = None) -> np.ndarray:
         """
         Get output feature names for transformation.
 
@@ -868,7 +866,7 @@ class FractionalDiffTransformer:
 def apply_frac_diff_to_dataframe(
     df: pd.DataFrame,
     d: float = 0.5,
-    columns: Optional[list[str]] = None,
+    columns: list[str] | None = None,
     threshold: float = 1e-5,
     use_parallel: bool = False,
 ) -> pd.DataFrame:
@@ -909,16 +907,14 @@ def get_weights(d: float, threshold: float = 1e-5) -> np.ndarray:
     return fd.get_weights(d, threshold)
 
 
-def fractional_diff(
-    series: Union[pd.Series, np.ndarray], d: float, threshold: float = 1e-5
-) -> pd.Series:
+def fractional_diff(series: pd.Series | np.ndarray, d: float, threshold: float = 1e-5) -> pd.Series:
     """Apply fractional differentiation to a series (NUMBA OPTIMIZED)."""
     fd = FractionalDifferentiation(threshold=threshold)
     return fd.fractional_diff(series, d, threshold)
 
 
 def find_optimal_d(
-    series: Union[pd.Series, np.ndarray],
+    series: pd.Series | np.ndarray,
     min_d: float = 0.0,
     max_d: float = 1.0,
     step: float = 0.05,

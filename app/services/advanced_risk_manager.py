@@ -15,11 +15,13 @@ import logging
 from collections import defaultdict
 from datetime import datetime
 from decimal import Decimal
-from typing import Any, Optional
+from typing import TYPE_CHECKING, Any
 
-from app.domain.models.portfolio import Portfolio
-from app.domain.models.signal import Signal
 from app.shared.config.centralized_config import get_config
+
+if TYPE_CHECKING:
+    from app.domain.models.portfolio import Portfolio
+    from app.domain.models.signal import Signal
 
 logger = logging.getLogger(__name__)
 
@@ -53,7 +55,7 @@ class TradeRiskLimiter:
     Ensures no single trade risks more than 2% of capital.
     """
 
-    def __init__(self, max_risk_per_trade: Optional[Decimal] = None):
+    def __init__(self, max_risk_per_trade: Decimal | None = None):
         """
         Initialize risk limiter.
 
@@ -146,7 +148,7 @@ class RiskRewardValidator:
     Ensures minimum 1:3 risk/reward ratio (risk 1 to gain 3).
     """
 
-    def __init__(self, min_reward_ratio: Optional[Decimal] = None):
+    def __init__(self, min_reward_ratio: Decimal | None = None):
         """
         Initialize validator.
 
@@ -290,7 +292,7 @@ class DrawdownMonitor:
     Monitors portfolio drawdown and triggers stop when >15%.
     """
 
-    def __init__(self, max_drawdown: Optional[Decimal] = None):
+    def __init__(self, max_drawdown: Decimal | None = None):
         """
         Initialize drawdown monitor.
 
@@ -432,9 +434,9 @@ class AdvancedRiskManager:
 
     def __init__(
         self,
-        max_risk_per_trade: Optional[Decimal] = None,
-        min_reward_ratio: Optional[Decimal] = None,
-        max_drawdown: Optional[Decimal] = None,
+        max_risk_per_trade: Decimal | None = None,
+        min_reward_ratio: Decimal | None = None,
+        max_drawdown: Decimal | None = None,
         max_consecutive_stops: int = 5,
     ):
         """
@@ -572,7 +574,7 @@ class AdvancedRiskManager:
 
 
 # Global manager instance
-_advanced_risk_manager: Optional[AdvancedRiskManager] = None
+_advanced_risk_manager: AdvancedRiskManager | None = None
 
 
 def get_advanced_risk_manager() -> AdvancedRiskManager:

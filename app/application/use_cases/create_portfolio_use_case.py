@@ -6,12 +6,14 @@ from __future__ import annotations
 
 import logging
 from decimal import Decimal
-from typing import Optional
+from typing import TYPE_CHECKING
 
 logger = logging.getLogger(__name__)
 
-from app.domain.entities.portfolio import Portfolio
 from app.domain.factories import TradingEntityFactory
+
+if TYPE_CHECKING:
+    from app.domain.entities.portfolio import Portfolio
 
 
 class CreatePortfolioUseCase:
@@ -22,7 +24,7 @@ class CreatePortfolioUseCase:
     with appropriate capital and risk parameters.
     """
 
-    def __init__(self, factory: Optional[TradingEntityFactory] = None):
+    def __init__(self, factory: TradingEntityFactory | None = None):
         """Initialize use case with optional factory."""
         self._factory = factory or TradingEntityFactory()
         logger.debug(
@@ -73,8 +75,8 @@ class CreatePortfolioUseCase:
         portfolio_id: str,
         initial_capital: Decimal,
         currency: str = "USD",
-        max_position_size_pct: Optional[Decimal] = None,
-        max_portfolio_exposure_pct: Optional[Decimal] = None,
+        max_position_size_pct: Decimal | None = None,
+        max_portfolio_exposure_pct: Decimal | None = None,
     ) -> Portfolio:
         """
         Execute the use case - create a portfolio.

@@ -16,7 +16,6 @@ from __future__ import annotations
 import logging
 from datetime import datetime, timedelta
 from decimal import Decimal
-from typing import Optional
 
 import numpy as np
 
@@ -262,9 +261,9 @@ class RiskScalingMonitor:
 
     async def get_alert_history(
         self,
-        portfolio_id: Optional[str] = None,
-        alert_type: Optional[RiskAlertType] = None,
-        severity: Optional[RiskLevel] = None,
+        portfolio_id: str | None = None,
+        alert_type: RiskAlertType | None = None,
+        severity: RiskLevel | None = None,
         hours_back: int = 24,
     ) -> list[RiskAlert]:
         """
@@ -296,8 +295,8 @@ class RiskScalingMonitor:
     async def resolve_alert(
         self,
         alert_id: str,
-        resolution_note: Optional[str] = None,
-    ) -> Optional[RiskAlert]:
+        resolution_note: str | None = None,
+    ) -> RiskAlert | None:
         """
         Mark an alert as resolved.
 

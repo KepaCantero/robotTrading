@@ -10,7 +10,7 @@ from __future__ import annotations
 import logging
 from datetime import datetime
 from enum import Enum
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING
 
 from pydantic import BaseModel
 
@@ -35,8 +35,8 @@ class ServiceHealth(BaseModel):
     service_name: str
     status: HealthStatus
     last_check: datetime
-    response_time_ms: Optional[float] = None
-    error_message: Optional[str] = None
+    response_time_ms: float | None = None
+    error_message: str | None = None
     consecutive_failures: int = 0
 
 
@@ -65,7 +65,7 @@ class HealthCheckConfig:
 class HealthCheckManager:
     """Manages health checks for external integrations."""
 
-    def __init__(self, config: Optional[HealthCheckConfig] = None):
+    def __init__(self, config: HealthCheckConfig | None = None):
         """
         Initialize health check manager.
 
@@ -163,7 +163,7 @@ class HealthCheckManager:
                 f"({health.consecutive_failures}/{self.config.failure_threshold}): {error_message}"
             )
 
-    def get_service_health(self, service_name: str) -> Optional[ServiceHealth]:
+    def get_service_health(self, service_name: str) -> ServiceHealth | None:
         """
         Get health status of a service.
 
@@ -241,7 +241,7 @@ class HealthCheckManager:
 
 
 # Default instance
-_health_check_manager: Optional[HealthCheckManager] = None
+_health_check_manager: HealthCheckManager | None = None
 
 
 def get_health_check_manager() -> HealthCheckManager:

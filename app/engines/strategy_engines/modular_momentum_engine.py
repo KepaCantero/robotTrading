@@ -13,13 +13,10 @@ from __future__ import annotations
 
 import logging
 from collections import deque
-from collections.abc import Sequence
 from datetime import datetime
 from decimal import Decimal
-from typing import Any, Optional
+from typing import TYPE_CHECKING, Any
 
-from app.domain.models.market_data import Quote
-from app.domain.models.portfolio import Portfolio
 from app.domain.models.signal import Signal, SignalSource, SignalStrength, SignalType
 from app.domain.services.analysis.momentum import TechnicalIndicatorCalculator
 from app.domain.strategies.momentum_modular.modules.filters import (
@@ -33,6 +30,12 @@ from app.domain.strategies.momentum_modular.modules.filters import (
 from app.domain.strategies.momentum_modular.modules.market_analyzer import MarketAnalyzer
 
 from .base import BaseStrategyEngine
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
+
+    from app.domain.models.market_data import Quote
+    from app.domain.models.portfolio import Portfolio
 
 logger = logging.getLogger(__name__)
 
@@ -138,7 +141,7 @@ class ModularMomentumStrategyEngine(BaseStrategyEngine):
         return "modular_momentum"
 
     def extract_features(
-        self, market_data: Quote, historical_data: Optional[Sequence[Quote]] = None
+        self, market_data: Quote, historical_data: Sequence[Quote] | None = None
     ) -> dict[str, Any]:
         """
         Extraer features estandarizados para Learning Engine.
@@ -496,7 +499,7 @@ class ModularMomentumStrategyEngine(BaseStrategyEngine):
 
     def _determine_signal_type(
         self, filter_results: dict[str, dict[str, Any]], market_context: dict[str, Any]
-    ) -> Optional[SignalType]:
+    ) -> SignalType | None:
         """Determinar tipo de señal basado en resultados de filtros."""
 
         if len(self.filters) == 0:
@@ -543,7 +546,7 @@ class ModularMomentumStrategyEngine(BaseStrategyEngine):
     def _calculate_signal_confidence(
         self,
         filter_results: dict[str, dict[str, Any]],
-        learning_prediction: Optional[dict[str, Any]],
+        learning_prediction: dict[str, Any] | None,
     ) -> float:
         """Calcular confianza de la señal."""
         # Confianza base desde filtros

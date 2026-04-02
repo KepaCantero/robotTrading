@@ -8,7 +8,7 @@ import asyncio
 import logging
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 from .audit_trail import AuditTrail
 from .learning_storage import LearningEngineStorage
@@ -76,11 +76,11 @@ def integrate_meta_analyzer_with_runner(
 async def save_backtest_audit_and_weights(
     runner,
     audit_trail: AuditTrail,
-    storage: Optional[LearningEngineStorage],
+    storage: LearningEngineStorage | None,
     test_result: dict[str, Any],
     test_type: str,
-    learning_engine_name: Optional[str] = None,
-    learning_engine_weights: Optional[Any] = None,
+    learning_engine_name: str | None = None,
+    learning_engine_weights: Any | None = None,
 ) -> None:
     """
     Guardar auditoría y pesos después de un backtest.

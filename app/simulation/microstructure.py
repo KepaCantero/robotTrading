@@ -25,7 +25,6 @@ from dataclasses import dataclass
 from datetime import datetime
 from decimal import Decimal
 from enum import Enum
-from typing import Optional
 
 import numpy as np
 
@@ -270,7 +269,7 @@ class OrderFlowAnalyzer:
             }
         )
 
-    def calculate_order_imbalance(self) -> Optional[OrderImbalance]:
+    def calculate_order_imbalance(self) -> OrderImbalance | None:
         """
         Calculate current order imbalance.
 
@@ -598,7 +597,7 @@ class LiquidityProvider:
     def __init__(
         self,
         symbol: str,
-        max_position: Optional[Decimal] = None,
+        max_position: Decimal | None = None,
         risk_tolerance: float = 0.02,
         target_spread_bps: float = 10.0,
         min_profit_bps: float = 2.0,
@@ -673,8 +672,8 @@ class LiquidityProvider:
         self,
         mid_price: Decimal,
         volatility: float,
-        order_imbalance: Optional[float] = None,
-    ) -> tuple[Optional[Decimal], Optional[Decimal], Decimal]:
+        order_imbalance: float | None = None,
+    ) -> tuple[Decimal | None, Decimal | None, Decimal]:
         """
         Calculate bid and ask quotes.
 
@@ -816,11 +815,11 @@ class MarketMicrostructureAnalyzer:
             depth_levels=depth_levels,
         )
 
-        self._impact_function: Optional[PriceImpactFunction] = None
+        self._impact_function: PriceImpactFunction | None = None
 
         logger.info(f"Initialized MarketMicrostructureAnalyzer for {symbol}")
 
-    def update(self, order: Optional[Order] = None, trade: Optional[Trade] = None) -> None:
+    def update(self, order: Order | None = None, trade: Trade | None = None) -> None:
         """Update with new order or trade."""
         if order:
             self.order_flow_analyzer.add_order(order)

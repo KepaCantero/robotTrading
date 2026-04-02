@@ -16,15 +16,17 @@ import asyncio
 import logging
 import signal
 from dataclasses import dataclass, field
-from datetime import datetime
 from decimal import Decimal
 from enum import Enum
-from typing import Callable, Optional, Union
+from typing import TYPE_CHECKING, Callable
 
 from requests.exceptions import HTTPError
 
 from app.shared.config.centralized_config import get_config
 from app.shared.utils.timezone_utils import utc_now
+
+if TYPE_CHECKING:
+    from datetime import datetime
 
 logger = logging.getLogger(__name__)
 
@@ -54,7 +56,7 @@ class EmergencyCloseResult:
     errors: list[str] = field(default_factory=list)
     timestamp: datetime = field(default_factory=utc_now)
 
-    def to_dict(self) -> dict[str, Union[str, int, float, bool, Decimal, list[str], datetime]]:
+    def to_dict(self) -> dict[str, str | int | float | bool | Decimal | list[str] | datetime]:
         """Convert to dictionary."""
         return {
             "success": self.success,
@@ -86,9 +88,9 @@ class EmergencyCloser:
     def __init__(
         self,
         broker,
-        alert_callback: Optional[Callable[[str], None]] = None,
+        alert_callback: Callable[[str], None] | None = None,
         require_confirmation: bool = False,
-        confirmation_timeout_seconds: Optional[float] = None,
+        confirmation_timeout_seconds: float | None = None,
     ):
         """
         Initialize emergency closer.
@@ -114,20 +116,18 @@ class EmergencyCloser:
         self._audit_log: list[
             dict[
                 str,
-                Union[
-                    str,
-                    int,
-                    float,
-                    bool,
-                    Decimal,
-                    list[str],
-                    datetime,
-                    dict[str, Union[str, int, float, bool, Decimal, list[str], datetime]],
-                ],
+                str
+                | int
+                | float
+                | bool
+                | Decimal
+                | list[str]
+                | datetime
+                | dict[str, str | int | float | bool | Decimal | list[str] | datetime],
             ]
         ] = []
-        self._last_trigger: Optional[EmergencyTrigger] = None
-        self._last_close_time: Optional[datetime] = None
+        self._last_trigger: EmergencyTrigger | None = None
+        self._last_close_time: datetime | None = None
 
         # Setup signal handlers for graceful shutdown
         self._setup_signal_handlers()
@@ -449,7 +449,7 @@ class EmergencyCloser:
 
     async def _close_position(
         self, position: object
-    ) -> dict[str, Union[str, int, float, bool, Decimal]]:
+    ) -> dict[str, str | int | float | bool | Decimal]:
         """
         Close a single position.
 
@@ -526,14 +526,14 @@ class EmergencyCloser:
 
     def get_audit_log(
         self, limit: int = 100
-    ) -> list[dict[str, Union[str, int, float, bool, Decimal, list[str], datetime]]]:
+    ) -> list[dict[str, str | int | float | bool | Decimal | list[str] | datetime]]:
         """Get audit log entries."""
         return self._audit_log[-limit:]
 
-    def get_last_trigger(self) -> Optional[EmergencyTrigger]:
+    def get_last_trigger(self) -> EmergencyTrigger | None:
         """Get the last trigger type."""
         return self._last_trigger
 
-    def get_last_close_time(self) -> Optional[datetime]:
+    def get_last_close_time(self) -> datetime | None:
         """Get the last close time."""
         return self._last_close_time

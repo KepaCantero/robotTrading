@@ -16,7 +16,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from decimal import Decimal
 from enum import Enum
-from typing import Optional, Protocol, Union, runtime_checkable
+from typing import Protocol, runtime_checkable
 
 from app.infrastructure.resilience.reconnection_manager import (
     ReconnectionConfig,
@@ -81,8 +81,8 @@ class BrokerAccount:
     margin_used: Decimal = Decimal("0")
     multiplier: Decimal = Decimal("1")  # Leverage
     connected: bool = False
-    last_sync: Optional[datetime] = None
-    error_message: Optional[str] = None
+    last_sync: datetime | None = None
+    error_message: str | None = None
 
 
 @dataclass
@@ -107,42 +107,42 @@ class BrokerOrder:
     side: OrderSide
     order_type: OrderType
     quantity: Decimal
-    price: Optional[Decimal] = None
-    stop_price: Optional[Decimal] = None
+    price: Decimal | None = None
+    stop_price: Decimal | None = None
     status: OrderStatus = OrderStatus.PENDING
     filled_quantity: Decimal = Decimal("0")
     avg_filled_price: Decimal = Decimal("0")
     created_at: datetime = field(default_factory=datetime.now)
-    updated_at: Optional[datetime] = None
-    executed_at: Optional[datetime] = None
-    error_message: Optional[str] = None
-    client_order_id: Optional[str] = None  # SEC-005: Idempotency key
+    updated_at: datetime | None = None
+    executed_at: datetime | None = None
+    error_message: str | None = None
+    client_order_id: str | None = None  # SEC-005: Idempotency key
 
 
 @runtime_checkable
 class BrokerAdapter(Protocol):
     """Protocol defining the interface that all broker adapters must implement."""
 
-    account: Optional[BrokerAccount]
+    account: BrokerAccount | None
     positions: dict[str, BrokerPosition]
     orders: dict[str, BrokerOrder]
     is_connected: bool
 
     async def connect(
         self,
-        api_key: Optional[str] = None,
-        api_secret: Optional[str] = None,
-        account_id: Optional[str] = None,
+        api_key: str | None = None,
+        api_secret: str | None = None,
+        account_id: str | None = None,
         **kwargs: object,
     ) -> bool: ...
 
     async def disconnect(self) -> bool: ...
 
-    async def get_account_info(self) -> Optional[BrokerAccount]: ...
+    async def get_account_info(self) -> BrokerAccount | None: ...
 
     async def get_positions(self) -> list[BrokerPosition]: ...
 
-    async def get_position(self, symbol: str) -> Optional[BrokerPosition]: ...
+    async def get_position(self, symbol: str) -> BrokerPosition | None: ...
 
     async def place_order(
         self,
@@ -150,9 +150,9 @@ class BrokerAdapter(Protocol):
         side: OrderSide,
         quantity: Decimal,
         order_type: OrderType = OrderType.MARKET,
-        price: Optional[Decimal] = None,
-        stop_price: Optional[Decimal] = None,
-        client_order_id: Optional[str] = None,
+        price: Decimal | None = None,
+        stop_price: Decimal | None = None,
+        client_order_id: str | None = None,
     ) -> str: ...
 
     async def cancel_order(self, order_id: str) -> bool: ...
@@ -163,7 +163,7 @@ class BrokerAdapter(Protocol):
 
     async def sync_account_balance(self) -> bool: ...
 
-    async def calculate_portfolio_value(self) -> Optional[Decimal]: ...
+    async def calculate_portfolio_value(self) -> Decimal | None: ...
 
     def is_paper_trading(self) -> bool: ...
 
@@ -207,7 +207,7 @@ class BrokerConnector:
 
     # Properties for compatibility
     @property
-    def account(self) -> Optional[BrokerAccount]:
+    def account(self) -> BrokerAccount | None:
         """Get account information."""
         return self.adapter.account
 
@@ -266,9 +266,9 @@ class BrokerConnector:
 
     async def connect(
         self,
-        api_key: Optional[str] = None,
-        api_secret: Optional[str] = None,
-        account_id: Optional[str] = None,
+        api_key: str | None = None,
+        api_secret: str | None = None,
+        account_id: str | None = None,
         **kwargs,
     ) -> bool:
         """
@@ -300,9 +300,9 @@ class BrokerConnector:
 
     async def connect_with_retry(
         self,
-        api_key: Optional[str] = None,
-        api_secret: Optional[str] = None,
-        account_id: Optional[str] = None,
+        api_key: str | None = None,
+        api_secret: str | None = None,
+        account_id: str | None = None,
         **kwargs,
     ) -> bool:
         """
@@ -329,7 +329,7 @@ class BrokerConnector:
         result = await self.reconnection_manager.connect_with_backoff(_connect)
         return result is not False
 
-    def get_connection_stats(self) -> dict[str, Union[str, int, float, bool, None]]:
+    def get_connection_stats(self) -> dict[str, str | int | float | bool | None]:
         return self.reconnection_manager.get_stats()
 
     async def disconnect(self) -> bool:
@@ -341,7 +341,7 @@ class BrokerConnector:
         """
         return await self.adapter.disconnect()
 
-    async def get_account_info(self) -> Optional[BrokerAccount]:
+    async def get_account_info(self) -> BrokerAccount | None:
         """
         Get current account information.
 
@@ -360,7 +360,7 @@ class BrokerConnector:
         positions_list = await self.adapter.get_positions()
         return {pos.symbol: pos for pos in positions_list}
 
-    async def get_position(self, symbol: str) -> Optional[BrokerPosition]:
+    async def get_position(self, symbol: str) -> BrokerPosition | None:
         """
         Get single position by symbol.
 
@@ -378,10 +378,10 @@ class BrokerConnector:
         side: OrderSide,
         quantity: Decimal,
         order_type: OrderType = OrderType.MARKET,
-        price: Optional[Decimal] = None,
-        stop_price: Optional[Decimal] = None,
-        client_order_id: Optional[str] = None,
-    ) -> Optional[BrokerOrder]:
+        price: Decimal | None = None,
+        stop_price: Decimal | None = None,
+        client_order_id: str | None = None,
+    ) -> BrokerOrder | None:
         """
         Place order with broker using client_order_id for idempotency.
 
@@ -504,7 +504,7 @@ class BrokerConnector:
         """
         return await self.adapter.sync_account_balance()
 
-    async def calculate_portfolio_value(self) -> Optional[Decimal]:
+    async def calculate_portfolio_value(self) -> Decimal | None:
         """
         Calculate total portfolio value.
 
@@ -523,7 +523,7 @@ class BrokerConnector:
 
 
 # Singleton
-_connector: Optional[BrokerConnector] = None
+_connector: BrokerConnector | None = None
 
 
 def get_broker_connector(broker_type: BrokerType = BrokerType.PAPER) -> BrokerConnector:

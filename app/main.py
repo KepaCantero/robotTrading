@@ -6,9 +6,11 @@ import platform
 import sys
 from contextlib import asynccontextmanager
 from datetime import datetime
-from typing import TYPE_CHECKING, Any, Callable, Optional, cast
+from typing import TYPE_CHECKING, Any, Callable, cast
 
 if TYPE_CHECKING:
+    from starlette.responses import JSONResponse as StarletteJSONResponse
+
     from app.shared.config.config import Settings
 
 import uvicorn
@@ -118,7 +120,7 @@ os.environ["TORCH_USE_CUDA_DSA"] = "0"
 logger = logging.getLogger(__name__)
 
 # Module-level settings cache for lazy loading
-_settings: Optional[Settings] = None
+_settings: Settings | None = None
 
 
 def get_app_settings() -> Settings:
@@ -224,7 +226,6 @@ app.add_middleware(
 
 from fastapi.exceptions import RequestValidationError
 from pydantic import ValidationError
-from starlette.responses import JSONResponse as StarletteJSONResponse
 
 # HTTP Exceptions (4xx, 5xx)
 app.add_exception_handler(

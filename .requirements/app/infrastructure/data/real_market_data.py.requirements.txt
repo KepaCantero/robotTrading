@@ -32,7 +32,6 @@ numpy>=1.26.0             # Numerical operations (pandas dependency)
 ```
 
 ### API Keys Required
-- `ALPHA_VANTAGE_API_KEY` - Alpha Vantage API key (env variable)
 
 ## 3. Core Components
 ### Classes

@@ -10,7 +10,7 @@ from __future__ import annotations
 # mypy: ignore-errors
 import logging
 from decimal import Decimal
-from typing import Any, Optional
+from typing import Any
 
 import numpy as np
 
@@ -349,7 +349,7 @@ class CorrelationAnalyzer:
 
     def get_most_correlated_pair(
         self, metrics: CorrelationMetrics
-    ) -> Optional[tuple[str, str, float]]:
+    ) -> tuple[str, str, float] | None:
         """Get the most correlated strategy pair.
 
         Args:
@@ -365,7 +365,7 @@ class CorrelationAnalyzer:
 
     def get_least_correlated_pair(
         self, metrics: CorrelationMetrics
-    ) -> Optional[tuple[str, str, float]]:
+    ) -> tuple[str, str, float] | None:
         """Get the least correlated strategy pair.
 
         Args:

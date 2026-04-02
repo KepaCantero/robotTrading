@@ -10,7 +10,6 @@ from __future__ import annotations
 import logging
 from datetime import datetime
 from decimal import Decimal
-from typing import Optional
 
 from requests.exceptions import HTTPError, RequestException
 
@@ -53,7 +52,7 @@ class AlphalsensAnalyzer:
         self,
         factor_data: dict,
         returns: dict,
-        periods: Optional[list[int]] = None,
+        periods: list[int] | None = None,
     ) -> dict:
         """
         Analyze single factor performance.
@@ -145,7 +144,7 @@ class AlphalsensAnalyzer:
         self,
         factor_values: dict,
         returns: dict,
-        periods: Optional[list[int]] = None,
+        periods: list[int] | None = None,
     ) -> dict:
         """
         Calculate information coefficient for factor.
@@ -316,7 +315,7 @@ class AlphalsensAnalyzer:
             logger.error(f"❌ Report generation failed: {e!s}")
             return {}
 
-    def get_factor_statistics(self, factor_name: str) -> Optional[dict]:
+    def get_factor_statistics(self, factor_name: str) -> dict | None:
         """Get statistics for specific factor."""
         return self.factor_data.get(factor_name)
 
@@ -334,7 +333,7 @@ class AlphalsensAnalyzer:
 
 
 # Singleton
-_analyzer: Optional[AlphalsensAnalyzer] = None
+_analyzer: AlphalsensAnalyzer | None = None
 
 
 def get_alphalens_analyzer() -> AlphalsensAnalyzer:

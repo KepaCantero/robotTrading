@@ -6,7 +6,6 @@ from __future__ import annotations
 
 import logging
 from abc import ABC, abstractmethod
-from typing import Optional
 
 logger = logging.getLogger(__name__)
 
@@ -24,8 +23,8 @@ class BaseMarketDetector(ABC):
     def __init__(
         self,
         name: str,
-        config: Optional[dict] = None,
-        tier: Optional[str] = None,
+        config: dict | None = None,
+        tier: str | None = None,
         use_yaml: bool = True,
     ):
         """

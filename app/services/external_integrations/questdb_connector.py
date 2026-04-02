@@ -10,12 +10,14 @@ from __future__ import annotations
 import asyncio
 import logging
 from dataclasses import dataclass
-from datetime import datetime
-from decimal import Decimal
-from typing import Optional
+from typing import TYPE_CHECKING
 
 import aiohttp
 import numpy as np
+
+if TYPE_CHECKING:
+    from datetime import datetime
+    from decimal import Decimal
 
 logger = logging.getLogger(__name__)
 
@@ -31,7 +33,7 @@ class TimeSeriesData:
     low_price: Decimal
     close_price: Decimal
     volume: Decimal
-    vwap: Optional[Decimal] = None
+    vwap: Decimal | None = None
 
 
 @dataclass
@@ -64,8 +66,8 @@ class QuestDBConnector:
         self,
         host: str = "localhost",
         port: int = 9009,
-        ilp_port: Optional[int] = None,
-        http_port: Optional[int] = None,
+        ilp_port: int | None = None,
+        http_port: int | None = None,
     ):
         """
         Initialize QuestDB connector.
@@ -95,7 +97,7 @@ class QuestDBConnector:
         self.ilp_url = f"http://{host}:{self.ilp_port}"
         self.http_url = f"http://{host}:{self.http_port}"
         self.connected = False
-        self.session: Optional[aiohttp.ClientSession] = None
+        self.session: aiohttp.ClientSession | None = None
         self.write_buffer: list[str] = []
         self.buffer_size = 1000
         # In-memory storage for testing
@@ -302,8 +304,8 @@ class QuestDBConnector:
 
     async def query_trades(
         self,
-        symbol: Optional[str] = None,
-        start_time: Optional[datetime] = None,
+        symbol: str | None = None,
+        start_time: datetime | None = None,
     ) -> list[TradeRecord]:
         """Query trade records via HTTP REST API."""
         if not self.connected or not self.session:
@@ -325,7 +327,7 @@ class QuestDBConnector:
             logger.error(f"❌ Trade query failed: {e!s}")
             return []
 
-    async def get_latest_price(self, symbol: str) -> Optional[Decimal]:
+    async def get_latest_price(self, symbol: str) -> Decimal | None:
         """Get latest price for symbol via HTTP REST API."""
         if not self.connected or not self.session:
             return None
@@ -387,7 +389,7 @@ class QuestDBConnector:
 
 
 # Singleton
-_connector: Optional[QuestDBConnector] = None
+_connector: QuestDBConnector | None = None
 
 
 def get_questdb_connector(

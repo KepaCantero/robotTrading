@@ -13,7 +13,7 @@ from __future__ import annotations
 import logging
 import multiprocessing
 from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor, as_completed
-from typing import Any, Callable, Optional
+from typing import Any, Callable
 
 # Type alias for task functions
 TaskFunction = Callable[[dict[str, Any]], dict[str, Any]]
@@ -32,7 +32,7 @@ class ParallelExecutor:
     y ThreadPoolExecutor para I/O-bound tasks.
     """
 
-    def __init__(self, max_workers: Optional[int] = None, use_processes: bool = True):
+    def __init__(self, max_workers: int | None = None, use_processes: bool = True):
         """
         Inicializar ejecutor paralelo.
 
@@ -180,7 +180,7 @@ class ParallelExecutor:
 
 
 def create_parallel_executor(
-    max_workers: Optional[int] = None, use_processes: bool = True
+    max_workers: int | None = None, use_processes: bool = True
 ) -> ParallelExecutor:
     """
     Factory function para crear ParallelExecutor.

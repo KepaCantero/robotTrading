@@ -12,7 +12,7 @@ from __future__ import annotations
 import logging
 from abc import ABC, abstractmethod
 from datetime import datetime, timedelta
-from typing import Any, Optional, Union
+from typing import Any
 
 import numpy as np
 
@@ -41,7 +41,7 @@ class BaseMetaLearner(ABC):
     def learn_weights(
         self,
         strategy_performance: dict[str, dict[str, float]],
-        market_context: Optional[dict[str, Any]] = None,
+        market_context: dict[str, Any] | None = None,
     ) -> dict[str, float]:
         """
         Aprender pesos óptimos para estrategias.
@@ -59,7 +59,7 @@ class BaseMetaLearner(ABC):
         self,
         strategy_performance: dict[str, dict[str, float]],
         portfolio_return: float,
-        market_context: Optional[dict[str, Any]] = None,
+        market_context: dict[str, Any] | None = None,
     ) -> None:
         """
         Actualizar modelo con nueva experiencia.
@@ -89,13 +89,13 @@ class HistoricalPerformanceLearner(BaseMetaLearner):
 
         # Historial de performance
         self.performance_history: dict[
-            str, list[dict[str, Union[datetime, dict[str, float], float]]]
+            str, list[dict[str, datetime | dict[str, float] | float]]
         ] = {}
 
     def learn_weights(
         self,
         strategy_performance: dict[str, dict[str, float]],
-        market_context: Optional[dict[str, Any]] = None,
+        market_context: dict[str, Any] | None = None,
     ) -> dict[str, float]:
         """
         Aprender pesos basados en performance histórica.
@@ -206,7 +206,7 @@ class HistoricalPerformanceLearner(BaseMetaLearner):
         self,
         strategy_performance: dict[str, dict[str, float]],
         portfolio_return: float,
-        market_context: Optional[dict[str, Any]] = None,
+        market_context: dict[str, Any] | None = None,
     ) -> None:
         """Actualizar con nueva experiencia."""
         self._update_history(strategy_performance)
@@ -277,7 +277,7 @@ class ReinforcementLearningLearner(BaseMetaLearner):
     def learn_weights(
         self,
         strategy_performance: dict[str, dict[str, float]],
-        market_context: Optional[dict[str, Any]] = None,
+        market_context: dict[str, Any] | None = None,
     ) -> dict[str, float]:
         """
         Aprender pesos usando RL.
@@ -327,7 +327,7 @@ class ReinforcementLearningLearner(BaseMetaLearner):
     def _extract_features(
         self,
         strategy_performance: dict[str, dict[str, float]],
-        market_context: Optional[dict[str, Any]],
+        market_context: dict[str, Any] | None,
     ) -> np.ndarray:
         """Extraer features para el modelo."""
         features = []
@@ -357,7 +357,7 @@ class ReinforcementLearningLearner(BaseMetaLearner):
         self,
         strategy_performance: dict[str, dict[str, float]],
         portfolio_return: float,
-        market_context: Optional[dict[str, Any]] = None,
+        market_context: dict[str, Any] | None = None,
     ) -> None:
         """Actualizar modelo RL con nueva experiencia."""
         if not self.model:
@@ -431,7 +431,7 @@ class EnsembleMetaLearner(BaseMetaLearner):
     def learn_weights(
         self,
         strategy_performance: dict[str, dict[str, float]],
-        market_context: Optional[dict[str, Any]] = None,
+        market_context: dict[str, Any] | None = None,
     ) -> dict[str, float]:
         """
         Aprender pesos usando ensemble de learners.
@@ -499,7 +499,7 @@ class EnsembleMetaLearner(BaseMetaLearner):
         self,
         strategy_performance: dict[str, dict[str, float]],
         portfolio_return: float,
-        market_context: Optional[dict[str, Any]] = None,
+        market_context: dict[str, Any] | None = None,
     ) -> None:
         """Actualizar todos los learners."""
         for learner in self.learners:

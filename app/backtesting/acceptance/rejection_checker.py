@@ -8,7 +8,6 @@ Follows Single Responsibility Principle (SOL-001).
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Optional
 
 from app.backtesting.acceptance.models import CriterionResult
 
@@ -28,9 +27,7 @@ class RejectionCriteriaChecker:
     MAX_FAILED_REGIMES: int = 2
     NEGATIVE_EQUITY_YEARS_THRESHOLD: int = 2
 
-    def check_commission_impact(
-        self, commission_impact: Optional[float]
-    ) -> Optional[CriterionResult]:
+    def check_commission_impact(self, commission_impact: float | None) -> CriterionResult | None:
         """
         Check commission impact criterion.
 
@@ -53,7 +50,7 @@ class RejectionCriteriaChecker:
             description=f"Commissions must be < {self.MAX_COMMISSION_IMPACT * 100}% of gross profit",
         )
 
-    def check_failed_regimes(self, failed_regimes: Optional[int]) -> Optional[CriterionResult]:
+    def check_failed_regimes(self, failed_regimes: int | None) -> CriterionResult | None:
         """
         Check failed market regimes criterion.
 
@@ -77,8 +74,8 @@ class RejectionCriteriaChecker:
         )
 
     def check_equity_curve_trend(
-        self, equity_curve_last_years: Optional[list[float]]
-    ) -> Optional[CriterionResult]:
+        self, equity_curve_last_years: list[float] | None
+    ) -> CriterionResult | None:
         """
         Check equity curve trend criterion.
 
@@ -108,9 +105,9 @@ class RejectionCriteriaChecker:
 
     def check_all(
         self,
-        commission_impact: Optional[float] = None,
-        failed_regimes: Optional[int] = None,
-        equity_curve_last_years: Optional[list[float]] = None,
+        commission_impact: float | None = None,
+        failed_regimes: int | None = None,
+        equity_curve_last_years: list[float] | None = None,
     ) -> list[CriterionResult]:
         """
         Check all rejection criteria.

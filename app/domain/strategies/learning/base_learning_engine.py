@@ -17,7 +17,7 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import Any, ClassVar, Optional
+from typing import Any, ClassVar
 
 # SECURITY: Using joblib instead of pickle for sklearn model serialization (REQUIRED)
 # joblib is safer than pickle as it only serializes numpy arrays and sklearn objects
@@ -136,8 +136,8 @@ class BaseLearningEngine(ABC):
     @abstractmethod
     def train(
         self,
-        training_data: Optional[dict[str, Any]] = None,
-        validation_data: Optional[dict[str, Any]] = None,
+        training_data: dict[str, Any] | None = None,
+        validation_data: dict[str, Any] | None = None,
     ) -> dict[str, float]:
         """
         Entrenar el modelo.
@@ -169,7 +169,7 @@ class BaseLearningEngine(ABC):
             }
         """
 
-    def explain(self, features: dict[str, Any], prediction: Optional[dict[str, Any]] = None) -> str:
+    def explain(self, features: dict[str, Any], prediction: dict[str, Any] | None = None) -> str:
         """
         Generar explicación textual de la predicción.
 
@@ -205,7 +205,7 @@ class BaseLearningEngine(ABC):
             Dict con métricas de evaluación
         """
 
-    def save_model(self, path: Optional[str] = None) -> bool:
+    def save_model(self, path: str | None = None) -> bool:
         """
         Guardar modelo entrenado usando joblib (seguro para sklearn).
 
@@ -258,7 +258,7 @@ class BaseLearningEngine(ABC):
             logger.error(f"{self.name}: Error guardando modelo: {e}")
             return False
 
-    def load_model(self, path: Optional[str] = None) -> bool:
+    def load_model(self, path: str | None = None) -> bool:
         """
         Cargar modelo previamente entrenado usando joblib (seguro).
 
@@ -406,7 +406,7 @@ class BaseLearningEngine(ABC):
         validation_metrics: dict[str, float],
         feature_importance: dict[str, float],
         n_samples: int,
-        model_params: Optional[dict[str, Any]] = None,
+        model_params: dict[str, Any] | None = None,
     ) -> None:
         """
         Record a training snapshot for stability tracking (Ilmanen).

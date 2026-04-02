@@ -14,13 +14,15 @@ Provides automatic cleanup with context manager pattern.
 from __future__ import annotations
 
 import logging
-from collections.abc import Generator
 from contextlib import contextmanager
 from pathlib import Path
-from typing import Any, Optional
+from typing import TYPE_CHECKING, Any
 from uuid import uuid4
 
 import yaml
+
+if TYPE_CHECKING:
+    from collections.abc import Generator
 
 logger = logging.getLogger(__name__)
 
@@ -56,7 +58,7 @@ class TempConfigManager:
         self.output_dir = Path(output_dir)
         self.prefix = prefix
         self.suffix = suffix
-        self.temp_path: Optional[Path] = None
+        self.temp_path: Path | None = None
 
     def __enter__(self) -> Path:
         """Create temp file and return path."""
@@ -142,7 +144,7 @@ class TempConfigFactory:
         self.output_dir = Path(output_dir)
 
     def create_backtest_config(
-        self, config: dict[str, Any], profile_id: Optional[str] = None
+        self, config: dict[str, Any], profile_id: str | None = None
     ) -> TempConfigManager:
         """
         Create temp config for backtest execution.
@@ -158,7 +160,7 @@ class TempConfigFactory:
         return TempConfigManager(config, self.output_dir, prefix=prefix)
 
     def create_optimization_config(
-        self, config: dict[str, Any], trial_num: Optional[int] = None
+        self, config: dict[str, Any], trial_num: int | None = None
     ) -> TempConfigManager:
         """
         Create temp config for optimization trial.

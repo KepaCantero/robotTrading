@@ -12,7 +12,7 @@ from __future__ import annotations
 
 import logging
 from decimal import Decimal
-from typing import Any, ClassVar, Optional
+from typing import Any, ClassVar
 
 from .models import CapitalTier, CapitalTierResult, RiskProfile, StrategyFeatures
 
@@ -208,7 +208,7 @@ class StrategyFeatureGatekeeper:
         self.logger = logging.getLogger(__name__)
 
     def activate_features(
-        self, capital: Decimal, requested_features: Optional[StrategyFeatures] = None
+        self, capital: Decimal, requested_features: StrategyFeatures | None = None
     ) -> StrategyFeatures:
         """
         Activate appropriate features for capital tier.

@@ -11,7 +11,7 @@ import logging
 from datetime import datetime
 from decimal import Decimal
 from enum import Enum
-from typing import Any, Optional
+from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
@@ -59,7 +59,7 @@ class ObjectiveConfig(BaseModel):
         min_length=1,
         description="Weights for each objective (must sum to 1.0)",
     )
-    constraints: Optional[dict[str, Any]] = Field(
+    constraints: dict[str, Any] | None = Field(
         default=None,
         description="Optional constraints for optimization",
     )
@@ -257,7 +257,7 @@ class EnsembleConfig(BaseModel):
         min_length=2,
         description="List of strategy names to include",
     )
-    strategy_weights: Optional[dict[str, float]] = Field(
+    strategy_weights: dict[str, float] | None = Field(
         default=None,
         description="Optional custom weights for strategies",
     )
@@ -287,7 +287,7 @@ class EnsembleConfig(BaseModel):
 
     @field_validator("strategy_weights")
     @classmethod
-    def validate_strategy_weights(cls, v: Optional[dict[str, float]]) -> Optional[dict[str, float]]:
+    def validate_strategy_weights(cls, v: dict[str, float] | None) -> dict[str, float] | None:
         """Validate strategy weights if provided."""
         if v is None:
             return v

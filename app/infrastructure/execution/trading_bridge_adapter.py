@@ -14,13 +14,11 @@ from dataclasses import asdict, dataclass
 from decimal import Decimal
 from typing import TYPE_CHECKING, Any
 
+from app.shared.protocols import ITradeExecutor
+
 if TYPE_CHECKING:
     from app.services.live_trading.alert_to_trade_mapper import TradeSignal
-    from app.services.live_trading.trading_bridge_orchestrator import (
-        TradingBridgeOrchestrator,
-    )
-
-from app.shared.protocols import ITradeExecutor
+    from app.services.live_trading.trading_bridge_orchestrator import TradingBridgeOrchestrator
 
 logger = logging.getLogger(__name__)
 

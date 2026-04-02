@@ -255,7 +255,8 @@ class StressTester:
             db_path.parent.mkdir(parents=True, exist_ok=True)
 
             async with aiosqlite.connect(self.config.db_path) as db:
-                await db.execute("""
+                await db.execute(
+                    """
                     CREATE TABLE IF NOT EXISTS stress_tests (
                         id INTEGER PRIMARY KEY AUTOINCREMENT,
                         service_name TEXT NOT NULL,
@@ -283,12 +284,15 @@ class StressTester:
                         incidents TEXT NOT NULL,
                         created_at TEXT NOT NULL DEFAULT (datetime('utc'))
                     )
-                """)
+                """
+                )
 
-                await db.execute("""
+                await db.execute(
+                    """
                     CREATE INDEX IF NOT EXISTS idx_stress_tests_service
                     ON stress_tests(service_name)
-                """)
+                """
+                )
 
                 await db.commit()
 

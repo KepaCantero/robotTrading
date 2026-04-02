@@ -7,13 +7,15 @@ from __future__ import annotations
 import logging
 from datetime import datetime, timedelta
 from decimal import Decimal
-from typing import Any, Optional
+from typing import TYPE_CHECKING, Any
 
 import numpy as np
 import pandas as pd
 
 from app.backtesting.models import Trade, TradeStatus
-from app.domain.models.market_data import Quote
+
+if TYPE_CHECKING:
+    from app.domain.models.market_data import Quote
 
 # Optional pandas-ta import
 try:
@@ -348,7 +350,7 @@ class TrainingDataPreparator:
         return {"sequences": X_sequences, "labels": y_labels}
 
     def prepare_reinforcement_learning_data(
-        self, quotes: list[Quote], initial_capital: Optional[Decimal] = None
+        self, quotes: list[Quote], initial_capital: Decimal | None = None
     ) -> dict[str, Any]:
         """
         Preparar datos de mercado para Reinforcement Learning.
@@ -637,8 +639,8 @@ class TrainingDataPreparator:
         df: pd.DataFrame,
         current_idx: int,
         lookahead_days: int = 10,
-        training_cutoff: Optional[datetime] = None,
-    ) -> Optional[int]:
+        training_cutoff: datetime | None = None,
+    ) -> int | None:
         """
         Generar label para un timestamp con mejor granularidad.
         Label = 1 si hubo un trade exitoso en los próximos N días.

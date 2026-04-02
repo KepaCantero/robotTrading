@@ -11,11 +11,12 @@ from __future__ import annotations
 import logging
 from abc import ABC, abstractmethod
 from datetime import datetime
-from typing import Any, Optional
+from typing import TYPE_CHECKING, Any
 
 import numpy as np
 
-from app.domain.models.portfolio import Portfolio
+if TYPE_CHECKING:
+    from app.domain.models.portfolio import Portfolio
 
 logger = logging.getLogger(__name__)
 
@@ -69,9 +70,9 @@ class RiskAttributor(BaseRiskAttributor):
     def attribute_risk(
         self,
         portfolio: Portfolio,
-        returns_history: Optional[dict[str, list[float]]] = None,
-        strategy_allocations: Optional[dict[str, list[str]]] = None,
-        factor_data: Optional[dict[str, list[float]]] = None,
+        returns_history: dict[str, list[float]] | None = None,
+        strategy_allocations: dict[str, list[str]] | None = None,
+        factor_data: dict[str, list[float]] | None = None,
         **kwargs,
     ) -> dict[str, Any]:
         """
@@ -119,7 +120,7 @@ class RiskAttributor(BaseRiskAttributor):
             return {"error": str(e), "timestamp": datetime.utcnow().isoformat()}
 
     def _attribute_by_asset(
-        self, portfolio: Portfolio, returns_history: Optional[dict[str, list[float]]]
+        self, portfolio: Portfolio, returns_history: dict[str, list[float]] | None
     ) -> dict[str, Any]:
         """Atribuir riesgo por activo."""
         if portfolio.total_equity == 0:
@@ -165,7 +166,7 @@ class RiskAttributor(BaseRiskAttributor):
         self,
         portfolio: Portfolio,
         strategy_allocations: dict[str, list[str]],
-        returns_history: Optional[dict[str, list[float]]],
+        returns_history: dict[str, list[float]] | None,
     ) -> dict[str, Any]:
         """Atribuir riesgo por estrategia."""
         if portfolio.total_equity == 0:
@@ -230,8 +231,8 @@ class RiskAttributor(BaseRiskAttributor):
     def _attribute_by_factors(
         self,
         portfolio: Portfolio,
-        returns_history: Optional[dict[str, list[float]]],
-        factor_data: Optional[dict[str, list[float]]],
+        returns_history: dict[str, list[float]] | None,
+        factor_data: dict[str, list[float]] | None,
     ) -> dict[str, Any]:
         """Atribuir riesgo por factores (Fama-French simplificado)."""
         if not factor_data or not returns_history:

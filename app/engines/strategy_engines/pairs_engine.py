@@ -12,9 +12,8 @@ from __future__ import annotations
 
 import logging
 from collections import defaultdict, deque
-from collections.abc import Sequence
 from decimal import Decimal
-from typing import Any, Optional
+from typing import TYPE_CHECKING, Any
 
 import numpy as np
 
@@ -22,12 +21,16 @@ import numpy as np
 
 SCIPY_AVAILABLE = True
 
-from app.domain.models.market_data import Quote
-from app.domain.models.portfolio import Portfolio
 from app.domain.models.signal import Signal, SignalSource, SignalStrength, SignalType
 from app.shared.config.centralized_config import get_config
 
 from .base import BaseStrategyEngine
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
+
+    from app.domain.models.market_data import Quote
+    from app.domain.models.portfolio import Portfolio
 
 logger = logging.getLogger(__name__)
 
@@ -139,7 +142,7 @@ class PairsTradingStrategyEngine(BaseStrategyEngine):
         # Rolling cointegration revalidation
         self.last_cointegration_recalc_date = None
         self.cointegration_recalc_interval_days = 30
-        self.cached_cointegration_score: Optional[float] = None
+        self.cached_cointegration_score: float | None = None
         self.cached_hedge_ratio = Decimal("1.0")
 
         # Trade frequency limiting
@@ -168,7 +171,7 @@ class PairsTradingStrategyEngine(BaseStrategyEngine):
         return "pairs_trading"
 
     def extract_features(
-        self, market_data: Quote, historical_data: Optional[Sequence[Quote]] = None
+        self, market_data: Quote, historical_data: Sequence[Quote] | None = None
     ) -> dict[str, Any]:
         """
         Extraer features estandarizados para Learning Engine.
@@ -290,9 +293,7 @@ class PairsTradingStrategyEngine(BaseStrategyEngine):
 
         return features
 
-    def _calculate_cointegration(
-        self, prices1: list[float], prices2: list[float]
-    ) -> Optional[float]:
+    def _calculate_cointegration(self, prices1: list[float], prices2: list[float]) -> float | None:
         """
         Calcular score de cointegración usando ADF test (simplificado).
 
@@ -368,7 +369,7 @@ class PairsTradingStrategyEngine(BaseStrategyEngine):
             spread_z_score = (current_spread - spread_mean) / spread_std if spread_std > 0 else 0.0
 
             # Verificar cointegración (caché)
-            cointegration_score: Optional[float] = self.cached_cointegration_score
+            cointegration_score: float | None = self.cached_cointegration_score
             if cointegration_score is None:
                 cointegration_score = self._calculate_cointegration(prices1, prices2)
                 self.cached_cointegration_score = cointegration_score
@@ -437,7 +438,7 @@ class PairsTradingStrategyEngine(BaseStrategyEngine):
         self,
         market_data: Quote,
         spread_z_score: float,
-        cointegration_score: Optional[float],
+        cointegration_score: float | None,
         correlation: float,
     ) -> Signal:
         """Crear señal de compra para pairs trading."""
@@ -478,7 +479,7 @@ class PairsTradingStrategyEngine(BaseStrategyEngine):
         self,
         market_data: Quote,
         spread_z_score: float,
-        cointegration_score: Optional[float],
+        cointegration_score: float | None,
         correlation: float,
     ) -> Signal:
         """Crear señal de venta para pairs trading."""
@@ -516,7 +517,7 @@ class PairsTradingStrategyEngine(BaseStrategyEngine):
         )
 
     def _calculate_confidence(
-        self, abs_spread_z_score: float, cointegration_score: Optional[float], correlation: float
+        self, abs_spread_z_score: float, cointegration_score: float | None, correlation: float
     ) -> float:
         """
         Calcular confidence basado en spread Z-score, cointegración y correlación.

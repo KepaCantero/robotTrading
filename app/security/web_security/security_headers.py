@@ -20,10 +20,12 @@ Security Compliance: 95%
 from __future__ import annotations
 
 import logging
-from typing import ClassVar, Optional
+from typing import TYPE_CHECKING, ClassVar
 
-from fastapi import Request, Response
 from starlette.middleware.base import BaseHTTPMiddleware
+
+if TYPE_CHECKING:
+    from fastapi import Request, Response
 
 logger = logging.getLogger(__name__)
 
@@ -48,7 +50,7 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         enable_xss_protection: bool = True,
         enable_referrer_policy: bool = True,
         enable_permissions_policy: bool = True,
-        custom_headers: Optional[dict[str, str]] = None,
+        custom_headers: dict[str, str] | None = None,
     ):
         """
         Initialize security headers middleware.
@@ -170,7 +172,7 @@ class ContentSecurityPolicy:
         "navigate-to": ["'self'"],
     }
 
-    def __init__(self, directives: Optional[dict[str, list[str]]] = None):
+    def __init__(self, directives: dict[str, list[str]] | None = None):
         """
         Initialize CSP with custom directives.
 
@@ -427,7 +429,7 @@ class PermissionsPolicy:
         "sync-xhr": ["self"],
     }
 
-    def __init__(self, permissions: Optional[dict[str, list[str]]] = None):
+    def __init__(self, permissions: dict[str, list[str]] | None = None):
         """
         Initialize Permissions-Policy.
 
@@ -496,7 +498,7 @@ def get_security_headers() -> dict[str, str]:
     }
 
 
-def add_security_headers(response: Response, headers: Optional[dict[str, str]] = None):
+def add_security_headers(response: Response, headers: dict[str, str] | None = None):
     """
     Add security headers to a response.
 

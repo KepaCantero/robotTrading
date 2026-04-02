@@ -14,7 +14,7 @@ import logging
 from abc import ABC, abstractmethod
 from datetime import datetime, timedelta
 from decimal import Decimal
-from typing import Any, Optional
+from typing import Any
 
 import numpy as np
 
@@ -33,7 +33,7 @@ class BaseRebalancer(ABC):
         """
         self.config = config
         self.logger = logging.getLogger(self.__class__.__name__)
-        self.last_rebalance_time: Optional[datetime] = None
+        self.last_rebalance_time: datetime | None = None
         self.rebalance_count = 0
 
     @abstractmethod

@@ -8,12 +8,10 @@ import logging
 from collections import deque
 from datetime import datetime
 from decimal import Decimal
-from typing import Any, Optional
+from typing import TYPE_CHECKING, Any
 
 import numpy as np
 
-from app.domain.models.market_data import Quote
-from app.domain.models.portfolio import Portfolio
 from app.domain.models.signal import Signal, SignalSource, SignalStrength, SignalType
 from app.domain.services.analysis.momentum import TechnicalIndicatorCalculator
 from app.domain.strategies.base import BaseStrategy
@@ -27,6 +25,10 @@ from .modules.filters import (
     VolumeFilter,
 )
 from .modules.market_analyzer import MarketAnalyzer
+
+if TYPE_CHECKING:
+    from app.domain.models.market_data import Quote
+    from app.domain.models.portfolio import Portfolio
 
 # BaseLearningEngine solo para type hints (no se ejecuta en runtime)
 
@@ -82,7 +84,7 @@ class StrategyConfig:
     # Position sizing
     max_position_size_default: float = 0.1
 
-    def __init__(self, config_dict: Optional[dict] = None):
+    def __init__(self, config_dict: dict | None = None):
         """Inicializar con valores del diccionario si existen."""
         if config_dict:
             for key, value in config_dict.items():
@@ -795,7 +797,7 @@ class ModularMomentumStrategy(BaseStrategy):
 
     def _determine_signal_type(
         self, filter_results: dict[str, dict[str, Any]], market_context: dict[str, Any]
-    ) -> Optional[SignalType]:
+    ) -> SignalType | None:
         """Determinar tipo de señal basado en resultados de filtros."""
 
         if len(self.filters) == 0:
@@ -905,7 +907,7 @@ class ModularMomentumStrategy(BaseStrategy):
     def _calculate_signal_confidence(
         self,
         filter_results: dict[str, dict[str, Any]],
-        learning_prediction: Optional[dict[str, Any]],
+        learning_prediction: dict[str, Any] | None,
     ) -> float:
         """Calcular confianza de la señal - use config weights for learning combination."""
         # Confianza base desde filtros

@@ -9,7 +9,7 @@ from __future__ import annotations
 import logging
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Any, ClassVar, Optional
+from typing import Any, ClassVar
 
 from pydantic import BaseModel, Field
 
@@ -37,7 +37,7 @@ class SHAPExplanation(BaseModel):
     base_value: float = Field(..., description="Base value (model average)")
     shap_values: list[SHAPValue] = Field(..., description="List of SHAP values")
     timestamp: datetime = Field(default_factory=datetime.now)
-    model_name: Optional[str] = Field(None, description="Name of the model")
+    model_name: str | None = Field(None, description="Name of the model")
 
     class Config:
         json_encoders: ClassVar[dict] = {datetime: lambda v: v.isoformat()}
@@ -85,7 +85,7 @@ class LIMEFeature(BaseModel):
     """Individual feature contribution in LIME explanation."""
 
     feature_name: str = Field(..., description="Name of the feature")
-    feature_range: Optional[str] = Field(None, description="Feature value range")
+    feature_range: str | None = Field(None, description="Feature value range")
     contribution: float = Field(..., description="Contribution to prediction")
     is_positive: bool = Field(..., description="Whether contribution is positive")
 
@@ -116,7 +116,7 @@ class FeatureImportance(BaseModel):
     feature_name: str = Field(..., description="Name of the feature")
     importance_score: float = Field(..., description="Importance score (0-1 or 0-100)")
     method: str = Field(..., description="Method used (shap, permutation, gain, cover, etc.)")
-    rank: Optional[int] = Field(None, description="Ranking among all features")
+    rank: int | None = Field(None, description="Ranking among all features")
 
 
 class FeatureImportanceReport(BaseModel):
@@ -165,22 +165,22 @@ class PredictionExplanation(BaseModel):
 
     prediction_id: str = Field(..., description="Unique prediction ID")
     prediction_value: float = Field(..., description="The prediction")
-    actual_value: Optional[float] = Field(None, description="Actual value if available")
+    actual_value: float | None = Field(None, description="Actual value if available")
     prediction_confidence: float = Field(..., description="Confidence score (0-1)")
 
     # SHAP explanation
-    shap_explanation: Optional[SHAPExplanation] = Field(None, description="SHAP explanation")
+    shap_explanation: SHAPExplanation | None = Field(None, description="SHAP explanation")
 
     # LIME explanation
-    lime_explanation: Optional[LIMEExplanation] = Field(None, description="LIME explanation")
+    lime_explanation: LIMEExplanation | None = Field(None, description="LIME explanation")
 
     # Feature importance
-    feature_importance: Optional[list[FeatureImportance]] = Field(
+    feature_importance: list[FeatureImportance] | None = Field(
         None, description="Feature importance scores"
     )
 
     timestamp: datetime = Field(default_factory=datetime.now)
-    model_name: Optional[str] = Field(None, description="Name of the model")
+    model_name: str | None = Field(None, description="Name of the model")
 
     class Config:
         json_encoders: ClassVar[dict] = {datetime: lambda v: v.isoformat()}
@@ -229,7 +229,7 @@ class InterpretationReport(BaseModel):
     num_samples_analyzed: int = Field(..., description="Number of samples")
 
     # Feature importance
-    feature_importance: Optional[FeatureImportanceReport] = Field(
+    feature_importance: FeatureImportanceReport | None = Field(
         None, description="Overall feature importance"
     )
 

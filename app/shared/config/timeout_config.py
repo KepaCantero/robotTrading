@@ -29,7 +29,6 @@ from __future__ import annotations
 import logging
 import os
 from dataclasses import dataclass
-from typing import Optional
 
 logger = logging.getLogger(__name__)
 
@@ -276,7 +275,7 @@ class TimeoutConfig:
 # ==================== Global Instance ====================
 
 # Lazy-loaded global instance
-_TIMEOUTS_INSTANCE: Optional[TimeoutConfig] = None
+_TIMEOUTS_INSTANCE: TimeoutConfig | None = None
 
 
 def get_timeouts() -> TimeoutConfig:
@@ -311,7 +310,7 @@ class TimeoutManager:
         timeout = TimeoutManager.get_timeout("alpaca_read")
     """
 
-    def __init__(self, config: Optional[TimeoutConfig] = None):
+    def __init__(self, config: TimeoutConfig | None = None):
         """Initialize with optional config override."""
         self._config = config or get_timeouts()
 

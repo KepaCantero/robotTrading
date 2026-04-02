@@ -371,7 +371,11 @@ def test_dependency_injection():
     print("✓ UserStore dependency injection works")
 
     # Test token manager
-    from app.security.authentication.jwt_token_manager import JWTTokenManager, get_token_manager, set_token_manager
+    from app.security.authentication.jwt_token_manager import (
+        JWTTokenManager,
+        get_token_manager,
+        set_token_manager,
+    )
 
     try:
         custom_manager = JWTTokenManager()

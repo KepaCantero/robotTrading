@@ -18,11 +18,12 @@ Reference: Hull, Options, Futures, and Other Derivatives, Chapter 20
 from __future__ import annotations
 
 import logging
-from typing import Any, Optional
+from typing import TYPE_CHECKING, Any
 
 import numpy as np
 
-from app.domain.models.portfolio import Portfolio
+if TYPE_CHECKING:
+    from app.domain.models.portfolio import Portfolio
 
 logger = logging.getLogger(__name__)
 
@@ -34,7 +35,7 @@ class PortfolioVarianceStressTester:
     Tests how portfolio variance changes under various stress scenarios.
     """
 
-    def __init__(self, config: Optional[dict[str, Any]] = None):
+    def __init__(self, config: dict[str, Any] | None = None):
         """
         Initialize portfolio variance stress tester.
 
@@ -131,7 +132,7 @@ class PortfolioVarianceStressTester:
         portfolio: Portfolio,
         current_correlations: dict[str, dict[str, float]],
         current_volatilities: dict[str, float],
-        scenario_names: Optional[list[str]] = None,
+        scenario_names: list[str] | None = None,
     ) -> dict[str, Any]:
         """
         Run comprehensive variance stress tests.

@@ -7,7 +7,7 @@ Engine for constructing and optimizing portfolios based on various strategies.
 from __future__ import annotations
 
 import logging
-from typing import Any, Optional
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -20,7 +20,7 @@ class PortfolioConstructionEngine:
     based on target weights, constraints, and market conditions.
     """
 
-    def __init__(self, config: Optional[dict[str, Any]] = None):
+    def __init__(self, config: dict[str, Any] | None = None):
         """
         Initialize the Portfolio Construction Engine.
 
@@ -36,7 +36,7 @@ class PortfolioConstructionEngine:
     def construct_portfolio(
         self,
         target_weights: dict[str, float],
-        constraints: Optional[dict[str, Any]] = None,
+        constraints: dict[str, Any] | None = None,
         **kwargs,
     ) -> dict[str, Any]:
         """

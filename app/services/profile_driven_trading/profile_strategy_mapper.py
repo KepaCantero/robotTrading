@@ -23,7 +23,7 @@ from __future__ import annotations
 import logging
 from decimal import Decimal
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 import yaml
 from pydantic import BaseModel, Field, field_validator
@@ -138,7 +138,7 @@ class StrategyMapping(BaseModel):
     )
 
     # Capital allocation
-    capital_allocation: Optional[dict[str, Decimal]] = Field(
+    capital_allocation: dict[str, Decimal] | None = Field(
         default=None, description="Capital allocated to each strategy"
     )
 
@@ -309,7 +309,7 @@ class ProfileStrategyMapper:
 
         return strategy_config
 
-    def _get_profile_config(self, objective: str, capital_tier: str) -> Optional[dict[str, Any]]:
+    def _get_profile_config(self, objective: str, capital_tier: str) -> dict[str, Any] | None:
         """
         Get profile configuration from investment_profiles.yaml.
 

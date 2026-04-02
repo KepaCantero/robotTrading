@@ -12,9 +12,10 @@ SOLID Principles:
 from __future__ import annotations
 
 import logging
-from typing import Optional
+from typing import TYPE_CHECKING
 
-from app.domain.models.momentum import MomentumAnalysis, MomentumStrategy
+if TYPE_CHECKING:
+    from app.domain.models.momentum import MomentumAnalysis, MomentumStrategy
 
 logger = logging.getLogger(__name__)
 
@@ -52,7 +53,7 @@ class InMemoryStorageBackend:
         self.analyses[analysis_id] = analysis
         logger.debug(f"Saved analysis: {analysis_id}")
 
-    async def get_analysis(self, analysis_id: str) -> Optional[MomentumAnalysis]:
+    async def get_analysis(self, analysis_id: str) -> MomentumAnalysis | None:
         """
         Get momentum analysis by ID.
 

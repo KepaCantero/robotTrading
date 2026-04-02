@@ -205,7 +205,8 @@ class ChaosOrchestrator:
             db_path.parent.mkdir(parents=True, exist_ok=True)
 
             async with aiosqlite.connect(self.config.db_path) as db:
-                await db.execute("""
+                await db.execute(
+                    """
                     CREATE TABLE IF NOT EXISTS chaos_experiments (
                         id TEXT PRIMARY KEY,
                         service_name TEXT NOT NULL,
@@ -224,12 +225,15 @@ class ChaosOrchestrator:
                         incidents TEXT,
                         rollback_actions TEXT
                     )
-                """)
+                """
+                )
 
-                await db.execute("""
+                await db.execute(
+                    """
                     CREATE INDEX IF NOT EXISTS idx_experiments_service_status
                     ON chaos_experiments(service_name, status)
-                """)
+                """
+                )
 
                 await db.commit()
 

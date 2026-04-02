@@ -6,7 +6,7 @@ Usa análisis de correlaciones para detectar cambios de régimen.
 """
 
 import logging
-from typing import Any, Optional
+from typing import Any
 
 import numpy as np
 import pandas as pd
@@ -28,7 +28,7 @@ class CorrelationRegimeDetector:
     Usa cambios en correlaciones entre activos para detectar cambios de régimen.
     """
 
-    def __init__(self, config: Optional[dict[str, Any]] = None):
+    def __init__(self, config: dict[str, Any] | None = None):
         """
         Inicializar detector de correlación.
 
@@ -69,7 +69,7 @@ class CorrelationRegimeDetector:
             return 0.0
 
     def detect(
-        self, price_data: dict[str, list[float]], baseline_period: Optional[int] = None
+        self, price_data: dict[str, list[float]], baseline_period: int | None = None
     ) -> dict[str, Any]:
         """
         Detectar régimen basado en correlaciones.

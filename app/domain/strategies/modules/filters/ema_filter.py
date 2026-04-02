@@ -5,7 +5,6 @@ EMAFilter - Filtro de tendencia basado en cruces de EMA.
 from __future__ import annotations
 
 import logging
-from typing import Optional
 
 from ..base_filter import BaseFilter
 
@@ -24,9 +23,9 @@ class EMAFilter(BaseFilter):
 
     def __init__(
         self,
-        config: Optional[dict] = None,
+        config: dict | None = None,
         preset: str = "balanced",
-        tier: Optional[str] = None,
+        tier: str | None = None,
         use_yaml: bool = True,
     ):
         """Inicializar filtro EMA."""

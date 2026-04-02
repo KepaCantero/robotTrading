@@ -22,7 +22,6 @@ import logging
 from dataclasses import dataclass
 from datetime import datetime
 from decimal import ROUND_HALF_UP, Decimal
-from typing import Optional
 
 from app.shared.config.centralized_config import get_config
 
@@ -62,7 +61,7 @@ class LossMonitor:
         should_reset = monitor.should_reset_loss_counter(trade_results)
     """
 
-    def __init__(self, reset_threshold: Optional[int] = None):
+    def __init__(self, reset_threshold: int | None = None):
         """
         Initialize loss monitor.
 
@@ -81,7 +80,7 @@ class LossMonitor:
     def detect_consecutive_losses(
         self,
         trade_results: list[TradeResult],
-        window_days: Optional[int] = None,
+        window_days: int | None = None,
     ) -> int:
         """
         Count consecutive losing trades from most recent backwards.
@@ -168,7 +167,7 @@ class LossMonitor:
     def should_reset_loss_counter(
         self,
         trade_results: list[TradeResult],
-        lookback_trades: Optional[int] = None,
+        lookback_trades: int | None = None,
     ) -> bool:
         """
         Check if loss streak should reset.
@@ -238,7 +237,7 @@ class LossMonitor:
     def calculate_win_rate(
         self,
         trade_results: list[TradeResult],
-        window_trades: Optional[int] = None,
+        window_trades: int | None = None,
     ) -> Decimal:
         """
         Calculate win rate from recent trades.
@@ -268,8 +267,8 @@ class LossMonitor:
     def calculate_average_win_loss_ratio(
         self,
         trade_results: list[TradeResult],
-        window_trades: Optional[int] = None,
-    ) -> Optional[Decimal]:
+        window_trades: int | None = None,
+    ) -> Decimal | None:
         """
         Calculate average win size vs average loss size.
 

@@ -16,16 +16,18 @@ from __future__ import annotations
 import asyncio
 import logging
 from dataclasses import dataclass, field
-from datetime import datetime
 from decimal import Decimal
 from enum import Enum
-from typing import Any, Callable, Optional
+from typing import TYPE_CHECKING, Any, Callable
 
 from httpx import HTTPError
 
 from app.shared.config.centralized_config import get_config
 from app.shared.utils.decimal_utils import to_decimal
 from app.shared.utils.timezone_utils import utc_now
+
+if TYPE_CHECKING:
+    from datetime import datetime
 
 logger = logging.getLogger(__name__)
 
@@ -56,10 +58,10 @@ class MarketState:
     status: TradingStatus
     current_price: Decimal
     change_pct: Decimal
-    volume: Optional[Decimal] = None
-    vix: Optional[Decimal] = None
+    volume: Decimal | None = None
+    vix: Decimal | None = None
     last_update: datetime = field(default_factory=utc_now)
-    halt_reason: Optional[str] = None
+    halt_reason: str | None = None
 
     def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
@@ -81,7 +83,7 @@ class CircuitBreakerEvent:
 
     timestamp: datetime
     symbol: str
-    level: Optional[CircuitBreakerLevel]
+    level: CircuitBreakerLevel | None
     reason: str
     change_pct: Decimal
 
@@ -99,7 +101,7 @@ class CircuitBreakerEvent:
 class CircuitBreakerConfig:
     """Configuration for circuit breaker behavior - uses centralized config."""
 
-    def __init__(self, custom_config: Optional[dict] = None):
+    def __init__(self, custom_config: dict | None = None):
         """Initialize config with centralized values."""
         tt = get_config().trading_thresholds
 
@@ -156,9 +158,9 @@ class CircuitBreakerManager:
         self,
         broker,
         data_service,
-        config: Optional[CircuitBreakerConfig] = None,
-        on_halt: Optional[Callable[[CircuitBreakerEvent], None]] = None,
-        on_resume: Optional[Callable[[str], None]] = None,
+        config: CircuitBreakerConfig | None = None,
+        on_halt: Callable[[CircuitBreakerEvent], None] | None = None,
+        on_resume: Callable[[str], None] | None = None,
     ):
         """
         Initialize circuit breaker manager.
@@ -179,8 +181,8 @@ class CircuitBreakerManager:
         # State
         self._is_monitoring = False
         self._is_trading_paused = False
-        self._monitor_task: Optional[asyncio.Task] = None
-        self._halt_check_task: Optional[asyncio.Task] = None
+        self._monitor_task: asyncio.Task | None = None
+        self._halt_check_task: asyncio.Task | None = None
 
         # Track market states
         self._market_states: dict[str, MarketState] = {}
@@ -496,7 +498,7 @@ class CircuitBreakerManager:
             except (asyncio.TimeoutError, OSError) as e:
                 logger.error(f"Error in halt check loop: {e}")
 
-    def get_market_state(self, symbol: str) -> Optional[MarketState]:
+    def get_market_state(self, symbol: str) -> MarketState | None:
         """Get current state of a market or symbol."""
         return self._market_states.get(symbol)
 

@@ -21,14 +21,16 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass
-from datetime import date
 from decimal import Decimal
-from typing import Optional
+from typing import TYPE_CHECKING
 
 import numpy as np
 from scipy import stats
 
 from .models import VolatilityMetrics, VolatilityRegime
+
+if TYPE_CHECKING:
+    from datetime import date
 
 logger = logging.getLogger(__name__)
 
@@ -65,7 +67,7 @@ class VolatilityCalculator:
 
     def __init__(
         self,
-        risk_free_rate: Optional[Decimal] = None,
+        risk_free_rate: Decimal | None = None,
         trading_days_per_year: int = 252,
     ):
         """
@@ -151,7 +153,7 @@ class VolatilityCalculator:
         self,
         price_series: list[tuple[date, Decimal]],
         window: int = 20,
-    ) -> Optional[Decimal]:
+    ) -> Decimal | None:
         """
         Calcular volatilidad histórica.
 
@@ -188,7 +190,7 @@ class VolatilityCalculator:
         self,
         stock_returns: np.ndarray,
         market_returns: np.ndarray,
-    ) -> Optional[Decimal]:
+    ) -> Decimal | None:
         """
         Calcular beta respecto al mercado.
 
@@ -219,7 +221,7 @@ class VolatilityCalculator:
         self,
         returns: np.ndarray,
         min_return: float = 0.0,
-    ) -> Optional[Decimal]:
+    ) -> Decimal | None:
         """
         Calcular riesgo downside (semi-deviation).
 
@@ -252,7 +254,7 @@ class VolatilityCalculator:
     def calculate_max_drawdown(
         self,
         price_series: list[tuple[date, Decimal]],
-    ) -> Optional[Decimal]:
+    ) -> Decimal | None:
         """
         Calcular máximo drawdown.
 
@@ -281,7 +283,7 @@ class VolatilityCalculator:
         self,
         returns: np.ndarray,
         target_return: float = 0.0,
-    ) -> Optional[Decimal]:
+    ) -> Decimal | None:
         """
         Calcular Sortino ratio.
 
@@ -312,7 +314,7 @@ class VolatilityCalculator:
     def calculate_sharpe_ratio(
         self,
         returns: np.ndarray,
-    ) -> Optional[Decimal]:
+    ) -> Decimal | None:
         """
         Calcular Sharpe ratio.
 
@@ -346,7 +348,7 @@ class VolatilityCalculator:
         self,
         stock_returns: np.ndarray,
         market_returns: np.ndarray,
-    ) -> Optional[Decimal]:
+    ) -> Decimal | None:
         """
         Calcular correlación con el mercado.
 
@@ -371,8 +373,8 @@ class VolatilityCalculator:
         self,
         stock_returns: np.ndarray,
         market_returns: np.ndarray,
-        beta: Optional[Decimal],
-    ) -> Optional[Decimal]:
+        beta: Decimal | None,
+    ) -> Decimal | None:
         """
         Calcular volatilidad idiosincrática.
 
@@ -415,7 +417,7 @@ class VolatilityCalculator:
     def calculate_moments(
         self,
         returns: np.ndarray,
-    ) -> tuple[Optional[Decimal], Optional[Decimal]]:
+    ) -> tuple[Decimal | None, Decimal | None]:
         """
         Calcular skewness y kurtosis de retornos.
 

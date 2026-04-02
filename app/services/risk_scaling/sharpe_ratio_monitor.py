@@ -20,7 +20,7 @@ import logging
 import math
 import statistics
 from decimal import ROUND_HALF_UP, Decimal
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING
 
 from app.shared.config.centralized_config import get_config
 
@@ -46,7 +46,7 @@ class SharpeRatioMonitor:
         scale = monitor.calculate_sharpe_scale(sharpe)
     """
 
-    def __init__(self, risk_free_rate: Optional[Decimal] = None):
+    def __init__(self, risk_free_rate: Decimal | None = None):
         """
         Initialize Sharpe ratio monitor.
 
@@ -69,7 +69,7 @@ class SharpeRatioMonitor:
         self,
         daily_returns: list[Decimal],
         window_days: int = 30,
-        risk_free_rate: Optional[Decimal] = None,
+        risk_free_rate: Decimal | None = None,
     ) -> Decimal:
         """
         Calculate rolling Sharpe ratio over window_days.
@@ -175,8 +175,8 @@ class SharpeRatioMonitor:
     def is_sharpe_declining(
         self,
         current_sharpe: Decimal,
-        previous_sharpe: Optional[Decimal] = None,
-        history: Optional[list[Decimal]] = None,
+        previous_sharpe: Decimal | None = None,
+        history: list[Decimal] | None = None,
         window: int = 5,
     ) -> tuple[bool, str]:
         """
@@ -238,7 +238,7 @@ class SharpeRatioMonitor:
         self,
         portfolio_returns: list[Decimal],
         benchmark_returns: list[Decimal],
-        risk_free_rate: Optional[Decimal] = None,
+        risk_free_rate: Decimal | None = None,
     ) -> Decimal:
         """
         Calculate Information Ratio (excess return / tracking error).
@@ -316,8 +316,8 @@ class SharpeRatioMonitor:
     def suggest_capital_adjustment(
         self,
         current_sharpe: Decimal,
-        previous_sharpe: Optional[Decimal] = None,
-        current_allocation: Optional[Decimal] = None,
+        previous_sharpe: Decimal | None = None,
+        current_allocation: Decimal | None = None,
     ) -> tuple[Decimal, str]:
         """
         Suggest capital adjustment based on Sharpe trend.

@@ -8,7 +8,6 @@ from __future__ import annotations
 
 import logging
 from decimal import Decimal
-from typing import Optional
 
 from pydantic import BaseModel, Field
 
@@ -50,7 +49,7 @@ class PortfolioAllocation(BaseModel):
     expected_portfolio_drawdown_pct: Decimal
     diversification_ratio: Decimal
     optimization_notes: str = ""
-    error_message: Optional[str] = None
+    error_message: str | None = None
 
 
 class RiskScalingRequest(BaseModel):
@@ -73,13 +72,13 @@ class RiskAdjustedPortfolio(BaseModel):
     success: bool = True
     profile_id: str
     base_allocation: PortfolioAllocation
-    adjusted_allocation: Optional[PortfolioAllocation] = None
+    adjusted_allocation: PortfolioAllocation | None = None
     risk_scaling_applied: bool = False
     scaling_factor: Decimal = Decimal("1.0")
     market_regime: str
     volatility_level: str
     adjustment_rationale: str = ""
-    error_message: Optional[str] = None
+    error_message: str | None = None
 
 
 logger.debug(

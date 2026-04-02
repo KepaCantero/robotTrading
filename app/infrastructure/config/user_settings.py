@@ -9,7 +9,6 @@ from __future__ import annotations
 import logging
 from decimal import Decimal
 from enum import Enum
-from typing import Optional
 
 from pydantic import BaseModel, Field, field_validator
 
@@ -56,9 +55,9 @@ class NotificationSettings(BaseModel):
     """User notification preferences."""
 
     enable_telegram: bool = Field(default=False, description="Enable Telegram alerts")
-    telegram_chat_id: Optional[str] = Field(default=None, description="Telegram chat ID")
+    telegram_chat_id: str | None = Field(default=None, description="Telegram chat ID")
     enable_email: bool = Field(default=False, description="Enable email alerts")
-    email_address: Optional[str] = Field(default=None, description="Email address")
+    email_address: str | None = Field(default=None, description="Email address")
     alert_on_entry: bool = Field(default=True, description="Alert on entry orders")
     alert_on_exit: bool = Field(default=True, description="Alert on exit orders")
     alert_on_risk: bool = Field(default=True, description="Alert on risk events")
@@ -70,9 +69,9 @@ class BrokerSettings(BaseModel):
 
     broker_type: BrokerType = Field(default=BrokerType.PAPER, description="Primary broker")
     paper_trading: bool = Field(default=True, description="Use paper trading mode")
-    alpaca_api_key: Optional[str] = Field(default=None, description="Alpaca API key")
-    alpaca_api_secret: Optional[str] = Field(default=None, description="Alpaca API secret")
-    alpaca_base_url: Optional[str] = Field(
+    alpaca_api_key: str | None = Field(default=None, description="Alpaca API key")
+    alpaca_api_secret: str | None = Field(default=None, description="Alpaca API secret")
+    alpaca_base_url: str | None = Field(
         default="https://paper-api.alpaca.markets",
         description="Alpaca base URL",
     )

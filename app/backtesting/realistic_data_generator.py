@@ -18,7 +18,7 @@ import logging
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import ClassVar, Optional
+from typing import ClassVar
 
 import numpy as np
 
@@ -122,10 +122,10 @@ class RealisticDataGenerator:
 
     def __init__(
         self,
-        seed: Optional[int] = None,
+        seed: int | None = None,
         base_price: float = 100.0,
         base_volume: int = 50_000_000,
-        regimes: Optional[dict] = None,
+        regimes: dict | None = None,
         asset_class: str = "equity",
     ):
         """
@@ -310,7 +310,7 @@ class RealisticDataGenerator:
         volumes: list[int],
         dates: list[datetime],
         symbol: str,
-        regimes: Optional[list[MarketRegime]] = None,
+        regimes: list[MarketRegime] | None = None,
     ) -> list[Quote]:
         """
         Convert price list to realistic Quote objects with proper OHLC.

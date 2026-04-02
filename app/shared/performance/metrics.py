@@ -34,7 +34,7 @@ from __future__ import annotations
 
 import logging
 from decimal import Decimal
-from typing import Optional, Union, cast
+from typing import cast
 
 import numpy as np
 import pandas as pd
@@ -89,8 +89,8 @@ class PerformanceMetricsCalculator(_PerformanceMetricsCalculator):
     @classmethod
     def from_config(
         cls,
-        risk_free_rate: Optional[float] = None,
-        trading_days: Optional[int] = None,
+        risk_free_rate: float | None = None,
+        trading_days: int | None = None,
         use_empyrical: bool = True,
     ) -> PerformanceMetricsCalculator:
         """
@@ -129,7 +129,7 @@ class PerformanceMetricsCalculator(_PerformanceMetricsCalculator):
 
 
 def _to_float_array(
-    returns: Union[pd.Series, np.ndarray, list[Decimal], list[float]],
+    returns: pd.Series | np.ndarray | list[Decimal] | list[float],
 ) -> np.ndarray:
     """Convert returns to numpy array, handling various input types."""
     logger.debug(
@@ -161,8 +161,8 @@ def _to_float_array(
 
 
 def sharpe_ratio(
-    returns: Union[pd.Series, np.ndarray, list[Decimal], list[float]],
-    risk_free_rate: Optional[float] = None,
+    returns: pd.Series | np.ndarray | list[Decimal] | list[float],
+    risk_free_rate: float | None = None,
     annualize: bool = True,
 ) -> float:
     """
@@ -197,8 +197,8 @@ def sharpe_ratio(
 
 
 def sortino_ratio(
-    returns: Union[pd.Series, np.ndarray, list[Decimal], list[float]],
-    risk_free_rate: Optional[float] = None,
+    returns: pd.Series | np.ndarray | list[Decimal] | list[float],
+    risk_free_rate: float | None = None,
     target_return: float = 0.0,
     annualize: bool = True,
 ) -> float:
@@ -223,9 +223,9 @@ def sortino_ratio(
 
 
 def calmar_ratio(
-    returns: Union[pd.Series, np.ndarray, list[float]],
-    equity_curve: Optional[Union[pd.Series, np.ndarray, list[float]]] = None,
-) -> Optional[float]:
+    returns: pd.Series | np.ndarray | list[float],
+    equity_curve: pd.Series | np.ndarray | list[float] | None = None,
+) -> float | None:
     """
     Calculate Calmar ratio using CentralizedConfig defaults.
 
@@ -242,7 +242,7 @@ def calmar_ratio(
 
 
 def omega_ratio(
-    returns: Union[pd.Series, np.ndarray, list[Decimal], list[float]],
+    returns: pd.Series | np.ndarray | list[Decimal] | list[float],
     threshold: float = 0.0,
 ) -> float:
     """
@@ -260,7 +260,7 @@ def omega_ratio(
 
 
 def max_drawdown(
-    equity_curve: Union[pd.Series, np.ndarray, list[Decimal], list[float]],
+    equity_curve: pd.Series | np.ndarray | list[Decimal] | list[float],
     as_percentage: bool = False,
 ) -> float:
     """
@@ -278,7 +278,7 @@ def max_drawdown(
 
 
 def ulcer_index(
-    equity_curve: Union[pd.Series, np.ndarray, list[Decimal], list[float]],
+    equity_curve: pd.Series | np.ndarray | list[Decimal] | list[float],
 ) -> float:
     """
     Calculate Ulcer Index.

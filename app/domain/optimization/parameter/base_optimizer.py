@@ -11,12 +11,14 @@ from abc import ABC, abstractmethod
 from concurrent.futures import ProcessPoolExecutor, as_completed
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Any, Callable, Optional
+from typing import TYPE_CHECKING, Any, Callable
 
 import numpy as np
 
-from .models import ParameterGrid
 from .trial import TrialContext, TrialHistory, TrialResult, TrialStatus, create_trial_id
+
+if TYPE_CHECKING:
+    from .models import ParameterGrid
 
 logger = logging.getLogger(__name__)
 
@@ -46,7 +48,7 @@ class OptimizationConfig:
     """
 
     max_iterations: int = 100
-    timeout_seconds: Optional[int] = None
+    timeout_seconds: int | None = None
     n_jobs: int = 1
     early_stopping: bool = True
     early_stopping_patience: int = 10
@@ -54,11 +56,11 @@ class OptimizationConfig:
     metric: str = "sharpe_ratio"
     maximize: bool = True
     minimize: bool = False
-    random_seed: Optional[int] = None
+    random_seed: int | None = None
     verbose: int = 1
     progress_bar: bool = True
     checkpoint_interval: int = 0
-    checkpoint_path: Optional[str] = None
+    checkpoint_path: str | None = None
     validation_split: float = 0.0
     cv_folds: int = 1
 
@@ -128,13 +130,13 @@ class OptimizationResult:
     optimization_time: float
     n_iterations: int
     converged: bool
-    convergence_iteration: Optional[int] = None
-    config: Optional[OptimizationConfig] = None
+    convergence_iteration: int | None = None
+    config: OptimizationConfig | None = None
     best_metrics: dict[str, float] = field(default_factory=dict)
     additional_info: dict[str, Any] = field(default_factory=dict)
 
     @property
-    def best_trial(self) -> Optional[TrialResult]:
+    def best_trial(self) -> TrialResult | None:
         """Get the best trial result."""
         if not self.all_trials:
             return None
@@ -270,8 +272,8 @@ class BaseOptimizer(ABC):
         """
         self.config = config
         self.history = TrialHistory()
-        self._start_time: Optional[datetime] = None
-        self._end_time: Optional[datetime] = None
+        self._start_time: datetime | None = None
+        self._end_time: datetime | None = None
         self._best_score = float("-inf") if config.maximize else float("inf")
         self._iteration_count = 0
 
@@ -545,7 +547,7 @@ class BaseOptimizer(ABC):
             if self.config.verbose >= 1:
                 logger.info(f"Saved checkpoint at iteration {iteration}")
 
-    def _load_checkpoint(self) -> Optional[int]:
+    def _load_checkpoint(self) -> int | None:
         """
         Load checkpoint if available.
 

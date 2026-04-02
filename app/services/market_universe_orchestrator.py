@@ -14,12 +14,13 @@ Created: 2025-01-23
 from __future__ import annotations
 
 import logging
-from typing import Optional
-
-import pandas as pd
+from typing import TYPE_CHECKING
 
 from app.services.market_universe_loader import MarketUniverseLoader, get_market_universe_loader
 from app.services.strategy_stock_allocator import AllocationResult, StrategyStockAllocator
+
+if TYPE_CHECKING:
+    import pandas as pd
 
 logger = logging.getLogger(__name__)
 
@@ -38,8 +39,8 @@ class MarketUniverseOrchestrator:
 
     def __init__(
         self,
-        market_loader: Optional[MarketUniverseLoader] = None,
-        stock_allocator: Optional[StrategyStockAllocator] = None,
+        market_loader: MarketUniverseLoader | None = None,
+        stock_allocator: StrategyStockAllocator | None = None,
     ):
         """
         Inicializar el orquestador.
@@ -143,7 +144,7 @@ class MarketUniverseOrchestrator:
     async def allocate_from_market_universe(
         self,
         total_capital: float,
-        strategy_allocations: Optional[dict[str, float]] = None,
+        strategy_allocations: dict[str, float] | None = None,
         include_sp500: bool = True,
         include_nasdaq100: bool = False,
         include_ibex35: bool = False,
@@ -230,7 +231,7 @@ class MarketUniverseOrchestrator:
     async def get_sp500_for_allocation(
         self,
         total_capital: float,
-        strategy_allocations: Optional[dict[str, float]] = None,
+        strategy_allocations: dict[str, float] | None = None,
         top_n: int = 100,
         **kwargs,
     ) -> AllocationResult:
@@ -261,7 +262,7 @@ class MarketUniverseOrchestrator:
     async def get_ibex35_for_allocation(
         self,
         total_capital: float,
-        strategy_allocations: Optional[dict[str, float]] = None,
+        strategy_allocations: dict[str, float] | None = None,
         top_n: int = 35,
         **kwargs,
     ) -> AllocationResult:
@@ -292,7 +293,7 @@ class MarketUniverseOrchestrator:
     async def get_crypto_for_allocation(
         self,
         total_capital: float,
-        strategy_allocations: Optional[dict[str, float]] = None,
+        strategy_allocations: dict[str, float] | None = None,
         top_n: int = 20,
         **kwargs,
     ) -> AllocationResult:
@@ -323,7 +324,7 @@ class MarketUniverseOrchestrator:
     async def get_mixed_universe_for_allocation(
         self,
         total_capital: float,
-        strategy_allocations: Optional[dict[str, float]] = None,
+        strategy_allocations: dict[str, float] | None = None,
         sp500_top: int = 50,
         crypto_top: int = 10,
         **kwargs,
@@ -358,7 +359,7 @@ class MarketUniverseOrchestrator:
 # GLOBAL SINGLETON
 # ============================================================================
 
-_market_universe_orchestrator: Optional[MarketUniverseOrchestrator] = None
+_market_universe_orchestrator: MarketUniverseOrchestrator | None = None
 
 
 def get_market_universe_orchestrator() -> MarketUniverseOrchestrator:

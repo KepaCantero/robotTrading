@@ -10,7 +10,7 @@ import logging
 from dataclasses import dataclass, field
 from datetime import datetime
 from decimal import Decimal
-from typing import Literal, Optional
+from typing import Literal
 
 logger = logging.getLogger(__name__)
 
@@ -54,13 +54,13 @@ class StrategyRecommendationRequest:
     profile_id: str
     input_id: str
     objective: str  # maximizar_capital, dividendos, preservation, growth, income
-    backtest_result: Optional[dict] = None
-    sharpe_ratio: Optional[Decimal] = None
-    annual_return_pct: Optional[Decimal] = None
-    max_drawdown_pct: Optional[Decimal] = None
-    sortino_ratio: Optional[Decimal] = None
-    win_rate_pct: Optional[Decimal] = None
-    dividend_yield_pct: Optional[Decimal] = None
+    backtest_result: dict | None = None
+    sharpe_ratio: Decimal | None = None
+    annual_return_pct: Decimal | None = None
+    max_drawdown_pct: Decimal | None = None
+    sortino_ratio: Decimal | None = None
+    win_rate_pct: Decimal | None = None
+    dividend_yield_pct: Decimal | None = None
 
 
 @dataclass
@@ -86,8 +86,8 @@ class StrategyRecommendation:
     weaknesses: list[str] = field(default_factory=list)
 
     # Detailed analysis
-    objective_weights: Optional[ObjectiveWeights] = None
-    error_message: Optional[str] = None
+    objective_weights: ObjectiveWeights | None = None
+    error_message: str | None = None
 
 
 logger.debug(

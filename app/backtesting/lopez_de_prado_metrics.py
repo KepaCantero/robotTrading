@@ -22,7 +22,7 @@ from __future__ import annotations
 import logging
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Any, Optional
+from typing import Any
 
 import numpy as np
 from scipy import stats
@@ -40,11 +40,11 @@ class SharpeCombinationResult:
     combined_sharpe: float
     method: str
     individual_sharpes: list[float] = field(default_factory=list)
-    weights: Optional[np.ndarray] = None
+    weights: np.ndarray | None = None
     improvement_pct: float = 0.0
     is_statistically_significant: bool = False
     p_value: float = 1.0
-    confidence_interval: Optional[tuple[float, float]] = None
+    confidence_interval: tuple[float, float] | None = None
     timestamp: datetime = field(default_factory=datetime.now)
 
     def to_dict(self) -> dict[str, Any]:
@@ -165,7 +165,7 @@ class SharpeRatioCombinator:
     - Hierarchical combination methods
     """
 
-    def __init__(self, risk_free_rate: Optional[float] = None):
+    def __init__(self, risk_free_rate: float | None = None):
         """
         Initialize Sharpe ratio combinator.
 
@@ -757,7 +757,7 @@ class TurnoverAdjustedCalculator:
     def __init__(
         self,
         transaction_cost_bps: float = 10.0,  # 10 bps per trade
-        risk_free_rate: Optional[float] = None,
+        risk_free_rate: float | None = None,
     ):
         """
         Initialize turnover-adjusted calculator.
@@ -1012,7 +1012,7 @@ class ConcentrationAnalyzer:
 
 # Factory function for easy instantiation
 def create_lopez_de_prado_suite(
-    risk_free_rate: Optional[float] = None,
+    risk_free_rate: float | None = None,
     stability_threshold: float = 70.0,
     transaction_cost_bps: float = 10.0,
 ) -> dict[str, Any]:

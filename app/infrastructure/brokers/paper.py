@@ -9,10 +9,9 @@ from __future__ import annotations
 import logging
 from datetime import datetime
 from decimal import Decimal
-from typing import Optional
+from typing import TYPE_CHECKING
 from uuid import UUID, uuid4
 
-from app.domain.models.market_data import Quote
 from app.domain.models.paper_trading import (
     OrderSide,
     OrderType,
@@ -24,13 +23,16 @@ from app.domain.models.paper_trading import (
     TradeStatus,
 )
 
+if TYPE_CHECKING:
+    from app.domain.models.market_data import Quote
+
 logger = logging.getLogger(__name__)
 
 
 class PaperTradingService:
     """Service for paper trading simulation."""
 
-    def __init__(self, initial_capital: Optional[Decimal] = None) -> None:
+    def __init__(self, initial_capital: Decimal | None = None) -> None:
         if initial_capital is None:
             initial_capital = Decimal("100000")
         self._capital = initial_capital
@@ -47,8 +49,8 @@ class PaperTradingService:
     async def create_portfolio(
         self,
         name: str,
-        config_id: Optional[UUID] = None,
-        initial_cash: Optional[Decimal] = None,
+        config_id: UUID | None = None,
+        initial_cash: Decimal | None = None,
     ) -> PaperPortfolio:
         """Create a new paper trading portfolio."""
         cash = initial_cash if initial_cash is not None else self._capital
@@ -63,7 +65,7 @@ class PaperTradingService:
         self.portfolios[portfolio.id] = portfolio
         return portfolio
 
-    async def get_portfolio(self, portfolio_id: UUID) -> Optional[PaperPortfolio]:
+    async def get_portfolio(self, portfolio_id: UUID) -> PaperPortfolio | None:
         """Get portfolio by ID."""
         return self.portfolios.get(portfolio_id)
 
@@ -71,8 +73,8 @@ class PaperTradingService:
         self,
         portfolio_id: UUID,
         name: str,
-        description: Optional[str] = None,
-        config_id: Optional[UUID] = None,
+        description: str | None = None,
+        config_id: UUID | None = None,
     ) -> PaperTradingSession:
         """Create a new trading session."""
         if config_id is None:
@@ -87,7 +89,7 @@ class PaperTradingService:
         self.sessions[session.id] = session
         return session
 
-    async def get_session(self, session_id: UUID) -> Optional[PaperTradingSession]:
+    async def get_session(self, session_id: UUID) -> PaperTradingSession | None:
         """Get session by ID."""
         return self.sessions.get(session_id)
 
@@ -108,10 +110,10 @@ class PaperTradingService:
         side: OrderSide,
         order_type: OrderType,
         quantity: Decimal,
-        price: Optional[Decimal] = None,
-        session_id: Optional[UUID] = None,
-        strategy_id: Optional[str] = None,
-        signal_id: Optional[UUID] = None,
+        price: Decimal | None = None,
+        session_id: UUID | None = None,
+        strategy_id: str | None = None,
+        signal_id: UUID | None = None,
     ) -> PaperTrade:
         """Execute a paper trade."""
         execution_price = price if price is not None else Decimal("0")
@@ -137,9 +139,9 @@ class PaperTradingService:
     async def get_trades(
         self,
         portfolio_id: UUID,
-        session_id: Optional[UUID] = None,
-        symbol: Optional[str] = None,
-        status: Optional[TradeStatus] = None,
+        session_id: UUID | None = None,
+        symbol: str | None = None,
+        status: TradeStatus | None = None,
     ) -> list[PaperTrade]:
         """Get trades for a portfolio with optional filters."""
         result = list(self.trades.values())
@@ -166,7 +168,7 @@ class PaperTradingService:
         symbol: str,
         side: str,
         quantity: Decimal,
-        price: Optional[Decimal] = None,
+        price: Decimal | None = None,
     ) -> dict[str, object]:
         """Place a paper trading order."""
         order: dict[str, object] = {
@@ -181,7 +183,7 @@ class PaperTradingService:
         self._orders.append(order)
         return order
 
-    async def get_position(self, symbol: str) -> Optional[PaperPosition]:
+    async def get_position(self, symbol: str) -> PaperPosition | None:
         """Get position for a specific symbol."""
         return self._positions.get(symbol)
 
@@ -204,7 +206,7 @@ class PaperTradingService:
 
 
 # Singleton instance
-_paper_trading_service: Optional[PaperTradingService] = None
+_paper_trading_service: PaperTradingService | None = None
 
 
 def get_paper_trading_service() -> PaperTradingService:

@@ -19,7 +19,7 @@ import logging
 import uuid
 from datetime import datetime
 from decimal import Decimal
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING
 
 logger = logging.getLogger(__name__)
 
@@ -60,7 +60,7 @@ class User(Base):
     updated_at: Mapped[datetime] = mapped_column(
         DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False
     )
-    last_login: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
+    last_login: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
 
     # Relationships
     portfolios: Mapped[list[Portfolio]] = relationship(
@@ -91,8 +91,8 @@ class APIKey(Base):
     key_hash: Mapped[str] = mapped_column(String(255), nullable=False, unique=True, index=True)
     permissions: Mapped[dict] = mapped_column(JSON, nullable=False, default=lambda: {})
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
-    expires_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
-    last_used: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
+    expires_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    last_used: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
 
     # Relationships
@@ -115,7 +115,7 @@ class Portfolio(Base):
         UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False
     )
     name: Mapped[str] = mapped_column(String(100), nullable=False)
-    description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    description: Mapped[str | None] = mapped_column(Text, nullable=True)
     initial_cash: Mapped[Decimal] = mapped_column(Numeric(15, 2), nullable=False)
     current_cash: Mapped[Decimal] = mapped_column(Numeric(15, 2), nullable=False)
     total_value: Mapped[Decimal] = mapped_column(Numeric(15, 2), nullable=False)
@@ -155,7 +155,7 @@ class Asset(Base):
     name: Mapped[str] = mapped_column(String(200), nullable=False)
     # stock, etf, crypto, etc.
     asset_class: Mapped[str] = mapped_column(String(50), nullable=False)
-    exchange: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
+    exchange: Mapped[str | None] = mapped_column(String(50), nullable=True)
     currency: Mapped[str] = mapped_column(String(3), nullable=False, default="USD")
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
@@ -191,8 +191,8 @@ class Position(Base):
     )
     quantity: Mapped[Decimal] = mapped_column(Numeric(15, 8), nullable=False)
     average_price: Mapped[Decimal] = mapped_column(Numeric(15, 4), nullable=False)
-    current_price: Mapped[Optional[Decimal]] = mapped_column(Numeric(15, 4), nullable=True)
-    unrealized_pnl: Mapped[Optional[Decimal]] = mapped_column(Numeric(15, 2), nullable=True)
+    current_price: Mapped[Decimal | None] = mapped_column(Numeric(15, 4), nullable=True)
+    unrealized_pnl: Mapped[Decimal | None] = mapped_column(Numeric(15, 2), nullable=True)
     realized_pnl: Mapped[Decimal] = mapped_column(
         Numeric(15, 2), default=Decimal("0"), nullable=False
     )
@@ -236,7 +236,7 @@ class Trade(Base):
     asset_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True), ForeignKey("assets.id", ondelete="CASCADE"), nullable=False
     )
-    order_id: Mapped[Optional[str]] = mapped_column(
+    order_id: Mapped[str | None] = mapped_column(
         String(100), nullable=True, unique=True, index=True
     )
     side: Mapped[str] = mapped_column(String(4), nullable=False)  # BUY, SELL
@@ -316,7 +316,7 @@ class Trade(Base):
         pydantic_trade: PydanticTrade,
         portfolio_id: uuid.UUID,
         asset_id: uuid.UUID,
-        order_id: Optional[str] = None,
+        order_id: str | None = None,
     ) -> Trade:
         """
         Create SQLAlchemy Trade from canonical Pydantic Trade model.
@@ -385,7 +385,7 @@ class MarketData(Base):
     low_price: Mapped[Decimal] = mapped_column(Numeric(15, 4), nullable=False)
     close_price: Mapped[Decimal] = mapped_column(Numeric(15, 4), nullable=False)
     volume: Mapped[Decimal] = mapped_column(Numeric(20, 0), nullable=False)
-    adjusted_close: Mapped[Optional[Decimal]] = mapped_column(Numeric(15, 4), nullable=True)
+    adjusted_close: Mapped[Decimal | None] = mapped_column(Numeric(15, 4), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
 
     # Relationships
@@ -421,7 +421,7 @@ class Signal(Base):
     strength: Mapped[str] = mapped_column(String(20), nullable=False)  # WEAK, MODERATE, STRONG
     confidence: Mapped[Decimal] = mapped_column(Numeric(5, 2), nullable=False)  # 0-100
     price: Mapped[Decimal] = mapped_column(Numeric(15, 4), nullable=False)
-    volume: Mapped[Optional[Decimal]] = mapped_column(Numeric(15, 8), nullable=True)
+    volume: Mapped[Decimal | None] = mapped_column(Numeric(15, 8), nullable=True)
     meta_data: Mapped[dict] = mapped_column(JSON, nullable=False, default=lambda: {})
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
 
@@ -455,9 +455,9 @@ class Backtest(Base):
     initial_capital: Mapped[Decimal] = mapped_column(Numeric(15, 2), nullable=False)
     final_capital: Mapped[Decimal] = mapped_column(Numeric(15, 2), nullable=False)
     total_return: Mapped[Decimal] = mapped_column(Numeric(8, 4), nullable=False)  # Percentage
-    sharpe_ratio: Mapped[Optional[Decimal]] = mapped_column(Numeric(8, 4), nullable=True)
-    max_drawdown: Mapped[Optional[Decimal]] = mapped_column(Numeric(8, 4), nullable=True)
-    win_rate: Mapped[Optional[Decimal]] = mapped_column(Numeric(5, 2), nullable=True)  # Percentage
+    sharpe_ratio: Mapped[Decimal | None] = mapped_column(Numeric(8, 4), nullable=True)
+    max_drawdown: Mapped[Decimal | None] = mapped_column(Numeric(8, 4), nullable=True)
+    win_rate: Mapped[Decimal | None] = mapped_column(Numeric(5, 2), nullable=True)  # Percentage
     total_trades: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     parameters: Mapped[dict] = mapped_column(JSON, nullable=False, default=lambda: {})
     results: Mapped[dict] = mapped_column(JSON, nullable=False, default=lambda: {})
@@ -465,7 +465,7 @@ class Backtest(Base):
         String(20), nullable=False, default="COMPLETED"
     )  # RUNNING, COMPLETED, FAILED
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
-    completed_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
+    completed_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
 
     # Relationships
     portfolio: Mapped[Portfolio] = relationship("Portfolio", back_populates="backtests")
@@ -492,18 +492,18 @@ class RiskMetrics(Base):
         UUID(as_uuid=True), ForeignKey("portfolios.id", ondelete="CASCADE"), nullable=False
     )
     calculation_date: Mapped[datetime] = mapped_column(DateTime, nullable=False, index=True)
-    var_95: Mapped[Optional[Decimal]] = mapped_column(
+    var_95: Mapped[Decimal | None] = mapped_column(
         Numeric(15, 2), nullable=True
     )  # Value at Risk 95%
-    var_99: Mapped[Optional[Decimal]] = mapped_column(
+    var_99: Mapped[Decimal | None] = mapped_column(
         Numeric(15, 2), nullable=True
     )  # Value at Risk 99%
-    expected_shortfall: Mapped[Optional[Decimal]] = mapped_column(Numeric(15, 2), nullable=True)
-    volatility: Mapped[Optional[Decimal]] = mapped_column(
+    expected_shortfall: Mapped[Decimal | None] = mapped_column(Numeric(15, 2), nullable=True)
+    volatility: Mapped[Decimal | None] = mapped_column(
         Numeric(8, 4), nullable=True
     )  # Annualized volatility
-    beta: Mapped[Optional[Decimal]] = mapped_column(Numeric(8, 4), nullable=True)
-    correlation_matrix: Mapped[Optional[dict]] = mapped_column(JSON, nullable=True)
+    beta: Mapped[Decimal | None] = mapped_column(Numeric(8, 4), nullable=True)
+    correlation_matrix: Mapped[dict | None] = mapped_column(JSON, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
 
     # Relationships
@@ -525,7 +525,7 @@ class SystemLog(Base):
     level: Mapped[str] = mapped_column(String(20), nullable=False, index=True)
     service: Mapped[str] = mapped_column(String(50), nullable=False, index=True)
     message: Mapped[str] = mapped_column(Text, nullable=False)
-    meta_data: Mapped[Optional[dict]] = mapped_column(JSON, nullable=True)
+    meta_data: Mapped[dict | None] = mapped_column(JSON, nullable=True)
     timestamp: Mapped[datetime] = mapped_column(DateTime, nullable=False, index=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
 

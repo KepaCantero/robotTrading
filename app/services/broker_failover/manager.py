@@ -14,14 +14,15 @@ from __future__ import annotations
 import asyncio
 import logging
 from dataclasses import dataclass
-from datetime import datetime
-from decimal import Decimal
 from enum import Enum
-from typing import TYPE_CHECKING, Callable, Optional, Union
+from typing import TYPE_CHECKING, Callable
 
 from app.shared.utils.timezone_utils import utc_now
 
 if TYPE_CHECKING:
+    from datetime import datetime
+    from decimal import Decimal
+
     from app.services.live_trading.broker_connector import BrokerPosition
 
 logger = logging.getLogger(__name__)
@@ -59,9 +60,9 @@ class BrokerState:
     last_health_check: datetime
     consecutive_failures: int = 0
     total_failures: int = 0
-    last_error: Optional[str] = None
+    last_error: str | None = None
 
-    def to_dict(self) -> dict[str, Union[str, int, float, bool, datetime, None]]:
+    def to_dict(self) -> dict[str, str | int | float | bool | datetime | None]:
         """Convert to dictionary."""
         return {
             "name": self.name,
@@ -90,7 +91,7 @@ class BrokerFailoverManager:
     def __init__(
         self,
         brokers: list[BrokerConfig],
-        on_failover: Optional[Callable[[str, str], None]] = None,
+        on_failover: Callable[[str, str], None] | None = None,
         health_check_interval: float = 60.0,
     ):
         """
@@ -107,10 +108,10 @@ class BrokerFailoverManager:
         self.health_check_interval = health_check_interval
 
         # State
-        self._active_broker: Optional[BrokerConfig] = None
+        self._active_broker: BrokerConfig | None = None
         self._broker_states: dict[str, BrokerState] = {}
         self._is_monitoring = False
-        self._monitor_task: Optional[asyncio.Task] = None
+        self._monitor_task: asyncio.Task | None = None
 
         # Initialize states
         for broker in self.brokers:
@@ -165,8 +166,8 @@ class BrokerFailoverManager:
         side: str,
         quantity: Decimal,
         order_type: str = "MARKET",
-        price: Optional[Decimal] = None,
-    ) -> Optional[object]:
+        price: Decimal | None = None,
+    ) -> object | None:
         """
         Try primary broker, failover to secondary if needed.
 
@@ -251,7 +252,7 @@ class BrokerFailoverManager:
 
         return positions_by_broker
 
-    async def get_account_info(self) -> Optional[dict[str, Union[str, int, float, bool, Decimal]]]:
+    async def get_account_info(self) -> dict[str, str | int | float | bool | Decimal] | None:
         """
         Get account info from active broker with failover.
 
@@ -401,11 +402,11 @@ class BrokerFailoverManager:
 
         logger.error("No healthy broker available for failover")
 
-    def get_active_broker(self) -> Optional[object]:
+    def get_active_broker(self) -> object | None:
         """Get currently active broker."""
         return self._active_broker.broker if self._active_broker else None
 
-    def get_active_broker_name(self) -> Optional[str]:
+    def get_active_broker_name(self) -> str | None:
         """Get name of currently active broker."""
         return self._active_broker.name if self._active_broker else None
 
@@ -413,7 +414,7 @@ class BrokerFailoverManager:
         """Get state of all brokers."""
         return self._broker_states.copy()
 
-    def get_statistics(self) -> dict[str, Union[str, int, bool, None]]:
+    def get_statistics(self) -> dict[str, str | int | bool | None]:
         """Get failover statistics."""
         return {
             "active_broker": self._active_broker.name if self._active_broker else None,
@@ -427,7 +428,7 @@ class BrokerFailoverManager:
             "is_monitoring": self._is_monitoring,
         }
 
-    def get_health_report(self) -> dict[str, Union[str, int, bool, None, dict, list]]:
+    def get_health_report(self) -> dict[str, str | int | bool | None | dict | list]:
         """
         Generate a comprehensive health report.
 

@@ -9,9 +9,11 @@ from __future__ import annotations
 import logging
 from dataclasses import dataclass, field
 from datetime import datetime
-from decimal import Decimal
 from enum import Enum
-from typing import Any, Optional
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from decimal import Decimal
 
 logger = logging.getLogger(__name__)
 
@@ -93,8 +95,8 @@ class ThresholdRule:
     metric_name: str
     operator: ComparisonOperator
     threshold: Decimal
-    symbol: Optional[str] = None  # Optional symbol filter
-    portfolio_id: Optional[str] = None
+    symbol: str | None = None  # Optional symbol filter
+    portfolio_id: str | None = None
 
     def evaluate(self, value: Decimal) -> bool:
         """Evaluate metric against threshold."""
@@ -147,8 +149,8 @@ class ChangeRule:
     metric_name: str
     change_percent: Decimal  # Trigger if change > this percentage
     window_minutes: int  # Time window to measure change
-    symbol: Optional[str] = None
-    portfolio_id: Optional[str] = None
+    symbol: str | None = None
+    portfolio_id: str | None = None
     direction: str = "any"  # "up", "down", or "any"
 
     def to_dict(self) -> dict:
@@ -219,14 +221,14 @@ class AlertEvent:
 
     # Context
     metric_name: str = ""
-    metric_value: Optional[Decimal] = None
-    symbol: Optional[str] = None
-    portfolio_id: Optional[str] = None
+    metric_value: Decimal | None = None
+    symbol: str | None = None
+    portfolio_id: str | None = None
 
     # Timeline
     triggered_at: datetime = field(default_factory=datetime.utcnow)
-    resolved_at: Optional[datetime] = None
-    acknowledged_at: Optional[datetime] = None
+    resolved_at: datetime | None = None
+    acknowledged_at: datetime | None = None
 
     # Message
     message: str = ""
@@ -234,7 +236,7 @@ class AlertEvent:
 
     # Notifications sent
     notifications_sent: int = 0
-    last_notification_at: Optional[datetime] = None
+    last_notification_at: datetime | None = None
 
     def to_dict(self) -> dict:
         """Convert to dictionary."""
@@ -288,13 +290,13 @@ class AlertEvaluationContext:
 
     metric_name: str
     current_value: Decimal
-    symbol: Optional[str] = None
-    portfolio_id: Optional[str] = None
-    previous_value: Optional[Decimal] = None
+    symbol: str | None = None
+    portfolio_id: str | None = None
+    previous_value: Decimal | None = None
     timestamp: datetime = field(default_factory=datetime.utcnow)
     window_data: list[Decimal] = field(default_factory=list)  # Historical values for window
 
-    def calculate_change_percent(self) -> Optional[Decimal]:
+    def calculate_change_percent(self) -> Decimal | None:
         """Calculate percentage change from first to current value."""
         logger.debug(
             "Calculating change percent",
@@ -343,8 +345,8 @@ class NotificationPayload:
     severity: AlertSeverity
     message: str
     metric_name: str
-    metric_value: Optional[Decimal] = None
-    symbol: Optional[str] = None
+    metric_value: Decimal | None = None
+    symbol: str | None = None
     triggered_at: datetime = field(default_factory=datetime.utcnow)
     details: dict[str, Any] = field(default_factory=dict)
 

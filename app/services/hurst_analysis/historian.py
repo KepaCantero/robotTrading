@@ -12,8 +12,10 @@ from __future__ import annotations
 
 import logging
 from collections import defaultdict
-from datetime import datetime
-from typing import Final
+from typing import TYPE_CHECKING, Final
+
+if TYPE_CHECKING:
+    from datetime import datetime
 
 logger = logging.getLogger(__name__)
 

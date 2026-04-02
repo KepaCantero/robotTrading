@@ -19,9 +19,10 @@ import logging
 from collections import defaultdict
 from dataclasses import dataclass
 from decimal import Decimal
-from typing import Any, TypedDict
+from typing import TYPE_CHECKING, Any, TypedDict
 
-from .models import DividendStock, DividendStrategyConfig
+if TYPE_CHECKING:
+    from .models import DividendStock, DividendStrategyConfig
 
 logger = logging.getLogger(__name__)
 

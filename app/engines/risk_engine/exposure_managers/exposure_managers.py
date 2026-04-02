@@ -13,9 +13,10 @@ import logging
 from abc import ABC, abstractmethod
 from datetime import datetime
 from decimal import Decimal
-from typing import Any, Optional
+from typing import TYPE_CHECKING, Any
 
-from app.domain.models.portfolio import Portfolio
+if TYPE_CHECKING:
+    from app.domain.models.portfolio import Portfolio
 
 logger = logging.getLogger(__name__)
 
@@ -75,7 +76,7 @@ class ExposureManager(BaseExposureManager):
     def analyze_exposure(
         self,
         portfolio: Portfolio,
-        strategy_allocations: Optional[dict[str, list[str]]] = None,
+        strategy_allocations: dict[str, list[str]] | None = None,
         **kwargs,
     ) -> dict[str, Any]:
         """

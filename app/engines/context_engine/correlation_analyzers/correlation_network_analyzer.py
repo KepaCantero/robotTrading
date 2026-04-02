@@ -7,11 +7,13 @@ Usa teoría de grafos para analizar correlaciones entre activos.
 from __future__ import annotations
 
 import logging
-from typing import Any, Optional
+from typing import TYPE_CHECKING, Any
 
 # REQUIRED: networkx is REQUIRED - NO FALLBACKS
 import networkx as nx
-import numpy as np
+
+if TYPE_CHECKING:
+    import numpy as np
 
 logger = logging.getLogger(__name__)
 
@@ -19,7 +21,7 @@ logger = logging.getLogger(__name__)
 class CorrelationNetworkAnalyzer:
     """Analizador de red de correlaciones."""
 
-    def __init__(self, config: Optional[dict[str, Any]] = None):
+    def __init__(self, config: dict[str, Any] | None = None):
         config = config or {}
         self.threshold = config.get("threshold", 0.5)
 

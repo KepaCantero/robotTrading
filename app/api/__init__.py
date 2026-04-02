@@ -7,21 +7,20 @@ from __future__ import annotations
 import logging
 import uuid
 from contextvars import ContextVar
-from typing import Optional
 
 # Context variable for correlation ID tracking
-_correlation_id: ContextVar[Optional[str]] = ContextVar("correlation_id", default=None)
+_correlation_id: ContextVar[str | None] = ContextVar("correlation_id", default=None)
 
 # Audit logger instance
 audit_logger = logging.getLogger("audit")
 
 
-def get_correlation_id() -> Optional[str]:
+def get_correlation_id() -> str | None:
     """Get the current correlation ID from context."""
     return _correlation_id.get()
 
 
-def set_correlation_id(correlation_id: Optional[str] = None) -> str:
+def set_correlation_id(correlation_id: str | None = None) -> str:
     """Set a correlation ID in context. Generates one if not provided."""
     if correlation_id is None:
         correlation_id = str(uuid.uuid4())

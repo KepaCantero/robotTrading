@@ -11,15 +11,17 @@ import asyncio
 import logging
 import time
 import uuid
-from collections.abc import AsyncGenerator, Awaitable
 from contextlib import asynccontextmanager
 from functools import wraps
-from typing import Callable, Optional, TypeVar, Union, cast
+from typing import TYPE_CHECKING, Callable, TypeVar, cast
 
 from fastapi import HTTPException, Request, Response, status
 from starlette.middleware.base import BaseHTTPMiddleware
 
 from app.infrastructure.logging.logging_config import get_correlation_id, set_correlation_id
+
+if TYPE_CHECKING:
+    from collections.abc import AsyncGenerator, Awaitable
 
 logger = logging.getLogger(__name__)
 
@@ -35,9 +37,9 @@ class RateLimiter:
 
     def __init__(self) -> None:
         """Initialize rate limiter with empty buckets."""
-        self._buckets: dict[str, dict[str, Union[int, float]]] = {}
+        self._buckets: dict[str, dict[str, int | float]] = {}
 
-    def _get_bucket(self, key: str) -> dict[str, Union[int, float]]:
+    def _get_bucket(self, key: str) -> dict[str, int | float]:
         """Get or create bucket for key."""
         if key not in self._buckets:
             self._buckets[key] = {
@@ -48,7 +50,7 @@ class RateLimiter:
             }
         return self._buckets[key]
 
-    def _refill(self, bucket: dict[str, Union[int, float]]) -> None:
+    def _refill(self, bucket: dict[str, int | float]) -> None:
         """Refill tokens based on elapsed time."""
         now = time.time()
         elapsed = now - bucket["last_update"]
@@ -86,7 +88,7 @@ class RateLimiter:
             return True
         return False
 
-    def reset(self, key: Optional[str] = None) -> None:
+    def reset(self, key: str | None = None) -> None:
         """
         Reset rate limit bucket(s).
 
@@ -187,7 +189,7 @@ def with_timeout(
 
 
 def with_rate_limit(
-    key_func: Optional[Callable[[Request], str]] = None,
+    key_func: Callable[[Request], str] | None = None,
     max_tokens: int = 10,
     refill_rate: float = 1.0,
     tokens_per_request: int = 1,
@@ -211,7 +213,7 @@ def with_rate_limit(
         @wraps(func)
         async def wrapper(*args: object, **kwargs: object) -> T:
             # Try to find Request in args/kwargs
-            request: Optional[Request] = None
+            request: Request | None = None
             for arg in args:
                 if isinstance(arg, Request):
                     request = arg
@@ -331,7 +333,7 @@ def log_endpoint_call(
 
 def log_error_with_trace(
     error: Exception,
-    context: dict[str, Union[str, int, float, bool]],
+    context: dict[str, str | int | float | bool],
     service: str = "api",
 ) -> None:
     """

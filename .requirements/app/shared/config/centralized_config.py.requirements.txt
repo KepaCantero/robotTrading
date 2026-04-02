@@ -30,7 +30,7 @@ Generated: 2026-03-09
 ### Classes
 - `Environment`
 - `CentralizedConfig`
-- `Configuration`
+
 ### Public Functions
 - `get_config()`
 - `get_trading_threshold()`
@@ -53,13 +53,10 @@ Generated: 2026-03-09
 - `validate_dates()`
 - `validate_config_object()`
 - `merge_configs()`
-- `get_default_atr_multiplier()`
-- `get_default_risk_per_trade()`
-- `get_default_max_position_size()`
-- `get_default_stop_distance_pct()`
-- `get_config_cached_after_load()`
-- `get_config_cache_invalidated_on_change()`
-- `get_atr_multiplier_positive_property()`
+
+
+
+
 - `get_risk_percentage_bounds_property()`
 - `get_symbols_list_property()`
 - `get_date_order_property()`
@@ -68,19 +65,11 @@ Generated: 2026-03-09
 - `concurrent_read_access()`
 - `full_config_workflow()`
 - `config_with_validation()`
-- `get_strategy_config()`
 - `trading_thresholds()`
-- `get_trading_threshold()`
-- `update_strategy_config()`
-- `validate_configuration()`
-- `get_config_summary()`
-- `get()`
-- `set()`
-- `get_atr_multiplier()`
-- `set_atr_multiplier()`
-- `get_risk_config()`
-- `get_trading_symbols()`
-- `get_backtest_dates()`
+
+
+
+
 - `read_config()`
 
 ## 4. SOLID Principles (from rules/python/03-solid-principles.md)

@@ -9,7 +9,6 @@ from __future__ import annotations
 import logging
 from dataclasses import dataclass
 from decimal import Decimal
-from typing import Optional
 
 logger = logging.getLogger(__name__)
 
@@ -204,7 +203,7 @@ class StrategyScorer:
 
 
 # Singleton
-_scorer: Optional[StrategyScorer] = None
+_scorer: StrategyScorer | None = None
 
 
 def get_strategy_scorer() -> StrategyScorer:

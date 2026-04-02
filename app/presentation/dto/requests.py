@@ -4,9 +4,12 @@ Request DTOs for Presentation Layer
 
 from __future__ import annotations
 
-from decimal import Decimal
+from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, Field
+
+if TYPE_CHECKING:
+    from decimal import Decimal
 
 
 class CreatePortfolioRequest(BaseModel):

@@ -13,7 +13,7 @@ from __future__ import annotations
 import logging
 from decimal import Decimal
 from enum import Enum
-from typing import ClassVar, Optional
+from typing import ClassVar
 
 from pydantic import BaseModel, Field
 
@@ -174,7 +174,7 @@ class AbsoluteReturnValidation(BaseModel):
 
     is_feasible: bool = Field(..., description="Is target feasible?")
     required_alpha_pct: Decimal = Field(..., description="Required alpha as % of capital annually")
-    capacity_fade_adjusted_alpha: Optional[Decimal] = Field(
+    capacity_fade_adjusted_alpha: Decimal | None = Field(
         None, description="Alpha after capacity fade estimate"
     )
     recommendation: str = Field(..., description="Recommendation text")

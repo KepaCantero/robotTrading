@@ -14,9 +14,11 @@ from __future__ import annotations
 
 import logging
 import math
-from collections.abc import Sequence
 from decimal import ROUND_HALF_UP, Decimal, InvalidOperation, getcontext
-from typing import Optional, Union
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
 
 # Set high precision for financial calculations
 getcontext().prec = 28  # Sufficient for most financial calculations
@@ -25,7 +27,7 @@ getcontext().rounding = ROUND_HALF_UP  # Standard banking rounding
 logger = logging.getLogger(__name__)
 
 
-def to_decimal(value: Union[int, float, str, Decimal, None]) -> Optional[Decimal]:
+def to_decimal(value: int | float | str | Decimal | None) -> Decimal | None:
     """
     Safely convert value to Decimal for financial calculations.
 
@@ -77,7 +79,7 @@ def to_decimal(value: Union[int, float, str, Decimal, None]) -> Optional[Decimal
     raise ValueError(f"Cannot convert {type(value).__name__} to Decimal")
 
 
-def to_decimal_required(value: Union[int, float, str, Decimal]) -> Decimal:
+def to_decimal_required(value: int | float | str | Decimal) -> Decimal:
     """
     Convert value to Decimal, raising an error if value is None.
 
@@ -108,10 +110,10 @@ def to_decimal_required(value: Union[int, float, str, Decimal]) -> Decimal:
 
 
 def safe_decimal_divide(
-    numerator: Union[int, float, str, Decimal],
-    denominator: Union[int, float, str, Decimal],
-    default: Optional[Decimal] = None,
-) -> Optional[Decimal]:
+    numerator: int | float | str | Decimal,
+    denominator: int | float | str | Decimal,
+    default: Decimal | None = None,
+) -> Decimal | None:
     """
     Safely divide two Decimal values, handling division by zero.
 
@@ -145,9 +147,9 @@ def safe_decimal_divide(
 
 
 def validate_price(
-    value: Union[int, float, str, Decimal],
-    min_value: Optional[Decimal] = None,
-    max_value: Optional[Decimal] = None,
+    value: int | float | str | Decimal,
+    min_value: Decimal | None = None,
+    max_value: Decimal | None = None,
 ) -> Decimal:
     """
     Validate that a value is a valid price within acceptable bounds.
@@ -184,9 +186,9 @@ def validate_price(
 
 
 def validate_quantity(
-    value: Union[int, float, str, Decimal],
-    min_value: Optional[Decimal] = None,
-    max_value: Optional[Decimal] = None,
+    value: int | float | str | Decimal,
+    min_value: Decimal | None = None,
+    max_value: Decimal | None = None,
 ) -> Decimal:
     """
     Validate that a value is a valid quantity within acceptable bounds.
@@ -223,7 +225,7 @@ def validate_quantity(
 
 
 def round_decimal(
-    value: Union[int, float, str, Decimal], precision: int, rounding: str = ROUND_HALF_UP
+    value: int | float | str | Decimal, precision: int, rounding: str = ROUND_HALF_UP
 ) -> Decimal:
     """
     Round a Decimal value to specified precision.
@@ -247,7 +249,7 @@ def round_decimal(
     return decimal_value.quantize(quantizer, rounding=rounding)
 
 
-def format_currency(value: Union[int, float, str, Decimal], symbol: str = "$") -> str:
+def format_currency(value: int | float | str | Decimal, symbol: str = "$") -> str:
     """
     Format a Decimal value as a currency string.
 
@@ -270,10 +272,10 @@ def format_currency(value: Union[int, float, str, Decimal], symbol: str = "$") -
 
 
 def calculate_percentage(
-    numerator: Union[int, float, str, Decimal],
-    denominator: Union[int, float, str, Decimal],
+    numerator: int | float | str | Decimal,
+    denominator: int | float | str | Decimal,
     precision: int = 2,
-) -> Optional[Decimal]:
+) -> Decimal | None:
     """
     Calculate percentage safely, handling division by zero.
 
@@ -360,7 +362,7 @@ CRYPTO_PAIR_PRECISIONS = {
 
 
 def round_to_currency_precision(
-    value: Union[int, float, str, Decimal], currency: str = "USD"
+    value: int | float | str | Decimal, currency: str = "USD"
 ) -> Decimal:
     """
     Round a value to the standard precision for a given currency.
@@ -382,7 +384,7 @@ def round_to_currency_precision(
     return round_decimal(value, precision)
 
 
-def get_price_precision(asset_class: str = "equity", symbol: Optional[str] = None) -> int:
+def get_price_precision(asset_class: str = "equity", symbol: str | None = None) -> int:
     """
     Get the appropriate price precision for an asset class or specific trading pair.
 
@@ -436,9 +438,9 @@ def get_price_precision(asset_class: str = "equity", symbol: Optional[str] = Non
 
 
 def round_price(
-    value: Union[int, float, str, Decimal],
+    value: int | float | str | Decimal,
     asset_class: str = "equity",
-    symbol: Optional[str] = None,
+    symbol: str | None = None,
     rounding: str = ROUND_HALF_UP,
 ) -> Decimal:
     """
@@ -476,9 +478,9 @@ def round_price(
 
 
 def validate_price_for_asset_class(
-    value: Union[int, float, str, Decimal],
+    value: int | float | str | Decimal,
     asset_class: str = "equity",
-    symbol: Optional[str] = None,
+    symbol: str | None = None,
 ) -> Decimal:
     """
     Validate and round a price for a specific asset class.
@@ -534,8 +536,8 @@ def validate_price_for_asset_class(
 
 
 def safe_mean(
-    values: Sequence[Union[int, float, str, Decimal]], default: Optional[Decimal] = None
-) -> Optional[Decimal]:
+    values: Sequence[int | float | str | Decimal], default: Decimal | None = None
+) -> Decimal | None:
     """
     Calculate mean (average) of a sequence of values using specialized libraries.
 
@@ -570,10 +572,10 @@ def safe_mean(
 
 
 def safe_variance(
-    values: Sequence[Union[int, float, str, Decimal]],
-    default: Optional[Decimal] = None,
+    values: Sequence[int | float | str | Decimal],
+    default: Decimal | None = None,
     sample: bool = False,
-) -> Optional[Decimal]:
+) -> Decimal | None:
     """
     Calculate variance of a sequence of values.
 
@@ -611,10 +613,10 @@ def safe_variance(
 
 
 def safe_std(
-    values: Sequence[Union[int, float, str, Decimal]],
-    default: Optional[Decimal] = None,
+    values: Sequence[int | float | str | Decimal],
+    default: Decimal | None = None,
     sample: bool = False,
-) -> Optional[Decimal]:
+) -> Decimal | None:
     """
     Calculate standard deviation of a sequence of values.
 
@@ -645,8 +647,8 @@ def safe_std(
 
 
 def safe_decimal_sqrt(
-    value: Union[int, float, str, Decimal], default: Optional[Decimal] = None
-) -> Optional[Decimal]:
+    value: int | float | str | Decimal, default: Decimal | None = None
+) -> Decimal | None:
     """
     Calculate square root of a Decimal value.
 
@@ -687,7 +689,7 @@ _BPS_CONVERSION_FACTOR = Decimal("10000")
 _BPS_DECIMAL_FACTOR = Decimal("0.0001")  # 1/10000
 
 
-def to_bps(value: Union[int, float, str, Decimal], precision: int = 2) -> Decimal:
+def to_bps(value: int | float | str | Decimal, precision: int = 2) -> Decimal:
     """
     Convert a decimal value to basis points (BPS).
 
@@ -715,7 +717,7 @@ def to_bps(value: Union[int, float, str, Decimal], precision: int = 2) -> Decima
     return round_decimal(result, precision)
 
 
-def from_bps(bps_value: Union[int, float, str, Decimal], precision: int = 6) -> Decimal:
+def from_bps(bps_value: int | float | str | Decimal, precision: int = 6) -> Decimal:
     """
     Convert basis points (BPS) to decimal value.
 
@@ -786,7 +788,7 @@ def from_bps_float(bps_value: float) -> float:
 
 
 def spread_to_bps(
-    bid: Union[int, float, str, Decimal], ask: Union[int, float, str, Decimal], precision: int = 2
+    bid: int | float | str | Decimal, ask: int | float | str | Decimal, precision: int = 2
 ) -> Decimal:
     """
     Convert bid-ask spread to basis points.
@@ -817,7 +819,7 @@ def spread_to_bps(
 
 
 def annualize_volatility(
-    daily_volatility: Union[int, float, str, Decimal], trading_days: int = 252
+    daily_volatility: int | float | str | Decimal, trading_days: int = 252
 ) -> Decimal:
     """
     Annualize daily volatility using proper sqrt calculation.
@@ -843,7 +845,7 @@ def annualize_volatility(
 
 
 def annualize_returns(
-    daily_return: Union[int, float, str, Decimal], trading_days: int = 252
+    daily_return: int | float | str | Decimal, trading_days: int = 252
 ) -> Decimal:
     """
     Annualize daily returns.

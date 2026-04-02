@@ -10,10 +10,12 @@ import json
 import logging
 import statistics
 from datetime import datetime
-from pathlib import Path
-from typing import Optional
+from typing import TYPE_CHECKING
 
 import pandas as pd
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
@@ -268,7 +270,7 @@ def generate_backend_test_summary(
     end_date: datetime,
     initial_capital: float,
     project_root: Path,
-    multi_strategy_results: Optional[dict] = None,
+    multi_strategy_results: dict | None = None,
 ) -> Path:
     """
     Generate professional Backend Test Result Summary.
@@ -403,7 +405,7 @@ def _generate_comprehensive_backend_report(
     end_date: datetime,
     initial_capital: float,
     all_results: list[dict],
-    multi_strategy_results: Optional[dict] = None,
+    multi_strategy_results: dict | None = None,
 ) -> str:
     """Generate comprehensive backend test report."""
     logger.debug(
@@ -686,7 +688,7 @@ def _estimate_risk_reward(win_rate: float) -> float:
         return win_rate / 50
 
 
-def _generate_multi_strategy_section(multi_strategy_results: Optional[dict]) -> str:
+def _generate_multi_strategy_section(multi_strategy_results: dict | None) -> str:
     """Generate multi-strategy analysis section."""
     if not multi_strategy_results:
         return ""

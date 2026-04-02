@@ -6,7 +6,6 @@ from __future__ import annotations
 
 import bisect
 import logging
-from typing import Optional
 
 from .base_detector import BaseMarketDetector
 
@@ -22,9 +21,7 @@ class VolatilityDetector(BaseMarketDetector):
     - std_dev: Desviación estándar de retornos
     """
 
-    def __init__(
-        self, config: Optional[dict] = None, tier: Optional[str] = None, use_yaml: bool = True
-    ):
+    def __init__(self, config: dict | None = None, tier: str | None = None, use_yaml: bool = True):
         """Inicializar detector de volatilidad."""
         super().__init__("volatility_detector", config, tier, use_yaml)
 

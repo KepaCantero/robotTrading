@@ -10,7 +10,7 @@ from __future__ import annotations
 import logging
 from dataclasses import dataclass
 from decimal import Decimal
-from typing import Any, Optional
+from typing import Any
 
 from app.shared.config.centralized_config import get_config
 
@@ -298,7 +298,7 @@ class LimitAdjuster:
         position_size: Decimal,
         capital: Decimal,
         risk_per_trade_pct: Decimal,
-        volatility_adjustment: Optional[Decimal] = None,
+        volatility_adjustment: Decimal | None = None,
     ) -> Decimal:
         """
         Calculate stop loss price based on capital risk allocation.
@@ -489,7 +489,7 @@ class LimitAdjuster:
 
 
 # Singleton
-_adjuster: Optional[LimitAdjuster] = None
+_adjuster: LimitAdjuster | None = None
 
 
 def get_limit_adjuster() -> LimitAdjuster:

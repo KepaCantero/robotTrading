@@ -9,15 +9,18 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from datetime import datetime
-from typing import Any, Optional
+from typing import TYPE_CHECKING, Any
 
 from app.backtesting.data_loader import DataLoader
-from app.domain.models.market_data import Quote
 from app.services.portfolio_config_manager import (
     PortfolioConfigManager,
     get_portfolio_config_manager,
 )
+
+if TYPE_CHECKING:
+    from datetime import datetime
+
+    from app.domain.models.market_data import Quote
 
 logger = logging.getLogger(__name__)
 
@@ -32,8 +35,8 @@ class PortfolioBuilder:
 
     def __init__(
         self,
-        portfolio_config: Optional[PortfolioConfigManager] = None,
-        data_loader: Optional[DataLoader] = None,
+        portfolio_config: PortfolioConfigManager | None = None,
+        data_loader: DataLoader | None = None,
     ):
         """
         Initialize portfolio builder.
@@ -49,7 +52,7 @@ class PortfolioBuilder:
         self,
         start_date: datetime,
         end_date: datetime,
-        max_symbols_per_strategy: Optional[int] = None,
+        max_symbols_per_strategy: int | None = None,
     ) -> list[Quote]:
         """
         Build a complete portfolio with quotes from all strategy sectors.
@@ -146,7 +149,7 @@ class PortfolioBuilder:
     def _collect_all_symbols(
         self,
         strategies: list[str],
-        max_symbols_per_strategy: Optional[int] = None,
+        max_symbols_per_strategy: int | None = None,
     ) -> set[str]:
         """
         Collect all symbols needed across strategies.

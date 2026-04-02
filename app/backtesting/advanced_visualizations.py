@@ -15,7 +15,7 @@ from __future__ import annotations
 
 import logging
 from pathlib import Path
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING
 
 import numpy as np
 import pandas as pd
@@ -93,8 +93,8 @@ class AdvancedVisualizer:
         data: pd.DataFrame,
         threshold: float = 0.3,
         figsize: tuple[int, int] = (14, 10),
-        output_file: Optional[str] = None,
-    ) -> Optional[Figure]:
+        output_file: str | None = None,
+    ) -> Figure | None:
         """
         Plot correlation network using networkx.
 
@@ -184,10 +184,10 @@ class AdvancedVisualizer:
     def plot_parallel_coordinates(
         self,
         data: pd.DataFrame,
-        color_col: Optional[str] = None,
+        color_col: str | None = None,
         max_cols: int = 10,
-        output_file: Optional[str] = None,
-    ) -> Optional[str]:
+        output_file: str | None = None,
+    ) -> str | None:
         """
         Plot parallel coordinates using plotly (interactive).
 
@@ -254,10 +254,10 @@ class AdvancedVisualizer:
         x_col: str,
         y_col: str,
         z_col: str,
-        color_col: Optional[str] = None,
-        size_col: Optional[str] = None,
-        output_file: Optional[str] = None,
-    ) -> Optional[str]:
+        color_col: str | None = None,
+        size_col: str | None = None,
+        output_file: str | None = None,
+    ) -> str | None:
         """
         Plot 3D scatter plot using plotly (interactive).
 
@@ -345,8 +345,8 @@ class AdvancedVisualizer:
         self,
         equity_curve: pd.Series,
         figsize: tuple[int, int] = (14, 6),
-        output_file: Optional[str] = None,
-    ) -> Optional[Figure]:
+        output_file: str | None = None,
+    ) -> Figure | None:
         """
         Plot underwater (drawdown) chart.
 
@@ -413,10 +413,10 @@ class AdvancedVisualizer:
     def plot_rolling_metrics(
         self,
         equity_curve: pd.Series,
-        window: Optional[int] = None,
+        window: int | None = None,
         figsize: tuple[int, int] = (14, 8),
-        output_file: Optional[str] = None,
-    ) -> Optional[Figure]:
+        output_file: str | None = None,
+    ) -> Figure | None:
         """
         Plot rolling metrics (returns, sharpe, volatility).
 
@@ -509,10 +509,10 @@ class AdvancedVisualizer:
         self,
         returns: pd.Series,
         regime_labels: pd.Series,
-        regime_names: Optional[dict[int, str]] = None,
+        regime_names: dict[int, str] | None = None,
         figsize: tuple[int, int] = (12, 6),
-        output_file: Optional[str] = None,
-    ) -> Optional[Figure]:
+        output_file: str | None = None,
+    ) -> Figure | None:
         """
         Plot performance by regime.
 
@@ -628,8 +628,8 @@ class AdvancedVisualizer:
         self,
         returns: pd.Series,
         figsize: tuple[int, int] = (14, 8),
-        output_file: Optional[str] = None,
-    ) -> Optional[Figure]:
+        output_file: str | None = None,
+    ) -> Figure | None:
         """
         Plot seasonality heatmap (monthly returns by year).
 
@@ -715,9 +715,9 @@ class AdvancedVisualizer:
     def generate_interactive_dashboard(
         self,
         data: pd.DataFrame,
-        equity_curve: Optional[pd.Series] = None,
+        equity_curve: pd.Series | None = None,
         output_file: str = "dashboard.html",
-    ) -> Optional[str]:
+    ) -> str | None:
         """
         Generate comprehensive interactive dashboard using plotly.
 

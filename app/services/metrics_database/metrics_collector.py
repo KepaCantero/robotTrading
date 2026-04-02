@@ -16,11 +16,14 @@ import asyncio
 import contextlib
 import logging
 from datetime import datetime
-from decimal import Decimal
-from typing import Callable, Optional
+from typing import TYPE_CHECKING, Callable
 
 from .models import MetricPoint, MetricsCollectionResult, MetricType
-from .questdb_connector import QuestDBConnector
+
+if TYPE_CHECKING:
+    from decimal import Decimal
+
+    from .questdb_connector import QuestDBConnector
 
 logger = logging.getLogger(__name__)
 
@@ -54,7 +57,7 @@ class MetricsCollector:
         self._metric_sources: dict[str, Callable] = {}
         self._pending_metrics: list[MetricPoint] = []
         self._collection_running = False
-        self._collection_task: Optional[asyncio.Task] = None
+        self._collection_task: asyncio.Task | None = None
 
         # Statistics
         self._total_collected = 0
@@ -237,9 +240,9 @@ class MetricsCollector:
         self,
         metric_type: MetricType,
         value: Decimal,
-        symbol: Optional[str] = None,
-        portfolio_id: Optional[str] = None,
-        tags: Optional[dict[str, str]] = None,
+        symbol: str | None = None,
+        portfolio_id: str | None = None,
+        tags: dict[str, str] | None = None,
     ) -> None:
         """
         Add a single metric to the collection.

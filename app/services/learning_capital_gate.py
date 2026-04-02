@@ -26,7 +26,7 @@ from __future__ import annotations
 
 import logging
 from decimal import Decimal
-from typing import ClassVar, Optional
+from typing import ClassVar
 
 from app.shared.config.centralized_config import get_config
 
@@ -59,8 +59,8 @@ class LearningCapitalGate:
     @staticmethod
     def is_learning_viable(
         capital: Decimal,
-        expected_monthly_alpha: Optional[Decimal] = None,
-        monthly_win_rate: Optional[Decimal] = None,  # 55% win rate (achievable)
+        expected_monthly_alpha: Decimal | None = None,
+        monthly_win_rate: Decimal | None = None,  # 55% win rate (achievable)
         learning_enabled: bool = True,
     ) -> tuple[bool, dict]:
         """
@@ -272,8 +272,8 @@ class LearningCapitalGate:
 
     @staticmethod
     def get_minimum_capital_for_learning(
-        expected_monthly_alpha: Optional[Decimal] = None,
-        target_cost_ratio: Optional[Decimal] = None,
+        expected_monthly_alpha: Decimal | None = None,
+        target_cost_ratio: Decimal | None = None,
     ) -> Decimal:
         """
         Calculate minimum capital needed for learning to be economically viable.
@@ -309,7 +309,7 @@ class LearningCapitalGate:
     def log_learning_decision(
         capital: Decimal,
         analysis: dict,
-        account_id: Optional[str] = None,
+        account_id: str | None = None,
     ) -> str:
         """Log learning capital gate decision for audit trail"""
 

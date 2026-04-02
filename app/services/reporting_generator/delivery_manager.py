@@ -17,8 +17,10 @@ from dataclasses import dataclass
 from datetime import datetime
 from decimal import Decimal
 from enum import Enum
-from pathlib import Path
-from typing import Any, Optional
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
@@ -93,7 +95,7 @@ class ExportResult:
 
     success: bool
     format: ExportFormat
-    file_path: Optional[Path]
+    file_path: Path | None
     file_size_mb: Decimal
     export_time_ms: Decimal
     message: str
@@ -398,7 +400,7 @@ class ReportDeliveryManager:
         self,
         file_path: Path,
         s3_config: S3Config,
-        object_key: Optional[str] = None,
+        object_key: str | None = None,
     ) -> DeliveryResult:
         """
         Upload report to AWS S3.
@@ -489,7 +491,7 @@ class ReportDeliveryManager:
 # ============================================================================
 
 
-_delivery_manager_instance: Optional[ReportDeliveryManager] = None
+_delivery_manager_instance: ReportDeliveryManager | None = None
 
 
 def get_delivery_manager() -> ReportDeliveryManager:

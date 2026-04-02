@@ -233,7 +233,8 @@ def load_feature_importance_config(
         # Try default locations
         possible_paths = [
             Path("config/learning/feature_importance.yaml"),
-            Path(__file__).parent.parent.parent.parent.parent / "config/learning/feature_importance.yaml",
+            Path(__file__).parent.parent.parent.parent.parent
+            / "config/learning/feature_importance.yaml",
         ]
         for path in possible_paths:
             if path.exists():

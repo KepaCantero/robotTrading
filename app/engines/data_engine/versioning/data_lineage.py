@@ -10,7 +10,7 @@ import json
 import logging
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 from uuid import uuid4
 
 logger = logging.getLogger(__name__)
@@ -26,7 +26,7 @@ class DataLineageTracker:
     - Dependencias entre datasets
     """
 
-    def __init__(self, config: Optional[dict[str, Any]] = None):
+    def __init__(self, config: dict[str, Any] | None = None):
         """
         Inicializar tracker.
 
@@ -62,7 +62,7 @@ class DataLineageTracker:
         data_id: str,
         source_type: str,
         source_config: dict[str, Any],
-        metadata: Optional[dict[str, Any]] = None,
+        metadata: dict[str, Any] | None = None,
     ) -> str:
         """
         Registrar origen de datos.
@@ -100,7 +100,7 @@ class DataLineageTracker:
         lineage_id: str,
         transformation_type: str,
         transformation_config: dict[str, Any],
-        output_data_id: Optional[str] = None,
+        output_data_id: str | None = None,
     ) -> None:
         """
         Registrar una transformación aplicada.
@@ -151,7 +151,7 @@ class DataLineageTracker:
         self.lineage_records[lineage_id]["dependencies"].append(dependency)
         self._save_lineage_db()
 
-    def get_lineage(self, lineage_id: str) -> Optional[dict[str, Any]]:
+    def get_lineage(self, lineage_id: str) -> dict[str, Any] | None:
         """Obtener lineage completo."""
         return self.lineage_records.get(lineage_id)
 
@@ -184,9 +184,9 @@ class DataLineageTracker:
 
     def query_lineage(
         self,
-        source_type: Optional[str] = None,
-        data_id: Optional[str] = None,
-        transformation_type: Optional[str] = None,
+        source_type: str | None = None,
+        data_id: str | None = None,
+        transformation_type: str | None = None,
     ) -> list[dict[str, Any]]:
         """
         Query lineage por criterios.

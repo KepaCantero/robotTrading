@@ -11,7 +11,7 @@ import logging
 from datetime import datetime
 from decimal import Decimal
 from enum import Enum
-from typing import Any, Optional
+from typing import Any
 from uuid import UUID, uuid4
 
 from pydantic import BaseModel, Field, field_validator, model_validator
@@ -65,7 +65,7 @@ class PaperTrade(BaseModel):
     quantity: Decimal = Field(..., gt=0, description="Trade quantity")
     price: Decimal = Field(..., gt=0, description="Execution price")
     filled_quantity: Decimal = Field(default=Decimal("0"), ge=0, description="Filled quantity")
-    filled_price: Optional[Decimal] = Field(None, gt=0, description="Average fill price")
+    filled_price: Decimal | None = Field(None, gt=0, description="Average fill price")
 
     # Simulation details
     slippage: Decimal = Field(default=Decimal("0"), ge=0, description="Slippage amount")
@@ -75,16 +75,16 @@ class PaperTrade(BaseModel):
     # Status and timing
     status: TradeStatus = Field(default=TradeStatus.PENDING, description="Trade status")
     created_at: datetime = Field(default_factory=datetime.utcnow, description="Trade creation time")
-    filled_at: Optional[datetime] = Field(None, description="Fill time")
-    cancelled_at: Optional[datetime] = Field(None, description="Cancellation time")
+    filled_at: datetime | None = Field(None, description="Fill time")
+    cancelled_at: datetime | None = Field(None, description="Cancellation time")
 
     # P&L calculation
     unrealized_pnl: Decimal = Field(default=Decimal("0"), description="Unrealized P&L")
     realized_pnl: Decimal = Field(default=Decimal("0"), description="Realized P&L")
 
     # Metadata
-    strategy_id: Optional[str] = Field(None, description="Strategy that generated the trade")
-    signal_id: Optional[UUID] = Field(None, description="Signal that triggered the trade")
+    strategy_id: str | None = Field(None, description="Strategy that generated the trade")
+    signal_id: UUID | None = Field(None, description="Signal that triggered the trade")
     metadata: dict[str, Any] = Field(default_factory=dict, description="Additional trade metadata")
 
     @field_validator("quantity", "price", "filled_quantity", "filled_price")
@@ -337,14 +337,14 @@ class PaperPortfolio(BaseModel):
 
     # Risk metrics
     max_drawdown: Decimal = Field(default=Decimal("0"), ge=0, description="Maximum drawdown")
-    sharpe_ratio: Optional[Decimal] = Field(None, description="Sharpe ratio")
-    volatility: Optional[Decimal] = Field(None, ge=0, description="Portfolio volatility")
+    sharpe_ratio: Decimal | None = Field(None, description="Sharpe ratio")
+    volatility: Decimal | None = Field(None, ge=0, description="Portfolio volatility")
 
     # Settings
     simulation_mode: PaperTradingMode = Field(
         default=PaperTradingMode.REALISTIC, description="Simulation mode"
     )
-    config_id: Optional[UUID] = Field(None, description="Configuration ID")
+    config_id: UUID | None = Field(None, description="Configuration ID")
     commission_rate: Decimal = Field(
         default=Decimal("0.001"),
         ge=0,
@@ -524,7 +524,7 @@ class PaperTradingSession(BaseModel):
 
     # Session details
     name: str = Field(..., description="Session name")
-    description: Optional[str] = Field(None, description="Session description")
+    description: str | None = Field(None, description="Session description")
 
     # Status
     is_active: bool = Field(default=True, description="Whether session is active")
@@ -532,7 +532,7 @@ class PaperTradingSession(BaseModel):
 
     # Timing
     started_at: datetime = Field(default_factory=datetime.utcnow, description="Session start time")
-    ended_at: Optional[datetime] = Field(None, description="Session end time")
+    ended_at: datetime | None = Field(None, description="Session end time")
     last_activity: datetime = Field(
         default_factory=datetime.utcnow, description="Last activity time"
     )

@@ -10,7 +10,7 @@ from __future__ import annotations
 import logging
 from datetime import datetime, timedelta
 from decimal import Decimal
-from typing import TYPE_CHECKING, Any, Optional
+from typing import TYPE_CHECKING, Any
 
 import optuna
 
@@ -40,10 +40,10 @@ class MultiStrategyOptimizer:
 
     def __init__(
         self,
-        total_capital: Optional[Decimal] = None,
+        total_capital: Decimal | None = None,
         symbol: str = "AAPL",
-        start_date: Optional[datetime] = None,
-        end_date: Optional[datetime] = None,
+        start_date: datetime | None = None,
+        end_date: datetime | None = None,
         n_trials: int = 50,
         optimization_direction: str = "maximize",
         objective_metric: str = "sharpe",  # "sharpe", "return", "calmar"
@@ -85,8 +85,8 @@ class MultiStrategyOptimizer:
 
         logger.info(f"Loaded {len(self.market_data)} market data points")
 
-        self.best_params: Optional[dict[str, Any]] = None
-        self.best_value: Optional[float] = None
+        self.best_params: dict[str, Any] | None = None
+        self.best_value: float | None = None
 
     def _suggest_strategy_params(self, trial: optuna.Trial) -> dict[str, dict[str, Any]]:
         """
@@ -310,7 +310,7 @@ class MultiStrategyOptimizer:
 
     def optimize(
         self,
-        storage: Optional[str] = None,
+        storage: str | None = None,
         study_name: str = "multi_strategy_optimization",
         resume: bool = False,
     ) -> optuna.Study:

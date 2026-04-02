@@ -12,7 +12,7 @@ from __future__ import annotations
 
 import logging
 from datetime import datetime
-from typing import Any, Optional
+from typing import Any
 
 import numpy as np
 
@@ -29,7 +29,7 @@ class InsightGenerator:
     actionable insights without LLM/NLP (deterministic, traceable output).
     """
 
-    def __init__(self, risk_free_rate: Optional[float] = None):
+    def __init__(self, risk_free_rate: float | None = None):
         """
         Initialize InsightGenerator.
 
@@ -271,7 +271,7 @@ class InsightGenerator:
             return self.warnings
 
     def generate_recommendations(
-        self, metrics: dict[str, float], regimes: Optional[dict[str, Any]] = None
+        self, metrics: dict[str, float], regimes: dict[str, Any] | None = None
     ) -> list[dict[str, Any]]:
         """
         Generate actionable recommendations based on analysis.
@@ -398,7 +398,7 @@ class InsightGenerator:
         self,
         strategy_name: str,
         metrics: dict[str, float],
-        regimes: Optional[dict[str, Any]] = None,
+        regimes: dict[str, Any] | None = None,
         include_warnings: bool = True,
         include_recommendations: bool = True,
     ) -> str:

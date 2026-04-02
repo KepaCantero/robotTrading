@@ -9,7 +9,7 @@ from __future__ import annotations
 import os
 import threading
 from pathlib import Path
-from typing import Callable, Optional, Union
+from typing import Callable
 
 import structlog
 import yaml
@@ -30,7 +30,7 @@ class YAMLConfigLoader:
     - Configuration value validation
     """
 
-    def __init__(self, config_dir: Optional[Path] = None):
+    def __init__(self, config_dir: Path | None = None):
         """
         Initialize the configuration loader.
 
@@ -144,9 +144,9 @@ class YAMLConfigLoader:
         self,
         config: dict[str, object],
         key_path: str,
-        default: Union[str, int, float, bool, None] = None,
+        default: str | int | float | bool | None = None,
         separator: str = ".",
-    ) -> Union[str, int, float, bool, dict[str, object], list[object], None]:
+    ) -> str | int | float | bool | dict[str, object] | list[object] | None:
         """
         Get a nested value using dot notation.
 
@@ -181,7 +181,7 @@ class YAMLConfigLoader:
     def load_with_tier_override(
         self,
         filename: str,
-        tier: Optional[str] = None,
+        tier: str | None = None,
     ) -> dict[str, object]:
         """
         Load configuration with tier-specific overrides.
@@ -244,7 +244,7 @@ class YAMLConfigLoader:
 
         return result
 
-    def get_strategy_stock_allocator_config(self, tier: Optional[str] = None) -> dict[str, object]:
+    def get_strategy_stock_allocator_config(self, tier: str | None = None) -> dict[str, object]:
         """
         Load the Strategy Stock Allocator configuration.
 
@@ -381,7 +381,7 @@ class YAMLConfigLoader:
 
 
 # Singleton instance for easy access
-_default_loader: Optional[YAMLConfigLoader] = None
+_default_loader: YAMLConfigLoader | None = None
 
 
 def get_config_loader() -> YAMLConfigLoader:
@@ -398,7 +398,7 @@ def get_config_loader() -> YAMLConfigLoader:
 
 
 def load_strategy_stock_allocator_config(
-    tier: Optional[str] = None,
+    tier: str | None = None,
 ) -> dict[str, object]:
     """
     Convenience function to load the Strategy Stock Allocator configuration.
@@ -413,7 +413,7 @@ def load_strategy_stock_allocator_config(
 
 
 def load_momentum_filters_config(
-    tier: Optional[str] = None,
+    tier: str | None = None,
 ) -> dict[str, object]:
     """
     Convenience function to load the Momentum Filters configuration.
@@ -428,7 +428,7 @@ def load_momentum_filters_config(
 
 
 def load_market_detectors_config(
-    tier: Optional[str] = None,
+    tier: str | None = None,
 ) -> dict[str, object]:
     """
     Convenience function to load the Market Detectors configuration.
@@ -443,7 +443,7 @@ def load_market_detectors_config(
 
 
 def load_strategy_defaults_config(
-    tier: Optional[str] = None,
+    tier: str | None = None,
 ) -> dict[str, object]:
     """
     Convenience function to load the Strategy Defaults configuration.
@@ -458,7 +458,7 @@ def load_strategy_defaults_config(
 
 
 def load_learning_parameters_config(
-    tier: Optional[str] = None,
+    tier: str | None = None,
 ) -> dict[str, object]:
     """
     Convenience function to load the Learning Parameters configuration.
@@ -474,7 +474,7 @@ def load_learning_parameters_config(
 
 def get_filter_config(
     filter_name: str,
-    tier: Optional[str] = None,
+    tier: str | None = None,
     preset: str = "balanced",
 ) -> dict[str, object]:
     """
@@ -516,7 +516,7 @@ def get_filter_config(
 
 def get_detector_config(
     detector_name: str,
-    tier: Optional[str] = None,
+    tier: str | None = None,
 ) -> dict[str, object]:
     """
     Get the configuration of a specific detector from market_detectors.yaml.
@@ -537,7 +537,7 @@ def get_detector_config(
 
 def get_strategy_config(
     strategy_name: str,
-    tier: Optional[str] = None,
+    tier: str | None = None,
 ) -> dict[str, object]:
     """
     Get the configuration of a specific strategy from strategy_defaults.yaml.

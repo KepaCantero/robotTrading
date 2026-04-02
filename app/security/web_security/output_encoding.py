@@ -25,7 +25,7 @@ import json
 import logging
 import re
 import urllib.parse
-from typing import ClassVar, Optional, Union
+from typing import ClassVar, Union
 
 # Type alias for values that can be encoded
 EncodableValue = Union[str, int, float, bool, None]
@@ -70,7 +70,7 @@ class OutputEncoder:
     ]
 
     @staticmethod
-    def encode_for_html(value: Union[str, int, float, bool, None]) -> str:
+    def encode_for_html(value: str | int | float | bool | None) -> str:
         """
         Encode value for safe HTML context.
 
@@ -99,7 +99,7 @@ class OutputEncoder:
         return encoded
 
     @staticmethod
-    def encode_for_html_attribute(value: Union[str, int, float, bool, None]) -> str:
+    def encode_for_html_attribute(value: str | int | float | bool | None) -> str:
         """
         Encode value for safe HTML attribute context.
 
@@ -134,7 +134,7 @@ class OutputEncoder:
         return encoded
 
     @staticmethod
-    def encode_for_javascript(value: Union[str, int, float, bool, None, object]) -> str:
+    def encode_for_javascript(value: str | int | float | bool | None | object) -> str:
         """
         Encode value for safe JavaScript context.
 
@@ -262,7 +262,7 @@ class OutputEncoder:
         return urllib.parse.quote_plus(text, safe="")
 
     @staticmethod
-    def encode_json(data: Union[EncodableValue, RecursiveDict, RecursiveList]) -> str:
+    def encode_json(data: EncodableValue | RecursiveDict | RecursiveList) -> str:
         """
         Encode data as safe JSON string.
 
@@ -437,7 +437,7 @@ class OutputEncoder:
         return text
 
     @staticmethod
-    def sanitize_html(value: str, allowed_tags: Optional[list[str]] = None) -> str:
+    def sanitize_html(value: str, allowed_tags: list[str] | None = None) -> str:
         """
         Sanitize HTML by removing dangerous tags and attributes.
 
@@ -611,7 +611,7 @@ class ContentSecurityPolicy:
         "object-src": "'none'",
     }
 
-    def __init__(self, directives: Optional[dict[str, str]] = None):
+    def __init__(self, directives: dict[str, str] | None = None):
         """
         Initialize CSP with custom directives.
 
@@ -677,7 +677,7 @@ def encode_for_css(value: EncodableValue) -> str:
     return encoder.encode_for_css(value)
 
 
-def encode_for_javascript(value: Union[EncodableValue, object]) -> str:
+def encode_for_javascript(value: EncodableValue | object) -> str:
     """Encode value for JavaScript context."""
     return encoder.encode_for_javascript(value)
 
@@ -687,14 +687,14 @@ def encode_for_url(value: EncodableValue) -> str:
     return encoder.encode_for_url(value)
 
 
-def safe_json_dumps(data: Union[EncodableValue, RecursiveDict, RecursiveList]) -> str:
+def safe_json_dumps(data: EncodableValue | RecursiveDict | RecursiveList) -> str:
     """Safely encode data as JSON."""
     return encoder.encode_json(data)
 
 
 def sanitize_output(
-    data: Union[EncodableValue, RecursiveDict, RecursiveList], context: str = "html"
-) -> Union[EncodableValue, RecursiveDict, RecursiveList]:
+    data: EncodableValue | RecursiveDict | RecursiveList, context: str = "html"
+) -> EncodableValue | RecursiveDict | RecursiveList:
     """
     Sanitize output data based on context.
 

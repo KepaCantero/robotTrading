@@ -13,7 +13,7 @@ import json
 import logging
 from datetime import datetime
 from pathlib import Path
-from typing import ClassVar, Optional, Union
+from typing import ClassVar
 
 import aiofiles
 
@@ -57,8 +57,8 @@ class LearningEngineStorage:
         engine_name: str,
         weights: object,
         test_id: str,
-        metadata: Optional[dict[str, Union[int, float, str, bool, list]]] = None,
-        save_format: Optional[str] = None,
+        metadata: dict[str, int | float | str | bool | list] | None = None,
+        save_format: str | None = None,
     ) -> str:
         """
         Guardar pesos de un learning engine usando serialización segura.
@@ -152,8 +152,8 @@ class LearningEngineStorage:
         engine_name: str,
         weights: object,
         test_id: str,
-        metadata: Optional[dict[str, Union[int, float, str, bool, list]]] = None,
-        save_format: Optional[str] = None,
+        metadata: dict[str, int | float | str | bool | list] | None = None,
+        save_format: str | None = None,
     ) -> str:
         """
         Guardar pesos de forma asíncrona usando serialización segura.
@@ -241,8 +241,8 @@ class LearningEngineStorage:
         return str(file_path)
 
     def load_weights(
-        self, engine_name: str, test_id: Optional[str] = None, latest: bool = True
-    ) -> dict[str, Union[int, float, str, bool, list]]:
+        self, engine_name: str, test_id: str | None = None, latest: bool = True
+    ) -> dict[str, int | float | str | bool | list]:
         """
         Cargar pesos de un learning engine usando serialización segura.
 
@@ -316,8 +316,8 @@ class LearningEngineStorage:
             raise
 
     def list_available_weights(
-        self, engine_name: str, test_id_filter: Optional[str] = None
-    ) -> list[dict[str, Union[int, float, str, bool, list]]]:
+        self, engine_name: str, test_id_filter: str | None = None
+    ) -> list[dict[str, int | float | str | bool | list]]:
         """
         Listar pesos disponibles para un engine (solo formatos seguros).
 
@@ -341,7 +341,7 @@ class LearningEngineStorage:
             + list(engine_dir.glob("*.msgpack"))
         )
 
-        weights_info: list[dict[str, Union[int, float, str, bool, list]]] = []
+        weights_info: list[dict[str, int | float | str | bool | list]] = []
         for file_path in files:
             # Extraer test_id del nombre
             filename = file_path.stem
@@ -370,7 +370,7 @@ class LearningEngineStorage:
         return weights_info
 
     def delete_weights(
-        self, engine_name: str, test_id: Optional[str] = None, keep_latest: bool = True
+        self, engine_name: str, test_id: str | None = None, keep_latest: bool = True
     ) -> int:
         """
         Eliminar pesos guardados.
@@ -419,22 +419,18 @@ class LearningEngineStorage:
         else:
             return "joblib"  # Seguro para sklearn y numpy (REQUIRED - joblib must be available)
 
-    def _save_msgpack(
-        self, path: Path, data: dict[str, Union[int, float, str, bool, list]]
-    ) -> None:
+    def _save_msgpack(self, path: Path, data: dict[str, int | float | str | bool | list]) -> None:
         """Guardar datos usando msgpack."""
         packed = msgpack.packb(data, default=str)
         with open(path, "wb") as f:
             f.write(packed)
 
-    def _load_msgpack(self, path: Path) -> dict[str, Union[int, float, str, bool, list]]:
+    def _load_msgpack(self, path: Path) -> dict[str, int | float | str | bool | list]:
         """Cargar datos usando msgpack."""
         with open(path, "rb") as f:
             return msgpack.unpackb(f.read(), raw=False)
 
-    def _find_and_migrate_old_pkl_files(
-        self, engine_dir: Path, test_id: Optional[str]
-    ) -> list[Path]:
+    def _find_and_migrate_old_pkl_files(self, engine_dir: Path, test_id: str | None) -> list[Path]:
         """
         Buscar archivos .pkl antiguos y migrarlos a formato seguro.
 
@@ -467,7 +463,7 @@ class LearningEngineStorage:
 
         return migrated_files
 
-    def _migrate_pkl_weights(self, pkl_path: Path) -> Optional[Path]:
+    def _migrate_pkl_weights(self, pkl_path: Path) -> Path | None:
         """
         Migrar archivo .pkl a formato seguro (one-time migration).
 
@@ -556,7 +552,7 @@ class LearningEngineStorage:
             return None
 
     def _save_metadata(
-        self, metadata_path: Path, metadata: dict[str, Union[int, float, str, bool, list]]
+        self, metadata_path: Path, metadata: dict[str, int | float | str | bool | list]
     ) -> None:
         """Guardar metadatos en JSON separado."""
 

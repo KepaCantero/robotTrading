@@ -6,7 +6,7 @@ from __future__ import annotations
 
 import logging
 from datetime import datetime
-from typing import Any, Optional
+from typing import Any
 
 import numpy as np
 import pandas as pd
@@ -34,7 +34,7 @@ class FeatureExtractor:
         indicators: dict[str, Any],
         filter_results: dict[str, dict],
         market_context: dict[str, Any],
-        metadata: Optional[dict[str, Any]] = None,
+        metadata: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         """
         Extraer todas las features disponibles.
@@ -526,7 +526,7 @@ class FeatureExtractor:
         self,
         historical_data: list[dict[str, Any]],
         sequence_length: int,
-        feature_names: Optional[list[str]] = None,
+        feature_names: list[str] | None = None,
     ) -> np.ndarray:
         """
         Extraer secuencias de features para Deep Learning.

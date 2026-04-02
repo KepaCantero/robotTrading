@@ -6,7 +6,6 @@ from __future__ import annotations
 
 import logging
 import os
-from typing import Optional
 
 # ============================================================================
 # CRÍTICO: Configurar variables de entorno ANTES de importar numpy/pandas/PyTorch
@@ -90,7 +89,7 @@ class TransformerEngine(BaseLearningEngine):
             self.epochs = params.get("epochs", 50)
             self.batch_size = params.get("batch_size", 32)
             self.learning_rate = params.get("learning_rate", 0.0001)
-            self.model: Optional[nn.Module] = None
+            self.model: nn.Module | None = None
             self.scaler = None
             return
 
@@ -121,7 +120,7 @@ class TransformerEngine(BaseLearningEngine):
 
     def _prepare_sequences(
         self, data: list[dict[str, object]], sequence_length: int = 30, target_key: str = "target"
-    ) -> tuple[np.ndarray, Optional[np.ndarray]]:
+    ) -> tuple[np.ndarray, np.ndarray | None]:
         """
         Preparar sequences de tiempo desde datos históricos.
 
@@ -176,8 +175,8 @@ class TransformerEngine(BaseLearningEngine):
 
     def train(
         self,
-        training_data: Optional[dict[str, object]] = None,
-        validation_data: Optional[dict[str, object]] = None,
+        training_data: dict[str, object] | None = None,
+        validation_data: dict[str, object] | None = None,
     ) -> dict[str, object]:
         """
         Entrenar el modelo Transformer.

@@ -7,7 +7,7 @@ Usa KMeans y DBSCAN para identificar regímenes basados en features de mercado.
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING, Any, Optional
+from typing import TYPE_CHECKING, Any
 
 import numpy as np
 
@@ -29,7 +29,7 @@ class ClusteringRegimeDetector:
     Usa KMeans o DBSCAN para identificar regímenes basados en features de mercado.
     """
 
-    def __init__(self, config: Optional[dict[str, Any]] = None):
+    def __init__(self, config: dict[str, Any] | None = None):
         """
         Inicializar detector de clustering.
 
@@ -44,9 +44,9 @@ class ClusteringRegimeDetector:
         self.use_pca = config.get("use_pca", False)
         self.n_components_pca = config.get("n_components_pca", 2)
 
-        self.model: Optional[ClusterMixin] = None
+        self.model: ClusterMixin | None = None
         self.scaler = StandardScaler()
-        self.pca: Optional[PCA] = PCA(n_components=self.n_components_pca) if self.use_pca else None
+        self.pca: PCA | None = PCA(n_components=self.n_components_pca) if self.use_pca else None
         self.regime_labels = (
             ["bear", "sideways", "bull"]
             if self.n_clusters == 3

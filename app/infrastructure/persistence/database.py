@@ -8,9 +8,8 @@ with asyncpg driver, including session management and connection pooling.
 from __future__ import annotations
 
 import logging
-from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager, contextmanager
-from typing import Optional
+from typing import TYPE_CHECKING
 
 from sqlalchemy import MetaData
 from sqlalchemy.exc import (
@@ -31,6 +30,9 @@ from sqlalchemy.orm import DeclarativeBase, Session, sessionmaker
 from sqlalchemy.pool import NullPool, QueuePool
 
 from app.shared.config.config import get_settings
+
+if TYPE_CHECKING:
+    from collections.abc import AsyncGenerator
 
 # Configure logging
 logger = logging.getLogger(__name__)
@@ -59,8 +61,8 @@ class Base(DeclarativeBase):
 
 
 # Global variables for database engine and session factory
-_engine: Optional[AsyncEngine] = None
-_session_factory: Optional[async_sessionmaker[AsyncSession]] = None
+_engine: AsyncEngine | None = None
+_session_factory: async_sessionmaker[AsyncSession] | None = None
 
 
 def get_database_engine() -> AsyncEngine:
@@ -327,7 +329,7 @@ async def get_database_info() -> dict:
 
 
 # Convenience functions for common database operations
-async def execute_query(query: str, params: Optional[dict] = None) -> list:
+async def execute_query(query: str, params: dict | None = None) -> list:
     """
     Execute a raw SQL query.
 
@@ -349,7 +351,7 @@ async def execute_query(query: str, params: Optional[dict] = None) -> list:
             raise
 
 
-async def execute_scalar(query: str, params: Optional[dict] = None) -> object:
+async def execute_scalar(query: str, params: dict | None = None) -> object:
     """
     Execute a scalar query (returns single value).
 

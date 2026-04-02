@@ -11,7 +11,7 @@ import logging
 from dataclasses import dataclass, field
 from decimal import Decimal
 from enum import Enum
-from typing import Any, Optional
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -150,7 +150,7 @@ class ParameterizationResult:
     """Result of module parametrization."""
 
     success: bool
-    parameter_set: Optional[ModuleParameterSet] = None
+    parameter_set: ModuleParameterSet | None = None
     error_message: str = ""
     warnings: list[str] = field(default_factory=list)
     disabled_modules: list[str] = field(

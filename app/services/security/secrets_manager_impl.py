@@ -20,7 +20,7 @@ import os
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import Optional, Protocol
+from typing import Protocol
 
 from cryptography.fernet import Fernet, InvalidToken
 
@@ -50,7 +50,7 @@ class SecretStorage(Protocol):
         """Store a secret value."""
         ...
 
-    def retrieve(self, key: str) -> Optional[str]:
+    def retrieve(self, key: str) -> str | None:
         """Retrieve a secret value."""
         ...
 
@@ -84,7 +84,7 @@ class EnvironmentStorage:
         os.environ[env_key] = value
         logger.debug(f"Stored secret in environment variable: {env_key}")
 
-    def retrieve(self, key: str) -> Optional[str]:
+    def retrieve(self, key: str) -> str | None:
         """
         Retrieve a secret from environment variables.
 
@@ -133,7 +133,7 @@ class EncryptedFileStorage:
     The file is encrypted using Fernet symmetric encryption.
     """
 
-    def __init__(self, file_path: str, encryption_key: Optional[bytes] = None):
+    def __init__(self, file_path: str, encryption_key: bytes | None = None):
         """
         Initialize encrypted file storage.
 
@@ -200,7 +200,7 @@ class EncryptedFileStorage:
         self._save()
         logger.debug(f"Stored secret in encrypted file: {key}")
 
-    def retrieve(self, key: str) -> Optional[str]:
+    def retrieve(self, key: str) -> str | None:
         """
         Retrieve a secret from the encrypted file.
 
@@ -253,7 +253,7 @@ class SecretsManagerImpl:
     with support for multiple storage backends.
     """
 
-    def __init__(self, storage_backend: Optional[SecretStorage] = None):
+    def __init__(self, storage_backend: SecretStorage | None = None):
         """
         Initialize the secrets manager.
 
@@ -266,7 +266,7 @@ class SecretsManagerImpl:
 
         self._storage = storage_backend
         self._secrets: dict[str, SecretValue] = {}
-        self._fernet: Optional[Fernet] = None
+        self._fernet: Fernet | None = None
 
         # Initialize encryption for in-memory values
         encryption_key = os.environ.get("ALGOTRADING_ENCRYPTION_KEY")
@@ -333,7 +333,7 @@ class SecretsManagerImpl:
 
         logger.info(f"Secret '{key}' stored (version {self._secrets[key].version})")
 
-    def get_secret(self, key: str) -> Optional[str]:
+    def get_secret(self, key: str) -> str | None:
         """
         Retrieve a secret.
 
@@ -409,7 +409,7 @@ class SecretsManagerImpl:
         keys.update(self._storage.list_keys())
         return list(keys)
 
-    def get_secret_metadata(self, key: str) -> Optional[SecretValue]:
+    def get_secret_metadata(self, key: str) -> SecretValue | None:
         """
         Get metadata about a secret without revealing the value.
 

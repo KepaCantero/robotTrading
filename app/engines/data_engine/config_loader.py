@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import logging
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 import yaml
 
@@ -63,7 +63,7 @@ class DataEngineConfigLoader:
         }
 
     def get_cache_config(
-        self, env_redis_url: Optional[str] = None, env_postgres_url: Optional[str] = None
+        self, env_redis_url: str | None = None, env_postgres_url: str | None = None
     ) -> dict[str, Any]:
         """
         Obtener configuración de cache.
@@ -106,9 +106,7 @@ class DataEngineConfigLoader:
             ),
         }
 
-    def get_source_config(
-        self, source_type: str, source_name: Optional[str] = None
-    ) -> dict[str, Any]:
+    def get_source_config(self, source_type: str, source_name: str | None = None) -> dict[str, Any]:
         """
         Obtener configuración de fuente específica.
 
@@ -147,7 +145,7 @@ class DataEngineConfigLoader:
             "error_status": api_config.get("error_status", 500),
         }
 
-    def get_sentiment_config(self, source_name: Optional[str] = None) -> dict[str, Any]:
+    def get_sentiment_config(self, source_name: str | None = None) -> dict[str, Any]:
         """
         Obtener configuración de análisis de sentimiento.
 

@@ -20,7 +20,6 @@ import statistics
 from dataclasses import dataclass
 from datetime import datetime
 from decimal import ROUND_HALF_UP, Decimal
-from typing import Optional
 
 from app.shared.config.centralized_config import get_config
 
@@ -37,7 +36,7 @@ class PriceData:
     low: Decimal
     close: Decimal
 
-    def true_range(self, prev_close: Optional[Decimal] = None) -> Decimal:
+    def true_range(self, prev_close: Decimal | None = None) -> Decimal:
         """Calculate true range for this candle."""
         high_low = self.high - self.low
 
@@ -66,7 +65,7 @@ class VolatilityMonitor:
         scale = monitor.calculate_volatility_scale(symbol, current_atr, avg_atr)
     """
 
-    def __init__(self, atr_period: Optional[int] = None):
+    def __init__(self, atr_period: int | None = None):
         """
         Initialize volatility monitor.
 
@@ -84,7 +83,7 @@ class VolatilityMonitor:
     def calculate_atr(
         self,
         prices: list[PriceData],
-        period: Optional[int] = None,
+        period: int | None = None,
     ) -> Decimal:
         """
         Calculate Average True Range from price data.
@@ -118,8 +117,8 @@ class VolatilityMonitor:
     def calculate_average_atr(
         self,
         symbol: str,
-        prices: Optional[list[PriceData]] = None,
-        lookback_periods: Optional[int] = None,
+        prices: list[PriceData] | None = None,
+        lookback_periods: int | None = None,
     ) -> Decimal:
         """
         Calculate historical average ATR for symbol.
@@ -166,7 +165,7 @@ class VolatilityMonitor:
         symbol: str,
         current_atr: Decimal,
         average_atr: Decimal,
-        base_scale: Optional[Decimal] = None,
+        base_scale: Decimal | None = None,
     ) -> Decimal:
         """
         Return position sizing scale based on ATR ratio.
@@ -230,8 +229,8 @@ class VolatilityMonitor:
         symbol: str,
         current_atr: Decimal,
         average_atr: Decimal,
-        std_dev: Optional[Decimal] = None,
-        threshold_multiplier: Optional[Decimal] = None,
+        std_dev: Decimal | None = None,
+        threshold_multiplier: Decimal | None = None,
     ) -> bool:
         """
         Check if ATR > mean + nsigma (volatility spike).
@@ -313,7 +312,7 @@ class VolatilityMonitor:
     def get_recent_volatility_spikes(
         self,
         symbol: str,
-        lookback_minutes: Optional[int] = None,
+        lookback_minutes: int | None = None,
     ) -> list[datetime]:
         """
         Get recent volatility spikes for symbol.
@@ -338,7 +337,7 @@ class VolatilityMonitor:
     def calculate_atr_std_dev(
         self,
         symbol: str,
-        lookback_periods: Optional[int] = None,
+        lookback_periods: int | None = None,
     ) -> Decimal:
         """
         Calculate standard deviation of ATR values.

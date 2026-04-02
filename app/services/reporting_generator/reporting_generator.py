@@ -9,7 +9,7 @@ from __future__ import annotations
 import logging
 from datetime import datetime
 from decimal import Decimal
-from typing import ClassVar, Optional
+from typing import ClassVar
 
 import numpy as np
 
@@ -531,7 +531,7 @@ class ReportingGenerator:
 
     async def get_report_history(
         self,
-        limit: Optional[int] = None,
+        limit: int | None = None,
     ) -> list[PerformanceReport]:
         """Get report history."""
         results = self.report_history
@@ -559,7 +559,7 @@ class ReportingGenerator:
 
 
 # Singleton
-_generator: Optional[ReportingGenerator] = None
+_generator: ReportingGenerator | None = None
 
 
 def get_reporting_generator() -> ReportingGenerator:

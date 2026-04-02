@@ -17,7 +17,7 @@ from __future__ import annotations
 
 import logging
 from pathlib import Path
-from typing import Optional, Union
+from typing import Union
 
 from .config_loader import YAMLConfigLoader
 
@@ -51,9 +51,9 @@ class ProfileConfigLoader:
 
     def __init__(
         self,
-        config_path: Optional[Path] = None,
-        profile: Optional[str] = None,
-        tier: Optional[str] = None,
+        config_path: Path | None = None,
+        profile: str | None = None,
+        tier: str | None = None,
     ):
         """
         Initialize the profile configuration loader.
@@ -209,7 +209,7 @@ class ProfileConfigLoader:
         return default
 
     def _get_dict(
-        self, key_path: str, default: Optional[dict[str, _ConfigValue]] = None
+        self, key_path: str, default: dict[str, _ConfigValue] | None = None
     ) -> dict[str, _ConfigValue]:
         """Retrieve a config value that must be a dict."""
         value = self.get(key_path, default if default is not None else {})
@@ -218,7 +218,7 @@ class ProfileConfigLoader:
         return default if default is not None else {}
 
     def _get_list(
-        self, key_path: str, default: Optional[list[_ConfigValue]] = None
+        self, key_path: str, default: list[_ConfigValue] | None = None
     ) -> list[_ConfigValue]:
         """Retrieve a config value that must be a list."""
         value = self.get(key_path, default if default is not None else [])
@@ -250,7 +250,7 @@ class ProfileConfigLoader:
     # THREADING CONFIGURATION
     # ========================================================================
 
-    def get_max_workers(self, cpu_count: Optional[int] = None) -> Optional[int]:
+    def get_max_workers(self, cpu_count: int | None = None) -> int | None:
         """
         Get maximum number of workers for parallel operations.
 
@@ -436,7 +436,7 @@ class ProfileConfigLoader:
     def validate_parameter_range(
         self,
         key_path: str,
-        value: Union[int, float],
+        value: int | float,
         min_key: str = "min",
         max_key: str = "max",
     ) -> bool:
@@ -471,9 +471,7 @@ class ProfileConfigLoader:
 
     def get_parameter_range(
         self, key_path: str, min_key: str = "min", max_key: str = "max"
-    ) -> tuple[
-        Optional[Union[int, float]], Optional[Union[int, float]], Optional[Union[int, float]]
-    ]:
+    ) -> tuple[int | float | None, int | float | None, int | float | None]:
         """
         Get parameter range from configuration.
 
@@ -493,9 +491,9 @@ class ProfileConfigLoader:
         raw_max = param_config.get(max_key)
         raw_step = param_config.get("step")
 
-        min_val: Optional[Union[int, float]] = None
-        max_val: Optional[Union[int, float]] = None
-        step: Optional[Union[int, float]] = None
+        min_val: int | float | None = None
+        max_val: int | float | None = None
+        step: int | float | None = None
 
         if isinstance(raw_min, (int, float)) and not isinstance(raw_min, bool):
             min_val = raw_min
@@ -512,13 +510,13 @@ class ProfileConfigLoader:
 # ============================================================================
 
 # Singleton instance cache
-_loaders: dict[tuple[Optional[str], Optional[str], Optional[Path]], ProfileConfigLoader] = {}
+_loaders: dict[tuple[str | None, str | None, Path | None], ProfileConfigLoader] = {}
 
 
 def get_profile_config_loader(
-    profile: Optional[str] = None,
-    tier: Optional[str] = None,
-    config_path: Optional[Path] = None,
+    profile: str | None = None,
+    tier: str | None = None,
+    config_path: Path | None = None,
 ) -> ProfileConfigLoader:
     """
     Get or create a ProfileConfigLoader instance with caching.
@@ -547,7 +545,7 @@ def get_profile_config_loader(
 
 
 def get_common_params(
-    profile: Optional[str] = None, tier: Optional[str] = None
+    profile: str | None = None, tier: str | None = None
 ) -> dict[str, _ConfigValue]:
     """
     Get common parameters as a dictionary.
@@ -571,8 +569,8 @@ def get_common_params(
 
 def get_model_params(
     model_type: str,
-    profile: Optional[str] = None,
-    tier: Optional[str] = None,
+    profile: str | None = None,
+    tier: str | None = None,
 ) -> dict[str, _ConfigValue]:
     """
     Get model parameters with profile and tier overrides applied.
@@ -591,8 +589,8 @@ def get_model_params(
 
 def get_threshold_ranges(
     indicator: str,
-    profile: Optional[str] = None,
-    tier: Optional[str] = None,
+    profile: str | None = None,
+    tier: str | None = None,
 ) -> dict[str, _ConfigValue]:
     """
     Get threshold optimization ranges for an indicator.
@@ -610,8 +608,8 @@ def get_threshold_ranges(
 
 
 def get_rl_config(
-    profile: Optional[str] = None,
-    tier: Optional[str] = None,
+    profile: str | None = None,
+    tier: str | None = None,
 ) -> dict[str, _ConfigValue]:
     """
     Get complete RL configuration with overrides.

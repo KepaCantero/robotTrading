@@ -125,9 +125,8 @@ class EmailChannel(NotificationChannel):
 
         from email.mime.multipart import MIMEMultipart
         from email.mime.text import MIMEText
-        from typing import Optional
 
-        aiosmtplib: Optional[ModuleType] = None
+        aiosmtplib: ModuleType | None = None
         try:
             import aiosmtplib as _aiosmtplib
 

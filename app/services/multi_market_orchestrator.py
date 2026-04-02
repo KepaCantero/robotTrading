@@ -23,7 +23,7 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 from decimal import Decimal
 from enum import Enum
-from typing import Any, ClassVar, Optional
+from typing import Any, ClassVar
 
 from app.services.crypto_data_service import get_crypto_fetcher
 from app.services.forex_data_service import get_forex_fetcher
@@ -85,9 +85,9 @@ class MarketSignal:
     strategy: StrategyType
     action: str  # "BUY", "SELL", "HOLD"
     confidence: Decimal  # 0 a 1
-    sentiment_score: Optional[Decimal] = None  # De Marketaux
-    expected_return: Optional[Decimal] = None
-    risk_level: Optional[Decimal] = None
+    sentiment_score: Decimal | None = None  # De Marketaux
+    expected_return: Decimal | None = None
+    risk_level: Decimal | None = None
 
 
 class MultiMarketOrchestrator:
@@ -178,7 +178,7 @@ class MultiMarketOrchestrator:
         total_capital: Decimal,
         tax_residence: str = "ES",  # España por defecto
         base_currency: str = "EUR",
-        marketaux_api_key: Optional[str] = None,
+        marketaux_api_key: str | None = None,
     ):
         """
         Inicializar orquestador multi-mercado.
@@ -201,7 +201,7 @@ class MultiMarketOrchestrator:
         # Estado actual
         self.allocations: dict[MarketType, MarketAllocation] = {}
         self.current_regime = MarketRegime.SIDEWAYS
-        self.vix_level: Optional[Decimal] = None
+        self.vix_level: Decimal | None = None
 
         # Sentiment cache
         self.sentiment_cache: dict[str, tuple[Decimal, datetime]] = {}
@@ -520,13 +520,13 @@ class MultiMarketOrchestrator:
 
 
 # Global instance
-_orchestrator: Optional[MultiMarketOrchestrator] = None
+_orchestrator: MultiMarketOrchestrator | None = None
 
 
 def get_orchestrator(
-    total_capital: Optional[Decimal] = None,
+    total_capital: Decimal | None = None,
     tax_residence: str = "ES",
-    marketaux_api_key: Optional[str] = None,
+    marketaux_api_key: str | None = None,
 ) -> MultiMarketOrchestrator:
     """Get or create global MultiMarketOrchestrator instance."""
     if total_capital is None:

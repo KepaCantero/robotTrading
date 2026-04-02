@@ -10,7 +10,6 @@ DEPRECATED: Import from app.services.momentum instead.
 from __future__ import annotations
 
 import logging
-from typing import Optional
 
 from app.domain.models.momentum import (
     MomentumAnalysis,
@@ -70,7 +69,7 @@ class MomentumAnalysisService:
         return analysis
 
     async def get_momentum_signals(
-        self, filter_criteria: Optional[MomentumFilter] = None
+        self, filter_criteria: MomentumFilter | None = None
     ) -> list[MomentumSignal]:
         """Get momentum signals based on filter criteria."""
         return await self._service.get_momentum_signals(filter_criteria)
@@ -90,13 +89,13 @@ class MomentumAnalysisService:
         self.strategies[strategy.name] = new_strategy
         return new_strategy
 
-    async def get_strategy(self, strategy_name: str) -> Optional[MomentumStrategy]:
+    async def get_strategy(self, strategy_name: str) -> MomentumStrategy | None:
         """Get a momentum strategy by name."""
         return await self._service.get_strategy(strategy_name)
 
     async def update_strategy(
         self, strategy_name: str, updated_fields: dict
-    ) -> Optional[MomentumStrategy]:
+    ) -> MomentumStrategy | None:
         """Update a momentum strategy."""
         updated_strategy = await self._service.update_strategy(strategy_name, updated_fields)
         # Sync to local dict for backward compatibility
@@ -116,7 +115,7 @@ class MomentumAnalysisService:
         """Get all momentum analyses."""
         return await self._service.get_analyses()
 
-    async def get_analysis(self, analysis_id: str) -> Optional[MomentumAnalysis]:
+    async def get_analysis(self, analysis_id: str) -> MomentumAnalysis | None:
         """Get a momentum analysis by ID."""
         return await self._service.get_analysis(analysis_id)
 

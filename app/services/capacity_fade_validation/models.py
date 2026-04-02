@@ -11,7 +11,6 @@ import logging
 from datetime import datetime
 from decimal import Decimal
 from enum import Enum
-from typing import Optional
 
 from pydantic import BaseModel, Field
 
@@ -54,7 +53,7 @@ class CapacityFadeAnalysis(BaseModel):
     alpha_sufficient: bool  # True if estimated_alpha >= required_alpha
 
     # Liquidity constraints
-    liquidity_report: Optional[LiquidityReport] = None
+    liquidity_report: LiquidityReport | None = None
     liquidity_constrained: bool = False
 
     # Fade factors
@@ -102,7 +101,7 @@ class CapacityFadeRequest(BaseModel):
 
     # Target deployment
     target_capital_usd: Decimal = Field(gt=Decimal("0"))
-    target_monthly_return_usd: Optional[Decimal] = None  # e.g., EUR800/month
+    target_monthly_return_usd: Decimal | None = None  # e.g., EUR800/month
 
     # Average position size (for liquidity calculation)
     avg_position_size_usd: Decimal = Field(gt=Decimal("0"))
@@ -128,7 +127,7 @@ class CapacityFadeResponse(BaseModel):
     summary: str
     details: dict = Field(default_factory=dict)
 
-    error_message: Optional[str] = None
+    error_message: str | None = None
 
 
 logger.debug(

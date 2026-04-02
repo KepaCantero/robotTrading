@@ -15,7 +15,7 @@ from __future__ import annotations
 import logging
 import traceback
 from datetime import datetime
-from typing import Any, Optional
+from typing import Any
 
 from fastapi import APIRouter, HTTPException, Request, status
 from pydantic import BaseModel, Field
@@ -44,10 +44,8 @@ class ErrorHandlingRequest(BaseModel):
     error_message: str = Field(..., description="Error message")
     error_type: str = Field(..., description="Type of error")
     context: ErrorContext = Field(..., description="Context where error occurred")
-    operation_id: Optional[str] = Field(None, description="Operation identifier")
-    metadata: Optional[dict[str, Any]] = Field(
-        default_factory=dict, description="Additional metadata"
-    )
+    operation_id: str | None = Field(None, description="Operation identifier")
+    metadata: dict[str, Any] | None = Field(default_factory=dict, description="Additional metadata")
 
 
 class ErrorHandlingResponse(BaseModel):
@@ -66,7 +64,7 @@ class CircuitBreakerStatus(BaseModel):
     context: str = Field(..., description="Context name")
     is_open: bool = Field(..., description="Whether circuit breaker is open")
     error_count: int = Field(..., description="Current error count")
-    last_error_time: Optional[str] = Field(None, description="Last error timestamp")
+    last_error_time: str | None = Field(None, description="Last error timestamp")
 
 
 class ErrorStatistics(BaseModel):

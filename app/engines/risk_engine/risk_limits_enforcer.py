@@ -24,12 +24,14 @@ from __future__ import annotations
 import logging
 from datetime import datetime
 from decimal import Decimal
-from typing import Any, Optional
+from typing import TYPE_CHECKING, Any
 
 import numpy as np
 
-from app.domain.models.portfolio import Portfolio
 from app.shared.config.centralized_config import get_config
+
+if TYPE_CHECKING:
+    from app.domain.models.portfolio import Portfolio
 
 logger = logging.getLogger(__name__)
 
@@ -63,7 +65,7 @@ class RiskLimitsEnforcer:
     Monitors portfolio risk and automatically enforces limits.
     """
 
-    def __init__(self, config: Optional[dict[str, Any]] = None):
+    def __init__(self, config: dict[str, Any] | None = None):
         """
         Initialize risk limits enforcer.
 
@@ -97,7 +99,7 @@ class RiskLimitsEnforcer:
         self,
         portfolio: Portfolio,
         current_var: float,
-        portfolio_value: Optional[float] = None,
+        portfolio_value: float | None = None,
     ) -> dict[str, Any]:
         """
         Check if portfolio VaR exceeds limits and recommend actions.
@@ -294,7 +296,7 @@ class RiskLimitsEnforcer:
     def generate_risk_heatmap(
         self,
         portfolio: Portfolio,
-        risk_contributions: Optional[dict[str, float]] = None,
+        risk_contributions: dict[str, float] | None = None,
     ) -> dict[str, Any]:
         """
         Generate portfolio risk heatmap by position.
@@ -431,7 +433,7 @@ class RiskLimitsEnforcer:
         self,
         portfolio: Portfolio,
         returns_history: dict[str, list[float]],
-        asset_class_mapping: Optional[dict[str, str]] = None,
+        asset_class_mapping: dict[str, str] | None = None,
     ) -> dict[str, Any]:
         """
         Attribute risk by asset class.
@@ -544,7 +546,7 @@ class RiskLimitsEnforcer:
         self,
         base_position_value: float,
         current_var_utilization: float,
-        max_utilization: Optional[float] = None,
+        max_utilization: float | None = None,
     ) -> float:
         """
         Calculate dynamically adjusted position size based on VaR utilization.

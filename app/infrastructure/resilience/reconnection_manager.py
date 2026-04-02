@@ -11,13 +11,15 @@ from __future__ import annotations
 import asyncio
 import logging
 import random
-from collections.abc import Awaitable
 from dataclasses import dataclass
-from datetime import datetime
-from typing import Any, Callable, Optional
+from typing import TYPE_CHECKING, Any, Callable
 
 from app.shared.config.centralized_config import get_config
 from app.shared.utils.timezone_utils import utc_now
+
+if TYPE_CHECKING:
+    from collections.abc import Awaitable
+    from datetime import datetime
 
 logger = logging.getLogger(__name__)
 
@@ -32,19 +34,19 @@ class ReconnectionConfig:
 
     def __init__(
         self,
-        custom_config: Optional[dict] = None,
+        custom_config: dict | None = None,
         *,
-        max_attempts: Optional[int] = None,
-        base_delay_seconds: Optional[float] = None,
-        max_delay_seconds: Optional[float] = None,
-        exponential_base: Optional[float] = None,
-        jitter: Optional[bool] = None,
-        jitter_factor: Optional[float] = None,
-        alert_after_attempts: Optional[int] = None,
-        on_attempt: Optional[Callable[[int], None]] = None,
-        on_success: Optional[Callable[[int], None]] = None,
-        on_failure: Optional[Callable[[], None]] = None,
-        alert_callback: Optional[Callable[[int], None]] = None,
+        max_attempts: int | None = None,
+        base_delay_seconds: float | None = None,
+        max_delay_seconds: float | None = None,
+        exponential_base: float | None = None,
+        jitter: bool | None = None,
+        jitter_factor: float | None = None,
+        alert_after_attempts: int | None = None,
+        on_attempt: Callable[[int], None] | None = None,
+        on_success: Callable[[int], None] | None = None,
+        on_failure: Callable[[], None] | None = None,
+        alert_callback: Callable[[int], None] | None = None,
     ):
         """
         Initialize ReconnectionConfig with centralized config values.
@@ -115,8 +117,8 @@ class ReconnectionStats:
     total_attempts: int = 0
     successful_connections: int = 0
     failed_connections: int = 0
-    last_connection_time: Optional[datetime] = None
-    last_failure_time: Optional[datetime] = None
+    last_connection_time: datetime | None = None
+    last_failure_time: datetime | None = None
     current_backoff_seconds: float = 0.0
 
     @property
@@ -142,7 +144,7 @@ class ReconnectionManager:
     def __init__(
         self,
         service_name: str,
-        config: Optional[ReconnectionConfig] = None,
+        config: ReconnectionConfig | None = None,
     ):
         """
         Initialize reconnection manager.
@@ -187,7 +189,7 @@ class ReconnectionManager:
     async def connect_with_backoff(
         self,
         connect_func: Callable[[], Any],
-    ) -> Optional[Any]:
+    ) -> Any | None:
         """
         Try to connect with exponential backoff.
 
@@ -269,8 +271,8 @@ class ReconnectionManager:
     async def maintain_connection(
         self,
         connect_func: Callable[[], Any],
-        check_func: Optional[Callable[[], Awaitable[bool]]] = None,
-        reconnect_delay: Optional[float] = None,
+        check_func: Callable[[], Awaitable[bool]] | None = None,
+        reconnect_delay: float | None = None,
     ):
         """
         Continuously maintain connection, reconnecting if lost.

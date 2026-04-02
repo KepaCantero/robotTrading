@@ -40,7 +40,7 @@ from __future__ import annotations
 import logging
 from decimal import Decimal
 from enum import Enum
-from typing import ClassVar, Optional
+from typing import ClassVar
 
 # Import centralized configuration (REQUIRED - no fallbacks)
 from app.shared.config.strategy_config_loader import get_strategy_config
@@ -235,7 +235,7 @@ class TierMapper:
             return "large"
 
     @classmethod
-    def to_yaml_tier(cls, tier: str, source_system: Optional[TierSystem] = None) -> str:
+    def to_yaml_tier(cls, tier: str, source_system: TierSystem | None = None) -> str:
         """
         Convert tier to YAML format (micro, small, medium, large).
 
@@ -276,7 +276,7 @@ class TierMapper:
         raise ValueError(f"Cannot convert tier '{tier}' from {source_system} to YAML format")
 
     @classmethod
-    def to_spanish(cls, tier: str, source_system: Optional[TierSystem] = None) -> str:
+    def to_spanish(cls, tier: str, source_system: TierSystem | None = None) -> str:
         """
         Convert tier to Spanish format (bajo, medio, alto).
 
@@ -311,7 +311,7 @@ class TierMapper:
         return cls.YAML_TO_SPANISH.get(yaml_tier, tier)
 
     @classmethod
-    def to_capital_flag(cls, tier: str, source_system: Optional[TierSystem] = None) -> str:
+    def to_capital_flag(cls, tier: str, source_system: TierSystem | None = None) -> str:
         """
         Convert tier to capital_flag format (small, medium, large).
 
@@ -382,7 +382,7 @@ class TierMapper:
         )
 
     @classmethod
-    def is_valid_tier(cls, tier: str, system: Optional[TierSystem] = None) -> bool:
+    def is_valid_tier(cls, tier: str, system: TierSystem | None = None) -> bool:
         """
         Check if a tier name is valid.
 

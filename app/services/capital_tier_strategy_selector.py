@@ -31,7 +31,7 @@ import logging
 from dataclasses import dataclass
 from decimal import Decimal
 from enum import Enum
-from typing import ClassVar, Optional
+from typing import ClassVar
 
 from app.services.account_configuration import AccountConfiguration, AccountTier
 from app.services.deployment_validator import DeploymentStatus, DeploymentValidator
@@ -185,7 +185,7 @@ class DeploymentReport:
     """
 
     status: DeploymentStatus
-    account_id: Optional[str]
+    account_id: str | None
     issues: list[str]
     warnings: list[str]
     recommendations: list[str]
@@ -273,7 +273,7 @@ class CapitalTierStrategySelector:
         AccountTier.LARGE: Decimal("0.15"),  # 15% max drawdown (can sustain longer periods)
     }
 
-    def __init__(self, capital: Decimal, account_id: Optional[str] = None):
+    def __init__(self, capital: Decimal, account_id: str | None = None):
         """
         Initialize Capital Tier Strategy Selector.
 
@@ -470,8 +470,8 @@ class CapitalTierStrategySelector:
         self,
         monthly_profit_goal: Decimal,
         expected_monthly_alpha: Decimal,
-        tax_rate: Optional[Decimal] = None,
-        commission_per_trade: Optional[Decimal] = None,
+        tax_rate: Decimal | None = None,
+        commission_per_trade: Decimal | None = None,
     ) -> DeploymentReport:
         """
         Validate if account is safe for live trading deployment.
@@ -662,7 +662,7 @@ class CapitalTierStrategySelector:
 _selector_instances: dict[str, CapitalTierStrategySelector] = {}
 
 
-def get_selector(capital: Decimal, account_id: Optional[str] = None) -> CapitalTierStrategySelector:
+def get_selector(capital: Decimal, account_id: str | None = None) -> CapitalTierStrategySelector:
     """
     Get or create a CapitalTierStrategySelector instance.
 

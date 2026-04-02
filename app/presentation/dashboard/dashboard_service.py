@@ -11,7 +11,7 @@ import asyncio
 import logging
 from datetime import datetime, timezone
 from decimal import Decimal
-from typing import Any, Optional
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -349,7 +349,7 @@ class DashboardService:
 
 
 # Singleton instance
-_dashboard_service: Optional[DashboardService] = None
+_dashboard_service: DashboardService | None = None
 
 
 def get_dashboard_service() -> DashboardService:

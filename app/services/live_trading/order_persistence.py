@@ -21,7 +21,6 @@ from contextlib import contextmanager, suppress
 from datetime import datetime, timezone
 from decimal import Decimal
 from pathlib import Path
-from typing import Optional
 
 from sqlalchemy.exc import (
     DatabaseError,
@@ -91,7 +90,7 @@ class OrderPersistence:
     - Thread-local connections: Safe for multi-threaded access
     """
 
-    def __init__(self, db_path: Optional[Path] = None):
+    def __init__(self, db_path: Path | None = None):
         """
         Initialize persistence layer.
 
@@ -147,7 +146,8 @@ class OrderPersistence:
             cursor = conn.cursor()
 
             # Orders table
-            cursor.execute("""
+            cursor.execute(
+                """
                 CREATE TABLE IF NOT EXISTS orders (
                     order_id TEXT PRIMARY KEY,
                     symbol TEXT NOT NULL,
@@ -165,10 +165,12 @@ class OrderPersistence:
                     metadata TEXT,
                     is_pending INTEGER DEFAULT 1
                 )
-            """)
+            """
+            )
 
             # Executions table
-            cursor.execute("""
+            cursor.execute(
+                """
                 CREATE TABLE IF NOT EXISTS executions (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     order_id TEXT NOT NULL,
@@ -180,10 +182,12 @@ class OrderPersistence:
                     net_proceeds TEXT DEFAULT '0',
                     FOREIGN KEY (order_id) REFERENCES orders(order_id)
                 )
-            """)
+            """
+            )
 
             # Order errors table
-            cursor.execute("""
+            cursor.execute(
+                """
                 CREATE TABLE IF NOT EXISTS order_errors (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     order_id TEXT NOT NULL,
@@ -195,7 +199,8 @@ class OrderPersistence:
                     max_retries INTEGER DEFAULT 3,
                     FOREIGN KEY (order_id) REFERENCES orders(order_id)
                 )
-            """)
+            """
+            )
 
             # Indexes for common queries
             cursor.execute("CREATE INDEX IF NOT EXISTS idx_orders_symbol ON orders(symbol)")
@@ -298,7 +303,7 @@ class OrderPersistence:
             logger.error(f"Failed to save order: {e}")
             return False
 
-    def get_order(self, order_id: str) -> Optional[dict]:
+    def get_order(self, order_id: str) -> dict | None:
         """
         Get order by ID.
 
@@ -322,7 +327,7 @@ class OrderPersistence:
             logger.error(f"Failed to get order: {e}")
             return None
 
-    def get_pending_orders(self, symbol: Optional[str] = None) -> list[dict]:
+    def get_pending_orders(self, symbol: str | None = None) -> list[dict]:
         """
         Get all pending orders.
 
@@ -349,7 +354,7 @@ class OrderPersistence:
             logger.error(f"Failed to get pending orders: {e}")
             return []
 
-    def get_executed_orders(self, symbol: Optional[str] = None) -> list[dict]:
+    def get_executed_orders(self, symbol: str | None = None) -> list[dict]:
         """
         Get all executed orders.
 
@@ -379,7 +384,7 @@ class OrderPersistence:
             logger.error(f"Failed to get executed orders: {e}")
             return []
 
-    def get_order_history(self, symbol: Optional[str] = None, limit: int = 1000) -> list[dict]:
+    def get_order_history(self, symbol: str | None = None, limit: int = 1000) -> list[dict]:
         """
         Get order history.
 
@@ -472,9 +477,7 @@ class OrderPersistence:
             logger.error(f"Failed to save execution: {e}")
             return False
 
-    def get_executions(
-        self, order_id: Optional[str] = None, symbol: Optional[str] = None
-    ) -> list[dict]:
+    def get_executions(self, order_id: str | None = None, symbol: str | None = None) -> list[dict]:
         """
         Get execution records.
 
@@ -543,9 +546,7 @@ class OrderPersistence:
             logger.error(f"Failed to save error: {e}")
             return False
 
-    def get_errors(
-        self, order_id: Optional[str] = None, symbol: Optional[str] = None
-    ) -> list[dict]:
+    def get_errors(self, order_id: str | None = None, symbol: str | None = None) -> list[dict]:
         """
         Get error records.
 
@@ -684,10 +685,10 @@ class OrderPersistence:
 
 
 # Singleton instance
-_persistence: Optional[OrderPersistence] = None
+_persistence: OrderPersistence | None = None
 
 
-def get_order_persistence(db_path: Optional[Path] = None) -> OrderPersistence:
+def get_order_persistence(db_path: Path | None = None) -> OrderPersistence:
     """Get or create singleton OrderPersistence instance."""
     global _persistence
     if _persistence is None:

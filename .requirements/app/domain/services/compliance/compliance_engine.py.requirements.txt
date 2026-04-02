@@ -56,55 +56,9 @@ Generated: 2026-03-09
 
 ## 3. Core Components
 ### Classes
-- `ComplianceConfig`
-- `SystemAvailability`
-- `SystemBus`
-- `ComplianceEngine`
-- `TradeResult`
-- `CycleResult`
-- `CycleResult`
-- `TradeResult`
-- `TradeResult`
+
 ### Public Functions
-- `get_compliance_engine()`
-- `quick_check()`
-- `get_execution_plan()`
-- `kill_switch_must_be_negative()`
-- `get_availability()`
-- `is_available()`
-- `get_summary()`
-- `execute_pre_trade_analysis()`
-- `check_kill_switch()`
-- `track_daily_pnl()`
-- `reset_daily_tracking()`
-- `set_starting_capital()`
-- `get_daily_pnl_summary()`
-- `calculate_position_size()`
-- `validate_risk_envelope()`
-- `get_risk_envelope_exposures()`
-- `analyze_pre_trade()`
-- `analyze_post_trade()`
-- `optimize_portfolio()`
-- `track_order_submission()`
-- `track_order_completion()`
-- `get_slo_metrics()`
-- `process_alert()`
-- `validate_alert()`
-- `filter_duplicate_alerts()`
-- `prioritize_alerts()`
-- `get_alert_history()`
-- `execute_trade()`
-- `cancel_order()`
-- `modify_order()`
-- `get_order_status()`
-- `get_open_orders()`
-- `run_cycle()`
-- `validate_cycle_input()`
-- `execute_cycle_phase()`
-- `handle_cycle_error()`
-- `get_cycle_metrics()`
-- `get_system_status()`
-- `get_priority()`
+
 
 ## 4. SOLID Principles (from rules/python/03-solid-principles.md)
 

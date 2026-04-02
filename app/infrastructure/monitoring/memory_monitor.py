@@ -16,15 +16,17 @@ import gc
 import logging
 import os
 import sys
-from collections.abc import Awaitable
 from dataclasses import dataclass
-from datetime import datetime
 from enum import Enum
-from typing import Any, Callable, Optional
+from typing import TYPE_CHECKING, Any, Callable
 
 import psutil
 
 from app.shared.utils.timezone_utils import utc_now
+
+if TYPE_CHECKING:
+    from collections.abc import Awaitable
+    from datetime import datetime
 
 logger = logging.getLogger(__name__)
 
@@ -48,7 +50,7 @@ class MemoryConfig:
     action: MemoryAction = MemoryAction.ALERT_ONLY
     close_positions_on_restart: bool = False
     save_state_before_restart: bool = True
-    alert_callback: Optional[Callable[[str], None]] = None
+    alert_callback: Callable[[str], None] | None = None
 
 
 @dataclass
@@ -84,9 +86,9 @@ class MemoryMonitor:
 
     def __init__(
         self,
-        config: Optional[MemoryConfig] = None,
-        state_saver: Optional[Callable[[], Awaitable[None]]] = None,
-        position_closer: Optional[Callable[[], Awaitable[None]]] = None,
+        config: MemoryConfig | None = None,
+        state_saver: Callable[[], Awaitable[None]] | None = None,
+        position_closer: Callable[[], Awaitable[None]] | None = None,
     ):
         """
         Initialize memory monitor.
@@ -102,10 +104,10 @@ class MemoryMonitor:
 
         # State
         self._is_monitoring = False
-        self._monitor_task: Optional[asyncio.Task] = None
+        self._monitor_task: asyncio.Task | None = None
         self._snapshots: list[MemorySnapshot] = []
         self._restart_count = 0
-        self._last_restart: Optional[datetime] = None
+        self._last_restart: datetime | None = None
 
         # Get process
         self.process = psutil.Process(os.getpid())
@@ -385,13 +387,13 @@ class MemoryMonitor:
 
 
 # Global instance
-_memory_monitor: Optional[MemoryMonitor] = None
+_memory_monitor: MemoryMonitor | None = None
 
 
 def get_memory_monitor(
-    config: Optional[MemoryConfig] = None,
-    state_saver: Optional[Callable[[], None]] = None,
-    position_closer: Optional[Callable[[], None]] = None,
+    config: MemoryConfig | None = None,
+    state_saver: Callable[[], None] | None = None,
+    position_closer: Callable[[], None] | None = None,
 ) -> MemoryMonitor:
     """
     Get or create the global MemoryMonitor instance.

@@ -59,7 +59,10 @@ except (ValueError, TypeError, KeyError, AttributeError):
 ComprehensiveBacktestRunner = None
 
 # Importar librerías básicas
-import types as _types
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    import types as _types
 
 _yaml: _types.ModuleType | None = None
 try:
@@ -91,7 +94,6 @@ except (FileNotFoundError, ValueError, KeyError, TypeError):
 import contextlib
 import logging
 from datetime import datetime, timedelta
-from typing import Optional, Union
 
 logger = logging.getLogger(__name__)
 
@@ -146,7 +148,7 @@ st.markdown(
 )
 
 
-def load_thresholds(config_path: Optional[str] = None) -> dict[str, dict[str, float]]:
+def load_thresholds(config_path: str | None = None) -> dict[str, dict[str, float]]:
     """Cargar thresholds desde configuración."""
     default = {
         "sharpe": {"bad": 0.0, "warn": 0.8, "good": 1.5},
@@ -192,7 +194,7 @@ def get_metric_color(value: float, metric: str, thresholds: dict) -> tuple[str, 
 
 def render_metric_card(
     label: str,
-    value: Union[str, int, float, bool],
+    value: str | int | float | bool,
     metric: str,
     thresholds: dict,
     format_str: str = "{:.2f}",
@@ -231,7 +233,7 @@ def render_metric_card(
 # ============================================================================
 
 
-def get_integration_test_objectives() -> dict[str, dict[str, Union[str, int, float, bool]]]:
+def get_integration_test_objectives() -> dict[str, dict[str, str | int | float | bool]]:
     """
     Define los objetivos de métricas para integration tests.
     Returns: Dict con objetivos por métrica
@@ -345,7 +347,7 @@ def evaluate_all_objectives(
 
 def extract_strategy_config(
     result_row: pd.Series,
-) -> dict[str, Union[str, int, float, bool, dict, list, None]]:
+) -> dict[str, str | int | float | bool | dict | list | None]:
     """
     Extrae la configuración de estrategia y parámetros de un resultado.
     Returns: Dict con información de estrategia, parámetros, módulos, etc.
@@ -1103,25 +1105,29 @@ def main():
                     st.info(
                         "📋 No hay resultados cargados. Ejecuta tests o carga resultados existentes."
                     )
-                    st.markdown("""
+                    st.markdown(
+                        """
                     **💡 Para empezar:**
                     1. Ve al sidebar y selecciona tests (Baseline, Learning Engines, etc.)
                     2. Activa los learning engines que quieras probar
                     3. Haz clic en "🚀 EXECUTE SELECTED TESTS" (arriba o en el sidebar)
                     4. O carga resultados existentes desde la tab "📁 Load Results"
-                    """)
+                    """
+                    )
             except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
                 st.error(f"❌ Error cargando resultados: {e}")
                 st.exception(e)
                 logger.error(f"Error en dashboard: {e}", exc_info=True)
 
             # Show helpful message even on error
-            st.markdown("""
+            st.markdown(
+                """
             **🔧 Solución:**
             1. Verifica que el directorio `reports/comprehensive_backtest` existe
             2. Ejecuta algunos backtests primero desde el sidebar
             3. O carga resultados desde la tab "📁 Load Results"
-            """)
+            """
+            )
 
         # Tab 2: Individual Results
         with tabs[1]:
@@ -1746,11 +1752,13 @@ def main():
         # Tab 5: Integration Test Objectives
         with tabs[4]:
             st.header("🎯 Integration Test Objectives")
-            st.markdown("""
+            st.markdown(
+                """
             ### Objetivos de Métricas para Integration Tests
 
             Esta sección muestra qué estrategias con qué parámetros cumplen los objetivos establecidos para los integration tests.
-            """)
+            """
+            )
 
             # Load and display Meta Analysis results if available
             loader = ComprehensiveBacktestLoader()
@@ -2586,14 +2594,16 @@ def main():
         logger.error(f"Error crítico en dashboard main(): {e}", exc_info=True)
 
         # Show minimal working interface
-        st.markdown("""
+        st.markdown(
+            """
         ## 🔧 Dashboard en modo recuperación
 
         El dashboard encontró un error. Por favor:
         1. Recarga la página (F5 o Cmd+R)
         2. Si persiste, revisa los logs en `logs/errors.log`
         3. Intenta ejecutar el dashboard básico: `python run_dashboard.py`
-        """)
+        """
+        )
 
 
 # Streamlit ejecuta el script directamente, así que siempre llamamos main()

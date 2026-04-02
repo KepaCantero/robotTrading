@@ -8,7 +8,7 @@ from __future__ import annotations
 # mypy: ignore-errors
 import logging
 from enum import Enum
-from typing import Any, Optional
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -45,8 +45,8 @@ class AlgoTradingError(Exception):
         error_code: str,
         category: ErrorCategory,
         severity: ErrorSeverity = ErrorSeverity.MEDIUM,
-        details: Optional[dict[str, Any]] = None,
-        original_error: Optional[Exception] = None,
+        details: dict[str, Any] | None = None,
+        original_error: Exception | None = None,
     ):
         self.message = message
         self.error_code = error_code
@@ -84,9 +84,9 @@ class ValidationError(AlgoTradingError):
     def __init__(
         self,
         message: str,
-        field: Optional[str] = None,
-        value: Optional[Any] = None,
-        details: Optional[dict[str, Any]] = None,
+        field: str | None = None,
+        value: Any | None = None,
+        details: dict[str, Any] | None = None,
     ):
         error_code = f"VALIDATION_ERROR_{field.upper()}" if field else "VALIDATION_ERROR"
         super().__init__(
@@ -117,8 +117,8 @@ class BusinessLogicError(AlgoTradingError):
     def __init__(
         self,
         message: str,
-        operation: Optional[str] = None,
-        details: Optional[dict[str, Any]] = None,
+        operation: str | None = None,
+        details: dict[str, Any] | None = None,
     ):
         error_code = f"BUSINESS_ERROR_{operation.upper()}" if operation else "BUSINESS_ERROR"
         super().__init__(
@@ -137,8 +137,8 @@ class ExternalAPIError(AlgoTradingError):
         self,
         message: str,
         api_name: str,
-        status_code: Optional[int] = None,
-        details: Optional[dict[str, Any]] = None,
+        status_code: int | None = None,
+        details: dict[str, Any] | None = None,
     ):
         error_code = f"API_ERROR_{api_name.upper()}"
         super().__init__(
@@ -170,9 +170,9 @@ class AlgoTradingDatabaseError(AlgoTradingError):
     def __init__(
         self,
         message: str,
-        operation: Optional[str] = None,
-        table: Optional[str] = None,
-        details: Optional[dict[str, Any]] = None,
+        operation: str | None = None,
+        table: str | None = None,
+        details: dict[str, Any] | None = None,
     ):
         error_code = f"DB_ERROR_{operation.upper()}" if operation else "DB_ERROR"
         super().__init__(
@@ -190,9 +190,9 @@ class NetworkError(AlgoTradingError):
     def __init__(
         self,
         message: str,
-        endpoint: Optional[str] = None,
-        timeout: Optional[float] = None,
-        details: Optional[dict[str, Any]] = None,
+        endpoint: str | None = None,
+        timeout: float | None = None,
+        details: dict[str, Any] | None = None,
     ):
         super().__init__(
             message=message,
@@ -209,8 +209,8 @@ class ConfigurationError(AlgoTradingError):
     def __init__(
         self,
         message: str,
-        config_key: Optional[str] = None,
-        details: Optional[dict[str, Any]] = None,
+        config_key: str | None = None,
+        details: dict[str, Any] | None = None,
     ):
         error_code = f"CONFIG_ERROR_{config_key.upper()}" if config_key else "CONFIG_ERROR"
         super().__init__(
@@ -228,8 +228,8 @@ class SecurityError(AlgoTradingError):
     def __init__(
         self,
         message: str,
-        violation_type: Optional[str] = None,
-        details: Optional[dict[str, Any]] = None,
+        violation_type: str | None = None,
+        details: dict[str, Any] | None = None,
     ):
         error_code = (
             f"SECURITY_ERROR_{violation_type.upper()}" if violation_type else "SECURITY_ERROR"
@@ -258,10 +258,10 @@ class PerformanceError(AlgoTradingError):
     def __init__(
         self,
         message: str,
-        operation: Optional[str] = None,
-        duration: Optional[float] = None,
-        threshold: Optional[float] = None,
-        details: Optional[dict[str, Any]] = None,
+        operation: str | None = None,
+        duration: float | None = None,
+        threshold: float | None = None,
+        details: dict[str, Any] | None = None,
     ):
         error_code = f"PERF_ERROR_{operation.upper()}" if operation else "PERF_ERROR"
         super().__init__(
@@ -284,8 +284,8 @@ class TradingSystemError(AlgoTradingError):
     def __init__(
         self,
         message: str,
-        component: Optional[str] = None,
-        details: Optional[dict[str, Any]] = None,
+        component: str | None = None,
+        details: dict[str, Any] | None = None,
     ):
         error_code = f"SYSTEM_ERROR_{component.upper()}" if component else "SYSTEM_ERROR"
         super().__init__(
@@ -304,9 +304,9 @@ class TradingError(BusinessLogicError):
     def __init__(
         self,
         message: str,
-        symbol: Optional[str] = None,
-        operation: Optional[str] = None,
-        details: Optional[dict[str, Any]] = None,
+        symbol: str | None = None,
+        operation: str | None = None,
+        details: dict[str, Any] | None = None,
     ):
         super().__init__(
             message=message,
@@ -321,9 +321,9 @@ class SignalError(BusinessLogicError):
     def __init__(
         self,
         message: str,
-        signal_type: Optional[str] = None,
-        strategy: Optional[str] = None,
-        details: Optional[dict[str, Any]] = None,
+        signal_type: str | None = None,
+        strategy: str | None = None,
+        details: dict[str, Any] | None = None,
     ):
         super().__init__(
             message=message,
@@ -342,9 +342,9 @@ class PortfolioError(BusinessLogicError):
     def __init__(
         self,
         message: str,
-        operation: Optional[str] = None,
-        portfolio_id: Optional[str] = None,
-        details: Optional[dict[str, Any]] = None,
+        operation: str | None = None,
+        portfolio_id: str | None = None,
+        details: dict[str, Any] | None = None,
     ):
         super().__init__(
             message=message,
@@ -359,10 +359,10 @@ class RiskManagementError(BusinessLogicError):
     def __init__(
         self,
         message: str,
-        risk_type: Optional[str] = None,
-        limit: Optional[float] = None,
-        current_value: Optional[float] = None,
-        details: Optional[dict[str, Any]] = None,
+        risk_type: str | None = None,
+        limit: float | None = None,
+        current_value: float | None = None,
+        details: dict[str, Any] | None = None,
     ):
         super().__init__(
             message=message,
@@ -382,9 +382,9 @@ class MarketDataError(ExternalAPIError):
     def __init__(
         self,
         message: str,
-        symbol: Optional[str] = None,
-        data_type: Optional[str] = None,
-        details: Optional[dict[str, Any]] = None,
+        symbol: str | None = None,
+        data_type: str | None = None,
+        details: dict[str, Any] | None = None,
     ):
         super().__init__(
             message=message,
@@ -399,10 +399,10 @@ class BrokerError(ExternalAPIError):
     def __init__(
         self,
         message: str,
-        broker: Optional[str] = None,
-        operation: Optional[str] = None,
-        order_id: Optional[str] = None,
-        details: Optional[dict[str, Any]] = None,
+        broker: str | None = None,
+        operation: str | None = None,
+        order_id: str | None = None,
+        details: dict[str, Any] | None = None,
     ):
         super().__init__(
             message=message,

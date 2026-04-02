@@ -29,7 +29,7 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 from decimal import Decimal
 from enum import Enum
-from typing import Optional, Union
+from typing import Union
 
 # Position dictionaries contain heterogeneous values from broker/DB
 PositionDict = dict[str, Union[str, int, float, Decimal, None]]
@@ -57,10 +57,10 @@ class PositionDiscrepancy:
     symbol: str
     side: str
     quantity: Decimal
-    entry_price: Optional[Decimal]
+    entry_price: Decimal | None
     current_price: Decimal
     discrepancy_type: str  # 'ORPHANED' or 'PHANTOM'
-    broker_order_id: Optional[str]
+    broker_order_id: str | None
     action: ReconciliationAction
     reason: str
 
@@ -74,7 +74,7 @@ class BootReconciler:
     """
 
     def __init__(
-        self, broker_client: object, db_path: str, emergency_handler: Optional[object] = None
+        self, broker_client: object, db_path: str, emergency_handler: object | None = None
     ):
         """
         Initialize reconciler.
@@ -88,7 +88,7 @@ class BootReconciler:
         self.db_path = db_path
         self.emergency_handler = emergency_handler
 
-    async def reconcile_on_startup(self) -> dict[str, Union[str, int, list[PositionDict]]]:
+    async def reconcile_on_startup(self) -> dict[str, str | int | list[PositionDict]]:
         """
         Perform full reconciliation on system startup.
 
@@ -214,7 +214,8 @@ class BootReconciler:
         """Fetch all open positions from local database."""
         try:
             async with aiosqlite.connect(self.db_path) as db:
-                cursor = await db.execute("""
+                cursor = await db.execute(
+                    """
                     SELECT
                         id, symbol, side, quantity, entry_price,
                         current_price, stop_loss_price, take_profit_price,
@@ -222,7 +223,8 @@ class BootReconciler:
                     FROM positions
                     WHERE status = 'OPEN'
                     ORDER BY created_at DESC
-                """)
+                """
+                )
                 rows = await cursor.fetchall()
 
                 return [
@@ -498,7 +500,7 @@ class BootReconciler:
 
 
 async def run_reconciliation_on_startup(
-    broker_client: object, db_path: str, emergency_handler: Optional[object] = None
+    broker_client: object, db_path: str, emergency_handler: object | None = None
 ) -> PositionDict:
     """
     Convenience function to run reconciliation on startup.

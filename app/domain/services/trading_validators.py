@@ -11,7 +11,6 @@ from __future__ import annotations
 
 import logging
 from decimal import Decimal
-from typing import Optional
 
 from app.shared.config.centralized_config import get_config
 
@@ -32,7 +31,7 @@ class TradingValidator:
     def validate_position_size(
         capital: Decimal,
         position_size: Decimal,
-        max_position_percent: Optional[Decimal] = None,
+        max_position_percent: Decimal | None = None,
     ) -> bool:
         """
         Validate that position size doesn't exceed available capital.
@@ -111,7 +110,7 @@ class TradingValidator:
     @staticmethod
     def validate_stop_loss(
         entry_price: Decimal,
-        stop_loss: Optional[Decimal],
+        stop_loss: Decimal | None,
         side: str = "long",
     ) -> bool:
         """
@@ -212,8 +211,8 @@ class TradingValidator:
     def validate_trade_risk_reward(
         entry_price: Decimal,
         stop_loss: Decimal,
-        take_profit: Optional[Decimal] = None,
-        min_reward_risk_ratio: Optional[Decimal] = None,
+        take_profit: Decimal | None = None,
+        min_reward_risk_ratio: Decimal | None = None,
     ) -> bool:
         """
         Validate that the trade has a favorable risk-reward ratio.
@@ -277,7 +276,7 @@ class TradingValidator:
     @staticmethod
     def validate_trading_hours(
         current_time,
-        allowed_hours: Optional[set] = None,
+        allowed_hours: set | None = None,
     ) -> bool:
         """
         Validate that trading is allowed at the current time.

@@ -16,7 +16,7 @@ This follows the Factory pattern for better separation of concerns.
 from __future__ import annotations
 
 import logging
-from typing import ClassVar, Optional, Union, cast
+from typing import ClassVar, Union, cast
 
 from app.domain.strategies.mean_reversion import MeanReversionStrategy
 from app.domain.strategies.momentum import MomentumStrategy
@@ -61,8 +61,8 @@ class StrategyFactory:
     def create_strategy(
         cls,
         strategy_config: ConfigDict,
-        symbols: Optional[list[str]] = None,
-    ) -> Union[MomentumStrategy, MeanReversionStrategy, PairsTradingStrategy]:
+        symbols: list[str] | None = None,
+    ) -> MomentumStrategy | MeanReversionStrategy | PairsTradingStrategy:
         """
         Create a strategy instance from configuration.
 
@@ -274,8 +274,8 @@ class StrategyFactory:
 
 def create_strategy_from_config(
     strategy_config: ConfigDict,
-    symbols: Optional[list[str]] = None,
-) -> Union[MomentumStrategy, MeanReversionStrategy, PairsTradingStrategy]:
+    symbols: list[str] | None = None,
+) -> MomentumStrategy | MeanReversionStrategy | PairsTradingStrategy:
     """
     Convenience function to create a strategy from configuration.
 

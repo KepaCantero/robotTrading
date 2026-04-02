@@ -7,7 +7,7 @@ Calcula matrices de correlación en ventanas móviles.
 from __future__ import annotations
 
 import logging
-from typing import Any, Optional
+from typing import Any
 
 import numpy as np
 import pandas as pd
@@ -18,12 +18,12 @@ logger = logging.getLogger(__name__)
 class RollingCorrelationAnalyzer:
     """Analizador de correlaciones con ventana móvil."""
 
-    def __init__(self, config: Optional[dict[str, Any]] = None):
+    def __init__(self, config: dict[str, Any] | None = None):
         config = config or {}
         self.window_size = config.get("window_size", 60)
 
     def calculate_rolling_correlation(
-        self, returns_data: dict[str, list[float]], window: Optional[int] = None
+        self, returns_data: dict[str, list[float]], window: int | None = None
     ) -> dict[str, Any]:
         """
         Calcular correlación rolling.

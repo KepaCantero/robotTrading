@@ -12,17 +12,20 @@ from __future__ import annotations
 
 import logging
 from collections import deque
-from collections.abc import Sequence
 from decimal import Decimal
-from typing import Any, Optional
+from typing import TYPE_CHECKING, Any
 
-from app.domain.models.market_data import Quote
-from app.domain.models.portfolio import Portfolio
 from app.domain.models.signal import Signal, SignalSource, SignalStrength, SignalType
 from app.domain.services.analysis.momentum import TechnicalIndicatorCalculator
 from app.shared.config.centralized_config import get_config
 
 from .base import BaseStrategyEngine
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
+
+    from app.domain.models.market_data import Quote
+    from app.domain.models.portfolio import Portfolio
 
 logger = logging.getLogger(__name__)
 
@@ -135,7 +138,7 @@ class MeanReversionStrategyEngine(BaseStrategyEngine):
         return "mean_reversion"
 
     def extract_features(
-        self, market_data: Quote, historical_data: Optional[Sequence[Quote]] = None
+        self, market_data: Quote, historical_data: Sequence[Quote] | None = None
     ) -> dict[str, Any]:
         """
         Extraer features estandarizados para Learning Engine.

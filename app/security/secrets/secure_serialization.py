@@ -20,7 +20,6 @@ import json
 import logging
 import os
 from decimal import Decimal
-from typing import Union
 
 # REQUIRED: No fallbacks - fail fast if dependencies are missing
 import msgpack
@@ -216,7 +215,7 @@ def _restore_from_msgpack(obj: object) -> object:
     return obj
 
 
-def sign_and_dump(data: object, secret_key: Union[str, bytes, None] = None) -> str:
+def sign_and_dump(data: object, secret_key: str | bytes | None = None) -> str:
     """
     Sign and serialize data with automatic format detection.
 
@@ -275,7 +274,7 @@ def sign_and_dump(data: object, secret_key: Union[str, bytes, None] = None) -> s
         raise ValueError(f"Invalid data structure for serialization: {e}") from e
 
 
-def verify_and_load(signed_data: str, secret_key: Union[str, bytes, None] = None) -> object:
+def verify_and_load(signed_data: str, secret_key: str | bytes | None = None) -> object:
     """
     Verify HMAC signature and deserialize data.
 

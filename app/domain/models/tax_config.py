@@ -10,7 +10,6 @@ Reference:
 """
 
 from decimal import Decimal
-from typing import Optional
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -104,7 +103,7 @@ class TaxConfig(BaseModel):
         description="Whether losses can be carried forward",
     )
 
-    loss_carryforward_years: Optional[int] = Field(
+    loss_carryforward_years: int | None = Field(
         default=None,
         ge=0,
         description="Years losses can be carried forward",
@@ -116,7 +115,7 @@ class TaxConfig(BaseModel):
         description="Prefer long-term holdings for tax efficiency",
     )
 
-    min_holding_period_days: Optional[int] = Field(
+    min_holding_period_days: int | None = Field(
         default=None,
         ge=1,
         description="Minimum holding period to qualify for long-term rate",

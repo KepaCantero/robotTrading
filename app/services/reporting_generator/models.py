@@ -8,10 +8,12 @@ from __future__ import annotations
 
 import logging
 from datetime import datetime
-from decimal import Decimal
-from typing import Any, Optional
+from typing import TYPE_CHECKING, Any
 
 from pydantic import BaseModel, Field
+
+if TYPE_CHECKING:
+    from decimal import Decimal
 
 logger = logging.getLogger(__name__)
 
@@ -22,7 +24,7 @@ class PerformanceMetric(BaseModel):
     name: str = Field(..., description="Metric name")
     value: Decimal = Field(..., description="Metric value")
     unit: str = Field(default="", description="Unit of measurement")
-    target: Optional[Decimal] = Field(None, description="Target value")
+    target: Decimal | None = Field(None, description="Target value")
     status: str = Field(default="neutral", description="Status: green/yellow/red")
 
 
@@ -104,8 +106,8 @@ class PerformanceReport(BaseModel):
     recommendations: list[str] = Field(default=[], description="Recommendations for improvement")
 
     # Report metadata
-    html_content: Optional[str] = Field(None, description="HTML report content")
-    charts_data: Optional[dict[str, Any]] = Field(None, description="Chart data for visualization")
+    html_content: str | None = Field(None, description="HTML report content")
+    charts_data: dict[str, Any] | None = Field(None, description="Chart data for visualization")
 
     # Report timing
     generation_timestamp: datetime = Field(
@@ -113,7 +115,7 @@ class PerformanceReport(BaseModel):
     )
 
     # Error handling
-    error_message: Optional[str] = Field(None, description="Error message if failed")
+    error_message: str | None = Field(None, description="Error message if failed")
 
 
 logger.debug(

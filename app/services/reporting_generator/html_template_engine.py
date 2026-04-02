@@ -12,7 +12,7 @@ import logging
 from dataclasses import dataclass
 from datetime import datetime
 from decimal import Decimal
-from typing import Any, Optional
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -27,12 +27,12 @@ class BrandingConfig:
     """Branding configuration for reports."""
 
     company_name: str
-    company_logo_url: Optional[str] = None
+    company_logo_url: str | None = None
     primary_color: str = "#1f77b4"  # Default matplotlib blue
     secondary_color: str = "#ff7f0e"  # Default matplotlib orange
     accent_color: str = "#2ca02c"  # Default matplotlib green
     font_family: str = "Segoe UI, Tahoma, Geneva, Verdana, sans-seri"
-    report_footer_text: Optional[str] = None
+    report_footer_text: str | None = None
 
 
 @dataclass
@@ -52,15 +52,15 @@ class ReportConfig:
     """Complete report configuration."""
 
     report_title: str
-    report_subtitle: Optional[str] = None
+    report_subtitle: str | None = None
     strategy_name: str = ""
-    report_date: Optional[datetime] = None
-    branding: Optional[BrandingConfig] = None
-    sections: Optional[list[ReportSection]] = None
+    report_date: datetime | None = None
+    branding: BrandingConfig | None = None
+    sections: list[ReportSection] | None = None
     include_toc: bool = True  # Table of contents
     include_summary: bool = True
     include_disclaimers: bool = True
-    custom_css: Optional[str] = None
+    custom_css: str | None = None
 
     def __post_init__(self):
         """Initialize default sections if not provided."""
@@ -126,9 +126,9 @@ class HTMLTemplateEngine:
     def render_report(
         self,
         config: ReportConfig,
-        metrics: Optional[dict[str, Any]] = None,
-        charts_data: Optional[dict[str, str]] = None,
-        tables_data: Optional[dict[str, list[dict]]] = None,
+        metrics: dict[str, Any] | None = None,
+        charts_data: dict[str, str] | None = None,
+        tables_data: dict[str, list[dict]] | None = None,
     ) -> HTMLReport:
         """
         Render complete HTML report from configuration and data.
@@ -288,7 +288,7 @@ class HTMLTemplateEngine:
     def _render_summary(
         self,
         config: ReportConfig,
-        metrics: Optional[dict[str, Any]] = None,
+        metrics: dict[str, Any] | None = None,
     ) -> str:
         """Render executive summary section."""
         try:
@@ -324,9 +324,9 @@ class HTMLTemplateEngine:
     def _render_section(
         self,
         section: ReportSection,
-        metrics: Optional[dict[str, Any]] = None,
-        charts_data: Optional[dict[str, str]] = None,
-        tables_data: Optional[dict[str, list[dict]]] = None,
+        metrics: dict[str, Any] | None = None,
+        charts_data: dict[str, str] | None = None,
+        tables_data: dict[str, list[dict]] | None = None,
     ) -> str:
         """Render a report section based on type."""
         try:
@@ -353,7 +353,7 @@ class HTMLTemplateEngine:
     def _render_metrics_section(
         self,
         content: dict[str, Any],
-        metrics: Optional[dict[str, Any]] = None,
+        metrics: dict[str, Any] | None = None,
     ) -> str:
         """Render metrics display section."""
         try:
@@ -389,7 +389,7 @@ class HTMLTemplateEngine:
     def _render_charts_section(
         self,
         content: dict[str, Any],
-        charts_data: Optional[dict[str, str]] = None,
+        charts_data: dict[str, str] | None = None,
     ) -> str:
         """Render charts section."""
         try:
@@ -411,7 +411,7 @@ class HTMLTemplateEngine:
     def _render_tables_section(
         self,
         content: dict[str, Any],
-        tables_data: Optional[dict[str, list[dict]]] = None,
+        tables_data: dict[str, list[dict]] | None = None,
     ) -> str:
         """Render tables section."""
         try:
@@ -543,7 +543,7 @@ class HTMLTemplateEngine:
         html += "</head>\n"
         return html
 
-    def _get_default_styles(self, branding: Optional[BrandingConfig]) -> str:
+    def _get_default_styles(self, branding: BrandingConfig | None) -> str:
         """Get default CSS styles."""
         if not branding:
             branding = BrandingConfig(company_name="AlgoTrading")
@@ -710,7 +710,7 @@ class HTMLTemplateEngine:
 # ============================================================================
 
 
-_html_engine_instance: Optional[HTMLTemplateEngine] = None
+_html_engine_instance: HTMLTemplateEngine | None = None
 
 
 def get_html_template_engine() -> HTMLTemplateEngine:

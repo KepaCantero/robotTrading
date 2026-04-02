@@ -32,7 +32,7 @@ from __future__ import annotations
 import logging
 from decimal import Decimal
 from enum import Enum
-from typing import ClassVar, Optional
+from typing import ClassVar
 
 logger = logging.getLogger(__name__)
 
@@ -125,7 +125,7 @@ class ExpensiveModuleGate:
     def should_enable_module(
         module_name: str,
         capital: Decimal,
-        expected_monthly_alpha: Optional[Decimal] = None,
+        expected_monthly_alpha: Decimal | None = None,
         enforce_strict_cost_ratio: bool = False,
     ) -> tuple[bool, dict]:
         """
@@ -245,7 +245,7 @@ class ExpensiveModuleGate:
     @staticmethod
     def get_enabled_modules(
         capital: Decimal,
-        expected_monthly_alpha: Optional[Decimal] = None,
+        expected_monthly_alpha: Decimal | None = None,
         enforce_strict_cost_ratio: bool = False,
     ) -> tuple[dict[str, bool], dict[str, dict]]:
         """
@@ -352,7 +352,7 @@ class ExpensiveModuleGate:
         module_name: str,
         capital: Decimal,
         analysis: dict,
-        account_id: Optional[str] = None,
+        account_id: str | None = None,
     ) -> str:
         """Log module enable/disable decision for audit trail"""
 
@@ -379,7 +379,7 @@ class ExpensiveModuleGate:
     def get_cost_summary(
         capital: Decimal,
         enabled_modules: dict[str, bool],
-        expected_monthly_alpha: Optional[Decimal] = None,
+        expected_monthly_alpha: Decimal | None = None,
     ) -> dict:
         """
         Get cost summary for all enabled expensive modules.

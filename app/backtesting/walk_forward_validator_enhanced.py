@@ -56,14 +56,16 @@ from __future__ import annotations
 import logging
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
-from typing import Any, Optional
+from typing import TYPE_CHECKING, Any
 
 import numpy as np
 from scipy import stats
 
 from app.backtesting.engine import SimpleBacktester
-from app.backtesting.models import BacktestConfig
-from app.domain.models.market_data import Quote
+
+if TYPE_CHECKING:
+    from app.backtesting.models import BacktestConfig
+    from app.domain.models.market_data import Quote
 
 # Optional regime detector (may not be available)
 try:
@@ -330,7 +332,7 @@ class TomasiniWalkForwardValidator:
     5. IS/OOS consistency ratio > 0.7 required
     """
 
-    def __init__(self, config: Optional[dict[str, Any]] = None):
+    def __init__(self, config: dict[str, Any] | None = None):
         """
         Initialize Tomasini walk-forward validator.
 
@@ -372,7 +374,7 @@ class TomasiniWalkForwardValidator:
 
         # State tracking
         self.parameter_history: list[ParameterHistory] = []
-        self.regime_detector: Optional[ClusteringRegimeDetector] = None
+        self.regime_detector: ClusteringRegimeDetector | None = None
 
         if self.regime_aware and REGIME_DETECTOR_AVAILABLE:
             self.regime_detector = ClusteringRegimeDetector(n_regimes=3)
@@ -386,7 +388,7 @@ class TomasiniWalkForwardValidator:
         self,
         start_date: datetime,
         end_date: datetime,
-        train_years: Optional[float] = None,
+        train_years: float | None = None,
     ) -> list[dict[str, datetime]]:
         """
         Create rolling windows with Tomasini-compliant step sizing.
@@ -582,7 +584,7 @@ class TomasiniWalkForwardValidator:
         start_date: datetime,
         end_date: datetime,
         config: BacktestConfig,
-        optimal_params: Optional[dict[str, Any]] = None,
+        optimal_params: dict[str, Any] | None = None,
     ) -> dict[str, float]:
         """
         Calculate metrics for a specific window.
@@ -646,7 +648,7 @@ class TomasiniWalkForwardValidator:
         config: BacktestConfig,
         start_date: datetime,
         end_date: datetime,
-        param_grid: Optional[dict[str, list[Any]]] = None,
+        param_grid: dict[str, list[Any]] | None = None,
     ) -> TomasiniWalkForwardResult:
         """
         Run Tomasini walk-forward validation.

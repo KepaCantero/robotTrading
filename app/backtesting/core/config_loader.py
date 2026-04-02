@@ -10,7 +10,7 @@ from __future__ import annotations
 import logging
 from decimal import Decimal
 from pathlib import Path
-from typing import Optional, Union, cast
+from typing import Union, cast
 
 import yaml
 
@@ -73,7 +73,7 @@ class BacktestConfigLoader:
 
     def _validate_positive_decimal(
         self,
-        value: Union[str, int, float, bool, Decimal, YamlDict, list[object]],
+        value: str | int | float | bool | Decimal | YamlDict | list[object],
         name: str,
         allow_zero: bool = False,
     ) -> Decimal:
@@ -106,9 +106,9 @@ class BacktestConfigLoader:
 
     def _validate_percentage(
         self,
-        value: Union[str, int, float, bool, Decimal, YamlDict, list[object]],
+        value: str | int | float | bool | Decimal | YamlDict | list[object],
         name: str,
-        max_value: Optional[Decimal] = None,
+        max_value: Decimal | None = None,
     ) -> Decimal:
         """
         Validate that a value is a percentage (0-100 or 0-1).
@@ -142,8 +142,8 @@ class BacktestConfigLoader:
     def get_section(
         self,
         section: str,
-        default: Optional[dict[str, Union[str, int, float, bool, dict, list]]] = None,
-    ) -> dict[str, Union[str, int, float, bool, dict, list]]:
+        default: dict[str, str | int | float | bool | dict | list] | None = None,
+    ) -> dict[str, str | int | float | bool | dict | list]:
         """
         Get configuration section.
 
@@ -156,7 +156,7 @@ class BacktestConfigLoader:
         """
         value = self._raw_config.get(section, default or {})
         if isinstance(value, dict):
-            return cast("dict[str, Union[str, int, float, bool, dict, list]]", value)
+            return cast("dict[str, str | int | float | bool | dict | list]", value)
         return default or {}
 
     def get_backtest_config(self) -> BacktestConfig:
@@ -241,7 +241,7 @@ class BacktestConfigLoader:
 
     def get_strategy_config(
         self,
-    ) -> dict[str, Union[str, int, float, bool, dict, list]]:
+    ) -> dict[str, str | int | float | bool | dict | list]:
         """
         Get strategy configuration section.
 
@@ -252,7 +252,7 @@ class BacktestConfigLoader:
 
     def get_execution_config(
         self,
-    ) -> dict[str, Union[str, int, float, bool, dict, list]]:
+    ) -> dict[str, str | int | float | bool | dict | list]:
         """
         Get execution configuration section.
 
@@ -263,7 +263,7 @@ class BacktestConfigLoader:
 
     def get_modules_config(
         self,
-    ) -> dict[str, Union[str, int, float, bool, dict, list]]:
+    ) -> dict[str, str | int | float | bool | dict | list]:
         """
         Get modules configuration section.
 
@@ -274,7 +274,7 @@ class BacktestConfigLoader:
 
     def get_learning_engines_config(
         self,
-    ) -> dict[str, Union[str, int, float, bool, dict, list]]:
+    ) -> dict[str, str | int | float | bool | dict | list]:
         """
         Get learning engines configuration section.
 
@@ -285,7 +285,7 @@ class BacktestConfigLoader:
 
     def get_parallelization_config(
         self,
-    ) -> dict[str, Union[str, int, float, bool, dict, list]]:
+    ) -> dict[str, str | int | float | bool | dict | list]:
         """
         Get parallelization configuration section.
 
@@ -296,7 +296,7 @@ class BacktestConfigLoader:
 
     def get_reporting_config(
         self,
-    ) -> dict[str, Union[str, int, float, bool, dict, list]]:
+    ) -> dict[str, str | int | float | bool | dict | list]:
         """
         Get reporting configuration section.
 
@@ -307,7 +307,7 @@ class BacktestConfigLoader:
 
     def get_meta_analysis_config(
         self,
-    ) -> dict[str, Union[str, int, float, bool, dict, list]]:
+    ) -> dict[str, str | int | float | bool | dict | list]:
         """
         Get meta-analysis configuration section.
 
@@ -318,7 +318,7 @@ class BacktestConfigLoader:
 
     def get_input_config(
         self,
-    ) -> dict[str, Union[str, int, float, bool, dict, list]]:
+    ) -> dict[str, str | int | float | bool | dict | list]:
         """
         Get input configuration section.
 
@@ -329,7 +329,7 @@ class BacktestConfigLoader:
 
     def get_backtests_config(
         self,
-    ) -> dict[str, Union[str, int, float, bool, dict, list]]:
+    ) -> dict[str, str | int | float | bool | dict | list]:
         """
         Get backtests configuration section.
 

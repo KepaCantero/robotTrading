@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import logging
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 import yaml
 
@@ -43,7 +43,7 @@ class ParameterPresetManager:
         except OSError as e:
             logger.error(f"Error loading preset config: {e}")
 
-    def get_preset(self, preset_name: str) -> Optional[dict[str, Any]]:
+    def get_preset(self, preset_name: str) -> dict[str, Any] | None:
         """
         Get configuration for a specific preset.
 
@@ -98,7 +98,7 @@ class ParameterPresetManager:
 
     def validate_parameter_in_range(
         self, indicator_name: str, value: float
-    ) -> tuple[bool, Optional[str]]:
+    ) -> tuple[bool, str | None]:
         """
         Validate that a parameter value is within sensible range - TASK-PARAM-3.
 
@@ -126,7 +126,7 @@ class ParameterPresetManager:
 
 
 # Global instance
-_preset_manager: Optional[ParameterPresetManager] = None
+_preset_manager: ParameterPresetManager | None = None
 
 
 def get_preset_manager() -> ParameterPresetManager:

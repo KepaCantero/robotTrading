@@ -18,7 +18,7 @@ import contextlib
 import logging
 from dataclasses import dataclass
 from datetime import datetime, timezone
-from typing import TYPE_CHECKING, Callable, Optional, Union
+from typing import TYPE_CHECKING, Callable
 
 from app.shared.utils.timezone_utils import utc_now
 
@@ -49,9 +49,9 @@ class TimeSyncConfig:
     timeout_seconds: float = 5.0
 
     # Callbacks
-    on_drift_detected: Optional[Callable[[float], None]] = None
-    on_critical_drift: Optional[Callable[[float], None]] = None
-    on_sync_error: Optional[Callable[[Exception], None]] = None
+    on_drift_detected: Callable[[float], None] | None = None
+    on_critical_drift: Callable[[float], None] | None = None
+    on_sync_error: Callable[[Exception], None] | None = None
 
 
 @dataclass
@@ -61,8 +61,8 @@ class TimeSyncStatus:
     is_synced: bool
     drift_seconds: float
     local_time: datetime
-    ntp_time: Optional[datetime]
-    ntp_server: Optional[str]
+    ntp_time: datetime | None
+    ntp_server: str | None
     last_check: datetime
     checks_total: int = 0
     checks_failed: int = 0
@@ -95,7 +95,7 @@ class TimeSyncMonitor:
     - Provides status and metrics
     """
 
-    def __init__(self, config: Optional[TimeSyncConfig] = None):
+    def __init__(self, config: TimeSyncConfig | None = None):
         """
         Initialize time sync monitor.
 
@@ -105,12 +105,12 @@ class TimeSyncMonitor:
         self.config = config or TimeSyncConfig()
 
         # Lazy load ntplib to avoid import errors if not available
-        self._ntp_client: Optional[ntplib.NTPClient] = None
+        self._ntp_client: ntplib.NTPClient | None = None
         self._ntp_available = False
 
         # State
         self._is_monitoring = False
-        self._monitor_task: Optional[asyncio.Task] = None
+        self._monitor_task: asyncio.Task | None = None
         self._status = TimeSyncStatus(
             is_synced=True,
             drift_seconds=0.0,
@@ -373,7 +373,7 @@ class TimeSyncMonitor:
             logger.error(f"Error syncing clock: {e}")
             return False
 
-    async def force_check(self) -> dict[str, Union[str, int, float, bool, None]]:
+    async def force_check(self) -> dict[str, str | int | float | bool | None]:
         """
         Force an immediate time sync check.
 
@@ -394,11 +394,11 @@ class TimeSyncMonitor:
 
 
 # Singleton instance
-_monitor: Optional[TimeSyncMonitor] = None
-_stop_task: Optional[asyncio.Task] = None
+_monitor: TimeSyncMonitor | None = None
+_stop_task: asyncio.Task | None = None
 
 
-def get_time_sync_monitor(config: Optional[TimeSyncConfig] = None) -> TimeSyncMonitor:
+def get_time_sync_monitor(config: TimeSyncConfig | None = None) -> TimeSyncMonitor:
     """
     Get or create singleton TimeSyncMonitor.
 

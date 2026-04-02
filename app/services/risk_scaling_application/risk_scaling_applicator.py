@@ -24,7 +24,6 @@ from __future__ import annotations
 import logging
 from datetime import datetime
 from decimal import Decimal
-from typing import Optional
 
 import numpy as np
 
@@ -53,9 +52,9 @@ class RiskScalingApplication:
 
     def __init__(
         self,
-        calculator: Optional[RiskAdjustmentCalculator] = None,
-        limit_adjuster: Optional[LimitAdjuster] = None,
-        monitor: Optional[RealTimeMonitor] = None,
+        calculator: RiskAdjustmentCalculator | None = None,
+        limit_adjuster: LimitAdjuster | None = None,
+        monitor: RealTimeMonitor | None = None,
     ):
         """
         Initialize risk scaling application.
@@ -196,7 +195,7 @@ class RiskScalingApplication:
 
     async def get_scaling_history(
         self,
-        limit: Optional[int] = None,
+        limit: int | None = None,
     ) -> list[RiskAdjustedPortfolio]:
         """Get scaling history."""
         results = self.scaling_history
@@ -231,7 +230,7 @@ class RiskScalingApplication:
 
 
 # Singleton
-_scaler: Optional[RiskScalingApplication] = None
+_scaler: RiskScalingApplication | None = None
 
 
 def get_risk_scaler() -> RiskScalingApplication:

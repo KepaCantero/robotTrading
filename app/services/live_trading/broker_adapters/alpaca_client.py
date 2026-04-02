@@ -16,13 +16,15 @@ import asyncio
 import json
 import logging
 from datetime import datetime
-from decimal import Decimal
-from typing import Any, Callable, Optional
+from typing import TYPE_CHECKING, Any, Callable
 
 import websockets
 from requests.exceptions import HTTPError
 
 from app.shared.config.timeout_config import get_timeouts
+
+if TYPE_CHECKING:
+    from decimal import Decimal
 
 logger = logging.getLogger(__name__)
 
@@ -62,25 +64,25 @@ class AlpacaClient:
         """Initialize Alpaca client (not connected yet)."""
         self.api = None  # Will be alpaca_trade_api.REST instance
         self.stream = None  # Will be WebSocket stream
-        self.base_url: Optional[str] = None
+        self.base_url: str | None = None
         self.is_authenticated = False
-        self.last_request_time: Optional[datetime] = None
-        self.rate_limit_reset: Optional[datetime] = None
+        self.last_request_time: datetime | None = None
+        self.rate_limit_reset: datetime | None = None
 
         # Load timeout configuration
         self._timeouts = get_timeouts()
 
         # WebSocket streaming
-        self.stream_socket: Optional[websockets.WebSocketClientProtocol] = None
-        self.stream_task: Optional[asyncio.Task] = None
+        self.stream_socket: websockets.WebSocketClientProtocol | None = None
+        self.stream_task: asyncio.Task | None = None
         self.is_streaming = False
         self.subscribed_symbols: list[str] = []
 
         # Event callbacks
-        self.on_quote: Optional[Callable[[dict[str, Any]], None]] = None
-        self.on_trade: Optional[Callable[[dict[str, Any]], None]] = None
-        self.on_order_update: Optional[Callable[[dict[str, Any]], None]] = None
-        self.on_connection_error: Optional[Callable[[Exception], None]] = None
+        self.on_quote: Callable[[dict[str, Any]], None] | None = None
+        self.on_trade: Callable[[dict[str, Any]], None] | None = None
+        self.on_order_update: Callable[[dict[str, Any]], None] | None = None
+        self.on_connection_error: Callable[[Exception], None] | None = None
 
     async def authenticate(
         self,
@@ -197,11 +199,11 @@ class AlpacaClient:
         qty: Decimal,
         side: str,
         order_type: str = "market",
-        limit_price: Optional[Decimal] = None,
-        stop_price: Optional[Decimal] = None,
+        limit_price: Decimal | None = None,
+        stop_price: Decimal | None = None,
         time_in_force: str = "day",
-        trail_percent: Optional[float] = None,
-        client_order_id: Optional[str] = None,
+        trail_percent: float | None = None,
+        client_order_id: str | None = None,
     ) -> str:
         """
         Submit an order to Alpaca with timeout.
@@ -437,7 +439,7 @@ class AlpacaClient:
 
     # ==================== WebSocket Methods ====================
 
-    async def start_stream(self, symbols: Optional[list[str]] = None) -> None:
+    async def start_stream(self, symbols: list[str] | None = None) -> None:
         """
         Start WebSocket stream for real-time data.
 

@@ -21,7 +21,7 @@ import logging
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Any, Optional, Union, cast
+from typing import TYPE_CHECKING, Any, cast
 
 import numpy as np
 import numpy.typing as npt
@@ -36,9 +36,11 @@ from app.backtesting.backtesting_compliance import (
     create_backtesting_compliance,
 )
 from app.backtesting.engine import SimpleBacktester
-from app.backtesting.models import BacktestConfig
 from app.backtesting.realistic_data_generator import MarketRegime, RealisticDataGenerator
-from app.domain.models.market_data import Quote
+
+if TYPE_CHECKING:
+    from app.backtesting.models import BacktestConfig
+    from app.domain.models.market_data import Quote
 
 logger = logging.getLogger(__name__)
 
@@ -55,8 +57,8 @@ class DataGenerationParams:
     n_days: int
     start_date: datetime
     symbol: str = "SYNTH"
-    drift: Optional[float] = None
-    volatility: Optional[float] = None
+    drift: float | None = None
+    volatility: float | None = None
 
 
 @dataclass
@@ -313,10 +315,10 @@ class ValidationReport:
 
     strategy_name: str
     timestamp: datetime
-    walk_forward_results: Optional[JsonDict] = None
-    cross_validation_results: Optional[JsonDict] = None
-    stress_test_results: Optional[JsonDict] = None
-    monte_carlo_results: Optional[JsonDict] = None
+    walk_forward_results: JsonDict | None = None
+    cross_validation_results: JsonDict | None = None
+    stress_test_results: JsonDict | None = None
+    monte_carlo_results: JsonDict | None = None
     overall_passed: bool = False
     summary: JsonDict = field(default_factory=dict)
 
@@ -677,7 +679,7 @@ class WalkForwardValidator:
 
     def __init__(
         self,
-        config: Optional[JsonDict] = None,
+        config: JsonDict | None = None,
         config_path: str = "config/validation.yaml",
     ):
         """
@@ -1120,7 +1122,7 @@ class CrossValidationTemporal:
 
     def __init__(
         self,
-        config: Optional[JsonDict] = None,
+        config: JsonDict | None = None,
         config_path: str = "config/validation.yaml",
     ):
         """Initialize temporal cross-validator."""
@@ -1141,12 +1143,12 @@ class CrossValidationTemporal:
         self,
         start_date: datetime,
         end_date: datetime,
-    ) -> list[dict[str, Union[datetime, int]]]:
+    ) -> list[dict[str, datetime | int]]:
         """Create temporal folds for cross-validation."""
         total_days = (end_date - start_date).days
         fold_days = total_days // self.n_folds
 
-        folds: list[dict[str, Union[datetime, int]]] = []
+        folds: list[dict[str, datetime | int]] = []
         for i in range(self.n_folds):
             fold_start = start_date + timedelta(days=i * fold_days)
             fold_end = start_date + timedelta(days=(i + 1) * fold_days)
@@ -1287,7 +1289,7 @@ class StressTester:
 
     def __init__(
         self,
-        config: Optional[JsonDict] = None,
+        config: JsonDict | None = None,
         config_path: str = "config/validation.yaml",
     ):
         """Initialize stress tester."""
@@ -1475,7 +1477,7 @@ class StressTester:
         n_days: int,
         start_date: datetime,
         symbol: str,
-    ) -> Optional[StressScenarioResult]:
+    ) -> StressScenarioResult | None:
         """Run a single stress test scenario."""
         end_date = start_date + timedelta(days=n_days)
 
@@ -1624,7 +1626,7 @@ class MonteCarloSimulator:
 
     def __init__(
         self,
-        config: Optional[JsonDict] = None,
+        config: JsonDict | None = None,
         config_path: str = "config/validation.yaml",
     ):
         """Initialize Monte Carlo simulator."""
@@ -1914,7 +1916,7 @@ class ComprehensiveValidator:
 
         return returns
 
-    def save_report(self, report: ValidationReport, output_path: Optional[str] = None) -> str:
+    def save_report(self, report: ValidationReport, output_path: str | None = None) -> str:
         """Save validation report to JSON file."""
         if output_path is None:
             output_dir = Path(

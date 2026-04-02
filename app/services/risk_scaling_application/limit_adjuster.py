@@ -15,9 +15,10 @@ from __future__ import annotations
 import logging
 from dataclasses import dataclass
 from decimal import Decimal
-from typing import Optional
+from typing import TYPE_CHECKING
 
-from app.services.portfolio_constructor import AllocationWeight
+if TYPE_CHECKING:
+    from app.services.portfolio_constructor import AllocationWeight
 
 logger = logging.getLogger(__name__)
 
@@ -59,9 +60,9 @@ class LimitAdjuster:
 
     def __init__(
         self,
-        default_position_limit: Optional[Decimal] = None,
-        default_max_leverage: Optional[Decimal] = None,
-        default_max_allocation: Optional[Decimal] = None,  # % of portfolio
+        default_position_limit: Decimal | None = None,
+        default_max_leverage: Decimal | None = None,
+        default_max_allocation: Decimal | None = None,  # % of portfolio
     ):
         """
         Initialize limit adjuster.
@@ -281,7 +282,7 @@ class LimitAdjuster:
     def validate_leverage_within_limits(
         self,
         current_leverage: Decimal,
-        max_leverage: Optional[Decimal] = None,
+        max_leverage: Decimal | None = None,
     ) -> tuple[bool, str]:
         """
         Validate if current leverage is within limits.
@@ -388,7 +389,7 @@ class LimitAdjuster:
 
 
 # Singleton instance
-_adjuster: Optional[LimitAdjuster] = None
+_adjuster: LimitAdjuster | None = None
 
 
 def get_limit_adjuster() -> LimitAdjuster:

@@ -9,7 +9,6 @@ from __future__ import annotations
 import logging
 from dataclasses import dataclass
 from decimal import Decimal
-from typing import Optional
 
 logger = logging.getLogger(__name__)
 
@@ -330,7 +329,7 @@ class AllocationRecommender:
 
     async def get_recommendation_history(
         self,
-        limit: Optional[int] = None,
+        limit: int | None = None,
     ) -> list[AllocationRecommendation]:
         """Get recommendation history."""
         if limit is None:
@@ -345,7 +344,7 @@ class AllocationRecommender:
 
 
 # Singleton
-_recommender: Optional[AllocationRecommender] = None
+_recommender: AllocationRecommender | None = None
 
 
 def get_allocation_recommender() -> AllocationRecommender:

@@ -12,7 +12,6 @@ import logging
 from dataclasses import dataclass, field
 from datetime import datetime
 from decimal import Decimal
-from typing import Optional
 
 import numpy as np
 
@@ -54,7 +53,7 @@ class FactorAnalysis:
     factors: list[FactorExposure] = field(default_factory=list)
     residual_return_pct: Decimal = Decimal("0")  # Unexplained return (alpha)
     residual_volatility_pct: Decimal = Decimal("0")  # Unexplained volatility
-    model_r_squared: Optional[Decimal] = None  # How well factors explain returns
+    model_r_squared: Decimal | None = None  # How well factors explain returns
     factor_contribution_pct: dict[str, Decimal] = field(default_factory=dict)
 
     def to_dict(self) -> dict:
@@ -142,26 +141,26 @@ class Tearsheet:
     win_rate_pct: Decimal
 
     # Risk decomposition
-    systematic_return_pct: Optional[Decimal] = None  # From factors
-    idiosyncratic_return_pct: Optional[Decimal] = None  # Alpha
-    systematic_volatility_pct: Optional[Decimal] = None
-    idiosyncratic_volatility_pct: Optional[Decimal] = None
+    systematic_return_pct: Decimal | None = None  # From factors
+    idiosyncratic_return_pct: Decimal | None = None  # Alpha
+    systematic_volatility_pct: Decimal | None = None
+    idiosyncratic_volatility_pct: Decimal | None = None
 
     # Concentration metrics
-    position_concentration: Optional[PositionConcentration] = None
+    position_concentration: PositionConcentration | None = None
 
     # Factor analysis
-    factor_analysis: Optional[FactorAnalysis] = None
+    factor_analysis: FactorAnalysis | None = None
 
     # Capacity analysis
-    capacity_fade: Optional[CapacityFade] = None
+    capacity_fade: CapacityFade | None = None
 
     # Monthly returns distribution
     monthly_returns: dict[str, Decimal] = field(default_factory=dict)
 
     # Best/worst days
     best_day_pct: Decimal = Decimal("0")
-    worst_day_pct: Optional[Decimal] = None
+    worst_day_pct: Decimal | None = None
 
     def to_dict(self) -> dict:
         """Convert to dictionary."""
@@ -229,17 +228,17 @@ class PyFolioIntegrator:
         self,
         strategy_name: str,
         returns: list[Decimal],
-        positions: Optional[list[dict]] = None,
-        transactions: Optional[list[dict]] = None,
-        period_start: Optional[datetime] = None,
-        period_end: Optional[datetime] = None,
-        annual_return_pct: Optional[Decimal] = None,
-        annual_volatility_pct: Optional[Decimal] = None,
-        sharpe_ratio: Optional[Decimal] = None,
-        calmar_ratio: Optional[Decimal] = None,
-        sortino_ratio: Optional[Decimal] = None,
-        max_drawdown_pct: Optional[Decimal] = None,
-        win_rate_pct: Optional[Decimal] = None,
+        positions: list[dict] | None = None,
+        transactions: list[dict] | None = None,
+        period_start: datetime | None = None,
+        period_end: datetime | None = None,
+        annual_return_pct: Decimal | None = None,
+        annual_volatility_pct: Decimal | None = None,
+        sharpe_ratio: Decimal | None = None,
+        calmar_ratio: Decimal | None = None,
+        sortino_ratio: Decimal | None = None,
+        max_drawdown_pct: Decimal | None = None,
+        win_rate_pct: Decimal | None = None,
     ) -> Tearsheet:
         """
         Generate comprehensive tearsheet with all risk metrics and decomposition.
@@ -536,13 +535,13 @@ class PyFolioIntegrator:
     def analyze_capacity_fade(
         self,
         backtest_returns: list[Decimal],
-        live_returns: Optional[list[Decimal]] = None,
-        backtest_capital: Optional[Decimal] = None,
-        current_capital: Optional[Decimal] = None,
-        target_capital: Optional[Decimal] = None,
-        required_return_pct: Optional[Decimal] = None,
-        backtest_sharpe: Optional[Decimal] = None,
-        live_sharpe: Optional[Decimal] = None,
+        live_returns: list[Decimal] | None = None,
+        backtest_capital: Decimal | None = None,
+        current_capital: Decimal | None = None,
+        target_capital: Decimal | None = None,
+        required_return_pct: Decimal | None = None,
+        backtest_sharpe: Decimal | None = None,
+        live_sharpe: Decimal | None = None,
     ) -> CapacityFade:
         """
         Analyze capacity fade: how strategy alpha decays with scaling capital.
@@ -698,7 +697,7 @@ class PyFolioIntegrator:
 # ============================================================================
 
 
-_pyfolio_integrator_instance: Optional[PyFolioIntegrator] = None
+_pyfolio_integrator_instance: PyFolioIntegrator | None = None
 
 
 def get_pyfolio_integrator() -> PyFolioIntegrator:

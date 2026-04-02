@@ -23,11 +23,13 @@ from __future__ import annotations
 import logging
 from collections import deque
 from dataclasses import dataclass, field
-from datetime import datetime
 from decimal import Decimal
-from typing import Optional
+from typing import TYPE_CHECKING
 
 from app.shared.utils.timezone_utils import utc_now
+
+if TYPE_CHECKING:
+    from datetime import datetime
 
 logger = logging.getLogger(__name__)
 
@@ -45,7 +47,7 @@ class OrderRecord:
     timestamp: datetime
     cancelled: bool = False
     filled: bool = False
-    fill_quantity: Optional[Decimal] = None
+    fill_quantity: Decimal | None = None
 
     def to_dict(self) -> dict:
         """Convert to dictionary."""
@@ -278,7 +280,7 @@ class OrderPatternAnalyzer:
                 logger.debug(f"Order filled: {order_id} - {fill_quantity}")
                 break
 
-    def get_order_to_trade_ratio(self, symbol: Optional[str] = None) -> Decimal:
+    def get_order_to_trade_ratio(self, symbol: str | None = None) -> Decimal:
         """
         Calculate order-to-trade ratio.
 
@@ -303,8 +305,8 @@ class OrderPatternAnalyzer:
 
     def get_alerts(
         self,
-        pattern_type: Optional[str] = None,
-        start_time: Optional[datetime] = None,
+        pattern_type: str | None = None,
+        start_time: datetime | None = None,
     ) -> list[PatternAlert]:
         """
         Get pattern alerts.
@@ -331,7 +333,7 @@ class OrderPatternAnalyzer:
         symbol: str,
         side: str,
         price: Decimal,
-        price_tolerance: Optional[Decimal] = None,
+        price_tolerance: Decimal | None = None,
     ) -> bool:
         """
         Detect layering pattern.

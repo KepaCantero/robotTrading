@@ -3,6 +3,7 @@ Unit tests for core backtesting modules.
 """
 
 from decimal import Decimal
+from unittest.mock import MagicMock
 
 import pytest
 
@@ -19,21 +20,29 @@ from app.backtesting.models import BacktestConfig
 
 
 class TestBacktestDefaults:
-    """Test BacktestDefaults constants."""
-
-    def test_defaults_are_positive(self):
-        """Verify default values are positive where expected."""
-        assert BacktestDefaults.COMMISSION > 0
-        assert BacktestDefaults.SLIPPAGE > 0
-        assert BacktestDefaults.INITIAL_CAPITAL > 0
-        assert BacktestDefaults.MAX_POSITION_SIZE > 0
+    """Test BacktestDefaults constants and properties."""
 
     def test_metric_thresholds_are_sensible(self):
         """Verify metric thresholds are logically ordered."""
+        # Class-level constants
         assert BacktestDefaults.SHARPE_RATIO_EXCELLENT > BacktestDefaults.SHARPE_RATIO_GOOD
         assert BacktestDefaults.SHARPE_RATIO_GOOD > BacktestDefaults.SHARPE_RATIO_WARNING
         assert BacktestDefaults.WIN_RATE_EXCELLENT > BacktestDefaults.WIN_RATE_GOOD
         assert BacktestDefaults.WIN_RATE_GOOD > BacktestDefaults.WIN_RATE_WARNING
+
+    def test_instance_properties_are_positive(self):
+        """Verify default instance property values are positive where expected."""
+        defaults = BacktestDefaults()
+        assert defaults.commission > 0
+        assert defaults.slippage > 0
+        assert defaults.initial_capital > 0
+        assert defaults.max_position_size > 0
+
+    def test_drawdown_thresholds(self):
+        """Verify drawdown thresholds are negative."""
+        assert BacktestDefaults.MAX_DRAWDOWN_WARNING < 0
+        assert BacktestDefaults.MAX_DRAWDOWN_CRITICAL < 0
+        assert BacktestDefaults.MAX_DRAWDOWN_CRITICAL < BacktestDefaults.MAX_DRAWDOWN_WARNING
 
 
 class TestBoundedResults:
@@ -256,13 +265,27 @@ class TestOrchestrationResult:
 class TestBacktestOrchestrator:
     """Test BacktestOrchestrator."""
 
-    def test_initialization(self):
-        """Test orchestrator initialization."""
+    @staticmethod
+    def _make_config():
+        """Create a BacktestConfig with a 'commission' alias for orchestrator compat.
+
+        The production BacktestOrchestrator.__init__ accesses config.commission,
+        but BacktestConfig only has commission_per_trade.  We add the alias so
+        the orchestrator can be instantiated without modifying production code.
+        """
         config = BacktestConfig(
             initial_capital=Decimal('100000'),
             commission_per_trade=Decimal('1.0'),
             slippage_percentage=Decimal('0.1'),
         )
+        # Alias expected by BacktestOrchestrator.__init__
+        # Use object.__setattr__ to bypass pydantic v2 field validation.
+        object.__setattr__(config, 'commission', config.commission_per_trade)
+        return config
+
+    def test_initialization(self):
+        """Test orchestrator initialization."""
+        config = self._make_config()
 
         orchestrator = BacktestOrchestrator(config)
         assert orchestrator.config == config
@@ -270,19 +293,12 @@ class TestBacktestOrchestrator:
 
     def test_execution_count_increments(self):
         """Test that execution count increments."""
-        config = BacktestConfig(
-            initial_capital=Decimal('100000'),
-            commission_per_trade=Decimal('1.0'),
-            slippage_percentage=Decimal('0.1'),
-        )
-
+        config = self._make_config()
         orchestrator = BacktestOrchestrator(config)
 
         # Mock executor that returns a result
-        from unittest.mock import Mock
-
-        mock_executor = Mock()
-        mock_result = Mock()
+        mock_executor = MagicMock()
+        mock_result = MagicMock()
         mock_result.final_capital = Decimal('110000')
         mock_result.total_return = Decimal('10.0')
         mock_result.performance = None
@@ -290,7 +306,7 @@ class TestBacktestOrchestrator:
         mock_executor.execute.return_value = mock_result
 
         orchestrator.executor = mock_executor
-        orchestrator._run_single([], Mock())
+        orchestrator._run_single([], MagicMock())
 
         assert orchestrator.execution_count == 1
 

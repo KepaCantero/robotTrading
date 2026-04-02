@@ -12,7 +12,6 @@ import logging
 from datetime import datetime
 from decimal import Decimal
 from pathlib import Path
-from typing import Optional
 
 import yaml
 
@@ -52,7 +51,7 @@ class ProfileGenerator:
     - Validation against constraints
     """
 
-    def __init__(self, config_path: Optional[str] = None):
+    def __init__(self, config_path: str | None = None):
         """
         Initialize profile generator.
 
@@ -371,7 +370,7 @@ class ProfileGenerator:
 
     def _get_profile_template(
         self, objective: InvestmentObjective, tier: CapitalTier
-    ) -> Optional[dict]:
+    ) -> dict | None:
         """Get profile template for objective and tier."""
         try:
             obj_key = objective.value
@@ -567,12 +566,12 @@ class ProfileGenerator:
             logger.error(f"❌ Error integrating MAESTRO PHASE 1: {e}", exc_info=True)
             # Don't raise - allow profile generation to continue with partial data
 
-    async def get_profile(self, profile_id: str) -> Optional[InvestmentProfile]:
+    async def get_profile(self, profile_id: str) -> InvestmentProfile | None:
         """Get cached profile by ID."""
         return self.profile_cache.get(profile_id)
 
     async def get_generation_history(
-        self, limit: Optional[int] = None
+        self, limit: int | None = None
     ) -> list[ProfileGenerationResult]:
         """Get profile generation history."""
         results = self.generation_history
@@ -591,10 +590,10 @@ class ProfileGenerator:
 
 
 # Singleton
-_generator: Optional[ProfileGenerator] = None
+_generator: ProfileGenerator | None = None
 
 
-def get_profile_generator(config_path: Optional[str] = None) -> ProfileGenerator:
+def get_profile_generator(config_path: str | None = None) -> ProfileGenerator:
     """Get or create singleton ProfileGenerator."""
     global _generator
     if _generator is None:

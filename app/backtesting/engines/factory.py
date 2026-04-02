@@ -21,13 +21,16 @@ Usage:
 
 from __future__ import annotations
 
-from decimal import Decimal
-from typing import ClassVar, Optional, TypeVar, Union
-
-from pydantic import BaseModel
+from typing import TYPE_CHECKING, ClassVar, TypeVar
 
 from app.backtesting.base_engine import BaseBacktestEngine, EngineType
-from app.backtesting.models import BacktestConfig
+
+if TYPE_CHECKING:
+    from decimal import Decimal
+
+    from pydantic import BaseModel
+
+    from app.backtesting.models import BacktestConfig
 
 # Type variable for engine types
 EngineT = TypeVar("EngineT", bound=BaseBacktestEngine)
@@ -69,7 +72,7 @@ class EngineFactory:
     def create(
         cls,
         engine_type: EngineType,
-        config: Union[BacktestConfig, BaseModel],
+        config: BacktestConfig | BaseModel,
         **kwargs,
     ) -> BaseBacktestEngine:
         """
@@ -141,8 +144,8 @@ class EngineFactory:
     def create_standard(
         cls,
         config: BacktestConfig,
-        strategy: Optional[object] = None,
-        diagnostic_logger: Optional[object] = None,
+        strategy: object | None = None,
+        diagnostic_logger: object | None = None,
         strategy_name: str = "unknown",
         enable_risk_envelope: bool = True,
         **kwargs,
@@ -179,7 +182,7 @@ class EngineFactory:
         cls,
         config: BacktestConfig,
         execution_type: str = "pessimistic",
-        base_slippage_bps: Optional[Decimal] = None,
+        base_slippage_bps: Decimal | None = None,
         **kwargs,
     ) -> BaseBacktestEngine:
         """
@@ -249,7 +252,7 @@ class EngineFactory:
     @classmethod
     def create_robust(
         cls,
-        config: Union[BacktestConfig, BaseModel],  # RobustBacktestConfig
+        config: BacktestConfig | BaseModel,  # RobustBacktestConfig
         **kwargs,
     ) -> BaseBacktestEngine:
         """
@@ -283,7 +286,7 @@ class EngineFactory:
         return list(cls._registry.keys())
 
     @classmethod
-    def get_engine_class(cls, engine_type: EngineType) -> Optional[type[BaseBacktestEngine]]:
+    def get_engine_class(cls, engine_type: EngineType) -> type[BaseBacktestEngine] | None:
         """
         Get the engine class for a given type.
 

@@ -19,7 +19,6 @@ st.set_page_config(
 import os
 import sys
 from pathlib import Path
-from typing import Optional
 
 # CRÍTICO: Configurar variables de entorno ANTES de imports pesados
 os.environ.setdefault("OMP_NUM_THREADS", "1")
@@ -183,7 +182,7 @@ def render_objective_card(metric_name: str, value: float, test_name: str = ""):
     )
 
 
-def get_metric_value(row: pd.Series, metric_name: str) -> Optional[float]:
+def get_metric_value(row: pd.Series, metric_name: str) -> float | None:
     """Obtiene el valor de una métrica desde una fila del DataFrame."""
     metric_map = {
         "max_drawdown": "max_drawdown",
@@ -213,7 +212,7 @@ def get_metric_value(row: pd.Series, metric_name: str) -> Optional[float]:
 # ============================================================================
 
 
-def load_results() -> Optional[pd.DataFrame]:
+def load_results() -> pd.DataFrame | None:
     """Carga resultados usando el loader existente."""
     if not loader_available:
         return None
@@ -493,7 +492,8 @@ def main():
         with st.sidebar:
             st.header("⚙ Configuración")
             st.markdown("---")
-            st.info("""
+            st.info(
+                """
             **Objetivos de Métricas:**
             - Max Drawdown: < 20%
             - Sharpe Ratio: > 1.2
@@ -501,7 +501,8 @@ def main():
             - Volatilidad: 10-15%
             - Profit Factor: > 1.4
             - Win Rate: 45-60%
-            """)
+            """
+            )
 
             if st.button("🔄 Recargar Resultados", use_container_width=True):
                 st.cache_data.clear()
@@ -512,14 +513,16 @@ def main():
             df = load_results()
 
         if df is None or df.empty:
-            st.warning("""
+            st.warning(
+                """
             ⚠ No se encontraron resultados de backtesting.
 
             Ejecuta algunos backtests primero:
             ```bash
             python scripts/run_comprehensive_backtest.py baseline grid_search
             ```
-            """)
+            """
+            )
             return
 
         st.success(f"✅ {len(df)} resultado(s) cargado(s)")

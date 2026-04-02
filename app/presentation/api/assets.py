@@ -17,7 +17,7 @@ import asyncio
 import logging
 import traceback
 from datetime import datetime
-from typing import Any, Optional
+from typing import Any
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query, Request
 from requests.exceptions import HTTPError, RequestException
@@ -472,7 +472,7 @@ async def get_liquidity_metrics(
 
 @router.get("/rankings", response_model=dict[str, Any])
 async def get_asset_rankings(
-    asset_class: Optional[AssetClass] = Query(None, description="Filter by asset class"),
+    asset_class: AssetClass | None = Query(None, description="Filter by asset class"),
     http_request: Request = Request,
     service: AssetIdentificationService = Depends(get_asset_identification_service),
 ):
@@ -698,7 +698,7 @@ async def refresh_liquidity_data(
 
 @router.get("/universe", response_model=dict[str, Any])
 async def get_asset_universe(
-    asset_class: Optional[AssetClass] = Query(None, description="Filter by asset class"),
+    asset_class: AssetClass | None = Query(None, description="Filter by asset class"),
     http_request: Request = Request,
     service: AssetIdentificationService = Depends(get_asset_identification_service),
 ):

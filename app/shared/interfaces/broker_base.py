@@ -23,7 +23,6 @@ from dataclasses import dataclass
 from datetime import datetime
 from decimal import Decimal
 from enum import Enum
-from typing import Optional
 
 logger = logging.getLogger(__name__)
 
@@ -106,7 +105,7 @@ class Ticker:
     ask: Decimal
     last: Decimal
     timestamp: datetime
-    volume: Optional[Decimal] = None
+    volume: Decimal | None = None
 
 
 @dataclass
@@ -118,13 +117,13 @@ class Order:
     side: OrderSide
     type: OrderType
     quantity: Decimal
-    price: Optional[Decimal] = None  # Para LIMIT, STOP_LIMIT
-    stop_price: Optional[Decimal] = None  # Para STOP_LOSS, STOP_LIMIT
+    price: Decimal | None = None  # Para LIMIT, STOP_LIMIT
+    stop_price: Decimal | None = None  # Para STOP_LOSS, STOP_LIMIT
     status: OrderStatus = OrderStatus.PENDING
     filled_quantity: Decimal = Decimal("0")
-    avg_fill_price: Optional[Decimal] = None
-    created_at: Optional[datetime] = None
-    updated_at: Optional[datetime] = None
+    avg_fill_price: Decimal | None = None
+    created_at: datetime | None = None
+    updated_at: datetime | None = None
 
     def __post_init__(self):
         if self.created_at is None:
@@ -139,11 +138,11 @@ class OrderResult:
 
     order_id: str
     status: OrderStatus
-    message: Optional[str] = None
-    execution_price: Optional[Decimal] = None
+    message: str | None = None
+    execution_price: Decimal | None = None
     filled_quantity: Decimal = Decimal("0")
     fees: Decimal = Decimal("0")
-    timestamp: Optional[datetime] = None
+    timestamp: datetime | None = None
 
     def __post_init__(self):
         if self.timestamp is None:
@@ -173,7 +172,7 @@ class BrokerConfig:
 
     broker_type: BrokerType
     api_key: str
-    api_secret: Optional[str] = None
+    api_secret: str | None = None
     sandbox: bool = True  # SIEMPRE empezar en sandbox
     rate_limit_per_second: int = 10  # Límite de Rate Limit Governor
     websocket_enabled: bool = True
@@ -440,7 +439,7 @@ class IBroker(ABC):
         """
 
     @abstractmethod
-    async def close_position(self, symbol: str, quantity: Optional[Decimal] = None) -> OrderResult:
+    async def close_position(self, symbol: str, quantity: Decimal | None = None) -> OrderResult:
         """
         Cerrar posición (total o parcial).
 
@@ -600,7 +599,7 @@ class IBroker(ABC):
 # ========================================================================
 
 
-def validate_order(order: Order) -> tuple[bool, Optional[str]]:
+def validate_order(order: Order) -> tuple[bool, str | None]:
     """
     Validar orden antes de enviar al broker.
 

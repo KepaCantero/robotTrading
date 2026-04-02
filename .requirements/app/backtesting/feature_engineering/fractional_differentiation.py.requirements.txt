@@ -28,7 +28,7 @@ Generated: 2026-03-09
 - `get_weights()`
 - `fractional_diff()`
 - `find_optimal_d()`
-- `adfuller()`
+- `calculate_adfuller_on_diff_series()`
 - `get_weights()`
 - `fractional_diff()`
 - `fractional_diff_ffd()`

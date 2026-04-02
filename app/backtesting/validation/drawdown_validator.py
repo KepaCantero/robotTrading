@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import logging
 from decimal import Decimal
-from typing import Any, Optional
+from typing import Any
 
 import numpy as np
 
@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
 class DrawdownValidationError(Exception):
     """Exception raised when drawdown validation fails."""
 
-    def __init__(self, message: str, details: Optional[dict] = None):
+    def __init__(self, message: str, details: dict | None = None):
         super().__init__(message)
         self.details = details or {}
 
@@ -43,8 +43,8 @@ class DrawdownValidator:
 
     def __init__(
         self,
-        max_drawdown_pct: Optional[Decimal] = None,
-        min_drawdown_pct: Optional[Decimal] = None,
+        max_drawdown_pct: Decimal | None = None,
+        min_drawdown_pct: Decimal | None = None,
     ):
         """
         Initialize Drawdown Validator.
@@ -122,9 +122,9 @@ class DrawdownValidator:
     def validate_max_drawdown(
         self,
         reported_max_dd: Decimal,
-        equity_curve: Optional[list[tuple[str, Decimal]]] = None,
-        trades: Optional[list[Trade]] = None,
-        initial_capital: Optional[Decimal] = None,
+        equity_curve: list[tuple[str, Decimal]] | None = None,
+        trades: list[Trade] | None = None,
+        initial_capital: Decimal | None = None,
     ) -> bool:
         """
         Validate reported max drawdown.

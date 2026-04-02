@@ -15,7 +15,7 @@ import json
 import logging
 from datetime import datetime
 from pathlib import Path
-from typing import Any, ClassVar, Optional
+from typing import Any, ClassVar
 
 import numpy as np
 import pandas as pd
@@ -39,7 +39,7 @@ class ResultAggregator:
     def __init__(
         self,
         output_dir: Path,
-        output_formats: Optional[list[str]] = None,
+        output_formats: list[str] | None = None,
     ):
         """
         Initialize result aggregator.

@@ -10,7 +10,7 @@ from __future__ import annotations
 import asyncio
 import logging
 from dataclasses import dataclass
-from typing import ClassVar, Optional
+from typing import ClassVar
 
 logger = logging.getLogger(__name__)
 
@@ -68,7 +68,7 @@ class DeployDecisionOrchestrator:
         backtest_result: dict,
         recommendation: dict,
         allocation: dict,
-        investment_profile: Optional[dict] = None,
+        investment_profile: dict | None = None,
     ) -> DeploymentDecision:
         """
         Master orchestration method synthesizing all components.

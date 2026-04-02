@@ -13,7 +13,7 @@ from __future__ import annotations
 
 import logging
 from decimal import Decimal
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING
 
 import numpy as np
 import pandas as pd
@@ -54,7 +54,7 @@ class TechnicalIndicatorCalculator:
     """
 
     @staticmethod
-    def calculate_rsi(prices: list[float], period: int = 14) -> Optional[float]:
+    def calculate_rsi(prices: list[float], period: int = 14) -> float | None:
         """
         Calculate Relative Strength Index using pandas-ta-classic.rsi() library.
 
@@ -115,7 +115,7 @@ class TechnicalIndicatorCalculator:
             return None
 
     @staticmethod
-    def calculate_ema(prices: list[float], period: int = 9) -> Optional[float]:
+    def calculate_ema(prices: list[float], period: int = 9) -> float | None:
         """
         Calculate Exponential Moving Average using pandas-ta or manual fallback.
 
@@ -175,7 +175,7 @@ class TechnicalIndicatorCalculator:
         fast_period: int = 12,
         slow_period: int = 26,
         signal_period: int = 9,
-    ) -> tuple[Optional[float], Optional[float], Optional[float]]:
+    ) -> tuple[float | None, float | None, float | None]:
         """
         Calculate MACD using pandas_ta_classic.macd() library.
 
@@ -242,7 +242,7 @@ class TechnicalIndicatorCalculator:
             return None, None, None
 
     @staticmethod
-    def calculate_roc(prices: list[float], period: int = 12) -> Optional[float]:
+    def calculate_roc(prices: list[float], period: int = 12) -> float | None:
         """
         Calculate Rate of Change using pandas_ta_classic.roc() library.
 
@@ -276,7 +276,7 @@ class TechnicalIndicatorCalculator:
     @staticmethod
     def calculate_stochastic_rsi(
         rsi_values: list[float], period: int = 14, smooth_k: int = 3
-    ) -> tuple[Optional[float], Optional[float]]:
+    ) -> tuple[float | None, float | None]:
         """
         Calculate Stochastic RSI from pre-calculated RSI values using pandas vectorized operations.
 
@@ -349,7 +349,7 @@ class TechnicalIndicatorCalculator:
     @staticmethod
     def calculate_atr(
         highs: list[float], lows: list[float], closes: list[float], period: int = 14
-    ) -> Optional[float]:
+    ) -> float | None:
         """
         Calculate Average True Range using pandas_ta_classic.atr() library.
 
@@ -387,7 +387,7 @@ class TechnicalIndicatorCalculator:
     @staticmethod
     def calculate_adx(
         highs: list[float], lows: list[float], closes: list[float], period: int = 14
-    ) -> Optional[float]:
+    ) -> float | None:
         """
         Calculate Average Directional Index using pandas_ta_classic.adx() library.
 
@@ -434,7 +434,7 @@ class TechnicalIndicatorCalculator:
             raise
 
     @staticmethod
-    def calculate_obv(prices: list[float], volumes: list[float]) -> Optional[float]:
+    def calculate_obv(prices: list[float], volumes: list[float]) -> float | None:
         """
         Calculate On-Balance Volume (OBV) indicator.
 
@@ -485,7 +485,7 @@ class TechnicalIndicatorCalculator:
             raise
 
     @staticmethod
-    def calculate_volume_sma(volumes: list[Decimal], period: int = 20) -> Optional[Decimal]:
+    def calculate_volume_sma(volumes: list[Decimal], period: int = 20) -> Decimal | None:
         """
         Calculate Volume Simple Moving Average using pandas.rolling() library.
 
@@ -514,8 +514,8 @@ class TechnicalIndicatorCalculator:
 
     @staticmethod
     def calculate_vwap(
-        prices: list[float], volumes: list[float], period: Optional[int] = None
-    ) -> Optional[float]:
+        prices: list[float], volumes: list[float], period: int | None = None
+    ) -> float | None:
         """
         Calculate Volume-Weighted Average Price using pandas DataFrame operations.
 
@@ -555,9 +555,7 @@ class TechnicalIndicatorCalculator:
             raise
 
     @staticmethod
-    def calculate_zscore(
-        prices: list[float], period: int = 30, std: float = 1.0
-    ) -> Optional[float]:
+    def calculate_zscore(prices: list[float], period: int = 30, std: float = 1.0) -> float | None:
         """
         Calculate Z-score using pandas-ta-classic.zscore() library.
 
@@ -594,7 +592,7 @@ class TechnicalIndicatorCalculator:
     @staticmethod
     def calculate_volatility(
         prices: list[float], tf: str = "days", returns: bool = False, log: bool = False
-    ) -> Optional[float]:
+    ) -> float | None:
         """
         Calculate volatility using pandas-ta-classic.volatility() library.
 
@@ -634,7 +632,7 @@ class TechnicalIndicatorCalculator:
         losing_trades: int,
         avg_win_amount: float,
         avg_loss_amount: float,
-    ) -> Optional[float]:
+    ) -> float | None:
         """
         Calculate Expectancy metric for system consistency.
 
@@ -660,7 +658,7 @@ class TechnicalIndicatorCalculator:
     @staticmethod
     def detect_macd_divergence(
         prices: list[float], macd_histograms: list[float], lookback: int = 5
-    ) -> Optional[str]:
+    ) -> str | None:
         """
         Detect MACD histogram divergence patterns using numpy.
 

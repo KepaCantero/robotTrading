@@ -114,6 +114,7 @@ hats:
   # --------------------------------------------------------------------------
   clean_start:
     name: "Clean Start"
+    description: "Reset total del estado previo y preparacion del scratchpad limpio"
     triggers: ["aaa.start"]
     publishes: ["aaa.clean_done", "aaa.blocked"]
     default_publishes: "aaa.clean_done"
@@ -156,6 +157,7 @@ hats:
   # --------------------------------------------------------------------------
   structural_fix:
     name: "Structural Fix"
+    description: "Eliminar duplicados, corregir imports circulares y rotos"
     triggers: ["aaa.clean_done"]
     publishes: ["aaa.structural_done", "aaa.blocked"]
     default_publishes: "aaa.structural_done"
@@ -213,6 +215,7 @@ hats:
   # --------------------------------------------------------------------------
   requirements_generator:
     name: "Requirements Generator"
+    description: "Generar o verificar archivos .requirements.txt para cada archivo Python"
     triggers: ["aaa.structural_done"]
     publishes: ["aaa.requirements_done", "aaa.blocked"]
     default_publishes: "aaa.requirements_done"
@@ -249,6 +252,7 @@ hats:
   # --------------------------------------------------------------------------
   production_audit:
     name: "Production Audit"
+    description: "Auditar cada archivo contra sus requirements y corregir gaps"
     triggers: ["aaa.requirements_done"]
     publishes: ["aaa.audit_done", "aaa.blocked"]
     default_publishes: "aaa.audit_done"
@@ -301,6 +305,7 @@ hats:
   # --------------------------------------------------------------------------
   architecture_audit:
     name: "Architecture Audit"
+    description: "Verificar cumplimiento SOLID, separacion de capas y valores hardcodeados"
     triggers: ["aaa.audit_done"]
     publishes: ["aaa.arch_done", "aaa.blocked"]
     default_publishes: "aaa.arch_done"
@@ -350,6 +355,7 @@ hats:
   # --------------------------------------------------------------------------
   qa_enforcement:
     name: "QA Enforcement"
+    description: "Ejecutar black, isort y ruff hasta conseguir 0 errores"
     triggers: ["aaa.arch_done"]
     publishes: ["aaa.qa_done", "aaa.blocked"]
     default_publishes: "aaa.qa_done"
@@ -392,6 +398,7 @@ hats:
   # --------------------------------------------------------------------------
   security:
     name: "Security"
+    description: "Verificar ausencia de secrets, injection y hardcoded credentials"
     triggers: ["aaa.qa_done"]
     publishes: ["aaa.security_done", "aaa.blocked"]
     default_publishes: "aaa.security_done"
@@ -433,6 +440,7 @@ hats:
   # --------------------------------------------------------------------------
   final_report:
     name: "Final Report"
+    description: "Validar todos los gates y generar reporte final AAA Production Ready"
     triggers: ["aaa.security_done"]
     publishes: ["AAA_PRODUCTION_READY"]
     default_publishes: "AAA_PRODUCTION_READY"
@@ -500,6 +508,7 @@ hats:
   # --------------------------------------------------------------------------
   blocked_handler:
     name: "Blocked Handler"
+    description: "Diagnosticar y recuperar de errores que bloquean el pipeline"
     triggers: ["aaa.blocked"]
     publishes: ["aaa.start"]
     default_publishes: "aaa.start"

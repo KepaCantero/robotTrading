@@ -13,7 +13,7 @@ from __future__ import annotations
 import logging
 from datetime import datetime
 from decimal import Decimal
-from typing import ClassVar, Optional
+from typing import ClassVar
 
 from app.shared.protocols.i_spain_tax_engine import ISpainTaxEngine
 
@@ -248,7 +248,7 @@ class SpainTaxEngineImpl(ISpainTaxEngine):
         )
         return exceeds
 
-    def generate_modelo_720_report(self, foreign_assets_data: Optional[dict] = None) -> dict:
+    def generate_modelo_720_report(self, foreign_assets_data: dict | None = None) -> dict:
         """
         Generate a Modelo 720 report structure for foreign assets declaration.
 

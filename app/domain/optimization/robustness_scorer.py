@@ -22,10 +22,12 @@ import logging
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from pathlib import Path
-from typing import Any, Optional
+from typing import TYPE_CHECKING, Any
 
 import numpy as np
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
@@ -76,11 +78,11 @@ class RobustnessResult:
     """Result of robustness analysis."""
 
     strategy_name: str
-    parameter_name: Optional[str] = None
+    parameter_name: str | None = None
     overall_robustness_score: float = 0.0
     production_readiness: ProductionReadiness = ProductionReadiness.FAIL
     risk_level: RiskLevel = RiskLevel.HIGH
-    score_details: Optional[RobustnessScoreDetail] = None
+    score_details: RobustnessScoreDetail | None = None
     risk_factors: list[RiskFactor] = field(default_factory=list)
     recommendations: list[str] = field(default_factory=list)
     timestamp: datetime = field(default_factory=datetime.now)
@@ -130,7 +132,7 @@ class RobustnessReport:
             "results": {name: result.to_dict() for name, result in self.results.items()},
         }
 
-    def to_json(self, filepath: Optional[Path] = None) -> str:
+    def to_json(self, filepath: Path | None = None) -> str:
         """Serialize to JSON string or file."""
         json_str = json.dumps(self.to_dict(), indent=2)
         if filepath:
@@ -148,7 +150,7 @@ class RobustnessScorer:
     Answers: "Is this safe to deploy in live trading?"
     """
 
-    def __init__(self, config: Optional[dict[str, Any]] = None):
+    def __init__(self, config: dict[str, Any] | None = None):
         """
         Initialize robustness scorer.
 
@@ -192,7 +194,7 @@ class RobustnessScorer:
         sensitivity_score: float,  # 0-100: inverse of elasticity
         overfitting_penalty: float,  # 0-100: (1 - IS/OOS gap)
         regime_robustness_score: float,  # 0-100: cross-regime performance
-        parameter_name: Optional[str] = None,
+        parameter_name: str | None = None,
     ) -> RobustnessResult:
         """
         Calculate comprehensive robustness score.

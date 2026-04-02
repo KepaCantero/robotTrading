@@ -16,7 +16,7 @@ from __future__ import annotations
 import logging
 import time
 from decimal import Decimal
-from typing import ClassVar, Optional
+from typing import ClassVar
 
 import numpy as np
 
@@ -73,7 +73,7 @@ class CryptoScreener:
         CryptoAssetType.OTHER: Decimal("100000000"),  # $100M+
     }
 
-    def __init__(self, config: Optional[dict] = None):
+    def __init__(self, config: dict | None = None):
         """
         Initialize crypto screener.
 
@@ -86,12 +86,12 @@ class CryptoScreener:
     def screen(
         self,
         universe: list[CryptoAsset],
-        min_market_cap: Optional[Decimal] = None,
-        min_daily_volume: Optional[Decimal] = None,
-        min_liquidity_score: Optional[Decimal] = None,
-        max_volatility: Optional[Decimal] = None,
-        required_exchanges: Optional[list[CryptoExchange]] = None,
-        asset_types: Optional[list[CryptoAssetType]] = None,
+        min_market_cap: Decimal | None = None,
+        min_daily_volume: Decimal | None = None,
+        min_liquidity_score: Decimal | None = None,
+        max_volatility: Decimal | None = None,
+        required_exchanges: list[CryptoExchange] | None = None,
+        asset_types: list[CryptoAssetType] | None = None,
     ) -> CryptoScreeningResult:
         """
         Screen crypto assets by criteria.
@@ -168,9 +168,9 @@ class CryptoScreener:
         min_market_cap: Decimal,
         min_daily_volume: Decimal,
         min_liquidity_score: Decimal,
-        max_volatility: Optional[Decimal],
-        required_exchanges: Optional[list[CryptoExchange]],
-        asset_types: Optional[list[CryptoAssetType]],
+        max_volatility: Decimal | None,
+        required_exchanges: list[CryptoExchange] | None,
+        asset_types: list[CryptoAssetType] | None,
     ) -> list[str]:
         """
         Check if an asset meets all screening criteria.

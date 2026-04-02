@@ -22,7 +22,7 @@ from __future__ import annotations
 import logging
 from decimal import Decimal
 from enum import Enum
-from typing import Optional, TypedDict
+from typing import TypedDict
 
 
 class _GateResult(TypedDict, total=False):
@@ -41,7 +41,7 @@ class _GateResult(TypedDict, total=False):
 
 
 class _AnalysisDict(TypedDict, total=False):
-    account_id: Optional[str]
+    account_id: str | None
     capital: Decimal
     monthly_profit_goal: Decimal
     expected_monthly_alpha: Decimal
@@ -87,12 +87,12 @@ class DeploymentValidator:
         capital: Decimal,
         monthly_profit_goal: Decimal,
         expected_monthly_alpha: Decimal,
-        tax_rate: Optional[Decimal] = None,
-        commission_per_trade: Optional[Decimal] = None,
+        tax_rate: Decimal | None = None,
+        commission_per_trade: Decimal | None = None,
         expected_trades_per_month: int = 10,
         learning_enabled: bool = True,
         expensive_modules_enabled: bool = True,
-        account_id: Optional[str] = None,
+        account_id: str | None = None,
     ) -> tuple[DeploymentStatus, _AnalysisDict]:
         """
         Run all capital gates to determine if account is safe for live deployment.
@@ -362,7 +362,7 @@ class DeploymentValidator:
     @staticmethod
     def get_minimum_capital_recommendation(
         monthly_profit_goal: Decimal,
-        expected_monthly_alpha: Optional[Decimal] = None,
+        expected_monthly_alpha: Decimal | None = None,
     ) -> dict[str, Decimal]:
         """
         Calculate minimum capital needed based on goals and infrastructure requirements.

@@ -11,7 +11,6 @@ from __future__ import annotations
 import logging
 from abc import ABC, abstractmethod
 from decimal import Decimal
-from typing import Optional
 
 logger = logging.getLogger(__name__)
 
@@ -25,7 +24,7 @@ class TaxEngine(ABC):
     and handling country-specific tax rules.
     """
 
-    def __init__(self, config: Optional[dict] = None):
+    def __init__(self, config: dict | None = None):
         """
         Initialize tax engine with optional configuration.
 
