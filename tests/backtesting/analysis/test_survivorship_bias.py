@@ -116,8 +116,8 @@ class TestSurvivorshipBiasCorrector:
 
     def test_bankruptcy_adjustment(self, corrector):
         """Test bankruptcy adjustment calculation."""
-        # No bankruptcies
-        adj = corrector._calculate_bankruptcy_adjustment(delisted_count=10, period_years=1.0)
+        # No bankruptcies (delisted_count=0 means no bankruptcies possible)
+        adj = corrector._calculate_bankruptcy_adjustment(delisted_count=0, period_years=1.0)
         assert adj == 1.0
 
         # With bankruptcies (should reduce adjustment)
@@ -126,8 +126,8 @@ class TestSurvivorshipBiasCorrector:
 
     def test_acquisition_adjustment(self, corrector):
         """Test acquisition adjustment calculation."""
-        # No acquisitions
-        adj = corrector._calculate_acquisition_adjustment(delisted_count=10, period_years=1.0)
+        # No acquisitions (delisted_count=0 means no acquisitions possible)
+        adj = corrector._calculate_acquisition_adjustment(delisted_count=0, period_years=1.0)
         assert adj == 1.0
 
         # With acquisitions (should increase adjustment)

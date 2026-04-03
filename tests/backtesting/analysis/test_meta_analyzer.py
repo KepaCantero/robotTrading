@@ -496,13 +496,13 @@ class TestExportReport:
                 }
             )
 
-            output_path = analyzer.export_report(format="json")
+            output_path = analyzer.export_report(output_format="json")
 
             assert output_path != ""
             assert Path(output_path).exists()
 
             # Verify content
-            with open(output_path, 'r') as f:
+            with open(output_path) as f:
                 exported_data = json.load(f)
 
             assert "summary_stats" in exported_data
@@ -522,7 +522,7 @@ class TestExportReport:
                 }
             )
 
-            output_path = analyzer.export_report(format="csv")
+            output_path = analyzer.export_report(output_format="csv")
 
             assert output_path != ""
             assert Path(output_path).exists()
