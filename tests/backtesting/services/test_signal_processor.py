@@ -129,7 +129,7 @@ class TestSignalProcessor:
         processor = SignalProcessor(config=config, strategy=None, enable_risk_envelope=True)
 
         assert processor.enable_risk_envelope is True
-        assert processor.risk_validator is not None
+        assert processor.compliance_engine is not None
 
     def test_process_buy_signal_approved(self, signal_processor, buy_signal, default_symbol):
         """Test processing approved buy signal."""

@@ -10,14 +10,11 @@ The fallback pattern has been removed to ensure consistent validation behavior.
 
 from __future__ import annotations
 
+from datetime import datetime  # noqa: TC003 - needed at runtime by Pydantic v2
 from decimal import Decimal
 from enum import Enum
-from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, Field, field_validator, model_validator
-
-if TYPE_CHECKING:
-    from datetime import datetime
 
 
 class TradeSide(str, Enum):
