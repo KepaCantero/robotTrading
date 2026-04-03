@@ -20,18 +20,24 @@ from app.backtesting.models import BacktestConfig
 from app.backtesting.walk_forward_validator import (
     ComprehensiveValidator,
     CrossValidationTemporal,
+    DataGenerationParams,
+    FlashCrashParams,
+    FullValidationParams,
+    GapScenarioParams,
     MonteCarloSimulator,
+    ScenarioGenerationParams,
     StressScenarioResult,
     StressTester,
     SyntheticDataGenerator,
     ValidationReport,
     ValidationWindow,
+    WalkForwardValidationParams,
     WalkForwardValidator,
     get_default_config,
     load_validation_config,
 )
-from app.shared.utils.decimal_utils import round_price
 from app.domain.models.market_data import Quote
+from app.shared.utils.decimal_utils import round_price
 
 # ============================================================================
 # Fixtures
@@ -239,7 +245,9 @@ class TestSyntheticDataGenerator:
         generator = SyntheticDataGenerator(sample_config["synthetic_data"])
         start_date = datetime(2020, 1, 1)
 
-        quotes = generator.generate_gbm_prices(100, start_date, "TEST")
+        quotes = generator.generate_gbm_prices(
+            DataGenerationParams(n_days=100, start_date=start_date, symbol="TEST")
+        )
 
         assert len(quotes) == 100
         assert all(isinstance(q, Quote) for q in quotes)
@@ -250,7 +258,9 @@ class TestSyntheticDataGenerator:
         generator = SyntheticDataGenerator(sample_config["synthetic_data"])
         start_date = datetime(2020, 1, 1)
 
-        quotes = generator.generate_gbm_prices(500, start_date)
+        quotes = generator.generate_gbm_prices(
+            DataGenerationParams(n_days=500, start_date=start_date)
+        )
 
         assert all(float(q.close) > 0 for q in quotes)
         assert all(float(q.low) > 0 for q in quotes)
@@ -260,7 +270,9 @@ class TestSyntheticDataGenerator:
         generator = SyntheticDataGenerator(sample_config["synthetic_data"])
         start_date = datetime(2020, 1, 1)
 
-        quotes = generator.generate_ou_prices(500, start_date, theta=0.5, mu=100.0)
+        quotes = generator.generate_ou_prices(
+            DataGenerationParams(n_days=500, start_date=start_date)
+        )
 
         # Prices should stay relatively close to mean
         prices = [float(q.close) for q in quotes]
@@ -271,7 +283,9 @@ class TestSyntheticDataGenerator:
         generator = SyntheticDataGenerator(sample_config["synthetic_data"])
         start_date = datetime(2020, 1, 1)
 
-        quotes = generator.generate_flash_crash_scenario(100, start_date, drop_pct=-0.15)
+        quotes = generator.generate_flash_crash_scenario(
+            FlashCrashParams(n_days=100, start_date=start_date, drop_pct=-0.15)
+        )
 
         prices = [float(q.close) for q in quotes]
         min_price = min(prices)
@@ -284,7 +298,9 @@ class TestSyntheticDataGenerator:
         generator = SyntheticDataGenerator(sample_config["synthetic_data"])
         start_date = datetime(2020, 1, 1)
 
-        normal_quotes = generator.generate_gbm_prices(200, start_date)
+        normal_quotes = generator.generate_gbm_prices(
+            DataGenerationParams(n_days=200, start_date=start_date)
+        )
         high_vol_quotes = generator.generate_high_volatility_scenario(
             200, start_date, volatility_multiplier=3.0
         )
@@ -324,7 +340,9 @@ class TestSyntheticDataGenerator:
         generator = SyntheticDataGenerator(sample_config["synthetic_data"])
         start_date = datetime(2020, 1, 1)
 
-        quotes = generator.generate_gap_scenario(100, start_date, gap_pct=0.10, n_gaps=3)
+        quotes = generator.generate_gap_scenario(
+            GapScenarioParams(n_days=100, start_date=start_date, gap_pct=0.10, n_gaps=3)
+        )
 
         prices = [float(q.close) for q in quotes]
         returns = np.diff(prices) / prices[:-1]
@@ -346,7 +364,9 @@ class TestSyntheticDataGenerator:
         generator = SyntheticDataGenerator(sample_config["synthetic_data"])
         start_date = datetime(2020, 1, 1)
 
-        quotes = generator.generate_gbm_prices(100, start_date)
+        quotes = generator.generate_gbm_prices(
+            DataGenerationParams(n_days=100, start_date=start_date)
+        )
 
         for q in quotes:
             assert float(q.high) >= float(q.low)
@@ -422,7 +442,15 @@ class TestWalkForwardValidator:
         start_date = datetime(2020, 1, 1)
         end_date = datetime(2021, 1, 1)
 
-        result = validator.validate_strategy([], [], backtest_config, start_date, end_date)
+        result = validator.validate_strategy(
+            WalkForwardValidationParams(
+                quotes=[],
+                signals=[],
+                config=backtest_config,
+                start_date=start_date,
+                end_date=end_date,
+            )
+        )
 
         assert result["passed"] is False
         assert "Insufficient windows" in result.get("reason", "")
@@ -591,7 +619,15 @@ class TestStressTester:
         scenario_config = sample_config["stress_testing"]["scenarios"]["flash_crash"]
         start_date = datetime(2020, 1, 1)
 
-        quotes = tester._generate_scenario("flash_crash", scenario_config, 100, start_date, "TEST")
+        quotes = tester._generate_scenario(
+            ScenarioGenerationParams(
+                scenario_type="flash_crash",
+                scenario_config=scenario_config,
+                n_days=100,
+                start_date=start_date,
+                symbol="TEST",
+            )
+        )
 
         assert len(quotes) == 100
         assert all(isinstance(q, Quote) for q in quotes)
@@ -606,7 +642,15 @@ class TestStressTester:
 
         start_date = datetime(2020, 1, 1)
 
-        quotes = tester._generate_scenario("unknown_type", {}, 100, start_date, "TEST")
+        quotes = tester._generate_scenario(
+            ScenarioGenerationParams(
+                scenario_type="unknown_type",
+                scenario_config={},
+                n_days=100,
+                start_date=start_date,
+                symbol="TEST",
+            )
+        )
 
         assert len(quotes) == 100
 
@@ -725,59 +769,60 @@ class TestIntegration:
 
     def test_full_validation_workflow_mock(self, sample_config, backtest_config):
         """Test full validation workflow with mocks."""
-        with patch(
-            'app.backtesting.walk_forward_validator.load_validation_config',
-            return_value=sample_config,
+        with (
+            patch(
+                'app.backtesting.walk_forward_validator.load_validation_config',
+                return_value=sample_config,
+            ),
+            patch('app.backtesting.walk_forward_validator.SimpleBacktester') as mock_backtester,
         ):
-            with patch(
-                'app.backtesting.walk_forward_validator.SimpleBacktester'
-            ) as mock_backtester:
-                # Mock backtest result
-                mock_result = Mock()
-                mock_result.total_return = Decimal("0.10")
-                mock_result.final_capital = Decimal("110000")
-                mock_result.performance = Mock()
-                mock_result.performance.sharpe_ratio = Decimal("1.5")
-                mock_result.performance.max_drawdown_percentage = Decimal("-0.10")
-                mock_result.performance.total_trades = 20
-                mock_result.performance.win_rate = Decimal("55")
+            # Mock backtest result
+            mock_result = Mock()
+            mock_result.total_return = Decimal("0.10")
+            mock_result.final_capital = Decimal("110000")
+            mock_result.performance = Mock()
+            mock_result.performance.sharpe_ratio = Decimal("1.5")
+            mock_result.performance.max_drawdown_percentage = Decimal("-0.10")
+            mock_result.performance.total_trades = 20
+            mock_result.performance.win_rate = Decimal("55")
 
-                mock_backtester.return_value.run_backtest.return_value = mock_result
+            mock_backtester.return_value.run_backtest.return_value = mock_result
 
-                validator = ComprehensiveValidator()
+            validator = ComprehensiveValidator()
 
-                # Create mock quotes and signals
-                start_date = datetime(2015, 1, 1)
-                end_date = datetime(2022, 1, 1)
-                quotes = []
-                signals = []
+            # Create mock quotes and signals
+            start_date = datetime(2015, 1, 1)
+            end_date = datetime(2022, 1, 1)
+            quotes = []
+            signals = []
 
-                for i in range(2500):  # ~7 years
-                    quotes.append(
-                        Quote(
-                            symbol="TEST",
+            for i in range(2500):  # ~7 years
+                quotes.append(
+                    Quote(
+                        symbol="TEST",
+                        timestamp=start_date + timedelta(days=i),
+                        bid=Decimal("100"),
+                        ask=Decimal("100.1"),
+                        last=Decimal("100"),
+                        volume=Decimal("1000000"),
+                    )
+                )
+                if i % 20 == 0:
+                    signals.append(
+                        Mock(
                             timestamp=start_date + timedelta(days=i),
-                            bid=Decimal("100"),
-                            ask=Decimal("100.1"),
-                            last=Decimal("100"),
-                            volume=Decimal("1000000"),
                         )
                     )
-                    if i % 20 == 0:
-                        signals.append(
-                            Mock(
-                                timestamp=start_date + timedelta(days=i),
-                            )
-                        )
 
-                mock_strategy = Mock()
-                mock_strategy.analyze.return_value = Mock()
+            mock_strategy = Mock()
+            mock_strategy.analyze.return_value = Mock()
 
-                # Run validation (with stress testing disabled to speed up test)
-                validator.config["stress_testing"]["enabled"] = False
-                validator.config["monte_carlo"]["enabled"] = False
+            # Run validation (with stress testing disabled to speed up test)
+            validator.config["stress_testing"]["enabled"] = False
+            validator.config["monte_carlo"]["enabled"] = False
 
-                report = validator.run_full_validation(
+            report = validator.run_full_validation(
+                FullValidationParams(
                     strategy=mock_strategy,
                     strategy_name="test_strategy",
                     quotes=quotes,
@@ -786,9 +831,10 @@ class TestIntegration:
                     start_date=start_date,
                     end_date=end_date,
                 )
+            )
 
-                assert report.strategy_name == "test_strategy"
-                assert report.summary is not None
+            assert report.strategy_name == "test_strategy"
+            assert report.summary is not None
 
 
 # ============================================================================
@@ -804,11 +850,13 @@ class TestEdgeCases:
         validator = WalkForwardValidator(config=sample_config["walk_forward"])
 
         result = validator.validate_strategy(
-            [],
-            [],
-            backtest_config,
-            datetime(2015, 1, 1),
-            datetime(2022, 1, 1),
+            WalkForwardValidationParams(
+                quotes=[],
+                signals=[],
+                config=backtest_config,
+                start_date=datetime(2015, 1, 1),
+                end_date=datetime(2022, 1, 1),
+            )
         )
 
         assert result["passed"] is False
@@ -850,9 +898,11 @@ class TestEdgeCases:
 
         # Generate with very low volatility
         quotes = generator.generate_gbm_prices(
-            100,
-            datetime(2020, 1, 1),
-            volatility=0.0001,  # Near zero
+            DataGenerationParams(
+                n_days=100,
+                start_date=datetime(2020, 1, 1),
+                volatility=0.0001,  # Near zero
+            )
         )
 
         prices = [float(q.close) for q in quotes]

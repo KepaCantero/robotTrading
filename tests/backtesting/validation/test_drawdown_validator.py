@@ -1,15 +1,14 @@
 """
 Tests for drawdown validator.
 """
-import pytest
-from decimal import Decimal
-from datetime import datetime, timezone
 
-from app.backtesting.validation.drawdown_validator import (
-    DrawdownValidator,
-    DrawdownValidationError,
-)
+from datetime import datetime, timezone
+from decimal import Decimal
+
+import pytest
+
 from app.backtesting.models import Trade, TradeStatus
+from app.backtesting.validation.drawdown_validator import DrawdownValidationError, DrawdownValidator
 
 
 @pytest.fixture

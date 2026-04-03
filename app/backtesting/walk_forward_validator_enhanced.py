@@ -377,7 +377,7 @@ class TomasiniWalkForwardValidator:
         self.regime_detector: ClusteringRegimeDetector | None = None
 
         if self.regime_aware and REGIME_DETECTOR_AVAILABLE:
-            self.regime_detector = ClusteringRegimeDetector(n_regimes=3)
+            self.regime_detector = ClusteringRegimeDetector(config={"n_clusters": 3})
         elif self.regime_aware and not REGIME_DETECTOR_AVAILABLE:
             logger.warning(
                 "Regime detection requested but dependencies not available. Regime-aware features disabled."
@@ -524,7 +524,7 @@ class TomasiniWalkForwardValidator:
 
         best_params = {}
         best_score = float("-inf")
-        best_metrics = {}
+        best_metrics = self._empty_metrics()
 
         # Generate all parameter combinations
         from itertools import product
@@ -565,6 +565,7 @@ class TomasiniWalkForwardValidator:
                         "total_return": float(result.total_return),
                         "sortino_ratio": float(result.performance.sortino_ratio or 0),
                         "max_drawdown": float(result.performance.max_drawdown_percentage or 0),
+                        "volatility": 0.0,
                         "total_trades": result.performance.total_trades,
                         "win_rate": float(result.performance.win_rate),
                     }

@@ -359,22 +359,24 @@ investment_horizons:
                             try:
                                 # This would normally run full pipeline, but we're just testing validation
                                 # We'll mock the internal methods to avoid actual execution
-                                with patch.object(
-                                    backtester, '_create_profile_config', return_value={}
+                                with (
+                                    patch.object(
+                                        backtester, '_create_profile_config', return_value={}
+                                    ),
+                                    patch.object(backtester, '_run_baseline', return_value={}),
                                 ):
-                                    with patch.object(backtester, '_run_baseline', return_value={}):
+                                    with patch.object(
+                                        backtester,
+                                        '_run_optimization_pipeline',
+                                        return_value=MagicMock(),
+                                    ):
                                         with patch.object(
-                                            backtester,
-                                            '_run_optimization_pipeline',
-                                            return_value=MagicMock(),
+                                            backtester.database_service, 'store_result'
                                         ):
-                                            with patch.object(
-                                                backtester.database_service, 'store_result'
-                                            ):
-                                                result = backtester.run_single_profile(
-                                                    profile, multi_strategy=True
-                                                )
-                                                # If we get here without ValueError, validation passed
+                                            result = backtester.run_single_profile(
+                                                profile, multi_strategy=True
+                                            )
+                                            # If we get here without ValueError, validation passed
                             except ValueError as e:
                                 if "ProfileStrategyMapper not initialized" in str(e):
                                     pytest.fail("Multi-strategy validation failed unexpectedly")

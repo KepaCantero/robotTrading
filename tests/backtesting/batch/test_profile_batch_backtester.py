@@ -471,11 +471,15 @@ investment_horizons:
                         backtester = ProfileBatchBacktester(config_path=config_path)
 
                         # Mock baseline failure
-                        with patch.object(
-                            backtester, '_run_baseline', side_effect=RuntimeError("Backtest failed")
+                        with (
+                            patch.object(
+                                backtester,
+                                '_run_baseline',
+                                side_effect=RuntimeError("Backtest failed"),
+                            ),
+                            pytest.raises(RuntimeError),
                         ):
-                            with pytest.raises(RuntimeError):
-                                backtester._run_baseline(profile, config={})
+                            backtester._run_baseline(profile, config={})
         finally:
             Path(config_path).unlink(missing_ok=True)
 

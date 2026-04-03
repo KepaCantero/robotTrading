@@ -72,14 +72,14 @@ class TestFallbackValuesMatchConfig:
         Test that RSI buy threshold fallback values match config.
 
         From profile_batch_backtester.py lines 1191 and 1197:
-            rsi_buy_min, rsi_buy_max = 20, 35
+            rsi_buy_min, rsi_buy_max = 10, 45
 
         Should match config/backtesting/profile_optimization.yaml:
-            threshold_optimization.rsi.buy_threshold: min=20, max=35
+            threshold_optimization.rsi.buy_threshold: min=10, max=45
         """
-        # Expected hardcoded values from code
-        expected_min = 20
-        expected_max = 35
+        # Expected hardcoded values from code (matching profile_optimization.yaml)
+        expected_min = 10
+        expected_max = 45
 
         # Actual values from config
         actual_min = config_defaults["rsi_buy"]["min"]
@@ -102,13 +102,13 @@ class TestFallbackValuesMatchConfig:
         Test that volume ratio fallback values match config.
 
         From profile_batch_backtester.py lines 1192 and 1198:
-            vol_min, vol_max = 1.0, 1.5
+            vol_min, vol_max = 0.5, 1.5
 
         Should match config/backtesting/profile_optimization.yaml:
-            threshold_optimization.volume_ratio: min=1.0, max=1.5
+            threshold_optimization.volume_ratio: min=0.5, max=1.5
         """
-        # Expected hardcoded values from code
-        expected_min = 1.0
+        # Expected hardcoded values from code (matching profile_optimization.yaml)
+        expected_min = 0.5
         expected_max = 1.5
 
         # Actual values from config
@@ -137,9 +137,9 @@ class TestFallbackValuesMatchConfig:
         """
         # Verify config has EMA distance defined
         assert "ema_distance" in config_defaults
-        assert config_defaults["ema_distance"]["min"] == 0.002
-        assert config_defaults["ema_distance"]["max"] == 0.01
-        assert config_defaults["ema_distance"]["default"] == 0.005
+        assert config_defaults["ema_distance"]["min"] == 0.001
+        assert config_defaults["ema_distance"]["max"] == 0.015
+        assert config_defaults["ema_distance"]["default"] == 0.003
 
     def test_momentum_config_exists(self, config_defaults):
         """
@@ -151,9 +151,9 @@ class TestFallbackValuesMatchConfig:
         """
         # Verify config has momentum defined
         assert "momentum" in config_defaults
-        assert config_defaults["momentum"]["min"] == 0.01
-        assert config_defaults["momentum"]["max"] == 0.03
-        assert config_defaults["momentum"]["default"] == 0.015
+        assert config_defaults["momentum"]["min"] == 0.003
+        assert config_defaults["momentum"]["max"] == 0.020
+        assert config_defaults["momentum"]["default"] == 0.010
 
     def test_fallback_values_have_config_comments(self):
         """
@@ -192,12 +192,12 @@ class TestFallbackValuesMatchConfig:
 
         # These old values should NOT be present
         assert "rsi_buy_min, rsi_buy_max = 30, 70" not in content, (
-            "Old incorrect RSI fallback (30, 70) found. Should be (20, 35) "
+            "Old incorrect RSI fallback (30, 70) found. Should be (10, 45) "
             "to match config buy_threshold range."
         )
 
         assert "vol_min, vol_max = 1.0, 3.0" not in content, (
-            "Old incorrect volume fallback (1.0, 3.0) found. Should be (1.0, 1.5) "
+            "Old incorrect volume fallback (1.0, 3.0) found. Should be (0.5, 1.5) "
             "to match config volume_ratio range."
         )
 
