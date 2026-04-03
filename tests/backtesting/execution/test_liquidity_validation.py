@@ -250,8 +250,13 @@ class TestMarketImpact:
 
     @pytest.fixture
     def validator(self):
-        """Create default liquidity validator."""
-        return LiquidityValidator()
+        """Create liquidity validator with explicit thresholds."""
+        return LiquidityValidator(
+            enable_partial_fills=True,
+            max_order_pct_of_volume=Decimal("0.10"),
+            warning_order_pct_of_volume=Decimal("0.05"),
+            partial_fill_pct=Decimal("0.05"),
+        )
 
     def test_market_impact_increases_with_size(self, validator):
         """Test that market impact increases with order size."""
@@ -365,8 +370,13 @@ class TestLiquidityMetrics:
 
     @pytest.fixture
     def validator(self):
-        """Create default liquidity validator."""
-        return LiquidityValidator()
+        """Create liquidity validator with explicit 10%/5%/5% thresholds."""
+        return LiquidityValidator(
+            enable_partial_fills=True,
+            max_order_pct_of_volume=Decimal("0.10"),  # 10%
+            warning_order_pct_of_volume=Decimal("0.05"),  # 5%
+            partial_fill_pct=Decimal("0.05"),  # 5%
+        )
 
     def test_liquidity_metrics_without_order(self, validator):
         """Test liquidity metrics without order context."""
@@ -475,8 +485,13 @@ class TestIntegrationScenarios:
 
     @pytest.fixture
     def validator(self):
-        """Create default liquidity validator."""
-        return LiquidityValidator()
+        """Create liquidity validator with explicit 10%/5%/5% thresholds."""
+        return LiquidityValidator(
+            enable_partial_fills=True,
+            max_order_pct_of_volume=Decimal("0.10"),  # 10%
+            warning_order_pct_of_volume=Decimal("0.05"),  # 5%
+            partial_fill_pct=Decimal("0.05"),  # 5%
+        )
 
     def test_illiquid_stock_scenario(self, validator):
         """Test trading an illiquid stock with low volume."""

@@ -287,12 +287,15 @@ class TransactionCostModel:
             result.total_cost_bps = (result.total_cost / result.gross_value) * Decimal("10000")
 
         # Calculate effective execution price
-        if side.upper() == "BUY":
-            # Buy: pay more due to costs
-            result.effective_price = (result.gross_value + result.total_cost) / quantity
+        if quantity > 0:
+            if side.upper() == "BUY":
+                # Buy: pay more due to costs
+                result.effective_price = (result.gross_value + result.total_cost) / quantity
+            else:
+                # Sell: receive less due to costs
+                result.effective_price = (result.gross_value - result.total_cost) / quantity
         else:
-            # Sell: receive less due to costs
-            result.effective_price = (result.gross_value - result.total_cost) / quantity
+            result.effective_price = Decimal("0")
 
         # Store metadata
         result.metadata = {

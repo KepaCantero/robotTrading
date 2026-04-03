@@ -32,6 +32,15 @@ from app.models.signal import Signal, SignalSource, SignalStrength, SignalType
 class TestAdvancedBacktestingMethods:
     """Test advanced backtesting methods with corrected implementation."""
 
+    @pytest.fixture(autouse=True)
+    def _reset_compliance_singleton(self):
+        """Reset ComplianceEngine singleton before each test to prevent state leakage."""
+        from app.services.compliance.compliance_engine import ComplianceEngine
+
+        ComplianceEngine._instance = None
+        yield
+        ComplianceEngine._instance = None
+
     @pytest.fixture
     def config(self):
         """Default backtest configuration."""
