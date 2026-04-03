@@ -19,8 +19,9 @@ from app.backtesting.engines.execution_engine import (
     Position,
     create_position_with_stops,
 )
-from app.shared.utils.decimal_utils import round_price
+from app.backtesting.models import BacktestConfig
 from app.domain.models.market_data import Quote
+from app.shared.utils.decimal_utils import round_price
 
 # ============================================================================
 # Fixtures
@@ -30,7 +31,9 @@ from app.domain.models.market_data import Quote
 @pytest.fixture
 def execution_engine():
     """Default pessimistic execution engine."""
+    config = BacktestConfig(initial_capital=Decimal("100000"))
     return PessimisticExecutionEngine(
+        config=config,
         execution_type=ExecutionType.PESSIMISTIC,
         base_slippage_bps=Decimal("5"),
     )
@@ -307,7 +310,8 @@ class TestSlippageCalculation:
 
     def test_volatility_adjusted_slippage(self):
         """Test that volatility increases slippage."""
-        engine = PessimisticExecutionEngine(base_slippage_bps=Decimal("5"))
+        config = BacktestConfig(initial_capital=Decimal("100000"))
+        engine = PessimisticExecutionEngine(config=config, base_slippage_bps=Decimal("5"))
 
         # Low volatility
         result_low = engine.execute_entry_order(
