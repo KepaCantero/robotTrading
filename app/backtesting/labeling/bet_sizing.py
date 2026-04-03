@@ -193,6 +193,21 @@ class BetSizing:
         """
         n_signals = len(predictions)
 
+        if n_signals == 0:
+            return BetSizingResult(
+                bet_sizes=np.array([]),
+                expected_returns=np.array([]),
+                risk_contribution=np.array([]),
+                kelly_fractions=np.array([]),
+                metadata={
+                    "method": self.config.method,
+                    "n_signals": 0,
+                    "avg_bet_size": 0.0,
+                    "total_exposure": 0.0,
+                    "max_exposure": 0.0,
+                },
+            )
+
         # Initialize with default values
         if probabilities is None:
             probabilities = np.ones(n_signals) * 0.5
@@ -373,8 +388,8 @@ class BetSizing:
     def _risk_parity_sizing(
         self,
         predictions: np.ndarray,
-        volatilities: np.ndarray | None,
-        correlation_matrix: np.ndarray | None,
+        volatilities: np.ndarray | None = None,
+        correlation_matrix: np.ndarray | None = None,
     ) -> np.ndarray:
         """
         Calculate bet sizes using risk parity.
@@ -1074,6 +1089,15 @@ def calculate_bet_sizes_with_meta_model(
         ...     meta_model, X_test, primary_preds, method='kelly'
         ... )
     """
+    # Map user-friendly method names to internal meta_* names
+    method_mapping = {
+        "kelly": "meta_kelly",
+        "probability": "meta_probability",
+        "expected_value": "meta_expected_value",
+        "confidence": "meta_confidence",
+    }
+    internal_method = method_mapping.get(method, method)
+
     # Get meta-model predictions
     if isinstance(meta_model, SklearnModelWithProba):
         meta_proba_raw = meta_model.predict_proba(X)
@@ -1094,7 +1118,7 @@ def calculate_bet_sizes_with_meta_model(
         meta_proba=meta_proba,
         primary_predictions=primary_predictions,
         expected_returns=expected_returns,
-        method=method,
+        method=internal_method,
         confidence_threshold=confidence_threshold,
     )
 

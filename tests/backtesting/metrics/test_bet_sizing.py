@@ -4,7 +4,6 @@ Unit tests for Bet Sizing module.
 Tests for bet sizing calculations based on López de Prado's work.
 """
 
-
 import numpy as np
 import pytest
 
@@ -348,10 +347,13 @@ class TestBetSizing:
 
         predictions = np.array([1, 0, 1, 1, 0])
         volatilities = np.array([0.01, 0.02, 0.015, 0.025, 0.018])
+        n = len(predictions)
+        correlation_matrix = np.eye(n)
 
         bet_sizes = bet_sizing._risk_parity_sizing(
             predictions=predictions,
             volatilities=volatilities,
+            correlation_matrix=correlation_matrix,
         )
 
         # Risk parity: weight proportional to 1/volatility
@@ -409,8 +411,8 @@ class TestCalculateBetSizesConvenience:
             method="meta_probability",
         )
 
-        # Should equal probabilities
-        expected = meta_proba
+        # Confidence threshold (default 0.5) zeros out probabilities below it
+        expected = np.array([0.6, 0.8, 0.0, 0.9])
         np.testing.assert_allclose(bet_sizes, expected, atol=1e-5)
 
     def test_calculate_bet_sizes_ml_confidence(self):
