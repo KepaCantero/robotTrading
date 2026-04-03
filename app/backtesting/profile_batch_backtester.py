@@ -672,11 +672,13 @@ class ProfileBatchBacktester:
                 rsi_buy_config = self.profile_config_loader.get_threshold_config("rsi").get(
                     "buy_threshold", {}
                 )
-                rsi_buy_min = rsi_buy_config.get("min", 20)
-                rsi_buy_max = rsi_buy_config.get("max", 35)
+                # profile_optimization.yaml: rsi.buy_threshold
+                rsi_buy_min = rsi_buy_config.get("min", 10)
+                rsi_buy_max = rsi_buy_config.get("max", 45)
 
+                # profile_optimization.yaml: volume_ratio
                 vol_config = self.profile_config_loader.get_threshold_config("volume_ratio")
-                vol_min = vol_config.get("min", 1.0)
+                vol_min = vol_config.get("min", 0.5)
                 vol_max = vol_config.get("max", 1.5)
 
                 logger.debug("Loaded parameter ranges from ProfileConfigLoader")
@@ -684,13 +686,17 @@ class ProfileBatchBacktester:
                 logger.warning(f"Failed to load parameter ranges from ProfileConfigLoader: {e}")
                 logger.info("Falling back to default parameter ranges")
                 self.fallback_tracker.increment_fallback_counter("profile_config_loader")
-                rsi_buy_min, rsi_buy_max = 20, 35
-                vol_min, vol_max = 1.0, 1.5
+                # profile_optimization.yaml: rsi.buy_threshold fallback
+                rsi_buy_min, rsi_buy_max = 10, 45
+                # profile_optimization.yaml: volume_ratio fallback
+                vol_min, vol_max = 0.5, 1.5
         else:
             logger.info("Using default parameter ranges (ProfileConfigLoader not initialized)")
             self.fallback_tracker.increment_fallback_counter("profile_config_loader")
-            rsi_buy_min, rsi_buy_max = 20, 35
-            vol_min, vol_max = 1.0, 1.5
+            # profile_optimization.yaml: rsi.buy_threshold fallback
+            rsi_buy_min, rsi_buy_max = 10, 45
+            # profile_optimization.yaml: volume_ratio fallback
+            vol_min, vol_max = 0.5, 1.5
 
         def objective(trial: optuna.Trial) -> float:
             """Objective function for optimization."""

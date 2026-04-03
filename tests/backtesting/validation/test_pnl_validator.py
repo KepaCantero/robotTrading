@@ -1,12 +1,14 @@
 """
 Tests for P&L validator.
 """
-import pytest
-from decimal import Decimal
-from datetime import datetime, timezone
 
-from app.backtesting.validation.pnl_validator import PnLValidator, PnLValidationError
+from datetime import datetime, timezone
+from decimal import Decimal
+
+import pytest
+
 from app.backtesting.models import Trade, TradeStatus
+from app.backtesting.validation.pnl_validator import PnLValidationError, PnLValidator
 
 
 @pytest.fixture

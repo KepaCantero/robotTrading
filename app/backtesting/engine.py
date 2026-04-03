@@ -181,6 +181,61 @@ class BacktestEngine:
         logger.info(f"BacktestEngine initialized for {strategy_name} with COMPLIANCE ENGINE")
 
     # ==========================================================================
+    # CONVENIENCE WRAPPERS (for testing / backward compatibility)
+    # ==========================================================================
+
+    @property
+    def positions(self) -> dict[str, Decimal]:
+        """Convenience accessor for position_manager.positions (backward compatibility)."""
+        return self.position_manager.positions
+
+    def _execute_buy_signal(self, signal: Signal, market_data: Quote) -> None:
+        """
+        Convenience wrapper to execute a buy signal for testing.
+
+        Calculates position size internally and delegates to the trade_executor.
+
+        Args:
+            signal: Buy signal to execute
+            market_data: Current market data (quote)
+        """
+        current_price = get_price(market_data)
+
+        # Calculate position size: use max_position_size fraction of capital
+        position_value = self.capital * self.config.max_position_size
+        position_size = position_value / current_price
+
+        trade, new_capital = self.trade_executor.execute_buy_signal(
+            signal=signal,
+            market_data=market_data,
+            capital=self.capital,
+            close_position_func=self._close_position,
+            validate_profitability_func=self._validate_trade_profitability,
+            position_size=position_size,
+        )
+        if trade:
+            self.trades.append(trade)
+            self.capital = new_capital
+
+    def _check_exit_conditions(self, market_data: Quote) -> bool:
+        """
+        Convenience wrapper to check exit conditions for testing.
+
+        Delegates to exit_monitor.check_exit_conditions.
+
+        Args:
+            market_data: Current market data (quote)
+
+        Returns:
+            True if a position was closed
+        """
+        return self.exit_monitor.check_exit_conditions(
+            market_data=market_data,
+            trades=self.trades,
+            close_position_func=self._close_position,
+        )
+
+    # ==========================================================================
     # PICKLE SUPPORT (for multiprocessing)
     # ==========================================================================
 

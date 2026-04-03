@@ -15,11 +15,11 @@ import asyncio
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 import pytest
+from sqlalchemy import pool
+from sqlalchemy.exc import SQLAlchemyError
 
 # Import the env module AFTER conftest has mocked alembic.context
 from app.infrastructure.persistence.database.migrations import env
-from sqlalchemy import pool
-from sqlalchemy.exc import SQLAlchemyError
 
 
 class TestRunMigrationsOffline:
@@ -600,14 +600,18 @@ class TestRunMigrationsOnline:
         mock_config = MagicMock()
         mock_config.get_main_option = Mock(return_value="sqlite+aiosqlite:///test.db")
 
-        with patch.object(env, "config", mock_config):
-            with patch("app.infrastructure.persistence.database.migrations.env.asyncio.run") as mock_asyncio_run:
-                # Act
-                env.run_migrations_online()
+        with (
+            patch.object(env, "config", mock_config),
+            patch(
+                "app.infrastructure.persistence.database.migrations.env.asyncio.run"
+            ) as mock_asyncio_run,
+        ):
+            # Act
+            env.run_migrations_online()
 
-                # Assert
-                mock_logger.info.assert_any_call("Detected async driver, running async migrations")
-                assert mock_asyncio_run.called
+            # Assert
+            mock_logger.info.assert_any_call("Detected async driver, running async migrations")
+            assert mock_asyncio_run.called
 
     @patch("app.infrastructure.persistence.database.migrations.env.do_run_migrations")
     @patch("app.infrastructure.persistence.database.migrations.env.engine_from_config")

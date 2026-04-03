@@ -475,4 +475,4 @@ def is_strategy_significant(
     corrected_p = p_value * num_strategies_tested
 
     # Check significance
-    return corrected_p < alpha
+    return bool(corrected_p < alpha)

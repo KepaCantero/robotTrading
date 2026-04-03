@@ -28,10 +28,14 @@ import numpy as np
 import pytest
 
 from app.backtesting.models import BacktestConfig
-from app.backtesting.walk_forward_validator import ValidationWindow, WalkForwardValidator
-from app.shared.utils.decimal_utils import round_price
+from app.backtesting.walk_forward_validator import (
+    ValidationWindow,
+    WalkForwardValidationParams,
+    WalkForwardValidator,
+)
 from app.domain.models.market_data import Quote
 from app.models.signal import Signal, SignalSource, SignalStrength, SignalType
+from app.shared.utils.decimal_utils import round_price
 
 # Set reproducible seed
 np.random.seed(42)
@@ -348,11 +352,13 @@ class TestWalkForwardISOS:
         validator = WalkForwardValidator(config=walk_forward_config)
 
         result = validator.validate_strategy(
-            sample_quotes_12_years,
-            sample_signals_12_years,
-            backtest_config,
-            datetime(2010, 1, 1),
-            datetime(2022, 1, 1),
+            WalkForwardValidationParams(
+                quotes=sample_quotes_12_years,
+                signals=sample_signals_12_years,
+                config=backtest_config,
+                start_date=datetime(2010, 1, 1),
+                end_date=datetime(2022, 1, 1),
+            )
         )
 
         # Should execute real backtests (may pass or fail depending on metrics/trades)
@@ -371,11 +377,13 @@ class TestWalkForwardISOS:
         validator = WalkForwardValidator(config=walk_forward_config)
 
         result = validator.validate_strategy(
-            sample_quotes_12_years,
-            sample_signals_12_years,
-            backtest_config,
-            datetime(2010, 1, 1),
-            datetime(2022, 1, 1),
+            WalkForwardValidationParams(
+                quotes=sample_quotes_12_years,
+                signals=sample_signals_12_years,
+                config=backtest_config,
+                start_date=datetime(2010, 1, 1),
+                end_date=datetime(2022, 1, 1),
+            )
         )
 
         # Consistency Ratio should be calculated from real backtests
@@ -394,11 +402,13 @@ class TestWalkForwardISOS:
         validator = WalkForwardValidator(config=walk_forward_config)
 
         result = validator.validate_strategy(
-            sample_quotes_12_years,
-            sample_signals_12_years,
-            backtest_config,
-            datetime(2010, 1, 1),
-            datetime(2022, 1, 1),
+            WalkForwardValidationParams(
+                quotes=sample_quotes_12_years,
+                signals=sample_signals_12_years,
+                config=backtest_config,
+                start_date=datetime(2010, 1, 1),
+                end_date=datetime(2022, 1, 1),
+            )
         )
 
         is_oos = result["is_oos_analysis"]
@@ -432,11 +442,13 @@ class TestWalkForwardThresholds:
 
         # Use only 3 years of data (should fail min_cycles check)
         result = validator.validate_strategy(
-            sample_quotes_12_years[: 3 * 252],  # Only 3 years
-            sample_signals_12_years[:100],
-            backtest_config,
-            datetime(2010, 1, 1),
-            datetime(2013, 1, 1),
+            WalkForwardValidationParams(
+                quotes=sample_quotes_12_years[: 3 * 252],  # Only 3 years
+                signals=sample_signals_12_years[:100],
+                config=backtest_config,
+                start_date=datetime(2010, 1, 1),
+                end_date=datetime(2013, 1, 1),
+            )
         )
 
         assert result["passed"] is False
@@ -458,11 +470,13 @@ class TestWalkForwardThresholds:
         validator = WalkForwardValidator(config=relaxed_config)
 
         result = validator.validate_strategy(
-            sample_quotes_12_years,
-            sample_signals_12_years,
-            backtest_config,
-            datetime(2010, 1, 1),
-            datetime(2022, 1, 1),
+            WalkForwardValidationParams(
+                quotes=sample_quotes_12_years,
+                signals=sample_signals_12_years,
+                config=backtest_config,
+                start_date=datetime(2010, 1, 1),
+                end_date=datetime(2022, 1, 1),
+            )
         )
 
         # Check if consistency ratio was evaluated
@@ -483,11 +497,13 @@ class TestWalkForwardThresholds:
         validator = WalkForwardValidator(config=walk_forward_config)
 
         result = validator.validate_strategy(
-            sample_quotes_12_years,
-            sample_signals_12_years,
-            backtest_config,
-            datetime(2010, 1, 1),
-            datetime(2022, 1, 1),
+            WalkForwardValidationParams(
+                quotes=sample_quotes_12_years,
+                signals=sample_signals_12_years,
+                config=backtest_config,
+                start_date=datetime(2010, 1, 1),
+                end_date=datetime(2022, 1, 1),
+            )
         )
 
         # Degradation should be calculated from real backtests
@@ -511,11 +527,13 @@ class TestWalkForwardThresholds:
         validator = WalkForwardValidator(config=walk_forward_config)
 
         result = validator.validate_strategy(
-            sample_quotes_12_years,
-            sample_signals_12_years,
-            backtest_config,
-            datetime(2010, 1, 1),
-            datetime(2022, 1, 1),
+            WalkForwardValidationParams(
+                quotes=sample_quotes_12_years,
+                signals=sample_signals_12_years,
+                config=backtest_config,
+                start_date=datetime(2010, 1, 1),
+                end_date=datetime(2022, 1, 1),
+            )
         )
 
         # Should calculate negative windows percentage
@@ -548,11 +566,13 @@ class TestWindowResultsStructure:
         validator = WalkForwardValidator(config=walk_forward_config)
 
         result = validator.validate_strategy(
-            sample_quotes_12_years,
-            sample_signals_12_years,
-            backtest_config,
-            datetime(2010, 1, 1),
-            datetime(2022, 1, 1),
+            WalkForwardValidationParams(
+                quotes=sample_quotes_12_years,
+                signals=sample_signals_12_years,
+                config=backtest_config,
+                start_date=datetime(2010, 1, 1),
+                end_date=datetime(2022, 1, 1),
+            )
         )
 
         if result.get("windows"):
@@ -606,11 +626,13 @@ class TestWalkForwardEdgeCasesRobust:
         short_signals = generate_sma_crossover_signals(short_quotes)
 
         result = validator.validate_strategy(
-            short_quotes,
-            short_signals,
-            backtest_config,
-            datetime(2010, 1, 1),
-            datetime(2012, 1, 1),
+            WalkForwardValidationParams(
+                quotes=short_quotes,
+                signals=short_signals,
+                config=backtest_config,
+                start_date=datetime(2010, 1, 1),
+                end_date=datetime(2012, 1, 1),
+            )
         )
 
         assert result["passed"] is False
@@ -632,11 +654,13 @@ class TestWalkForwardEdgeCasesRobust:
         stable_signals = generate_sma_crossover_signals(stable_quotes)
 
         result = validator.validate_strategy(
-            stable_quotes,
-            stable_signals,
-            backtest_config,
-            datetime(2010, 1, 1),
-            datetime(2016, 1, 1),
+            WalkForwardValidationParams(
+                quotes=stable_quotes,
+                signals=stable_signals,
+                config=backtest_config,
+                start_date=datetime(2010, 1, 1),
+                end_date=datetime(2016, 1, 1),
+            )
         )
 
         # Should calculate consistency ratio
@@ -660,11 +684,13 @@ class TestWalkForwardEdgeCasesRobust:
         volatile_signals = generate_sma_crossover_signals(volatile_quotes)
 
         result = validator.validate_strategy(
-            volatile_quotes,
-            volatile_signals,
-            backtest_config,
-            datetime(2010, 1, 1),
-            datetime(2016, 1, 1),
+            WalkForwardValidationParams(
+                quotes=volatile_quotes,
+                signals=volatile_signals,
+                config=backtest_config,
+                start_date=datetime(2010, 1, 1),
+                end_date=datetime(2016, 1, 1),
+            )
         )
 
         # Should handle low/zero consistency gracefully
@@ -691,11 +717,13 @@ class TestWalkForwardEdgeCasesRobust:
         degradation_signals = generate_sma_crossover_signals(degradation_quotes)
 
         result = validator.validate_strategy(
-            degradation_quotes,
-            degradation_signals,
-            backtest_config,
-            datetime(2010, 1, 1),
-            datetime(2016, 1, 1),
+            WalkForwardValidationParams(
+                quotes=degradation_quotes,
+                signals=degradation_signals,
+                config=backtest_config,
+                start_date=datetime(2010, 1, 1),
+                end_date=datetime(2016, 1, 1),
+            )
         )
 
         # Should calculate degradation
@@ -721,11 +749,13 @@ class TestWalkForwardEdgeCasesRobust:
         collapse_signals = generate_sma_crossover_signals(collapse_quotes)
 
         result = validator.validate_strategy(
-            collapse_quotes,
-            collapse_signals,
-            backtest_config,
-            datetime(2010, 1, 1),
-            datetime(2016, 1, 1),
+            WalkForwardValidationParams(
+                quotes=collapse_quotes,
+                signals=collapse_signals,
+                config=backtest_config,
+                start_date=datetime(2010, 1, 1),
+                end_date=datetime(2016, 1, 1),
+            )
         )
 
         # Should handle high degradation gracefully
@@ -752,11 +782,13 @@ class TestWalkForwardEdgeCasesRobust:
         sideways_signals = generate_sma_crossover_signals(sideways_quotes)
 
         result = validator.validate_strategy(
-            sideways_quotes,
-            sideways_signals,
-            backtest_config,
-            datetime(2010, 1, 1),
-            datetime(2016, 1, 1),
+            WalkForwardValidationParams(
+                quotes=sideways_quotes,
+                signals=sideways_signals,
+                config=backtest_config,
+                start_date=datetime(2010, 1, 1),
+                end_date=datetime(2016, 1, 1),
+            )
         )
 
         # Should calculate negative windows
@@ -786,11 +818,13 @@ class TestWalkForwardEdgeCasesRobust:
         declining_signals = generate_sma_crossover_signals(declining_quotes)
 
         result = validator.validate_strategy(
-            declining_quotes,
-            declining_signals,
-            backtest_config,
-            datetime(2010, 1, 1),
-            datetime(2016, 1, 1),
+            WalkForwardValidationParams(
+                quotes=declining_quotes,
+                signals=declining_signals,
+                config=backtest_config,
+                start_date=datetime(2010, 1, 1),
+                end_date=datetime(2016, 1, 1),
+            )
         )
 
         # Should handle high negative window percentage
@@ -817,11 +851,13 @@ class TestWalkForwardEdgeCasesRobust:
         crash_signals = generate_sma_crossover_signals(crash_quotes)
 
         result = validator.validate_strategy(
-            crash_quotes,
-            crash_signals,
-            backtest_config,
-            datetime(2010, 1, 1),
-            datetime(2016, 1, 1),
+            WalkForwardValidationParams(
+                quotes=crash_quotes,
+                signals=crash_signals,
+                config=backtest_config,
+                start_date=datetime(2010, 1, 1),
+                end_date=datetime(2016, 1, 1),
+            )
         )
 
         # Should handle complete failure gracefully

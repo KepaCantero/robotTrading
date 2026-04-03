@@ -81,7 +81,6 @@ class TestStopLossCritical:
         # Verify position opened
         assert "AAPL" in backtester.positions
         assert backtester.positions["AAPL"] > 0
-        backtester.capital
 
         # Simulate price dropping to $94 (6% decline - below 5% stop-loss)
         quote_decline = Quote(
