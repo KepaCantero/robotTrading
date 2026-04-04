@@ -113,10 +113,16 @@ class ConfigurationService:
         result = self.config.get("capital_tiers", {})
         return result if isinstance(result, dict) else {}
 
-    def get_horizons_config(self) -> ConfigDict:
-        """Get investment horizons configuration."""
+    def get_horizons_config(self) -> ConfigDict | list[int]:
+        """Get investment horizons configuration.
+
+        Supports both dict format (e.g., {short: 12, medium: 24}) and
+        list format (e.g., [12, 24, 36, 60]).
+        """
         result = self.config.get("investment_horizons", {})
-        return result if isinstance(result, dict) else {}
+        if isinstance(result, (dict, list)):
+            return result
+        return {}
 
     def get_optimization_config(self) -> ConfigDict:
         """Get optimization configuration."""

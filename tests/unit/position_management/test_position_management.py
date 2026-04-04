@@ -4,13 +4,14 @@ Unit Tests for Position Management
 Tests for TrailingStopManager, PartialTakeProfit, and PyramidingManager.
 """
 
-import pytest
 from decimal import Decimal
 
+import pytest
+
 from app.services.position_management import (
-    TrailingStopManager,
     PartialTakeProfit,
     PyramidingManager,
+    TrailingStopManager,
 )
 
 

@@ -39,7 +39,7 @@ class TestPDTTracker:
     def test_initialization_us(self, us_tracker):
         """Test USA tracker initialization."""
         assert us_tracker.country == Country.US
-        assert us_tracker.PDT_MIN_EQUITY == Decimal("25000")
+        assert Decimal("25000") == us_tracker.PDT_MIN_EQUITY
         assert us_tracker.MAX_DAY_TRADES == 3
         assert us_tracker.ROLLING_WINDOW_DAYS == 5
 

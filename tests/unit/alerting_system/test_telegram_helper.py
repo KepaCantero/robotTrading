@@ -1,8 +1,10 @@
 """
 Tests for TelegramBotHelper.
 """
-import pytest
+
 from unittest.mock import AsyncMock, MagicMock, patch
+
+import pytest
 
 from app.services.alerting_system.telegram_helper import TelegramBotHelper
 

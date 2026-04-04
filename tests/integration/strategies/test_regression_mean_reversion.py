@@ -10,8 +10,8 @@ from datetime import datetime, timedelta
 from decimal import Decimal
 
 from app.domain.models.market_data import Quote
-from app.models.signal import SignalType
 from app.domain.strategies.mean_reversion import MeanReversionStrategy
+from app.models.signal import SignalType
 
 
 class TestMeanreversionRegression(unittest.TestCase):

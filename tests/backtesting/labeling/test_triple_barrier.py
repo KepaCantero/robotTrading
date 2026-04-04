@@ -142,12 +142,14 @@ class TestBarrierLabeling:
         prices = np.array([100.0, 102.0, 98.0])
         events = np.array([0])
 
-        # Upper barrier exactly hit
+        # Upper barrier exactly hit at j=1 (price 102.0 = 100.0 * 1.02)
         labels_upper = get_barrier_labels(prices, events, 1.02, 0.99, 5)
         assert labels_upper[0] == 1
 
-        # Lower barrier exactly hit
-        labels_lower = get_barrier_labels(prices, events, 1.02, 0.98, 5)
+        # Lower barrier exactly hit at j=2 (price 98.0 = 100.0 * 0.98)
+        # Use prices where lower is hit first chronologically
+        prices_lower_first = np.array([100.0, 98.0, 102.0])
+        labels_lower = get_barrier_labels(prices_lower_first, events, 1.02, 0.98, 5)
         assert labels_lower[0] == -1
 
     def test_barrier_at_data_boundary(self):
@@ -205,27 +207,37 @@ class TestDynamicBarriers:
     def test_barrier_correlation_with_volatility(self, price_series, event_series):
         """Test that barriers correlate with volatility."""
         config = TripleBarrierConfig(vol_window=10)
-        upper, lower = calculate_dynamic_barriers(
+        upper, _lower = calculate_dynamic_barriers(
             price_series, event_series, config, vol_scaling=True
         )
+
+        # Drop NaN barriers (events without enough data for vol calculation)
+        valid_mask = upper.notna()
+        upper_valid = upper[valid_mask]
 
         # Calculate returns and volatility
         returns = price_series.pct_change().dropna()
         vol = returns.rolling(window=config.vol_window).std()
 
-        # Get volatility at event times
+        # Get volatility at event times (matching upper's index)
         event_vols = []
-        for event_time in event_series:
+        valid_indices = []
+        for idx_pos, event_time in enumerate(event_series):
             if event_time in vol.index:
                 event_vols.append(vol.loc[event_time])
+                valid_indices.append(event_series.index[idx_pos])
             else:
                 valid_idx = vol.index[vol.index <= event_time]
                 if len(valid_idx) > 0:
                     event_vols.append(vol.loc[valid_idx[-1]])
+                    valid_indices.append(event_series.index[idx_pos])
 
         # Higher volatility should lead to wider barriers
-        event_vols = pd.Series(event_vols)
-        correlation = upper.corr(event_vols)
+        event_vols = pd.Series(event_vols, index=valid_indices)
+
+        # Align both series by common valid indices
+        common_idx = upper_valid.index.intersection(event_vols.index)
+        correlation = upper_valid.loc[common_idx].corr(event_vols.loc[common_idx])
 
         # Should be positive correlation (higher vol → wider barriers)
         assert correlation > 0, "Barriers should be wider in high volatility"
@@ -405,7 +417,7 @@ class TestTripleBarrierMethod:
         assert len(labels) == len(events)
         assert "label" in labels.columns
         assert "barrier_hit" in labels.columns
-        assert "days_to_barrier" in labels.columns
+        assert "bars_to_barrier" in labels.columns
 
     def test_convenience_function_with_vol_scaling(self, sample_data):
         """Test volatility scaling in convenience function."""
@@ -465,9 +477,9 @@ class TestSampleWeights:
 
         weights = calculate_sample_weights(events, labels, max_holding_period=5)
 
-        # No overlap should result in equal weights
+        # No overlap should result in equal weights (normalized so average = 1.0)
         assert len(weights) == len(events)
-        np.testing.assert_array_almost_equal(weights.values, [0.5, 0.5])
+        np.testing.assert_array_almost_equal(weights.values, [1.0, 1.0])
 
     def test_sample_weights_with_overlap(self):
         """Test sample weights with overlapping events."""
@@ -480,7 +492,8 @@ class TestSampleWeights:
 
         # Events with more overlap should get lower weights
         assert len(weights) == len(events)
-        assert weights.sum() == pytest.approx(1.0)
+        # Production code normalizes to sum=n_samples (average weight = 1.0)
+        assert weights.sum() == pytest.approx(len(events))
 
 
 class TestPurgedCVSplit:

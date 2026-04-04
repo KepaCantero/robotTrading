@@ -12,7 +12,6 @@ Author: Backend Developer
 Date: 2026-01-25
 """
 
-
 import pytest
 
 from app.shared.interfaces.broker_base import BrokerType

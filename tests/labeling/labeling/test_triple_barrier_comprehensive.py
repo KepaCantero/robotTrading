@@ -11,7 +11,6 @@ Tests cover:
 - Performance optimizations
 """
 
-
 import pytest
 
 # Try importing the module

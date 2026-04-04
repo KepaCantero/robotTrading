@@ -10,10 +10,10 @@ from decimal import Decimal
 
 import pytest
 
-from app.shared.utils.decimal_utils import to_decimal, validate_price, validate_quantity
 from app.services.crypto_data_service import get_crypto_fetcher
 from app.services.forex_data_service import get_forex_fetcher
 from app.services.market_data_service import MarketDataService
+from app.shared.utils.decimal_utils import to_decimal, validate_price, validate_quantity
 
 
 class TestMarketDataServiceDecimalPrecision:
@@ -45,8 +45,8 @@ class TestMarketDataServiceDecimalPrecision:
 
     def test_quote_from_float_conversion(self):
         """Test that float inputs must be converted to Decimal before use."""
-        from app.shared.utils.decimal_utils import to_decimal
         from app.domain.models.market_data import DataFeedType, Quote
+        from app.shared.utils.decimal_utils import to_decimal
 
         # Create quote with converted float inputs
         quote = Quote(
@@ -261,8 +261,8 @@ class TestServiceBoundaryValidation:
         """Test that non-Decimal types are rejected at model boundaries."""
         import pytest
 
-        from app.shared.utils.decimal_utils import to_decimal
         from app.domain.models.market_data import DataFeedType, Quote
+        from app.shared.utils.decimal_utils import to_decimal
 
         # Valid: Decimal price created with to_decimal utility
         quote1 = Quote(
@@ -348,8 +348,8 @@ class TestHistoricalDataDecimalPrecision:
 
     def test_historical_data_from_dict_conversion(self):
         """Test that historical data from dict converts to Decimal."""
-        from app.shared.utils.decimal_utils import to_decimal
         from app.domain.models.market_data import DataFeedType, DataFrequency, HistoricalData
+        from app.shared.utils.decimal_utils import to_decimal
 
         # Create from dict with converted values
         data_dict = {
@@ -380,8 +380,8 @@ class TestDecimalPrecisionAcceptanceCriteria:
     def test_no_float_arithmetic_for_financial_calculations(self):
         """AC: No float arithmetic for financial calculations."""
         # Verify that all price/quantity fields use Decimal
-        from app.shared.utils.decimal_utils import to_decimal
         from app.domain.models.market_data import DataFeedType, Quote
+        from app.shared.utils.decimal_utils import to_decimal
 
         # Convert inputs to Decimal before creating model
         quote = Quote(
@@ -430,8 +430,8 @@ class TestDecimalPrecisionAcceptanceCriteria:
     def test_to_decimal_utility_added_to_each_service(self):
         """AC: to_decimal() utility function added to each service file."""
         # Verify imports work
-        from app.shared.utils.decimal_utils import to_decimal as shared_to_decimal
         from app.services.market_data_service import to_decimal as mds_to_decimal
+        from app.shared.utils.decimal_utils import to_decimal as shared_to_decimal
 
         # Both should reference the same function (from shared module)
         assert mds_to_decimal is shared_to_decimal

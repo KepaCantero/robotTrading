@@ -19,9 +19,9 @@ try:
 except ImportError:
     PANDAS_TA_AVAILABLE = False
 
-from app.shared.config.centralized_config import get_strategy_config
-from app.services.momentum_analysis import TechnicalIndicatorCalculator
 from app.domain.strategies.momentum import MomentumStrategy
+from app.services.momentum_analysis import TechnicalIndicatorCalculator
+from app.shared.config.centralized_config import get_strategy_config
 
 
 class TestIndicatorCoherenceWithPandasTA(unittest.TestCase):

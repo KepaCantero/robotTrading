@@ -9,6 +9,7 @@ from decimal import Decimal
 
 import pytest
 
+from app.domain.models.market_data import Quote
 from app.engines.strategy_engines.base import BaseStrategyEngine
 from app.engines.strategy_engines.ensemble import (
     BaseStrategyEnsemble,
@@ -16,7 +17,6 @@ from app.engines.strategy_engines.ensemble import (
     VotingEnsemble,
     WeightedEnsemble,
 )
-from app.domain.models.market_data import Quote
 from app.models.signal import Signal, SignalSource, SignalStrength, SignalType
 
 

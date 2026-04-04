@@ -9,10 +9,10 @@ from decimal import Decimal
 import numpy as np
 import pytest
 
+from app.domain.models.portfolio import Portfolio
 from app.engines.risk_engine.stress_testers.portfolio_variance_stress import (
     PortfolioVarianceStressTester,
 )
-from app.domain.models.portfolio import Portfolio
 
 
 class TestPortfolioVarianceStressTester:

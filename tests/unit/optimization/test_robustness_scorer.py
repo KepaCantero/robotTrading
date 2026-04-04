@@ -14,11 +14,11 @@ from pathlib import Path
 import pytest
 
 project_root = Path(__file__).parent.parent.parent
-import sys  # noqa: E402
+import sys
 
 sys.path.insert(0, str(project_root))
 
-from app.domain.optimization.robustness_scorer import (  # noqa: E402
+from app.domain.optimization.robustness_scorer import (
     ProductionReadiness,
     RiskLevel,
     RobustnessReport,

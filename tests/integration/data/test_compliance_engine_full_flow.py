@@ -12,14 +12,14 @@ This is an INTEGRATION test - it tests the complete flow through
 the system with real components (not mocks).
 """
 
-import pytest
 from decimal import Decimal
 
-from app.domain.services.compliance.compliance_engine import ComplianceEngine, ComplianceConfig
+import pytest
+
+from app.domain.services.compliance.compliance_engine import ComplianceConfig, ComplianceEngine
 from app.infrastructure.execution.execution_adapter import ExecutionEngineAdapter
 from app.infrastructure.execution.order_manager_adapter import OrderManagerAdapter
 from app.infrastructure.execution.trading_bridge_adapter import TradingBridgeAdapter
-
 
 # =============================================================================
 # Fixtures
@@ -49,12 +49,9 @@ def engine(compliance_config):
 @pytest.fixture
 def sample_signal():
     """Create sample trade signal."""
-    from app.services.live_trading.alert_to_trade_mapper import (
-        TradeSignal,
-        TradeSignalType,
-    )
-    from app.services.live_trading.broker_connector import OrderSide, OrderType
     from app.services.alerting_system import AlertSeverity
+    from app.services.live_trading.alert_to_trade_mapper import TradeSignal, TradeSignalType
+    from app.services.live_trading.broker_connector import OrderSide, OrderType
 
     return TradeSignal(
         signal_id="test_signal_001",
@@ -225,12 +222,9 @@ class TestFullTradingFlow:
         assert exec_result.symbol == sample_signal.symbol
 
         # Create a new signal for OrderManager (to avoid duplicate IDs)
-        from app.services.live_trading.alert_to_trade_mapper import (
-            TradeSignal,
-            TradeSignalType,
-        )
-        from app.services.live_trading.broker_connector import OrderSide, OrderType
         from app.services.alerting_system import AlertSeverity
+        from app.services.live_trading.alert_to_trade_mapper import TradeSignal, TradeSignalType
+        from app.services.live_trading.broker_connector import OrderSide, OrderType
 
         om_signal = TradeSignal(
             signal_id="test_signal_002",
@@ -258,12 +252,9 @@ class TestFullTradingFlow:
         execution_adapter: ExecutionEngineAdapter,
     ):
         """Test executing multiple orders sequentially."""
-        from app.services.live_trading.alert_to_trade_mapper import (
-            TradeSignal,
-            TradeSignalType,
-        )
-        from app.services.live_trading.broker_connector import OrderSide, OrderType
         from app.services.alerting_system import AlertSeverity
+        from app.services.live_trading.alert_to_trade_mapper import TradeSignal, TradeSignalType
+        from app.services.live_trading.broker_connector import OrderSide, OrderType
 
         signals = [
             TradeSignal(
@@ -367,12 +358,9 @@ class TestErrorHandling:
         execution_adapter: ExecutionEngineAdapter,
     ):
         """Test execution with invalid signal data."""
-        from app.services.live_trading.alert_to_trade_mapper import (
-            TradeSignal,
-            TradeSignalType,
-        )
-        from app.services.live_trading.broker_connector import OrderSide, OrderType
         from app.services.alerting_system import AlertSeverity
+        from app.services.live_trading.alert_to_trade_mapper import TradeSignal, TradeSignalType
+        from app.services.live_trading.broker_connector import OrderSide, OrderType
 
         # Create signal with zero quantity (should still work, just zero-size trade)
         invalid_signal = TradeSignal(

@@ -22,7 +22,7 @@ sys.path.insert(0, str(project_root))
 
 
 # Now import app modules
-from app.services.strategy_stock_allocator import StrategyStockAllocator  # noqa: E402
+from app.services.strategy_stock_allocator import StrategyStockAllocator
 
 logging.basicConfig(
     level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
@@ -279,7 +279,7 @@ if __name__ == "__main__":
         sys.exit(0 if success else 1)
     except Exception as e:
         print(f"\n❌ TEST FAILED with exception: {e}")
-        #         import traceback  # noqa: F811 duplicate
+        #         import traceback
 
         traceback.print_exc()
         sys.exit(1)

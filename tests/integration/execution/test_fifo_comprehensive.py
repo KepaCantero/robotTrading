@@ -20,8 +20,8 @@ import pytest
 from sqlalchemy import select
 
 from app.infrastructure.persistence.database import get_db_transaction
-from app.services.fifo.fifo_integrator import FIFOIntegrator, Position, Trade
 from app.infrastructure.persistence.tax.fifo_schema import AssetType, Lot, LotStatus, Transaction
+from app.services.fifo.fifo_integrator import FIFOIntegrator, Position, Trade
 
 
 @pytest.mark.asyncio

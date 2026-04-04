@@ -48,7 +48,7 @@ class TestDataFactory:
         annual_vol = Decimal(str(np.std(returns_array) * np.sqrt(252))) * Decimal("100")
 
         # Annual return (compound)
-        annual_ret = Decimal(str((np.prod(1 + returns_array) - 1))) * Decimal("100")
+        annual_ret = Decimal(str(np.prod(1 + returns_array) - 1)) * Decimal("100")
 
         # Sharpe ratio (simplified, assuming 0% risk-free rate)
         sharpe = annual_ret / annual_vol if annual_vol > 0 else Decimal("0")
@@ -422,7 +422,7 @@ class TestPipelineT4T8T9:
 
         returns_array = np.array([float(r) for r in returns])
         annual_vol = Decimal(str(np.std(returns_array) * np.sqrt(252))) * Decimal("100")
-        annual_ret = Decimal(str((np.prod(1 + returns_array) - 1))) * Decimal("100")
+        annual_ret = Decimal(str(np.prod(1 + returns_array) - 1)) * Decimal("100")
 
         quantstats = get_quantstats_integrator()
         stats = quantstats.generate_statistics_report(
@@ -496,7 +496,7 @@ class TestPipelineT4T8T9:
 
             returns_array = np.array([float(r) for r in base_returns])
             annual_vol = Decimal(str(np.std(returns_array) * np.sqrt(252))) * Decimal("100")
-            annual_ret = Decimal(str((np.prod(1 + returns_array) - 1))) * Decimal("100")
+            annual_ret = Decimal(str(np.prod(1 + returns_array) - 1)) * Decimal("100")
 
             stats = quantstats.generate_statistics_report(
                 returns=base_returns,
@@ -572,7 +572,7 @@ class TestPipelineT4T8T9:
 
         returns_array = np.array([float(r) for r in returns])
         annual_vol = Decimal(str(np.std(returns_array) * np.sqrt(252))) * Decimal("100")
-        annual_ret = Decimal(str((np.prod(1 + returns_array) - 1))) * Decimal("100")
+        annual_ret = Decimal(str(np.prod(1 + returns_array) - 1)) * Decimal("100")
 
         stats_report = quantstats.generate_statistics_report(
             returns=returns,
@@ -932,7 +932,7 @@ class TestPipelineEdgeCases:
 
         returns_array = np.array([float(r) for r in returns])
         annual_vol = Decimal(str(np.std(returns_array) * np.sqrt(252))) * Decimal("100")
-        annual_ret = Decimal(str((np.prod(1 + returns_array) - 1))) * Decimal("100")
+        annual_ret = Decimal(str(np.prod(1 + returns_array) - 1)) * Decimal("100")
 
         stats = quantstats.generate_statistics_report(
             returns=returns,

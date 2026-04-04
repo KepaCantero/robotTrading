@@ -77,18 +77,18 @@ print(f"Ready for Paper Trading: {result.ready_for_paper_trading}")
 print(f"Recomendacion: {result.recommendation}")
 
 if result.baseline_results:
-    print(f"\nBaseline:")
+    print("\nBaseline:")
     print(f"  Sharpe: {result.baseline_results.get('sharpe_ratio', 'N/A')}")
     print(f"  Return: {result.baseline_results.get('return_pct', 'N/A')}%")
     print(f"  MaxDD: {result.baseline_results.get('max_drawdown', 'N/A')}%")
 
 if result.optimization_results:
-    print(f"\nOptimizado:")
+    print("\nOptimizado:")
     print(f"  Sharpe: {result.optimization_results.get('sharpe_ratio', 'N/A')}")
     print(f"  Return: {result.optimization_results.get('return_pct', 'N/A')}%")
 
 if result.improvement_metrics:
-    print(f"\nMejora:")
+    print("\nMejora:")
     print(f"  Sharpe: {result.improvement_metrics.get('sharpe_improvement', 0):.1f}%")
 
 # 6. Compliance - Validar todas las reglas
@@ -121,12 +121,12 @@ if hasattr(result, 'optimization_results') and result.optimization_results:
 # R7: Monte Carlo
 r7 = compliance.check_monte_carlo(var_95=-0.05, var_99=-0.08, n_simulations=1000)
 print(f"R7 Monte Carlo: {'PASS' if r7.monte_carlo_passed else 'FAIL'}")
-print(f"  Simulaciones: 1000, VaR 95%: -5%, VaR 99%: -8%")
+print("  Simulaciones: 1000, VaR 95%: -5%, VaR 99%: -8%")
 
 # DATA-001: Purged CV
 data001 = compliance.check_purged_cv(purge_days=5, embargo_days=10, has_overlap=False)
 print(f"DATA-001 Purged CV: {'PASS' if data001.purged_cv_passed else 'FAIL'}")
-print(f"  Purge: 5 dias, Embargo: 10 dias, Overlap: False")
+print("  Purge: 5 dias, Embargo: 10 dias, Overlap: False")
 
 print("\n" + "=" * 80)
 print("TEST COMPLETADO")

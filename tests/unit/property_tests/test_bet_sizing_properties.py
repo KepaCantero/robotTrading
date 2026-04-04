@@ -12,7 +12,6 @@ Properties tested:
 - Meta-labeling bet sizing properties
 """
 
-
 import numpy as np
 import pytest
 from hypothesis import assume, given, settings, strategies as st

@@ -168,7 +168,8 @@ class TestFinancialMLPipeline:
     def test_fit_with_numpy_arrays(self, sample_data):
         """Test fitting pipeline with numpy arrays."""
         X, prices, y = sample_data
-        pipeline = FinancialMLPipeline()
+        config = FinancialMLConfig(apply_fracdiff=False, use_purged_cv=False)
+        pipeline = FinancialMLPipeline(config)
 
         # Mock the fracdiff to avoid complex computations
         with patch.object(pipeline, "_apply_fracdiff_to_features", return_value=X):
@@ -182,7 +183,8 @@ class TestFinancialMLPipeline:
     def test_fit_with_dataframe(self, sample_dataframe_data):
         """Test fitting pipeline with DataFrame input."""
         X_df, prices_series, y_series = sample_dataframe_data
-        pipeline = FinancialMLPipeline()
+        config = FinancialMLConfig(apply_fracdiff=False, use_purged_cv=False)
+        pipeline = FinancialMLPipeline(config)
 
         # Mock the fracdiff to avoid complex computations
         X = X_df.values
@@ -208,14 +210,12 @@ class TestFinancialMLPipeline:
 
     def test_predict_after_fit(self, sample_data):
         """Test predict after fitting."""
-        X_train, prices_train, y_train = (
-            sample_data[:150],
-            sample_data[1][:150],
-            sample_data[2][:150],
-        )
-        X_test, prices_test, _ = sample_data[0][150:], sample_data[1][150:], sample_data[2][150:]
+        X, prices, y = sample_data
+        X_train, prices_train, y_train = X[:150], prices[:150], y[:150]
+        X_test, prices_test, _ = X[150:], prices[150:], y[150:]
 
-        pipeline = FinancialMLPipeline()
+        config = FinancialMLConfig(apply_fracdiff=False, use_purged_cv=False)
+        pipeline = FinancialMLPipeline(config)
 
         # Mock the fracdiff to avoid complex computations
         with patch.object(pipeline, "_apply_fracdiff_to_features", return_value=X_train):
@@ -231,13 +231,15 @@ class TestFinancialMLPipeline:
 
     def test_fit_predict_workflow(self, sample_data):
         """Test the complete fit_predict workflow."""
-        X_train = sample_data[0][:150]
-        prices_train = sample_data[1][:150]
-        X_test = sample_data[0][150:]
-        prices_test = sample_data[1][150:]
-        y_test = sample_data[2][150:]
+        X, prices, y = sample_data
+        X_train = X[:150]
+        prices_train = prices[:150]
+        X_test = X[150:]
+        prices_test = prices[150:]
+        y_test = y[150:]
 
-        pipeline = FinancialMLPipeline()
+        config = FinancialMLConfig(apply_fracdiff=False, use_purged_cv=False)
+        pipeline = FinancialMLPipeline(config)
 
         # Mock to avoid complex computations
         with patch.object(pipeline, "_apply_fracdiff_to_features", side_effect=lambda x, p: x):
@@ -279,12 +281,15 @@ class TestFinancialMLPipeline:
 
     def test_fit_predict_with_meta_labeling_disabled(self, sample_data):
         """Test fit_predict with meta-labeling disabled."""
-        X_train = sample_data[0][:150]
-        prices_train = sample_data[1][:150]
-        X_test = sample_data[0][150:]
-        prices_test = sample_data[1][150:]
+        X, prices, _ = sample_data
+        X_train = X[:150]
+        prices_train = prices[:150]
+        X_test = X[150:]
+        prices_test = prices[150:]
 
-        config = FinancialMLConfig(use_meta_labeling=False, apply_fracdiff=False)
+        config = FinancialMLConfig(
+            use_meta_labeling=False, apply_fracdiff=False, use_purged_cv=False
+        )
         pipeline = FinancialMLPipeline(config)
 
         result = pipeline.fit_predict(X_train, prices_train, X_test, prices_test)
@@ -405,7 +410,9 @@ class TestFinancialMLEdgeCases:
         prices = 100 + np.cumsum(np.random.randn(100) * 0.01)
         y = np.random.randint(0, 2, 100)
 
-        pipeline = FinancialMLPipeline(config=FinancialMLConfig(apply_fracdiff=False))
+        pipeline = FinancialMLPipeline(
+            config=FinancialMLConfig(apply_fracdiff=False, use_purged_cv=False)
+        )
 
         with patch.object(pipeline, "_apply_fracdiff_to_features", return_value=X):
             pipeline.fit(X, prices, y)
@@ -445,6 +452,7 @@ class TestFinancialMLIntegration:
         config = FinancialMLConfig(
             use_meta_labeling=True,
             apply_fracdiff=False,
+            use_purged_cv=False,
         )
 
         pipeline = FinancialMLPipeline(config)
@@ -480,7 +488,9 @@ class TestFinancialMLPerformance:
         prices = 100 + np.cumsum(np.random.randn(n_samples) * 0.01)
         y = np.random.randint(0, 2, n_samples)
 
-        pipeline = FinancialMLPipeline(config=FinancialMLConfig(apply_fracdiff=False))
+        pipeline = FinancialMLPipeline(
+            config=FinancialMLConfig(apply_fracdiff=False, use_purged_cv=False)
+        )
 
         with patch.object(pipeline, "_apply_fracdiff_to_features", return_value=X):
             pipeline.fit(X, prices, y)
@@ -494,7 +504,9 @@ class TestFinancialMLPerformance:
         prices = 100 + np.cumsum(np.random.randn(100) * 0.01)
         y = np.random.randint(0, 2, 100)
 
-        pipeline = FinancialMLPipeline(config=FinancialMLConfig(apply_fracdiff=False))
+        pipeline = FinancialMLPipeline(
+            config=FinancialMLConfig(apply_fracdiff=False, use_purged_cv=False)
+        )
 
         with patch.object(pipeline, "_apply_fracdiff_to_features", return_value=X):
             pipeline.fit(X, prices, y)
@@ -507,8 +519,8 @@ class TestFinancialMLPerformance:
         prices = 100 + np.cumsum(np.random.randn(100) * 0.01)
         y = np.random.randint(0, 2, 100)
 
-        config1 = FinancialMLConfig(random_state=42, apply_fracdiff=False)
-        config2 = FinancialMLConfig(random_state=42, apply_fracdiff=False)
+        config1 = FinancialMLConfig(random_state=42, apply_fracdiff=False, use_purged_cv=False)
+        config2 = FinancialMLConfig(random_state=42, apply_fracdiff=False, use_purged_cv=False)
 
         pipeline1 = FinancialMLPipeline(config1)
         pipeline2 = FinancialMLPipeline(config2)

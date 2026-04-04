@@ -10,7 +10,6 @@ Following TDD best practices:
 6. Clear test names and structure
 """
 
-
 import numpy as np
 import pandas as pd
 import pytest

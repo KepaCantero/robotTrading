@@ -3,6 +3,7 @@ Comprehensive edge case tests for Risk Engine.
 
 Tests boundary conditions, unusual inputs, and stress scenarios.
 """
+
 from unittest.mock import Mock
 
 import numpy as np

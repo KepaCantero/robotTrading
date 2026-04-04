@@ -10,7 +10,6 @@ from decimal import Decimal
 
 import pytest
 
-from app.shared.config.centralized_config import get_config
 from app.services.metrics_database.models import (
     MetricPoint,
     MetricsCollectorConfig,
@@ -18,6 +17,7 @@ from app.services.metrics_database.models import (
     MetricType,
     QuestDBConfig,
 )
+from app.shared.config.centralized_config import get_config
 
 
 class TestMetricsModelsConfiguration:

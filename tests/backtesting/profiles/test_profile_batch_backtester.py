@@ -69,6 +69,13 @@ def config_path(tmp_path):
             "min_sharpe": 1.0,
             "min_return": 0.10,
             "max_drawdown": -0.25,
+            "significance_threshold": 5.0,
+            "strong_significance_threshold": 10.0,
+            "degradation_threshold": -5.0,
+            "confidence_high": 0.8,
+            "confidence_medium": 0.7,
+            "confidence_low": 0.5,
+            "revision_multiplier": 0.8,
         },
         "modules": {
             "filters": {
@@ -181,15 +188,15 @@ class TestConfigurationLoading:
 
     def test_load_config(self, backtester):
         """Test configuration is loaded correctly."""
-        assert backtester.config is not None
-        assert "capital_tiers" in backtester.config
-        assert "risk_parameters" in backtester.config
+        assert backtester.config_service is not None
+        assert "capital_tiers" in backtester.config_service.config
+        assert "risk_parameters" in backtester.config_service.config
 
     def test_capital_tiers(self, backtester):
         """Test capital tiers are loaded."""
-        assert backtester.capital_tiers["bajo"] == 50000
-        assert backtester.capital_tiers["medio"] == 150000
-        assert backtester.capital_tiers["alto"] == 500000
+        assert backtester.config_service.get_capital_tiers()["bajo"] == 50000
+        assert backtester.config_service.get_capital_tiers()["medio"] == 150000
+        assert backtester.config_service.get_capital_tiers()["alto"] == 500000
 
     def test_output_dir_created(self, backtester):
         """Test output directory is created."""
@@ -335,12 +342,12 @@ class TestComparisonGeneration:
 
     def test_pct_improvement_positive(self, backtester):
         """Test percentage improvement calculation (positive)."""
-        improvement = backtester._pct_improvement(1.0, 1.5)
+        improvement = backtester.metrics_service._pct_improvement(1.0, 1.5)
         assert improvement == 50.0
 
     def test_pct_improvement_negative(self, backtester):
         """Test percentage improvement calculation (negative)."""
-        improvement = backtester._pct_improvement(1.5, 1.0)
+        improvement = backtester.metrics_service._pct_improvement(1.5, 1.0)
         assert improvement == pytest.approx(-33.33, rel=0.01)
 
     def test_generate_comparison(self, backtester):
@@ -350,7 +357,9 @@ class TestComparisonGeneration:
 
         optuna_results = {"n_trials": 100, "history": []}
 
-        comparison = backtester._generate_comparison(baseline, optimized, optuna_results)
+        comparison = backtester.metrics_service.generate_comparison(
+            baseline, optimized, optuna_results
+        )
 
         assert comparison.sharpe_improvement == 50.0
         assert comparison.return_improvement == 50.0
@@ -396,10 +405,10 @@ class TestResultStorage:
         )
 
         # Store result
-        backtester._store_result(result)
+        backtester.database_service.store_result(result)
 
         # Query database
-        session = backtester.Session()
+        session = backtester.database_service.Session()
         db_result = session.query(ProfileResultDB).filter_by(profile_id="test_profile").first()
 
         assert db_result is not None
@@ -449,7 +458,7 @@ class TestExportFunctionality:
         backtester.results = {"test_profile": result}
 
         # Export
-        json_path = backtester.export_results(format="json")
+        json_path = backtester.export_results(output_format="json")
 
         assert json_path.exists()
         with open(json_path) as f:
@@ -485,7 +494,7 @@ class TestExportFunctionality:
         backtester.results = {"test_profile": result}
 
         # Export
-        csv_path = backtester.export_results(format="csv")
+        csv_path = backtester.export_results(output_format="csv")
 
         assert csv_path.exists()
 
@@ -499,7 +508,7 @@ class TestExportFunctionality:
     def test_export_unsupported_format(self, backtester):
         """Test export with unsupported format."""
         with pytest.raises(ValueError, match="Unsupported format"):
-            backtester.export_results(format="unsupported")
+            backtester.export_results(output_format="unsupported")
 
 
 # ============================================================================
@@ -582,7 +591,7 @@ class TestGetBestStrategy:
             recommendation="APPROVED",
         )
 
-        backtester._store_result(result)
+        backtester.database_service.store_result(result)
 
         # Get best strategy
         best = backtester.get_best_strategy(
@@ -634,7 +643,7 @@ class TestResultToDict:
             recommendation="TEST",
         )
 
-        result_dict = backtester._result_to_dict(result)
+        result_dict = backtester.report_service._result_to_dict(result)
 
         assert result_dict["profile_id"] == "test_profile"
         assert result_dict["objective"] == "maximizar_capital"

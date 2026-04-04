@@ -1,24 +1,19 @@
 # Loop Summary
 
-**Status:** Completed successfully
+**Status:** Failed: too many consecutive failures
 **Iterations:** 8
-**Duration:** 1h 36m 41s
+**Duration:** 3h 24m 9s
 
 ## Tasks
 
-- [x] Fase 1: Structural Fix
-- [x] Fase 2: Requirements
-- [x] Fase 3: Production Audit (vs .requirements/)
-- [x] Fase 4: Architecture Audit
-- [x] Fase 5: QA Enforcement
-- [x] Fase 6: Security
-- [x] Fase 7: Final Report
+_No scratchpad found._
 
 ## Events
 
-- 13 total events
+- 21 total events
 - 3 aaa.start
 - 2 aaa.clean_done
+- 2 loop.terminate
 - 1 AAA_PRODUCTION_READY
 - 1 aaa.arch_done
 - 1 aaa.audit_done
@@ -26,8 +21,14 @@
 - 1 aaa.requirements_done
 - 1 aaa.security_done
 - 1 aaa.structural_done
-- 1 loop.terminate
+- 1 backtest.level1_done
+- 1 backtest.level1_start
+- 1 backtest.level2_done
+- 1 backtest.level3_done
+- 1 backtest.level4_done
+- 1 backtest.level7_done
+- 1 backtest.level8_done
 
 ## Final Commit
 
-ac75848e: continue with auditing
+22c47a83: fix: labeling test suite - 63 tests passing (was 8 failures)

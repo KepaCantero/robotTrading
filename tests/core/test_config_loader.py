@@ -397,10 +397,9 @@ class TestYAMLConfigLoaderCaching:
         loader = YAMLConfigLoader(config_dir=temp_config_dir)
 
         # RLock allows recursive locking
-        with loader._cache_lock:
-            with loader._cache_lock:
-                # Should not deadlock
-                loader.load("cached_config.yaml")
+        with loader._cache_lock, loader._cache_lock:
+            # Should not deadlock
+            loader.load("cached_config.yaml")
 
     def test_cache_key_uses_filename(self, temp_config_dir):
         """Test that cache key is based on filename."""

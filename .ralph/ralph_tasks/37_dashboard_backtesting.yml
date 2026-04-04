@@ -1,0 +1,366 @@
+# ============================================
+# Ralph Task 37: Dashboard Backtesting Integration
+# ============================================
+# VERSION: 1.0
+# OBJETIVO: Unificar dashboard para que el usuario pueda:
+#   1. Ejecutar backtests desde el dashboard con parametros configurables
+#   2. Guardar resultados historicos y comparar entre ejecuciones
+#   3. Ver parametros de central config desde el dashboard
+#   4. Responder: strategy + investor profile + time window = profitable?
+# ============================================================================
+# REGLAS:
+#   - Se PUEDE tocar app/ Y tests/ SI es necesario
+#   - Despues de CADA cambio: test pasa + QA gates (black, isort, ruff)
+#   - Si se toca app/: unit tests (tests/unit/) deben seguir pasando
+#   - Registrar resultados en .ralph/outputs/37_dashboard_backtesting_report.md
+# ============================================================================
+# USO: ralph run -P .ralph/ralph_tasks/prompts/37_dashboard_backtesting.md
+# ============================================================================
+
+event_loop:
+  prompt_file: ".ralph/ralph_tasks/prompts/37_dashboard_backtesting.md"
+  completion_promise: "DASHBOARD_BACKTESTING_COMPLETE"
+  max_iterations: 600
+  max_runtime_seconds: 432000  # 5 days
+  checkpoint_interval: 2
+  starting_event: "dashboard.phase1_start"
+  idle_timeout_secs: 1800
+
+cli:
+  backend: "claude"
+
+core:
+  specs_dir: ".ralph/docs/"
+  guardrails:
+    - "CRITICAL: You CAN modify app/ and tests/ as needed. But after ANY change, verify: (1) failing test passes, (2) unit tests pass (pytest tests/unit/ -x), (3) QA gates pass (black, isort, ruff)."
+    - "CRITICAL: NEVER claim a phase is complete without RUNNING the actual verification commands."
+    - "CRITICAL: After EVERY code change, run: black <file> && isort <file> && ruff check <file> --fix"
+    - "CRITICAL: Record REAL output in .ralph/outputs/37_dashboard_backtesting_report.md"
+    - "CRITICAL: NEVER emit a phase completion event until ALL backpressure gates pass."
+    - "Fresh context each iteration - re-read scratchpad and plan before acting."
+    - "Commit after each completed phase. Never commit Ralph files (.ralph/)."
+
+backpressure:
+  gates:
+    - name: format_app
+      command: ["bash", "-c", "black app/ --check 2>&1 | tail -5"]
+      on_fail: "Black failed on app/. Run 'black app/'."
+    - name: format_tests
+      command: ["bash", "-c", "black tests/ --check 2>&1 | tail -5"]
+      on_fail: "Black failed on tests/. Run 'black tests/'."
+    - name: imports_app
+      command: ["bash", "-c", "isort app/ --check-only 2>&1 | tail -5"]
+      on_fail: "isort failed on app/. Run 'isort app/'."
+    - name: imports_tests
+      command: ["bash", "-c", "isort tests/ --check-only 2>&1 | tail -5"]
+      on_fail: "isort failed on tests/. Run 'isort tests/'."
+    - name: lint_app
+      command: ["bash", "-c", "ruff check app/ 2>&1 | tail -10"]
+      on_fail: "Ruff failed on app/. Run 'ruff check app/ --fix'. and retry."
+    - name: lint_tests
+      command: ["bash", "-c", "ruff check tests/ 2>&1 | tail -10"]
+      on_fail: "Ruff failed on tests/. Run 'ruff check tests/ --fix' and retry."
+    - name: app_imports_healthy
+      command: ["bash", "-c", "python -c \"import app; print('OK')\" 2>&1"]
+      on_fail: "App import check failed. Fix the import issue."
+
+memories:
+  enabled: true
+  inject: auto
+  budget: 8000
+  filter:
+    recent: 7
+
+tasks:
+  enabled: true
+
+features:
+  parallel: false
+  preflight:
+    enabled: true
+    strict: false
+    skip: []
+
+hooks:
+  enabled: true
+  defaults:
+    timeout_seconds: 600
+    max_output_bytes: 32768
+    suspend_mode: wait_for_resume
+  events:
+    pre.loop.start:
+      - name: clean-state
+        command: ["bash", "-c", "rm -f .ralph/loop.lock .ralph/current-events .ralph/current-loop-id 2>/dev/null; echo 'State cleaned'"]
+        on_error: warn
+
+ hats:
+  phase1_audit:
+    name: "Phase 1: Audit & Spec"
+    description: "Leer central_config, dashboard existente, backtest entry-point, coverage gaps"
+    triggers: ["dashboard.phase1_start"]
+    publishes: ["dashboard.phase1_done", "dashboard.blocked"]
+    default_publishes: "dashboard.phase1_done"
+    max_activations: 2
+    instructions: |
+      ## Phase 1: Audit & Spec
+
+      ### Paso 1: Leer central config
+      ```bash
+      python -c "
+      from app.shared.config.centralized_config import get_config
+      config = get_config()
+      print(f'Config keys groups: {list(config.__dict__.keys())}')
+      " 2>&1
+      ```
+
+      ### Paso 2: Leer dashboard existente
+      ```bash
+      ls -la app/presentation/dashboard/*.py | sort
+      wc -l app/presentation/dashboard/main.py | head -5
+      wc -l app/presentation/dashboard/advanced_dashboard.py | head -5
+      ```
+
+      ### Paso 3: Leer backtest entry-point
+      ```bash
+      grep -rn "class.*Backtest" app/ --include="*.py" -l | head -10
+      ```
+
+      ### Paso 4: Verificar perfiles de inversion
+      ```bash
+      python -c "
+      from app.domain.models.input_profile import ObjectivoInversion, RiskTolerance
+      from app.domain.models.investment_profile import CapitalTier
+      print('Objetivos:', [o.value for o in ObjectivoInversion])
+      print('Tiers:', [t.value for t in CapitalTier])
+      print('Risks:', [r.value for r in RiskTolerance])
+      " 2>&1
+      ```
+
+      ### Paso 5: Catalog test coverage gaps
+      ```bash
+      find tests/ -path "*dashboard*" -name "test_*.py" | sort
+      find tests/ -name "*backtest_result*" | sort
+      find tests/ -name "*profitability*" | sort
+      ```
+
+      ### Paso 6: Escribir audit
+      Escribir `.ralph/outputs/37_audit.md`:
+      - Central Config Parameters disponibles
+      - Dashboard Components existentes
+      - Backtest Entry-Point Signature
+      - Coverage Gaps
+      - Implementation Plan (ordered steps)
+
+      Emitir: `ralph emit "dashboard.phase1_done" "audit complete"`
+
+  phase2_backend:
+    name: "Phase 2: Backend Services"
+    description: "Implementar BacktestRunner, BacktestResultStore (SQLite), y ProfitabilityEngine"
+    triggers: ["dashboard.phase1_done"]
+    publishes: ["dashboard.phase2_done" "dashboard.blocked"]
+    default_publishes: "dashboard.phase2_done"
+    max_activations: 8
+    instructions: |
+      ## Phase 2: Backend Services
+
+      ### Crear BacktestRunner service:
+      `app/services/backtest_runner.py`
+      - Acepta: strategy, investor_profile, time_window, param_overrides
+      - Valida inputs
+      - Ejecuta backtest engine existente (wrap, NO reewrite)
+      - Retorna resultado con verdict: PROFITABLE / NOT_PROFITABLE / INCONCLUSIVE
+      - Guarda resultado via BacktestResultStore
+
+      ### Crear BacktestResultStore:
+      `app/infrastructure/persistence/backtest_result_store.py`
+      - SQLite para persistencia eficiente
+      - save_result(run_data) - guarda un run
+      - list_runs(limit, strategy, profile) - lista runs
+      - get_run(run_id) - detalle de un run
+      - compare_runs(id_a, id_b) - diff de params + resultados
+
+      ### Crear ProfitabilityEngine:
+      `app/presentation/dashboard/profitability_engine.py`
+      - evaluate_profitability(metrics, profile) - es profitable?
+      - Criterios por perfil:
+        - maximizar_dividendos: DRIP return > X%, yield on cost > Y%
+        - maximizar_capital: total_return > X%, Sharpe > Y
+        - capital_preservation: max_drawdown < X%
+        - balanced_growth: Sharpe > X%, max_drawdown < Y
+        - income_generation: win_rate > X%, profit_factor > Y
+      - get_profitability_trend(run_history) - tendencia temporal
+
+      ### Tests:
+      - tests/services/test_backtest_runner.py
+      - tests/infrastructure/test_backtest_result_store.py
+      - tests/presentation/test_profitability_engine.py
+
+      ### QA gates obligatorios:
+      ```bash
+      black app/ && isort app/ && ruff check app/ --fix
+      black tests/ && isort tests/ && ruff check tests/ --fix
+      python -m pytest tests/services/test_backtest_runner.py tests/infrastructure/test_backtest_result_store.py tests/presentation/test_profitability_engine.py -v --timeout=120 2>&1 | tail -30
+      ```
+
+      Emitir: `ralph emit "dashboard.phase2_done" "backend: X files, Y tests, all pass"`
+
+  phase3_dashboard:
+    name: "Phase 3: Dashboard Integration"
+    description: "Modificar dashboard: Config Viewer + Backtest Runner + History/Compare tabs"
+    triggers: ["dashboard.phase2_done"]
+    publishes: ["dashboard.phase3_done" "dashboard.blocked"]
+    default_publishes: "dashboard.phase3_done"
+    max_activations: 8
+    instructions: |
+      ## Phase 3: Dashboard Integration
+
+      ### Modificar dashboard existente (Streamlit):
+      1. Config Viewer Tab (read-only): mostrar parametros de central_config
+      2. Backtest Runner Tab: strategy + profile + time window selectors + "Run" button + resultado inline
+      3. History Tab: tabla de runs pasados + comparar 2 runs
+      4. Profitability Tab: trend chart + verdict por combinacion
+
+      ### Tab 1 - Config Viewer:
+      - Leer de central_config y mostrar grouped by category
+      - Solo lectura (read-only)
+      - Highlight params que cambiarian entre runs
+
+      ### Tab 2 - Backtest Runner:
+      - Dropdown de estrategia (populated from config)
+      - Dropdown de investor profile (5 objetivos x 4 tiers x 3 risks)
+      - Slider de time window (1mo - 5yr)
+      - "Run Backtest" button -> llama BacktestRunner
+      - Resultado inline: verdadero/falso + metricas
+      - Progress indicator durante ejecucion
+      - Focus en maximizar_dividendos: DRIP, yield on cost, dividend income vs capital gains
+
+      ### Tab 3 - History & Compare:
+      - Tabla de runs pasados (ultimos 20)
+      - Filtrar por strategy y profile
+      - Expandir fila para ver detalle completo
+      - Checkbox 2 runs -> "Compare" -> diff de params + resultados
+
+      ### Tab 4 - Profitability:
+      - Trend chart: metricas clave a lo largo del tiempo
+      - Heatmap: strategy x profile -> profitability score
+      - Veredict final por combinacion seleccion
+
+      ### QA gates:
+      ```bash
+      black app/ && isort app/ && ruff check app/ --fix
+      python -m pytest tests/ -x --timeout=300 -q 2>&1 | tail -30
+      ```
+
+      Emitir: `ralph emit "dashboard.phase3_done" "dashboard: X tabs, tests pass"`
+
+  phase4_e2e:
+    name: "Phase 4: E2E + QA"
+    description: "Tests end-to-end + full QA review"
+    triggers: ["dashboard.phase3_done"]
+    publishes: ["dashboard.phase4_done" "dashboard.blocked"]
+    default_publishes: "dashboard.phase4_done"
+    max_activations: 5
+    instructions: |
+      ## Phase 4: E2E Tests + Full QA
+
+      ### E2E Tests:
+      - tests/dashboard/test_dashboard_e2e.py
+      - Verificar: dashboard renderiza sin crash
+      - Verificar: "Run Backtest" llama BacktestRunner con args correctos
+      - Verificar: resultado se muestra correctamente (profitable + unprofitable)
+      - Verificar: history table renderiza desde datos mock
+      - Verificar: compare view muestra diffs correctos
+
+      ### Full QA:
+      ```bash
+      python -m pytest tests/ -v --timeout=300 2>&1 | tail -50
+      black app/ --check && black tests/ --check && echo "BLACK: PASS"
+      isort app/ --check-only && isort tests/ --check-only && echo "ISORT: PASS"
+      ruff check app/ && ruff check tests/ && echo "RUFF: PASS"
+      python -c "import app; print('IMPORTS: PASS')" 2>&1
+      ```
+
+      ### Verificar data flow:
+      central_config -> BacktestRunner -> SQLite -> Dashboard -> ProfitabilityEngine
+
+      ### Verificar que results se persisten:
+      ```bash
+      python -c "
+      from app.infrastructure.persistence.backtest_result_store import BacktestResultStore
+      store = BacktestResultStore()
+      runs = store.list_runs(limit=1)
+      print(f'Runs in DB: {len(runs)}')
+      " 2>&1
+      ```
+
+      Emitir: `ralph emit "dashboard.phase4_done" "e2e: X tests, qa: all pass"`
+
+  phase5_report:
+    name: "Phase 5: Final Report"
+    description: "Generar reporte final consolidado"
+    triggers: ["dashboard.phase4_done"]
+    publishes: ["DASHBOARD_BACKTESTING_COMPLETE"]
+    default_publishes: "DASHBOARD_BACKTESTING_COMPLETE"
+    max_activations: 1
+    instructions: |
+      ## Phase 5: Final Report
+
+      Escribir `.ralph/outputs/37_dashboard_backtesting_report.md`:
+      ```markdown
+      # Task 37 - Dashboard Backtesting Integration - Final Report
+      ## Summary
+      [que se ha construido]
+
+      ## Files Created
+      | File | Description |
+      |------|-------------|
+
+      ## Files Modified
+      | File | Changes |
+      |------|---------|
+
+      ## Test Coverage
+      | Module | Tests | Result |
+      |--------|-------|--------|
+
+      ## Backtest Result Schema
+      [schema del resultado guardado]
+
+      ## Profitability Logic
+      [criterios por perfil de inversion]
+
+      ## How to Use
+      1. Abrir dashboard: streamlit run app/presentation/dashboard/main.py
+      2. Seleccionar estrategia + perfil + time window
+      3. Click "Run Backtest"
+      4. Ver resultado: profitable/not profitable + metricas
+      5. Comparar con runs anteriores en History tab
+      6. Ver trend de profitability en Profitability tab
+      ```
+
+      ### Commit final:
+      ```bash
+      git add app/ tests/
+      git commit -m "feat: dashboard backtesting integration - execute, persist, compare, profitability"
+      ```
+
+      Emitir: `ralph emit "DASHBOARD_BACKTESTING_COMPLETE" "phases: 5/5, files: X, tests: Y, qa: all pass"`
+
+  blocked_handler:
+    name: "Blocked Handler"
+    description: "Diagnosticar y recuperar de errores"
+    triggers: ["dashboard.blocked"]
+    publishes: ["dashboard.phase1_start"]
+    default_publishes: "dashboard.phase1_start"
+    max_activations: 8
+    instructions: |
+      ## Blocked Handler
+      Se ha emitido `dashboard.blocked`. Una fase fallo.
+      1. Leer scratchpad para ver en que fase se bloqueo
+      2. Leer reporte `.ralph/outputs/37_dashboard_backtesting_report.md`
+      3. Diagnosticar: bug en app/, bug en tests/, o environment
+      4. Si es de app/: FIX + verificar unit tests + QA gates
+      5. Si es de tests/: FIX + re-ejecutar
+      6. Si es de environment: FIX (pip install, etc.)
+      7. Recuperable: emitir evento trigger de la fase que fallo
+      8. No recuperable: escribir diagnostico y parar

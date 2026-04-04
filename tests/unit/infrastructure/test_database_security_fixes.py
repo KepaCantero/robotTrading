@@ -13,8 +13,7 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from app.infrastructure.persistence.database import DatabaseManager
-from app.infrastructure.persistence.database import get_sync_db
+from app.infrastructure.persistence.database import DatabaseManager, get_sync_db
 from app.infrastructure.persistence.database.models import PositionState
 from app.services.position_monitor.position_monitor import (
     MonitoredPosition,

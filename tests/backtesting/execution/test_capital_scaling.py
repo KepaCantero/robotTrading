@@ -36,9 +36,9 @@ from app.backtesting.capital_scale_analyzer import (
 )
 from app.backtesting.models import BacktestConfig
 from app.backtesting.test_summary import TestSummaryReporter
-from app.shared.utils.decimal_utils import round_price
 from app.domain.models.market_data import Quote
 from app.models.signal import Signal, SignalSource, SignalStrength, SignalType
+from app.shared.utils.decimal_utils import round_price
 
 # Set reproducible seed
 np.random.seed(42)

@@ -15,8 +15,8 @@ from decimal import Decimal
 
 import pytest
 
-from app.shared.utils.timezone_utils import utc_now
 from app.services.news_processor import NewsEvent, NewsEventHandler, NewsEventType, SentimentUpdate
+from app.shared.utils.timezone_utils import utc_now
 
 
 class MockMarketauxClient:

@@ -17,16 +17,13 @@ from uuid import uuid4
 project_root = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(project_root))
 
-from app.engines.portfolio_engine import PortfolioEngine  # noqa: E402
-from app.engines.portfolio_engine.optimizers import MarkowitzOptimizer  # noqa: E402
-from app.engines.risk_engine import RiskEngine  # noqa: E402
-from app.engines.risk_engine.drawdown_controllers import DrawdownController  # noqa: E402
-from app.engines.risk_engine.var_calculators import HistoricalVaRCalculator  # noqa: E402
-from app.engines.strategy_engines import (  # noqa: E402
-    ModularMomentumStrategyEngine,
-    MomentumStrategyEngine,
-)
-from app.domain.models.portfolio import AssetClass, Portfolio, Position  # noqa: E402
+from app.domain.models.portfolio import AssetClass, Portfolio, Position
+from app.engines.portfolio_engine import PortfolioEngine
+from app.engines.portfolio_engine.optimizers import MarkowitzOptimizer
+from app.engines.risk_engine import RiskEngine
+from app.engines.risk_engine.drawdown_controllers import DrawdownController
+from app.engines.risk_engine.var_calculators import HistoricalVaRCalculator
+from app.engines.strategy_engines import ModularMomentumStrategyEngine, MomentumStrategyEngine
 
 logging.basicConfig(
     level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'

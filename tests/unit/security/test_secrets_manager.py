@@ -10,17 +10,18 @@ Tests the secrets management functionality including:
 - Storage backend switching
 """
 
-import pytest
 import os
 import tempfile
 from datetime import datetime
+
+import pytest
 from cryptography.fernet import Fernet
 
 from app.services.security.secrets_manager_impl import (
+    EncryptedFileStorage,
+    EnvironmentStorage,
     SecretsManagerImpl,
     SecretValue,
-    EnvironmentStorage,
-    EncryptedFileStorage,
 )
 
 

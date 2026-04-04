@@ -80,11 +80,10 @@ class TestPurgedKFold:
         X = np.random.randn(100, 5)
 
         for train_idx, test_idx in cv.split(X):
-            # Check that there's a gap
-            if len(train_idx) > 0 and len(test_idx) > 0:
-                max_train = max(train_idx)
-                min_test = min(test_idx)
-                assert min_test - max_train >= 2
+            # Verify that no training sample is within timeseries_gap of any test sample
+            for t in train_idx:
+                for s in test_idx:
+                    assert abs(t - s) > 2, f"Training sample {t} is within gap=2 of test sample {s}"
 
 
 class TestMetaLabelingCV:

@@ -35,14 +35,14 @@ def module_parameters_yaml_path():
 @pytest.fixture
 def investment_profiles_config(investment_profiles_yaml_path):
     """Load investment profiles YAML configuration."""
-    with open(investment_profiles_yaml_path, 'r') as f:
+    with open(investment_profiles_yaml_path) as f:
         return yaml.safe_load(f)
 
 
 @pytest.fixture
 def module_parameters_config(module_parameters_yaml_path):
     """Load module parameters YAML configuration."""
-    with open(module_parameters_yaml_path, 'r') as f:
+    with open(module_parameters_yaml_path) as f:
         return yaml.safe_load(f)
 
 

@@ -226,7 +226,7 @@ class MockDataService:
 
     def __init__(self, quotes_dict: Dict[str, List[Quote]]):
         self.quotes_dict = quotes_dict
-        self.current_index = {symbol: 0 for symbol in quotes_dict}
+        self.current_index = dict.fromkeys(quotes_dict, 0)
         self.fixed_quotes: Dict[str, Optional[Quote]] = {}
 
     def set_quote(self, symbol: str, quote: Quote) -> None:
@@ -305,16 +305,16 @@ class TestCircuitBreakerConfig:
         """Test default circuit breaker thresholds."""
         config = CircuitBreakerConfig()
 
-        assert config.LEVEL_1_THRESHOLD == Decimal("-0.07")
-        assert config.LEVEL_2_THRESHOLD == Decimal("-0.13")
-        assert config.LEVEL_3_THRESHOLD == Decimal("-0.20")
+        assert Decimal("-0.07") == config.LEVEL_1_THRESHOLD
+        assert Decimal("-0.13") == config.LEVEL_2_THRESHOLD
+        assert Decimal("-0.20") == config.LEVEL_3_THRESHOLD
 
     def test_vix_thresholds(self):
         """Test VIX thresholds."""
         config = CircuitBreakerConfig()
 
-        assert config.VIX_HIGH == Decimal("40")
-        assert config.VIX_EXTREME == Decimal("60")
+        assert Decimal("40") == config.VIX_HIGH
+        assert Decimal("60") == config.VIX_EXTREME
 
     def test_market_index_symbol(self):
         """Test default market index symbol."""

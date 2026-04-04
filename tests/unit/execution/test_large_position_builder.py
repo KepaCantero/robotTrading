@@ -110,7 +110,7 @@ class TestLargePositionBuilder:
         """Test builder initializes correctly."""
         assert builder is not None
         assert builder.scheduler is not None
-        assert builder.MIN_POSITION_SIZE == Decimal("25000")
+        assert Decimal("25000") == builder.MIN_POSITION_SIZE
 
     @pytest.mark.asyncio
     async def test_build_position_basic(self, builder):

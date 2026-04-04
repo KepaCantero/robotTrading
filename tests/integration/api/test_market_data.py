@@ -15,7 +15,6 @@ import pytest
 from fastapi import status
 from fastapi.testclient import TestClient
 
-from app.presentation.api.market_data import router
 from app.domain.models.market_data import (
     DataFeedConfig,
     DataFeedType,
@@ -23,6 +22,7 @@ from app.domain.models.market_data import (
     HistoricalData,
     Quote,
 )
+from app.presentation.api.market_data import router
 
 
 class TestMarketDataAPIEndpoints:

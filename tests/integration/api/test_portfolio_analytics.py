@@ -15,7 +15,6 @@ import pytest
 from fastapi import status
 from fastapi.testclient import TestClient
 
-from app.presentation.api.portfolio_analytics import router
 from app.domain.models.portfolio_analytics import (
     PerformanceMetrics,
     PerformancePeriod,
@@ -26,6 +25,7 @@ from app.domain.models.portfolio_analytics import (
     RiskLevel,
     RiskMetrics,
 )
+from app.presentation.api.portfolio_analytics import router
 
 
 class TestPortfolioAnalyticsAPIEndpoints:

@@ -316,9 +316,9 @@ class TestSpainTaxEngine:
         """Test engine with custom tax rates."""
         engine = engine_with_custom_config
 
-        assert engine.RATE_1 == Decimal("0.20")
-        assert engine.RATE_2 == Decimal("0.22")
-        assert engine.RATE_3 == Decimal("0.25")
+        assert Decimal("0.20") == engine.RATE_1
+        assert Decimal("0.22") == engine.RATE_2
+        assert Decimal("0.25") == engine.RATE_3
 
     def test_custom_config_calculation(self, engine_with_custom_config):
         """Test tax calculation with custom rates."""
@@ -335,8 +335,8 @@ class TestSpainTaxEngine:
         """Test custom bracket limits."""
         engine = engine_with_custom_config
 
-        assert engine.BRACKET_1_LIMIT == Decimal("30000")
-        assert engine.BRACKET_2_LIMIT == Decimal("50000")
+        assert Decimal("30000") == engine.BRACKET_1_LIMIT
+        assert Decimal("50000") == engine.BRACKET_2_LIMIT
 
     # Test factory
     def test_factory_spain_engine(self):

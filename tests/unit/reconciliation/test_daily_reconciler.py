@@ -392,10 +392,10 @@ class TestDailyReconciler:
 
     def test_tolerances_constants(self):
         """Test tolerance constants match R16 requirements"""
-        assert DailyReconciler.QUANTITY_TOLERANCE == Decimal("1")
-        assert DailyReconciler.PRICE_TOLERANCE_PCT == Decimal("0.001")
-        assert DiscrepancyDetector.QUANTITY_TOLERANCE == Decimal("1")
-        assert DiscrepancyDetector.PRICE_TOLERANCE_PCT == Decimal("0.001")
+        assert Decimal("1") == DailyReconciler.QUANTITY_TOLERANCE
+        assert Decimal("0.001") == DailyReconciler.PRICE_TOLERANCE_PCT
+        assert Decimal("1") == DiscrepancyDetector.QUANTITY_TOLERANCE
+        assert Decimal("0.001") == DiscrepancyDetector.PRICE_TOLERANCE_PCT
 
 
 class TestReconciliationResult:
@@ -433,10 +433,7 @@ class TestReconciliationResult:
 # Test imports work correctly
 def test_imports():
     """Test that all main classes can be imported"""
-    from app.services.reconciliation import (
-        DailyReconciler,
-        DiscrepancyDetector,
-    )
+    from app.services.reconciliation import DailyReconciler, DiscrepancyDetector
 
     assert DailyReconciler is not None
     assert DiscrepancyDetector is not None

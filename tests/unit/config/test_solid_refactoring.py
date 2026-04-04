@@ -5,36 +5,37 @@ Verifies that all new modules work correctly and maintain backward compatibility
 """
 
 import pytest
-from app.shared.config.protocols import (
-    ConfigProvider,
-    FileConfigLoader,
-    ConfigValidator,
-    ConfigMerger,
-    ConfigCache,
-)
-from app.shared.config.loaders import YAMLConfigLoader, JSONConfigLoader, ConfigLoaderRegistry
-from app.shared.config.validators import (
-    ATRMultiplierValidator,
-    RiskPercentageValidator,
-    TradingSymbolsValidator,
-    DateRangeValidator,
-    CompositeConfigValidator,
-)
-from app.shared.config.mergers import RecursiveConfigMerger, ReplaceConfigMerger
-from app.shared.config.cache import FileBasedConfigCache
+
 from app.shared.config.base.defaults import (
     get_default_atr_multiplier,
-    get_default_risk_per_trade,
     get_default_max_position_size,
+    get_default_risk_per_trade,
     get_default_stop_distance_pct,
 )
+from app.shared.config.cache import FileBasedConfigCache
 from app.shared.config.centralized_config import (
+    CentralizedConfig,
+    Configuration,
     get_config,
     get_trading_threshold,
-    validate_atr_multipliers,
     merge_configs,
-    Configuration,
-    CentralizedConfig,
+    validate_atr_multipliers,
+)
+from app.shared.config.loaders import ConfigLoaderRegistry, JSONConfigLoader, YAMLConfigLoader
+from app.shared.config.mergers import RecursiveConfigMerger, ReplaceConfigMerger
+from app.shared.config.protocols import (
+    ConfigCache,
+    ConfigMerger,
+    ConfigProvider,
+    ConfigValidator,
+    FileConfigLoader,
+)
+from app.shared.config.validators import (
+    ATRMultiplierValidator,
+    CompositeConfigValidator,
+    DateRangeValidator,
+    RiskPercentageValidator,
+    TradingSymbolsValidator,
 )
 
 
@@ -381,10 +382,10 @@ class TestSOLIDCompliance:
         # CentralizedConfig depends on protocols (abstractions)
         # not concrete implementations
         from app.shared.config.centralized_config import (
-            _loader_registry,
             _config_cache,
-            _config_validator,
             _config_merger,
+            _config_validator,
+            _loader_registry,
         )
 
         # These are instances of protocols

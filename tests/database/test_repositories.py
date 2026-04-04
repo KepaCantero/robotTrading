@@ -43,6 +43,7 @@ from sqlalchemy.orm import sessionmaker
 
 from app.core.exceptions import AlgoTradingDatabaseError as DatabaseError
 from app.infrastructure.persistence.database import Base
+from app.infrastructure.persistence.database._base_repository import BaseRepository
 from app.infrastructure.persistence.database.models import (
     Asset,
     Backtest,
@@ -55,7 +56,6 @@ from app.infrastructure.persistence.database.models import (
     Trade,
     User,
 )
-from app.infrastructure.persistence.database._base_repository import BaseRepository
 from app.infrastructure.persistence.database.repositories import (
     AssetRepository,
     BacktestRepository,

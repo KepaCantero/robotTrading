@@ -15,7 +15,9 @@ Uso:
 """
 
 import logging
+import os
 import sys
+import tempfile
 from datetime import datetime
 from decimal import Decimal
 from pathlib import Path
@@ -29,13 +31,80 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+import pytest
+import yaml
+
+from app.backtesting.backtesting_compliance import create_backtesting_compliance
+from app.backtesting.profile_batch_backtester import ProfileBatchBacktester
+
 # Imports después de configurar path
 from app.domain.models.input_profile import InputProfile, ObjectivoInversion, RiskTolerance
-from app.backtesting.profile_batch_backtester import ProfileBatchBacktester
-from app.backtesting.backtesting_compliance import create_backtesting_compliance
 
-# Config path centralizado
-CONFIG_PATH = Path(__file__).parent.parent.parent / "config" / "profile_batch_backtest.yaml"
+
+@pytest.fixture
+def config_path():
+    """Create a temporary config file for testing."""
+    config = {
+        "database": {"url": "sqlite:///:memory:"},
+        "output_dir": tempfile.mkdtemp(),
+        "capital_tiers": {
+            "bajo": 50000,
+            "medio": 150000,
+            "alto": 500000,
+        },
+        "investment_horizons": {
+            "short": 12,
+            "medium": 24,
+            "long": 36,
+            "very_long": 60,
+        },
+        "backtest_period": {"start_date": "2020-01-01", "end_date": "2023-12-31"},
+        "symbols": ["AAPL", "MSFT", "GOOGL"],
+        "risk_parameters": {
+            "bajo": {"max_position_pct": 0.05, "stop_loss_pct": 0.02},
+            "medio": {"max_position_pct": 0.10, "stop_loss_pct": 0.03},
+            "alto": {"max_position_pct": 0.20, "stop_loss_pct": 0.05},
+        },
+        "objective_parameters": {
+            "maximizar_capital": {"min_sharpe": 1.2, "min_return": 0.15},
+            "maximizar_dividendos": {"min_sharpe": 0.8, "min_return": 0.10},
+        },
+        "optimization": {"n_trials": 10, "timeout": None},
+        "validation": {
+            "walk_forward": {"n_windows": 5, "train_percentage": 0.6},
+            "monte_carlo": {"n_simulations": 50},
+            "out_of_sample": {"oos_percentage": 0.20},
+        },
+        "acceptance_criteria": {
+            "min_sharpe": 1.0,
+            "min_return": 0.10,
+            "max_drawdown": -0.25,
+            "significance_threshold": 5.0,
+            "strong_significance_threshold": 10.0,
+            "degradation_threshold": -5.0,
+            "confidence_high": 0.8,
+            "confidence_medium": 0.7,
+            "confidence_low": 0.5,
+            "revision_multiplier": 0.8,
+        },
+        "modules": {
+            "filters": {
+                "momentum": {
+                    "enabled": True,
+                    "parameters": {"momentum_threshold": {"type": "float", "default": 0.02}},
+                }
+            }
+        },
+        "reporting": {"output_formats": ["json", "csv"]},
+    }
+
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as f:
+        yaml.dump(config, f)
+        path = f.name
+
+    yield path
+
+    os.unlink(path)
 
 
 def create_minimal_test_profile() -> InputProfile:
@@ -57,7 +126,7 @@ def create_minimal_test_profile() -> InputProfile:
     return profile
 
 
-def test_profile_investor_backtest():
+def test_profile_investor_backtest(config_path):
     """
     Test principal: Ejecuta backtest completo para un profile investor.
 
@@ -72,19 +141,14 @@ def test_profile_investor_backtest():
     logger.info("PROFILE INVESTOR BACKTEST TEST")
     logger.info("=" * 80)
 
-    # 1. Verificar que existe el config
-    if not CONFIG_PATH.exists():
-        logger.error(f"Config file not found: {CONFIG_PATH}")
-        raise FileNotFoundError(f"Config file not found: {CONFIG_PATH}")
-
-    logger.info(f"Using config: {CONFIG_PATH}")
+    logger.info(f"Using config: {config_path}")
 
     # 2. Crear profile investor
     profile = create_minimal_test_profile()
 
     # 3. Inicializar backtester
     logger.info("Initializing ProfileBatchBacktester...")
-    backtester = ProfileBatchBacktester(config_path=str(CONFIG_PATH))
+    backtester = ProfileBatchBacktester(config_path=str(config_path))
 
     # 4. Ejecutar backtest
     logger.info("Running single profile backtest...")
@@ -147,7 +211,7 @@ def test_profile_investor_backtest():
     return result
 
 
-def test_quick_profile_validation():
+def test_quick_profile_validation(config_path):
     """
     Test rápido: Solo valida que el profile y config funcionan.
     No ejecuta el backtest completo.
@@ -160,10 +224,10 @@ def test_quick_profile_validation():
     assert profile.objetivo_inversion == ObjectivoInversion.MAXIMIZAR_CAPITAL
 
     # Verificar config
-    assert CONFIG_PATH.exists(), f"Config not found: {CONFIG_PATH}"
+    assert Path(config_path).exists(), f"Config not found: {config_path}"
 
     # Inicializar backtester (sin ejecutar)
-    backtester = ProfileBatchBacktester(config_path=str(CONFIG_PATH))
+    backtester = ProfileBatchBacktester(config_path=str(config_path))
     assert backtester is not None
 
     logger.info("Quick validation PASSED")
@@ -181,15 +245,65 @@ if __name__ == "__main__":
     parser.add_argument("--full", action="store_true", help="Run full backtest (default)")
     args = parser.parse_args()
 
+    # Create a temp config for direct script execution
+    _tmp_config = {
+        "database": {"url": "sqlite:///:memory:"},
+        "output_dir": tempfile.mkdtemp(),
+        "capital_tiers": {"bajo": 50000, "medio": 150000, "alto": 500000},
+        "investment_horizons": {"short": 12, "medium": 24, "long": 36, "very_long": 60},
+        "backtest_period": {"start_date": "2020-01-01", "end_date": "2023-12-31"},
+        "symbols": ["AAPL", "MSFT", "GOOGL"],
+        "risk_parameters": {
+            "bajo": {"max_position_pct": 0.05, "stop_loss_pct": 0.02},
+            "medio": {"max_position_pct": 0.10, "stop_loss_pct": 0.03},
+            "alto": {"max_position_pct": 0.20, "stop_loss_pct": 0.05},
+        },
+        "objective_parameters": {
+            "maximizar_capital": {"min_sharpe": 1.2, "min_return": 0.15},
+            "maximizar_dividendos": {"min_sharpe": 0.8, "min_return": 0.10},
+        },
+        "optimization": {"n_trials": 10, "timeout": None},
+        "validation": {
+            "walk_forward": {"n_windows": 5, "train_percentage": 0.6},
+            "monte_carlo": {"n_simulations": 50},
+            "out_of_sample": {"oos_percentage": 0.20},
+        },
+        "acceptance_criteria": {
+            "min_sharpe": 1.0,
+            "min_return": 0.10,
+            "max_drawdown": -0.25,
+            "significance_threshold": 5.0,
+            "strong_significance_threshold": 10.0,
+            "degradation_threshold": -5.0,
+            "confidence_high": 0.8,
+            "confidence_medium": 0.7,
+            "confidence_low": 0.5,
+            "revision_multiplier": 0.8,
+        },
+        "modules": {
+            "filters": {
+                "momentum": {
+                    "enabled": True,
+                    "parameters": {"momentum_threshold": {"type": "float", "default": 0.02}},
+                }
+            }
+        },
+        "reporting": {"output_formats": ["json", "csv"]},
+    }
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as _f:
+        yaml.dump(_tmp_config, _f)
+        _config_path = _f.name
+
     try:
         if args.quick:
-            test_quick_profile_validation()
+            test_quick_profile_validation(_config_path)
         else:
-            test_profile_investor_backtest()
-        sys.exit(0)
+            test_profile_investor_backtest(_config_path)
     except Exception as e:
         logger.error(f"Test failed: {e}")
         import traceback
 
         traceback.print_exc()
         sys.exit(1)
+    finally:
+        os.unlink(_config_path)

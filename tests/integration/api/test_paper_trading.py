@@ -15,7 +15,6 @@ import pytest
 from fastapi import status
 from fastapi.testclient import TestClient
 
-from app.presentation.api.paper_trading import router
 from app.domain.models.paper_trading import (
     OrderSide,
     OrderType,
@@ -26,6 +25,7 @@ from app.domain.models.paper_trading import (
     PaperTradingSession,
     TradeStatus,
 )
+from app.presentation.api.paper_trading import router
 
 
 class TestPaperTradingAPIEndpoints:

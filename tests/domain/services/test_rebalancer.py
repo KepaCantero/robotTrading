@@ -1,6 +1,7 @@
 """
 Tests for Rebalancer Domain Service - ZeroDivisionError fix verification
 """
+
 import sys
 from pathlib import Path
 

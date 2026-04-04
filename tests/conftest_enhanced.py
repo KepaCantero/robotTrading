@@ -6,16 +6,17 @@ Testing Reviewer Audit - Phase 1: Critical Fixes
 import asyncio
 import tempfile
 import uuid
+from collections.abc import Generator
 from datetime import datetime, timedelta
 from decimal import Decimal
 from pathlib import Path
-from typing import Any, Dict, Generator
+from typing import Any, Dict
 from unittest.mock import Mock
 
 import pytest
 
-from app.shared.config.centralized_config import CentralizedConfig, get_config, set_config
 from app.core.test_config import TestConfigManager
+from app.shared.config.centralized_config import CentralizedConfig, get_config, set_config
 
 # Test Categories
 pytestmark = [

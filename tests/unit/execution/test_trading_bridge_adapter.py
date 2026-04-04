@@ -3,9 +3,11 @@ Unit tests for TradingBridgeAdapter.
 
 Tests the integration between TradingBridgeOrchestrator and ITradeExecutor protocol.
 """
-import pytest
+
 from decimal import Decimal
 from unittest.mock import AsyncMock, MagicMock, patch
+
+import pytest
 
 from app.infrastructure.execution.trading_bridge_adapter import (
     TradingBridgeAdapter,

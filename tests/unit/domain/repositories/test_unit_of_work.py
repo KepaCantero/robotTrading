@@ -8,6 +8,7 @@ Tests verify that the Unit of Work pattern correctly implements:
 - Domain event collection
 - Repository management
 """
+
 from decimal import Decimal
 from typing import List, Optional
 
@@ -267,11 +268,10 @@ class TestGenericUnitOfWork:
         """Test context manager rolls back on error."""
         uow = TestUnitOfWork()
 
-        with pytest.raises(ValueError):
-            with uow:
-                order = Order("ORD1", "AAPL", Decimal("100"))
-                uow.track_entity(order, state='new')
-                raise ValueError("Test error")
+        with pytest.raises(ValueError), uow:
+            order = Order("ORD1", "AAPL", Decimal("100"))
+            uow.track_entity(order, state='new')
+            raise ValueError("Test error")
 
         assert uow.rolled_back is True
         assert uow.committed is False

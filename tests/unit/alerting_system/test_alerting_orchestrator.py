@@ -457,16 +457,18 @@ class TestErrorHandling:
     @pytest.mark.asyncio
     async def test_initialize_error_handling(self, orchestrator):
         """Test error handling during initialization."""
-        with patch.object(
-            AlertRuleTemplates,
-            "get_all_default_templates",
-            side_effect=Exception("Test error"),
+        with (
+            patch.object(
+                AlertRuleTemplates,
+                "get_all_default_templates",
+                side_effect=Exception("Test error"),
+            ),
+            pytest.raises(Exception),
         ):
-            with pytest.raises(Exception):
-                await orchestrator.initialize(
-                    metrics_query_engine=MagicMock(),
-                    auto_register_templates=True,
-                )
+            await orchestrator.initialize(
+                metrics_query_engine=MagicMock(),
+                auto_register_templates=True,
+            )
 
     @pytest.mark.asyncio
     async def test_start_error_handling(self, orchestrator):

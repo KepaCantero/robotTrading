@@ -16,16 +16,16 @@ import pytest
 project_root = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(project_root))
 
-import pandas as pd  # noqa: E402
+import pandas as pd
 
-from app.engines.context_engine import ContextEngine  # noqa: E402
-from app.engines.strategy_engines import (  # noqa: E402
+from app.domain.models.market_data import Quote
+from app.engines.context_engine import ContextEngine
+from app.engines.strategy_engines import (
     MeanReversionStrategyEngine,
     ModularMomentumStrategyEngine,
     MomentumStrategyEngine,
 )
-from app.domain.models.market_data import Quote  # noqa: E402
-from tests.integration.data.test_data_loader import load_all_csv_data  # noqa: E402
+from tests.integration.data.test_data_loader import load_all_csv_data
 
 logging.basicConfig(
     level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'

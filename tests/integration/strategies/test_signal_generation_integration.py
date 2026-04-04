@@ -24,12 +24,12 @@ import pytest
 project_root = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(project_root))
 
-from app.domain.models.market_data import Quote  # noqa: E402
-from app.services.strategy_stock_allocator import StrategyStockAllocator  # noqa: E402
-from app.domain.strategies.mean_reversion import MeanReversionStrategy  # noqa: E402
-from app.domain.strategies.momentum import MomentumStrategy  # noqa: E402
-from app.domain.strategies.pairs_trading import PairsTrading as PairsTradingStrategy  # noqa: E402
-from tests.integration.data.test_data_loader import load_all_csv_data  # noqa: E402
+from app.domain.models.market_data import Quote
+from app.domain.strategies.mean_reversion import MeanReversionStrategy
+from app.domain.strategies.momentum import MomentumStrategy
+from app.domain.strategies.pairs_trading import PairsTrading as PairsTradingStrategy
+from app.services.strategy_stock_allocator import StrategyStockAllocator
+from tests.integration.data.test_data_loader import load_all_csv_data
 
 logging.basicConfig(
     level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'

@@ -32,13 +32,13 @@ from typing import List, Optional
 import numpy as np
 import pytest
 
+from app.domain.models.portfolio import AssetClass, Portfolio, Position
 from app.presentation.dashboard.production_dashboard import (
     DashboardMetrics,
     HistoricalDataPoint,
     ProductionDashboard,
     get_production_dashboard,
 )
-from app.domain.models.portfolio import AssetClass, Portfolio, Position
 
 # Set reproducible seed
 np.random.seed(42)

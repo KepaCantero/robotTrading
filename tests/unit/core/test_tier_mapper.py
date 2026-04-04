@@ -286,9 +286,11 @@ class TestEdgeCases:
             converted = (
                 TierMapper.to_yaml_tier(tier, source)
                 if target == TierSystem.YAML
-                else TierMapper.to_spanish(tier, source)
-                if target == TierSystem.SPANISH
-                else TierMapper.to_capital_flag(tier, source)
+                else (
+                    TierMapper.to_spanish(tier, source)
+                    if target == TierSystem.SPANISH
+                    else TierMapper.to_capital_flag(tier, source)
+                )
             )
             # For valid conversions, should not raise exceptions
             assert converted is not None

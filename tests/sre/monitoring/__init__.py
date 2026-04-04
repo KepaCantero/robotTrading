@@ -8,8 +8,8 @@ This package contains comprehensive tests for:
 - Health Status Evaluation
 """
 
-from .test_golden_signals import *  # noqa: F401, F403
-from .test_trading_metrics import *  # noqa: F401, F403
+from .test_golden_signals import *  # noqa: F403
+from .test_trading_metrics import *  # noqa: F403
 
 __all__ = [
     # Golden signals tests

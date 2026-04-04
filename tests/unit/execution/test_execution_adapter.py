@@ -5,8 +5,9 @@ Tests verify that the adapter correctly implements ITradeExecutor protocol
 and bridges PessimisticExecutionEngine with ComplianceEngine.
 """
 
-import pytest
 from decimal import Decimal
+
+import pytest
 
 from app.infrastructure.execution.execution_adapter import (
     ExecutionEngineAdapter,
@@ -24,12 +25,9 @@ def adapter():
 @pytest.fixture
 def sample_signal():
     """Provide a sample TradeSignal for testing."""
-    from app.services.live_trading.broker_connector import OrderSide, OrderType
-    from app.services.live_trading.alert_to_trade_mapper import (
-        TradeSignal,
-        TradeSignalType,
-    )
     from app.services.alerting_system import AlertSeverity
+    from app.services.live_trading.alert_to_trade_mapper import TradeSignal, TradeSignalType
+    from app.services.live_trading.broker_connector import OrderSide, OrderType
 
     return TradeSignal(
         signal_id="test_signal_001",
@@ -77,12 +75,9 @@ async def test_execute_order_with_slippage(adapter, sample_signal):
 @pytest.mark.asyncio
 async def test_execute_order_sell_side(adapter):
     """Test order execution for SELL side."""
-    from app.services.live_trading.broker_connector import OrderSide, OrderType
-    from app.services.live_trading.alert_to_trade_mapper import (
-        TradeSignal,
-        TradeSignalType,
-    )
     from app.services.alerting_system import AlertSeverity
+    from app.services.live_trading.alert_to_trade_mapper import TradeSignal, TradeSignalType
+    from app.services.live_trading.broker_connector import OrderSide, OrderType
 
     signal = TradeSignal(
         signal_id="test_signal_002",
@@ -108,12 +103,9 @@ async def test_execute_order_sell_side(adapter):
 @pytest.mark.asyncio
 async def test_execute_order_without_price(adapter):
     """Test order execution when price is not provided."""
-    from app.services.live_trading.broker_connector import OrderSide, OrderType
-    from app.services.live_trading.alert_to_trade_mapper import (
-        TradeSignal,
-        TradeSignalType,
-    )
     from app.services.alerting_system import AlertSeverity
+    from app.services.live_trading.alert_to_trade_mapper import TradeSignal, TradeSignalType
+    from app.services.live_trading.broker_connector import OrderSide, OrderType
 
     signal = TradeSignal(
         signal_id="test_signal_003",
@@ -256,12 +248,9 @@ def test_get_execution_adapter():
 @pytest.mark.asyncio
 async def test_execute_multiple_orders(adapter):
     """Test executing multiple orders sequentially."""
-    from app.services.live_trading.broker_connector import OrderSide, OrderType
-    from app.services.live_trading.alert_to_trade_mapper import (
-        TradeSignal,
-        TradeSignalType,
-    )
     from app.services.alerting_system import AlertSeverity
+    from app.services.live_trading.alert_to_trade_mapper import TradeSignal, TradeSignalType
+    from app.services.live_trading.broker_connector import OrderSide, OrderType
 
     signals = [
         TradeSignal(
@@ -308,12 +297,9 @@ async def test_execute_multiple_orders(adapter):
 @pytest.mark.asyncio
 async def test_slippage_calculation_accuracy(adapter):
     """Test that slippage calculation is accurate."""
-    from app.services.live_trading.broker_connector import OrderSide, OrderType
-    from app.services.live_trading.alert_to_trade_mapper import (
-        TradeSignal,
-        TradeSignalType,
-    )
     from app.services.alerting_system import AlertSeverity
+    from app.services.live_trading.alert_to_trade_mapper import TradeSignal, TradeSignalType
+    from app.services.live_trading.broker_connector import OrderSide, OrderType
 
     signal = TradeSignal(
         signal_id="test_signal_006",

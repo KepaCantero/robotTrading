@@ -5,11 +5,11 @@ from decimal import Decimal
 import numpy as np
 
 from app.domain.models.market_data import Quote
-from app.models.signal import SignalType
-from app.services.momentum_analysis import TechnicalIndicatorCalculator
 from app.domain.strategies.mean_reversion import MeanReversionStrategy
 from app.domain.strategies.momentum import MomentumStrategy
 from app.domain.strategies.pairs_trading import PairsTrading as PairsTradingStrategy
+from app.models.signal import SignalType
+from app.services.momentum_analysis import TechnicalIndicatorCalculator
 
 """
 BLOQUE 3 — Pruebas de Señales

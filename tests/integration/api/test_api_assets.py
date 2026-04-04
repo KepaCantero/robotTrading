@@ -12,7 +12,6 @@ import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
-from app.presentation.api.assets import router
 from app.domain.models.assets import (
     Asset,
     AssetClass,
@@ -21,6 +20,7 @@ from app.domain.models.assets import (
     Exchange,
     LiquidityMetrics,
 )
+from app.presentation.api.assets import router
 from app.services.asset_identification import get_asset_identification_service
 
 # Create test app
@@ -33,9 +33,9 @@ def override_get_asset_identification_service():
     return AsyncMock()
 
 
-app.dependency_overrides[
-    get_asset_identification_service
-] = override_get_asset_identification_service
+app.dependency_overrides[get_asset_identification_service] = (
+    override_get_asset_identification_service
+)
 
 app.include_router(router)
 

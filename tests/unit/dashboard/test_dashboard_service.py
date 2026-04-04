@@ -1,16 +1,18 @@
 """
 Tests for dashboard service.
 """
-import pytest
-from unittest.mock import AsyncMock, MagicMock, patch
-from decimal import Decimal
 
-from app.presentation.dashboard.dashboard_service import DashboardService
+from decimal import Decimal
+from unittest.mock import AsyncMock, MagicMock, patch
+
+import pytest
+
 from app.presentation.dashboard.dashboard_data import (
     DashboardSnapshot,
     PerformanceMetrics,
     SystemStatus,
 )
+from app.presentation.dashboard.dashboard_service import DashboardService
 
 
 @pytest.fixture

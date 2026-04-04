@@ -3,6 +3,7 @@ Unit tests for Numba-accelerated VaR helper functions.
 
 Tests for low-level Numba JIT functions used in VaR calculations.
 """
+
 import numpy as np
 import pytest
 

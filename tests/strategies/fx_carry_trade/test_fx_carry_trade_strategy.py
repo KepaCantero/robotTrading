@@ -15,10 +15,6 @@ from app.domain.strategies.fx_carry_trade.carry_calculator import (
     CarryCalculator,
     CarryTradeOpportunity,
 )
-from app.domain.strategies.fx_carry_trade_strategy import (
-    FXCarryTradeState,
-    FXCarryTradeStrategy,
-)
 from app.domain.strategies.fx_carry_trade.fx_rates_provider import InMemoryFXRateProvider
 from app.domain.strategies.fx_carry_trade.models import (
     FXCarryPosition,
@@ -26,6 +22,7 @@ from app.domain.strategies.fx_carry_trade.models import (
     FXCarryTradeConfig,
     FXPair,
 )
+from app.domain.strategies.fx_carry_trade_strategy import FXCarryTradeState, FXCarryTradeStrategy
 
 
 class TestFXCarryTradeState:

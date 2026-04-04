@@ -378,7 +378,7 @@ class TestBaselineOptimizationReporter:
             assert output_path.exists()
 
             # Read and verify content
-            with open(output_path, "r") as f:
+            with open(output_path) as f:
                 saved_html = f.read()
 
             assert saved_html == html
@@ -517,7 +517,7 @@ class TestFullWorkflow:
             assert output_path.stat().st_size > 0
 
             # Verify it can be opened and read
-            with open(output_path, "r") as f:
+            with open(output_path) as f:
                 content = f.read()
 
             assert len(content) > 1000  # Should be substantial

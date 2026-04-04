@@ -13,8 +13,8 @@ import pytest
 from fastapi import status
 from fastapi.testclient import TestClient
 
-from app.presentation.api.signals import get_signal_scorer_service, router
 from app.domain.models.signal import Signal, SignalSource, SignalStrength, SignalType
+from app.presentation.api.signals import get_signal_scorer_service, router
 from app.services.signal_scorer import SignalScorerService
 
 
@@ -144,16 +144,18 @@ class TestSignalsAPIEndpoints:
     @pytest.mark.asyncio
     async def test_execute_signal_success(self, client, mock_signal):
         """Test execute_signal executes trade successfully."""
-        with patch.object(
-            SignalScorerService, "get_signals_by_symbol", new=AsyncMock(return_value=[mock_signal])
+        with (
+            patch.object(
+                SignalScorerService,
+                "get_signals_by_symbol",
+                new=AsyncMock(return_value=[mock_signal]),
+            ),
+            patch.object(SignalScorerService, "execute_signal", new=AsyncMock(return_value=True)),
         ):
-            with patch.object(
-                SignalScorerService, "execute_signal", new=AsyncMock(return_value=True)
-            ):
-                response = client.post("/signals/execute/AAPL")
-                assert response.status_code == status.HTTP_200_OK
-                data = response.json()
-                assert data["success"] is True
+            response = client.post("/signals/execute/AAPL")
+            assert response.status_code == status.HTTP_200_OK
+            data = response.json()
+            assert data["success"] is True
 
     @pytest.mark.asyncio
     async def test_execute_signal_no_signals_found(self, client):
@@ -340,15 +342,17 @@ class TestSymbolUppercaseConversion:
             metadata={},
         )
 
-        with patch.object(
-            SignalScorerService, "get_signals_by_symbol", new=AsyncMock(return_value=[mock_signal])
-        ) as mock_get:
-            with patch.object(
-                SignalScorerService, "execute_signal", new=AsyncMock(return_value=True)
-            ):
-                client.post("/signals/execute/aapl")
-                # Should call with uppercase symbol
-                mock_get.assert_called_once_with("AAPL")
+        with (
+            patch.object(
+                SignalScorerService,
+                "get_signals_by_symbol",
+                new=AsyncMock(return_value=[mock_signal]),
+            ) as mock_get,
+            patch.object(SignalScorerService, "execute_signal", new=AsyncMock(return_value=True)),
+        ):
+            client.post("/signals/execute/aapl")
+            # Should call with uppercase symbol
+            mock_get.assert_called_once_with("AAPL")
 
     @pytest.mark.asyncio
     async def test_get_signals_by_symbol_converts_to_uppercase(self, client):

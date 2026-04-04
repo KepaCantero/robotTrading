@@ -20,8 +20,8 @@ import pytest
 
 from app.domain.models.market_data import Quote
 from app.domain.models.portfolio import Portfolio
-from app.models.signal import Signal, SignalSource, SignalStrength, SignalType
 from app.domain.strategies.mean_reversion import MeanReversionStrategy
+from app.models.signal import Signal, SignalSource, SignalStrength, SignalType
 
 logger = logging.getLogger(__name__)
 

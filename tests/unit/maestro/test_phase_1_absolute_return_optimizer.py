@@ -18,9 +18,7 @@ from app.application.orchestration.target_optimization.absolute_return_optimizer
     ParameterOptimizer,
     TargetAlphaCalculator,
 )
-from app.application.orchestration.target_optimization.models import (
-    AbsoluteReturnTarget,
-)
+from app.application.orchestration.target_optimization.models import AbsoluteReturnTarget
 
 
 class TestTargetAlphaCalculation:

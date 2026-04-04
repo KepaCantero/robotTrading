@@ -13,11 +13,11 @@ This is an INTEGRATION test - it tests the complete order management flow
 with real OrderManager and RiskGates (not mocked).
 """
 
-import pytest
 from decimal import Decimal
 
-from app.infrastructure.execution.order_manager_adapter import OrderManagerAdapter
+import pytest
 
+from app.infrastructure.execution.order_manager_adapter import OrderManagerAdapter
 
 # =============================================================================
 # Fixtures
@@ -33,12 +33,9 @@ def order_adapter():
 @pytest.fixture
 def sample_signal():
     """Create sample trade signal."""
-    from app.services.live_trading.alert_to_trade_mapper import (
-        TradeSignal,
-        TradeSignalType,
-    )
-    from app.services.live_trading.broker_connector import OrderSide, OrderType
     from app.services.alerting_system import AlertSeverity
+    from app.services.live_trading.alert_to_trade_mapper import TradeSignal, TradeSignalType
+    from app.services.live_trading.broker_connector import OrderSide, OrderType
 
     return TradeSignal(
         signal_id="test_om_001",
@@ -58,12 +55,9 @@ def sample_signal():
 @pytest.fixture
 def signal_with_stops():
     """Create signal with stop loss and take profit."""
-    from app.services.live_trading.alert_to_trade_mapper import (
-        TradeSignal,
-        TradeSignalType,
-    )
-    from app.services.live_trading.broker_connector import OrderSide, OrderType
     from app.services.alerting_system import AlertSeverity
+    from app.services.live_trading.alert_to_trade_mapper import TradeSignal, TradeSignalType
+    from app.services.live_trading.broker_connector import OrderSide, OrderType
 
     return TradeSignal(
         signal_id="test_om_stops",
@@ -117,12 +111,9 @@ class TestOrderPlacement:
     @pytest.mark.asyncio
     async def test_place_order_multiple(self, order_adapter):
         """Test placing multiple orders."""
-        from app.services.live_trading.alert_to_trade_mapper import (
-            TradeSignal,
-            TradeSignalType,
-        )
-        from app.services.live_trading.broker_connector import OrderSide, OrderType
         from app.services.alerting_system import AlertSeverity
+        from app.services.live_trading.alert_to_trade_mapper import TradeSignal, TradeSignalType
+        from app.services.live_trading.broker_connector import OrderSide, OrderType
 
         signals = [
             TradeSignal(
@@ -155,12 +146,9 @@ class TestOrderPlacement:
     @pytest.mark.asyncio
     async def test_place_sell_order(self, order_adapter):
         """Test placing SELL order."""
-        from app.services.live_trading.alert_to_trade_mapper import (
-            TradeSignal,
-            TradeSignalType,
-        )
-        from app.services.live_trading.broker_connector import OrderSide, OrderType
         from app.services.alerting_system import AlertSeverity
+        from app.services.live_trading.alert_to_trade_mapper import TradeSignal, TradeSignalType
+        from app.services.live_trading.broker_connector import OrderSide, OrderType
 
         signal = TradeSignal(
             signal_id="test_om_sell",
@@ -306,12 +294,9 @@ class TestSignalToOrderMapping:
     @pytest.mark.asyncio
     async def test_unique_order_ids(self, order_adapter):
         """Test that each signal gets processed."""
-        from app.services.live_trading.alert_to_trade_mapper import (
-            TradeSignal,
-            TradeSignalType,
-        )
-        from app.services.live_trading.broker_connector import OrderSide, OrderType
         from app.services.alerting_system import AlertSeverity
+        from app.services.live_trading.alert_to_trade_mapper import TradeSignal, TradeSignalType
+        from app.services.live_trading.broker_connector import OrderSide, OrderType
 
         signals = [
             TradeSignal(
@@ -352,12 +337,9 @@ class TestErrorHandling:
     @pytest.mark.asyncio
     async def test_place_order_invalid_quantity(self, order_adapter):
         """Test placing order with invalid quantity."""
-        from app.services.live_trading.alert_to_trade_mapper import (
-            TradeSignal,
-            TradeSignalType,
-        )
-        from app.services.live_trading.broker_connector import OrderSide, OrderType
         from app.services.alerting_system import AlertSeverity
+        from app.services.live_trading.alert_to_trade_mapper import TradeSignal, TradeSignalType
+        from app.services.live_trading.broker_connector import OrderSide, OrderType
 
         signal = TradeSignal(
             signal_id="test_invalid_qty",
@@ -380,12 +362,9 @@ class TestErrorHandling:
     @pytest.mark.asyncio
     async def test_place_order_no_price(self, order_adapter):
         """Test placing order without price."""
-        from app.services.live_trading.alert_to_trade_mapper import (
-            TradeSignal,
-            TradeSignalType,
-        )
-        from app.services.live_trading.broker_connector import OrderSide, OrderType
         from app.services.alerting_system import AlertSeverity
+        from app.services.live_trading.alert_to_trade_mapper import TradeSignal, TradeSignalType
+        from app.services.live_trading.broker_connector import OrderSide, OrderType
 
         signal = TradeSignal(
             signal_id="test_no_price",
@@ -441,12 +420,9 @@ class TestOrderTypes:
     @pytest.mark.asyncio
     async def test_market_order(self, order_adapter):
         """Test MARKET order type."""
-        from app.services.live_trading.alert_to_trade_mapper import (
-            TradeSignal,
-            TradeSignalType,
-        )
-        from app.services.live_trading.broker_connector import OrderSide, OrderType
         from app.services.alerting_system import AlertSeverity
+        from app.services.live_trading.alert_to_trade_mapper import TradeSignal, TradeSignalType
+        from app.services.live_trading.broker_connector import OrderSide, OrderType
 
         signal = TradeSignal(
             signal_id="test_market",
@@ -470,12 +446,9 @@ class TestOrderTypes:
     @pytest.mark.asyncio
     async def test_limit_order(self, order_adapter):
         """Test LIMIT order type."""
-        from app.services.live_trading.alert_to_trade_mapper import (
-            TradeSignal,
-            TradeSignalType,
-        )
-        from app.services.live_trading.broker_connector import OrderSide, OrderType
         from app.services.alerting_system import AlertSeverity
+        from app.services.live_trading.alert_to_trade_mapper import TradeSignal, TradeSignalType
+        from app.services.live_trading.broker_connector import OrderSide, OrderType
 
         signal = TradeSignal(
             signal_id="test_limit",
@@ -499,12 +472,9 @@ class TestOrderTypes:
     @pytest.mark.asyncio
     async def test_stop_order(self, order_adapter):
         """Test STOP order type."""
-        from app.services.live_trading.alert_to_trade_mapper import (
-            TradeSignal,
-            TradeSignalType,
-        )
-        from app.services.live_trading.broker_connector import OrderSide, OrderType
         from app.services.alerting_system import AlertSeverity
+        from app.services.live_trading.alert_to_trade_mapper import TradeSignal, TradeSignalType
+        from app.services.live_trading.broker_connector import OrderSide, OrderType
 
         signal = TradeSignal(
             signal_id="test_stop",

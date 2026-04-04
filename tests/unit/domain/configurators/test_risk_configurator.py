@@ -14,9 +14,9 @@ from decimal import Decimal
 
 import pytest
 
-from app.domain.models.input_profile import RiskTolerance
 from app.domain.configurators.risk_config import RiskConfig
 from app.domain.configurators.risk_configurator import RiskConfigurator
+from app.domain.models.input_profile import RiskTolerance
 
 
 class TestRiskConfig:

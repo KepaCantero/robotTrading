@@ -15,7 +15,6 @@ Tests cover all Markowitz rules (66-80) from the paper:
 - Rule 15: Input sanitization
 """
 
-
 import numpy as np
 import pytest
 from numpy.typing import NDArray

@@ -19,7 +19,7 @@ import pytest
 project_root = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(project_root))
 
-from app.domain.strategies.learning.feature_importance import (  # noqa: E402
+from app.domain.strategies.learning.feature_importance import (
     SHAP_AVAILABLE,
     FeatureImportanceAnalyzer,
     FeatureSelector,
@@ -76,7 +76,7 @@ class TestSHAPAnalyzer:
     def test_explain_prediction(self):
         """Test explicación de predicción individual."""
         try:
-            from sklearn.ensemble import RandomForestClassifier  # noqa: E402
+            from sklearn.ensemble import RandomForestClassifier
 
             X_train = np.random.randn(100, 5)
             y_train = (X_train[:, 0] > 0).astype(int)
@@ -111,7 +111,7 @@ class TestFeatureSelector:
     def test_univariate_selection(self):
         """Test selección univariante."""
         try:
-            from sklearn.datasets import make_classification  # noqa: E402
+            from sklearn.datasets import make_classification
 
             X, y = make_classification(
                 n_samples=200, n_features=20, n_informative=10, random_state=42
@@ -134,7 +134,7 @@ class TestFeatureSelector:
     def test_model_based_selection(self):
         """Test selección basada en modelo."""
         try:
-            from sklearn.datasets import make_classification  # noqa: E402
+            from sklearn.datasets import make_classification
 
             X, y = make_classification(
                 n_samples=200, n_features=20, n_informative=10, random_state=42
@@ -173,7 +173,7 @@ class TestFeatureImportanceAnalyzer:
     def test_analyze_with_shap(self):
         """Test análisis completo con SHAP."""
         try:
-            from sklearn.ensemble import RandomForestClassifier  # noqa: E402
+            from sklearn.ensemble import RandomForestClassifier
 
             X_train = np.random.randn(100, 10)
             y_train = (X_train[:, 0] > 0).astype(int)
@@ -201,7 +201,7 @@ class TestFeatureImportanceAnalyzer:
     def test_analyze_with_selection(self):
         """Test análisis con feature selection."""
         try:
-            from sklearn.ensemble import RandomForestClassifier  # noqa: E402
+            from sklearn.ensemble import RandomForestClassifier
 
             X_train = np.random.randn(100, 20)
             y_train = (X_train[:, 0] > 0).astype(int)

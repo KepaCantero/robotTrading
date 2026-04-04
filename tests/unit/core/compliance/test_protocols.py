@@ -11,7 +11,11 @@ from typing import Any
 import pandas as pd
 import pytest
 
-from app.domain.services.compliance.protocols import ComplianceService, PostTradeCheckable, PreTradeCheckable
+from app.domain.services.compliance.protocols import (
+    ComplianceService,
+    PostTradeCheckable,
+    PreTradeCheckable,
+)
 
 
 class MockComplianceService:

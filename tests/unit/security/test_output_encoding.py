@@ -14,7 +14,6 @@ Tests:
 - XSS pattern detection
 """
 
-
 import pytest
 
 from app.security.web_security.output_encoding import (
@@ -274,7 +273,7 @@ class TestSQLLikeEncoding:
         """Test encoding of SQL wildcards."""
         result = encode_for_sql_like("user_input")
 
-        assert "user\\_input" == result or "user_input" == result
+        assert result == "user\\_input" or result == "user_input"
 
     def test_encode_for_sql_like_percent(self):
         """Test encoding of percent sign."""
@@ -354,7 +353,7 @@ class TestJSONEncoding:
         """Test encoding of simple JSON."""
         result = safe_json_dumps({"key": "value"})
 
-        assert '{"key": "value"}' == result or '{"key":"value"}' == result
+        assert result == '{"key": "value"}' or result == '{"key":"value"}'
 
     def test_encode_json_with_special_chars(self):
         """Test encoding of JSON with special characters."""

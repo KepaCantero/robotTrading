@@ -4,18 +4,16 @@ Unit tests for OrderManagerAdapter - Task 11 Order Manager Integration
 Tests the adapter that bridges OrderManager to ITradeExecutor protocol.
 """
 
-import pytest
 from decimal import Decimal
 from unittest.mock import AsyncMock, MagicMock
+
+import pytest
 
 from app.infrastructure.execution.order_manager_adapter import (
     OrderManagerAdapter,
     get_order_manager_adapter,
 )
-from app.services.live_trading.alert_to_trade_mapper import (
-    TradeSignal,
-    TradeSignalType,
-)
+from app.services.live_trading.alert_to_trade_mapper import TradeSignal, TradeSignalType
 from app.services.live_trading.broker_connector import (
     BrokerOrder,
     OrderSide,

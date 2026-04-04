@@ -16,9 +16,7 @@ import pytest
 # Skip all tests if lightgbm is not available
 pytest.importorskip("lightgbm")
 
-from app.domain.strategies.learning.supervised_learning_engine import (
-    SupervisedLearningEngine,
-)
+from app.domain.strategies.learning.supervised_learning_engine import SupervisedLearningEngine
 
 
 class TestSampleWeightsIntegration:
