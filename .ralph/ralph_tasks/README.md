@@ -11,6 +11,8 @@
 | 31 | Production Audit | Audit de archivos contra .requirements/ + QA gates | Pendiente |
 | 32 | Architecture Requirements Audit | Audit de arquitectura y estructura del sistema | Pendiente |
 | 35 | Fix Pytest | Corregir 175 collection errors en tests/unit/ | Pendiente |
+| 36 | Progressive Backtesting | Ejecutar tests/backtesting/ progresivo: 1->ALL stocks, min->5yr, 5 perfiles (foco dividendos). Se puede tocar app/. QA gates obligatorios. | Pendiente |
+| 37 | Dashboard Backtesting | Integrar backtesting en dashboard: ejecutar, guardar historico, ver config, es profitable? | Pendiente |
 | 99 | Final Cleanup | Limpieza final post-orquestador | Pendiente |
 
 ## Ejecutar
@@ -24,6 +26,9 @@ ralph run -P .ralph/ralph_tasks/prompts/35_fix_pytest.md
 
 # Fix metricas backtesting (independiente)
 ralph run -P .ralph/ralph_tasks/prompts/23_profile_backtest_metrics_fix.md
+
+# Progressive backtesting (independiente)
+ralph run -P .ralph/ralph_tasks/prompts/36_progressive_backtesting.md
 ```
 
 ## Tareas Eliminadas (2026-04-02)

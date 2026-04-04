@@ -3,6 +3,7 @@ Unit tests for Order entity.
 
 Tests the Order entity with comprehensive state machine following Tomasini's methodology.
 """
+
 from datetime import datetime
 from decimal import Decimal
 from unittest.mock import Mock

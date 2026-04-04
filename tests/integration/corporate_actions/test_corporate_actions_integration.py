@@ -14,8 +14,8 @@ from unittest.mock import AsyncMock, MagicMock, Mock
 
 import pytest
 
-from app.shared.interfaces.broker_base import BrokerType, OrderSide, OrderStatus
 from app.services.corporate_actions.handler import CorporateActionsHandler, CorporateActionType
+from app.shared.interfaces.broker_base import BrokerType, OrderSide, OrderStatus
 
 # =============================================================================
 # FIXTURES

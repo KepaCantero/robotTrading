@@ -8,6 +8,7 @@ Tests verify that the Repository pattern correctly implements:
 - Cached repository
 - Error handling
 """
+
 from typing import Optional
 
 import pytest

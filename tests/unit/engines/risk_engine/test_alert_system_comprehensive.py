@@ -15,8 +15,8 @@ from unittest.mock import Mock, patch
 import pytest
 from hypothesis import given, settings, strategies as st
 
-from app.engines.risk_engine.alert_system import AlertSystem
 from app.domain.models.portfolio import Portfolio
+from app.engines.risk_engine.alert_system import AlertSystem
 
 # =============================================================================
 # Test Fixtures

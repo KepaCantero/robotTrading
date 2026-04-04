@@ -10,13 +10,14 @@ Tests the API key management functionality including:
 - Last used updates
 """
 
-import pytest
 from datetime import datetime, timedelta
+
+import pytest
 from cryptography.fernet import Fernet
 
 from app.services.security.api_key_manager import (
-    ApiKeyManager,
     ApiKey,
+    ApiKeyManager,
     KeyPermission,
     KeyValidationError,
 )

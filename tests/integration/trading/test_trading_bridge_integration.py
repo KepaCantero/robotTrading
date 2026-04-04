@@ -13,12 +13,12 @@ This is an INTEGRATION test - it tests the complete alert-to-trade flow
 with real TradingBridgeOrchestrator and related components (not mocked).
 """
 
-import pytest
-from decimal import Decimal
 from datetime import datetime, timezone
+from decimal import Decimal
+
+import pytest
 
 from app.infrastructure.execution.trading_bridge_adapter import TradingBridgeAdapter
-
 
 # =============================================================================
 # Fixtures
@@ -34,12 +34,9 @@ def bridge_adapter():
 @pytest.fixture
 def sample_signal():
     """Create sample trade signal."""
-    from app.services.live_trading.alert_to_trade_mapper import (
-        TradeSignal,
-        TradeSignalType,
-    )
-    from app.services.live_trading.broker_connector import OrderSide, OrderType
     from app.services.alerting_system import AlertSeverity
+    from app.services.live_trading.alert_to_trade_mapper import TradeSignal, TradeSignalType
+    from app.services.live_trading.broker_connector import OrderSide, OrderType
 
     return TradeSignal(
         signal_id="test_tb_001",
@@ -122,12 +119,9 @@ class TestSignalExecution:
     @pytest.mark.asyncio
     async def test_execute_multiple_signals(self, bridge_adapter):
         """Test executing multiple signals."""
-        from app.services.live_trading.alert_to_trade_mapper import (
-            TradeSignal,
-            TradeSignalType,
-        )
-        from app.services.live_trading.broker_connector import OrderSide, OrderType
         from app.services.alerting_system import AlertSeverity
+        from app.services.live_trading.alert_to_trade_mapper import TradeSignal, TradeSignalType
+        from app.services.live_trading.broker_connector import OrderSide, OrderType
 
         signals = [
             TradeSignal(
@@ -264,12 +258,9 @@ class TestErrorHandling:
     @pytest.mark.asyncio
     async def test_execute_with_invalid_signal(self, bridge_adapter):
         """Test execution with invalid signal data."""
-        from app.services.live_trading.alert_to_trade_mapper import (
-            TradeSignal,
-            TradeSignalType,
-        )
-        from app.services.live_trading.broker_connector import OrderSide, OrderType
         from app.services.alerting_system import AlertSeverity
+        from app.services.live_trading.alert_to_trade_mapper import TradeSignal, TradeSignalType
+        from app.services.live_trading.broker_connector import OrderSide, OrderType
 
         # Create signal with minimal data
         invalid_signal = TradeSignal(
@@ -324,12 +315,9 @@ class TestSignalTypes:
     @pytest.mark.asyncio
     async def test_long_signal(self, bridge_adapter):
         """Test LONG signal type."""
-        from app.services.live_trading.alert_to_trade_mapper import (
-            TradeSignal,
-            TradeSignalType,
-        )
-        from app.services.live_trading.broker_connector import OrderSide, OrderType
         from app.services.alerting_system import AlertSeverity
+        from app.services.live_trading.alert_to_trade_mapper import TradeSignal, TradeSignalType
+        from app.services.live_trading.broker_connector import OrderSide, OrderType
 
         signal = TradeSignal(
             signal_id="test_long",
@@ -353,12 +341,9 @@ class TestSignalTypes:
     @pytest.mark.asyncio
     async def test_short_signal(self, bridge_adapter):
         """Test SHORT signal type."""
-        from app.services.live_trading.alert_to_trade_mapper import (
-            TradeSignal,
-            TradeSignalType,
-        )
-        from app.services.live_trading.broker_connector import OrderSide, OrderType
         from app.services.alerting_system import AlertSeverity
+        from app.services.live_trading.alert_to_trade_mapper import TradeSignal, TradeSignalType
+        from app.services.live_trading.broker_connector import OrderSide, OrderType
 
         signal = TradeSignal(
             signal_id="test_short",
@@ -391,12 +376,9 @@ class TestAlertSeverity:
     @pytest.mark.asyncio
     async def test_critical_severity_alert(self, bridge_adapter):
         """Test CRITICAL severity alert."""
-        from app.services.live_trading.alert_to_trade_mapper import (
-            TradeSignal,
-            TradeSignalType,
-        )
-        from app.services.live_trading.broker_connector import OrderSide, OrderType
         from app.services.alerting_system import AlertSeverity
+        from app.services.live_trading.alert_to_trade_mapper import TradeSignal, TradeSignalType
+        from app.services.live_trading.broker_connector import OrderSide, OrderType
 
         signal = TradeSignal(
             signal_id="test_critical",
@@ -420,12 +402,9 @@ class TestAlertSeverity:
     @pytest.mark.asyncio
     async def test_warning_severity_alert(self, bridge_adapter):
         """Test WARNING severity alert."""
-        from app.services.live_trading.alert_to_trade_mapper import (
-            TradeSignal,
-            TradeSignalType,
-        )
-        from app.services.live_trading.broker_connector import OrderSide, OrderType
         from app.services.alerting_system import AlertSeverity
+        from app.services.live_trading.alert_to_trade_mapper import TradeSignal, TradeSignalType
+        from app.services.live_trading.broker_connector import OrderSide, OrderType
 
         signal = TradeSignal(
             signal_id="test_warning",
@@ -449,12 +428,9 @@ class TestAlertSeverity:
     @pytest.mark.asyncio
     async def test_info_severity_alert(self, bridge_adapter):
         """Test INFO severity alert."""
-        from app.services.live_trading.alert_to_trade_mapper import (
-            TradeSignal,
-            TradeSignalType,
-        )
-        from app.services.live_trading.broker_connector import OrderSide, OrderType
         from app.services.alerting_system import AlertSeverity
+        from app.services.live_trading.alert_to_trade_mapper import TradeSignal, TradeSignalType
+        from app.services.live_trading.broker_connector import OrderSide, OrderType
 
         signal = TradeSignal(
             signal_id="test_info",
@@ -513,12 +489,9 @@ class TestMultiSymbolExecution:
     @pytest.mark.asyncio
     async def test_execute_different_symbols(self, bridge_adapter):
         """Test executing signals for different symbols."""
-        from app.services.live_trading.alert_to_trade_mapper import (
-            TradeSignal,
-            TradeSignalType,
-        )
-        from app.services.live_trading.broker_connector import OrderSide, OrderType
         from app.services.alerting_system import AlertSeverity
+        from app.services.live_trading.alert_to_trade_mapper import TradeSignal, TradeSignalType
+        from app.services.live_trading.broker_connector import OrderSide, OrderType
 
         symbols = ["AAPL", "MSFT", "GOOGL", "TSLA", "AMZN"]
         signals = [

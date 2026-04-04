@@ -75,7 +75,7 @@ class TestSecretManager:
         manager = SecretManager()
         # Very short strings get fully masked
         short = manager.mask_value("ab")
-        assert "**" == short or "***" == short
+        assert short == "**" or short == "***"
 
         # Medium strings show first and last chars
         medium = manager.mask_value("abcdefghij")
@@ -254,7 +254,7 @@ class TestConnectionStrings:
             manager = SecretManager()
             conn_str = manager.get_connection_string('questdb')
 
-            assert 'postgresql://admin:quest_pass@localhost:9009/qdb' == conn_str
+            assert conn_str == 'postgresql://admin:quest_pass@localhost:9009/qdb'
 
     def test_postgresql_missing_password_raises_error(self):
         """Test that missing DB password raises error."""
@@ -313,7 +313,7 @@ class TestConvenienceFunctions:
         ):
             conn_str = get_connection_string('postgresql')
             # Check that connection string is built correctly
-            assert 'postgresql://user:pass@localhost:5432/db' == conn_str
+            assert conn_str == 'postgresql://user:pass@localhost:5432/db'
 
     def test_mask_secret_function(self):
         """Test mask_secret convenience function."""

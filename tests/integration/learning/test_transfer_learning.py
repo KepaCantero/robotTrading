@@ -20,7 +20,7 @@ import pytest
 project_root = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(project_root))
 
-from app.domain.strategies.learning.transfer_learning import (  # noqa: E402
+from app.domain.strategies.learning.transfer_learning import (
     PYTORCH_AVAILABLE,
     FineTuner,
     KnowledgeDistiller,
@@ -142,8 +142,8 @@ class TestFineTuner:
     def test_fine_tune_pytorch(self):
         """Test fine-tuning de modelo PyTorch."""
         try:
-            import torch  # noqa: E402
-            import torch.nn as nn  # noqa: E402
+            import torch
+            import torch.nn as nn
 
             # Crear modelo simple
             class SimpleModel(nn.Module):
@@ -178,7 +178,7 @@ class TestFineTuner:
     def test_fine_tune_tree_based(self):
         """Test fine-tuning de modelo tree-based."""
         try:
-            from sklearn.ensemble import RandomForestClassifier  # noqa: E402
+            from sklearn.ensemble import RandomForestClassifier
 
             # Crear modelo
             X_train = np.random.randn(100, 5)
@@ -217,8 +217,8 @@ class TestKnowledgeDistiller:
     def test_distill_pytorch(self):
         """Test distillation PyTorch."""
         try:
-            import torch  # noqa: E402
-            import torch.nn as nn  # noqa: E402
+            import torch
+            import torch.nn as nn
 
             # Teacher (grande)
             class TeacherModel(nn.Module):

@@ -31,7 +31,7 @@ from app.services.parametrization.module_parametrizer import ModuleParametrizer
 def investment_profiles_config():
     """Load investment profiles YAML configuration."""
     yaml_path = Path("/Users/kepa.cantero/Projects/algoTrading/config/investment_profiles.yaml")
-    with open(yaml_path, 'r') as f:
+    with open(yaml_path) as f:
         return yaml.safe_load(f)
 
 
@@ -39,7 +39,7 @@ def investment_profiles_config():
 def module_parameters_config():
     """Load module parameters YAML configuration."""
     yaml_path = Path("/Users/kepa.cantero/Projects/algoTrading/config/module_parameters.yaml")
-    with open(yaml_path, 'r') as f:
+    with open(yaml_path) as f:
         return yaml.safe_load(f)
 
 

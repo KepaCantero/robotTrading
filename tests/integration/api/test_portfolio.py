@@ -13,8 +13,8 @@ import pytest
 from fastapi import status
 from fastapi.testclient import TestClient
 
-from app.presentation.api.portfolio import get_portfolio_service, router
 from app.domain.models.portfolio import Portfolio
+from app.presentation.api.portfolio import get_portfolio_service, router
 from app.services.portfolio_service import PortfolioService
 
 
@@ -141,20 +141,22 @@ class TestPortfolioAPIEndpoints:
     async def test_portfolio_health_check_healthy(self, client, mock_portfolio):
         """Test portfolio_health_check returns healthy status."""
         mock_portfolio.positions = []
-        with patch.object(
-            PortfolioService,
-            "get_portfolio",
-            new=AsyncMock(return_value=mock_portfolio),
-        ):
-            with patch.object(
+        with (
+            patch.object(
+                PortfolioService,
+                "get_portfolio",
+                new=AsyncMock(return_value=mock_portfolio),
+            ),
+            patch.object(
                 PortfolioService,
                 "get_circuit_breaker_status",
                 return_value={},
-            ):
-                response = client.get("/portfolio/health")
-                assert response.status_code == status.HTTP_200_OK
-                data = response.json()
-                assert data["status"] in ["healthy", "unhealthy"]
+            ),
+        ):
+            response = client.get("/portfolio/health")
+            assert response.status_code == status.HTTP_200_OK
+            data = response.json()
+            assert data["status"] in ["healthy", "unhealthy"]
 
 
 class TestDIContainerPattern:

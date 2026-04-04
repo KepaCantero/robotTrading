@@ -3,6 +3,7 @@ Property-based tests for Risk Engine using Hypothesis.
 
 Tests invariants and properties across wide range of inputs.
 """
+
 import numpy as np
 import pytest
 from hypothesis import given, settings

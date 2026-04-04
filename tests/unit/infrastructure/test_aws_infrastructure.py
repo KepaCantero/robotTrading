@@ -32,7 +32,7 @@ class TestAWSInfrastructureConfig:
 
     def test_aws_config_structure(self):
         """Test AWS configuration file structure."""
-        with open(self.config_path, "r") as f:
+        with open(self.config_path) as f:
             config = yaml.safe_load(f)
 
         # Required top-level keys
@@ -54,7 +54,7 @@ class TestAWSInfrastructureConfig:
 
     def test_vpc_configuration(self):
         """Test VPC configuration."""
-        with open(self.config_path, "r") as f:
+        with open(self.config_path) as f:
             config = yaml.safe_load(f)
 
         vpc = config["vpc"]
@@ -67,7 +67,7 @@ class TestAWSInfrastructureConfig:
 
     def test_ec2_configuration(self):
         """Test EC2 configuration."""
-        with open(self.config_path, "r") as f:
+        with open(self.config_path) as f:
             config = yaml.safe_load(f)
 
         ec2 = config["ec2"]
@@ -79,7 +79,7 @@ class TestAWSInfrastructureConfig:
 
     def test_rds_configuration(self):
         """Test RDS configuration."""
-        with open(self.config_path, "r") as f:
+        with open(self.config_path) as f:
             config = yaml.safe_load(f)
 
         rds = config["rds"]
@@ -93,7 +93,7 @@ class TestAWSInfrastructureConfig:
 
     def test_elasticache_configuration(self):
         """Test ElastiCache configuration."""
-        with open(self.config_path, "r") as f:
+        with open(self.config_path) as f:
             config = yaml.safe_load(f)
 
         elasticache = config["elasticache"]
@@ -105,7 +105,7 @@ class TestAWSInfrastructureConfig:
 
     def test_security_groups_configuration(self):
         """Test security groups configuration."""
-        with open(self.config_path, "r") as f:
+        with open(self.config_path) as f:
             config = yaml.safe_load(f)
 
         security_groups = config["security_groups"]
@@ -121,7 +121,7 @@ class TestAWSInfrastructureConfig:
 
     def test_iam_configuration(self):
         """Test IAM configuration."""
-        with open(self.config_path, "r") as f:
+        with open(self.config_path) as f:
             config = yaml.safe_load(f)
 
         iam = config["iam"]
@@ -133,7 +133,7 @@ class TestAWSInfrastructureConfig:
 
     def test_terraform_syntax(self):
         """Test Terraform file syntax."""
-        with open(self.terraform_path, "r") as f:
+        with open(self.terraform_path) as f:
             terraform_content = f.read()
 
         # Basic Terraform syntax checks
@@ -146,7 +146,7 @@ class TestAWSInfrastructureConfig:
 
     def test_user_data_script_content(self):
         """Test user data script content."""
-        with open(self.user_data_path, "r") as f:
+        with open(self.user_data_path) as f:
             user_data = f.read()
 
         # Check for essential commands
@@ -173,7 +173,7 @@ class TestAWSInfrastructureConfig:
         assert deploy_script.exists()
 
         # Check if script has proper shebang
-        with open(deploy_script, "r") as f:
+        with open(deploy_script) as f:
             content = f.read()
             assert content.startswith("#!/bin/bash")
 
@@ -183,16 +183,16 @@ class TestAWSInfrastructureConfig:
         assert destroy_script.exists()
 
         # Check if script has proper shebang
-        with open(destroy_script, "r") as f:
+        with open(destroy_script) as f:
             content = f.read()
             assert content.startswith("#!/bin/bash")
 
     def test_configuration_consistency(self):
         """Test configuration consistency across files."""
-        with open(self.config_path, "r") as f:
+        with open(self.config_path) as f:
             config = yaml.safe_load(f)
 
-        with open(self.terraform_path, "r") as f:
+        with open(self.terraform_path) as f:
             terraform_content = f.read()
 
         # Check that project name is consistent
@@ -205,7 +205,7 @@ class TestAWSInfrastructureConfig:
 
     def test_security_best_practices(self):
         """Test security best practices in configuration."""
-        with open(self.config_path, "r") as f:
+        with open(self.config_path) as f:
             config = yaml.safe_load(f)
 
         # Check that database is in private subnets
@@ -225,7 +225,7 @@ class TestAWSInfrastructureConfig:
 
     def test_monitoring_configuration(self):
         """Test monitoring configuration."""
-        with open(self.config_path, "r") as f:
+        with open(self.config_path) as f:
             config = yaml.safe_load(f)
 
         # Check CloudWatch configuration
@@ -236,7 +236,7 @@ class TestAWSInfrastructureConfig:
 
     def test_backup_configuration(self):
         """Test backup configuration."""
-        with open(self.config_path, "r") as f:
+        with open(self.config_path) as f:
             config = yaml.safe_load(f)
 
         # Check RDS backup settings
@@ -251,7 +251,7 @@ class TestAWSInfrastructureConfig:
 
     def test_scalability_considerations(self):
         """Test scalability considerations."""
-        with open(self.config_path, "r") as f:
+        with open(self.config_path) as f:
             config = yaml.safe_load(f)
 
         # Check that RDS has max allocated storage
@@ -264,7 +264,7 @@ class TestAWSInfrastructureConfig:
 
     def test_cost_optimization(self):
         """Test cost optimization settings."""
-        with open(self.config_path, "r") as f:
+        with open(self.config_path) as f:
             config = yaml.safe_load(f)
 
         # Check that multi-AZ is disabled for MVP
@@ -277,7 +277,7 @@ class TestAWSInfrastructureConfig:
 
     def test_environment_variables(self):
         """Test environment variable configuration."""
-        with open(self.user_data_path, "r") as f:
+        with open(self.user_data_path) as f:
             user_data = f.read()
 
         # Check that environment variables are properly set
@@ -288,7 +288,7 @@ class TestAWSInfrastructureConfig:
 
     def test_logging_configuration(self):
         """Test logging configuration."""
-        with open(self.user_data_path, "r") as f:
+        with open(self.user_data_path) as f:
             user_data = f.read()
 
         # Check CloudWatch agent configuration
@@ -300,7 +300,7 @@ class TestAWSInfrastructureConfig:
 
     def test_health_checks(self):
         """Test health check configuration."""
-        with open(self.user_data_path, "r") as f:
+        with open(self.user_data_path) as f:
             user_data = f.read()
 
         # Check that health checks are configured
@@ -309,7 +309,7 @@ class TestAWSInfrastructureConfig:
 
     def test_monitoring_scripts(self):
         """Test monitoring scripts."""
-        with open(self.user_data_path, "r") as f:
+        with open(self.user_data_path) as f:
             user_data = f.read()
 
         # Check monitoring script creation
@@ -321,7 +321,7 @@ class TestAWSInfrastructureConfig:
 
     def test_service_configuration(self):
         """Test systemd service configuration."""
-        with open(self.user_data_path, "r") as f:
+        with open(self.user_data_path) as f:
             user_data = f.read()
 
         # Check systemd service creation
@@ -331,7 +331,7 @@ class TestAWSInfrastructureConfig:
 
     def test_ssl_configuration(self):
         """Test SSL configuration placeholder."""
-        with open(self.user_data_path, "r") as f:
+        with open(self.user_data_path) as f:
             user_data = f.read()
 
         # Check nginx SSL configuration
@@ -340,7 +340,7 @@ class TestAWSInfrastructureConfig:
 
     def test_file_permissions(self):
         """Test file permissions configuration."""
-        with open(self.user_data_path, "r") as f:
+        with open(self.user_data_path) as f:
             user_data = f.read()
 
         # Check that proper permissions are set
@@ -349,7 +349,7 @@ class TestAWSInfrastructureConfig:
 
     def test_error_handling(self):
         """Test error handling in scripts."""
-        with open(self.user_data_path, "r") as f:
+        with open(self.user_data_path) as f:
             user_data = f.read()
 
         # Check that error handling is in place
@@ -357,7 +357,7 @@ class TestAWSInfrastructureConfig:
 
     def test_resource_cleanup(self):
         """Test resource cleanup configuration."""
-        with open(self.user_data_path, "r") as f:
+        with open(self.user_data_path) as f:
             user_data = f.read()
 
         # Check that cleanup is configured
@@ -366,7 +366,7 @@ class TestAWSInfrastructureConfig:
 
     def test_configuration_validation(self):
         """Test configuration validation."""
-        with open(self.config_path, "r") as f:
+        with open(self.config_path) as f:
             config = yaml.safe_load(f)
 
         # Validate numeric values
@@ -381,7 +381,7 @@ class TestAWSInfrastructureConfig:
 
     def test_terraform_outputs(self):
         """Test Terraform outputs configuration."""
-        with open(self.terraform_path, "r") as f:
+        with open(self.terraform_path) as f:
             terraform_content = f.read()
 
         # Check that important outputs are defined
@@ -392,7 +392,7 @@ class TestAWSInfrastructureConfig:
 
     def test_terraform_variables(self):
         """Test Terraform variables configuration."""
-        with open(self.terraform_path, "r") as f:
+        with open(self.terraform_path) as f:
             terraform_content = f.read()
 
         # Check that important variables are defined
@@ -403,7 +403,7 @@ class TestAWSInfrastructureConfig:
 
     def test_terraform_backend(self):
         """Test Terraform backend configuration."""
-        with open(self.terraform_path, "r") as f:
+        with open(self.terraform_path) as f:
             terraform_content = f.read()
 
         # Check that backend is configured
@@ -414,7 +414,7 @@ class TestAWSInfrastructureConfig:
 
     def test_terraform_provider(self):
         """Test Terraform provider configuration."""
-        with open(self.terraform_path, "r") as f:
+        with open(self.terraform_path) as f:
             terraform_content = f.read()
 
         # Check that AWS provider is configured
@@ -424,7 +424,7 @@ class TestAWSInfrastructureConfig:
 
     def test_terraform_required_version(self):
         """Test Terraform required version."""
-        with open(self.terraform_path, "r") as f:
+        with open(self.terraform_path) as f:
             terraform_content = f.read()
 
         # Check that required version is specified
@@ -433,7 +433,7 @@ class TestAWSInfrastructureConfig:
 
     def test_configuration_completeness(self):
         """Test that configuration is complete."""
-        with open(self.config_path, "r") as f:
+        with open(self.config_path) as f:
             config = yaml.safe_load(f)
 
         # Check that all required sections have content
@@ -442,7 +442,7 @@ class TestAWSInfrastructureConfig:
 
     def test_configuration_readability(self):
         """Test that configuration is readable and well-formatted."""
-        with open(self.config_path, "r") as f:
+        with open(self.config_path) as f:
             content = f.read()
 
         # Check that file is properly formatted YAML
@@ -453,7 +453,7 @@ class TestAWSInfrastructureConfig:
 
     def test_terraform_readability(self):
         """Test that Terraform file is readable."""
-        with open(self.terraform_path, "r") as f:
+        with open(self.terraform_path) as f:
             content = f.read()
 
         # Basic syntax checks
@@ -471,7 +471,7 @@ class TestAWSInfrastructureConfig:
         for script_path in scripts:
             script_file = Path(script_path)
             if script_file.exists():
-                with open(script_file, "r") as f:
+                with open(script_file) as f:
                     content = f.read()
                     assert len(content) > 0, f"Script {script_path} should not be empty"
                     assert (

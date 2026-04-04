@@ -1,10 +1,12 @@
 """
 Tests for TelegramChannel notification channel.
 """
-import pytest
+
 from datetime import datetime
 from decimal import Decimal
 from unittest.mock import AsyncMock, MagicMock, patch
+
+import pytest
 
 from app.services.alerting_system.models import (
     AlertSeverity,

@@ -16,11 +16,11 @@ import numpy as np
 import pytest
 
 project_root = Path(__file__).parent.parent.parent
-import sys  # noqa: E402
+import sys
 
 sys.path.insert(0, str(project_root))
 
-from app.domain.optimization.parameter_stability_metrics import (  # noqa: E402
+from app.domain.optimization.parameter_stability_metrics import (
     ParameterStabilityMetrics,
     ParameterStabilityResult,
     StabilityReport,

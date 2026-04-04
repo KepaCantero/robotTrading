@@ -3,6 +3,7 @@ Comprehensive integration tests for VaR calculators.
 
 Tests comparing different VaR calculation methods.
 """
+
 import numpy as np
 import pytest
 

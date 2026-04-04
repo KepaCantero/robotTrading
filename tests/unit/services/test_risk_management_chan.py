@@ -2,7 +2,6 @@
 Unit tests for Risk Management - Ernest Chan methodologies
 """
 
-
 import numpy as np
 import pytest
 

@@ -4,8 +4,9 @@ Unit tests for IBKRSpainAdapter.
 Tests the IBrokerAdapter Protocol implementation for Spanish traders.
 """
 
-import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
+
+import pytest
 
 from app.services.live_trading.broker_adapters.ibkr_adapter_spain import (
     IBKRSpainAdapter,

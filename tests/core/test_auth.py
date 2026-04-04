@@ -20,7 +20,6 @@ from unittest.mock import Mock
 import pytest
 from fastapi import HTTPException, status
 
-from app.shared.audit import AuditLogger
 from app.security.authentication.auth import (  # TypedDict classes; Main classes; Singleton getters; Dependencies; Utilities
     APIKeyDict,
     AuthAttemptTracker,
@@ -47,6 +46,7 @@ from app.security.authentication.auth import (  # TypedDict classes; Main classe
     require_roles,
     verify_token_and_get_user,
 )
+from app.shared.audit import AuditLogger
 
 # Check if JWT library is available
 try:

@@ -193,6 +193,18 @@ database:
 
 output_dir: "test_output"
 
+acceptance_criteria:
+  significance_threshold: 0.05
+  strong_significance_threshold: 0.01
+  degradation_threshold: 0.1
+  confidence_high: 0.95
+  confidence_medium: 0.9
+  confidence_low: 0.8
+  min_sharpe: 0.5
+  min_return: 0.0
+  max_drawdown: 0.25
+  revision_multiplier: 1.2
+
 capital_tiers:
   bajo: [50000, 100000]
   medio: [100000, 500000]
@@ -207,12 +219,10 @@ investment_horizons:
             config_path = f.name
 
         try:
-            # Mock database creation to avoid actual DB operations
-            with patch('app.backtesting.profile_batch_backtester.create_engine'):
-                with patch('app.backtesting.profile_batch_backtester.sessionmaker'):
-                    with patch('app.backtesting.profile_batch_backtester.Base.metadata.create_all'):
-                        backtester = ProfileBatchBacktester(config_path=config_path)
-                        assert backtester is not None
+            # Mock DatabaseService to avoid actual DB operations
+            with patch('app.backtesting.profile_batch_backtester.DatabaseService'):
+                backtester = ProfileBatchBacktester(config_path=config_path)
+                assert backtester is not None
         finally:
             # Clean up
             Path(config_path).unlink(missing_ok=True)
@@ -236,10 +246,22 @@ database:
 
 output_dir: "test_output"
 
+acceptance_criteria:
+  significance_threshold: 0.05
+  strong_significance_threshold: 0.01
+  degradation_threshold: 0.1
+  confidence_high: 0.95
+  confidence_medium: 0.9
+  confidence_low: 0.8
+  min_sharpe: 0.5
+  min_return: 0.0
+  max_drawdown: 0.25
+  revision_multiplier: 1.2
+
 capital_tiers:
-  bajo: [50000, 100000]
-  medio: [100000, 500000]
-  alto: [500000, 1000000]
+  bajo: 50000
+  medio: 150000
+  alto: 500000
 
 investment_horizons:
   corto: 6
@@ -250,14 +272,12 @@ investment_horizons:
             config_path = f.name
 
         try:
-            with patch('app.backtesting.profile_batch_backtester.create_engine'):
-                with patch('app.backtesting.profile_batch_backtester.sessionmaker'):
-                    with patch('app.backtesting.profile_batch_backtester.Base.metadata.create_all'):
-                        backtester = ProfileBatchBacktester(config_path=config_path)
-                        profiles = backtester.generate_all_profiles()
-                        assert isinstance(profiles, list)
-                        assert len(profiles) > 0
-                        assert all(isinstance(p, InputProfile) for p in profiles)
+            with patch('app.backtesting.profile_batch_backtester.DatabaseService'):
+                backtester = ProfileBatchBacktester(config_path=config_path)
+                profiles = backtester.generate_all_profiles()
+                assert isinstance(profiles, list)
+                assert len(profiles) > 0
+                assert all(isinstance(p, InputProfile) for p in profiles)
         finally:
             Path(config_path).unlink(missing_ok=True)
 
@@ -272,6 +292,7 @@ class TestRunSingleProfile:
             objetivo_inversion=ObjectivoInversion.MAXIMIZAR_CAPITAL,
             risk_tolerance=RiskTolerance.ALTO,
             capital_initial=100000,
+            investment_horizon=12,
         )
 
         # Create temporary config
@@ -281,10 +302,22 @@ database:
   url: "sqlite:///test.db"
 output_dir: "test_output"
 
+acceptance_criteria:
+  significance_threshold: 0.05
+  strong_significance_threshold: 0.01
+  degradation_threshold: 0.1
+  confidence_high: 0.95
+  confidence_medium: 0.9
+  confidence_low: 0.8
+  min_sharpe: 0.5
+  min_return: 0.0
+  max_drawdown: 0.25
+  revision_multiplier: 1.2
+
 capital_tiers:
-  bajo: [50000, 100000]
-  medio: [100000, 500000]
-  alto: [500000, 1000000]
+  bajo: 50000
+  medio: 150000
+  alto: 500000
 
 investment_horizons:
   corto: 6
@@ -295,57 +328,54 @@ investment_horizons:
             config_path = f.name
 
         try:
-            with patch('app.backtesting.profile_batch_backtester.create_engine'):
-                with patch('app.backtesting.profile_batch_backtester.sessionmaker'):
-                    with patch('app.backtesting.profile_batch_backtester.Base.metadata.create_all'):
-                        backtester = ProfileBatchBacktester(config_path=config_path)
+            with patch('app.backtesting.profile_batch_backtester.DatabaseService'):
+                backtester = ProfileBatchBacktester(config_path=config_path)
 
-                        # Mock the ComprehensiveBacktestRunner
-                        mock_baseline_results = {
-                            "sharpe_ratio": 1.5,
-                            "total_return": 50.0,
-                            "max_drawdown_percentage": -15.0,
-                            "win_rate": 0.6,
-                        }
+                # Mock the ComprehensiveBacktestRunner
+                mock_baseline_results = {
+                    "sharpe_ratio": 1.5,
+                    "total_return": 50.0,
+                    "max_drawdown_percentage": -15.0,
+                    "win_rate": 0.6,
+                }
 
-                        with patch.object(
-                            backtester, '_run_baseline', return_value=mock_baseline_results
-                        ):
-                            # Mock optimization pipeline
-                            mock_comparison = BaselineOptimizationComparison(
-                                sharpe_improvement=0.0,
-                                return_improvement=0.0,
-                                max_dd_improvement=0.0,
-                                win_rate_improvement=0.0,
-                                sharpe_significant=False,
-                                return_significant=False,
-                                parameter_importance={},
-                                recommended="baseline",
-                                confidence=0.5,
-                                reason="Test",
-                            )
+                with patch.object(backtester, '_run_baseline', return_value=mock_baseline_results):
+                    # Mock optimization pipeline
+                    mock_comparison = BaselineOptimizationComparison(
+                        sharpe_improvement=0.0,
+                        return_improvement=0.0,
+                        max_dd_improvement=0.0,
+                        win_rate_improvement=0.0,
+                        sharpe_significant=False,
+                        return_significant=False,
+                        parameter_importance={},
+                        recommended="baseline",
+                        confidence=0.5,
+                        reason="Test",
+                    )
 
-                            mock_optimized_strategy = OptimizedStrategy(
-                                profile_id="test-001",
-                                baseline_metrics=mock_baseline_results,
-                                optimized_metrics=mock_baseline_results,
-                                best_parameters={},
-                                optimization_history=[],
-                                comparison=mock_comparison,
-                                ready_for_paper_trading=False,
-                                recommendation="Test",
-                            )
+                    mock_optimized_strategy = OptimizedStrategy(
+                        profile_id="test-001",
+                        baseline_metrics=mock_baseline_results,
+                        optimized_metrics=mock_baseline_results,
+                        best_parameters={},
+                        optimization_history=[],
+                        walk_forward_results={"passed": True},
+                        monte_carlo_results={"passed": True},
+                        out_of_sample_results={"passed": True},
+                        comparison=mock_comparison,
+                        ready_for_paper_trading=False,
+                        recommendation="Test",
+                    )
 
-                            with patch.object(
-                                backtester,
-                                '_run_optimization_pipeline',
-                                return_value=mock_optimized_strategy,
-                            ):
-                                # Mock database storage
-                                with patch.object(backtester, '_store_result'):
-                                    result = backtester.run_single_profile(profile)
-                                    assert isinstance(result, ProfileResult)
-                                    assert result.profile_id == "test-001"
+                    with patch.object(
+                        backtester,
+                        '_run_optimization_pipeline',
+                        return_value=mock_optimized_strategy,
+                    ):
+                        result = backtester.run_single_profile(profile)
+                        assert isinstance(result, ProfileResult)
+                        assert result.profile_id == profile.input_id
         finally:
             Path(config_path).unlink(missing_ok=True)
 
@@ -418,10 +448,22 @@ database:
   url: "sqlite:///test.db"
 output_dir: "test_output"
 
+acceptance_criteria:
+  significance_threshold: 0.05
+  strong_significance_threshold: 0.01
+  degradation_threshold: 0.1
+  confidence_high: 0.95
+  confidence_medium: 0.9
+  confidence_low: 0.8
+  min_sharpe: 0.5
+  min_return: 0.0
+  max_drawdown: 0.25
+  revision_multiplier: 1.2
+
 capital_tiers:
-  bajo: [50000, 100000]
-  medio: [100000, 500000]
-  alto: [500000, 1000000]
+  bajo: 50000
+  medio: 150000
+  alto: 500000
 
 investment_horizons:
   corto: 6
@@ -431,10 +473,10 @@ investment_horizons:
 
         try:
             with patch(
-                'app.backtesting.profile_batch_backtester.create_engine'
-            ) as mock_create_engine:
+                'app.backtesting.profile_batch_backtester.DatabaseService'
+            ) as mock_db_service:
                 # Simulate database error
-                mock_create_engine.side_effect = Exception("Database connection failed")
+                mock_db_service.side_effect = Exception("Database connection failed")
 
                 with pytest.raises(Exception):
                     ProfileBatchBacktester(config_path=config_path)
@@ -447,6 +489,7 @@ investment_horizons:
             objetivo_inversion=ObjectivoInversion.MAXIMIZAR_CAPITAL,
             risk_tolerance=RiskTolerance.ALTO,
             capital_initial=100000,
+            investment_horizon=12,
         )
 
         with tempfile.NamedTemporaryFile(mode='w', suffix='.yaml', delete=False) as f:
@@ -455,8 +498,20 @@ database:
   url: "sqlite:///test.db"
 output_dir: "test_output"
 
+acceptance_criteria:
+  significance_threshold: 0.05
+  strong_significance_threshold: 0.01
+  degradation_threshold: 0.1
+  confidence_high: 0.95
+  confidence_medium: 0.9
+  confidence_low: 0.8
+  min_sharpe: 0.5
+  min_return: 0.0
+  max_drawdown: 0.25
+  revision_multiplier: 1.2
+
 capital_tiers:
-  bajo: [50000, 100000]
+  bajo: 50000
 
 investment_horizons:
   corto: 6
@@ -465,21 +520,19 @@ investment_horizons:
             config_path = f.name
 
         try:
-            with patch('app.backtesting.profile_batch_backtester.create_engine'):
-                with patch('app.backtesting.profile_batch_backtester.sessionmaker'):
-                    with patch('app.backtesting.profile_batch_backtester.Base.metadata.create_all'):
-                        backtester = ProfileBatchBacktester(config_path=config_path)
+            with patch('app.backtesting.profile_batch_backtester.DatabaseService'):
+                backtester = ProfileBatchBacktester(config_path=config_path)
 
-                        # Mock baseline failure
-                        with (
-                            patch.object(
-                                backtester,
-                                '_run_baseline',
-                                side_effect=RuntimeError("Backtest failed"),
-                            ),
-                            pytest.raises(RuntimeError),
-                        ):
-                            backtester._run_baseline(profile, config={})
+                # Mock baseline failure
+                with (
+                    patch.object(
+                        backtester,
+                        '_run_baseline',
+                        side_effect=RuntimeError("Backtest failed"),
+                    ),
+                    pytest.raises(RuntimeError),
+                ):
+                    backtester._run_baseline(profile, config={})
         finally:
             Path(config_path).unlink(missing_ok=True)
 

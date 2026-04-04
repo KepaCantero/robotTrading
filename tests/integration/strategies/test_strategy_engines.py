@@ -23,20 +23,21 @@ Integration Tests: Strategy Engines (Módulo 3)
 Tests para los nuevos Strategy Engines refactorizados.
 """
 
-import logging  # noqa: E402
-import sys  # noqa: E402
-from datetime import datetime  # noqa: E402
-from decimal import Decimal  # noqa: E402
-from pathlib import Path  # noqa: E402
+import logging
+import sys
+from datetime import datetime
+from decimal import Decimal
+from pathlib import Path
 
-import pandas as pd  # noqa: E402
-import pytest  # noqa: E402
+import pandas as pd
+import pytest
 
 # Add project root to path
 project_root = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(project_root))
 
-from app.engines.strategy_engines import (  # noqa: E402
+from app.domain.models.market_data import Quote
+from app.engines.strategy_engines import (
     BreakoutStrategyEngine,
     MeanReversionStrategyEngine,
     ModularMomentumStrategyEngine,
@@ -44,9 +45,8 @@ from app.engines.strategy_engines import (  # noqa: E402
     PairsTradingStrategyEngine,
     TrendFollowingStrategyEngine,
 )
-from app.domain.models.market_data import Quote  # noqa: E402
-from app.models.signal import SignalType  # noqa: E402
-from tests.integration.data.test_data_loader import load_all_csv_data  # noqa: E402
+from app.models.signal import SignalType
+from tests.integration.data.test_data_loader import load_all_csv_data
 
 logging.basicConfig(
     level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'

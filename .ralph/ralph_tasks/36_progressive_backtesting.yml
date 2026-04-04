@@ -1,0 +1,835 @@
+# ============================================
+# Ralph Task 36: Progressive Backtesting Tests
+# ============================================
+# VERSION: 4.0 - FIX APP/ + TESTS + QA GATES OBLIGATORIOS
+# OBJETIVO: Ejecutar tests/backtesting/ de manera progresiva en 3 dimensiones:
+#   1. Stocks: de 1 a todos los disponibles (~61)
+#   2. Time window: de minima a 5 años
+#   3. Investment profiles: los 5 objetivos, con foco en maximizar_dividendos
+# REGLA CRITICA: Si un test NO ejecuta o falla, HAY QUE ARREGLARLO.
+#   Se puede tocar app/ SI es necesario. Despues DEBE pasar:
+#   - El test que se arreglo
+#   - Unit tests (python -m pytest tests/unit/ -x)
+#   - QA gates (black, isort, ruff)
+# ============================================================================
+# ESTRATEGIA PROGRESIVA (3 fases):
+#
+#   FASE A - Core Tests (Niveles 1-4): 1 stock, escalando ventana temporal
+#     Nivel 1: 1 stock, ventana minima (BacktestModels + EdgeCases)
+#     Nivel 2: 1 stock, ~1 año (core, services, metrics)
+#     Nivel 3: 1 stock, ~2 años (execution, validation, labeling)
+#     Nivel 4: 1 stock, ~5 años (full workflow, analysis, ML)
+#
+#   FASE B - Profile Tests (Niveles 5-6): Multi-stock + todos los perfiles
+#     Nivel 5: 3 stocks, ~5 años - Perfiles: maximizar_dividendos (TODAS las tiers)
+#     Nivel 6: 5 stocks, ~5 años - Perfiles: TODOS los objetivos de inversion
+#
+#   FASE C - Stress Tests (Niveles 7-8): All stocks + perfiles
+#     Nivel 7: ALL stocks, ~5 años - Full regression + profile batch
+#     Nivel 8: Dividend deep-dive - maximizar_dividendos con DRIP, yield on cost
+#
+#   FASE D - Final Report
+#
+# ============================================================================
+# PERFILES DE INVERSION (5 objetivos):
+#   1. maximizar_capital     - Growth puro
+#   2. maximizar_dividendos  - FOCO PRINCIPAL - DRIP, yield, dividend quality
+#   3. capital_preservation  - Proteccion de capital
+#   4. balanced_growth       - Balance riesgo/retorno
+#   5. income_generation     - Ingresos regulares (dividendos + opciones)
+#   Capital tiers: micro (<15k), small (15-50k), medium (50-250k), large (>=250k)
+#   Risk tolerances: bajo, medio, alto
+#   Total combinaciones: 5 x 4 x 3 = 60 base (180 con horizontes)
+# ============================================================================
+# REGLAS:
+#   - Se PUEDE tocar app/ si es necesario para que los tests pasen
+#   - Despues de tocar app/, HAY QUE verificar que unit tests siguen pasando
+#   - Cada nivel debe pasar 100% antes de avanzar
+#   - Si un test NO ejecuta (collection error, import error) = HAY QUE ARREGLARLO
+#   - Despues de CADA fix, DEBE pasar QA gates: black + isort + ruff
+#   - Registrar resultados en .ralph/outputs/36_progressive_backtesting_report.md
+#   - Usar --timeout=300 para tests potencialmente lentos
+# ============================================================================
+# USO: ralph run -P .ralph/ralph_tasks/prompts/36_progressive_backtesting.md
+# ============================================================================
+
+event_loop:
+  prompt_file: ".ralph/ralph_tasks/prompts/36_progressive_backtesting.md"
+  completion_promise: "PROGRESSIVE_BACKTESTING_COMPLETE"
+  max_iterations: 800
+  max_runtime_seconds: 432000  # 5 days - perfiles agregan carga
+  checkpoint_interval: 2
+  starting_event: "backtest.level1_start"
+  idle_timeout_secs: 1800  # 30 min idle = problema
+
+cli:
+  backend: "claude"
+
+core:
+  specs_dir: ".ralph/docs/"
+  guardrails:
+    - "CRITICAL: You CAN modify app/ if needed to fix failing tests. But after ANY change to app/, you MUST verify: (1) the failing test now passes, (2) unit tests pass (pytest tests/unit/ -x), (3) QA gates pass (black, isort, ruff)."
+    - "CRITICAL: NEVER skip a level. If a level has failures, FIX them before proceeding."
+    - "CRITICAL: NEVER claim a level passes without RUNNING the actual pytest command."
+    - "CRITICAL: If a test does NOT execute (collection error, import error), you MUST fix it. It is NOT acceptable to skip or document as known issue."
+    - "CRITICAL: After EVERY code change (app/ or tests/), run: black <file> && isort <file> && ruff check <file> --fix. Then verify ALL QA gates pass."
+    - "CRITICAL: After EVERY code change, re-run the failed test to verify the fix works AND that existing unit tests still pass."
+    - "CRITICAL: Record REAL output from pytest for each level in the report."
+    - "CRITICAL: For profile tests, maximizar_dividendos MUST be tested FIRST before other profiles."
+    - "CRITICAL: NEVER emit a level completion event until ALL backpressure gates pass (black, isort, ruff, app imports, unit tests)."
+    - "Fresh context each iteration - re-read scratchpad and plan before acting."
+    - "Commit after each completed level. Never commit Ralph files (.ralph/)."
+
+# === BACKPRESSURE: QA gates - TODOS deben pasar antes de emitir evento ===
+# Se ejecutan sobre app/ Y tests/ porque se puede tocar ambos.
+backpressure:
+  gates:
+    - name: format_app
+      command: ["bash", "-c", "black app/ --check 2>&1 | tail -5"]
+      on_fail: "Black formatting failed on app/. Run 'black app/' and retry."
+    - name: format_tests
+      command: ["bash", "-c", "black tests/ --check 2>&1 | tail -5"]
+      on_fail: "Black formatting failed on tests/. Run 'black tests/' and retry."
+    - name: imports_app
+      command: ["bash", "-c", "isort app/ --check-only 2>&1 | tail -5"]
+      on_fail: "Import sorting failed on app/. Run 'isort app/' and retry."
+    - name: imports_tests
+      command: ["bash", "-c", "isort tests/ --check-only 2>&1 | tail -5"]
+      on_fail: "Import sorting failed on tests/. Run 'isort tests/' and retry."
+    - name: lint_app
+      command: ["bash", "-c", "ruff check app/ 2>&1 | tail -10"]
+      on_fail: "Ruff lint failed on app/. Run 'ruff check app/ --fix' and retry."
+    - name: lint_tests
+      command: ["bash", "-c", "ruff check tests/ 2>&1 | tail -10"]
+      on_fail: "Ruff lint failed on tests/. Run 'ruff check tests/ --fix' and retry."
+    - name: app_imports_healthy
+      command: ["bash", "-c", "python -c \"import app; print('app imports OK')\" 2>&1"]
+      on_fail: "App import health check failed. Fix the import issue."
+
+memories:
+  enabled: true
+  inject: auto
+  budget: 8000
+  filter:
+    recent: 7
+
+tasks:
+  enabled: true
+
+features:
+  parallel: false
+  preflight:
+    enabled: true
+    strict: false
+    skip: []
+
+hooks:
+  enabled: true
+  defaults:
+    timeout_seconds: 600
+    max_output_bytes: 32768
+    suspend_mode: wait_for_resume
+  events:
+    pre.loop.start:
+      - name: clean-state
+        command: ["bash", "-c", "rm -f .ralph/loop.lock .ralph/current-events .ralph/current-loop-id 2>/dev/null; echo 'State cleaned'"]
+        on_error: warn
+
+# ============================================================================
+# HATS - 12 hats progresivos (4 fases)
+# ============================================================================
+
+hats:
+  # ==========================================================================
+  # HAT 0: Discovery - Diagnostico completo
+  # ==========================================================================
+  discovery:
+    name: "Backtest Discovery"
+    description: "Diagnostico del estado actual: symbols, profiles, test inventory"
+    triggers: ["backtest.level1_start"]
+    publishes: ["backtest.discovered", "backtest.blocked"]
+    default_publishes: "backtest.discovered"
+    max_activations: 1
+    instructions: |
+      ## Backtest Discovery - Entender el estado actual
+
+      ### Paso 1: Verificar symbols disponibles
+      ```bash
+      python -c "
+      from tests.backtesting.conftest import AVAILABLE_SYMBOLS, DEFAULT_SYMBOL, QUICK_TEST_SYMBOLS
+      print(f'Total symbols: {len(AVAILABLE_SYMBOLS)}')
+      print(f'Default symbol: {DEFAULT_SYMBOL}')
+      print(f'Quick test symbols ({len(QUICK_TEST_SYMBOLS)}): {QUICK_TEST_SYMBOLS}')
+      print(f'All symbols: {AVAILABLE_SYMBOLS}')
+      " 2>&1
+      ```
+
+      ### Paso 2: Verificar datos historicos
+      ```bash
+      ls -la data/historical/*.csv 2>/dev/null | head -20 || echo "No historical data CSVs found"
+      ```
+
+      ### Paso 3: Verificar perfiles de inversion disponibles
+      ```bash
+      python -c "
+      from app.domain.models.input_profile import ObjectivoInversion, RiskTolerance
+      from app.domain.models.investment_profile import CapitalTier
+      print('Objetivos:', [o.value for o in ObjectivoInversion])
+      print('Risks:', [r.value for r in RiskTolerance])
+      print('Tiers:', [t.value for t in CapitalTier])
+      " 2>&1
+      ```
+
+      ### Paso 4: Verificar configuracion de perfiles
+      ```bash
+      # Verificar config de dividendos
+      python -c "
+      import yaml
+      with open('config/portfolio/investment_profiles.yaml') as f:
+          config = yaml.safe_load(f)
+      div_config = config.get('investment_profiles', config).get('maximizar_dividendos', {})
+      print('Dividend config keys:', list(div_config.keys()) if div_config else 'NOT FOUND')
+      for tier_name, tier_config in div_config.items():
+          if isinstance(tier_config, dict) and 'modules' in tier_config:
+              print(f'  {tier_name}: modules={tier_config[\"modules\"]}')
+      " 2>&1
+      ```
+
+      ### Paso 5: Collect test inventory
+      ```bash
+      echo "=== Backtesting tests ==="
+      find tests/backtesting -name "test_*.py" -type f | sort
+      echo "---"
+      find tests/backtesting -name "test_*.py" -type f | wc -l
+      echo "test files total"
+      echo ""
+      echo "=== Profile-related tests ==="
+      find tests/ -path "*/profiles/*" -name "test_*.py" -type f | sort
+      find tests/ -name "*profile*" -name "test_*.py" -type f | sort
+      find tests/ -name "*dividend*" -name "test_*.py" -type f | sort
+      ```
+
+      ### Paso 6: Quick smoke test
+      ```bash
+      python -m pytest tests/backtesting/core/test_backtest_basic.py::TestBacktestModels -v --tb=short --timeout=60 2>&1 | tail -30
+      ```
+
+      ### Paso 7: Crear reporte inicial
+      Escribir `.ralph/outputs/36_progressive_backtesting_report.md`:
+      ```markdown
+      # Progressive Backtesting Report
+      Date: (ahora)
+
+      ## Discovery
+      - Symbols disponibles: X
+      - Default: Y
+      - Quick test: Z
+      - Test files backtesting: N
+      - Test files profiles: M
+      - Perfiles: maximizar_capital, maximizar_dividendos, capital_preservation, balanced_growth, income_generation
+      - Capital tiers: micro, small, medium, large
+      - Risk tolerances: bajo, medio, alto
+
+      ## Niveles
+      (se iran completando)
+      ```
+
+      Escribir scratchpad con estado actual y plan.
+
+      Emitir: `ralph emit "backtest.discovered" "symbols: X, profiles: 5, test_files: Y, smoke: OK/FAIL"`
+
+  # ==========================================================================
+  # FASE A: CORE TESTS - 1 stock, escalando ventana temporal
+  # ==========================================================================
+
+  # --------------------------------------------------------------------------
+  # HAT 1: Level 1 - 1 stock, ventana minima (~100 dias)
+  # --------------------------------------------------------------------------
+  level1:
+    name: "Level 1: 1 stock, min window"
+    description: "1 stock (DEFAULT_SYMBOL), ventana minima. Tests unitarios rapidos."
+    triggers: ["backtest.discovered"]
+    publishes: ["backtest.level1_done", "backtest.blocked"]
+    default_publishes: "backtest.level1_done"
+    max_activations: 5
+    instructions: |
+      ## Level 1: 1 stock, ventana minima (~100 dias)
+
+      Ejecutar tests que usan datos cortos (100 dias o menos) con un solo stock.
+
+      ### Tests a ejecutar:
+      ```bash
+      # Modelos y validacion
+      python -m pytest tests/backtesting/core/test_backtest_basic.py::TestBacktestModels -v --tb=short --timeout=60 2>&1 | tail -30
+
+      # Edge cases con datos cortos
+      python -m pytest tests/backtesting/core/test_backtest_basic.py::TestEdgeCasesRobust -v --tb=short --timeout=120 2>&1 | tail -40
+
+      # Simple backtester con datos cortos
+      python -m pytest tests/backtesting/core/test_backtest_basic.py::TestSimpleBacktester -v --tb=short --timeout=120 2>&1 | tail -40
+      ```
+
+      ### Si hay failures O tests que no ejecutan:
+      1. Leer el error completo (usar --tb=long para tracebacks, --co para collection errors)
+      2. Diagnosticar: es un bug del test o del codigo de produccion?
+      3. Si es del test: FIX en tests/
+      4. Si es de app/: FIX en app/ - se PUEDE tocar codigo de produccion
+      5. Despues de CADA fix (app/ o tests/), ejecutar QA gates OBLIGATORIOS:
+         ```bash
+         # Para fixes en app/:
+         black app/ && isort app/ && ruff check app/ --fix
+         # Para fixes en tests/:
+         black tests/ && isort tests/ && ruff check tests/ --fix
+         ```
+      6. Re-ejecutar SOLO el test fallido para verificar el fix funciona
+      7. Si se toco app/, ejecutar unit tests para verificar que no se rompio nada:
+         ```bash
+         python -m pytest tests/unit/ -x --timeout=120 2>&1 | tail -30
+         ```
+      8. Verificar que TODOS los backpressure gates pasan:
+         ```bash
+         black app/ --check && black tests/ --check && echo "BLACK: PASS"
+         isort app/ --check-only && isort tests/ --check-only && echo "ISORT: PASS"
+         ruff check app/ && ruff check tests/ && echo "RUFF: PASS"
+         python -c "import app; print('IMPORTS: PASS')" 2>&1
+         ```
+
+      ### IMPORTANTE: Collection errors (tests que NO ejecutan) = HAY QUE ARREGLARLOS
+      NO es aceptable documentar un collection error como KNOWN_ISSUE.
+      Un test que no puede ni coleccionarse tiene que ser arreglado SIEMPRE.
+      Tipos de errores que HAY que arreglar:
+      - ImportError / ModuleNotFoundError
+      - SyntaxError
+      - NameError at import time
+      - Fixture not found
+      - conftest errors
+      - Missing dependencies
+
+      ### Registrar resultados en el reporte.
+
+      Emitir: `ralph emit "backtest.level1_done" "passed: X, failed: Y, time: Zs"`
+
+  # --------------------------------------------------------------------------
+  # HAT 2: Level 2 - 1 stock, ~1 año
+  # --------------------------------------------------------------------------
+  level2:
+    name: "Level 2: 1 stock, ~1 year"
+    description: "1 stock, ~252 trading days. Core, services, metrics."
+    triggers: ["backtest.level1_done"]
+    publishes: ["backtest.level2_done", "backtest.blocked"]
+    default_publishes: "backtest.level2_done"
+    max_activations: 5
+    instructions: |
+      ## Level 2: 1 stock, ~1 año (252 dias)
+
+      ### Tests a ejecutar:
+      ```bash
+      python -m pytest tests/backtesting/core/ -v --tb=short --timeout=300 2>&1 | tail -50
+      python -m pytest tests/backtesting/services/ -v --tb=short --timeout=300 2>&1 | tail -50
+      python -m pytest tests/backtesting/metrics/ -v --tb=short --timeout=300 2>&1 | tail -50
+      ```
+
+      ### Si hay failures O collection errors: seguir proceso de fix + QA gates
+      (ver Level 1 para proceso completo)
+      Se PUEDE tocar app/ si el bug esta en produccion.
+      Despues de CADA fix:
+      ```bash
+      black <fixed_file> && isort <fixed_file> && ruff check <fixed_file> --fix
+      ```
+      Si se toco app/, verificar unit tests:
+      ```bash
+      python -m pytest tests/unit/ -x --timeout=120 2>&1 | tail -30
+      ```
+      Despues de TODOS los fixes, verificar backpressure gates:
+      ```bash
+      black app/ --check && black tests/ --check && isort app/ --check-only && isort tests/ --check-only && ruff check app/ && ruff check tests/ && python -c "import app"
+      ```
+
+      Emitir: `ralph emit "backtest.level2_done" "passed: X, failed: Y, time: Zs"`
+
+  # --------------------------------------------------------------------------
+  # HAT 3: Level 3 - 1 stock, ~2 años
+  # --------------------------------------------------------------------------
+  level3:
+    name: "Level 3: 1 stock, ~2 years"
+    description: "1 stock, ~504 trading days. Execution, validation, labeling."
+    triggers: ["backtest.level2_done"]
+    publishes: ["backtest.level3_done", "backtest.blocked"]
+    default_publishes: "backtest.level3_done"
+    max_activations: 5
+    instructions: |
+      ## Level 3: 1 stock, ~2 años (504 dias)
+
+      ### Tests a ejecutar:
+      ```bash
+      python -m pytest tests/backtesting/execution/ -v --tb=short --timeout=300 2>&1 | tail -50
+      python -m pytest tests/backtesting/validation/ -v --tb=short --timeout=300 2>&1 | tail -50
+      python -m pytest tests/backtesting/labeling/ -v --tb=short --timeout=300 2>&1 | tail -50
+      ```
+
+      ### Si hay failures O collection errors: seguir proceso de fix + QA gates
+      (ver Level 1 para proceso completo)
+      Despues de CADA fix: `black <file> && isort <file> && ruff check <file> --fix`
+      Despues de TODOS los fixes: `black tests/ --check && isort tests/ --check-only && ruff check tests/`
+
+      Emitir: `ralph emit "backtest.level3_done" "passed: X, failed: Y, time: Zs"`
+
+  # --------------------------------------------------------------------------
+  # HAT 4: Level 4 - 1 stock, ~5 años
+  # --------------------------------------------------------------------------
+  level4:
+    name: "Level 4: 1 stock, ~5 years"
+    description: "1 stock, ~1260 trading days. Full workflow, analysis, ML."
+    triggers: ["backtest.level3_done"]
+    publishes: ["backtest.level4_done", "backtest.blocked"]
+    default_publishes: "backtest.level4_done"
+    max_activations: 5
+    instructions: |
+      ## Level 4: 1 stock, ~5 años (1260 dias)
+
+      ### Tests a ejecutar:
+      ```bash
+      python -m pytest tests/backtesting/core/test_full_workflow.py -v --tb=short --timeout=600 2>&1 | tail -50
+      python -m pytest tests/backtesting/analysis/ -v --tb=short --timeout=300 2>&1 | tail -50
+      python -m pytest tests/backtesting/ml/ -v --tb=short --timeout=300 2>&1 | tail -50
+      python -m pytest tests/backtesting/feature_engineering/ -v --tb=short --timeout=300 2>&1 | tail -50
+      ```
+
+      ### Si hay failures O collection errors: seguir proceso de fix + QA gates
+      (ver Level 1 para proceso completo)
+      Despues de CADA fix: `black <file> && isort <file> && ruff check <file> --fix`
+      Despues de TODOS los fixes: `black tests/ --check && isort tests/ --check-only && ruff check tests/`
+
+      Emitir: `ralph emit "backtest.level4_done" "passed: X, failed: Y, time: Zs"`
+
+  # ==========================================================================
+  # FASE B: PROFILE TESTS - Multi-stock + perfiles de inversion
+  # ==========================================================================
+
+  # --------------------------------------------------------------------------
+  # HAT 5: Level 5 - Dividend Focus: 3 stocks, maximizar_dividendos
+  # --------------------------------------------------------------------------
+  level5_dividends:
+    name: "Level 5: Dividend Focus - 3 stocks"
+    description: "3 stocks, ~5 años. Perfil maximizar_dividendos con TODAS las capital tiers y risk levels. FOCO PRINCIPAL."
+    triggers: ["backtest.level4_done"]
+    publishes: ["backtest.level5_done", "backtest.blocked"]
+    default_publishes: "backtest.level5_done"
+    max_activations: 8
+    instructions: |
+      ## Level 5: Dividend Focus - 3 stocks, maximizar_dividendos
+
+      Este es el nivel con MAYOR PRIORIDAD. Testar el perfil que maximiza dividendos
+      con todas sus variantes (tiers + risk levels).
+
+      ### Paso 1: Verificar modulos de dividendos
+      ```bash
+      # Verificar que los modulos de dividendos importan correctamente
+      python -c "
+      from app.domain.strategies.dividend_screener import DividendScreener
+      from app.domain.strategies.dividend_analyzer import DividendAnalyzer
+      from app.domain.strategies.dividend_portfolio_constructor import DividendPortfolioConstructor
+      from app.domain.strategies.dividend_config import DividendStrategyConfig
+      print('All dividend modules import OK')
+      " 2>&1
+      ```
+
+      ### Paso 2: Tests de profiles (maximizar_dividendos PRIMERO)
+      ```bash
+      # Profile batch tests (incluyen maximizar_dividendos)
+      python -m pytest tests/backtesting/profiles/ -v --tb=short --timeout=600 2>&1 | tail -60
+
+      # Batch optimization tests
+      python -m pytest tests/backtesting/batch/ -v --tb=short --timeout=600 2>&1 | tail -50
+      ```
+
+      ### Paso 3: Tests unitarios de profile mapping (dividendos)
+      ```bash
+      # Profile generator tests
+      python -m pytest tests/unit/parametrization_framework/test_profile_generator.py -v --tb=short --timeout=300 2>&1 | tail -40
+      python -m pytest tests/unit/parametrization_framework/test_profile_generator_t21.py -v --tb=short --timeout=300 2>&1 | tail -40
+
+      # Profile strategy mapper (mapea perfiles a estrategias)
+      python -m pytest tests/unit/services/test_profile_strategy_mapper.py -v --tb=short --timeout=300 2>&1 | tail -40
+      ```
+
+      ### Paso 4: Integration tests de profiles
+      ```bash
+      # Profile-driven integration tests
+      python -m pytest tests/integration/profiles/ -v --tb=short --timeout=600 2>&1 | tail -50
+      ```
+
+      ### Paso 5: Si los tests de dividendos no cubren suficientes escenarios,
+      ### verificar que los tests validan:
+      ### - DRIP (Dividend Reinvestment Plan)
+      ### - Yield on cost tracking
+      ### - Dividend quality scoring (DividendQualityScore)
+      ### - Sector diversification limits
+      ### - Payout ratio validation
+      ### - Dividend aristocrat/king detection
+      ### - Fractional share support
+      ### - Spain tax handling for dividends
+      ### - Todas las capital tiers: micro, small, medium, large
+      ### - Todas las risk tolerances: bajo, medio, alto
+
+      Si falta cobertura: documentar en el reporte como COVERAGE_GAP.
+
+      ### Registrar resultados en el reporte con seccion especial:
+      ```markdown
+      ## Level 5: Dividend Focus Results
+      ### maximizar_dividendos
+      | Tier | Risk | Tests | Passed | Failed | Modules Activated |
+      |------|------|-------|--------|--------|-------------------|
+      | micro | bajo | ? | ? | ? | dividend_screener |
+      | micro | medio | ? | ? | ? | dividend_screener |
+      | micro | alto | ? | ? | ? | dividend_screener |
+      | small | bajo | ? | ? | ? | dividend_screener, dividend_predictor |
+      | small | medio | ? | ? | ? | ... |
+      | ... | ... | ? | ? | ? | ... |
+      | large | alto | ? | ? | ? | all modules |
+      ```
+
+      Emitir: `ralph emit "backtest.level5_done" "dividendos: X passed, Y failed, tiers_tested: 4"`
+
+  # --------------------------------------------------------------------------
+  # HAT 6: Level 6 - All Profiles: 5 stocks, todos los objetivos
+  # --------------------------------------------------------------------------
+  level6_all_profiles:
+    name: "Level 6: All Profiles - 5 stocks"
+    description: "5 stocks (QUICK_TEST_SYMBOLS), ~5 años. TODOS los objetivos de inversion."
+    triggers: ["backtest.level5_done"]
+    publishes: ["backtest.level6_done", "backtest.blocked"]
+    default_publishes: "backtest.level6_done"
+    max_activations: 8
+    instructions: |
+      ## Level 6: All Profiles - 5 stocks, todos los objetivos de inversion
+
+      Testar TODOS los perfiles de inversion (no solo dividendos).
+
+      ### Paso 1: Tests de profile generator (todos los objetivos)
+      ```bash
+      # Verificar que TODOS los perfiles se generan correctamente
+      python -c "
+      from app.domain.models.input_profile import ObjectivoInversion, RiskTolerance
+      from app.domain.models.investment_profile import CapitalTier, InvestmentProfile
+      for obj in ObjectivoInversion:
+          for tier in CapitalTier:
+              for risk in RiskTolerance:
+                  print(f'{obj.value} / {tier.value} / {risk.value}')
+      " 2>&1
+      ```
+
+      ### Paso 2: Full regression - all backtesting tests con 5 stocks
+      ```bash
+      python -m pytest tests/backtesting/ -v --tb=short --timeout=600 -x 2>&1 | tail -80
+      ```
+
+      Si falla con `-x`, remover y obtener reporte completo:
+      ```bash
+      python -m pytest tests/backtesting/ -v --tb=short --timeout=600 2>&1 | tail -100
+      ```
+
+      ### Paso 3: Profile-related tests fuera de backtesting/
+      ```bash
+      python -m pytest tests/unit/parametrization/test_input_processor.py -v --tb=short --timeout=300 2>&1 | tail -30
+      ```
+
+      ### Registrar resultados con tabla por perfil:
+      ```markdown
+      ## Level 6: All Profiles Results
+      | Objetivo | Tests | Passed | Failed | Nota |
+      |----------|-------|--------|--------|------|
+      | maximizar_dividendos | ? | ? | ? | FOCO PRINCIPAL |
+      | maximizar_capital | ? | ? | ? | |
+      | capital_preservation | ? | ? | ? | |
+      | balanced_growth | ? | ? | ? | |
+      | income_generation | ? | ? | ? | |
+      ```
+
+      Emitir: `ralph emit "backtest.level6_done" "all_profiles: X passed, Y failed"`
+
+  # ==========================================================================
+  # FASE C: STRESS TESTS - All stocks + perfiles
+  # ==========================================================================
+
+  # --------------------------------------------------------------------------
+  # HAT 7: Level 7 - ALL stocks, full regression
+  # --------------------------------------------------------------------------
+  level7_stress:
+    name: "Level 7: All stocks stress test"
+    description: "ALL available symbols (~61), ~1260 trading days. Stress test maximo."
+    triggers: ["backtest.level6_done"]
+    publishes: ["backtest.level7_done", "backtest.blocked"]
+    default_publishes: "backtest.level7_done"
+    max_activations: 5
+    instructions: |
+      ## Level 7: ALL stocks (~61), ~5 años
+
+      ### ADVERTENCIA: Este nivel puede tardar significativamente.
+
+      ```bash
+      python -c "
+      from tests.backtesting.conftest import AVAILABLE_SYMBOLS
+      print(f'Total symbols: {len(AVAILABLE_SYMBOLS)}')
+      " 2>&1
+
+      python -m pytest tests/backtesting/ -v --tb=short --timeout=900 --durations=50 2>&1 | tail -120
+      ```
+
+      ### Registrar resultados con top 10 slowest tests.
+
+      Emitir: `ralph emit "backtest.level7_done" "passed: X, failed: Y, symbols: N, time: Ts"`
+
+  # --------------------------------------------------------------------------
+  # HAT 8: Level 8 - Dividend Deep-Dive
+  # --------------------------------------------------------------------------
+  level8_dividend_deep:
+    name: "Level 8: Dividend Deep-Dive"
+    description: "Deep test de maximizar_dividendos: DRIP, yield on cost, tax, fractional shares, all tiers."
+    triggers: ["backtest.level7_done"]
+    publishes: ["backtest.level8_done", "backtest.blocked"]
+    default_publishes: "backtest.level8_done"
+    max_activations: 8
+    instructions: |
+      ## Level 8: Dividend Deep-Dive - Validacion exhaustiva
+
+      Este nivel valida en profundidad el perfil maximizar_dividendos con ALL stocks.
+
+      ### Paso 1: Tests de modulos de dividendos
+      ```bash
+      # Verificar que existen tests para dividendos
+      find tests/ -name "*dividend*" -name "test_*.py" -type f | sort
+
+      # Si no hay tests especificos de dividendos, verificar que los modulos funcionan:
+      python -c "
+      from app.domain.strategies.dividend_screener import DividendScreener
+      from app.domain.strategies.dividend_analyzer import DividendAnalyzer
+      from app.domain.strategies.dividend_portfolio_constructor import DividendPortfolioConstructor
+      from app.backtesting.robust_engine.dividend_handler import DividendHandler
+      from app.domain.strategies.dividend_config import DividendStrategyConfig
+      print('All dividend modules import OK')
+
+      # Verificar config
+      config = DividendStrategyConfig()
+      print(f'Min yield: {config.min_dividend_yield}')
+      print(f'Max yield: {config.max_dividend_yield}')
+      print(f'Portfolio size: {config.portfolio_size}')
+      print(f'Max sector weight: {config.max_sector_weight}')
+      print(f'Max payout ratio: {config.max_payout_ratio}')
+      " 2>&1
+      ```
+
+      ### Paso 2: Verificar coverage de dividendos
+      ```bash
+      # Buscar tests que validen estos aspectos criticos:
+      echo "=== DRIP tests ==="
+      grep -r "drip\|DRIP\|dividend_reinvest" tests/ --include="*.py" -l 2>/dev/null || echo "NO DRIP tests found"
+
+      echo "=== Yield on cost tests ==="
+      grep -r "yield_on_cost\|yield on cost" tests/ --include="*.py" -l 2>/dev/null || echo "NO yield on cost tests found"
+
+      echo "=== Dividend quality tests ==="
+      grep -r "dividend_quality\|DividendQuality\|payout_ratio" tests/ --include="*.py" -l 2>/dev/null || echo "NO dividend quality tests found"
+
+      echo "=== Sector diversification tests ==="
+      grep -r "sector_diversif\|max_sector" tests/ --include="*.py" -l 2>/dev/null || echo "NO sector diversification tests found"
+
+      echo "=== Fractional shares tests ==="
+      grep -r "fractional\|fraction" tests/ --include="*.py" -l 2>/dev/null || echo "NO fractional share tests found"
+
+      echo "=== Tax handling tests ==="
+      grep -r "spain_dividend_tax\|tax_efficien" tests/ --include="*.py" -l 2>/dev/null || echo "NO tax tests found"
+
+      echo "=== Dividend aristocrat tests ==="
+      grep -r "aristocrat\|dividend_king" tests/ --include="*.py" -l 2>/dev/null || echo "NO aristocrat tests found"
+      ```
+
+      ### Paso 3: Ejecutar todos los tests de dividendos encontrados
+      ```bash
+      # Si hay tests especificos de dividendos, ejecutarlos
+      DIVIDEND_TESTS=$(find tests/ -name "*dividend*" -name "test_*.py" -type f)
+      if [ -n "$DIVIDEND_TESTS" ]; then
+          python -m pytest $DIVIDEND_TESTS -v --tb=short --timeout=300 2>&1 | tail -50
+      else
+          echo "No dedicated dividend tests found - running profile tests instead"
+          python -m pytest tests/backtesting/profiles/ -v --tb=short --timeout=600 -k "dividend or profile" 2>&1 | tail -50
+      fi
+      ```
+
+      ### Paso 4: Verificar perfil maximizar_dividendos en batch config
+      ```bash
+      python -c "
+      import yaml
+      with open('config/portfolio/profile_batch_backtest.yaml') as f:
+          config = yaml.safe_load(f)
+      div_params = config.get('objective_parameters', {}).get('maximizar_dividendos', {})
+      print('Dividend batch params:', div_params)
+      assert div_params.get('dividend_focus') == True, 'dividend_focus should be True'
+      print('dividend_focus: CONFIRMED')
+      " 2>&1
+      ```
+
+      ### Registrar resultados:
+      ```markdown
+      ## Level 8: Dividend Deep-Dive Results
+      ### Module Coverage
+      | Module | Has Tests | Tests Pass | Notes |
+      |--------|-----------|------------|-------|
+      | dividend_screener | ? | ? | |
+      | dividend_analyzer | ? | ? | |
+      | dividend_portfolio_constructor | ? | ? | |
+      | dividend_handler (DRIP) | ? | ? | |
+      | dividend_config | ? | ? | |
+      | spain_dividend_tax | ? | ? | |
+
+      ### Feature Coverage
+      | Feature | Covered | Notes |
+      |---------|---------|-------|
+      | DRIP (reinvestment) | ? | |
+      | Yield on cost | ? | |
+      | Dividend quality scoring | ? | |
+      | Sector diversification | ? | |
+      | Payout ratio validation | ? | |
+      | Aristocrat/King detection | ? | |
+      | Fractional shares | ? | |
+      | Spain tax handling | ? | |
+      | All 4 capital tiers | ? | |
+      | All 3 risk levels | ? | |
+
+      ### Coverage Gaps (tests que faltan)
+      (lista de features sin tests)
+      ```
+
+      Emitir: `ralph emit "backtest.level8_done" "dividend_modules: X, coverage_gaps: Y"`
+
+  # ==========================================================================
+  # FASE D: FINAL REPORT
+  # ==========================================================================
+
+  # --------------------------------------------------------------------------
+  # HAT 9: Final Report
+  # --------------------------------------------------------------------------
+  final_report:
+    name: "Final Report"
+    description: "Consolidar resultados de todos los niveles y generar reporte final"
+    triggers: ["backtest.level8_done"]
+    publishes: ["PROGRESSIVE_BACKTESTING_COMPLETE"]
+    default_publishes: "PROGRESSIVE_BACKTESTING_COMPLETE"
+    max_activations: 1
+    instructions: |
+      ## Final Report - Consolidar todos los niveles
+
+      ### Paso 1: Verificar que TODOS los niveles pasaron
+      Leer el scratchpad y el reporte `.ralph/outputs/36_progressive_backtesting_report.md`.
+
+      ### Paso 2: Generar reporte final consolidado
+      Actualizar `.ralph/outputs/36_progressive_backtesting_report.md` con:
+      ```markdown
+      # Progressive Backtesting Report - FINAL
+      Date: (ahora)
+
+      ## Resumen Ejecutivo
+      - Niveles completados: 8/8
+      - Total tests ejecutados: X
+      - Total passed: Y
+      - Total failed: Z (con fixes)
+      - Tiempo total acumulado: Ts
+      - Symbols testados: 1 -> 3 -> 5 -> ALL (N)
+      - Perfiles testados: 5/5 objetivos, 4/4 tiers, 3/3 risks
+
+      ## Resultados por Nivel
+      | Nivel | Fase | Stocks | Window | Profile | Tests | Passed | Failed | Time |
+      |-------|------|--------|--------|---------|-------|--------|--------|------|
+      | 1 | A | 1 | min | general | ? | ? | ? | ? |
+      | 2 | A | 1 | ~1yr | general | ? | ? | ? | ? |
+      | 3 | A | 1 | ~2yr | general | ? | ? | ? | ? |
+      | 4 | A | 1 | ~5yr | general | ? | ? | ? | ? |
+      | 5 | B | 3 | ~5yr | maximizar_dividendos | ? | ? | ? | ? |
+      | 6 | B | 5 | ~5yr | ALL profiles | ? | ? | ? | ? |
+      | 7 | C | ALL | ~5yr | ALL | ? | ? | ? | ? |
+      | 8 | C | ALL | ~5yr | dividendos deep | ? | ? | ? | ? |
+
+      ## Perfil: maximizar_dividendos (FOCO PRINCIPAL)
+      | Tier | Risk | Modules | Tests | Status |
+      |------|------|---------|-------|--------|
+      | micro | bajo | dividend_screener | ? | ? |
+      | micro | medio | dividend_screener | ? | ? |
+      | micro | alto | dividend_screener | ? | ? |
+      | small | bajo | screener+predictor | ? | ? |
+      | small | medio | screener+predictor | ? | ? |
+      | small | alto | screener+predictor | ? | ? |
+      | medium | bajo | screener+predictor+MR | ? | ? |
+      | medium | medio | screener+predictor+MR | ? | ? |
+      | medium | alto | screener+predictor+MR | ? | ? |
+      | large | bajo | all modules | ? | ? |
+      | large | medio | all modules | ? | ? |
+      | large | alto | all modules | ? | ? |
+
+      ## Dividend Feature Coverage
+      | Feature | Tested | Status |
+      |---------|--------|--------|
+      | DRIP | ? | ? |
+      | Yield on cost | ? | ? |
+      | Quality scoring | ? | ? |
+      | Sector diversification | ? | ? |
+      | Payout ratio | ? | ? |
+      | Aristocrat/King | ? | ? |
+      | Fractional shares | ? | ? |
+      | Spain tax | ? | ? |
+
+      ## Fixes Aplicados
+      (lista de tests corregidos)
+
+      ## Known Issues
+      (tests que no se pudieron arreglar sin modificar app/)
+
+      ## Coverage Gaps
+      (features de dividendos sin tests)
+
+      ## Top 10 Slowest Tests
+      (del output de --durations=50)
+
+      ## Status: PROGRESSIVE_BACKTESTING_COMPLETE
+      ```
+
+      ### Paso 3: Commit final
+      ```bash
+      git add tests/
+      git commit -m "fix: progressive backtesting tests - all levels + profiles passing"
+      ```
+
+      Emitir: `ralph emit "PROGRESSIVE_BACKTESTING_COMPLETE" "levels: 8/8, profiles: 5/5, dividendos: deep-tested"`
+
+  # ==========================================================================
+  # HAT ERROR: Blocked Handler
+  # ==========================================================================
+  blocked_handler:
+    name: "Blocked Handler"
+    description: "Diagnosticar y recuperar de errores que bloquean el pipeline"
+    triggers: ["backtest.blocked"]
+    publishes: ["backtest.level1_start"]
+    default_publishes: "backtest.level1_start"
+    max_activations: 8
+    instructions: |
+      ## Blocked Handler - Diagnosticar y recuperar
+
+      Se ha emitido `backtest.blocked`. Un nivel del pipeline fallo.
+
+      ### Diagnostico:
+      1. Leer el scratchpad para ver en que nivel se bloqueo.
+      2. Leer el reporte `.ralph/outputs/36_progressive_backtesting_report.md`.
+      3. Verificar si los errores son:
+         - Test bugs (fixable en tests/)
+         - Production bugs (fixable en app/ - AUTORIZADO)
+         - Missing dependencies (install needed)
+         - Environment issues (paths, permissions)
+
+      ### Acciones:
+      - Si el error es del test: FIX en tests/ y re-ejecutar
+      - Si el error es de app/: FIX en app/, verificar unit tests + QA gates
+      - Si es de environment: FIX (pip install, etc.)
+      - Si no es recuperable: escribir diagnostico detallado y parar
+
+      ### Decidir:
+      - Recuperable: emitir evento trigger del nivel que fallo para reintentar
+      - No recuperable: escribir reporte y parar

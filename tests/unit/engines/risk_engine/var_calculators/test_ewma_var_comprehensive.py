@@ -3,6 +3,7 @@ Comprehensive unit tests for EWMA VaR Calculator.
 
 Tests for all EWMA VaR functionality including correlation and forecasting.
 """
+
 import numpy as np
 import pytest
 

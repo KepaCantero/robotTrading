@@ -3,16 +3,17 @@ Integration tests for Risk Engine components.
 
 Tests interaction between different risk engine modules.
 """
+
 from unittest.mock import Mock
 
 import numpy as np
 import pytest
 
+from app.domain.models.portfolio import Portfolio
 from app.engines.risk_engine.alert_system import AlertSystem
 from app.engines.risk_engine.greeks_calculator import GreeksCalculator
 from app.engines.risk_engine.risk_limits_enforcer import RiskLimitsEnforcer
 from app.engines.risk_engine.var_calculators.var_calculators import calculate_var
-from app.domain.models.portfolio import Portfolio
 
 
 @pytest.fixture

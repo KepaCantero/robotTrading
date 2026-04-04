@@ -368,9 +368,10 @@ def modular_momentum_config() -> Dict[str, Any]:
 @pytest.fixture
 def mock_centralized_config():
     """Mock centralized configuration system."""
-    with patch('app.engines.strategy_engines.base.get_strategy_config') as mock_config, patch(
-        'app.engines.strategy_engines.base.get_trading_threshold'
-    ) as mock_threshold:
+    with (
+        patch('app.engines.strategy_engines.base.get_strategy_config') as mock_config,
+        patch('app.engines.strategy_engines.base.get_trading_threshold') as mock_threshold,
+    ):
         # Mock strategy config
         strategy_config = Mock()
         strategy_config.parameters = {

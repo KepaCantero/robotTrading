@@ -8,6 +8,7 @@ Tests verify that the Service Layer pattern correctly implements:
 - Query handlers
 - Service orchestration
 """
+
 from decimal import Decimal
 from typing import List, Optional
 

@@ -37,7 +37,7 @@ class TestSmartOrderRouter:
 
     def test_minimum_order_size(self, router):
         """Test minimum order size constant."""
-        assert router.MIN_ORDER_SIZE_FOR_ROUTING == Decimal("25000")
+        assert Decimal("25000") == router.MIN_ORDER_SIZE_FOR_ROUTING
 
     @pytest.mark.asyncio
     async def test_route_order_basic(self, router):

@@ -12,7 +12,6 @@ import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
-from app.presentation.api.optimization import router
 from app.domain.models.optimization import (
     OptimizationArtifact,
     OptimizationMethod,
@@ -25,6 +24,7 @@ from app.domain.models.optimization import (
     ParameterConstraint,
     ParameterType,
 )
+from app.presentation.api.optimization import router
 from app.services.parameter_optimization_service import ParameterOptimizationService
 
 # Create test app

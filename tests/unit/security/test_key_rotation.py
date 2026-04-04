@@ -9,23 +9,19 @@ Tests the key rotation functionality including:
 - Schedule listing
 """
 
-import pytest
 from datetime import datetime, timedelta
 
+import pytest
+
+from app.services.security.api_key_manager import ApiKeyManager, KeyPermission
 from app.services.security.key_rotation import (
     KeyRotationManager,
-    RotationSchedule,
-    RotationResult,
     RotationError,
+    RotationResult,
+    RotationSchedule,
     RotationStatus,
 )
-from app.services.security.api_key_manager import (
-    ApiKeyManager,
-    KeyPermission,
-)
-from app.services.security.secrets_manager_impl import (
-    SecretsManagerImpl,
-)
+from app.services.security.secrets_manager_impl import SecretsManagerImpl
 
 
 @pytest.fixture

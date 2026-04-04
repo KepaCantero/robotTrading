@@ -37,9 +37,9 @@ import pytest
 
 from app.backtesting.engine import SimpleBacktester
 from app.backtesting.models import BacktestConfig
-from app.shared.utils.decimal_utils import round_price
 from app.domain.models.market_data import Quote
 from app.models.signal import Signal, SignalSource, SignalStrength, SignalType
+from app.shared.utils.decimal_utils import round_price
 
 # Set reproducible seed
 np.random.seed(42)

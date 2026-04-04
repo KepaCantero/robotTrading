@@ -12,8 +12,8 @@ import pytest
 
 from app.domain.models.market_data import Quote
 from app.domain.models.portfolio import AssetClass, Portfolio, Position
-from app.models.signal import Signal, SignalSource, SignalStrength, SignalType
 from app.domain.strategies.momentum import MomentumStrategy
+from app.models.signal import Signal, SignalSource, SignalStrength, SignalType
 
 
 class TestMomentumSignalGeneration:

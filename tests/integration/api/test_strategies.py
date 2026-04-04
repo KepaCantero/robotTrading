@@ -12,6 +12,10 @@ import pytest
 from fastapi import status
 from fastapi.testclient import TestClient
 
+from app.domain.strategies.config_loader import StrategyConfigLoader
+from app.domain.strategies.execution_engine import ExecutionEngine
+from app.domain.strategies.strategy_logger import StrategyLogger
+from app.domain.strategies.strategy_registry import StrategyRegistry
 from app.presentation.api.strategies import (
     get_config_loader,
     get_execution_engine_dep as get_execution_engine,
@@ -19,10 +23,6 @@ from app.presentation.api.strategies import (
     get_strategy_registry_dep as get_strategy_registry,
     router,
 )
-from app.domain.strategies.execution_engine import ExecutionEngine
-from app.domain.strategies.config_loader import StrategyConfigLoader
-from app.domain.strategies.strategy_logger import StrategyLogger
-from app.domain.strategies.strategy_registry import StrategyRegistry
 
 
 class TestStrategiesAPIEndpoints:

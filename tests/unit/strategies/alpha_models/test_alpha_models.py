@@ -9,7 +9,6 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from app.models.signal import SignalStrength, SignalType
 from app.domain.strategies.alpha_models import (
     AlphaDecayMetrics,
     AlphaDecayRegime,
@@ -20,6 +19,7 @@ from app.domain.strategies.alpha_models import (
     MultiFactorAlphaModel,
     get_alpha_model,
 )
+from app.models.signal import SignalStrength, SignalType
 
 
 @pytest.fixture

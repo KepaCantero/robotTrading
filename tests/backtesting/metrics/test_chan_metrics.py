@@ -2,7 +2,6 @@
 Unit tests for Chan Metrics (Ernest Chan performance metrics)
 """
 
-
 import numpy as np
 import pandas as pd
 import pytest

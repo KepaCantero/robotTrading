@@ -15,8 +15,8 @@ import pytest
 from fastapi import status
 from fastapi.testclient import TestClient
 
-from app.presentation.api.deployment import router
 from app.domain.models.deployment import DeploymentInput
+from app.presentation.api.deployment import router
 
 
 class TestDeploymentAPIEndpoints:

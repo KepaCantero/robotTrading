@@ -8,8 +8,8 @@ verificar la lógica principal sin depender de datos históricos reales.
 from datetime import datetime
 from decimal import Decimal
 
-from app.engines.strategy_engines import BreakoutStrategyEngine
 from app.domain.models.market_data import Quote
+from app.engines.strategy_engines import BreakoutStrategyEngine
 from app.models.signal import SignalType
 
 

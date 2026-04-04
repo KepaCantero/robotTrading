@@ -17,9 +17,9 @@ import pytest
 
 from app.domain.models.market_data import Quote
 from app.domain.models.portfolio import Portfolio
+from app.domain.strategies.momentum import MomentumStrategy
 from app.models.signal import SignalSource, SignalType
 from app.services.momentum_analysis import TechnicalIndicatorCalculator
-from app.domain.strategies.momentum import MomentumStrategy
 
 logger = logging.getLogger(__name__)
 

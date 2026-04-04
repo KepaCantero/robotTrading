@@ -8,10 +8,11 @@ Tests for:
 """
 
 import asyncio
-import pytest
-from decimal import Decimal
 from datetime import datetime
-from unittest.mock import Mock, AsyncMock, patch
+from decimal import Decimal
+from unittest.mock import AsyncMock, Mock, patch
+
+import pytest
 
 from app.domain.services.compliance.compliance_engine import ComplianceEngine
 
@@ -185,9 +186,14 @@ class TestITradeExecutorMethods:
         engine.set_starting_capital(1_000_000)
 
         # Mock dependencies - patch source modules since they are lazy-imported
-        with patch("app.infrastructure.logging.trading_decision_logger.TradingDecisionLogger") as mock_logger, patch(
-            "app.services.tax_efficiency.engines.spain_tax_engine_impl.SpainTaxEngineImpl"
-        ) as mock_tax:
+        with (
+            patch(
+                "app.infrastructure.logging.trading_decision_logger.TradingDecisionLogger"
+            ) as mock_logger,
+            patch(
+                "app.services.tax_efficiency.engines.spain_tax_engine_impl.SpainTaxEngineImpl"
+            ) as mock_tax,
+        ):
             # Setup mocks
             mock_logger.return_value.log_signal.return_value = "test_corr_id"
             mock_tax.return_value.calculate_capital_gains_tax.return_value = Decimal("0")
@@ -206,8 +212,11 @@ class TestITradeExecutorMethods:
         # Loss of $1000 on $1000 capital = -100% > kill switch threshold
         engine.track_daily_pnl("TEST", "BUY", Decimal("100"), Decimal("1000"), Decimal("0"))
 
-        with patch("app.infrastructure.logging.trading_decision_logger.TradingDecisionLogger") as mock_logger, patch(
-            "app.services.tax_efficiency.engines.spain_tax_engine_impl.SpainTaxEngineImpl"
+        with (
+            patch(
+                "app.infrastructure.logging.trading_decision_logger.TradingDecisionLogger"
+            ) as mock_logger,
+            patch("app.services.tax_efficiency.engines.spain_tax_engine_impl.SpainTaxEngineImpl"),
         ):
             mock_logger.return_value.log_signal.return_value = "test_corr_id"
 
@@ -391,7 +400,9 @@ class TestIStrategyCycleRunnerMethods:
         engine._active_orders.clear()
         engine._completed_trades.clear()
         engine._active_orders["order1"] = {"symbol": "AAPL"}
-        engine._completed_trades.append({"order_id": "order2", "slo_met": True, "latency_ms": 100.0})
+        engine._completed_trades.append(
+            {"order_id": "order2", "slo_met": True, "latency_ms": 100.0}
+        )
 
         result = await engine.get_cycle_metrics()
 

@@ -3,6 +3,7 @@ Performance tests for Risk Engine components.
 
 Tests that verify Numba acceleration and performance characteristics.
 """
+
 import time
 
 import numpy as np

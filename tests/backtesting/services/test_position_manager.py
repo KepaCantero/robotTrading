@@ -6,7 +6,6 @@ Tests position tracking, updates, queries, and edge cases.
 
 from decimal import Decimal
 
-
 from app.backtesting.services.position_manager import PositionManager
 from tests.backtesting.conftest import DEFAULT_SYMBOL
 

@@ -21,13 +21,13 @@ from pathlib import Path
 
 import pytest
 
+from app.domain.models.market_data import Quote
+from app.domain.strategies.factory import StrategyFactory
 from app.engines.strategy_engines.ensemble import (
     RegimeBasedSelector,
     VotingEnsemble,
     WeightedEnsemble,
 )
-from app.domain.models.market_data import Quote
-from app.domain.strategies.factory import StrategyFactory
 
 logger = logging.getLogger(__name__)
 

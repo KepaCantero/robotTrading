@@ -17,12 +17,9 @@ from pathlib import Path
 project_root = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(project_root))
 
-from app.engines.context_engine import ContextEngine  # noqa: E402
-from app.engines.data_engine import DataEngine  # noqa: E402
-from app.engines.strategy_engines import (  # noqa: E402
-    MeanReversionStrategyEngine,
-    MomentumStrategyEngine,
-)
+from app.engines.context_engine import ContextEngine
+from app.engines.data_engine import DataEngine
+from app.engines.strategy_engines import MeanReversionStrategyEngine, MomentumStrategyEngine
 
 logging.basicConfig(
     level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'

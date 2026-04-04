@@ -18,6 +18,14 @@
 
 ## Fixes
 
+### mem-1775221037-ea79
+> bonferroni_correction.py is_strategy_significant returns numpy.bool_ on Python 3.9 - must wrap with bool() for isinstance checks
+<!-- tags: backtesting, validation, numpy | created: 2026-04-03 -->
+
+### mem-1775208376-3b39
+> calculate_bet_sizes_with_meta_model uses user-friendly method names (kelly, probability, expected_value, confidence) but passes to calculate_bet_sizes_ml which expects meta_* prefixed names (meta_kelly, meta_probability, etc.). A mapping layer was added at line ~1092 of bet_sizing.py to handle the conversion.
+<!-- tags: backtesting, bet-sizing, method-mapping | created: 2026-04-03 -->
+
 ### mem-1774897554-2d91
 > app/domain/tax/ was an orphan directory with unreferenced SQLAlchemy and aiohttp/aiosqlite files. Deleted in iteration 6. The canonical fifo_schema.py is at app/infrastructure/persistence/tax/fifo_schema.py. modelo_721_exporter.py had zero references anywhere.
 <!-- tags: architecture, dead-code, domain-purity | created: 2026-03-30 -->

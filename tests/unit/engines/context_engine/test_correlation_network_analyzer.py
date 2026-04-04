@@ -154,7 +154,7 @@ class TestAnalyzeNetwork:
         mock_graph.return_value = mock_graph_instance
         mock_graph_instance.number_of_nodes.return_value = 4
         mock_graph_instance.number_of_edges.return_value = 6
-        mock_centrality.return_value = {sym: 0.9 for sym in sample_symbols}
+        mock_centrality.return_value = dict.fromkeys(sample_symbols, 0.9)
         mock_communities.return_value[
             ({sample_symbols[0], sample_symbols[1], sample_symbols[2], sample_symbols[3]},)
         ]
@@ -186,7 +186,7 @@ class TestAnalyzeNetwork:
         mock_graph.return_value = mock_graph_instance
         mock_graph_instance.number_of_nodes.return_value = 4
         mock_graph_instance.number_of_edges.return_value = 0
-        mock_centrality.return_value = {sym: 0.0 for sym in sample_symbols}
+        mock_centrality.return_value = dict.fromkeys(sample_symbols, 0.0)
         mock_communities.return_value = []
 
         result = analyzer.analyze_network(low_correlation_matrix, sample_symbols)
@@ -246,7 +246,7 @@ class TestAnalyzeNetwork:
         mock_graph.return_value = mock_graph_instance
         mock_graph_instance.number_of_nodes.return_value = 4
         mock_graph_instance.number_of_edges.return_value = 3
-        mock_centrality.return_value = {sym: 0.5 for sym in sample_symbols}
+        mock_centrality.return_value = dict.fromkeys(sample_symbols, 0.5)
         mock_communities.return_value = [({'AAPL', 'MSFT'},), ({'GOOGL', 'AMZN'},)]
 
         result = analyzer.analyze_network(sample_correlation_matrix, sample_symbols)
@@ -282,7 +282,7 @@ class TestThresholdFiltering:
         # With threshold 0.5, only correlations > 0.5 should create edges
         # In sample matrix: 0.8, 0.9 (2 edges above threshold)
         mock_graph_instance.number_of_edges.return_value = 2
-        mock_centrality.return_value = {sym: 0.5 for sym in sample_symbols}
+        mock_centrality.return_value = dict.fromkeys(sample_symbols, 0.5)
         mock_communities.return_value = []
 
         result = analyzer.analyze_network(sample_correlation_matrix, sample_symbols)
@@ -311,7 +311,7 @@ class TestThresholdFiltering:
         mock_graph_instance.number_of_nodes.return_value = 4
         # With threshold 0.7, only correlations > 0.7 should create edges
         mock_graph_instance.number_of_edges.return_value = 1
-        mock_centrality.return_value = {sym: 0.5 for sym in sample_symbols}
+        mock_centrality.return_value = dict.fromkeys(sample_symbols, 0.5)
         mock_communities.return_value = []
 
         result = custom_threshold_analyzer.analyze_network(
@@ -346,7 +346,7 @@ class TestGraphConstruction:
         mock_graph.return_value = mock_graph_instance
         mock_graph_instance.number_of_nodes.return_value = len(sample_symbols)
         mock_graph_instance.number_of_edges.return_value = 2
-        mock_centrality.return_value = {sym: 0.5 for sym in sample_symbols}
+        mock_centrality.return_value = dict.fromkeys(sample_symbols, 0.5)
         mock_communities.return_value = []
 
         analyzer.analyze_network(sample_correlation_matrix, sample_symbols)
@@ -375,7 +375,7 @@ class TestGraphConstruction:
         mock_graph.return_value = mock_graph_instance
         mock_graph_instance.number_of_nodes.return_value = 4
         mock_graph_instance.number_of_edges.return_value = 2
-        mock_centrality.return_value = {sym: 0.5 for sym in sample_symbols}
+        mock_centrality.return_value = dict.fromkeys(sample_symbols, 0.5)
         mock_communities.return_value = []
 
         analyzer.analyze_network(sample_correlation_matrix, sample_symbols)
@@ -463,7 +463,7 @@ class TestEdgeCases:
         mock_graph.return_value = mock_graph_instance
         mock_graph_instance.number_of_nodes.return_value = 4
         mock_graph_instance.number_of_edges.return_value = 2
-        mock_centrality.return_value = {sym: 0.5 for sym in sample_symbols}
+        mock_centrality.return_value = dict.fromkeys(sample_symbols, 0.5)
         mock_communities.return_value = []
 
         # Should handle gracefully
@@ -523,7 +523,7 @@ class TestPropertyBasedTests:
                     mock_graph.return_value = mock_graph_instance
                     mock_graph_instance.number_of_nodes.return_value = n_assets
                     mock_graph_instance.number_of_edges.return_value = 0
-                    mock_centrality.return_value = {sym: 0.0 for sym in symbols}
+                    mock_centrality.return_value = dict.fromkeys(symbols, 0.0)
                     mock_communities.return_value = []
 
                     result = analyzer.analyze_network(corr_matrix, symbols)
@@ -556,7 +556,7 @@ class TestClustering:
         mock_graph.return_value = mock_graph_instance
         mock_graph_instance.number_of_nodes.return_value = 4
         mock_graph_instance.number_of_edges.return_value = 6
-        mock_centrality.return_value = {sym: 0.8 for sym in sample_symbols}
+        mock_centrality.return_value = dict.fromkeys(sample_symbols, 0.8)
         # All assets in one cluster
         mock_communities.return_value[
             ({sample_symbols[0], sample_symbols[1], sample_symbols[2], sample_symbols[3]},)
@@ -587,7 +587,7 @@ class TestClustering:
         mock_graph.return_value = mock_graph_instance
         mock_graph_instance.number_of_nodes.return_value = 4
         mock_graph_instance.number_of_edges.return_value = 2
-        mock_centrality.return_value = {sym: 0.5 for sym in sample_symbols}
+        mock_centrality.return_value = dict.fromkeys(sample_symbols, 0.5)
         # Two separate clusters
         mock_communities.return_value = [({'AAPL', 'MSFT'},), ({'GOOGL', 'AMZN'},)]
 
@@ -616,7 +616,7 @@ class TestClustering:
         mock_graph.return_value = mock_graph_instance
         mock_graph_instance.number_of_nodes.return_value = 4
         mock_graph_instance.number_of_edges.return_value = 0
-        mock_centrality.return_value = {sym: 0.0 for sym in sample_symbols}
+        mock_centrality.return_value = dict.fromkeys(sample_symbols, 0.0)
         mock_communities.return_value = []
 
         result = analyzer.analyze_network(low_correlation_matrix, sample_symbols)
@@ -678,7 +678,7 @@ class TestCentrality:
         mock_graph.return_value = mock_graph_instance
         mock_graph_instance.number_of_nodes.return_value = 4
         mock_graph_instance.number_of_edges.return_value = 3
-        mock_centrality.return_value = {sym: 0.5 for sym in sample_symbols}
+        mock_centrality.return_value = dict.fromkeys(sample_symbols, 0.5)
         mock_communities.return_value = []
 
         result = analyzer.analyze_network(sample_correlation_matrix, sample_symbols)
@@ -714,7 +714,7 @@ class TestPerformance:
         mock_graph.return_value = mock_graph_instance
         mock_graph_instance.number_of_nodes.return_value = n_assets
         mock_graph_instance.number_of_edges.return_value = 450
-        mock_centrality.return_value = {sym: 0.5 for sym in symbols}
+        mock_centrality.return_value = dict.fromkeys(symbols, 0.5)
         mock_communities.return_value = []
 
         # Should complete without timing out
@@ -742,7 +742,7 @@ class TestPerformance:
         mock_graph.return_value = mock_graph_instance
         mock_graph_instance.number_of_nodes.return_value = 4
         mock_graph_instance.number_of_edges.return_value = 6
-        mock_centrality.return_value = {sym: 1.0 for sym in sample_symbols}
+        mock_centrality.return_value = dict.fromkeys(sample_symbols, 1.0)
         mock_communities.return_value[
             ({sample_symbols[0], sample_symbols[1], sample_symbols[2], sample_symbols[3]},)
         ]

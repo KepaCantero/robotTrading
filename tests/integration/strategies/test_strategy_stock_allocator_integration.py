@@ -21,10 +21,10 @@ from pathlib import Path
 project_root = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(project_root))
 
-import pytest  # noqa: E402
+import pytest
 
-from app.shared.config.params.strategy_config import StockAllocationSettings  # noqa: E402
-from app.services.strategy_stock_allocator import StrategyStockAllocator  # noqa: E402
+from app.services.strategy_stock_allocator import StrategyStockAllocator
+from app.shared.config.params.strategy_config import StockAllocationSettings
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)

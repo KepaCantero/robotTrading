@@ -3,6 +3,7 @@ Unit tests for Capital value object.
 
 Tests the immutable Capital value object following DDD patterns.
 """
+
 from decimal import Decimal
 
 import pytest

@@ -80,7 +80,9 @@ class TestLiquidityIntegration:
             symbol=default_symbol,
         )
 
-        assert result.fill_status == "FILLED", f"Normal order should be filled: {result.rejection_reason}"
+        assert (
+            result.fill_status == "FILLED"
+        ), f"Normal order should be filled: {result.rejection_reason}"
         assert result.filled_quantity == Decimal("5000"), "Should fill full quantity"
         assert result.fill_price > Decimal("100"), "Fill price should include market impact"
 
@@ -108,9 +110,9 @@ class TestLiquidityIntegration:
             symbol="PENNY",
         )
 
-        assert result.fill_status == "REJECTED", (
-            f"Excessive order should be rejected, got: {result.fill_status}"
-        )
+        assert (
+            result.fill_status == "REJECTED"
+        ), f"Excessive order should be rejected, got: {result.fill_status}"
         assert result.filled_quantity == Decimal("0"), "Rejected order should have zero fill"
         assert result.rejection_reason is not None, "Should have a rejection reason"
 
@@ -139,14 +141,14 @@ class TestLiquidityIntegration:
             symbol="TEST",
         )
 
-        assert result.fill_status == "PARTIAL", (
-            f"Large order should get partial fill, got: {result.fill_status}"
-        )
+        assert (
+            result.fill_status == "PARTIAL"
+        ), f"Large order should get partial fill, got: {result.fill_status}"
         assert result.filled_quantity > 0, "Should have some fill"
         # Partial fill should be capped at 5% of daily volume (25,000 shares)
-        assert result.filled_quantity <= Decimal("25000"), (
-            f"Partial fill {result.filled_quantity} should be <= 25,000 (5% of 500K)"
-        )
+        assert result.filled_quantity <= Decimal(
+            "25000"
+        ), f"Partial fill {result.filled_quantity} should be <= 25,000 (5% of 500K)"
 
     def test_sell_order_liquidity_validation(self, validator, default_symbol):
         """Test that sell orders also undergo liquidity validation."""
@@ -172,12 +174,14 @@ class TestLiquidityIntegration:
             symbol=default_symbol,
         )
 
-        assert result.fill_status == "FILLED", f"Sell order should be filled: {result.rejection_reason}"
+        assert (
+            result.fill_status == "FILLED"
+        ), f"Sell order should be filled: {result.rejection_reason}"
         assert result.filled_quantity == Decimal("5000"), "Should fill full quantity"
         # Sell price should be less than close due to slippage
-        assert result.fill_price < Decimal("100"), (
-            "Sell fill price should include slippage (less than close)"
-        )
+        assert result.fill_price < Decimal(
+            "100"
+        ), "Sell fill price should include slippage (less than close)"
 
     def test_liquidity_metrics_available(self, backtester, default_symbol):
         """Test that liquidity metrics can be retrieved."""

@@ -22,15 +22,15 @@ from .test_momentum_engine import *
 from .test_pairs_engine import *
 
 __all__ = [
-    "TestBaseStrategyEngineInitialization",
-    "TestLearningEngineIntegration",
-    "TestCallbacks",
-    "TestEnsembleWeights",
-    "TestContextDataEngineIntegration",
-    "TestSignalGeneration",
-    "TestMetrics",
-    "TestStatus",
     "TestAbstractMethods",
-    "TestRepr",
+    "TestBaseStrategyEngineInitialization",
+    "TestCallbacks",
+    "TestContextDataEngineIntegration",
     "TestEdgeCases",
+    "TestEnsembleWeights",
+    "TestLearningEngineIntegration",
+    "TestMetrics",
+    "TestRepr",
+    "TestSignalGeneration",
+    "TestStatus",
 ]

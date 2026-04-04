@@ -23,7 +23,7 @@ import pytest
 project_root = Path(__file__).parent.parent.parent.parent
 sys.path.insert(0, str(project_root))
 
-from app.domain.strategies.learning.feature_importance import (  # noqa: E402
+from app.domain.strategies.learning.feature_importance import (
     BuiltInImportanceAnalyzer,
     ComprehensiveFeatureAnalyzer,
     ComprehensiveImportanceReport,

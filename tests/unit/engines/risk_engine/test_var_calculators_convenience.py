@@ -3,6 +3,7 @@ Unit tests for VaR Calculator convenience functions.
 
 Tests for the calculate_var convenience function.
 """
+
 import numpy as np
 import pytest
 

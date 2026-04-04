@@ -7,6 +7,7 @@ Tests memory management functionality including:
 - Emergency cleanup
 - Thread safety
 """
+
 from __future__ import annotations
 
 import threading

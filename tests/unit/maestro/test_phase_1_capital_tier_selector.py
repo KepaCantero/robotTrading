@@ -17,10 +17,7 @@ from app.application.orchestration.target_optimization.capital_tier_selector imp
     RiskProfileScaler,
     StrategyFeatureGatekeeper,
 )
-from app.application.orchestration.target_optimization.models import (
-    CapitalTier,
-    StrategyFeatures,
-)
+from app.application.orchestration.target_optimization.models import CapitalTier, StrategyFeatures
 
 
 class TestCapitalTierDetection:

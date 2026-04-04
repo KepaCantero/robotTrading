@@ -463,38 +463,36 @@ class TestGracefulRestart:
     @pytest.mark.asyncio
     async def test_trigger_graceful_restart(self, memory_monitor):
         """Test triggering graceful restart."""
-        with patch("os.execv") as mock_execv:
-            with patch("sys.executable", "/usr/bin/python"):
-                with patch("sys.argv", ["main.py"]):
-                    await memory_monitor.trigger_graceful_restart()
+        with patch("os.execv") as mock_execv, patch("sys.executable", "/usr/bin/python"):
+            with patch("sys.argv", ["main.py"]):
+                await memory_monitor.trigger_graceful_restart()
 
-                    # Verify restart stats updated
-                    assert memory_monitor._restart_count == 1
-                    assert memory_monitor._last_restart is not None
+                # Verify restart stats updated
+                assert memory_monitor._restart_count == 1
+                assert memory_monitor._last_restart is not None
 
-                    # Verify execv was called
-                    mock_execv.assert_called_once()
+                # Verify execv was called
+                mock_execv.assert_called_once()
 
     @pytest.mark.asyncio
     async def test_restart_flushes_logs(self, memory_monitor):
         """Test that restart flushes logs."""
-        with patch("os.execv"):
-            with patch("sys.executable", "/usr/bin/python"):
-                with patch("sys.argv", ["main.py"]):
-                    # Add a real log handler
-                    handler = logging.StreamHandler()
-                    handler.flush = Mock()
+        with patch("os.execv"), patch("sys.executable", "/usr/bin/python"):
+            with patch("sys.argv", ["main.py"]):
+                # Add a real log handler
+                handler = logging.StreamHandler()
+                handler.flush = Mock()
 
-                    logger = logging.getLogger("app.services.monitoring.memory_monitor")
-                    logger.addHandler(handler)
+                logger = logging.getLogger("app.services.monitoring.memory_monitor")
+                logger.addHandler(handler)
 
-                    await memory_monitor.trigger_graceful_restart()
+                await memory_monitor.trigger_graceful_restart()
 
-                    # Verify flush was called
-                    handler.flush.assert_called()
+                # Verify flush was called
+                handler.flush.assert_called()
 
-                    # Cleanup
-                    logger.removeHandler(handler)
+                # Cleanup
+                logger.removeHandler(handler)
 
 
 class TestEdgeCases:

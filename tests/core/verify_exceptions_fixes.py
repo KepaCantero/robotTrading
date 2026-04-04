@@ -61,11 +61,11 @@ for func_name in helper_functions:
     for test_name, invalid_input in validation_tests:
         try:
             func(invalid_input)
-            print(f"  ❌ {func_name} did not validate {test_name}: '{repr(invalid_input)}'")
+            print(f"  ❌ {func_name} did not validate {test_name}: '{invalid_input!r}'")
             all_passed = False
         except ValueError as e:
             if "message must be a non-empty string" in str(e):
-                print(f"  ✅ {func_name} rejects {test_name}: '{repr(invalid_input)}'")
+                print(f"  ✅ {func_name} rejects {test_name}: '{invalid_input!r}'")
             else:
                 print(f"  ⚠️  {func_name} validation message: {e}")
         except Exception as e:

@@ -9,6 +9,7 @@ Tests verify that the Strategy pattern with Registry correctly implements:
 - Strategy lookup and filtering
 - Decorator registration
 """
+
 from typing import Any, Dict, List
 
 import pytest

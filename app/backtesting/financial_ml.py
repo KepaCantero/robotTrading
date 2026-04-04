@@ -198,6 +198,7 @@ class FinancialMLPipeline:
         # State
         self._is_fitted = False
         self.feature_importance_ = None
+        self._primary_model = None  # Used when meta_labeling is disabled
 
     def fit(
         self,
@@ -221,14 +222,14 @@ class FinancialMLPipeline:
         """
         # Convert to arrays
         if isinstance(X, pd.DataFrame):
-            X = X.values
             self.feature_names_ = X.columns.tolist()
+            X = X.values
         else:
             self.feature_names_ = [f"feature_{i}" for i in range(X.shape[1])]
 
         if isinstance(prices, pd.Series):
-            prices = prices.values
             self.price_index_ = prices.index.tolist()
+            prices = prices.values
         else:
             self.price_index_ = list(range(len(prices)))
 
@@ -277,6 +278,14 @@ class FinancialMLPipeline:
                 y_train_cv = y_triple_barrier
 
             self.meta_labeling.fit(X_train_cv, y_train_cv)
+        else:
+            # Train a simple primary model for prediction
+            from sklearn.ensemble import RandomForestClassifier
+
+            self._primary_model = RandomForestClassifier(
+                n_estimators=100, random_state=self.config.random_state, n_jobs=self.config.n_jobs
+            )
+            self._primary_model.fit(X_transformed, y_triple_barrier)
 
         # Step 4: Calculate feature importance if requested
         if self.config.compute_importance:
@@ -356,7 +365,7 @@ class FinancialMLPipeline:
             meta_predictions = meta_result.meta_predictions
         else:
             # Simple predictions without meta-labeling
-            primary_predictions = self.meta_labeling.primary_model.predict(X_transformed)
+            primary_predictions = self._primary_model.predict(X_transformed)
             meta_predictions = None
             bet_sizes = None
 
@@ -514,7 +523,28 @@ class FinancialMLPipeline:
                 primary_pred = meta_result.primary_predictions
                 meta_pred = meta_result.meta_predictions
             else:
-                primary_pred = self.meta_labeling.primary_model.predict(X_test_fold)
+                # Use simple primary model
+                if self._primary_model is None:
+                    from sklearn.ensemble import RandomForestClassifier
+
+                    self._primary_model = RandomForestClassifier(
+                        n_estimators=100,
+                        random_state=self.config.random_state,
+                        n_jobs=self.config.n_jobs,
+                    )
+                    self._primary_model.fit(X_train_fold, y_train_fold)
+                else:
+                    # Refit on this fold's training data
+                    from sklearn.ensemble import RandomForestClassifier
+
+                    fold_model = RandomForestClassifier(
+                        n_estimators=100,
+                        random_state=self.config.random_state,
+                        n_jobs=self.config.n_jobs,
+                    )
+                    fold_model.fit(X_train_fold, y_train_fold)
+                    self._primary_model = fold_model
+                primary_pred = self._primary_model.predict(X_test_fold)
                 meta_pred = None
 
             # Calculate metrics
@@ -537,6 +567,9 @@ class FinancialMLPipeline:
 
     def _apply_fracdiff_to_features(self, X: np.ndarray, prices: np.ndarray) -> np.ndarray:
         """Apply fractional differentiation to features."""
+        if not self.config.apply_fracdiff:
+            return X
+
         X_transformed = np.zeros_like(X)
 
         for i in range(X.shape[1]):

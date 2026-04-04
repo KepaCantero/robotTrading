@@ -3,6 +3,7 @@ Shared fixtures and configuration for risk engine tests.
 
 This module provides common fixtures used across all risk engine test modules.
 """
+
 from unittest.mock import Mock
 
 import numpy as np

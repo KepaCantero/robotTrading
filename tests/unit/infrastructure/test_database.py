@@ -5,11 +5,10 @@ TASK-6: Configuracion de base de datos
 
 from __future__ import annotations
 
+import uuid
 from datetime import datetime, timedelta
 from decimal import Decimal
-from typing import Optional
 from unittest.mock import MagicMock, patch
-import uuid
 
 import pytest
 from sqlalchemy import (
@@ -22,11 +21,8 @@ from sqlalchemy import (
     Numeric,
     String,
     Text,
-    Unicode,
     create_engine,
-    text,
 )
-from sqlalchemy.dialects.postgresql import UUID as PG_UUID
 from sqlalchemy.orm import DeclarativeBase, sessionmaker
 from sqlalchemy.types import TypeDecorator
 
@@ -39,18 +35,11 @@ from app.infrastructure.persistence.database import (
     initialize_database,
 )
 from app.infrastructure.persistence.database._base_repository import BaseRepository
-from app.infrastructure.persistence.database.models import (
-    Position,
-    Signal,
-    Trade,
-    User,
-)
 from app.infrastructure.persistence.database.repositories import (
     AssetRepository,
     PortfolioRepository,
     UserRepository,
 )
-
 
 # ---------------------------------------------------------------------------
 # SQLite-compatible test models
@@ -61,6 +50,7 @@ from app.infrastructure.persistence.database.repositories import (
 # table definitions that mirror the *structure* of the real models so that
 # basic CRUD behaviour can be verified in-memory.
 # ---------------------------------------------------------------------------
+
 
 # SQLite does not have a native UUID type.  We use a simple String(36) stand-in
 # that stores UUIDs in their hyphenated textual form.
@@ -204,12 +194,8 @@ class TestDatabaseManager:
     @pytest.fixture
     def db_manager(self):
         """Create DatabaseManager instance."""
-        with patch(
-            "app.shared.config.base.environment_config.get_config"
-        ) as mock_config:
-            mock_config.return_value.database.connection_string = (
-                "sqlite:///:memory:"
-            )
+        with patch("app.shared.config.base.environment_config.get_config") as mock_config:
+            mock_config.return_value.database.connection_string = "sqlite:///:memory:"
             mock_config.return_value.debug = False
             mock_config.return_value.database.db_pool_size = 5
             mock_config.return_value.database.db_max_overflow = 10

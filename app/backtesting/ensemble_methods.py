@@ -618,8 +618,9 @@ class StackingEnsemble:
             Dictionary mapping model names to scores
         """
         stacker = self._ensure_fitted()
-        estimators_list = stacker.estimators_
-        return {name: float(estimator.score(X, y)) for name, estimator in estimators_list}
+        names = [name for name, _ in stacker.estimators]
+        fitted_estimators = stacker.estimators_
+        return {name: float(est.score(X, y)) for name, est in zip(names, fitted_estimators)}
 
 
 class RandomForestEnsemble:
@@ -1056,7 +1057,7 @@ class EnsembleAnalyzer:
         Returns:
             Diversity score (0 = identical, 1 = completely different)
         """
-        check_is_fitted(ensemble, ["bagger_", "rf_"])
+        check_is_fitted(ensemble)
 
         estimators = self._get_ensemble_estimators(ensemble)
         predictions = self._get_estimator_predictions(estimators, X)

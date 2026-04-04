@@ -3,6 +3,7 @@ Unit tests for Money value object.
 
 Tests the immutable Money value object following DDD patterns.
 """
+
 from decimal import Decimal
 
 import pytest

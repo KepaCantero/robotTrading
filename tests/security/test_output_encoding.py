@@ -2,7 +2,6 @@
 Tests for app/security/output_encoding.py
 """
 
-
 from app.security.web_security.output_encoding import (
     ContentSecurityPolicy,
     OutputEncoder,
@@ -113,7 +112,7 @@ class TestOutputEncoder:
         """Test XML encoding."""
         encoder = OutputEncoder()
         result = encoder.encode_for_xml("<test>&</test>")
-        assert "&lt;test&gt;&amp;&lt;/test&gt;" == result
+        assert result == "&lt;test&gt;&amp;&lt;/test&gt;"
 
     def test_encode_csv(self):
         """Test CSV encoding."""
@@ -193,7 +192,7 @@ class TestConvenienceFunctions:
     def test_encode_for_html(self):
         """Test HTML encoding function."""
         result = encode_for_html("<script>")
-        assert "&lt;script&gt;" == result
+        assert result == "&lt;script&gt;"
 
     def test_encode_for_html_attribute(self):
         """Test HTML attribute encoding function."""
@@ -233,4 +232,4 @@ class TestConvenienceFunctions:
     def test_sanitize_output_string(self):
         """Test sanitizing string output."""
         result = sanitize_output("<script>", context="html")
-        assert "&lt;script&gt;" == result
+        assert result == "&lt;script&gt;"

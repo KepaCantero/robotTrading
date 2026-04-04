@@ -9,7 +9,6 @@ Tests for:
 - Model stability tests (Hastie Rule 15)
 """
 
-
 import numpy as np
 import pandas as pd
 import pytest

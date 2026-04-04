@@ -105,9 +105,11 @@ class TestGridSearchImplementation:
             # Verify that splitter was called with correct parameters
             mock_splitter.assert_called_once()
             call_args = mock_splitter.call_args
-            assert call_args[1]['train_ratio'] == 0.6
-            assert call_args[1]['val_ratio'] == 0.2
-            assert call_args[1]['test_ratio'] == 0.2
+            # TrainValTestSplitter is called with a DataSplit dataclass
+            data_split = call_args[0][0]
+            assert data_split.train_pct == 0.6
+            assert data_split.val_pct == 0.2
+            assert data_split.test_pct == 0.2
 
     def test_grid_search_has_static_evaluator(self):
         """Test that _evaluate_param_set_static method exists for parallel execution."""
@@ -117,7 +119,7 @@ class TestGridSearchImplementation:
         """Test that _evaluate_param_set_static is a static method."""
         import inspect
 
-        getattr(ComprehensiveBacktestRunner, '_evaluate_param_set_static')
+        ComprehensiveBacktestRunner._evaluate_param_set_static
         assert isinstance(
             inspect.getattr_static(ComprehensiveBacktestRunner, '_evaluate_param_set_static'),
             staticmethod,

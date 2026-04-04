@@ -811,10 +811,8 @@ def calculate_sample_weights_uniqueness(
     if weights.sum() > 0:
         weights = weights * n_samples / weights.sum()
 
-    return pd.Series(weights, index=events.index)
-
-
-# ========== Helper Functions (ARCH-004: Extract helper methods) ==========
+    idx = events.index if hasattr(events, "index") else pd.RangeIndex(len(events))
+    return pd.Series(weights, index=idx)
 
 
 def _build_label_end_indices(

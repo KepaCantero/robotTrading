@@ -15,12 +15,7 @@ import pandas as pd
 import pytest
 from pandas import Series
 
-from app.models.signal import Signal, SignalSource, SignalStrength, SignalType
 from app.domain.strategies.fx_intermarket.correlation_analyzer import CorrelationAnalyzer
-from app.domain.strategies.fx_intermarket_strategy import (
-    FXIntermarketState,
-    FXIntermarketStrategy,
-)
 from app.domain.strategies.fx_intermarket.models import (
     AssetClass,
     FXIntermarketConfig,
@@ -28,6 +23,8 @@ from app.domain.strategies.fx_intermarket.models import (
     IntermarketSignal,
     RelationshipType,
 )
+from app.domain.strategies.fx_intermarket_strategy import FXIntermarketState, FXIntermarketStrategy
+from app.models.signal import Signal, SignalSource, SignalStrength, SignalType
 
 
 class TestFXIntermarketState:

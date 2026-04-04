@@ -16,8 +16,8 @@ from app.backtesting.engine import SimpleBacktester
 from app.backtesting.models import BacktestConfig
 from app.domain.models.market_data import Quote
 from app.domain.models.portfolio import AssetClass, Portfolio, Position
-from app.models.signal import Signal, SignalSource, SignalStrength, SignalType
 from app.domain.strategies.momentum import MomentumStrategy
+from app.models.signal import Signal, SignalSource, SignalStrength, SignalType
 
 
 class TestStopLossTakeProfit(unittest.TestCase):

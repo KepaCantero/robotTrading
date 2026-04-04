@@ -238,6 +238,13 @@ class PurgedKFold:
             # Exclude embargo period
             train_mask[embargo_start:embargo_end] = False
 
+            # Exclude timeseries_gap zone around test set
+            if self.timeseries_gap > 0:
+                gap_before_start = max(0, test_start - self.timeseries_gap)
+                train_mask[gap_before_start:test_start] = False
+                gap_after_end = min(n_samples, test_end + self.timeseries_gap)
+                train_mask[test_end:gap_after_end] = False
+
             # Additional purging based on label overlaps
             if events is not None and labels is not None:
                 train_mask = self._apply_label_purge(
@@ -304,7 +311,10 @@ class PurgedKFold:
             Array of event indices
         """
         # Convert events to indices if they're timestamps
-        if isinstance(events.iloc[0], pd.Timestamp):
+        if isinstance(events, pd.DatetimeIndex):
+            return np.arange(len(events))
+        first_val = events.iloc[0] if hasattr(events, "iloc") else events[0]
+        if isinstance(first_val, pd.Timestamp):
             # Events are already in the dataframe index
             return np.arange(len(events))
         else:
@@ -662,7 +672,8 @@ class SequentialBootstrap:
         # Generate sequential splits
         for i in range(self.n_splits):
             # Calculate test set start
-            test_start = int((i / self.n_splits) * (n_samples - test_n_samples))
+            # Offset by 1 to ensure first split has training data
+            test_start = int(((i + 1) / (self.n_splits + 1)) * (n_samples - test_n_samples))
             test_end = test_start + test_n_samples
 
             # Ensure we don't go out of bounds

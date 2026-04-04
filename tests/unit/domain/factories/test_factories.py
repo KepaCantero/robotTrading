@@ -8,6 +8,7 @@ Tests verify that the Factory pattern correctly implements:
 - Prototype pattern
 - Factory Registry
 """
+
 from decimal import Decimal
 
 import pytest

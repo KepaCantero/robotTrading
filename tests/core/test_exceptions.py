@@ -797,8 +797,8 @@ class TestInputValidationEdgeCases:
             "\n",  # Newline
             "\r",  # Carriage return
             "   \t\n   ",  # Mixed whitespace
-            "\u200B",  # Zero-width space
-            "\uFEFF",  # Zero-width non-breaking space
+            "\u200b",  # Zero-width space
+            "\ufeff",  # Zero-width non-breaking space
         ],
     )
     def test_all_helper_functions_reject_invalid_messages(self, message: str) -> None:

@@ -5,7 +5,6 @@ Tests Ornstein-Uhlenbeck half-life calculation as described in
 Ernest Chan's "Quantitative Trading" (Chapter 2).
 """
 
-
 import numpy as np
 import pandas as pd
 import pytest

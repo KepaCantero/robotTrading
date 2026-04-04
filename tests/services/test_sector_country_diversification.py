@@ -7,10 +7,10 @@ from decimal import Decimal
 
 import pytest
 
-from app.shared.config.centralized_config import SectorCountryDiversificationConfig
 from app.domain.models.portfolio import AssetClass, HedgingMetadata, Portfolio, Position
 from app.services.country_diversification_validator import CountryDiversificationValidator
 from app.services.sector_diversification_validator import SectorDiversificationValidator
+from app.shared.config.centralized_config import SectorCountryDiversificationConfig
 
 
 @pytest.fixture

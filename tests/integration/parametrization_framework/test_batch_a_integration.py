@@ -14,9 +14,9 @@ import numpy as np
 import pandas as pd
 import pytest
 
+from app.application.reporting.reporting_orchestrator import get_reporting_orchestrator
 from app.services.reporting.quantstats_integration import get_quantstats_integration
 from app.services.reporting.report_templates import get_report_templates
-from app.application.reporting.reporting_orchestrator import get_reporting_orchestrator
 from app.services.risk_scaling.limit_adjuster import get_limit_adjuster
 from app.services.risk_scaling.risk_adjustment_calculator import get_risk_adjustment_calculator
 from app.services.risk_scaling.risk_scaling_application import get_risk_scaling_application

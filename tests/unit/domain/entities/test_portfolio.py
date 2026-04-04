@@ -3,6 +3,7 @@ Unit tests for Portfolio and Position entities.
 
 Tests the Portfolio and Position entities following DDD patterns.
 """
+
 from decimal import Decimal
 
 import pytest

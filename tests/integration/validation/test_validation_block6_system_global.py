@@ -40,7 +40,7 @@ class TestResultJSONIntegrity(unittest.TestCase):
 
         # Validar estructura de al menos un archivo
         for json_file in json_files[:1]:  # Validar el primero
-            with open(json_file, 'r') as f:
+            with open(json_file) as f:
                 try:
                     data = json.load(f)
                 except json.JSONDecodeError as e:
@@ -96,7 +96,7 @@ class TestResultJSONIntegrity(unittest.TestCase):
             self.skipTest("No hay archivos JSON de resultados")
 
         for json_file in json_files[:1]:
-            with open(json_file, 'r') as f:
+            with open(json_file) as f:
                 data = json.load(f)
 
             # Verificar que tiene métricas (pueden estar en diferentes niveles)

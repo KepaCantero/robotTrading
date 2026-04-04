@@ -9,8 +9,8 @@ from decimal import Decimal
 import pytest
 
 from app.domain.models.market_data import Quote
-from app.services.momentum_analysis import TechnicalIndicatorCalculator
 from app.domain.strategies.momentum import MomentumStrategy
+from app.services.momentum_analysis import TechnicalIndicatorCalculator
 
 
 @pytest.fixture

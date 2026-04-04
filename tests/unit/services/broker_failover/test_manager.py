@@ -11,7 +11,6 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from app.shared.utils.timezone_utils import utc_now
 from app.services.broker_failover import (
     BrokerConfig,
     BrokerFailoverManager,
@@ -27,6 +26,7 @@ from app.services.live_trading.broker_connector import (
     OrderStatus,
     OrderType,
 )
+from app.shared.utils.timezone_utils import utc_now
 
 
 class MockBroker:
