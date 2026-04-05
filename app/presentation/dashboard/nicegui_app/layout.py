@@ -18,6 +18,14 @@ if TYPE_CHECKING:
     from app.services.backtest_runner import BacktestRunner
 
 
+def _toggle_mode(dark: ui.dark_mode, label: ui.label) -> None:
+    """Toggle dark/light mode and update the label text."""
+    dark.toggle()
+    # dark.value is the *new* state after toggle
+    is_dark = dark.value
+    label.text = "Dark" if is_dark else "Light"
+
+
 class AppShell:
     """Main application shell with drawer, header, and routed content area."""
 
@@ -57,9 +65,12 @@ class AppShell:
         # ── Header ─────────────────────────────────────────────────────────
         with ui.header().classes("items-center justify-between bg-[#0f3460]"):
             ui.label("Backtesting Dashboard").classes("text-h6")
-            ui.button(icon="dark_mode", on_click=lambda: dark.toggle()).props("flat round").tooltip(
-                "Toggle dark/light mode"
-            )
+            with ui.row().classes("items-center gap-sm"):
+                mode_label = ui.label("Dark").classes("text-caption")
+                ui.button(
+                    icon="dark_mode",
+                    on_click=lambda: _toggle_mode(dark, mode_label),
+                ).props("flat round").tooltip("Toggle dark/light mode")
 
         # ── Page Routes ────────────────────────────────────────────────────
         @ui.page("/")

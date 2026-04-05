@@ -12,7 +12,10 @@ from typing import TYPE_CHECKING
 
 from nicegui import ui
 
-from app.presentation.dashboard.nicegui_app.components.metric_cards import metric_card
+from app.presentation.dashboard.nicegui_app.components.metric_cards import (
+    metric_card,
+    skeleton_card,
+)
 from app.presentation.dashboard.nicegui_app.components.profitability_badge import (
     profitability_badge,
 )
@@ -150,7 +153,9 @@ def render(
 
             with ui.row().classes("w-full wrap gap-lg"):
                 with ui.column().classes("min-w-[200px]"):
-                    ui.label("Strategy").classes("text-caption")
+                    ui.label("Strategy").classes("text-caption").tooltip(
+                        "The trading strategy to backtest"
+                    )
                     strategy_select = ui.select(
                         options=_STRATEGY_OPTIONS,
                         value=_STRATEGY_OPTIONS[0],
@@ -158,7 +163,9 @@ def render(
                     ).classes("min-w-[220px]")
 
                 with ui.column().classes("min-w-[200px]"):
-                    ui.label("Investor Profile").classes("text-caption")
+                    ui.label("Investor Profile").classes("text-caption").tooltip(
+                        "Investment objective and risk tolerance"
+                    )
                     profile_select = ui.select(
                         options=_PROFILE_OPTIONS,
                         value=_PROFILE_OPTIONS[0],
@@ -166,14 +173,18 @@ def render(
                     ).classes("min-w-[220px]")
 
                 with ui.column().classes("min-w-[200px]"):
-                    ui.label("Time Window").classes("text-caption")
+                    ui.label("Time Window").classes("text-caption").tooltip(
+                        "Historical data period for the backtest"
+                    )
                     time_window_select = ui.select(
                         options=_TIME_WINDOW_OPTIONS,
                         value="1y",
                     ).classes("min-w-[120px]")
 
                 with ui.column().classes("min-w-[150px]"):
-                    ui.label("Initial Capital").classes("text-caption")
+                    ui.label("Initial Capital").classes("text-caption").tooltip(
+                        "Starting portfolio value in EUR"
+                    )
                     capital_input = ui.number(
                         value=100000.0,
                         min=1000.0,
@@ -210,13 +221,19 @@ def render(
                 ui.notify("Please select a strategy.", type="warning")
                 return
 
-            # Show spinner, disable button
+            # Show skeleton loading, disable button
             run_button.disable()
             results_container.clear()
 
             with results_container:
-                ui.spinner("dots", size="xl").classes("q-mt-lg")
-                ui.label("Running backtest...").classes("text-grey q-mt-sm")
+                ui.label("Running backtest...").classes("text-h6 q-mt-md")
+                with ui.row().classes("w-full wrap gap-md q-mt-sm"):
+                    for _ in range(6):
+                        skeleton_card()
+                ui.linear_progress(value=None).classes("w-full q-mt-md")
+                ui.label("Please wait while the backtest executes.").classes(
+                    "text-caption text-grey q-mt-sm"
+                )
 
             try:
                 from app.services.backtest_runner import BacktestParams
@@ -257,15 +274,32 @@ def render(
 
             except ValueError as exc:
                 results_container.clear()
-                with results_container:
-                    ui.label(f"Validation error: {exc}").classes("text-negative")
+                with results_container:  # noqa: SIM117
+                    with (
+                        ui.card().classes("w-full q-pa-lg").style("border-left: 4px solid #FF9800")
+                    ):
+                        ui.label("Validation Error").classes("text-h6 text-warning")
+                        ui.label(str(exc)).classes("text-body2 q-mt-sm")
+                        ui.label("Please check your parameters and try again.").classes(
+                            "text-caption text-grey q-mt-sm"
+                        )
                 ui.notify(str(exc), type="negative")
             except Exception as exc:
                 logger.exception("Backtest run failed")
                 results_container.clear()
-                with results_container:
-                    ui.label(f"Error: {exc}").classes("text-negative")
-                ui.notify(f"Backtest failed: {exc}", type="negative")
+                with results_container:  # noqa: SIM117
+                    with (
+                        ui.card().classes("w-full q-pa-lg").style("border-left: 4px solid #F44336")
+                    ):
+                        ui.label("Backtest Error").classes("text-h6 text-negative")
+                        ui.label("An unexpected error occurred during backtest execution.").classes(
+                            "text-body2 q-mt-sm"
+                        )
+                        ui.label(str(exc)).classes("text-caption text-grey q-mt-sm")
+                        ui.label("Check the application logs for more details.").classes(
+                            "text-caption text-grey"
+                        )
+                ui.notify("Backtest failed", type="negative")
             finally:
                 run_button.enable()
 
