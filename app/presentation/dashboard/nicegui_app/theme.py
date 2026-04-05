@@ -87,3 +87,16 @@ def profitability_color(verdict: str) -> str:
         "INCONCLUSIVE": COLORS["inconclusive"],
     }
     return mapping.get(verdict.upper(), COLORS["neutral"])
+
+
+# ── Metric Descriptions (tooltips) ───────────────────────────────────────────
+
+METRIC_DESCRIPTIONS: dict[str, str] = {
+    "Total Return": "Total percentage gain or loss over the backtest period.",
+    "Sharpe Ratio": "Risk-adjusted return. Higher is better (>1.0 is good, >2.0 is excellent).",
+    "Sortino Ratio": "Like Sharpe but only penalizes downside volatility. Better for asymmetric returns.",
+    "Max Drawdown": "Largest peak-to-trough decline. Represents worst-case loss from a high point.",
+    "Win Rate": "Percentage of trades that were profitable.",
+    "Profit Factor": "Ratio of gross profits to gross losses. Above 1.5 is considered good.",
+    "Total Trades": "Number of executed trades during the backtest period.",
+}

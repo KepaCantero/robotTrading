@@ -11,6 +11,7 @@ from typing import TYPE_CHECKING, Any
 
 from nicegui import ui
 
+from app.presentation.dashboard.nicegui_app.components.metric_cards import skeleton_card
 from app.presentation.dashboard.nicegui_app.theme import COLORS
 
 if TYPE_CHECKING:
@@ -174,6 +175,10 @@ def render(
 
         # Summary stats (populated asynchronously)
         summary_container = ui.column().classes("w-full q-mb-lg")
+        with summary_container:  # noqa: SIM117
+            with ui.row().classes("w-full wrap gap-md"):
+                for _ in range(6):
+                    skeleton_card()
 
         with ui.card().classes("w-full q-pa-lg"):
             ui.label("Verdict Table").classes("text-h6 q-mb-md")
