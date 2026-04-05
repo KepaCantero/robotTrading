@@ -4,13 +4,38 @@ Provides the main layout structure: left drawer navigation, top header
 with dark mode toggle, and a main content area with page routing.
 """
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 from nicegui import ui
 
 from app.presentation.dashboard.nicegui_app.theme import PAGES
 
+if TYPE_CHECKING:
+    from app.infrastructure.persistence.backtest_result_store import BacktestResultStore
+    from app.presentation.dashboard.profitability_engine import ProfitabilityEngine
+    from app.services.backtest_runner import BacktestRunner
+
 
 class AppShell:
     """Main application shell with drawer, header, and routed content area."""
+
+    _store: BacktestResultStore | None = None
+    _runner: BacktestRunner | None = None
+    _profitability: ProfitabilityEngine | None = None
+
+    @classmethod
+    def configure(
+        cls,
+        store: BacktestResultStore,
+        runner: BacktestRunner,
+        profitability: ProfitabilityEngine,
+    ) -> None:
+        """Inject shared service instances before calling setup()."""
+        cls._store = store
+        cls._runner = runner
+        cls._profitability = profitability
 
     @classmethod
     def setup(cls) -> None:
@@ -39,27 +64,30 @@ class AppShell:
         # ── Page Routes ────────────────────────────────────────────────────
         @ui.page("/")
         def page_backtest_runner():
-            cls._page_wrapper("Backtest Runner")
+            from app.presentation.dashboard.nicegui_app.pages.backtest_runner import render
+
+            render(cls._store, cls._runner, cls._profitability)
 
         @ui.page("/results")
         def page_results():
-            cls._page_wrapper("Results")
+            from app.presentation.dashboard.nicegui_app.pages.backtest_results import render
+
+            render(cls._store, cls._profitability)
 
         @ui.page("/history")
         def page_history():
-            cls._page_wrapper("History & Compare")
+            from app.presentation.dashboard.nicegui_app.pages.history_compare import render
+
+            render(cls._store, cls._profitability)
 
         @ui.page("/config")
         def page_config():
-            cls._page_wrapper("Config Viewer")
+            from app.presentation.dashboard.nicegui_app.pages.config_viewer import render
+
+            render()
 
         @ui.page("/profitability")
         def page_profitability():
-            cls._page_wrapper("Profitability")
+            from app.presentation.dashboard.nicegui_app.pages.profitability import render
 
-    @staticmethod
-    def _page_wrapper(title: str) -> None:
-        """Wrap page content with standard padding and a title."""
-        with ui.column().classes("w-full q-pa-lg"):
-            ui.label(title).classes("text-h4 q-mb-md")
-            ui.label(f"Welcome to {title}. Content coming soon.").classes("text-grey")
+            render(cls._store, cls._profitability)
