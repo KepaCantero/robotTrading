@@ -9,7 +9,7 @@ null-service resilience, theme constants, and formatting helpers.
 from __future__ import annotations
 
 import json
-from pathlib import Path
+from pathlib import Path  # noqa: TC003
 
 import pytest
 from nicegui.testing import user_simulation
@@ -248,7 +248,9 @@ class TestMetricCardComponent:
         """metric_card should render title, value, and subtitle."""
         from app.presentation.dashboard.nicegui_app.components.metric_cards import metric_card
 
-        async with user_simulation(lambda: metric_card("Sharpe", "1.80", "Risk-adjusted", "#2196F3")) as user:
+        async with user_simulation(
+            lambda: metric_card("Sharpe", "1.80", "Risk-adjusted", "#2196F3")
+        ) as user:
             await user.open("/")
             await user.should_see("Sharpe")
             await user.should_see("1.80")
@@ -335,9 +337,7 @@ class TestRunComparisonComponent:
 
     async def test_comparison_renders_labels(self) -> None:
         """run_comparison should show run labels."""
-        from app.presentation.dashboard.nicegui_app.components.run_comparison import (
-            run_comparison,
-        )
+        from app.presentation.dashboard.nicegui_app.components.run_comparison import run_comparison
 
         diff = {
             "total_return": {"a": 0.10, "b": 0.15, "delta": 0.05},
@@ -355,9 +355,7 @@ class TestRunComparisonComponent:
         Note: ui.table row data is not directly visible via should_see,
         but the table element itself is present in the page tree.
         """
-        from app.presentation.dashboard.nicegui_app.components.run_comparison import (
-            run_comparison,
-        )
+        from app.presentation.dashboard.nicegui_app.components.run_comparison import run_comparison
 
         diff = {"win_rate": {"a": 0.55, "b": 0.65, "delta": 0.10}}
 
@@ -386,9 +384,7 @@ class TestDividendPanelComponent:
 
     async def test_dividend_panel_renders(self) -> None:
         """dividend_panel placeholder should render."""
-        from app.presentation.dashboard.nicegui_app.components.dividend_panel import (
-            dividend_panel,
-        )
+        from app.presentation.dashboard.nicegui_app.components.dividend_panel import dividend_panel
 
         async with user_simulation(dividend_panel) as user:
             await user.open("/")
