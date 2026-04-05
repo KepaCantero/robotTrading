@@ -255,12 +255,12 @@ class ProfitabilityEngine:
     ) -> bool:
         """Check whether the primary metric meets its threshold."""
         if metric == "sharpe_ratio":
-            return value >= thresholds["min_sharpe"]
+            return bool(value >= thresholds["min_sharpe"])
         if metric == "total_return":
-            return value >= thresholds["min_return"]
+            return bool(value >= thresholds["min_return"])
         if metric == "max_drawdown":
             limit = thresholds.get("max_drawdown_limit", 0.25)
-            return abs(value) <= limit
+            return bool(abs(value) <= limit)
         return False
 
     def _evaluate_secondary_metrics(

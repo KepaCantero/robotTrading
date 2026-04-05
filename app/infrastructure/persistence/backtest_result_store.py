@@ -145,7 +145,7 @@ _ROW_COLUMNS = [
 ]
 
 
-def _row_to_record(row: aiosqlite.Row) -> BacktestRunRecord:
+def _row_to_record(row: tuple[Any, ...] | aiosqlite.Row) -> BacktestRunRecord:
     """Convert a database row to a BacktestRunRecord."""
     values = dict(zip(_ROW_COLUMNS, row))
     # Parse the ISO-format timestamp string back to datetime.

@@ -210,9 +210,9 @@ def render(
                 ui.button(
                     "View Results",
                     icon="search",
-                ).props(
-                    "color=primary"
-                ).on_click(lambda: _load_run(store, profitability, select, results_container))
+                ).props("color=primary").on_click(
+                    lambda: _load_run(store, profitability, select, results_container)
+                )
 
             ui.timer(0.1, _load_options, once=True)
 

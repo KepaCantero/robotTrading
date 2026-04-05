@@ -126,9 +126,9 @@ def _build_comparison_section(
         ui.button(
             "Compare",
             icon="compare",
-        ).props(
-            "color=primary"
-        ).on_click(lambda: _run_compare(store, select_a, select_b, diff_container))
+        ).props("color=primary").on_click(
+            lambda: _run_compare(store, select_a, select_b, diff_container)
+        )
 
     diff_container = ui.column().classes("w-full q-mt-md")
 
