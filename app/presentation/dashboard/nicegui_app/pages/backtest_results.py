@@ -217,7 +217,7 @@ def render(
             ui.timer(0.1, _load_options, once=True)
 
         # ── Results Container ─────────────────────────────────────────────
-        results_container = ui.column().classes("w-full q-mt-md")
+        results_container: ui.column = ui.column().classes("w-full q-mt-md")
 
 
 async def _load_run(

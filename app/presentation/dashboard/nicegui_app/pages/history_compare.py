@@ -106,6 +106,8 @@ def _build_comparison_section(
     """Build the comparison dropdowns and diff view."""
     ui.label("Compare Runs").classes("text-h6 q-mt-lg q-mb-md")
 
+    diff_container: ui.column = ui.column().classes("w-full q-mt-md")
+
     with ui.row().classes("w-full items-center gap-lg"):
         with ui.column().classes("min-w-[300px]"):
             ui.label("Run A").classes("text-caption")
@@ -129,8 +131,6 @@ def _build_comparison_section(
         ).props("color=primary").on_click(
             lambda: _run_compare(store, select_a, select_b, diff_container)
         )
-
-    diff_container = ui.column().classes("w-full q-mt-md")
 
     async def _load_options() -> None:
         if store is None:
