@@ -230,7 +230,7 @@ def render(
                 with ui.row().classes("w-full wrap gap-md q-mt-sm"):
                     for _ in range(6):
                         skeleton_card()
-                ui.linear_progress(value=None).classes("w-full q-mt-md")
+                ui.linear_progress(value=0.0).classes("w-full q-mt-md")
                 ui.label("Please wait while the backtest executes.").classes(
                     "text-caption text-grey q-mt-sm"
                 )

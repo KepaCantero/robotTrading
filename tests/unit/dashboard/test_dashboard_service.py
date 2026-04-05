@@ -77,7 +77,7 @@ def mock_broker():
 def dashboard_service(mock_compliance_engine):
     """Create dashboard service with mocked dependencies."""
     with patch(
-        "app.dashboard.dashboard_service.get_compliance_engine",
+        "app.presentation.dashboard.dashboard_service.get_compliance_engine",
         return_value=mock_compliance_engine,
     ):
         service = DashboardService()
@@ -163,14 +163,12 @@ async def test_get_dashboard_service_singleton():
     from app.presentation.dashboard.dashboard_service import get_dashboard_service
 
     # First call creates instance
-    service1 = get_dashboard_service()
+    get_dashboard_service()
 
     # Reset global to test singleton behavior
-    import app.dashboard.dashboard_service as ds_module
+    import app.presentation.dashboard.dashboard_service as ds_module
 
-    original_get_engine = ds_module.get_compliance_engine
-
-    with patch("app.dashboard.dashboard_service.get_compliance_engine"):
+    with patch("app.presentation.dashboard.dashboard_service.get_compliance_engine"):
         # After first call, should return same instance
         ds_module._dashboard_service = None
         service2 = get_dashboard_service()

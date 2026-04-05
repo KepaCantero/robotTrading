@@ -27,7 +27,7 @@ Changes:
 import asyncio
 from datetime import datetime, timezone
 from decimal import Decimal
-from typing import List, Optional
+from typing import Optional
 
 import numpy as np
 import pytest
@@ -83,7 +83,7 @@ def generate_realistic_prices(
 
 
 def create_realistic_portfolio(
-    symbols: List[str] = None,
+    symbols: Optional[list[str]] = None,
     seed: int = 42,
     crash_day: Optional[int] = None,
     crash_magnitude: float = -0.10,
@@ -158,6 +158,7 @@ class MockAlertingOrchestrator:
         self.alerts = []
         self.acknowledged = []
         self.resolved = []
+        self.alert_manager = self.AlertManager()
 
     async def acknowledge_alert(self, alert_id: str):
         self.acknowledged.append(alert_id)
@@ -174,7 +175,7 @@ class MockAlertingOrchestrator:
         }
 
     class AlertManager:
-        def get_recent_alerts(self, hours=24):
+        def get_recent_alerts(self, older_than_hours=24):
             return []
 
 
@@ -366,8 +367,8 @@ class TestDashboardEdgeCases:
     @pytest.mark.asyncio
     async def test_market_crash_metrics(self, dashboard):
         """Test dashboard metrics during market crash (20%+ drop)."""
-        # Create portfolio with severe crash
-        crash_portfolio = create_realistic_portfolio(crash_day=3, crash_magnitude=-0.25)
+        # Create portfolio with severe crash on last day to prevent GBM recovery
+        crash_portfolio = create_realistic_portfolio(crash_day=9, crash_magnitude=-0.25)
         dashboard.portfolio_service._portfolio = crash_portfolio
 
         metrics = await dashboard.get_metrics()
