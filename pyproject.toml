@@ -37,7 +37,7 @@ dependencies = [
     "pyarrow>=12.0.0",
     "scipy>=1.11.0",
     "numba>=0.58.0",
-    "joblib>=1.3.0",
+    "joblib>=1.5.3",
     "h5py>=3.9.0",
 
     # ML & Deep Learning
