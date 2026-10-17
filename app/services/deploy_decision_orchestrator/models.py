@@ -12,12 +12,9 @@ from __future__ import annotations
 
 import logging
 from datetime import datetime
-from typing import TYPE_CHECKING
+from decimal import Decimal
 
 from pydantic import BaseModel, Field
-
-if TYPE_CHECKING:
-    from decimal import Decimal
 
 logger = logging.getLogger(__name__)
 
@@ -140,6 +137,11 @@ class DeploymentDecision(BaseModel):
     )
 
     error_message: str | None = Field(None, description="Error if any")
+
+
+# Resolve forward references (Decimal was previously only imported under TYPE_CHECKING)
+DeploymentInput.model_rebuild()
+DeploymentDecision.model_rebuild()
 
 
 logger.debug(

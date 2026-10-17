@@ -17,7 +17,8 @@ import asyncio
 import logging
 import traceback
 from datetime import datetime
-from typing import TYPE_CHECKING, Any
+from typing import Any
+from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Path, Query, Request
 from pydantic import BaseModel, Field
@@ -38,9 +39,6 @@ from app.infrastructure.feeds.market_data import MarketDataService, get_market_d
 
 from . import audit_logger, get_correlation_id
 from .security import audit_log, rate_limit, require_auth
-
-if TYPE_CHECKING:
-    from uuid import UUID
 
 router = APIRouter(prefix="/market-data", tags=["market-data"])
 logger = logging.getLogger(__name__)
@@ -127,6 +125,10 @@ class SubscribeRequest(BaseModel):
     frequency: DataFrequency = Field(
         default=DataFrequency.REAL_TIME, description="Data update frequency"
     )
+
+
+# Resolve forward references (UUID was previously only imported under TYPE_CHECKING)
+SubscribeRequest.model_rebuild()
 
 
 # Endpoints

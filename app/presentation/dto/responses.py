@@ -4,12 +4,9 @@ Response DTOs for Presentation Layer
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from decimal import Decimal
 
 from pydantic import BaseModel, Field
-
-if TYPE_CHECKING:
-    from decimal import Decimal
 
 
 class PortfolioResponse(BaseModel):
@@ -35,3 +32,7 @@ class HealthResponse(BaseModel):
 
     status: str = Field(..., description="System status")
     version: str = Field(default="1.0.0", description="API version")
+
+
+# Resolve forward references (Decimal was previously only imported under TYPE_CHECKING)
+PortfolioResponse.model_rebuild()

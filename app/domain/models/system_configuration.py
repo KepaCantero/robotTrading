@@ -10,15 +10,12 @@ configuration for the trading system.
 """
 
 from decimal import Decimal
-from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from app.domain.models.risk_config import RiskConfig
 from app.domain.models.strategy_type import StrategyType
-
-if TYPE_CHECKING:
-    from app.domain.models.risk_config import RiskConfig
-    from app.domain.models.tax_config import TaxConfig
+from app.domain.models.tax_config import TaxConfig
 
 
 class SystemConfiguration(BaseModel):
@@ -148,3 +145,7 @@ class SystemConfiguration(BaseModel):
             "tax_optimization": self.tax_config is not None,
             "expected_volatility": str(self.expected_volatility),
         }
+
+
+# Resolve forward references (RiskConfig/TaxConfig were previously only imported under TYPE_CHECKING)
+SystemConfiguration.model_rebuild()

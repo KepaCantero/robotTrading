@@ -12,14 +12,11 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass
-from typing import TYPE_CHECKING
+from datetime import datetime
+from decimal import Decimal
 
 import numpy as np
 from pydantic import BaseModel, Field
-
-if TYPE_CHECKING:
-    from datetime import datetime
-    from decimal import Decimal
 
 logger = logging.getLogger(__name__)
 
@@ -46,6 +43,11 @@ class DataQualityReport(BaseModel):
     consistency_errors: int = 0
     is_valid: bool = True
     quality_score: float = 100.0
+
+
+# Resolve forward references (datetime/Decimal were previously only imported under TYPE_CHECKING)
+DataQualityIssue.model_rebuild()
+DataQualityReport.model_rebuild()
 
 
 @dataclass

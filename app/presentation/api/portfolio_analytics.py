@@ -15,7 +15,8 @@ import logging
 import traceback
 from datetime import datetime
 from decimal import Decimal
-from typing import TYPE_CHECKING, Annotated, Any
+from typing import Annotated, Any
+from uuid import UUID
 
 from fastapi import APIRouter, Depends, Query, Request
 from pydantic import BaseModel, Field
@@ -37,9 +38,6 @@ from app.services.portfolio_analytics import (
 
 from . import audit_logger, get_correlation_id
 from .security import audit_log, rate_limit, require_auth
-
-if TYPE_CHECKING:
-    from uuid import UUID
 
 router = APIRouter(prefix="/portfolio-analytics", tags=["Portfolio Analytics"])
 logger = logging.getLogger(__name__)
@@ -132,6 +130,12 @@ class AnalyticsSummaryResponse(BaseModel):
     success: bool = Field(..., description="Success status")
     data: dict[str, Any] | None = Field(None, description="Analytics summary data")
     error: str | None = Field(None, description="Error message if any")
+
+
+# Resolve forward references (UUID was previously only imported under TYPE_CHECKING)
+PerformanceMetricsRequest.model_rebuild()
+RebalanceRequest.model_rebuild()
+PortfolioComparisonRequest.model_rebuild()
 
 
 # Mock portfolio data for demonstration

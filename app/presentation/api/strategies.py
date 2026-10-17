@@ -12,7 +12,7 @@ GAP Fixes:
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING, Annotated, Any
+from typing import Annotated, Any
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from pydantic import BaseModel
@@ -26,15 +26,16 @@ from app.shared.config.di_container import (
     get_strategy_registry as di_get_strategy_registry,
 )
 
+# Runtime imports (previously TYPE_CHECKING-only): FastAPI must be able to resolve
+# these names to see the Depends() metadata; otherwise the params become query args.
+from app.domain.strategies.execution_engine import ExecutionEngine
+from app.domain.strategies.protocols import (
+    StrategyLoggerProto as StrategyLogger,
+    StrategyRegistryProto as StrategyRegistry,
+)
+
 from . import audit_logger, get_correlation_id
 from .security import audit_log, rate_limit, require_auth
-
-if TYPE_CHECKING:
-    from app.domain.strategies.execution_engine import ExecutionEngine
-    from app.domain.strategies.protocols import (
-        StrategyLoggerProto as StrategyLogger,
-        StrategyRegistryProto as StrategyRegistry,
-    )
 
 logger = logging.getLogger(__name__)
 

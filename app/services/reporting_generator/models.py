@@ -8,12 +8,10 @@ from __future__ import annotations
 
 import logging
 from datetime import datetime
-from typing import TYPE_CHECKING, Any
+from decimal import Decimal
+from typing import Any
 
 from pydantic import BaseModel, Field
-
-if TYPE_CHECKING:
-    from decimal import Decimal
 
 logger = logging.getLogger(__name__)
 
@@ -116,6 +114,14 @@ class PerformanceReport(BaseModel):
 
     # Error handling
     error_message: str | None = Field(None, description="Error message if failed")
+
+
+# Resolve forward references (Decimal was previously only imported under TYPE_CHECKING)
+PerformanceMetric.model_rebuild()
+StrategyMetrics.model_rebuild()
+AllocationSnapshot.model_rebuild()
+ReportGenerationRequest.model_rebuild()
+PerformanceReport.model_rebuild()
 
 
 logger.debug(

@@ -4,12 +4,9 @@ Request DTOs for Presentation Layer
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from decimal import Decimal
 
 from pydantic import BaseModel, Field
-
-if TYPE_CHECKING:
-    from decimal import Decimal
 
 
 class CreatePortfolioRequest(BaseModel):
@@ -26,3 +23,7 @@ class ExecuteStrategyRequest(BaseModel):
     strategy_type: str = Field(..., description="Strategy type")
     symbol: str = Field(..., description="Trading symbol")
     parameters: dict = Field(default_factory=dict, description="Strategy parameters")
+
+
+# Resolve forward references (Decimal was previously only imported under TYPE_CHECKING)
+CreatePortfolioRequest.model_rebuild()

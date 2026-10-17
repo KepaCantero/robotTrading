@@ -16,7 +16,9 @@ import asyncio
 import logging
 import traceback
 from datetime import datetime
-from typing import TYPE_CHECKING, Annotated, Any
+from decimal import Decimal
+from typing import Annotated, Any
+from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from pydantic import BaseModel, Field
@@ -28,6 +30,7 @@ from sqlalchemy.exc import (
     ProgrammingError,
 )
 
+from app.domain.models.market_data import Quote
 from app.domain.models.paper_trading import (
     OrderSide,
     OrderType,
@@ -42,12 +45,6 @@ from app.infrastructure.brokers.paper import PaperTradingService, get_paper_trad
 
 from . import audit_logger, get_correlation_id
 from .security import audit_log, rate_limit, require_auth
-
-if TYPE_CHECKING:
-    from decimal import Decimal
-    from uuid import UUID
-
-    from app.domain.models.market_data import Quote
 
 router = APIRouter(prefix="/paper-trading", tags=["Paper Trading"])
 logger = logging.getLogger(__name__)
@@ -135,9 +132,16 @@ class MarketUpdateResponse(BaseModel):
     """Response model for market updates."""
 
     success: bool = Field(True, description="Success status")
-    updated_symbols: list[str] = Field(..., description="Updated symbols")
+    updated_symbols: list[str] = Field(..., description="List of updated symbols")
     count: int = Field(..., description="Number of updated symbols")
     timestamp: datetime = Field(default_factory=datetime.utcnow, description="Response timestamp")
+
+
+# Resolve forward references (Decimal/UUID/Quote were previously only imported under TYPE_CHECKING)
+CreatePortfolioRequest.model_rebuild()
+CreateSessionRequest.model_rebuild()
+ExecuteTradeRequest.model_rebuild()
+UpdateMarketPricesRequest.model_rebuild()
 
 
 # Portfolio Management Endpoints

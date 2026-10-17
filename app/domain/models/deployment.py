@@ -10,12 +10,9 @@ TODO: Complete implementation in PHASE 4
 from __future__ import annotations
 
 from datetime import datetime
-from typing import TYPE_CHECKING
+from decimal import Decimal
 
 from pydantic import BaseModel, Field
-
-if TYPE_CHECKING:
-    from decimal import Decimal
 
 
 class DeploymentInput(BaseModel):
@@ -130,3 +127,7 @@ class DeploymentDecision(BaseModel):
             }
         }
     }
+
+
+# Resolve forward references (Decimal was previously only imported under TYPE_CHECKING)
+DeploymentInput.model_rebuild()

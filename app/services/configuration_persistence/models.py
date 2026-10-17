@@ -8,12 +8,10 @@ from __future__ import annotations
 
 import logging
 from datetime import datetime
-from typing import TYPE_CHECKING, Any
+from decimal import Decimal
+from typing import Any
 
 from pydantic import BaseModel, Field
-
-if TYPE_CHECKING:
-    from decimal import Decimal
 
 logger = logging.getLogger(__name__)
 
@@ -113,6 +111,14 @@ class VersionedConfiguration(BaseModel):
     created_at: datetime = Field(..., description="Version creation time")
     configuration: StrategyConfiguration = Field(..., description="Configuration at this version")
     change_description: str = Field(default="", description="Description of changes")
+
+
+# Resolve forward references (Decimal was previously only imported under TYPE_CHECKING)
+StrategyConfiguration.model_rebuild()
+ConfigurationSaveRequest.model_rebuild()
+ConfigurationLoadResponse.model_rebuild()
+ConfigurationListResponse.model_rebuild()
+VersionedConfiguration.model_rebuild()
 
 
 logger.debug(
