@@ -1,8 +1,9 @@
 """Integration tests for scripts/import_kaggle_market_data.py.
 
-Builds a synthetic archive in the Stooq layout the Kaggle "Huge Stock
-Market Dataset" uses (Data/Stocks/*.us.txt, Data/ETFs/*.us.txt) and checks
-the converter output against the real backtesting DataLoader.
+Builds a synthetic archive mixing both Kaggle layouts — Stooq
+(Data/Stocks/*.us.txt, "Huge Stock Market Dataset") and folder
+(stocks/*.csv with Adj Close, "Stock Market Dataset") — and checks the
+converter output against the real backtesting DataLoader.
 """
 
 from __future__ import annotations
@@ -14,6 +15,7 @@ from datetime import datetime
 from pathlib import Path
 
 import pandas as pd
+import pytest
 
 from app.backtesting.data_loader import DataLoader
 
@@ -39,6 +41,7 @@ GE_TXT = """Date,Open,High,Low,Close,Volume
 2010-01-04,15.10,15.40,15.00,15.30,100000
 2010-01-05,15.30,15.80,15.20,15.70,120000
 2010-01-06,15.70,16.00,15.50,15.90,90000
+2010-01-07,0,16.10,15.60,16.00,80000
 """
 
 SPY_TXT = """Date,Open,High,Low,Close,Volume
@@ -57,6 +60,19 @@ ZZZ_TXT = """Date,Open,High,Low,Close,Volume
 2010-01-05,5.10,5.30,5.00,5.20,1100
 """
 
+# jacksoncrow "Stock Market Dataset" layout: stocks/<TICKER>.csv, Yahoo
+# columns with Adj Close (frozen ~2020).
+INTC_CSV = """Date,Open,High,Low,Close,Adj Close,Volume
+2010-01-04,20.80,21.00,20.40,20.90,17.72,55000000
+2010-01-05,20.90,21.30,20.60,21.10,17.89,44000000
+2010-01-06,21.10,21.80,21.00,21.60,18.36,47000000
+"""
+
+META_CSV = """symbol,name
+A,Agilent Technologies
+AAPL,Apple Inc.
+"""
+
 
 def _make_archive(path: Path) -> Path:
     with zipfile.ZipFile(path, "w") as archive:
@@ -65,6 +81,8 @@ def _make_archive(path: Path) -> Path:
         archive.writestr("Data/Stocks/adj.us.txt", ADJ_TXT)
         archive.writestr("Data/Stocks/zzz.us.txt", ZZZ_TXT)
         archive.writestr("Data/ETFs/spy.us.txt", SPY_TXT)
+        archive.writestr("stocks/intc.csv", INTC_CSV)
+        archive.writestr("symbols_valid_meta.csv", META_CSV)
     return path
 
 
@@ -72,6 +90,14 @@ def test_kaggle_stem_strips_us_suffix_and_uppercases() -> None:
     assert importer.kaggle_stem("aapl.us.txt") == "AAPL"
     assert importer.kaggle_stem("Data/Stocks/ge.us.txt") == "GE"
     assert importer.kaggle_stem("brk-b.us.txt") == "BRK-B"
+
+
+def test_source_stem_recognizes_both_layouts_and_ignores_metadata() -> None:
+    assert importer.source_stem("Data/Stocks/aapl.us.txt") == "AAPL"
+    assert importer.source_stem("stocks/intc.csv") == "INTC"
+    assert importer.source_stem("etfs/schx.csv") == "SCHX"
+    assert importer.source_stem("symbols_valid_meta.csv") is None
+    assert importer.source_stem("Data/Stocks/notes.txt") is None
 
 
 def test_import_converts_zip_to_loader_schema(tmp_path: Path) -> None:
@@ -150,7 +176,39 @@ def test_roundtrip_through_backtesting_data_loader(tmp_path: Path) -> None:
 
     loader = DataLoader(base_path=out_dir)
     quotes = loader.load_market_data("GE", datetime(2010, 1, 1), datetime(2010, 2, 1))
-    assert len(quotes) == 3
+    assert len(quotes) == 4
     assert float(quotes[0].close) == 15.30
     assert float(quotes[0].high) == 15.40
-    assert [quote.timestamp.day for quote in quotes] == [4, 5, 6]
+    assert [quote.timestamp.day for quote in quotes] == [4, 5, 6, 7]
+    # the Open=0 row is repaired open→close, not dropped
+    assert float(quotes[-1].open) == 16.00
+
+
+def test_folder_layout_csv_rescales_and_meta_stays_out(tmp_path: Path) -> None:
+    archive = _make_archive(tmp_path / "dataset.zip")
+    out_dir = tmp_path / "historical"
+
+    exit_code = importer.main(["--zip", str(archive), "--tickers", "INTC", "--out", str(out_dir)])
+
+    assert exit_code == 0
+    frame = pd.read_csv(out_dir / "INTC.csv", index_col="date")
+    # OHLC rescaled by adj/close (17.72/20.90 ≈ 0.84785…): Close == Adj Close
+    assert frame.loc["2010-01-04", "Close"] == 17.72
+    assert frame.loc["2010-01-04", "Open"] == pytest.approx(20.80 * 17.72 / 20.90)
+    assert frame.loc["2010-01-06", "High"] == pytest.approx(21.80 * 18.36 / 21.60)
+    assert not (out_dir / "SYMBOLS_VALID_META.csv").exists()
+
+
+def test_dir_mode_walks_extracted_tree(tmp_path: Path) -> None:
+    archive = _make_archive(tmp_path / "dataset.zip")
+    extracted = tmp_path / "extracted"
+    with zipfile.ZipFile(archive) as handle:
+        handle.extractall(extracted)
+    out_dir = tmp_path / "historical"
+
+    exit_code = importer.main(["--dir", str(extracted), "--out", str(out_dir)])
+
+    assert exit_code == 0
+    assert (out_dir / "AAPL.csv").exists()
+    assert (out_dir / "INTC.csv").exists()
+    assert not (out_dir / "SPY.csv").exists()  # etfs still opt-in in dir mode
