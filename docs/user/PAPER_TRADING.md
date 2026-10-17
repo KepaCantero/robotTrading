@@ -95,10 +95,10 @@ mkdir -p logs data
 
 ```bash
 # Iniciar todo (API + Dashboard)
-./start_paper_trading.sh
+./scripts/start_paper_trading.sh
 
 # Detener todo
-./stop_paper_trading.sh
+./scripts/stop_paper_trading.sh
 ```
 
 ### Opción 2: Inicio Manual
