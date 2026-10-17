@@ -132,6 +132,40 @@ SubscribeRequest.model_rebuild()
 
 
 # Endpoints
+@router.get("/quotes/top-liquid", response_model=list[QuoteResponse])
+async def get_top_liquid_quotes(
+    limit: int = Query(default=20, ge=1, le=100, description="Number of quotes to return"),
+    service: MarketDataService = Depends(get_market_data_service),
+):
+    """Get quotes for top liquid assets."""
+    try:
+        quotes_data = await service.get_top_liquid_quotes(limit)
+
+        return [
+            QuoteResponse(
+                success=True,
+                data=Quote(
+                    symbol=q.get("symbol", ""),
+                    bid=q.get("bid"),
+                    ask=q.get("ask"),
+                    last=q.get("price"),
+                    open=q.get("open"),
+                    high=q.get("high"),
+                    low=q.get("low"),
+                    close=q.get("close"),
+                    volume=q.get("volume"),
+                ),
+                error=None,
+                timestamp=datetime.utcnow(),
+            )
+            for q in quotes_data
+        ]
+    except (RequestsConnectionError, TimeoutError, HTTPError, RequestException) as e:
+        raise HTTPException(
+            status_code=500, detail=f"Error getting top liquid quotes: {e!s}"
+        ) from e
+
+
 @router.get("/quotes/{symbol}", response_model=QuoteResponse)
 @rate_limit(max_requests=200, window_seconds=60)
 async def get_quote(
@@ -141,7 +175,7 @@ async def get_quote(
     service: MarketDataService = Depends(get_market_data_service),
 ):
     """Get real-time quote for a symbol."""
-    correlation_id = get_correlation_id(http_request) if http_request else ""
+    correlation_id = get_correlation_id()
     logger.info(
         "Fetching quote for symbol",
         extra={
@@ -272,40 +306,6 @@ async def get_multiple_quotes(
         return quotes
     except (RequestsConnectionError, TimeoutError, HTTPError, RequestException) as e:
         raise HTTPException(status_code=500, detail=f"Error getting quotes: {e!s}") from e
-
-
-@router.get("/quotes/top-liquid", response_model=list[QuoteResponse])
-async def get_top_liquid_quotes(
-    limit: int = Query(default=20, ge=1, le=100, description="Number of quotes to return"),
-    service: MarketDataService = Depends(get_market_data_service),
-):
-    """Get quotes for top liquid assets."""
-    try:
-        quotes_data = await service.get_top_liquid_quotes(limit)
-
-        return [
-            QuoteResponse(
-                success=True,
-                data=Quote(
-                    symbol=q.get("symbol", ""),
-                    bid=q.get("bid"),
-                    ask=q.get("ask"),
-                    last=q.get("price"),
-                    open=q.get("open"),
-                    high=q.get("high"),
-                    low=q.get("low"),
-                    close=q.get("close"),
-                    volume=q.get("volume"),
-                ),
-                error=None,
-                timestamp=datetime.utcnow(),
-            )
-            for q in quotes_data
-        ]
-    except (RequestsConnectionError, TimeoutError, HTTPError, RequestException) as e:
-        raise HTTPException(
-            status_code=500, detail=f"Error getting top liquid quotes: {e!s}"
-        ) from e
 
 
 @router.get("/historical/{symbol}", response_model=HistoricalDataResponse)

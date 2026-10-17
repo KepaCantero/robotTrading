@@ -306,7 +306,7 @@ class TestDIContainerPattern:
 
     def test_di_container_initialization(self):
         """Test that DI container is properly initialized with strategy services."""
-        from app.core.di_container import get_container
+        from app.shared.config.di_container import get_container
 
         container = get_container()
 
@@ -329,7 +329,7 @@ class TestDIContainerPattern:
 
     def test_execution_engine_depends_on_registry_and_logger(self):
         """Test that ExecutionEngine properly depends on StrategyRegistry and StrategyLogger."""
-        from app.core.di_container import get_container
+        from app.shared.config.di_container import get_container
 
         container = get_container()
 

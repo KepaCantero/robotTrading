@@ -16,7 +16,7 @@ from app.engines.risk_engine.risk_limits_enforcer import RiskLimitsEnforcer
 def mock_position():
     """Create mock position."""
     position = Mock()
-    position.symbol = 'AAPL'
+    position.symbol = "AAPL"
     position.market_value = 20000.0
     return position
 
@@ -32,18 +32,22 @@ def mock_portfolio():
 
 @pytest.fixture
 def sample_portfolio():
-    """Create portfolio with sample positions."""
+    """Create portfolio with sample positions.
+
+    All positions stay within the documented default limits enforced by
+    RiskLimitsEnforcer: max_position_pct=0.20 and top-3 concentration <= 0.40.
+    """
     portfolio = Mock(spec=Portfolio)
     portfolio.total_equity = 100000.0
 
-    # Create mock positions
+    # Create mock positions (weights: 18%, 15%, 6%, 4% -> top 3 = 39%)
     positions = []
     for i, (symbol, value) in enumerate(
         [
-            ('AAPL', 30000.0),
-            ('MSFT', 25000.0),
-            ('GOOGL', 20000.0),
-            ('TSLA', 15000.0),
+            ("AAPL", 18000.0),
+            ("MSFT", 15000.0),
+            ("GOOGL", 6000.0),
+            ("TSLA", 4000.0),
         ]
     ):
         pos = Mock()
@@ -65,11 +69,11 @@ def enforcer():
 def custom_enforcer():
     """Create RiskLimitsEnforcer with custom config."""
     config = {
-        'var_warning_limit': 0.01,
-        'var_critical_limit': 0.02,
-        'var_halt_limit': 0.03,
-        'max_position_pct': 0.15,
-        'max_concentration_pct': 0.30,
+        "var_warning_limit": 0.01,
+        "var_critical_limit": 0.02,
+        "var_halt_limit": 0.03,
+        "max_position_pct": 0.15,
+        "max_concentration_pct": 0.30,
     }
     return RiskLimitsEnforcer(config)
 
@@ -112,33 +116,33 @@ class TestVaRLimitsChecking:
         """Test VaR within acceptable limits."""
         result = enforcer.check_var_limits(mock_portfolio, current_var=0.01)
 
-        assert result['severity'] == 'NORMAL'
-        assert result['action'] is None
-        assert result['trading_halted'] is False
+        assert result["severity"] == "NORMAL"
+        assert result["action"] is None
+        assert result["trading_halted"] is False
 
     def test_var_warning_limit(self, enforcer, mock_portfolio):
         """Test VaR at warning limit."""
         result = enforcer.check_var_limits(mock_portfolio, current_var=0.025)
 
-        assert result['severity'] == 'WARNING'
-        assert result['action'] == 'MONITOR'
-        assert result['trading_halted'] is False
+        assert result["severity"] == "WARNING"
+        assert result["action"] == "MONITOR"
+        assert result["trading_halted"] is False
 
     def test_var_critical_limit(self, enforcer, mock_portfolio):
         """Test VaR at critical limit."""
         result = enforcer.check_var_limits(mock_portfolio, current_var=0.035)
 
-        assert result['severity'] == 'CRITICAL'
-        assert result['action'] == 'REDUCE_POSITIONS'
-        assert 'reduction_needed' in result['messages'][1]
+        assert result["severity"] == "CRITICAL"
+        assert result["action"] == "REDUCE_POSITIONS"
+        assert "reduction_needed" in result["messages"][1]
 
     def test_var_halt_limit(self, enforcer, mock_portfolio):
         """Test VaR at halt limit."""
         result = enforcer.check_var_limits(mock_portfolio, current_var=0.06)
 
-        assert result['severity'] == 'CRITICAL'
-        assert result['action'] == 'HALT_TRADING'
-        assert result['trading_halted'] is True
+        assert result["severity"] == "CRITICAL"
+        assert result["action"] == "HALT_TRADING"
+        assert result["trading_halted"] is True
         assert enforcer.trading_halted is True
         assert enforcer.halt_reason is not None
 
@@ -146,14 +150,14 @@ class TestVaRLimitsChecking:
         """Test VaR amount is calculated correctly."""
         result = enforcer.check_var_limits(mock_portfolio, current_var=0.05)
 
-        assert result['var_amount'] == 5000.0  # 5% of 100,000
+        assert result["var_amount"] == 5000.0  # 5% of 100,000
 
     def test_var_utilization_calculation(self, enforcer, mock_portfolio):
         """Test VaR utilization is calculated correctly."""
         result = enforcer.check_var_limits(mock_portfolio, current_var=0.03)
 
         # 0.03 / 0.03 (critical limit) = 1.0
-        assert result['var_utilization'] == 1.0
+        assert result["var_utilization"] == 1.0
 
     def test_var_with_custom_portfolio_value(self, enforcer, mock_portfolio):
         """Test VaR check with custom portfolio value."""
@@ -161,16 +165,16 @@ class TestVaRLimitsChecking:
             mock_portfolio, current_var=0.05, portfolio_value=200000.0
         )
 
-        assert result['var_amount'] == 10000.0  # 5% of 200,000
+        assert result["var_amount"] == 10000.0  # 5% of 200,000
 
     def test_var_limits_in_result(self, enforcer, mock_portfolio):
         """Test that limits are included in result."""
         result = enforcer.check_var_limits(mock_portfolio, current_var=0.03)
 
-        assert 'limits' in result
-        assert 'warning' in result['limits']
-        assert 'critical' in result['limits']
-        assert 'halt' in result['limits']
+        assert "limits" in result
+        assert "warning" in result["limits"]
+        assert "critical" in result["limits"]
+        assert "halt" in result["limits"]
 
 
 @pytest.mark.unit
@@ -207,24 +211,25 @@ class TestPositionLimitsEnforcement:
         """Test portfolio with no position limit violations."""
         result = enforcer.enforce_position_limits(sample_portfolio)
 
-        assert result['compliance'] is True
-        assert len(result['violations']) == 0
+        assert result["compliance"] is True
+        assert len(result["violations"]) == 0
 
     def test_position_size_violation(self, enforcer, sample_portfolio):
         """Test position size exceeding limit."""
-        # Add a large position
+        # Add a single position clearly above the 20% position limit
+        # (all fixture positions stay below it)
         large_pos = Mock()
-        large_pos.symbol = 'AMZN'
-        large_pos.market_value = 30000.0  # 30% of portfolio
+        large_pos.symbol = "AMZN"
+        large_pos.market_value = 45000.0  # 45% of portfolio
         sample_portfolio.positions.append(large_pos)
 
         result = enforcer.enforce_position_limits(sample_portfolio)
 
-        assert result['compliance'] is False
+        assert result["compliance"] is False
 
-        position_violations = [v for v in result['violations'] if v['type'] == 'position_size']
+        position_violations = [v for v in result["violations"] if v["type"] == "position_size"]
         assert len(position_violations) > 0
-        assert position_violations[0]['symbol'] == 'AMZN'
+        assert position_violations[0]["symbol"] == "AMZN"
 
     def test_concentration_violation(self, enforcer, sample_portfolio):
         """Test concentration limit violation."""
@@ -234,37 +239,37 @@ class TestPositionLimitsEnforcement:
 
         # Add one very large position
         large_pos = Mock()
-        large_pos.symbol = 'NVDA'
+        large_pos.symbol = "NVDA"
         large_pos.market_value = 50000.0  # 50% of portfolio
         sample_portfolio.positions.append(large_pos)
 
         result = enforcer.enforce_position_limits(sample_portfolio)
 
-        concentration_violations = [v for v in result['violations'] if v['type'] == 'concentration']
+        concentration_violations = [v for v in result["violations"] if v["type"] == "concentration"]
         assert len(concentration_violations) > 0
 
     def test_position_limits_calculation(self, enforcer, sample_portfolio):
         """Test position limits are calculated for all positions."""
         result = enforcer.enforce_position_limits(sample_portfolio)
 
-        assert 'position_limits' in result
-        assert len(result['position_limits']) == len(sample_portfolio.positions)
+        assert "position_limits" in result
+        assert len(result["position_limits"]) == len(sample_portfolio.positions)
 
-        for symbol, limits in result['position_limits'].items():
-            assert 'current_weight' in limits
-            assert 'limit' in limits
-            assert 'utilization' in limits
-            assert 'status' in limits
+        for symbol, limits in result["position_limits"].items():
+            assert "current_weight" in limits
+            assert "limit" in limits
+            assert "utilization" in limits
+            assert "status" in limits
 
     def test_top_concentration_calculation(self, enforcer, sample_portfolio):
         """Test top 3 concentration is calculated."""
         result = enforcer.enforce_position_limits(sample_portfolio)
 
-        assert 'top_concentration' in result
-        assert 'concentration_limit' in result
+        assert "top_concentration" in result
+        assert "concentration_limit" in result
 
         # Top 3 should sum to less than or equal to total
-        assert result['top_concentration'] <= 1.0
+        assert result["top_concentration"] <= 1.0
 
     def test_zero_portfolio_value_error(self, enforcer, mock_portfolio):
         """Test error handling for zero portfolio value."""
@@ -272,7 +277,7 @@ class TestPositionLimitsEnforcement:
 
         result = enforcer.enforce_position_limits(mock_portfolio)
 
-        assert 'error' in result
+        assert "error" in result
 
 
 @pytest.mark.unit
@@ -283,24 +288,24 @@ class TestRiskHeatmap:
         """Test heatmap is generated."""
         result = enforcer.generate_risk_heatmap(sample_portfolio)
 
-        assert 'heatmap' in result
-        assert len(result['heatmap']) == len(sample_portfolio.positions)
+        assert "heatmap" in result
+        assert len(result["heatmap"]) == len(sample_portfolio.positions)
 
     def test_risk_level_classification(self, enforcer, sample_portfolio):
         """Test risk levels are classified correctly."""
         result = enforcer.generate_risk_heatmap(sample_portfolio)
 
-        for item in result['heatmap']:
-            assert 'risk_level' in item
-            assert item['risk_level'] in ['LOW', 'MEDIUM', 'HIGH']
+        for item in result["heatmap"]:
+            assert "risk_level" in item
+            assert item["risk_level"] in ["LOW", "MEDIUM", "HIGH"]
 
     def test_risk_color_assignment(self, enforcer, sample_portfolio):
         """Test risk colors are assigned."""
         result = enforcer.generate_risk_heatmap(sample_portfolio)
 
-        for item in result['heatmap']:
-            assert 'risk_color' in item
-            assert item['risk_color'] in ['green', 'yellow', 'red']
+        for item in result["heatmap"]:
+            assert "risk_color" in item
+            assert item["risk_color"] in ["green", "yellow", "red"]
 
     def test_high_weight_gets_high_risk(self, enforcer, sample_portfolio):
         """Test that high weight positions get HIGH risk."""
@@ -309,47 +314,47 @@ class TestRiskHeatmap:
             pos.market_value = 10000.0
 
         large_pos = Mock()
-        large_pos.symbol = 'BIG'
+        large_pos.symbol = "BIG"
         large_pos.market_value = 25000.0  # 25% weight
         sample_portfolio.positions.append(large_pos)
 
         result = enforcer.generate_risk_heatmap(sample_portfolio)
 
-        big_item = next(item for item in result['heatmap'] if item['symbol'] == 'BIG')
-        assert big_item['risk_level'] == 'HIGH'
-        assert big_item['risk_color'] == 'red'
+        big_item = next(item for item in result["heatmap"] if item["symbol"] == "BIG")
+        assert big_item["risk_level"] == "HIGH"
+        assert big_item["risk_color"] == "red"
 
     def test_heatmap_sorted_by_risk(self, enforcer, sample_portfolio):
         """Test heatmap is sorted by risk contribution."""
         result = enforcer.generate_risk_heatmap(sample_portfolio)
 
-        heatmap = result['heatmap']
+        heatmap = result["heatmap"]
         # Should be sorted in descending order
         for i in range(len(heatmap) - 1):
-            assert abs(heatmap[i]['risk_contribution']) >= abs(heatmap[i + 1]['risk_contribution'])
+            assert abs(heatmap[i]["risk_contribution"]) >= abs(heatmap[i + 1]["risk_contribution"])
 
     def test_risk_distribution_analysis(self, enforcer, sample_portfolio):
         """Test risk distribution is analyzed."""
         result = enforcer.generate_risk_heatmap(sample_portfolio)
 
-        assert 'risk_distribution' in result
-        assert 'top_3_concentration' in result['risk_distribution']
-        assert 'top_5_concentration' in result['risk_distribution']
-        assert 'concentration_level' in result['risk_distribution']
+        assert "risk_distribution" in result
+        assert "top_3_concentration" in result["risk_distribution"]
+        assert "top_5_concentration" in result["risk_distribution"]
+        assert "concentration_level" in result["risk_distribution"]
 
     def test_with_risk_contributions(self, enforcer, sample_portfolio):
         """Test heatmap with provided risk contributions."""
         risk_contributions = {
-            'AAPL': 0.30,
-            'MSFT': 0.25,
-            'GOOGL': 0.20,
-            'TSLA': 0.15,
+            "AAPL": 0.30,
+            "MSFT": 0.25,
+            "GOOGL": 0.20,
+            "TSLA": 0.15,
         }
 
         result = enforcer.generate_risk_heatmap(sample_portfolio, risk_contributions)
 
-        for item in result['heatmap']:
-            assert 'risk_contribution' in item
+        for item in result["heatmap"]:
+            assert "risk_contribution" in item
 
 
 @pytest.mark.unit
@@ -359,59 +364,59 @@ class TestRiskAttribution:
     def test_default_asset_class_mapping(self, enforcer, sample_portfolio):
         """Test default asset class mapping."""
         returns_history = {
-            'AAPL': [0.01, -0.01, 0.02],
-            'MSFT': [0.02, 0.01, -0.01],
+            "AAPL": [0.01, -0.01, 0.02],
+            "MSFT": [0.02, 0.01, -0.01],
         }
 
         result = enforcer.attribute_risk_by_asset_class(sample_portfolio, returns_history)
 
-        assert 'by_asset_class' in result
-        assert len(result['by_asset_class']) > 0
+        assert "by_asset_class" in result
+        assert len(result["by_asset_class"]) > 0
 
     def test_custom_asset_class_mapping(self, enforcer, sample_portfolio):
         """Test with custom asset class mapping."""
         mapping = {
-            'AAPL': 'technology',
-            'MSFT': 'technology',
-            'GOOGL': 'technology',
-            'TSLA': 'consumer_discretionary',
+            "AAPL": "technology",
+            "MSFT": "technology",
+            "GOOGL": "technology",
+            "TSLA": "consumer_discretionary",
         }
 
         returns_history = {
-            'AAPL': [0.01, -0.01, 0.02],
-            'MSFT': [0.02, 0.01, -0.01],
+            "AAPL": [0.01, -0.01, 0.02],
+            "MSFT": [0.02, 0.01, -0.01],
         }
 
         result = enforcer.attribute_risk_by_asset_class(sample_portfolio, returns_history, mapping)
 
-        assert 'technology' in result['by_asset_class']
+        assert "technology" in result["by_asset_class"]
 
     def test_risk_contribution_calculation(self, enforcer, sample_portfolio):
         """Test risk contribution by asset class."""
         returns_history = {
-            'AAPL': [0.01, -0.01, 0.02],
-            'MSFT': [0.02, 0.01, -0.01],
+            "AAPL": [0.01, -0.01, 0.02],
+            "MSFT": [0.02, 0.01, -0.01],
         }
 
         result = enforcer.attribute_risk_by_asset_class(sample_portfolio, returns_history)
 
-        for asset_class, attribution in result['by_asset_class'].items():
-            assert 'exposure' in attribution
-            assert 'weight' in attribution
-            assert 'avg_volatility' in attribution
-            assert 'risk_contribution' in attribution
+        for asset_class, attribution in result["by_asset_class"].items():
+            assert "exposure" in attribution
+            assert "weight" in attribution
+            assert "avg_volatility" in attribution
+            assert "risk_contribution" in attribution
 
     def test_dominant_risk_identification(self, enforcer, sample_portfolio):
         """Test dominant risk is identified."""
         returns_history = {
-            'AAPL': [0.01, -0.01, 0.02],
-            'MSFT': [0.02, 0.01, -0.01],
+            "AAPL": [0.01, -0.01, 0.02],
+            "MSFT": [0.02, 0.01, -0.01],
         }
 
         result = enforcer.attribute_risk_by_asset_class(sample_portfolio, returns_history)
 
-        assert 'dominant_risk' in result
-        assert result['dominant_risk'] is not None
+        assert "dominant_risk" in result
+        assert result["dominant_risk"] is not None
 
 
 @pytest.mark.unit
@@ -486,9 +491,9 @@ class TestEnforcementLogging:
 
         entry = enforcer.enforcement_history[0]
 
-        assert 'type' in entry
-        assert 'timestamp' in entry
-        assert 'result' in entry
+        assert "type" in entry
+        assert "timestamp" in entry
+        assert "result" in entry
 
     def test_multiple_enforcements_logged(self, enforcer, mock_portfolio):
         """Test multiple enforcement actions are logged."""
@@ -523,8 +528,8 @@ class TestTradingHaltManagement:
         """Test halt reason includes VaR information."""
         enforcer.check_var_limits(mock_portfolio, current_var=0.06)
 
-        assert 'VaR' in enforcer.halt_reason
-        assert '%' in enforcer.halt_reason
+        assert "VaR" in enforcer.halt_reason
+        assert "%" in enforcer.halt_reason
 
 
 @pytest.mark.unit
@@ -535,18 +540,18 @@ class TestGetEnforcementStatus:
         """Test getting enforcement status."""
         status = enforcer.get_enforcement_status()
 
-        assert 'trading_halted' in status
-        assert 'halt_reason' in status
-        assert 'enforcement_count' in status
-        assert 'limits' in status
+        assert "trading_halted" in status
+        assert "halt_reason" in status
+        assert "enforcement_count" in status
+        assert "limits" in status
 
     def test_status_limits_match_config(self, custom_enforcer):
         """Test status limits match configuration."""
         status = custom_enforcer.get_enforcement_status()
 
-        assert status['limits']['var_warning'] == 1.0
-        assert status['limits']['var_critical'] == 2.0
-        assert status['limits']['var_halt'] == 3.0
+        assert status["limits"]["var_warning"] == 1.0
+        assert status["limits"]["var_critical"] == 2.0
+        assert status["limits"]["var_halt"] == 3.0
 
 
 @pytest.mark.unit
@@ -558,14 +563,14 @@ class TestEdgeCases:
         result = enforcer.check_var_limits(mock_portfolio, current_var=-0.01)
 
         # Should handle gracefully
-        assert 'severity' in result
+        assert "severity" in result
 
     def test_very_high_var(self, enforcer, mock_portfolio):
         """Test handling of very high VaR."""
         result = enforcer.check_var_limits(mock_portfolio, current_var=0.50)
 
-        assert result['action'] == 'HALT_TRADING'
-        assert result['trading_halted'] is True
+        assert result["action"] == "HALT_TRADING"
+        assert result["trading_halted"] is True
 
     def test_empty_portfolio(self, enforcer):
         """Test handling of empty portfolio."""
@@ -575,8 +580,8 @@ class TestEdgeCases:
 
         result = enforcer.enforce_position_limits(portfolio)
 
-        assert 'compliance' in result
-        assert result['compliance'] is True  # No violations
+        assert "compliance" in result
+        assert result["compliance"] is True  # No violations
 
     def test_portfolio_with_zero_positions(self, enforcer):
         """Test heatmap with no positions."""
@@ -586,8 +591,8 @@ class TestEdgeCases:
 
         result = enforcer.generate_risk_heatmap(portfolio)
 
-        assert 'heatmap' in result
-        assert len(result['heatmap']) == 0
+        assert "heatmap" in result
+        assert len(result["heatmap"]) == 0
 
 
 @pytest.mark.unit
@@ -597,27 +602,28 @@ class TestRiskDistributionAnalysis:
     def test_concentration_levels(self, enforcer, sample_portfolio):
         """Test concentration level classification."""
         result = enforcer.generate_risk_heatmap(sample_portfolio)
-        distribution = result['risk_distribution']
+        distribution = result["risk_distribution"]
 
-        assert distribution['concentration_level'] in ['LOW', 'MEDIUM', 'HIGH']
+        assert distribution["concentration_level"] in ["LOW", "MEDIUM", "HIGH"]
 
     def test_top_concentration_calculations(self, enforcer, sample_portfolio):
         """Test top concentration calculations."""
         result = enforcer.generate_risk_heatmap(sample_portfolio)
-        distribution = result['risk_distribution']
+        distribution = result["risk_distribution"]
 
-        assert distribution['top_3_concentration'] <= 100
-        assert distribution['top_5_concentration'] <= 100
+        # Percentages may carry tiny float rounding noise
+        assert distribution["top_3_concentration"] <= 100.0 + 1e-9
+        assert distribution["top_5_concentration"] <= 100.0 + 1e-9
 
         # Top 5 should be >= top 3
-        assert distribution['top_5_concentration'] >= distribution['top_3_concentration']
+        assert distribution["top_5_concentration"] >= distribution["top_3_concentration"]
 
     def test_n_positions_counted(self, enforcer, sample_portfolio):
         """Test number of positions is counted."""
         result = enforcer.generate_risk_heatmap(sample_portfolio)
-        distribution = result['risk_distribution']
+        distribution = result["risk_distribution"]
 
-        assert distribution['n_positions'] == len(sample_portfolio.positions)
+        assert distribution["n_positions"] == len(sample_portfolio.positions)
 
 
 @pytest.mark.unit
@@ -628,13 +634,13 @@ class TestRequiredReductionMessages:
         """Test reduction message is formatted correctly."""
         result = enforcer.check_var_limits(mock_portfolio, current_var=0.035)
 
-        reduction_msg = [m for m in result['messages'] if 'Reduce positions' in m]
+        reduction_msg = [m for m in result["messages"] if "Reduce positions" in m]
         assert len(reduction_msg) > 0
-        assert '%' in reduction_msg[0]
+        assert "%" in reduction_msg[0]
 
     def test_monitor_message(self, enforcer, mock_portfolio):
         """Test monitor message at warning level."""
         result = enforcer.check_var_limits(mock_portfolio, current_var=0.025)
 
-        assert 'MONITOR' in result['action']
-        assert 'exceeds warning limit' in result['messages'][0]
+        assert "MONITOR" in result["action"]
+        assert "exceeds warning limit" in result["messages"][0]

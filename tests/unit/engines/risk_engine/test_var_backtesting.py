@@ -42,13 +42,13 @@ class TestVaRBacktester:
 
         result = backtester_95.kupiec_test(var_preds, returns)
 
-        assert 'error' not in result
-        assert result['test_name'] == 'Kupiec Likelihood Ratio Test'
-        assert result['observations'] == 1000
-        assert 'exceptions' in result
-        assert 'model_valid' in result
-        assert 'interpretation' in result
-        assert isinstance(result['lr_statistic'], float)
+        assert "error" not in result
+        assert result["test_name"] == "Kupiec Likelihood Ratio Test"
+        assert result["observations"] == 1000
+        assert "exceptions" in result
+        assert "model_valid" in result
+        assert "interpretation" in result
+        assert isinstance(result["lr_statistic"], float)
 
     def test_kupiec_test_rejects_bad_model(self, backtester_95):
         """Test Kupiec test rejects model with too many exceptions."""
@@ -59,9 +59,9 @@ class TestVaRBacktester:
 
         result = backtester_95.kupiec_test(var_preds, returns)
 
-        assert 'error' not in result
+        assert "error" not in result
         # Should have many exceptions
-        assert result['exceptions'] > 50  # More than expected 25
+        assert result["exceptions"] > 50  # More than expected 25
 
     def test_kupiec_test_length_mismatch(self, backtester_95):
         """Test Kupiec test with mismatched array lengths."""
@@ -70,8 +70,8 @@ class TestVaRBacktester:
 
         result = backtester_95.kupiec_test(var_preds, returns)
 
-        assert 'error' in result
-        assert 'Length mismatch' in result['error']
+        assert "error" in result
+        assert "Length mismatch" in result["error"]
 
     def test_christoffersen_test_valid_model(self, backtester_95, valid_var_predictions):
         """Test Christoffersen test with independent exceptions."""
@@ -79,15 +79,15 @@ class TestVaRBacktester:
 
         result = backtester_95.christoffersen_test(var_preds, returns)
 
-        assert 'error' not in result
-        assert result['test_name'] == 'Christoffersen Independence Test'
-        assert 'transitions' in result
-        assert 'n_00' in result['transitions']
-        assert 'n_01' in result['transitions']
-        assert 'n_10' in result['transitions']
-        assert 'n_11' in result['transitions']
-        assert 'transition_probabilities' in result
-        assert 'exceptions_independent' in result
+        assert "error" not in result
+        assert result["test_name"] == "Christoffersen Independence Test"
+        assert "transitions" in result
+        assert "n_00" in result["transitions"]
+        assert "n_01" in result["transitions"]
+        assert "n_10" in result["transitions"]
+        assert "n_11" in result["transitions"]
+        assert "transition_probabilities" in result
+        assert "exceptions_independent" in result
 
     def test_christoffersen_test_detects_clustering(self, backtester_95):
         """Test Christoffersen test detects exception clustering."""
@@ -103,10 +103,10 @@ class TestVaRBacktester:
 
         result = backtester_95.christoffersen_test(var_preds, returns)
 
-        assert 'error' not in result
+        assert "error" not in result
         # Should detect some dependence due to clustering
-        assert 'pi_11' in result['transition_probabilities']
-        assert 'pi_01' in result['transition_probabilities']
+        assert "pi_11" in result["transition_probabilities"]
+        assert "pi_01" in result["transition_probabilities"]
 
     def test_calculate_var_exceptions(self, backtester_95, valid_var_predictions):
         """Test VaR exception statistics calculation."""
@@ -114,16 +114,17 @@ class TestVaRBacktester:
 
         result = backtester_95.calculate_var_exceptions(var_preds, returns)
 
-        assert 'error' not in result
-        assert result['total_observations'] == 1000
-        assert 'num_exceptions' in result
-        assert 'exception_rate' in result
-        assert 'exception_magnitude' in result
-        assert 'clustering' in result
-        assert 'exception_indices' in result
+        assert "error" not in result
+        assert result["total_observations"] == 1000
+        assert "num_exceptions" in result
+        assert "exception_rate" in result
+        assert "exception_magnitude" in result
+        assert "clustering" in result
+        assert "exception_indices" in result
 
     def test_exception_clustering_metrics(self, backtester_95):
         """Test exception clustering detection."""
+        np.random.seed(19)
         n = 100
         returns = np.random.normal(0, 0.01, n)
         var_preds = np.full(n, -0.02)
@@ -135,11 +136,11 @@ class TestVaRBacktester:
 
         result = backtester_95.calculate_var_exceptions(var_preds, returns)
 
-        assert 'error' not in result
-        assert result['num_exceptions'] == 6
-        assert result['clustering']['avg_gap'] is not None
-        assert result['clustering']['min_gap'] is not None
-        assert result['clustering']['max_gap'] is not None
+        assert "error" not in result
+        assert result["num_exceptions"] == 6
+        assert result["clustering"]["avg_gap"] is not None
+        assert result["clustering"]["min_gap"] is not None
+        assert result["clustering"]["max_gap"] is not None
 
     def test_comprehensive_backtest(self, backtester_95, valid_var_predictions):
         """Test comprehensive backtest with all tests."""
@@ -147,13 +148,13 @@ class TestVaRBacktester:
 
         result = backtester_95.run_comprehensive_backtest(var_preds, returns)
 
-        assert 'error' not in result
-        assert 'overall_result' in result
-        assert result['overall_result'] in ['PASS', 'CONDITIONAL', 'FAIL']
-        assert 'recommendation' in result
-        assert 'kupiec_test' in result
-        assert 'christoffersen_test' in result
-        assert 'exception_statistics' in result
+        assert "error" not in result
+        assert "overall_result" in result
+        assert result["overall_result"] in ["PASS", "CONDITIONAL", "FAIL"]
+        assert "recommendation" in result
+        assert "kupiec_test" in result
+        assert "christoffersen_test" in result
+        assert "exception_statistics" in result
 
     def test_backtest_result_interpretation(self, backtester_95):
         """Test backtest result interpretation logic."""
@@ -166,8 +167,8 @@ class TestVaRBacktester:
 
         result = backtester_95.run_comprehensive_backtest(var_preds, returns)
 
-        assert 'overall_result' in result
-        assert 'recommendation' in result
+        assert "overall_result" in result
+        assert "recommendation" in result
 
     def test_different_confidence_levels(self, backtester_95, backtester_99):
         """Test backtesting with different confidence levels."""
@@ -182,10 +183,10 @@ class TestVaRBacktester:
         var_99 = np.percentile(returns, 1)
         result_99 = backtester_99.kupiec_test(np.full(n, var_99), returns)
 
-        assert result_95['confidence_level'] == 0.95
-        assert result_99['confidence_level'] == 0.99
-        assert result_95['expected_failure_rate'] == 0.05
-        assert result_99['expected_failure_rate'] == 0.01
+        assert result_95["confidence_level"] == 0.95
+        assert result_99["confidence_level"] == 0.99
+        assert result_95["expected_failure_rate"] == 0.05
+        assert result_99["expected_failure_rate"] == 0.01
 
     def test_convenience_function(self, valid_var_predictions):
         """Test the convenience function run_var_backtest."""
@@ -195,10 +196,10 @@ class TestVaRBacktester:
             var_preds, returns, confidence_level=0.95, significance_level=0.05
         )
 
-        assert 'error' not in result
-        assert 'overall_result' in result
-        assert 'kupiec_test' in result
-        assert 'christoffersen_test' in result
+        assert "error" not in result
+        assert "overall_result" in result
+        assert "kupiec_test" in result
+        assert "christoffersen_test" in result
 
     def test_kupiec_interpretation_messages(self, backtester_95):
         """Test Kupiec test interpretation messages."""
@@ -208,9 +209,9 @@ class TestVaRBacktester:
 
         result = backtester_95.kupiec_test(var_preds, returns)
 
-        assert 'interpretation' in result
-        assert isinstance(result['interpretation'], str)
-        assert len(result['interpretation']) > 0
+        assert "interpretation" in result
+        assert isinstance(result["interpretation"], str)
+        assert len(result["interpretation"]) > 0
 
     def test_christoffersen_interpretation_messages(self, backtester_95):
         """Test Christoffersen test interpretation messages."""
@@ -220,12 +221,13 @@ class TestVaRBacktester:
 
         result = backtester_95.christoffersen_test(var_preds, returns)
 
-        assert 'interpretation' in result
-        assert isinstance(result['interpretation'], str)
-        assert 'π01=' in result['interpretation'] or 'pi_01=' in result['interpretation']
+        assert "interpretation" in result
+        assert isinstance(result["interpretation"], str)
+        assert "π01=" in result["interpretation"] or "pi_01=" in result["interpretation"]
 
     def test_exception_magnitude_statistics(self, backtester_95):
         """Test exception magnitude statistics."""
+        np.random.seed(42)
         n = 200
         returns = np.random.normal(0, 0.01, n)
         var_preds = np.full(n, -0.015)
@@ -237,14 +239,15 @@ class TestVaRBacktester:
 
         result = backtester_95.calculate_var_exceptions(var_preds, returns)
 
-        assert 'error' not in result
-        mag_stats = result['exception_magnitude']
-        assert 'mean' in mag_stats
-        assert 'std' in mag_stats
-        assert 'min' in mag_stats
-        assert 'max' in mag_stats
-        # Max should be more negative than min (larger loss)
-        assert mag_stats['max'] <= mag_stats['min']
+        assert "error" not in result
+        mag_stats = result["exception_magnitude"]
+        assert "mean" in mag_stats
+        assert "std" in mag_stats
+        assert "min" in mag_stats
+        assert "max" in mag_stats
+        # Magnitudes are negative (loss beyond VaR): min is the largest loss
+        # (most negative) and max the mildest one, so min <= max numerically
+        assert mag_stats["min"] <= mag_stats["max"]
 
 
 class TestVaRBacktesterEdgeCases:
@@ -258,7 +261,7 @@ class TestVaRBacktesterEdgeCases:
         """Test with empty arrays."""
         result = backtester.kupiec_test(np.array([]), np.array([]))
         # Should handle gracefully or return error
-        assert 'error' in result or result['observations'] == 0
+        assert "error" in result or result["observations"] == 0
 
     def test_single_observation(self, backtester):
         """Test with single observation."""
@@ -268,7 +271,7 @@ class TestVaRBacktesterEdgeCases:
         result = backtester.kupiec_test(var_preds, returns)
 
         # Should handle but may have limited statistical power
-        assert 'observations' in result
+        assert "observations" in result
 
     def test_no_exceptions(self, backtester):
         """Test case with no VaR exceptions."""
@@ -277,7 +280,7 @@ class TestVaRBacktesterEdgeCases:
 
         result = backtester.kupiec_test(var_preds, returns)
 
-        assert result['num_exceptions'] == 0
+        assert result["num_exceptions"] == 0
         # Model may be too conservative
 
     def test_all_exceptions(self, backtester):
@@ -287,7 +290,7 @@ class TestVaRBacktesterEdgeCases:
 
         result = backtester.kupiec_test(var_preds, returns)
 
-        assert result['num_exceptions'] == 3
+        assert result["num_exceptions"] == 3
         # Model seriously underestimates risk
 
 
@@ -337,10 +340,10 @@ class TestVaRBacktesterIntegration:
         result = backtester.run_comprehensive_backtest(var_preds, returns)
 
         # Validate results
-        assert 'error' not in result
-        assert 'overall_result' in result
-        assert 'exception_statistics' in result
+        assert "error" not in result
+        assert "overall_result" in result
+        assert "exception_statistics" in result
 
         # Check that exception rate is reasonable
-        exception_rate = result['exception_statistics']['exception_rate']
+        exception_rate = result["exception_statistics"]["exception_rate"]
         assert 0.01 < exception_rate < 0.15  # Should be around 0.05 but allow variance

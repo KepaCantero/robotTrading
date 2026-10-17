@@ -121,8 +121,11 @@ class TestL1Regularization:
         # R² scores should be between -inf and 1
         assert train_score <= 1
         assert test_score <= 1
-        # Train score should generally be >= test score
-        assert train_score >= test_score
+        # Good fit on both sets without catastrophic overfitting.
+        # (train >= test is not guaranteed: with this fixture the split is
+        # random enough that test R² can slightly exceed train R².)
+        assert train_score > 0.9
+        assert test_score > 0.9
 
     def test_lasso_sparsity(self, sample_regression_data):
         """Test that Lasso produces sparse solutions."""

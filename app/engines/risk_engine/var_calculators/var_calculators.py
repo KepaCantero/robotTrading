@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 """
 Value at Risk (VaR) Calculators - NUMBA OPTIMIZED
 
@@ -18,6 +16,8 @@ PERFORMANCE OPTIMIZATIONS (95% Compliance Target):
 Author: Risk Management Team
 Version: 2.0.0 - NUMBA OPTIMIZED
 """
+
+from __future__ import annotations
 
 import importlib.util
 import logging
@@ -734,7 +734,8 @@ class VaRBacktester:
             confidence_level: VaR confidence level (e.g., 0.95 for 95%)
         """
         self.confidence_level = confidence_level
-        self.expected_failure_rate = 1 - confidence_level
+        # Round to avoid float representation noise (e.g., 1 - 0.95 = 0.050000000000000044)
+        self.expected_failure_rate = round(1 - confidence_level, 10)
         self.logger = logging.getLogger(self.__class__.__name__)
 
     def kupiec_test(
@@ -828,6 +829,7 @@ class VaRBacktester:
                 "test_name": "Kupiec Likelihood Ratio Test",
                 "observations": n,
                 "exceptions": num_exceptions,
+                "num_exceptions": num_exceptions,  # Alias for "exceptions"
                 "expected_exceptions": expected_exceptions,
                 "actual_failure_rate": actual_failure_rate,
                 "expected_failure_rate": self.expected_failure_rate,

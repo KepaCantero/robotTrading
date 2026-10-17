@@ -16,12 +16,10 @@ from typing import TYPE_CHECKING, Callable, TypeVar
 logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
-    from app.domain.strategies import (
-        ExecutionEngine,
-        StrategyConfigLoader,
-        StrategyLogger,
-        StrategyRegistry,
-    )
+    from app.domain.strategies.config_loader import StrategyConfigLoader
+    from app.domain.strategies.execution_engine import ExecutionEngine
+    from app.domain.strategies.strategy_logger import StrategyLogger
+    from app.domain.strategies.strategy_registry import StrategyRegistry
 
 T = TypeVar("T")
 
@@ -364,7 +362,7 @@ def get_strategy_registry() -> StrategyRegistry:
     global _strategy_registry_instance
     if _strategy_registry_instance is None:
         logger.debug("creating_strategy_registry_instance")
-        from app.domain.strategies import StrategyRegistry
+        from app.domain.strategies.strategy_registry import StrategyRegistry
 
         _strategy_registry_instance = StrategyRegistry()
         logger.debug("strategy_registry_instance_created")
@@ -394,7 +392,7 @@ def get_strategy_config_loader() -> StrategyConfigLoader:
     global _strategy_config_loader_instance
     if _strategy_config_loader_instance is None:
         logger.debug("creating_strategy_config_loader_instance")
-        from app.domain.strategies import StrategyConfigLoader
+        from app.domain.strategies.config_loader import StrategyConfigLoader
 
         _strategy_config_loader_instance = StrategyConfigLoader()
         logger.debug("strategy_config_loader_instance_created")
@@ -424,7 +422,7 @@ def get_strategy_logger() -> StrategyLogger:
     global _strategy_logger_instance
     if _strategy_logger_instance is None:
         logger.debug("creating_strategy_logger_instance")
-        from app.domain.strategies import StrategyLogger
+        from app.domain.strategies.strategy_logger import StrategyLogger
 
         _strategy_logger_instance = StrategyLogger()
         logger.debug("strategy_logger_instance_created")
@@ -457,7 +455,7 @@ def get_execution_engine() -> ExecutionEngine:
     global _execution_engine_instance
     if _execution_engine_instance is None:
         logger.debug("creating_execution_engine_instance")
-        from app.domain.strategies import ExecutionEngine
+        from app.domain.strategies.execution_engine import ExecutionEngine
 
         registry = get_strategy_registry()
         strategy_logger = get_strategy_logger()

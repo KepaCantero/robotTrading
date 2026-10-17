@@ -20,6 +20,8 @@ from decimal import Decimal
 from enum import Enum
 from typing import TYPE_CHECKING, Any
 
+from .slo_tracker import SLOComplianceStatus
+
 if TYPE_CHECKING:
     from .error_budget_manager import ErrorBudgetManager
     from .slo_tracker import SLOTracker
@@ -327,7 +329,12 @@ class DevelopmentGate:
 
             # Check if any SLOs are below threshold
             failing_slos = []
+            skipped_insufficient = 0
             for report in reports:
+                # Reports without enough data (actual_slo=0) are not actionable
+                if report.status == SLOComplianceStatus.INSUFFICIENT_DATA:
+                    skipped_insufficient += 1
+                    continue
                 if report.actual_slo < self.config.slo_compliance_threshold:
                     failing_slos.append(
                         {
@@ -356,6 +363,7 @@ class DevelopmentGate:
                 message="All SLOs compliant",
                 details={
                     "slos_checked": len(reports),
+                    "skipped_insufficient_data": skipped_insufficient,
                     "compliance_threshold": f"{self.config.slo_compliance_threshold * 100:.2f}%",
                 },
                 timestamp=datetime.utcnow(),

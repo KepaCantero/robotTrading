@@ -284,7 +284,7 @@ class TestDevelopmentGates:
         history = await gate.get_decision_history()
 
         assert len(history) >= 3
-        assert all(isinstance(d, GateStatus) for d in history)
+        assert all(isinstance(d.status, GateStatus) for d in history)
 
     async def test_gate_summary(self, gate_setup):
         """Test gate summary generation."""

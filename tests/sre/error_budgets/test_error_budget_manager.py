@@ -139,10 +139,14 @@ class TestErrorBudgetManager:
     @pytest.mark.asyncio
     async def test_budget_exhaustion_detection(self, budget_manager):
         """Test budget exhaustion is detected correctly."""
-        # Record enough downtime to exhaust budget
-        # Monthly budget for 99.5% SLO = 216 minutes
+        # Record enough downtime to exhaust budget.
+        # The monthly window is the real calendar month (28-31 days), so
+        # derive the downtime from the actual allowance instead of assuming
+        # a fixed 216-minute (30-day) budget.
+        allowance = budget_manager._current_state.allowance
+        near_exhaustion = max(allowance.allowed_downtime_minutes - 5, 1)
         await budget_manager.record_downtime(
-            downtime_minutes=200,  # Close to exhaustion
+            downtime_minutes=near_exhaustion,  # All but a few minutes consumed
             error_type="test",
             description="Major outage",
         )
@@ -183,9 +187,15 @@ class TestErrorBudgetManager:
 
         state = await budget_manager.get_current_state()
 
-        # Actual SLO should be slightly below target
-        assert state.actual_slo < state.allowance.target_slo
-        assert state.actual_slo > Decimal("0.99")  # Still above 99%
+        # actual_slo = uptime / total over the current calendar-month window
+        # (28-31 days depending on the month), so compare against the value
+        # computed from the real window rather than a fixed monthly length.
+        total = Decimal(state.allowance.total_minutes)
+        expected_slo = (total - Decimal(60)) / total
+        assert state.actual_slo == expected_slo
+        assert state.actual_slo < Decimal("1")
+        # 60 minutes can never drop a monthly window below 99%
+        assert state.actual_slo > Decimal("0.99")
 
     @pytest.mark.asyncio
     async def test_deployment_allowed_when_healthy(self, budget_manager):

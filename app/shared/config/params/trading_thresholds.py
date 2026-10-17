@@ -714,6 +714,15 @@ class TradingThresholds(BaseModel):
     loss_monitor_window_trades: int = Field(
         default=10, ge=5, le=20, description="Window trades for loss monitoring"
     )
+    loss_monitor_scale_1_loss: float = Field(
+        default=0.9, ge=0.5, le=1.0, description="Position scale after 1 consecutive loss"
+    )
+    loss_monitor_scale_2_losses: float = Field(
+        default=0.8, ge=0.5, le=1.0, description="Position scale after 2 consecutive losses"
+    )
+    loss_monitor_scale_3_losses: float = Field(
+        default=0.6, ge=0.5, le=1.0, description="Position scale after 3 consecutive losses"
+    )
     loss_monitor_scale_max_reduction: float = Field(
         default=0.5, ge=0.25, le=0.75, description="Maximum scale reduction from loss monitor"
     )
