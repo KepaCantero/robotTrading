@@ -283,8 +283,10 @@ class StandardBacktestEngine(BaseBacktestEngine[BacktestConfig, BacktestResult])
         # Calculate final metrics
         performance = self.performance_calculator.calculate_performance_metrics(
             trades=self.state.trades,
-            max_drawdown=self.equity_tracker.get_max_drawdown(),
+            # Decimal fraction from peak equity (contract: PerformanceMetrics.max_drawdown)
+            max_drawdown=self.equity_tracker.get_max_drawdown_percentage() / Decimal("100"),
             initial_capital=self.config.initial_capital,
+            equity_returns=self.equity_tracker.calculate_returns(),
         )
 
         # Calculate returns

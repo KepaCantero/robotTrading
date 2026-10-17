@@ -49,14 +49,19 @@ class PerformanceMetricsCalculator:
         trades: list[Trade],
         max_drawdown: Decimal,
         initial_capital: Decimal | None = None,
+        equity_returns: list[Decimal] | None = None,
     ) -> PerformanceMetrics:
         """
         Calculate comprehensive performance metrics.
 
         Args:
             trades: List of all trades
-            max_drawdown: Maximum drawdown observed
+            max_drawdown: Maximum drawdown observed (decimal fraction from peak,
+                e.g. -0.25 for a 25% drawdown; must be <= 0)
             initial_capital: Initial capital (defaults to config)
+            equity_returns: Per-bar returns from the equity curve. When provided,
+                Sharpe/Sortino are computed from this series (correct time base);
+                otherwise they fall back to the legacy trade-based estimate.
 
         Returns:
             PerformanceMetrics object with all calculated metrics
@@ -102,8 +107,15 @@ class PerformanceMetricsCalculator:
         largest_win = max(trade.pnl for trade in winning_trades) if winning_trades else Decimal("0")
         largest_loss = min(trade.pnl for trade in losing_trades) if losing_trades else Decimal("0")
 
-        # Calculate Sharpe ratio
-        sharpe_ratio = self._calculate_sharpe_ratio(trades)
+        # Calculate Sharpe/Sortino ratios. Prefer the per-bar equity-curve series:
+        # it has the correct time base (one observation per bar, not per trade),
+        # so annualization by trading days is meaningful.
+        if equity_returns is not None and len(equity_returns) >= 2:
+            sharpe_ratio = self._calculate_sharpe_from_returns(equity_returns)
+            sortino_ratio = self._calculate_sortino_from_returns(equity_returns)
+        else:
+            sharpe_ratio = self._calculate_sharpe_ratio(trades)
+            sortino_ratio = None
 
         # Calculate time metrics
         if trades:
@@ -130,12 +142,9 @@ class PerformanceMetricsCalculator:
             gross_loss=gross_loss,
             net_profit=net_profit,
             max_drawdown=max_drawdown,
-            max_drawdown_percentage=min(
-                Decimal("0"),
-                ((max_drawdown / capital * 100) if capital > 0 else Decimal("0")),
-            ),
+            max_drawdown_percentage=min(Decimal("0"), max_drawdown * Decimal("100")),
             sharpe_ratio=sharpe_ratio,
-            sortino_ratio=None,  # Not implemented yet
+            sortino_ratio=sortino_ratio,
             avg_win=avg_win,
             avg_loss=avg_loss,
             largest_win=largest_win,
@@ -222,6 +231,74 @@ class PerformanceMetricsCalculator:
         sharpe = excess_return / annual_std
 
         return sharpe
+
+    def _calculate_sharpe_from_returns(self, returns: list[Decimal]) -> Decimal | None:
+        """
+        Calculate annualized Sharpe ratio from a per-bar return series.
+
+        One observation per bar annualized with the configured number of
+        trading days. A minimum annualized volatility floor is applied so
+        near-constant return series do not produce extreme ratios.
+
+        Args:
+            returns: Period-over-period returns (one per bar)
+
+        Returns:
+            Annualized Sharpe ratio, or None if not computable
+        """
+        if len(returns) < 2:
+            return None
+
+        mean_return = safe_mean(returns)
+        variance = safe_variance(returns)
+        std_dev = Decimal(str(math.sqrt(float(variance))))
+
+        MIN_ANNUAL_VOLATILITY = _backtest_config.min_annual_volatility
+        annual_mean = mean_return * Decimal(str(_backtest_config.annual_trading_days))
+        annual_std = std_dev * Decimal(
+            str(math.sqrt(_backtest_config.annual_trading_days))
+        )
+        annual_std = max(annual_std, MIN_ANNUAL_VOLATILITY)
+
+        if annual_std == 0:
+            return None
+
+        return (annual_mean - self.config.risk_free_rate) / annual_std
+
+    def _calculate_sortino_from_returns(self, returns: list[Decimal]) -> Decimal | None:
+        """
+        Calculate annualized Sortino ratio from a per-bar return series.
+
+        Downside deviation uses the full lower semi-deviation against a
+        zero target (MAR = 0): sqrt(mean(min(r, 0)^2)).
+
+        Args:
+            returns: Period-over-period returns (one per bar)
+
+        Returns:
+            Annualized Sortino ratio, or None if not computable (no downside)
+        """
+        if len(returns) < 2:
+            return None
+
+        downside = [r for r in returns if r < 0]
+        if not downside:
+            return None
+
+        downside_var = sum(r * r for r in downside) / Decimal(len(returns))
+        downside_dev = Decimal(str(math.sqrt(float(downside_var))))
+        if downside_dev == 0:
+            return None
+
+        MIN_ANNUAL_VOLATILITY = _backtest_config.min_annual_volatility
+        mean_return = safe_mean(returns)
+        annual_mean = mean_return * Decimal(str(_backtest_config.annual_trading_days))
+        annual_downside = downside_dev * Decimal(
+            str(math.sqrt(_backtest_config.annual_trading_days))
+        )
+        annual_downside = max(annual_downside, MIN_ANNUAL_VOLATILITY)
+
+        return (annual_mean - self.config.risk_free_rate) / annual_downside
 
     def _create_empty_metrics(self, initial_capital: Decimal | None = None) -> PerformanceMetrics:
         """

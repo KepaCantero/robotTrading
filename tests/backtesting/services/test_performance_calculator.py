@@ -118,12 +118,12 @@ class TestPerformanceMetricsCalculator:
         assert metrics.max_drawdown <= Decimal("0")
 
     def test_calculate_performance_metrics_negative_drawdown(self, calculator, sample_trades):
-        """Test performance metrics with negative drawdown."""
-        metrics = calculator.calculate_performance_metrics(sample_trades, Decimal("-5000"))
+        """Test performance metrics with negative drawdown (decimal fraction from peak)."""
+        metrics = calculator.calculate_performance_metrics(sample_trades, Decimal("-0.05"))
 
-        assert metrics.max_drawdown == Decimal("-5000")
-        # Should be -5% of 100k
-        assert abs(metrics.max_drawdown_percentage - Decimal("-5")) < Decimal("0.1")
+        assert metrics.max_drawdown == Decimal("-0.05")
+        # Percentage form of the same fraction
+        assert abs(metrics.max_drawdown_percentage - Decimal("-5")) < Decimal("0.001")
 
     def test_calculate_sharpe_ratio_with_trades(self, calculator, sample_trades):
         """Test Sharpe ratio calculation."""
