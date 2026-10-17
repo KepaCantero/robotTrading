@@ -1,0 +1,6 @@
+extends: occurrence
+message: "Paragraph packs more than 7 sentences. Give the reader a break: split it into two."
+level: suggestion
+scope: paragraph
+max: 7
+token: "[.!?]"

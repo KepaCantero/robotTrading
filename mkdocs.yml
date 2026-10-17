@@ -1,0 +1,106 @@
+site_name: AlgoTrading Docs
+site_description: Documentation for the AlgoTrading platform — plain-English guides, architecture and operations
+use_directory_urls: true
+
+theme:
+  name: material
+  language: en
+  palette:
+    - scheme: default
+      primary: deep purple
+      accent: amber
+  features:
+    - content.code.copy
+    - navigation.top
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - md_in_html
+  - pymdownx.superfences
+  - toc:
+      permalink: true
+
+nav:
+  - Home: README.md
+  - "ELI5 — start here":
+    - "Overview": eli5/README.md
+    - "How the system works": eli5/01-how-the-system-works.md
+    - "The life of a trade": eli5/02-life-of-a-trade.md
+    - "The folder map": eli5/03-folder-map.md
+  - "Quickstart": quickstart.md
+  - "Installation": installation.md
+  - "Architecture overview": architecture.md
+  - "Production": production.md
+  - "Domain / infrastructure separation": domain_infrastructure_separation.md
+  - "LOGST standards": LOGST_standards.md
+  - "Refactoring plan (god classes)": REFACTORING_PLAN_GOD_CLASSES.md
+  - "Refactoring summary": REFACTORING_SUMMARY.md
+  - "API":
+    - "API reference": api/API_REFERENCE.md
+  - "Architecture (detailed)":
+    - "Algorithm architecture": architecture/ALGORITHM_ARCHITECTURE.md
+    - "Architecture": architecture/ARCHITECTURE.md
+    - "Architecture patterns guide": architecture/ARCHITECTURE_PATTERNS_GUIDE.md
+    - "AWS infrastructure design": architecture/AWS_INFRASTRUCTURE_DESIGN.md
+    - "Tier mapping architecture": architecture/TIER_MAPPING_ARCHITECTURE.md
+    - "Tier mapping system": architecture/TIER_MAPPING_SYSTEM.md
+    - "Backtesting workflow analysis": architecture/backtesting_workflow_complete_analysis.md
+    - "Services matrix": architecture/comprehensive_services_matrix.md
+  - "Developer":
+    - "Architecture": developer/ARCHITECTURE.md
+    - "Circular dependencies resolution": developer/CIRCULAR_DEPENDENCIES_RESOLUTION.md
+    - "Compliance integration guide": developer/COMPLIANCE_INTEGRATION_GUIDE.md
+    - "Contributing": developer/CONTRIBUTING.md
+    - "Database migrations guide": developer/DATABASE_MIGRATIONS_GUIDE.md
+    - "Data sources": developer/DATA_SOURCES.md
+    - "Ernest Chan — quantitative trading": developer/ERNEST_CHAN_QUANTITATIVE_TRADING.md
+    - "Filter combination modes": developer/FILTER_COMBINATION_MODES.md
+    - "Getting started": developer/GETTING_STARTED.md
+    - "Harris — trading and exchanges": developer/HARRIS_TRADING_AND_EXCHANGES.md
+    - "Hmmlearn fallback quick reference": developer/HMMLEARN_FALLBACK_QUICK_REFERENCE.md
+    - "Kubernetes deployment guide": developer/KUBERNETES_DEPLOYMENT_GUIDE.md
+    - "López de Prado 95 compliance": developer/LOPEZ_DE_PRADO_95_COMPLIANCE.md
+    - "Meta-labeling position sizing": developer/META_LABELING_POSITION_SIZING_INTEGRATION.md
+    - "Modules overview": developer/MODULES_OVERVIEW.md
+    - "Narang — inside the black box": developer/NARANG_INSIDE_BLACK_BOX_IMPLEMENTATION.md
+    - "Statistical learning (Hastie) compliance": developer/STATISTICAL_LEARNING_HASTIE_COMPLIANCE.md
+    - "System overview": developer/SYSTEM_OVERVIEW.md
+    - "Toil tracking quick start": developer/TOIL_TRACKING_QUICK_START.md
+    - "Quick references":
+      - "K8s": developer/quick_references/K8S_QUICK_REFERENCE.md
+      - "Kill switch": developer/quick_references/KILL_SWITCH_QUICK_REFERENCE.md
+      - "Meta labeling": developer/quick_references/META_LABELING_QUICK_REFERENCE.md
+      - "Migrations": developer/quick_references/MIGRATIONS_QUICK_REFERENCE.md
+      - "Numba enforcement": developer/quick_references/NUMBA_ENFORCEMENT.md
+      - "Ohara microstructure": developer/quick_references/OHARA_MICROSTRUCTURE_QUICK_REFERENCE.md
+      - "Production config": developer/quick_references/PRODUCTION_CONFIG_QUICK_START.md
+      - "Sample weights": developer/quick_references/SAMPLE_WEIGHTS_QUICK_REFERENCE.md
+      - "Statsmodels fallback": developer/quick_references/STATSMODELS_FALLBACK_QUICK_REFERENCE.md
+  - "History":
+    - "README (v1, español)": history/README_es_v1.md
+  - "Plans":
+    - "FASE5 backtesting engine": plans/FASE5_Backtesting_Engine.md
+    - "FASE 6 advanced modules": plans/FASE_6_ADVANCED_MODULES.md
+    - "Multi-market expansion": plans/MULTI_MARKET_EXPANSION.md
+    - "Plan summary": plans/PLAN_SUMMARY.md
+    - "Rollout plan": plans/ROLLOUT_PLAN.md
+    - "Visual roadmap": plans/VISUAL_ROADMAP.md
+    - "Fix GAP violations": plans/fix_gap_violations.md
+    - "Portfolio DI refactor": plans/refactor-portfolio-di.md
+  - "Refactoring":
+    - "Refactoring summary": refactoring/REFACTORING_SUMMARY.md
+    - "Centralized config SOLID refactoring": refactoring/centralized_config_solid_refactoring.md
+    - "Shadow mode magic numbers — fix": refactoring/shadow_mode_magic_numbers_fix.md
+    - "Shadow mode magic numbers — reference": refactoring/shadow_mode_magic_numbers_reference.md
+  - "SRE":
+    - "Golden signals monitoring": sre/GOLDEN_SIGNALS_MONITORING.md
+    - "Market readiness analysis": sre/MARKET_READINESS_ANALYSIS.md
+    - "Security compliance (Rule 28)": sre/SECURITY_COMPLIANCE_RULE28.md
+    - "Spain tax engine": sre/SPAIN_TAX_ENGINE.md
+    - "SRE critical components": sre/SRE_CRITICAL_COMPONENTS.md
+    - "Toil tracking": sre/TOIL_TRACKING.md
+    - "Trading metrics": sre/TRADING_METRICS_SRE.md
+  - "User":
+    - "Paper trading": user/PAPER_TRADING.md
+    - "User guide": user/USER_GUIDE.md

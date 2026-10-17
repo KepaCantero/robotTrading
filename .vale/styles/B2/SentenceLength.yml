@@ -1,0 +1,6 @@
+extends: occurrence
+message: "Sentence runs past 24 words. B2 readers lose the thread past ~20 — split it or cut words."
+level: warning
+scope: sentence
+max: 24
+token: "[A-Za-z0-9’'-]+"

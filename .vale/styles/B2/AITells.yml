@@ -1,0 +1,27 @@
+extends: substitution
+message: "Prefer '%s' — the original word is an AI-writing tell."
+level: error
+ignorecase: true
+swap:
+  leverage: use
+  leveraging: using
+  utilize: use
+  utilizing: using
+  utilisation: use
+  seamless: smooth
+  seamlessly: smoothly
+  comprehensive: thorough
+  streamline: simplify
+  streamlining: simplifying
+  cutting-edge: latest
+  state-of-the-art: latest
+  delve: dig
+  delves: digs
+  delving: digging
+  facilitate: help
+  facilitates: helps
+  robust: solid
+  paramount: essential
+  myriad: many
+  holistic: complete
+  in order to: to

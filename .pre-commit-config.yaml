@@ -27,3 +27,14 @@ repos:
     hooks:
       - id: detect-secrets
         args: ["--baseline", ".secrets.baseline"]
+
+  # Prose lint for the ELI5 docs (B2 profile in .vale.ini).
+  # Errors (AI-writing tells) block the commit; warnings only inform.
+  # Requires the vale binary on PATH (installed at ~/.local/bin).
+  - repo: local
+    hooks:
+      - id: vale-eli5
+        name: vale B2 prose lint (docs/eli5)
+        entry: vale
+        language: system
+        files: ^docs/eli5/.*\.md$

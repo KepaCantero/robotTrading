@@ -57,6 +57,7 @@ python scripts/run_backtest.py --module momentum --config moderate
 
 ## 📖 Documentation Sections
 
+0. **[eli5/](./eli5/)**: The system explained in plain English, with friendly SVG diagrams — start here if you're new
 1. **[SYSTEM_OVERVIEW.md](./SYSTEM_OVERVIEW.md)**: Architecture and components
 2. **[MODULES/](./MODULES/)**: Individual module documentation
 3. **[BACKTEST_RESULTS/](./BACKTEST_RESULTS/)**: Backtest reports and data
@@ -79,4 +80,3 @@ For questions about:
 - **Backtest results**: See `BACKTEST_RESULTS/`
 - **System integrity**: See `AUDIT_LOGS/`
 - **Architecture**: See `SYSTEM_OVERVIEW.md`
-

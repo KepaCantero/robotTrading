@@ -1,0 +1,12 @@
+extends: existence
+message: "Hedging boilerplate '%s' — say the thing or cut the sentence."
+level: warning
+ignorecase: true
+tokens:
+  - it is worth noting that
+  - it should be noted that
+  - it is important to note that
+  - in conclusion
+  - as previously mentioned
+  - at the end of the day
+  - without further ado
