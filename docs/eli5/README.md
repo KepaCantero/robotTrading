@@ -25,6 +25,12 @@ Everything here is written in simple English (around B2 level). If a sentence ma
 12. [The IBKR connection](12-ibkr.md) — how IBKR plugs in, and what is real today.
 13. [The component playbook](13-component-playbook.md) — the logic each component applies.
 
+**The rulebook and its sources**
+
+20. [The trading rulebook](20-trading-rules.md) — every trading rule, grouped by the book it comes from.
+21. [The engineering rulebook](21-engineering-rules.md) — the Python rules the code must follow.
+22. [The bibliography](22-bibliography.md) — the books behind the rules, and where each idea landed.
+
 **One page per hat**
 
 14. [Newcomer](14-hat-newcomer.md) — your first week on the project.

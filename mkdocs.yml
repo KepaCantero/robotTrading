@@ -38,6 +38,9 @@ nav:
     - "The dashboard": eli5/11-dashboard.md
     - "The IBKR connection": eli5/12-ibkr.md
     - "The component playbook": eli5/13-component-playbook.md
+    - "The trading rulebook": eli5/20-trading-rules.md
+    - "The engineering rulebook": eli5/21-engineering-rules.md
+    - "The bibliography": eli5/22-bibliography.md
     - "Hat: newcomer": eli5/14-hat-newcomer.md
     - "Hat: trader": eli5/15-hat-trader.md
     - "Hat: developer": eli5/16-hat-developer.md
