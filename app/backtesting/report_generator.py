@@ -20,7 +20,7 @@ from typing import TYPE_CHECKING, TypedDict
 if TYPE_CHECKING:
     from pathlib import Path
 
-    from app.backtesting.models import BacktestConfig, BacktestResult, PerformanceMetrics
+    from app.backtesting.models import BacktestConfig, BacktestResult, PerformanceMetrics, Trade
 
 logger = logging.getLogger(__name__)
 
@@ -633,28 +633,132 @@ Max Position Size: {float(config.max_position_size):.2f}%
 """
 
     def _analyze_trade_distribution(self, result: BacktestResult) -> str:
-        """Analyze trade distribution."""
-        return "Trade distribution analysis placeholder."
+        """Analyze closed-trade distribution: win rate, averages, profit factor."""
+        closed = [trade for trade in result.trades if trade.pnl is not None]
+        if not closed:
+            return "No closed trades to analyze."
+
+        wins = [trade for trade in closed if trade.pnl > 0]
+        losses = [trade for trade in closed if trade.pnl <= 0]
+        gross_win = sum(float(trade.pnl) for trade in wins)
+        gross_loss = abs(sum(float(trade.pnl) for trade in losses))
+        profit_factor = gross_win / gross_loss if gross_loss > 0 else float("inf")
+        durations = [
+            (trade.exit_time - trade.entry_time).total_seconds() / 86400
+            for trade in closed
+            if trade.exit_time is not None
+        ]
+        avg_hold = sum(durations) / len(durations) if durations else 0.0
+        best = max(closed, key=lambda trade: trade.pnl)
+        worst = min(closed, key=lambda trade: trade.pnl)
+        avg_win = gross_win / len(wins) if wins else 0.0
+        avg_loss = -gross_loss / len(losses) if losses else 0.0
+
+        return f"""
+- **Closed Trades:** {len(closed)} ({len(wins)} wins / {len(losses)} losses)
+- **Win Rate:** {len(wins) / len(closed):.1%}
+- **Avg Win:** ${avg_win:,.2f} | **Avg Loss:** ${avg_loss:,.2f}
+- **Profit Factor:** {profit_factor:.2f}
+- **Best Trade:** ${float(best.pnl):,.2f} ({best.symbol}) | **Worst:** ${float(worst.pnl):,.2f} ({worst.symbol})
+- **Avg Holding Period:** {avg_hold:.1f} days
+"""
 
     def _analyze_market_conditions(self, result: BacktestResult) -> str:
-        """Analyze market conditions."""
-        return "Market conditions analysis placeholder."
+        """Report why market-condition analysis cannot run on this result."""
+        del result
+        return (
+            "\nMarket conditions analysis not available: BacktestResult carries no "
+            "benchmark or market-wide series. Extend it with benchmark data to "
+            "enable this section.\n"
+        )
 
     def _analyze_trade_risks(self, result: BacktestResult) -> str:
-        """Analyze trade-level risks."""
-        return "Trade-level risk analysis placeholder."
+        """Analyze realized per-trade risk: loss tail, streaks, cost drag."""
+        closed = [trade for trade in result.trades if trade.pnl is not None]
+        if not closed:
+            return "No closed trades to analyze."
+
+        loss_values = sorted(float(trade.pnl) for trade in closed if trade.pnl <= 0)
+        worst = loss_values[0] if loss_values else 0.0
+        avg_loss = sum(loss_values) / len(loss_values) if loss_values else 0.0
+
+        max_streak = streak = 0
+        for trade in closed:
+            streak = streak + 1 if trade.pnl <= 0 else 0
+            max_streak = max(max_streak, streak)
+
+        total_commission = sum(float(trade.commission) for trade in closed)
+        total_slippage = sum(float(trade.slippage) for trade in closed)
+        total_impact = sum(float(trade.market_impact) for trade in closed)
+        largest_notional = max(float(trade.quantity) * float(trade.entry_price) for trade in closed)
+
+        return f"""
+- **Worst Trade:** ${worst:,.2f} | **Avg Losing Trade:** ${avg_loss:,.2f}
+- **Max Consecutive Losing Trades:** {max_streak}
+- **Cost Drag:** commissions ${total_commission:,.2f}, slippage ${total_slippage:,.2f}, market impact ${total_impact:,.2f}
+- **Largest Trade Notional:** ${largest_notional:,.2f}
+"""
 
     def _analyze_stop_losses(self, result: BacktestResult, config: BacktestConfig) -> str:
-        """Analyze stop loss effectiveness."""
-        return "Stop loss analysis placeholder."
+        """Analyze exit reasons and stop-loss/take-profit effectiveness."""
+        closed = [
+            trade
+            for trade in result.trades
+            if trade.pnl is not None and trade.exit_price is not None
+        ]
+        configured = (
+            f"SL {float(config.stop_loss_percentage):.1f}% / "
+            f"TP {float(config.take_profit_percentage):.1f}%"
+            if config.stop_loss_percentage is not None
+            else "no stop-loss/take-profit configured"
+        )
+        if not closed:
+            return f"\nConfigured: {configured}. No closed trades to analyze.\n"
+
+        def _bucket(trade: Trade) -> str:
+            reason = (trade.reason or "").lower()
+            if "stop" in reason:
+                return "stop_loss"
+            if "take" in reason or "tp" in reason or "target" in reason:
+                return "take_profit"
+            return "signal/other"
+
+        lines = [f"\nConfigured: {configured}. Exit breakdown of {len(closed)} closed trades:"]
+        for bucket in ("stop_loss", "take_profit", "signal/other"):
+            subset = [trade for trade in closed if _bucket(trade) == bucket]
+            if not subset:
+                lines.append(f"- **{bucket}:** 0 trades")
+                continue
+            avg_pnl = sum(float(trade.pnl) for trade in subset) / len(subset)
+            lines.append(f"- **{bucket}:** {len(subset)} trades, avg P&L ${avg_pnl:,.2f}")
+        return "\n".join(lines) + "\n"
 
     def _analyze_position_sizing(self, result: BacktestResult, config: BacktestConfig) -> str:
-        """Analyze position sizing."""
-        return "Position sizing analysis placeholder."
+        """Compare realized per-trade exposure against the configured limit."""
+        if not result.trades:
+            return "No trades to analyze."
+
+        capital = float(config.initial_capital)
+        exposures = [
+            float(trade.quantity) * float(trade.entry_price) / capital for trade in result.trades
+        ]
+        limit = float(config.max_position_size)
+        breaches = sum(exposure > limit for exposure in exposures)
+
+        return f"""
+- **Max Position Limit (config):** {limit:.1%} of capital
+- **Realized Exposure:** max {max(exposures):.1%}, avg {sum(exposures) / len(exposures):.1%}
+- **Trades Over Limit:** {breaches} of {len(exposures)}
+"""
 
     def _analyze_correlations(self, result: BacktestResult) -> str:
-        """Analyze trade correlations."""
-        return "Correlation analysis placeholder."
+        """Report why correlation analysis cannot run on this result."""
+        del result
+        return (
+            "\nCorrelation analysis not available: it needs cross-asset return "
+            "series, which BacktestResult does not carry. Extend it with per-symbol "
+            "returns to enable this section.\n"
+        )
 
     def _identify_risk_warnings(self, result: BacktestResult, perf: PerformanceMetrics) -> str:
         """Identify risk warnings."""

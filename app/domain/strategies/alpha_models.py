@@ -76,7 +76,9 @@ class AlphaSignal:
     holding_period_days: int  # Expected holding period
     decay_regime: AlphaDecayRegime
     decay_half_life: int | None = None  # Days until alpha loses half its value
-    timestamp: datetime = field(default_factory=datetime.now)
+    # utcnow (not now): Signal's validator rejects timestamps later than
+    # datetime.utcnow(), and local time runs ahead of UTC in CET/CEST.
+    timestamp: datetime = field(default_factory=datetime.utcnow)
     metadata: dict[str, Any] = field(default_factory=dict)
 
     def to_signal(self, price: Decimal) -> Signal:
@@ -95,11 +97,11 @@ class AlphaSignal:
         alpha_to_signal_source = {
             AlphaType.MOMENTUM: SignalSource.MOMENTUM,
             AlphaType.MEAN_REVERSION: SignalSource.MEAN_REVERSION,
-            AlphaType.SENTIMENT: SignalSource.TECHNICAL,
+            AlphaType.SENTIMENT: SignalSource.SENTIMENT,
             AlphaType.FUNDAMENTAL: SignalSource.FUNDAMENTAL,
             AlphaType.STATISTICAL_ARBITRAGE: SignalSource.ARBITRAGE,
             AlphaType.MACRO: SignalSource.FUNDAMENTAL,
-            AlphaType.MACHINE_LEARNING: SignalSource.TECHNICAL,
+            AlphaType.MACHINE_LEARNING: SignalSource.MACHINE_LEARNING,
         }
 
         source = alpha_to_signal_source.get(self.alpha_type, SignalSource.TECHNICAL)

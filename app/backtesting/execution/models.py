@@ -282,12 +282,6 @@ class Order:
             OrderStatus.PARTIALLY_FILLED,
         )
 
-    @property
-    def estimated_value(self) -> Decimal:
-        """Estimate order value at current market price."""
-        # This is a rough estimate, actual value depends on fill prices
-        return Decimal(str(self.quantity)) * Decimal("100")  # Placeholder
-
     def validate(self) -> bool:
         """
         Validate order parameters.

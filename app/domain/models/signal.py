@@ -49,6 +49,8 @@ class SignalSource(str, Enum):
     VOLUME = "volume"
     TECHNICAL = "technical"
     FUNDAMENTAL = "fundamental"
+    SENTIMENT = "sentiment"
+    MACHINE_LEARNING = "machine_learning"
     TREND_FOLLOWING = "trend_following"
     BREAKOUT = "breakout"
     MEAN_REVERSION = "mean_reversion"
