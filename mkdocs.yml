@@ -28,6 +28,22 @@ nav:
     - "How the system works": eli5/01-how-the-system-works.md
     - "The life of a trade": eli5/02-life-of-a-trade.md
     - "The folder map": eli5/03-folder-map.md
+    - "The data pipeline": eli5/04-data-pipeline.md
+    - "The strategies": eli5/05-strategies.md
+    - "The risk engine": eli5/06-risk-engine.md
+    - "Execution": eli5/07-execution.md
+    - "The portfolio": eli5/08-portfolio.md
+    - "Backtesting": eli5/09-backtesting.md
+    - "Security": eli5/10-security.md
+    - "The dashboard": eli5/11-dashboard.md
+    - "The IBKR connection": eli5/12-ibkr.md
+    - "The component playbook": eli5/13-component-playbook.md
+    - "Hat: newcomer": eli5/14-hat-newcomer.md
+    - "Hat: trader": eli5/15-hat-trader.md
+    - "Hat: developer": eli5/16-hat-developer.md
+    - "Hat: quant": eli5/17-hat-quant.md
+    - "Hat: SRE": eli5/18-hat-sre.md
+    - "Hat: security": eli5/19-hat-security.md
   - "Quickstart": quickstart.md
   - "Installation": installation.md
   - "Architecture overview": architecture.md

@@ -6,9 +6,33 @@ Everything here is written in simple English (around B2 level). If a sentence ma
 
 ## The pages
 
+**The basics**
+
 1. [How the system works](01-how-the-system-works.md) — the big picture, layer by layer.
 2. [The life of a trade](02-life-of-a-trade.md) — follow one order from "the price moved" to "position updated".
 3. [The folder map](03-folder-map.md) — what lives in each folder inside `app/`.
+
+**One page per subsystem**
+
+4. [The data pipeline](04-data-pipeline.md) — where prices and news come from.
+5. [The strategies](05-strategies.md) — momentum, mean reversion, pairs trading, and the ensembles.
+6. [The risk engine](06-risk-engine.md) — limits, gates, and circuit breakers.
+7. [Execution](07-execution.md) — the order lifecycle and paper trading.
+8. [The portfolio](08-portfolio.md) — positions, cash, and allocation.
+9. [Backtesting](09-backtesting.md) — replay the past, get a verdict.
+10. [Security](10-security.md) — API keys, JWT, and secrets.
+11. [The dashboard](11-dashboard.md) — the NiceGUI app, with docs at `/docs`.
+12. [The IBKR connection](12-ibkr.md) — how IBKR plugs in, and what is real today.
+13. [The component playbook](13-component-playbook.md) — the logic each component applies.
+
+**One page per hat**
+
+14. [Newcomer](14-hat-newcomer.md) — your first week on the project.
+15. [Trader](15-hat-trader.md) — what the robot does with your money.
+16. [Developer](16-hat-developer.md) — where to code, and how it fits together.
+17. [Quant](17-hat-quant.md) — strategies, metrics, and backtests.
+18. [SRE](18-hat-sre.md) — keeping the system alive and observable.
+19. [Security](19-hat-security.md) — keys, secrets, and audits.
 
 ## The ELI5 palette
 

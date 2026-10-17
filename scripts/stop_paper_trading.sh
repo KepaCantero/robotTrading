@@ -44,7 +44,7 @@ else
 fi
 
 # Stop dashboard
-DASHBOARD_PID=$(pgrep -f "streamlit run app/presentation/dashboard/advanced_dashboard.py" || true)
+DASHBOARD_PID=$(pgrep -f "app.presentation.dashboard.nicegui_app" || true)
 if [ -n "$DASHBOARD_PID" ]; then
     echo -e "${YELLOW}  Stopping Dashboard (PID: $DASHBOARD_PID)...${NC}"
     kill $DASHBOARD_PID
