@@ -16,11 +16,14 @@ account:
 Both are converted into the exact schema the backtesting DataLoader expects
 (date,Open,High,Low,Close,Volume) with the same guarantees the Yahoo
 downloader provides: sorted unique dates, positive prices, OHLC-coherent
-rows rounded to 6 decimals.
+rows rounded to 6 decimals. Ad-hoc price CSVs work too via --csv (e.g. a
+world-indices export with a Ticker/Index column: it is split into one CSV
+per symbol).
 
 Usage:
     python scripts/import_kaggle_market_data.py --dir ~/Downloads/archive-3 --tickers INTC GE F
     python scripts/import_kaggle_market_data.py --dir ~/Downloads/archive --etfs
+    python scripts/import_kaggle_market_data.py --csv ~/Downloads/archive-7/DAX40_Germany.csv
     python scripts/import_kaggle_market_data.py --dir ~/Downloads/archive-3 --min-rows 500 --dry-run
 
 Existing CSVs are never overwritten unless --overwrite is passed: mixing
@@ -35,6 +38,7 @@ from __future__ import annotations
 import argparse
 import sys
 import zipfile
+from collections.abc import Iterator
 from pathlib import Path
 
 import pandas as pd
@@ -44,6 +48,7 @@ OUT_DIR = REPO_ROOT / "data" / "historical"
 
 PRICE_FIELDS = ("open", "high", "low", "close")
 FOLDER_LAYOUT_DIRS = {"stocks", "etfs"}
+TICKER_COLUMNS = ("ticker", "index", "symbol", "code")
 
 
 def kaggle_stem(filename: str) -> str:
@@ -175,6 +180,27 @@ def _read_frame(base: Path, rel: str) -> pd.DataFrame:
     return pd.read_csv(base / rel)
 
 
+def _emit_frame(
+    stem: str,
+    frame: pd.DataFrame,
+    out_dir: Path,
+    min_rows: int,
+    overwrite: bool,
+    dry_run: bool,
+) -> tuple[int, str]:
+    """Write one normalized frame as <stem>.csv. Returns (rows, span note)."""
+    csv_path = out_dir / f"{stem}.csv"
+    if csv_path.exists() and not overwrite:
+        return 0, "SKIP (exists)"
+    if len(frame) < min_rows:
+        return 0, f"SKIP ({len(frame)} rows < {min_rows})"
+    if not dry_run and not frame.empty:
+        frame.to_csv(csv_path, date_format="%Y-%m-%d")
+    first = str(frame.index[0].date()) if not frame.empty else "-"
+    last = str(frame.index[-1].date()) if not frame.empty else "-"
+    return len(frame), f"{first} → {last}"
+
+
 def import_one(
     base: Path,
     rel: str,
@@ -185,18 +211,31 @@ def import_one(
 ) -> tuple[str, int, str]:
     """Convert one dataset file and write its CSV. Returns (stem, rows, note)."""
     stem = source_stem(rel) or rel
-    csv_path = out_dir / f"{stem}.csv"
-    if csv_path.exists() and not overwrite:
-        return stem, 0, "SKIP (exists)"
-
     frame, note = normalize_frame(_read_frame(base, rel))
-    if len(frame) < min_rows:
-        return stem, 0, f"SKIP ({len(frame)} rows < {min_rows})"
-    if not dry_run and not frame.empty:
-        frame.to_csv(csv_path, date_format="%Y-%m-%d")
-    first = str(frame.index[0].date()) if not frame.empty else "-"
-    last = str(frame.index[-1].date()) if not frame.empty else "-"
-    return stem, len(frame), f"{first} → {last} ({note})"
+    rows, span = _emit_frame(stem, frame, out_dir, min_rows, overwrite, dry_run)
+    return stem, rows, f"{span} ({note})"
+
+
+def _safe_stem(name: str) -> str:
+    """File-system-safe output stem for an ad-hoc symbol (^GDAXI → GDAXI)."""
+    return name.strip().lstrip("^").replace("/", "-").upper()
+
+
+def _iter_csv_groups(path: Path) -> Iterator[tuple[str, pd.DataFrame]]:
+    """Yield (stem, raw frame) for one ad-hoc CSV file.
+
+    Long-format files (a Ticker/Index/symbol column) are split into one
+    group per ticker; otherwise the whole file is a single symbol named
+    after the file.
+    """
+    frame = pd.read_csv(path)
+    lowered = {str(column).strip().lower(): column for column in frame.columns}
+    ticker_column = next((lowered[name] for name in TICKER_COLUMNS if name in lowered), None)
+    if ticker_column is None:
+        yield _safe_stem(path.stem), frame
+        return
+    for ticker, group in frame.groupby(ticker_column, sort=True, dropna=True):
+        yield _safe_stem(str(ticker)), group.drop(columns=[ticker_column])
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -204,6 +243,13 @@ def main(argv: list[str] | None = None) -> int:
     source_group = parser.add_mutually_exclusive_group(required=True)
     source_group.add_argument("--zip", type=Path, help="path to a downloaded dataset .zip")
     source_group.add_argument("--dir", type=Path, help="path to an extracted dataset folder")
+    source_group.add_argument(
+        "--csv",
+        type=Path,
+        nargs="+",
+        help="ad-hoc CSV files: long format (a Ticker/Index/symbol column) is "
+        "split per ticker, otherwise one symbol named after the file",
+    )
     parser.add_argument(
         "--tickers", nargs="*", default=None, help="specific tickers (default: all)"
     )
@@ -219,7 +265,13 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
 
     sources: list[tuple[Path, str]] = []
-    if args.zip is not None:
+    csv_groups: list[tuple[str, pd.DataFrame]] = []
+    if args.csv is not None:
+        for path in args.csv:
+            if not path.is_file():
+                parser.error(f"csv not found: {path}")
+            csv_groups.extend(_iter_csv_groups(path))
+    elif args.zip is not None:
         if not args.zip.is_file():
             parser.error(f"zip not found: {args.zip}")
         sources = [(args.zip, rel) for rel in _candidate_rels_from_zip(args.zip, args.etfs)]
@@ -231,6 +283,7 @@ def main(argv: list[str] | None = None) -> int:
     wanted = {ticker.upper() for ticker in args.tickers} if args.tickers else None
     if wanted is not None:
         sources = [(base, rel) for base, rel in sources if source_stem(rel) in wanted]
+        csv_groups = [(stem, frame) for stem, frame in csv_groups if stem in wanted]
 
     args.out.mkdir(parents=True, exist_ok=True)
     imported, skipped, failures = 0, 0, []
@@ -249,6 +302,24 @@ def main(argv: list[str] | None = None) -> int:
             skipped += 1
             status = "!! "
         print(f"{status}{stem:<10} {rows:>6} rows  {note}")
+
+    for stem, raw_frame in csv_groups:
+        try:
+            frame, note = normalize_frame(raw_frame)
+            rows, span = _emit_frame(
+                stem, frame, args.out, args.min_rows, args.overwrite, args.dry_run
+            )
+            report_note = f"{span} ({note})"
+        except Exception as exc:  # noqa: BLE001 - keep importing the rest
+            rows, report_note = 0, f"ERROR {exc}"
+            failures.append(stem)
+        if rows > 0:
+            imported += 1
+            status = "OK "
+        else:
+            skipped += 1
+            status = "!! "
+        print(f"{status}{stem:<10} {rows:>6} rows  {report_note}")
 
     if wanted is not None and not args.dry_run:
         # A requested ticker only succeeds if its CSV exists at the end:

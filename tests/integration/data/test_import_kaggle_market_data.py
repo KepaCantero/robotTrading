@@ -73,6 +73,19 @@ A,Agilent Technologies
 AAPL,Apple Inc.
 """
 
+# ad-hoc long-format export (world indices style): Ticker column to split
+WORLD_CSV = """Ticker,Date,Open,High,Low,Close,Adj Close,Volume
+^GDAXI,2010-01-04,6000.00,6050.00,5980.00,6020.00,6020.00,0
+^GDAXI,2010-01-05,6020.00,6100.00,6010.00,6080.00,6080.00,0
+SAP.DE,2010-01-04,40.00,41.00,39.50,40.50,36.45,1000000
+SAP.DE,2010-01-05,40.50,42.00,40.00,41.00,36.90,900000
+"""
+
+SINGLE_CSV = """Date,Open,High,Low,Close,Volume
+2010-01-04,10.00,10.50,9.90,10.20,5000
+2010-01-05,10.20,10.80,10.10,10.70,6000
+"""
+
 
 def _make_archive(path: Path) -> Path:
     with zipfile.ZipFile(path, "w") as archive:
@@ -212,3 +225,36 @@ def test_dir_mode_walks_extracted_tree(tmp_path: Path) -> None:
     assert (out_dir / "AAPL.csv").exists()
     assert (out_dir / "INTC.csv").exists()
     assert not (out_dir / "SPY.csv").exists()  # etfs still opt-in in dir mode
+
+
+def test_csv_mode_splits_long_format_per_ticker(tmp_path: Path) -> None:
+    world = tmp_path / "World_indices.csv"
+    world.write_text(WORLD_CSV)
+    out_dir = tmp_path / "historical"
+
+    exit_code = importer.main(["--csv", str(world), "--out", str(out_dir)])
+
+    assert exit_code == 0
+    assert (out_dir / "GDAXI.csv").exists()
+    # dots survive in stems, matching the curated naming (SAP.DE.csv, MC.PA.csv)
+    assert (out_dir / "SAP.DE.csv").exists()
+    sap = pd.read_csv(out_dir / "SAP.DE.csv", index_col="date")
+    # Adj Close rescale applied inside the split group (36.45/40.50 factor)
+    assert sap.loc["2010-01-04", "Close"] == 36.45
+    assert sap.loc["2010-01-04", "Open"] == pytest.approx(40.00 * 36.45 / 40.50)
+    gdaxi = pd.read_csv(out_dir / "GDAXI.csv", index_col="date")
+    assert list(gdaxi.columns) == ["Open", "High", "Low", "Close", "Volume"]
+    assert gdaxi.loc["2010-01-05", "Close"] == 6080.0
+
+
+def test_csv_mode_single_symbol_file_uses_filename_stem(tmp_path: Path) -> None:
+    single = tmp_path / "stoxx.csv"
+    single.write_text(SINGLE_CSV)
+    out_dir = tmp_path / "historical"
+
+    exit_code = importer.main(["--csv", str(single), "--tickers", "STOXX", "--out", str(out_dir)])
+
+    assert exit_code == 0
+    frame = pd.read_csv(out_dir / "STOXX.csv", index_col="date")
+    assert len(frame) == 2
+    assert frame.loc["2010-01-05", "Close"] == 10.70
