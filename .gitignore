@@ -125,3 +125,6 @@ app/services/.ralph/
 .ralph/events-*.jsonl
 
 # === LIMPIEZA 2026-04-02 ===
+# SQLite runtime sidecars
+*.db-shm
+*.db-wal
