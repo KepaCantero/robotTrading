@@ -143,21 +143,36 @@ class ExitConditionMonitor:
 
         # PESSIMISTIC EXECUTION: If both triggered, prioritize stop-loss
         if (stop_loss_triggered and take_profit_triggered) or stop_loss_triggered:
-            # Stop-loss hit (or both hit - use stop-loss price pessimistically)
+            # Stop-loss hit (or both hit - use stop-loss price pessimistically).
+            # Gap-through: if the bar opens below the stop, the order fills at the
+            # (worse) open price, not at the stop level.
             exit_price = (
                 stop_loss_price
                 if hasattr(market_data, "low") and market_data.low is not None
                 else close_price
             )
+            if (
+                hasattr(market_data, "open")
+                and market_data.open is not None
+                and market_data.open < exit_price
+            ):
+                exit_price = market_data.open
             close_position_func(market_data.symbol, market_data.timestamp, "stop_loss", exit_price)
             return True
         elif take_profit_triggered:
-            # Only take-profit hit
+            # Only take-profit hit. Gap-through on a limit sell: if the bar
+            # opens above the target, the limit fills at the (better) open.
             exit_price = (
                 take_profit_price
                 if hasattr(market_data, "high") and market_data.high is not None
                 else close_price
             )
+            if (
+                hasattr(market_data, "open")
+                and market_data.open is not None
+                and market_data.open > exit_price
+            ):
+                exit_price = market_data.open
             close_position_func(
                 market_data.symbol, market_data.timestamp, "take_profit", exit_price
             )

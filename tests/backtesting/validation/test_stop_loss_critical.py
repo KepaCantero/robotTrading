@@ -916,7 +916,8 @@ class TestStopLossWithDifferentConfigs:
         closed_trades = [t for t in backtester.trades if t.status == TradeStatus.CLOSED]
         loss_pct = abs(closed_trades[-1].pnl_percentage)
 
-        # Loss should be ~15-17% (wide SL)
+        # The triggering bar gaps through the stop (open=81 < stop=85), so the
+        # order fills at the open: loss ~19%, not the optimistic 15% stop level.
         assert (
-            Decimal("13") <= loss_pct <= Decimal("18")
-        ), f"Wide SL should allow ~15% loss, got {loss_pct}%"
+            Decimal("18") <= loss_pct <= Decimal("20")
+        ), f"Wide SL with gap-through should fill at open (~19% loss), got {loss_pct}%"
