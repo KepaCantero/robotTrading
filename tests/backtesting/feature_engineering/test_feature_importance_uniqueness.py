@@ -519,7 +519,7 @@ class TestIntegration:
         y = (X[:, 0] + X[:, 2] > 0).astype(int)
 
         # Events and labels
-        events = pd.date_range("2020-01-01", periods=n_samples, freq="H")
+        events = pd.date_range("2020-01-01", periods=n_samples, freq="h")
         labels = pd.DataFrame(
             {
                 "bars_to_barrier": np.random.randint(5, 20, n_samples),
