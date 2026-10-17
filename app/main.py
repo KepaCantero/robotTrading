@@ -80,6 +80,7 @@ from app.presentation.api.paper_trading import router as paper_trading_router
 from app.presentation.api.portfolio import router as portfolio_router
 from app.presentation.api.portfolio_analytics import router as portfolio_analytics_router
 from app.presentation.api.signals import router as signals_router
+from app.presentation.api.strategies import router as strategies_router
 from app.presentation.api.trading_error_handler import router as trading_error_handler_router
 from app.shared.config.config import get_settings
 
@@ -180,11 +181,20 @@ app = FastAPI(
 )
 
 # Configure CORS middleware
+# Allowed origins come from the CORS_ORIGINS environment variable (comma-
+# separated; the JSON-list format used in config/environments/*.env is also
+# accepted). Defaults to localhost only.
+_cors_env = os.getenv("CORS_ORIGINS", "")
+if _cors_env.strip():
+    _cors_origins = [origin.strip().strip("\"'[]") for origin in _cors_env.split(",")]
+    _cors_origins = [origin for origin in _cors_origins if origin]
+else:
+    _cors_origins = ["http://localhost:8080", "http://127.0.0.1:8080"]
 # NOTE: allow_origins=["*"] with allow_credentials=True is rejected by browsers.
 # Use allow_credentials=False when allowing all origins.
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=_cors_origins,
     allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -280,6 +290,7 @@ app.include_router(health_router)
 app.include_router(capa2_router)
 app.include_router(portfolio_router)
 app.include_router(signals_router)
+app.include_router(strategies_router)
 app.include_router(momentum_router)
 app.include_router(assets_router)
 app.include_router(market_data_router)
