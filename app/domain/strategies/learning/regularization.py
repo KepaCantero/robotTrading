@@ -29,6 +29,7 @@ from typing import Any
 
 import numpy as np
 import pandas as pd
+from sklearn.base import BaseEstimator, RegressorMixin
 from sklearn.linear_model import ElasticNet, Lasso, LassoCV, Ridge, RidgeCV
 from sklearn.utils.validation import check_array, check_is_fitted
 
@@ -144,7 +145,7 @@ class RegularizationPath:
         }
 
 
-class L1Regularization:
+class L1Regularization(RegressorMixin, BaseEstimator):
     """
     L1 Regularization (Lasso).
 
@@ -281,7 +282,7 @@ class L1Regularization:
         return np.where(self.get_sparsity_mask())[0]
 
 
-class L2Regularization:
+class L2Regularization(RegressorMixin, BaseEstimator):
     """
     L2 Regularization (Ridge).
 
@@ -411,7 +412,7 @@ class L2Regularization:
         return float(self.ridge_.intercept_)
 
 
-class ElasticNetRegularization:
+class ElasticNetRegularization(RegressorMixin, BaseEstimator):
     """
     Elastic Net Regularization.
 
@@ -550,7 +551,7 @@ class ElasticNetRegularization:
         return self.get_coefficients() != 0
 
 
-class AdaptiveLasso:
+class AdaptiveLasso(RegressorMixin, BaseEstimator):
     """
     Adaptive Lasso.
 

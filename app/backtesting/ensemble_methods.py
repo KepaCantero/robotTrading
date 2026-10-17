@@ -29,6 +29,7 @@ from enum import Enum
 from typing import TYPE_CHECKING, NamedTuple, Union, cast
 
 import numpy as np
+from sklearn.base import BaseEstimator
 from sklearn.ensemble import (
     BaggingClassifier,
     BaggingRegressor,
@@ -45,7 +46,6 @@ from typing_extensions import TypeAlias
 
 if TYPE_CHECKING:
     import pandas as pd
-    from sklearn.base import BaseEstimator
 
 # Type aliases for the union types used across ensemble classes
 BaggingModel: TypeAlias = Union[BaggingClassifier, BaggingRegressor]
@@ -70,7 +70,7 @@ def _is_classification_target(y: np.ndarray) -> bool:
     return len(np.unique(y)) <= 15
 
 
-class EnsembleMethod(Enum):
+class EnsembleMethod(str, Enum):
     """Ensemble method types."""
 
     BAGGING = "bagging"
@@ -155,7 +155,7 @@ class StackingConfig:
     n_jobs: int = -1
 
 
-class BaggingEnsemble:
+class BaggingEnsemble(BaseEstimator):
     """
     Bagging (Bootstrap Aggregating).
 
@@ -185,6 +185,7 @@ class BaggingEnsemble:
         self,
         estimator: BaseEstimator | None = None,
         config: BaggingConfig | None = None,
+        n_estimators: int | None = None,
     ):
         """
         Initialize Bagging Ensemble.
@@ -192,12 +193,12 @@ class BaggingEnsemble:
         Args:
             estimator: Base estimator (default: Decision Tree)
             config: Bagging configuration
+            n_estimators: Optional override for the number of bagged estimators
+                (takes precedence over ``config.n_estimators`` when provided)
         """
-        if config is None:
-            config = BaggingConfig()
-
-        self.config = config
-        self.estimator = estimator or DecisionTreeRegressor()
+        self.estimator = estimator if estimator is not None else DecisionTreeRegressor()
+        self.config = config if config is not None else BaggingConfig()
+        self.n_estimators = n_estimators
 
         self.bagger_: BaggingModel | None = None
 
@@ -243,7 +244,7 @@ class BaggingEnsemble:
         """Create bagging estimator with configuration."""
         return bagging_cls(
             estimator=self.estimator,
-            n_estimators=self.config.n_estimators,
+            n_estimators=self._effective_n_estimators(),
             max_samples=self.config.max_samples,
             max_features=self.config.max_features,
             bootstrap=self.config.bootstrap,
@@ -251,6 +252,12 @@ class BaggingEnsemble:
             n_jobs=self.config.n_jobs,
             random_state=self.config.random_state,
         )
+
+    def _effective_n_estimators(self) -> int:
+        """Resolve estimator count: ``n_estimators`` overrides ``config.n_estimators``."""
+        if self.n_estimators is not None:
+            return self.n_estimators
+        return self.config.n_estimators
 
     def predict(self, X: np.ndarray | pd.DataFrame) -> np.ndarray:
         """
@@ -312,7 +319,7 @@ class BaggingEnsemble:
         return float(val) if val is not None else None
 
 
-class BoostingEnsemble:
+class BoostingEnsemble(BaseEstimator):
     """
     Boosting Ensemble.
 
@@ -347,6 +354,7 @@ class BoostingEnsemble:
         self,
         config: BoostingConfig | None = None,
         task_type: str = "auto",
+        n_estimators: int | None = None,
     ):
         """
         Initialize Boosting Ensemble.
@@ -354,12 +362,12 @@ class BoostingEnsemble:
         Args:
             config: Boosting configuration
             task_type: 'classification', 'regression', or 'auto'
+            n_estimators: Optional override for the number of boosting stages
+                (takes precedence over ``config.n_estimators`` when provided)
         """
-        if config is None:
-            config = BoostingConfig()
-
-        self.config = config
+        self.config = config if config is not None else BoostingConfig()
         self.task_type = task_type
+        self.n_estimators = n_estimators
 
         self.booster_: GradientBoostingClassifier | GradientBoostingRegressor | None = None
 
@@ -400,8 +408,11 @@ class BoostingEnsemble:
 
     def _create_booster(self, task: str) -> GradientBoostingClassifier | GradientBoostingRegressor:
         """Create gradient booster based on task type."""
+        n_estimators = (
+            self.n_estimators if self.n_estimators is not None else self.config.n_estimators
+        )
         common_params = {
-            "n_estimators": self.config.n_estimators,
+            "n_estimators": n_estimators,
             "learning_rate": self.config.learning_rate,
             "max_depth": self.config.max_depth,
             "subsample": self.config.subsample,
@@ -465,7 +476,7 @@ class BoostingEnsemble:
         return cast("np.ndarray", importance)
 
 
-class StackingEnsemble:
+class StackingEnsemble(BaseEstimator):
     """
     Stacking (Stacked Generalization).
 
@@ -623,7 +634,7 @@ class StackingEnsemble:
         return {name: float(est.score(X, y)) for name, est in zip(names, fitted_estimators)}
 
 
-class RandomForestEnsemble:
+class RandomForestEnsemble(BaseEstimator):
     """
     Random Forest Ensemble.
 
