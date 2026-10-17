@@ -1,0 +1,66 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-6 -6 971 331" role="img" aria-label="The trade loop: market data, strategy, risk check, execution, portfolio, audit trail, then back to the start">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#2B2D42"/>
+    </marker>
+    <marker id="arrowNo" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#FF6B6B"/>
+    </marker>
+  </defs>
+  <rect x="1" y="1" width="958" height="318" rx="16" fill="#FFF9E6" stroke="#2B2D42" stroke-width="2"/>
+  <g font-family="Helvetica, Arial, sans-serif" text-anchor="middle">
+    <circle cx="80" cy="86" r="15" fill="#2B2D42"/>
+    <text x="80" y="91" font-size="14" font-weight="bold" fill="#FFFFFF">1</text>
+    <rect x="16" y="96" width="128" height="96" rx="12" fill="#4D96FF" stroke="#2B2D42" stroke-width="2.5"/>
+    <text x="80" y="130" font-size="14.5" font-weight="bold" fill="#FFFFFF">Market data</text>
+    <text x="80" y="152" font-size="11" fill="#FFFFFF">prices, volume,</text>
+    <text x="80" y="168" font-size="11" fill="#FFFFFF">news (data_engine)</text>
+
+    <circle cx="240" cy="86" r="15" fill="#2B2D42"/>
+    <text x="240" y="91" font-size="14" font-weight="bold" fill="#FFFFFF">2</text>
+    <rect x="176" y="96" width="128" height="96" rx="12" fill="#FFD93D" stroke="#2B2D42" stroke-width="2.5"/>
+    <text x="240" y="130" font-size="14.5" font-weight="bold" fill="#2B2D42">Strategy</text>
+    <text x="240" y="152" font-size="11" fill="#2B2D42">buy, sell or wait?</text>
+    <text x="240" y="168" font-size="11" fill="#2B2D42">(strategy_engines)</text>
+
+    <circle cx="400" cy="86" r="15" fill="#2B2D42"/>
+    <text x="400" y="91" font-size="14" font-weight="bold" fill="#FFFFFF">3</text>
+    <rect x="336" y="96" width="128" height="96" rx="12" fill="#FF6B6B" stroke="#2B2D42" stroke-width="2.5"/>
+    <text x="400" y="130" font-size="14.5" font-weight="bold" fill="#FFFFFF">Risk check</text>
+    <text x="400" y="152" font-size="11" fill="#FFFFFF">are the limits</text>
+    <text x="400" y="168" font-size="11" fill="#FFFFFF">ok? (risk_engine)</text>
+
+    <circle cx="560" cy="86" r="15" fill="#2B2D42"/>
+    <text x="560" y="91" font-size="14" font-weight="bold" fill="#FFFFFF">4</text>
+    <rect x="496" y="96" width="128" height="96" rx="12" fill="#6BCB77" stroke="#2B2D42" stroke-width="2.5"/>
+    <text x="560" y="130" font-size="14.5" font-weight="bold" fill="#2B2D42">Execution</text>
+    <text x="560" y="152" font-size="11" fill="#2B2D42">the order goes</text>
+    <text x="560" y="168" font-size="11" fill="#2B2D42">out (execution)</text>
+
+    <circle cx="720" cy="86" r="15" fill="#2B2D42"/>
+    <text x="720" y="91" font-size="14" font-weight="bold" fill="#FFFFFF">5</text>
+    <rect x="656" y="96" width="128" height="96" rx="12" fill="#9B5DE5" stroke="#2B2D42" stroke-width="2.5"/>
+    <text x="720" y="130" font-size="14.5" font-weight="bold" fill="#FFFFFF">Portfolio</text>
+    <text x="720" y="152" font-size="11" fill="#FFFFFF">positions &amp; cash</text>
+    <text x="720" y="168" font-size="11" fill="#FFFFFF">updated</text>
+
+    <circle cx="880" cy="86" r="15" fill="#2B2D42"/>
+    <text x="880" y="91" font-size="14" font-weight="bold" fill="#FFFFFF">6</text>
+    <rect x="816" y="96" width="128" height="96" rx="12" fill="#FFFFFF" stroke="#2B2D42" stroke-width="2.5"/>
+    <text x="880" y="130" font-size="14.5" font-weight="bold" fill="#2B2D42">Audit trail</text>
+    <text x="880" y="152" font-size="11" fill="#2B2D42">everything logged,</text>
+    <text x="880" y="168" font-size="11" fill="#2B2D42">compliance checks</text>
+
+    <line x1="148" y1="144" x2="172" y2="144" stroke="#2B2D42" stroke-width="2.5" marker-end="url(#arrow)"/>
+    <line x1="308" y1="144" x2="332" y2="144" stroke="#2B2D42" stroke-width="2.5" marker-end="url(#arrow)"/>
+    <line x1="468" y1="144" x2="492" y2="144" stroke="#2B2D42" stroke-width="2.5" marker-end="url(#arrow)"/>
+    <line x1="628" y1="144" x2="652" y2="144" stroke="#2B2D42" stroke-width="2.5" marker-end="url(#arrow)"/>
+    <line x1="788" y1="144" x2="812" y2="144" stroke="#2B2D42" stroke-width="2.5" marker-end="url(#arrow)"/>
+
+    <line x1="400" y1="192" x2="400" y2="220" stroke="#FF6B6B" stroke-width="2.5" marker-end="url(#arrowNo)"/>
+    <text x="400" y="240" font-size="12.5" font-weight="bold" fill="#FF6B6B">NO — skip this round, stay in cash</text>
+
+    <path d="M 880 192 V 280 H 80 V 202" fill="none" stroke="#2B2D42" stroke-width="2" stroke-dasharray="6 5" marker-end="url(#arrow)"/>
+    <text x="480" y="270" font-size="13" font-style="italic" fill="#2B2D42">…and a moment later, it starts all over again</text>
+  </g>
+</svg>

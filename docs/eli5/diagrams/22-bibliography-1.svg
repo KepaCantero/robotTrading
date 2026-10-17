@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-5 -5 770 350" role="img" aria-label="A bookshelf with six schools: backtesting classics, market microstructure, risk, portfolio and factors, time series and machine learning, systems">
+  <rect x="1" y="1" width="758" height="338" rx="16" fill="#FFF9E6" stroke="#2B2D42" stroke-width="2"/>
+  <g font-family="Helvetica, Arial, sans-serif" text-anchor="middle">
+    <text x="380" y="26" font-size="15" font-weight="bold" fill="#2B2D42">The shelf behind the rulebook</text>
+    <rect x="30" y="44" width="220" height="110" rx="12" fill="#FFD93D" stroke="#2B2D42" stroke-width="2"/>
+    <text x="140" y="96" font-size="15" font-weight="bold" fill="#2B2D42">Backtesting classics</text>
+    <text x="140" y="124" font-size="11.5" fill="#2B2D42">Chan · Pardo · Tomasini</text>
+    <rect x="270" y="44" width="220" height="110" rx="12" fill="#4D96FF" stroke="#2B2D42" stroke-width="2"/>
+    <text x="380" y="96" font-size="15" font-weight="bold" fill="#FFFFFF">Market microstructure</text>
+    <text x="380" y="124" font-size="11.5" fill="#FFFFFF">Harris · O'Hara · Johnson</text>
+    <rect x="510" y="44" width="220" height="110" rx="12" fill="#FF6B6B" stroke="#2B2D42" stroke-width="2"/>
+    <text x="620" y="96" font-size="15" font-weight="bold" fill="#FFFFFF">Risk</text>
+    <text x="620" y="124" font-size="11.5" fill="#FFFFFF">Hull · Carver · Ilmanen</text>
+    <line x1="24" y1="170" x2="736" y2="170" stroke="#2B2D42" stroke-width="2.5"/>
+    <rect x="30" y="186" width="220" height="110" rx="12" fill="#6BCB77" stroke="#2B2D42" stroke-width="2"/>
+    <text x="140" y="238" font-size="15" font-weight="bold" fill="#2B2D42">Portfolio and factors</text>
+    <text x="140" y="266" font-size="11.5" fill="#2B2D42">Grinold-Kahn · Ang · Faber</text>
+    <rect x="270" y="186" width="220" height="110" rx="12" fill="#9B5DE5" stroke="#2B2D42" stroke-width="2"/>
+    <text x="380" y="238" font-size="15" font-weight="bold" fill="#FFFFFF">Time series and ML</text>
+    <text x="380" y="266" font-size="11.5" fill="#FFFFFF">Tsay · Hastie · de Prado</text>
+    <rect x="510" y="186" width="220" height="110" rx="12" fill="#2B2D42" stroke="#2B2D42" stroke-width="2"/>
+    <text x="620" y="238" font-size="15" font-weight="bold" fill="#FFFFFF">Systems</text>
+    <text x="620" y="266" font-size="11.5" fill="#FFFFFF">Kleppmann · Kissell · Aldridge</text>
+    <line x1="24" y1="312" x2="736" y2="312" stroke="#2B2D42" stroke-width="2.5"/>
+  </g>
+</svg>

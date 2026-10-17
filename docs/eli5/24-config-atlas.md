@@ -8,42 +8,7 @@ Mostly they don't fight, because each knob has one home. When they do overlap, t
 
 ## The map
 
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 470" role="img" aria-label="Config map: env vars, YAML files and Python defaults merge into one config object">
-  <defs>
-    <marker id="cfgArrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
-      <path d="M 0 0 L 10 5 L 0 10 z" fill="#2B2D42"/>
-    </marker>
-  </defs>
-  <rect x="1" y="1" width="758" height="468" rx="14" fill="#FFF9E6" stroke="#2B2D42" stroke-width="2"/>
-  <g font-family="Helvetica, Arial, sans-serif" text-anchor="middle">
-    <rect x="30" y="30" width="220" height="88" rx="12" fill="#FF6B6B" stroke="#2B2D42" stroke-width="2.5"/>
-    <text x="140" y="58" font-size="15" font-weight="bold" fill="#FFFFFF">Environment variables</text>
-    <text x="140" y="80" font-size="12" fill="#FFFFFF">.env and .env.prod</text>
-    <text x="140" y="98" font-size="12" fill="#FFFFFF">secrets, hosts, ports</text>
-    <rect x="270" y="30" width="220" height="88" rx="12" fill="#4D96FF" stroke="#2B2D42" stroke-width="2.5"/>
-    <text x="380" y="58" font-size="15" font-weight="bold" fill="#FFFFFF">YAML files</text>
-    <text x="380" y="80" font-size="12" fill="#FFFFFF">the config/ folder</text>
-    <text x="380" y="98" font-size="12" fill="#FFFFFF">thresholds, costs, allocations</text>
-    <rect x="510" y="30" width="220" height="88" rx="12" fill="#FFFFFF" stroke="#2B2D42" stroke-width="2.5"/>
-    <text x="620" y="58" font-size="15" font-weight="bold" fill="#2B2D42">Python defaults</text>
-    <text x="620" y="80" font-size="12" fill="#2B2D42">pydantic Field values</text>
-    <text x="620" y="98" font-size="12" fill="#2B2D42">the safety net</text>
-    <line x1="140" y1="118" x2="140" y2="198" stroke="#2B2D42" stroke-width="2" marker-end="url(#cfgArrow)"/>
-    <text x="140" y="165" font-size="11" fill="#2B2D42">strongest</text>
-    <line x1="380" y1="118" x2="380" y2="198" stroke="#2B2D42" stroke-width="2" marker-end="url(#cfgArrow)"/>
-    <line x1="620" y1="118" x2="620" y2="198" stroke="#2B2D42" stroke-width="2" marker-end="url(#cfgArrow)"/>
-    <text x="620" y="165" font-size="11" fill="#2B2D42">fallback</text>
-    <rect x="180" y="202" width="400" height="96" rx="12" fill="#6BCB77" stroke="#2B2D42" stroke-width="2.5"/>
-    <text x="380" y="232" font-size="15" font-weight="bold" fill="#2B2D42">The loaders</text>
-    <text x="380" y="254" font-size="12" fill="#2B2D42">CentralizedConfig plus YAMLConfigLoader</text>
-    <text x="380" y="272" font-size="12" fill="#2B2D42">env beats file beats default</text>
-    <line x1="380" y1="298" x2="380" y2="358" stroke="#2B2D42" stroke-width="2.5" marker-end="url(#cfgArrow)"/>
-    <rect x="180" y="362" width="400" height="88" rx="12" fill="#9B5DE5" stroke="#2B2D42" stroke-width="2.5"/>
-    <text x="380" y="392" font-size="15" font-weight="bold" fill="#FFFFFF">One config object</text>
-    <text x="380" y="414" font-size="12" fill="#FFFFFF">get_config() serves everyone</text>
-    <text x="380" y="432" font-size="12" fill="#FFFFFF">reload_config() starts over</text>
-  </g>
-</svg>
+![Config map: env vars, YAML files and Python defaults merge into one config object](diagrams/24-config-atlas-1.svg)
 
 Here's the load order, verified in the code. `CentralizedConfig` is a pydantic `BaseSettings` with `env_file=".env"`, so it reads real environment variables first, then the file, then its own field defaults. It also walks `config/strategies/` and loads every YAML there. Everything else under `config/` is pulled by `YAMLConfigLoader`, one subsystem at a time.
 

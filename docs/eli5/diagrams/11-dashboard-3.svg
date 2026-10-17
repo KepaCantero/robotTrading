@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-6 -6 771 201" role="img" aria-label="make dashboard builds the MkDocs site, then the app serves it at /docs">
+  <defs>
+    <marker id="arrowDocs" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#2B2D42"/>
+    </marker>
+  </defs>
+  <rect x="1" y="1" width="758" height="188" rx="16" fill="#FFF9E6" stroke="#2B2D42" stroke-width="2"/>
+  <g font-family="Helvetica, Arial, sans-serif" text-anchor="middle">
+    <rect x="20" y="50" width="210" height="90" rx="12" fill="#6BCB77" stroke="#2B2D42" stroke-width="2.5"/>
+    <text x="125" y="86" font-size="13" font-weight="bold" fill="#2B2D42">make dashboard</text>
+    <text x="125" y="110" font-size="11" fill="#2B2D42">docs first, then the app</text>
+    <line x1="230" y1="95" x2="258" y2="95" stroke="#2B2D42" stroke-width="2.5" marker-end="url(#arrowDocs)"/>
+    <rect x="262" y="50" width="210" height="90" rx="12" fill="#FFFFFF" stroke="#2B2D42" stroke-width="2.5"/>
+    <text x="367" y="86" font-size="13" font-weight="bold" fill="#2B2D42">site/</text>
+    <text x="367" y="110" font-size="11" fill="#2B2D42">MkDocs static HTML</text>
+    <line x1="472" y1="95" x2="500" y2="95" stroke="#2B2D42" stroke-width="2.5" marker-end="url(#arrowDocs)"/>
+    <rect x="504" y="50" width="236" height="90" rx="12" fill="#FF6B6B" stroke="#2B2D42" stroke-width="2.5"/>
+    <text x="622" y="80" font-size="12.5" font-weight="bold" fill="#FFFFFF">dashboard mounts /docs/</text>
+    <text x="622" y="103" font-size="11" fill="#FFFFFF">Starlette StaticFiles</text>
+    <text x="622" y="121" font-size="11" fill="#FFFFFF">serves the files as-is</text>
+  </g>
+</svg>

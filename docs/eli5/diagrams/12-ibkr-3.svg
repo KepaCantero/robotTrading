@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-6 -6 791 211" role="img" aria-label="Diagram: TWS returns OHLCV bars, IBKRSource makes dicts, the DataEngine cleans them, strategies and backtests use them">
+  <defs>
+    <marker id="arrowIb3" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#2B2D42"/>
+    </marker>
+  </defs>
+  <rect x="1" y="1" width="778" height="198" rx="16" fill="#FFF9E6" stroke="#2B2D42" stroke-width="2"/>
+  <g font-family="Helvetica, Arial, sans-serif" text-anchor="middle">
+    <rect x="20" y="60" width="185" height="96" rx="14" fill="#FF6B6B" stroke="#2B2D42" stroke-width="2.5"/>
+    <text x="112" y="88" font-size="14" font-weight="bold" fill="#FFFFFF">TWS / Gateway</text>
+    <text x="112" y="112" font-size="12" fill="#FFFFFF">returns OHLCV bars</text>
+    <line x1="207" y1="108" x2="223" y2="108" stroke="#2B2D42" stroke-width="2.5" marker-end="url(#arrowIb3)"/>
+    <rect x="225" y="60" width="165" height="96" rx="14" fill="#4D96FF" stroke="#2B2D42" stroke-width="2.5"/>
+    <text x="307" y="88" font-size="14" font-weight="bold" fill="#FFFFFF">IBKRSource</text>
+    <text x="307" y="110" font-size="12" fill="#FFFFFF">bars become dicts</text>
+    <line x1="392" y1="108" x2="408" y2="108" stroke="#2B2D42" stroke-width="2.5" marker-end="url(#arrowIb3)"/>
+    <rect x="410" y="60" width="165" height="96" rx="14" fill="#6BCB77" stroke="#2B2D42" stroke-width="2.5"/>
+    <text x="492" y="88" font-size="14" font-weight="bold" fill="#2B2D42">DataEngine</text>
+    <text x="492" y="112" font-size="12" fill="#2B2D42">cache · clean · UTC</text>
+    <line x1="577" y1="108" x2="593" y2="108" stroke="#2B2D42" stroke-width="2.5" marker-end="url(#arrowIb3)"/>
+    <rect x="595" y="60" width="165" height="96" rx="14" fill="#9B5DE5" stroke="#2B2D42" stroke-width="2.5"/>
+    <text x="677" y="88" font-size="14" font-weight="bold" fill="#FFFFFF">Who uses it</text>
+    <text x="677" y="110" font-size="12" fill="#FFFFFF">strategies · backtests</text>
+    <text x="677" y="130" font-size="12" fill="#FFFFFF">dashboard · API</text>
+  </g>
+</svg>

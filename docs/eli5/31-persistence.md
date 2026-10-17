@@ -6,41 +6,7 @@ Everything this system remembers sits in one of four homes. PostgreSQL is the sh
 
 Once you know which home a piece of data lives in, you also know how long it lasts and who else can read it. Here's the map:
 
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 260" role="img" aria-label="The four homes of data: PostgreSQL, Redis, SQLite files and plain files">
-  <rect x="1" y="1" width="758" height="258" rx="14" fill="#FFF9E6" stroke="#2B2D42" stroke-width="2"/>
-  <g font-family="Helvetica, Arial, sans-serif" text-anchor="middle">
-    <rect x="20" y="24" width="165" height="190" rx="12" fill="#FF6B6B" stroke="#2B2D42" stroke-width="2.5"/>
-    <text x="102" y="54" font-size="15" font-weight="bold" fill="#FFFFFF">PostgreSQL</text>
-    <text x="102" y="76" font-size="11.5" fill="#FFFFFF">the shared ledger</text>
-    <text x="102" y="104" font-size="11.5" fill="#FFFFFF">users · portfolios</text>
-    <text x="102" y="126" font-size="11.5" fill="#FFFFFF">trades · positions</text>
-    <text x="102" y="148" font-size="11.5" fill="#FFFFFF">signals · market data</text>
-    <text x="102" y="170" font-size="11.5" fill="#FFFFFF">backtests · risk metrics</text>
-    <text x="102" y="198" font-size="10.5" fill="#FFFFFF">via repositories</text>
-    <rect x="205" y="24" width="165" height="190" rx="12" fill="#FF6B6B" stroke="#2B2D42" stroke-width="2.5"/>
-    <text x="287" y="54" font-size="15" font-weight="bold" fill="#FFFFFF">Redis</text>
-    <text x="287" y="76" font-size="11.5" fill="#FFFFFF">the short memory</text>
-    <text x="287" y="104" font-size="11.5" fill="#FFFFFF">cached market data</text>
-    <text x="287" y="126" font-size="11.5" fill="#FFFFFF">keys expire on their own</text>
-    <text x="287" y="148" font-size="11.5" fill="#FFFFFF">set by a TTL</text>
-    <text x="287" y="198" font-size="10.5" fill="#FFFFFF">via DistributedCache</text>
-    <rect x="390" y="24" width="165" height="190" rx="12" fill="#FFFFFF" stroke="#2B2D42" stroke-width="2.5"/>
-    <text x="472" y="54" font-size="15" font-weight="bold" fill="#2B2D42">SQLite</text>
-    <text x="472" y="76" font-size="11.5" fill="#2B2D42">two local notebooks</text>
-    <text x="472" y="104" font-size="11.5" fill="#2B2D42">backtest_results.db</text>
-    <text x="472" y="126" font-size="11.5" fill="#2B2D42">one row per run</text>
-    <text x="472" y="148" font-size="11.5" fill="#2B2D42">swarm_runs.db</text>
-    <text x="472" y="170" font-size="11.5" fill="#2B2D42">runs plus their events</text>
-    <rect x="575" y="24" width="165" height="190" rx="12" fill="#FFFFFF" stroke="#2B2D42" stroke-width="2.5"/>
-    <text x="657" y="54" font-size="15" font-weight="bold" fill="#2B2D42">Plain files</text>
-    <text x="657" y="76" font-size="11.5" fill="#2B2D42">just bytes on disk</text>
-    <text x="657" y="104" font-size="11.5" fill="#2B2D42">data/historical CSVs</text>
-    <text x="657" y="126" font-size="11.5" fill="#2B2D42">AAPL.csv and friends</text>
-    <text x="657" y="148" font-size="11.5" fill="#2B2D42">outputs/ JSON reports</text>
-    <text x="380" y="236" font-size="11" fill="#2B2D42">coral = shared servers</text>
-    <text x="380" y="252" font-size="11" fill="#2B2D42">white = plain local files</text>
-  </g>
-</svg>
+![The four homes of data: PostgreSQL, Redis, SQLite files and plain files](diagrams/31-persistence-1.svg)
 
 **PostgreSQL — the shared ledger.** This is the database of record, meaning the place where truth is kept. It holds about a dozen tables: `users`, `api_keys`, `portfolios`, `assets`, `positions`, `trades`, `market_data`, `signals`, `backtests`, `risk_metrics` and friends. Your code never writes SQL for them by hand. Repository classes like `TradeRepository` or `BacktestRepository` do all the talking.
 
@@ -54,46 +20,7 @@ Once you know which home a piece of data lives in, you also know how long it las
 
 A single backtest run touches three of the homes at once. Watch it flow:
 
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 350" role="img" aria-label="A backtest run: dashboard starts it, engine replays a strategy, prices come from Redis, the record goes to PostgreSQL and the SQLite store">
-  <defs>
-    <marker id="pflow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
-      <path d="M 0 0 L 10 5 L 0 10 z" fill="#2B2D42"/>
-    </marker>
-  </defs>
-  <rect x="1" y="1" width="758" height="348" rx="14" fill="#FFF9E6" stroke="#2B2D42" stroke-width="2"/>
-  <g font-family="Helvetica, Arial, sans-serif" text-anchor="middle">
-    <rect x="190" y="25" width="150" height="80" rx="12" fill="#FF6B6B" stroke="#2B2D42" stroke-width="2.5"/>
-    <text x="265" y="55" font-size="12.5" font-weight="bold" fill="#FFFFFF">DistributedCache</text>
-    <text x="265" y="75" font-size="11.5" fill="#FFFFFF">prices in Redis</text>
-    <text x="265" y="93" font-size="11.5" fill="#FFFFFF">fast, then forgotten</text>
-    <line x1="265" y1="105" x2="265" y2="131" stroke="#2B2D42" stroke-width="2.5" marker-end="url(#pflow)"/>
-    <text x="278" y="124" font-size="10.5" fill="#2B2D42" text-anchor="start">prices</text>
-    <rect x="20" y="135" width="140" height="70" rx="12" fill="#4D96FF" stroke="#2B2D42" stroke-width="2.5"/>
-    <text x="90" y="165" font-size="13" font-weight="bold" fill="#FFFFFF">You start a run</text>
-    <text x="90" y="187" font-size="11.5" fill="#FFFFFF">dashboard or API</text>
-    <line x1="160" y1="170" x2="186" y2="170" stroke="#2B2D42" stroke-width="2.5" marker-end="url(#pflow)"/>
-    <rect x="190" y="135" width="150" height="70" rx="12" fill="#FFD93D" stroke="#2B2D42" stroke-width="2.5"/>
-    <text x="265" y="165" font-size="13" font-weight="bold" fill="#2B2D42">Backtest engine</text>
-    <text x="265" y="187" font-size="11.5" fill="#2B2D42">replays a strategy</text>
-    <line x1="340" y1="170" x2="366" y2="170" stroke="#2B2D42" stroke-width="2.5" marker-end="url(#pflow)"/>
-    <rect x="370" y="135" width="150" height="70" rx="12" fill="#9B5DE5" stroke="#2B2D42" stroke-width="2.5"/>
-    <text x="445" y="165" font-size="12" font-weight="bold" fill="#FFFFFF">BacktestRunRecord</text>
-    <text x="445" y="187" font-size="11.5" fill="#FFFFFF">metrics + full JSON</text>
-    <polyline points="520,170 542,170 542,87 554,87" fill="none" stroke="#2B2D42" stroke-width="2.5" marker-end="url(#pflow)"/>
-    <polyline points="520,170 542,170 542,257 554,257" fill="none" stroke="#2B2D42" stroke-width="2.5" marker-end="url(#pflow)"/>
-    <rect x="560" y="35" width="180" height="105" rx="12" fill="#FF6B6B" stroke="#2B2D42" stroke-width="2.5"/>
-    <text x="650" y="63" font-size="14" font-weight="bold" fill="#FFFFFF">PostgreSQL</text>
-    <text x="650" y="86" font-size="11.5" fill="#FFFFFF">backtests table</text>
-    <text x="650" y="108" font-size="11.5" fill="#FFFFFF">written by</text>
-    <text x="650" y="130" font-size="11.5" fill="#FFFFFF">BacktestRepository</text>
-    <rect x="560" y="205" width="180" height="105" rx="12" fill="#FFFFFF" stroke="#2B2D42" stroke-width="2.5"/>
-    <text x="650" y="233" font-size="14" font-weight="bold" fill="#2B2D42">SQLite notebook</text>
-    <text x="650" y="256" font-size="11.5" fill="#2B2D42">written by</text>
-    <text x="650" y="278" font-size="11.5" fill="#2B2D42">BacktestResultStore</text>
-    <text x="650" y="300" font-size="11.5" fill="#2B2D42">backtest_results.db</text>
-    <text x="380" y="335" font-size="11" fill="#2B2D42">one run · three homes</text>
-  </g>
-</svg>
+![A backtest run: dashboard starts it, engine replays a strategy, prices come from Redis, the record goes to PostgreSQL and the SQLite store](diagrams/31-persistence-2.svg)
 
 You ask for a run, the engine replays a strategy over prices, and `DistributedCache` serves those prices from Redis when they're fresh. The finished run becomes a `BacktestRunRecord`. Its tidy summary goes to PostgreSQL through `BacktestRepository`, and the full record goes to the SQLite notebook through `BacktestResultStore`.
 

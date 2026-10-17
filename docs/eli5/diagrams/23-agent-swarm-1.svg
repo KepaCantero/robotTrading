@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-6 -6 771 391" role="img" aria-label="The swarm: the executor above ten agent boxes, with the event bus and the SQLite store below">
+  <defs>
+    <marker id="arrowA" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#2B2D42"/></marker>
+  </defs>
+  <rect x="1" y="1" width="758" height="378" rx="16" fill="#FFF9E6" stroke="#2B2D42" stroke-width="2"/>
+  <g font-family="Helvetica, Arial, sans-serif" text-anchor="middle">
+    <rect x="180" y="24" width="400" height="60" rx="14" fill="#6BCB77" stroke="#2B2D42" stroke-width="2.5"/><text x="380" y="49" font-size="15" font-weight="bold" fill="#2B2D42">Capa2PipelineExecutor</text><text x="380" y="70" font-size="11.5" fill="#2B2D42">runs the ten agents in order</text>
+    <line x1="380" y1="84" x2="380" y2="110" stroke="#2B2D42" stroke-width="2.5" marker-end="url(#arrowA)"/>
+    <rect x="30" y="116" width="132" height="56" rx="12" fill="#FFD93D" stroke="#2B2D42" stroke-width="2"/><text x="96" y="140" font-size="12.5" font-weight="bold" fill="#2B2D42">T1.1</text><text x="96" y="158" font-size="10" fill="#2B2D42">Input Processor</text>
+    <rect x="178" y="116" width="132" height="56" rx="12" fill="#FFD93D" stroke="#2B2D42" stroke-width="2"/><text x="244" y="140" font-size="12.5" font-weight="bold" fill="#2B2D42">T2.1</text><text x="244" y="158" font-size="10" fill="#2B2D42">Profile Generator</text>
+    <rect x="326" y="116" width="132" height="56" rx="12" fill="#FFD93D" stroke="#2B2D42" stroke-width="2"/><text x="392" y="140" font-size="12.5" font-weight="bold" fill="#2B2D42">T3.1</text><text x="392" y="158" font-size="10" fill="#2B2D42">Module Parametrizer</text>
+    <rect x="474" y="116" width="132" height="56" rx="12" fill="#FFD93D" stroke="#2B2D42" stroke-width="2"/><text x="540" y="140" font-size="12.5" font-weight="bold" fill="#2B2D42">T4.1</text><text x="540" y="158" font-size="10" fill="#2B2D42">Backtest Orchestrator</text>
+    <rect x="622" y="116" width="132" height="56" rx="12" fill="#FFD93D" stroke="#2B2D42" stroke-width="2"/><text x="688" y="140" font-size="12.5" font-weight="bold" fill="#2B2D42">T5.1</text><text x="688" y="158" font-size="10" fill="#2B2D42">Validation Engine</text>
+    <rect x="30" y="182" width="132" height="56" rx="12" fill="#FFD93D" stroke="#2B2D42" stroke-width="2"/><text x="96" y="206" font-size="12.5" font-weight="bold" fill="#2B2D42">T6.1</text><text x="96" y="224" font-size="10" fill="#2B2D42">Strategy Recommender</text>
+    <rect x="178" y="182" width="132" height="56" rx="12" fill="#FFD93D" stroke="#2B2D42" stroke-width="2"/><text x="244" y="206" font-size="12.5" font-weight="bold" fill="#2B2D42">T7.1</text><text x="244" y="224" font-size="10" fill="#2B2D42">Portfolio Constructor</text>
+    <rect x="326" y="182" width="132" height="56" rx="12" fill="#FFD93D" stroke="#2B2D42" stroke-width="2"/><text x="392" y="206" font-size="12.5" font-weight="bold" fill="#2B2D42">T8.1</text><text x="392" y="224" font-size="10" fill="#2B2D42">Risk Scaling</text>
+    <rect x="474" y="182" width="132" height="56" rx="12" fill="#FFD93D" stroke="#2B2D42" stroke-width="2"/><text x="540" y="206" font-size="12.5" font-weight="bold" fill="#2B2D42">T9.1</text><text x="540" y="224" font-size="10" fill="#2B2D42">Reporting Generator</text>
+    <rect x="622" y="182" width="132" height="56" rx="12" fill="#FFD93D" stroke="#2B2D42" stroke-width="2"/><text x="688" y="206" font-size="12.5" font-weight="bold" fill="#2B2D42">T10.1</text><text x="688" y="224" font-size="10" fill="#2B2D42">Deploy Decision</text>
+    <line x1="200" y1="238" x2="200" y2="296" stroke="#2B2D42" stroke-width="2" marker-end="url(#arrowA)"/>
+    <text x="212" y="272" font-size="11" fill="#2B2D42" text-anchor="start">events</text>
+    <line x1="560" y1="238" x2="560" y2="296" stroke="#2B2D42" stroke-width="2" marker-end="url(#arrowA)"/>
+    <text x="572" y="272" font-size="11" fill="#2B2D42" text-anchor="start">run + events</text>
+    <rect x="60" y="300" width="280" height="60" rx="12" fill="#FFFFFF" stroke="#2B2D42" stroke-width="2"/><text x="200" y="325" font-size="13" font-weight="bold" fill="#2B2D42">AgentEventBus</text><text x="200" y="345" font-size="11" fill="#2B2D42">in-process event pipe</text>
+    <rect x="420" y="300" width="280" height="60" rx="12" fill="#9B5DE5" stroke="#2B2D42" stroke-width="2"/><text x="560" y="325" font-size="13" font-weight="bold" fill="#FFFFFF">SwarmRunStore</text><text x="560" y="345" font-size="11" fill="#FFFFFF">SQLite · swarm_runs.db</text>
+  </g>
+</svg>

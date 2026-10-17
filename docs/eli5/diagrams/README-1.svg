@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-5 -5 750 140" role="img" aria-label="The ELI5 color palette">
+  <rect x="1" y="1" width="738" height="128" rx="14" fill="#FFF9E6" stroke="#2B2D42" stroke-width="2"/>
+  <g font-family="Helvetica, Arial, sans-serif" text-anchor="middle">
+    <rect x="20" y="18" width="100" height="56" rx="10" fill="#FFD93D" stroke="#2B2D42" stroke-width="2"/>
+    <text x="70" y="51" font-size="13" font-weight="bold" fill="#2B2D42">Sunflower</text>
+    <text x="70" y="94" font-size="11" fill="#2B2D42" font-family="monospace">#FFD93D</text>
+    <rect x="138" y="18" width="100" height="56" rx="10" fill="#FF6B6B" stroke="#2B2D42" stroke-width="2"/>
+    <text x="188" y="51" font-size="13" font-weight="bold" fill="#FFFFFF">Coral</text>
+    <text x="188" y="94" font-size="11" fill="#2B2D42" font-family="monospace">#FF6B6B</text>
+    <rect x="256" y="18" width="100" height="56" rx="10" fill="#4D96FF" stroke="#2B2D42" stroke-width="2"/>
+    <text x="306" y="51" font-size="13" font-weight="bold" fill="#FFFFFF">Sky</text>
+    <text x="306" y="94" font-size="11" fill="#2B2D42" font-family="monospace">#4D96FF</text>
+    <rect x="374" y="18" width="100" height="56" rx="10" fill="#6BCB77" stroke="#2B2D42" stroke-width="2"/>
+    <text x="424" y="51" font-size="13" font-weight="bold" fill="#2B2D42">Mint</text>
+    <text x="424" y="94" font-size="11" fill="#2B2D42" font-family="monospace">#6BCB77</text>
+    <rect x="492" y="18" width="100" height="56" rx="10" fill="#9B5DE5" stroke="#2B2D42" stroke-width="2"/>
+    <text x="542" y="51" font-size="13" font-weight="bold" fill="#FFFFFF">Grape</text>
+    <text x="542" y="94" font-size="11" fill="#2B2D42" font-family="monospace">#9B5DE5</text>
+    <rect x="610" y="18" width="100" height="56" rx="10" fill="#2B2D42" stroke="#2B2D42" stroke-width="2"/>
+    <text x="660" y="51" font-size="13" font-weight="bold" fill="#FFFFFF">Ink</text>
+    <text x="660" y="94" font-size="11" fill="#2B2D42" font-family="monospace">#2B2D42</text>
+  </g>
+</svg>

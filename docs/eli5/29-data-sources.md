@@ -6,54 +6,7 @@ This page is the reference sheet: every well the robot can drink from, and what 
 
 ## The source map
 
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 560" role="img" aria-label="Diagram: market APIs, mood feeds, offline CSVs and Yahoo flow into the Data Engine and Data Loader, which feed strategies, backtests and the dashboard">
-  <defs>
-    <marker id="s29arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#2B2D42"/></marker>
-  </defs>
-  <rect x="1" y="1" width="758" height="558" rx="16" fill="#FFF9E6" stroke="#2B2D42" stroke-width="2"/>
-  <g font-family="Helvetica, Arial, sans-serif" text-anchor="middle">
-    <rect x="30" y="40" width="200" height="110" rx="12" fill="#FF6B6B" stroke="#2B2D42" stroke-width="2"/>
-    <text x="130" y="70" font-size="15" font-weight="bold" fill="#FFFFFF">Market data APIs</text>
-    <text x="130" y="95" font-size="11.5" fill="#FFFFFF">1 Polygon · 2 Alpaca</text>
-    <text x="130" y="115" font-size="11.5" fill="#FFFFFF">3 Binance · 4 IBKR</text>
-    <text x="130" y="137" font-size="10.5" fill="#FFFFFF">try in this order</text>
-    <rect x="30" y="170" width="200" height="110" rx="12" fill="#FF6B6B" stroke="#2B2D42" stroke-width="2"/>
-    <text x="130" y="200" font-size="15" font-weight="bold" fill="#FFFFFF">News &amp; mood feeds</text>
-    <text x="130" y="225" font-size="11.5" fill="#FFFFFF">Twitter · Reddit</text>
-    <text x="130" y="245" font-size="11.5" fill="#FFFFFF">NewsAPI · Marketaux</text>
-    <text x="130" y="265" font-size="11.5" fill="#FFFFFF">· Alpha Vantage</text>
-    <rect x="30" y="300" width="200" height="100" rx="12" fill="#FF6B6B" stroke="#2B2D42" stroke-width="2"/>
-    <text x="130" y="330" font-size="15" font-weight="bold" fill="#FFFFFF">Offline CSVs</text>
-    <text x="130" y="355" font-size="11.5" fill="#FFFFFF">Stooq daily files</text>
-    <text x="130" y="375" font-size="11.5" fill="#FFFFFF">data/historical/</text>
-    <rect x="30" y="420" width="200" height="90" rx="12" fill="#FF6B6B" stroke="#2B2D42" stroke-width="2"/>
-    <text x="130" y="450" font-size="15" font-weight="bold" fill="#FFFFFF">Yahoo Finance</text>
-    <text x="130" y="475" font-size="11.5" fill="#FFFFFF">free, no key</text>
-    <text x="130" y="495" font-size="11.5" fill="#FFFFFF">backtest fallback</text>
-    <rect x="300" y="40" width="200" height="240" rx="14" fill="#6BCB77" stroke="#2B2D42" stroke-width="2.5"/>
-    <text x="400" y="75" font-size="17" font-weight="bold" fill="#2B2D42">Data Engine</text>
-    <text x="400" y="97" font-size="11.5" fill="#2B2D42">app/engines/data_engine</text>
-    <rect x="315" y="125" width="170" height="110" rx="10" fill="#FFFFFF" stroke="#2B2D42" stroke-width="2"/>
-    <text x="400" y="155" font-size="12" fill="#2B2D42">picks first source</text>
-    <text x="400" y="180" font-size="12" fill="#2B2D42">normalize · clean</text>
-    <text x="400" y="205" font-size="12" fill="#2B2D42">cache · stream</text>
-    <rect x="300" y="330" width="200" height="110" rx="14" fill="#FFFFFF" stroke="#2B2D42" stroke-width="2.5"/>
-    <text x="400" y="365" font-size="16" font-weight="bold" fill="#2B2D42">Data Loader</text>
-    <text x="400" y="390" font-size="11.5" fill="#2B2D42">CSV first, then Yahoo</text>
-    <text x="400" y="412" font-size="11.5" fill="#2B2D42">Quote objects out</text>
-    <rect x="570" y="140" width="160" height="180" rx="12" fill="#9B5DE5" stroke="#2B2D42" stroke-width="2"/>
-    <text x="650" y="190" font-size="14" font-weight="bold" fill="#FFFFFF">Strategies</text>
-    <text x="650" y="220" font-size="14" font-weight="bold" fill="#FFFFFF">Backtests</text>
-    <text x="650" y="250" font-size="14" font-weight="bold" fill="#FFFFFF">Dashboard</text>
-    <text x="650" y="285" font-size="11" fill="#FFFFFF">eat the clean rows</text>
-    <line x1="232" y1="95" x2="286" y2="115" stroke="#2B2D42" stroke-width="2" marker-end="url(#s29arrow)"/>
-    <line x1="232" y1="225" x2="286" y2="205" stroke="#2B2D42" stroke-width="2" marker-end="url(#s29arrow)"/>
-    <line x1="232" y1="350" x2="286" y2="365" stroke="#2B2D42" stroke-width="2" marker-end="url(#s29arrow)"/>
-    <line x1="232" y1="465" x2="286" y2="410" stroke="#2B2D42" stroke-width="2" marker-end="url(#s29arrow)"/>
-    <line x1="500" y1="150" x2="556" y2="190" stroke="#2B2D42" stroke-width="2" marker-end="url(#s29arrow)"/>
-    <line x1="500" y1="385" x2="556" y2="270" stroke="#2B2D42" stroke-width="2" marker-end="url(#s29arrow)"/>
-  </g>
-</svg>
+![Diagram: market APIs, mood feeds, offline CSVs and Yahoo flow into the Data Engine and Data Loader, which feed strategies, backtests and the dashboard](diagrams/29-data-sources-1.svg)
 
 Coral is the outside world, mint picks and shapes, white loads files, grape is where data lands. The numbers on the market box are the engine's fallback order.
 

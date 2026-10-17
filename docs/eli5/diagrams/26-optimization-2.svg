@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-5 -5 750 340" role="img" aria-label="A price path between three barriers: take profit above, stop loss below, time limit on the right">
+  <rect x="1" y="1" width="738" height="328" rx="16" fill="#FFF9E6" stroke="#2B2D42" stroke-width="2"/>
+  <g font-family="Helvetica, Arial, sans-serif">
+    <line x1="70" y1="78" x2="540" y2="78" stroke="#6BCB77" stroke-width="2.5" stroke-dasharray="8 6"/>
+    <text x="70" y="66" font-size="12" font-weight="bold" fill="#2B2D42">upper barrier: take profit</text>
+    <line x1="70" y1="224" x2="540" y2="224" stroke="#FF6B6B" stroke-width="2.5" stroke-dasharray="8 6"/>
+    <text x="70" y="246" font-size="12" font-weight="bold" fill="#2B2D42">lower barrier: stop loss</text>
+    <line x1="540" y1="44" x2="540" y2="254" stroke="#4D96FF" stroke-width="2.5" stroke-dasharray="8 6"/>
+    <text x="552" y="106" font-size="12" font-weight="bold" fill="#2B2D42">vertical barrier:</text>
+    <text x="552" y="124" font-size="12" fill="#2B2D42">time limit</text>
+    <polyline points="80,205 130,165 175,185 225,135 275,105 320,78" fill="none" stroke="#2B2D42" stroke-width="2.5"/>
+    <circle cx="320" cy="78" r="6" fill="#6BCB77" stroke="#2B2D42" stroke-width="2"/>
+    <text x="332" y="74" font-size="12" font-weight="bold" fill="#9B5DE5">label +1: profit hit first</text>
+    <rect x="70" y="260" width="440" height="58" rx="12" fill="#FFFFFF" stroke="#2B2D42" stroke-width="2"/>
+    <text x="290" y="280" font-size="13" font-weight="bold" fill="#2B2D42" text-anchor="middle">TripleBarrierConfig</text>
+    <text x="290" y="298" font-size="11.5" fill="#2B2D42" text-anchor="middle">defaults: +2%, -1%, 5 bars</text>
+    <text x="290" y="313" font-size="11.5" fill="#2B2D42" text-anchor="middle">width scales with volatility</text>
+  </g>
+</svg>

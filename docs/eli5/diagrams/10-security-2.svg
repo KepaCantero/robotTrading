@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-6 -6 771 311" role="img" aria-label="UserStore loads users and hashed API keys from environment variables, User objects carry roles, JWTTokenManager signs tokens, AuthAttemptTracker counts failures">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#2B2D42"/>
+    </marker>
+  </defs>
+  <rect x="1" y="1" width="758" height="298" rx="16" fill="#FFF9E6" stroke="#2B2D42" stroke-width="2"/>
+  <g font-family="Helvetica, Arial, sans-serif" text-anchor="middle">
+    <rect x="30" y="24" width="214" height="92" rx="12" fill="#4D96FF" stroke="#2B2D42" stroke-width="2.5"/>
+    <text x="137" y="52" font-size="13.5" font-weight="bold" fill="#FFFFFF">Environment variables</text>
+    <text x="137" y="74" font-size="11" fill="#FFFFFF">AUTH_USER_TOM_ROLE</text>
+    <text x="137" y="92" font-size="11" fill="#FFFFFF">AUTH_API_KEY_… = key</text>
+    <rect x="273" y="24" width="214" height="92" rx="12" fill="#FFFFFF" stroke="#2B2D42" stroke-width="2.5"/>
+    <text x="380" y="56" font-size="14.5" font-weight="bold" fill="#2B2D42">UserStore</text>
+    <text x="380" y="78" font-size="11" fill="#2B2D42">users + hashed keys in memory</text>
+    <rect x="516" y="24" width="214" height="92" rx="12" fill="#9B5DE5" stroke="#2B2D42" stroke-width="2.5"/>
+    <text x="623" y="52" font-size="14.5" font-weight="bold" fill="#FFFFFF">User</text>
+    <text x="623" y="74" font-size="11" fill="#FFFFFF">id, role, permissions</text>
+    <text x="623" y="92" font-size="11" fill="#FFFFFF">admin, trader, viewer, system</text>
+    <line x1="246" y1="70" x2="270" y2="70" stroke="#2B2D42" stroke-width="2.5" marker-end="url(#arrow)"/>
+    <line x1="489" y1="70" x2="513" y2="70" stroke="#2B2D42" stroke-width="2.5" marker-end="url(#arrow)"/>
+    <rect x="152" y="184" width="214" height="92" rx="12" fill="#FFD93D" stroke="#2B2D42" stroke-width="2.5"/>
+    <text x="259" y="212" font-size="14" font-weight="bold" fill="#2B2D42">JWTTokenManager</text>
+    <text x="259" y="234" font-size="11" fill="#2B2D42">signs and checks tokens</text>
+    <rect x="394" y="184" width="214" height="92" rx="12" fill="#FF6B6B" stroke="#2B2D42" stroke-width="2.5"/>
+    <text x="501" y="212" font-size="14" font-weight="bold" fill="#FFFFFF">AuthAttemptTracker</text>
+    <text x="501" y="234" font-size="11" fill="#FFFFFF">5 fails = 15 min lockout</text>
+    <line x1="340" y1="116" x2="265" y2="180" stroke="#2B2D42" stroke-width="2" stroke-dasharray="6 5" marker-end="url(#arrow)"/>
+    <line x1="420" y1="116" x2="498" y2="180" stroke="#2B2D42" stroke-width="2" stroke-dasharray="6 5" marker-end="url(#arrow)"/>
+  </g>
+</svg>

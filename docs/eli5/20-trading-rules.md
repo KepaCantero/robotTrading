@@ -8,39 +8,7 @@ The number in each heading below is the file number, so `config/rules/trading/13
 
 ## The bookshelf
 
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 470" role="img" aria-label="The rules library as a bookshelf with six shelves: backtesting, risk, microstructure and execution, portfolio and factors, machine learning, data and infrastructure">
-  <rect x="1" y="1" width="758" height="468" rx="16" fill="#FFF9E6" stroke="#2B2D42" stroke-width="2"/>
-  <g font-family="Helvetica, Arial, sans-serif" text-anchor="middle">
-    <text x="380" y="32" font-size="16.5" font-weight="bold" fill="#2B2D42">The trading rules library</text>
-    <text x="380" y="52" font-size="11.5" fill="#2B2D42">36 books · numbers are file numbers</text>
-    <rect x="30" y="68" width="340" height="100" rx="13" fill="#FFD93D" stroke="#2B2D42" stroke-width="2.5"/>
-    <text x="200" y="104" font-size="15" font-weight="bold" fill="#2B2D42">Backtesting discipline</text>
-    <text x="200" y="128" font-size="12" fill="#2B2D42">6 books</text>
-    <text x="200" y="148" font-size="11" fill="#2B2D42">files 01, 02, 08, 12, 14, 41</text>
-    <rect x="390" y="68" width="340" height="100" rx="13" fill="#FF6B6B" stroke="#2B2D42" stroke-width="2.5"/>
-    <text x="560" y="104" font-size="15" font-weight="bold" fill="#FFFFFF">Risk management</text>
-    <text x="560" y="128" font-size="12" fill="#FFFFFF">3 books</text>
-    <text x="560" y="148" font-size="11" fill="#FFFFFF">files 10, 13, 64</text>
-    <rect x="30" y="182" width="340" height="100" rx="13" fill="#6BCB77" stroke="#2B2D42" stroke-width="2.5"/>
-    <text x="200" y="218" font-size="15" font-weight="bold" fill="#2B2D42">Market microstructure</text>
-    <text x="200" y="240" font-size="12" fill="#2B2D42">and execution · 8 books</text>
-    <text x="200" y="262" font-size="11" fill="#2B2D42">files 06, 07, 29, 31, 35, 38, 39, 42</text>
-    <rect x="390" y="182" width="340" height="100" rx="13" fill="#9B5DE5" stroke="#2B2D42" stroke-width="2.5"/>
-    <text x="560" y="218" font-size="15" font-weight="bold" fill="#FFFFFF">Portfolio and factors</text>
-    <text x="560" y="240" font-size="12" fill="#FFFFFF">6 books</text>
-    <text x="560" y="262" font-size="11" fill="#FFFFFF">files 11, 30, 33, 34, 37, 40</text>
-    <rect x="30" y="296" width="340" height="100" rx="13" fill="#4D96FF" stroke="#2B2D42" stroke-width="2.5"/>
-    <text x="200" y="332" font-size="15" font-weight="bold" fill="#FFFFFF">Machine learning</text>
-    <text x="200" y="354" font-size="12" fill="#FFFFFF">8 books</text>
-    <text x="200" y="376" font-size="11" fill="#FFFFFF">files 03, 04, 05, 15, 32, 36, 46, 47</text>
-    <rect x="390" y="296" width="340" height="100" rx="13" fill="#2B2D42" stroke="#2B2D42" stroke-width="2.5"/>
-    <text x="560" y="332" font-size="15" font-weight="bold" fill="#FFFFFF">Data and infrastructure</text>
-    <text x="560" y="354" font-size="12" fill="#FFFFFF">5 books</text>
-    <text x="560" y="376" font-size="11" fill="#FFFFFF">files 09, 24, 26, 27, 28</text>
-    <rect x="30" y="410" width="700" height="44" rx="12" fill="#FFFFFF" stroke="#2B2D42" stroke-width="2"/>
-    <text x="380" y="438" font-size="11.5" fill="#2B2D42">19 more files live in papers/</text>
-  </g>
-</svg>
+![The rules library as a bookshelf with six shelves: backtesting, risk, microstructure and execution, portfolio and factors, machine learning, data and infrastructure](diagrams/20-trading-rules-1.svg)
 
 ## Backtesting discipline
 ### 1. Ernest Chan — Algorithmic Trading

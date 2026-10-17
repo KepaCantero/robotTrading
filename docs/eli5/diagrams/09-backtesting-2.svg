@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-6 -6 771 279" role="img" aria-label="A score of 20 points per passed check flows into three verdict states: APPROVED, REVISION, REJECTED">
+  <defs><marker id="arrowB" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#2B2D42"/></marker></defs>
+  <rect x="1" y="1" width="758" height="266" rx="16" fill="#FFF9E6" stroke="#2B2D42" stroke-width="2"/>
+  <g font-family="Helvetica, Arial, sans-serif" text-anchor="middle">
+    <rect x="170" y="24" width="420" height="62" rx="12" fill="#FFD93D" stroke="#2B2D42" stroke-width="2.5"/>
+    <text x="380" y="49" font-size="16" font-weight="bold" fill="#2B2D42">The score</text>
+    <text x="380" y="71" font-size="12.5" fill="#2B2D42">20 points per check, 100 max</text>
+    <line x1="280" y1="86" x2="144" y2="126" stroke="#2B2D42" stroke-width="2" marker-end="url(#arrowB)"/>
+    <line x1="380" y1="86" x2="380" y2="126" stroke="#2B2D42" stroke-width="2" marker-end="url(#arrowB)"/>
+    <line x1="480" y1="86" x2="616" y2="126" stroke="#2B2D42" stroke-width="2" marker-end="url(#arrowB)"/>
+    <rect x="30" y="132" width="220" height="112" rx="12" fill="#FFFFFF" stroke="#2B2D42" stroke-width="2.5"/>
+    <text x="140" y="164" font-size="16" font-weight="bold" fill="#9B5DE5">APPROVED</text>
+    <text x="140" y="192" font-size="12.5" fill="#2B2D42">all five checks pass</text>
+    <text x="140" y="214" font-size="12.5" fill="#2B2D42">ship it as is</text>
+    <rect x="270" y="132" width="220" height="112" rx="12" fill="#FFFFFF" stroke="#2B2D42" stroke-width="2.5"/>
+    <text x="380" y="164" font-size="16" font-weight="bold" fill="#9B5DE5">REVISION</text>
+    <text x="380" y="192" font-size="12.5" fill="#2B2D42">score 60 or more</text>
+    <text x="380" y="214" font-size="12.5" fill="#2B2D42">fix the failed checks</text>
+    <rect x="510" y="132" width="220" height="112" rx="12" fill="#FFFFFF" stroke="#2B2D42" stroke-width="2.5"/>
+    <text x="620" y="164" font-size="16" font-weight="bold" fill="#9B5DE5">REJECTED</text>
+    <text x="620" y="192" font-size="12.5" fill="#2B2D42">a hard rule broke</text>
+    <text x="620" y="214" font-size="12.5" fill="#2B2D42">or score under 60</text>
+  </g>
+</svg>

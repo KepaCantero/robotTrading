@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-6 -6 751 321" role="img" aria-label="The optimization loop: pick parameters, run backtest, score, learn, repeat, with guards in the middle">
+  <defs>
+    <marker id="aA" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#2B2D42"/>
+    </marker>
+  </defs>
+  <rect x="1" y="1" width="738" height="308" rx="16" fill="#FFF9E6" stroke="#2B2D42" stroke-width="2"/>
+  <g font-family="Helvetica, Arial, sans-serif" text-anchor="middle">
+    <rect x="30" y="40" width="200" height="62" rx="14" fill="#4D96FF" stroke="#2B2D42" stroke-width="2.5"/>
+    <text x="130" y="66" font-size="14" font-weight="bold" fill="#FFFFFF">1. Pick parameters</text>
+    <text x="130" y="88" font-size="11.5" fill="#FFFFFF">grid, random or Optuna</text>
+    <rect x="510" y="40" width="200" height="62" rx="14" fill="#FFD93D" stroke="#2B2D42" stroke-width="2.5"/>
+    <text x="610" y="66" font-size="14" font-weight="bold" fill="#2B2D42">2. Run backtest</text>
+    <text x="610" y="88" font-size="11.5" fill="#2B2D42">same data, new knobs</text>
+    <rect x="510" y="210" width="200" height="62" rx="14" fill="#9B5DE5" stroke="#2B2D42" stroke-width="2.5"/>
+    <text x="610" y="236" font-size="14" font-weight="bold" fill="#FFFFFF">3. Score result</text>
+    <text x="610" y="258" font-size="11.5" fill="#FFFFFF">Sharpe ratio, drawdown</text>
+    <rect x="30" y="210" width="200" height="62" rx="14" fill="#6BCB77" stroke="#2B2D42" stroke-width="2.5"/>
+    <text x="130" y="236" font-size="14" font-weight="bold" fill="#2B2D42">4. Learn, suggest next</text>
+    <text x="130" y="258" font-size="11.5" fill="#2B2D42">TPE sampler in Optuna</text>
+    <line x1="230" y1="71" x2="510" y2="71" stroke="#2B2D42" stroke-width="2.5" marker-end="url(#aA)"/>
+    <line x1="610" y1="102" x2="610" y2="210" stroke="#2B2D42" stroke-width="2.5" marker-end="url(#aA)"/>
+    <line x1="510" y1="241" x2="230" y2="241" stroke="#2B2D42" stroke-width="2.5" marker-end="url(#aA)"/>
+    <line x1="130" y1="210" x2="130" y2="102" stroke="#2B2D42" stroke-width="2.5" marker-end="url(#aA)"/>
+    <text x="370" y="200" font-size="11" fill="#2B2D42">hundreds of trials</text>
+    <rect x="250" y="106" width="240" height="76" rx="14" fill="#FF6B6B" stroke="#2B2D42" stroke-width="2.5"/>
+    <text x="370" y="130" font-size="13" font-weight="bold" fill="#FFFFFF">Overfitting guards</text>
+    <text x="370" y="150" font-size="11.5" fill="#FFFFFF">walk-forward windows</text>
+    <text x="370" y="168" font-size="11.5" fill="#FFFFFF">purge and embargo</text>
+  </g>
+</svg>

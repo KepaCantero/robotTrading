@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-6 -6 771 311" role="img" aria-label="The allocation manager splits total capital across three strategies by weight">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#2B2D42"/>
+    </marker>
+  </defs>
+  <rect x="1" y="1" width="758" height="298" rx="16" fill="#FFF9E6" stroke="#2B2D42" stroke-width="2"/>
+  <g font-family="Helvetica, Arial, sans-serif" text-anchor="middle">
+    <rect x="40" y="72" width="180" height="64" rx="12" fill="#4D96FF" stroke="#2B2D42" stroke-width="2"/>
+    <text x="130" y="97" font-size="14" font-weight="bold" fill="#FFFFFF">Total capital</text>
+    <text x="130" y="118" font-size="11" fill="#FFFFFF">total_capital</text>
+    <line x1="222" y1="104" x2="294" y2="104" stroke="#2B2D42" stroke-width="2" marker-end="url(#arrow)"/>
+    <rect x="300" y="58" width="230" height="92" rx="14" fill="#6BCB77" stroke="#2B2D42" stroke-width="2.5"/>
+    <text x="415" y="84" font-size="14" font-weight="bold" fill="#2B2D42">MultiStrategy</text>
+    <text x="415" y="104" font-size="14" font-weight="bold" fill="#2B2D42">AllocationManager</text>
+    <line x1="500" y1="60" x2="576" y2="56" stroke="#2B2D42" stroke-width="2" marker-end="url(#arrow)"/>
+    <line x1="532" y1="112" x2="576" y2="148" stroke="#2B2D42" stroke-width="2" marker-end="url(#arrow)"/>
+    <line x1="500" y1="150" x2="576" y2="240" stroke="#2B2D42" stroke-width="2" marker-end="url(#arrow)"/>
+    <rect x="580" y="24" width="150" height="60" rx="12" fill="#FFD93D" stroke="#2B2D42" stroke-width="2"/>
+    <text x="655" y="59" font-size="13" font-weight="bold" fill="#2B2D42">momentum · 50%</text>
+    <rect x="580" y="118" width="150" height="60" rx="12" fill="#FFD93D" stroke="#2B2D42" stroke-width="2"/>
+    <text x="655" y="153" font-size="13" font-weight="bold" fill="#2B2D42">mean_reversion · 25%</text>
+    <rect x="580" y="212" width="150" height="60" rx="12" fill="#FFD93D" stroke="#2B2D42" stroke-width="2"/>
+    <text x="655" y="247" font-size="13" font-weight="bold" fill="#2B2D42">pairs_trading · 25%</text>
+  </g>
+</svg>

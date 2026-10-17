@@ -65,29 +65,7 @@ Everything here is written in simple English (around B2 level). If a sentence ma
 
 Every diagram in these pages uses the same small set of colors, so your eyes learn the meaning once and reuse it everywhere:
 
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 740 130" role="img" aria-label="The ELI5 color palette">
-  <rect x="1" y="1" width="738" height="128" rx="14" fill="#FFF9E6" stroke="#2B2D42" stroke-width="2"/>
-  <g font-family="Helvetica, Arial, sans-serif" text-anchor="middle">
-    <rect x="20" y="18" width="100" height="56" rx="10" fill="#FFD93D" stroke="#2B2D42" stroke-width="2"/>
-    <text x="70" y="51" font-size="13" font-weight="bold" fill="#2B2D42">Sunflower</text>
-    <text x="70" y="94" font-size="11" fill="#2B2D42" font-family="monospace">#FFD93D</text>
-    <rect x="138" y="18" width="100" height="56" rx="10" fill="#FF6B6B" stroke="#2B2D42" stroke-width="2"/>
-    <text x="188" y="51" font-size="13" font-weight="bold" fill="#FFFFFF">Coral</text>
-    <text x="188" y="94" font-size="11" fill="#2B2D42" font-family="monospace">#FF6B6B</text>
-    <rect x="256" y="18" width="100" height="56" rx="10" fill="#4D96FF" stroke="#2B2D42" stroke-width="2"/>
-    <text x="306" y="51" font-size="13" font-weight="bold" fill="#FFFFFF">Sky</text>
-    <text x="306" y="94" font-size="11" fill="#2B2D42" font-family="monospace">#4D96FF</text>
-    <rect x="374" y="18" width="100" height="56" rx="10" fill="#6BCB77" stroke="#2B2D42" stroke-width="2"/>
-    <text x="424" y="51" font-size="13" font-weight="bold" fill="#2B2D42">Mint</text>
-    <text x="424" y="94" font-size="11" fill="#2B2D42" font-family="monospace">#6BCB77</text>
-    <rect x="492" y="18" width="100" height="56" rx="10" fill="#9B5DE5" stroke="#2B2D42" stroke-width="2"/>
-    <text x="542" y="51" font-size="13" font-weight="bold" fill="#FFFFFF">Grape</text>
-    <text x="542" y="94" font-size="11" fill="#2B2D42" font-family="monospace">#9B5DE5</text>
-    <rect x="610" y="18" width="100" height="56" rx="10" fill="#2B2D42" stroke="#2B2D42" stroke-width="2"/>
-    <text x="660" y="51" font-size="13" font-weight="bold" fill="#FFFFFF">Ink</text>
-    <text x="660" y="94" font-size="11" fill="#2B2D42" font-family="monospace">#2B2D42</text>
-  </g>
-</svg>
+![The ELI5 color palette](diagrams/README-1.svg)
 
 And each color always means the same thing:
 
@@ -103,14 +81,15 @@ And each color always means the same thing:
 
 ## Diagram rules
 
-- Diagrams are inline `<svg>` blocks with a `viewBox`, never a fixed width, so they scale on any screen.
+- Diagrams live as `.svg` files in `diagrams/` and are embedded as images pointing at `diagrams/NN-page-N.svg`. This renders everywhere — GitHub, VS Code, MkDocs and the dashboard.
+- Each file carries a `viewBox` and no fixed width, so it scales on any screen.
 - Boxes are rounded (`rx="12"` or more) with an ink border 2–2.5 px wide.
 - Six words per line inside a box, maximum. If it doesn't fit, the diagram is too complicated.
 - Copy the palette above. Don't invent new colors — the meaning lives in the repetition.
 
-## A note about rendering (important)
+## A note about rendering
 
-GitHub strips inline `<svg>` from markdown files for security reasons. In VS Code's markdown preview, in MkDocs and in most other viewers, the diagrams look right. So does the dashboard: it serves this whole site at `http://localhost:8503/docs/` (`make dashboard`). On github.com you'll see empty gaps. If a page must render there, turn that one diagram into [Mermaid](https://mermaid.js.org) (GitHub renders it natively) or a standalone `.svg` file.
+Inline `<svg>` blocks inside markdown don't survive every viewer — GitHub strips them, and some tools print the raw markup as text. That is why every diagram here is a referenced image file instead. If you edit a diagram, edit its `.svg` file in `diagrams/` and keep the embed as an image.
 
 ## Keeping the human voice
 

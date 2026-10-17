@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-6 -6 771 361" role="img" aria-label="A backtest run: dashboard starts it, engine replays a strategy, prices come from Redis, the record goes to PostgreSQL and the SQLite store">
+  <defs>
+    <marker id="pflow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#2B2D42"/>
+    </marker>
+  </defs>
+  <rect x="1" y="1" width="758" height="348" rx="14" fill="#FFF9E6" stroke="#2B2D42" stroke-width="2"/>
+  <g font-family="Helvetica, Arial, sans-serif" text-anchor="middle">
+    <rect x="190" y="25" width="150" height="80" rx="12" fill="#FF6B6B" stroke="#2B2D42" stroke-width="2.5"/>
+    <text x="265" y="55" font-size="12.5" font-weight="bold" fill="#FFFFFF">DistributedCache</text>
+    <text x="265" y="75" font-size="11.5" fill="#FFFFFF">prices in Redis</text>
+    <text x="265" y="93" font-size="11.5" fill="#FFFFFF">fast, then forgotten</text>
+    <line x1="265" y1="105" x2="265" y2="131" stroke="#2B2D42" stroke-width="2.5" marker-end="url(#pflow)"/>
+    <text x="278" y="124" font-size="10.5" fill="#2B2D42" text-anchor="start">prices</text>
+    <rect x="20" y="135" width="140" height="70" rx="12" fill="#4D96FF" stroke="#2B2D42" stroke-width="2.5"/>
+    <text x="90" y="165" font-size="13" font-weight="bold" fill="#FFFFFF">You start a run</text>
+    <text x="90" y="187" font-size="11.5" fill="#FFFFFF">dashboard or API</text>
+    <line x1="160" y1="170" x2="186" y2="170" stroke="#2B2D42" stroke-width="2.5" marker-end="url(#pflow)"/>
+    <rect x="190" y="135" width="150" height="70" rx="12" fill="#FFD93D" stroke="#2B2D42" stroke-width="2.5"/>
+    <text x="265" y="165" font-size="13" font-weight="bold" fill="#2B2D42">Backtest engine</text>
+    <text x="265" y="187" font-size="11.5" fill="#2B2D42">replays a strategy</text>
+    <line x1="340" y1="170" x2="366" y2="170" stroke="#2B2D42" stroke-width="2.5" marker-end="url(#pflow)"/>
+    <rect x="370" y="135" width="150" height="70" rx="12" fill="#9B5DE5" stroke="#2B2D42" stroke-width="2.5"/>
+    <text x="445" y="165" font-size="12" font-weight="bold" fill="#FFFFFF">BacktestRunRecord</text>
+    <text x="445" y="187" font-size="11.5" fill="#FFFFFF">metrics + full JSON</text>
+    <polyline points="520,170 542,170 542,87 554,87" fill="none" stroke="#2B2D42" stroke-width="2.5" marker-end="url(#pflow)"/>
+    <polyline points="520,170 542,170 542,257 554,257" fill="none" stroke="#2B2D42" stroke-width="2.5" marker-end="url(#pflow)"/>
+    <rect x="560" y="35" width="180" height="105" rx="12" fill="#FF6B6B" stroke="#2B2D42" stroke-width="2.5"/>
+    <text x="650" y="63" font-size="14" font-weight="bold" fill="#FFFFFF">PostgreSQL</text>
+    <text x="650" y="86" font-size="11.5" fill="#FFFFFF">backtests table</text>
+    <text x="650" y="108" font-size="11.5" fill="#FFFFFF">written by</text>
+    <text x="650" y="130" font-size="11.5" fill="#FFFFFF">BacktestRepository</text>
+    <rect x="560" y="205" width="180" height="105" rx="12" fill="#FFFFFF" stroke="#2B2D42" stroke-width="2.5"/>
+    <text x="650" y="233" font-size="14" font-weight="bold" fill="#2B2D42">SQLite notebook</text>
+    <text x="650" y="256" font-size="11.5" fill="#2B2D42">written by</text>
+    <text x="650" y="278" font-size="11.5" fill="#2B2D42">BacktestResultStore</text>
+    <text x="650" y="300" font-size="11.5" fill="#2B2D42">backtest_results.db</text>
+    <text x="380" y="335" font-size="11" fill="#2B2D42">one run · three homes</text>
+  </g>
+</svg>

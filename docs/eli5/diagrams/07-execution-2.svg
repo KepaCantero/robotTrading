@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-6 -6 771 371" role="img" aria-label="Execution flow: approved order, execution costs, then a paper path or a live broker path">
+  <defs>
+    <marker id="arrow07b" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#2B2D42"/></marker>
+  </defs>
+  <rect x="1" y="1" width="758" height="358" rx="16" fill="#FFF9E6" stroke="#2B2D42" stroke-width="2"/>
+  <g font-family="Helvetica, Arial, sans-serif" text-anchor="middle">
+    <rect x="25" y="40" width="175" height="80" rx="12" fill="#4D96FF" stroke="#2B2D42" stroke-width="2.5"/>
+    <text x="112" y="82" font-size="14" font-weight="bold" fill="#FFFFFF">Approved order</text>
+    <line x1="200" y1="80" x2="258" y2="80" stroke="#2B2D42" stroke-width="2" marker-end="url(#arrow07b)"/>
+    <rect x="260" y="35" width="220" height="90" rx="12" fill="#FFD93D" stroke="#2B2D42" stroke-width="2.5"/>
+    <text x="370" y="66" font-size="14" font-weight="bold" fill="#2B2D42">Execution costs</text>
+    <text x="370" y="88" font-size="11" fill="#2B2D42">commission 0.1%</text>
+    <text x="370" y="106" font-size="11" fill="#2B2D42">slippage + impact</text>
+    <line x1="335" y1="125" x2="195" y2="238" stroke="#2B2D42" stroke-width="2" marker-end="url(#arrow07b)"/>
+    <text x="215" y="185" font-size="11" fill="#2B2D42">paper mode</text>
+    <line x1="405" y1="125" x2="565" y2="238" stroke="#2B2D42" stroke-width="2" marker-end="url(#arrow07b)"/>
+    <text x="545" y="185" font-size="11" fill="#2B2D42">live mode</text>
+    <rect x="40" y="240" width="310" height="92" rx="12" fill="#9B5DE5" stroke="#2B2D42" stroke-width="2.5"/>
+    <text x="195" y="284" font-size="14" font-weight="bold" fill="#FFFFFF">Paper trading engine</text>
+    <text x="195" y="306" font-size="11" fill="#FFFFFF">live prices, fake money</text>
+    <rect x="410" y="240" width="310" height="92" rx="12" fill="#FF6B6B" stroke="#2B2D42" stroke-width="2.5"/>
+    <text x="565" y="272" font-size="14" font-weight="bold" fill="#FFFFFF">Broker adapter</text>
+    <text x="565" y="294" font-size="11" fill="#FFFFFF">real broker, real money</text>
+    <text x="565" y="312" font-size="11" fill="#FFFFFF">contract only, for now</text>
+  </g>
+</svg>

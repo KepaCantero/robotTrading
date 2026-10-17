@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-6 -6 771 367" role="img" aria-label="AppShell holds the drawer and the routed content; five shared services sit behind it">
+  <defs>
+    <marker id="arrowDash" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#2B2D42"/>
+    </marker>
+  </defs>
+  <rect x="1" y="1" width="758" height="354" rx="16" fill="#FFF9E6" stroke="#2B2D42" stroke-width="2"/>
+  <g font-family="Helvetica, Arial, sans-serif" text-anchor="middle">
+    <rect x="90" y="20" width="580" height="230" rx="14" fill="#6BCB77" stroke="#2B2D42" stroke-width="2.5"/>
+    <text x="380" y="46" font-size="15" font-weight="bold" fill="#2B2D42">AppShell — layout &amp; routes</text>
+    <rect x="110" y="80" width="250" height="158" rx="12" fill="#9B5DE5" stroke="#2B2D42" stroke-width="2"/>
+    <text x="235" y="100" font-size="11" fill="#FFFFFF">Backtest Runner — /</text>
+    <text x="235" y="116" font-size="11" fill="#FFFFFF">Results — /results</text>
+    <text x="235" y="132" font-size="11" fill="#FFFFFF">History &amp; Compare — /history</text>
+    <text x="235" y="148" font-size="11" fill="#FFFFFF">Objectives — /objectives</text>
+    <text x="235" y="164" font-size="11" fill="#FFFFFF">Config Viewer — /config</text>
+    <text x="235" y="180" font-size="11" fill="#FFFFFF">Profitability — /profitability</text>
+    <text x="235" y="196" font-size="11" fill="#FFFFFF">Agent Swarm — /swarm</text>
+    <text x="235" y="212" font-size="11" fill="#FFFFFF">Documentation — /docs/</text>
+    <rect x="380" y="80" width="270" height="158" rx="12" fill="#FFFFFF" stroke="#2B2D42" stroke-width="2"/>
+    <text x="515" y="163" font-size="12" font-weight="bold" fill="#2B2D42">one render() per route</text>
+    <line x1="515" y1="250" x2="515" y2="282" stroke="#2B2D42" stroke-width="2.5" marker-end="url(#arrowDash)"/>
+    <rect x="15" y="286" width="138" height="48" rx="12" fill="#FFFFFF" stroke="#2B2D42" stroke-width="2"/>
+    <text x="84" y="314" font-size="11" font-weight="bold" fill="#2B2D42">BacktestResultStore</text>
+    <rect x="163" y="286" width="138" height="48" rx="12" fill="#FFFFFF" stroke="#2B2D42" stroke-width="2"/>
+    <text x="232" y="314" font-size="11" font-weight="bold" fill="#2B2D42">BacktestRunner</text>
+    <rect x="311" y="286" width="138" height="48" rx="12" fill="#FFFFFF" stroke="#2B2D42" stroke-width="2"/>
+    <text x="380" y="314" font-size="11" font-weight="bold" fill="#2B2D42">ProfitabilityEngine</text>
+    <rect x="459" y="286" width="138" height="48" rx="12" fill="#FFFFFF" stroke="#2B2D42" stroke-width="2"/>
+    <text x="528" y="314" font-size="11" font-weight="bold" fill="#2B2D42">Capa2PipelineExecutor</text>
+    <rect x="607" y="286" width="138" height="48" rx="12" fill="#FFFFFF" stroke="#2B2D42" stroke-width="2"/>
+    <text x="676" y="314" font-size="11" font-weight="bold" fill="#2B2D42">SwarmRunStore</text>
+  </g>
+</svg>

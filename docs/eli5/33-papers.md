@@ -6,37 +6,7 @@
 
 Sixteen files carry 15 numbered rules each, about 240 in total; files 43, 44 and 45 are looser summaries. Everything is written in Spanish; here it is in English, cut to the lines that shape the code. The number in each heading is the file number, so `papers/49-*.md` is the pairs trading paper. The count runs straight on from the book shelf: books 46 and 47 sit upstairs, between papers 45 and 48.
 
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 400" role="img" aria-label="The research-paper shelf: five themes with file and paper counts">
-  <rect x="1" y="1" width="758" height="398" rx="16" fill="#FFF9E6" stroke="#2B2D42" stroke-width="2"/>
-  <g font-family="Helvetica, Arial, sans-serif" text-anchor="middle">
-    <text x="380" y="30" font-size="16.5" font-weight="bold" fill="#2B2D42">The research-paper shelf</text>
-    <text x="380" y="50" font-size="11.5" fill="#2B2D42">19 files · 22 papers · numbers are file numbers</text>
-    <rect x="30" y="64" width="340" height="100" rx="13" fill="#FFD93D" stroke="#2B2D42" stroke-width="2.5"/>
-    <text x="200" y="98" font-size="15" font-weight="bold" fill="#2B2D42">Factors, portfolios and pairs</text>
-    <text x="200" y="120" font-size="12" fill="#2B2D42">6 files · 8 papers</text>
-    <text x="200" y="141" font-size="11" fill="#2B2D42">files 43, 45, 48,</text>
-    <text x="200" y="156" font-size="11" fill="#2B2D42">49, 50, 60</text>
-    <rect x="390" y="64" width="340" height="100" rx="13" fill="#4D96FF" stroke="#2B2D42" stroke-width="2.5"/>
-    <text x="560" y="98" font-size="15" font-weight="bold" fill="#FFFFFF">Execution and</text>
-    <text x="560" y="118" font-size="15" font-weight="bold" fill="#FFFFFF">microstructure</text>
-    <text x="560" y="140" font-size="12" fill="#FFFFFF">3 files · 4 papers</text>
-    <text x="560" y="156" font-size="11" fill="#FFFFFF">files 44, 51, 62</text>
-    <rect x="30" y="176" width="340" height="110" rx="13" fill="#FF6B6B" stroke="#2B2D42" stroke-width="2.5"/>
-    <text x="200" y="210" font-size="15" font-weight="bold" fill="#FFFFFF">Tail risk and</text>
-    <text x="200" y="230" font-size="15" font-weight="bold" fill="#FFFFFF">rough volatility</text>
-    <text x="200" y="252" font-size="12" fill="#FFFFFF">2 files · 2 papers</text>
-    <text x="200" y="268" font-size="11" fill="#FFFFFF">files 52, 55</text>
-    <rect x="390" y="176" width="340" height="110" rx="13" fill="#9B5DE5" stroke="#2B2D42" stroke-width="2.5"/>
-    <text x="560" y="206" font-size="15" font-weight="bold" fill="#FFFFFF">Learning machines</text>
-    <text x="560" y="226" font-size="11.5" fill="#FFFFFF">and synthetic markets</text>
-    <text x="560" y="246" font-size="12" fill="#FFFFFF">6 files · 6 papers</text>
-    <text x="560" y="263" font-size="11" fill="#FFFFFF">files 53, 54, 56,</text>
-    <text x="560" y="278" font-size="11" fill="#FFFFFF">59, 61, 63</text>
-    <rect x="30" y="298" width="700" height="72" rx="12" fill="#6BCB77" stroke="#2B2D42" stroke-width="2"/>
-    <text x="380" y="326" font-size="15" font-weight="bold" fill="#2B2D42">Attention and news</text>
-    <text x="380" y="350" font-size="11.5" fill="#2B2D42">2 files · 2 papers · 57, 58</text>
-  </g>
-</svg>
+![The research-paper shelf: five themes with file and paper counts](diagrams/33-papers-1.svg)
 
 ## Factors, portfolios and pairs
 
