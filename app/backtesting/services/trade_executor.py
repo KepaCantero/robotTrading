@@ -298,6 +298,7 @@ class TradeExecutor:
             status=TradeStatus.OPEN,
             commission=commission,
             slippage=slippage_cost,
+            all_in_cost=cost_result.total_cost,
             reason=reason,
         )
 
@@ -457,6 +458,7 @@ class TradeExecutor:
             pnl_percentage=pnl_info["pnl_percentage"],
             commission=commission,
             slippage=slippage_cost,
+            all_in_cost=total_costs,
             reason=reason,
         )
 

@@ -111,6 +111,10 @@ class BacktestEngine:
         # Track last known price for each symbol for accurate equity curve calculation
         self.last_known_prices: dict[str, Decimal] = {}
 
+        # Signals matched on bar t awaiting execution at the open of the next
+        # bar for their symbol (next_day_execution=True)
+        self._pending_signals: dict[str, list[Signal]] = {}
+
         # Store market_data for building price_history for compliance engine
         self._market_data_list: list[Quote] = []
 
@@ -256,6 +260,7 @@ class BacktestEngine:
             "capital": self.config.initial_capital,
             "last_known_prices": {},
             "trades": [],
+            "_pending_signals": {},
         }
         return state
 
@@ -371,6 +376,10 @@ class BacktestEngine:
         strategy_stats: dict[str, dict[str, int]] = {}
 
         for md in market_data:
+            # Execute signals matched on a previous bar of this symbol at the
+            # OPEN of the current bar (t+1 execution, prevents look-ahead bias)
+            self._execute_pending_signals(md)
+
             # Track the current price for this symbol BEFORE updating equity curve
             current_md_price = get_price(md)
             self.last_known_prices[md.symbol] = current_md_price
@@ -410,6 +419,12 @@ class BacktestEngine:
         # Close any remaining positions using the last price for each symbol
         price_map = self._build_price_map(market_data)
         self._close_all_positions(market_data[-1], price_map=price_map)
+
+        # Signals still pending had no subsequent bar for their symbol to fill at
+        if self._pending_signals:
+            dropped = sum(len(v) for v in self._pending_signals.values())
+            logger.info(f"Dropped {dropped} pending signal(s) with no subsequent bar to fill at")
+            self._pending_signals.clear()
 
         logger.info(
             f"Backtest matching stats: {signals_processed} processed, {signals_matched} matched, {signals_skipped} skipped, {len(self.trades)} trades executed"
@@ -525,6 +540,7 @@ class BacktestEngine:
         self.position_manager.clear_all_positions()
         self.equity_tracker.reset()
         self.last_known_prices.clear()
+        self._pending_signals.clear()
 
     def _execute_learning_retraining(
         self, market_data: Quote, all_market_data: list[Quote]
@@ -572,6 +588,50 @@ class BacktestEngine:
             current_date=market_data.timestamp,
             quotes=all_market_data[: market_data_index + 1] if market_data_index >= 0 else None,
         )
+
+    def _execute_pending_signals(self, market_data: Quote) -> None:
+        """
+        Execute signals queued on previous bars at the current bar's open.
+
+        Only called when config.next_day_execution is True. Queued signals
+        whose symbol never reappears in the data are dropped (no fill on a
+        bar that does not exist).
+
+        Args:
+            market_data: Current bar (fill happens at its open)
+        """
+        pending = self._pending_signals.get(market_data.symbol)
+        if not pending:
+            return
+
+        del self._pending_signals[market_data.symbol]
+        open_view = self._open_price_view(market_data)
+        for signal in pending:
+            logger.debug(
+                f"T+1 EXECUTION: {signal.symbol} {signal.signal_type} "
+                f"(strategy={signal.metadata.get('strategy', 'unknown') if signal.metadata else 'unknown'}) "
+                f"signal={signal.timestamp} filled at open of {market_data.timestamp}"
+            )
+            self._process_signal(signal, open_view)
+
+    @staticmethod
+    def _open_price_view(md: Quote) -> Quote:
+        """
+        Return a copy of the bar priced at its open for t+1 open execution.
+
+        The fill chain derives base prices from close/last/ask/bid, so those
+        fields are replaced with the open. High/low/volume stay real (they
+        are only used for exit checks and liquidity on later bars).
+        """
+        open_price = getattr(md, "open", None)
+        if open_price is None:
+            return md
+        update: dict[str, Decimal] = {"close": open_price, "last": open_price}
+        if getattr(md, "ask", None) is not None:
+            update["ask"] = open_price
+        if getattr(md, "bid", None) is not None:
+            update["bid"] = open_price
+        return md.model_copy(update=update)
 
     def _process_signals_at_timestamp(
         self,
@@ -633,7 +693,10 @@ class BacktestEngine:
                     f"md_time={market_data.timestamp}"
                 )
 
-            if signal.symbol == market_data.symbol and time_diff >= -86400 and time_diff <= 86400:
+            # A signal may only execute on a bar at or after its timestamp:
+            # time_diff >= 0 (signals from the future are never executed) and
+            # at most 1 day old (older signals are stale and skipped).
+            if signal.symbol == market_data.symbol and 0 <= time_diff <= 86400:
                 signals_matched += 1
                 strategy_stats[strategy_name]["matched"] += 1
                 if strategy_name == "momentum":
@@ -644,7 +707,11 @@ class BacktestEngine:
                     logger.debug(
                         f"MATCHED signal: {signal.symbol} {signal.signal_type} (strategy={strategy_name}) at {market_data.timestamp}, time_diff={time_diff:.0f}s"
                     )
-                self._process_signal(signal, market_data)
+                if self.config.next_day_execution:
+                    # Queue for execution at the open of this symbol's next bar
+                    self._pending_signals.setdefault(signal.symbol, []).append(signal)
+                else:
+                    self._process_signal(signal, market_data)
                 signal_index += 1
             elif signal.timestamp > market_data.timestamp:
                 # Signal is in the future, wait for next market data
@@ -1162,22 +1229,25 @@ class BacktestEngine:
         if not recent_trades:
             return
 
-        # Calculate P&L using PnL calculator
-        pnl_info = self.pnl_calculator.calculate_close_position_pnl(
-            symbol=symbol,
-            quantity=current_position,
-            exit_price=current_price or recent_trades[-1].entry_price,
-            trades=self.trades,
-        )
-
-        # Apply slippage to exit price
+        # Apply slippage to exit price FIRST: the capital update books the
+        # slippage-adjusted proceeds, so the P&L must use the same price to
+        # stay reconcilable with capital.
         from app.backtesting.base_engine import SlippageParams
 
+        reference_price = current_price or recent_trades[-1].entry_price
         slippage_params = SlippageParams(
-            price=current_price or recent_trades[-1].entry_price,
+            price=reference_price,
             is_buy=False,
         )
         exit_price_with_slippage = self._apply_slippage(slippage_params)
+
+        # Calculate P&L using PnL calculator (at the slippage-adjusted price)
+        pnl_info = self.pnl_calculator.calculate_close_position_pnl(
+            symbol=symbol,
+            quantity=current_position,
+            exit_price=exit_price_with_slippage,
+            trades=self.trades,
+        )
 
         # Create summary sell trade
         trade_id = str(uuid4())
@@ -1187,17 +1257,16 @@ class BacktestEngine:
             side="sell",
             quantity=current_position,
             entry_price=pnl_info["avg_entry_price"],
-            exit_price=current_price or recent_trades[-1].entry_price,
+            exit_price=reference_price,
             entry_time=pnl_info["entry_time"] or timestamp,
             exit_time=timestamp,
             status=TradeStatus.CLOSED,
             pnl=pnl_info["pnl"],
             pnl_percentage=pnl_info["pnl_percentage"],
             commission=pnl_info["total_commission"],
-            slippage=abs(
-                current_position
-                * (exit_price_with_slippage - (current_price or recent_trades[-1].entry_price))
-            ),
+            slippage=abs(current_position * (exit_price_with_slippage - reference_price)),
+            all_in_cost=pnl_info["total_commission"]
+            + abs(current_position * (exit_price_with_slippage - reference_price)),
             reason=reason,  # FIX: Set the reason for the trade
         )
 

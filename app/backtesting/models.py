@@ -75,6 +75,15 @@ class Trade(BaseModel):
     commission: Decimal = Field(default=Decimal("0"), ge=0, description="Commission paid")
     slippage: Decimal = Field(default=Decimal("0"), ge=0, description="Slippage cost")
     market_impact: Decimal = Field(default=Decimal("0"), ge=0, description="Market impact cost")
+    all_in_cost: Decimal | None = Field(
+        default=None,
+        ge=0,
+        description=(
+            "All-in transaction costs charged to capital (commission + spread "
+            "+ slippage + market impact + regulatory fees). None on legacy "
+            "records; fall back to the computed total_cost property when absent."
+        ),
+    )
 
     # Additional context (from multi_asset Trade)
     asset_class: str | None = Field(None, description="Asset class (equity, bond, crypto, etc.)")
@@ -357,6 +366,14 @@ class BacktestConfig(BaseModel):
     )
     take_profit_percentage: Decimal | None = Field(
         None, ge=0, le=100, description="Take profit percentage"
+    )
+    next_day_execution: bool = Field(
+        default=True,
+        description=(
+            "Execute signals at the OPEN of the next bar for their symbol "
+            "(prevents look-ahead bias). When False, signals fill at the "
+            "close of the matching bar (legacy behavior)."
+        ),
     )
 
     @field_validator("slippage_percentage")
