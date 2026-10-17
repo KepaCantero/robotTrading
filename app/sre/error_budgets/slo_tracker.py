@@ -279,7 +279,7 @@ class SLOTracker:
                         metric_type TEXT NOT NULL,
                         timestamp TEXT NOT NULL,
                         metadata TEXT,
-                        created_at TEXT NOT NULL DEFAULT (datetime('utc'))
+                        created_at TEXT NOT NULL DEFAULT (STRFTIME('%Y-%m-%dT%H:%M:%fZ','now'))
                     )
                 """
                 )
@@ -296,7 +296,7 @@ class SLOTracker:
                         warning_threshold TEXT,
                         violation_threshold TEXT,
                         min_samples INTEGER,
-                        created_at TEXT NOT NULL DEFAULT (datetime('utc')),
+                        created_at TEXT NOT NULL DEFAULT (STRFTIME('%Y-%m-%dT%H:%M:%fZ','now')),
                         UNIQUE(service_name, slo_name)
                     )
                 """
@@ -314,7 +314,7 @@ class SLOTracker:
                         target_value TEXT NOT NULL,
                         severity TEXT NOT NULL,
                         resolved INTEGER NOT NULL DEFAULT 0,
-                        created_at TEXT NOT NULL DEFAULT (datetime('utc'))
+                        created_at TEXT NOT NULL DEFAULT (STRFTIME('%Y-%m-%dT%H:%M:%fZ','now'))
                     )
                 """
                 )

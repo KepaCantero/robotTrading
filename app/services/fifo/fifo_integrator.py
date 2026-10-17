@@ -46,7 +46,7 @@ from app.shared.config import get_settings
 if TYPE_CHECKING:
     from datetime import datetime
 
-    from sqlalchemy.ext.asyncio import AsyncSession
+    from sqlalchemy.orm import Session
 
 logger = logging.getLogger(__name__)
 
@@ -140,13 +140,15 @@ class FIFOIntegrator:
             self.logger.info(f"Initializing FIFO integrator for user {self.user_id}")
 
             # Ensure we have a default account
-            async with get_db_transaction() as session:
+            # get_db_transaction() yields a SYNC session (DatabaseSession),
+            # so use a sync context manager and sync session calls.
+            with get_db_transaction() as session:
                 settings = get_settings()
 
                 # Create default account for stocks if not exists
                 # Use getattr to safely get the setting with a default value
                 default_exchange = getattr(settings, "fifo_default_exchange", "alpaca")
-                default_account = await self._get_or_create_account(
+                default_account = self._get_or_create_account(
                     session=session,
                     exchange_name=default_exchange,
                     exchange_type=ExchangeType.BROKER,
@@ -161,9 +163,9 @@ class FIFOIntegrator:
             self.logger.error(f"Error initializing FIFO integrator: {e}")
             raise
 
-    async def _get_or_create_account(
+    def _get_or_create_account(
         self,
-        session: AsyncSession,
+        session: Session,
         exchange_name: str,
         exchange_type: ExchangeType,
         currency: str,
@@ -172,7 +174,7 @@ class FIFOIntegrator:
         Get or create a trading account.
 
         Args:
-            session: Database session
+            session: Database session (sync)
             exchange_name: Name of exchange (e.g., "alpaca", "binance")
             exchange_type: Type of exchange
             currency: Account currency
@@ -187,7 +189,7 @@ class FIFOIntegrator:
             Account.currency == currency,
             Account.is_active,
         )
-        result = await session.execute(stmt)
+        result = session.execute(stmt)
         account = result.scalars().first()
 
         if account is None:
@@ -201,7 +203,7 @@ class FIFOIntegrator:
                 is_active=True,
             )
             session.add(account)
-            await session.flush()
+            session.flush()
 
             self.logger.info(f"Created new account: {account.account_name}")
 
@@ -248,12 +250,12 @@ class FIFOIntegrator:
             ValueError: If trade data is invalid or insufficient lots for SELL
         """
         try:
-            async with get_db_transaction() as session:
+            with get_db_transaction() as session:
                 # Determine asset type
                 asset_type = await self._determine_asset_type(trade.symbol)
 
                 # Get or create account
-                account = await self._get_or_create_account(
+                account = self._get_or_create_account(
                     session=session,
                     exchange_name=trade.broker_name.lower(),
                     exchange_type=ExchangeType.BROKER,
@@ -294,7 +296,7 @@ class FIFOIntegrator:
                 )
 
                 session.add(transaction)
-                await session.flush()
+                session.flush()
 
                 # Process FIFO logic
                 processor = FIFOProcessor(session)
@@ -326,7 +328,7 @@ class FIFOIntegrator:
 
                         # Update lot realized gains/losses
                         for lot_id in fifo_calc.lots_closed:
-                            lot = await session.get(Lot, lot_id)
+                            lot = session.get(Lot, lot_id)
                             if lot:
                                 lot.realized_gain = fifo_calc.gain
                                 lot.realized_loss = fifo_calc.loss
@@ -342,7 +344,7 @@ class FIFOIntegrator:
                         # Still save the transaction but mark with error
                         transaction.meta_data["fifo_error"] = str(e)
 
-                await session.flush()
+                session.flush()
 
         except (asyncio.TimeoutError, OSError) as e:
             self.logger.error(f"Error recording trade in FIFO: {e}", exc_info=True)
@@ -414,7 +416,7 @@ class FIFOIntegrator:
             List of LotInfo objects for open lots, ordered by opened_at (FIFO)
         """
         try:
-            async with get_db_transaction() as session:
+            with get_db_transaction() as session:
                 stmt = (
                     select(Lot)
                     .where(
@@ -425,7 +427,7 @@ class FIFOIntegrator:
                     .order_by(Lot.opened_at)
                 )
 
-                result = await session.execute(stmt)
+                result = session.execute(stmt)
                 lots = result.scalars().all()
 
                 return [
@@ -527,7 +529,7 @@ class FIFOIntegrator:
             Dictionary with gains/losses summary
         """
         try:
-            async with get_db_transaction() as session:
+            with get_db_transaction() as session:
                 stmt = select(Lot).where(Lot.status == LotStatus.CLOSED)
 
                 if symbol:
@@ -536,7 +538,7 @@ class FIFOIntegrator:
                 if year:
                     stmt = stmt.where(Lot.tax_year_closed == year)
 
-                result = await session.execute(stmt)
+                result = session.execute(stmt)
                 lots = result.scalars().all()
 
                 total_gain = sum(lot.realized_gain or Decimal("0") for lot in lots)
@@ -584,10 +586,10 @@ class FIFOIntegrator:
             Dictionary with verification results
         """
         try:
-            async with get_db_transaction() as session:
+            with get_db_transaction() as session:
                 # Get all lots for symbol
                 stmt = select(Lot).where(Lot.symbol == symbol.upper())
-                result = await session.execute(stmt)
+                result = session.execute(stmt)
                 lots = result.scalars().all()
 
                 # Get all transactions for symbol
@@ -595,7 +597,7 @@ class FIFOIntegrator:
                     Transaction.symbol == symbol.upper(),
                     Transaction.tx_type.in_([TransactionType.BUY, TransactionType.SELL]),
                 )
-                tx_result = await session.execute(tx_stmt)
+                tx_result = session.execute(tx_stmt)
                 transactions = tx_result.scalars().all()
 
                 # Calculate totals

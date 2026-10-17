@@ -361,7 +361,7 @@ class ErrorBudgetManager:
                         status TEXT NOT NULL,
                         burn_rate TEXT,
                         calculated_at TEXT NOT NULL,
-                        created_at TEXT NOT NULL DEFAULT (datetime('utc')),
+                        created_at TEXT NOT NULL DEFAULT (STRFTIME('%Y-%m-%dT%H:%M:%fZ','now')),
                         UNIQUE(service_name, period, window_start)
                     )
                 """
@@ -377,7 +377,7 @@ class ErrorBudgetManager:
                         error_type TEXT,
                         description TEXT,
                         metadata TEXT,
-                        created_at TEXT NOT NULL DEFAULT (datetime('utc'))
+                        created_at TEXT NOT NULL DEFAULT (STRFTIME('%Y-%m-%dT%H:%M:%fZ','now'))
                     )
                 """
                 )
@@ -654,8 +654,11 @@ class ErrorBudgetManager:
             )
             self._current_state.burn_rate = burn_rate
 
-            # Check for high burn rate
-            if burn_rate > self.config.high_burn_rate_threshold:
+            # Check for high burn rate (None threshold means check disabled)
+            if (
+                self.config.high_burn_rate_threshold is not None
+                and burn_rate > self.config.high_burn_rate_threshold
+            ):
                 self._current_state.status = BudgetStatus.BURN_RATE_HIGH
 
         self._current_state.calculated_at = datetime.utcnow()
@@ -685,7 +688,8 @@ class ErrorBudgetManager:
 
         # Check for high burn rate
         if (
-            self._current_state.burn_rate
+            self.config.high_burn_rate_threshold is not None
+            and self._current_state.burn_rate
             and self._current_state.burn_rate > self.config.high_burn_rate_threshold
         ):
             self.logger.warning(
@@ -770,7 +774,8 @@ class ErrorBudgetManager:
 
             # Warn if high burn rate
             if (
-                self._current_state.burn_rate
+                self.config.high_burn_rate_threshold is not None
+                and self._current_state.burn_rate
                 and self._current_state.burn_rate > self.config.high_burn_rate_threshold
             ):
                 return True, (
