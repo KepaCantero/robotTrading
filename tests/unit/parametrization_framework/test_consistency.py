@@ -28,7 +28,7 @@ from app.services.parametrization.module_parametrizer import ModuleParametrizer
 @pytest.fixture
 def investment_profiles_config():
     """Load investment profiles YAML configuration."""
-    yaml_path = Path("/Users/kepa.cantero/Projects/algoTrading/config/investment_profiles.yaml")
+    yaml_path = Path(__file__).resolve().parents[3] / "config" / "portfolio" / "investment_profiles.yaml"
     with open(yaml_path) as f:
         return yaml.safe_load(f)
 
@@ -36,7 +36,7 @@ def investment_profiles_config():
 @pytest.fixture
 def module_parameters_config():
     """Load module parameters YAML configuration."""
-    yaml_path = Path("/Users/kepa.cantero/Projects/algoTrading/config/module_parameters.yaml")
+    yaml_path = Path(__file__).resolve().parents[3] / "config" / "module_parameters.yaml"
     with open(yaml_path) as f:
         return yaml.safe_load(f)
 

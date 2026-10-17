@@ -12,7 +12,7 @@ from pathlib import Path
 
 import pytest
 
-sys.path.insert(0, '/Users/kepa.cantero/Projects/algoTrading')
+sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 
 from app.sre.automation.toil_tracker import (
     AutomationOpportunity,

@@ -66,7 +66,7 @@ if lsof -Pi :8000 -sTCP:LISTEN -t >/dev/null 2>&1; then
 else
     # Start API server in background
     echo -e "${BLUE}🚀 Starting API server in background...${NC}"
-    nohup uvicorn app.api.paper_trading:app \
+    nohup uvicorn app.main:app \
         --host 0.0.0.0 \
         --port 8000 \
         --reload \
@@ -100,5 +100,5 @@ else
     echo -e "${GREEN}═══════════════════════════════════════════════════════════════${NC}"
     echo ""
 
-    streamlit run app/dashboard/advanced_dashboard.py
+    streamlit run app/presentation/dashboard/advanced_dashboard.py
 fi

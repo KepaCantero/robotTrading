@@ -33,7 +33,7 @@ if [ -f ".api_server.pid" ]; then
     fi
 else
     # Try to find uvicorn process
-    UVICORN_PID=$(pgrep -f "uvicorn app.api.paper_trading:app" || true)
+    UVICORN_PID=$(pgrep -f "uvicorn app.main:app" || true)
     if [ -n "$UVICORN_PID" ]; then
         echo -e "${YELLOW}  Stopping API server (PID: $UVICORN_PID)...${NC}"
         kill $UVICORN_PID
@@ -44,7 +44,7 @@ else
 fi
 
 # Stop dashboard
-DASHBOARD_PID=$(pgrep -f "streamlit run app/dashboard/advanced_dashboard.py" || true)
+DASHBOARD_PID=$(pgrep -f "streamlit run app/presentation/dashboard/advanced_dashboard.py" || true)
 if [ -n "$DASHBOARD_PID" ]; then
     echo -e "${YELLOW}  Stopping Dashboard (PID: $DASHBOARD_PID)...${NC}"
     kill $DASHBOARD_PID

@@ -7,7 +7,7 @@ import re
 import sys
 from pathlib import Path
 
-PROJECT_ROOT = Path("/Users/kepa.cantero/Projects/algoTrading")
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
 APP_DIR = PROJECT_ROOT / "app"
 REQ_DIR = PROJECT_ROOT / ".requirements" / "app"
 

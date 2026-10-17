@@ -23,13 +23,13 @@ import yaml
 @pytest.fixture
 def investment_profiles_yaml_path():
     """Path to investment profiles configuration."""
-    return Path("/Users/kepa.cantero/Projects/algoTrading/config/investment_profiles.yaml")
+    return Path(__file__).resolve().parents[3] / "config" / "portfolio" / "investment_profiles.yaml"
 
 
 @pytest.fixture
 def module_parameters_yaml_path():
     """Path to module parameters configuration."""
-    return Path("/Users/kepa.cantero/Projects/algoTrading/config/module_parameters.yaml")
+    return Path(__file__).resolve().parents[3] / "config" / "module_parameters.yaml"
 
 
 @pytest.fixture

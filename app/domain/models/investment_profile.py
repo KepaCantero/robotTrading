@@ -299,7 +299,7 @@ class ProfileGenerator:
     @staticmethod
     def _check_risk_scaling_available() -> bool:
         """Check if PHASE 3 (risk scaling) is available in codebase."""
-        import os
+        from pathlib import Path
 
-        path = "/Users/kepa.cantero/Projects/algoTrading/app/services/risk_scaling"
-        return os.path.exists(path)
+        path = Path(__file__).resolve().parents[2] / "services" / "risk_scaling"
+        return path.exists()
