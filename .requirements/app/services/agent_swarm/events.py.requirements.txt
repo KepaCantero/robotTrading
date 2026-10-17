@@ -1,0 +1,38 @@
+# Requirements Document: app/services/agent_swarm/events.py
+
+## 1. Module Overview
+File: events.py
+Domain: Service
+
+## 2. Dependencies
+- `__future__`
+- `asyncio`
+- `collections`
+- `dataclasses`
+- `datetime`
+
+## 3. Core Components
+### Classes
+- `AgentEvent`
+- `AgentEventBus`
+### Public Functions
+- `to_dict()`
+- `from_dict()`
+- `subscriber_count()`
+- `recent_events()`
+- `subscribe()`
+- `unsubscribe()`
+- `publish()`
+
+## 4. Applicable Trading Rules
+
+#### R15
+Complete Logging (log all decisions, trade journal format)
+
+- [ ] Implementation verified
+- [ ] Tests pass
+
+---
+Universal rules (SOLID, type hints, formatting, security, logging) live in
+.requirements/BASE_RULES.md and apply to every file.
+Resync this stub with: python scripts/generate_requirements.py

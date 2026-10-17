@@ -1,14 +1,14 @@
 # BASE_RULES.md - AlgoTrading Codebase
 
-**Last Updated:** 2026-03-15
-**Total Rule Files:** 80
-**Total Rules Extracted:** 250+ rules organized
+**Last Updated:** 2026-10-17
+**Per-file specs:** 1,170 auto-generated stubs (`.requirements/app/**/*.requirements.txt`) + 3 hand-written (fx/covered-call models)
+**Sync:** `python scripts/generate_requirements.py` — verify with `python scripts/production_audit.py`
 
 ---
 
 ## Purpose
 
-These are the **BASE RULES** that EVERY production file in algoTrading MUST follow. Each `.requirements.md` file should reference these universal rules plus file-specific rules.
+These are the **BASE RULES** that EVERY production file in algoTrading MUST follow. Each `.requirements.txt` file references these universal rules plus file-specific rules.
 
 ---
 

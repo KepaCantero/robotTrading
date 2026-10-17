@@ -1,0 +1,28 @@
+# Requirements Document: app/presentation/dashboard/nicegui_app/components/run_comparison.py
+
+## 1. Module Overview
+File: run_comparison.py
+Domain: Presentation
+
+## 2. Dependencies
+- `__future__`
+- `app.presentation.dashboard.nicegui_app.theme`
+- `nicegui`
+- `typing`
+
+## 3. Core Components
+### Public Functions
+- `run_comparison()`
+
+## 4. Applicable Trading Rules
+
+#### R15
+Complete Logging (log all decisions, trade journal format)
+
+- [ ] Implementation verified
+- [ ] Tests pass
+
+---
+Universal rules (SOLID, type hints, formatting, security, logging) live in
+.requirements/BASE_RULES.md and apply to every file.
+Resync this stub with: python scripts/generate_requirements.py

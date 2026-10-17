@@ -16,7 +16,7 @@ Pipeline completo de 12 hats que integra **Ruff + Aider + OpenHands + Confession
 
 1. Discovery -> 2. Aider Formatter -> 3. Deep Linter -> 4. Deep Fixer -> 5. Requirements -> 6. Architecture -> 7. OpenHands -> 8. Anti-Patterns -> 9. Confession Loop -> 10. Aider Fix-up -> 11. Tests -> 12. Final Validation
 
-**7 quality gates automaticos**: ruff lint, ruff format, mypy, bandit, safety, pytest coverage >= 80%, validate_file_complete.sh
+**7 quality gates automaticos**: ruff lint, ruff format, mypy, bandit, safety, pytest coverage >= 80%, check_all.sh
 
 **Herramientas integradas**:
 - **Ruff**: auto-fix masivo de lint + formato
@@ -83,13 +83,13 @@ bandit -r app/ -ll  # solo bandit
 safety check        # solo dependencias
 ```
 
-### 4. Validacion por Archivo (script legacy)
+### 4. Validacion de Calidad del Codigo
 
 ```bash
-bash scripts/validate_file_complete.sh app/domain/services/signal_generator.py
+./scripts/check_all.sh --core   # rápido: lint, formato, tipos, seguridad
+./scripts/check_all.sh          # completo: añade radon, vulture, semgrep, pip-audit
+./scripts/check_all.sh --fix    # aplica ruff --fix + ruff format (lo mismo que pre-commit)
 ```
-
-Ejecuta 13 checks: ruff lint, ruff format, safety, flake8, pylint, mypy, bandit, radon CC, radon MI, syntax, imports.
 
 ### 5. Pre-commit Hooks (automatico en cada commit)
 
@@ -319,7 +319,7 @@ CI/CD pipeline (`.github/workflows/ci-cd.yml`):
 | `ralph run -H .ralph/presets/tdd-red-green.yml -c .ralph/ralph.yml` | TDD |
 | `aider <archivo>` | fix interactivo con AI |
 | `pre-commit run --all-files` | ejecutar hooks manualmente |
-| `bash scripts/validate_file_complete.sh <file>` | validar un archivo |
+| `bash scripts/check_all.sh <file>` | validar un archivo |
 
 ---
 

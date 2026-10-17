@@ -1,0 +1,25 @@
+# Requirements Document: app/presentation/dashboard/nicegui_app/components/dividend_panel.py
+
+## 1. Module Overview
+File: dividend_panel.py
+Domain: Presentation
+
+## 2. Dependencies
+- `nicegui`
+
+## 3. Core Components
+### Public Functions
+- `dividend_panel()`
+
+## 4. Applicable Trading Rules
+
+#### R15
+Complete Logging (log all decisions, trade journal format)
+
+- [ ] Implementation verified
+- [ ] Tests pass
+
+---
+Universal rules (SOLID, type hints, formatting, security, logging) live in
+.requirements/BASE_RULES.md and apply to every file.
+Resync this stub with: python scripts/generate_requirements.py

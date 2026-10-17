@@ -174,7 +174,7 @@ If tools become available:
 ## Sign-off
 
 **Audit Completed By:** Tech Lead Orchestrator
-**Agents Utilized:** 
+**Agents Utilized:**
 - @agent-requirement-expert (for requirements documents)
 - @agent-python-expert (for GAP analysis and fixes)
 - @agent-code-reviewer (for QA verification)

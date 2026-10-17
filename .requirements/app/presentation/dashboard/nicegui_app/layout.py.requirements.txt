@@ -1,0 +1,44 @@
+# Requirements Document: app/presentation/dashboard/nicegui_app/layout.py
+
+## 1. Module Overview
+File: layout.py
+Domain: Presentation
+
+## 2. Dependencies
+- `__future__`
+- `app.infrastructure.persistence.backtest_result_store`
+- `app.presentation.dashboard.nicegui_app.pages.backtest_results`
+- `app.presentation.dashboard.nicegui_app.pages.backtest_runner`
+- `app.presentation.dashboard.nicegui_app.pages.config_viewer`
+- `app.presentation.dashboard.nicegui_app.pages.history_compare`
+- `app.presentation.dashboard.nicegui_app.pages.profitability`
+- `app.presentation.dashboard.nicegui_app.theme`
+- `app.presentation.dashboard.profitability_engine`
+- `app.services.backtest_runner`
+- `nicegui`
+- `typing`
+
+## 3. Core Components
+### Classes
+- `AppShell`
+### Public Functions
+- `configure()`
+- `setup()`
+- `page_backtest_runner()`
+- `page_results()`
+- `page_history()`
+- `page_config()`
+- `page_profitability()`
+
+## 4. Applicable Trading Rules
+
+#### R15
+Complete Logging (log all decisions, trade journal format)
+
+- [ ] Implementation verified
+- [ ] Tests pass
+
+---
+Universal rules (SOLID, type hints, formatting, security, logging) live in
+.requirements/BASE_RULES.md and apply to every file.
+Resync this stub with: python scripts/generate_requirements.py

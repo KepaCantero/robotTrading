@@ -1,7 +1,7 @@
 # auth.py Audit Summary
 
-**Date:** 2026-02-05  
-**File:** app/core/auth.py  
+**Date:** 2026-02-05
+**File:** app/core/auth.py
 **Status:** ✅ **PASSED** - Production Ready
 
 ## Executive Summary
