@@ -195,9 +195,9 @@ class ParameterOptimizer:
         # Calculate optimal number of concurrent positions
         # Diversify across multiple positions to reduce risk
         try:
-            config = get_config()
+            centralized_config = get_config()
             small_position_threshold = Decimal(
-                str(getattr(config.trading, "position_size_small_threshold", 0.05))
+                str(getattr(centralized_config.trading, "position_size_small_threshold", 0.05))
             )
         except (AttributeError, ValueError) as e:
             logger.error(f"Error loading position sizing config: {e}, using default 0.05")

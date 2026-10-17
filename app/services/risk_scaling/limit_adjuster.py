@@ -118,8 +118,11 @@ class LimitAdjuster:
                 "max_drawdown_pct": _get_config_limit("limit_large_max_drawdown_pct", 0.25),
             },
         }
-        # Default to medium tier for unknown tiers
-        return tier_limits.get(tier, self._get_tier_limits("medium"))
+        # Default to medium tier for unknown tiers (direct access: no recursion)
+        if tier not in tier_limits:
+            logger.warning(f"Unknown capital tier '{tier}', using medium tier limits")
+            tier = "medium"
+        return tier_limits[tier]
 
     def _get_volatility_multipliers(self) -> dict[str, Decimal]:
         """
