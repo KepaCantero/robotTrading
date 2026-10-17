@@ -23,11 +23,11 @@ from __future__ import annotations
 
 import logging
 from decimal import Decimal
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from app.backtesting.models import BacktestConfig, BacktestResult
+from app.backtesting.models import BacktestConfig, BacktestResult, PerformanceMetrics, Trade
 
 if TYPE_CHECKING:
     from datetime import datetime
@@ -222,11 +222,13 @@ class BacktestOrchestrator:
                 "input": {
                     "start_date": data_start_date.strftime("%Y-%m-%d"),
                     "end_date": data_end_date.strftime("%Y-%m-%d"),
-                    "symbol": backtest_config.symbols[0] if backtest_config.symbols else "AAPL",
+                    # BacktestConfig no define `symbols`/`strategy_preset`; el
+                    # runner completo usa un símbolo por configuración.
+                    "symbol": "AAPL",
                 },
                 "strategy": {
                     "name": backtest_config.strategy_name,
-                    "preset": backtest_config.strategy_preset or "default",
+                    "preset": "default",
                 },
                 "capital": {
                     "initial_capital": float(backtest_config.initial_capital),
@@ -258,13 +260,23 @@ class BacktestOrchestrator:
                 )
 
                 if baseline_result and "metrics" in baseline_result:
-                    metrics = baseline_result["metrics"]
+                    raw_metrics = baseline_result.get("metrics")
+                    if not isinstance(raw_metrics, dict):
+                        raise TypeError("baseline result 'metrics' is not a dict")
+                    metrics = raw_metrics
+                    raw_trades = baseline_result.get("trades", [])
+                    raw_curve = baseline_result.get("equity_curve", [])
                     result = BacktestResult(
                         strategy_name=backtest_config.strategy_name,
                         config=backtest_config,
-                        trades=baseline_result.get("trades", []),
-                        performance=metrics,
-                        equity_curve=baseline_result.get("equity_curve", []),
+                        trades=cast(
+                            "list[Trade]", raw_trades if isinstance(raw_trades, list) else []
+                        ),
+                        performance=cast("PerformanceMetrics", metrics),
+                        equity_curve=cast(
+                            "list[tuple[datetime, Decimal]]",
+                            raw_curve if isinstance(raw_curve, list) else [],
+                        ),
                         start_date=data_start_date,
                         end_date=data_end_date,
                         final_capital=Decimal(
@@ -272,8 +284,6 @@ class BacktestOrchestrator:
                         ),
                         total_return=Decimal(str(metrics.get("total_return", 0))),
                         annualized_return=Decimal(str(metrics.get("annualized_return", 0))),
-                        sharpe_ratio=Decimal(str(metrics.get("sharpe_ratio", 0))),
-                        max_drawdown=Decimal(str(metrics.get("max_drawdown", 0))),
                     )
                     logger.info(f"✅ Real backtest completed: {backtest_config.strategy_name}")
                     return result

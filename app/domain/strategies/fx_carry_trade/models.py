@@ -116,7 +116,7 @@ class FXCarrySignal:
     carry: Decimal
     signal: Decimal
     timestamp: date
-    months: int
+    months: int = 3  # plazo forward por defecto: el benchmark 3M
 
     def __post_init__(self) -> None:
         """
@@ -156,7 +156,7 @@ class FXCarrySignal:
     def signal_strength(self) -> str:
         """Return signal strength as string."""
         abs_signal = abs(self.signal)
-        if abs_signal >= 0.7:
+        if abs_signal >= 0.8:
             return "VERY_STRONG"
         if abs_signal >= 0.5:
             return "STRONG"
@@ -368,7 +368,7 @@ class InterestRateQuote:
 
     currency: str
     rate_1m: Decimal | None = None
-    rate_3m: Decimal = Decimal("0")
+    rate_3m: Decimal | None = None
     rate_6m: Decimal | None = None
     rate_12m: Decimal | None = None
     timestamp: date | None = None

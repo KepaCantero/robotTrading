@@ -459,7 +459,7 @@ class SHAPAnalyzer:
             if isinstance(shap_values, list):
                 shap_values = np.mean([np.abs(sv) for sv in shap_values], axis=0)
             else:
-                shap_values = np.abs(shap_values)  # Valor absoluto para importancia
+                shap_values = np.abs(np.asarray(shap_values))  # Valor absoluto para importancia
 
             # Calcular importancia promedio por feature
             if shap_values.ndim > 1:
@@ -607,7 +607,7 @@ class SHAPAnalyzer:
             if isinstance(shap_values, list):
                 shap_values = shap_values[1] if len(shap_values) > 1 else shap_values[0]
 
-            shap_values = shap_values.flatten()
+            shap_values = np.asarray(shap_values).flatten()
 
             # Crear explicación
             if feature_names and len(feature_names) == len(shap_values):
@@ -870,6 +870,8 @@ class FeatureSelector:
 
             feature_names = feature_names or [f"feature_{i}" for i in range(X.shape[1])]
 
+            selector: SelectorType
+            scores: FloatArray | None
             if self.method == "univariate":
                 selector, scores = self._univariate_selection(X, y, n_features, task_type)
             elif self.method == "rfe":

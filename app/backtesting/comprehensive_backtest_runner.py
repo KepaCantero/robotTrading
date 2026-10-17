@@ -18,12 +18,15 @@ import math
 from datetime import datetime, timedelta
 from decimal import Decimal
 from pathlib import Path
-from typing import ClassVar, cast
+from typing import ClassVar, Union, cast
 
 import numpy as np
 import pandas as pd
 
 logger = logging.getLogger(__name__)
+
+# Valor serializable (JSON-like) de un resultado de backtest; puede ser None.
+ResultValue = Union[str, int, float, bool, list, dict, None]
 
 # COMPLIANCE: Backtesting Compliance (R5, R6, R7, DATA-001)
 from app.backtesting.backtesting_compliance import (
@@ -33,6 +36,7 @@ from app.backtesting.backtesting_compliance import (
 
 # Core backtesting modules (Fase 1 + Fase 2)
 from app.backtesting.core import BacktestConfigLoader, BacktestOrchestrator
+from app.backtesting.core.config_loader import YamlDict, cfg_dict
 from app.backtesting.core.error_handling import MutexError, TrainingError, train_with_retry
 from app.backtesting.core.executor import ProcessPoolBacktestExecutor, SimpleBacktestExecutor
 from app.backtesting.core.memory_manager import AggressiveMemoryManager
@@ -122,7 +126,8 @@ class ComprehensiveBacktestRunner:
             max_results=500, max_backtest_objects=100, memory_threshold_mb=4096
         )
 
-        self.output_dir = Path(self.raw_config["reporting"]["output_directory"])
+        reporting_cfg: YamlDict = cfg_dict(self.raw_config.get("reporting"))
+        self.output_dir = Path(str(reporting_cfg["output_directory"]))
         self.output_dir.mkdir(parents=True, exist_ok=True)
 
         # Cargar datos históricos
@@ -134,14 +139,15 @@ class ComprehensiveBacktestRunner:
         # macOS uses 'spawn' which requires pickling all objects (including thread locks)
         import platform
 
+        parallelization_cfg: YamlDict = cfg_dict(self.raw_config.get("parallelization"))
         default_parallel = platform.system() != "Darwin"  # Disable on macOS
-        self.parallel_enabled = self.raw_config.get("parallelization", {}).get(
-            "enabled", default_parallel
-        )
-        self.max_workers = self.raw_config.get("parallelization", {}).get("max_workers")
+        self.parallel_enabled = bool(parallelization_cfg.get("enabled", default_parallel))
+        max_workers_raw = parallelization_cfg.get("max_workers")
+        self.max_workers = int(max_workers_raw) if max_workers_raw is not None else None
 
         # Integrar meta_analyzer si está habilitado
-        self.meta_enabled = self.raw_config.get("meta_analysis", {}).get("enabled", False)
+        meta_analysis_cfg: YamlDict = cfg_dict(self.raw_config.get("meta_analysis"))
+        self.meta_enabled = bool(meta_analysis_cfg.get("enabled", False))
         self.audit_trail = None
         self.learning_storage = None
         self.audit_hash: str | None = None
@@ -157,13 +163,11 @@ class ComprehensiveBacktestRunner:
         # SRP: Initialize extracted modules (Phase 6)
         self.regime_analyzer = RegimeAnalyzer()
         self.monte_carlo_simulator = MonteCarloSimulator(
-            random_state=self.raw_config.get("random_state", 42)
+            random_state=int(self.raw_config.get("random_state", 42))
         )
         self.result_aggregator = ResultAggregator(
             output_dir=self.output_dir,
-            output_formats=self.raw_config.get("reporting", {}).get(
-                "output_format", ["csv", "json"]
-            ),
+            output_formats=cast("list[str]", reporting_cfg.get("output_format", ["csv", "json"])),
         )
 
         logger.info(f"ComprehensiveBacktestRunner initialized with {len(self.quotes)} quotes")
@@ -175,14 +179,13 @@ class ComprehensiveBacktestRunner:
         try:
             from app.backtesting.meta_analyzer import integrate_meta_analyzer_with_runner
 
+            meta_analysis_cfg: YamlDict = cfg_dict(self.raw_config.get("meta_analysis"))
             meta = integrate_meta_analyzer_with_runner(
                 runner=self,
                 config_path=self.config_path,
-                enable_audit=self.raw_config.get("meta_analysis", {}).get("enable_audit", True),
-                enable_storage=self.raw_config.get("meta_analysis", {}).get("enable_storage", True),
-                enable_analysis=self.raw_config.get("meta_analysis", {}).get(
-                    "enable_analysis", True
-                ),
+                enable_audit=bool(meta_analysis_cfg.get("enable_audit", True)),
+                enable_storage=bool(meta_analysis_cfg.get("enable_storage", True)),
+                enable_analysis=bool(meta_analysis_cfg.get("enable_analysis", True)),
             )
             self.audit_trail = meta["audit_trail"]
             self.learning_storage = meta["storage"]
@@ -206,13 +209,12 @@ class ComprehensiveBacktestRunner:
 
     def _load_market_data(self) -> list:
         """Cargar datos históricos de mercado."""
-        start_date = datetime.strptime(self.raw_config["input"]["start_date"], "%Y-%m-%d")
-        end_date = datetime.strptime(self.raw_config["input"]["end_date"], "%Y-%m-%d")
+        input_cfg: YamlDict = cfg_dict(self.raw_config.get("input"))
+        start_date = datetime.strptime(str(input_cfg["start_date"]), "%Y-%m-%d")
+        end_date = datetime.strptime(str(input_cfg["end_date"]), "%Y-%m-%d")
 
-        all_symbols = self.raw_config["input"]["symbols"]
-        data_source = self.raw_config["input"].get(
-            "source", "csv"
-        )  # Get source from config, default to csv
+        all_symbols = cast("list[str]", input_cfg["symbols"])
+        data_source = str(input_cfg.get("source", "csv"))  # Get source from config, default to csv
 
         logger.info(f"Loading market data from {start_date.date()} to {end_date.date()}")
         logger.info(f"Symbols: {all_symbols}")
@@ -259,7 +261,7 @@ class ComprehensiveBacktestRunner:
 
         return config_start, config_end
 
-    def run_all_backtests(self) -> list[dict[str, str | int | float | bool | list | dict]]:
+    def run_all_backtests(self) -> list[dict[str, ResultValue]]:
         """
         Ejecutar todos los backtests configurados.
 
@@ -274,10 +276,10 @@ class ComprehensiveBacktestRunner:
         results = []
 
         # Backtests configurados
-        backtests_config = self.raw_config.get("backtests", {})
+        backtests_config: YamlDict = cfg_dict(self.raw_config.get("backtests"))
 
         # 1. Baseline
-        if backtests_config.get("baseline", {}).get("enabled", True):
+        if cfg_dict(backtests_config.get("baseline", {})).get("enabled", True):
             logger.info("\n" + "=" * 80)
             logger.info("BASELINE BACKTEST")
             logger.info("=" * 80)
@@ -285,7 +287,7 @@ class ComprehensiveBacktestRunner:
             results.extend(baseline_results)
 
         # 2. Learning Engines
-        if backtests_config.get("learning_engines", {}).get("enabled", False):
+        if cfg_dict(backtests_config.get("learning_engines", {})).get("enabled", False):
             logger.info("\n" + "=" * 80)
             logger.info("LEARNING ENGINES BACKTEST")
             logger.info("=" * 80)
@@ -293,7 +295,7 @@ class ComprehensiveBacktestRunner:
             results.extend(learning_results)
 
         # 3. Walk-forward
-        if backtests_config.get("walk_forward", {}).get("enabled", False):
+        if cfg_dict(backtests_config.get("walk_forward", {})).get("enabled", False):
             logger.info("\n" + "=" * 80)
             logger.info("WALK-FORWARD BACKTEST")
             logger.info("=" * 80)
@@ -301,7 +303,7 @@ class ComprehensiveBacktestRunner:
             results.extend(walk_forward_results)
 
         # 4. Monte Carlo (unificado con Fase 3)
-        if backtests_config.get("monte_carlo", {}).get("enabled", False):
+        if cfg_dict(backtests_config.get("monte_carlo", {})).get("enabled", False):
             logger.info("\n" + "=" * 80)
             logger.info("MONTE CARLO BACKTEST")
             logger.info("=" * 80)
@@ -309,7 +311,7 @@ class ComprehensiveBacktestRunner:
             results.extend(monte_carlo_results)
 
         # 5. Transformer Optimization
-        if backtests_config.get("transformer_optimization", {}).get("enabled", False):
+        if cfg_dict(backtests_config.get("transformer_optimization", {})).get("enabled", False):
             logger.info("\n" + "=" * 80)
             logger.info("TRANSFORMER OPTIMIZATION BACKTEST")
             logger.info("=" * 80)
@@ -317,7 +319,7 @@ class ComprehensiveBacktestRunner:
             results.extend(transformer_results)
 
         # 6. Ablation
-        if backtests_config.get("ablation", {}).get("enabled", False):
+        if cfg_dict(backtests_config.get("ablation", {})).get("enabled", False):
             logger.info("\n" + "=" * 80)
             logger.info("ABLATION BACKTEST")
             logger.info("=" * 80)
@@ -325,7 +327,7 @@ class ComprehensiveBacktestRunner:
             results.extend(ablation_results)
 
         # 7. Grid Search
-        if backtests_config.get("grid_search", {}).get("enabled", False):
+        if cfg_dict(backtests_config.get("grid_search", {})).get("enabled", False):
             logger.info("\n" + "=" * 80)
             logger.info("GRID SEARCH BACKTEST")
             logger.info("=" * 80)
@@ -333,7 +335,7 @@ class ComprehensiveBacktestRunner:
             results.extend(grid_results)
 
         # 8. Out-of-Sample
-        if backtests_config.get("out_of_sample", {}).get("enabled", False):
+        if cfg_dict(backtests_config.get("out_of_sample", {})).get("enabled", False):
             logger.info("\n" + "=" * 80)
             logger.info("OUT-OF-SAMPLE BACKTEST")
             logger.info("=" * 80)
@@ -341,7 +343,7 @@ class ComprehensiveBacktestRunner:
             results.extend(oos_results)
 
         # 9. Multi-Strategy
-        if backtests_config.get("multi_strategy", {}).get("enabled", False):
+        if cfg_dict(backtests_config.get("multi_strategy", {})).get("enabled", False):
             logger.info("\n" + "=" * 80)
             logger.info("MULTI-STRATEGY BACKTEST")
             logger.info("=" * 80)
@@ -349,7 +351,7 @@ class ComprehensiveBacktestRunner:
             results.extend(multi_results)
 
         # 10. Regime Test
-        if backtests_config.get("regime_test", {}).get("enabled", False):
+        if cfg_dict(backtests_config.get("regime_test", {})).get("enabled", False):
             logger.info("\n" + "=" * 80)
             logger.info("REGIME TEST BACKTEST")
             logger.info("=" * 80)
@@ -372,7 +374,7 @@ class ComprehensiveBacktestRunner:
         return results
 
     def _run_compliance_validation(
-        self, results: list[dict[str, str | int | float | bool | list | dict]]
+        self, results: list[dict[str, ResultValue]]
     ) -> BacktestingComplianceResult:
         """
         Ejecutar validación de compliance sobre los resultados de backtest.
@@ -406,7 +408,7 @@ class ComprehensiveBacktestRunner:
         mc_var_95 = 0.0
         mc_var_99 = 0.0
         if mc_results:
-            returns = [r.get("return_pct", 0) for r in mc_results]
+            returns = [float(r.get("return_pct", 0)) for r in mc_results]
             mc_var_95 = float(np.percentile(returns, 5)) if returns else 0.0
             mc_var_99 = float(np.percentile(returns, 1)) if returns else 0.0
 
@@ -445,17 +447,18 @@ class ComprehensiveBacktestRunner:
         count = 0
 
         # Contar parámetros de módulos
-        modules = self.raw_config.get("modules", {})
+        modules: YamlDict = cfg_dict(self.raw_config.get("modules"))
         for _module_name, module_config in modules.items():
             if isinstance(module_config, dict):
+                module_cfg: YamlDict = module_config
                 # Contar thresholds y parámetros
-                if "thresholds" in module_config:
-                    count += len(module_config["thresholds"])
-                if "parameters" in module_config:
-                    count += len(module_config["parameters"])
+                if "thresholds" in module_cfg:
+                    count += len(module_cfg["thresholds"])
+                if "parameters" in module_cfg:
+                    count += len(module_cfg["parameters"])
 
         # Contar parámetros de learning engines
-        learning_engines = self.raw_config.get("learning_engines", {})
+        learning_engines: YamlDict = cfg_dict(self.raw_config.get("learning_engines"))
         for _engine_name, engine_config in learning_engines.items():
             if (
                 isinstance(engine_config, dict)
@@ -470,8 +473,8 @@ class ComprehensiveBacktestRunner:
         return count
 
     def _extract_walk_forward_results(
-        self, results: list[dict[str, str | int | float | bool | list | dict]]
-    ) -> list[dict[str, str | int | float | bool | list | dict]]:
+        self, results: list[dict[str, ResultValue]]
+    ) -> list[dict[str, ResultValue]]:
         """
         Extraer resultados de walk-forward para validación R5.
 
@@ -502,9 +505,7 @@ class ComprehensiveBacktestRunner:
 
         return windows
 
-    def run_specific_backtests(
-        self, backtest_names: list[str]
-    ) -> list[dict[str, str | int | float | bool | list | dict]]:
+    def run_specific_backtests(self, backtest_names: list[str]) -> list[dict[str, ResultValue]]:
         """
         Ejecutar backtests específicos por nombre.
 
@@ -567,7 +568,7 @@ class ComprehensiveBacktestRunner:
 
         return results
 
-    def run_baseline_backtest(self) -> list[dict[str, str | int | float | bool | list | dict]]:
+    def run_baseline_backtest(self) -> list[dict[str, ResultValue]]:
         """
         Ejecutar backtest baseline con todos los módulos activos.
 
@@ -603,7 +604,9 @@ class ComprehensiveBacktestRunner:
         result_dict = {
             "test_type": "baseline",
             "test_name": "Baseline - All Modules Active",
-            "modules_active": list(self.raw_config["modules"]["filters"].keys()),
+            "modules_active": list(
+                cfg_dict(cfg_dict(self.raw_config.get("modules"))["filters"]).keys()
+            ),
             "learning_engine": None,
             "thresholds": self._extract_thresholds(strategy_config),
             "total_pnl": consistent_metrics["total_pnl"],
@@ -636,7 +639,7 @@ class ComprehensiveBacktestRunner:
 
     def run_learning_engines_backtest(
         self,
-    ) -> list[dict[str, str | int | float | bool | list | dict]]:
+    ) -> list[dict[str, ResultValue]]:
         """
         Ejecutar backtests para cada learning engine individualmente.
 
@@ -646,7 +649,7 @@ class ComprehensiveBacktestRunner:
         logger.info("Running learning engines backtest...")
 
         results = []
-        learning_engines_config = self.raw_config.get("learning_engines", {})
+        learning_engines_config: YamlDict = cfg_dict(self.raw_config.get("learning_engines"))
 
         # Opción 2: Solo Supervised Learning (Deep/Transformer/Reinforcement deshabilitados por mutex blocking)
         logger.info("Learning Engines Policy: Only 'supervised' is supported (scikit-learn)")
@@ -675,9 +678,7 @@ class ComprehensiveBacktestRunner:
 
         return results
 
-    def _test_learning_engine(
-        self, engine_type: str
-    ) -> dict[str, str | int | float | bool | list | dict] | None:
+    def _test_learning_engine(self, engine_type: str) -> dict[str, ResultValue] | None:
         """
         Probar un learning engine específico.
 
@@ -689,8 +690,8 @@ class ComprehensiveBacktestRunner:
         """
         try:
             # Get the learning engine config from raw_config
-            learning_engines_config = self.raw_config.get("learning_engines", {})
-            engine_config = learning_engines_config.get(engine_type, {})
+            learning_engines_cfg: YamlDict = cfg_dict(self.raw_config.get("learning_engines"))
+            engine_config: YamlDict = cfg_dict(learning_engines_cfg.get(engine_type))
 
             # Build adaptive_learning config with full engine configuration
             adaptive_learning_config = {
@@ -802,9 +803,7 @@ class ComprehensiveBacktestRunner:
             logger.error(f"Error testing {engine_type} learning engine: {e}", exc_info=True)
             return None
 
-    def run_monte_carlo_backtest(
-        self, parallel: bool = False
-    ) -> list[dict[str, str | int | float | bool | list | dict]]:
+    def run_monte_carlo_backtest(self, parallel: bool = False) -> list[dict[str, ResultValue]]:
         """
         Ejecutar Monte Carlo / Stress Test (Fase 3: Unificado).
 
@@ -818,9 +817,11 @@ class ComprehensiveBacktestRunner:
         """
         logger.info(f"Running Monte Carlo Backtest ({'parallel' if parallel else 'sequential'})...")
 
-        mc_config = self.raw_config["backtests"]["monte_carlo"]
+        mc_config = cfg_dict(self.raw_config["backtests"])["monte_carlo"]
         num_simulations = mc_config.get("num_simulations", 100)
-        volatility_multiplier = mc_config.get("volatility_multiplier", {}).get("default", 1.0)
+        volatility_multiplier = cfg_dict(mc_config.get("volatility_multiplier", {})).get(
+            "default", 1.0
+        )
 
         results = []
 
@@ -863,7 +864,7 @@ class ComprehensiveBacktestRunner:
                 "test_name": f"Monte Carlo - Simulation {sim_num + 1}",
                 "simulation_num": sim_num + 1,
                 "volatility_multiplier": volatility_multiplier,
-                "modules_active": list(self.raw_config["modules"]["filters"].keys()),
+                "modules_active": list(cfg_dict(self.raw_config["modules"])["filters"].keys()),
                 "learning_engine": None,
                 "thresholds": self._extract_thresholds(strategy_config),
                 "total_pnl": final_capital - initial_capital,
@@ -917,7 +918,7 @@ class ComprehensiveBacktestRunner:
 
     def run_walk_forward_backtest(
         self,
-    ) -> list[dict[str, str | int | float | bool | list | dict]]:
+    ) -> list[dict[str, ResultValue]]:
         """
         Ejecutar backtest walk-forward con rolling windows.
 
@@ -936,7 +937,7 @@ class ComprehensiveBacktestRunner:
         """
         logger.info("Running walk-forward backtest...")
 
-        wf_config = self.raw_config.get("backtests", {}).get("walk_forward", {})
+        wf_config = cfg_dict(self.raw_config.get("backtests", {})).get("walk_forward", {})
 
         # Parámetros de ventana con valores default desde López de Prado
         train_pct = wf_config.get("train_pct", 0.70)  # 70% training
@@ -1157,7 +1158,7 @@ class ComprehensiveBacktestRunner:
             "win_rate": np.mean([w["win_rate"] for w in window_results]),
             "total_trades": np.sum([w["total_trades"] for w in window_results]),
             # Metadata
-            "modules_active": list(self.raw_config["modules"]["filters"].keys()),
+            "modules_active": list(cfg_dict(self.raw_config["modules"])["filters"].keys()),
             "learning_engine": None,
             "thresholds": self._extract_thresholds(self._create_strategy_config()),
         }
@@ -1188,7 +1189,7 @@ class ComprehensiveBacktestRunner:
 
     def run_transformer_optimization_backtest(
         self,
-    ) -> list[dict[str, str | int | float | bool | list | dict]]:
+    ) -> list[dict[str, ResultValue]]:
         """
         Execute Transformer-based parameter optimization backtest.
 
@@ -1213,14 +1214,20 @@ class ComprehensiveBacktestRunner:
         logger.info("Running Transformer optimization backtest...")
 
         try:
-            transformer_config = self.raw_config.get("learning_engines", {}).get("transformer", {})
+            transformer_config = cfg_dict(self.raw_config.get("learning_engines", {})).get(
+                "transformer", {}
+            )
             if not transformer_config.get("enabled", False):
                 logger.info("Transformer learning engine disabled, skipping optimization")
                 return []
 
             # Step 1: Determine safe date bounds for splitting
-            config_start = datetime.strptime(self.raw_config["input"]["start_date"], "%Y-%m-%d")
-            config_end = datetime.strptime(self.raw_config["input"]["end_date"], "%Y-%m-%d")
+            config_start = datetime.strptime(
+                cfg_dict(self.raw_config["input"])["start_date"], "%Y-%m-%d"
+            )
+            config_end = datetime.strptime(
+                cfg_dict(self.raw_config["input"])["end_date"], "%Y-%m-%d"
+            )
             split_start, split_end = self._get_safe_split_dates(config_start, config_end)
 
             # Step 2: Split data into train/validation/test (60%/20%/20%)
@@ -1398,7 +1405,7 @@ class ComprehensiveBacktestRunner:
             logger.error(f"Error in Transformer optimization backtest: {e}", exc_info=True)
             return []
 
-    def run_ablation_backtest(self) -> list[dict[str, str | int | float | bool | list | dict]]:
+    def run_ablation_backtest(self) -> list[dict[str, ResultValue]]:
         """
         Execute ablation backtest to measure individual filter/module impact.
 
@@ -1432,13 +1439,13 @@ class ComprehensiveBacktestRunner:
         logger.info("=" * 80)
 
         # Get ablation configuration
-        ablation_config = self.raw_config.get("backtests", {}).get("ablation", {})
+        ablation_config = cfg_dict(self.raw_config.get("backtests", {})).get("ablation", {})
 
         # Get filters to test from config or use all enabled filters
         modules_to_test = ablation_config.get("modules_to_test", [])
         if not modules_to_test:
             # Default: test all enabled filters
-            modules_config = self.raw_config.get("modules", {}).get("filters", {})
+            modules_config = cfg_dict(self.raw_config.get("modules", {})).get("filters", {})
             modules_to_test = [
                 name for name, config in modules_config.items() if config.get("enabled", False)
             ]
@@ -1718,7 +1725,7 @@ class ComprehensiveBacktestRunner:
 
         return [summary_dict, *ablation_results]
 
-    def run_grid_search_backtest(self) -> list[dict[str, str | int | float | bool | list | dict]]:
+    def run_grid_search_backtest(self) -> list[dict[str, ResultValue]]:
         """
         Execute grid search hyperparameter optimization backtest.
 
@@ -1755,7 +1762,7 @@ class ComprehensiveBacktestRunner:
 
         try:
             # Step 1: Define parameter grid from configuration
-            grid_config = self.raw_config.get("backtests", {}).get("grid_search", {})
+            grid_config = cfg_dict(self.raw_config.get("backtests", {})).get("grid_search", {})
             param_grid_def = grid_config.get("param_grid", {})
 
             # Default parameter grid if not specified
@@ -1789,8 +1796,12 @@ class ComprehensiveBacktestRunner:
                 param_combinations.append(param_dict)
 
             # Step 3: Determine actual data bounds and validate against config
-            config_start = datetime.strptime(self.raw_config["input"]["start_date"], "%Y-%m-%d")
-            config_end = datetime.strptime(self.raw_config["input"]["end_date"], "%Y-%m-%d")
+            config_start = datetime.strptime(
+                cfg_dict(self.raw_config["input"])["start_date"], "%Y-%m-%d"
+            )
+            config_end = datetime.strptime(
+                cfg_dict(self.raw_config["input"])["end_date"], "%Y-%m-%d"
+            )
 
             # Get actual data bounds from loaded quotes
             if self.quotes:
@@ -1849,8 +1860,8 @@ class ComprehensiveBacktestRunner:
 
             # Helper function to evaluate a single parameter combination
             def evaluate_param_set(
-                params: dict[str, str | int | float | bool | list | dict], param_idx: int
-            ) -> dict[str, str | int | float | bool | list | dict] | None:
+                params: dict[str, ResultValue], param_idx: int
+            ) -> dict[str, ResultValue] | None:
                 """
                 Evaluate a single parameter combination on train/val sets.
 
@@ -2156,11 +2167,11 @@ class ComprehensiveBacktestRunner:
     @staticmethod
     def _evaluate_param_set_static(
         config_path: str,
-        params: dict[str, str | int | float | bool | list | dict],
+        params: dict[str, ResultValue],
         param_idx: int,
         train_size: int,
         val_size: int,
-    ) -> dict[str, str | int | float | bool | list | dict] | None:
+    ) -> dict[str, ResultValue] | None:
         """
         Static method for evaluating a parameter set in parallel.
 
@@ -2198,7 +2209,7 @@ class ComprehensiveBacktestRunner:
         except Exception:
             return None
 
-    def run_optuna_optimization(self) -> list[dict[str, str | int | float | bool | list | dict]]:
+    def run_optuna_optimization(self) -> list[dict[str, ResultValue]]:
         """
         Execute Optuna-based hyperparameter optimization for learning engines.
 
@@ -2225,7 +2236,9 @@ class ComprehensiveBacktestRunner:
         logger.info("=" * 80)
 
         # Get optimization config
-        opt_config = self.raw_config.get("backtests", {}).get("hyperparameter_optimization", {})
+        opt_config = cfg_dict(self.raw_config.get("backtests", {})).get(
+            "hyperparameter_optimization", {}
+        )
         n_trials = opt_config.get("n_trials", 50)
         timeout = opt_config.get("timeout", 600)
         metric = opt_config.get("metric", "sharpe_ratio")
@@ -2239,8 +2252,12 @@ class ComprehensiveBacktestRunner:
         best_value = float("-inf")
 
         # Get learning engine config
-        learning_config = self.raw_config.get("learning_engines", {}).get("supervised", {})
-        algorithm = learning_config.get("parameters", {}).get("algorithm", "random_forest")
+        learning_config = cfg_dict(self.raw_config.get("learning_engines", {})).get(
+            "supervised", {}
+        )
+        algorithm = cfg_dict(learning_config.get("parameters", {})).get(
+            "algorithm", "random_forest"
+        )
 
         logger.info(f"Optimizing {algorithm} learning engine")
 
@@ -2290,8 +2307,12 @@ class ComprehensiveBacktestRunner:
                 # Create modified config for this trial
                 trial_config = copy.deepcopy(self.raw_config)
                 trial_config.setdefault("learning_engines", {}).setdefault("supervised", {})
-                trial_config["learning_engines"]["supervised"]["parameters"] = params
-                trial_config["learning_engines"]["supervised"]["lookahead_days"] = lookahead_days
+                cfg_dict(cfg_dict(trial_config["learning_engines"])["supervised"])["parameters"] = (
+                    params
+                )
+                cfg_dict(cfg_dict(trial_config["learning_engines"])["supervised"])[
+                    "lookahead_days"
+                ] = lookahead_days
 
                 # Create a temporary runner with the trial config
                 # Write config to temp file
@@ -2457,7 +2478,7 @@ class ComprehensiveBacktestRunner:
             f"  Optimized PnL:   ${final_results['best_result'].get('total_pnl', 0):,.2f} | "
             f"Sharpe: {final_results['best_result'].get('sharpe_ratio', 0):.2f}"
         )
-        improvement = final_results["improvement"]["pnl_diff"]
+        improvement = cfg_dict(final_results["improvement"])["pnl_diff"]
         logger.info(
             f"  Improvement:     ${improvement:,.2f} ({'✅ BETTER' if improvement > 0 else '❌ WORSE'})"
         )
@@ -2470,7 +2491,7 @@ class ComprehensiveBacktestRunner:
 
     def run_out_of_sample_backtest(
         self,
-    ) -> list[dict[str, str | int | float | bool | list | dict]]:
+    ) -> list[dict[str, ResultValue]]:
         """
         Ejecutar backtest out-of-sample con validación rigorosa.
 
@@ -2499,7 +2520,7 @@ class ComprehensiveBacktestRunner:
         logger.info("=" * 80)
 
         # Configuración del split OOS
-        oos_config = self.raw_config.get("backtests", {}).get("out_of_sample", {})
+        oos_config = cfg_dict(self.raw_config.get("backtests", {})).get("out_of_sample", {})
         train_ratio = oos_config.get("train_ratio", 0.70)
         acceptable_degradation = oos_config.get("acceptable_degradation_pct", 0.30)
         concept_drift_threshold = oos_config.get("concept_drift_threshold", 0.50)
@@ -2893,7 +2914,7 @@ class ComprehensiveBacktestRunner:
             "overall_status": "PASS" if (is_acceptable and not concept_drift_detected) else "FAIL",
             # Configuración de filtros
             "modules_active": (
-                list(self.raw_config["modules"]["filters"].keys())
+                list(cfg_dict(self.raw_config["modules"])["filters"].keys())
                 if "modules" in self.raw_config
                 else []
             ),
@@ -2905,7 +2926,7 @@ class ComprehensiveBacktestRunner:
         self.memory_manager.add_backtest_object("out_of_sample", oos_result)
 
         self._save_test_audit_and_weights(
-            cast("dict[str, str | int | float | bool | list | dict]", result_dict),
+            cast("dict[str, ResultValue]", result_dict),
             "out_of_sample",
             strategy,
         )
@@ -2921,11 +2942,11 @@ class ComprehensiveBacktestRunner:
         )
         logger.info("=" * 80)
 
-        return [cast("dict[str, str | int | float | bool | list | dict]", result_dict)]
+        return [cast("dict[str, ResultValue]", result_dict)]
 
     def run_backtest(
         self,
-    ) -> list[dict[str, str | int | float | bool | list | dict]]:
+    ) -> list[dict[str, ResultValue]]:
         """
         Ejecutar backtest multi-strategy con asignación de capital.
 
@@ -2998,15 +3019,19 @@ class ComprehensiveBacktestRunner:
                 allocation_manager=allocation_manager,
                 strategies=strategies,
                 config_params=config_params,
-                enable_diagnostics=self.raw_config.get("diagnostics", {}).get("enabled", False),
-                enable_dynamic_reallocation=self.raw_config.get("dynamic_reallocation", {}).get(
-                    "enabled", True
+                enable_diagnostics=cfg_dict(self.raw_config.get("diagnostics", {})).get(
+                    "enabled", False
                 ),
+                enable_dynamic_reallocation=cfg_dict(
+                    self.raw_config.get("dynamic_reallocation", {})
+                ).get("enabled", True),
             )
 
             # Paso 7: Ejecutar backtest multi-strategy
-            start_date = datetime.strptime(self.raw_config["input"]["start_date"], "%Y-%m-%d")
-            end_date = datetime.strptime(self.raw_config["input"]["end_date"], "%Y-%m-%d")
+            start_date = datetime.strptime(
+                cfg_dict(self.raw_config["input"])["start_date"], "%Y-%m-%d"
+            )
+            end_date = datetime.strptime(cfg_dict(self.raw_config["input"])["end_date"], "%Y-%m-%d")
 
             logger.info(
                 f"Running multi-strategy backtest from {start_date.date()} to {end_date.date()}"
@@ -3045,18 +3070,22 @@ class ComprehensiveBacktestRunner:
         from app.domain.models.input_profile import InputProfile, ObjectivoInversion, RiskTolerance
 
         # Extraer parámetros del config
-        initial_capital = Decimal(str(self.raw_config["input"]["initial_capital"]))
+        initial_capital = Decimal(str(cfg_dict(self.raw_config["input"])["initial_capital"]))
 
         # Obtener objetivo y riesgo del config o usar defaults
-        objective_str = self.raw_config.get("profile", {}).get("objective", "balanced_growth")
-        risk_str = self.raw_config.get("profile", {}).get("risk_tolerance", "medio")
+        objective_str = cfg_dict(self.raw_config.get("profile", {})).get(
+            "objective", "balanced_growth"
+        )
+        risk_str = cfg_dict(self.raw_config.get("profile", {})).get("risk_tolerance", "medio")
 
         # Mapear a enums
         objective = ObjectivoInversion(objective_str)
         risk = RiskTolerance(risk_str)
 
         # Obtener horizonte de inversión (default 24 meses)
-        investment_horizon = self.raw_config.get("profile", {}).get("investment_horizon", 24)
+        investment_horizon = cfg_dict(self.raw_config.get("profile", {})).get(
+            "investment_horizon", 24
+        )
 
         profile = InputProfile(
             capital_initial=initial_capital,
@@ -3074,7 +3103,7 @@ class ComprehensiveBacktestRunner:
 
     def _create_strategy_config_for_type(
         self, strategy_name: str, strategy_mapping
-    ) -> dict[str, str | int | float | bool | list | dict]:
+    ) -> dict[str, ResultValue]:
         """
         Crear configuración para un tipo de estrategia específico.
 
@@ -3091,7 +3120,7 @@ class ComprehensiveBacktestRunner:
         # Configuración base
         base_config = {
             "type": mapped_strategy_name,
-            "symbols": self.raw_config["input"]["symbols"],
+            "symbols": cfg_dict(self.raw_config["input"])["symbols"],
             "parameters": {
                 "risk_profile": strategy_mapping.risk_profile,
                 "leverage": strategy_mapping.leverage,
@@ -3142,17 +3171,17 @@ class ComprehensiveBacktestRunner:
 
         return base_config
 
-    def _get_filter_config(self) -> dict[str, str | int | float | bool | list | dict]:
+    def _get_filter_config(self) -> dict[str, ResultValue]:
         """
         Obtener configuración de filtros desde el config YAML.
 
         Returns:
             Diccionario con configuración de filtros
         """
-        filters_config: dict[str, str | int | float | bool | list | dict] = {}
+        filters_config: dict[str, ResultValue] = {}
 
         if "modules" in self.raw_config and "filters" in self.raw_config["modules"]:
-            filters = self.raw_config["modules"]["filters"]
+            filters = cfg_dict(self.raw_config["modules"])["filters"]
 
             for filter_name, filter_config in filters.items():
                 if filter_config.get("enabled", False):
@@ -3170,7 +3199,7 @@ class ComprehensiveBacktestRunner:
         consolidated_results: dict,
         strategy_mapping,
         profile,
-    ) -> list[dict[str, str | int | float | bool | list | dict]]:
+    ) -> list[dict[str, ResultValue]]:
         """
         Formatear resultados del multi-strategy backtest.
 
@@ -3261,7 +3290,7 @@ class ComprehensiveBacktestRunner:
 
         return results
 
-    def run_regime_test_backtest(self) -> list[dict[str, str | int | float | bool | list | dict]]:
+    def run_regime_test_backtest(self) -> list[dict[str, ResultValue]]:
         """
         Execute regime-based backtest to analyze strategy performance across market regimes.
 
@@ -3294,7 +3323,7 @@ class ComprehensiveBacktestRunner:
             # ============================================================
             # STEP 1: Load configuration and prepare data
             # ============================================================
-            regime_config = self.raw_config.get("backtests", {}).get("regime_test", {})
+            regime_config = cfg_dict(self.raw_config.get("backtests", {})).get("regime_test", {})
 
             # Regime detection method selection
             detection_method = regime_config.get(
@@ -3699,7 +3728,7 @@ class ComprehensiveBacktestRunner:
                 },
                 # Metadata
                 "modules_active": (
-                    list(self.raw_config["modules"]["filters"].keys())
+                    list(cfg_dict(self.raw_config["modules"])["filters"].keys())
                     if "modules" in self.raw_config
                     else []
                 ),
@@ -3735,9 +3764,9 @@ class ComprehensiveBacktestRunner:
 
     def optimize_with_validation(
         self,
-        param_grid: list[dict[str, str | int | float | bool | list | dict]],
+        param_grid: list[dict[str, ResultValue]],
         strategy_class: type[ModularMomentumStrategy] = ModularMomentumStrategy,
-    ) -> dict[str, str | int | float | bool | list | dict]:
+    ) -> dict[str, ResultValue]:
         """
         Optimize strategy parameters with proper train/val/test split and multiple testing correction.
 
@@ -3772,8 +3801,10 @@ class ComprehensiveBacktestRunner:
         splitter = TrainValTestSplitter(DataSplit(train_pct=0.6, val_pct=0.2, test_pct=0.2))
 
         # Determine safe date bounds for splitting
-        config_start = datetime.strptime(self.raw_config["input"]["start_date"], "%Y-%m-%d")
-        config_end = datetime.strptime(self.raw_config["input"]["end_date"], "%Y-%m-%d")
+        config_start = datetime.strptime(
+            cfg_dict(self.raw_config["input"])["start_date"], "%Y-%m-%d"
+        )
+        config_end = datetime.strptime(cfg_dict(self.raw_config["input"])["end_date"], "%Y-%m-%d")
         split_start, split_end = self._get_safe_split_dates(config_start, config_end)
 
         # Split data
@@ -3899,7 +3930,7 @@ class ComprehensiveBacktestRunner:
         self,
         quotes: list,
         strategy: ModularMomentumStrategy,
-    ) -> dict[str, str | int | float | bool | list | dict]:
+    ) -> dict[str, ResultValue]:
         """
         Execute backtest with specific quotes and strategy.
 
@@ -3949,7 +3980,7 @@ class ComprehensiveBacktestRunner:
         }
 
     # Métodos helper
-    def _create_strategy_config(self) -> dict[str, str | int | float | bool | list | dict]:
+    def _create_strategy_config(self) -> dict[str, ResultValue]:
         """
         Crear configuración de estrategia desde config YAML.
 
@@ -3975,7 +4006,7 @@ class ComprehensiveBacktestRunner:
         if "modules" in self.raw_config and "filters" in self.raw_config["modules"]:
             # Crear configuración de filtros desde YAML
             filters_config = {}
-            filters = self.raw_config["modules"]["filters"]
+            filters = cfg_dict(self.raw_config["modules"])["filters"]
 
             # Mapeo de nombres de filtros (config -> estrategia)
             filter_name_map = {
@@ -4021,12 +4052,10 @@ class ComprehensiveBacktestRunner:
                 },
             }
 
-        config: dict[str, str | int | float | bool | list | dict] = (
-            StrategyFactory.create_baseline_config(self.raw_config)
-        )
+        config: dict[str, ResultValue] = StrategyFactory.create_baseline_config(self.raw_config)
         return config
 
-    def _extract_filter_thresholds(self) -> dict[str, str | int | float | bool | list | dict]:
+    def _extract_filter_thresholds(self) -> dict[str, ResultValue]:
         """
         Extraer thresholds de la configuración de filtros.
 
@@ -4034,7 +4063,7 @@ class ComprehensiveBacktestRunner:
             Diccionario con thresholds de cada filtro activo
         """
         thresholds = {}
-        filters_config = self.raw_config.get("modules", {}).get("filters", {})
+        filters_config = cfg_dict(self.raw_config.get("modules", {})).get("filters", {})
 
         # Extraer thresholds de cada filtro
         for filter_name, filter_config in filters_config.items():
@@ -4058,16 +4087,14 @@ class ComprehensiveBacktestRunner:
         return name
 
     def _extract_thresholds(
-        self, strategy_config: dict[str, str | int | float | bool | list | dict]
-    ) -> dict[str, str | int | float | bool | list | dict]:
+        self, strategy_config: dict[str, ResultValue]
+    ) -> dict[str, ResultValue]:
         """
         Extraer thresholds de configuración de estrategia.
 
         Phase 5: Now delegates to StrategyFactory.
         """
-        result: dict[str, str | int | float | bool | list | dict] = (
-            StrategyFactory.extract_thresholds(strategy_config)
-        )
+        result: dict[str, ResultValue] = StrategyFactory.extract_thresholds(strategy_config)
         return result
 
     def _calculate_consistent_metrics(
@@ -4097,7 +4124,7 @@ class ComprehensiveBacktestRunner:
 
     def _save_test_audit_and_weights(
         self,
-        result_dict: dict[str, str | int | float | bool | list | dict],
+        result_dict: dict[str, ResultValue],
         test_type: str,
         strategy: object,
     ) -> None:
@@ -4119,13 +4146,13 @@ class ComprehensiveBacktestRunner:
 
             # Guardar pesos si hay learning engine
             if self.learning_storage and result_dict.get("learning_engine"):
-                engine_type = result_dict["learning_engine"]
+                engine_type = cast("str", result_dict["learning_engine"])
                 if hasattr(strategy, "learning_engine") and strategy.learning_engine:  # pylint: disable=no-member
                     try:
                         self.learning_storage.save_weights(
                             engine_name=engine_type,
                             weights=strategy.learning_engine.model,
-                            test_id=result_dict["test_name"],
+                            test_id=cast("str", result_dict["test_name"]),
                             metrics=result_dict,
                         )
                     except Exception as e:
@@ -4134,9 +4161,7 @@ class ComprehensiveBacktestRunner:
         except Exception as e:
             logger.warning(f"Error saving audit/weights: {e}")
 
-    def _save_results(
-        self, results: list[dict[str, str | int | float | bool | list | dict]]
-    ) -> None:
+    def _save_results(self, results: list[dict[str, ResultValue]]) -> None:
         """
         Guardar resultados a archivos.
 
@@ -4151,7 +4176,7 @@ class ComprehensiveBacktestRunner:
         self,
         engine_type: str,
         strategy: object,
-        result_dict: dict[str, str | int | float | bool | list | dict],
+        result_dict: dict[str, ResultValue],
     ) -> str | None:
         """
         Save learning engine weights asynchronously for better performance.
@@ -4189,8 +4214,8 @@ class ComprehensiveBacktestRunner:
             return None
 
     async def _finalize_meta_analysis(
-        self, results: list[dict[str, str | int | float | bool | list | dict]]
-    ) -> dict[str, str | int | float | bool | list | dict]:
+        self, results: list[dict[str, ResultValue]]
+    ) -> dict[str, ResultValue]:
         """
         Finalize meta-analysis after all backtests complete.
 
@@ -4267,26 +4292,24 @@ class ComprehensiveBacktestRunner:
             logger.error(f"Error during meta-analysis: {e}", exc_info=True)
             return {}
 
-    def get_results(self) -> list[dict[str, str | int | float | bool | list | dict]]:
+    def get_results(self) -> list[dict[str, ResultValue]]:
         """
         Obtener todos los resultados almacenados.
 
         Returns:
             Lista de resultados
         """
-        results: list[dict[str, str | int | float | bool | list | dict]] = (
-            self.memory_manager.get_results()
-        )
+        results: list[dict[str, ResultValue]] = self.memory_manager.get_results()
         return results
 
-    def get_memory_stats(self) -> dict[str, str | int | float | bool | list | dict]:
+    def get_memory_stats(self) -> dict[str, ResultValue]:
         """
         Obtener estadísticas de memoria.
 
         Returns:
             Diccionario con estadísticas
         """
-        stats: dict[str, str | int | float | bool | list | dict] = self.memory_manager.get_stats()
+        stats: dict[str, ResultValue] = self.memory_manager.get_stats()
         return stats
 
     def _extract_transformer_predictions(
@@ -4325,7 +4348,7 @@ class ComprehensiveBacktestRunner:
         self,
         train_quotes: list,
         val_quotes: list,
-        transformer_config: dict[str, str | int | float | bool | list | dict],
+        transformer_config: dict[str, ResultValue],
         n_iterations: int = 20,
     ) -> dict[str, float]:
         """
@@ -4514,9 +4537,7 @@ class ComprehensiveBacktestRunner:
             logger.warning(f"Error applying meta-labeling: {e}")
             return {}
 
-    def _create_ablation_config(
-        self, disabled_filter: str
-    ) -> dict[str, str | int | float | bool | list | dict]:
+    def _create_ablation_config(self, disabled_filter: str) -> dict[str, ResultValue]:
         """
         Create strategy configuration with a specific filter disabled for ablation testing.
 
@@ -4531,7 +4552,7 @@ class ComprehensiveBacktestRunner:
 
         # Create filters config
         filters_config = {}
-        filters = self.raw_config["modules"]["filters"]
+        filters = cfg_dict(self.raw_config["modules"])["filters"]
 
         for filter_name, filter_config in filters.items():
             if filter_name == disabled_filter:
@@ -4597,7 +4618,7 @@ class ComprehensiveBacktestRunner:
 
     def _analyze_regime_transitions(
         self, regime_labels: np.ndarray, regime_names: dict[int, str]
-    ) -> dict[str, str | int | float | bool | list | dict]:
+    ) -> dict[str, ResultValue]:
         """
         Analyze regime transitions and build transition probability matrix.
 
@@ -4610,7 +4631,7 @@ class ComprehensiveBacktestRunner:
         Returns:
             Dictionary with transition analysis results
         """
-        transitions: dict[str, str | int | float | bool | list | dict] = (
-            self.regime_analyzer.analyze_regime_transitions(regime_labels, regime_names)
+        transitions: dict[str, ResultValue] = self.regime_analyzer.analyze_regime_transitions(
+            regime_labels, regime_names
         )
         return transitions

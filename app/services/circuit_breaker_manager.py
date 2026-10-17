@@ -105,10 +105,13 @@ class CircuitBreakerConfig:
         """Initialize config with centralized values."""
         tt = get_config().trading_thresholds
 
-        # Market-wide thresholds (percentage drops) - from centralized config
-        self.LEVEL_1_THRESHOLD = Decimal(str(tt.circuit_breaker_level_1))
-        self.LEVEL_2_THRESHOLD = Decimal(str(tt.circuit_breaker_level_2))
-        self.LEVEL_3_THRESHOLD = Decimal(str(tt.circuit_breaker_level_3))
+        # Market-wide thresholds (percentage drops) - from centralized config.
+        # BUG FIX: `circuit_breaker_level_{1,2,3}` no existen en TradingThresholds
+        # (AttributeError garantizado en runtime); se usan los niveles estándar
+        # de los circuit breakers de mercado de EE. UU. (7%/13%/20%, en fracción).
+        self.LEVEL_1_THRESHOLD = Decimal(str(getattr(tt, "circuit_breaker_level_1", -0.07)))
+        self.LEVEL_2_THRESHOLD = Decimal(str(getattr(tt, "circuit_breaker_level_2", -0.13)))
+        self.LEVEL_3_THRESHOLD = Decimal(str(getattr(tt, "circuit_breaker_level_3", -0.20)))
 
         # Single stock halt thresholds - from centralized config
         self.STOCK_VOLATILITY_THRESHOLD = Decimal(str(tt.circuit_breaker_stock_volatility))
@@ -321,8 +324,8 @@ class CircuitBreakerManager:
                 logger.warning(f"Could not fetch data for {self.config.market_index_symbol}")
                 return
 
-            current_price = to_decimal(getattr(index_data, "last_price", 0))
-            change_pct = to_decimal(getattr(index_data, "change_percent", 0))
+            current_price = to_decimal(getattr(index_data, "last_price", 0)) or Decimal("0")
+            change_pct = to_decimal(getattr(index_data, "change_percent", 0)) or Decimal("0")
 
             # Update market state
             self._market_states[self.config.market_index_symbol] = MarketState(

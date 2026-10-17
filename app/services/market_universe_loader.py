@@ -31,7 +31,7 @@ import time
 from collections import OrderedDict
 from datetime import timedelta
 from decimal import Decimal
-from typing import TYPE_CHECKING, ClassVar
+from typing import TYPE_CHECKING, Awaitable, Callable, ClassVar, Generic, TypeVar
 
 if TYPE_CHECKING:
     import pandas as pd
@@ -46,6 +46,8 @@ YFINANCE_AVAILABLE = True
 TQDM_AVAILABLE = True
 
 logger = logging.getLogger(__name__)
+
+_T = TypeVar("_T")
 
 
 # ============================================================================
@@ -72,10 +74,10 @@ class RetryConfig:
 
 
 async def retry_with_backoff(
-    func,
+    func: Callable[[], Awaitable[_T]],
     retry_config: RetryConfig | None = None,
     operation_name: str = "operation",
-) -> str | int | float | bool | dict | list | None:
+) -> _T:
     """
     Execute function with retry and exponential backoff.
 
@@ -91,7 +93,7 @@ async def retry_with_backoff(
         Exception: If all retries exhausted
     """
     config = retry_config or RetryConfig()
-    last_exception = None
+    last_exception: BaseException | None = None
 
     for attempt in range(config.max_attempts):
         try:
@@ -121,7 +123,9 @@ async def retry_with_backoff(
             )
             await asyncio.sleep(delay)
 
-    raise last_exception
+    if last_exception is not None:
+        raise last_exception
+    raise RuntimeError(f"{operation_name}: no retry attempts were executed")
 
 
 # ============================================================================
@@ -208,7 +212,7 @@ class CircuitBreaker:
 # ============================================================================
 
 
-class LRUCache:
+class LRUCache(Generic[_T]):
     """
     LRU (Least Recently Used) cache with size limits and TTL.
 
@@ -230,12 +234,12 @@ class LRUCache:
         self.max_size = max_size
         self.default_ttl_seconds = default_ttl_seconds
 
-        self._cache: OrderedDict = OrderedDict()
+        self._cache: OrderedDict[str, _T] = OrderedDict()
         self._timestamps: dict[str, float] = {}
         self._hits = 0
         self._misses = 0
 
-    def get(self, key: str) -> str | int | float | bool | dict | list | None:
+    def get(self, key: str) -> _T | None:
         """Get value from cache."""
         if key not in self._cache:
             self._misses += 1
@@ -255,7 +259,7 @@ class LRUCache:
     def put(
         self,
         key: str,
-        value: str | int | float | bool | dict | list,
+        value: _T,
         ttl_seconds: float | None = None,
     ):
         """Put value in cache."""
@@ -515,18 +519,18 @@ class MarketUniverseLoader:
         self.max_concurrent_requests = max_concurrent_requests
 
         cache_ttl_seconds = cache_ttl_hours * 3600
-        self._universe_cache = LRUCache(max_size=50, default_ttl_seconds=cache_ttl_seconds)
-        self._data_cache = LRUCache(max_size=100, default_ttl_seconds=cache_ttl_seconds)
+        self._universe_cache: LRUCache[list[str]] = LRUCache(
+            max_size=50, default_ttl_seconds=cache_ttl_seconds
+        )
+        self._data_cache: LRUCache[dict] = LRUCache(
+            max_size=100, default_ttl_seconds=cache_ttl_seconds
+        )
 
-        if enable_circuit_breaker:
-            self._circuit_breaker = CircuitBreaker()
-        else:
-            self._circuit_breaker = None
+        self._circuit_breaker: CircuitBreaker | None = (
+            CircuitBreaker() if enable_circuit_breaker else None
+        )
 
-        if enable_retry:
-            self._retry_config = RetryConfig()
-        else:
-            self._retry_config = None
+        self._retry_config: RetryConfig | None = RetryConfig() if enable_retry else None
 
         self._semaphore: asyncio.Semaphore | None = None
         self._max_concurrent_requests = max_concurrent_requests

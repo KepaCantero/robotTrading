@@ -292,14 +292,16 @@ class MarketDataService:
 
         return None
 
-    async def _get_cached_quote(self, symbol: str) -> MarketDataCache | None:
+    async def _get_cached_quote(self, symbol: str) -> Quote | None:
         """Get cached quote data."""
         async with self._cache_lock:
             cache_key = f"quote_{symbol}"
             cache_item = self.cache.get(cache_key)
             if cache_item and cache_item.is_cache_valid():
                 # Convert dict back to Quote object
-                quote_data = cache_item.data
+                if not isinstance(cache_item.data, dict):
+                    return None
+                quote_data: dict[str, Any] = cache_item.data
                 # Convert string enum values back to enum objects
                 if "feed_type" in quote_data and isinstance(quote_data["feed_type"], str):
                     quote_data["feed_type"] = DataFeedType.YAHOO_FINANCE
@@ -329,7 +331,14 @@ class MarketDataService:
             cache_item = self.cache.get(cache_key)
             if cache_item and cache_item.is_cache_valid():
                 # Convert list of dicts back to HistoricalData objects
-                historical_data = [HistoricalData(**item) for item in cache_item.data]
+                if not isinstance(cache_item.data, list):
+                    return None
+                historical_data: list[HistoricalData] = []
+                for raw_item in cache_item.data:
+                    if not isinstance(raw_item, dict):
+                        continue
+                    item: dict[str, Any] = raw_item
+                    historical_data.append(HistoricalData(**item))
                 return historical_data
             return None
 

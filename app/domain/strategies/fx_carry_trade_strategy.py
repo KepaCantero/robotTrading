@@ -286,9 +286,7 @@ class FXCarryTradeStrategy(BaseStrategy):
         """
         # Base confidence from signal strength - use config multiplier
         signal_strength = abs(float(signal.signal))
-        base_confidence: float = min(
-            signal_strength * self._cfg.base_confidence_multiplier, self._cfg.carry_boost_max
-        )
+        base_confidence: float = min(signal_strength * self._cfg.base_confidence_multiplier, 100.0)
 
         # Boost for positive carry (positive expected return) - use config
         if signal.carry > 0:

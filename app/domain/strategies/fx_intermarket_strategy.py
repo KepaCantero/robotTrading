@@ -28,8 +28,9 @@ import logging
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from decimal import Decimal
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING, Any, cast
 
+from app.domain.models.market_data import Quote
 from app.domain.models.signal import Signal, SignalSource, SignalStrength, SignalType
 from app.domain.strategies.base import BaseStrategy
 from app.domain.strategies.fx_intermarket.correlation_analyzer import CorrelationAnalyzer
@@ -114,12 +115,12 @@ class FXIntermarketStrategy(BaseStrategy):
         if isinstance(config, dict):
             # Extract known parameters or use defaults
             strategy_config = FXIntermarketConfig(
-                correlation_lookback=config.get("correlation_lookback", 60),
+                correlation_lookback=int(config.get("correlation_lookback", 60)),
                 min_correlation=Decimal(str(config.get("min_correlation", "0.6"))),
                 min_significance=Decimal(str(config.get("min_significance", "70"))),
                 signal_threshold=Decimal(str(config.get("signal_threshold", "60"))),
                 min_signal_strength=Decimal(str(config.get("min_signal_strength", "65"))),
-                max_positions=config.get("max_positions", 5),
+                max_positions=int(config.get("max_positions", 5)),
                 stop_loss=Decimal(str(config.get("stop_loss", "0.03"))),
                 take_profit=Decimal(str(config.get("take_profit", "0.08"))),
                 position_size=Decimal(str(config.get("position_size", "0.1"))),
@@ -145,7 +146,11 @@ class FXIntermarketStrategy(BaseStrategy):
                 }
             )
 
-        self.config = strategy_config
+        # Typed view of the strategy configuration (the same object kept in
+        # ``self.config`` for BaseStrategy compatibility, which types it as a
+        # plain dict). Use ``self.fx_config`` for typed attribute access.
+        self.fx_config = strategy_config
+        self.config = cast("dict[str, Any]", strategy_config)
 
         # Initialize correlation analyzer
         self.analyzer = CorrelationAnalyzer(
@@ -162,8 +167,8 @@ class FXIntermarketStrategy(BaseStrategy):
 
         logger.info(
             f"FXIntermarketStrategy initialized with "
-            f"{len(self.config.monitored_pairs)} pairs, "
-            f"{len(self.config.monitored_assets)} assets"
+            f"{len(self.fx_config.monitored_pairs)} pairs, "
+            f"{len(self.fx_config.monitored_assets)} assets"
         )
 
     def _setup_default_relationships(self) -> None:
@@ -186,7 +191,7 @@ class FXIntermarketStrategy(BaseStrategy):
             "USD/JPY_US10Y": RelationshipType.YIELD_DIFFERENTIAL,
         }
 
-    def generate_signals(self, market_data: dict[str, pd.Series]) -> list[Signal]:
+    def generate_signals(self, market_data: dict[str, pd.Series] | Quote) -> list[Signal]:
         """
         Generate trading signals based on intermarket analysis.
 
@@ -250,10 +255,10 @@ class FXIntermarketStrategy(BaseStrategy):
                             signals.append(base_signal)
 
             # Limit to max positions
-            if len(signals) > self.config.max_positions:
+            if len(signals) > self.fx_config.max_positions:
                 # Sort by confidence and keep top signals
                 signals.sort(key=lambda s: s.confidence, reverse=True)
-                signals = signals[: self.config.max_positions]
+                signals = signals[: self.fx_config.max_positions]
 
             logger.info(
                 f"Generated {len(signals)} intermarket signals "
@@ -315,7 +320,7 @@ class FXIntermarketStrategy(BaseStrategy):
 
         for asset, returns in returns_data.items():
             # Only check external assets, not FX pairs
-            if asset in self.config.monitored_assets:
+            if asset in self.fx_config.monitored_assets:
                 if len(returns) < 2:
                     continue
 
@@ -408,7 +413,7 @@ class FXIntermarketStrategy(BaseStrategy):
             signal_type = self._determine_signal_type(expected_move, relationship.relationship_type)
 
             # Check if signal meets threshold
-            if strength < self.config.min_signal_strength:
+            if strength < self.fx_config.min_signal_strength:
                 return None
 
             # Build rationale
@@ -419,7 +424,7 @@ class FXIntermarketStrategy(BaseStrategy):
                 expected_move=expected_move,
                 confidence=confidence,
                 relationship=relationship,
-                trigger_move=asset_move,
+                trigger_move=asset_return,
                 timestamp=datetime.now(timezone.utc).replace(tzinfo=None),
             )
 
@@ -758,7 +763,7 @@ class FXIntermarketStrategy(BaseStrategy):
         Examples:
             >>> pairs = strategy.get_monitored_pairs()
         """
-        return cast("list[str]", self.config.get_fx_pairs())
+        return cast("list[str]", self.fx_config.get_fx_pairs())
 
     def get_monitored_assets(self) -> dict[str, AssetClass]:
         """
@@ -770,7 +775,7 @@ class FXIntermarketStrategy(BaseStrategy):
         Examples:
             >>> assets = strategy.get_monitored_assets()
         """
-        return cast("dict[str, AssetClass]", self.config.get_external_assets())
+        return cast("dict[str, AssetClass]", self.fx_config.get_external_assets())
 
     def risk_check(self, signal: Signal, portfolio: object) -> bool:
         """
@@ -787,10 +792,10 @@ class FXIntermarketStrategy(BaseStrategy):
             >>> passes = strategy.risk_check(signal, portfolio)
         """
         # Check confidence threshold
-        if signal.confidence < float(self.config.signal_threshold):
+        if signal.confidence < float(self.fx_config.signal_threshold):
             logger.warning(
                 f"Signal rejected: confidence {signal.confidence} "
-                f"below threshold {self.config.signal_threshold}"
+                f"below threshold {self.fx_config.signal_threshold}"
             )
             return False
 
@@ -834,8 +839,8 @@ class FXIntermarketStrategy(BaseStrategy):
             "active_relationships": len(self.state.active_relationships),
             "current_signals": len(self.state.current_signals),
             "total_trades": self.state.total_trades,
-            "monitored_pairs": len(self.config.monitored_pairs),
-            "monitored_assets": len(self.config.monitored_assets),
+            "monitored_pairs": len(self.fx_config.monitored_pairs),
+            "monitored_assets": len(self.fx_config.monitored_assets),
             "last_correlation_update": self.state.last_correlation_update.isoformat(),
         }
 
@@ -843,9 +848,9 @@ class FXIntermarketStrategy(BaseStrategy):
         """Return string representation of strategy."""
         return (
             f"FXIntermarketStrategy("
-            f"pairs={len(self.config.monitored_pairs)}, "
-            f"assets={len(self.config.monitored_assets)}, "
-            f"min_corr={self.config.min_correlation})"
+            f"pairs={len(self.fx_config.monitored_pairs)}, "
+            f"assets={len(self.fx_config.monitored_assets)}, "
+            f"min_corr={self.fx_config.min_correlation})"
         )
 
     def __repr__(self) -> str:

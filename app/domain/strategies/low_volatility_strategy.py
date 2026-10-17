@@ -245,9 +245,7 @@ class LowVolatilityStrategy(BaseStrategy):
             return []
 
         # Actualizar precio en el perfil
-        profile.current_price = (
-            market_data.close if hasattr(market_data, "close") else market_data.price
-        )
+        profile.current_price = market_data.close
 
         # Evaluar si generar señal
         signals = []
@@ -305,14 +303,21 @@ class LowVolatilityStrategy(BaseStrategy):
         if not profile.is_defensive_stock:
             return False
 
+        # Métricas de volatilidad (valor por defecto del dominio si faltan)
+        metrics = (
+            profile.volatility_metrics
+            if profile.volatility_metrics is not None
+            else VolatilityMetrics()
+        )
+
         # Verificar volatilidad promedio
-        avg_vol = profile.volatility_metrics.average_volatility
-        if avg_vol is None or avg_vol > self.strategy_config.max_historical_volatility:
+        avg_vol = metrics.average_volatility
+        if avg_vol > self.strategy_config.max_historical_volatility:
             return False
 
         # Verificar beta
-        beta = profile.volatility_metrics.beta
-        return not (beta is None or beta > self.strategy_config.max_beta)
+        beta = metrics.beta
+        return not beta > self.strategy_config.max_beta
 
     def _should_sell(self, profile: LowVolatilityProfile) -> bool:
         """
@@ -329,25 +334,34 @@ class LowVolatilityStrategy(BaseStrategy):
         Returns:
             True si se debe vender
         """
+        # Métricas de volatilidad (valor por defecto del dominio si faltan)
+        metrics = (
+            profile.volatility_metrics
+            if profile.volatility_metrics is not None
+            else VolatilityMetrics()
+        )
+
         # Verificar si estamos en régimen de alta volatilidad
-        if profile.volatility_metrics.volatility_regime == VolatilityRegime.HIGH:
+        if metrics.volatility_regime == VolatilityRegime.HIGH:
             logger.warning(f"🌊 Régimen de alta volatilidad detectado: {profile.symbol}")
             return True
 
         # Volatilidad aumentó significativamente
-        current_vol = profile.volatility_metrics.average_volatility
-        if current_vol and current_vol > self.strategy_config.max_historical_volatility * 1.5:
+        current_vol = metrics.average_volatility
+        if current_vol and current_vol > self.strategy_config.max_historical_volatility * Decimal(
+            "1.5"
+        ):
             logger.warning(f"📈 Volatilidad excesiva: {profile.symbol} {current_vol:.2f}%")
             return True
 
         # Beta aumentó
-        beta = profile.volatility_metrics.beta
-        if beta and beta > self.strategy_config.max_beta * 1.2:
+        beta = metrics.beta
+        if beta and beta > self.strategy_config.max_beta * Decimal("1.2"):
             logger.warning(f"⚠️ Beta excesivo: {profile.symbol} {beta:.2f}")
             return True
 
         # Máximo drawdown excesivo
-        max_dd = profile.volatility_metrics.max_drawdown
+        max_dd = metrics.max_drawdown
         if max_dd and max_dd < -50:  # Caída > 50%
             logger.warning(f"📉 Drawdown severo: {profile.symbol} {max_dd:.2f}%")
             return True
@@ -374,9 +388,16 @@ class LowVolatilityStrategy(BaseStrategy):
         # Calcular confianza basada en scores
         confidence = float(profile.overall_score or profile.low_vol_score or 60)
 
+        # Métricas de volatilidad (valor por defecto del dominio si faltan)
+        metrics = (
+            profile.volatility_metrics
+            if profile.volatility_metrics is not None
+            else VolatilityMetrics()
+        )
+
         # Calcular fuerza basada en volatilidad y beta
-        vol = profile.volatility_metrics.average_volatility or 20
-        beta = profile.volatility_metrics.beta or 0.7
+        vol = float(metrics.average_volatility or 20)
+        beta = float(metrics.beta or 0.7)
 
         if vol < 15 and beta < 0.5:
             strength = SignalStrength.STRONG
@@ -399,8 +420,8 @@ class LowVolatilityStrategy(BaseStrategy):
             liquidity_score=liquidity_score,
             priority_score=priority,
             source=SignalSource.FUNDAMENTAL,
-            price=market_data.close if hasattr(market_data, "close") else market_data.price,
-            volume=market_data.volume if hasattr(market_data, "volume") else Decimal("1000000"),
+            price=market_data.close,
+            volume=market_data.volume,
             metadata={
                 "reason": reason,
                 "volatility": float(vol),
@@ -431,6 +452,12 @@ class LowVolatilityStrategy(BaseStrategy):
         Returns:
             Señal de venta
         """
+        # Métricas de volatilidad (valor por defecto del dominio si faltan)
+        metrics = (
+            profile.volatility_metrics
+            if profile.volatility_metrics is not None
+            else VolatilityMetrics()
+        )
         signal = Signal(
             symbol=profile.symbol,
             signal_type=SignalType.SELL,
@@ -439,12 +466,12 @@ class LowVolatilityStrategy(BaseStrategy):
             liquidity_score=80.0,
             priority_score=60.0,
             source=SignalSource.FUNDAMENTAL,
-            price=market_data.close if hasattr(market_data, "close") else market_data.price,
-            volume=market_data.volume if hasattr(market_data, "volume") else Decimal("1000000"),
+            price=market_data.close,
+            volume=market_data.volume,
             metadata={
                 "reason": "volatility_increased",
-                "volatility": float(profile.volatility_metrics.average_volatility or 0),
-                "beta": float(profile.volatility_metrics.beta or 0),
+                "volatility": float(metrics.average_volatility or 0),
+                "beta": float(metrics.beta or 0),
                 "strategy": "low_volatility",
             },
         )
@@ -470,7 +497,7 @@ class LowVolatilityStrategy(BaseStrategy):
 
         for pos in portfolio.positions:
             if pos.symbol == signal.symbol:
-                current_allocation = pos.value / portfolio.total_value
+                current_allocation = pos.market_value / portfolio.total_value
 
         # Si ya tenemos posición, verificar si podemos aumentar
         if current_allocation > 0 and current_allocation >= max_pos:
