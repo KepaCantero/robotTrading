@@ -216,8 +216,10 @@ regulation:
 # ============================================
 api_keys:
   # Marketaux News API
+  # The real token is NEVER stored in this file: set MARKETAUX_API_KEY in .env
+  # (see .env.example). This section documents the integration only.
   marketaux:
-    api_token: "***REMOVED-LEAKED-TOKEN***"
+    api_token: "${MARKETAUX_API_KEY}"
     base_url: "https://api.marketaux.com/v1"
     features:
       - "News sentiment"

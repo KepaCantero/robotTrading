@@ -20,14 +20,14 @@ He completado la expansión del sistema de trading algorítmico para soportar tr
 
 ### 1. MARKETAUX NEWS API INTEGRATION
 
-**API Token**: `***REMOVED-LEAKED-TOKEN***`
+**API Token**: `${MARKETAUX_API_KEY}`
 
 **Características implementadas**:
 ```python
 from app.engines.data_engine.sources.sentiment_sources import NewsSentimentSource
 
 config = {
-    'api_key': '***REMOVED-LEAKED-TOKEN***',
+    'api_key': '${MARKETAUX_API_KEY}',
     'provider': 'marketaux'
 }
 
@@ -97,7 +97,7 @@ from app.services.multi_market_orchestrator import get_orchestrator
 orchestrator = get_orchestrator(
     total_capital=Decimal("100000"),
     tax_residence="ES",  # España
-    marketaux_api_key="***REMOVED-LEAKED-TOKEN***"
+    marketaux_api_key="${MARKETAUX_API_KEY}"
 )
 
 # Ejecutar ciclo completo de trading
@@ -280,7 +280,7 @@ from app.engines.data_engine.sources.sentiment_sources import NewsSentimentSourc
 
 async def test():
     config = {
-        'api_key': '***REMOVED-LEAKED-TOKEN***',
+        'api_key': '${MARKETAUX_API_KEY}',
         'provider': 'marketaux'
     }
     source = NewsSentimentSource(config)
@@ -304,7 +304,7 @@ async def test():
     orch = get_orchestrator(
         total_capital=Decimal('100000'),
         tax_residence='ES',
-        marketaux_api_key='***REMOVED-LEAKED-TOKEN***'
+        marketaux_api_key='${MARKETAUX_API_KEY}'
     )
     report = await orch.run_cycle('medio')
     print(report)
