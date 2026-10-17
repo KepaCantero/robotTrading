@@ -8,9 +8,7 @@ baseline vs optimization testing across investor profiles.
 import logging
 from decimal import Decimal
 
-from app.backtesting.profile_batch_backtester import (
-    ProfileBatchBacktester,
-)
+from app.backtesting.profile_batch_backtester import ProfileBatchBacktester
 from app.core.models.input_profile import InputProfile, ObjectivoInversion, RiskTolerance
 
 # Configure logging
@@ -77,7 +75,7 @@ def example_2_single_profile():
         investment_horizon=24,  # 2 years
     )
 
-    print(f"\nTesting profile:")
+    print("\nTesting profile:")
     print(f"  Capital: €{profile.capital_initial:,.0f}")
     print(f"  Objective: {profile.objetivo_inversion.value}")
     print(f"  Risk: {profile.risk_tolerance.value}")
@@ -86,7 +84,7 @@ def example_2_single_profile():
     # Run profile
     result = backtester.run_single_profile(profile)
 
-    print(f"\nResults:")
+    print("\nResults:")
     print(f"  Baseline Sharpe: {result.baseline_results.get('sharpe_ratio', 0):.2f}")
     print(f"  Optimized Sharpe: {result.optimization_results.get('sharpe_ratio', 0):.2f}")
     print(f"  Improvement: {result.improvement_metrics.get('sharpe_improvement', 0):.1f}%")
@@ -126,7 +124,7 @@ def example_3_get_best_strategy():
         objective="maximizar_capital", tier="medio", risk="medio"
     )
 
-    print(f"\nBest configuration for maximizar_capital, medio, medio:")
+    print("\nBest configuration for maximizar_capital, medio, medio:")
     print(f"  Profile ID: {best_config.get('profile_id')}")
     print(f"  Baseline Sharpe: {best_config['baseline_metrics']['sharpe_ratio']:.2f}")
     print(f"  Optimized Sharpe: {best_config['optimized_metrics']['sharpe_ratio']:.2f}")
@@ -162,13 +160,13 @@ def example_4_comparison_report():
     # Generate HTML comparison report
     html_report = backtester.generate_comparison_report()
 
-    print(f"\nComparison report generated:")
+    print("\nComparison report generated:")
     print(f"  Length: {len(html_report):,} characters")
-    print(f"  Report includes:")
-    print(f"    - Baseline vs Optimized metrics comparison")
-    print(f"    - Improvement percentages")
-    print(f"    - Parameter importance analysis")
-    print(f"    - Best strategies by objective")
+    print("  Report includes:")
+    print("    - Baseline vs Optimized metrics comparison")
+    print("    - Improvement percentages")
+    print("    - Parameter importance analysis")
+    print("    - Best strategies by objective")
 
 
 # ============================================================================
@@ -225,9 +223,9 @@ def example_5_custom_profiles():
         profile_name = (
             f"{result.profile.objetivo_inversion.value}_{result.profile.risk_tolerance.value}"
         )
-        baseline = result.baseline_results.get('sharpe_ratio', 0)
-        optimized = result.optimization_results.get('sharpe_ratio', 0)
-        improvement = result.improvement_metrics.get('sharpe_improvement', 0)
+        baseline = result.baseline_results.get("sharpe_ratio", 0)
+        optimized = result.optimization_results.get("sharpe_ratio", 0)
+        improvement = result.improvement_metrics.get("sharpe_improvement", 0)
         ready = "YES" if result.ready_for_paper_trading else "NO"
         print(
             f"{profile_name:<30} {baseline:<10.2f} {optimized:<10.2f} {improvement:+<11.1f}% {ready}"

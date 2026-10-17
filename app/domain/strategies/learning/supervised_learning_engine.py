@@ -63,6 +63,7 @@ class SupervisedLearningEngine(BaseLearningEngine):
 
         # Parámetros específicos por algoritmo
         self.model_params = config.get("model_parameters", {})
+        self.model = None
 
         # Threshold optimization
         self.optimize_thresholds = config.get("optimize_thresholds", True)
@@ -280,9 +281,13 @@ class SupervisedLearningEngine(BaseLearningEngine):
                                 else self.sample_weights_.iloc[: len(train_idx)].values
                             )
                         else:
-                            train_weights = self.sample_weights_[: len(train_idx)]
+                            train_weights = self.sample_weights_[  # pylint: disable=unsubscriptable-object
+                                : len(train_idx)
+                            ]
                     else:
-                        train_weights = self.sample_weights_[: len(X_train)]
+                        train_weights = self.sample_weights_[  # pylint: disable=unsubscriptable-object
+                            : len(X_train)
+                        ]
 
                     logger.info(
                         f"Applied sample weights to training set: {len(train_weights)} samples"
@@ -521,7 +526,7 @@ class SupervisedLearningEngine(BaseLearningEngine):
                     loss = self.bce(pred, target)
                     return (loss * weights).mean()
 
-            criterion = WeightedBCELoss()
+            criterion: WeightedBCELoss | nn.BCELoss = WeightedBCELoss()
         else:
             criterion = nn.BCELoss()
 
@@ -562,6 +567,12 @@ class SupervisedLearningEngine(BaseLearningEngine):
 
         return model
 
+    def _require_sklearn_model(self):
+        """Devuelve el modelo entrenado (familia sklearn-like) o lanza si no hay."""
+        if self.model is None:
+            raise ValueError("SupervisedLearningEngine: no trained model available")
+        return self.model
+
     def _evaluate_model(self, X, y):
         """Evaluar modelo y retornar métricas."""
         # PyTorch es REQUIRED - ya importado al inicio del módulo
@@ -573,16 +584,17 @@ class SupervisedLearningEngine(BaseLearningEngine):
                 y_pred = (predictions >= 0.5).astype(int)
         else:
             # Evaluación para sklearn/xgboost/lightgbm/catboost
-            if hasattr(self.model, "predict_proba"):
-                proba = self.model.predict_proba(X)
+            model = self._require_sklearn_model()
+            if hasattr(model, "predict_proba"):
+                proba = model.predict_proba(X)
                 # Verificar si solo hay una clase (proba tiene shape [n_samples, 1])
                 # En ese caso, usar la única columna disponible
                 predictions = proba[:, 1] if proba.shape[1] > 1 else proba[:, 0]
             else:
-                predictions = self.model.predict(X)
+                predictions = model.predict(X)
 
             # Obtener predicciones de clase (para métricas)
-            y_pred = self.model.predict(X)
+            y_pred = model.predict(X)
 
         metrics = {
             "accuracy": float(accuracy_score(y, y_pred)),
@@ -700,14 +712,15 @@ class SupervisedLearningEngine(BaseLearningEngine):
                 prob = self.model(X_t).item()
         else:
             # Predicción con sklearn/xgboost
-            if hasattr(self.model, "predict_proba"):
-                proba = self.model.predict_proba([feature_vector])[0]
+            model = self._require_sklearn_model()
+            if hasattr(model, "predict_proba"):
+                proba = model.predict_proba([feature_vector])[0]
                 # Manejar caso donde solo hay una clase
                 prob = (
                     proba[1] if len(proba) > 1 else proba[0]
                 )  # Clase positiva o única clase disponible
             else:
-                pred = self.model.predict([feature_vector])[0]
+                pred = model.predict([feature_vector])[0]
                 prob = float(pred)
 
         # Decidir acción

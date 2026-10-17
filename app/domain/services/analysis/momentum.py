@@ -23,7 +23,8 @@ Recommended (new code):
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING, Any, cast
+import math
+from typing import TYPE_CHECKING, Any, Sequence, cast
 
 from app.domain.services.indicators.factory import get_indicator_calculator
 
@@ -67,6 +68,36 @@ class TechnicalIndicatorCalculator:
     def indicators(self) -> TechnicalIndicators:
         """Get the underlying indicators instance."""
         return self._indicators
+
+    def calculate_zscore(
+        self, prices: Sequence[float], period: int = 20, std: float = 1.0
+    ) -> float | None:
+        """Rolling z-score del último precio; None si no hay datos suficientes."""
+        if len(prices) < 2:
+            return None
+        window = list(prices[-period:])
+        mean = sum(window) / len(window)
+        variance = sum((p - mean) ** 2 for p in window) / (len(window) - 1)
+        sd = variance**0.5
+        if sd == 0:
+            return None
+        return (prices[-1] - mean) / (sd * std)
+
+    def calculate_volatility(
+        self, prices: Sequence[float], tf: str = "days", returns: bool = False, log: bool = False
+    ) -> float | None:
+        """Desviación típica de retornos como fracción diaria; None si no alcanza."""
+        if len(prices) < 3:
+            return None
+        if log:
+            rets = [math.log(b / a) for a, b in zip(prices, prices[1:]) if a > 0]
+        else:
+            rets = [(b - a) / a for a, b in zip(prices, prices[1:]) if a > 0]
+        if len(rets) < 2:
+            return None
+        mean = sum(rets) / len(rets)
+        variance = sum((r - mean) ** 2 for r in rets) / (len(rets) - 1)
+        return variance**0.5
 
     def calculate_rsi(
         self, prices: list | np.ndarray | pd.Series, period: int = 14

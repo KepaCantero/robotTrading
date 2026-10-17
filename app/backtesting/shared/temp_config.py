@@ -65,7 +65,7 @@ class TempConfigManager:
         self.temp_path = self._create_temp_file()
         return self.temp_path
 
-    def __exit__(self, exc_type, exc_val, exc_tb) -> None:
+    def __exit__(self, exc_type, exc_val, _exc_tb) -> None:
         """Clean up temp file."""
         self._cleanup()
 

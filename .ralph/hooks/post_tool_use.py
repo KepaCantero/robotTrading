@@ -3,6 +3,7 @@
 Post-tool-use hook for .ralph
 Validates tool outputs after execution, including ruff/mypy checks on edited files
 """
+
 import json
 import os
 import subprocess

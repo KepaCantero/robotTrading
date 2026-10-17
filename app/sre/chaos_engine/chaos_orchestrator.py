@@ -32,7 +32,7 @@ from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from decimal import Decimal
 from enum import Enum
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 import aiosqlite
 
@@ -150,10 +150,10 @@ class ChaosOrchestrator:
     def __init__(
         self,
         service_name: str,
-        failure_injectors: dict[str, object],
+        failure_injectors: dict[str, Any],
         blast_radius_controller: BlastRadiusController,
         hypothesis_validator: HypothesisValidator,
-        metrics_collector: object | None = None,
+        metrics_collector: Any = None,
         config: ChaosConfig | None = None,
     ):
         """
@@ -205,8 +205,7 @@ class ChaosOrchestrator:
             db_path.parent.mkdir(parents=True, exist_ok=True)
 
             async with aiosqlite.connect(self.config.db_path) as db:
-                await db.execute(
-                    """
+                await db.execute("""
                     CREATE TABLE IF NOT EXISTS chaos_experiments (
                         id TEXT PRIMARY KEY,
                         service_name TEXT NOT NULL,
@@ -225,15 +224,12 @@ class ChaosOrchestrator:
                         incidents TEXT,
                         rollback_actions TEXT
                     )
-                """
-                )
+                """)
 
-                await db.execute(
-                    """
+                await db.execute("""
                     CREATE INDEX IF NOT EXISTS idx_experiments_service_status
                     ON chaos_experiments(service_name, status)
-                """
-                )
+                """)
 
                 await db.commit()
 

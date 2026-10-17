@@ -1,3 +1,15 @@
+"""
+Test de comparación de estrategias - Ejecuta 4 backtests y genera comparativa.
+
+Este test ejecuta backtests con:
+1. Multi-strategy (all_strategies)
+2. Solo Momentum
+3. Solo Pairs Trading
+4. Solo Mean Reversion
+
+Y genera una comparativa de resultados al final.
+"""
+
 #!/usr/bin/env python3
 import logging
 import sys
@@ -19,26 +31,13 @@ from app.services.portfolio_builder import PortfolioBuilder
 from app.services.portfolio_config_manager import get_portfolio_config_manager
 from tests.integration.data.test_data_loader import load_all_csv_data
 
-"""
-Test de comparación de estrategias - Ejecuta 4 backtests y genera comparativa.
-
-Este test ejecuta backtests con:
-1. Multi-strategy (all_strategies)
-2. Solo Momentum
-3. Solo Pairs Trading
-4. Solo Mean Reversion
-
-Y genera una comparativa de resultados al final.
-"""
-
-
 # Add project root to path
 project_root = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(project_root))
 
 
 logging.basicConfig(
-    level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
 logger = logging.getLogger(__name__)
 
@@ -328,7 +327,7 @@ class StrategyComparisonBacktest:
                 s
                 for s in comparison_data
                 if isinstance(s.get("Win Rate"), str)
-                and s["Win Rate"].endswith('%')
+                and s["Win Rate"].endswith("%")
                 and s["Win Rate"] != "N/A"
             ]
             if win_rate_candidates:

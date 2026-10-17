@@ -62,7 +62,9 @@ class TestTradeRiskLimiter:
         limiter = TradeRiskLimiter()
 
         max_size = limiter.calculate_max_position_size(
-            sample_signal, sample_portfolio, Decimal("0.05")  # 5% stop loss
+            sample_signal,
+            sample_portfolio,
+            Decimal("0.05"),  # 5% stop loss
         )
 
         assert max_size > Decimal("0")

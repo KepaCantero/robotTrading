@@ -370,6 +370,7 @@ class AlmgrenChrissModel:
         Returns:
             Dict with calibrated parameters
         """
+        del symbol_col  # aceptado por compatibilidad; sin uso aquí
         required_cols = [size_col, adv_col, volatility_col, impact_col]
         missing = [c for c in required_cols if c not in historical_executions.columns]
 

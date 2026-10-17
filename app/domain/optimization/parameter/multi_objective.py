@@ -1,7 +1,3 @@
-from __future__ import annotations
-
-# mypy: ignore-errors
-# mypy: ignore-errors
 """
 Multi-Objective Optimization - FASE 6.1 Extension
 
@@ -12,6 +8,10 @@ Provides multi-objective optimization capabilities:
 - Weighted criteria selection
 """
 
+from __future__ import annotations
+
+# mypy: ignore-errors
+# mypy: ignore-errors
 import logging
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any, Callable

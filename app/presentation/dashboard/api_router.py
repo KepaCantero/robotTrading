@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 """Production Dashboard API Router.
 
 Provides FastAPI endpoints for the production dashboard including:
@@ -7,6 +5,8 @@ Provides FastAPI endpoints for the production dashboard including:
 - WebSocket endpoint for real-time updates
 - Alert management endpoints
 """
+
+from __future__ import annotations
 
 import asyncio
 import contextlib

@@ -25,7 +25,7 @@ from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import datetime
 from decimal import Decimal
-from typing import Any, Protocol, TypeVar, Union
+from typing import Any, Protocol, TypeVar, Union, cast
 
 from pandas import DataFrame
 from typing_extensions import TypeAlias
@@ -144,7 +144,7 @@ S = TypeVar("S", bound=StrategyProtocol)
 from ...backtesting.validation.models import WalkForwardConfig
 from ...backtesting.validation.walk_forward import WalkForwardValidator
 from ...core.config.base import get_config
-from ...core.models.input_profile import InputProfile, ObjectivoInversion, RiskTolerance
+from ...domain.models.input_profile import InputProfile, ObjectivoInversion, RiskTolerance
 from ...domain.optimization.parameter.base_optimizer import OptimizationConfig
 from ...domain.optimization.parameter.bayesian_optimizer import BayesianOptimizer
 from ...domain.optimization.parameter.models import ParameterGrid, ParameterRange, ParameterType
@@ -1717,8 +1717,10 @@ class StrategySelector:
         # Run validation
         try:
             result = validator.validate(
-                strategy_factory=strategy_factory,
-                param_grid=param_grid,
+                strategy_factory=cast(
+                    "Callable[[dict[str, int | float | str | bool]], object]", strategy_factory
+                ),
+                param_grid=cast("dict[str, list[int | float | str | bool]]", param_grid),
                 data=market_df,
             )
 

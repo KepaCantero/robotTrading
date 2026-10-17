@@ -17,9 +17,14 @@ from __future__ import annotations
 
 import logging
 from pathlib import Path
-from typing import Union
+from typing import Union, cast, overload
+
+from typing_extensions import TypeVar
 
 from .config_loader import YAMLConfigLoader
+
+# T se infiere del valor por defecto: get("x", 42) -> int, get("x", []) -> list
+T = TypeVar("T")
 
 logger = logging.getLogger(__name__)
 
@@ -84,7 +89,7 @@ class ProfileConfigLoader:
             self._config = {}
             return
 
-        self._config = loaded
+        self._config = cast("dict[str, _ConfigValue]", loaded)
 
         # Apply profile override if specified
         if self.profile:
@@ -139,11 +144,13 @@ class ProfileConfigLoader:
         """Get the full configuration dictionary."""
         return self._config
 
-    def get(
-        self,
-        key_path: str,
-        default: _ConfigValue = None,
-    ) -> _ConfigValue:
+    @overload
+    def get(self, key_path: str) -> _ConfigValue | None: ...
+
+    @overload
+    def get(self, key_path: str, default: T) -> T: ...
+
+    def get(self, key_path: str, default: object = None) -> object:
         """
         Get a configuration value using dot notation.
 
@@ -160,15 +167,15 @@ class ProfileConfigLoader:
             >>> loader.get("models.random_forest.n_estimators", 100)
             100
         """
-        if isinstance(default, (dict, list)):
+        if not isinstance(default, (str, int, float, bool)) and default is not None:
             # get_nested only accepts scalar defaults; resolve manually for
-            # container defaults.
+            # container (or other non-scalar) defaults.
             return self._resolve_path(key_path, default)
 
-        result: _ConfigValue = self.yaml_loader.get_nested(self.config, key_path, default)
-        return result
+        config = cast("dict[str, object]", self.config)
+        return cast("_ConfigValue", self.yaml_loader.get_nested(config, key_path, default))
 
-    def _resolve_path(self, key_path: str, default: _ConfigValue) -> _ConfigValue:
+    def _resolve_path(self, key_path: str, default: T) -> T:
         """Manually resolve a dot-separated key path, returning *default* if not found."""
         keys = key_path.split(".")
         value: _ConfigValue = self.config
@@ -181,7 +188,7 @@ class ProfileConfigLoader:
             else:
                 return default
 
-        return value if value is not None else default
+        return default if value is None else cast("T", value)
 
     # ========================================================================
     # PRIVATE TYPED ACCESSORS

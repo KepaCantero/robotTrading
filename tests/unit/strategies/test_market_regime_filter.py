@@ -57,10 +57,10 @@ class TestMarketRegimeFilter:
     def test_bear_market_crash_high_strength(self, strategy):
         """Test that bear market with high strength is blocked."""
         market_context = {
-            'type': 'trend_down',
-            'trend_strength': 0.8,  # > 0.6
-            'volatility_regime': 'high',
-            'volatility_percentile': 80,
+            "type": "trend_down",
+            "trend_strength": 0.8,  # > 0.6
+            "volatility_regime": "high",
+            "volatility_percentile": 80,
         }
 
         result = strategy._is_market_regime_safe(market_context)
@@ -70,10 +70,10 @@ class TestMarketRegimeFilter:
     def test_bear_market_exactly_at_threshold(self, strategy):
         """Test bear market exactly at threshold (0.6)."""
         market_context = {
-            'type': 'trend_down',
-            'trend_strength': 0.61,  # Just above 0.6
-            'volatility_regime': 'normal',
-            'volatility_percentile': 60,
+            "type": "trend_down",
+            "trend_strength": 0.61,  # Just above 0.6
+            "volatility_regime": "normal",
+            "volatility_percentile": 60,
         }
 
         result = strategy._is_market_regime_safe(market_context)
@@ -83,10 +83,10 @@ class TestMarketRegimeFilter:
     def test_dead_market_range_low_volatility(self, strategy):
         """Test that dead market (range + low vol) is blocked."""
         market_context = {
-            'type': 'range',
-            'trend_strength': 0.2,
-            'volatility_regime': 'low',  # KEY: low volatility
-            'volatility_percentile': 15,
+            "type": "range",
+            "trend_strength": 0.2,
+            "volatility_regime": "low",  # KEY: low volatility
+            "volatility_percentile": 15,
         }
 
         result = strategy._is_market_regime_safe(market_context)
@@ -96,10 +96,10 @@ class TestMarketRegimeFilter:
     def test_dead_market_sideways_low_volatility(self, strategy):
         """Test that sideways market with low volatility is blocked."""
         market_context = {
-            'type': 'sideways',
-            'trend_strength': 0.1,
-            'volatility_regime': 'low',
-            'volatility_percentile': 10,
+            "type": "sideways",
+            "trend_strength": 0.1,
+            "volatility_regime": "low",
+            "volatility_percentile": 10,
         }
 
         result = strategy._is_market_regime_safe(market_context)
@@ -109,10 +109,10 @@ class TestMarketRegimeFilter:
     def test_extreme_volatility_crisis(self, strategy):
         """Test that extreme volatility (>75 percentile) is blocked."""
         market_context = {
-            'type': 'trend_up',  # Even with uptrend
-            'trend_strength': 0.7,
-            'volatility_regime': 'high',
-            'volatility_percentile': 85,  # > 75
+            "type": "trend_up",  # Even with uptrend
+            "trend_strength": 0.7,
+            "volatility_regime": "high",
+            "volatility_percentile": 85,  # > 75
         }
 
         result = strategy._is_market_regime_safe(market_context)
@@ -122,10 +122,10 @@ class TestMarketRegimeFilter:
     def test_extreme_volatility_at_threshold(self, strategy):
         """Test extreme volatility exactly at threshold (75)."""
         market_context = {
-            'type': 'unknown',
-            'trend_strength': 0.5,
-            'volatility_regime': 'high',
-            'volatility_percentile': 76,  # Just above 75
+            "type": "unknown",
+            "trend_strength": 0.5,
+            "volatility_regime": "high",
+            "volatility_percentile": 76,  # Just above 75
         }
 
         result = strategy._is_market_regime_safe(market_context)
@@ -137,10 +137,10 @@ class TestMarketRegimeFilter:
     def test_bull_market_always_allowed(self, strategy):
         """Test that bull market (trend_up) is always allowed."""
         market_context = {
-            'type': 'trend_up',  # KEY: uptrend
-            'trend_strength': 0.9,
-            'volatility_regime': 'normal',
-            'volatility_percentile': 60,
+            "type": "trend_up",  # KEY: uptrend
+            "trend_strength": 0.9,
+            "volatility_regime": "normal",
+            "volatility_percentile": 60,
         }
 
         result = strategy._is_market_regime_safe(market_context)
@@ -150,10 +150,10 @@ class TestMarketRegimeFilter:
     def test_bull_market_weak_strength(self, strategy):
         """Test bull market even with weak strength."""
         market_context = {
-            'type': 'trend_up',
-            'trend_strength': 0.3,  # Weak but still up
-            'volatility_regime': 'low',
-            'volatility_percentile': 30,
+            "type": "trend_up",
+            "trend_strength": 0.3,  # Weak but still up
+            "volatility_regime": "low",
+            "volatility_percentile": 30,
         }
 
         result = strategy._is_market_regime_safe(market_context)
@@ -163,10 +163,10 @@ class TestMarketRegimeFilter:
     def test_normal_volatility_safe_range(self, strategy):
         """Test that normal volatility (40-70 percentile) is allowed."""
         market_context = {
-            'type': 'range',
-            'trend_strength': 0.0,
-            'volatility_regime': 'normal',
-            'volatility_percentile': 55,  # In 40-70 range
+            "type": "range",
+            "trend_strength": 0.0,
+            "volatility_regime": "normal",
+            "volatility_percentile": 55,  # In 40-70 range
         }
 
         result = strategy._is_market_regime_safe(market_context)
@@ -176,10 +176,10 @@ class TestMarketRegimeFilter:
     def test_normal_volatility_at_lower_bound(self, strategy):
         """Test normal volatility at lower bound (40)."""
         market_context = {
-            'type': 'no_trend',
-            'trend_strength': 0.0,
-            'volatility_regime': 'normal',
-            'volatility_percentile': 40,  # Exactly at lower bound
+            "type": "no_trend",
+            "trend_strength": 0.0,
+            "volatility_regime": "normal",
+            "volatility_percentile": 40,  # Exactly at lower bound
         }
 
         result = strategy._is_market_regime_safe(market_context)
@@ -189,10 +189,10 @@ class TestMarketRegimeFilter:
     def test_normal_volatility_at_upper_bound(self, strategy):
         """Test normal volatility at upper bound (70)."""
         market_context = {
-            'type': 'unknown',
-            'trend_strength': 0.4,
-            'volatility_regime': 'normal',
-            'volatility_percentile': 70,  # Exactly at upper bound
+            "type": "unknown",
+            "trend_strength": 0.4,
+            "volatility_regime": "normal",
+            "volatility_percentile": 70,  # Exactly at upper bound
         }
 
         result = strategy._is_market_regime_safe(market_context)
@@ -202,10 +202,10 @@ class TestMarketRegimeFilter:
     def test_range_market_normal_volatility(self, strategy):
         """Test that range market with normal volatility is allowed."""
         market_context = {
-            'type': 'range',
-            'trend_strength': 0.1,
-            'volatility_regime': 'normal',  # KEY: normal, not low
-            'volatility_percentile': 50,
+            "type": "range",
+            "trend_strength": 0.1,
+            "volatility_regime": "normal",  # KEY: normal, not low
+            "volatility_percentile": 50,
         }
 
         result = strategy._is_market_regime_safe(market_context)
@@ -215,10 +215,10 @@ class TestMarketRegimeFilter:
     def test_no_trend_normal_volatility(self, strategy):
         """Test that no_trend with normal volatility is allowed."""
         market_context = {
-            'type': 'no_trend',
-            'trend_strength': 0.0,
-            'volatility_regime': 'normal',
-            'volatility_percentile': 45,
+            "type": "no_trend",
+            "trend_strength": 0.0,
+            "volatility_regime": "normal",
+            "volatility_percentile": 45,
         }
 
         result = strategy._is_market_regime_safe(market_context)
@@ -230,10 +230,10 @@ class TestMarketRegimeFilter:
     def test_weak_downtrend_normal_volatility(self, strategy):
         """Test weak downtrend (<= 0.5) with normal volatility."""
         market_context = {
-            'type': 'trend_down',
-            'trend_strength': 0.4,  # Weak, <= 0.5
-            'volatility_regime': 'normal',
-            'volatility_percentile': 50,
+            "type": "trend_down",
+            "trend_strength": 0.4,  # Weak, <= 0.5
+            "volatility_regime": "normal",
+            "volatility_percentile": 50,
         }
 
         result = strategy._is_market_regime_safe(market_context)
@@ -243,10 +243,10 @@ class TestMarketRegimeFilter:
     def test_weak_downtrend_in_normal_vol_range(self, strategy):
         """Test weak downtrend within 40-70 percentile range."""
         market_context = {
-            'type': 'trend_down',
-            'trend_strength': 0.5,
-            'volatility_regime': 'normal',
-            'volatility_percentile': 60,  # In 40-70 range
+            "type": "trend_down",
+            "trend_strength": 0.5,
+            "volatility_regime": "normal",
+            "volatility_percentile": 60,  # In 40-70 range
         }
 
         result = strategy._is_market_regime_safe(market_context)
@@ -256,7 +256,7 @@ class TestMarketRegimeFilter:
     def test_missing_context_fields_defaults_safe(self, strategy):
         """Test that missing context uses safe defaults (percentile=50, regime='normal')."""
         market_context = {
-            'type': 'unknown',
+            "type": "unknown",
             # Missing trend_strength, volatility_regime, volatility_percentile
         }
 
@@ -269,10 +269,10 @@ class TestMarketRegimeFilter:
     def test_high_volatility_below_threshold(self, strategy):
         """Test high volatility but below crisis threshold (75)."""
         market_context = {
-            'type': 'trend_up',
-            'trend_strength': 0.7,
-            'volatility_regime': 'high',
-            'volatility_percentile': 72,  # High but < 75
+            "type": "trend_up",
+            "trend_strength": 0.7,
+            "volatility_regime": "high",
+            "volatility_percentile": 72,  # High but < 75
         }
 
         result = strategy._is_market_regime_safe(market_context)
@@ -283,10 +283,10 @@ class TestMarketRegimeFilter:
     def test_range_market_with_high_but_safe_volatility(self, strategy):
         """Test range market with high but safe volatility."""
         market_context = {
-            'type': 'range',
-            'trend_strength': 0.0,
-            'volatility_regime': 'normal',
-            'volatility_percentile': 65,  # In normal range
+            "type": "range",
+            "trend_strength": 0.0,
+            "volatility_regime": "normal",
+            "volatility_percentile": 65,  # In normal range
         }
 
         result = strategy._is_market_regime_safe(market_context)
@@ -306,10 +306,10 @@ class TestMarketRegimeFilter:
 
         # Mock market_analyzer to return bear market crash
         bear_market_context = {
-            'type': 'trend_down',
-            'trend_strength': 0.8,
-            'volatility_regime': 'high',
-            'volatility_percentile': 80,
+            "type": "trend_down",
+            "trend_strength": 0.8,
+            "volatility_regime": "high",
+            "volatility_percentile": 80,
         }
 
         def mock_analyze(*args, **kwargs):
@@ -334,10 +334,10 @@ class TestMarketRegimeFilter:
 
         # Mock market_analyzer to return bull market
         bull_market_context = {
-            'type': 'trend_up',
-            'trend_strength': 0.7,
-            'volatility_regime': 'normal',
-            'volatility_percentile': 60,
+            "type": "trend_up",
+            "trend_strength": 0.7,
+            "volatility_regime": "normal",
+            "volatility_percentile": 60,
         }
 
         def mock_analyze(*args, **kwargs):
@@ -361,24 +361,24 @@ class TestMarketRegimeFilter:
         crash_scenarios = [
             # 2008-style crash
             {
-                'type': 'trend_down',
-                'trend_strength': 0.9,
-                'volatility_regime': 'high',
-                'volatility_percentile': 90,
+                "type": "trend_down",
+                "trend_strength": 0.9,
+                "volatility_regime": "high",
+                "volatility_percentile": 90,
             },
             # COVID crash
             {
-                'type': 'trend_down',
-                'trend_strength': 0.85,
-                'volatility_regime': 'high',
-                'volatility_percentile': 95,
+                "type": "trend_down",
+                "trend_strength": 0.85,
+                "volatility_regime": "high",
+                "volatility_percentile": 95,
             },
             # Flash crash
             {
-                'type': 'trend_down',
-                'trend_strength': 0.7,
-                'volatility_regime': 'high',
-                'volatility_percentile': 85,
+                "type": "trend_down",
+                "trend_strength": 0.7,
+                "volatility_regime": "high",
+                "volatility_percentile": 85,
             },
         ]
 
@@ -391,24 +391,24 @@ class TestMarketRegimeFilter:
         normal_scenarios = [
             # Healthy bull market
             {
-                'type': 'trend_up',
-                'trend_strength': 0.6,
-                'volatility_regime': 'normal',
-                'volatility_percentile': 55,
+                "type": "trend_up",
+                "trend_strength": 0.6,
+                "volatility_regime": "normal",
+                "volatility_percentile": 55,
             },
             # Mild volatility with uptrend
             {
-                'type': 'trend_up',
-                'trend_strength': 0.4,
-                'volatility_regime': 'normal',
-                'volatility_percentile': 45,
+                "type": "trend_up",
+                "trend_strength": 0.4,
+                "volatility_regime": "normal",
+                "volatility_percentile": 45,
             },
             # Normal range-bound market
             {
-                'type': 'range',
-                'trend_strength': 0.0,
-                'volatility_regime': 'normal',
-                'volatility_percentile': 50,
+                "type": "range",
+                "trend_strength": 0.0,
+                "volatility_regime": "normal",
+                "volatility_percentile": 50,
             },
         ]
 
@@ -447,10 +447,10 @@ class TestMarketRegimeFilterLogging:
         caplog.set_level(logging.WARNING)
 
         market_context = {
-            'type': 'trend_down',
-            'trend_strength': 0.8,
-            'volatility_regime': 'high',
-            'volatility_percentile': 80,
+            "type": "trend_down",
+            "trend_strength": 0.8,
+            "volatility_regime": "high",
+            "volatility_percentile": 80,
         }
 
         strategy._is_market_regime_safe(market_context)
@@ -465,10 +465,10 @@ class TestMarketRegimeFilterLogging:
         caplog.set_level(logging.WARNING)
 
         market_context = {
-            'type': 'trend_up',
-            'trend_strength': 0.5,
-            'volatility_regime': 'high',
-            'volatility_percentile': 85,
+            "type": "trend_up",
+            "trend_strength": 0.5,
+            "volatility_regime": "high",
+            "volatility_percentile": 85,
         }
 
         strategy._is_market_regime_safe(market_context)
@@ -483,10 +483,10 @@ class TestMarketRegimeFilterLogging:
         caplog.set_level(logging.DEBUG)
 
         market_context = {
-            'type': 'trend_up',
-            'trend_strength': 0.7,
-            'volatility_regime': 'normal',
-            'volatility_percentile': 60,
+            "type": "trend_up",
+            "trend_strength": 0.7,
+            "volatility_regime": "normal",
+            "volatility_percentile": 60,
         }
 
         strategy._is_market_regime_safe(market_context)

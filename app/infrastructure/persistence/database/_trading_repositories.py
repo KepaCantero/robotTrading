@@ -65,7 +65,7 @@ class TradeRepository(BaseRepository[Trade]):
             raise_database_error(
                 f"Failed to get trades by portfolio: {e!s}",
                 "get_by_portfolio",
-                "trades",
+                {"table": "trades"},
             )
 
     def get_by_asset(self, asset_id: uuid.UUID, limit: int | None = None) -> list[Trade]:
@@ -98,7 +98,9 @@ class TradeRepository(BaseRepository[Trade]):
                 asset_id=str(asset_id),
                 error=str(e),
             )
-            raise_database_error(f"Failed to get trades by asset: {e!s}", "get_by_asset", "trades")
+            raise_database_error(
+                f"Failed to get trades by asset: {e!s}", "get_by_asset", {"table": "trades"}
+            )
 
     def get_by_date_range(self, start_date: datetime, end_date: datetime) -> list[Trade]:
         """Get trades within date range."""
@@ -132,7 +134,7 @@ class TradeRepository(BaseRepository[Trade]):
             raise_database_error(
                 f"Failed to get trades by date range: {e!s}",
                 "get_by_date_range",
-                "trades",
+                {"table": "trades"},
             )
 
     def get_trade_summary(self, portfolio_id: uuid.UUID) -> dict[str, Any]:
@@ -173,7 +175,9 @@ class TradeRepository(BaseRepository[Trade]):
                 error=str(e),
             )
             raise_database_error(
-                f"Failed to get trade summary: {e!s}", "get_trade_summary", "trades"
+                f"Failed to get trade summary: {e!s}",
+                "get_trade_summary",
+                {"table": "trades"},
             )
 
 
@@ -213,7 +217,7 @@ class SignalRepository(BaseRepository[Signal]):
             raise_database_error(
                 f"Failed to get signals by strategy: {e!s}",
                 "get_by_strategy",
-                "signals",
+                {"table": "signals"},
             )
 
     def get_by_asset(self, asset_id: uuid.UUID, limit: int | None = None) -> list[Signal]:
@@ -247,7 +251,7 @@ class SignalRepository(BaseRepository[Signal]):
                 error=str(e),
             )
             raise_database_error(
-                f"Failed to get signals by asset: {e!s}", "get_by_asset", "signals"
+                f"Failed to get signals by asset: {e!s}", "get_by_asset", {"table": "signals"}
             )
 
     def get_recent_signals(self, hours: int = 24) -> list[Signal]:
@@ -281,5 +285,5 @@ class SignalRepository(BaseRepository[Signal]):
             raise_database_error(
                 f"Failed to get recent signals: {e!s}",
                 "get_recent_signals",
-                "signals",
+                {"table": "signals"},
             )

@@ -1277,4 +1277,3 @@ async def place_order(symbol, side, quantity, price):
 **Objetivo:** Sistema de algo trading para vivir del bot (1000€/mes netos)
 **Escala:** 1000€ → 500k
 **Residencia:** España (IRPF progresivo 19/21/23%)
-

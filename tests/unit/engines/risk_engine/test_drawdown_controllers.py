@@ -38,21 +38,21 @@ class TestDrawdownController:
         """Test drawdown calculation."""
         result = drawdown_controller.calculate_drawdown(sample_equity_curve)
 
-        assert 'current_drawdown' in result
-        assert 'max_drawdown' in result
-        assert 'peak_equity' in result
+        assert "current_drawdown" in result
+        assert "max_drawdown" in result
+        assert "peak_equity" in result
 
     def test_drawdown_range(self, drawdown_controller, sample_equity_curve):
         """Test that drawdown is in valid range."""
         result = drawdown_controller.calculate_drawdown(sample_equity_curve)
 
-        assert -1 <= result['current_drawdown'] <= 0
+        assert -1 <= result["current_drawdown"] <= 0
 
     def test_max_drawdown_larger_than_current(self, drawdown_controller, sample_equity_curve):
         """Test that max drawdown >= current drawdown."""
         result = drawdown_controller.calculate_drawdown(sample_equity_curve)
 
-        assert abs(result['max_drawdown']) >= abs(result['current_drawdown'])
+        assert abs(result["max_drawdown"]) >= abs(result["current_drawdown"])
 
 
 @pytest.mark.unit
@@ -61,18 +61,18 @@ class TestCircuitBreakerController:
 
     def test_circuit_breaker_activation(self):
         """Test circuit breaker activates on severe drawdown."""
-        controller = CircuitBreakerController({'threshold': 0.10})
+        controller = CircuitBreakerController({"threshold": 0.10})
 
         equity = [100000, 90000, 80000, 70000]  # 30% drop
         result = controller.check_circuit_breaker(equity)
 
-        assert 'should_halt' in result
+        assert "should_halt" in result
 
     def test_circuit_breaker_not_triggered(self):
         """Test circuit breaker not triggered on minor drawdown."""
-        controller = CircuitBreakerController({'threshold': 0.20})
+        controller = CircuitBreakerController({"threshold": 0.20})
 
         equity = [100000, 95000, 90000]  # 10% drop
         result = controller.check_circuit_breaker(equity)
 
-        assert result['should_halt'] is False
+        assert result["should_halt"] is False

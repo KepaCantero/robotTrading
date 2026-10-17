@@ -9,12 +9,9 @@ operational toil following Google SRE principles.
 import asyncio
 import sys
 
-sys.path.insert(0, '/Users/kepa.cantero/Projects/algoTrading')
+sys.path.insert(0, "/Users/kepa.cantero/Projects/algoTrading")
 
-from app.sre.automation.toil_tracker import (
-    ToilTracker,
-    ToilConfig,
-)
+from app.sre.automation.toil_tracker import ToilConfig, ToilTracker
 
 
 async def main():

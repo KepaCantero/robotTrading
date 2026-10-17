@@ -15,9 +15,6 @@ Verifica:
 5. Métricas y estado
 from app.engines.context_engine import ContextEngine
 from app.engines.data_engine import DataEngine
-"""
-
-"""
 Integration Tests: Strategy Engines (Módulo 3)
 
 Tests para los nuevos Strategy Engines refactorizados.
@@ -49,7 +46,7 @@ from app.models.signal import SignalType
 from tests.integration.data.test_data_loader import load_all_csv_data
 
 logging.basicConfig(
-    level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
 logger = logging.getLogger(__name__)
 
@@ -64,14 +61,14 @@ def dataframe_to_quotes(symbol: str, df: pd.DataFrame):
         quote = Quote(
             symbol=symbol,
             timestamp=idx if isinstance(idx, datetime) else datetime.now(),
-            bid=Decimal(str(row.get('close', row.get('open', 0)))),
-            ask=Decimal(str(row.get('close', row.get('open', 0)))),
-            last=Decimal(str(row.get('close', 0))),
-            close=Decimal(str(row.get('close', 0))),
-            open=Decimal(str(row.get('open', row.get('close', 0)))),
-            high=Decimal(str(row.get('high', row.get('close', 0)))),
-            low=Decimal(str(row.get('low', row.get('close', 0)))),
-            volume=Decimal(str(row.get('volume', 0))),
+            bid=Decimal(str(row.get("close", row.get("open", 0)))),
+            ask=Decimal(str(row.get("close", row.get("open", 0)))),
+            last=Decimal(str(row.get("close", 0))),
+            close=Decimal(str(row.get("close", 0))),
+            open=Decimal(str(row.get("open", row.get("close", 0)))),
+            high=Decimal(str(row.get("high", row.get("close", 0)))),
+            low=Decimal(str(row.get("low", row.get("close", 0)))),
+            volume=Decimal(str(row.get("volume", 0))),
         )
         quotes.append(quote)
     return quotes
@@ -83,10 +80,10 @@ class TestMomentumStrategyEngine:
     def test_momentum_engine_initialization(self):
         """Test que el engine se inicializa correctamente."""
         config = {
-            'rsi_period': 14,
-            'ema_fast_period': 12,
-            'ema_slow_period': 26,
-            'learning_enabled': False,
+            "rsi_period": 14,
+            "ema_fast_period": 12,
+            "ema_slow_period": 26,
+            "learning_enabled": False,
         }
 
         engine = MomentumStrategyEngine(config)
@@ -108,10 +105,10 @@ class TestMomentumStrategyEngine:
 
         # Crear engine
         config = {
-            'rsi_period': 14,
-            'ema_fast_period': 12,
-            'ema_slow_period': 26,
-            'learning_enabled': False,
+            "rsi_period": 14,
+            "ema_fast_period": 12,
+            "ema_slow_period": 26,
+            "learning_enabled": False,
         }
         engine = MomentumStrategyEngine(config)
 
@@ -131,7 +128,7 @@ class TestMomentumStrategyEngine:
 
     def test_momentum_engine_feature_extraction(self):
         """Test feature extraction."""
-        config = {'rsi_period': 14, 'learning_enabled': False}
+        config = {"rsi_period": 14, "learning_enabled": False}
         engine = MomentumStrategyEngine(config)
 
         # Crear quote de ejemplo
@@ -156,12 +153,12 @@ class TestMomentumStrategyEngine:
         features = engine.extract_features(quote)
 
         assert isinstance(features, dict)
-        assert 'rsi' in features or 'indicators' in features
+        assert "rsi" in features or "indicators" in features
         logger.info(f"Features extraídas: {list(features.keys())[:5]}")
 
     def test_momentum_engine_callbacks(self):
         """Test sistema de callbacks."""
-        config = {'learning_enabled': False}
+        config = {"learning_enabled": False}
         engine = MomentumStrategyEngine(config)
 
         signal_callback_called = False
@@ -212,7 +209,7 @@ class TestMeanReversionStrategyEngine:
 
     def test_mean_reversion_engine_initialization(self):
         """Test inicialización."""
-        config = {'z_score_window': 20, 'z_score_threshold': 2.0, 'learning_enabled': False}
+        config = {"z_score_window": 20, "z_score_threshold": 2.0, "learning_enabled": False}
 
         engine = MeanReversionStrategyEngine(config)
 
@@ -229,7 +226,7 @@ class TestMeanReversionStrategyEngine:
         df = historical_data[symbol]
         quotes = dataframe_to_quotes(symbol, df[:100])
 
-        config = {'z_score_window': 20, 'z_score_threshold': 2.0, 'learning_enabled': False}
+        config = {"z_score_window": 20, "z_score_threshold": 2.0, "learning_enabled": False}
         engine = MeanReversionStrategyEngine(config)
 
         signals_count = 0
@@ -242,7 +239,7 @@ class TestMeanReversionStrategyEngine:
 
     def test_mean_reversion_engine_features(self):
         """Test feature extraction."""
-        config = {'learning_enabled': False}
+        config = {"learning_enabled": False}
         engine = MeanReversionStrategyEngine(config)
 
         quote = Quote(
@@ -271,7 +268,7 @@ class TestPairsTradingStrategyEngine:
 
     def test_pairs_engine_initialization(self):
         """Test inicialización."""
-        config = {'lookback_window': 60, 'cointegration_threshold': 0.05, 'learning_enabled': False}
+        config = {"lookback_window": 60, "cointegration_threshold": 0.05, "learning_enabled": False}
 
         engine = PairsTradingStrategyEngine(config)
 
@@ -293,10 +290,10 @@ class TestPairsTradingStrategyEngine:
         quotes2 = dataframe_to_quotes(symbol2, df2)
 
         config = {
-            'symbol1': symbol1,
-            'symbol2': symbol2,
-            'lookback_window': 60,
-            'learning_enabled': False,
+            "symbol1": symbol1,
+            "symbol2": symbol2,
+            "lookback_window": 60,
+            "learning_enabled": False,
         }
         engine = PairsTradingStrategyEngine(config)
 
@@ -325,9 +322,9 @@ class TestModularMomentumStrategyEngine:
             context_engine = ContextEngine({})
 
             config = {
-                'preset': 'balanced',
-                'modules': {'ema_filter': {'enabled': True}, 'rsi_filter': {'enabled': True}},
-                'context_engine_enabled': True,
+                "preset": "balanced",
+                "modules": {"ema_filter": {"enabled": True}, "rsi_filter": {"enabled": True}},
+                "context_engine_enabled": True,
             }
 
             engine = ModularMomentumStrategyEngine(config)
@@ -344,8 +341,8 @@ class TestModularMomentumStrategyEngine:
     def test_modular_momentum_engine_initialization(self):
         """Test inicialización."""
         config = {
-            'filters': {'rsi_filter': {'enabled': True}, 'ema_filter': {'enabled': True}},
-            'learning_enabled': False,
+            "filters": {"rsi_filter": {"enabled": True}, "ema_filter": {"enabled": True}},
+            "learning_enabled": False,
         }
 
         engine = ModularMomentumStrategyEngine(config)
@@ -363,11 +360,11 @@ class TestModularMomentumStrategyEngine:
         quotes = dataframe_to_quotes(symbol, df[:100])
 
         config = {
-            'filters': {
-                'rsi_filter': {'enabled': True, 'rsi_buy_min': 30, 'rsi_buy_max': 70},
-                'ema_filter': {'enabled': True},
+            "filters": {
+                "rsi_filter": {"enabled": True, "rsi_buy_min": 30, "rsi_buy_max": 70},
+                "ema_filter": {"enabled": True},
             },
-            'learning_enabled': False,
+            "learning_enabled": False,
         }
         engine = ModularMomentumStrategyEngine(config)
 
@@ -382,11 +379,11 @@ class TestModularMomentumStrategyEngine:
     def test_modular_momentum_engine_with_learning(self):
         """Test integración con learning engine (sin entrenar realmente)."""
         config = {
-            'filters': {'rsi_filter': {'enabled': True}},
-            'learning_enabled': True,
-            'learning_engine': {
-                'engine_type': 'supervised',
-                'enabled': False,  # No entrenar, solo probar integración
+            "filters": {"rsi_filter": {"enabled": True}},
+            "learning_enabled": True,
+            "learning_engine": {
+                "engine_type": "supervised",
+                "enabled": False,  # No entrenar, solo probar integración
             },
         }
 
@@ -626,8 +623,8 @@ class TestStrategyEnginesIntegration:
     def test_ensemble_weights(self):
         """Test configuración de pesos para ensembles."""
         engines = [
-            MomentumStrategyEngine({'learning_enabled': False}),
-            MeanReversionStrategyEngine({'learning_enabled': False}),
+            MomentumStrategyEngine({"learning_enabled": False}),
+            MeanReversionStrategyEngine({"learning_enabled": False}),
         ]
 
         weights = [0.6, 0.4]
@@ -644,12 +641,12 @@ class TestStrategyEnginesIntegration:
             from app.engines.context_engine import ContextEngine
             from app.engines.data_engine import DataEngine
 
-            data_engine = DataEngine({'sources': {}})
+            data_engine = DataEngine({"sources": {}})
             context_engine = ContextEngine({})
 
             # Crear Strategy Engines
-            momentum_engine = MomentumStrategyEngine({'rsi_period': 14})
-            mean_reversion_engine = MeanReversionStrategyEngine({'z_score_period': 20})
+            momentum_engine = MomentumStrategyEngine({"rsi_period": 14})
+            mean_reversion_engine = MeanReversionStrategyEngine({"z_score_period": 20})
 
             # Configurar engines compartidos
             momentum_engine.set_data_engine(data_engine)
@@ -666,8 +663,8 @@ class TestStrategyEnginesIntegration:
 
             # Verificar status incluye engines
             momentum_status = momentum_engine.get_status()
-            assert 'data_engine_enabled' in momentum_status
-            assert 'context_engine_enabled' in momentum_status
+            assert "data_engine_enabled" in momentum_status
+            assert "context_engine_enabled" in momentum_status
 
             logger.info(
                 "✅ Strategy Engines integrados correctamente con DataEngine y ContextEngine"
@@ -679,7 +676,7 @@ class TestStrategyEnginesIntegration:
 
     def test_engine_metrics(self):
         """Test obtención de métricas."""
-        config = {'learning_enabled': False}
+        config = {"learning_enabled": False}
         engine = MomentumStrategyEngine(config)
 
         metrics = engine.get_metrics()
@@ -687,14 +684,14 @@ class TestStrategyEnginesIntegration:
 
         status = engine.get_status()
         assert isinstance(status, dict)
-        assert 'learning_enabled' in status
-        assert 'metrics' in status
+        assert "learning_enabled" in status
+        assert "metrics" in status
 
     def test_feature_extraction_consistency(self):
         """Test que feature extraction es consistente."""
         engines = [
-            MomentumStrategyEngine({'learning_enabled': False}),
-            MeanReversionStrategyEngine({'learning_enabled': False}),
+            MomentumStrategyEngine({"learning_enabled": False}),
+            MeanReversionStrategyEngine({"learning_enabled": False}),
         ]
 
         quote = Quote(

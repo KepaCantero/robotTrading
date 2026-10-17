@@ -280,7 +280,9 @@ class TestMarketImpact:
 
         # Extremely large order
         impact = validator.calculate_market_impact(
-            order_quantity=Decimal("900000"), current_bar=bar, order_side="buy"  # 90% of volume
+            order_quantity=Decimal("900000"),
+            current_bar=bar,
+            order_side="buy",  # 90% of volume
         )
 
         # Should be capped at 5%
@@ -300,9 +302,9 @@ class TestMarketImpact:
         )
 
         # Buy price should be higher than close price
-        assert result.fill_price > Decimal(
-            "100"
-        ), f"Buy price ${result.fill_price} should be higher than $100 due to market impact"
+        assert result.fill_price > Decimal("100"), (
+            f"Buy price ${result.fill_price} should be higher than $100 due to market impact"
+        )
 
     def test_sell_price_includes_market_impact(self, validator, default_symbol):
         """Test that sell execution price includes market impact."""
@@ -318,9 +320,9 @@ class TestMarketImpact:
         )
 
         # Sell price should be lower than close price
-        assert result.fill_price < Decimal(
-            "100"
-        ), f"Sell price ${result.fill_price} should be lower than $100 due to market impact"
+        assert result.fill_price < Decimal("100"), (
+            f"Sell price ${result.fill_price} should be lower than $100 due to market impact"
+        )
 
 
 class TestFillResult:
@@ -469,15 +471,15 @@ class TestEdgeCases:
         )
 
         # Buy price should be higher than sell price (adverse selection)
-        assert buy_result.fill_price > Decimal(
-            "100"
-        ), f"Buy price ${buy_result.fill_price} should be > $100"
-        assert sell_result.fill_price < Decimal(
-            "100"
-        ), f"Sell price ${sell_result.fill_price} should be < $100"
-        assert (
-            buy_result.fill_price > sell_result.fill_price
-        ), "Buy price should be higher than sell price"
+        assert buy_result.fill_price > Decimal("100"), (
+            f"Buy price ${buy_result.fill_price} should be > $100"
+        )
+        assert sell_result.fill_price < Decimal("100"), (
+            f"Sell price ${sell_result.fill_price} should be < $100"
+        )
+        assert buy_result.fill_price > sell_result.fill_price, (
+            "Buy price should be higher than sell price"
+        )
 
 
 class TestIntegrationScenarios:
@@ -527,9 +529,9 @@ class TestIntegrationScenarios:
 
         # Should be accepted with minimal market impact
         assert result.fill_status == "FILLED"
-        assert result.market_impact <= Decimal(
-            "0.01"
-        ), f"Market impact should be minimal for liquid stock, got {result.market_impact}"
+        assert result.market_impact <= Decimal("0.01"), (
+            f"Market impact should be minimal for liquid stock, got {result.market_impact}"
+        )
 
     def test_scalping_strategy_scenario(self, validator, default_symbol):
         """Test liquidity validation for a high-frequency scalping strategy."""
@@ -550,6 +552,6 @@ class TestIntegrationScenarios:
 
         # All orders should be filled
         for result in results:
-            assert (
-                result.fill_status == "FILLED"
-            ), f"Scalping order should be filled, got {result.fill_status}"
+            assert result.fill_status == "FILLED", (
+                f"Scalping order should be filled, got {result.fill_status}"
+            )

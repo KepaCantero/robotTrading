@@ -18,7 +18,7 @@ import logging
 import threading
 import weakref
 from collections import deque
-from typing import TYPE_CHECKING, TypedDict
+from typing import TYPE_CHECKING, Mapping
 
 import psutil
 
@@ -26,23 +26,6 @@ if TYPE_CHECKING:
     from app.backtesting.models import BacktestResult
 
 logger = logging.getLogger(__name__)
-
-
-class BacktestResultDict(TypedDict, total=False):
-    """TypedDict for backtest result dictionaries."""
-
-    test_type: str
-    test_name: str
-    strategy_name: str
-    total_pnl: float
-    return_pct: float
-    final_capital: float
-    total_trades: int
-    win_rate: float
-    sharpe_ratio: float
-    sortino_ratio: float
-    max_drawdown: float
-    avg_trade_pnl: float
 
 
 class MemoryPressureError(Exception):
@@ -88,7 +71,7 @@ class AggressiveMemoryManager:
         self.auto_monitor = auto_monitor
 
         # Use deque with maxlen for automatic bounded size
-        self._results: deque[BacktestResultDict] = deque(maxlen=max_results)
+        self._results: deque[Mapping[str, object]] = deque(maxlen=max_results)
         # Use weak references for BacktestResult to prevent circular references
         self._backtest_refs: dict[str, weakref.ref] = {}
         self._backtest_objects: deque[tuple[str, BacktestResult]] = deque(
@@ -126,7 +109,7 @@ class AggressiveMemoryManager:
 
         self._lock = threading.RLock()
 
-    def add_result(self, result: BacktestResultDict) -> None:
+    def add_result(self, result: Mapping[str, object]) -> None:
         """
         Add a lightweight result dictionary.
 
@@ -166,7 +149,7 @@ class AggressiveMemoryManager:
             if self.auto_monitor:
                 self._auto_check_memory()
 
-    def get_results(self) -> list[BacktestResultDict]:
+    def get_results(self) -> list[Mapping[str, object]]:
         """
         Get all current results as a list.
 

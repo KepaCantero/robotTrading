@@ -110,6 +110,7 @@ class BacktestOptimizer:
         Returns:
             List with grid search results
         """
+        del get_safe_split_dates_helper  # aceptado por compatibilidad; sin uso aquí
         logger.info("=" * 80)
         logger.info("GRID SEARCH BACKTEST - Starting hyperparameter optimization")
         logger.info("=" * 80)
@@ -501,6 +502,7 @@ class BacktestOptimizer:
         Returns:
             Dictionary with evaluation results or None if failed
         """
+        del val_size  # aceptado por compatibilidad; sin uso aquí
         try:
             # Placeholder for parallel execution
             # Full implementation would require significant refactoring

@@ -225,7 +225,7 @@ class TestRiskExposureAfterTrade(unittest.TestCase):
         # Verificamos que la estrategia tiene límites configurados
 
         max_exposure = (
-            self.strategy.max_exposure if hasattr(self.strategy, 'max_exposure') else Decimal("0.8")
+            self.strategy.max_exposure if hasattr(self.strategy, "max_exposure") else Decimal("0.8")
         )
 
         self.assertGreater(max_exposure, 0, "max_exposure debe estar configurado")

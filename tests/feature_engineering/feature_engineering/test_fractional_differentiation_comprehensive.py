@@ -140,7 +140,7 @@ class TestFractionalDiffFixedWindow:
     def sample_price_series(self):
         """Create sample price series for testing."""
         np.random.seed(42)
-        dates = pd.date_range(start='2020-01-01', periods=500, freq='D')
+        dates = pd.date_range(start="2020-01-01", periods=500, freq="D")
 
         # Create geometric random walk
         returns = np.random.normal(0.0005, 0.02, 500)
@@ -225,7 +225,7 @@ class TestFractionalDiffExpandingWindow:
     def sample_price_series(self):
         """Create sample price series for testing."""
         np.random.seed(42)
-        dates = pd.date_range(start='2020-01-01', periods=500, freq='D')
+        dates = pd.date_range(start="2020-01-01", periods=500, freq="D")
 
         # Create geometric random walk
         returns = np.random.normal(0.0005, 0.02, 500)
@@ -277,7 +277,7 @@ class TestFindOptimalD:
     def sample_price_series(self):
         """Create sample price series for testing."""
         np.random.seed(42)
-        dates = pd.date_range(start='2020-01-01', periods=500, freq='D')
+        dates = pd.date_range(start="2020-01-01", periods=500, freq="D")
 
         # Create trending series (non-stationary)
         returns = np.random.normal(0.001, 0.02, 500)
@@ -294,11 +294,11 @@ class TestFindOptimalD:
             threshold=1e-5,
         )
 
-        assert hasattr(result, 'd')
-        assert hasattr(result, 'series')
-        assert hasattr(result, 'adf_statistic')
-        assert hasattr(result, 'p_value')
-        assert hasattr(result, 'is_stationary')
+        assert hasattr(result, "d")
+        assert hasattr(result, "series")
+        assert hasattr(result, "adf_statistic")
+        assert hasattr(result, "p_value")
+        assert hasattr(result, "is_stationary")
 
         # Check that d is in reasonable range
         assert 0.1 <= result.d <= 0.9
@@ -325,7 +325,7 @@ class TestFindOptimalD:
         )
 
         assert result is not None
-        assert hasattr(result, 'p_value')
+        assert hasattr(result, "p_value")
 
 
 @pytest.mark.skipif(not MODULE_AVAILABLE, reason="Module not available")
@@ -460,9 +460,9 @@ class TestDataClass:
             n_weights=50,
         )
 
-        assert hasattr(result, 'd')
-        assert hasattr(result, 'series')
-        assert hasattr(result, 'adf_statistic')
-        assert hasattr(result, 'p_value')
-        assert hasattr(result, 'is_stationary')
-        assert hasattr(result, 'n_weights')
+        assert hasattr(result, "d")
+        assert hasattr(result, "series")
+        assert hasattr(result, "adf_statistic")
+        assert hasattr(result, "p_value")
+        assert hasattr(result, "is_stationary")
+        assert hasattr(result, "n_weights")

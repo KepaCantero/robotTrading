@@ -8,7 +8,7 @@ import logging
 from enum import Enum
 from typing import Any
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from pydantic_settings import BaseSettings
 
 logger = logging.getLogger(__name__)
@@ -26,12 +26,9 @@ class Environment(str, Enum):
 class ConfigBase(BaseModel):
     """Base class for all configuration models."""
 
-    class Config:
-        """Pydantic configuration."""
-
-        validate_assignment = True
-        arbitrary_types_allowed = True
-        use_enum_values = True
+    model_config = ConfigDict(
+        validate_assignment=True, arbitrary_types_allowed=True, use_enum_values=True
+    )
 
 
 class SettingsBase(BaseSettings):

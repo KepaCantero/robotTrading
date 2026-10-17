@@ -160,7 +160,7 @@ class HistoricalPerformanceLearner(BaseMetaLearner):
         return weights
 
     def _apply_smoothing(
-        self, new_weights: dict[str, float], new_scores: dict[str, float]
+        self, new_weights: dict[str, float], _new_scores: dict[str, float]
     ) -> dict[str, float]:
         """Aplicar smoothing exponencial a los pesos."""
         # Obtener último peso del historial

@@ -543,6 +543,7 @@ class DividendAnalyzer:
         Returns:
             Yield on Cost (%)
         """
+        del years_held  # aceptado por compatibilidad; sin uso aquí
         annual_dividend = profile.dividend_data.annual_dividend
         yield_on_cost = (annual_dividend / purchase_price) * 100
 

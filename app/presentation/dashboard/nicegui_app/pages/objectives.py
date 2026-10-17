@@ -1,7 +1,6 @@
 """Objectives & compliance page for the NiceGUI dashboard.
 
 Evaluates every saved backtest run against the integration-test targets.
-Ported from the retired Streamlit advanced dashboard (2026-10-17 migration);
 the target values are unchanged so historical comparisons still match.
 """
 

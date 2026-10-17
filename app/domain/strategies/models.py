@@ -78,53 +78,63 @@ class FactorScores(BaseModel):
     symbol: str = Field(..., description="Stock symbol")
 
     # Value factor metrics
-    book_to_market: Decimal | None = Field(None, description="Book-to-Market ratio")
+    book_to_market: Decimal | None = Field(default=None, description="Book-to-Market ratio")
     value_score: Decimal | None = Field(
-        None, ge=-3, le=3, description="Value factor score (standardized)"
+        default=None, ge=-3, le=3, description="Value factor score (standardized)"
     )
 
     # Size factor metrics
-    market_cap: Decimal | None = Field(None, ge=0, description="Market capitalization (millions)")
-    log_market_cap: Decimal | None = Field(None, description="Log of market cap")
+    market_cap: Decimal | None = Field(
+        default=None, ge=0, description="Market capitalization (millions)"
+    )
+    log_market_cap: Decimal | None = Field(default=None, description="Log of market cap")
     size_score: Decimal | None = Field(
-        None, ge=-3, le=3, description="Size factor score (standardized)"
+        default=None, ge=-3, le=3, description="Size factor score (standardized)"
     )
 
     # Profitability factor metrics
     operating_profitability: Decimal | None = Field(
-        None, description="Operating profitability (ROA)"
+        default=None, description="Operating profitability (ROA)"
     )
-    roe: Decimal | None = Field(None, description="Return on Equity")
-    roa: Decimal | None = Field(None, description="Return on Assets")
+    roe: Decimal | None = Field(default=None, description="Return on Equity")
+    roa: Decimal | None = Field(default=None, description="Return on Assets")
     profitability_score: Decimal | None = Field(
-        None, ge=-3, le=3, description="Profitability factor score"
+        default=None, ge=-3, le=3, description="Profitability factor score"
     )
 
     # Investment factor metrics
-    asset_growth: Decimal | None = Field(None, description="Asset growth rate")
+    asset_growth: Decimal | None = Field(default=None, description="Asset growth rate")
     investment_score: Decimal | None = Field(
-        None, ge=-3, le=3, description="Investment factor score (conservative = positive)"
+        default=None, ge=-3, le=3, description="Investment factor score (conservative = positive)"
     )
 
     # Momentum factor metrics
     momentum_12m: Decimal | None = Field(
-        None, description="12-month momentum (excluding last month)"
+        default=None, description="12-month momentum (excluding last month)"
     )
-    momentum_6m: Decimal | None = Field(None, description="6-month momentum")
-    momentum_score: Decimal | None = Field(None, ge=-3, le=3, description="Momentum factor score")
+    momentum_6m: Decimal | None = Field(default=None, description="6-month momentum")
+    momentum_score: Decimal | None = Field(
+        default=None, ge=-3, le=3, description="Momentum factor score"
+    )
 
     # Composite scores
     composite_quality_score: Decimal | None = Field(
-        None, ge=0, le=100, description="Composite quality score"
+        default=None, ge=0, le=100, description="Composite quality score"
     )
     factor_momentum_score: Decimal | None = Field(
-        None, ge=0, le=100, description="Factor momentum score"
+        default=None, ge=0, le=100, description="Factor momentum score"
     )
 
     # Factor model fit
-    predicted_return: Decimal | None = Field(None, description="Predicted return from factor model")
-    residual_return: Decimal | None = Field(None, description="Residual (idiosyncratic) return")
-    r_squared: Decimal | None = Field(None, ge=0, le=1, description="R-squared of factor model")
+    predicted_return: Decimal | None = Field(
+        default=None, description="Predicted return from factor model"
+    )
+    residual_return: Decimal | None = Field(
+        default=None, description="Residual (idiosyncratic) return"
+    )
+    r_squared: Decimal | None = Field(
+        default=None, ge=0, le=1, description="R-squared of factor model"
+    )
 
     calculated_at: datetime = Field(
         default_factory=datetime.utcnow, description="When scores were calculated"
@@ -146,69 +156,77 @@ class FactorProfile(BaseModel):
     )
 
     symbol: str = Field(..., description="Stock symbol")
-    company_name: str | None = Field(None, description="Company name")
-    sector: str | None = Field(None, description="GICS sector")
-    industry: str | None = Field(None, description="GICS industry")
+    company_name: str | None = Field(default=None, description="Company name")
+    sector: str | None = Field(default=None, description="GICS sector")
+    industry: str | None = Field(default=None, description="GICS industry")
 
     # Market data
     current_price: Decimal = Field(..., gt=0, description="Current market price")
-    market_cap: Decimal | None = Field(None, ge=0, description="Market cap (millions)")
-    shares_outstanding: Decimal | None = Field(None, ge=0, description="Shares outstanding")
+    market_cap: Decimal | None = Field(default=None, ge=0, description="Market cap (millions)")
+    shares_outstanding: Decimal | None = Field(default=None, ge=0, description="Shares outstanding")
 
     # Value metrics
-    book_value_per_share: Decimal | None = Field(None, ge=0, description="Book value per share")
-    book_to_market: Decimal | None = Field(None, ge=0, description="Book-to-market ratio")
-    pe_ratio: Decimal | None = Field(None, ge=0, description="P/E ratio (TTM)")
-    pb_ratio: Decimal | None = Field(None, ge=0, description="P/B ratio")
-    ps_ratio: Decimal | None = Field(None, ge=0, description="P/S ratio")
-    ev_ebitda: Decimal | None = Field(None, ge=0, description="EV/EBITDA")
+    book_value_per_share: Decimal | None = Field(
+        default=None, ge=0, description="Book value per share"
+    )
+    book_to_market: Decimal | None = Field(default=None, ge=0, description="Book-to-market ratio")
+    pe_ratio: Decimal | None = Field(default=None, ge=0, description="P/E ratio (TTM)")
+    pb_ratio: Decimal | None = Field(default=None, ge=0, description="P/B ratio")
+    ps_ratio: Decimal | None = Field(default=None, ge=0, description="P/S ratio")
+    ev_ebitda: Decimal | None = Field(default=None, ge=0, description="EV/EBITDA")
 
     # Profitability metrics
-    revenue: Decimal | None = Field(None, ge=0, description="Total revenue (TTM)")
-    ebitda: Decimal | None = Field(None, ge=0, description="EBITDA (TTM)")
-    operating_income: Decimal | None = Field(None, ge=0, description="Operating income (TTM)")
-    net_income: Decimal | None = Field(None, ge=0, description="Net income (TTM)")
-    roe: Decimal | None = Field(None, description="Return on Equity (%)")
-    roa: Decimal | None = Field(None, description="Return on Assets (%)")
-    roic: Decimal | None = Field(None, description="Return on Invested Capital (%)")
-    gross_margin: Decimal | None = Field(None, ge=0, le=100, description="Gross margin (%)")
-    operating_margin: Decimal | None = Field(None, ge=0, le=100, description="Operating margin (%)")
-    net_margin: Decimal | None = Field(None, ge=0, le=100, description="Net margin (%)")
+    revenue: Decimal | None = Field(default=None, ge=0, description="Total revenue (TTM)")
+    ebitda: Decimal | None = Field(default=None, ge=0, description="EBITDA (TTM)")
+    operating_income: Decimal | None = Field(
+        default=None, ge=0, description="Operating income (TTM)"
+    )
+    net_income: Decimal | None = Field(default=None, ge=0, description="Net income (TTM)")
+    roe: Decimal | None = Field(default=None, description="Return on Equity (%)")
+    roa: Decimal | None = Field(default=None, description="Return on Assets (%)")
+    roic: Decimal | None = Field(default=None, description="Return on Invested Capital (%)")
+    gross_margin: Decimal | None = Field(default=None, ge=0, le=100, description="Gross margin (%)")
+    operating_margin: Decimal | None = Field(
+        default=None, ge=0, le=100, description="Operating margin (%)"
+    )
+    net_margin: Decimal | None = Field(default=None, ge=0, le=100, description="Net margin (%)")
 
     # Investment metrics
-    total_assets: Decimal | None = Field(None, ge=0, description="Total assets")
-    total_assets_py: Decimal | None = Field(None, ge=0, description="Total assets prior year")
-    asset_growth: Decimal | None = Field(None, description="Asset growth rate (%)")
-    capex: Decimal | None = Field(None, ge=0, description="Capital expenditures")
-    capex_py: Decimal | None = Field(None, ge=0, description="Capex prior year")
+    total_assets: Decimal | None = Field(default=None, ge=0, description="Total assets")
+    total_assets_py: Decimal | None = Field(
+        default=None, ge=0, description="Total assets prior year"
+    )
+    asset_growth: Decimal | None = Field(default=None, description="Asset growth rate (%)")
+    capex: Decimal | None = Field(default=None, ge=0, description="Capital expenditures")
+    capex_py: Decimal | None = Field(default=None, ge=0, description="Capex prior year")
 
     # Price history for momentum
-    price_1m_ago: Decimal | None = Field(None, gt=0, description="Price 1 month ago")
-    price_3m_ago: Decimal | None = Field(None, gt=0, description="Price 3 months ago")
-    price_6m_ago: Decimal | None = Field(None, gt=0, description="Price 6 months ago")
-    price_12m_ago: Decimal | None = Field(None, gt=0, description="Price 12 months ago")
+    price_1m_ago: Decimal | None = Field(default=None, gt=0, description="Price 1 month ago")
+    price_3m_ago: Decimal | None = Field(default=None, gt=0, description="Price 3 months ago")
+    price_6m_ago: Decimal | None = Field(default=None, gt=0, description="Price 6 months ago")
+    price_12m_ago: Decimal | None = Field(default=None, gt=0, description="Price 12 months ago")
 
     # Momentum calculations
-    momentum_1m: Decimal | None = Field(None, description="1-month return")
-    momentum_3m: Decimal | None = Field(None, description="3-month return")
-    momentum_6m: Decimal | None = Field(None, description="6-month return")
-    momentum_12m: Decimal | None = Field(None, description="12-month return")
+    momentum_1m: Decimal | None = Field(default=None, description="1-month return")
+    momentum_3m: Decimal | None = Field(default=None, description="3-month return")
+    momentum_6m: Decimal | None = Field(default=None, description="6-month return")
+    momentum_12m: Decimal | None = Field(default=None, description="12-month return")
 
     # Volatility and risk
-    beta: Decimal | None = Field(None, description="Beta (5-year monthly)")
-    volatility_1y: Decimal | None = Field(None, ge=0, description="1-year volatility")
-    max_drawdown_1y: Decimal | None = Field(None, le=0, description="1-year max drawdown")
+    beta: Decimal | None = Field(default=None, description="Beta (5-year monthly)")
+    volatility_1y: Decimal | None = Field(default=None, ge=0, description="1-year volatility")
+    max_drawdown_1y: Decimal | None = Field(default=None, le=0, description="1-year max drawdown")
 
     # Factor scores (calculated)
-    factor_scores: FactorScores | None = Field(None, description="Calculated factor scores")
+    factor_scores: FactorScores | None = Field(default=None, description="Calculated factor scores")
 
     # Composite scores
     overall_factor_score: Decimal | None = Field(
-        None, ge=0, le=100, description="Overall factor score"
+        default=None, ge=0, le=100, description="Overall factor score"
     )
-    quality_score: Decimal | None = Field(None, ge=0, le=100, description="Quality score")
-    value_score: Decimal | None = Field(None, ge=0, le=100, description="Value score")
-    growth_score: Decimal | None = Field(None, ge=0, le=100, description="Growth score")
+    quality_score: Decimal | None = Field(default=None, ge=0, le=100, description="Quality score")
+    value_score: Decimal | None = Field(default=None, ge=0, le=100, description="Value score")
+    growth_score: Decimal | None = Field(default=None, ge=0, le=100, description="Growth score")
 
     @property
     def momentum_excluding_last_month(self) -> Decimal | None:
@@ -283,70 +301,76 @@ class FactorStrategyConfig(BaseModel):
 
     # Universe and screening
     min_market_cap: Decimal | None = Field(
-        None, ge=0, description="Minimum market cap (millions, None = no filter)"
+        default=None, ge=0, description="Minimum market cap (millions, None = no filter)"
     )
     max_market_cap: Decimal | None = Field(
-        None, ge=0, description="Maximum market cap (millions, None = no filter)"
+        default=None, ge=0, description="Maximum market cap (millions, None = no filter)"
     )
-    min_price: Decimal = Field(Decimal("5"), ge=0, description="Minimum stock price")
+    min_price: Decimal = Field(default=Decimal("5"), ge=0, description="Minimum stock price")
     min_daily_volume: Decimal | None = Field(
-        None, ge=0, description="Minimum daily volume (shares)"
+        default=None, ge=0, description="Minimum daily volume (shares)"
     )
 
     # Factor tilt settings
     value_tilt: Decimal = Field(
-        Decimal("0.2"),
+        default=Decimal("0.2"),
         ge=-1,
         le=1,
         description="Value factor tilt (+0.2 = overweight value by 20%)",
     )
     size_tilt: Decimal = Field(
-        Decimal("0"), ge=-1, le=1, description="Size factor tilt (+0.2 = overweight small caps)"
+        default=Decimal("0"),
+        ge=-1,
+        le=1,
+        description="Size factor tilt (+0.2 = overweight small caps)",
     )
     profitability_tilt: Decimal = Field(
-        Decimal("0.2"),
+        default=Decimal("0.2"),
         ge=-1,
         le=1,
         description="Profitability factor tilt (+0.2 = overweight profitable firms)",
     )
     investment_tilt: Decimal = Field(
-        Decimal("0"),
+        default=Decimal("0"),
         ge=-1,
         le=1,
         description="Investment factor tilt (+0.2 = overweight conservative investors)",
     )
     momentum_tilt: Decimal = Field(
-        Decimal("0.1"), ge=-1, le=1, description="Momentum factor tilt (+0.1 = overweight winners)"
+        default=Decimal("0.1"),
+        ge=-1,
+        le=1,
+        description="Momentum factor tilt (+0.1 = overweight winners)",
     )
 
     # Portfolio construction
     portfolio_size: int = Field(
-        40, ge=10, le=100, description="Target number of stocks in portfolio"
+        default=40, ge=10, le=100, description="Target number of stocks in portfolio"
     )
     max_sector_weight: Decimal = Field(
-        Decimal("0.25"), ge=0.05, le=1.0, description="Maximum weight per sector"
+        default=Decimal("0.25"), ge=0.05, le=1.0, description="Maximum weight per sector"
     )
     max_single_position: Decimal = Field(
-        Decimal("0.04"), ge=0.01, le=0.5, description="Maximum weight per position"
+        default=Decimal("0.04"), ge=0.01, le=0.5, description="Maximum weight per position"
     )
     min_position: Decimal = Field(
-        Decimal("0.01"), ge=0.005, le=0.1, description="Minimum position size"
+        default=Decimal("0.01"), ge=0.005, le=0.1, description="Minimum position size"
     )
 
     # Factor constraints
     max_factor_exposure: Decimal = Field(
-        Decimal("0.3"), ge=0.1, le=1.0, description="Maximum exposure to any single factor"
+        default=Decimal("0.3"), ge=0.1, le=1.0, description="Maximum exposure to any single factor"
     )
     factor_neutral: bool = Field(
-        False, description="Require market-neutral factor exposure (sum to zero)"
+        default=False, description="Require market-neutral factor exposure (sum to zero)"
     )
 
     # Rebalancing
     rebalance_frequency: str = Field(
-        "quarterly", description="Rebalancing frequency (monthly, quarterly, semi_annual)"
+        default="quarterly", description="Rebalancing frequency (monthly, quarterly, semi_annual)"
     )
     rebalance_threshold: Decimal = Field(
-        Decimal("0.05"),
+        default=Decimal("0.05"),
         ge=0.01,
         le=0.2,
         description="Rebalance threshold (drift before rebalancing)",
@@ -354,38 +378,41 @@ class FactorStrategyConfig(BaseModel):
 
     # Risk management
     max_beta: Decimal | None = Field(
-        None, ge=0, description="Maximum portfolio beta (None = no constraint)"
+        default=None, ge=0, description="Maximum portfolio beta (None = no constraint)"
     )
     max_volatility: Decimal | None = Field(
-        None, ge=0, description="Maximum portfolio volatility (None = no constraint)"
+        default=None, ge=0, description="Maximum portfolio volatility (None = no constraint)"
     )
     stop_loss_factor: Decimal = Field(
-        Decimal("0.15"), ge=0, le=1, description="Stop loss as factor of portfolio volatility"
+        default=Decimal("0.15"),
+        ge=0,
+        le=1,
+        description="Stop loss as factor of portfolio volatility",
     )
 
     # Factor scoring weights
     value_weight: Decimal = Field(
-        Decimal("0.25"), ge=0, le=1, description="Weight of value factor in scoring"
+        default=Decimal("0.25"), ge=0, le=1, description="Weight of value factor in scoring"
     )
     profitability_weight: Decimal = Field(
-        Decimal("0.25"), ge=0, le=1, description="Weight of profitability factor in scoring"
+        default=Decimal("0.25"), ge=0, le=1, description="Weight of profitability factor in scoring"
     )
     momentum_weight: Decimal = Field(
-        Decimal("0.20"), ge=0, le=1, description="Weight of momentum factor in scoring"
+        default=Decimal("0.20"), ge=0, le=1, description="Weight of momentum factor in scoring"
     )
     size_weight: Decimal = Field(
-        Decimal("0.15"), ge=0, le=1, description="Weight of size factor in scoring"
+        default=Decimal("0.15"), ge=0, le=1, description="Weight of size factor in scoring"
     )
     investment_weight: Decimal = Field(
-        Decimal("0.15"), ge=0, le=1, description="Weight of investment factor in scoring"
+        default=Decimal("0.15"), ge=0, le=1, description="Weight of investment factor in scoring"
     )
 
     # Minimum scores
     min_quality_score: Decimal = Field(
-        Decimal("40"), ge=0, le=100, description="Minimum quality score to include"
+        default=Decimal("40"), ge=0, le=100, description="Minimum quality score to include"
     )
     min_factor_score: Decimal = Field(
-        Decimal("30"), ge=0, le=100, description="Minimum composite factor score to include"
+        default=Decimal("30"), ge=0, le=100, description="Minimum composite factor score to include"
     )
 
     @model_validator(mode="after")
@@ -519,8 +546,10 @@ class FactorPosition(BaseModel):
     factor_exposure: dict[str, Decimal] = Field(
         default_factory=dict, description="Factor exposures"
     )
-    expected_return: Decimal | None = Field(None, description="Expected return from factor model")
-    sector: str | None = Field(None, description="Sector classification")
+    expected_return: Decimal | None = Field(
+        default=None, description="Expected return from factor model"
+    )
+    sector: str | None = Field(default=None, description="Sector classification")
 
 
 class FactorPortfolio(BaseModel):
@@ -534,9 +563,9 @@ class FactorPortfolio(BaseModel):
 
     positions: list[FactorPosition] = Field(default_factory=list, description="Portfolio positions")
     total_value: Decimal = Field(..., ge=0, description="Total portfolio value")
-    cash: Decimal = Field(Decimal("0"), ge=0, description="Cash balance")
+    cash: Decimal = Field(default=Decimal("0"), ge=0, description="Cash balance")
     created_at: datetime = Field(default_factory=datetime.utcnow, description="Creation timestamp")
-    rebalance_at: datetime | None = Field(None, description="Next rebalance date")
+    rebalance_at: datetime | None = Field(default=None, description="Next rebalance date")
 
     # Factor exposures
     factor_exposures: dict[str, Decimal] = Field(
@@ -1402,6 +1431,14 @@ class CryptoScreeningResult:
     """
 
     passed_assets: list[CryptoAsset]
+
+    @property
+    def pass_rate(self) -> float:
+        """Porcentaje de activos que pasaron el screening."""
+        if self.total_evaluated == 0:
+            return 0.0
+        return len(self.passed_assets) / self.total_evaluated * 100
+
     failed_assets: dict[str, list[str]]
     total_evaluated: int
     screening_time_ms: float

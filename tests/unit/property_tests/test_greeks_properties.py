@@ -25,7 +25,7 @@ from app.engines.risk_engine.greeks_calculator import GreeksCalculator
 
 def valid_option_type() -> st.SearchStrategy[str]:
     """Generate valid option types."""
-    return st.sampled_from(['call', 'put'])
+    return st.sampled_from(["call", "put"])
 
 
 def valid_spot_price() -> st.SearchStrategy[float]:
@@ -100,11 +100,11 @@ class TestDeltaProperties:
             dividend_yield=dividend_yield,
         )
 
-        assume('error' not in result)
+        assume("error" not in result)
 
-        delta = result['primary_greeks']['delta']
+        delta = result["primary_greeks"]["delta"]
 
-        if option_type == 'call':
+        if option_type == "call":
             assert 0 <= delta <= 1, f"Call delta {delta} outside [0, 1]"
         else:  # put
             assert -1 <= delta <= 0, f"Put delta {delta} outside [-1, 0]"
@@ -124,7 +124,7 @@ class TestDeltaProperties:
         """Call delta should decrease as strike increases."""
         calculator = GreeksCalculator()
         result1 = calculator.calculate_all_greeks(
-            option_type='call',
+            option_type="call",
             spot_price=spot_price,
             strike_price=strike_price,
             time_to_expiry=time_to_expiry,
@@ -134,7 +134,7 @@ class TestDeltaProperties:
         )
 
         result2 = calculator.calculate_all_greeks(
-            option_type='call',
+            option_type="call",
             spot_price=spot_price,
             strike_price=strike_price * 1.1,  # 10% higher strike
             time_to_expiry=time_to_expiry,
@@ -143,10 +143,10 @@ class TestDeltaProperties:
             dividend_yield=dividend_yield,
         )
 
-        assume('error' not in result1 and 'error' not in result2)
+        assume("error" not in result1 and "error" not in result2)
 
-        delta1 = result1['primary_greeks']['delta']
-        delta2 = result2['primary_greeks']['delta']
+        delta1 = result1["primary_greeks"]["delta"]
+        delta2 = result2["primary_greeks"]["delta"]
 
         assert delta2 <= delta1, f"Call delta should decrease with strike: {delta2} > {delta1}"
 
@@ -165,7 +165,7 @@ class TestDeltaProperties:
         """Put delta should approximately equal call delta minus 1."""
         calculator = GreeksCalculator()
         call_result = calculator.calculate_all_greeks(
-            option_type='call',
+            option_type="call",
             spot_price=spot_price,
             strike_price=strike_price,
             time_to_expiry=time_to_expiry,
@@ -175,7 +175,7 @@ class TestDeltaProperties:
         )
 
         put_result = calculator.calculate_all_greeks(
-            option_type='put',
+            option_type="put",
             spot_price=spot_price,
             strike_price=strike_price,
             time_to_expiry=time_to_expiry,
@@ -184,17 +184,17 @@ class TestDeltaProperties:
             dividend_yield=dividend_yield,
         )
 
-        assume('error' not in call_result and 'error' not in put_result)
+        assume("error" not in call_result and "error" not in put_result)
 
-        call_delta = call_result['primary_greeks']['delta']
-        put_delta = put_result['primary_greeks']['delta']
+        call_delta = call_result["primary_greeks"]["delta"]
+        put_delta = put_result["primary_greeks"]["delta"]
 
         # Put delta ≈ Call delta - 1 (with dividend adjustment)
         expected_put_delta = call_delta - np.exp(-dividend_yield * time_to_expiry)
 
-        assert (
-            abs(put_delta - expected_put_delta) < 0.01
-        ), f"Put delta {put_delta} != call delta {call_delta} - 1"
+        assert abs(put_delta - expected_put_delta) < 0.01, (
+            f"Put delta {put_delta} != call delta {call_delta} - 1"
+        )
 
 
 # ============================================================================
@@ -239,9 +239,9 @@ class TestGammaProperties:
             dividend_yield=dividend_yield,
         )
 
-        assume('error' not in result)
+        assume("error" not in result)
 
-        gamma = result['primary_greeks']['gamma']
+        gamma = result["primary_greeks"]["gamma"]
 
         assert gamma >= 0, f"Gamma should be non-negative, got {gamma}"
 
@@ -259,7 +259,7 @@ class TestGammaProperties:
         """Gamma should be identical for calls and puts with same parameters."""
         calculator = GreeksCalculator()
         call_result = calculator.calculate_all_greeks(
-            option_type='call',
+            option_type="call",
             spot_price=spot_price,
             strike_price=strike_price,
             time_to_expiry=1.0,
@@ -269,7 +269,7 @@ class TestGammaProperties:
         )
 
         put_result = calculator.calculate_all_greeks(
-            option_type='put',
+            option_type="put",
             spot_price=spot_price,
             strike_price=strike_price,
             time_to_expiry=1.0,
@@ -278,14 +278,14 @@ class TestGammaProperties:
             dividend_yield=dividend_yield,
         )
 
-        assume('error' not in call_result and 'error' not in put_result)
+        assume("error" not in call_result and "error" not in put_result)
 
-        call_gamma = call_result['primary_greeks']['gamma']
-        put_gamma = put_result['primary_greeks']['gamma']
+        call_gamma = call_result["primary_greeks"]["gamma"]
+        put_gamma = put_result["primary_greeks"]["gamma"]
 
-        assert (
-            abs(call_gamma - put_gamma) < 1e-10
-        ), f"Call gamma {call_gamma} should equal put gamma {put_gamma}"
+        assert abs(call_gamma - put_gamma) < 1e-10, (
+            f"Call gamma {call_gamma} should equal put gamma {put_gamma}"
+        )
 
     @given(
         spot_price=valid_spot_price(),
@@ -301,7 +301,7 @@ class TestGammaProperties:
         """Gamma should be positive for different time horizons."""
         calculator = GreeksCalculator()
         result_long = calculator.calculate_all_greeks(
-            option_type='call',
+            option_type="call",
             spot_price=spot_price,
             strike_price=strike_price,
             time_to_expiry=1.0,  # 1 year
@@ -311,7 +311,7 @@ class TestGammaProperties:
         )
 
         result_short = calculator.calculate_all_greeks(
-            option_type='call',
+            option_type="call",
             spot_price=spot_price,
             strike_price=strike_price,
             time_to_expiry=0.25,  # 3 months
@@ -320,15 +320,15 @@ class TestGammaProperties:
             dividend_yield=dividend_yield,
         )
 
-        assume('error' not in result_long and 'error' not in result_short)
+        assume("error" not in result_long and "error" not in result_short)
 
-        gamma_long = result_long['primary_greeks']['gamma']
-        gamma_short = result_short['primary_greeks']['gamma']
+        gamma_long = result_long["primary_greeks"]["gamma"]
+        gamma_short = result_short["primary_greeks"]["gamma"]
 
         # Both gammas should be non-negative
-        assert (
-            gamma_long >= 0 and gamma_short >= 0
-        ), f"Both gammas should be non-negative: long={gamma_long}, short={gamma_short}"
+        assert gamma_long >= 0 and gamma_short >= 0, (
+            f"Both gammas should be non-negative: long={gamma_long}, short={gamma_short}"
+        )
 
 
 # ============================================================================
@@ -373,9 +373,9 @@ class TestThetaProperties:
             dividend_yield=dividend_yield,
         )
 
-        assume('error' not in result)
+        assume("error" not in result)
 
-        theta = result['primary_greeks']['theta']
+        theta = result["primary_greeks"]["theta"]
 
         # Theta is usually negative for long options (time decay)
         # Deep ITM European puts with high interest rates can be positive
@@ -419,15 +419,15 @@ class TestThetaProperties:
             dividend_yield=dividend_yield,
         )
 
-        assume('error' not in result_far and 'error' not in result_near)
+        assume("error" not in result_far and "error" not in result_near)
 
-        theta_far = result_far['primary_greeks']['theta']
-        theta_near = result_near['primary_greeks']['theta']
+        theta_far = result_far["primary_greeks"]["theta"]
+        theta_near = result_near["primary_greeks"]["theta"]
 
         # Both thetas should be finite values
-        assert np.isfinite(theta_far) and np.isfinite(
-            theta_near
-        ), f"Both thetas should be finite: far={theta_far}, near={theta_near}"
+        assert np.isfinite(theta_far) and np.isfinite(theta_near), (
+            f"Both thetas should be finite: far={theta_far}, near={theta_near}"
+        )
 
 
 # ============================================================================
@@ -472,9 +472,9 @@ class TestVegaProperties:
             dividend_yield=dividend_yield,
         )
 
-        assume('error' not in result)
+        assume("error" not in result)
 
-        vega = result['primary_greeks']['vega']
+        vega = result["primary_greeks"]["vega"]
 
         assert vega >= 0, f"Vega should be non-negative, got {vega}"
 
@@ -493,7 +493,7 @@ class TestVegaProperties:
         """Vega should be identical for calls and puts with same parameters."""
         calculator = GreeksCalculator()
         call_result = calculator.calculate_all_greeks(
-            option_type='call',
+            option_type="call",
             spot_price=spot_price,
             strike_price=strike_price,
             time_to_expiry=time_to_expiry,
@@ -503,7 +503,7 @@ class TestVegaProperties:
         )
 
         put_result = calculator.calculate_all_greeks(
-            option_type='put',
+            option_type="put",
             spot_price=spot_price,
             strike_price=strike_price,
             time_to_expiry=time_to_expiry,
@@ -512,14 +512,14 @@ class TestVegaProperties:
             dividend_yield=dividend_yield,
         )
 
-        assume('error' not in call_result and 'error' not in put_result)
+        assume("error" not in call_result and "error" not in put_result)
 
-        call_vega = call_result['primary_greeks']['vega']
-        put_vega = put_result['primary_greeks']['vega']
+        call_vega = call_result["primary_greeks"]["vega"]
+        put_vega = put_result["primary_greeks"]["vega"]
 
-        assert (
-            abs(call_vega - put_vega) < 1e-10
-        ), f"Call vega {call_vega} should equal put vega {put_vega}"
+        assert abs(call_vega - put_vega) < 1e-10, (
+            f"Call vega {call_vega} should equal put vega {put_vega}"
+        )
 
 
 # ============================================================================
@@ -547,7 +547,7 @@ class TestPutCallParity:
         """Put-call parity: C - P = S - K*e^(-rT) should hold."""
         calculator = GreeksCalculator()
         call_result = calculator.calculate_all_greeks(
-            option_type='call',
+            option_type="call",
             spot_price=spot_price,
             strike_price=strike_price,
             time_to_expiry=time_to_expiry,
@@ -557,7 +557,7 @@ class TestPutCallParity:
         )
 
         put_result = calculator.calculate_all_greeks(
-            option_type='put',
+            option_type="put",
             spot_price=spot_price,
             strike_price=strike_price,
             time_to_expiry=time_to_expiry,
@@ -566,10 +566,10 @@ class TestPutCallParity:
             dividend_yield=dividend_yield,
         )
 
-        assume('error' not in call_result and 'error' not in put_result)
+        assume("error" not in call_result and "error" not in put_result)
 
-        call_price = call_result['option_price']
-        put_price = put_result['option_price']
+        call_price = call_result["option_price"]
+        put_price = put_result["option_price"]
 
         # Put-call parity
         lhs = call_price - put_price
@@ -593,7 +593,7 @@ class TestPutCallParity:
         """Put-call parity with dividends: C - P = S*e^(-qT) - K*e^(-rT) should hold."""
         calculator = GreeksCalculator()
         call_result = calculator.calculate_all_greeks(
-            option_type='call',
+            option_type="call",
             spot_price=spot_price,
             strike_price=strike_price,
             time_to_expiry=time_to_expiry,
@@ -603,7 +603,7 @@ class TestPutCallParity:
         )
 
         put_result = calculator.calculate_all_greeks(
-            option_type='put',
+            option_type="put",
             spot_price=spot_price,
             strike_price=strike_price,
             time_to_expiry=time_to_expiry,
@@ -612,10 +612,10 @@ class TestPutCallParity:
             dividend_yield=dividend_yield,
         )
 
-        assume('error' not in call_result and 'error' not in put_result)
+        assume("error" not in call_result and "error" not in put_result)
 
-        call_price = call_result['option_price']
-        put_price = put_result['option_price']
+        call_price = call_result["option_price"]
+        put_price = put_result["option_price"]
 
         # Put-call parity with dividends
         lhs = call_price - put_price
@@ -624,9 +624,9 @@ class TestPutCallParity:
         )
 
         # Should be very close (allowing for numerical precision)
-        assert (
-            abs(lhs - rhs) < 0.05
-        ), f"Put-call parity with dividends violated: C-P={lhs}, S*e^(-qT)-K*e^(-rT)={rhs}"
+        assert abs(lhs - rhs) < 0.05, (
+            f"Put-call parity with dividends violated: C-P={lhs}, S*e^(-qT)-K*e^(-rT)={rhs}"
+        )
 
 
 # ============================================================================
@@ -653,7 +653,7 @@ class TestOptionPriceProperties:
     ):
         """Option price should always be non-negative."""
         calculator = GreeksCalculator()
-        for option_type in ['call', 'put']:
+        for option_type in ["call", "put"]:
             result = calculator.calculate_all_greeks(
                 option_type=option_type,
                 spot_price=spot_price,
@@ -664,9 +664,9 @@ class TestOptionPriceProperties:
                 dividend_yield=dividend_yield,
             )
 
-            assume('error' not in result)
+            assume("error" not in result)
 
-            price = result['option_price']
+            price = result["option_price"]
 
             # Option price should be non-negative (can be 0 for deep OTM)
             assert price >= 0, f"{option_type} price should be non-negative, got {price}"
@@ -686,7 +686,7 @@ class TestOptionPriceProperties:
         """Call price should satisfy: C >= max(S*e^(-qT) - K*e^(-rT), 0)."""
         calculator = GreeksCalculator()
         result = calculator.calculate_all_greeks(
-            option_type='call',
+            option_type="call",
             spot_price=spot_price,
             strike_price=strike_price,
             time_to_expiry=time_to_expiry,
@@ -695,9 +695,9 @@ class TestOptionPriceProperties:
             dividend_yield=dividend_yield,
         )
 
-        assume('error' not in result)
+        assume("error" not in result)
 
-        call_price = result['option_price']
+        call_price = result["option_price"]
 
         # Lower bound
         intrinsic_value = max(
@@ -706,9 +706,9 @@ class TestOptionPriceProperties:
             0,
         )
 
-        assert (
-            call_price >= intrinsic_value - 0.01
-        ), f"Call price {call_price} below lower bound {intrinsic_value}"
+        assert call_price >= intrinsic_value - 0.01, (
+            f"Call price {call_price} below lower bound {intrinsic_value}"
+        )
 
     @given(
         spot_price=valid_spot_price(),
@@ -725,7 +725,7 @@ class TestOptionPriceProperties:
         """Put price should satisfy: P >= max(K*e^(-rT) - S*e^(-qT), 0)."""
         calculator = GreeksCalculator()
         result = calculator.calculate_all_greeks(
-            option_type='put',
+            option_type="put",
             spot_price=spot_price,
             strike_price=strike_price,
             time_to_expiry=time_to_expiry,
@@ -734,9 +734,9 @@ class TestOptionPriceProperties:
             dividend_yield=dividend_yield,
         )
 
-        assume('error' not in result)
+        assume("error" not in result)
 
-        put_price = result['option_price']
+        put_price = result["option_price"]
 
         # Lower bound
         intrinsic_value = max(
@@ -745,9 +745,9 @@ class TestOptionPriceProperties:
             0,
         )
 
-        assert (
-            put_price >= intrinsic_value - 0.01
-        ), f"Put price {put_price} below lower bound {intrinsic_value}"
+        assert put_price >= intrinsic_value - 0.01, (
+            f"Put price {put_price} below lower bound {intrinsic_value}"
+        )
 
     @given(
         spot_price=valid_spot_price(),
@@ -764,7 +764,7 @@ class TestOptionPriceProperties:
         """Call price should increase (or stay same) as spot price increases."""
         calculator = GreeksCalculator()
         result1 = calculator.calculate_all_greeks(
-            option_type='call',
+            option_type="call",
             spot_price=spot_price,
             strike_price=strike_price,
             time_to_expiry=time_to_expiry,
@@ -774,7 +774,7 @@ class TestOptionPriceProperties:
         )
 
         result2 = calculator.calculate_all_greeks(
-            option_type='call',
+            option_type="call",
             spot_price=spot_price * 1.1,  # 10% higher spot
             strike_price=strike_price,
             time_to_expiry=time_to_expiry,
@@ -783,10 +783,10 @@ class TestOptionPriceProperties:
             dividend_yield=dividend_yield,
         )
 
-        assume('error' not in result1 and 'error' not in result2)
+        assume("error" not in result1 and "error" not in result2)
 
-        price1 = result1['option_price']
-        price2 = result2['option_price']
+        price1 = result1["option_price"]
+        price2 = result2["option_price"]
 
         # Call price should increase or stay the same with higher spot
         assert price2 >= price1, f"Call price should increase with spot: {price2} < {price1}"
@@ -806,7 +806,7 @@ class TestOptionPriceProperties:
         """Put price should decrease (or stay same) as spot price increases."""
         calculator = GreeksCalculator()
         result1 = calculator.calculate_all_greeks(
-            option_type='put',
+            option_type="put",
             spot_price=spot_price,
             strike_price=strike_price,
             time_to_expiry=time_to_expiry,
@@ -816,7 +816,7 @@ class TestOptionPriceProperties:
         )
 
         result2 = calculator.calculate_all_greeks(
-            option_type='put',
+            option_type="put",
             spot_price=spot_price * 1.1,  # 10% higher spot
             strike_price=strike_price,
             time_to_expiry=time_to_expiry,
@@ -825,10 +825,10 @@ class TestOptionPriceProperties:
             dividend_yield=dividend_yield,
         )
 
-        assume('error' not in result1 and 'error' not in result2)
+        assume("error" not in result1 and "error" not in result2)
 
-        price1 = result1['option_price']
-        price2 = result2['option_price']
+        price1 = result1["option_price"]
+        price2 = result2["option_price"]
 
         # Put price should decrease or stay the same with higher spot
         assert price2 <= price1, f"Put price should decrease with spot: {price2} > {price1}"
@@ -859,7 +859,7 @@ class TestHigherOrderGreeks:
         """Vanna should be defined and finite."""
         calculator = GreeksCalculator()
         result = calculator.calculate_all_greeks(
-            option_type='call',
+            option_type="call",
             spot_price=spot_price,
             strike_price=strike_price,
             time_to_expiry=time_to_expiry,
@@ -868,9 +868,9 @@ class TestHigherOrderGreeks:
             dividend_yield=dividend_yield,
         )
 
-        assume('error' not in result)
+        assume("error" not in result)
 
-        vanna = result['higher_order_greeks']['vanna']
+        vanna = result["higher_order_greeks"]["vanna"]
 
         assert np.isfinite(vanna), f"Vanna should be finite, got {vanna}"
 
@@ -889,7 +889,7 @@ class TestHigherOrderGreeks:
         """Vomma should be defined and finite."""
         calculator = GreeksCalculator()
         result = calculator.calculate_all_greeks(
-            option_type='call',
+            option_type="call",
             spot_price=spot_price,
             strike_price=strike_price,
             time_to_expiry=time_to_expiry,
@@ -898,9 +898,9 @@ class TestHigherOrderGreeks:
             dividend_yield=dividend_yield,
         )
 
-        assume('error' not in result)
+        assume("error" not in result)
 
-        vomma = result['higher_order_greeks']['vomma']
+        vomma = result["higher_order_greeks"]["vomma"]
 
         assert np.isfinite(vomma), f"Vomma should be finite, got {vomma}"
 
@@ -919,7 +919,7 @@ class TestHigherOrderGreeks:
         """Charm should be defined and finite."""
         calculator = GreeksCalculator()
         result = calculator.calculate_all_greeks(
-            option_type='call',
+            option_type="call",
             spot_price=spot_price,
             strike_price=strike_price,
             time_to_expiry=time_to_expiry,
@@ -928,9 +928,9 @@ class TestHigherOrderGreeks:
             dividend_yield=dividend_yield,
         )
 
-        assume('error' not in result)
+        assume("error" not in result)
 
-        charm = result['higher_order_greeks']['charm']
+        charm = result["higher_order_greeks"]["charm"]
 
         assert np.isfinite(charm), f"Charm should be finite, got {charm}"
 
@@ -958,7 +958,7 @@ class TestGreeksEdgeCases:
         """Zero time to expiry should raise an error."""
         calculator = GreeksCalculator()
         result = calculator.calculate_all_greeks(
-            option_type='call',
+            option_type="call",
             spot_price=spot_price,
             strike_price=strike_price,
             time_to_expiry=0.0,  # Zero time
@@ -967,7 +967,7 @@ class TestGreeksEdgeCases:
         )
 
         # Should return error
-        assert 'error' in result, "Zero time to expiry should result in error"
+        assert "error" in result, "Zero time to expiry should result in error"
 
     @given(
         spot_price=valid_spot_price(),
@@ -982,7 +982,7 @@ class TestGreeksEdgeCases:
         """Zero volatility should raise an error."""
         calculator = GreeksCalculator()
         result = calculator.calculate_all_greeks(
-            option_type='call',
+            option_type="call",
             spot_price=spot_price,
             strike_price=strike_price,
             time_to_expiry=time_to_expiry,
@@ -991,7 +991,7 @@ class TestGreeksEdgeCases:
         )
 
         # Should return error
-        assert 'error' in result, "Zero volatility should result in error"
+        assert "error" in result, "Zero volatility should result in error"
 
     @given(
         spot_price=st.floats(min_value=50, max_value=500, allow_nan=False, allow_infinity=False),
@@ -1008,7 +1008,7 @@ class TestGreeksEdgeCases:
         calculator = GreeksCalculator()
 
         result = calculator.calculate_all_greeks(
-            option_type='call',
+            option_type="call",
             spot_price=strike_price * 2,  # Spot is 2x strike (deep ITM)
             strike_price=strike_price,
             time_to_expiry=time_to_expiry,
@@ -1016,9 +1016,9 @@ class TestGreeksEdgeCases:
             risk_free_rate=0.05,
         )
 
-        assume('error' not in result)
+        assume("error" not in result)
 
-        delta = result['primary_greeks']['delta']
+        delta = result["primary_greeks"]["delta"]
 
         # Delta should be close to 1 for deep ITM (with reasonable volatility)
         assert delta > 0.7, f"Deep ITM call delta {delta} should be close to 1"
@@ -1040,7 +1040,7 @@ class TestGreeksEdgeCases:
         calculator = GreeksCalculator()
 
         result = calculator.calculate_all_greeks(
-            option_type='call',
+            option_type="call",
             spot_price=strike_price * 0.5,  # Spot is half of strike (deep OTM)
             strike_price=strike_price,
             time_to_expiry=time_to_expiry,
@@ -1048,9 +1048,9 @@ class TestGreeksEdgeCases:
             risk_free_rate=0.05,
         )
 
-        assume('error' not in result)
+        assume("error" not in result)
 
-        delta = result['primary_greeks']['delta']
+        delta = result["primary_greeks"]["delta"]
 
         # Delta should be reasonably close to 0 for deep OTM (with reasonable volatility)
         assert delta < 0.45, f"Deep OTM call delta {delta} should be close to 0"

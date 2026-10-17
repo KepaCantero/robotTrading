@@ -44,7 +44,7 @@ def generate_synthetic_financial_data(n_samples=1000, n_features=10, random_stat
     np.random.seed(random_state)
 
     # Generate time index
-    dates = pd.date_range('2020-01-01', periods=n_samples, freq='D')
+    dates = pd.date_range("2020-01-01", periods=n_samples, freq="D")
 
     # Generate features with realistic properties
     X = np.zeros((n_samples, n_features))
@@ -227,7 +227,7 @@ def example_3_cross_validate_with_purging():
         n_splits=5,
         purge_pct=0.05,
         embargo_pct=0.02,
-        scoring=lambda y_true, y_pred: f1_score(y_true, y_pred, average='weighted'),
+        scoring=lambda y_true, y_pred: f1_score(y_true, y_pred, average="weighted"),
     )
 
     print(f"  Mean F1-score: {np.mean(results_f1['test_score']):.4f}")
@@ -268,8 +268,7 @@ def example_4_time_series_split():
         test_end = test_idx.max()
 
         print(
-            f"  Fold {fold + 1}: train=[{train_start}:{train_end}], "
-            f"test=[{test_start}:{test_end}]"
+            f"  Fold {fold + 1}: train=[{train_start}:{train_end}], test=[{test_start}:{test_end}]"
         )
 
     # Train classifier
@@ -305,9 +304,9 @@ def example_5_pandas_dataframe():
     X, y_class, _, dates = generate_synthetic_financial_data(n_samples=1000)
 
     # Create DataFrame with time index
-    X_df = pd.DataFrame(X, columns=[f'feature_{i}' for i in range(X.shape[1])], index=dates)
+    X_df = pd.DataFrame(X, columns=[f"feature_{i}" for i in range(X.shape[1])], index=dates)
 
-    y_series = pd.Series(y_class, index=dates, name='target')
+    y_series = pd.Series(y_class, index=dates, name="target")
 
     print(f"\nDataFrame shape: {X_df.shape}")
     print(f"Date range: {X_df.index.min()} to {X_df.index.max()}")
@@ -352,10 +351,10 @@ def example_6_comparing_purge_embargo_settings():
 
     # Test different configurations
     configs = [
-        {'purge_pct': 0.00, 'embargo_pct': 0.00, 'name': 'No Purge/Embargo'},
-        {'purge_pct': 0.02, 'embargo_pct': 0.01, 'name': 'Light (2%/1%)'},
-        {'purge_pct': 0.05, 'embargo_pct': 0.02, 'name': 'Medium (5%/2%)'},
-        {'purge_pct': 0.10, 'embargo_pct': 0.05, 'name': 'Heavy (10%/5%)'},
+        {"purge_pct": 0.00, "embargo_pct": 0.00, "name": "No Purge/Embargo"},
+        {"purge_pct": 0.02, "embargo_pct": 0.01, "name": "Light (2%/1%)"},
+        {"purge_pct": 0.05, "embargo_pct": 0.02, "name": "Medium (5%/2%)"},
+        {"purge_pct": 0.10, "embargo_pct": 0.05, "name": "Heavy (10%/5%)"},
     ]
 
     results = []
@@ -363,8 +362,8 @@ def example_6_comparing_purge_embargo_settings():
     for config in configs:
         purged_cv = PurgedKFold(
             n_splits=5,
-            purge_pct=config['purge_pct'],
-            embargo_pct=config['embargo_pct'],
+            purge_pct=config["purge_pct"],
+            embargo_pct=config["embargo_pct"],
         )
 
         splits = purged_cv.split(X, y_class)
@@ -386,12 +385,12 @@ def example_6_comparing_purge_embargo_settings():
 
         results.append(
             {
-                'config': config['name'],
-                'purge_pct': config['purge_pct'],
-                'embargo_pct': config['embargo_pct'],
-                'mean_accuracy': mean_score,
-                'std_accuracy': std_score,
-                'n_splits': len(splits),
+                "config": config["name"],
+                "purge_pct": config["purge_pct"],
+                "embargo_pct": config["embargo_pct"],
+                "mean_accuracy": mean_score,
+                "std_accuracy": std_score,
+                "n_splits": len(splits),
             }
         )
 
@@ -405,7 +404,7 @@ def example_6_comparing_purge_embargo_settings():
     print("=" * 80)
     results_df = pd.DataFrame(results)
     print(
-        results_df[['config', 'mean_accuracy', 'std_accuracy', 'n_splits']].to_string(index=False)
+        results_df[["config", "mean_accuracy", "std_accuracy", "n_splits"]].to_string(index=False)
     )
 
 
@@ -433,7 +432,7 @@ def example_7_leakage_detection():
     # Validate no leakage
     has_no_leakage = purged_cv.validate_no_leakage(X)
     print(
-        f"\n✅ Validation passed: No information leakage detected"
+        "\n✅ Validation passed: No information leakage detected"
         if has_no_leakage
         else "❌ Validation failed: Leakage detected"
     )
@@ -485,5 +484,5 @@ def main():
     print("\nReference: 'Advances in Financial Machine Learning' by Marcos López de Prado")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

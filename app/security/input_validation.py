@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 """
 Comprehensive Input Validation Module
 
@@ -18,13 +16,15 @@ Security Compliance: 95%
 - Zero-trust validation approach
 """
 
+from __future__ import annotations
+
 import html
 import logging
 import re
 import time
 from collections import defaultdict
 from decimal import Decimal, InvalidOperation
-from typing import TypeVar, cast
+from typing import TypeVar
 from urllib.parse import unquote
 
 from pydantic import BaseModel
@@ -996,7 +996,7 @@ class SecureRequestValidator:
 
         # Validate with Pydantic
         try:
-            return cast("T", model_class(**data))
+            return model_class(**data)
         except Exception as e:
             raise ValidationError(f"Model validation failed: {e!s}") from e
 
@@ -1117,6 +1117,8 @@ def validate_and_sanitize_input(
             min_decimal = Decimal(str(min_v)) if isinstance(min_v, (int, float, str)) else None
             max_decimal = Decimal(str(max_v)) if isinstance(max_v, (int, float, str)) else None
             prec_int = int(prec_v) if isinstance(prec_v, (int, float)) else 8
+            if not isinstance(data, (str, int, float, Decimal)):
+                raise ValidationError(f"Expected number, got {type(data).__name__}")
             return validator.numeric.validate_decimal(
                 data,
                 min_decimal,
@@ -1128,6 +1130,8 @@ def validate_and_sanitize_input(
             max_v = constraints.get("max_value")
             min_int = int(min_v) if isinstance(min_v, (int, float)) else None
             max_int = int(max_v) if isinstance(max_v, (int, float)) else None
+            if not isinstance(data, (str, int, float)):
+                raise ValidationError(f"Expected integer, got {type(data).__name__}")
             return validator.numeric.validate_integer(data, min_int, max_int)
 
     elif input_type == "list":

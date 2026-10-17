@@ -374,6 +374,7 @@ class FamaFrenchModel:
         Returns:
             Dictionary of asset -> weight
         """
+        del target_factor  # aceptado por compatibilidad; sin uso aquí
         # This is a simplified implementation
         # In practice, you'd regress asset returns on factors and select
         # assets with high loadings on the target factor

@@ -63,8 +63,8 @@ def test_centralized_config_has_fallback_price_settings():
     centralized = get_config().shadow_mode
 
     # Verify fallback price settings exist
-    assert hasattr(centralized, 'fallback_price')
-    assert hasattr(centralized, 'enable_fallback_price')
+    assert hasattr(centralized, "fallback_price")
+    assert hasattr(centralized, "enable_fallback_price")
 
     # Verify default values
     assert centralized.fallback_price == Decimal("100.00")
@@ -76,10 +76,10 @@ def test_centralized_config_has_simulation_parameters():
     centralized = get_config().shadow_mode
 
     # Verify simulation parameters exist
-    assert hasattr(centralized, 'fill_delay_jitter_min_ms')
-    assert hasattr(centralized, 'fill_delay_jitter_max_ms')
-    assert hasattr(centralized, 'partial_fill_min_pct')
-    assert hasattr(centralized, 'partial_fill_max_pct')
+    assert hasattr(centralized, "fill_delay_jitter_min_ms")
+    assert hasattr(centralized, "fill_delay_jitter_max_ms")
+    assert hasattr(centralized, "partial_fill_min_pct")
+    assert hasattr(centralized, "partial_fill_max_pct")
 
     # Verify values
     assert centralized.fill_delay_jitter_min_ms == -20

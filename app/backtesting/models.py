@@ -14,7 +14,7 @@ from datetime import datetime  # noqa: TC003 - needed at runtime by Pydantic v2
 from decimal import Decimal
 from enum import Enum
 
-from pydantic import BaseModel, Field, field_validator, model_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 
 class TradeSide(str, Enum):
@@ -60,16 +60,20 @@ class Trade(BaseModel):
 
     # Price information
     entry_price: Decimal = Field(..., gt=0, description="Entry/execution price")
-    exit_price: Decimal | None = Field(None, gt=0, description="Exit price (for closed trades)")
+    exit_price: Decimal | None = Field(
+        default=None, gt=0, description="Exit price (for closed trades)"
+    )
 
     # Timestamps
     entry_time: datetime = Field(..., description="Entry/execution timestamp")
-    exit_time: datetime | None = Field(None, description="Exit timestamp (for closed trades)")
+    exit_time: datetime | None = Field(
+        default=None, description="Exit timestamp (for closed trades)"
+    )
 
     # Status and P&L
-    status: TradeStatus = Field(TradeStatus.OPEN, description="Trade status")
-    pnl: Decimal | None = Field(None, description="Profit/Loss")
-    pnl_percentage: Decimal | None = Field(None, description="P&L percentage")
+    status: TradeStatus = Field(default=TradeStatus.OPEN, description="Trade status")
+    pnl: Decimal | None = Field(default=None, description="Profit/Loss")
+    pnl_percentage: Decimal | None = Field(default=None, description="P&L percentage")
 
     # Transaction costs
     commission: Decimal = Field(default=Decimal("0"), ge=0, description="Commission paid")
@@ -86,14 +90,20 @@ class Trade(BaseModel):
     )
 
     # Additional context (from multi_asset Trade)
-    asset_class: str | None = Field(None, description="Asset class (equity, bond, crypto, etc.)")
-    value: Decimal | None = Field(None, ge=0, description="Total trade value (quantity * price)")
+    asset_class: str | None = Field(
+        default=None, description="Asset class (equity, bond, crypto, etc.)"
+    )
+    value: Decimal | None = Field(
+        default=None, ge=0, description="Total trade value (quantity * price)"
+    )
     currency: str = Field(default="USD", description="Trade currency")
     priority: int = Field(default=0, ge=0, le=100, description="Execution priority (0-100)")
     estimated_cost: Decimal = Field(
         default=Decimal("0"), ge=0, description="Estimated trading cost"
     )
-    reason: str | None = Field(None, description="Reason or signal that triggered the trade")
+    reason: str | None = Field(
+        default=None, description="Reason or signal that triggered the trade"
+    )
 
     @field_validator("side")
     @classmethod
@@ -159,9 +169,15 @@ class PerformanceMetrics(BaseModel):
     total_return: Decimal | None = Field(
         None, description="Total return over entire period (decimal form)"
     )
-    annualized_return: Decimal | None = Field(None, description="Annualized return percentage")
-    cagr: Decimal | None = Field(None, description="Compound Annual Growth Rate (decimal form)")
-    cumulative_return: Decimal | None = Field(None, description="Cumulative return over period")
+    annualized_return: Decimal | None = Field(
+        default=None, description="Annualized return percentage"
+    )
+    cagr: Decimal | None = Field(
+        default=None, description="Compound Annual Growth Rate (decimal form)"
+    )
+    cumulative_return: Decimal | None = Field(
+        default=None, description="Cumulative return over period"
+    )
 
     # =========================================================================
     # BASIC TRADE METRICS
@@ -179,8 +195,8 @@ class PerformanceMetrics(BaseModel):
     gross_profit: Decimal = Field(default=Decimal("0"), ge=0, description="Gross profit")
     gross_loss: Decimal = Field(default=Decimal("0"), le=0, description="Gross loss")
     net_profit: Decimal = Field(default=Decimal("0"), description="Net profit")
-    daily_pnl: Decimal | None = Field(None, description="Daily profit/loss")
-    daily_return_pct: float | None = Field(None, description="Daily return percentage")
+    daily_pnl: Decimal | None = Field(default=None, description="Daily profit/loss")
+    daily_return_pct: float | None = Field(default=None, description="Daily return percentage")
 
     # =========================================================================
     # RISK METRICS
@@ -194,8 +210,8 @@ class PerformanceMetrics(BaseModel):
     max_drawdown_duration: int | None = Field(
         None, ge=0, description="Maximum drawdown duration in days"
     )
-    current_drawdown: float | None = Field(None, description="Current drawdown")
-    volatility: Decimal | None = Field(None, description="Volatility (decimal form)")
+    current_drawdown: float | None = Field(default=None, description="Current drawdown")
+    volatility: Decimal | None = Field(default=None, description="Volatility (decimal form)")
     volatility_annualized: Decimal | None = Field(
         None, description="Annualized Volatility: std(returns) * sqrt(252)"
     )
@@ -206,8 +222,8 @@ class PerformanceMetrics(BaseModel):
     # =========================================================================
     # RISK-ADJUSTED RETURN METRICS
     # =========================================================================
-    sharpe_ratio: Decimal | None = Field(None, description="Sharpe ratio (annualized)")
-    sortino_ratio: Decimal | None = Field(None, description="Sortino ratio (downside risk)")
+    sharpe_ratio: Decimal | None = Field(default=None, description="Sharpe ratio (annualized)")
+    sortino_ratio: Decimal | None = Field(default=None, description="Sortino ratio (downside risk)")
     calmar_ratio: Decimal | None = Field(
         None, description="Calmar Ratio: CAGR / |Max Drawdown| (>1.0 good, >3.0 excellent)"
     )
@@ -217,7 +233,9 @@ class PerformanceMetrics(BaseModel):
     treynor_ratio: Decimal | None = Field(
         None, description="Treynor ratio: (Return - RiskFree) / Beta"
     )
-    information_ratio: Decimal | None = Field(None, description="Information ratio vs benchmark")
+    information_ratio: Decimal | None = Field(
+        default=None, description="Information ratio vs benchmark"
+    )
     risk_reward_ratio: Decimal | None = Field(
         None, description="Average risk/reward ratio per trade (target >=1:3)"
     )
@@ -234,7 +252,9 @@ class PerformanceMetrics(BaseModel):
     profit_factor: Decimal | None = Field(
         None, description="Profit Factor: Gross Profit / |Gross Loss| (>1.5 good, >2.0 excellent)"
     )
-    tail_ratio: Decimal | None = Field(None, description="Ratio of extreme gains to extreme losses")
+    tail_ratio: Decimal | None = Field(
+        default=None, description="Ratio of extreme gains to extreme losses"
+    )
 
     # =========================================================================
     # RETURN DISTRIBUTION METRICS
@@ -252,7 +272,7 @@ class PerformanceMetrics(BaseModel):
     var_95: Decimal | None = Field(
         None, description="Value at Risk 95%: Worst 5% scenario (negative value = potential loss)"
     )
-    var_99: Decimal | None = Field(None, description="Value at Risk 99%: Worst 1% scenario")
+    var_99: Decimal | None = Field(default=None, description="Value at Risk 99%: Worst 1% scenario")
     cvar_95: Decimal | None = Field(
         None, description="Conditional VaR 95%: Expected loss beyond VaR threshold"
     )
@@ -262,11 +282,11 @@ class PerformanceMetrics(BaseModel):
     # =========================================================================
     avg_win: Decimal = Field(default=Decimal("0"), description="Average winning trade")
     avg_loss: Decimal = Field(default=Decimal("0"), le=0, description="Average losing trade")
-    avg_trade_return: Decimal | None = Field(None, description="Average trade return")
+    avg_trade_return: Decimal | None = Field(default=None, description="Average trade return")
     largest_win: Decimal = Field(default=Decimal("0"), ge=0, description="Largest winning trade")
     largest_loss: Decimal = Field(default=Decimal("0"), le=0, description="Largest losing trade")
-    best_trade: Decimal | None = Field(None, description="Best single trade return")
-    worst_trade: Decimal | None = Field(None, description="Worst single trade return")
+    best_trade: Decimal | None = Field(default=None, description="Best single trade return")
+    worst_trade: Decimal | None = Field(default=None, description="Worst single trade return")
     expectancy: Decimal | None = Field(
         None,
         description="Expectancy: Expected value per trade (positive=profitable, negative=unprofitable)",
@@ -275,23 +295,25 @@ class PerformanceMetrics(BaseModel):
     # =========================================================================
     # STREAK METRICS
     # =========================================================================
-    winning_streak: int | None = Field(None, ge=0, description="Longest winning streak")
-    losing_streak: int | None = Field(None, ge=0, description="Longest losing streak")
+    winning_streak: int | None = Field(default=None, ge=0, description="Longest winning streak")
+    losing_streak: int | None = Field(default=None, ge=0, description="Longest losing streak")
 
     # =========================================================================
     # YEARLY PERFORMANCE METRICS
     # =========================================================================
-    best_year: Decimal | None = Field(None, description="Best calendar year return")
-    worst_year: Decimal | None = Field(None, description="Worst calendar year return")
-    avg_yearly_return: Decimal | None = Field(None, description="Average yearly return")
+    best_year: Decimal | None = Field(default=None, description="Best calendar year return")
+    worst_year: Decimal | None = Field(default=None, description="Worst calendar year return")
+    avg_yearly_return: Decimal | None = Field(default=None, description="Average yearly return")
 
     # =========================================================================
     # BENCHMARK COMPARISON METRICS
     # =========================================================================
-    tracking_error: Decimal | None = Field(None, description="Tracking error vs benchmark")
-    beta: Decimal | None = Field(None, description="Portfolio beta")
-    alpha: Decimal | None = Field(None, description="Jensen's alpha")
-    jensen_alpha: Decimal | None = Field(None, description="Jensen's alpha (alternative name)")
+    tracking_error: Decimal | None = Field(default=None, description="Tracking error vs benchmark")
+    beta: Decimal | None = Field(default=None, description="Portfolio beta")
+    alpha: Decimal | None = Field(default=None, description="Jensen's alpha")
+    jensen_alpha: Decimal | None = Field(
+        default=None, description="Jensen's alpha (alternative name)"
+    )
 
     # =========================================================================
     # TIME METRICS
@@ -304,8 +326,8 @@ class PerformanceMetrics(BaseModel):
     # =========================================================================
     # PORTFOLIO VALUE METRICS (for dashboard)
     # =========================================================================
-    portfolio_value: Decimal | None = Field(None, description="Current portfolio value")
-    starting_capital: Decimal | None = Field(None, description="Starting capital")
+    portfolio_value: Decimal | None = Field(default=None, description="Current portfolio value")
+    starting_capital: Decimal | None = Field(default=None, description="Starting capital")
 
     @model_validator(mode="after")
     def validate_metrics_consistency(self) -> PerformanceMetrics:
@@ -332,13 +354,8 @@ class PerformanceMetrics(BaseModel):
 
         return self
 
-    class Config:
-        """Pydantic config for PerformanceMetrics."""
-
-        # Allow extra fields for forward compatibility
-        extra = "ignore"
-        # Use enum values
-        use_enum_values = True
+    # extra="ignore" por compatibilidad hacia adelante
+    model_config = ConfigDict(extra="ignore", use_enum_values=True)
 
 
 class BacktestConfig(BaseModel):
@@ -362,10 +379,10 @@ class BacktestConfig(BaseModel):
         description="Maximum position size as % of capital",
     )
     stop_loss_percentage: Decimal | None = Field(
-        None, ge=0, le=50, description="Stop loss percentage"
+        default=None, ge=0, le=50, description="Stop loss percentage"
     )
     take_profit_percentage: Decimal | None = Field(
-        None, ge=0, le=100, description="Take profit percentage"
+        default=None, ge=0, le=100, description="Take profit percentage"
     )
     next_day_execution: bool = Field(
         default=True,

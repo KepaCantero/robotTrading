@@ -130,22 +130,22 @@ Builds portfolios with:
 
 ```python
 class DividendSafety(str, Enum):
-    VERY_SAFE = "very_safe"   # Payout < 40%
-    SAFE = "safe"             # Payout 40-60%
-    MODERATE = "moderate"     # Payout 60-80%
-    RISKY = "risky"           # Payout 80-100%
-    DANGEROUS = "dangerous"   # Payout > 100%
+    VERY_SAFE = "very_safe"  # Payout < 40%
+    SAFE = "safe"  # Payout 40-60%
+    MODERATE = "moderate"  # Payout 60-80%
+    RISKY = "risky"  # Payout 80-100%
+    DANGEROUS = "dangerous"  # Payout > 100%
 ```
 
 ### 2. Dividend Aristocrat Status
 
 ```python
 class DividendAristocratStatus(str, Enum):
-    ARISTOCRAT_5 = "aristocrat_5"     # 5+ years
-    ARISTOCRAT_10 = "aristocrat_10"   # 10+ years
-    ARISTOCRAT_25 = "aristocrat_25"   # 25+ years (S&P 500)
-    KING = "king"                     # 50+ years
-    LEGENDARY = "legendary"           # 50+ exceptional
+    ARISTOCRAT_5 = "aristocrat_5"  # 5+ years
+    ARISTOCRAT_10 = "aristocrat_10"  # 10+ years
+    ARISTOCRAT_25 = "aristocrat_25"  # 25+ years (S&P 500)
+    KING = "king"  # 50+ years
+    LEGENDARY = "legendary"  # 50+ exceptional
 ```
 
 ### 3. Dividend Trap Detection
@@ -225,13 +225,15 @@ from app.strategies.dividend import DividendStrategy
 from app.strategies.dividend.models import DividendProfile, DividendData
 
 # 1. Create strategy
-strategy = DividendStrategy({
-    "name": "HighYieldDividend",
-    "min_dividend_yield": 4.0,
-    "max_dividend_yield": 10.0,
-    "portfolio_size": 25,
-    "max_sector_weight": 0.30,
-})
+strategy = DividendStrategy(
+    {
+        "name": "HighYieldDividend",
+        "min_dividend_yield": 4.0,
+        "max_dividend_yield": 10.0,
+        "portfolio_size": 25,
+        "max_sector_weight": 0.30,
+    }
+)
 
 # 2. Set universe (list of dividend profiles)
 dividend_profiles = [...]  # Your list of profiles
@@ -245,12 +247,13 @@ print(f"Passed: {len(screening_result.passed_stocks)}/{screening_result.total_ev
 for stock in screening_result.passed_stocks:
     quality = strategy.analyzer.analyze_quality(stock.profile)
     sustainability = strategy.analyzer.analyze_sustainability(stock.profile)
-    print(f"{stock.profile.symbol}: Quality={quality.total}, Sustainable={sustainability.sustainable}")
+    print(
+        f"{stock.profile.symbol}: Quality={quality.total}, Sustainable={sustainability.sustainable}"
+    )
 
 # 5. Construct portfolio
 portfolio = strategy.construct_portfolio(
-    screening_result.passed_stocks,
-    total_capital=Decimal("100000")
+    screening_result.passed_stocks, total_capital=Decimal("100000")
 )
 
 print(f"Portfolio yield: {portfolio.portfolio_yield:.2f}%")
@@ -332,7 +335,7 @@ registry.register(
     strategy_class=DividendStrategy,
     description="Dividend investing strategy - MAXIMIZAR_DIVIDENDOS",
     category="income",
-    tags=["dividend", "income", "value", "yield"]
+    tags=["dividend", "income", "value", "yield"],
 )
 
 # Create instance

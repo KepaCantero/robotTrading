@@ -527,7 +527,7 @@ class LowVolatilityStrategy(BaseStrategy):
         try:
             # Validar volatilidad máxima
             if self.strategy_config.max_historical_volatility < 10:
-                logger.error("max_historical_volatility debe ser al menos 10%")
+                logger.error("max_historical_volatility debe ser al menos 10%%")
                 return False
 
             # Validar beta máximo

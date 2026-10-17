@@ -396,12 +396,16 @@ class BaselineOptimizationReporter:
             initial: float = (
                 float(first[1])
                 if isinstance(first, tuple)
-                else float(first) if isinstance(first, (int, float)) else 0.0
+                else float(first)
+                if isinstance(first, (int, float))
+                else 0.0
             )
             final: float = (
                 float(last[1])
                 if isinstance(last, tuple)
-                else float(last) if isinstance(last, (int, float)) else 0.0
+                else float(last)
+                if isinstance(last, (int, float))
+                else 0.0
             )
             total_return = (final - initial) / initial if initial > 0 else 0.0
 

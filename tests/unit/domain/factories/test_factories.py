@@ -34,7 +34,7 @@ class TestAbstractEntityFactory:
 
     def test_abstract_factory_has_required_methods(self):
         """Test that AbstractEntityFactory defines required methods."""
-        required_methods = ['create_order', 'create_portfolio', 'create_position']
+        required_methods = ["create_order", "create_portfolio", "create_position"]
 
         for method in required_methods:
             assert hasattr(AbstractEntityFactory, method)

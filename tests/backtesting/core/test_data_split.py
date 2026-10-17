@@ -74,7 +74,9 @@ class TestTrainValTestSplitter:
 
         # Filter to only include first 50 days
         train, val, test = splitter.split_data(
-            quotes, start_date=datetime(2024, 1, 1), end_date=datetime(2024, 2, 10)  # ~40 days
+            quotes,
+            start_date=datetime(2024, 1, 1),
+            end_date=datetime(2024, 2, 10),  # ~40 days
         )
 
         # Should have fewer quotes

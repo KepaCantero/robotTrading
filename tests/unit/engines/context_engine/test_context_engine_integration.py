@@ -26,19 +26,19 @@ def multi_asset_sample_data():
     regime_returns[200:] *= 1.5  # Higher volatility regime
 
     price_data = {
-        'AAPL': [100.0],
-        'MSFT': [100.0],
-        'GOOGL': [100.0],
-        'AMZN': [100.0],
-        'TSLA': [100.0],
+        "AAPL": [100.0],
+        "MSFT": [100.0],
+        "GOOGL": [100.0],
+        "AMZN": [100.0],
+        "TSLA": [100.0],
     }
 
     correlations = {
-        'AAPL': 0.8,  # High correlation with market
-        'MSFT': 0.75,
-        'GOOGL': 0.7,
-        'AMZN': 0.6,
-        'TSLA': 0.4,  # Lower correlation
+        "AAPL": 0.8,  # High correlation with market
+        "MSFT": 0.75,
+        "GOOGL": 0.7,
+        "AMZN": 0.6,
+        "TSLA": 0.4,  # Lower correlation
     }
 
     for i, ret in enumerate(regime_returns):
@@ -55,7 +55,7 @@ def bull_market_data():
     np.random.seed(123)
     n_days = 200
 
-    price_data = {'SPY': [100.0], 'QQQ': [100.0]}
+    price_data = {"SPY": [100.0], "QQQ": [100.0]}
 
     for i in range(n_days):
         # Strong upward trend
@@ -74,7 +74,7 @@ def bear_market_data():
     np.random.seed(456)
     n_days = 200
 
-    price_data = {'SPY': [100.0], 'QQQ': [100.0]}
+    price_data = {"SPY": [100.0], "QQQ": [100.0]}
 
     for i in range(n_days):
         # Downward trend with high volatility
@@ -93,7 +93,7 @@ def sideways_market_data():
     np.random.seed(789)
     n_days = 200
 
-    price_data = {'SPY': [100.0], 'QQQ': [100.0]}
+    price_data = {"SPY": [100.0], "QQQ": [100.0]}
 
     for i in range(n_days):
         # No clear trend, range-bound
@@ -110,7 +110,7 @@ def sideways_market_data():
 class TestClusteringRegimeDetectorIntegration:
     """Integration tests for ClusteringRegimeDetector."""
 
-    @patch('app.engines.context_engine.regime_detectors.clustering_regime_detector.KMeans')
+    @patch("app.engines.context_engine.regime_detectors.clustering_regime_detector.KMeans")
     def test_clustering_detector_with_different_markets(self, mock_kmeans):
         """Test clustering detector across different market conditions."""
         from app.engines.context_engine.regime_detectors.clustering_regime_detector import (
@@ -125,17 +125,17 @@ class TestClusteringRegimeDetectorIntegration:
         detector = ClusteringRegimeDetector()
 
         # Test with bull market
-        bull_prices = bull_market_data()['SPY']
+        bull_prices = bull_market_data()["SPY"]
         bull_result = detector.detect(bull_prices)
         assert isinstance(bull_result, dict)
 
         # Test with bear market
         mock_model.predict.return_value = np.array([0])  # Bear
-        bear_prices = bear_market_data()['SPY']
+        bear_prices = bear_market_data()["SPY"]
         bear_result = detector.detect(bear_prices)
         assert isinstance(bear_result, dict)
 
-    @patch('app.engines.context_engine.regime_detectors.clustering_regime_detector.KMeans')
+    @patch("app.engines.context_engine.regime_detectors.clustering_regime_detector.KMeans")
     def test_clustering_detector_feature_extraction_consistency(self, mock_kmeans):
         """Test that feature extraction is consistent across similar data."""
         from app.engines.context_engine.regime_detectors.clustering_regime_detector import (
@@ -176,9 +176,9 @@ class TestCorrelationRegimeDetectorIntegration:
         # Test overall detection
         result = detector.detect(multi_asset_sample_data)
 
-        assert 'correlation_regime' in result
-        assert 'average_correlation' in result
-        assert 'pca_variance' in result
+        assert "correlation_regime" in result
+        assert "average_correlation" in result
+        assert "pca_variance" in result
 
     def test_correlation_detector_baseline_functionality(self, multi_asset_sample_data):
         """Test baseline setting and comparison."""
@@ -200,7 +200,7 @@ class TestCorrelationRegimeDetectorIntegration:
         }
         result = detector.detect(second_half)
 
-        assert 'baseline_comparison' in result
+        assert "baseline_comparison" in result
 
     def test_correlation_detector_with_high_correlation_assets(self, bull_market_data):
         """Test with highly correlated assets (ETFs)."""
@@ -208,19 +208,19 @@ class TestCorrelationRegimeDetectorIntegration:
             CorrelationRegimeDetector,
         )
 
-        detector = CorrelationRegimeDetector(config={'correlation_threshold': 0.8})
+        detector = CorrelationRegimeDetector(config={"correlation_threshold": 0.8})
 
         result = detector.detect(bull_market_data)
 
         # ETFs should be highly correlated
-        assert result['average_correlation'] > 0.5
+        assert result["average_correlation"] > 0.5
 
 
 @pytest.mark.unit
 class TestHMMRegimeDetectorIntegration:
     """Integration tests for HMMRegimeDetector."""
 
-    @patch('app.engines.context_engine.regime_detectors.hmm_regime_detector.hmm.GaussianHMM')
+    @patch("app.engines.context_engine.regime_detectors.hmm_regime_detector.hmm.GaussianHMM")
     def test_hmm_detector_regime_classification(self, mock_hmm):
         """Test HMM detector regime classification."""
         from app.engines.context_engine.regime_detectors.hmm_regime_detector import (
@@ -240,14 +240,14 @@ class TestHMMRegimeDetectorIntegration:
         detector = HMMRegimeDetector()
 
         # Test with bull market
-        bull_prices = bull_market_data()['SPY']
+        bull_prices = bull_market_data()["SPY"]
         result = detector.detect(bull_prices)
 
-        assert 'regime' in result
-        assert 'regime_probabilities' in result
-        assert len(result['regime_probabilities']) == 3
+        assert "regime" in result
+        assert "regime_probabilities" in result
+        assert len(result["regime_probabilities"]) == 3
 
-    @patch('app.engines.context_engine.regime_detectors.hmm_regime_detector.hmm.GaussianHMM')
+    @patch("app.engines.context_engine.regime_detectors.hmm_regime_detector.hmm.GaussianHMM")
     def test_hmm_detector_volatility_calculation(self, mock_hmm):
         """Test HMM volatility calculation."""
         from app.engines.context_engine.regime_detectors.hmm_regime_detector import (
@@ -286,17 +286,17 @@ class TestCorrelationNetworkAnalyzerIntegration:
         result = corr_detector.detect(multi_asset_sample_data)
 
         # Then analyze network
-        network_analyzer = CorrelationNetworkAnalyzer(config={'threshold': 0.5})
+        network_analyzer = CorrelationNetworkAnalyzer(config={"threshold": 0.5})
 
         symbols = list(multi_asset_sample_data.keys())
-        corr_matrix = np.array(result['correlation_matrix'])
+        corr_matrix = np.array(result["correlation_matrix"])
 
         network_result = network_analyzer.analyze_network(corr_matrix, symbols)
 
-        assert 'centrality' in network_result
-        assert 'clusters' in network_result
-        assert 'num_nodes' in network_result
-        assert network_result['num_nodes'] == len(symbols)
+        assert "centrality" in network_result
+        assert "clusters" in network_result
+        assert "num_nodes" in network_result
+        assert network_result["num_nodes"] == len(symbols)
 
     def test_network_analyzer_cluster_detection(self, multi_asset_sample_data):
         """Test cluster detection in network analysis."""
@@ -310,22 +310,22 @@ class TestCorrelationNetworkAnalyzerIntegration:
         corr_detector = CorrelationRegimeDetector()
         result = corr_detector.detect(multi_asset_sample_data)
 
-        network_analyzer = CorrelationNetworkAnalyzer(config={'threshold': 0.6})
+        network_analyzer = CorrelationNetworkAnalyzer(config={"threshold": 0.6})
 
         symbols = list(multi_asset_sample_data.keys())
-        corr_matrix = np.array(result['correlation_matrix'])
+        corr_matrix = np.array(result["correlation_matrix"])
 
         network_result = network_analyzer.analyze_network(corr_matrix, symbols)
 
         # Check that clusters were detected
-        assert isinstance(network_result['clusters'], list)
+        assert isinstance(network_result["clusters"], list)
 
 
 @pytest.mark.unit
 class TestGARCHAnalyzerIntegration:
     """Integration tests for GARCHAnalyzer."""
 
-    @patch('app.engines.context_engine.volatility_analyzers.garch_analyzer.arch_model')
+    @patch("app.engines.context_engine.volatility_analyzers.garch_analyzer.arch_model")
     def test_garch_clustering_detection(self, mock_arch_model):
         """Test GARCH clustering detection across market conditions."""
         from app.engines.context_engine.volatility_analyzers.garch_analyzer import GARCHAnalyzer
@@ -344,8 +344,8 @@ class TestGARCHAnalyzerIntegration:
         mock_fit_result = MagicMock()
 
         mock_params = MagicMock()
-        mock_params.get = Mock(side_effect=lambda x: {'alpha[1]': 0.3, 'beta[1]': 0.6}.get(x, 0))
-        mock_params.to_dict.return_value = {'alpha[1]': 0.3, 'beta[1]': 0.6}
+        mock_params.get = Mock(side_effect=lambda x: {"alpha[1]": 0.3, "beta[1]": 0.6}.get(x, 0))
+        mock_params.to_dict.return_value = {"alpha[1]": 0.3, "beta[1]": 0.6}
         mock_fit_result.params = mock_params
 
         mock_model.fit.return_value = mock_fit_result
@@ -353,10 +353,10 @@ class TestGARCHAnalyzerIntegration:
 
         result = analyzer.detect_clustering(returns)
 
-        assert 'clustering_detected' in result
-        assert 'persistence' in result
+        assert "clustering_detected" in result
+        assert "persistence" in result
 
-    @patch('app.engines.context_engine.volatility_analyzers.garch_analyzer.arch_model')
+    @patch("app.engines.context_engine.volatility_analyzers.garch_analyzer.arch_model")
     def test_garch_prediction_workflow(self, mock_arch_model):
         """Test complete GARCH prediction workflow."""
         from app.engines.context_engine.volatility_analyzers.garch_analyzer import GARCHAnalyzer
@@ -384,7 +384,7 @@ class TestGARCHAnalyzerIntegration:
         # Predict with different horizons
         for horizon in [1, 3, 5]:
             pred_result = analyzer.predict_volatility(horizon=horizon)
-            assert pred_result['volatility'] is not None
+            assert pred_result["volatility"] is not None
 
 
 @pytest.mark.unit
@@ -392,7 +392,7 @@ class TestStructuralChangeDetectorIntegration:
     """Integration tests for StructuralChangeDetector."""
 
     @patch(
-        'app.engines.context_engine.volatility_analyzers.structural_change_detector.breaks_cusumolsresid'
+        "app.engines.context_engine.volatility_analyzers.structural_change_detector.breaks_cusumolsresid"
     )
     def test_structural_change_detection_methods(self, mock_cusum):
         """Test both CUSUM and Chow test methods."""
@@ -411,17 +411,17 @@ class TestStructuralChangeDetectorIntegration:
             prices.append(prices[-1] * (1 + np.random.normal(-0.002, 0.03)))
 
         # Test CUSUM
-        cusum_detector = StructuralChangeDetector(config={'method': 'cusum'})
+        cusum_detector = StructuralChangeDetector(config={"method": "cusum"})
         cusum_result = cusum_detector.detect(prices)
-        assert 'change_detected' in cusum_result
+        assert "change_detected" in cusum_result
 
         # Test Chow
-        chow_detector = StructuralChangeDetector(config={'method': 'chow'})
+        chow_detector = StructuralChangeDetector(config={"method": "chow"})
         chow_result = chow_detector.detect(prices)
-        assert 'change_detected' in chow_result
+        assert "change_detected" in chow_result
 
     @patch(
-        'app.engines.context_engine.volatility_analyzers.structural_change_detector.breaks_cusumolsresid'
+        "app.engines.context_engine.volatility_analyzers.structural_change_detector.breaks_cusumolsresid"
     )
     def test_structural_change_across_market_regimes(self, mock_cusum):
         """Test structural change detection across different market regimes."""
@@ -431,25 +431,25 @@ class TestStructuralChangeDetectorIntegration:
 
         mock_cusum.return_value = (6.0, 0.01, 4.8)
 
-        detector = StructuralChangeDetector(config={'method': 'cusum'})
+        detector = StructuralChangeDetector(config={"method": "cusum"})
 
         # Test with bull to bear transition
-        bull_prices = bull_market_data()['SPY']
-        bear_prices = bear_market_data()['SPY']
+        bull_prices = bull_market_data()["SPY"]
+        bear_prices = bear_market_data()["SPY"]
         transition_prices = bull_prices + bear_prices
 
         result = detector.detect(transition_prices)
 
-        assert 'change_detected' in result
-        assert 'confidence' in result
+        assert "change_detected" in result
+        assert "confidence" in result
 
 
 @pytest.mark.unit
 class TestCrossModuleIntegration:
     """Test integration between different context engine modules."""
 
-    @patch('app.engines.context_engine.regime_detectors.clustering_regime_detector.KMeans')
-    @patch('app.engines.context_engine.volatility_analyzers.garch_analyzer.arch_model')
+    @patch("app.engines.context_engine.regime_detectors.clustering_regime_detector.KMeans")
+    @patch("app.engines.context_engine.volatility_analyzers.garch_analyzer.arch_model")
     def test_regime_and_volatility_integration(self, mock_arch, mock_kmeans):
         """Test integration between regime detection and volatility analysis."""
         from app.engines.context_engine.regime_detectors.clustering_regime_detector import (
@@ -464,8 +464,8 @@ class TestCrossModuleIntegration:
 
         mock_fit_result = MagicMock()
         mock_params = MagicMock()
-        mock_params.get = Mock(side_effect=lambda x: {'alpha[1]': 0.3, 'beta[1]': 0.6}.get(x, 0))
-        mock_params.to_dict.return_value = {'alpha[1]': 0.3, 'beta[1]': 0.6}
+        mock_params.get = Mock(side_effect=lambda x: {"alpha[1]": 0.3, "beta[1]": 0.6}.get(x, 0))
+        mock_params.to_dict.return_value = {"alpha[1]": 0.3, "beta[1]": 0.6}
         mock_fit_result.params = mock_params
         mock_model.fit.return_value = mock_fit_result
         mock_arch.return_value = mock_model
@@ -491,7 +491,7 @@ class TestCrossModuleIntegration:
         assert isinstance(vol_result, dict)
 
     @patch(
-        'app.engines.context_engine.volatility_analyzers.structural_change_detector.breaks_cusumolsresid'
+        "app.engines.context_engine.volatility_analyzers.structural_change_detector.breaks_cusumolsresid"
     )
     def test_correlation_and_structural_change_integration(
         self, mock_cusum, multi_asset_sample_data
@@ -511,7 +511,7 @@ class TestCrossModuleIntegration:
         corr_result = corr_detector.detect(multi_asset_sample_data)
 
         # Detect structural changes in one asset
-        prices = multi_asset_sample_data['AAPL']
+        prices = multi_asset_sample_data["AAPL"]
         change_detector = StructuralChangeDetector()
         change_result = change_detector.detect(prices)
 
@@ -524,8 +524,8 @@ class TestCrossModuleIntegration:
 class TestPerformanceIntegration:
     """Performance tests for integrated context engine workflows."""
 
-    @patch('app.engines.context_engine.regime_detectors.clustering_regime_detector.KMeans')
-    @patch('app.engines.context_engine.regime_detectors.hmm_regime_detector.hmm.GaussianHMM')
+    @patch("app.engines.context_engine.regime_detectors.clustering_regime_detector.KMeans")
+    @patch("app.engines.context_engine.regime_detectors.hmm_regime_detector.hmm.GaussianHMM")
     def test_multiple_detectors_on_same_data(self, mock_hmm, mock_kmeans):
         """Test running multiple detectors on the same data."""
         from app.engines.context_engine.regime_detectors.clustering_regime_detector import (

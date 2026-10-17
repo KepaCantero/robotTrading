@@ -709,12 +709,15 @@ class ConfigValidator:
         if "database" not in config:
             return True
 
-        try:
-            DatabaseConfigValidator(**config["database"])
-            return True
-        except ValidationError as e:
-            self._process_validation_errors(e, "database")
-            return False
+        database_section = config["database"]
+        if isinstance(database_section, dict):
+            try:
+                DatabaseConfigValidator(**database_section)
+                return True
+            except ValidationError as e:
+                self._process_validation_errors(e, "database")
+                return False
+        return True
 
     def validate_risk_config(self, config: dict[str, object]) -> bool:
         """
@@ -732,12 +735,15 @@ class ConfigValidator:
         if "risk" not in config:
             return True
 
-        try:
-            RiskConfigValidator(**config["risk"])
-            return True
-        except ValidationError as e:
-            self._process_validation_errors(e, "risk")
-            return False
+        risk_section = config["risk"]
+        if isinstance(risk_section, dict):
+            try:
+                RiskConfigValidator(**risk_section)
+                return True
+            except ValidationError as e:
+                self._process_validation_errors(e, "risk")
+                return False
+        return True
 
     def validate_circuit_breaker_config(self, config: dict[str, object]) -> bool:
         """
@@ -755,12 +761,15 @@ class ConfigValidator:
         if "circuit_breaker" not in config:
             return True
 
-        try:
-            CircuitBreakerValidator(**config["circuit_breaker"])
-            return True
-        except ValidationError as e:
-            self._process_validation_errors(e, "circuit_breaker")
-            return False
+        breaker_section = config["circuit_breaker"]
+        if isinstance(breaker_section, dict):
+            try:
+                CircuitBreakerValidator(**breaker_section)
+                return True
+            except ValidationError as e:
+                self._process_validation_errors(e, "circuit_breaker")
+                return False
+        return True
 
     def _process_validation_errors(self, exc: ValidationError, prefix: str) -> None:
         """
@@ -1238,8 +1247,11 @@ class ConfigValidator:
             modules = batch_config["modules"]
             known_filters = ["momentum", "ema", "rsi", "volume", "atr", "stoch_rsi"]
 
-            if "filters" in modules:
-                for filter_name in modules["filters"]:
+            if isinstance(modules, dict) and "filters" in modules:
+                filters = modules["filters"]
+                if not isinstance(filters, list):
+                    return
+                for filter_name in filters:
                     if filter_name not in known_filters:
                         self.result.add_warning(
                             "modules.filters",

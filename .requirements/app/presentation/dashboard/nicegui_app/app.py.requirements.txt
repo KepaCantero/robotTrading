@@ -9,14 +9,18 @@ Domain: Presentation
 - `app.infrastructure.persistence.backtest_result_store`
 - `app.presentation.dashboard.nicegui_app.layout`
 - `app.presentation.dashboard.profitability_engine`
+- `app.services.agent_swarm.executor`
+- `app.services.agent_swarm.store`
 - `app.services.backtest_runner`
 - `asyncio`
+- `logging`
 - `nicegui`
+- `pathlib`
+- `starlette.staticfiles`
 
 ## 3. Core Components
 ### Public Functions
 - `create_app()`
-- `run()`
 
 ## 4. Applicable Trading Rules
 

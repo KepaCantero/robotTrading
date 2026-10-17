@@ -31,8 +31,8 @@ from app.shared.config.centralized_config import get_config
 
 from .dividend_analyzer import DividendAnalyzer
 from .dividend_portfolio_constructor import DividendPortfolio, DividendPortfolioConstructor
-from .dividend_screener import DividendScreener
-from .models import DividendProfile, DividendStock, DividendStrategyConfig, ExDividendDate
+from .dividend_screener import DividendScreener, DividendStockResult
+from .models import DividendProfile, DividendStrategyConfig, ExDividendDate
 
 if TYPE_CHECKING:
     from collections import deque
@@ -605,7 +605,7 @@ class DividendStrategy(BaseStrategy):
         logger.info(f"Universo establecido: {len(profiles)} acciones")
 
     def construct_portfolio(
-        self, stocks: list[DividendStock], total_capital: Decimal
+        self, stocks: list[DividendStockResult], total_capital: Decimal
     ) -> DividendPortfolio:
         """
         Construir portafolio de dividendos.
@@ -623,7 +623,7 @@ class DividendStrategy(BaseStrategy):
         return self.current_portfolio
 
     def rebalance_portfolio(
-        self, new_stocks: list[DividendStock], total_capital: Decimal
+        self, new_stocks: list[DividendStockResult], total_capital: Decimal
     ) -> DividendPortfolio:
         """
         Rebalancear portafolio existente.

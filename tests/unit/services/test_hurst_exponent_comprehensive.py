@@ -77,13 +77,13 @@ def mean_reverting_series():
 def sample_price_data():
     """Create sample price data as DataFrame."""
     np.random.seed(42)
-    dates = pd.date_range(start='2020-01-01', periods=1000, freq='D')
+    dates = pd.date_range(start="2020-01-01", periods=1000, freq="D")
     prices = 100 + np.cumsum(np.random.normal(0, 1, 1000))
 
     return pd.DataFrame(
         {
-            'timestamp': dates,
-            'close': prices,
+            "timestamp": dates,
+            "close": prices,
         }
     )
 
@@ -183,7 +183,7 @@ class TestHurstExponentCalculation:
 
     def test_calculate_hurst_with_series_type(self, hurst_analyzer, sample_price_data):
         """Test Hurst calculation with pandas Series."""
-        prices = sample_price_data['close']
+        prices = sample_price_data["close"]
         result = hurst_analyzer.calculate_hurst_exponent(prices)
 
         assert isinstance(result, HurstResult)
@@ -294,7 +294,7 @@ class TestRollingHurstCalculation:
 
     def test_rolling_hurst_basic(self, hurst_analyzer, sample_price_data):
         """Test basic rolling Hurst calculation."""
-        prices = sample_price_data['close']
+        prices = sample_price_data["close"]
 
         results = hurst_analyzer.calculate_rolling_hurst(
             prices,
@@ -311,7 +311,7 @@ class TestRollingHurstCalculation:
 
     def test_rolling_hurst_small_step(self, hurst_analyzer, sample_price_data):
         """Test rolling Hurst with small step size."""
-        prices = sample_price_data['close']
+        prices = sample_price_data["close"]
 
         results = hurst_analyzer.calculate_rolling_hurst(
             prices,
@@ -324,7 +324,7 @@ class TestRollingHurstCalculation:
 
     def test_rolling_hurst_large_window(self, hurst_analyzer, sample_price_data):
         """Test rolling Hurst with large window."""
-        prices = sample_price_data['close']
+        prices = sample_price_data["close"]
 
         results = hurst_analyzer.calculate_rolling_hurst(
             prices,
@@ -346,7 +346,7 @@ class TestRegimeChangeDetection:
 
     def test_detect_regime_change(self, hurst_analyzer, sample_price_data):
         """Test regime change detection."""
-        prices = sample_price_data['close']
+        prices = sample_price_data["close"]
 
         regime_changes = hurst_analyzer.detect_regime_changes(
             prices,
@@ -534,12 +534,12 @@ class TestNumbaJITCompilation:
         from app.services import hurst_exponent_analyzer
 
         # Check that the module has Numba available
-        assert hasattr(hurst_exponent_analyzer, 'NUMBA_AVAILABLE')
+        assert hasattr(hurst_exponent_analyzer, "NUMBA_AVAILABLE")
         assert hurst_exponent_analyzer.NUMBA_AVAILABLE is True
 
         # Check that the module has the Numba JIT functions defined
-        assert hasattr(hurst_exponent_analyzer, 'calculate_cumulative_deviation_numba')
-        assert hasattr(hurst_exponent_analyzer, 'calculate_rs_for_window_numba')
+        assert hasattr(hurst_exponent_analyzer, "calculate_cumulative_deviation_numba")
+        assert hasattr(hurst_exponent_analyzer, "calculate_rs_for_window_numba")
 
     def test_numba_performance(self, hurst_analyzer):
         """Test that Numba functions are performant."""
@@ -599,7 +599,7 @@ class TestHurstAnalyzerIntegration:
 
     def test_complete_analysis_workflow(self, hurst_analyzer, sample_price_data):
         """Test complete analysis workflow."""
-        prices = sample_price_data['close']
+        prices = sample_price_data["close"]
 
         # Calculate Hurst exponent
         result = hurst_analyzer.calculate_hurst_exponent(prices)
@@ -623,7 +623,7 @@ class TestHurstAnalyzerIntegration:
 
     def test_multi_symbol_analysis(self, hurst_analyzer):
         """Test analyzing multiple symbols."""
-        symbols = ['AAPL', 'MSFT', 'GOOGL']
+        symbols = ["AAPL", "MSFT", "GOOGL"]
         results = {}
 
         for symbol in symbols:

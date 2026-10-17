@@ -14,7 +14,9 @@ from __future__ import annotations
 
 import asyncio
 import hashlib
+import hmac
 import logging
+import os
 import time
 import traceback
 from collections import defaultdict
@@ -388,12 +390,39 @@ class SecurityConfig:
     ADMIN_ROLE_REQUIRED = False
 
 
+# Tracks whether the "no API keys configured" critical error was already
+# logged, so a misconfigured deployment logs once instead of per request.
+_api_keys_missing_logged = False
+
+
+def _get_configured_api_keys() -> list[str]:
+    """Read valid API keys from configuration.
+
+    Keys are read from the API_ACCESS_KEYS environment variable
+    (comma-separated list), falling back to a single API_KEY variable.
+
+    Returns:
+        List of configured API keys (empty if none are configured).
+    """
+    raw_keys = os.getenv("API_ACCESS_KEYS", "")
+    keys = [key.strip() for key in raw_keys.split(",") if key.strip()]
+    if not keys:
+        single_key = os.getenv("API_KEY", "").strip()
+        if single_key:
+            keys.append(single_key)
+    return keys
+
+
 def get_user_from_request(request: Request) -> dict[str, str] | None:
     """
     Extract user information from the request.
 
-    This is a placeholder implementation that should be replaced with
-    proper JWT/OAuth authentication.
+    API key authentication: the X-API-Key header must match one of the keys
+    configured via API_ACCESS_KEYS or API_KEY (compared in constant time).
+    Keys are never accepted based on length or format alone.
+
+    Fail-closed: if authentication is enabled and no keys are configured,
+    every request is rejected.
 
     Args:
         request: FastAPI Request object
@@ -401,21 +430,35 @@ def get_user_from_request(request: Request) -> dict[str, str] | None:
     Returns:
         Optional[Dict]: User information if authenticated, None otherwise
     """
-    # Placeholder: Check for API key in headers
+    global _api_keys_missing_logged
+
     api_key = request.headers.get("X-API-Key")
     if api_key:
-        # Basic validation: reject empty or clearly invalid keys
-        if len(api_key) < 32:
+        configured_keys = _get_configured_api_keys()
+        if not configured_keys:
+            if SecurityConfig.AUTH_ENABLED and not _api_keys_missing_logged:
+                logger.critical(
+                    "AUTH_ENABLED but no API keys configured: rejecting all "
+                    "X-API-Key requests. Set API_ACCESS_KEYS to a comma-separated "
+                    "list of valid keys (or API_KEY for a single key) to enable "
+                    "API key authentication."
+                )
+                _api_keys_missing_logged = True
             return None
-        # Mask the key for logging - never expose full key
-        return {"id": "api_key_user", "type": "api_key", "key_prefix": api_key[:8]}
+        _api_keys_missing_logged = False
+        if any(
+            hmac.compare_digest(api_key.encode("utf-8"), key.encode("utf-8"))
+            for key in configured_keys
+        ):
+            # Mask the key for logging - never expose full key
+            return {"id": "api_key_user", "type": "api_key", "key_prefix": api_key[:8]}
+        return None
 
-    # Placeholder: Check for JWT token
+    # JWT bearer authentication is not implemented yet: reject unvalidated
+    # tokens instead of trusting them (fail-closed).
     auth_header = request.headers.get("Authorization")
     if auth_header and auth_header.startswith("Bearer "):
-        # NOTE: Validate and decode JWT token
-        # For now, return None to indicate no valid auth
-        pass
+        return None
 
     # Check request state for user set by middleware
     if hasattr(request.state, "user"):
@@ -448,6 +491,7 @@ def require_auth(
         async def execute_trade():
             return {"status": "executed"}
     """
+    del allow_api_key  # aceptado por compatibilidad; sin uso aquí
 
     def decorator(func: F) -> F:
         @wraps(func)

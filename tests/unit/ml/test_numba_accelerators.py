@@ -78,10 +78,10 @@ class TestNumbaAccelerators:
         """Test Numba info function."""
         info = get_numba_info()
         assert isinstance(info, dict)
-        assert 'numba_available' in info
-        assert 'functions_optimized' in info
-        assert 'expected_speedups' in info
-        assert info['functions_optimized'] > 0
+        assert "numba_available" in info
+        assert "functions_optimized" in info
+        assert "expected_speedups" in info
+        assert info["functions_optimized"] > 0
 
     def test_calculate_rsi_numba(self, sample_prices):
         """Test RSI calculation with Numba."""
@@ -282,7 +282,7 @@ class TestNumbaPerformance:
         assert elapsed < 1.0, f"RSI too slow: {elapsed:.3f}s for {iterations} iterations"
 
         print(f"✅ RSI Performance: {elapsed:.3f}s for {iterations} iterations")
-        print(f"   Average: {elapsed/iterations*1000:.2f}ms per calculation")
+        print(f"   Average: {elapsed / iterations * 1000:.2f}ms per calculation")
 
     def test_ema_performance(self, large_dataset):
         """Test EMA calculation performance."""
@@ -300,7 +300,7 @@ class TestNumbaPerformance:
         assert elapsed < 1.0, f"EMA too slow: {elapsed:.3f}s for {iterations} iterations"
 
         print(f"✅ EMA Performance: {elapsed:.3f}s for {iterations} iterations")
-        print(f"   Average: {elapsed/iterations*1000:.2f}ms per calculation")
+        print(f"   Average: {elapsed / iterations * 1000:.2f}ms per calculation")
 
     def test_macd_performance(self, large_dataset):
         """Test MACD calculation performance."""
@@ -318,7 +318,7 @@ class TestNumbaPerformance:
         assert elapsed < 2.0, f"MACD too slow: {elapsed:.3f}s for {iterations} iterations"
 
         print(f"✅ MACD Performance: {elapsed:.3f}s for {iterations} iterations")
-        print(f"   Average: {elapsed/iterations*1000:.2f}ms per calculation")
+        print(f"   Average: {elapsed / iterations * 1000:.2f}ms per calculation")
 
 
 if __name__ == "__main__":

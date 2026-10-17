@@ -37,10 +37,10 @@ class TestYAMLConfigLoaderStructlog:
 
         # Check that logger exists and has structlog methods
         # Structlog bound loggers have specific methods like info, warning, error, debug
-        assert hasattr(logger, 'info')
-        assert hasattr(logger, 'warning')
-        assert hasattr(logger, 'error')
-        assert hasattr(logger, 'debug')
+        assert hasattr(logger, "info")
+        assert hasattr(logger, "warning")
+        assert hasattr(logger, "error")
+        assert hasattr(logger, "debug")
 
     def test_structlog_warning_on_invalid_filename(self, caplog):
         """Test that structlog logs warning for invalid filename."""
@@ -86,7 +86,7 @@ class TestYAMLConfigLoaderStructlog:
         # Create test config file
         config_data = {"test_section": {"test_key": "test_value"}}
         config_file = tmp_path / "test_config.yaml"
-        with open(config_file, 'w') as f:
+        with open(config_file, "w") as f:
             yaml.dump(config_data, f)
 
         loader = YAMLConfigLoader(config_dir=tmp_path)
@@ -98,7 +98,7 @@ class TestYAMLConfigLoaderStructlog:
         """Test that structlog logs error on invalid YAML."""
         # Create invalid YAML file
         invalid_file = tmp_path / "invalid.yaml"
-        with open(invalid_file, 'w') as f:
+        with open(invalid_file, "w") as f:
             f.write("invalid: yaml: content: [")
 
         loader = YAMLConfigLoader(config_dir=tmp_path)
@@ -115,7 +115,7 @@ class TestYAMLConfigLoaderStructlog:
             "api": {"api_key": "key_abc"},
         }
         config_file = tmp_path / "sensitive_config.yaml"
-        with open(config_file, 'w') as f:
+        with open(config_file, "w") as f:
             yaml.dump(config_data, f)
 
         loader = YAMLConfigLoader(config_dir=tmp_path)
@@ -175,10 +175,10 @@ class TestYAMLConfigLoaderInit:
 
         # Check that the lock has RLock behavior (acquire/release methods)
         # and supports reentrant locking
-        assert hasattr(loader._cache_lock, 'acquire')
-        assert hasattr(loader._cache_lock, 'release')
-        assert hasattr(loader._cache_lock, '__enter__')
-        assert hasattr(loader._cache_lock, '__exit__')
+        assert hasattr(loader._cache_lock, "acquire")
+        assert hasattr(loader._cache_lock, "release")
+        assert hasattr(loader._cache_lock, "__enter__")
+        assert hasattr(loader._cache_lock, "__exit__")
 
         # Test that it's reentrant (can be acquired multiple times in same thread)
         loader._cache_lock.acquire()
@@ -206,17 +206,17 @@ class TestYAMLConfigLoaderLoad:
                 "section2": {"enabled": True, "threshold": 0.5},
             }
             config_file = tmp_path / "test_config.yaml"
-            with open(config_file, 'w') as f:
+            with open(config_file, "w") as f:
                 yaml.dump(config_data, f)
 
             # Create empty config file
             empty_file = tmp_path / "empty_config.yaml"
-            with open(empty_file, 'w') as f:
+            with open(empty_file, "w") as f:
                 yaml.dump({}, f)
 
             # Create invalid YAML file
             invalid_file = tmp_path / "invalid.yaml"
-            with open(invalid_file, 'w') as f:
+            with open(invalid_file, "w") as f:
                 f.write("invalid: yaml: [")
 
             yield tmp_path
@@ -282,7 +282,7 @@ class TestYAMLConfigLoaderLoad:
             }
         }
         config_file = temp_config_dir / "invalid_values.yaml"
-        with open(config_file, 'w') as f:
+        with open(config_file, "w") as f:
             yaml.dump(config_data, f)
 
         loader = YAMLConfigLoader(config_dir=temp_config_dir)
@@ -298,7 +298,7 @@ class TestYAMLConfigLoaderLoad:
             "normal_key": "normal_value",
         }
         config_file = temp_config_dir / "sensitive.yaml"
-        with open(config_file, 'w') as f:
+        with open(config_file, "w") as f:
             yaml.dump(config_data, f)
 
         loader = YAMLConfigLoader(config_dir=temp_config_dir)
@@ -319,7 +319,7 @@ class TestYAMLConfigLoaderCaching:
             tmp_path = Path(tmp_dir)
             config_data = {"test_key": "test_value"}
             config_file = tmp_path / "cached_config.yaml"
-            with open(config_file, 'w') as f:
+            with open(config_file, "w") as f:
                 yaml.dump(config_data, f)
             yield tmp_path
 
@@ -518,7 +518,7 @@ class TestYAMLConfigLoaderTierOverrides:
                 },
             }
             config_file = tmp_path / "tier_config.yaml"
-            with open(config_file, 'w') as f:
+            with open(config_file, "w") as f:
                 yaml.dump(config_data, f)
 
             yield tmp_path
@@ -578,7 +578,7 @@ class TestYAMLConfigLoaderTierOverrides:
         """Test tier override when config has no tiers section."""
         config_data = {"key": "value"}
         config_file = temp_config_with_tiers / "no_tiers.yaml"
-        with open(config_file, 'w') as f:
+        with open(config_file, "w") as f:
             yaml.dump(config_data, f)
 
         loader = YAMLConfigLoader(config_dir=temp_config_with_tiers)
@@ -619,7 +619,7 @@ class TestYAMLConfigLoaderValidation:
         """Test validation with valid dict config."""
         config_data = {"key": "value"}
         config_file = temp_config_dir / "valid.yaml"
-        with open(config_file, 'w') as f:
+        with open(config_file, "w") as f:
             yaml.dump(config_data, f)
 
         loader = YAMLConfigLoader(config_dir=temp_config_dir)
@@ -630,7 +630,7 @@ class TestYAMLConfigLoaderValidation:
     def test_validate_with_invalid_type(self, temp_config_dir):
         """Test validation with invalid config type (non-dict)."""
         config_file = temp_config_dir / "list_config.yaml"
-        with open(config_file, 'w') as f:
+        with open(config_file, "w") as f:
             yaml.dump(["item1", "item2"], f)
 
         loader = YAMLConfigLoader(config_dir=temp_config_dir)
@@ -643,7 +643,7 @@ class TestYAMLConfigLoaderValidation:
         """Test validation of valid max_strategy_exposure."""
         config_data = {"exposure": {"max_strategy_exposure": 0.50}}
         config_file = temp_config_dir / "valid_exposure.yaml"
-        with open(config_file, 'w') as f:
+        with open(config_file, "w") as f:
             yaml.dump(config_data, f)
 
         loader = YAMLConfigLoader(config_dir=temp_config_dir)
@@ -655,7 +655,7 @@ class TestYAMLConfigLoaderValidation:
         """Test validation of invalid max_strategy_exposure (> 1)."""
         config_data = {"exposure": {"max_strategy_exposure": 1.5}}
         config_file = temp_config_dir / "invalid_exposure.yaml"
-        with open(config_file, 'w') as f:
+        with open(config_file, "w") as f:
             yaml.dump(config_data, f)
 
         loader = YAMLConfigLoader(config_dir=temp_config_dir)
@@ -668,7 +668,7 @@ class TestYAMLConfigLoaderValidation:
         """Test validation of valid lookback_max_days."""
         config_data = {"data_validation": {"lookback_max_days": 126}}
         config_file = temp_config_dir / "valid_lookback.yaml"
-        with open(config_file, 'w') as f:
+        with open(config_file, "w") as f:
             yaml.dump(config_data, f)
 
         loader = YAMLConfigLoader(config_dir=temp_config_dir)
@@ -680,7 +680,7 @@ class TestYAMLConfigLoaderValidation:
         """Test validation of invalid lookback_max_days (negative)."""
         config_data = {"data_validation": {"lookback_max_days": -10}}
         config_file = temp_config_dir / "invalid_lookback.yaml"
-        with open(config_file, 'w') as f:
+        with open(config_file, "w") as f:
             yaml.dump(config_data, f)
 
         loader = YAMLConfigLoader(config_dir=temp_config_dir)
@@ -693,7 +693,7 @@ class TestYAMLConfigLoaderValidation:
         """Test validation of enabled boolean field."""
         config_data = {"feature": {"enabled": True}}
         config_file = temp_config_dir / "enabled_config.yaml"
-        with open(config_file, 'w') as f:
+        with open(config_file, "w") as f:
             yaml.dump(config_data, f)
 
         loader = YAMLConfigLoader(config_dir=temp_config_dir)
@@ -708,7 +708,7 @@ class TestYAMLConfigLoaderValidation:
         for tier in valid_tiers:
             config_data = {"tier": tier}
             config_file = temp_config_dir / f"{tier}_config.yaml"
-            with open(config_file, 'w') as f:
+            with open(config_file, "w") as f:
                 yaml.dump(config_data, f)
 
             loader = YAMLConfigLoader(config_dir=temp_config_dir)
@@ -720,7 +720,7 @@ class TestYAMLConfigLoaderValidation:
         """Test validation of invalid tier value."""
         config_data = {"tier": "invalid_tier"}
         config_file = temp_config_dir / "invalid_tier.yaml"
-        with open(config_file, 'w') as f:
+        with open(config_file, "w") as f:
             yaml.dump(config_data, f)
 
         loader = YAMLConfigLoader(config_dir=temp_config_dir)
@@ -733,7 +733,7 @@ class TestYAMLConfigLoaderValidation:
         """Test validation of nested configuration."""
         config_data = {"level1": {"level2": {"enabled": True, "max_strategy_exposure": 0.75}}}
         config_file = temp_config_dir / "nested_config.yaml"
-        with open(config_file, 'w') as f:
+        with open(config_file, "w") as f:
             yaml.dump(config_data, f)
 
         loader = YAMLConfigLoader(config_dir=temp_config_dir)
@@ -749,7 +749,7 @@ class TestYAMLConfigLoaderValidation:
         for key in sensitive_keys:
             config_data = {"config_section": {key: "sensitive_value"}}
             config_file = temp_config_dir / f"{key}_config.yaml"
-            with open(config_file, 'w') as f:
+            with open(config_file, "w") as f:
                 yaml.dump(config_data, f)
 
             loader = YAMLConfigLoader(config_dir=temp_config_dir)
@@ -773,7 +773,7 @@ class TestYAMLConfigLoaderMethods:
                 "tiers": {"micro": {"test_param": "micro_value"}},
             }
             config_file = tmp_path / "strategy_stock_allocator.yaml"
-            with open(config_file, 'w') as f:
+            with open(config_file, "w") as f:
                 yaml.dump(config_data, f)
 
             yield tmp_path
@@ -875,7 +875,7 @@ class TestYAMLConfigLoaderErrorHandling:
     def test_yaml_parse_error(self, tmp_path):
         """Test handling of YAML parse error."""
         invalid_file = tmp_path / "invalid.yaml"
-        with open(invalid_file, 'w') as f:
+        with open(invalid_file, "w") as f:
             f.write("invalid: yaml: content: [")
 
         loader = YAMLConfigLoader(config_dir=tmp_path)
@@ -929,7 +929,7 @@ class TestYAMLConfigLoaderEdgeCases:
           key2: value2
         """
         config_file = tmp_path / "with_comments.yaml"
-        with open(config_file, 'w') as f:
+        with open(config_file, "w") as f:
             f.write(config_content)
 
         loader = YAMLConfigLoader(config_dir=tmp_path)
@@ -946,7 +946,7 @@ class TestYAMLConfigLoaderEdgeCases:
             "key.with.dots": "value3",
         }
         config_file = tmp_path / "special_chars.yaml"
-        with open(config_file, 'w') as f:
+        with open(config_file, "w") as f:
             yaml.dump(config_data, f)
 
         loader = YAMLConfigLoader(config_dir=tmp_path)
@@ -966,7 +966,7 @@ class TestYAMLConfigLoaderEdgeCases:
             """
         }
         config_file = tmp_path / "multiline.yaml"
-        with open(config_file, 'w') as f:
+        with open(config_file, "w") as f:
             yaml.dump(config_data, f)
 
         loader = YAMLConfigLoader(config_dir=tmp_path)
@@ -979,7 +979,7 @@ class TestYAMLConfigLoaderEdgeCases:
         """Test loading config with unicode characters."""
         config_data = {"spanish": "Hola ñoño", "emoji": "🚀📈", "chinese": "你好"}
         config_file = tmp_path / "unicode.yaml"
-        with open(config_file, 'w', encoding='utf-8') as f:
+        with open(config_file, "w", encoding="utf-8") as f:
             yaml.dump(config_data, f)
 
         loader = YAMLConfigLoader(config_dir=tmp_path)
@@ -995,7 +995,7 @@ class TestYAMLConfigLoaderEdgeCases:
             "level1": {"level2": {"level3": {"level4": {"level5": {"deep_value": "found"}}}}}
         }
         config_file = tmp_path / "deep_nested.yaml"
-        with open(config_file, 'w') as f:
+        with open(config_file, "w") as f:
             yaml.dump(config_data, f)
 
         loader = YAMLConfigLoader(config_dir=tmp_path)
@@ -1012,7 +1012,7 @@ class TestYAMLConfigLoaderEdgeCases:
             "small_float": 0.000001,
         }
         config_file = tmp_path / "large_values.yaml"
-        with open(config_file, 'w') as f:
+        with open(config_file, "w") as f:
             yaml.dump(config_data, f)
 
         loader = YAMLConfigLoader(config_dir=tmp_path)
@@ -1026,7 +1026,7 @@ class TestYAMLConfigLoaderEdgeCases:
         """Test loading config with explicit null values."""
         config_data = {"null_key": None, "string_key": "value"}
         config_file = tmp_path / "null_values.yaml"
-        with open(config_file, 'w') as f:
+        with open(config_file, "w") as f:
             yaml.dump(config_data, f)
 
         loader = YAMLConfigLoader(config_dir=tmp_path)
@@ -1041,7 +1041,7 @@ class TestYAMLConfigLoaderEdgeCases:
         sensitive_keys = ["password", "secret", "api_key", "token", "private_key"]
         config_data = {key: f"value_{key}" for key in sensitive_keys}
         config_file = tmp_path / "all_sensitive.yaml"
-        with open(config_file, 'w') as f:
+        with open(config_file, "w") as f:
             yaml.dump(config_data, f)
 
         loader = YAMLConfigLoader(config_dir=tmp_path)

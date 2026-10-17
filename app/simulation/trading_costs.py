@@ -622,6 +622,7 @@ class TradingCostAnalyzer:
             Harris, L. (2003). Trading and Exchanges, Chapter 9,
             "Execution Quality"
         """
+        del peer_fill_rate  # aceptado por compatibilidad; sin uso aquí
         if fill_rate is None:
             fill_rate = Decimal("100")
         # Calculate effective spread in bps

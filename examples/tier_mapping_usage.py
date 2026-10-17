@@ -9,13 +9,14 @@ Run examples:
 """
 
 from decimal import Decimal
+
 from app.core.models.input_profile import InputProfile
 from app.core.tier_mapper import (
     TierMapper,
     TierSystem,
     get_tier,
-    normalize_tier,
     map_profile_tier_to_config,
+    normalize_tier,
     validate_tier_mapping,
 )
 

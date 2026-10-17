@@ -47,40 +47,40 @@ class PerformanceMetricsRequest(BaseModel):
     period: PerformancePeriod = Field(
         default=PerformancePeriod.MONTHLY, description="Performance period"
     )
-    start_date: datetime | None = Field(None, description="Start date for calculation")
-    end_date: datetime | None = Field(None, description="End date for calculation")
+    start_date: datetime | None = Field(default=None, description="Start date for calculation")
+    end_date: datetime | None = Field(default=None, description="End date for calculation")
 
 
 class PerformanceMetricsResponse(BaseModel):
     """Response model for performance metrics."""
 
     success: bool = Field(..., description="Success status")
-    data: PerformanceMetrics | None = Field(None, description="Performance metrics data")
-    error: str | None = Field(None, description="Error message if any")
+    data: PerformanceMetrics | None = Field(default=None, description="Performance metrics data")
+    error: str | None = Field(default=None, description="Error message if any")
 
 
 class RiskMetricsResponse(BaseModel):
     """Response model for risk metrics."""
 
     success: bool = Field(..., description="Success status")
-    data: RiskMetrics | None = Field(None, description="Risk metrics data")
-    error: str | None = Field(None, description="Error message if any")
+    data: RiskMetrics | None = Field(default=None, description="Risk metrics data")
+    error: str | None = Field(default=None, description="Error message if any")
 
 
 class PortfolioAnalyticsResponse(BaseModel):
     """Response model for portfolio analytics."""
 
     success: bool = Field(..., description="Success status")
-    data: PortfolioAnalytics | None = Field(None, description="Portfolio analytics data")
-    error: str | None = Field(None, description="Error message if any")
+    data: PortfolioAnalytics | None = Field(default=None, description="Portfolio analytics data")
+    error: str | None = Field(default=None, description="Error message if any")
 
 
 class PortfolioAllocationResponse(BaseModel):
     """Response model for portfolio allocation."""
 
     success: bool = Field(..., description="Success status")
-    data: PortfolioAllocation | None = Field(None, description="Portfolio allocation data")
-    error: str | None = Field(None, description="Error message if any")
+    data: PortfolioAllocation | None = Field(default=None, description="Portfolio allocation data")
+    error: str | None = Field(default=None, description="Error message if any")
 
 
 class RebalanceRequest(BaseModel):
@@ -102,8 +102,8 @@ class RebalanceResponse(BaseModel):
     """Response model for rebalancing recommendations."""
 
     success: bool = Field(..., description="Success status")
-    data: PortfolioRebalance | None = Field(None, description="Rebalancing recommendations")
-    error: str | None = Field(None, description="Error message if any")
+    data: PortfolioRebalance | None = Field(default=None, description="Rebalancing recommendations")
+    error: str | None = Field(default=None, description="Error message if any")
 
 
 class PortfolioComparisonRequest(BaseModel):
@@ -116,16 +116,16 @@ class PortfolioComparisonResponse(BaseModel):
     """Response model for portfolio comparison."""
 
     success: bool = Field(..., description="Success status")
-    data: PortfolioComparison | None = Field(None, description="Portfolio comparison data")
-    error: str | None = Field(None, description="Error message if any")
+    data: PortfolioComparison | None = Field(default=None, description="Portfolio comparison data")
+    error: str | None = Field(default=None, description="Error message if any")
 
 
 class AnalyticsSummaryResponse(BaseModel):
     """Response model for analytics summary."""
 
     success: bool = Field(..., description="Success status")
-    data: dict[str, Any] | None = Field(None, description="Analytics summary data")
-    error: str | None = Field(None, description="Error message if any")
+    data: dict[str, Any] | None = Field(default=None, description="Analytics summary data")
+    error: str | None = Field(default=None, description="Error message if any")
 
 
 # Mock portfolio data for demonstration

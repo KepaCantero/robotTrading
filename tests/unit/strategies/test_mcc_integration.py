@@ -18,9 +18,9 @@ class TestMCCIntegration:
     def mock_train_data(self):
         """Create mock training data."""
         return {
-            'features': np.random.randn(100, 10),
-            'labels': np.random.randint(0, 2, 100),
-            'metadata': {},
+            "features": np.random.randn(100, 10),
+            "labels": np.random.randint(0, 2, 100),
+            "metadata": {},
         }
 
     @pytest.fixture
@@ -58,14 +58,14 @@ class TestMCCIntegration:
 
             # Create engine with mock configuration
             config = {
-                'algorithm': 'random_forest',
-                'feature_columns': [f'feature_{i}' for i in range(10)],
-                'target_column': 'trade_success',
-                'model_parameters': {'n_estimators': 10, 'max_depth': 3},
+                "algorithm": "random_forest",
+                "feature_columns": [f"feature_{i}" for i in range(10)],
+                "target_column": "trade_success",
+                "model_parameters": {"n_estimators": 10, "max_depth": 3},
             }
 
             # Patch the training methods to avoid actual training
-            with patch.object(SupervisedLearningEngine, '_train_random_forest') as mock_train:
+            with patch.object(SupervisedLearningEngine, "_train_random_forest") as mock_train:
                 mock_train.return_value = mock_model
 
                 engine = SupervisedLearningEngine(config)
@@ -73,17 +73,17 @@ class TestMCCIntegration:
                 engine.is_trained = True
 
                 # Evaluate model
-                X_val = mock_train_data['features']
-                y_val = mock_train_data['labels']
+                X_val = mock_train_data["features"]
+                y_val = mock_train_data["labels"]
                 metrics = engine._evaluate_model(X_val, y_val)
 
                 # Check that MCC is in metrics
-                assert 'mcc' in metrics, "MCC not found in evaluation metrics"
-                assert metrics['mcc'] is not None, "MCC is None"
-                assert isinstance(
-                    metrics['mcc'], float
-                ), f"MCC should be float, got {type(metrics['mcc'])}"
-                assert -1 <= metrics['mcc'] <= 1, f"MCC {metrics['mcc']} not in valid range [-1, 1]"
+                assert "mcc" in metrics, "MCC not found in evaluation metrics"
+                assert metrics["mcc"] is not None, "MCC is None"
+                assert isinstance(metrics["mcc"], float), (
+                    f"MCC should be float, got {type(metrics['mcc'])}"
+                )
+                assert -1 <= metrics["mcc"] <= 1, f"MCC {metrics['mcc']} not in valid range [-1, 1]"
 
                 print(f"✓ MCC in metrics: {metrics['mcc']:.4f}")
 
@@ -101,10 +101,10 @@ class TestMCCIntegration:
 
             # Create engine with mock configuration
             config = {
-                'algorithm': 'random_forest',
-                'feature_columns': [f'feature_{i}' for i in range(10)],
-                'target_column': 'trade_success',
-                'model_parameters': {'n_estimators': 10, 'max_depth': 3},
+                "algorithm": "random_forest",
+                "feature_columns": [f"feature_{i}" for i in range(10)],
+                "target_column": "trade_success",
+                "model_parameters": {"n_estimators": 10, "max_depth": 3},
             }
 
             # Mock model with poor predictions (should give low MCC)
@@ -114,7 +114,7 @@ class TestMCCIntegration:
             )
             poor_model.predict = Mock(return_value=np.random.randint(0, 2, 100))
 
-            with patch.object(SupervisedLearningEngine, '_train_random_forest') as mock_train:
+            with patch.object(SupervisedLearningEngine, "_train_random_forest") as mock_train:
                 mock_train.return_value = poor_model
 
                 engine = SupervisedLearningEngine(config)
@@ -122,16 +122,16 @@ class TestMCCIntegration:
                 engine.is_trained = True
 
                 # Capture log output
-                with patch('logging.getLogger') as mock_logger:
+                with patch("logging.getLogger") as mock_logger:
                     logger_instance = Mock()
                     mock_logger.return_value = logger_instance
 
-                    X_val = mock_train_data['features']
-                    y_val = mock_train_data['labels']
+                    X_val = mock_train_data["features"]
+                    y_val = mock_train_data["labels"]
                     metrics = engine._evaluate_model(X_val, y_val)
 
                     # Check that MCC was calculated
-                    assert 'mcc' in metrics, "MCC not in metrics"
+                    assert "mcc" in metrics, "MCC not in metrics"
                     print(f"✓ MCC threshold warning test: MCC={metrics['mcc']:.4f}")
 
         except ImportError as e:
@@ -203,9 +203,9 @@ class TestMCCIntegration:
             source = inspect.getsource(SupervisedLearningEngine._evaluate_model)
 
             # Check for MCC-related code
-            assert (
-                'calculate_matthews_corrcoef' in source or 'mcc' in source
-            ), "MCC calculation not found in _evaluate_model method"
+            assert "calculate_matthews_corrcoef" in source or "mcc" in source, (
+                "MCC calculation not found in _evaluate_model method"
+            )
 
             print("✓ SupervisedLearningEngine._evaluate_model includes MCC")
 
@@ -213,7 +213,7 @@ class TestMCCIntegration:
             pytest.skip(f"Cannot verify SupervisedLearningEngine source: {e}")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     # Run tests manually if pytest is not available
     test = TestMCCIntegration()
 

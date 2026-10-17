@@ -180,17 +180,17 @@ class TestOptimalDFinding:
     def test_find_optimal_d_binary_search(self, fractional_diff_instance, sample_series):
         """Test binary search method for finding optimal d."""
         optimal_d, p_value, metadata = fractional_diff_instance.find_optimal_d(
-            sample_series, method='binary'
+            sample_series, method="binary"
         )
-        assert metadata['method'] == 'binary_search'
+        assert metadata["method"] == "binary_search"
         assert 0.0 <= optimal_d <= 1.0
 
     def test_find_optimal_d_grid_search(self, fractional_diff_instance, sample_series):
         """Test grid search method for finding optimal d."""
         optimal_d, p_value, metadata = fractional_diff_instance.find_optimal_d(
-            sample_series, method='grid'
+            sample_series, method="grid"
         )
-        assert metadata['method'] == 'grid_search'
+        assert metadata["method"] == "grid_search"
         assert 0.0 <= optimal_d <= 1.0
 
     def test_find_optimal_d_already_stationary(self, fractional_diff_instance, stationary_series):
@@ -213,7 +213,7 @@ class TestMemoryPreservation:
         """Test that memory preservation ratio is between 0 and 1."""
         diff_series = fractional_diff_instance.fractional_diff(sample_series, d=0.5)
         result = fractional_diff_instance.calculate_memory_loss(sample_series, diff_series)
-        assert 0 <= result['memory_preservation_ratio'] <= 1
+        assert 0 <= result["memory_preservation_ratio"] <= 1
 
     def test_memory_loss_higher_for_higher_d(self, fractional_diff_instance, sample_series):
         """Test that higher d leads to more memory loss."""
@@ -224,7 +224,7 @@ class TestMemoryPreservation:
         memory_d7 = fractional_diff_instance.calculate_memory_loss(sample_series, diff_d7)
 
         # Higher d should lead to more memory loss
-        assert memory_d3['memory_preservation_ratio'] >= memory_d7['memory_preservation_ratio']
+        assert memory_d3["memory_preservation_ratio"] >= memory_d7["memory_preservation_ratio"]
 
 
 class TestComparisonUtilities:
@@ -239,13 +239,13 @@ class TestComparisonUtilities:
         """Test that compare_d_values returns expected columns."""
         result = fractional_diff_instance.compare_d_values(sample_series)
         expected_cols = [
-            'd',
-            'adf_statistic',
-            'p_value',
-            'is_stationary',
-            'memory_preservation',
-            'memory_loss_pct',
-            'n_obs',
+            "d",
+            "adf_statistic",
+            "p_value",
+            "is_stationary",
+            "memory_preservation",
+            "memory_loss_pct",
+            "n_obs",
         ]
         for col in expected_cols:
             assert col in result.columns
@@ -254,11 +254,11 @@ class TestComparisonUtilities:
         """Test that higher d values lead to more stationarity."""
         result = fractional_diff_instance.compare_d_values(sample_series)
         # Filter out rows with valid observations
-        valid_results = result[result['n_obs'] > 0]
+        valid_results = result[result["n_obs"] > 0]
 
         # Higher d should generally lead to more stationarity
         # (at least for non-stationary input)
-        stationary_counts = valid_results.groupby('d')['is_stationary'].sum()
+        stationary_counts = valid_results.groupby("d")["is_stationary"].sum()
         assert stationary_counts.sum() > 0
 
 
@@ -271,9 +271,9 @@ class TestTransformer:
         np.random.seed(42)
         return pd.DataFrame(
             {
-                'feature1': np.random.randn(100).cumsum(),
-                'feature2': np.random.randn(100).cumsum(),
-                'feature3': np.random.randn(100),
+                "feature1": np.random.randn(100).cumsum(),
+                "feature2": np.random.randn(100).cumsum(),
+                "feature3": np.random.randn(100),
             }
         )
 
@@ -311,7 +311,7 @@ class TestTransformer:
         transformer.fit(sample_dataframe)
         feature_names = transformer.get_feature_names_out()
         assert len(feature_names) == len(sample_dataframe.columns)
-        assert all(name.endswith('_fracdiff') for name in feature_names)
+        assert all(name.endswith("_fracdiff") for name in feature_names)
 
 
 class TestConvenienceFunctions:
@@ -339,10 +339,10 @@ class TestConvenienceFunctions:
         """Test apply_frac_diff_to_dataframe function."""
         np.random.seed(42)
         df = pd.DataFrame(
-            {'price': np.random.randn(100).cumsum(), 'volume': np.random.randint(100, 1000, 100)}
+            {"price": np.random.randn(100).cumsum(), "volume": np.random.randint(100, 1000, 100)}
         )
-        result = apply_frac_diff_to_dataframe(df, d=0.5, columns=['price'])
-        assert 'price_fracdiff' in result.columns
+        result = apply_frac_diff_to_dataframe(df, d=0.5, columns=["price"])
+        assert "price_fracdiff" in result.columns
         assert isinstance(result, pd.DataFrame)
 
 

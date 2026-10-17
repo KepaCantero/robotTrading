@@ -170,6 +170,7 @@ async def mock_broker():
     yield broker
     # Cleanup
 
+
 @pytest.fixture
 async def db_session():
     """Database session for testing."""
@@ -185,6 +186,7 @@ async def db_session():
 ```python
 import pytest
 from app.services.my_service import MyService
+
 
 @pytest.mark.unit
 class TestMyService:
@@ -202,6 +204,7 @@ class TestMyService:
 ```python
 import pytest
 from app.services.position_monitor import PositionMonitor
+
 
 @pytest.mark.asyncio
 @pytest.mark.integration
@@ -228,6 +231,7 @@ class TestPositionMonitor:
 ```python
 import pytest
 from app.services.position_monitor import PositionMonitor
+
 
 @pytest.mark.asyncio
 @pytest.mark.load

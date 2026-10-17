@@ -1,11 +1,11 @@
-from __future__ import annotations
-
 """
 Data models for Order Flow Imbalance (OFI) module.
 
 This module defines all Pydantic and dataclass models used throughout the OFI
 module, ensuring type safety and validation.
 """
+
+from __future__ import annotations
 
 import logging
 from dataclasses import dataclass

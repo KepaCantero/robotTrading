@@ -584,6 +584,7 @@ class SyntheticDataGenerator:
         Returns:
             List of Quote objects with uptrend
         """
+        del daily_drift  # aceptado por compatibilidad; sin uso aquí
         logger.info(f"Generating {n_days} days of trending scenario (bull regime)")
 
         return cast(

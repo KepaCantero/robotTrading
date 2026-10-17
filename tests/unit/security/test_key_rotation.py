@@ -103,7 +103,8 @@ class TestKeyRotationManager:
     def test_check_rotations_due_not_due(self, rotation_manager):
         """Test checking due rotations when none are due yet."""
         rotation_manager.schedule_rotation(
-            key_id="test_key_id", interval_days=30  # Not due for 30 days
+            key_id="test_key_id",
+            interval_days=30,  # Not due for 30 days
         )
 
         due_keys = rotation_manager.check_rotations_due()

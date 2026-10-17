@@ -39,7 +39,7 @@ from app.domain.models.input_profile import InputProfile, ObjectivoInversion, Ri
 
 logging.basicConfig(
     level=logging.WARNING,  # Reduce noise
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
 )
 logger = logging.getLogger(__name__)
 
@@ -89,7 +89,7 @@ def create_temp_config():
         "logging": {"level": "WARNING"},
     }
 
-    with tempfile.NamedTemporaryFile(mode='w', suffix='.yaml', delete=False) as f:
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as f:
         yaml.dump(config, f)
         return f.name
 
@@ -302,7 +302,7 @@ class TestParallelExecution:
             mock_loader = mock_market_data_factory()
 
             with patch(
-                'app.backtesting.data_loader.DataLoader.load_market_data', side_effect=mock_loader
+                "app.backtesting.data_loader.DataLoader.load_market_data", side_effect=mock_loader
             ):
                 profiles = [
                     InputProfile(
@@ -334,7 +334,7 @@ class TestFullPipeline:
             mock_loader = mock_market_data_factory()
 
             with patch(
-                'app.backtesting.data_loader.DataLoader.load_market_data', side_effect=mock_loader
+                "app.backtesting.data_loader.DataLoader.load_market_data", side_effect=mock_loader
             ):
                 profile = InputProfile(
                     capital_initial=Decimal("100000"),
@@ -460,14 +460,14 @@ def run_tests(test_class=None):
     errors = []
 
     for test_cls in test_classes:
-        print(f"\n{'='*60}")
+        print(f"\n{'=' * 60}")
         print(f"Running {test_cls.__name__}")
-        print('=' * 60)
+        print("=" * 60)
 
         instance = test_cls()
 
         for method_name in dir(instance):
-            if method_name.startswith('test_'):
+            if method_name.startswith("test_"):
                 method = getattr(instance, method_name)
                 if callable(method):
                     try:
@@ -486,9 +486,9 @@ def run_tests(test_class=None):
                         errors.append((method_name, str(e)))
 
     # Summary
-    print(f"\n{'='*60}")
+    print(f"\n{'=' * 60}")
     print("TEST SUMMARY")
-    print('=' * 60)
+    print("=" * 60)
     print(f"Passed: {passed}")
     print(f"Failed: {failed}")
     print(f"Total:  {passed + failed}")

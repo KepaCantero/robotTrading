@@ -124,8 +124,8 @@ class TestUnitOfWork(GenericUnitOfWork):
         self.portfolios = InMemoryPortfolioRepository()
 
         # Register with UoW
-        self.register_repository('orders', self.orders)
-        self.register_repository('portfolios', self.portfolios)
+        self.register_repository("orders", self.orders)
+        self.register_repository("portfolios", self.portfolios)
 
     def commit(self) -> None:
         """Commit changes."""
@@ -145,7 +145,7 @@ class TestUnitOfWork(GenericUnitOfWork):
         events = []
         for tracked in self._tracked_entities.values():
             entity = tracked.entity
-            if hasattr(entity, 'events'):
+            if hasattr(entity, "events"):
                 events.extend(entity.events)
                 entity.events.clear()
         return events
@@ -170,9 +170,9 @@ class TestGenericUnitOfWork:
         uow = GenericUnitOfWork()
         repo = InMemoryOrderRepository()
 
-        uow.register_repository('orders', repo)
+        uow.register_repository("orders", repo)
 
-        assert hasattr(uow, 'orders')
+        assert hasattr(uow, "orders")
         assert uow.orders is repo
 
     def test_track_entity(self):
@@ -180,7 +180,7 @@ class TestGenericUnitOfWork:
         uow = TestUnitOfWork()
         order = Order("ORD1", "AAPL", Decimal("100"))
 
-        uow.track_entity(order, state='new')
+        uow.track_entity(order, state="new")
 
         assert len(uow._tracked_entities) == 1
         assert "Order:ORD1" in uow._tracked_entities
@@ -189,31 +189,31 @@ class TestGenericUnitOfWork:
         """Test marking entity as dirty."""
         uow = TestUnitOfWork()
         order = Order("ORD1", "AAPL", Decimal("100"))
-        uow.track_entity(order, state='clean')
+        uow.track_entity(order, state="clean")
 
         uow.mark_dirty(order)
 
         tracked = uow._tracked_entities.get("Order:ORD1")
         assert tracked is not None
-        assert tracked.state == 'dirty'
+        assert tracked.state == "dirty"
 
     def test_mark_deleted(self):
         """Test marking entity as deleted."""
         uow = TestUnitOfWork()
         order = Order("ORD1", "AAPL", Decimal("100"))
-        uow.track_entity(order, state='clean')
+        uow.track_entity(order, state="clean")
 
         uow.mark_deleted(order)
 
         tracked = uow._tracked_entities.get("Order:ORD1")
         assert tracked is not None
-        assert tracked.state == 'deleted'
+        assert tracked.state == "deleted"
 
     def test_commit_success(self):
         """Test successful commit."""
         uow = TestUnitOfWork()
         order = Order("ORD1", "AAPL", Decimal("100"))
-        uow.track_entity(order, state='new')
+        uow.track_entity(order, state="new")
 
         uow.commit()
 
@@ -232,7 +232,7 @@ class TestGenericUnitOfWork:
         """Test rollback."""
         uow = TestUnitOfWork()
         order = Order("ORD1", "AAPL", Decimal("100"))
-        uow.track_entity(order, state='new')
+        uow.track_entity(order, state="new")
 
         uow.rollback()
 
@@ -243,7 +243,7 @@ class TestGenericUnitOfWork:
         """Test collecting domain events."""
         uow = TestUnitOfWork()
         order = Order("ORD1", "AAPL", Decimal("100"))
-        uow.track_entity(order, state='clean')
+        uow.track_entity(order, state="clean")
 
         # Generate event
         order.submit()
@@ -259,7 +259,7 @@ class TestGenericUnitOfWork:
 
         with uow:
             order = Order("ORD1", "AAPL", Decimal("100"))
-            uow.track_entity(order, state='new')
+            uow.track_entity(order, state="new")
 
         assert uow.committed is True
         assert uow.rolled_back is False
@@ -270,7 +270,7 @@ class TestGenericUnitOfWork:
 
         with pytest.raises(ValueError), uow:
             order = Order("ORD1", "AAPL", Decimal("100"))
-            uow.track_entity(order, state='new')
+            uow.track_entity(order, state="new")
             raise ValueError("Test error")
 
         assert uow.rolled_back is True
@@ -288,7 +288,7 @@ class TestUnitOfWorkScenarios:
             # Create order
             order = Order("ORD1", "AAPL", Decimal("100"))
             uow.orders.add(order)
-            uow.track_entity(order, state='new')
+            uow.track_entity(order, state="new")
 
             # Submit order
             order.submit()
@@ -310,12 +310,12 @@ class TestUnitOfWorkScenarios:
             # Create portfolio
             portfolio = Portfolio("PORT1", Decimal("10000"))
             uow.portfolios.add(portfolio)
-            uow.track_entity(portfolio, state='new')
+            uow.track_entity(portfolio, state="new")
 
             # Create order
             order = Order("ORD1", "AAPL", Decimal("100"))
             uow.orders.add(order)
-            uow.track_entity(order, state='new')
+            uow.track_entity(order, state="new")
 
         # Both should be committed
         assert uow.committed is True
@@ -343,7 +343,7 @@ class TestUnitOfWorkScenarios:
             with uow2:
                 order2 = Order("ORD2", "MSFT", Decimal("200"))
                 uow2.orders.add(order2)
-                uow2.track_entity(order2, state='new')
+                uow2.track_entity(order2, state="new")
                 raise ValueError("Simulated failure")
         except ValueError:
             pass
@@ -361,11 +361,11 @@ class TestUnitOfWorkScenarios:
             order = Order("ORD1", "AAPL", Decimal("100"))
             order.submit()
             uow.orders.add(order)
-            uow.track_entity(order, state='new')
+            uow.track_entity(order, state="new")
 
             portfolio = Portfolio("PORT1", Decimal("10000"))
             uow.portfolios.add(portfolio)
-            uow.track_entity(portfolio, state='new')
+            uow.track_entity(portfolio, state="new")
 
         events = uow.collect_new_events()
 

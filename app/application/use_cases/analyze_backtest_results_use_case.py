@@ -91,9 +91,24 @@ class AnalyzeBacktestResultsUseCase:
             return None
 
         # Calculate comparison metrics
-        returns = [bt.result.total_return_pct for bt in backtests]
-        sharpe_ratios = [bt.result.sharpe_ratio for bt in backtests if bt.result.sharpe_ratio]
-        drawdowns = [bt.result.max_drawdown for bt in backtests if bt.result.max_drawdown]
+        returns = [float(bt.result.total_return_pct) for bt in backtests if bt.result is not None]
+        if not returns:
+            logger.warning("compare_backtests.no_results", backtest_ids=backtest_ids)
+            return None
+        sharpe_ratios = [
+            float(bt.result.sharpe_ratio)
+            for bt in backtests
+            if bt.result is not None and bt.result.sharpe_ratio
+        ]
+        drawdowns = [
+            float(bt.result.max_drawdown)
+            for bt in backtests
+            if bt.result is not None and bt.result.max_drawdown
+        ]
+
+        def _result_of(bid: str) -> float:
+            bt = backtests[backtest_ids.index(bid)]
+            return float(bt.result.total_return_pct) if bt.result is not None else float("-inf")
 
         comparison = {
             "backtest_count": len(backtests),
@@ -102,10 +117,7 @@ class AnalyzeBacktestResultsUseCase:
             "worst_return": str(min(returns)),
             "avg_sharpe": str(np.mean(sharpe_ratios)) if sharpe_ratios else None,
             "avg_drawdown": str(np.mean(drawdowns)) if drawdowns else None,
-            "best_backtest": max(
-                backtest_ids,
-                key=lambda bid: backtests[backtest_ids.index(bid)].result.total_return_pct,
-            ),
+            "best_backtest": max(backtest_ids, key=_result_of),
         }
         logger.info("compare_backtests.success", backtest_count=len(backtests))
         return comparison

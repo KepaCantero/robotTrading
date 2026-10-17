@@ -38,8 +38,8 @@ class TestProfileGeneratorInitialization:
         generator = ProfileGenerator()
         assert len(generator.profile_templates) > 0
         # Check for either flat or nested structure
-        has_profiles = ('profiles' in generator.profile_templates) or (
-            'maximizar_capital' in generator.profile_templates
+        has_profiles = ("profiles" in generator.profile_templates) or (
+            "maximizar_capital" in generator.profile_templates
         )
         assert has_profiles
 

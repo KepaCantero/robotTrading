@@ -30,7 +30,9 @@ from app.services.parametrization.module_parametrizer import ModuleParametrizer
 @pytest.fixture
 def investment_profiles_config():
     """Load investment profiles YAML configuration."""
-    yaml_path = Path(__file__).resolve().parents[3] / "config" / "portfolio" / "investment_profiles.yaml"
+    yaml_path = (
+        Path(__file__).resolve().parents[3] / "config" / "portfolio" / "investment_profiles.yaml"
+    )
     with open(yaml_path) as f:
         return yaml.safe_load(f)
 
@@ -339,7 +341,7 @@ class TestParameterConsistency:
 
         # Parameters should respect risk profile through risk_adjustment
         for module_name, module_param in module_params.modules.items():
-            if hasattr(module_param, 'risk_adjustment'):
+            if hasattr(module_param, "risk_adjustment"):
                 assert 0.5 <= module_param.risk_adjustment <= 2.0
 
     @pytest.mark.asyncio
@@ -406,7 +408,7 @@ class TestParameterConsistency:
             # Get max position size from generated parameters
             max_positions = []
             for module_param in module_params.modules.values():
-                if hasattr(module_param, 'max_position_size'):
+                if hasattr(module_param, "max_position_size"):
                     max_positions.append(module_param.max_position_size)
 
             if max_positions:

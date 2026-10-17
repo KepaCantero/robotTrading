@@ -367,9 +367,9 @@ class TestEndToEndProfessionalBacktesting:
         )
 
         assert len(quotes) == 1000, "Should generate 1000 quotes"
-        assert all(
-            q.symbol == default_symbol for q in quotes
-        ), f"All quotes should be {default_symbol}"
+        assert all(q.symbol == default_symbol for q in quotes), (
+            f"All quotes should be {default_symbol}"
+        )
         assert quotes[0].timestamp < quotes[-1].timestamp, "Quotes should be chronological"
 
         # Verify price movement is realistic (not too wild)
@@ -435,9 +435,9 @@ class TestEndToEndProfessionalBacktesting:
 
         # Realistic return (-100% to +500%)
         # Note: Can lose more than 50% if strategy performs poorly
-        assert (
-            -10.00 <= result.total_return <= 5.00
-        ), f"Return should be realistic, got {result.total_return}"
+        assert -10.00 <= result.total_return <= 5.00, (
+            f"Return should be realistic, got {result.total_return}"
+        )
 
         # Realistic Sharpe ratio (< 3.0)
         if result.performance.sharpe_ratio is not None:
@@ -477,9 +477,9 @@ class TestEndToEndProfessionalBacktesting:
                 adv_data={"AAPL": Decimal("2000000000")},  # $2B ADV for AAPL
             )
 
-            assert isinstance(
-                capital_report, CapitalScaleAnalysisReport
-            ), "Should return capital report"
+            assert isinstance(capital_report, CapitalScaleAnalysisReport), (
+                "Should return capital report"
+            )
 
             # If capital scale analysis succeeded, verify results
             if len(capital_report.capital_level_results) > 0:
@@ -497,14 +497,14 @@ class TestEndToEndProfessionalBacktesting:
 
                     # Small capital should have HIGHER commission impact (worse)
                     # Large capital should have LOWER commission impact (better)
-                    assert (
-                        small_cap_impact > large_cap_impact
-                    ), "1K should have higher commission impact than 100K"
+                    assert small_cap_impact > large_cap_impact, (
+                        "1K should have higher commission impact than 100K"
+                    )
 
                 # Verify alpha degradation is reasonable (0-100%)
-                assert (
-                    0.0 <= float(capital_report.alpha_degradation) <= 1.0
-                ), "Alpha degradation should be 0-100%"
+                assert 0.0 <= float(capital_report.alpha_degradation) <= 1.0, (
+                    "Alpha degradation should be 0-100%"
+                )
             else:
                 # Capital scale analysis failed (known compatibility issue)
                 # We still verify the analyzer was created
@@ -562,9 +562,9 @@ class TestEndToEndProfessionalBacktesting:
 
             # Degradation should be reasonable (5-60%)
             degradation = is_oos.get("return_degradation", 0)
-            assert (
-                0.0 <= degradation <= 0.60
-            ), f"Return degradation should be 0-60%, got {degradation}"
+            assert 0.0 <= degradation <= 0.60, (
+                f"Return degradation should be 0-60%, got {degradation}"
+            )
 
         # ============================================================
         # Step 6: Pessimistic Execution (COMPLETE verification)
@@ -596,21 +596,21 @@ class TestEndToEndProfessionalBacktesting:
         assert result_sl is not None, "Should execute stop loss"
         assert result_sl.stop_loss_hit is True, "Stop loss should be hit"
         assert result_sl.take_profit_hit is True, "Take profit also hit"
-        assert (
-            result_sl.stop_execution_price == position.stop_loss_price
-        ), "Should execute at SL price"
+        assert result_sl.stop_execution_price == position.stop_loss_price, (
+            "Should execute at SL price"
+        )
 
         # Verify execution price includes slippage
         assert result_sl.execution_price is not None, "Should have execution price"
         assert result_sl.slippage_bps > 0, "Should have slippage applied"
-        assert result_sl.slippage_bps >= Decimal(
-            "10"
-        ), "Slippage should be >= 10 bps (2x base for stops)"
+        assert result_sl.slippage_bps >= Decimal("10"), (
+            "Slippage should be >= 10 bps (2x base for stops)"
+        )
 
         # Verify execution price is reasonable (not better than SL price)
-        assert (
-            result_sl.execution_price <= result_sl.stop_execution_price
-        ), "Execution should not be better than SL"
+        assert result_sl.execution_price <= result_sl.stop_execution_price, (
+            "Execution should not be better than SL"
+        )
 
         # ============================================================
         # Step 7: Robustness Testing (NO MOCKS - Real execution)
@@ -657,9 +657,9 @@ class TestEndToEndProfessionalBacktesting:
             n_steps=3,  # Reduced for faster test
         )
 
-        assert isinstance(
-            param_result, ParameterSensitivityResult
-        ), "Should return sensitivity result"
+        assert isinstance(param_result, ParameterSensitivityResult), (
+            "Should return sensitivity result"
+        )
         assert param_result.parameter_name == "stop_loss", "Parameter name should match"
         assert len(param_result.tested_values) == 3, "Should test 3 parameter values"
 
@@ -711,9 +711,9 @@ class TestEndToEndProfessionalBacktesting:
 
         # Verify metrics match the backtest result
         if result.performance.sharpe_ratio is not None:
-            assert acceptance_report.sharpe_ratio == float(
-                result.performance.sharpe_ratio
-            ), "Sharpe should match backtest"
+            assert acceptance_report.sharpe_ratio == float(result.performance.sharpe_ratio), (
+                "Sharpe should match backtest"
+            )
 
         assert acceptance_report.max_drawdown == float(
             result.performance.max_drawdown_percentage
@@ -732,14 +732,14 @@ class TestEndToEndProfessionalBacktesting:
             benchmark_return=benchmark_return,
         )
 
-        assert isinstance(
-            professional_report, ProfessionalReport
-        ), "Should return professional report"
+        assert isinstance(professional_report, ProfessionalReport), (
+            "Should return professional report"
+        )
         assert professional_report.strategy_name is not None, "Strategy name should match"
         assert professional_report.executive_summary is not None, "Should have executive summary"
-        assert (
-            professional_report.performance_section is not None
-        ), "Should have performance section"
+        assert professional_report.performance_section is not None, (
+            "Should have performance section"
+        )
         assert professional_report.risk_section is not None, "Should have risk section"
 
         # Test HTML export with parsing
@@ -756,9 +756,9 @@ class TestEndToEndProfessionalBacktesting:
 
         # Verify performance metrics in HTML
         html_text = soup.get_text()
-        assert (
-            "Sharpe" in html_text or "sharpe" in html_text.lower()
-        ), "HTML should mention Sharpe ratio"
+        assert "Sharpe" in html_text or "sharpe" in html_text.lower(), (
+            "HTML should mention Sharpe ratio"
+        )
         assert "Return" in html_text or "return" in html_text.lower(), "HTML should mention returns"
 
         # ============================================================
@@ -832,12 +832,12 @@ class TestEdgeCases:
 
             # Sharpe should be negative or None (not infinity)
             if result.performance.sharpe_ratio is not None:
-                assert (
-                    result.performance.sharpe_ratio < 0
-                ), "Sharpe should be negative for losing strategy"
-                assert (
-                    abs(result.performance.sharpe_ratio) < 20
-                ), "Sharpe magnitude should be reasonable"
+                assert result.performance.sharpe_ratio < 0, (
+                    "Sharpe should be negative for losing strategy"
+                )
+                assert abs(result.performance.sharpe_ratio) < 20, (
+                    "Sharpe magnitude should be reasonable"
+                )
 
     def test_edge_case_division_by_zero(self, default_symbol):
         """Test case: Gross loss = 0 (profit factor undefined)."""
@@ -957,12 +957,12 @@ class TestPessimisticExecutionComplete:
 
         # Pessimistic: execute at SL (95) with slippage
         # Should be >= SL price (95) but worse for long position
-        assert result.execution_price >= position.stop_loss_price * Decimal(
-            "0.99"
-        ), "Should be close to SL price"
-        assert (
-            result.execution_price <= position.stop_loss_price
-        ), "Should not be better than SL for long"
+        assert result.execution_price >= position.stop_loss_price * Decimal("0.99"), (
+            "Should be close to SL price"
+        )
+        assert result.execution_price <= position.stop_loss_price, (
+            "Should not be better than SL for long"
+        )
 
         # Verify slippage
         assert result.slippage_bps is not None, "Should have slippage"
@@ -1046,9 +1046,9 @@ class TestWalkForwardRealSignals:
         signals = simple_sma_crossover_strategy(quotes)
 
         # Should have sufficient signals
-        assert (
-            len(signals) >= 20
-        ), f"Should have at least 20 signals for walk-forward, got {len(signals)}"
+        assert len(signals) >= 20, (
+            f"Should have at least 20 signals for walk-forward, got {len(signals)}"
+        )
 
         # Configure walk-forward
         wf_config = {
@@ -1098,9 +1098,9 @@ class TestWalkForwardRealSignals:
         # Verify degradation is reasonable (walk-forward can show significant degradation)
         if "return_degradation" in is_oos:
             degradation = is_oos["return_degradation"]
-            assert (
-                0.0 <= degradation <= 1.0
-            ), f"Return degradation should be 0-100%, got {degradation}"
+            assert 0.0 <= degradation <= 1.0, (
+                f"Return degradation should be 0-100%, got {degradation}"
+            )
 
         # Verify consistency ratio exists
         if "consistency_ratio" in is_oos:

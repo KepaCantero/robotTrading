@@ -75,6 +75,8 @@ class CryptoMomentumConfig:
     max_position_weight: Decimal = Decimal("0.15")
     max_position_size: Decimal = Decimal("0.15")  # Alias for compatibility
     min_momentum_score: Decimal = Decimal("0")
+    # Techo de volatilidad 90d como fracción (300%: permisivo para cripto)
+    max_volatility: Decimal = Decimal("3.0")
 
 
 @dataclass

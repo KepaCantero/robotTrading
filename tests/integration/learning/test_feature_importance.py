@@ -36,7 +36,7 @@ class TestSHAPAnalyzer:
     @pytest.mark.skipif(not SHAP_AVAILABLE, reason="SHAP no disponible")
     def test_shap_analyzer_initialization(self):
         """Test inicialización."""
-        config = {'sample_size': 100, 'max_evals': 50}
+        config = {"sample_size": 100, "max_evals": 50}
 
         analyzer = SHAPAnalyzer(config)
 
@@ -59,13 +59,13 @@ class TestSHAPAnalyzer:
             # Analizar
             analyzer = SHAPAnalyzer()
             X_test = np.random.randn(20, 5)
-            feature_names = [f'feature_{i}' for i in range(5)]
+            feature_names = [f"feature_{i}" for i in range(5)]
 
-            result = analyzer.explain_model(model, X_test, feature_names, model_type='tree')
+            result = analyzer.explain_model(model, X_test, feature_names, model_type="tree")
 
-            assert 'feature_importance' in result or 'error' in result
-            if 'feature_importance' in result:
-                assert isinstance(result['feature_importance'], dict)
+            assert "feature_importance" in result or "error" in result
+            if "feature_importance" in result:
+                assert isinstance(result["feature_importance"], dict)
                 logger.info(
                     f"SHAP analysis completado: {len(result['feature_importance'])} features"
                 )
@@ -89,9 +89,9 @@ class TestSHAPAnalyzer:
 
             result = analyzer.explain_prediction(model, X_full, instance_idx=0)
 
-            assert 'explanation' in result or 'error' in result
-            if 'explanation' in result:
-                assert 'top_contributors' in result
+            assert "explanation" in result or "error" in result
+            if "explanation" in result:
+                assert "top_contributors" in result
         except ImportError:
             pytest.skip("sklearn no disponible")
 
@@ -101,11 +101,11 @@ class TestFeatureSelector:
 
     def test_feature_selector_initialization(self):
         """Test inicialización."""
-        config = {'method': 'model_based', 'n_features': 10, 'importance_threshold': 0.01}
+        config = {"method": "model_based", "n_features": 10, "importance_threshold": 0.01}
 
         selector = FeatureSelector(config)
 
-        assert selector.method == 'model_based'
+        assert selector.method == "model_based"
         assert selector.n_features == 10
 
     def test_univariate_selection(self):
@@ -117,15 +117,15 @@ class TestFeatureSelector:
                 n_samples=200, n_features=20, n_informative=10, random_state=42
             )
 
-            config = {'method': 'univariate', 'n_features': 5}
+            config = {"method": "univariate", "n_features": 5}
             selector = FeatureSelector(config)
 
-            result = selector.select_features(X, y, task_type='classification')
+            result = selector.select_features(X, y, task_type="classification")
 
-            assert 'selected_features' in result
-            assert 'n_selected' in result
-            assert result['n_selected'] <= 5
-            assert len(result['selected_features']) == result['n_selected']
+            assert "selected_features" in result
+            assert "n_selected" in result
+            assert result["n_selected"] <= 5
+            assert len(result["selected_features"]) == result["n_selected"]
 
             logger.info(f"Univariate selection: {result['n_selected']} features seleccionadas")
         except ImportError:
@@ -140,14 +140,14 @@ class TestFeatureSelector:
                 n_samples=200, n_features=20, n_informative=10, random_state=42
             )
 
-            config = {'method': 'model_based', 'importance_threshold': 0.01}
+            config = {"method": "model_based", "importance_threshold": 0.01}
             selector = FeatureSelector(config)
 
-            result = selector.select_features(X, y, task_type='classification')
+            result = selector.select_features(X, y, task_type="classification")
 
-            assert 'selected_features' in result
-            assert 'feature_scores' in result
-            assert result['n_selected'] > 0
+            assert "selected_features" in result
+            assert "feature_scores" in result
+            assert result["n_selected"] > 0
 
             logger.info(f"Model-based selection: {result['n_selected']} features seleccionadas")
         except ImportError:
@@ -160,8 +160,8 @@ class TestFeatureImportanceAnalyzer:
     def test_feature_importance_analyzer_initialization(self):
         """Test inicialización."""
         config = {
-            'shap_config': {'sample_size': 50},
-            'feature_selector_config': {'method': 'univariate'},
+            "shap_config": {"sample_size": 50},
+            "feature_selector_config": {"method": "univariate"},
         }
 
         analyzer = FeatureImportanceAnalyzer(config)
@@ -183,7 +183,7 @@ class TestFeatureImportanceAnalyzer:
 
             analyzer = FeatureImportanceAnalyzer()
             X_test = np.random.randn(30, 10)
-            feature_names = [f'feature_{i}' for i in range(10)]
+            feature_names = [f"feature_{i}" for i in range(10)]
 
             result = analyzer.analyze(
                 model,
@@ -193,8 +193,8 @@ class TestFeatureImportanceAnalyzer:
                 include_selection=False,
             )
 
-            assert 'shap_analysis' in result
-            assert result['shap_analysis'] is not None or 'error' in result.get('shap_analysis', {})
+            assert "shap_analysis" in result
+            assert result["shap_analysis"] is not None or "error" in result.get("shap_analysis", {})
         except ImportError:
             pytest.skip("sklearn no disponible")
 
@@ -215,8 +215,8 @@ class TestFeatureImportanceAnalyzer:
                 model, X_train, y=y_train, include_shap=False, include_selection=True
             )
 
-            assert 'feature_selection' in result
-            if result['feature_selection'] and 'selected_features' in result['feature_selection']:
-                assert len(result['feature_selection']['selected_features']) > 0
+            assert "feature_selection" in result
+            if result["feature_selection"] and "selected_features" in result["feature_selection"]:
+                assert len(result["feature_selection"]["selected_features"]) > 0
         except ImportError:
             pytest.skip("sklearn no disponible")

@@ -155,6 +155,7 @@ await integration.slo_tracker.record_metric(metric)
 # In app/api/health.py
 from app.sre.error_budgets.integration import get_error_budget_integration
 
+
 @router.get("/health")
 async def health_check():
     integration = get_error_budget_integration()
@@ -173,6 +174,7 @@ async def health_check():
 # In app/api/deployment.py
 from app.sre.error_budgets.integration import get_error_budget_integration
 
+
 @router.post("/deployment/deploy")
 async def deploy(deployment_request: DeploymentRequest):
     integration = get_error_budget_integration()
@@ -185,8 +187,7 @@ async def deploy(deployment_request: DeploymentRequest):
 
     if not decision["allowed"]:
         raise HTTPException(
-            status_code=403,
-            detail=f"Deployment blocked: {decision['blocker']['block_reason']}"
+            status_code=403, detail=f"Deployment blocked: {decision['blocker']['block_reason']}"
         )
 
     # Proceed with deployment
@@ -198,6 +199,7 @@ async def deploy(deployment_request: DeploymentRequest):
 ```python
 # In circuit_breaker_manager_v2.py
 from app.sre.error_budgets.integration import get_error_budget_integration
+
 
 async def pause_all_trading(self, reason: str):
     # Record downtime when circuit breaker triggers
@@ -293,8 +295,7 @@ python examples/error_budget_example.py
 3. If emergency, request override:
    ```python
    decision = await integration.check_deployment_allowed(
-       requesting_user="sre-team",
-       reason="Emergency security fix"
+       requesting_user="sre-team", reason="Emergency security fix"
    )
    ```
 

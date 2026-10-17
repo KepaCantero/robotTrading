@@ -58,7 +58,9 @@ class OrderTranche(BaseModel):
     execution_window: TimeWindow | None = Field(
         None, description="Time window constraints for execution"
     )
-    target_price: Decimal | None = Field(None, description="Target execution price (optional)")
+    target_price: Decimal | None = Field(
+        default=None, description="Target execution price (optional)"
+    )
     status: str = Field(
         default="pending", description="pending | submitted | filled | partial | rejected"
     )
@@ -258,7 +260,9 @@ class ExecutionMonitoring(BaseModel):
     started_at: datetime = Field(
         default_factory=datetime.now, description="Execution start timestamp"
     )
-    completed_at: datetime | None = Field(None, description="Execution completion timestamp")
+    completed_at: datetime | None = Field(
+        default=None, description="Execution completion timestamp"
+    )
 
     @property
     def cost_overrun(self) -> Decimal:
@@ -325,7 +329,9 @@ class CommissionTier(BaseModel):
     min_volume: Decimal = Field(
         ..., ge=Decimal("0"), description="Minimum volume to qualify for this tier"
     )
-    max_volume: Decimal | None = Field(None, description="Maximum volume (None = unlimited)")
+    max_volume: Decimal | None = Field(
+        default=None, description="Maximum volume (None = unlimited)"
+    )
     commission_rate: Decimal = Field(
         ...,
         ge=Decimal("0"),

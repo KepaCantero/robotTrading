@@ -190,8 +190,7 @@ class ComprehensiveBacktestRunner:
             self.audit_hash = meta["audit_hash"]
 
             if self.audit_hash and isinstance(self.audit_hash, str):
-                hash_str: str = self.audit_hash
-                hash_display = hash_str[:16]
+                hash_display = str(self.audit_hash)[:16]
                 logger.info(f"Meta-analyzer integrated (Hash: {hash_display}...)")
 
                 if self.audit_trail:
@@ -346,7 +345,7 @@ class ComprehensiveBacktestRunner:
             logger.info("\n" + "=" * 80)
             logger.info("MULTI-STRATEGY BACKTEST")
             logger.info("=" * 80)
-            multi_results = self.run_multi_strategy_backtest()
+            multi_results = self.run_backtest()
             results.extend(multi_results)
 
         # 10. Regime Test
@@ -535,7 +534,7 @@ class ComprehensiveBacktestRunner:
             "ablation": self.run_ablation_backtest,
             "grid_search": self.run_grid_search_backtest,
             "out_of_sample": self.run_out_of_sample_backtest,
-            "multi_strategy": self.run_multi_strategy_backtest,
+            "multi_strategy": self.run_backtest,
             "regime_test": self.run_regime_test_backtest,
         }
 
@@ -720,8 +719,9 @@ class ComprehensiveBacktestRunner:
             strategy_config["adaptive_learning"] = adaptive_learning_config
             strategy = ModularMomentumStrategy(strategy_config)
 
-            # Initialize the learning engine (lazy initialization)
-            strategy._initialize_learning_engine()
+            # Initialize the learning engine (lazy initialization, si existe)
+            if hasattr(strategy, "_initialize_learning_engine"):
+                strategy._initialize_learning_engine()
 
             # Usar train_with_retry (Fase 3)
             training_successful = train_with_retry(
@@ -1893,7 +1893,7 @@ class ComprehensiveBacktestRunner:
 
                     # Train on training set (if learning engines enabled)
                     train_success = True
-                    if hasattr(strategy, "learning_engine") and strategy.learning_engine:
+                    if hasattr(strategy, "learning_engine") and strategy.learning_engine:  # pylint: disable=no-member
                         train_success = train_with_retry(
                             strategy=strategy,
                             engine_type="supervised",
@@ -2176,6 +2176,7 @@ class ComprehensiveBacktestRunner:
         Returns:
             Dictionary with evaluation results or None if failed
         """
+        del val_size  # aceptado por compatibilidad; sin uso aquí
         try:
             # This is a simplified version for parallel execution
             # In production, you'd want to refactor to avoid recreating
@@ -2616,7 +2617,7 @@ class ComprehensiveBacktestRunner:
 
         # Training si hay learning engines
         learning_engine_used = None
-        if hasattr(strategy, "learning_engine") and strategy.learning_engine:
+        if hasattr(strategy, "learning_engine") and strategy.learning_engine:  # pylint: disable=no-member
             try:
                 # Usar train_with_retry para robustez
                 training_success = train_with_retry(
@@ -2922,7 +2923,7 @@ class ComprehensiveBacktestRunner:
 
         return [cast("dict[str, str | int | float | bool | list | dict]", result_dict)]
 
-    def run_multi_strategy_backtest(
+    def run_backtest(
         self,
     ) -> list[dict[str, str | int | float | bool | list | dict]]:
         """
@@ -3011,8 +3012,8 @@ class ComprehensiveBacktestRunner:
                 f"Running multi-strategy backtest from {start_date.date()} to {end_date.date()}"
             )
 
-            consolidated_results = multi_strategy_backtester.run_multi_strategy_backtest(
-                quotes=self.quotes, start_date=start_date, end_date=end_date
+            consolidated_results = multi_strategy_backtester.run_backtest(
+                market_data=self.quotes, start_date=start_date, end_date=end_date
             )
 
             # Paso 8: Convertir resultados al formato esperado
@@ -4119,7 +4120,7 @@ class ComprehensiveBacktestRunner:
             # Guardar pesos si hay learning engine
             if self.learning_storage and result_dict.get("learning_engine"):
                 engine_type = result_dict["learning_engine"]
-                if hasattr(strategy, "learning_engine") and strategy.learning_engine:
+                if hasattr(strategy, "learning_engine") and strategy.learning_engine:  # pylint: disable=no-member
                     try:
                         self.learning_storage.save_weights(
                             engine_name=engine_type,

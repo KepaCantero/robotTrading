@@ -265,7 +265,7 @@ class SpainTaxEngine:
     def calculate_capital_gains_tax(self, gain: Decimal) -> Decimal:
         """
         Spain: 19-23% progressive rate (no LT/ST distinction)
-        
+
         - 19%: < €33,007.99 gain
         - 21%: €33,008 - €53,407.99
         - 23%: > €53,408
@@ -451,11 +451,11 @@ Paper trading → $1k → $5k → $10k → $25k → Production
 
 ---
 
-**Document Version**: 1.0  
-**Date**: 2025-01-25  
-**Status**: READY FOR IMPLEMENTATION  
-**Total Timeline**: 28 weeks (7 months)  
-**Total Effort**: 143 developer-days  
+**Document Version**: 1.0
+**Date**: 2025-01-25
+**Status**: READY FOR IMPLEMENTATION
+**Total Timeline**: 28 weeks (7 months)
+**Total Effort**: 143 developer-days
 **Total Cost**: $114,400 development + $2-12k/year infrastructure
 
 ---

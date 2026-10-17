@@ -11,13 +11,14 @@ import asyncio
 import logging
 import uuid
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import date, datetime
 from decimal import Decimal
 from typing import TYPE_CHECKING
 
 from fastapi import Depends
 
 from .broker_connector import (
+    BrokerAccount,
     BrokerConnector,
     BrokerOrder,
     OrderSide,
@@ -92,6 +93,12 @@ class OrderManager:
         self.order_history: list[BrokerOrder] = []
         self.order_errors: dict[str, OrderError] = {}
         self.executions: list[OrderExecution] = []
+        # Serialize read-account -> validate -> send in place_order so two
+        # concurrent calls cannot validate against the same buying power
+        self._execution_lock = asyncio.Lock()
+        # Daily-loss breaker feeding: baseline day + last reported equity
+        self.pnl_baseline_date: date | None = None
+        self._last_reported_equity = Decimal("0")
         logger.info("✅ OrderManager initialized with risk validation")
 
     async def place_order(
@@ -103,6 +110,7 @@ class OrderManager:
         price: Decimal | None = None,
         stop_price: Decimal | None = None,
         timeout_seconds: int = 60,
+        order_ref: str | None = None,
     ) -> BrokerOrder | None:
         """
         Place order with broker.
@@ -115,36 +123,70 @@ class OrderManager:
             price: Limit price (for limit orders)
             stop_price: Stop price (for stop orders)
             timeout_seconds: Timeout for order placement
+            order_ref: Optional caller reference (e.g. signal/alert id). When
+                provided, the client_order_id is derived deterministically from
+                it so retries of the same intent dedup at the broker instead of
+                creating duplicate orders.
 
         Returns:
             BrokerOrder if successful, None if risk validation fails
         """
-        # Generate correlation ID for audit trail (SEC-005)
-        correlation_id = str(uuid.uuid4())
+        # SEC-005: idempotency key, generated once per call (never inside a
+        # retry loop). With order_ref it is deterministic across retries;
+        # determinism is the caller's responsibility (pass order_ref).
+        if order_ref:
+            client_order_id = f"{order_ref}:{symbol}:{side.value}:{quantity}"
+        else:
+            client_order_id = f"trade_{uuid.uuid4().hex}"
 
-        # Determine order price for risk validation
-        order_price = price
-        if order_price is None and order_type == OrderType.MARKET:
-            # For market orders, get current price from broker
+        # Serialize read-account -> validate -> send: two concurrent requests
+        # must not both validate against the same buying power.
+        async with self._execution_lock:
+            # Generate correlation ID for audit trail (SEC-005)
+            correlation_id = str(uuid.uuid4())
+
             account = await self.broker.get_account_info()
-            if account:
+
+            # Feed the daily-loss circuit breaker with real account equity
+            self._feed_daily_loss_breaker(account)
+
+            # Determine order price for risk validation
+            order_price = price
+            if order_price is None and order_type == OrderType.MARKET and account:
                 # Use conservative estimate if no current price available
                 order_price = Decimal("100")  # Conservative default
 
-        # TRD-002: Risk validation BEFORE order execution
-        if order_price is not None:
-            try:
-                risk_result: RiskCheckResult = await self.risk_gates.validate_order(
-                    symbol=symbol,
-                    side=side,
-                    quantity=quantity,
-                    price=order_price,
-                )
+            # TRD-002: Risk validation BEFORE order execution
+            if order_price is not None:
+                try:
+                    risk_result: RiskCheckResult = await self.risk_gates.validate_order(
+                        symbol=symbol,
+                        side=side,
+                        quantity=quantity,
+                        price=order_price,
+                    )
 
-                if not risk_result.passed:
-                    # Log rejection with structured logging and correlation ID
-                    logger.warning(
-                        "Order rejected by risk gates",
+                    if not risk_result.passed:
+                        # Log rejection with structured logging and correlation ID
+                        logger.warning(
+                            "Order rejected by risk gates",
+                            extra={
+                                "correlation_id": correlation_id,
+                                "symbol": symbol,
+                                "side": side.value,
+                                "quantity": str(quantity),
+                                "price": str(order_price),
+                                "order_type": order_type.value,
+                                "risk_level": risk_result.risk_level.value,
+                                "violations": risk_result.violations,
+                                "warnings": risk_result.warnings,
+                            },
+                        )
+                        return None
+
+                    # Log risk approval with structured logging (SEC-005)
+                    logger.info(
+                        "Order approved by risk gates",
                         extra={
                             "correlation_id": correlation_id,
                             "symbol": symbol,
@@ -153,88 +195,97 @@ class OrderManager:
                             "price": str(order_price),
                             "order_type": order_type.value,
                             "risk_level": risk_result.risk_level.value,
-                            "violations": risk_result.violations,
-                            "warnings": risk_result.warnings,
+                        },
+                    )
+                except Exception as e:
+                    logger.error(
+                        "Risk validation failed - order rejected",
+                        extra={
+                            "correlation_id": correlation_id,
+                            "symbol": symbol,
+                            "side": side.value,
+                            "error": str(e),
                         },
                     )
                     return None
 
-                # Log risk approval with structured logging (SEC-005)
-                logger.info(
-                    "Order approved by risk gates",
-                    extra={
-                        "correlation_id": correlation_id,
-                        "symbol": symbol,
-                        "side": side.value,
-                        "quantity": str(quantity),
-                        "price": str(order_price),
-                        "order_type": order_type.value,
-                        "risk_level": risk_result.risk_level.value,
-                    },
+            try:
+                order = await self.broker.place_order(
+                    symbol=symbol,
+                    side=side,
+                    quantity=quantity,
+                    order_type=order_type,
+                    price=price,
+                    stop_price=stop_price,
+                    client_order_id=client_order_id,
                 )
-            except Exception as e:
+
+                if order:
+                    self.pending_orders[order.order_id] = order
+                    self.order_history.append(order)
+                    # SEC-005: Structured logging with correlation ID
+                    logger.info(
+                        "Order placed successfully",
+                        extra={
+                            "correlation_id": correlation_id,
+                            "order_id": order.order_id,
+                            "client_order_id": client_order_id,
+                            "symbol": symbol,
+                            "side": side.value,
+                            "quantity": str(quantity),
+                            "order_type": order_type.value,
+                            "price": str(price) if price else None,
+                        },
+                    )
+                    return order
+                else:
+                    logger.error(
+                        "Order placement failed",
+                        extra={
+                            "correlation_id": correlation_id,
+                            "symbol": symbol,
+                            "side": side.value,
+                            "quantity": str(quantity),
+                        },
+                    )
+                    return None
+
+            except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
                 logger.error(
-                    "Risk validation failed - order rejected",
+                    "Error placing order",
                     extra={
                         "correlation_id": correlation_id,
                         "symbol": symbol,
                         "side": side.value,
                         "error": str(e),
+                        "error_type": type(e).__name__,
                     },
                 )
                 return None
 
-        try:
-            order = await self.broker.place_order(
-                symbol=symbol,
-                side=side,
-                quantity=quantity,
-                order_type=order_type,
-                price=price,
-                stop_price=stop_price,
-            )
+    def _feed_daily_loss_breaker(self, account: BrokerAccount | None) -> None:
+        """Feed the risk gates daily-loss circuit breaker from account equity.
 
-            if order:
-                self.pending_orders[order.order_id] = order
-                self.order_history.append(order)
-                # SEC-005: Structured logging with correlation ID
-                logger.info(
-                    "Order placed successfully",
-                    extra={
-                        "correlation_id": correlation_id,
-                        "order_id": order.order_id,
-                        "symbol": symbol,
-                        "side": side.value,
-                        "quantity": str(quantity),
-                        "order_type": order_type.value,
-                        "price": str(price) if price else None,
-                    },
-                )
-                return order
-            else:
-                logger.error(
-                    "Order placement failed",
-                    extra={
-                        "correlation_id": correlation_id,
-                        "symbol": symbol,
-                        "side": side.value,
-                        "quantity": str(quantity),
-                    },
-                )
-                return None
+        Sets the start-of-day baseline once per calendar day (resetting when
+        the day changes), then reports the equity change since the last report
+        on every call so cumulative daily_pnl tracks equity - baseline.
+        No-op when equity is unavailable: never break on missing data, and
+        never trade on a stale baseline.
 
-        except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
-            logger.error(
-                "Error placing order",
-                extra={
-                    "correlation_id": correlation_id,
-                    "symbol": symbol,
-                    "side": side.value,
-                    "error": str(e),
-                    "error_type": type(e).__name__,
-                },
-            )
-            return None
+        Args:
+            account: Latest broker account info (may be None)
+        """
+        equity = account.equity if account else None
+        if equity is None or equity <= 0:
+            return
+
+        today = datetime.now().date()
+        if self.pnl_baseline_date != today or self.risk_gates.start_of_day_capital <= 0:
+            self.risk_gates.set_start_of_day_capital(equity)
+            self.pnl_baseline_date = today
+        else:
+            self.risk_gates.update_daily_pnl(equity - self._last_reported_equity)
+        self._last_reported_equity = equity
 
     async def cancel_order(self, order_id: str) -> bool:
         """

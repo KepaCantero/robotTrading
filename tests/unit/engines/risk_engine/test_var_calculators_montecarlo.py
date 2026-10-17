@@ -24,9 +24,9 @@ def sample_returns():
 def calculator_config():
     """VaR calculator configuration."""
     return {
-        'confidence_level': 0.95,
-        'time_horizon': 1,
-        'n_simulations': 10000,
+        "confidence_level": 0.95,
+        "time_horizon": 1,
+        "n_simulations": 10000,
     }
 
 
@@ -86,7 +86,7 @@ class TestMonteCarloVaRCalculatorInitialization:
 
     def test_custom_n_simulations(self):
         """Test with custom number of simulations."""
-        config = {'n_simulations': 50000}
+        config = {"n_simulations": 50000}
         calc = MonteCarloVaRCalculator(config)
 
         assert calc.n_simulations == 50000
@@ -100,29 +100,29 @@ class TestMonteCarloVaRSuccessCases:
         """Test successful VaR calculation."""
         result = calculator.calculate_var(sample_returns)
 
-        assert 'error' not in result
-        assert 'var' in result
-        assert 'cvar' in result
-        assert result['method'] == 'monte_carlo'
+        assert "error" not in result
+        assert "var" in result
+        assert "cvar" in result
+        assert result["method"] == "monte_carlo"
 
     def test_n_simulations_in_result(self, calculator, sample_returns):
         """Test that n_simulations is included in result."""
         result = calculator.calculate_var(sample_returns)
 
-        assert result['n_simulations'] == calculator.n_simulations
+        assert result["n_simulations"] == calculator.n_simulations
 
     def test_parallel_processing_flag(self, calculator, sample_returns):
         """Test parallel processing flag."""
         result = calculator.calculate_var(sample_returns)
 
-        assert 'parallel_processing' in result
+        assert "parallel_processing" in result
 
     def test_with_portfolio_value(self, calculator, sample_returns):
         """Test with portfolio value."""
         result = calculator.calculate_var(sample_returns, portfolio_value=100000.0)
 
-        assert result['var_amount'] is not None
-        assert result['cvar_amount'] is not None
+        assert result["var_amount"] is not None
+        assert result["cvar_amount"] is not None
 
 
 @pytest.mark.unit
@@ -134,11 +134,11 @@ class TestMonteCarloVaRConsistency:
         np.random.seed(42)
         returns1 = np.random.normal(0, 0.02, 500)
 
-        calc = MonteCarloVaRCalculator({'n_simulations': 10000})
+        calc = MonteCarloVaRCalculator({"n_simulations": 10000})
         result1 = calc.calculate_var(returns1)
 
         # Should calculate successfully
-        assert 'var' in result1
+        assert "var" in result1
 
 
 @pytest.mark.unit
@@ -149,7 +149,7 @@ class TestMonteCarloVaRErrorHandling:
         """Test with empty returns."""
         result = calculator.calculate_var(np.array([]))
 
-        assert 'error' in result
+        assert "error" in result
 
     def test_small_sample_size(self, calculator):
         """Test with small sample."""
@@ -157,4 +157,4 @@ class TestMonteCarloVaRErrorHandling:
         result = calculator.calculate_var(returns)
 
         # Should still work
-        assert 'var' in result
+        assert "var" in result

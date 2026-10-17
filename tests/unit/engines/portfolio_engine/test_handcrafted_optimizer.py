@@ -286,7 +286,7 @@ class TestHandcraftedWeightsOptimizer:
     def test_equal_weight_fallback(self, optimizer):
         """Test equal weight fallback on error."""
         with patch.object(
-            optimizer, '_calculate_volatilities', side_effect=Exception("Test error")
+            optimizer, "_calculate_volatilities", side_effect=Exception("Test error")
         ):
             expected_returns = np.array([0.08, 0.10, 0.06])
             cov_matrix = np.eye(3) * 0.04

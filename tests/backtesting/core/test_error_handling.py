@@ -105,7 +105,7 @@ class TestTrainingRetry:
         strategy.learning_engine = Mock()
         strategy.learning_engine.train.return_value = None
 
-        result = train_with_retry(strategy, 'supervised')
+        result = train_with_retry(strategy, "supervised")
 
         assert result is True
         strategy.learning_engine.train.assert_called_once()
@@ -115,7 +115,7 @@ class TestTrainingRetry:
         strategy = Mock()
         strategy.learning_engine = None
 
-        result = train_with_retry(strategy, 'supervised')
+        result = train_with_retry(strategy, "supervised")
 
         assert result is False
 
@@ -133,7 +133,7 @@ class TestTrainingRetry:
             None,
         ]
 
-        result = train_with_retry(strategy, 'supervised')
+        result = train_with_retry(strategy, "supervised")
 
         assert result is True
         assert strategy.learning_engine.train.call_count == 2
@@ -150,7 +150,7 @@ class TestTrainingRetry:
         strategy.learning_engine.train.side_effect = ValueError("mutex lock failed")
 
         with pytest.raises(MutexError):
-            train_with_retry(strategy, 'supervised')
+            train_with_retry(strategy, "supervised")
 
     def test_train_with_retry_non_mutex_error(self) -> None:
         """Test that non-mutex errors are not retried."""
@@ -160,7 +160,7 @@ class TestTrainingRetry:
         strategy.learning_engine.train.side_effect = ValueError("invalid data")
 
         with pytest.raises(TrainingError):
-            train_with_retry(strategy, 'supervised')
+            train_with_retry(strategy, "supervised")
 
         # Should only be called once (no retry for non-mutex errors)
         assert strategy.learning_engine.train.call_count == 1
@@ -172,56 +172,56 @@ class TestSubprocessTraining:
     def test_train_in_subprocess_success(self) -> None:
         """Test successful subprocess training."""
         strategy = Mock()
-        strategy.__module__ = 'app.strategies.test'
-        strategy.__class__.__name__ = 'TestStrategy'
+        strategy.__module__ = "app.strategies.test"
+        strategy.__class__.__name__ = "TestStrategy"
 
-        with patch('multiprocessing.get_context') as mock_get_context:
+        with patch("multiprocessing.get_context") as mock_get_context:
             mock_ctx = Mock()
             mock_get_context.return_value = mock_ctx
 
             # Mock queue with success result
             mock_queue = Mock()
             mock_queue.empty.return_value = False
-            mock_queue.get.return_value = (True, 'Training completed')
+            mock_queue.get.return_value = (True, "Training completed")
 
             mock_ctx.Queue.return_value = mock_queue
             mock_ctx.Process.return_value.join.return_value = None
             mock_ctx.Process.return_value.is_alive.return_value = False
 
-            result = _train_in_subprocess(strategy, 'deep', timeout=60)
+            result = _train_in_subprocess(strategy, "deep", timeout=60)
 
             assert result is True
 
     def test_train_in_subprocess_failure(self) -> None:
         """Test subprocess training failure."""
         strategy = Mock()
-        strategy.__module__ = 'app.strategies.test'
-        strategy.__class__.__name__ = 'TestStrategy'
+        strategy.__module__ = "app.strategies.test"
+        strategy.__class__.__name__ = "TestStrategy"
 
-        with patch('multiprocessing.get_context') as mock_get_context:
+        with patch("multiprocessing.get_context") as mock_get_context:
             mock_ctx = Mock()
             mock_get_context.return_value = mock_ctx
 
             # Mock queue with error result
             mock_queue = Mock()
             mock_queue.empty.return_value = False
-            mock_queue.get.return_value = (False, 'Training failed')
+            mock_queue.get.return_value = (False, "Training failed")
 
             mock_ctx.Queue.return_value = mock_queue
             mock_ctx.Process.return_value.join.return_value = None
             mock_ctx.Process.return_value.is_alive.return_value = False
 
-            result = _train_in_subprocess(strategy, 'deep', timeout=60)
+            result = _train_in_subprocess(strategy, "deep", timeout=60)
 
             assert result is False
 
     def test_train_in_subprocess_timeout(self) -> None:
         """Test subprocess training timeout."""
         strategy = Mock()
-        strategy.__module__ = 'app.strategies.test'
-        strategy.__class__.__name__ = 'TestStrategy'
+        strategy.__module__ = "app.strategies.test"
+        strategy.__class__.__name__ = "TestStrategy"
 
-        with patch('multiprocessing.get_context') as mock_get_context:
+        with patch("multiprocessing.get_context") as mock_get_context:
             mock_ctx = Mock()
             mock_get_context.return_value = mock_ctx
 
@@ -238,15 +238,15 @@ class TestSubprocessTraining:
             mock_ctx.Process.return_value = mock_process
 
             with pytest.raises(SubprocessTimeoutError):
-                _train_in_subprocess(strategy, 'deep', timeout=1)
+                _train_in_subprocess(strategy, "deep", timeout=1)
 
     def test_train_in_subprocess_no_result(self) -> None:
         """Test subprocess training with no result in queue."""
         strategy = Mock()
-        strategy.__module__ = 'app.strategies.test'
-        strategy.__class__.__name__ = 'TestStrategy'
+        strategy.__module__ = "app.strategies.test"
+        strategy.__class__.__name__ = "TestStrategy"
 
-        with patch('multiprocessing.get_context') as mock_get_context:
+        with patch("multiprocessing.get_context") as mock_get_context:
             mock_ctx = Mock()
             mock_get_context.return_value = mock_ctx
 
@@ -258,7 +258,7 @@ class TestSubprocessTraining:
             mock_ctx.Process.return_value.join.return_value = None
             mock_ctx.Process.return_value.is_alive.return_value = False
 
-            result = _train_in_subprocess(strategy, 'deep', timeout=60)
+            result = _train_in_subprocess(strategy, "deep", timeout=60)
 
             assert result is False
 
@@ -309,7 +309,7 @@ class TestSafeExecute:
         def func() -> None:
             raise OperationalError("statement", {}, "Test error")
 
-        with patch('app.backtesting.core.error_handling.logger') as mock_logger:
+        with patch("app.backtesting.core.error_handling.logger") as mock_logger:
             safe_execute(func, log_errors=True)
 
             mock_logger.error.assert_called_once()
@@ -320,7 +320,7 @@ class TestSafeExecute:
         def func() -> None:
             raise OperationalError("statement", {}, "Test error")
 
-        with patch('app.backtesting.core.error_handling.logger') as mock_logger:
+        with patch("app.backtesting.core.error_handling.logger") as mock_logger:
             safe_execute(func, log_errors=False)
 
             mock_logger.error.assert_not_called()
@@ -376,7 +376,7 @@ class TestLogAndSuppress:
         def calculate(x: int) -> int:
             raise ValueError("Invalid input")
 
-        with patch('app.backtesting.core.error_handling.logger') as mock_logger:
+        with patch("app.backtesting.core.error_handling.logger") as mock_logger:
             calculate(-1)
 
             mock_logger.warning.assert_called_once()

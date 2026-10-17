@@ -33,6 +33,7 @@ except ImportError:
     nx = None
 
 try:
+    import matplotlib
     import matplotlib.pyplot as plt
     import seaborn as sns
     from matplotlib.dates import DateFormatter
@@ -159,7 +160,7 @@ class AdvancedVisualizer:
                 width=[w * 3 for w in weights],
                 alpha=0.6,
                 edge_color=weights,
-                edge_cmap=plt.cm.coolwarm,
+                edge_cmap=matplotlib.colormaps["coolwarm"],
                 ax=ax,
             )
 
@@ -579,7 +580,7 @@ class AdvancedVisualizer:
             # Regime transition heatmap
             ax = axes[2]
             regime_counts = regime_labels.value_counts().sort_index()
-            colors = plt.cm.viridis(np.linspace(0, 1, len(regime_counts)))
+            colors = matplotlib.colormaps["viridis"](np.linspace(0, 1, len(regime_counts)))
             ax.bar(
                 [regime_names.get(r, f"Regime {r}") for r in regime_counts.index],
                 regime_counts.values,

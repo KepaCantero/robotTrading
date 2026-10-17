@@ -20,20 +20,15 @@ from pathlib import Path
 
 # Setup logging
 logging.basicConfig(
-    level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
 logger = logging.getLogger(__name__)
 
 
 async def main():
     """Run error budget demonstration."""
-    from app.sre.error_budgets import (
-        SLIMetric,
-        SLIMetricType,
-    )
-    from app.sre.error_budgets.integration import (
-        get_error_budget_integration,
-    )
+    from app.sre.error_budgets import SLIMetric, SLIMetricType
+    from app.sre.error_budgets.integration import get_error_budget_integration
 
     logger.info("=" * 80)
     logger.info("Error Budget System Demo - SRE Rule 20 Compliance")
@@ -121,7 +116,7 @@ async def main():
         },
     )
 
-    logger.info(f"   ✓ Downtime recorded")
+    logger.info("   ✓ Downtime recorded")
     logger.info(f"   Budget Remaining: {result['budget_state']['remaining_percentage']}")
     logger.info(f"   Alerts Triggered: {result['alerts_triggered']}")
 
@@ -177,11 +172,11 @@ async def main():
     logger.info(f"   Deployment Allowed: {decision['allowed']}")
 
     if decision["blocker"]:
-        logger.info(f"   ❌ DEPLOYMENT BLOCKED")
+        logger.info("   ❌ DEPLOYMENT BLOCKED")
         logger.info(f"   Reason: {decision['blocker']['block_reason']}")
         logger.info(f"   Gate: {decision['blocker']['blocking_gate']}")
     else:
-        logger.info(f"   ✓ Deployment allowed")
+        logger.info("   ✓ Deployment allowed")
 
     for gate_decision in decision["decisions"]:
         status_symbol = (
@@ -225,7 +220,7 @@ async def main():
     logger.info(f"   Deployment Allowed: {decision['allowed']}")
 
     if decision["blocker"]:
-        logger.info(f"   ❌ DEPLOYMENT BLOCKED - Auto-halt activated")
+        logger.info("   ❌ DEPLOYMENT BLOCKED - Auto-halt activated")
         logger.info(f"   Reason: {decision['blocker']['block_reason']}")
         logger.info(f"   Budget Remaining: {decision['blocker']['budget_remaining_pct']}")
 
@@ -262,7 +257,7 @@ async def main():
 
     logger.info(f"   Total Alerts: {alert_summary['total_alerts']}")
     logger.info(f"   Active Alerts: {alert_summary['active_alerts']}")
-    logger.info(f"   By Severity:")
+    logger.info("   By Severity:")
     logger.info(f"   - Info: {alert_summary['by_severity']['info']}")
     logger.info(f"   - Warning: {alert_summary['by_severity']['warning']}")
     logger.info(f"   - Critical: {alert_summary['by_severity']['critical']}")

@@ -216,7 +216,7 @@ services:
     image: docker.elastic.co/logstash/logstash:8.11.0
     container_name: algotrading-logstash-prod
     volumes:
-      - ./deploy/monitoring/logstash/logstash.conf:/usr/share/logstash/pipeline/logstash.conf:ro
+      - ./logging/logstash/logstash.conf:/usr/share/logstash/pipeline/logstash.conf:ro
       - app_logs:/app/logs:ro
     networks:
       - algotrading-network

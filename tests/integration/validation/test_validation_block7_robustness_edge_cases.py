@@ -137,7 +137,7 @@ class TestNaNPriceHandling(unittest.TestCase):
                 open=Decimal("200"),
                 high=Decimal("202"),
                 low=Decimal("198"),
-                close=Decimal(str(float('nan'))),  # Intentar NaN
+                close=Decimal(str(float("nan"))),  # Intentar NaN
                 last=Decimal("200"),
                 bid=Decimal("199.8"),
                 ask=Decimal("200.2"),

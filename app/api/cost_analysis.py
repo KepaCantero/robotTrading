@@ -65,6 +65,10 @@ async def analyze_trade_costs(
             exit_time=datetime.fromisoformat(trade_data.get("exit_time", trade_data["entry_time"])),
             pnl=Decimal(str(trade_data.get("pnl", 0))),
             status=TradeStatus(trade_data.get("status", "closed")),
+            pnl_percentage=Decimal(str(trade_data.get("pnl_percentage", 0))),
+            asset_class=trade_data.get("asset_class", "equity"),
+            value=Decimal(str(trade_data.get("value", 0))),
+            reason=trade_data.get("reason", "api_request"),
             commission=Decimal(str(trade_data.get("commission", 0))),
             slippage=Decimal(str(trade_data.get("slippage", 0))),
         )
@@ -76,11 +80,12 @@ async def analyze_trade_costs(
             timeout=10.0,  # API-010: Add timeout configuration
         )
 
-        audit_logger.log_action(
-            action="trade_costs_analyzed",
-            method=http_request.method,
-            path=http_request.url.path,
-            details={
+        audit_logger.info(
+            "audit_action",
+            extra={
+                "action": "trade_costs_analyzed",
+                "http_method": http_request.method,
+                "path": http_request.url.path,
                 "trade_id": breakdown.trade_id,
                 "symbol": breakdown.symbol,
                 "total_cost": float(breakdown.total_cost),
@@ -118,12 +123,15 @@ async def analyze_trade_costs(
                 "stack_trace": traceback.format_exc(),
             },
         )
-        audit_logger.log_error(
-            method=http_request.method,
-            path=http_request.url.path,
-            error_type="TimeoutError",
-            error_message=str(e),
-            stack_trace=traceback.format_exc(),
+        audit_logger.error(
+            "audit_error",
+            extra={
+                "http_method": http_request.method,
+                "path": http_request.url.path,
+                "error_type": "TimeoutError",
+                "error_message": str(e),
+                "stack_trace": traceback.format_exc(),
+            },
         )
         raise HTTPException(status_code=504, detail=f"Timeout analyzing trade costs: {e!s}") from e
     except (ValueError, TypeError, KeyError, AttributeError) as e:
@@ -137,12 +145,15 @@ async def analyze_trade_costs(
                 "stack_trace": traceback.format_exc(),
             },
         )
-        audit_logger.log_error(
-            method=http_request.method,
-            path=http_request.url.path,
-            error_type=type(e).__name__,
-            error_message=str(e),
-            stack_trace=traceback.format_exc(),
+        audit_logger.error(
+            "audit_error",
+            extra={
+                "http_method": http_request.method,
+                "path": http_request.url.path,
+                "error_type": type(e).__name__,
+                "error_message": str(e),
+                "stack_trace": traceback.format_exc(),
+            },
         )
         raise HTTPException(status_code=400, detail=f"Error analyzing trade costs: {e!s}") from e
 
@@ -174,6 +185,10 @@ async def analyze_strategy_costs(
                 ),
                 pnl=Decimal(str(trade_data.get("pnl", 0))),
                 status=TradeStatus(trade_data.get("status", "closed")),
+                pnl_percentage=Decimal(str(trade_data.get("pnl_percentage", 0))),
+                asset_class=trade_data.get("asset_class", "equity"),
+                value=Decimal(str(trade_data.get("value", 0))),
+                reason=trade_data.get("reason", "api_request"),
                 commission=Decimal(str(trade_data.get("commission", 0))),
                 slippage=Decimal(str(trade_data.get("slippage", 0))),
             )

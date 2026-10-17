@@ -40,7 +40,7 @@ from app.services.strategy_stock_allocator import StrategyStockAllocator
 
 # Configure logging
 logging.basicConfig(
-    level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
 logger = logging.getLogger(__name__)
 
@@ -196,7 +196,7 @@ class TestProfileDrivenTrading:
             logger.info("   Top 5 Allocations:")
             for i, (symbol, metrics) in enumerate(list(allocation_result.allocations.items())[:5]):
                 logger.info(
-                    f"      {i+1}. {symbol}: €{metrics.capital:,.2f} ({metrics.weight:.2%}) - {metrics.strategy}"
+                    f"      {i + 1}. {symbol}: €{metrics.capital:,.2f} ({metrics.weight:.2%}) - {metrics.strategy}"
                 )
 
         logger.info("")
@@ -250,11 +250,11 @@ class TestProfileDrivenTrading:
 
                 filtered_data[symbol] = pd.DataFrame(
                     {
-                        'open': price * (1 + np.random.uniform(-0.01, 0.01, 126)),
-                        'high': price * (1 + np.abs(np.random.uniform(0, 0.02, 126))),
-                        'low': price * (1 - np.abs(np.random.uniform(0, 0.02, 126))),
-                        'close': price,
-                        'volume': np.random.randint(1000000, 10000000, 126),
+                        "open": price * (1 + np.random.uniform(-0.01, 0.01, 126)),
+                        "high": price * (1 + np.abs(np.random.uniform(0, 0.02, 126))),
+                        "low": price * (1 - np.abs(np.random.uniform(0, 0.02, 126))),
+                        "close": price,
+                        "volume": np.random.randint(1000000, 10000000, 126),
                     }
                 )
                 filtered_data[symbol].index = dates
@@ -295,7 +295,7 @@ class TestProfileDrivenTrading:
             )[:5]
             for i, (symbol, metrics) in enumerate(sorted_allocations):
                 logger.info(
-                    f"      {i+1}. {symbol}: €{metrics.capital:,.2f} ({metrics.weight:.2%})"
+                    f"      {i + 1}. {symbol}: €{metrics.capital:,.2f} ({metrics.weight:.2%})"
                 )
 
         logger.info("")
@@ -426,11 +426,11 @@ class TestProfileDrivenTrading:
 
                 filtered_data[symbol] = pd.DataFrame(
                     {
-                        'open': price * (1 + np.random.uniform(-0.01, 0.01, 126)),
-                        'high': price * (1 + np.abs(np.random.uniform(0, 0.02, 126))),
-                        'low': price * (1 - np.abs(np.random.uniform(0, 0.02, 126))),
-                        'close': price,
-                        'volume': np.random.randint(1000000, 10000000, 126),
+                        "open": price * (1 + np.random.uniform(-0.01, 0.01, 126)),
+                        "high": price * (1 + np.abs(np.random.uniform(0, 0.02, 126))),
+                        "low": price * (1 - np.abs(np.random.uniform(0, 0.02, 126))),
+                        "close": price,
+                        "volume": np.random.randint(1000000, 10000000, 126),
                     }
                 )
                 filtered_data[symbol].index = dates
@@ -467,7 +467,7 @@ class TestProfileDrivenTrading:
 
         logger.info("   Allocation by Strategy:")
         for strategy, capital in strategy_totals.items():
-            logger.info(f"      {strategy}: €{capital:,.2f} ({capital/total_capital:.1%})")
+            logger.info(f"      {strategy}: €{capital:,.2f} ({capital / total_capital:.1%})")
 
         # Show top 5 allocations
         logger.info("   Top 5 Holdings:")
@@ -476,7 +476,7 @@ class TestProfileDrivenTrading:
         )[:5]
         for i, (symbol, metrics) in enumerate(sorted_allocations):
             logger.info(
-                f"      {i+1}. {symbol}: €{metrics.capital:,.2f} ({metrics.weight:.2%}) - {metrics.strategy}"
+                f"      {i + 1}. {symbol}: €{metrics.capital:,.2f} ({metrics.weight:.2%}) - {metrics.strategy}"
             )
 
         logger.info("   ✅ Capital allocation completed")
@@ -519,7 +519,7 @@ class TestProfileDrivenTrading:
 def main():
     """Run the tests manually."""
     logging.basicConfig(
-        level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+        level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
     )
 
     test = TestProfileDrivenTrading()

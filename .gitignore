@@ -41,6 +41,7 @@ logs/
 build/
 dist/
 *.egg-info/
+site/
 
 # OS
 .DS_Store

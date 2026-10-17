@@ -214,7 +214,7 @@ class SignalExecutionEngine:
             return {
                 "success": False,
                 "error": str(e),
-                "order_status": OrderStatus.FAILED,
+                "order_status": OrderStatus.REJECTED,
             }
 
     async def _simulate_order_execution(self, order: Order, portfolio: Portfolio) -> dict[str, Any]:

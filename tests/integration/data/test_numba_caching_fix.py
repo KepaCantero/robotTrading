@@ -101,8 +101,8 @@ class TestNumbaCachingFix:
         from app.services import hurst_exponent_analyzer
 
         # Check that the module has the expected JIT functions
-        assert hasattr(hurst_exponent_analyzer, 'calculate_cumulative_deviation_numba')
-        assert hasattr(hurst_exponent_analyzer, 'calculate_rs_for_window_numba')
-        assert hasattr(hurst_exponent_analyzer, 'calculate_hurst_rs_numba')
-        assert hasattr(hurst_exponent_analyzer, 'calculate_hurst_variance_numba')
-        assert hasattr(hurst_exponent_analyzer, 'calculate_aggregated_variance_numba')
+        assert hasattr(hurst_exponent_analyzer, "calculate_cumulative_deviation_numba")
+        assert hasattr(hurst_exponent_analyzer, "calculate_rs_for_window_numba")
+        assert hasattr(hurst_exponent_analyzer, "calculate_hurst_rs_numba")
+        assert hasattr(hurst_exponent_analyzer, "calculate_hurst_variance_numba")
+        assert hasattr(hurst_exponent_analyzer, "calculate_aggregated_variance_numba")

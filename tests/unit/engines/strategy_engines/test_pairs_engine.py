@@ -32,9 +32,9 @@ class TestPairsTradingInitialization:
     def test_initialization_with_config(self, pairs_trading_config):
         """Test initialization with configuration."""
         with (
-            patch('app.engines.strategy_engines.pairs_engine.get_strategy_config') as mock_config,
+            patch("app.engines.strategy_engines.pairs_engine.get_strategy_config") as mock_config,
             patch(
-                'app.engines.strategy_engines.pairs_engine.get_trading_threshold'
+                "app.engines.strategy_engines.pairs_engine.get_trading_threshold"
             ) as mock_threshold,
         ):
             # Setup mocks
@@ -74,10 +74,10 @@ class TestPairsTradingInitialization:
 
         with (
             patch(
-                'app.engines.strategy_engines.pairs_engine.get_strategy_config', return_value=None
+                "app.engines.strategy_engines.pairs_engine.get_strategy_config", return_value=None
             ),
             patch(
-                'app.engines.strategy_engines.pairs_engine.get_trading_threshold',
+                "app.engines.strategy_engines.pairs_engine.get_trading_threshold",
                 return_value=Decimal("0.05"),
             ),
         ):
@@ -89,10 +89,10 @@ class TestPairsTradingInitialization:
         """Test that price history deques are initialized."""
         with (
             patch(
-                'app.engines.strategy_engines.pairs_engine.get_strategy_config', return_value=None
+                "app.engines.strategy_engines.pairs_engine.get_strategy_config", return_value=None
             ),
             patch(
-                'app.engines.strategy_engines.pairs_engine.get_trading_threshold',
+                "app.engines.strategy_engines.pairs_engine.get_trading_threshold",
                 return_value=Decimal("0.05"),
             ),
         ):
@@ -105,10 +105,10 @@ class TestPairsTradingInitialization:
         """Test get_strategy_type returns correct type."""
         with (
             patch(
-                'app.engines.strategy_engines.pairs_engine.get_strategy_config', return_value=None
+                "app.engines.strategy_engines.pairs_engine.get_strategy_config", return_value=None
             ),
             patch(
-                'app.engines.strategy_engines.pairs_engine.get_trading_threshold',
+                "app.engines.strategy_engines.pairs_engine.get_trading_threshold",
                 return_value=Decimal("0.05"),
             ),
         ):
@@ -128,10 +128,10 @@ class TestPairsTradingFeatureExtraction:
         """Test basic feature extraction."""
         with (
             patch(
-                'app.engines.strategy_engines.pairs_engine.get_strategy_config', return_value=None
+                "app.engines.strategy_engines.pairs_engine.get_strategy_config", return_value=None
             ),
             patch(
-                'app.engines.strategy_engines.pairs_engine.get_trading_threshold',
+                "app.engines.strategy_engines.pairs_engine.get_trading_threshold",
                 return_value=Decimal("0.05"),
             ),
         ):
@@ -162,10 +162,10 @@ class TestPairsTradingFeatureExtraction:
         """Test feature extraction with sufficient price history."""
         with (
             patch(
-                'app.engines.strategy_engines.pairs_engine.get_strategy_config', return_value=None
+                "app.engines.strategy_engines.pairs_engine.get_strategy_config", return_value=None
             ),
             patch(
-                'app.engines.strategy_engines.pairs_engine.get_trading_threshold',
+                "app.engines.strategy_engines.pairs_engine.get_trading_threshold",
                 return_value=Decimal("0.05"),
             ),
         ):
@@ -197,10 +197,10 @@ class TestPairsTradingFeatureExtraction:
         """Test correlation calculation in feature extraction."""
         with (
             patch(
-                'app.engines.strategy_engines.pairs_engine.get_strategy_config', return_value=None
+                "app.engines.strategy_engines.pairs_engine.get_strategy_config", return_value=None
             ),
             patch(
-                'app.engines.strategy_engines.pairs_engine.get_trading_threshold',
+                "app.engines.strategy_engines.pairs_engine.get_trading_threshold",
                 return_value=Decimal("0.05"),
             ),
         ):
@@ -229,10 +229,10 @@ class TestPairsTradingFeatureExtraction:
         """Test feature extraction with insufficient history."""
         with (
             patch(
-                'app.engines.strategy_engines.pairs_engine.get_strategy_config', return_value=None
+                "app.engines.strategy_engines.pairs_engine.get_strategy_config", return_value=None
             ),
             patch(
-                'app.engines.strategy_engines.pairs_engine.get_trading_threshold',
+                "app.engines.strategy_engines.pairs_engine.get_trading_threshold",
                 return_value=Decimal("0.05"),
             ),
         ):
@@ -263,10 +263,10 @@ class TestPairsTradingFeatureExtraction:
         """Test feature extraction with provided historical data."""
         with (
             patch(
-                'app.engines.strategy_engines.pairs_engine.get_strategy_config', return_value=None
+                "app.engines.strategy_engines.pairs_engine.get_strategy_config", return_value=None
             ),
             patch(
-                'app.engines.strategy_engines.pairs_engine.get_trading_threshold',
+                "app.engines.strategy_engines.pairs_engine.get_trading_threshold",
                 return_value=Decimal("0.05"),
             ),
         ):
@@ -322,10 +322,10 @@ class TestPairsTradingSignalGeneration:
         """Test signal generation with insufficient price history."""
         with (
             patch(
-                'app.engines.strategy_engines.pairs_engine.get_strategy_config', return_value=None
+                "app.engines.strategy_engines.pairs_engine.get_strategy_config", return_value=None
             ),
             patch(
-                'app.engines.strategy_engines.pairs_engine.get_trading_threshold',
+                "app.engines.strategy_engines.pairs_engine.get_trading_threshold",
                 return_value=Decimal("0.05"),
             ),
         ):
@@ -348,10 +348,10 @@ class TestPairsTradingSignalGeneration:
         """Test signal generation when spread diverges significantly."""
         with (
             patch(
-                'app.engines.strategy_engines.pairs_engine.get_strategy_config', return_value=None
+                "app.engines.strategy_engines.pairs_engine.get_strategy_config", return_value=None
             ),
             patch(
-                'app.engines.strategy_engines.pairs_engine.get_trading_threshold',
+                "app.engines.strategy_engines.pairs_engine.get_trading_threshold",
                 return_value=Decimal("0.05"),
             ),
         ):
@@ -386,10 +386,10 @@ class TestPairsTradingSignalGeneration:
         """Test signal generation when pairs are not cointegrated."""
         with (
             patch(
-                'app.engines.strategy_engines.pairs_engine.get_strategy_config', return_value=None
+                "app.engines.strategy_engines.pairs_engine.get_strategy_config", return_value=None
             ),
             patch(
-                'app.engines.strategy_engines.pairs_engine.get_trading_threshold',
+                "app.engines.strategy_engines.pairs_engine.get_trading_threshold",
                 return_value=Decimal("0.05"),
             ),
         ):
@@ -418,10 +418,10 @@ class TestPairsTradingSignalGeneration:
         """Test creation of buy signal."""
         with (
             patch(
-                'app.engines.strategy_engines.pairs_engine.get_strategy_config', return_value=None
+                "app.engines.strategy_engines.pairs_engine.get_strategy_config", return_value=None
             ),
             patch(
-                'app.engines.strategy_engines.pairs_engine.get_trading_threshold',
+                "app.engines.strategy_engines.pairs_engine.get_trading_threshold",
                 return_value=Decimal("0.05"),
             ),
         ):
@@ -452,10 +452,10 @@ class TestPairsTradingSignalGeneration:
         """Test creation of sell signal."""
         with (
             patch(
-                'app.engines.strategy_engines.pairs_engine.get_strategy_config', return_value=None
+                "app.engines.strategy_engines.pairs_engine.get_strategy_config", return_value=None
             ),
             patch(
-                'app.engines.strategy_engines.pairs_engine.get_trading_threshold',
+                "app.engines.strategy_engines.pairs_engine.get_trading_threshold",
                 return_value=Decimal("0.05"),
             ),
         ):
@@ -490,10 +490,10 @@ class TestConfidenceCalculation:
         """Test confidence with high Z-score."""
         with (
             patch(
-                'app.engines.strategy_engines.pairs_engine.get_strategy_config', return_value=None
+                "app.engines.strategy_engines.pairs_engine.get_strategy_config", return_value=None
             ),
             patch(
-                'app.engines.strategy_engines.pairs_engine.get_trading_threshold',
+                "app.engines.strategy_engines.pairs_engine.get_trading_threshold",
                 return_value=Decimal("0.05"),
             ),
         ):
@@ -510,10 +510,10 @@ class TestConfidenceCalculation:
         """Test confidence with medium Z-score."""
         with (
             patch(
-                'app.engines.strategy_engines.pairs_engine.get_strategy_config', return_value=None
+                "app.engines.strategy_engines.pairs_engine.get_strategy_config", return_value=None
             ),
             patch(
-                'app.engines.strategy_engines.pairs_engine.get_trading_threshold',
+                "app.engines.strategy_engines.pairs_engine.get_trading_threshold",
                 return_value=Decimal("0.05"),
             ),
         ):
@@ -530,10 +530,10 @@ class TestConfidenceCalculation:
         """Test confidence with low Z-score."""
         with (
             patch(
-                'app.engines.strategy_engines.pairs_engine.get_strategy_config', return_value=None
+                "app.engines.strategy_engines.pairs_engine.get_strategy_config", return_value=None
             ),
             patch(
-                'app.engines.strategy_engines.pairs_engine.get_trading_threshold',
+                "app.engines.strategy_engines.pairs_engine.get_trading_threshold",
                 return_value=Decimal("0.05"),
             ),
         ):
@@ -550,10 +550,10 @@ class TestConfidenceCalculation:
         """Test confidence when no cointegration score."""
         with (
             patch(
-                'app.engines.strategy_engines.pairs_engine.get_strategy_config', return_value=None
+                "app.engines.strategy_engines.pairs_engine.get_strategy_config", return_value=None
             ),
             patch(
-                'app.engines.strategy_engines.pairs_engine.get_trading_threshold',
+                "app.engines.strategy_engines.pairs_engine.get_trading_threshold",
                 return_value=Decimal("0.05"),
             ),
         ):
@@ -580,10 +580,10 @@ class TestRiskCheck:
         """Test risk check that passes."""
         with (
             patch(
-                'app.engines.strategy_engines.pairs_engine.get_strategy_config', return_value=None
+                "app.engines.strategy_engines.pairs_engine.get_strategy_config", return_value=None
             ),
             patch(
-                'app.engines.strategy_engines.pairs_engine.get_trading_threshold',
+                "app.engines.strategy_engines.pairs_engine.get_trading_threshold",
                 return_value=Decimal("0.05"),
             ),
         ):
@@ -602,10 +602,10 @@ class TestRiskCheck:
         """Test risk check with excessive total exposure."""
         with (
             patch(
-                'app.engines.strategy_engines.pairs_engine.get_strategy_config', return_value=None
+                "app.engines.strategy_engines.pairs_engine.get_strategy_config", return_value=None
             ),
             patch(
-                'app.engines.strategy_engines.pairs_engine.get_trading_threshold',
+                "app.engines.strategy_engines.pairs_engine.get_trading_threshold",
                 return_value=Decimal("0.05"),
             ),
         ):
@@ -638,10 +638,10 @@ class TestRiskCheck:
         """Test risk check with excessive pair exposure."""
         with (
             patch(
-                'app.engines.strategy_engines.pairs_engine.get_strategy_config', return_value=None
+                "app.engines.strategy_engines.pairs_engine.get_strategy_config", return_value=None
             ),
             patch(
-                'app.engines.strategy_engines.pairs_engine.get_trading_threshold',
+                "app.engines.strategy_engines.pairs_engine.get_trading_threshold",
                 return_value=Decimal("0.05"),
             ),
         ):
@@ -677,10 +677,10 @@ class TestRiskCheck:
         """Test risk check with low cointegration."""
         with (
             patch(
-                'app.engines.strategy_engines.pairs_engine.get_strategy_config', return_value=None
+                "app.engines.strategy_engines.pairs_engine.get_strategy_config", return_value=None
             ),
             patch(
-                'app.engines.strategy_engines.pairs_engine.get_trading_threshold',
+                "app.engines.strategy_engines.pairs_engine.get_trading_threshold",
                 return_value=Decimal("0.05"),
             ),
         ):
@@ -701,10 +701,10 @@ class TestRiskCheck:
         """Test risk check with low correlation."""
         with (
             patch(
-                'app.engines.strategy_engines.pairs_engine.get_strategy_config', return_value=None
+                "app.engines.strategy_engines.pairs_engine.get_strategy_config", return_value=None
             ),
             patch(
-                'app.engines.strategy_engines.pairs_engine.get_trading_threshold',
+                "app.engines.strategy_engines.pairs_engine.get_trading_threshold",
                 return_value=Decimal("0.05"),
             ),
         ):
@@ -731,10 +731,10 @@ class TestExposureCalculation:
         """Test total exposure calculation."""
         with (
             patch(
-                'app.engines.strategy_engines.pairs_engine.get_strategy_config', return_value=None
+                "app.engines.strategy_engines.pairs_engine.get_strategy_config", return_value=None
             ),
             patch(
-                'app.engines.strategy_engines.pairs_engine.get_trading_threshold',
+                "app.engines.strategy_engines.pairs_engine.get_trading_threshold",
                 return_value=Decimal("0.05"),
             ),
         ):
@@ -763,10 +763,10 @@ class TestExposureCalculation:
         """Test total exposure with empty portfolio."""
         with (
             patch(
-                'app.engines.strategy_engines.pairs_engine.get_strategy_config', return_value=None
+                "app.engines.strategy_engines.pairs_engine.get_strategy_config", return_value=None
             ),
             patch(
-                'app.engines.strategy_engines.pairs_engine.get_trading_threshold',
+                "app.engines.strategy_engines.pairs_engine.get_trading_threshold",
                 return_value=Decimal("0.05"),
             ),
         ):
@@ -785,10 +785,10 @@ class TestExposureCalculation:
         """Test pair-specific exposure calculation."""
         with (
             patch(
-                'app.engines.strategy_engines.pairs_engine.get_strategy_config', return_value=None
+                "app.engines.strategy_engines.pairs_engine.get_strategy_config", return_value=None
             ),
             patch(
-                'app.engines.strategy_engines.pairs_engine.get_trading_threshold',
+                "app.engines.strategy_engines.pairs_engine.get_trading_threshold",
                 return_value=Decimal("0.05"),
             ),
         ):
@@ -844,10 +844,10 @@ class TestEdgeCases:
 
         with (
             patch(
-                'app.engines.strategy_engines.pairs_engine.get_strategy_config', return_value=None
+                "app.engines.strategy_engines.pairs_engine.get_strategy_config", return_value=None
             ),
             patch(
-                'app.engines.strategy_engines.pairs_engine.get_trading_threshold',
+                "app.engines.strategy_engines.pairs_engine.get_trading_threshold",
                 return_value=Decimal("0.05"),
             ),
         ):
@@ -860,10 +860,10 @@ class TestEdgeCases:
         """Test handling of zero price quote."""
         with (
             patch(
-                'app.engines.strategy_engines.pairs_engine.get_strategy_config', return_value=None
+                "app.engines.strategy_engines.pairs_engine.get_strategy_config", return_value=None
             ),
             patch(
-                'app.engines.strategy_engines.pairs_engine.get_trading_threshold',
+                "app.engines.strategy_engines.pairs_engine.get_trading_threshold",
                 return_value=Decimal("0.05"),
             ),
         ):
@@ -882,10 +882,10 @@ class TestEdgeCases:
         """Test getting required parameters."""
         with (
             patch(
-                'app.engines.strategy_engines.pairs_engine.get_strategy_config', return_value=None
+                "app.engines.strategy_engines.pairs_engine.get_strategy_config", return_value=None
             ),
             patch(
-                'app.engines.strategy_engines.pairs_engine.get_trading_threshold',
+                "app.engines.strategy_engines.pairs_engine.get_trading_threshold",
                 return_value=Decimal("0.05"),
             ),
         ):

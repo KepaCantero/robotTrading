@@ -16,7 +16,6 @@ Domain: Shared
 - `Environment`
 - `ConfigBase`
 - `SettingsBase`
-- `Config`
 ### Public Functions
 - `get_config_summary()`
 

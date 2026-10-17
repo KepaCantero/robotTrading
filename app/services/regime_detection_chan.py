@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 """
 Ernest Chan - Quantitative Trading: Regime Detection Implementation
 
@@ -21,6 +19,8 @@ Based on:
 Author: Algorithmic Trading System
 Date: 2026-01-28
 """
+
+from __future__ import annotations
 
 import logging
 from dataclasses import dataclass
@@ -77,6 +77,7 @@ except ImportError:
 
         def fit(self, X, lengths=None):
             """Fit the Gaussian Mixture Model."""
+            del lengths  # aceptado por compatibilidad; sin uso aquí
             self.gmm.fit(X)
             self.means_ = self.gmm.means_
             self.covars_ = self.gmm.covariances_

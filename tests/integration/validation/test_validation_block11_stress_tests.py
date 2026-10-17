@@ -309,7 +309,7 @@ class TestTradeReturnDistribution(unittest.TestCase):
             self.assertLess(
                 negative_ratio,
                 0.99,  # Menos del 99% negativos
-                f"Patrón anómalo: {negative_ratio*100:.1f}% trades negativos "
+                f"Patrón anómalo: {negative_ratio * 100:.1f}% trades negativos "
                 "(posibles señales invertidas)",
             )
 

@@ -19,15 +19,15 @@ estimated_hours: "{{ESTIMATED_HOURS}}"
 event_loop:
   # Prompt file for this task
   prompt_file: ".ralph/ralph_tasks/prompts/{{TASK_ID}}.md"
-  
+
   # Completion promise (output when task is complete)
   completion_promise: "{{COMPLETION_PROMISE}}"  # e.g., "COMPLIANCE_ENGINE_REFACTOR_COMPLETE"
-  
+
   # Event loop settings
   max_iterations: "{{MAX_ITERATIONS}}"  # Default: 150
   max_runtime_seconds: "{{MAX_RUNTIME_SECONDS}}"  # Default: 86400 (24 hours)
   checkpoint_interval: "{{CHECKPOINT_INTERVAL}}"  # Default: 3
-  
+
   # Starting event
   starting_event: "{{TASK_PREFIX}}.start"  # e.g., "refactor.start"
 
@@ -53,43 +53,43 @@ hats:
   "{{HAT_NAME_1}}":
     name: "{{AGENT_DISPLAY_NAME}}"
     description: "{{AGENT_DESCRIPTION}}"
-    
+
     # Events that trigger this agent
     triggers:
       - "{{EVENT_PREFIX}}.start"
       - "{{EVENT_PREFIX}}.next_phase"
-    
+
     # Events this agent can publish
     publishes:
       - "{{EVENT_PREFIX}}.next_phase"
       - "{{EVENT_PREFIX}}.complete"
       - "{{EVENT_PREFIX}}.blocked"
-    
+
     # Default event to publish
     default_publishes: "{{EVENT_PREFIX}}.next_phase"
-    
+
     # Agent instructions (can reference templates from ralph_base.yml)
     instructions: |
       ## {{TASK_NAME}} - Agent Instructions
-      
+
       **Objective:** {{OBJECTIVE}}
-      
+
       **Requirements:** {{REQUIREMENTS_FILE}}
-      
+
       ### Phase 1: {{PHASE_1_NAME}}
       {{PHASE_1_INSTRUCTIONS}}
-      
+
       ### Phase 2: {{PHASE_2_NAME}}
       {{PHASE_2_INSTRUCTIONS}}
-      
+
       ### Validation
       After each phase, validate:
       ```bash
       scripts/validate_file_complete.sh <file_path>
       ```
-      
+
       Only mark as complete when success: true
-      
+
       ### Event Format
       Phase complete: `ralph emit "{{EVENT_PREFIX}}.next_phase" "phase=<n>"`
       All complete: `ralph emit "{{EVENT_PREFIX}}.complete" "all_passed=true"`
@@ -99,31 +99,31 @@ hats:
   "{{HAT_NAME_2}}":
     name: "{{VALIDATOR_NAME}}"
     description: "{{VALIDATOR_DESCRIPTION}}"
-    
+
     triggers:
       - "{{EVENT_PREFIX}}.complete"
-    
+
     publishes:
       - "{{EVENT_PREFIX}}.final_summary"
-    
+
     instructions: |
       ## {{VALIDATOR_NAME}} - Final Verification
-      
+
       Verify completion:
       ```bash
       # 1. Verify files
       ls {{FILE_PATH_1}}
       ls {{FILE_PATH_2}}
-      
+
       # 2. Validate all
       for f in {{FILE_PATTERN}}; do
         scripts/validate_file_complete.sh "$f" | jq '.summary.success'
       done
-      
+
       # 3. Verify requirements
       grep -n "{{REQUIREMENT_PATTERN}}" {{FILE_PATH}}
       ```
-      
+
       If ALL clean: `ralph emit "{{EVENT_PREFIX}}.final_summary" "all_passed"`
       Output: **{{COMPLETION_PROMISE}}**
 

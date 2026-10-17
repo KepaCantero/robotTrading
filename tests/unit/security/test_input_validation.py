@@ -400,7 +400,9 @@ class TestRateLimiting:
         # Make requests
         for i in range(5):
             limiter.check_rate_limit(
-                identifier="test_window", limit=10, window=1  # 1 second window
+                identifier="test_window",
+                limit=10,
+                window=1,  # 1 second window
             )
 
         # Check stats

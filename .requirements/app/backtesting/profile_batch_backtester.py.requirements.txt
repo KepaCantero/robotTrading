@@ -8,6 +8,7 @@ Domain: Backtest
 - `__future__`
 - `app.backtesting.backtesting_compliance`
 - `app.backtesting.comprehensive_backtest_runner`
+- `app.backtesting.core.config_loader`
 - `app.backtesting.professional_reporter`
 - `app.backtesting.services`
 - `app.backtesting.shared`

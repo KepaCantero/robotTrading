@@ -41,14 +41,14 @@ sources:
       pagination_enabled: true
     polygon:
       max_bars_per_request: 10000
-  
+
   # Configuración por defecto para fuentes fundamentales
   fundamental:
     fmp:
       default_limit: 5
     alpha_vantage:
       default_limit: 5
-  
+
   # Configuración por defecto para fuentes de sentimiento
   sentiment:
     default_max_results: 100
@@ -76,7 +76,7 @@ sources:
         negative: -0.5
         neutral: 0.0
       sample_feed_size: 5  # Tamaño de muestra de feed para metadata
-  
+
   # Configuración por defecto para fuentes de opciones
   options:
     default_implied_volatility: 0.0
@@ -127,4 +127,3 @@ versioning:
   enabled: true
   schema_version: "1.0.0"
   data_lineage_enabled: true
-

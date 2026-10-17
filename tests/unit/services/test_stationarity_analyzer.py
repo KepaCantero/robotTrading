@@ -55,10 +55,10 @@ class TestStationarityAnalyzer:
         result = analyzer.test_stationarity(stationary_series, "TestAsset")
 
         assert isinstance(result, StationarityTestResult)
-        assert hasattr(result, 'is_stationary')
-        assert hasattr(result, 'p_value')
-        assert hasattr(result, 'half_life')
-        assert hasattr(result, 'hurst_exponent')
+        assert hasattr(result, "is_stationary")
+        assert hasattr(result, "p_value")
+        assert hasattr(result, "half_life")
+        assert hasattr(result, "hurst_exponent")
 
     def test_non_stationary_detection(self, analyzer, non_stationary_series):
         """Test detection of non-stationary series."""
@@ -75,7 +75,7 @@ class TestStationarityAnalyzer:
         assert isinstance(half_life, (int, float))
         assert half_life >= 0
         # Stationary series should have finite half-life
-        assert half_life < float('inf')
+        assert half_life < float("inf")
 
     def test_hurst_exponent_calculation(self, analyzer):
         """Test Hurst exponent calculation."""
@@ -166,9 +166,9 @@ class TestCointegrationAnalyzer:
         result = analyzer.test_cointegration(y1, y2, "Asset1", "Asset2")
 
         assert isinstance(result, CointegrationTestResult)
-        assert hasattr(result, 'is_cointegrated')
-        assert hasattr(result, 'hedge_ratio')
-        assert hasattr(result, 'spread_half_life')
+        assert hasattr(result, "is_cointegrated")
+        assert hasattr(result, "hedge_ratio")
+        assert hasattr(result, "spread_half_life")
 
     def test_non_cointegrated_pair(self, analyzer, non_cointegrated_pair):
         """Test with non-cointegrated pair."""

@@ -585,7 +585,7 @@ def find_magic_values() -> dict[str, list[str]]:
     return dict(get_default_magic_values())
 
 
-def migrate_magic_values(magic_values: dict[str, list[str]]) -> bool:
+def migrate_magic_values(_magic_values: dict[str, list[str]]) -> bool:
     """Migrate magic values to centralized configuration."""
     # This would implement the migration logic
     # For now, return True

@@ -200,7 +200,7 @@ class TestChanPositionSizer:
         )
 
         assert isinstance(result, PositionSizeResult)
-        assert hasattr(result, 'kelly_fraction')
+        assert hasattr(result, "kelly_fraction")
         assert result.method_used == "Kelly (50% of full)"
 
     def test_kelly_with_edge_case(self, sizer):
@@ -353,9 +353,9 @@ class TestChanRiskMetrics:
         result = calculator.calculate_all_metrics(sample_returns)
 
         assert isinstance(result, RiskMetrics)
-        assert hasattr(result, 'daily_var_95')
-        assert hasattr(result, 'max_drawdown')
-        assert hasattr(result, 'sharpe_ratio')
+        assert hasattr(result, "daily_var_95")
+        assert hasattr(result, "max_drawdown")
+        assert hasattr(result, "sharpe_ratio")
 
     def test_var_calculation(self, calculator, sample_returns):
         """Test Value at Risk calculation."""

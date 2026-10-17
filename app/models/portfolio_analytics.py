@@ -26,7 +26,7 @@ class ExtendedPortfolio(BasePortfolio):
 
     id: UUID = Field(default_factory=uuid4, description="Portfolio identifier")
     name: str = Field(..., description="Portfolio name")
-    description: str | None = Field(None, description="Portfolio description")
+    description: str | None = Field(default=None, description="Portfolio description")
     total_value: Decimal = Field(..., description="Total portfolio value")
     cash_balance: Decimal = Field(..., description="Cash balance")
     created_at: datetime = Field(default_factory=datetime.utcnow, description="Creation timestamp")
@@ -163,9 +163,9 @@ class PerformanceMetrics(BaseModel):
     position_count: int = Field(..., description="Number of positions")
 
     # Benchmark Comparison
-    benchmark_return: Decimal | None = Field(None, description="Benchmark return")
-    excess_return: Decimal | None = Field(None, description="Excess return vs benchmark")
-    tracking_error: Decimal | None = Field(None, description="Tracking error")
+    benchmark_return: Decimal | None = Field(default=None, description="Benchmark return")
+    excess_return: Decimal | None = Field(default=None, description="Excess return vs benchmark")
+    tracking_error: Decimal | None = Field(default=None, description="Tracking error")
 
     # Timestamps
     calculated_at: datetime = Field(
@@ -393,7 +393,9 @@ class PortfolioAllocation(BaseModel):
     top_holdings: list[dict[str, Any]] = Field(default_factory=list, description="Top holdings")
 
     # Allocation Quality
-    target_allocation: dict[str, Decimal] | None = Field(None, description="Target allocation")
+    target_allocation: dict[str, Decimal] | None = Field(
+        default=None, description="Target allocation"
+    )
     allocation_deviation: dict[str, Decimal] | None = Field(
         None, description="Allocation deviation from target"
     )
@@ -494,7 +496,7 @@ class PortfolioRebalance(BaseModel):
     return_impact: Decimal = Field(..., description="Expected return impact")
 
     # Execution
-    execution_date: datetime | None = Field(None, description="Execution date")
+    execution_date: datetime | None = Field(default=None, description="Execution date")
     execution_status: str = Field(default="pending", description="Execution status")
 
     @field_validator("trigger_threshold", "estimated_cost", "risk_impact", "return_impact")

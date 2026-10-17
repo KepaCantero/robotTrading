@@ -101,7 +101,7 @@ security_groups:
     egress:
       - protocol: "-1"
         cidr_blocks: ["0.0.0.0/0"]
-  
+
   ssh_sg:
     name: "algo-trading-ssh-sg"
     description: "Security group for SSH access"
@@ -112,7 +112,7 @@ security_groups:
     egress:
       - protocol: "-1"
         cidr_blocks: ["0.0.0.0/0"]
-  
+
   db_sg:
     name: "algo-trading-db-sg"
     description: "Security group for RDS database"
@@ -123,7 +123,7 @@ security_groups:
     egress:
       - protocol: "-1"
         cidr_blocks: ["0.0.0.0/0"]
-  
+
   cache_sg:
     name: "algo-trading-cache-sg"
     description: "Security group for ElastiCache Redis"

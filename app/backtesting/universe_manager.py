@@ -204,6 +204,7 @@ class UniverseManager:
         Raises:
             ValueError: If min_market_cap or max_market_cap is negative
         """
+        del historical_date  # aceptado por compatibilidad; sin uso aquí
         # Validate market cap values (CC-006: Explicit error handling)
         if min_market_cap is not None and min_market_cap < 0:
             raise ValueError(f"min_market_cap must be >= 0: {min_market_cap}")

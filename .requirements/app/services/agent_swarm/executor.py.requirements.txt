@@ -25,6 +25,7 @@ Domain: Service
 - `app.services.risk_scaling_application.risk_scaling_applicator`
 - `app.services.strategy_recommendation.strategy_ranker`
 - `app.services.strategy_recommendation.strategy_recommender`
+- `app.services.tax_efficiency.engines.spain_tax_engine`
 - `app.services.validation_engine.models`
 - `app.services.validation_engine.validation_engine`
 - `dataclasses`

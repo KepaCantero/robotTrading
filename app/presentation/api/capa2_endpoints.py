@@ -1,3 +1,25 @@
+"""
+T13.1: CAPA 2 API Endpoints - Parametrization Framework REST API
+
+Exposes the complete CAPA 2 parametrization pipeline:
+1. InputProfile processing (T1.1)
+2. ProfileGenerator (T2.1)
+3. ModuleParametrizer (T3.1)
+4. BacktestOrchestrator (T4.1)
+5. ValidationEngine (T5.1)
+6. StrategyRecommender (T6.1)
+7. PortfolioConstructor (T7.1)
+8. RiskScalingApplication (T8.1)
+9. ReportingGenerator (T9.1)
+10. DeployDecisionOrchestrator (T10.1)
+
+GAP Fixes:
+- API-002: Added structured logging with correlation IDs
+- API-005: TODO: Rate limiting on expensive workflow endpoints
+- API-006: Added correlation ID tracking
+- API-009: Added audit logging for workflow operations
+"""
+
 from __future__ import annotations
 
 import asyncio
@@ -21,27 +43,6 @@ from app.services.deployment.deploy_decision_orchestrator import DeployDecisionO
 from . import audit_logger, get_correlation_id
 
 # import asyncio  # F811 duplicate from line 10
-"""
-T13.1: CAPA 2 API Endpoints - Parametrization Framework REST API
-
-Exposes the complete CAPA 2 parametrization pipeline:
-1. InputProfile processing (T1.1)
-2. ProfileGenerator (T2.1)
-3. ModuleParametrizer (T3.1)
-4. BacktestOrchestrator (T4.1)
-5. ValidationEngine (T5.1)
-6. StrategyRecommender (T6.1)
-7. PortfolioConstructor (T7.1)
-8. RiskScalingApplication (T8.1)
-9. ReportingGenerator (T9.1)
-10. DeployDecisionOrchestrator (T10.1)
-
-GAP Fixes:
-- API-002: Added structured logging with correlation IDs
-- API-005: TODO: Rate limiting on expensive workflow endpoints
-- API-006: Added correlation ID tracking
-- API-009: Added audit logging for workflow operations
-"""
 
 # Import all CAPA 2 services
 logger = logging.getLogger(__name__)
@@ -107,7 +108,7 @@ class ProcessInputRequest(BaseModel):
     objetivo_inversion: str = Field(..., description="Investment objective")
     risk_tolerance: str = Field(..., description="Risk tolerance level")
     investment_horizon: int = Field(..., ge=1, le=600, description="Investment horizon in months")
-    constraints: dict[str, Any] | None = Field(None, description="Optional constraints")
+    constraints: dict[str, Any] | None = Field(default=None, description="Optional constraints")
 
 
 class ProcessInputResponse(BaseModel):

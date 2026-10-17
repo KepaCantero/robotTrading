@@ -306,7 +306,7 @@ class AlertingOrchestrator:
                 # Process through alert manager for deduplication
                 for _rule_id, rule in self.registered_rules.items():
                     if rule.rule_id == alert_event.rule_id:
-                        await self.alert_manager.trigger_alert(rule, alert_event)
+                        self.alert_manager.trigger_alert(rule, alert_event)
                         break
 
             self.logger.info(f"Manually triggered alert: {alert_event.event_id}")

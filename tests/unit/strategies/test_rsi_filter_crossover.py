@@ -36,10 +36,10 @@ class TestRSICrossoverLogic:
         )
 
         # Fallback mode: RSI 29 > 28 (fallback threshold), so should not pass
-        assert result1['passed'] is False, "Should not buy at 29 even with fallback threshold of 28"
+        assert result1["passed"] is False, "Should not buy at 29 even with fallback threshold of 28"
         assert (
-            "fallback" in result1['reason'].lower()
-            or "not oversold enough" in result1['reason'].lower()
+            "fallback" in result1["reason"].lower()
+            or "not oversold enough" in result1["reason"].lower()
         )
 
         # Second call: RSI crosses to 32 (crossover detected!)
@@ -49,11 +49,11 @@ class TestRSICrossoverLogic:
             signal_type="BUY",
         )
 
-        assert result2['passed'] is True, "Should buy on crossover above 30"
-        assert "crossover" in result2['reason'].lower()
-        assert result2['metadata']['crossover'] is True
-        assert result2['metadata']['previous_rsi'] == 29.0
-        assert result2['metadata']['rsi'] == 32.0
+        assert result2["passed"] is True, "Should buy on crossover above 30"
+        assert "crossover" in result2["reason"].lower()
+        assert result2["metadata"]["crossover"] is True
+        assert result2["metadata"]["previous_rsi"] == 29.0
+        assert result2["metadata"]["rsi"] == 32.0
 
     def test_sell_crossover_detection(self):
         """Test SELL signal when RSI crosses below 70."""
@@ -68,12 +68,12 @@ class TestRSICrossoverLogic:
         )
 
         # Fallback mode: RSI 71 < 72 (fallback threshold), so should not pass
+        assert result1["passed"] is False, (
+            "Should not sell at 71 even with fallback threshold of 72"
+        )
         assert (
-            result1['passed'] is False
-        ), "Should not sell at 71 even with fallback threshold of 72"
-        assert (
-            "fallback" in result1['reason'].lower()
-            or "not overbought enough" in result1['reason'].lower()
+            "fallback" in result1["reason"].lower()
+            or "not overbought enough" in result1["reason"].lower()
         )
 
         # Second call: RSI crosses to 68 (crossover detected!)
@@ -83,11 +83,11 @@ class TestRSICrossoverLogic:
             signal_type="SELL",
         )
 
-        assert result2['passed'] is True, "Should sell on crossover below 70"
-        assert "crossover" in result2['reason'].lower()
-        assert result2['metadata']['crossover'] is True
-        assert result2['metadata']['previous_rsi'] == 71.0
-        assert result2['metadata']['rsi'] == 68.0
+        assert result2["passed"] is True, "Should sell on crossover below 70"
+        assert "crossover" in result2["reason"].lower()
+        assert result2["metadata"]["crossover"] is True
+        assert result2["metadata"]["previous_rsi"] == 71.0
+        assert result2["metadata"]["rsi"] == 68.0
 
     def test_no_buy_without_crossover(self):
         """Test that BUY signal is NOT generated when RSI stays below threshold."""
@@ -107,8 +107,8 @@ class TestRSICrossoverLogic:
             signal_type="BUY",
         )
 
-        assert result['passed'] is False, "Should not buy without crossing above threshold"
-        assert "waiting for crossover" in result['reason']
+        assert result["passed"] is False, "Should not buy without crossing above threshold"
+        assert "waiting for crossover" in result["reason"]
 
     def test_no_sell_without_crossover(self):
         """Test that SELL signal is NOT generated when RSI stays above threshold."""
@@ -128,8 +128,8 @@ class TestRSICrossoverLogic:
             signal_type="SELL",
         )
 
-        assert result['passed'] is False, "Should not sell without crossing below threshold"
-        assert "waiting for crossover" in result['reason']
+        assert result["passed"] is False, "Should not sell without crossing below threshold"
+        assert "waiting for crossover" in result["reason"]
 
 
 class TestRSIFallbackMode:
@@ -151,9 +151,9 @@ class TestRSIFallbackMode:
             signal_type="BUY",
         )
 
-        assert result['passed'] is False, "Should not buy at 29 with fallback threshold of 28"
-        assert result['metadata']['fallback_mode'] is True
-        assert result['metadata']['fallback_threshold'] == 28
+        assert result["passed"] is False, "Should not buy at 29 with fallback threshold of 28"
+        assert result["metadata"]["fallback_mode"] is True
+        assert result["metadata"]["fallback_threshold"] == 28
 
         # Clear history again for the second test
         RSIFilter.clear_rsi_history()
@@ -165,7 +165,7 @@ class TestRSIFallbackMode:
             signal_type="BUY",
         )
 
-        assert result2['passed'] is True, "Should buy at 27 with fallback threshold of 28"
+        assert result2["passed"] is True, "Should buy at 27 with fallback threshold of 28"
 
     def test_fallback_sell_stricter_threshold(self):
         """Test fallback mode uses stricter threshold for SELL (70 + 2 = 72)."""
@@ -183,9 +183,9 @@ class TestRSIFallbackMode:
             signal_type="SELL",
         )
 
-        assert result['passed'] is False, "Should not sell at 71 with fallback threshold of 72"
-        assert result['metadata']['fallback_mode'] is True
-        assert result['metadata']['fallback_threshold'] == 72
+        assert result["passed"] is False, "Should not sell at 71 with fallback threshold of 72"
+        assert result["metadata"]["fallback_mode"] is True
+        assert result["metadata"]["fallback_threshold"] == 72
 
         # Clear history again for the second test
         RSIFilter.clear_rsi_history()
@@ -197,7 +197,7 @@ class TestRSIFallbackMode:
             signal_type="SELL",
         )
 
-        assert result2['passed'] is True, "Should sell at 73 with fallback threshold of 72"
+        assert result2["passed"] is True, "Should sell at 73 with fallback threshold of 72"
 
 
 class TestRSIAdaptiveThresholds:
@@ -223,8 +223,8 @@ class TestRSIAdaptiveThresholds:
             signal_type="BUY",
         )
 
-        assert result['passed'] is True, "Should buy on crossover above 25 in volatile market"
-        assert result['metadata']['buy_threshold'] == 25
+        assert result["passed"] is True, "Should buy on crossover above 25 in volatile market"
+        assert result["metadata"]["buy_threshold"] == 25
 
     def test_trending_market_thresholds(self):
         """Test that trending market uses different thresholds."""
@@ -246,8 +246,8 @@ class TestRSIAdaptiveThresholds:
             signal_type="SELL",
         )
 
-        assert result['passed'] is True, "Should sell on crossover below 65 in trending market"
-        assert result['metadata']['sell_threshold'] == 65
+        assert result["passed"] is True, "Should sell on crossover below 65 in trending market"
+        assert result["metadata"]["sell_threshold"] == 65
 
 
 class TestRSICrossoverConfidence:
@@ -271,8 +271,8 @@ class TestRSICrossoverConfidence:
             signal_type="BUY",
         )
 
-        assert result['passed'] is True
-        assert result['confidence'] > 0.7, "Deep reversal should have high confidence"
+        assert result["passed"] is True
+        assert result["confidence"] > 0.7, "Deep reversal should have high confidence"
 
     def test_sell_confidence_deep_overbought(self):
         """Test that deeper overbought crossover gives higher confidence."""
@@ -292,8 +292,8 @@ class TestRSICrossoverConfidence:
             signal_type="SELL",
         )
 
-        assert result['passed'] is True
-        assert result['confidence'] > 0.7, "Deep reversal should have high confidence"
+        assert result["passed"] is True
+        assert result["confidence"] > 0.7, "Deep reversal should have high confidence"
 
 
 class TestRSIHistoryManagement:
@@ -377,8 +377,8 @@ class TestRSIDisableCrossover:
             signal_type="BUY",
         )
 
-        assert result['passed'] is True, "Should buy at 28 with crossover disabled"
-        assert result['metadata'].get('crossover') is not True
+        assert result["passed"] is True, "Should buy at 28 with crossover disabled"
+        assert result["metadata"].get("crossover") is not True
 
     def test_disable_crossover_sell(self):
         """Test SELL with crossover disabled uses threshold logic."""
@@ -393,8 +393,8 @@ class TestRSIDisableCrossover:
             signal_type="SELL",
         )
 
-        assert result['passed'] is True, "Should sell at 72 with crossover disabled"
-        assert result['metadata'].get('crossover') is not True
+        assert result["passed"] is True, "Should sell at 72 with crossover disabled"
+        assert result["metadata"].get("crossover") is not True
 
 
 class TestRSILogging:

@@ -42,7 +42,7 @@ class ParameterConstraint(BaseModel):
 
     min_value: float | int = Field(..., description="Minimum value for the parameter")
     max_value: float | int = Field(..., description="Maximum value for the parameter")
-    step_size: float | int | None = Field(None, description="Step size for optimization")
+    step_size: float | int | None = Field(default=None, description="Step size for optimization")
     parameter_type: ParameterType = Field(..., description="Type of parameter")
 
     @model_validator(mode="after")
@@ -77,7 +77,7 @@ class OptimizationParameter(BaseModel):
     name: str = Field(..., description="Name of the parameter")
     current_value: float | int = Field(..., description="Current value of the parameter")
     constraints: ParameterConstraint = Field(..., description="Constraints for optimization")
-    description: str | None = Field(None, description="Description of the parameter")
+    description: str | None = Field(default=None, description="Description of the parameter")
 
     @model_validator(mode="after")
     def validate_current_value(self):
@@ -123,7 +123,9 @@ class WalkForwardConfig(BaseModel):
         ge=30,
         description="Minimum training period in days",
     )
-    max_train_period: int | None = Field(None, description="Maximum training period in days")
+    max_train_period: int | None = Field(
+        default=None, description="Maximum training period in days"
+    )
     purged_period: int = Field(
         0,
         ge=0,
@@ -198,7 +200,7 @@ class OptimizationConfig(BaseModel):
         le=0.1,
         description="Convergence threshold",
     )
-    random_seed: int | None = Field(None, description="Random seed for reproducibility")
+    random_seed: int | None = Field(default=None, description="Random seed for reproducibility")
 
     @field_validator("walk_forward_config")
     @classmethod

@@ -331,7 +331,7 @@ def verify_and_load(signed_data: str, secret_key: str | bytes | None = None) -> 
             unpacked = msgpack.unpackb(serialized, raw=False)
             return _restore_from_msgpack(unpacked)
         else:
-            raise ValueError(f"Unknown format type: {format_type}")
+            raise ValueError(f"Unknown format type: {format_type!r}")
 
     except ValueError as e:
         # Re-raise ValueError with context (includes signature errors, parsing errors)

@@ -53,10 +53,10 @@ class TestChanSharpeRatioCalculator:
         result = calculator.calculate_sharpe_ratio(sample_returns)
 
         assert isinstance(result, SharpeRatioResult)
-        assert hasattr(result, 'sharpe_ratio')
-        assert hasattr(result, 'annualized_sharpe')
-        assert hasattr(result, 'daily_mean_return')
-        assert hasattr(result, 'daily_std_return')
+        assert hasattr(result, "sharpe_ratio")
+        assert hasattr(result, "annualized_sharpe")
+        assert hasattr(result, "daily_mean_return")
+        assert hasattr(result, "daily_std_return")
 
     def test_annualized_sharpe_relationship(self, calculator, sample_returns):
         """Test relationship between daily and annualized Sharpe."""
@@ -92,8 +92,8 @@ class TestChanSharpeRatioCalculator:
         """Test confidence interval calculation."""
         result = calculator.calculate_sharpe_ratio(sample_returns, confidence_level=0.95)
 
-        assert hasattr(result, 'confidence_interval_low')
-        assert hasattr(result, 'confidence_interval_high')
+        assert hasattr(result, "confidence_interval_low")
+        assert hasattr(result, "confidence_interval_high")
         assert result.confidence_interval_low < result.confidence_interval_high
 
     def test_statistical_significance(self, calculator, positive_returns):
@@ -172,9 +172,9 @@ class TestChanDrawdownAnalyzer:
         result = analyzer.analyze_drawdown(sample_equity_curve)
 
         assert isinstance(result, DrawdownResult)
-        assert hasattr(result, 'max_drawdown')
-        assert hasattr(result, 'max_drawdown_percentage')
-        assert hasattr(result, 'max_drawdown_duration_days')
+        assert hasattr(result, "max_drawdown")
+        assert hasattr(result, "max_drawdown_percentage")
+        assert hasattr(result, "max_drawdown_duration_days")
 
     def test_max_drawdown_calculation(self, analyzer, equity_with_drawdown):
         """Test maximum drawdown calculation."""
@@ -189,7 +189,7 @@ class TestChanDrawdownAnalyzer:
         """Test recovery factor calculation."""
         result = analyzer.analyze_drawdown(equity_with_drawdown)
 
-        assert hasattr(result, 'recovery_factor')
+        assert hasattr(result, "recovery_factor")
         # Recovery factor = (final - peak) / abs(max_dd)
         # (110000 - 120000) / 20833 = -0.48
         assert isinstance(result.recovery_factor, float)
@@ -198,18 +198,18 @@ class TestChanDrawdownAnalyzer:
         """Test drawdown distribution calculation."""
         result = analyzer.analyze_drawdown(sample_equity_curve)
 
-        assert hasattr(result, 'drawdown_distribution')
+        assert hasattr(result, "drawdown_distribution")
         assert isinstance(result.drawdown_distribution, dict)
         # Should have percentile values
-        assert 'p5' in result.drawdown_distribution
-        assert 'p50' in result.drawdown_distribution
-        assert 'p95' in result.drawdown_distribution
+        assert "p5" in result.drawdown_distribution
+        assert "p50" in result.drawdown_distribution
+        assert "p95" in result.drawdown_distribution
 
     def test_drawdown_periods(self, analyzer, equity_with_drawdown):
         """Test identification of drawdown periods."""
         result = analyzer.analyze_drawdown(equity_with_drawdown)
 
-        assert hasattr(result, 'drawdown_periods')
+        assert hasattr(result, "drawdown_periods")
         assert isinstance(result.drawdown_periods, list)
 
     def test_with_dates(self, analyzer):
@@ -248,15 +248,15 @@ class TestChanCalmarRatioCalculator:
         result = calculator.calculate_calmar_ratio(sample_returns)
 
         assert isinstance(result, CalmarRatioResult)
-        assert hasattr(result, 'calmar_ratio')
-        assert hasattr(result, 'annual_return')
-        assert hasattr(result, 'max_drawdown')
+        assert hasattr(result, "calmar_ratio")
+        assert hasattr(result, "annual_return")
+        assert hasattr(result, "max_drawdown")
 
     def test_calmar_interpretation(self, calculator, sample_returns):
         """Test Calmar ratio interpretation."""
         result = calculator.calculate_calmar_ratio(sample_returns)
 
-        assert hasattr(result, 'interpretation')
+        assert hasattr(result, "interpretation")
         assert isinstance(result.interpretation, str)
         assert len(result.interpretation) > 0
 
@@ -301,24 +301,24 @@ class TestChanReturnDistributionAnalyzer:
         result = analyzer.analyze_return_distribution(sample_returns)
 
         assert isinstance(result, ReturnDistributionMetrics)
-        assert hasattr(result, 'mean_return')
-        assert hasattr(result, 'median_return')
-        assert hasattr(result, 'std_return')
+        assert hasattr(result, "mean_return")
+        assert hasattr(result, "median_return")
+        assert hasattr(result, "std_return")
 
     def test_positive_negative_return_pct(self, analyzer, sample_returns):
         """Test positive/negative return percentage."""
         result = analyzer.analyze_return_distribution(sample_returns)
 
-        assert hasattr(result, 'positive_return_pct')
-        assert hasattr(result, 'negative_return_pct')
+        assert hasattr(result, "positive_return_pct")
+        assert hasattr(result, "negative_return_pct")
         assert result.positive_return_pct + result.negative_return_pct <= 1.0
 
     def test_best_worst_day(self, analyzer, sample_returns):
         """Test best and worst day calculations."""
         result = analyzer.analyze_return_distribution(sample_returns)
 
-        assert hasattr(result, 'best_day_return')
-        assert hasattr(result, 'worst_day_return')
+        assert hasattr(result, "best_day_return")
+        assert hasattr(result, "worst_day_return")
         assert result.best_day_return > result.worst_day_return
 
     def test_capture_ratios(self, analyzer):
@@ -331,14 +331,14 @@ class TestChanReturnDistributionAnalyzer:
             benchmark_returns,
         )
 
-        assert hasattr(result, 'up_capture_ratio')
-        assert hasattr(result, 'down_capture_ratio')
+        assert hasattr(result, "up_capture_ratio")
+        assert hasattr(result, "down_capture_ratio")
 
     def test_tail_ratio(self, analyzer, sample_returns):
         """Test tail ratio calculation."""
         result = analyzer.analyze_return_distribution(sample_returns)
 
-        assert hasattr(result, 'tail_ratio')
+        assert hasattr(result, "tail_ratio")
         assert result.tail_ratio >= 0
 
 
@@ -371,29 +371,29 @@ class TestChanStrategyComparator:
         result = comparator.compare_strategies(returns1, returns2)
 
         assert isinstance(result, StrategyComparisonResult)
-        assert hasattr(result, 'strategy1_sharpe')
-        assert hasattr(result, 'strategy2_sharpe')
-        assert hasattr(result, 'sharpe_difference')
+        assert hasattr(result, "strategy1_sharpe")
+        assert hasattr(result, "strategy2_sharpe")
+        assert hasattr(result, "sharpe_difference")
 
     def test_tracking_error(self, comparator, returns1, returns2):
         """Test tracking error calculation."""
         result = comparator.compare_strategies(returns1, returns2)
 
-        assert hasattr(result, 'tracking_error')
+        assert hasattr(result, "tracking_error")
         assert result.tracking_error >= 0
 
     def test_information_ratio(self, comparator, returns1, returns2):
         """Test information ratio calculation."""
         result = comparator.compare_strategies(returns1, returns2)
 
-        assert hasattr(result, 'information_ratio')
+        assert hasattr(result, "information_ratio")
         assert isinstance(result.information_ratio, float)
 
     def test_recommended_strategy(self, comparator, returns1, returns2):
         """Test strategy recommendation."""
         result = comparator.compare_strategies(returns1, returns2)
 
-        assert hasattr(result, 'recommended_strategy')
+        assert hasattr(result, "recommended_strategy")
         assert isinstance(result.recommended_strategy, str)
 
     def test_identical_strategies(self, comparator):

@@ -1,7 +1,6 @@
-from __future__ import annotations
+"""Strategy cycle protocols"""
 
-"""Strategy cycle protocols"""
-"""Strategy cycle protocols"""
+from __future__ import annotations
 
 from typing import TYPE_CHECKING, Protocol
 

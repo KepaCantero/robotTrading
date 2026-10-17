@@ -34,14 +34,14 @@ class TestLiquidityAnalyzer:
     def sample_order_book(self):
         """Create sample order book"""
         return {
-            'bids': [
+            "bids": [
                 (Decimal("99.99"), Decimal("1000")),
                 (Decimal("99.98"), Decimal("2000")),
                 (Decimal("99.97"), Decimal("3000")),
                 (Decimal("99.96"), Decimal("4000")),
                 (Decimal("99.95"), Decimal("5000")),
             ],
-            'asks': [
+            "asks": [
                 (Decimal("100.01"), Decimal("1000")),
                 (Decimal("100.02"), Decimal("2000")),
                 (Decimal("100.03"), Decimal("3000")),
@@ -55,10 +55,10 @@ class TestLiquidityAnalyzer:
         """Create sample price history"""
         return pd.DataFrame(
             {
-                'close': [100 + i * 0.01 + np.random.randn() * 0.05 for i in range(100)],
-                'volume': [1000000 + np.random.randint(-100000, 100000) for _ in range(100)],
+                "close": [100 + i * 0.01 + np.random.randn() * 0.05 for i in range(100)],
+                "volume": [1000000 + np.random.randint(-100000, 100000) for _ in range(100)],
             },
-            index=pd.date_range('2024-01-01', periods=100, freq='1min'),
+            index=pd.date_range("2024-01-01", periods=100, freq="1min"),
         )
 
     def test_measure_market_depth(self, analyzer, sample_order_book):
@@ -110,10 +110,10 @@ class TestLiquidityAnalyzer:
 
     def test_classify_liquidity_regime(self, analyzer):
         """Test liquidity regime classification"""
-        assert analyzer.classify_liquidity_regime(90) == 'HIGH'
-        assert analyzer.classify_liquidity_regime(70) == 'NORMAL'
-        assert analyzer.classify_liquidity_regime(50) == 'LOW'
-        assert analyzer.classify_liquidity_regime(30) == 'POOR'
+        assert analyzer.classify_liquidity_regime(90) == "HIGH"
+        assert analyzer.classify_liquidity_regime(70) == "NORMAL"
+        assert analyzer.classify_liquidity_regime(50) == "LOW"
+        assert analyzer.classify_liquidity_regime(30) == "POOR"
 
     def test_decompose_spread(self, analyzer):
         """Test spread decomposition"""
@@ -138,7 +138,7 @@ class TestLiquidityAnalyzer:
             execution_price=100.05,
             bid_price=99.98,
             ask_price=100.02,
-            side='BUY',
+            side="BUY",
         )
 
         # Should be positive for buy above midpoint
@@ -150,9 +150,9 @@ class TestLiquidityAnalyzer:
         prices = [100.0] * 50 + [102.0] * 50  # Shock at period 50
         price_history = pd.DataFrame(
             {
-                'close': prices,
+                "close": prices,
             },
-            index=pd.date_range('2024-01-01', periods=100, freq='1s'),
+            index=pd.date_range("2024-01-01", periods=100, freq="1s"),
         )
 
         shock_times = [price_history.index[50]]
@@ -173,19 +173,19 @@ class TestLiquidityAnalyzer:
             available_depth=Decimal("50000"),
             volatility=0.03,
             average_daily_volume=5_000_000,
-            urgency='HIGH',
+            urgency="HIGH",
         )
 
         # Should return valid risk assessment
         assert risk.liquidity_gap >= 0
         assert 0 <= risk.execution_shortfall_risk <= 1
-        assert risk.risk_level in ['LOW', 'MEDIUM', 'HIGH']
+        assert risk.risk_level in ["LOW", "MEDIUM", "HIGH"]
         assert isinstance(risk.recommendations, list)
 
     def test_calculate_liquidity_metrics(self, analyzer, sample_order_book, sample_price_history):
         """Test comprehensive liquidity metrics calculation"""
         metrics = analyzer.calculate_liquidity_metrics(
-            symbol='AAPL',
+            symbol="AAPL",
             order_book=sample_order_book,
             price_history=sample_price_history,
             volume=5_000_000,
@@ -196,14 +196,14 @@ class TestLiquidityAnalyzer:
         assert metrics.bid_ask_spread_bps >= 0
         assert metrics.quoted_depth > 0
         assert 0 <= metrics.liquidity_score <= 100
-        assert metrics.liquidity_regime in ['HIGH', 'NORMAL', 'LOW', 'POOR']
+        assert metrics.liquidity_regime in ["HIGH", "NORMAL", "LOW", "POOR"]
 
     def test_get_liquidity_trend(self, analyzer, sample_order_book, sample_price_history):
         """Test liquidity trend calculation"""
         # Add some historical metrics
         for i in range(10):
             analyzer.calculate_liquidity_metrics(
-                symbol='AAPL',
+                symbol="AAPL",
                 order_book=sample_order_book,
                 price_history=sample_price_history,
                 volume=5_000_000,
@@ -212,12 +212,12 @@ class TestLiquidityAnalyzer:
         trend = analyzer.get_liquidity_trend()
 
         # Should return valid trend
-        assert trend in ['IMPROVING', 'STABLE', 'DETERIORATING', 'UNKNOWN']
+        assert trend in ["IMPROVING", "STABLE", "DETERIORATING", "UNKNOWN"]
 
     def test_generate_liquidity_report(self, analyzer, sample_order_book, sample_price_history):
         """Test comprehensive liquidity report generation"""
         report = analyzer.generate_liquidity_report(
-            symbol='AAPL',
+            symbol="AAPL",
             order_book=sample_order_book,
             price_history=sample_price_history,
             volume=5_000_000,
@@ -225,13 +225,13 @@ class TestLiquidityAnalyzer:
         )
 
         # Should contain all required sections
-        assert 'symbol' in report
-        assert 'metrics' in report
-        assert 'depth_profile' in report
-        assert 'spread_decomposition' in report
-        assert 'liquidity_risk' in report
-        assert 'trend' in report
-        assert 'recommendations' in report
+        assert "symbol" in report
+        assert "metrics" in report
+        assert "depth_profile" in report
+        assert "spread_decomposition" in report
+        assert "liquidity_risk" in report
+        assert "trend" in report
+        assert "recommendations" in report
 
 
 class TestLiquidityMonitor:
@@ -256,14 +256,14 @@ class TestLiquidityMonitor:
             effective_spread_bps=50.0,
             depth_slope=0.1,
             liquidity_score=30.0,  # Below threshold
-            liquidity_regime='POOR',
+            liquidity_regime="POOR",
         )
 
         alert = monitor.check_liquidity_alert(low_metrics)
 
         # Should trigger alert
         assert alert is not None
-        assert alert['type'] == 'LOW_LIQUIDITY'
+        assert alert["type"] == "LOW_LIQUIDITY"
 
     def test_check_liquidity_alert_no_alert(self, monitor):
         """Test no alert for good liquidity"""
@@ -276,7 +276,7 @@ class TestLiquidityMonitor:
             effective_spread_bps=2.0,
             depth_slope=0.5,
             liquidity_score=80.0,  # Above threshold
-            liquidity_regime='HIGH',
+            liquidity_regime="HIGH",
         )
 
         alert = monitor.check_liquidity_alert(good_metrics)
@@ -366,25 +366,25 @@ class TestLiquidityIntegration:
 
         # Create realistic order book
         order_book = {
-            'bids': [
-                (Decimal(f"{100 - i*0.01:.2f}"), Decimal(str((i + 1) * 1000))) for i in range(10)
+            "bids": [
+                (Decimal(f"{100 - i * 0.01:.2f}"), Decimal(str((i + 1) * 1000))) for i in range(10)
             ],
-            'asks': [
-                (Decimal(f"{100 + i*0.01:.2f}"), Decimal(str((i + 1) * 1000))) for i in range(10)
+            "asks": [
+                (Decimal(f"{100 + i * 0.01:.2f}"), Decimal(str((i + 1) * 1000))) for i in range(10)
             ],
         }
 
         # Create price history
         price_history = pd.DataFrame(
             {
-                'close': [100 + np.random.randn() * 0.1 for _ in range(100)],
+                "close": [100 + np.random.randn() * 0.1 for _ in range(100)],
             },
-            index=pd.date_range('2024-01-01', periods=100, freq='1min'),
+            index=pd.date_range("2024-01-01", periods=100, freq="1min"),
         )
 
         # Generate report
         report = analyzer.generate_liquidity_report(
-            symbol='AAPL',
+            symbol="AAPL",
             order_book=order_book,
             price_history=price_history,
             volume=5_000_000,
@@ -392,11 +392,11 @@ class TestLiquidityIntegration:
         )
 
         # Validate report structure
-        assert report['symbol'] == 'AAPL'
-        assert 'metrics' in report
-        assert report['metrics']['liquidity_score'] >= 0
-        assert len(report['recommendations']) > 0
+        assert report["symbol"] == "AAPL"
+        assert "metrics" in report
+        assert report["metrics"]["liquidity_score"] >= 0
+        assert len(report["recommendations"]) > 0
 
 
-if __name__ == '__main__':
-    pytest.main([__file__, '-v'])
+if __name__ == "__main__":
+    pytest.main([__file__, "-v"])

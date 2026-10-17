@@ -16,6 +16,7 @@ Domain: Shared
 - `logging`
 - `pathlib`
 - `pydantic`
+- `pydantic_settings`
 - `typing`
 - `yaml`
 

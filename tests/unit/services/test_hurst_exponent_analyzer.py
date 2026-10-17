@@ -336,15 +336,15 @@ class TestAnalyzerFeatures:
         result = analyzer.analyze(sample_data, symbol="TEST", timestamp=datetime.now())
 
         # Check all attributes
-        assert hasattr(result, 'hurst_exponent')
-        assert hasattr(result, 'regime')
-        assert hasattr(result, 'strategy')
-        assert hasattr(result, 'confidence')
-        assert hasattr(result, 'method')
-        assert hasattr(result, 'std_error')
-        assert hasattr(result, 'p_value')
-        assert hasattr(result, 'rs_values')
-        assert hasattr(result, 'window_sizes')
+        assert hasattr(result, "hurst_exponent")
+        assert hasattr(result, "regime")
+        assert hasattr(result, "strategy")
+        assert hasattr(result, "confidence")
+        assert hasattr(result, "method")
+        assert hasattr(result, "std_error")
+        assert hasattr(result, "p_value")
+        assert hasattr(result, "rs_values")
+        assert hasattr(result, "window_sizes")
 
         # Check types
         assert isinstance(result.hurst_exponent, float)
@@ -487,7 +487,7 @@ class TestMultipleSymbolAnalysis:
         for i in range(1, n):
             dx = theta * (mu - x[i - 1]) * 0.01 + 0.5 * np.sqrt(0.01) * np.random.randn()
             x[i] = x[i - 1] + dx
-        data['AAPL'] = x
+        data["AAPL"] = x
 
         # MSFT: Random walk
         x = np.zeros(n)
@@ -495,14 +495,14 @@ class TestMultipleSymbolAnalysis:
         for i in range(1, n):
             dx = 0.01 * np.sqrt(0.01) * np.random.randn()
             x[i] = x[i - 1] * (1 + dx)
-        data['MSFT'] = x
+        data["MSFT"] = x
 
         # GOOGL: Trending
         x = np.zeros(n)
         x[0] = 100.0
         for i in range(1, n):
             x[i] = x[i - 1] * (1 + 0.05 * 0.01) + 0.02 * np.random.randn()
-        data['GOOGL'] = x
+        data["GOOGL"] = x
 
         return data
 
@@ -518,9 +518,9 @@ class TestMultipleSymbolAnalysis:
 
         # Check results
         assert len(results) == 3
-        assert 'AAPL' in results
-        assert 'MSFT' in results
-        assert 'GOOGL' in results
+        assert "AAPL" in results
+        assert "MSFT" in results
+        assert "GOOGL" in results
 
         # Each result should be valid
         for symbol, result in results.items():
@@ -635,7 +635,7 @@ class TestPerformance:
 
         # Should be reasonably fast with Numba
         print(f"✅ Hurst R/S Performance: {elapsed:.3f}s for {iterations} iterations")
-        print(f"   Average: {elapsed/iterations*1000:.2f}ms per calculation")
+        print(f"   Average: {elapsed / iterations * 1000:.2f}ms per calculation")
 
     def test_variance_calculation_performance(self, large_dataset):
         """Test variance calculation performance (Numba REQUIRED)."""
@@ -653,7 +653,7 @@ class TestPerformance:
         elapsed = time.time() - start
 
         print(f"✅ Hurst Variance Performance: {elapsed:.3f}s for {iterations} iterations")
-        print(f"   Average: {elapsed/iterations*1000:.2f}ms per calculation")
+        print(f"   Average: {elapsed / iterations * 1000:.2f}ms per calculation")
 
 
 class TestModuleInfo:
@@ -664,29 +664,29 @@ class TestModuleInfo:
         info = get_analyzer_info()
 
         assert isinstance(info, dict)
-        assert 'numba_required' in info
-        assert 'numba_version' in info
-        assert 'jit_compilation' in info
-        assert 'methods_available' in info
-        assert 'regime_classifications' in info
-        assert 'strategy_recommendations' in info
-        assert 'compliance' in info
+        assert "numba_required" in info
+        assert "numba_version" in info
+        assert "jit_compilation" in info
+        assert "methods_available" in info
+        assert "regime_classifications" in info
+        assert "strategy_recommendations" in info
+        assert "compliance" in info
 
         # Verify Numba is required
-        assert info['numba_required'] is True
-        assert 'NO FALLBACKS' in info['jit_compilation']
+        assert info["numba_required"] is True
+        assert "NO FALLBACKS" in info["jit_compilation"]
 
         # Check all three methods are available
-        assert 'rs' in info['methods_available']
-        assert 'variance' in info['methods_available']
-        assert 'agg_var' in info['methods_available']
+        assert "rs" in info["methods_available"]
+        assert "variance" in info["methods_available"]
+        assert "agg_var" in info["methods_available"]
 
         # Check compliance list
-        compliance = info['compliance']
-        assert any('Ernest Chan' in c for c in compliance)
-        assert any('Rule 19' in c for c in compliance)
-        assert any('Rule 3' in c for c in compliance)
-        assert any('Rule 32' in c for c in compliance)
+        compliance = info["compliance"]
+        assert any("Ernest Chan" in c for c in compliance)
+        assert any("Rule 19" in c for c in compliance)
+        assert any("Rule 3" in c for c in compliance)
+        assert any("Rule 32" in c for c in compliance)
 
 
 class TestRealWorldScenarios:

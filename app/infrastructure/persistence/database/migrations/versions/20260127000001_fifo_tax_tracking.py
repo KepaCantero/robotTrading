@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 """Add FIFO tax tracking for Modelo 721 (Spain tax compliance)
 
 This migration adds tables for tracking cryptocurrency and asset trades
@@ -14,13 +12,14 @@ Create Date: 2026-01-27
 
 """
 
+from __future__ import annotations
+
 import logging
 from typing import TYPE_CHECKING
 
 import sqlalchemy as sa
-from sqlalchemy.dialects import postgresql
-
 from alembic import op
+from sqlalchemy.dialects import postgresql
 
 if TYPE_CHECKING:
     from collections.abc import Sequence

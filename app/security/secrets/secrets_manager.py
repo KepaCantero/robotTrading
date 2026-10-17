@@ -399,7 +399,7 @@ class SecretsManager:
                 name=name,
                 value=new_value,
                 metadata={
-                    "rotated_from": hashlib.sha256(old_value.encode()).hexdigest()[:16],
+                    "rotated_from": hashlib.sha256((old_value or "").encode()).hexdigest()[:16],
                 },
             )
 
@@ -482,6 +482,7 @@ class SecretsManager:
         Returns:
             List of secret information
         """
+        del include_metadata  # aceptado por compatibilidad; sin uso aquí
         return [secret.to_dict(include_value=False) for secret in self.secrets.values()]
 
     def export_secrets(self, include_values: bool = False) -> dict[str, Any]:

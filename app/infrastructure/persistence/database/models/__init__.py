@@ -223,7 +223,7 @@ def __getattr__(name: str):
         "Backtest",
         "RiskMetrics",
         "SystemLog",
-        "PositionState",
+        "PositionState",  # pylint: disable=undefined-all-variable
     }
 
     if name in model_names:
@@ -243,7 +243,7 @@ __all__ = [
     "PortfolioModelProtocol",
     "PositionModelProtocol",
     # Model classes (dynamically loaded)
-    "PositionState",
+    "PositionState",  # pylint: disable=undefined-all-variable
     "PositionStateModelProtocol",
     "RiskMetricsModelProtocol",
     "SignalModelProtocol",

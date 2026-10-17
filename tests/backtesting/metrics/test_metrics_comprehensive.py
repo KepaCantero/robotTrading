@@ -10,14 +10,20 @@ Following TDD best practices from Kent Beck:
 6. Property-based testing with Hypothesis
 """
 
-from datetime import datetime, timedelta
+import logging
+from datetime import date, datetime, timedelta
 from decimal import Decimal
-from typing import List
 
 import pytest
 from hypothesis import HealthCheck, given, settings, strategies as st
 
-from app.backtesting.metrics import MetricsCalculator, calculate_expectancy, calculate_profit_factor
+from app.backtesting.metrics import (
+    MetricsCalculator,
+    build_daily_equity_series,
+    calculate_expectancy,
+    calculate_max_drawdown,
+    calculate_profit_factor,
+)
 from app.backtesting.models import Trade, TradeStatus
 
 # =============================================================================
@@ -26,7 +32,7 @@ from app.backtesting.models import Trade, TradeStatus
 
 
 @pytest.fixture
-def sample_trades() -> List[Trade]:
+def sample_trades() -> list[Trade]:
     """Create sample trades for testing."""
     base_time = datetime(2024, 1, 1, 9, 30, 0)
 
@@ -83,7 +89,7 @@ def sample_trades() -> List[Trade]:
 
 
 @pytest.fixture
-def winning_trades(default_symbol) -> List[Trade]:
+def winning_trades(default_symbol) -> list[Trade]:
     """Create only winning trades."""
     base_time = datetime(2024, 1, 1)
     return [
@@ -104,7 +110,7 @@ def winning_trades(default_symbol) -> List[Trade]:
 
 
 @pytest.fixture
-def losing_trades(default_symbol) -> List[Trade]:
+def losing_trades(default_symbol) -> list[Trade]:
     """Create only losing trades."""
     base_time = datetime(2024, 1, 1)
     return [
@@ -661,7 +667,7 @@ class TestCAGRCalculation:
 
     def test_cagr_validates_date_order(self, calculator):
         """Test that end_date must be after start_date."""
-        with pytest.raises(ValueError, match="start_date.*must be before end_date"):
+        with pytest.raises(ValueError, match=r"start_date.*must be before end_date"):
             calculator.calculate_cagr(
                 Decimal("10000"),
                 Decimal("20000"),
@@ -672,7 +678,7 @@ class TestCAGRCalculation:
     def test_cagr_with_same_dates_raises_error(self, calculator):
         """Test that same dates raise ValueError."""
         same_date = datetime(2024, 1, 1)
-        with pytest.raises(ValueError, match="start_date.*must be before end_date"):
+        with pytest.raises(ValueError, match=r"start_date.*must be before end_date"):
             calculator.calculate_cagr(
                 Decimal("10000"),
                 Decimal("20000"),
@@ -1225,3 +1231,161 @@ class TestSharpeSortinoRatios:
 
         # Should have Sortino ratio
         assert metrics.sortino_ratio is not None
+
+
+# =============================================================================
+# Daily Equity Curve, Bounded Drawdown and Daily Sharpe Tests
+# =============================================================================
+
+
+class TestDailyEquityCurve:
+    """Date-stamped daily equity curve: aggregation, drawdown bounds, Sharpe."""
+
+    @staticmethod
+    def _trade(trade_id: str, symbol: str, pnl: Decimal, exit_day: int) -> Trade:
+        """Create a closed trade exiting on `exit_day` (1-based, from 2024-01-01)."""
+        base = datetime(2024, 1, 1)
+        return Trade(
+            trade_id=trade_id,
+            symbol=symbol,
+            side="buy",
+            quantity=Decimal("100"),
+            entry_price=Decimal("150"),
+            exit_price=Decimal("155") if pnl > 0 else Decimal("145"),
+            entry_time=base + timedelta(days=exit_day - 1),
+            exit_time=base + timedelta(days=exit_day),
+            status=TradeStatus.CLOSED,
+            pnl=pnl,
+        )
+
+    def test_equity_curve_is_daily_and_aggregates_same_day(self, default_symbol):
+        """Trades closing on the same day collapse into one end-of-day point."""
+        trades = [
+            self._trade("T1", default_symbol, Decimal("500"), exit_day=1),
+            self._trade("T2", default_symbol, Decimal("-300"), exit_day=1),
+            self._trade("T3", default_symbol, Decimal("100"), exit_day=3),
+        ]
+
+        dates, equity, returns = build_daily_equity_series(trades, Decimal("10000"))
+
+        assert dates == [date(2024, 1, 2), date(2024, 1, 4)]
+        # Day-zero anchor + one point per active day (200 = 500 - 300 on day 1)
+        assert equity == [Decimal("10000"), Decimal("10200"), Decimal("10300")]
+        assert returns == [Decimal("0.02"), Decimal("100") / Decimal("10200")]
+
+    def test_days_without_trades_are_not_forward_filled(self, default_symbol):
+        """No artificial 0% returns are injected for days without trades."""
+        trades = [
+            self._trade("T1", default_symbol, Decimal("500"), exit_day=1),
+            self._trade("T2", default_symbol, Decimal("500"), exit_day=5),
+        ]
+
+        dates, equity, returns = build_daily_equity_series(trades, Decimal("10000"))
+
+        assert len(dates) == 2
+        assert len(equity) == 3
+        assert len(returns) == 2
+
+    def test_max_drawdown_exact_known_curve(self, calculator, default_symbol):
+        """100k -> peak 400k -> back to 100k: max drawdown is exactly -75%."""
+        trades = [
+            self._trade(f"W{i}", default_symbol, Decimal("100000"), exit_day=i + 1)
+            for i in range(3)
+        ] + [
+            self._trade(f"L{i}", default_symbol, Decimal("-100000"), exit_day=i + 4)
+            for i in range(3)
+        ]
+
+        metrics = calculator.calculate_all_metrics(
+            trades=trades,
+            initial_capital=Decimal("100000"),
+            final_capital=Decimal("100000"),
+            start_date=datetime(2024, 1, 1),
+            end_date=datetime(2024, 1, 31),
+        )
+
+        # Peak 400k, trough 100k: (100k - 400k) / 400k = -75% exactly,
+        # measured against the peak (NOT the initial capital, which would
+        # give the impossible -300%)
+        assert metrics.max_drawdown_percentage == Decimal("-75")
+        assert metrics.max_drawdown == Decimal("-300000")
+
+    @pytest.mark.parametrize(
+        "pnls,initial",
+        [
+            ([500, 500, 500], "10000"),  # only wins
+            ([-500, -500, -500], "10000"),  # only losses
+            ([500, -800, 500, -100], "10000"),  # mixed
+            ([-20000, 5000], "10000"),  # impossible: negative equity
+            ([5000, 5000, -9000], "10000"),  # dd below initial capital
+        ],
+    )
+    def test_max_drawdown_percentage_invariant(self, calculator, default_symbol, pnls, initial):
+        """Invariant: max_drawdown_percentage is ALWAYS within [-100, 0]."""
+        trades = [
+            self._trade(f"T{i}", default_symbol, Decimal(str(p)), exit_day=i + 1)
+            for i, p in enumerate(pnls)
+        ]
+
+        metrics = calculator.calculate_all_metrics(
+            trades=trades,
+            initial_capital=Decimal(initial),
+            final_capital=Decimal(initial) + Decimal(str(sum(pnls))),
+            start_date=datetime(2024, 1, 1),
+            end_date=datetime(2024, 1, 31),
+        )
+
+        assert Decimal("-100") <= metrics.max_drawdown_percentage <= Decimal("0")
+        assert metrics.max_drawdown <= Decimal("0")
+
+    def test_calculate_max_drawdown_clamps_negative_equity_with_warning(self, caplog):
+        """Negative equity -> raw -500% is clamped to -100%, warned once."""
+        from app.backtesting import metrics as metrics_module
+
+        metrics_module._drawdown_clamp_warned = False
+        with caplog.at_level(logging.WARNING, logger="app.backtesting.metrics"):
+            dd_abs, dd_pct = calculate_max_drawdown([Decimal("1000"), Decimal("-4000")])
+
+            # Second call must NOT warn again (once per process)
+            calculate_max_drawdown([Decimal("1000"), Decimal("-4000")])
+
+        assert dd_pct == Decimal("-100")
+        # Absolute value consistent with the clamped percentage (equity at 0)
+        assert dd_abs == Decimal("-1000")
+        warnings = [r for r in caplog.records if "clamped" in r.getMessage().lower()]
+        assert len(warnings) == 1
+
+    def test_calculate_max_drawdown_monotonic_growth_has_zero_drawdown(self):
+        """A strictly growing curve has no drawdown."""
+        dd_abs, dd_pct = calculate_max_drawdown([Decimal("1000"), Decimal("1500"), Decimal("2000")])
+        assert dd_abs == Decimal("0")
+        assert dd_pct == Decimal("0")
+
+    def test_sharpe_on_known_daily_series(self, monkeypatch):
+        """Sharpe over a known daily series [10%, -5%, 10%, -5%] with rf=0.
+
+        mean = 2.5%, population std = 7.5%
+        Sharpe = 0.025 * sqrt(252) / 0.075 ~= 5.2915
+        """
+        # Force the manual path so the expected value is exact regardless
+        # of whether empyrical is installed in the environment
+        monkeypatch.setattr("app.backtesting.metrics._ensure_empyrical", lambda: None)
+        calc = MetricsCalculator(risk_free_rate=Decimal("0"))
+
+        returns = [Decimal("0.10"), Decimal("-0.05"), Decimal("0.10"), Decimal("-0.05")]
+        sharpe = calc._calculate_sharpe_ratio(returns)
+
+        assert sharpe is not None
+        assert abs(sharpe - Decimal("5.2915")) < Decimal("0.001")
+
+    def test_daily_returns_are_real_daily_not_per_trade(self, calculator, default_symbol):
+        """5 trades over 2 active days produce 2 daily returns, not 5."""
+        trades = [
+            self._trade(f"A{i}", default_symbol, Decimal("100"), exit_day=1) for i in range(3)
+        ] + [self._trade(f"B{i}", default_symbol, Decimal("-50"), exit_day=2) for i in range(2)]
+
+        returns = calculator._calculate_daily_returns(trades, Decimal("10000"))
+
+        assert len(returns) == 2
+        assert returns[0] == Decimal("300") / Decimal("10000")
+        assert returns[1] == Decimal("-100") / Decimal("10300")

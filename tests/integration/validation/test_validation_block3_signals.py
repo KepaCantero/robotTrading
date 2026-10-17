@@ -1,3 +1,12 @@
+"""
+BLOQUE 3 — Pruebas de Señales
+
+Tests para verificar:
+- Dataset reducido (1 símbolo, 1 año, 1 estrategia por test)
+- Coherencia de señales (justificación por indicadores)
+- No solapamiento (no hay señales simultáneas opuestas)
+"""
+
 import unittest
 from datetime import datetime, timedelta
 from decimal import Decimal
@@ -10,15 +19,6 @@ from app.domain.strategies.momentum import MomentumStrategy
 from app.domain.strategies.pairs_trading import PairsTrading as PairsTradingStrategy
 from app.models.signal import SignalType
 from app.services.momentum_analysis import TechnicalIndicatorCalculator
-
-"""
-BLOQUE 3 — Pruebas de Señales
-
-Tests para verificar:
-- Dataset reducido (1 símbolo, 1 año, 1 estrategia por test)
-- Coherencia de señales (justificación por indicadores)
-- No solapamiento (no hay señales simultáneas opuestas)
-"""
 
 
 class TestMomentumSignalCoherence(unittest.TestCase):
@@ -136,7 +136,7 @@ class TestMomentumSignalCoherence(unittest.TestCase):
             # Verificar que las señales son coherentes con indicadores
             if signals:
                 # Obtener últimos valores de indicadores
-                if hasattr(self.strategy, 'last_rsi') and self.strategy.last_rsi is not None:
+                if hasattr(self.strategy, "last_rsi") and self.strategy.last_rsi is not None:
                     self.strategy.last_rsi
 
                     for signal in signals:

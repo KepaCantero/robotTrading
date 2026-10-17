@@ -30,17 +30,17 @@ def sample_data():
 
     X = pd.DataFrame(
         np.random.randn(n_samples, n_features),
-        columns=[f'feature_{i}' for i in range(n_features)],
-        index=pd.date_range('2020-01-01', periods=n_samples, freq='D'),
+        columns=[f"feature_{i}" for i in range(n_features)],
+        index=pd.date_range("2020-01-01", periods=n_samples, freq="D"),
     )
 
     # Create binary labels
-    y = pd.Series(np.random.randint(0, 2, n_samples), index=X.index, name='label')
+    y = pd.Series(np.random.randint(0, 2, n_samples), index=X.index, name="label")
 
     # Create events with t1 (exit times)
     random_days = np.random.randint(1, 10, n_samples)
     events = pd.DataFrame(
-        {'t1': [X.index[i] + pd.Timedelta(days=random_days[i]) for i in range(n_samples)]},
+        {"t1": [X.index[i] + pd.Timedelta(days=random_days[i]) for i in range(n_samples)]},
         index=X.index,
     )
 
@@ -149,9 +149,9 @@ class TestPurgedKFold:
 
         assert isinstance(summary, pd.DataFrame)
         assert len(summary) > 0
-        assert 'fold' in summary.columns
-        assert 'train_size' in summary.columns
-        assert 'test_size' in summary.columns
+        assert "fold" in summary.columns
+        assert "train_size" in summary.columns
+        assert "test_size" in summary.columns
 
     def test_validate_no_leakage(self, sample_data):
         """Test validate_no_leakage method."""
@@ -183,7 +183,9 @@ class TestPurgedKFold:
 
         # Set very high minimum samples
         cv = PurgedKFold(
-            n_splits=5, min_train_samples=10000, min_test_samples=1000  # More than total samples
+            n_splits=5,
+            min_train_samples=10000,
+            min_test_samples=1000,  # More than total samples
         )
 
         # Should raise error or return empty list
@@ -193,10 +195,10 @@ class TestPurgedKFold:
     def test_with_small_dataset(self):
         """Test behavior with small dataset."""
         # Create very small dataset
-        X = pd.DataFrame(np.random.randn(50, 5), columns=[f'feature_{i}' for i in range(5)])
+        X = pd.DataFrame(np.random.randn(50, 5), columns=[f"feature_{i}" for i in range(5)])
         y = pd.Series(np.random.randint(0, 2, 50))
         events = pd.DataFrame(
-            {'t1': pd.date_range('2020-01-01', periods=50, freq='D') + pd.Timedelta(days=5)}
+            {"t1": pd.date_range("2020-01-01", periods=50, freq="D") + pd.Timedelta(days=5)}
         )
 
         cv = PurgedKFold(n_splits=3, min_train_samples=20, min_test_samples=5)
@@ -263,10 +265,10 @@ class TestCVScore:
 
         results = cv_score(estimator, X.values, y.values, events=events, n_splits=3)
 
-        assert 'mean_score' in results
-        assert 'std_score' in results
-        assert 'fold_scores' in results
-        assert len(results['fold_scores']) <= 3
+        assert "mean_score" in results
+        assert "std_score" in results
+        assert "fold_scores" in results
+        assert len(results["fold_scores"]) <= 3
 
     def test_cv_score_with_custom_scoring(self, sample_data):
         """Test cv_score with custom scoring function."""
@@ -280,8 +282,8 @@ class TestCVScore:
             estimator, X.values, y.values, events=events, n_splits=3, scoring=f1_score
         )
 
-        assert 'mean_score' in results
-        assert isinstance(results['mean_score'], float)
+        assert "mean_score" in results
+        assert isinstance(results["mean_score"], float)
 
 
 class TestPurgedCVConfig:
@@ -383,10 +385,10 @@ class TestIntegration:
     def test_with_dataframe_index(self):
         """Test with DataFrame that has datetime index."""
         # Create data with datetime index
-        dates = pd.date_range('2020-01-01', periods=500, freq='D')
+        dates = pd.date_range("2020-01-01", periods=500, freq="D")
         X = pd.DataFrame(np.random.randn(500, 5), index=dates)
         y = pd.Series(np.random.randint(0, 2, 500), index=dates)
-        events = pd.DataFrame({'t1': dates + pd.Timedelta(days=5)}, index=dates)
+        events = pd.DataFrame({"t1": dates + pd.Timedelta(days=5)}, index=dates)
 
         cv = PurgedKFold(n_splits=5)
         splits = list(cv.split(X, y, events=events))

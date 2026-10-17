@@ -56,7 +56,7 @@ jobs:
         run: bandit -r app/ -f json -o bandit-report.json
 
       - name: Run Safety (Dependency Audit)
-        run: safety check --json --output safety-report.json || true
+        run: safety check --json --output safety-report.json
 
       - name: Upload Security Reports
         uses: actions/upload-artifact@v3
@@ -126,7 +126,7 @@ jobs:
 
       - name: Set up test environment
         run: |
-          cp config/testing.env .env
+          cp config/environments/testing.env .env
           echo "DATABASE_URL=postgresql://postgres:postgres@localhost:5432/algotrading_test" >> .env
           echo "REDIS_URL=redis://localhost:6379/1" >> .env
 
@@ -209,6 +209,7 @@ jobs:
         with:
           images: ${{ env.DOCKER_REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
+            type=sha
             type=ref,event=branch
             type=ref,event=pr
             type=semver,pattern={{version}}

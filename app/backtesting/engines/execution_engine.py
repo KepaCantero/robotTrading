@@ -334,6 +334,8 @@ class ExecutionBacktestEngine(BaseBacktestEngine[BacktestConfig, BacktestResult]
         Returns:
             Tuple of (execution_result_if_closed, remaining_position)
         """
+        del bar_close  # aceptado por compatibilidad; sin uso aquí
+        del bar_open  # aceptado por compatibilidad; sin uso aquí
         if not position.stop_loss_price and not position.take_profit_price:
             return None, position
 

@@ -20,6 +20,7 @@ from pydantic import BaseModel, Field
 
 from app.services.momentum_analysis import TechnicalIndicatorCalculator
 from app.shared.config.params.strategy_config import StockAllocationSettings
+from app.shared.utils.safe_parse import cfg_dict
 
 from .allocators import ERCCapitalAllocator
 from .calculators import HalfLifeCalculator, HurstCalculator, StationarityTester
@@ -480,7 +481,7 @@ class StrategyStockAllocator:
 
             # Create StockMetrics objects
             for ticker, capital in strategy_allocs.items():
-                sps_score = all_scores.get(ticker, {}).get(strategy, 0.0)
+                sps_score = cfg_dict(all_scores.get(ticker)).get(strategy, 0.0)
 
                 # Get metrics from scorer results
                 momentum_metrics = {}

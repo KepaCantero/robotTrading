@@ -7,9 +7,10 @@ from __future__ import annotations
 
 import contextlib
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
 from sqlalchemy import MetaData, create_engine, event, text
+from sqlalchemy.engine import Engine
 from sqlalchemy.exc import (
     DatabaseError,
     DataError,
@@ -17,7 +18,12 @@ from sqlalchemy.exc import (
     OperationalError,
     ProgrammingError,
 )
-from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+from sqlalchemy.ext.asyncio import (
+    AsyncEngine,
+    AsyncSession,
+    async_sessionmaker,
+    create_async_engine,
+)
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.pool import QueuePool
@@ -26,7 +32,7 @@ from app.shared.config.base.environment_config import get_config
 from app.shared.exceptions.exceptions import raise_database_error
 
 if TYPE_CHECKING:
-    from collections.abc import AsyncGenerator
+    from collections.abc import AsyncGenerator, Iterator
 
 logger = logging.getLogger(__name__)
 
@@ -48,10 +54,10 @@ class DatabaseManager:
 
     def __init__(self):
         self.config = get_config()
-        self.sync_engine = None
-        self.async_engine = None
-        self.session_factory = None
-        self.async_session_factory = None
+        self.sync_engine: Engine | None = None
+        self.async_engine: AsyncEngine | None = None
+        self.session_factory: sessionmaker | None = None
+        self.async_session_factory: async_sessionmaker | None = None
 
     def initialize_sync_engine(self) -> None:
         """Initialize synchronous database engine."""
@@ -157,24 +163,26 @@ class DatabaseManager:
 
     def _add_connection_listeners(self) -> None:
         """Add database connection event listeners."""
+        sync_engine = self.sync_engine
+        assert sync_engine is not None  # only called right after engine creation
 
-        @event.listens_for(self.sync_engine, "connect")
-        def set_sqlite_pragma(dbapi_connection, connection_record):
+        @event.listens_for(sync_engine, "connect")
+        def set_sqlite_pragma(dbapi_connection, _connection_record):
             """Set database connection parameters."""
-            if "postgresql" in str(self.sync_engine.url):
+            if "postgresql" in str(sync_engine.url):
                 # PostgreSQL specific settings
                 with dbapi_connection.cursor() as cursor:
                     cursor.execute("SET timezone TO 'UTC'")
                     cursor.execute("SET statement_timeout TO '30s'")
                     cursor.execute("SET lock_timeout TO '10s'")
 
-        @event.listens_for(self.sync_engine, "checkout")
-        def receive_checkout(dbapi_connection, connection_record, connection_proxy):
+        @event.listens_for(sync_engine, "checkout")
+        def receive_checkout(dbapi_connection, _connection_record, _connection_proxy):
             """Log connection checkout."""
             logger.debug("Database connection checked out")
 
-        @event.listens_for(self.sync_engine, "checkin")
-        def receive_checkin(dbapi_connection, connection_record):
+        @event.listens_for(sync_engine, "checkin")
+        def receive_checkin(dbapi_connection, _connection_record):
             """Log connection checkin."""
             logger.debug("Database connection checked in")
 
@@ -207,6 +215,7 @@ class DatabaseManager:
         if not self.session_factory:
             self.initialize_sync_engine()
 
+        assert self.session_factory is not None
         return self.session_factory()
 
     def get_async_session(self) -> AsyncSession:
@@ -214,6 +223,7 @@ class DatabaseManager:
         if not self.async_session_factory:
             self.initialize_async_engine()
 
+        assert self.async_session_factory is not None
         return self.async_session_factory()
 
     def close_connections(self) -> None:
@@ -264,7 +274,7 @@ def _get_db_manager() -> DatabaseManager:
 
 # Dependency functions for FastAPI
 @contextlib.contextmanager
-def get_sync_db() -> Session:
+def get_sync_db() -> Iterator[Session]:
     """Get synchronous database session for FastAPI dependency injection."""
     session = _get_db_manager().get_sync_session()
     try:
@@ -376,7 +386,7 @@ class DatabaseSession:
 
     def __init__(self, async_mode: bool = False):
         self.async_mode = async_mode
-        self.session = None
+        self.session: Session | AsyncSession | None = None
 
     def __enter__(self):
         if self.async_mode:
@@ -384,7 +394,7 @@ class DatabaseSession:
         self.session = _get_db_manager().get_sync_session()
         return self.session
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
+    def __exit__(self, exc_type, exc_val, _exc_tb):
         if self.session:
             if exc_type:
                 self.session.rollback()
@@ -398,13 +408,15 @@ class DatabaseSession:
         self.session = _get_db_manager().get_async_session()
         return self.session
 
-    async def __aexit__(self, exc_type, exc_val, exc_tb):
+    async def __aexit__(self, exc_type, exc_val, _exc_tb):
+        # __aexit__ is only reached via __aenter__, which stores an AsyncSession.
+        session = cast("AsyncSession", self.session)
         if self.session:
             if exc_type:
-                await self.session.rollback()
+                await session.rollback()
             else:
-                await self.session.commit()
-            await self.session.close()
+                await session.commit()
+            await session.close()
 
 
 # Database transaction decorators

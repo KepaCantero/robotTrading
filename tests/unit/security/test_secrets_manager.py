@@ -41,7 +41,7 @@ def secrets_manager(encryption_key, monkeypatch):
 @pytest.fixture
 def temp_file_path(encryption_key):
     """Create a temporary file path for encrypted storage testing."""
-    with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.json') as f:
+    with tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".json") as f:
         path = f.name
     yield path
     # Cleanup
@@ -189,7 +189,7 @@ class TestEncryptedFileStorage:
         storage.store("test_key", "test_value")
 
         # Read the raw file content
-        with open(temp_file_path, 'rb') as f:
+        with open(temp_file_path, "rb") as f:
             content = f.read()
 
         # Content should be encrypted (not plain JSON)

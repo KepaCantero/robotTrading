@@ -18,6 +18,7 @@ Reference:
 """
 
 import numpy as np
+
 from app.strategies.momentum_modular.learning.supervised_learning_engine import (
     SupervisedLearningEngine,
 )
@@ -34,13 +35,13 @@ def example_mcc_integration():
 
     # Configure the learning engine
     config = {
-        'algorithm': 'xgboost',  # Also works with: random_forest, lightgbm, catboost, gradient_boosting, neural_net
-        'feature_columns': ['rsi', 'momentum', 'ema_distance', 'volume_change'],
-        'target_column': 'trade_success',  # Binary: 1 = profitable trade, 0 = unprofitable
-        'model_parameters': {
-            'n_estimators': 100,
-            'max_depth': 6,
-            'learning_rate': 0.1,
+        "algorithm": "xgboost",  # Also works with: random_forest, lightgbm, catboost, gradient_boosting, neural_net
+        "feature_columns": ["rsi", "momentum", "ema_distance", "volume_change"],
+        "target_column": "trade_success",  # Binary: 1 = profitable trade, 0 = unprofitable
+        "model_parameters": {
+            "n_estimators": 100,
+            "max_depth": 6,
+            "learning_rate": 0.1,
         },
     }
 
@@ -49,21 +50,21 @@ def example_mcc_integration():
 
     # Prepare training data (imbalanced scenario: 10% winning trades)
     n_samples = 1000
-    n_features = len(config['feature_columns'])
+    n_features = len(config["feature_columns"])
 
     training_data = {
-        'features': np.random.randn(n_samples, n_features),
-        'labels': np.array([1] * 100 + [0] * 900),  # 10% winners, 90% losers
-        'metadata': {},
+        "features": np.random.randn(n_samples, n_features),
+        "labels": np.array([1] * 100 + [0] * 900),  # 10% winners, 90% losers
+        "metadata": {},
     }
 
     print("Training Scenario:")
     print(f"  Total samples: {n_samples}")
     print(
-        f"  Winning trades: {np.sum(training_data['labels'])} ({np.mean(training_data['labels'])*100:.1f}%)"
+        f"  Winning trades: {np.sum(training_data['labels'])} ({np.mean(training_data['labels']) * 100:.1f}%)"
     )
     print(
-        f"  Losing trades: {n_samples - np.sum(training_data['labels'])} ({(1-np.mean(training_data['labels']))*100:.1f}%)"
+        f"  Losing trades: {n_samples - np.sum(training_data['labels'])} ({(1 - np.mean(training_data['labels'])) * 100:.1f}%)"
     )
     print()
 
@@ -89,8 +90,8 @@ def example_mcc_integration():
     print()
 
     # Interpret MCC
-    if 'mcc' in metrics and metrics['mcc'] is not None:
-        mcc = metrics['mcc']
+    if "mcc" in metrics and metrics["mcc"] is not None:
+        mcc = metrics["mcc"]
         print("MCC Interpretation:")
         print(f"  Current MCC: {mcc:.3f}")
         print()
@@ -133,29 +134,29 @@ def example_mcc_comparison():
 
     scenarios = [
         {
-            'name': 'Perfect Prediction',
-            'y_true': np.array([1, 1, 1, 0, 0, 0]),
-            'y_pred': np.array([1, 1, 1, 0, 0, 0]),
+            "name": "Perfect Prediction",
+            "y_true": np.array([1, 1, 1, 0, 0, 0]),
+            "y_pred": np.array([1, 1, 1, 0, 0, 0]),
         },
         {
-            'name': 'Good Prediction',
-            'y_true': np.array([1, 1, 1, 0, 0, 0]),
-            'y_pred': np.array([1, 1, 0, 0, 0, 0]),
+            "name": "Good Prediction",
+            "y_true": np.array([1, 1, 1, 0, 0, 0]),
+            "y_pred": np.array([1, 1, 0, 0, 0, 0]),
         },
         {
-            'name': 'Random Prediction',
-            'y_true': np.array([1, 1, 1, 0, 0, 0]),
-            'y_pred': np.array([1, 0, 1, 0, 1, 0]),
+            "name": "Random Prediction",
+            "y_true": np.array([1, 1, 1, 0, 0, 0]),
+            "y_pred": np.array([1, 0, 1, 0, 1, 0]),
         },
         {
-            'name': 'Poor Prediction',
-            'y_true': np.array([1, 1, 1, 0, 0, 0]),
-            'y_pred': np.array([0, 0, 0, 1, 1, 1]),
+            "name": "Poor Prediction",
+            "y_true": np.array([1, 1, 1, 0, 0, 0]),
+            "y_pred": np.array([0, 0, 0, 1, 1, 1]),
         },
         {
-            'name': 'Complete Disagreement',
-            'y_true': np.array([1, 1, 1, 0, 0, 0]),
-            'y_pred': np.array([0, 0, 0, 1, 1, 1]),
+            "name": "Complete Disagreement",
+            "y_true": np.array([1, 1, 1, 0, 0, 0]),
+            "y_pred": np.array([0, 0, 0, 1, 1, 1]),
         },
     ]
 
@@ -163,7 +164,7 @@ def example_mcc_comparison():
     print("-" * 70)
 
     for scenario in scenarios:
-        mcc = calculate_matthews_corrcoef(scenario['y_true'], scenario['y_pred'])
+        mcc = calculate_matthews_corrcoef(scenario["y_true"], scenario["y_pred"])
 
         if mcc >= 0.7:
             interpretation = "Excellent"
@@ -201,8 +202,9 @@ def example_mcc_vs_accuracy():
     print("=" * 70)
     print()
 
-    from app.backtesting.metrics import calculate_matthews_corrcoef
     from sklearn.metrics import accuracy_score
+
+    from app.backtesting.metrics import calculate_matthews_corrcoef
 
     # Scenario: 95% losing trades, 5% winning trades
     # Model always predicts "losing trade" (0)
@@ -213,9 +215,9 @@ def example_mcc_vs_accuracy():
     mcc = calculate_matthews_corrcoef(y_true, y_pred)
 
     print("Scenario: Market with 5% winning trades")
-    print(f"  Total opportunities: 100")
-    print(f"  Winning trades: 5 (5%)")
-    print(f"  Losing trades: 95 (95%)")
+    print("  Total opportunities: 100")
+    print("  Winning trades: 5 (5%)")
+    print("  Losing trades: 95 (95%)")
     print()
 
     print("Model: Always predicts 'losing trade' (never takes a trade)")
@@ -243,7 +245,7 @@ def example_mcc_vs_accuracy():
     print()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     # Run all examples
     example_mcc_integration()
     example_mcc_comparison()

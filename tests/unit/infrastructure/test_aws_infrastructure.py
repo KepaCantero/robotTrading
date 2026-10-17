@@ -474,6 +474,6 @@ class TestAWSInfrastructureConfig:
                 with open(script_file) as f:
                     content = f.read()
                     assert len(content) > 0, f"Script {script_path} should not be empty"
-                    assert (
-                        "#!/bin/bash" in content
-                    ), f"Script {script_path} should have bash shebang"
+                    assert "#!/bin/bash" in content, (
+                        f"Script {script_path} should have bash shebang"
+                    )

@@ -15,8 +15,9 @@ Based on:
 - López de Prado, "Advances in Financial Machine Learning", Chapter 10 (Bet Sizing)
 """
 
-import numpy as np
 from decimal import Decimal
+
+import numpy as np
 
 from app.services.position_sizing_engine import (
     MetaLabelingPositionSizer,
@@ -93,7 +94,7 @@ def example_1_basic_meta_labeling_sizing():
     print("\nTraining meta-labeling model...")
     result = sizer.fit_meta_model(X_train, y_train, X_test, y_test)
 
-    print(f"\nMeta-Model Performance:")
+    print("\nMeta-Model Performance:")
     print(f"  Primary Model Accuracy: {result['metrics']['primary_accuracy']:.2%}")
     print(f"  Meta-Model Accuracy: {result['metrics']['meta_accuracy']:.2%}")
     print(f"  Combined Accuracy: {result['metrics']['combined_accuracy']:.2%}")
@@ -117,7 +118,7 @@ def example_1_basic_meta_labeling_sizing():
     )
     total_exposure = np.abs(position_sizes).sum()
 
-    print(f"\nPosition Sizing Results:")
+    print("\nPosition Sizing Results:")
     print(f"  Total signals: {len(y_test)}")
     print(f"  Trades taken: {n_trades} ({n_trades / len(y_test) * 100:.1f}%)")
     print(f"  Average long position: {avg_long_size:.2%}")
@@ -125,7 +126,7 @@ def example_1_basic_meta_labeling_sizing():
     print(f"  Total exposure: {total_exposure:.2%}")
 
     # Show sample positions
-    print(f"\nSample Positions (first 10):")
+    print("\nSample Positions (first 10):")
     print("  Signal | Meta-Proba | Position Size | Expected Return")
     print("  -------|------------|---------------|----------------")
     for i in range(min(10, len(y_test))):
@@ -157,7 +158,7 @@ def example_2_hybrid_meta_kelly():
     avg_loss = 75.0  # Average loss: $75
     capital = Decimal("10000")  # $10,000 capital
 
-    print(f"\nHistorical Performance:")
+    print("\nHistorical Performance:")
     print(f"  Win Rate: {win_rate:.2%}")
     print(f"  Average Win: ${avg_win:.2f}")
     print(f"  Average Loss: ${avg_loss:.2f}")
@@ -171,7 +172,7 @@ def example_2_hybrid_meta_kelly():
         capital=capital,
     )
 
-    print(f"\nKelly Criterion Results:")
+    print("\nKelly Criterion Results:")
     print(f"  Raw Kelly: {kelly_result['kelly_fraction']:.4f}")
     print(f"  Half-Kelly (capped): {kelly_result['half_kelly_fraction']:.4f}")
     print(f"  Position Value: ${kelly_result['position_value']:.2f}")
@@ -202,14 +203,14 @@ def example_2_hybrid_meta_kelly():
     n_trades = (position_sizes != 0).sum()
     avg_size = np.abs(position_sizes[position_sizes != 0]).mean() if n_trades > 0 else 0
 
-    print(f"\nHybrid Position Sizing Results:")
+    print("\nHybrid Position Sizing Results:")
     print(f"  Kelly Cap: {kelly_fraction:.2%}")
     print(f"  Signals passing meta-filter: {n_filtered} ({n_filtered / len(y_test) * 100:.1f}%)")
     print(f"  Final trades taken: {n_trades} ({n_trades / len(y_test) * 100:.1f}%)")
     print(f"  Average position size: {avg_size:.2%}")
 
     # Show sample positions
-    print(f"\nSample Positions (first 10):")
+    print("\nSample Positions (first 10):")
     print("  Signal | Meta-Proba | Filter | Meta-Size | Kelly-Cap | Final Size")
     print("  -------|------------|--------|-----------|-----------|-----------")
     for i in range(min(10, len(y_test))):
@@ -240,7 +241,7 @@ def example_3_different_bet_sizing_methods():
 
     methods = ["meta_kelly", "meta_probability", "meta_expected_value"]
 
-    print(f"\nComparing bet sizing methods:")
+    print("\nComparing bet sizing methods:")
     print(f"  Meta-Model Accuracy: {result['metrics']['meta_accuracy']:.2%}")
     print()
 
@@ -284,7 +285,7 @@ def example_4_confidence_threshold_impact():
 
     thresholds = [0.4, 0.5, 0.6, 0.7, 0.8]
 
-    print(f"\nImpact of confidence threshold on trading:")
+    print("\nImpact of confidence threshold on trading:")
     print()
 
     for threshold in thresholds:
@@ -350,7 +351,7 @@ def example_5_risk_management_integration():
     max_position_limit = 0.15  # 15% max per position
     max_portfolio_exposure = 0.80  # 80% max total exposure
 
-    print(f"\nRisk Management Parameters:")
+    print("\nRisk Management Parameters:")
     print(f"  Max Position Limit: {max_position_limit:.2%}")
     print(f"  Max Portfolio Exposure: {max_portfolio_exposure:.2%}")
 
@@ -365,7 +366,7 @@ def example_5_risk_management_integration():
         print(f"  Applied exposure scaling: {scale_factor:.4f}")
     else:
         position_sizes_final = position_sizes_capped
-        print(f"  No exposure scaling needed")
+        print("  No exposure scaling needed")
 
     # Analyze final results
     n_trades = (position_sizes_final != 0).sum()
@@ -381,7 +382,7 @@ def example_5_risk_management_integration():
     )
     total_exposure_final = np.abs(position_sizes_final).sum()
 
-    print(f"\nFinal Position Sizing Results:")
+    print("\nFinal Position Sizing Results:")
     print(f"  Trades taken: {n_trades}")
     print(f"  Average long position: {avg_long_size:.2%}")
     print(f"  Average short position: {avg_short_size:.2%}")

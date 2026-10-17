@@ -1,11 +1,11 @@
-from __future__ import annotations
-
 """
 Persistent Task Queue Implementation for AlgoTrading System.
 
 This module implements a robust, persistent task queue that survives restarts
 and provides comprehensive task lifecycle management for 24/7 trading operations.
 """
+
+from __future__ import annotations
 
 import asyncio
 import contextlib
@@ -290,8 +290,7 @@ class PersistentTaskQueue:
     async def initialize(self) -> None:
         """Initialize database schema."""
         async with aiosqlite.connect(self.db_path) as db:
-            await db.execute(
-                """
+            await db.execute("""
                 CREATE TABLE IF NOT EXISTS tasks (
                     task_id TEXT PRIMARY KEY,
                     name TEXT NOT NULL,
@@ -308,8 +307,7 @@ class PersistentTaskQueue:
                     error TEXT,
                     next_retry_at TEXT
                 )
-            """
-            )
+            """)
             # Create indexes for common queries
             await db.execute(
                 "CREATE INDEX IF NOT EXISTS idx_status_priority ON tasks(status, priority DESC)"
@@ -844,13 +842,11 @@ class PersistentTaskQueue:
         """
         async with aiosqlite.connect(self.db_path) as db:
             # Get count by status
-            cursor = await db.execute(
-                """
+            cursor = await db.execute("""
                 SELECT status, COUNT(*) as count
                 FROM tasks
                 GROUP BY status
-            """
-            )
+            """)
             rows = await cursor.fetchall()
 
             status_counts = {status.value: 0 for status in TaskStatus}

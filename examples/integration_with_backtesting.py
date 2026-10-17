@@ -12,9 +12,7 @@ import logging
 from decimal import Decimal
 from pathlib import Path
 
-from app.backtesting.reports.baseline_optimization_reporter import (
-    BaselineOptimizationReporter,
-)
+from app.backtesting.reports.baseline_optimization_reporter import BaselineOptimizationReporter
 from app.core.models.input_profile import InputProfile
 
 # Configure logging
@@ -225,7 +223,7 @@ def run_walk_forward_validation(profile: InputProfile) -> dict:
             {
                 "is_sharpe": round(is_sharpe, 2),
                 "oos_sharpe": round(oos_sharpe, 2),
-                "period": f"2024-Q{i+1}",
+                "period": f"2024-Q{i + 1}",
             }
         )
         is_sharpes.append(is_sharpe)

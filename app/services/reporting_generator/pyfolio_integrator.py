@@ -562,6 +562,7 @@ class PyFolioIntegrator:
         Returns:
             CapacityFade analysis with projections
         """
+        del live_sharpe  # aceptado por compatibilidad; sin uso aquí
         if backtest_capital is None:
             backtest_capital = Decimal("100000")
         if current_capital is None:

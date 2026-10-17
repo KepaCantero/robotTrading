@@ -66,8 +66,8 @@ class TestLookAheadBiasCorrector:
         )
 
         assert isinstance(result, BiasDetectionResult)
-        assert hasattr(result, 'has_lookahead_bias')
-        assert hasattr(result, 'recommendations')
+        assert hasattr(result, "has_lookahead_bias")
+        assert hasattr(result, "recommendations")
 
     def test_detects_forward_filling(self, corrector):
         """Test detection of forward filling bias."""
@@ -287,10 +287,10 @@ class TestBacktestValidator:
         )
 
         assert isinstance(result, BiasDetectionResult)
-        assert hasattr(result, 'has_lookahead_bias')
-        assert hasattr(result, 'has_survivorship_bias')
-        assert hasattr(result, 'corrected_sharpe_ratio')
-        assert hasattr(result, 'original_sharpe_ratio')
+        assert hasattr(result, "has_lookahead_bias")
+        assert hasattr(result, "has_survivorship_bias")
+        assert hasattr(result, "corrected_sharpe_ratio")
+        assert hasattr(result, "original_sharpe_ratio")
 
     def test_sharpe_ratio_calculation(self, validator):
         """Test Sharpe ratio calculation."""
@@ -519,4 +519,4 @@ class TestIntegration:
         )
 
         assert isinstance(result, BiasDetectionResult)
-        assert hasattr(result, 'corrected_sharpe_ratio')
+        assert hasattr(result, "corrected_sharpe_ratio")

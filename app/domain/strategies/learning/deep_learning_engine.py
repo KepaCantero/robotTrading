@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import logging
 import os
+from typing import cast
 
 # ============================================================================
 # CRÍTICO: Configurar variables de entorno ANTES de importar numpy/pandas/PyTorch
@@ -207,6 +208,7 @@ class DeepLearningEngine(BaseLearningEngine):
 
                 sequences_np = np.array(sequences, dtype=np.float32)
                 labels_np = None
+                self.labels: torch.Tensor | None = None
                 if labels is not None:
                     labels_np = np.array(labels, dtype=np.float32)
                 # Crear tensores sin threading - usar no_grad para máxima seguridad
@@ -254,6 +256,7 @@ class DeepLearningEngine(BaseLearningEngine):
 
                     sequences_np = np.array(sequences, dtype=np.float32)
                     labels_np = None
+                    self.labels: torch.Tensor | None = None
                     if labels is not None:
                         labels_np = np.array(labels, dtype=np.float32)
                     with torch.no_grad():
@@ -427,7 +430,8 @@ class DeepLearningEngine(BaseLearningEngine):
 
                 # Añadir positional encoding
                 seq_len = x.size(1)
-                x = x + self.pos_encoder[:, :seq_len, :]
+                pos_encoder = cast(torch.Tensor, self.pos_encoder)
+                x = x + pos_encoder[:, :seq_len, :]
 
                 # Transformer encoder
                 x = self.transformer_encoder(x)
@@ -603,10 +607,14 @@ class DeepLearningEngine(BaseLearningEngine):
 
                 # Deserializar datos
                 # SECURE: Use JSON+HMAC verification instead of pickle
-                training_data = verify_and_load(training_data_bytes)
-                validation_data = (
+                loaded_training = verify_and_load(training_data_bytes)
+                loaded_validation = (
                     verify_and_load(validation_data_bytes) if validation_data_bytes else None
                 )
+                if not isinstance(loaded_training, dict):
+                    raise ValueError("training_data debe ser un dict tras verificar firma")
+                training_data = loaded_training
+                validation_data = loaded_validation if isinstance(loaded_validation, dict) else None
 
                 # Entrenar
                 metrics = engine.train(training_data, validation_data, use_subprocess=False)
@@ -821,6 +829,7 @@ class DeepLearningEngine(BaseLearningEngine):
 
                 sequences_np = np.array(sequences, dtype=np.float32)
                 labels_np = None
+                self.labels: torch.Tensor | None = None
                 if labels is not None:
                     labels_np = np.array(labels, dtype=np.float32)
                 with torch.no_grad():
@@ -869,16 +878,16 @@ class DeepLearningEngine(BaseLearningEngine):
                 true_labels.extend(batch_y.cpu().numpy().flatten())
 
         # Calcular métricas
-        predictions = np.array(predictions)
-        true_labels = np.array(true_labels)
+        predictions_arr = np.array(predictions)
+        true_labels_arr = np.array(true_labels)
 
         # RMSE para regresión
-        rmse = np.sqrt(np.mean((predictions - true_labels) ** 2))
+        rmse = np.sqrt(np.mean((predictions_arr - true_labels_arr) ** 2))
 
         # Accuracy para clasificación (si labels son binarios)
-        if len(np.unique(true_labels)) <= 2:
-            pred_binary = (predictions >= 0.5).astype(int)
-            accuracy = np.mean(pred_binary == true_labels)
+        if len(np.unique(true_labels_arr)) <= 2:
+            pred_binary = (predictions_arr >= 0.5).astype(int)
+            accuracy = np.mean(pred_binary == true_labels_arr)
             return {"rmse": float(rmse), "accuracy": float(accuracy)}
 
         return {"rmse": float(rmse)}

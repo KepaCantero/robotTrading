@@ -85,6 +85,7 @@ Domain: Domain
 - `pass_rate()`
 - `pass_rate()`
 - `best_option()`
+- `pass_rate()`
 
 ## 4. Applicable Trading Rules
 

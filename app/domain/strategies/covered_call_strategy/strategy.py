@@ -227,7 +227,7 @@ class CoveredCallStrategy(BaseStrategy):
         symbol = market_data.symbol
 
         # Obtener precio
-        current_price = market_data.close if hasattr(market_data, "close") else market_data.price
+        current_price = market_data.close
 
         signals = []
 
@@ -293,7 +293,7 @@ class CoveredCallStrategy(BaseStrategy):
             return None  # No hay opciones disponibles
 
         # Screening de opciones
-        current_price = market_data.close if hasattr(market_data, "close") else market_data.price
+        current_price = market_data.close
 
         best_options = self.screener.get_best_option(
             options=options,
@@ -363,7 +363,7 @@ class CoveredCallStrategy(BaseStrategy):
         Returns:
             Señal de rolling
         """
-        current_price = market_data.close if hasattr(market_data, "close") else market_data.price
+        current_price = market_data.close
 
         # El rolling se implementa como:
         # 1. BUY to close (cerrar opción corta)
@@ -419,7 +419,7 @@ class CoveredCallStrategy(BaseStrategy):
         Returns:
             Señal de cierre
         """
-        current_price = market_data.close if hasattr(market_data, "close") else market_data.price
+        current_price = market_data.close
 
         signal = Signal(
             symbol=position.symbol,

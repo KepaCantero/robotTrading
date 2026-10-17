@@ -1,31 +1,19 @@
-# Requirements Document: app/presentation/dashboard/comprehensive_data_loader.py
+# Requirements Document: app/infrastructure/persistence/database/migrations/versions/20260127000002_account_asset_type.py
 
 ## 1. Module Overview
-File: comprehensive_data_loader.py
-Domain: Presentation
+File: 20260127000002_account_asset_type.py
+Domain: Infrastructure
 
 ## 2. Dependencies
 - `__future__`
-- `ast`
-- `datetime`
-- `json`
+- `alembic`
 - `logging`
-- `pandas`
-- `pathlib`
-- `typing`
+- `sqlalchemy`
 
 ## 3. Core Components
-### Classes
-- `ComprehensiveBacktestLoader`
 ### Public Functions
-- `load_all_results()`
-- `load_latest_results()`
-- `load_as_dataframe()`
-- `get_results_by_type()`
-- `get_best_result()`
-- `get_summary_stats()`
-- `load_meta_analysis_results()`
-- `get_meta_analysis_summary()`
+- `upgrade()`
+- `downgrade()`
 
 ## 4. Applicable Trading Rules
 

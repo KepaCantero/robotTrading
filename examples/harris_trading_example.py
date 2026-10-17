@@ -11,27 +11,11 @@ Usage:
 
 from decimal import Decimal
 
-from app.simulation.order_book import (
-    create_limit_order_book,
-    Order,
-    OrderSide,
-    OrderType,
-)
-from app.simulation.market_mechanics import (
-    create_market_mechanics_engine,
-    MarketPhase,
-)
-from app.simulation.exchange import (
-    create_exchange,
-)
-from app.simulation.trading_costs import (
-    create_trading_cost_analyzer,
-    ImpactModel,
-)
-from app.simulation.microstructure import (
-    create_market_microstructure_analyzer,
-    LiquidityRegime,
-)
+from app.simulation.exchange import create_exchange
+from app.simulation.market_mechanics import MarketPhase, create_market_mechanics_engine
+from app.simulation.microstructure import LiquidityRegime, create_market_microstructure_analyzer
+from app.simulation.order_book import Order, OrderSide, OrderType, create_limit_order_book
+from app.simulation.trading_costs import ImpactModel, create_trading_cost_analyzer
 
 
 def main():
@@ -98,7 +82,7 @@ def main():
 
     # Get order book snapshot
     snapshot = book.get_snapshot(depth=5)
-    print(f"\nOrder Book State:")
+    print("\nOrder Book State:")
     print(f"  Best Bid: ${snapshot.best_bid}")
     print(f"  Best Ask: ${snapshot.best_ask}")
     print(f"  Spread: ${snapshot.spread} ({snapshot.spread / snapshot.mid_price * 100:.2f}%)")
@@ -155,7 +139,7 @@ def main():
     print("\nExecuting opening auction...")
     result = engine.execute_opening_auction()
 
-    print(f"\nAuction Results:")
+    print("\nAuction Results:")
     print(f"  Auction Price: ${result.auction_price}")
     print(f"  Total Volume: {result.total_volume}")
     print(f"  Buy Volume: {result.buy_volume}")
@@ -202,7 +186,7 @@ def main():
     )
     executions = exchange.submit_order(market_order)
 
-    print(f"\nExecution Results:")
+    print("\nExecution Results:")
     for exec in executions:
         print(f"  Execution ID: {exec.execution_id}")
         print(f"  Quantity: {exec.quantity}")
@@ -211,7 +195,7 @@ def main():
 
     # Get exchange statistics
     stats = exchange.get_execution_statistics()
-    print(f"\nExchange Statistics:")
+    print("\nExchange Statistics:")
     print(f"  Total Trades: {stats['total_trades']}")
     print(f"  Total Volume: {stats['total_volume']}")
     print(f"  VWAP: ${stats['vwap']:.2f}")
@@ -247,14 +231,14 @@ def main():
         execution_period_hours=0.25,
     )
 
-    print(f"\nCost Breakdown:")
+    print("\nCost Breakdown:")
     print(f"  Total Cost: ${cost_analysis.total_cost:.2f}")
     print(f"  Total Cost (bps): {cost_analysis.total_cost_bps:.2f} bps")
     print(f"  Effective Spread: {cost_analysis.effective_spread:.2f} bps")
     print(f"  Implementation Shortfall: {cost_analysis.implementation_shortfall:.2f} bps")
     print(f"  Savings vs Benchmark: ${cost_analysis.saving_vs_benchmark:.2f}")
 
-    print(f"\n  Cost Components:")
+    print("\n  Cost Components:")
     for component, value in cost_analysis.components.items():
         print(f"    {component.value}: ${value:.2f}")
 
@@ -264,7 +248,7 @@ def main():
         fill_rate=Decimal("100"),
     )
 
-    print(f"\nExecution Quality:")
+    print("\nExecution Quality:")
     print(f"  Execution Score: {quality.execution_score:.1f}/100")
     print(f"  Fill Rate: {quality.fill_rate:.1f}%")
     print(f"  Price Improvement: {quality.price_improvement_bps:.2f} bps")
@@ -272,13 +256,13 @@ def main():
     print(f"  Timing Cost: {quality.timing_cost_bps:.2f} bps")
 
     if quality.execution_score >= 80:
-        print(f"  Rating: EXCELLENT")
+        print("  Rating: EXCELLENT")
     elif quality.execution_score >= 60:
-        print(f"  Rating: GOOD")
+        print("  Rating: GOOD")
     elif quality.execution_score >= 40:
-        print(f"  Rating: FAIR")
+        print("  Rating: FAIR")
     else:
-        print(f"  Rating: POOR")
+        print("  Rating: POOR")
 
     # ============================================================================
     # 5. MARKET MICROSTRUCTURE ANALYSIS
@@ -310,7 +294,7 @@ def main():
     print("\nCalculating microstructure metrics...")
     metrics = micro_analyzer.get_comprehensive_metrics()
 
-    print(f"\nOrder Flow:")
+    print("\nOrder Flow:")
     print(f"  Buy Volume: {metrics.order_imbalance.buy_volume}")
     print(f"  Sell Volume: {metrics.order_imbalance.sell_volume}")
     print(f"  Imbalance: {metrics.order_imbalance.imbalance}")
@@ -318,14 +302,14 @@ def main():
     print(f"  Direction: {metrics.order_imbalance.direction.value}")
     print(f"  Bias Strength: {metrics.order_imbalance.bias_strength}")
 
-    print(f"\nMarket Depth:")
+    print("\nMarket Depth:")
     print(f"  Total Depth: {metrics.market_depth['total_depth']:.0f} shares")
     print(f"  Bid Depth: {metrics.market_depth['total_bid_depth']:.0f} shares")
     print(f"  Ask Depth: {metrics.market_depth['total_ask_depth']:.0f} shares")
     print(f"  Depth Imbalance: {metrics.market_depth['depth_imbalance']:.2f}")
     print(f"  Spread: {metrics.market_depth['spread_bps']:.1f} bps")
 
-    print(f"\nLiquidity:")
+    print("\nLiquidity:")
     print(f"  Regime: {metrics.liquidity_regime.value}")
     print(f"  Flow Toxicity: {metrics.flow_toxicity:.2f}")
     print(f"  Price Discovery: {metrics.price_discovery:.1f}/100")
@@ -333,7 +317,7 @@ def main():
     print(f"  Share Turnover: {metrics.share_turnover:.4f}")
 
     # Interpret conditions
-    print(f"\nMarket Conditions Assessment:")
+    print("\nMarket Conditions Assessment:")
     if metrics.liquidity_regime == LiquidityRegime.HIGH:
         print("  LIQUIDITY: Excellent - Tight spreads, deep order book")
     elif metrics.liquidity_regime == LiquidityRegime.NORMAL:

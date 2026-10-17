@@ -224,8 +224,8 @@ class ErrorBudgetConfig:
     db_path: str = "data/error_budgets.db"
 
     # Callbacks
-    on_budget_exhausted: Callable[[ErrorBudgetState], None] | None = None
-    on_burn_rate_high: Callable[[ErrorBudgetState], None] | None = None
+    on_budget_exhausted: Callable[[ErrorBudgetState], Any] | None = None
+    on_burn_rate_high: Callable[[ErrorBudgetState], Any] | None = None
 
 
 class ErrorBudgetManager:
@@ -346,8 +346,7 @@ class ErrorBudgetManager:
             db_path.parent.mkdir(parents=True, exist_ok=True)
 
             async with aiosqlite.connect(self.config.db_path) as db:
-                await db.execute(
-                    """
+                await db.execute("""
                     CREATE TABLE IF NOT EXISTS error_budgets (
                         id INTEGER PRIMARY KEY AUTOINCREMENT,
                         service_name TEXT NOT NULL,
@@ -364,11 +363,9 @@ class ErrorBudgetManager:
                         created_at TEXT NOT NULL DEFAULT (STRFTIME('%Y-%m-%dT%H:%M:%fZ','now')),
                         UNIQUE(service_name, period, window_start)
                     )
-                """
-                )
+                """)
 
-                await db.execute(
-                    """
+                await db.execute("""
                     CREATE TABLE IF NOT EXISTS budget_incidents (
                         id INTEGER PRIMARY KEY AUTOINCREMENT,
                         service_name TEXT NOT NULL,
@@ -379,22 +376,17 @@ class ErrorBudgetManager:
                         metadata TEXT,
                         created_at TEXT NOT NULL DEFAULT (STRFTIME('%Y-%m-%dT%H:%M:%fZ','now'))
                     )
-                """
-                )
+                """)
 
-                await db.execute(
-                    """
+                await db.execute("""
                     CREATE INDEX IF NOT EXISTS idx_budget_service_period
                     ON error_budgets(service_name, period)
-                    """
-                )
+                    """)
 
-                await db.execute(
-                    """
+                await db.execute("""
                     CREATE INDEX IF NOT EXISTS idx_incidents_service_timestamp
                     ON budget_incidents(service_name, incident_timestamp)
-                    """
-                )
+                    """)
 
                 await db.commit()
 
@@ -567,6 +559,8 @@ class ErrorBudgetManager:
             try:
                 if self._current_state is None:
                     await self.initialize()
+                state = self._current_state
+                assert state is not None  # initialize() garantiza estado
 
                 # Add to consumption
                 incident_data = {
@@ -574,7 +568,7 @@ class ErrorBudgetManager:
                     "description": description,
                     "metadata": metadata,
                 }
-                self._current_state.consumption.add_incident(downtime_minutes, incident_data)
+                state.consumption.add_incident(downtime_minutes, incident_data)
 
                 # Save incident to database
                 await self._save_incident(downtime_minutes, error_type, description, metadata)
@@ -587,10 +581,10 @@ class ErrorBudgetManager:
 
                 self.logger.warning(
                     f"Recorded {downtime_minutes}min downtime (type: {error_type}), "
-                    f"budget remaining: {self._current_state.remaining_percentage:.1f}%"
+                    f"budget remaining: {state.remaining_percentage:.1f}%"
                 )
 
-                return self._current_state
+                return state
 
             except (asyncio.TimeoutError, OSError) as e:
                 self.logger.error(f"Error recording downtime: {e}")
@@ -764,23 +758,24 @@ class ErrorBudgetManager:
         async with self._lock:
             if self._current_state is None:
                 await self.initialize()
+            state = self._current_state
+            assert state is not None  # initialize() garantiza estado
 
             # Block if budget exhausted
-            if self._current_state.is_exhausted(self.config.exhausted_threshold_pct):
+            if state.is_exhausted(self.config.exhausted_threshold_pct):
                 return False, (
-                    f"Error budget exhausted ({self._current_state.remaining_percentage:.1f}% "
+                    f"Error budget exhausted ({state.remaining_percentage:.1f}% "
                     f"remaining < {self.config.exhausted_threshold_pct}% threshold)"
                 )
 
             # Warn if high burn rate
             if (
                 self.config.high_burn_rate_threshold is not None
-                and self._current_state.burn_rate
-                and self._current_state.burn_rate > self.config.high_burn_rate_threshold
+                and state.burn_rate
+                and state.burn_rate > self.config.high_burn_rate_threshold
             ):
                 return True, (
-                    f"High burn rate detected ({self._current_state.burn_rate:.2f} min/hr), "
-                    f"proceed with caution"
+                    f"High burn rate detected ({state.burn_rate:.2f} min/hr), proceed with caution"
                 )
 
             return True, "Deployment allowed within error budget"

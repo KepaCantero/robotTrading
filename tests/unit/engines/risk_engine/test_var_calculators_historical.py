@@ -25,8 +25,8 @@ def sample_returns():
 def calculator_config():
     """VaR calculator configuration."""
     return {
-        'confidence_level': 0.95,
-        'time_horizon': 1,
+        "confidence_level": 0.95,
+        "time_horizon": 1,
     }
 
 
@@ -93,8 +93,8 @@ class TestHistoricalVaRCalculatorInitialization:
     def test_custom_initialization(self):
         """Test initialization with custom config."""
         config = {
-            'confidence_level': 0.99,
-            'time_horizon': 10,
+            "confidence_level": 0.99,
+            "time_horizon": 10,
         }
         calc = HistoricalVaRCalculator(config)
 
@@ -114,52 +114,52 @@ class TestHistoricalVaRSuccessCases:
         """Test VaR calculation with numpy array."""
         result = calculator.calculate_var(sample_returns)
 
-        assert 'error' not in result
-        assert 'var' in result
-        assert 'cvar' in result
-        assert result['method'] == 'historical'
+        assert "error" not in result
+        assert "var" in result
+        assert "cvar" in result
+        assert result["method"] == "historical"
 
     def test_calculate_var_with_portfolio_value(self, calculator, sample_returns):
         """Test VaR calculation with portfolio value."""
         portfolio_value = 100000.0
         result = calculator.calculate_var(sample_returns, portfolio_value)
 
-        assert result['var_amount'] is not None
-        assert result['cvar_amount'] is not None
-        assert isinstance(result['var_amount'], float)
-        assert isinstance(result['cvar_amount'], float)
+        assert result["var_amount"] is not None
+        assert result["cvar_amount"] is not None
+        assert isinstance(result["var_amount"], float)
+        assert isinstance(result["cvar_amount"], float)
 
     def test_var_is_negative(self, calculator, sample_returns):
         """Test that VaR is negative (representing loss)."""
         result = calculator.calculate_var(sample_returns)
 
         # VaR should be negative for loss
-        assert result['var'] < 0
+        assert result["var"] < 0
 
     def test_cvar_more_negative_than_var(self, calculator, sample_returns):
         """Test that CVaR is more negative than VaR."""
         result = calculator.calculate_var(sample_returns)
 
         # CVaR (expected shortfall) should be worse than VaR
-        assert result['cvar'] <= result['var']
+        assert result["cvar"] <= result["var"]
 
     def test_confidence_level_in_result(self, calculator, sample_returns):
         """Test that confidence level is included in result."""
         result = calculator.calculate_var(sample_returns)
 
-        assert result['confidence_level'] == 0.95
+        assert result["confidence_level"] == 0.95
 
     def test_observations_counted(self, calculator, sample_returns):
         """Test that observations are counted."""
         result = calculator.calculate_var(sample_returns)
 
-        assert result['observations'] == len(sample_returns)
+        assert result["observations"] == len(sample_returns)
 
     def test_numba_acceleration_flag(self, calculator, sample_returns):
         """Test that Numba acceleration flag is set."""
         result = calculator.calculate_var(sample_returns)
 
-        assert 'numba_accelerated' in result
+        assert "numba_accelerated" in result
 
 
 @pytest.mark.unit
@@ -171,19 +171,19 @@ class TestHistoricalVaRInputTypes:
         returns_list = [-0.02, 0.01, -0.01, 0.03, -0.005]
         result = calculator.calculate_var(returns_list)
 
-        assert 'error' not in result
-        assert 'var' in result
+        assert "error" not in result
+        assert "var" in result
 
     def test_calculate_var_with_pandas_series(self, calculator):
         """Test VaR calculation with pandas Series."""
-        pytest.importorskip('pandas')
+        pytest.importorskip("pandas")
         import pandas as pd
 
         returns_series = pd.Series([-0.02, 0.01, -0.01, 0.03, -0.005])
         result = calculator.calculate_var(returns_series)
 
-        assert 'error' not in result
-        assert 'var' in result
+        assert "error" not in result
+        assert "var" in result
 
 
 @pytest.mark.unit
@@ -194,7 +194,7 @@ class TestHistoricalVaRErrorHandling:
         """Test with empty returns array."""
         result = calculator.calculate_var(np.array([]))
 
-        assert 'error' in result
+        assert "error" in result
 
     def test_very_small_sample(self, calculator):
         """Test with very small sample size."""
@@ -202,7 +202,7 @@ class TestHistoricalVaRErrorHandling:
         result = calculator.calculate_var(returns)
 
         # Should still calculate
-        assert 'var' in result
+        assert "var" in result
 
     def test_all_positive_returns(self, calculator):
         """Test with all positive returns (unusual)."""
@@ -210,7 +210,7 @@ class TestHistoricalVaRErrorHandling:
         result = calculator.calculate_var(returns)
 
         # VaR should still be calculated
-        assert 'var' in result
+        assert "var" in result
 
     def test_all_negative_returns(self, calculator):
         """Test with all negative returns (crash scenario)."""
@@ -218,8 +218,8 @@ class TestHistoricalVaRErrorHandling:
         result = calculator.calculate_var(returns)
 
         # VaR should be very negative
-        assert 'var' in result
-        assert result['var'] < -0.01
+        assert "var" in result
+        assert result["var"] < -0.01
 
 
 @pytest.mark.unit
@@ -228,25 +228,25 @@ class TestHistoricalVaRDifferentConfidenceLevels:
 
     def test_confidence_90(self, sample_returns):
         """Test VaR at 90% confidence level."""
-        config = {'confidence_level': 0.90}
+        config = {"confidence_level": 0.90}
         calc = HistoricalVaRCalculator(config)
         result = calc.calculate_var(sample_returns)
 
-        assert result['confidence_level'] == 0.90
+        assert result["confidence_level"] == 0.90
 
     def test_confidence_99(self, sample_returns):
         """Test VaR at 99% confidence level."""
-        config = {'confidence_level': 0.99}
+        config = {"confidence_level": 0.99}
         calc = HistoricalVaRCalculator(config)
         result = calc.calculate_var(sample_returns)
 
-        assert result['confidence_level'] == 0.99
+        assert result["confidence_level"] == 0.99
         # 99% VaR should be more negative than 95% VaR
 
     def test_higher_confidence_more_negative(self, sample_returns):
         """Test that higher confidence gives more negative VaR."""
-        config_95 = {'confidence_level': 0.95}
-        config_99 = {'confidence_level': 0.99}
+        config_95 = {"confidence_level": 0.95}
+        config_99 = {"confidence_level": 0.99}
 
         calc_95 = HistoricalVaRCalculator(config_95)
         calc_99 = HistoricalVaRCalculator(config_99)
@@ -255,7 +255,7 @@ class TestHistoricalVaRDifferentConfidenceLevels:
         result_99 = calc_99.calculate_var(sample_returns)
 
         # 99% VaR should be more negative
-        assert result_99['var'] <= result_95['var']
+        assert result_99["var"] <= result_95["var"]
 
 
 @pytest.mark.unit
@@ -267,8 +267,8 @@ class TestHistoricalVaRConsistency:
         result1 = calculator.calculate_var(sample_returns)
         result2 = calculator.calculate_var(sample_returns)
 
-        assert result1['var'] == result2['var']
-        assert result1['cvar'] == result2['cvar']
+        assert result1["var"] == result2["var"]
+        assert result1["cvar"] == result2["cvar"]
 
     def test_deterministic_with_seed(self):
         """Test deterministic results with random seed."""
@@ -278,13 +278,13 @@ class TestHistoricalVaRConsistency:
         np.random.seed(123)
         returns2 = np.random.normal(0, 0.02, 1000)
 
-        config = {'confidence_level': 0.95}
+        config = {"confidence_level": 0.95}
         calc = HistoricalVaRCalculator(config)
 
         result1 = calc.calculate_var(returns1)
         result2 = calc.calculate_var(returns2)
 
-        assert result1['var'] == result2['var']
+        assert result1["var"] == result2["var"]
 
 
 @pytest.mark.unit
@@ -297,7 +297,7 @@ class TestCVaRCalculation:
         result = calculator.calculate_var(returns)
 
         # CVaR should be more negative than VaR
-        assert result['cvar'] <= result['var']
+        assert result["cvar"] <= result["var"]
 
     def test_cvar_amount_calculation(self, calculator, sample_returns):
         """Test CVaR amount calculation."""
@@ -305,8 +305,8 @@ class TestCVaRCalculation:
         result = calculator.calculate_var(sample_returns, portfolio_value)
 
         # CVaR amount should be positive dollar amount
-        assert result['cvar_amount'] >= 0
-        assert isinstance(result['cvar_amount'], float)
+        assert result["cvar_amount"] >= 0
+        assert isinstance(result["cvar_amount"], float)
 
 
 @pytest.mark.unit
@@ -319,9 +319,9 @@ class TestHistoricalVaRExtremeCases:
         returns = np.random.normal(0, 0.10, 1000)  # 10% daily vol
         result = calculator.calculate_var(returns)
 
-        assert 'var' in result
+        assert "var" in result
         # VaR should be quite negative
-        assert result['var'] < -0.15
+        assert result["var"] < -0.15
 
     def test_low_volatility_returns(self, calculator):
         """Test with low volatility returns."""
@@ -329,9 +329,9 @@ class TestHistoricalVaRExtremeCases:
         returns = np.random.normal(0, 0.005, 1000)  # 0.5% daily vol
         result = calculator.calculate_var(returns)
 
-        assert 'var' in result
+        assert "var" in result
         # VaR should be relatively small
-        assert result['var'] > -0.02
+        assert result["var"] > -0.02
 
     def test_fat_tailed_distribution(self, calculator):
         """Test with fat-tailed distribution."""
@@ -340,7 +340,7 @@ class TestHistoricalVaRExtremeCases:
         returns = np.random.standard_t(3, 1000) * 0.01
         result = calculator.calculate_var(returns)
 
-        assert 'var' in result
+        assert "var" in result
 
 
 @pytest.mark.unit
@@ -351,29 +351,29 @@ class TestHistoricalVaRMethodAttributes:
         """Test that method is correctly identified."""
         result = calculator.calculate_var(sample_returns)
 
-        assert result['method'] == 'historical'
+        assert result["method"] == "historical"
 
     def test_time_horizon_included(self, calculator, sample_returns):
         """Test that time horizon is included."""
         result = calculator.calculate_var(sample_returns)
 
-        assert 'time_horizon' in result
-        assert result['time_horizon'] == 1
+        assert "time_horizon" in result
+        assert result["time_horizon"] == 1
 
     def test_all_required_fields_present(self, calculator, sample_returns):
         """Test that all required fields are present."""
         result = calculator.calculate_var(sample_returns)
 
         required_fields = [
-            'var',
-            'var_amount',
-            'cvar',
-            'cvar_amount',
-            'confidence_level',
-            'time_horizon',
-            'method',
-            'observations',
-            'numba_accelerated',
+            "var",
+            "var_amount",
+            "cvar",
+            "cvar_amount",
+            "confidence_level",
+            "time_horizon",
+            "method",
+            "observations",
+            "numba_accelerated",
         ]
 
         for field in required_fields:
@@ -390,7 +390,7 @@ class TestHistoricalVaRWithRealWorldData:
         returns = np.random.normal(0.001, 0.015, 500)  # Positive drift
         result = calculator.calculate_var(returns)
 
-        assert 'var' in result
+        assert "var" in result
 
     def test_bear_market_scenario(self, calculator):
         """Test with bear market returns (negative drift)."""
@@ -398,7 +398,7 @@ class TestHistoricalVaRWithRealWorldData:
         returns = np.random.normal(-0.001, 0.025, 500)  # Negative drift
         result = calculator.calculate_var(returns)
 
-        assert 'var' in result
+        assert "var" in result
         # VaR should be more negative than bull market
 
     def test_volatile_period(self, calculator):
@@ -413,4 +413,4 @@ class TestHistoricalVaRWithRealWorldData:
                 returns.append(np.random.normal(0, 0.04))  # Vol spike
 
         result = calculator.calculate_var(np.array(returns))
-        assert 'var' in result
+        assert "var" in result

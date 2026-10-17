@@ -224,6 +224,7 @@ class ReportDeliveryManager:
         Returns:
             ExportResult with export details
         """
+        del wkhtmltopdf_path  # aceptado por compatibilidad; sin uso aquí
         try:
             start_time = datetime.utcnow()
 

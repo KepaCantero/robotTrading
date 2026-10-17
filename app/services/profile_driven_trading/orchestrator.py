@@ -1,11 +1,11 @@
-from __future__ import annotations
-
 """
 Profile-Driven Trading Orchestrator - Main implementation.
 
 Orchestrates the complete trading lifecycle from investor profile to trade execution.
 This is the main entry point for the profile-driven trading system.
 """
+
+from __future__ import annotations
 
 import asyncio
 import importlib.util

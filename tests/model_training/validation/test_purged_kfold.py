@@ -232,7 +232,7 @@ class TestPurgedKFold(unittest.TestCase):
         self.assertEqual(len(summary), len(splits))
 
         # Should have required columns
-        required_cols = ['fold', 'train_size', 'test_size', 'purged_count', 'embargo_size']
+        required_cols = ["fold", "train_size", "test_size", "purged_count", "embargo_size"]
         for col in required_cols:
             self.assertIn(col, summary.columns)
 
@@ -246,7 +246,7 @@ class TestPurgedKFold(unittest.TestCase):
 
     def test_with_pandas_dataframe(self):
         """Test with pandas DataFrame."""
-        X_df = pd.DataFrame(self.X, index=pd.date_range('2020-01-01', periods=self.n_samples))
+        X_df = pd.DataFrame(self.X, index=pd.date_range("2020-01-01", periods=self.n_samples))
 
         purged_cv = PurgedKFold(n_splits=5)
         splits = purged_cv.split(X_df)
@@ -350,11 +350,11 @@ class TestCrossValidateWithPurging(unittest.TestCase):
         )
 
         # Should have test scores
-        self.assertIn('test_score', results)
-        self.assertGreater(len(results['test_score']), 0)
+        self.assertIn("test_score", results)
+        self.assertGreater(len(results["test_score"]), 0)
 
         # All scores should be between 0 and 1
-        for score in results['test_score']:
+        for score in results["test_score"]:
             self.assertGreaterEqual(score, 0)
             self.assertLessEqual(score, 1)
 
@@ -370,8 +370,8 @@ class TestCrossValidateWithPurging(unittest.TestCase):
         )
 
         # Should have test scores
-        self.assertIn('test_score', results)
-        self.assertGreater(len(results['test_score']), 0)
+        self.assertIn("test_score", results)
+        self.assertGreater(len(results["test_score"]), 0)
 
     def test_custom_scoring(self):
         """Test with custom scoring function."""
@@ -387,12 +387,12 @@ class TestCrossValidateWithPurging(unittest.TestCase):
             X,
             y,
             n_splits=3,
-            scoring=lambda y_true, y_pred: f1_score(y_true, y_pred, average='weighted'),
+            scoring=lambda y_true, y_pred: f1_score(y_true, y_pred, average="weighted"),
         )
 
         # Should have test scores
-        self.assertIn('test_score', results)
-        self.assertGreater(len(results['test_score']), 0)
+        self.assertIn("test_score", results)
+        self.assertGreater(len(results["test_score"]), 0)
 
     def test_with_fit_params(self):
         """Test with additional fit parameters."""
@@ -402,11 +402,11 @@ class TestCrossValidateWithPurging(unittest.TestCase):
         clf = RandomForestClassifier(n_estimators=10, random_state=42)
 
         results = cross_validate_with_purging(
-            clf, X, y, n_splits=3, fit_params={'sample_weight': np.ones(500)}
+            clf, X, y, n_splits=3, fit_params={"sample_weight": np.ones(500)}
         )
 
         # Should complete without error
-        self.assertIn('test_score', results)
+        self.assertIn("test_score", results)
 
 
 class TestLeakageDetection(unittest.TestCase):
@@ -437,7 +437,7 @@ class TestLeakageDetection(unittest.TestCase):
         summary = purged_cv.get_split_summary()
 
         # At least some splits should have purged samples
-        self.assertGreater(summary['purged_count'].sum(), 0)
+        self.assertGreater(summary["purged_count"].sum(), 0)
 
     def test_embargo_zone_created(self):
         """Test that embargo zone is properly created."""
@@ -451,7 +451,7 @@ class TestLeakageDetection(unittest.TestCase):
         summary = purged_cv.get_split_summary()
 
         # Most splits should have embargo (at least 70% to allow for boundary cases)
-        self.assertGreaterEqual((summary['embargo_size'] > 0).sum(), len(summary) * 0.7)
+        self.assertGreaterEqual((summary["embargo_size"] > 0).sum(), len(summary) * 0.7)
 
 
 class TestEdgeCases(unittest.TestCase):
@@ -532,5 +532,5 @@ class TestSyntheticData(unittest.TestCase):
         self.assertGreater(len(splits), 0)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

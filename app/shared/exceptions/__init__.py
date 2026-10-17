@@ -8,14 +8,24 @@ All imports from potentially circular modules are now deferred or type-only.
 
 from __future__ import annotations
 
-from typing import Callable
+from typing import TYPE_CHECKING, Callable, cast
 
 from fastapi import FastAPI
 from fastapi.exceptions import RequestValidationError
 from starlette.exceptions import HTTPException as StarletteHTTPException
+from starlette.types import ExceptionHandler
 
 # Direct import from independent exceptions module (no circular dependency)
 from app.shared.exceptions.exceptions import AlgoTradingError
+
+if TYPE_CHECKING:
+    from app.infrastructure.middleware.error_middleware import (
+        ErrorHandlingMiddleware,
+        HealthCheckMiddleware,
+        RateLimitingMiddleware,
+        RequestContextMiddleware,
+        SecurityHeadersMiddleware,
+    )
 
 
 def _get_error_handlers() -> tuple[
@@ -47,11 +57,11 @@ def _get_error_handlers() -> tuple[
 
 
 def _get_middleware_classes() -> tuple[
-    type,
-    type,
-    type,
-    type,
-    type,
+    type[ErrorHandlingMiddleware],
+    type[HealthCheckMiddleware],
+    type[RateLimitingMiddleware],
+    type[RequestContextMiddleware],
+    type[SecurityHeadersMiddleware],
 ]:
     """
     Lazily import middleware classes to avoid circular dependencies.
@@ -82,8 +92,6 @@ def setup_error_handling(app: FastAPI) -> None:
 
     Uses lazy imports internally to avoid circular dependencies at module load time.
     """
-    from typing import Callable, Union
-
     # Lazily load error handlers (avoids circular import at module load)
     (
         algotrading_handler,
@@ -92,21 +100,12 @@ def setup_error_handling(app: FastAPI) -> None:
         validation_handler,
     ) = _get_error_handlers()
 
-    # Define proper type for exception handlers
-    ExceptionHandlerType = Callable[
-        [type[Exception], Union[Exception, RequestValidationError]], None
-    ]
-
-    # Add exception handlers with proper type annotations
-    handler_algotrading: ExceptionHandlerType = algotrading_handler
-    handler_validation: ExceptionHandlerType = validation_handler
-    handler_starlette: ExceptionHandlerType = starlette_handler
-    handler_generic: ExceptionHandlerType = generic_handler
-
-    app.add_exception_handler(AlgoTradingError, handler_algotrading)
-    app.add_exception_handler(RequestValidationError, handler_validation)
-    app.add_exception_handler(StarletteHTTPException, handler_starlette)
-    app.add_exception_handler(Exception, handler_generic)
+    # Starlette dispatches handlers by registered exception class, so each
+    # handler only ever receives the exception type it declares.
+    app.add_exception_handler(AlgoTradingError, cast("ExceptionHandler", algotrading_handler))
+    app.add_exception_handler(RequestValidationError, cast("ExceptionHandler", validation_handler))
+    app.add_exception_handler(StarletteHTTPException, cast("ExceptionHandler", starlette_handler))
+    app.add_exception_handler(Exception, cast("ExceptionHandler", generic_handler))
 
     # Lazily load middleware classes (avoids circular import at module load)
     (

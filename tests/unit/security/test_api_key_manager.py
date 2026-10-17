@@ -260,7 +260,10 @@ class TestApiKeyManager:
     def test_check_expiration_with_expired_keys(self, api_key_manager, sample_api_key):
         """Test checking for expired keys."""
         key_id = api_key_manager.add_key(
-            "test_key", sample_api_key, KeyPermission.READ_ONLY, expires_in_days=-1  # Expired
+            "test_key",
+            sample_api_key,
+            KeyPermission.READ_ONLY,
+            expires_in_days=-1,  # Expired
         )
 
         expired_ids = api_key_manager.check_expiration()

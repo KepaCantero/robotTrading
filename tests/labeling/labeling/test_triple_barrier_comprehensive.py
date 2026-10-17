@@ -96,9 +96,9 @@ class TestTripleBarrierConfig:
 
     def test_metadata_dict(self):
         """Test metadata dictionary initialization."""
-        config = TripleBarrierConfig(metadata={'key': 'value', 'number': 42})
+        config = TripleBarrierConfig(metadata={"key": "value", "number": 42})
 
-        assert config.metadata == {'key': 'value', 'number': 42}
+        assert config.metadata == {"key": "value", "number": 42}
 
     def test_metadata_default_empty(self):
         """Test metadata is empty dict by default."""

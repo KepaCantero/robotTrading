@@ -295,11 +295,7 @@ Weights are calculated based on:
 3. **Normalization**: Ensures weights sum to 1.0
 
 ```python
-def _calculate_strategy_weights(
-    strategies,
-    profile_config,
-    risk_tolerance
-):
+def _calculate_strategy_weights(strategies, profile_config, risk_tolerance):
     base_weight = 1.0 / len(strategies)
 
     risk_adjustments = {
@@ -385,11 +381,7 @@ mapping = mapper.create_strategy_mapping(profile)
 # Create strategies using factory
 strategies = {}
 for strategy_name in mapping.enabled_strategies:
-    config = {
-        'type': strategy_name,
-        'parameters': mapping.risk_params,
-        'thresholds': {...}
-    }
+    config = {"type": strategy_name, "parameters": mapping.risk_params, "thresholds": {...}}
     strategies[strategy_name] = StrategyFactory.create_strategy(config)
 ```
 

@@ -167,14 +167,14 @@ class TestFallbackValuesMatchConfig:
             content = f.read()
 
         # Check for config reference comments near fallback values
-        assert (
-            "profile_optimization.yaml" in content or "threshold_optimization" in content
-        ), "Fallback values should have comments referencing config file"
+        assert "profile_optimization.yaml" in content or "threshold_optimization" in content, (
+            "Fallback values should have comments referencing config file"
+        )
 
         # Check for inline comments with config keys
-        assert (
-            "rsi.buy_threshold" in content
-        ), "RSI fallback should reference config key rsi.buy_threshold"
+        assert "rsi.buy_threshold" in content, (
+            "RSI fallback should reference config key rsi.buy_threshold"
+        )
         assert "volume_ratio" in content, "Volume fallback should reference config key volume_ratio"
 
     def test_no_incorrect_hardcoded_values(self):
@@ -213,9 +213,9 @@ class TestFallbackValueIntegration:
         """
         for threshold_name, values in config_defaults.items():
             if "min" in values and "max" in values:
-                assert (
-                    values["min"] < values["max"]
-                ), f"{threshold_name}: min ({values['min']}) must be less than max ({values['max']})"
+                assert values["min"] < values["max"], (
+                    f"{threshold_name}: min ({values['min']}) must be less than max ({values['max']})"
+                )
 
     def test_fallback_values_within_reasonable_bounds(self, config_defaults):
         """

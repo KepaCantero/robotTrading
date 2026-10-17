@@ -274,7 +274,7 @@ class QueryableRepository(AbstractRepository[T, K]):
         """
 
     @abstractmethod
-    async def find_by_specification(self, specification: Callable[[T], bool]) -> list[T]:
+    async def find_by_specification(self, _specification: Callable[[T], bool]) -> list[T]:
         """
         Find entities using a specification predicate.
 

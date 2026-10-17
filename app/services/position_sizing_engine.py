@@ -1,14 +1,3 @@
-from __future__ import annotations
-
-import logging
-from decimal import Decimal
-
-import numpy as np
-
-from app.shared.config.centralized_config import get_config
-
-logger = logging.getLogger(__name__)
-
 """
 Position Sizing Engine with ATR-Based Dynamic Stop Loss and Kelly Criterion.
 
@@ -25,6 +14,18 @@ This module now uses centralized configuration from config/risk_management.yaml:
 - Position sizing percentages are loaded from config
 - Risk per trade percentages are loaded from config
 """
+
+from __future__ import annotations
+
+import logging
+from decimal import Decimal
+
+import numpy as np
+
+from app.shared.config.centralized_config import get_config
+
+logger = logging.getLogger(__name__)
+
 
 # Import centralized configuration
 try:

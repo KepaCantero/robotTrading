@@ -28,8 +28,8 @@ def sample_returns():
 def calculator_config():
     """VaR calculator configuration."""
     return {
-        'confidence_level': 0.95,
-        'time_horizon': 1,
+        "confidence_level": 0.95,
+        "time_horizon": 1,
     }
 
 
@@ -59,29 +59,29 @@ class TestGARCHVaRSuccessCases:
         """Test successful VaR calculation."""
         result = calculator.calculate_var(sample_returns)
 
-        assert 'var' in result
-        assert 'method' == 'garch' or 'method' in result
+        assert "var" in result
+        assert "method" == "garch" or "method" in result
 
     def test_conditional_volatility_calculated(self, calculator, sample_returns):
         """Test that conditional volatility is calculated."""
         result = calculator.calculate_var(sample_returns)
 
-        if 'conditional_volatility' in result:
-            assert result['conditional_volatility'] > 0
+        if "conditional_volatility" in result:
+            assert result["conditional_volatility"] > 0
 
 
 @pytest.mark.unit
 class TestGARCHVaRFallback:
     """Test fallback behavior when ARCH is not available."""
 
-    @patch('app.engines.risk_engine.var_calculators.var_calculators.ARCH_AVAILABLE', False)
+    @patch("app.engines.risk_engine.var_calculators.var_calculators.ARCH_AVAILABLE", False)
     def test_fallback_to_parametric(self, sample_returns):
         """Test fallback to parametric when ARCH unavailable."""
-        calc = GARCHVaRCalculator({'confidence_level': 0.95})
+        calc = GARCHVaRCalculator({"confidence_level": 0.95})
         result = calc.calculate_var(sample_returns)
 
         # Should fall back to parametric
-        assert 'var' in result
+        assert "var" in result
 
     def test_fallback_with_insufficient_data(self, calculator):
         """Test fallback with insufficient data."""
@@ -89,7 +89,7 @@ class TestGARCHVaRFallback:
         result = calculator.calculate_var(short_returns)
 
         # Should fall back to parametric
-        assert 'var' in result
+        assert "var" in result
 
 
 @pytest.mark.unit
@@ -100,4 +100,4 @@ class TestGARCHVaRErrorHandling:
         """Test with empty returns."""
         result = calculator.calculate_var(np.array([]))
 
-        assert 'error' in result or 'var' in result
+        assert "error" in result or "var" in result

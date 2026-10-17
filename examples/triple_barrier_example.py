@@ -217,8 +217,8 @@ def example_volatility_scaling():
     )
 
     logger.info(
-        f"Vol scaling factor: Upper: {avg_upper_dynamic/avg_upper_fixed:.2f}x, "
-        f"Lower: {avg_lower_dynamic/avg_lower_fixed:.2f}x"
+        f"Vol scaling factor: Upper: {avg_upper_dynamic / avg_upper_fixed:.2f}x, "
+        f"Lower: {avg_lower_dynamic / avg_lower_fixed:.2f}x"
     )
 
     return df, signals, labels_fixed, labels_dynamic
@@ -385,7 +385,7 @@ def example_ml_integration(df: pd.DataFrame, signals: pd.Series, labels: pd.Data
     # Create binary labels for classification
     y_binary = (ml_labels["label"] == 1).astype(int)
 
-    logger.info(f"\nML Dataset:")
+    logger.info("\nML Dataset:")
     logger.info(f"  Samples: {len(features)}")
     logger.info(f"  Features: {features.shape[1]}")
     logger.info(f"  Positive class (profit): {y_binary.sum()} ({y_binary.mean():.1%})")
@@ -394,7 +394,7 @@ def example_ml_integration(df: pd.DataFrame, signals: pd.Series, labels: pd.Data
     )
 
     # Display feature statistics
-    logger.info(f"\nFeature Statistics:")
+    logger.info("\nFeature Statistics:")
     logger.info(features.describe())
 
     return features, y_binary
@@ -443,12 +443,12 @@ def example_performance_comparison():
     tb_dist = tb_labels["label"].value_counts(normalize=True)
     fixed_dist = fixed_labels.value_counts(normalize=True)
 
-    logger.info(f"Triple Barrier:")
+    logger.info("Triple Barrier:")
     logger.info(f"  Upper (Profit):  {tb_dist.get(1, 0):.1%}")
     logger.info(f"  Lower (Stop):    {tb_dist.get(-1, 0):.1%}")
     logger.info(f"  Vertical (Time): {tb_dist.get(0, 0):.1%}")
 
-    logger.info(f"\nFixed-Time (5-day):")
+    logger.info("\nFixed-Time (5-day):")
     logger.info(f"  Profit: {fixed_dist.get(1, 0):.1%}")
     logger.info(f"  Loss:   {fixed_dist.get(-1, 0):.1%}")
 

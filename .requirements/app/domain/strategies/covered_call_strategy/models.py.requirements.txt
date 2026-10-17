@@ -28,6 +28,7 @@ Domain: Domain
 ### Public Functions
 - `is_itm()`
 - `is_otm()`
+- `total_cost()`
 - `break_even_price()`
 - `return_if_unchanged()`
 - `net_cost()`

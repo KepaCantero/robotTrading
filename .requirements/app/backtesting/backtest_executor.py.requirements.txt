@@ -6,6 +6,7 @@ Domain: Backtest
 
 ## 2. Dependencies
 - `__future__`
+- `app.backtesting.core.config_loader`
 - `app.backtesting.core.error_handling`
 - `app.backtesting.core.executor`
 - `app.backtesting.core.memory_manager`

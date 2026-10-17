@@ -24,9 +24,6 @@ Domain: Presentation
 - `AlertHistoryItem`
 - `HistoricalDataPoint`
 - `ProductionDashboard`
-- `Config`
-- `Config`
-- `Config`
 ### Public Functions
 - `get_production_dashboard()`
 - `get_metrics()`

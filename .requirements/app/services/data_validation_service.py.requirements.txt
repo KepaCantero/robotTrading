@@ -12,7 +12,6 @@ Domain: Service
 - `logging`
 - `numpy`
 - `pydantic`
-- `typing`
 
 ## 3. Core Components
 ### Classes

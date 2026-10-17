@@ -147,7 +147,7 @@ class TestBidAskSpreadAnalyzer:
         # Add observations with varying spreads
         for i in range(10):
             bid = Decimal(f"149.{i}0")
-            ask = Decimal(f"150.{10-i}0")
+            ask = Decimal(f"150.{10 - i}0")
             analyzer.add_spread_observation(
                 timestamp=datetime.now(),
                 bid=bid,

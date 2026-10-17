@@ -177,7 +177,7 @@ class TestChronologicalOrder(unittest.TestCase):
                 quotes[i].timestamp,
                 quotes[i - 1].timestamp,
                 f"Quote {i} timestamp {quotes[i].timestamp} no está en orden ascendente "
-                f"(anterior: {quotes[i-1].timestamp})",
+                f"(anterior: {quotes[i - 1].timestamp})",
             )
 
     def test_signals_in_ascending_order(self):
@@ -208,7 +208,7 @@ class TestChronologicalOrder(unittest.TestCase):
                 all_signals[i].timestamp,
                 all_signals[i - 1].timestamp,
                 f"Signal {all_signals[i].signal_id} timestamp {all_signals[i].timestamp} "
-                f"no está en orden ascendente (anterior: {all_signals[i-1].timestamp})",
+                f"no está en orden ascendente (anterior: {all_signals[i - 1].timestamp})",
             )
 
     def test_no_retroactive_signals(self):
@@ -279,7 +279,7 @@ class TestDatasetPerSymbol:
                 time_diff = (symbol_quotes[i].timestamp - symbol_quotes[i - 1].timestamp).days
                 assert time_diff <= 2, (  # Permitir hasta 2 días (weekend)
                     f"{symbol} tiene gap de {time_diff} días entre "
-                    f"{symbol_quotes[i-1].timestamp} y {symbol_quotes[i].timestamp}"
+                    f"{symbol_quotes[i - 1].timestamp} y {symbol_quotes[i].timestamp}"
                 )
         except Exception as e:
             pytest.skip(f"No se pudieron obtener datos para {symbol}: {e}")
@@ -316,9 +316,9 @@ class TestDatasetPerSymbol:
         # El test debe fallar si hay gaps > 1 día (excepto weekend)
         for gap_start, gap_end, gap_size in gaps:
             # Permitir gaps de 2-3 días (weekend + holiday)
-            assert (
-                gap_size <= 3
-            ), f"{symbol} tiene gap de {gap_size} días entre {gap_start} y {gap_end}"
+            assert gap_size <= 3, (
+                f"{symbol} tiene gap de {gap_size} días entre {gap_start} y {gap_end}"
+            )
 
 
 class TestQuotePriceConsistency(unittest.TestCase):

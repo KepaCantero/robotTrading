@@ -21,10 +21,7 @@ import asyncio
 import random
 from datetime import datetime, timedelta
 
-from app.sre.monitoring import (
-    get_trading_metrics_monitor,
-    TradingMetricsConfig,
-)
+from app.sre.monitoring import TradingMetricsConfig, get_trading_metrics_monitor
 
 
 async def simulate_order_flow(monitor, num_orders=50):
@@ -38,9 +35,9 @@ async def simulate_order_flow(monitor, num_orders=50):
     symbols = ["AAPL", "MSFT", "GOOGL", "AMZN", "TSLA"]
     sides = ["buy", "sell"]
 
-    print(f"\n{'='*60}")
+    print(f"\n{'=' * 60}")
     print(f"Simulating {num_orders} orders...")
-    print(f"{'='*60}\n")
+    print(f"{'=' * 60}\n")
 
     for i in range(num_orders):
         symbol = random.choice(symbols)
@@ -177,9 +174,9 @@ async def simulate_risk_limit_updates(monitor):
 
 async def display_metrics_summary(monitor):
     """Display comprehensive metrics summary."""
-    print(f"\n{'='*60}")
+    print(f"\n{'=' * 60}")
     print("TRADING METRICS SUMMARY")
-    print(f"{'='*60}\n")
+    print(f"{'=' * 60}\n")
 
     summary = await monitor.get_metrics_summary()
 
@@ -274,7 +271,7 @@ async def main():
 
     # Collect and display metrics
     print("\nCollecting metrics...")
-    metrics = await monitor.collect_metrics()
+    await monitor.collect_metrics()
 
     await display_metrics_summary(monitor)
 
@@ -285,9 +282,9 @@ async def main():
     print(f"  Position Sync Health: {monitor.check_position_sync():.1f}%")
     print(f"  Trading Health: {monitor.evaluate_trading_health()}")
 
-    print(f"\n{'='*60}")
+    print(f"\n{'=' * 60}")
     print("Demonstration complete!")
-    print(f"{'='*60}\n")
+    print(f"{'=' * 60}\n")
 
 
 if __name__ == "__main__":

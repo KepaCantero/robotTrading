@@ -49,8 +49,8 @@ class CreatePortfolioRequest(BaseModel):
     """Request model for creating a portfolio."""
 
     name: str = Field(..., description="Portfolio name")
-    config_id: UUID | None = Field(None, description="Configuration ID")
-    initial_cash: Decimal | None = Field(None, description="Initial cash amount")
+    config_id: UUID | None = Field(default=None, description="Configuration ID")
+    initial_cash: Decimal | None = Field(default=None, description="Initial cash amount")
 
 
 class CreateSessionRequest(BaseModel):
@@ -58,8 +58,8 @@ class CreateSessionRequest(BaseModel):
 
     portfolio_id: UUID = Field(..., description="Portfolio ID")
     name: str = Field(..., description="Session name")
-    description: str | None = Field(None, description="Session description")
-    config_id: UUID | None = Field(None, description="Configuration ID")
+    description: str | None = Field(default=None, description="Session description")
+    config_id: UUID | None = Field(default=None, description="Configuration ID")
 
 
 class ExecuteTradeRequest(BaseModel):
@@ -69,9 +69,9 @@ class ExecuteTradeRequest(BaseModel):
     side: OrderSide = Field(..., description="Order side")
     order_type: OrderType = Field(..., description="Order type")
     quantity: Decimal = Field(..., gt=0, description="Trade quantity")
-    price: Decimal | None = Field(None, gt=0, description="Order price (for limit orders)")
-    strategy_id: str | None = Field(None, description="Strategy ID")
-    signal_id: UUID | None = Field(None, description="Signal ID")
+    price: Decimal | None = Field(default=None, gt=0, description="Order price (for limit orders)")
+    strategy_id: str | None = Field(default=None, description="Strategy ID")
+    signal_id: UUID | None = Field(default=None, description="Signal ID")
 
 
 class UpdateMarketPricesRequest(BaseModel):

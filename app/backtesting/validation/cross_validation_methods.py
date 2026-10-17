@@ -661,6 +661,7 @@ class CrossValidation:
         Returns:
             CVResult with validation results
         """
+        del return_estimator  # aceptado por compatibilidad; sin uso aquí
         import time
 
         from sklearn.metrics import check_scoring

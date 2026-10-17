@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 """Initial database schema for AlgoTrading Platform
 
 This migration creates all core tables for the algorithmic trading system,
@@ -12,12 +10,13 @@ Create Date: 2026-01-27
 
 """
 
+from __future__ import annotations
+
 from typing import TYPE_CHECKING
 
 import sqlalchemy as sa
-from sqlalchemy.dialects import postgresql
-
 from alembic import op
+from sqlalchemy.dialects import postgresql
 
 if TYPE_CHECKING:
     from collections.abc import Sequence

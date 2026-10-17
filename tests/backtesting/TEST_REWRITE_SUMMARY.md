@@ -90,15 +90,10 @@
    ```python
    # Change from:
    result = backtester.run_backtest(
-       quotes, signals, 
-       base_config.strategy_name or "strategy",
-       datetime.now(), datetime.now()
+       quotes, signals, base_config.strategy_name or "strategy", datetime.now(), datetime.now()
    )
    # To:
-   result = backtester.run_backtest(
-       quotes, signals,
-       datetime.now(), datetime.now()
-   )
+   result = backtester.run_backtest(quotes, signals, datetime.now(), datetime.now())
    result.strategy_name = base_config.strategy_name or "strategy"
    ```
 

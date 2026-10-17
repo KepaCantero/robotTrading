@@ -139,7 +139,7 @@ class RealisticDataGenerator:
             asset_class: Asset class for price precision (equity, forex, crypto, etc.)
         """
         self.seed = seed
-        self.rng = np.random.RandomState(seed)
+        self.rng = np.random.RandomState(seed)  # pylint: disable=no-member
         self.base_price = base_price
         self.base_volume = base_volume
         self.regimes = regimes or self.DEFAULT_REGIMES
@@ -456,7 +456,7 @@ class RealisticDataGenerator:
         for sim_idx in range(n_simulations):
             # Use simulation-specific seed for reproducibility
             sim_seed = self.seed + sim_idx if self.seed else None
-            sim_rng = np.random.RandomState(sim_seed)
+            sim_rng = np.random.RandomState(sim_seed)  # pylint: disable=no-member
 
             # Generate price path with same drift but realistic volatility
             sim_prices = np.empty(n_days)

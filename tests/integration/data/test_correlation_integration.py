@@ -175,8 +175,8 @@ async def test_portfolio_risk_manager_with_correlation_analyzer(
 ):
     """Test PortfolioRiskManager using real correlation from CorrelationAnalyzer."""
     # Set up mock to return historical data
-    mock_market_data_service.get_historical_data.side_effect = (
-        lambda symbol, **kwargs: mock_historical_data.get(symbol, [])
+    mock_market_data_service.get_historical_data.side_effect = lambda symbol, **kwargs: (
+        mock_historical_data.get(symbol, [])
     )
 
     # Create portfolio risk manager with correlation analyzer
@@ -237,8 +237,8 @@ async def test_correlation_analyzer_statistics(
 ):
     """Test correlation analyzer statistics tracking."""
     # Set up mock to return historical data
-    mock_market_data_service.get_historical_data.side_effect = (
-        lambda symbol, **kwargs: mock_historical_data.get(symbol, [])
+    mock_market_data_service.get_historical_data.side_effect = lambda symbol, **kwargs: (
+        mock_historical_data.get(symbol, [])
     )
 
     # Calculate correlation matrix
@@ -255,8 +255,8 @@ async def test_correlation_cache_update(
 ):
     """Test correlation cache update functionality."""
     # Set up mock to return historical data
-    mock_market_data_service.get_historical_data.side_effect = (
-        lambda symbol, **kwargs: mock_historical_data.get(symbol, [])
+    mock_market_data_service.get_historical_data.side_effect = lambda symbol, **kwargs: (
+        mock_historical_data.get(symbol, [])
     )
 
     # Update cache
@@ -281,8 +281,8 @@ async def test_correlation_with_new_position(
 ):
     """Test correlation calculation when adding a new position."""
     # Set up mock to return historical data
-    mock_market_data_service.get_historical_data.side_effect = (
-        lambda symbol, **kwargs: mock_historical_data.get(symbol, [])
+    mock_market_data_service.get_historical_data.side_effect = lambda symbol, **kwargs: (
+        mock_historical_data.get(symbol, [])
     )
 
     # Create portfolio risk manager with correlation analyzer
@@ -302,8 +302,8 @@ async def test_correlation_with_new_position(
     )
 
     # Add TSLA mock data
-    mock_market_data_service.get_historical_data.side_effect = (
-        lambda symbol, **kwargs: mock_historical_data.get(symbol, [])
+    mock_market_data_service.get_historical_data.side_effect = lambda symbol, **kwargs: (
+        mock_historical_data.get(symbol, [])
     )
 
     # Assess portfolio risk with new position

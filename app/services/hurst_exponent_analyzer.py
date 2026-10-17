@@ -1108,6 +1108,7 @@ class HurstExponentAnalyzer:
         Returns:
             HurstResult object with analysis results
         """
+        del calculate_std_error  # aceptado por compatibilidad; sin uso aquí
         return self.analyze(series)
 
     def classify_regime(self, hurst_exponent: float) -> MarketRegime:

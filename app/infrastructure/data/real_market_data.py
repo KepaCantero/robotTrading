@@ -1,7 +1,3 @@
-from __future__ import annotations
-
-# mypy: ignore-errors
-# mypy: ignore-errors
 """
 Real Market Data Fetcher - Alpha Vantage Integration
 
@@ -18,6 +14,8 @@ Features:
 Author: AlgoTrading System
 Date: 2025-01-25
 """
+
+from __future__ import annotations  # mypy: ignore-errors
 
 import asyncio
 import json
@@ -167,7 +165,7 @@ class RealMarketDataFetcher:
         await self.connect()
         return self
 
-    async def __aexit__(self, exc_type, exc_val, exc_tb):
+    async def __aexit__(self, exc_type, exc_val, _exc_tb):
         """Async context manager exit."""
         await self.disconnect()
 

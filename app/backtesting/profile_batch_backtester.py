@@ -64,6 +64,7 @@ from app.backtesting.backtesting_compliance import (
     create_backtesting_compliance,
 )
 from app.backtesting.comprehensive_backtest_runner import ComprehensiveBacktestRunner
+from app.backtesting.core.config_loader import YamlDict, cfg_dict
 from app.backtesting.professional_reporter import ProfessionalReporter
 from app.backtesting.services import (
     BatchExecutionService,
@@ -520,7 +521,7 @@ class ProfileBatchBacktester:
 
             if multi_strategy:
                 # Multi-strategy execution
-                results_list = runner.run_multi_strategy_backtest()
+                results_list = runner.run_backtest()
                 if not results_list:
                     logger.warning("No results from multi-strategy baseline")
                     return self._get_empty_metrics()
@@ -669,8 +670,8 @@ class ProfileBatchBacktester:
         # Get parameter ranges from ProfileConfigLoader
         if self.profile_config_loader is not None:
             try:
-                rsi_buy_config = self.profile_config_loader.get_threshold_config("rsi").get(
-                    "buy_threshold", {}
+                rsi_buy_config: YamlDict = cfg_dict(
+                    self.profile_config_loader.get_threshold_config("rsi").get("buy_threshold", {})
                 )
                 # profile_optimization.yaml: rsi.buy_threshold
                 rsi_buy_min = rsi_buy_config.get("min", 10)
@@ -794,7 +795,7 @@ class ProfileBatchBacktester:
 
                 if multi_strategy:
                     # Multi-strategy execution
-                    results = runner.run_multi_strategy_backtest()
+                    results = runner.run_backtest()
                     # Aggregate results
                     aggregated = self._aggregate_multi_strategy_results(results, profile)
                     # Add per-strategy results
@@ -863,8 +864,10 @@ class ProfileBatchBacktester:
                     )
 
                 # Calculate windows
-                start_date = pd.Timestamp(config.get("input", {}).get("start_date", "2020-01-01"))
-                end_date = pd.Timestamp(config.get("input", {}).get("end_date", "2023-12-31"))
+                start_date = pd.Timestamp(
+                    cfg_dict(config.get("input")).get("start_date", "2020-01-01")
+                )
+                end_date = pd.Timestamp(cfg_dict(config.get("input")).get("end_date", "2023-12-31"))
                 total_years = (end_date - start_date).days / 365.25
 
                 initial_train_years = train_years
@@ -898,8 +901,8 @@ class ProfileBatchBacktester:
             min_test_periods = wf_config.get("min_test_periods", 20)
 
         # Get backtest period dates
-        start_date = pd.Timestamp(config.get("input", {}).get("start_date", "2020-01-01"))
-        end_date = pd.Timestamp(config.get("input", {}).get("end_date", "2023-12-31"))
+        start_date = pd.Timestamp(cfg_dict(config.get("input")).get("start_date", "2020-01-01"))
+        end_date = pd.Timestamp(cfg_dict(config.get("input")).get("end_date", "2023-12-31"))
         total_days = (end_date - start_date).days
 
         if total_days < 365:

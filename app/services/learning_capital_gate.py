@@ -34,6 +34,8 @@ logger = logging.getLogger(__name__)
 
 
 class LearningCapitalGate:
+    # Umbral orientativo por defecto; el real se calcula desde config (tt.learning_min_capital)
+    MIN_CAPITAL_FOR_LEARNING: ClassVar[Decimal] = Decimal("10000")
     """
     Validates that learning engines are economically viable for the account capital.
 

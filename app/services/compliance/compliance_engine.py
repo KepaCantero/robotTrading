@@ -1134,13 +1134,13 @@ class SystemBus:
             alloc_config = get_strategy_stock_allocator_config()
             compliance_config = get_compliance_config()
 
-            if price_history is not None and len(price_history) >= alloc_config.SLOPE_WINDOW_MIN:
+            if price_history is not None and len(price_history) >= alloc_config["SLOPE_WINDOW_MIN"]:
                 # Calculate returns
                 returns = price_history["close"].pct_change().dropna()
 
                 # Calculate momentum signal based on recent returns
-                if len(returns) >= alloc_config.SLOPE_WINDOW_MIN:
-                    recent_returns = returns.tail(alloc_config.SLOPE_WINDOW_MIN)
+                if len(returns) >= alloc_config["SLOPE_WINDOW_MIN"]:
+                    recent_returns = returns.tail(alloc_config["SLOPE_WINDOW_MIN"])
                     avg_return = recent_returns.mean()
 
                     # Normalize signal to 0-1 range (0=bearish, 1=bullish)
@@ -2994,10 +2994,9 @@ class ComplianceEngine:
 
         try:
             # Use Chan's optimization (integrates with Narang's constraints)
-            from app.services.optimization_chan import get_portfolio_optimizer
+            from app.services.optimization_chan import optimize_portfolio
 
-            optimizer = get_portfolio_optimizer(method="mean_variance")
-            result = optimizer.optimize(returns)
+            result = optimize_portfolio(returns=returns, method="mean_variance")
 
             weights_dict = {
                 symbol: Decimal(str(weight)) for symbol, weight in zip(symbols, result.weights)
@@ -3227,7 +3226,7 @@ class ComplianceEngine:
 
         return sorted(alerts, key=get_priority)
 
-    async def get_alert_history(self, _symbol: str, _days: int) -> list:
+    async def get_alert_history(self, symbol: str, days: int) -> list:
         """Get alert history for symbol (last N days)."""
         # This would integrate with alert history storage
         # For now, return empty list
@@ -3237,7 +3236,7 @@ class ComplianceEngine:
         self,
         signal: TradeSignal,
         portfolio_value: Decimal | None = None,
-        _price_history: pd.DataFrame | None = None,
+        price_history: pd.DataFrame | None = None,
         decision_logger: TradingDecisionLogger | None = None,
         tax_engine: SpainTaxEngineImpl | None = None,
         broker_connector: BrokerConnector | None = None,
@@ -3501,7 +3500,7 @@ class ComplianceEngine:
     async def run_cycle(
         self,
         signals: list[TradeSignal],
-        _portfolio_value: Decimal | None = None,
+        portfolio_value: Decimal | None = None,
     ) -> CycleResult:
         """
         Run complete strategy cycle (IStrategyCycleRunner protocol).
@@ -3670,7 +3669,7 @@ class ComplianceEngine:
 
         return is_dup
 
-    async def _submit_to_broker(self, _broker, _signal: TradeSignal) -> str:
+    async def _submit_to_broker(self, broker, signal: TradeSignal) -> str:
         """Submit order to broker."""
         # Convert TradeSignal to broker format
 

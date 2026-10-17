@@ -26,7 +26,7 @@ scripts/
 | `check_all.sh` | QA completo: ruff, black, isort, flake8, pylint, mypy, bandit (+ radon/vulture/semgrep/pip-audit si están) | `./scripts/check_all.sh [--core\|--fix\|--strict]` |
 | `generate_requirements.py` | Regenera los 1.170 specs de `.requirements/app/` y borra huérfanos; idempotente | `python scripts/generate_requirements.py [--dry-run]` |
 | `production_audit.py` | Verifica cada archivo de `app/` contra su spec: GAP (falta en código) y STALE (spec desactualizada) | `python scripts/production_audit.py` |
-| `start_paper_trading.sh` | Start API server + Streamlit dashboard | `./scripts/start_paper_trading.sh` |
+| `start_paper_trading.sh` | Start API server + dashboard (NiceGUI) | `./scripts/start_paper_trading.sh` |
 | `stop_paper_trading.sh` | Stop paper-trading processes | `./scripts/stop_paper_trading.sh` |
 
 ## QA workflow

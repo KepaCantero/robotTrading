@@ -24,6 +24,8 @@ from typing import TYPE_CHECKING, Any, Callable
 
 import numpy as np
 
+from app.backtesting.core.config_loader import cfg_dict
+
 logger = logging.getLogger(__name__)
 
 from app.backtesting.core.error_handling import MutexError, TrainingError, train_with_retry
@@ -194,7 +196,7 @@ class BacktestExecutor:
         engine_types = ["supervised"]
 
         for engine_type in engine_types:
-            if not learning_engines_config.get(engine_type, {}).get("enabled", False):
+            if not cfg_dict(learning_engines_config.get(engine_type)).get("enabled", False):
                 logger.info(f"Skipping {engine_type} learning engine (disabled)")
                 continue
 
@@ -371,7 +373,7 @@ class BacktestExecutor:
 
         mc_config = self.raw_config["backtests"]["monte_carlo"]
         num_simulations = mc_config.get("num_simulations", 100)
-        volatility_multiplier = mc_config.get("volatility_multiplier", {}).get("default", 1.0)
+        volatility_multiplier = cfg_dict(mc_config.get("volatility_multiplier")).get("default", 1.0)
 
         results = []
 
@@ -529,7 +531,7 @@ class BacktestExecutor:
         """
         logger.info("Running walk-forward backtest...")
 
-        wf_config = self.raw_config.get("backtests", {}).get("walk_forward", {})
+        wf_config = cfg_dict(self.raw_config.get("backtests")).get("walk_forward", {})
 
         # Window parameters with defaults
         train_pct = wf_config.get("train_pct", 0.70)

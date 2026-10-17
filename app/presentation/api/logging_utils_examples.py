@@ -259,33 +259,31 @@ async def example_error_scenarios(request: Request, body: ExampleRequest) -> dic
 # Integration with existing correlation ID middleware
 # ============================================================================
 
-"""
-The logging utilities work seamlessly with the existing correlation ID middleware
-in app/api/__init__.py. The correlation ID is automatically:
-
-1. Generated or extracted from the X-Correlation-ID header by AuditMiddleware
-2. Stored in request.state.correlation_id
-3. Available through get_correlation_id_from_request()
-4. Included in all logs via the logging utilities
-
-Usage in production endpoints:
-
-```python
-from fastapi import APIRouter, Request
-from app.presentation.api.logging_utils import log_info, log_error
-
-@router.post("/trade")
-async def execute_trade(request: Request, trade_data: TradeRequest):
-    log_info(request, "Trade execution started", symbol=trade_data.symbol)
-
-    try:
-        result = await trade_service.execute(trade_data)
-        log_info(request, "Trade executed successfully", trade_id=result.id)
-        return result
-    except Exception as e:
-        log_error(request, "Trade execution failed", exception=e)
-        raise
-```
-
-This ensures all logs include the correlation ID for complete request tracing.
-"""
+# The logging utilities work seamlessly with the existing correlation ID middleware
+# in app/api/__init__.py. The correlation ID is automatically:
+#
+# # 1. Generated or extracted from the X-Correlation-ID header by AuditMiddleware
+# 2. Stored in request.state.correlation_id
+# 3. Available through get_correlation_id_from_request()
+# 4. Included in all logs via the logging utilities
+#
+# Usage in production endpoints:
+#
+# ```python
+# from fastapi import APIRouter, Request
+# from app.presentation.api.logging_utils import log_info, log_error
+#
+# @router.post("/trade")
+# async def execute_trade(request: Request, trade_data: TradeRequest):
+#     log_info(request, "Trade execution started", symbol=trade_data.symbol)
+#
+#     try:
+#         result = await trade_service.execute(trade_data)
+#         log_info(request, "Trade executed successfully", trade_id=result.id)
+#         return result
+#     except Exception as e:
+#         log_error(request, "Trade execution failed", exception=e)
+#         raise
+# ```
+#
+# This ensures all logs include the correlation ID for complete request tracing.

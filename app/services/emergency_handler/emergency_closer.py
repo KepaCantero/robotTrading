@@ -144,7 +144,7 @@ class EmergencyCloser:
         except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
             logger.warning(f"Could not register signal handlers: {e}")
 
-    def _signal_handler(self, signum, frame) -> None:
+    def _signal_handler(self, signum, _frame) -> None:  # la señal llega posicional
         """Handle shutdown signals."""
         logger.critical(f"Received signal {signum} - initiating emergency shutdown")
         # Create async task to handle shutdown

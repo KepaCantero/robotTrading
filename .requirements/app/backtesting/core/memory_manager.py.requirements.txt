@@ -17,7 +17,6 @@ Domain: Backtest
 
 ## 3. Core Components
 ### Classes
-- `BacktestResultDict`
 - `MemoryPressureError`
 - `AggressiveMemoryManager`
 ### Public Functions

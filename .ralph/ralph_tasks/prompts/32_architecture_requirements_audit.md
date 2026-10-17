@@ -975,4 +975,3 @@ grep -l "Architecture Rules" .requirements/app/**/*.requirements.md
 ```
 
 Emitir "file_requirements.updated"
-

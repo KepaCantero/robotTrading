@@ -293,6 +293,9 @@ async def example_5_market_status_monitoring():
     for market in markets:
         status = await scheduler.get_market_status(market)
         schedule = scheduler.get_market_schedule(market)
+        if schedule is None:
+            logger.debug(f"\n{market.value.upper()}: no schedule configured")
+            continue
 
         logger.debug(f"\n{market.value.upper()}:")
         logger.debug(f"  Status: {status.value}")
@@ -339,6 +342,7 @@ async def example_6_holiday_management():
 
     # Check added holidays
     us_schedule = scheduler.get_market_schedule(MarketType.STOCKS_US)
+    assert us_schedule is not None, "US market schedule must exist"
     logger.debug(f"\nUS Market holidays configured: {len(us_schedule.holidays)}")
     for holiday in sorted(us_schedule.holidays):
         logger.debug(f"  - {holiday}")
@@ -393,6 +397,7 @@ async def example_7_task_metrics():
 
     # Get task information
     task_info = scheduler.get_task_info("monitored_task")
+    assert task_info is not None, "monitored_task must exist"
 
     logger.debug("\nTask Metrics:")
     logger.debug(f"  Task ID: {task_info['task_id']}")

@@ -16,6 +16,7 @@ Domain: Domain
 - `logging`
 - `models`
 - `typing`
+- `uuid`
 
 ## 3. Core Components
 ### Classes

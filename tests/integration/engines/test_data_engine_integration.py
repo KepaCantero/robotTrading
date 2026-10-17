@@ -1,14 +1,3 @@
-import asyncio
-import sys
-from datetime import datetime, timedelta
-from pathlib import Path
-
-import pytest
-
-from app.engines.data_engine import DataEngine
-from app.engines.data_engine.cache.distributed_cache import DistributedCache
-from app.engines.data_engine.streaming.websocket_streaming import WebSocketStreamingManager
-
 """
 Integration Tests: DataEngine (Módulo 1)
 
@@ -21,6 +10,16 @@ Tests para verificar funcionalidad completa del DataEngine:
 - Streaming WebSocket
 """
 
+import asyncio
+import sys
+from datetime import datetime, timedelta
+from pathlib import Path
+
+import pytest
+
+from app.engines.data_engine import DataEngine
+from app.engines.data_engine.cache.distributed_cache import DistributedCache
+from app.engines.data_engine.streaming.websocket_streaming import WebSocketStreamingManager
 
 # Add project root to path
 project_root = Path(__file__).parent.parent.parent.parent
@@ -31,14 +30,14 @@ sys.path.insert(0, str(project_root))
 def data_engine_config():
     """Configuración básica para DataEngine."""
     return {
-        'cache_config': {
-            'use_redis': False,  # Usar solo memoria para tests
-            'use_postgres': False,
-            'default_ttl': 3600,
+        "cache_config": {
+            "use_redis": False,  # Usar solo memoria para tests
+            "use_postgres": False,
+            "default_ttl": 3600,
         },
-        'streaming_config': {'heartbeat_interval': 30, 'max_connections': 10},
-        'streaming_enabled': False,  # Deshabilitar streaming por defecto en tests
-        'sources': {},
+        "streaming_config": {"heartbeat_interval": 30, "max_connections": 10},
+        "streaming_enabled": False,  # Deshabilitar streaming por defecto en tests
+        "sources": {},
     }
 
 
@@ -66,12 +65,12 @@ class TestDataEngineInitialization:
         """Test obtener estado."""
         status = data_engine.get_status()
 
-        assert 'sources' in status
-        assert 'cache' in status
-        assert 'streaming' in status
-        assert 'normalizer_enabled' in status
-        assert 'cleaning_enabled' in status
-        assert 'versioning_enabled' in status
+        assert "sources" in status
+        assert "cache" in status
+        assert "streaming" in status
+        assert "normalizer_enabled" in status
+        assert "cleaning_enabled" in status
+        assert "versioning_enabled" in status
 
 
 class TestCacheIntegration:
@@ -143,10 +142,10 @@ class TestCacheIntegration:
         cache = data_engine.cache
         status = cache.get_status()
 
-        assert 'redis_enabled' in status
-        assert 'postgres_enabled' in status
-        assert 'memory_cache_size' in status
-        assert 'default_ttl' in status
+        assert "redis_enabled" in status
+        assert "postgres_enabled" in status
+        assert "memory_cache_size" in status
+        assert "default_ttl" in status
 
 
 class TestStreamingIntegration:
@@ -154,7 +153,7 @@ class TestStreamingIntegration:
 
     def test_streaming_manager_creation(self, data_engine_config):
         """Test creación del streaming manager."""
-        streaming_config = data_engine_config.get('streaming_config', {})
+        streaming_config = data_engine_config.get("streaming_config", {})
         manager = WebSocketStreamingManager(streaming_config)
 
         assert manager is not None
@@ -164,7 +163,7 @@ class TestStreamingIntegration:
     @pytest.mark.asyncio
     async def test_streaming_manager_start_stop(self, data_engine_config):
         """Test iniciar y detener streaming manager."""
-        streaming_config = data_engine_config.get('streaming_config', {})
+        streaming_config = data_engine_config.get("streaming_config", {})
         manager = WebSocketStreamingManager(streaming_config)
 
         # Iniciar
@@ -177,16 +176,16 @@ class TestStreamingIntegration:
 
     def test_streaming_manager_status(self, data_engine_config):
         """Test estado del streaming manager."""
-        streaming_config = data_engine_config.get('streaming_config', {})
+        streaming_config = data_engine_config.get("streaming_config", {})
         manager = WebSocketStreamingManager(streaming_config)
 
         status = manager.get_status()
 
-        assert 'active_connections' in status
-        assert 'total_subscriptions' in status
-        assert 'symbols_subscribed' in status
-        assert 'max_connections' in status
-        assert 'running' in status
+        assert "active_connections" in status
+        assert "total_subscriptions" in status
+        assert "symbols_subscribed" in status
+        assert "max_connections" in status
+        assert "running" in status
 
 
 class TestDataEngineAPIs:
@@ -227,9 +226,9 @@ class TestDataEngineAPIs:
 
         # Debería retornar dict con estructura de sentimiento
         assert isinstance(result, dict)
-        assert 'sentiment_score' in result
-        assert 'total_sources' in result
-        assert 'sources' in result
+        assert "sentiment_score" in result
+        assert "total_sources" in result
+        assert "sources" in result
 
 
 class TestDataEngineLifecycle:
@@ -281,7 +280,7 @@ class TestDataEngineIntegration:
 
     def test_distributed_cache_fallback(self):
         """Test que DistributedCache funciona sin Redis/PostgreSQL."""
-        config = {'use_redis': False, 'use_postgres': False, 'default_ttl': 3600}
+        config = {"use_redis": False, "use_postgres": False, "default_ttl": 3600}
 
         cache = DistributedCache(config)
 
@@ -290,5 +289,5 @@ class TestDataEngineIntegration:
         assert not cache.use_postgres
 
         status = cache.get_status()
-        assert not status['redis_enabled']
-        assert not status['postgres_enabled']
+        assert not status["redis_enabled"]
+        assert not status["postgres_enabled"]

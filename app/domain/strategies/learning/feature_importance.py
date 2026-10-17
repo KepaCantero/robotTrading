@@ -687,7 +687,9 @@ class AttentionWeightsAnalyzer:
 
             # Obtener attention weights - returns None or np.ndarray
             # This is a placeholder implementation that will be extended
-            attention_weights = self._get_attention_from_model(model, sequence_tensor, layer_idx)
+            attention_weights = self._get_attention_from_model(  # pylint: disable=assignment-from-none  # anotado FloatArray | None
+                model, sequence_tensor, layer_idx
+            )
 
             # Check if attention_weights is None before proceeding
             if attention_weights is None:
@@ -709,7 +711,7 @@ class AttentionWeightsAnalyzer:
             elif self.aggregation_method == "max":
                 aggregated = np.max(attention_weights, axis=(0, 1))
             else:  # first
-                aggregated = attention_weights[0, 0]  # Primer head, primera layer
+                aggregated = attention_weights[0, 0]  # pylint: disable=unsubscriptable-object  # __getitem__ verificado con hasattr
 
             # Normalizar si es necesario
             if self.normalize:
@@ -758,7 +760,7 @@ class AttentionWeightsAnalyzer:
 
             # Buscar TransformerEncoderLayer en el modelo
             # Hook para capturar attention
-            def attention_hook(module, module_input, output):
+            def attention_hook(module, _module_input, output):  # hook posicional de PyTorch
                 # En TransformerEncoderLayer, el output es (output, attention_weights) si return_attn=True
                 # O podemos usar register_forward_hook y buscar el atributo
                 if hasattr(module, "self_attn"):

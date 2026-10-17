@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 """
 Stationarity and Cointegration Analyzer
 
@@ -18,6 +16,8 @@ Reference:
     Chapter 2: Stationarity and Cointegration
     Chapter 6: Mean Reversion Strategies
 """
+
+from __future__ import annotations
 
 import logging
 from dataclasses import dataclass

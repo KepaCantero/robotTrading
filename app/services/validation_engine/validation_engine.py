@@ -50,22 +50,25 @@ class ValidationEngine:
     def _get_capital_viability_validator(self):
         """Lazy-load CapitalViabilityValidator."""
         if self._capital_viability_validator is None:
-            # NOTE: Implement lazy loading of CapitalViabilityValidator
-            pass
+            from app.services.capital_viability_gate import CapitalViabilityValidator
+
+            self._capital_viability_validator = CapitalViabilityValidator()
         return self._capital_viability_validator
 
     def _get_expensive_module_gate(self):
         """Lazy-load ExpensiveModuleGate."""
         if self._expensive_module_gate is None:
-            # NOTE: Implement lazy loading of ExpensiveModuleGate
-            pass
+            from app.services.expensive_module_gate import ExpensiveModuleGate
+
+            self._expensive_module_gate = ExpensiveModuleGate()
         return self._expensive_module_gate
 
     def _get_learning_capital_gate(self):
         """Lazy-load LearningCapitalGate."""
         if self._learning_capital_gate is None:
-            # NOTE: Implement lazy loading of LearningCapitalGate
-            pass
+            from app.services.learning_capital_gate import LearningCapitalGate
+
+            self._learning_capital_gate = LearningCapitalGate()
         return self._learning_capital_gate
 
     async def validate(self, request: ValidationRequest) -> ValidationResult:

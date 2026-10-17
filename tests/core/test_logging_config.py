@@ -377,7 +377,7 @@ class TestTimedFormatter:
     def test_timed_formatter_adds_timing_fields(self):
         """Test that TimedFormatter adds elapsed_ms and delta_ms."""
         formatter = TimedFormatter(
-            '%(asctime)s - %(name)s - %(levelname)s - [%(elapsed_ms).2fms] - %(message)s'
+            "%(asctime)s - %(name)s - %(levelname)s - [%(elapsed_ms).2fms] - %(message)s"
         )
 
         record = logging.LogRecord(
@@ -399,7 +399,7 @@ class TestTimedFormatter:
 
     def test_timed_formatter_includes_correlation_id(self):
         """Test that TimedFormatter includes correlation ID LOG-002."""
-        formatter = TimedFormatter('%(message)s - %(correlation_id)s')
+        formatter = TimedFormatter("%(message)s - %(correlation_id)s")
 
         record = logging.LogRecord(
             name="test",

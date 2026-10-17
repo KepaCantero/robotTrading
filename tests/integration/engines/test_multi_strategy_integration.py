@@ -28,7 +28,7 @@ from app.engines.strategy_engines import (
 from tests.integration.data.test_data_loader import load_all_csv_data
 
 logging.basicConfig(
-    level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
 logger = logging.getLogger(__name__)
 
@@ -43,14 +43,14 @@ def dataframe_to_quotes(symbol: str, df: pd.DataFrame):
         quote = Quote(
             symbol=symbol,
             timestamp=idx if isinstance(idx, datetime) else datetime.now(),
-            bid=Decimal(str(row.get('close', row.get('open', 0)))),
-            ask=Decimal(str(row.get('close', row.get('open', 0)))),
-            last=Decimal(str(row.get('close', 0))),
-            close=Decimal(str(row.get('close', 0))),
-            open=Decimal(str(row.get('open', row.get('close', 0)))),
-            high=Decimal(str(row.get('high', row.get('close', 0)))),
-            low=Decimal(str(row.get('low', row.get('close', 0)))),
-            volume=Decimal(str(row.get('volume', 0))),
+            bid=Decimal(str(row.get("close", row.get("open", 0)))),
+            ask=Decimal(str(row.get("close", row.get("open", 0)))),
+            last=Decimal(str(row.get("close", 0))),
+            close=Decimal(str(row.get("close", 0))),
+            open=Decimal(str(row.get("open", row.get("close", 0)))),
+            high=Decimal(str(row.get("high", row.get("close", 0)))),
+            low=Decimal(str(row.get("low", row.get("close", 0)))),
+            volume=Decimal(str(row.get("volume", 0))),
         )
         quotes.append(quote)
     return quotes
@@ -72,11 +72,11 @@ class TestMultiStrategyBacktestIntegration:
         context_engine = ContextEngine({})
 
         # Crear engines con ContextEngine
-        momentum_config = {'rsi_period': 14, 'context_engine_enabled': True}
+        momentum_config = {"rsi_period": 14, "context_engine_enabled": True}
         momentum_engine = MomentumStrategyEngine(momentum_config)
         momentum_engine.set_context_engine(context_engine)
 
-        mean_reversion_config = {'z_score_period': 20, 'context_engine_enabled': True}
+        mean_reversion_config = {"z_score_period": 20, "context_engine_enabled": True}
         mean_reversion_engine = MeanReversionStrategyEngine(mean_reversion_config)
         mean_reversion_engine.set_context_engine(context_engine)
 
@@ -101,12 +101,12 @@ class TestMultiStrategyBacktestIntegration:
 
         # Verificar que los engines están usando ContextEngine
         momentum_status = momentum_engine.get_status()
-        assert momentum_status['context_engine_enabled'] is True
+        assert momentum_status["context_engine_enabled"] is True
 
         # Verificar métricas
         momentum_metrics = momentum_engine.get_metrics()
         # context_analysis_calls puede ser 0 si no hay suficientes datos para entrenar
-        assert 'context_analysis_calls' in momentum_metrics
+        assert "context_analysis_calls" in momentum_metrics
 
     def test_modular_momentum_with_context_engine(self):
         """Test ModularMomentumStrategyEngine con ContextEngine."""
@@ -124,9 +124,9 @@ class TestMultiStrategyBacktestIntegration:
 
         # Crear ModularMomentumStrategyEngine con ContextEngine
         config = {
-            'preset': 'balanced',
-            'modules': {'ema_filter': {'enabled': True}, 'rsi_filter': {'enabled': True}},
-            'context_engine_enabled': True,
+            "preset": "balanced",
+            "modules": {"ema_filter": {"enabled": True}, "rsi_filter": {"enabled": True}},
+            "context_engine_enabled": True,
         }
 
         engine = ModularMomentumStrategyEngine(config)
@@ -142,7 +142,7 @@ class TestMultiStrategyBacktestIntegration:
 
         # Verificar integración
         status = engine.get_status()
-        assert status['context_engine_enabled'] is True
+        assert status["context_engine_enabled"] is True
 
     def test_engines_use_context_for_signal_adjustment(self):
         """Test que los engines usan contexto para ajustar señales."""
@@ -159,7 +159,7 @@ class TestMultiStrategyBacktestIntegration:
         context_engine = ContextEngine({})
 
         # Crear engine
-        engine = MomentumStrategyEngine({'rsi_period': 14, 'context_engine_enabled': True})
+        engine = MomentumStrategyEngine({"rsi_period": 14, "context_engine_enabled": True})
         engine.set_context_engine(context_engine)
 
         # Obtener precios para análisis de contexto
@@ -180,4 +180,4 @@ class TestMultiStrategyBacktestIntegration:
         # Verificar que se llamó al contexto
         metrics = engine.get_metrics()
         # context_analysis_calls puede ser 0 si no se llamó explícitamente
-        assert 'context_analysis_calls' in metrics
+        assert "context_analysis_calls" in metrics

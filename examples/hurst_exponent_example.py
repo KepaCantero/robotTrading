@@ -24,13 +24,13 @@ from app.services.hurst_exponent_analyzer import (
     StrategyRecommendation,
     calculate_hurst_exponent,
     classify_regime,
-    recommend_strategy_from_hurst,
     get_analyzer_info,
+    recommend_strategy_from_hurst,
 )
 
 # Configure logging
 logging.basicConfig(
-    level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
 logger = logging.getLogger(__name__)
 
@@ -59,14 +59,14 @@ def example_1_basic_calculation():
         print("❌ No data retrieved")
         return
 
-    prices = data['Close'].values
+    prices = data["Close"].values
     print(f"✅ Retrieved {len(prices)} price points")
 
     # Calculate Hurst exponent using convenience function
     print("\n🔬 Calculating Hurst exponent...")
     hurst = calculate_hurst_exponent(prices, method="rs", use_returns=True)
 
-    print(f"\n📊 Results:")
+    print("\n📊 Results:")
     print(f"   Hurst Exponent: {hurst:.4f}")
 
     # Classify regime
@@ -78,19 +78,19 @@ def example_1_basic_calculation():
     print(f"   Recommended Strategy: {strategy.value}")
 
     # Interpret results
-    print(f"\n💡 Interpretation:")
+    print("\n💡 Interpretation:")
     if hurst < 0.5:
         print(f"   • H < 0.5 ({hurst:.4f}): Mean-reverting market")
-        print(f"   • Consider mean reversion strategies (stat arb, pairs trading)")
-        print(f"   • Avoid trend following strategies")
+        print("   • Consider mean reversion strategies (stat arb, pairs trading)")
+        print("   • Avoid trend following strategies")
     elif hurst > 0.5:
         print(f"   • H > 0.5 ({hurst:.4f}): Trending market")
-        print(f"   • Consider trend following strategies (breakout, momentum)")
-        print(f"   • Avoid mean reversion strategies")
+        print("   • Consider trend following strategies (breakout, momentum)")
+        print("   • Avoid mean reversion strategies")
     else:
         print(f"   • H ≈ 0.5 ({hurst:.4f}): Random walk")
-        print(f"   • Market is efficient - no clear edge")
-        print(f"   • Consider neutral strategies (market making)")
+        print("   • Market is efficient - no clear edge")
+        print("   • Consider neutral strategies (market making)")
 
 
 # ============================================================================
@@ -114,7 +114,7 @@ def example_2_full_analysis():
     ticker = yf.Ticker("SPY")
     data = ticker.history(period="1y", interval="1d")
 
-    prices = data['Close'].values
+    prices = data["Close"].values
     print(f"✅ Retrieved {len(prices)} price points")
 
     # Create analyzer with custom parameters
@@ -132,17 +132,17 @@ def example_2_full_analysis():
     result = analyzer.analyze(prices, symbol="SPY", timestamp=datetime.now())
 
     # Display results
-    print(f"\n📊 Comprehensive Results:")
-    print(f"   Symbol: SPY")
+    print("\n📊 Comprehensive Results:")
+    print("   Symbol: SPY")
     print(f"   Hurst Exponent: {result.hurst_exponent:.4f}")
     print(f"   Market Regime: {result.regime.value}")
     print(f"   Recommended Strategy: {result.strategy.value}")
-    print(f"   Confidence: {result.confidence*100:.1f}%")
+    print(f"   Confidence: {result.confidence * 100:.1f}%")
     print(f"   Method: {result.method}")
 
     # Display R/S values if available
     if result.rs_values and result.window_sizes:
-        print(f"\n📈 R/S Analysis Details:")
+        print("\n📈 R/S Analysis Details:")
         print(f"   Window Sizes: {len(result.window_sizes)} points")
         print(f"   Min Window: {min(result.window_sizes)}")
         print(f"   Max Window: {max(result.window_sizes)}")
@@ -175,7 +175,7 @@ def example_3_compare_symbols():
             ticker = yf.Ticker(symbol)
             data = ticker.history(period="6mo", interval="1d")
             if not data.empty:
-                data_dict[symbol] = data['Close']
+                data_dict[symbol] = data["Close"]
                 print(f"   ✅ {symbol}: {len(data)} data points")
         except Exception as e:
             print(f"   ❌ {symbol}: {e}")
@@ -187,7 +187,7 @@ def example_3_compare_symbols():
     results = analyzer.monitor_multiple_symbols(data_dict, detect_changes=False)
 
     # Display results in a table
-    print(f"\n📊 Results Summary:")
+    print("\n📊 Results Summary:")
     print(f"{'Symbol':<10} {'Hurst':<10} {'Regime':<20} {'Strategy':<20} {'Confidence':<12}")
     print("-" * 80)
 
@@ -196,11 +196,11 @@ def example_3_compare_symbols():
         regime_short = result.regime.value[:20]
         strategy_short = result.strategy.value[:20]
         print(
-            f"{symbol:<10} {result.hurst_exponent:<10.4f} {regime_short:<20} {strategy_short:<20} {result.confidence*100:<11.1f}%"
+            f"{symbol:<10} {result.hurst_exponent:<10.4f} {regime_short:<20} {strategy_short:<20} {result.confidence * 100:<11.1f}%"
         )
 
     # Find best opportunities
-    print(f"\n💡 Best Opportunities:")
+    print("\n💡 Best Opportunities:")
 
     # Most mean-reverting (best for stat arb)
     most_mean_reverting = min(
@@ -248,7 +248,7 @@ def example_4_regime_change_detection():
         print("❌ No data retrieved")
         return
 
-    prices = data['Close'].values
+    prices = data["Close"].values
     print(f"✅ Retrieved {len(prices)} price points")
 
     # Create analyzer
@@ -258,7 +258,7 @@ def example_4_regime_change_detection():
     window_size = 30  # days
     step_size = 7  # days (weekly analysis)
 
-    print(f"\n🔬 Simulating weekly Hurst analysis over 1 year...")
+    print("\n🔬 Simulating weekly Hurst analysis over 1 year...")
 
     results_history = []
     for i in range(window_size, len(prices), step_size):
@@ -272,7 +272,7 @@ def example_4_regime_change_detection():
         result = analyzer.analyze(window_prices, symbol="BTC-USD", timestamp=current_date)
 
         results_history.append(
-            {'date': current_date, 'hurst': result.hurst_exponent, 'regime': result.regime.value}
+            {"date": current_date, "hurst": result.hurst_exponent, "regime": result.regime.value}
         )
 
     # Display history
@@ -281,25 +281,25 @@ def example_4_regime_change_detection():
     print("-" * 50)
 
     for entry in results_history[::2]:  # Show every other entry
-        date_str = entry['date'].strftime('%Y-%m-%d')
+        date_str = entry["date"].strftime("%Y-%m-%d")
         print(f"{date_str:<12} {entry['hurst']:<10.4f} {entry['regime']:<20}")
 
     # Detect regime changes
-    print(f"\n🔍 Detecting Regime Changes...")
+    print("\n🔍 Detecting Regime Changes...")
 
     changes = []
     for i in range(1, len(results_history)):
         prev_entry = results_history[i - 1]
         curr_entry = results_history[i]
 
-        if prev_entry['regime'] != curr_entry['regime']:
+        if prev_entry["regime"] != curr_entry["regime"]:
             changes.append(
                 {
-                    'date': curr_entry['date'],
-                    'old_regime': prev_entry['regime'],
-                    'new_regime': curr_entry['regime'],
-                    'old_hurst': prev_entry['hurst'],
-                    'new_hurst': curr_entry['hurst'],
+                    "date": curr_entry["date"],
+                    "old_regime": prev_entry["regime"],
+                    "new_regime": curr_entry["regime"],
+                    "old_hurst": prev_entry["hurst"],
+                    "new_hurst": curr_entry["hurst"],
                 }
             )
 
@@ -310,7 +310,7 @@ def example_4_regime_change_detection():
             print(f"   Change: {change['old_regime']} → {change['new_regime']}")
             print(f"   Hurst: {change['old_hurst']:.4f} → {change['new_hurst']:.4f}")
     else:
-        print(f"\n✅ No significant regime changes detected in this period")
+        print("\n✅ No significant regime changes detected in this period")
 
 
 # ============================================================================
@@ -348,8 +348,8 @@ def example_5_synthetic_data():
     result_ou = analyzer.analyze(ou_process)
     print(f"   Hurst: {result_ou.hurst_exponent:.4f}")
     print(f"   Regime: {result_ou.regime.value}")
-    print(f"   Expected: H < 0.5 (mean-reverting)")
-    print(f"   ✅ PASS" if result_ou.hurst_exponent < 0.5 else "   ⚠️  UNEXPECTED")
+    print("   Expected: H < 0.5 (mean-reverting)")
+    print("   ✅ PASS" if result_ou.hurst_exponent < 0.5 else "   ⚠️  UNEXPECTED")
 
     # 2. Random Walk (Geometric Brownian Motion)
     print("\n🔬 Testing Random Walk (Geometric Brownian Motion)...")
@@ -364,8 +364,8 @@ def example_5_synthetic_data():
     result_gbm = analyzer.analyze(gbm)
     print(f"   Hurst: {result_gbm.hurst_exponent:.4f}")
     print(f"   Regime: {result_gbm.regime.value}")
-    print(f"   Expected: H ≈ 0.5 (random walk)")
-    print(f"   ✅ PASS" if 0.4 < result_gbm.hurst_exponent < 0.6 else "   ⚠️  UNEXPECTED")
+    print("   Expected: H ≈ 0.5 (random walk)")
+    print("   ✅ PASS" if 0.4 < result_gbm.hurst_exponent < 0.6 else "   ⚠️  UNEXPECTED")
 
     # 3. Trending Series
     print("\n🔬 Testing Trending Series...")
@@ -379,8 +379,8 @@ def example_5_synthetic_data():
     result_trending = analyzer.analyze(trending)
     print(f"   Hurst: {result_trending.hurst_exponent:.4f}")
     print(f"   Regime: {result_trending.regime.value}")
-    print(f"   Expected: H > 0.5 (trending)")
-    print(f"   ✅ PASS" if result_trending.hurst_exponent > 0.5 else "   ⚠️  UNEXPECTED")
+    print("   Expected: H > 0.5 (trending)")
+    print("   ✅ PASS" if result_trending.hurst_exponent > 0.5 else "   ⚠️  UNEXPECTED")
 
 
 # ============================================================================
@@ -407,62 +407,62 @@ def example_6_strategy_selection_guide():
         print("❌ No data retrieved")
         return
 
-    prices = data['Close'].values
+    prices = data["Close"].values
 
     # Calculate Hurst
     analyzer = HurstExponentAnalyzer(method="rs", use_returns=True)
     result = analyzer.analyze(prices)
 
-    print(f"\n📊 Analysis Results:")
+    print("\n📊 Analysis Results:")
     print(f"   Hurst Exponent: {result.hurst_exponent:.4f}")
     print(f"   Market Regime: {result.regime.value}")
-    print(f"   Confidence: {result.confidence*100:.1f}%")
+    print(f"   Confidence: {result.confidence * 100:.1f}%")
 
     # Strategy recommendations
-    print(f"\n💼 Strategy Recommendations:")
+    print("\n💼 Strategy Recommendations:")
 
     if result.strategy == StrategyRecommendation.MEAN_REVERSION:
-        print(f"\n   ✅ USE MEAN REVERSION STRATEGIES")
-        print(f"   Recommended approaches:")
-        print(f"   • Pairs Trading (statistical arbitrage)")
-        print(f"   • Bollinger Bands reversal")
-        print(f"   • RSI/Stochastic oversold/overbought")
-        print(f"   • Mean reversion on specific factors")
-        print(f"\n   Avoid:")
-        print(f"   • Trend following strategies")
-        print(f"   • Breakout strategies")
+        print("\n   ✅ USE MEAN REVERSION STRATEGIES")
+        print("   Recommended approaches:")
+        print("   • Pairs Trading (statistical arbitrage)")
+        print("   • Bollinger Bands reversal")
+        print("   • RSI/Stochastic oversold/overbought")
+        print("   • Mean reversion on specific factors")
+        print("\n   Avoid:")
+        print("   • Trend following strategies")
+        print("   • Breakout strategies")
 
     elif result.strategy == StrategyRecommendation.TREND_FOLLOWING:
-        print(f"\n   ✅ USE TREND FOLLOWING STRATEGIES")
-        print(f"   Recommended approaches:")
-        print(f"   • Moving average crossovers")
-        print(f"   • Breakout strategies")
-        print(f"   • Momentum strategies")
-        print(f"   • Trend following on specific factors")
-        print(f"\n   Avoid:")
-        print(f"   • Mean reversion strategies")
-        print(f"   • Counter-trend strategies")
+        print("\n   ✅ USE TREND FOLLOWING STRATEGIES")
+        print("   Recommended approaches:")
+        print("   • Moving average crossovers")
+        print("   • Breakout strategies")
+        print("   • Momentum strategies")
+        print("   • Trend following on specific factors")
+        print("\n   Avoid:")
+        print("   • Mean reversion strategies")
+        print("   • Counter-trend strategies")
 
     else:  # NEUTRAL
-        print(f"\n   ✅ USE NEUTRAL STRATEGIES")
-        print(f"   Recommended approaches:")
-        print(f"   • Market making")
-        print(f"   • Delta-neutral strategies")
-        print(f"   • Volatility trading")
-        print(f"   • Options strategies (theta decay)")
-        print(f"\n   Note:")
-        print(f"   • Market appears efficient - no clear directional edge")
+        print("\n   ✅ USE NEUTRAL STRATEGIES")
+        print("   Recommended approaches:")
+        print("   • Market making")
+        print("   • Delta-neutral strategies")
+        print("   • Volatility trading")
+        print("   • Options strategies (theta decay)")
+        print("\n   Note:")
+        print("   • Market appears efficient - no clear directional edge")
 
     # Risk management advice
-    print(f"\n⚠️  Risk Management:")
+    print("\n⚠️  Risk Management:")
     if result.hurst_exponent < 0.3:
-        print(f"   • Strong mean reversion - use wider stops")
-        print(f"   • Consider position sizing based on deviation")
+        print("   • Strong mean reversion - use wider stops")
+        print("   • Consider position sizing based on deviation")
     elif result.hurst_exponent > 0.7:
-        print(f"   • Strong trend - use trailing stops")
-        print(f"   • Let winners run, cut losers quickly")
+        print("   • Strong trend - use trailing stops")
+        print("   • Let winners run, cut losers quickly")
     else:
-        print(f"   • Moderate regime - use standard risk management")
+        print("   • Moderate regime - use standard risk management")
 
 
 # ============================================================================
@@ -478,12 +478,12 @@ def main():
 
     # Display analyzer info
     info = get_analyzer_info()
-    print(f"\n🔧 Analyzer Configuration:")
+    print("\n🔧 Analyzer Configuration:")
     print(f"   Numba Available: {info['numba_available']}")
     print(f"   Methods: {', '.join(info['methods_available'])}")
     print(f"   Performance: {info['expected_performance']}")
-    print(f"\n📚 Compliance:")
-    for compliance_item in info['compliance']:
+    print("\n📚 Compliance:")
+    for compliance_item in info["compliance"]:
         print(f"   • {compliance_item}")
 
     # Run examples (comment out any you want to skip)

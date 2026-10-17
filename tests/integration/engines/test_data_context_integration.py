@@ -22,7 +22,7 @@ from app.engines.data_engine import DataEngine
 from app.engines.strategy_engines import MeanReversionStrategyEngine, MomentumStrategyEngine
 
 logging.basicConfig(
-    level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
 logger = logging.getLogger(__name__)
 
@@ -33,9 +33,9 @@ class TestDataEngineIntegration:
     def test_data_engine_initialization_in_strategy(self):
         """Test que DataEngine se puede inicializar en Strategy Engine."""
         config = {
-            'rsi_period': 14,
-            'data_engine_enabled': True,
-            'data_engine_config': {'sources': {}},
+            "rsi_period": 14,
+            "data_engine_enabled": True,
+            "data_engine_config": {"sources": {}},
         }
 
         engine = MomentumStrategyEngine(config)
@@ -46,10 +46,10 @@ class TestDataEngineIntegration:
 
     def test_set_data_engine_externally(self):
         """Test configurar DataEngine externamente."""
-        engine = MomentumStrategyEngine({'rsi_period': 14})
+        engine = MomentumStrategyEngine({"rsi_period": 14})
 
         # Crear DataEngine mock o real
-        data_engine_config = {'sources': {}}
+        data_engine_config = {"sources": {}}
         data_engine = DataEngine(data_engine_config)
 
         engine.set_data_engine(data_engine)
@@ -63,7 +63,7 @@ class TestContextEngineIntegration:
 
     def test_context_engine_initialization_in_strategy(self):
         """Test que ContextEngine se puede inicializar en Strategy Engine."""
-        config = {'rsi_period': 14, 'context_engine_enabled': True, 'context_engine_config': {}}
+        config = {"rsi_period": 14, "context_engine_enabled": True, "context_engine_config": {}}
 
         engine = MomentumStrategyEngine(config)
 
@@ -71,7 +71,7 @@ class TestContextEngineIntegration:
 
     def test_set_context_engine_externally(self):
         """Test configurar ContextEngine externamente."""
-        engine = MomentumStrategyEngine({'rsi_period': 14})
+        engine = MomentumStrategyEngine({"rsi_period": 14})
 
         context_engine = ContextEngine({})
 
@@ -82,7 +82,7 @@ class TestContextEngineIntegration:
 
     def test_get_context_analysis(self):
         """Test obtener análisis de contexto desde Strategy Engine."""
-        engine = MomentumStrategyEngine({'rsi_period': 14})
+        engine = MomentumStrategyEngine({"rsi_period": 14})
         context_engine = ContextEngine({})
         engine.set_context_engine(context_engine)
 
@@ -97,7 +97,7 @@ class TestContextEngineIntegration:
 
     def test_get_volatility_regime(self):
         """Test obtener régimen de volatilidad desde Strategy Engine."""
-        engine = MomentumStrategyEngine({'rsi_period': 14})
+        engine = MomentumStrategyEngine({"rsi_period": 14})
         context_engine = ContextEngine({})
         engine.set_context_engine(context_engine)
 
@@ -114,11 +114,11 @@ class TestIntegratedStrategyEngines:
     def test_strategy_with_both_engines(self):
         """Test Strategy Engine con DataEngine y ContextEngine."""
         config = {
-            'rsi_period': 14,
-            'data_engine_enabled': True,
-            'context_engine_enabled': True,
-            'data_engine_config': {'sources': {}},
-            'context_engine_config': {},
+            "rsi_period": 14,
+            "data_engine_enabled": True,
+            "context_engine_enabled": True,
+            "data_engine_config": {"sources": {}},
+            "context_engine_config": {},
         }
 
         engine = MomentumStrategyEngine(config)
@@ -128,7 +128,7 @@ class TestIntegratedStrategyEngines:
 
     def test_strategy_metrics_include_engines(self):
         """Test que las métricas incluyen llamadas a engines."""
-        engine = MomentumStrategyEngine({'rsi_period': 14})
+        engine = MomentumStrategyEngine({"rsi_period": 14})
         context_engine = ContextEngine({})
         engine.set_context_engine(context_engine)
 
@@ -139,20 +139,20 @@ class TestIntegratedStrategyEngines:
 
         metrics = engine.get_metrics()
 
-        assert 'context_analysis_calls' in metrics
-        assert metrics['context_analysis_calls'] >= 0
+        assert "context_analysis_calls" in metrics
+        assert metrics["context_analysis_calls"] >= 0
 
     def test_strategy_status_includes_engines(self):
         """Test que el status incluye información de engines."""
-        engine = MomentumStrategyEngine({'rsi_period': 14})
+        engine = MomentumStrategyEngine({"rsi_period": 14})
         context_engine = ContextEngine({})
         engine.set_context_engine(context_engine)
 
         status = engine.get_status()
 
-        assert 'data_engine_enabled' in status
-        assert 'context_engine_enabled' in status
-        assert status['context_engine_enabled'] is True
+        assert "data_engine_enabled" in status
+        assert "context_engine_enabled" in status
+        assert status["context_engine_enabled"] is True
 
 
 class TestMultiStrategyIntegration:
@@ -165,8 +165,8 @@ class TestMultiStrategyIntegration:
         shared_context = ContextEngine({})
 
         # Crear múltiples engines
-        momentum_engine = MomentumStrategyEngine({'rsi_period': 14})
-        mean_reversion_engine = MeanReversionStrategyEngine({'z_score_period': 20})
+        momentum_engine = MomentumStrategyEngine({"rsi_period": 14})
+        mean_reversion_engine = MeanReversionStrategyEngine({"z_score_period": 20})
 
         # Configurar mismo ContextEngine
         momentum_engine.set_context_engine(shared_context)
@@ -179,11 +179,11 @@ class TestMultiStrategyIntegration:
         """Test que múltiples engines pueden compartir DataEngine."""
 
         # Crear DataEngine compartido
-        shared_data = DataEngine({'sources': {}})
+        shared_data = DataEngine({"sources": {}})
 
         # Crear múltiples engines
-        momentum_engine = MomentumStrategyEngine({'rsi_period': 14})
-        mean_reversion_engine = MeanReversionStrategyEngine({'z_score_period': 20})
+        momentum_engine = MomentumStrategyEngine({"rsi_period": 14})
+        mean_reversion_engine = MeanReversionStrategyEngine({"z_score_period": 20})
 
         # Configurar mismo DataEngine
         momentum_engine.set_data_engine(shared_data)

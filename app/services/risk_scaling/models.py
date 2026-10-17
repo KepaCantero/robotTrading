@@ -158,7 +158,7 @@ class RiskAlert(BaseModel):
         default_factory=dict, description="Additional context (current_value, threshold, etc)"
     )
     resolved: bool = Field(default=False, description="Whether alert has been resolved")
-    resolved_at: datetime | None = Field(None, description="When alert was resolved")
+    resolved_at: datetime | None = Field(default=None, description="When alert was resolved")
 
 
 class RiskScalingState(BaseModel):
@@ -218,7 +218,7 @@ class AdjustedPositionSizes(BaseModel):
         default_factory=list,
         description="Reasons for size adjustment (high vol, negative Sharpe, etc)",
     )
-    original_stop_loss: Decimal | None = Field(None, description="Original stop loss price")
+    original_stop_loss: Decimal | None = Field(default=None, description="Original stop loss price")
     adjusted_stop_loss: Decimal | None = Field(
         None, description="Stop loss adjusted for volatility"
     )
@@ -243,7 +243,7 @@ class Signal(BaseModel):
     )
     base_position_size: Decimal = Field(..., gt=Decimal("0"), description="Base position size")
     entry_price: Decimal = Field(..., gt=Decimal("0"), description="Entry price")
-    stop_loss_price: Decimal | None = Field(None, description="Stop loss price")
+    stop_loss_price: Decimal | None = Field(default=None, description="Stop loss price")
 
 
 class AdjustedSignal(BaseModel):
@@ -267,9 +267,11 @@ class AdjustedSignal(BaseModel):
     is_rejected: bool = Field(
         default=False, description="True if signal was rejected due to scaling"
     )
-    rejection_reason: str | None = Field(None, description="Why signal was rejected")
-    scaling_factors: RiskScalingFactors | None = Field(None, description="Scaling factors applied")
-    original_stop_loss: Decimal | None = Field(None, description="Original stop loss")
+    rejection_reason: str | None = Field(default=None, description="Why signal was rejected")
+    scaling_factors: RiskScalingFactors | None = Field(
+        default=None, description="Scaling factors applied"
+    )
+    original_stop_loss: Decimal | None = Field(default=None, description="Original stop loss")
     adjusted_stop_loss: Decimal | None = Field(
         None, description="Stop loss after volatility adjustment"
     )

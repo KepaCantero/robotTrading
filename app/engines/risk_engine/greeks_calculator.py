@@ -888,9 +888,7 @@ class GreeksCalculator:
                 "risk_free_rate",
                 "dividend_yield",
             }
-            greeks_params = {
-                k: v for k, v in option_position.items() if k in valid_keys
-            }
+            greeks_params = {k: v for k, v in option_position.items() if k in valid_keys}
             greeks = self.calculate_all_greeks(**greeks_params)
 
             if "error" in greeks:
@@ -1512,9 +1510,8 @@ class GreeksCalculator:
 
             # Calculate put-call parity
             lhs = call_price - put_price
-            rhs = (
-                spot_price * np.exp(-dividend_yield * time_to_expiry)
-                - strike_price * np.exp(-risk_free_rate * time_to_expiry)
+            rhs = spot_price * np.exp(-dividend_yield * time_to_expiry) - strike_price * np.exp(
+                -risk_free_rate * time_to_expiry
             )
 
             difference = abs(lhs - rhs)
@@ -1682,9 +1679,7 @@ class GreeksCalculator:
                         normalized_type = "call"
 
                 # Calculate model price
-                greeks = self.calculate_all_greeks(
-                    option_type=normalized_type, **option_params
-                )
+                greeks = self.calculate_all_greeks(option_type=normalized_type, **option_params)
 
                 if "error" in greeks:
                     validation_results["options_validated"].append(

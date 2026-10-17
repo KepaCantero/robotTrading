@@ -18,8 +18,11 @@ from app.presentation.dashboard.nicegui_app.app import create_app
 
 
 def root() -> None:
-    """Build layout and register all dashboard pages."""
+    """Build layout, register all dashboard pages and render home."""
     create_app()
+    from app.presentation.dashboard.nicegui_app.layout import AppShell
+
+    AppShell.build_home()
 
 
 ui.run(

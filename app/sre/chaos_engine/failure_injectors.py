@@ -1,6 +1,3 @@
-from __future__ import annotations
-
-# mypy: ignore-errors
 """
 Failure Injectors - Controlled Failure Injection for Chaos Engineering
 
@@ -17,7 +14,9 @@ Safety:
 - Automatic cleanup on failure
 """
 
+from __future__ import annotations
 
+# mypy: ignore-errors
 import asyncio
 import contextlib
 import logging

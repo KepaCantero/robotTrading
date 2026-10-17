@@ -190,6 +190,11 @@ class CoveredCallPosition:
     metadata: dict[str, str] = field(default_factory=dict)
 
     @property
+    def total_cost(self) -> Decimal:
+        """Coste total de la posición (acciones x coste medio)."""
+        return self.shares_owned * self.average_cost
+
+    @property
     def break_even_price(self) -> Decimal:
         """Calculate break-even price."""
         return self.average_cost - self.premium_received

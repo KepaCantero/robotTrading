@@ -20,16 +20,16 @@ Tests for portfolio optimization algorithms:
 
 Key test scenarios:
 ```python
-- test_mean_variance_optimization_success
-- test_mean_variance_with_constraints
-- test_risk_parity_convergence
-- test_risk_parity_with_constraints
-- test_black_litterman_with_absolute_views
-- test_black_litterman_with_relative_views
-- test_kelly_optimization_basic
-- test_kelly_with_high_win_probability
-- test_single_asset_optimization
-- test_large_universe
+-test_mean_variance_optimization_success
+-test_mean_variance_with_constraints
+-test_risk_parity_convergence
+-test_risk_parity_with_constraints
+-test_black_litterman_with_absolute_views
+-test_black_litterman_with_relative_views
+-test_kelly_optimization_basic
+-test_kelly_with_high_win_probability
+-test_single_asset_optimization
+-test_large_universe
 ```
 
 ### 2. `test_handcrafted_optimizer.py` (639 lines, 38 tests)
@@ -42,14 +42,14 @@ Tests for Handcrafted Weights Optimizer (Carver's methodology):
 
 Key test scenarios:
 ```python
-- test_inverse_volatility_weighting
-- test_inverse_volatility_formula
-- test_equal_risk_contribution_mode
-- test_volatility_targeting
-- test_volatility_targeting_leverage_limit
-- test_constraint_handling
-- test_diversification_ratio_calculation
-- test_risk_contributions_calculation
+-test_inverse_volatility_weighting
+-test_inverse_volatility_formula
+-test_equal_risk_contribution_mode
+-test_volatility_targeting
+-test_volatility_targeting_leverage_limit
+-test_constraint_handling
+-test_diversification_ratio_calculation
+-test_risk_contributions_calculation
 ```
 
 ### 3. `test_stability_validator.py` (756 lines, 32 tests)
@@ -62,14 +62,14 @@ Tests for Portfolio Stability Validator (López de Prado methodologies):
 
 Key test scenarios:
 ```python
-- test_validate_with_sufficient_history
-- test_validate_with_insufficient_history
-- test_determine_validity_all_pass
-- test_determine_validity_not_stable
-- test_compare_portfolio_stabilities
-- test_select_most_stable_portfolio
-- test_get_stability_recommendations
-- test_save_validation_report
+-test_validate_with_sufficient_history
+-test_validate_with_insufficient_history
+-test_determine_validity_all_pass
+-test_determine_validity_not_stable
+-test_compare_portfolio_stabilities
+-test_select_most_stable_portfolio
+-test_get_stability_recommendations
+-test_save_validation_report
 ```
 
 ### 4. `test_meta_learners.py` (681 lines, 43 tests)
@@ -81,15 +81,15 @@ Tests for Portfolio Meta-Learners:
 
 Key test scenarios:
 ```python
-- test_learn_weights_basic
-- test_learn_weights_performance_based
-- test_learn_weights_with_smoothing
-- test_sharpe_normalization
-- test_return_normalization
-- test_drawdown_penalty
-- test_model_structure
-- test_feature_extraction
-- test_ensemble_with_custom_weights
+-test_learn_weights_basic
+-test_learn_weights_performance_based
+-test_learn_weights_with_smoothing
+-test_sharpe_normalization
+-test_return_normalization
+-test_drawdown_penalty
+-test_model_structure
+-test_feature_extraction
+-test_ensemble_with_custom_weights
 ```
 
 ### 5. `test_rebalancers.py` (780 lines, 42 tests)
@@ -102,15 +102,15 @@ Tests for Portfolio Rebalancers:
 
 Key test scenarios:
 ```python
-- test_should_rebalance_within_threshold
-- test_should_rebalance_exceeds_threshold
-- test_min_rebalance_interval
-- test_daily_frequency
-- test_should_rebalance_after_interval
-- test_should_not_rebalance_within_interval
-- test_should_rebalance_exceeds_threshold
-- test_should_rebalance_with_costs
-- test_cost_calculation
+-test_should_rebalance_within_threshold
+-test_should_rebalance_exceeds_threshold
+-test_min_rebalance_interval
+-test_daily_frequency
+-test_should_rebalance_after_interval
+-test_should_not_rebalance_within_interval
+-test_should_rebalance_exceeds_threshold
+-test_should_rebalance_with_costs
+-test_cost_calculation
 ```
 
 ## Test Statistics

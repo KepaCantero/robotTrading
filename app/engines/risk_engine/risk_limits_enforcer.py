@@ -270,8 +270,7 @@ class RiskLimitsEnforcer:
                             "limit": self.max_position_pct,
                             "excess": weight - self.max_position_pct,
                             "action": "REDUCE",
-                            "required_reduction": (weight - self.max_position_pct)
-                            * total_equity,
+                            "required_reduction": (weight - self.max_position_pct) * total_equity,
                         }
                     )
 

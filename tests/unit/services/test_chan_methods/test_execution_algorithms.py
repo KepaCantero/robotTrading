@@ -25,7 +25,7 @@ class TestVWAPExecutor:
         executor = VWAPExecutor()
 
         assert executor.typical_volume_profile is not None
-        assert '09:30-10:00' in executor.typical_volume_profile
+        assert "09:30-10:00" in executor.typical_volume_profile
 
     def test_custom_volume_profile(self):
         """Test with custom volume profile."""

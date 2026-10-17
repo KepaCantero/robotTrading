@@ -96,7 +96,7 @@ class AbstractUnitOfWork(ABC):
         """Enter Unit of Work context."""
         return self
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
+    def __exit__(self, exc_type, exc_val, _exc_tb):
         """Exit Unit of Work context."""
         if exc_type:
             self.rollback()
@@ -195,7 +195,7 @@ class GenericUnitOfWork(AbstractUnitOfWork):
         self._committed = False
         return super().__enter__()
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
+    def __exit__(self, exc_type, exc_val, _exc_tb):
         """Exit context with commit or rollback."""
         try:
             if exc_type is None and not self._committed:

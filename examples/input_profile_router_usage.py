@@ -170,7 +170,7 @@ def main() -> None:
     is_valid, warnings = router.validate_configuration(profile_warning, config_warning)
 
     print(f"Valid: {is_valid}")
-    print(f"Warnings:")
+    print("Warnings:")
     for warning in warnings:
         print(f"  - {warning}")
 

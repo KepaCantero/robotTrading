@@ -79,7 +79,7 @@ class TestKellyCriterionProperties:
         )
 
         # Half-Kelly should be bounded between 0 and 0.25
-        half_kelly = float(result['half_kelly_fraction'])
+        half_kelly = float(result["half_kelly_fraction"])
         assert 0.0 <= half_kelly <= 0.25, f"Half-Kelly {half_kelly} outside bounds [0, 0.25]"
 
     @given(win_rate=valid_win_rate(), avg_win=valid_avg_win(), avg_loss=valid_avg_loss())
@@ -93,17 +93,17 @@ class TestKellyCriterionProperties:
             avg_loss=avg_loss,
         )
 
-        raw_kelly = float(result['kelly_fraction'])
-        half_kelly = float(result['half_kelly_fraction'])
+        raw_kelly = float(result["kelly_fraction"])
+        half_kelly = float(result["half_kelly_fraction"])
 
         # Half-Kelly should be approximately half of raw Kelly (before capping)
         # Account for capping at 0.25
         if raw_kelly <= 0:
             assert half_kelly == 0.0, "Negative Kelly should result in zero position"
         elif raw_kelly * 0.5 <= 0.25:
-            assert (
-                abs(half_kelly - (raw_kelly * 0.5)) < 0.01
-            ), f"Half-Kelly {half_kelly} != {raw_kelly * 0.5}"
+            assert abs(half_kelly - (raw_kelly * 0.5)) < 0.01, (
+                f"Half-Kelly {half_kelly} != {raw_kelly * 0.5}"
+            )
 
     @given(
         win_rate=valid_win_rate(),
@@ -122,8 +122,8 @@ class TestKellyCriterionProperties:
             capital=capital,
         )
 
-        position_value = result.get('position_value', Decimal('0'))
-        assert position_value >= Decimal('0'), "Position value should be non-negative"
+        position_value = result.get("position_value", Decimal("0"))
+        assert position_value >= Decimal("0"), "Position value should be non-negative"
         assert position_value <= capital, f"Position value {position_value} > capital {capital}"
 
     @given(
@@ -143,11 +143,11 @@ class TestKellyCriterionProperties:
             capital=capital,
         )
 
-        position_value = result.get('position_value', Decimal('0'))
-        max_position = capital * Decimal('0.25')
-        assert (
-            position_value <= max_position
-        ), f"Position value {position_value} exceeds 25% cap {max_position}"
+        position_value = result.get("position_value", Decimal("0"))
+        max_position = capital * Decimal("0.25")
+        assert position_value <= max_position, (
+            f"Position value {position_value} exceeds 25% cap {max_position}"
+        )
 
     @given(
         win_rate=st.floats(min_value=0.51, max_value=0.90),
@@ -168,7 +168,7 @@ class TestKellyCriterionProperties:
             avg_loss=avg_loss,
         )
 
-        raw_kelly = float(result['kelly_fraction'])
+        raw_kelly = float(result["kelly_fraction"])
         assert raw_kelly > 0, f"Positive expectancy should give positive Kelly, got {raw_kelly}"
 
     @given(win_rate=valid_win_rate(), avg_win=valid_avg_win(), avg_loss=valid_avg_loss())
@@ -186,10 +186,10 @@ class TestKellyCriterionProperties:
             avg_loss=avg_loss,
         )
 
-        raw_kelly = float(result['kelly_fraction'])
-        assert (
-            raw_kelly <= 0
-        ), f"Negative expectancy should give non-positive Kelly, got {raw_kelly}"
+        raw_kelly = float(result["kelly_fraction"])
+        assert raw_kelly <= 0, (
+            f"Negative expectancy should give non-positive Kelly, got {raw_kelly}"
+        )
 
     @given(
         win_rate=valid_win_rate(),
@@ -210,12 +210,12 @@ class TestKellyCriterionProperties:
             capital=capital,
         )
 
-        position_pct = float(result['position_percentage'])
-        half_kelly = float(result['half_kelly_fraction'])
+        position_pct = float(result["position_percentage"])
+        half_kelly = float(result["half_kelly_fraction"])
 
-        assert (
-            abs(position_pct - (half_kelly * 100)) < 0.01
-        ), f"Position percentage {position_pct} != {half_kelly * 100}"
+        assert abs(position_pct - (half_kelly * 100)) < 0.01, (
+            f"Position percentage {position_pct} != {half_kelly * 100}"
+        )
 
     @given(
         win_rate=st.floats(min_value=0.45, max_value=0.55),
@@ -243,8 +243,8 @@ class TestKellyCriterionProperties:
         )
 
         # Kelly should be approximately symmetric (with opposite signs)
-        kelly1 = float(result1['kelly_fraction'])
-        kelly2 = float(result2['kelly_fraction'])
+        kelly1 = float(result1["kelly_fraction"])
+        kelly2 = float(result2["kelly_fraction"])
 
         # The 25% cap can break symmetry when one value is capped
         # Skip the assertion if either value is at or near the cap
@@ -265,23 +265,23 @@ class TestKellyCriterionProperties:
             avg_loss=avg_loss,
         )
 
-        raw_kelly = float(result['kelly_fraction'])
-        recommendation = result['recommendation']
+        raw_kelly = float(result["kelly_fraction"])
+        recommendation = result["recommendation"]
 
         if raw_kelly <= 0:
             assert recommendation in [
-                'AVOID',
-                'REDUCE',
+                "AVOID",
+                "REDUCE",
             ], f"Negative Kelly {raw_kelly} should give AVOID/REDUCE, got {recommendation}"
         elif raw_kelly < 0.02:
             assert recommendation in [
-                'REDUCE',
-                'BUY',
+                "REDUCE",
+                "BUY",
             ], f"Small Kelly {raw_kelly} should give REDUCE/BUY, got {recommendation}"
         else:
-            assert (
-                recommendation == 'BUY'
-            ), f"Positive Kelly {raw_kelly} should give BUY, got {recommendation}"
+            assert recommendation == "BUY", (
+                f"Positive Kelly {raw_kelly} should give BUY, got {recommendation}"
+            )
 
 
 # ============================================================================
@@ -323,10 +323,10 @@ class TestATRPositionSizingProperties:
 
         position_value = position_size * entry_price
         # Allow small tolerance for floating point arithmetic
-        tolerance = capital * Decimal('0.0001')  # 0.01% tolerance
-        assert (
-            position_value <= capital + tolerance
-        ), f"Position value {position_value} > capital {capital}"
+        tolerance = capital * Decimal("0.0001")  # 0.01% tolerance
+        assert position_value <= capital + tolerance, (
+            f"Position value {position_value} > capital {capital}"
+        )
 
     @given(
         capital=valid_capital(),
@@ -354,9 +354,9 @@ class TestATRPositionSizingProperties:
         assume(size_low is not None and size_high is not None)
 
         # Higher ATR should result in smaller or equal position size
-        assert (
-            size_high <= size_low
-        ), f"Higher ATR {atr_high} should give smaller position {size_high} <= {size_low}"
+        assert size_high <= size_low, (
+            f"Higher ATR {atr_high} should give smaller position {size_high} <= {size_low}"
+        )
 
     @given(capital=valid_capital(), entry_price=valid_entry_price(), atr=valid_atr())
     @settings(max_examples=100)
@@ -365,7 +365,7 @@ class TestATRPositionSizingProperties:
         engine = PositionSizingEngine(atr_multiplier=2.0)
         stop_loss = engine.calculate_stop_loss_price(
             entry_price=entry_price,
-            direction='buy',
+            direction="buy",
             atr=atr,
         )
 
@@ -376,9 +376,9 @@ class TestATRPositionSizingProperties:
         # Stop distance should be 2x ATR
         expected_distance = Decimal(str(atr)) * engine.atr_multiplier
 
-        assert abs(stop_distance - expected_distance) < Decimal(
-            '0.01'
-        ), f"Stop distance {stop_distance} != 2*ATR {expected_distance}"
+        assert abs(stop_distance - expected_distance) < Decimal("0.01"), (
+            f"Stop distance {stop_distance} != 2*ATR {expected_distance}"
+        )
 
     @given(capital=valid_capital(), entry_price=valid_entry_price(), atr=valid_atr())
     @settings(max_examples=100)
@@ -387,7 +387,7 @@ class TestATRPositionSizingProperties:
         engine = PositionSizingEngine(atr_multiplier=2.0)
         stop_loss = engine.calculate_stop_loss_price(
             entry_price=entry_price,
-            direction='buy',
+            direction="buy",
             atr=atr,
         )
 
@@ -402,7 +402,7 @@ class TestATRPositionSizingProperties:
         engine = PositionSizingEngine(atr_multiplier=2.0)
         stop_loss = engine.calculate_stop_loss_price(
             entry_price=entry_price,
-            direction='sell',
+            direction="sell",
             atr=atr,
         )
 
@@ -432,14 +432,14 @@ class TestStopLossProperties:
         engine = PositionSizingEngine(atr_multiplier=2.0)
         stop_with_atr = engine.calculate_stop_loss_price(
             entry_price=entry_price,
-            direction='buy',
+            direction="buy",
             atr=atr,
             stop_loss_pct=stop_pct,
         )
 
         stop_without_atr = engine.calculate_stop_loss_price(
             entry_price=entry_price,
-            direction='buy',
+            direction="buy",
             atr=None,
             stop_loss_pct=stop_pct,
         )
@@ -456,14 +456,14 @@ class TestStopLossProperties:
         engine = PositionSizingEngine(atr_multiplier=2.0)
         stop_buy = engine.calculate_stop_loss_price(
             entry_price=entry_price,
-            direction='buy',
+            direction="buy",
             atr=None,
             stop_loss_pct=stop_pct,
         )
 
         stop_sell = engine.calculate_stop_loss_price(
             entry_price=entry_price,
-            direction='sell',
+            direction="sell",
             atr=None,
             stop_loss_pct=stop_pct,
         )
@@ -473,16 +473,16 @@ class TestStopLossProperties:
         # Check buy stop
         buy_distance = abs(entry_price - stop_buy)
         expected_buy_distance = entry_price * Decimal(str(stop_pct))
-        assert abs(buy_distance - expected_buy_distance) < Decimal(
-            '0.01'
-        ), f"Buy stop distance {buy_distance} != {expected_buy_distance}"
+        assert abs(buy_distance - expected_buy_distance) < Decimal("0.01"), (
+            f"Buy stop distance {buy_distance} != {expected_buy_distance}"
+        )
 
         # Check sell stop
         sell_distance = abs(stop_sell - entry_price)
         expected_sell_distance = entry_price * Decimal(str(stop_pct))
-        assert abs(sell_distance - expected_sell_distance) < Decimal(
-            '0.01'
-        ), f"Sell stop distance {sell_distance} != {expected_sell_distance}"
+        assert abs(sell_distance - expected_sell_distance) < Decimal("0.01"), (
+            f"Sell stop distance {sell_distance} != {expected_sell_distance}"
+        )
 
 
 # ============================================================================
@@ -524,9 +524,9 @@ class TestMetaLabelingPositionSizingProperties:
                 meta_proba=meta_proba,
             )
 
-            assert all(
-                -1 <= size <= 1 for size in position_sizes
-            ), f"Position sizes should be in [-1, 1], got {position_sizes}"
+            assert all(-1 <= size <= 1 for size in position_sizes), (
+                f"Position sizes should be in [-1, 1], got {position_sizes}"
+            )
         except ImportError:
             pytest.skip("ML modules not available")
 
@@ -565,9 +565,9 @@ class TestMetaLabelingPositionSizingProperties:
             # Find indices where signal is 0
             zero_indices = np.where(signals == 0)[0]
             for idx in zero_indices:
-                assert (
-                    position_sizes[idx] == 0
-                ), f"Signal 0 should give position 0, got {position_sizes[idx]}"
+                assert position_sizes[idx] == 0, (
+                    f"Signal 0 should give position 0, got {position_sizes[idx]}"
+                )
         except ImportError:
             pytest.skip("ML modules not available")
 
@@ -602,9 +602,9 @@ class TestMetaLabelingPositionSizingProperties:
 
             for i, (signal, size) in enumerate(zip(signals, position_sizes)):
                 if signal != 0 and size != 0:
-                    assert np.sign(size) == np.sign(
-                        signal
-                    ), f"Position sign {np.sign(size)} != signal sign {np.sign(signal)} at index {i}"
+                    assert np.sign(size) == np.sign(signal), (
+                        f"Position sign {np.sign(size)} != signal sign {np.sign(signal)} at index {i}"
+                    )
         except ImportError:
             pytest.skip("ML modules not available")
 
@@ -645,9 +645,9 @@ class TestPositionSizingEdgeCases:
                 1.1,
                 1.5,
                 2.0,  # Values > 1.0
-                float('nan'),  # NaN
-                float('inf'),
-                float('-inf'),  # Infinity
+                float("nan"),  # NaN
+                float("inf"),
+                float("-inf"),  # Infinity
             ]
         )
     )
@@ -669,9 +669,9 @@ class TestPositionSizingEdgeCases:
                 -10.0,
                 -1.0,
                 0.0,  # Negative or zero values
-                float('nan'),  # NaN
-                float('inf'),
-                float('-inf'),  # Infinity
+                float("nan"),  # NaN
+                float("inf"),
+                float("-inf"),  # Infinity
             ]
         )
     )

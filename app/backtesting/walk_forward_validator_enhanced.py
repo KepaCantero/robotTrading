@@ -481,7 +481,7 @@ class TomasiniWalkForwardValidator:
             returns = np.diff(np.log(closes))
 
             # Detect regime using clustering
-            regimes = self.regime_detector.detect_regime(returns)
+            regimes = self.regime_detector.detect(returns)
 
             # Get most common regime
             if regimes:

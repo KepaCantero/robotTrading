@@ -32,8 +32,8 @@ class TestThresholdRebalancer:
     def rebalancer(self):
         """Create threshold rebalancer."""
         config = {
-            'threshold': 0.05,  # 5% threshold
-            'min_rebalance_interval_days': 1,
+            "threshold": 0.05,  # 5% threshold
+            "min_rebalance_interval_days": 1,
         }
         return ThresholdRebalancer(config)
 
@@ -41,18 +41,18 @@ class TestThresholdRebalancer:
     def sample_weights(self):
         """Create sample current and target weights."""
         current_weights = {
-            'AAPL': 0.30,
-            'MSFT': 0.25,
-            'GOOGL': 0.20,
-            'AMZN': 0.15,
-            'TSLA': 0.10,
+            "AAPL": 0.30,
+            "MSFT": 0.25,
+            "GOOGL": 0.20,
+            "AMZN": 0.15,
+            "TSLA": 0.10,
         }
         target_weights = {
-            'AAPL': 0.25,
-            'MSFT': 0.25,
-            'GOOGL': 0.25,
-            'AMZN': 0.15,
-            'TSLA': 0.10,
+            "AAPL": 0.25,
+            "MSFT": 0.25,
+            "GOOGL": 0.25,
+            "AMZN": 0.15,
+            "TSLA": 0.10,
         }
         return current_weights, target_weights
 
@@ -65,18 +65,18 @@ class TestThresholdRebalancer:
         """Test when weights are within threshold."""
         # Small deviation (within 5%)
         current_weights = {
-            'AAPL': 0.26,  # Only 1% from target 0.25
-            'MSFT': 0.25,  # Exact match
-            'GOOGL': 0.24,  # Only 1% from target 0.25
-            'AMZN': 0.15,
-            'TSLA': 0.10,
+            "AAPL": 0.26,  # Only 1% from target 0.25
+            "MSFT": 0.25,  # Exact match
+            "GOOGL": 0.24,  # Only 1% from target 0.25
+            "AMZN": 0.15,
+            "TSLA": 0.10,
         }
         target_weights = {
-            'AAPL': 0.25,
-            'MSFT': 0.25,
-            'GOOGL': 0.25,
-            'AMZN': 0.15,
-            'TSLA': 0.10,
+            "AAPL": 0.25,
+            "MSFT": 0.25,
+            "GOOGL": 0.25,
+            "AMZN": 0.15,
+            "TSLA": 0.10,
         }
 
         portfolio_value = Decimal("100000")
@@ -120,21 +120,21 @@ class TestThresholdRebalancer:
         current_weights, target_weights = sample_weights
 
         current_positions = {
-            'AAPL': {'quantity': 30, 'market_value': 30000},
-            'MSFT': {'quantity': 25, 'market_value': 25000},
-            'GOOGL': {'quantity': 20, 'market_value': 20000},
-            'AMZN': {'quantity': 15, 'market_value': 15000},
-            'TSLA': {'quantity': 10, 'market_value': 10000},
+            "AAPL": {"quantity": 30, "market_value": 30000},
+            "MSFT": {"quantity": 25, "market_value": 25000},
+            "GOOGL": {"quantity": 20, "market_value": 20000},
+            "AMZN": {"quantity": 15, "market_value": 15000},
+            "TSLA": {"quantity": 10, "market_value": 10000},
         }
 
         portfolio_value = Decimal("100000")
 
         prices = {
-            'AAPL': Decimal("1000"),
-            'MSFT': Decimal("1000"),
-            'GOOGL': Decimal("1000"),
-            'AMZN': Decimal("1000"),
-            'TSLA': Decimal("1000"),
+            "AAPL": Decimal("1000"),
+            "MSFT": Decimal("1000"),
+            "GOOGL": Decimal("1000"),
+            "AMZN": Decimal("1000"),
+            "TSLA": Decimal("1000"),
         }
 
         trades = rebalancer.calculate_rebalance_trades(
@@ -146,12 +146,12 @@ class TestThresholdRebalancer:
 
         # Check trade structure
         for trade in trades:
-            assert 'symbol' in trade
-            assert 'quantity' in trade
-            assert 'target_weight' in trade
-            assert 'current_weight' in trade
-            assert 'reason' in trade
-            assert trade['reason'] == 'threshold_rebalance'
+            assert "symbol" in trade
+            assert "quantity" in trade
+            assert "target_weight" in trade
+            assert "current_weight" in trade
+            assert "reason" in trade
+            assert trade["reason"] == "threshold_rebalance"
 
     def test_rebalance_count_increments(self, rebalancer, sample_weights):
         """Test that rebalance count increments."""
@@ -160,9 +160,9 @@ class TestThresholdRebalancer:
 
         # Mock positions and prices
         current_positions = {
-            'AAPL': {'quantity': 30, 'market_value': 30000},
+            "AAPL": {"quantity": 30, "market_value": 30000},
         }
-        prices = {'AAPL': Decimal("1000")}
+        prices = {"AAPL": Decimal("1000")}
 
         # Perform rebalance
         rebalancer.should_rebalance(current_weights, target_weights, portfolio_value)
@@ -175,7 +175,7 @@ class TestThresholdRebalancer:
 
     def test_custom_threshold(self):
         """Test with custom threshold."""
-        config = {'threshold': 0.03}  # 3% threshold
+        config = {"threshold": 0.03}  # 3% threshold
         rebalancer = ThresholdRebalancer(config)
 
         assert rebalancer.threshold == 0.03
@@ -188,47 +188,47 @@ class TestTimeBasedRebalancer:
     @pytest.fixture
     def rebalancer_daily(self):
         """Create daily rebalancer."""
-        config = {'frequency': 'daily'}
+        config = {"frequency": "daily"}
         return TimeBasedRebalancer(config)
 
     @pytest.fixture
     def rebalancer_weekly(self):
         """Create weekly rebalancer."""
-        config = {'frequency': 'weekly'}
+        config = {"frequency": "weekly"}
         return TimeBasedRebalancer(config)
 
     @pytest.fixture
     def rebalancer_monthly(self):
         """Create monthly rebalancer."""
-        config = {'frequency': 'monthly'}
+        config = {"frequency": "monthly"}
         return TimeBasedRebalancer(config)
 
     @pytest.fixture
     def sample_weights(self):
         """Create sample weights."""
-        current_weights = {'AAPL': 0.30, 'MSFT': 0.25, 'GOOGL': 0.20, 'AMZN': 0.15, 'TSLA': 0.10}
-        target_weights = {'AAPL': 0.25, 'MSFT': 0.25, 'GOOGL': 0.25, 'AMZN': 0.15, 'TSLA': 0.10}
+        current_weights = {"AAPL": 0.30, "MSFT": 0.25, "GOOGL": 0.20, "AMZN": 0.15, "TSLA": 0.10}
+        target_weights = {"AAPL": 0.25, "MSFT": 0.25, "GOOGL": 0.25, "AMZN": 0.15, "TSLA": 0.10}
         portfolio_value = Decimal("100000")
         return current_weights, target_weights, portfolio_value
 
     def test_daily_frequency(self, rebalancer_daily):
         """Test daily rebalancing frequency."""
-        assert rebalancer_daily.rebalance_frequency == 'daily'
+        assert rebalancer_daily.rebalance_frequency == "daily"
         assert rebalancer_daily.interval == timedelta(days=1)
 
     def test_weekly_frequency(self, rebalancer_weekly):
         """Test weekly rebalancing frequency."""
-        assert rebalancer_weekly.rebalance_frequency == 'weekly'
+        assert rebalancer_weekly.rebalance_frequency == "weekly"
         assert rebalancer_weekly.interval == timedelta(weeks=1)
 
     def test_monthly_frequency(self, rebalancer_monthly):
         """Test monthly rebalancing frequency."""
-        assert rebalancer_monthly.rebalance_frequency == 'monthly'
+        assert rebalancer_monthly.rebalance_frequency == "monthly"
         assert rebalancer_monthly.interval == timedelta(days=30)
 
     def test_invalid_frequency(self):
         """Test with invalid frequency."""
-        config = {'frequency': 'invalid'}
+        config = {"frequency": "invalid"}
         rebalancer = TimeBasedRebalancer(config)
 
         # Should fall back to daily
@@ -281,13 +281,13 @@ class TestTimeBasedRebalancer:
         current_weights, target_weights, portfolio_value = sample_weights
 
         current_positions = {
-            'AAPL': {'quantity': 30, 'market_value': 30000},
-            'MSFT': {'quantity': 25, 'market_value': 25000},
+            "AAPL": {"quantity": 30, "market_value": 30000},
+            "MSFT": {"quantity": 25, "market_value": 25000},
         }
 
         prices = {
-            'AAPL': Decimal("1000"),
-            'MSFT': Decimal("1000"),
+            "AAPL": Decimal("1000"),
+            "MSFT": Decimal("1000"),
         }
 
         trades = rebalancer_daily.calculate_rebalance_trades(
@@ -299,7 +299,7 @@ class TestTimeBasedRebalancer:
 
         # Check reason
         for trade in trades:
-            assert trade['reason'] == 'time_based_daily'
+            assert trade["reason"] == "time_based_daily"
 
 
 @pytest.mark.unit
@@ -310,16 +310,16 @@ class TestVolatilityTargetingRebalancer:
     def rebalancer(self):
         """Create volatility-targeting rebalancer."""
         config = {
-            'target_volatility': 0.15,  # 15% target
-            'volatility_threshold': 0.02,  # 2% deviation threshold
+            "target_volatility": 0.15,  # 15% target
+            "volatility_threshold": 0.02,  # 2% deviation threshold
         }
         return VolatilityTargetingRebalancer(config)
 
     @pytest.fixture
     def sample_data(self):
         """Create sample data."""
-        current_weights = {'AAPL': 0.30, 'MSFT': 0.25, 'GOOGL': 0.20, 'AMZN': 0.15, 'TSLA': 0.10}
-        target_weights = {'AAPL': 0.25, 'MSFT': 0.25, 'GOOGL': 0.25, 'AMZN': 0.15, 'TSLA': 0.10}
+        current_weights = {"AAPL": 0.30, "MSFT": 0.25, "GOOGL": 0.20, "AMZN": 0.15, "TSLA": 0.10}
+        target_weights = {"AAPL": 0.25, "MSFT": 0.25, "GOOGL": 0.25, "AMZN": 0.15, "TSLA": 0.10}
         portfolio_value = Decimal("100000")
 
         # Covariance matrix
@@ -364,8 +364,8 @@ class TestVolatilityTargetingRebalancer:
 
     def test_mismatched_weights_and_cov_matrix(self, rebalancer):
         """Test with mismatched weights and covariance matrix."""
-        current_weights = {'AAPL': 0.5, 'MSFT': 0.5}
-        target_weights = {'AAPL': 0.5, 'MSFT': 0.5}
+        current_weights = {"AAPL": 0.5, "MSFT": 0.5}
+        target_weights = {"AAPL": 0.5, "MSFT": 0.5}
 
         # 5x5 covariance matrix but only 2 assets
         cov_matrix = np.eye(5) * 0.04
@@ -384,13 +384,13 @@ class TestVolatilityTargetingRebalancer:
         current_weights, target_weights, portfolio_value, _ = sample_data
 
         current_positions = {
-            'AAPL': {'quantity': 30, 'market_value': 30000},
-            'MSFT': {'quantity': 25, 'market_value': 25000},
+            "AAPL": {"quantity": 30, "market_value": 30000},
+            "MSFT": {"quantity": 25, "market_value": 25000},
         }
 
         prices = {
-            'AAPL': Decimal("1000"),
-            'MSFT': Decimal("1000"),
+            "AAPL": Decimal("1000"),
+            "MSFT": Decimal("1000"),
         }
 
         trades = rebalancer.calculate_rebalance_trades(
@@ -402,7 +402,7 @@ class TestVolatilityTargetingRebalancer:
 
         # Check reason
         for trade in trades:
-            assert trade['reason'] == 'volatility_targeting'
+            assert trade["reason"] == "volatility_targeting"
 
     def test_portfolio_volatility_calculation(self, rebalancer, sample_data):
         """Test portfolio volatility calculation."""
@@ -426,33 +426,33 @@ class TestTransactionCostAwareRebalancer:
     def rebalancer(self):
         """Create transaction cost-aware rebalancer."""
         config = {
-            'commission_rate': 0.001,  # 0.1%
-            'slippage_rate': 0.0005,  # 0.05%
-            'min_benefit_threshold': 0.001,  # 0.1%
+            "commission_rate": 0.001,  # 0.1%
+            "slippage_rate": 0.0005,  # 0.05%
+            "min_benefit_threshold": 0.001,  # 0.1%
         }
         return TransactionCostAwareRebalancer(config)
 
     @pytest.fixture
     def sample_data(self):
         """Create sample data."""
-        current_weights = {'AAPL': 0.30, 'MSFT': 0.25, 'GOOGL': 0.20, 'AMZN': 0.15, 'TSLA': 0.10}
-        target_weights = {'AAPL': 0.25, 'MSFT': 0.25, 'GOOGL': 0.25, 'AMZN': 0.15, 'TSLA': 0.10}
+        current_weights = {"AAPL": 0.30, "MSFT": 0.25, "GOOGL": 0.20, "AMZN": 0.15, "TSLA": 0.10}
+        target_weights = {"AAPL": 0.25, "MSFT": 0.25, "GOOGL": 0.25, "AMZN": 0.15, "TSLA": 0.10}
         portfolio_value = Decimal("100000")
 
         current_positions = {
-            'AAPL': {'quantity': 30, 'market_value': 30000},
-            'MSFT': {'quantity': 25, 'market_value': 25000},
-            'GOOGL': {'quantity': 20, 'market_value': 20000},
-            'AMZN': {'quantity': 15, 'market_value': 15000},
-            'TSLA': {'quantity': 10, 'market_value': 10000},
+            "AAPL": {"quantity": 30, "market_value": 30000},
+            "MSFT": {"quantity": 25, "market_value": 25000},
+            "GOOGL": {"quantity": 20, "market_value": 20000},
+            "AMZN": {"quantity": 15, "market_value": 15000},
+            "TSLA": {"quantity": 10, "market_value": 10000},
         }
 
         prices = {
-            'AAPL': Decimal("1000"),
-            'MSFT': Decimal("1000"),
-            'GOOGL': Decimal("1000"),
-            'AMZN': Decimal("1000"),
-            'TSLA': Decimal("1000"),
+            "AAPL": Decimal("1000"),
+            "MSFT": Decimal("1000"),
+            "GOOGL": Decimal("1000"),
+            "AMZN": Decimal("1000"),
+            "TSLA": Decimal("1000"),
         }
 
         return current_weights, target_weights, portfolio_value, current_positions, prices
@@ -481,18 +481,18 @@ class TestTransactionCostAwareRebalancer:
     def test_should_not_rebalance_if_costs_exceed_benefit(self):
         """Test that rebalancing is skipped if costs exceed benefit."""
         config = {
-            'commission_rate': 0.01,  # High commission
-            'slippage_rate': 0.005,  # High slippage
-            'min_benefit_threshold': 0.001,
+            "commission_rate": 0.01,  # High commission
+            "slippage_rate": 0.005,  # High slippage
+            "min_benefit_threshold": 0.001,
         }
         rebalancer = TransactionCostAwareRebalancer(config)
 
-        current_weights = {'AAPL': 0.251, 'MSFT': 0.249}  # Very small deviation
-        target_weights = {'AAPL': 0.25, 'MSFT': 0.25}
+        current_weights = {"AAPL": 0.251, "MSFT": 0.249}  # Very small deviation
+        target_weights = {"AAPL": 0.25, "MSFT": 0.25}
         portfolio_value = Decimal("100000")
 
-        current_positions = {'AAPL': {'quantity': 25, 'market_value': 25000}}
-        prices = {'AAPL': Decimal("1000")}
+        current_positions = {"AAPL": {"quantity": 25, "market_value": 25000}}
+        prices = {"AAPL": Decimal("1000")}
 
         should_rebalance = rebalancer.should_rebalance(
             current_weights,
@@ -515,14 +515,14 @@ class TestTransactionCostAwareRebalancer:
 
         # All trades should have cost information
         for trade in trades:
-            assert 'estimated_commission' in trade
-            assert 'estimated_slippage' in trade
-            assert 'estimated_total_cost' in trade
+            assert "estimated_commission" in trade
+            assert "estimated_slippage" in trade
+            assert "estimated_total_cost" in trade
 
             # Costs should be non-negative
-            assert trade['estimated_commission'] >= 0
-            assert trade['estimated_slippage'] >= 0
-            assert trade['estimated_total_cost'] >= 0
+            assert trade["estimated_commission"] >= 0
+            assert trade["estimated_slippage"] >= 0
+            assert trade["estimated_total_cost"] >= 0
 
     def test_cost_calculation(self, rebalancer):
         """Test cost calculation accuracy."""
@@ -552,28 +552,28 @@ class TestHybridRebalancer:
     def hybrid_rebalancer(self):
         """Create hybrid rebalancer."""
         config = {
-            'use_threshold': True,
-            'use_time_based': True,
-            'use_volatility_targeting': False,
-            'use_transaction_cost_aware': True,
+            "use_threshold": True,
+            "use_time_based": True,
+            "use_volatility_targeting": False,
+            "use_transaction_cost_aware": True,
         }
         return HybridRebalancer(config)
 
     @pytest.fixture
     def sample_data(self):
         """Create sample data."""
-        current_weights = {'AAPL': 0.30, 'MSFT': 0.25, 'GOOGL': 0.20, 'AMZN': 0.15, 'TSLA': 0.10}
-        target_weights = {'AAPL': 0.25, 'MSFT': 0.25, 'GOOGL': 0.25, 'AMZN': 0.15, 'TSLA': 0.10}
+        current_weights = {"AAPL": 0.30, "MSFT": 0.25, "GOOGL": 0.20, "AMZN": 0.15, "TSLA": 0.10}
+        target_weights = {"AAPL": 0.25, "MSFT": 0.25, "GOOGL": 0.25, "AMZN": 0.15, "TSLA": 0.10}
         portfolio_value = Decimal("100000")
 
         current_positions = {
-            'AAPL': {'quantity': 30, 'market_value': 30000},
-            'MSFT': {'quantity': 25, 'market_value': 25000},
+            "AAPL": {"quantity": 30, "market_value": 30000},
+            "MSFT": {"quantity": 25, "market_value": 25000},
         }
 
         prices = {
-            'AAPL': Decimal("1000"),
-            'MSFT': Decimal("1000"),
+            "AAPL": Decimal("1000"),
+            "MSFT": Decimal("1000"),
         }
 
         return current_weights, target_weights, portfolio_value, current_positions, prices
@@ -584,9 +584,9 @@ class TestHybridRebalancer:
 
         # Should contain the configured rebalancers
         rebalancer_types = [type(r).__name__ for r in hybrid_rebalancer.rebalancers]
-        assert 'ThresholdRebalancer' in rebalancer_types
-        assert 'TimeBasedRebalancer' in rebalancer_types
-        assert 'TransactionCostAwareRebalancer' in rebalancer_types
+        assert "ThresholdRebalancer" in rebalancer_types
+        assert "TimeBasedRebalancer" in rebalancer_types
+        assert "TransactionCostAwareRebalancer" in rebalancer_types
 
     def test_should_rebalance_triggers_on_any(self, hybrid_rebalancer, sample_data):
         """Test that rebalancing triggers if any rebalancer recommends it."""
@@ -606,13 +606,13 @@ class TestHybridRebalancer:
     def test_should_not_rebalance_if_all_disagree(self):
         """Test that rebalancing doesn't trigger if all rebalancers disagree."""
         config = {
-            'use_threshold': True,
-            'use_time_based': False,  # Only threshold
+            "use_threshold": True,
+            "use_time_based": False,  # Only threshold
         }
         hybrid_rebalancer = HybridRebalancer(config)
 
-        current_weights = {'AAPL': 0.251, 'MSFT': 0.249}  # Very small deviation
-        target_weights = {'AAPL': 0.25, 'MSFT': 0.25}
+        current_weights = {"AAPL": 0.251, "MSFT": 0.249}  # Very small deviation
+        target_weights = {"AAPL": 0.25, "MSFT": 0.25}
         portfolio_value = Decimal("100000")
 
         # Set recent rebalance for time-based
@@ -639,10 +639,10 @@ class TestHybridRebalancer:
     def test_hybrid_with_all_rebalancers(self):
         """Test hybrid with all rebalancers enabled."""
         config = {
-            'use_threshold': True,
-            'use_time_based': True,
-            'use_volatility_targeting': True,
-            'use_transaction_cost_aware': True,
+            "use_threshold": True,
+            "use_time_based": True,
+            "use_volatility_targeting": True,
+            "use_transaction_cost_aware": True,
         }
         hybrid_rebalancer = HybridRebalancer(config)
 
@@ -656,10 +656,10 @@ class TestRebalancerEdgeCases:
 
     def test_zero_portfolio_value(self):
         """Test with zero portfolio value."""
-        rebalancer = ThresholdRebalancer({'threshold': 0.05})
+        rebalancer = ThresholdRebalancer({"threshold": 0.05})
 
-        current_weights = {'AAPL': 0.5, 'MSFT': 0.5}
-        target_weights = {'AAPL': 0.5, 'MSFT': 0.5}
+        current_weights = {"AAPL": 0.5, "MSFT": 0.5}
+        target_weights = {"AAPL": 0.5, "MSFT": 0.5}
         portfolio_value = Decimal("0")
 
         should_rebalance = rebalancer.should_rebalance(
@@ -671,12 +671,12 @@ class TestRebalancerEdgeCases:
 
     def test_empty_current_positions(self):
         """Test with empty current positions."""
-        rebalancer = ThresholdRebalancer({'threshold': 0.05})
+        rebalancer = ThresholdRebalancer({"threshold": 0.05})
 
         current_positions = {}
-        target_weights = {'AAPL': 0.5, 'MSFT': 0.5}
+        target_weights = {"AAPL": 0.5, "MSFT": 0.5}
         portfolio_value = Decimal("100000")
-        prices = {'AAPL': Decimal("1000"), 'MSFT': Decimal("1000")}
+        prices = {"AAPL": Decimal("1000"), "MSFT": Decimal("1000")}
 
         trades = rebalancer.calculate_rebalance_trades(
             current_positions, target_weights, portfolio_value, prices
@@ -687,12 +687,12 @@ class TestRebalancerEdgeCases:
 
     def test_zero_prices(self):
         """Test with zero prices."""
-        rebalancer = ThresholdRebalancer({'threshold': 0.05})
+        rebalancer = ThresholdRebalancer({"threshold": 0.05})
 
-        current_positions = {'AAPL': {'quantity': 10, 'market_value': 10000}}
-        target_weights = {'AAPL': 1.0}
+        current_positions = {"AAPL": {"quantity": 10, "market_value": 10000}}
+        target_weights = {"AAPL": 1.0}
         portfolio_value = Decimal("100000")
-        prices = {'AAPL': Decimal("0")}  # Zero price
+        prices = {"AAPL": Decimal("0")}  # Zero price
 
         trades = rebalancer.calculate_rebalance_trades(
             current_positions, target_weights, portfolio_value, prices
@@ -704,10 +704,10 @@ class TestRebalancerEdgeCases:
 
     def test_extreme_weight_deviation(self):
         """Test with extreme weight deviation."""
-        rebalancer = ThresholdRebalancer({'threshold': 0.5})  # 50% threshold
+        rebalancer = ThresholdRebalancer({"threshold": 0.5})  # 50% threshold
 
-        current_weights = {'AAPL': 0.99, 'MSFT': 0.01}
-        target_weights = {'AAPL': 0.5, 'MSFT': 0.5}
+        current_weights = {"AAPL": 0.99, "MSFT": 0.01}
+        target_weights = {"AAPL": 0.5, "MSFT": 0.5}
         portfolio_value = Decimal("100000")
 
         should_rebalance = rebalancer.should_rebalance(
@@ -719,10 +719,10 @@ class TestRebalancerEdgeCases:
 
     def test_missing_assets_in_current_weights(self):
         """Test with assets missing from current weights."""
-        rebalancer = ThresholdRebalancer({'threshold': 0.05})
+        rebalancer = ThresholdRebalancer({"threshold": 0.05})
 
-        current_weights = {'AAPL': 1.0}  # Missing MSFT
-        target_weights = {'AAPL': 0.5, 'MSFT': 0.5}
+        current_weights = {"AAPL": 1.0}  # Missing MSFT
+        target_weights = {"AAPL": 0.5, "MSFT": 0.5}
         portfolio_value = Decimal("100000")
 
         should_rebalance = rebalancer.should_rebalance(
@@ -734,10 +734,10 @@ class TestRebalancerEdgeCases:
 
     def test_missing_assets_in_target_weights(self):
         """Test with assets missing from target weights."""
-        rebalancer = ThresholdRebalancer({'threshold': 0.05})
+        rebalancer = ThresholdRebalancer({"threshold": 0.05})
 
-        current_weights = {'AAPL': 0.5, 'MSFT': 0.5}
-        target_weights = {'AAPL': 1.0}  # Missing MSFT
+        current_weights = {"AAPL": 0.5, "MSFT": 0.5}
+        target_weights = {"AAPL": 1.0}  # Missing MSFT
         portfolio_value = Decimal("100000")
 
         should_rebalance = rebalancer.should_rebalance(
@@ -749,10 +749,10 @@ class TestRebalancerEdgeCases:
 
     def test_very_small_threshold(self):
         """Test with very small threshold."""
-        rebalancer = ThresholdRebalancer({'threshold': 0.0001})  # 0.01% threshold
+        rebalancer = ThresholdRebalancer({"threshold": 0.0001})  # 0.01% threshold
 
-        current_weights = {'AAPL': 0.5001, 'MSFT': 0.4999}
-        target_weights = {'AAPL': 0.5, 'MSFT': 0.5}
+        current_weights = {"AAPL": 0.5001, "MSFT": 0.4999}
+        target_weights = {"AAPL": 0.5, "MSFT": 0.5}
         portfolio_value = Decimal("100000")
 
         should_rebalance = rebalancer.should_rebalance(
@@ -764,10 +764,10 @@ class TestRebalancerEdgeCases:
 
     def test_negative_weights(self):
         """Test with negative weights (short positions)."""
-        rebalancer = ThresholdRebalancer({'threshold': 0.05})
+        rebalancer = ThresholdRebalancer({"threshold": 0.05})
 
-        current_weights = {'AAPL': 1.5, 'MSFT': -0.5}  # Short MSFT
-        target_weights = {'AAPL': 1.2, 'MSFT': -0.2}
+        current_weights = {"AAPL": 1.5, "MSFT": -0.5}  # Short MSFT
+        target_weights = {"AAPL": 1.2, "MSFT": -0.2}
         portfolio_value = Decimal("100000")
 
         should_rebalance = rebalancer.should_rebalance(

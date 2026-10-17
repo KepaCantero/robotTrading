@@ -29,9 +29,9 @@ Domain: Presentation
 - `CreateFeedConfigRequest`
 - `SubscribeRequest`
 ### Public Functions
+- `get_top_liquid_quotes()`
 - `get_quote()`
 - `get_multiple_quotes()`
-- `get_top_liquid_quotes()`
 - `get_historical_data()`
 - `create_feed_config()`
 - `list_feed_configs()`

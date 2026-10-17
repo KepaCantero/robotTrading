@@ -49,7 +49,7 @@ class Settings(BaseModel):
     binance_api_secret: str = Field(..., min_length=10)
     database_url: str
     redis_url: str
-    
+
     class Config:
         env_file = ".env"
 
@@ -112,13 +112,13 @@ import time
 def generate_signature(api_secret: str, timestamp: int, method: str, endpoint: str, params: dict) -> str:
     query_string = '&'.join([f"{k}={v}" for k, v in sorted(params.items())])
     message = f"{timestamp}{method}{endpoint}{query_string}"
-    
+
     signature = hmac.new(
         api_secret.encode('utf-8'),
         message.encode('utf-8'),
         hashlib.sha256
     ).hexdigest()
-    
+
     return signature
 
 # Uso para Binance
@@ -139,7 +139,7 @@ import aiohttp
 async def make_request(url: str):
     # Verificar certificado SSL
     connector = aiohttp.TCPConnector(verify_ssl=True)
-    
+
     async with aiohttp.ClientSession(connector=connector) as session:
         async with session.get(url) as response:
             return await response.json()
@@ -179,11 +179,11 @@ class RateLimiter:
         self.max_requests = max_requests
         self.time_window = time_window
         self.requests = []
-    
+
     def allow_request(self) -> bool:
         now = time.time()
         self.requests = [t for t in self.requests if t > now - self.time_window]
-        
+
         if len(self.requests) < self.max_requests:
             self.requests.append(now)
             return True
@@ -191,7 +191,7 @@ class RateLimiter:
 
 def rate_limit(max_requests: int, time_window: int):
     limiter = RateLimiter(max_requests, time_window)
-    
+
     def decorator(func):
         @wraps(func)
         async def wrapper(*args, **kwargs):
@@ -217,10 +217,10 @@ async def place_order(order: Order):
 class IPWhitelist:
     def __init__(self, allowed_ips: list[str]):
         self.allowed_ips = set(allowed_ips)
-    
+
     def is_allowed(self, ip: str) -> bool:
         return ip in self.allowed_ips
-    
+
     def check_request(self, request):
         client_ip = request.remote_addr
         if not self.is_allowed(client_ip):
@@ -239,15 +239,15 @@ class ZeroTrustValidator:
         # Validar identidad
         if not self.verify_jwt(request.token):
             raise Exception("Invalid identity")
-        
+
         # Validar autorización
         if not self.check_permissions(request.user, request.action):
             raise Exception("Unauthorized")
-        
+
         # Validar contexto
         if self.is_suspicious_location(request.ip):
             raise Exception("Suspicious location")
-        
+
         # Validar dispositivo
         if not self.is_known_device(request.device_id):
             self.require_mfa(request)
@@ -276,7 +276,7 @@ class AuditLogger:
             price=float(order.price),
             timestamp=datetime.now().isoformat()
         )
-    
+
     def log_trade(self, trade: Trade):
         logger.info(
             "trade_executed",
@@ -355,10 +355,10 @@ from cryptography.fernet import Fernet
 class Encryptor:
     def __init__(self, key: bytes):
         self.cipher = Fernet(key)
-    
+
     def encrypt(self, data: str) -> bytes:
         return self.cipher.encrypt(data.encode())
-    
+
     def decrypt(self, encrypted_data: bytes) -> str:
         return self.cipher.decrypt(encrypted_data).decode()
 

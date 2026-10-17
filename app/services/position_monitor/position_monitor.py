@@ -298,7 +298,7 @@ class PositionMonitorConfig:
         stop_execution_timeout_seconds: Timeout for stop order execution (uses centralized config)
     """
 
-    def __init__(self, custom_config: dict | None = None):
+    def __init__(self, custom_config: dict | None = None, **kwargs: object):
         """
         Initialize PositionMonitorConfig with centralized config values.
 
@@ -323,6 +323,13 @@ class PositionMonitorConfig:
         # Stop execution
         self.execute_stops_automatically: bool = True
         self.stop_execution_timeout_seconds = tt.position_monitor_stop_execution_timeout
+
+        # Overrides por kwargs (API documentada y usada por los tests de carga)
+        for key, value in kwargs.items():
+            if hasattr(self, key):
+                setattr(self, key, value)
+            else:
+                raise AttributeError(f"Unknown config parameter: {key}")
 
         # Apply any custom overrides
         if custom_config:

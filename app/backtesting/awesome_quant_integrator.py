@@ -44,7 +44,7 @@ except ImportError:
 try:
     import pyfolio
 
-    PYFOLIO_AVAILABLE = True
+    PYFOLIO_AVAILABLE = bool(pyfolio)
 except ImportError:
     pyfolio = None
     PYFOLIO_AVAILABLE = False

@@ -17,7 +17,7 @@ import asyncio
 import logging
 from datetime import datetime, timedelta, timezone
 from decimal import Decimal
-from typing import Any, ClassVar
+from typing import Any
 
 from fastapi import WebSocket, WebSocketDisconnect
 from pydantic import BaseModel, Field
@@ -66,11 +66,6 @@ class DashboardMetrics(BaseModel):
     # Timestamp
     timestamp: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
 
-    class Config:
-        json_encoders: ClassVar[dict] = {
-            Decimal: str,
-        }
-
 
 class PositionMetric(BaseModel):
     """Individual position metric."""
@@ -83,11 +78,6 @@ class PositionMetric(BaseModel):
     unrealized_pnl: Decimal = Field(..., description="Unrealized P&L")
     unrealized_pnl_pct: Decimal = Field(..., description="Unrealized P&L percentage")
     currency: str = Field(default="USD", description="Position currency")
-
-    class Config:
-        json_encoders: ClassVar[dict] = {
-            Decimal: str,
-        }
 
 
 class AlertHistoryItem(BaseModel):
@@ -109,11 +99,6 @@ class HistoricalDataPoint(BaseModel):
     portfolio_value: Decimal = Field(..., description="Portfolio value")
     daily_pnl: Decimal = Field(..., description="Daily P&L")
     drawdown_pct: Decimal = Field(..., description="Drawdown percentage")
-
-    class Config:
-        json_encoders: ClassVar[dict] = {
-            Decimal: str,
-        }
 
 
 class ProductionDashboard:

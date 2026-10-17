@@ -157,27 +157,35 @@ class AuditLogger:
                         log_file.unlink()
                         files_removed += 1
                         logger.info(
-                            f"Removed old audit log file: {log_file.name}",
-                            file_mtime=file_mtime.isoformat(),
-                            cutoff_date=cutoff_date.isoformat(),
+                            "Removed old audit log file: %s",
+                            log_file.name,
+                            extra={
+                                "file_mtime": file_mtime.isoformat(),
+                                "cutoff_date": cutoff_date.isoformat(),
+                            },
                         )
                 except OSError as e:
                     logger.error(
-                        f"Failed to process audit log file {log_file}: {e}",
-                        log_file=str(log_file),
+                        "Failed to process audit log file %s: %s",
+                        log_file,
+                        e,
+                        extra={"log_file": str(log_file)},
                     )
 
             if files_removed > 0:
                 logger.info(
                     "Audit log cleanup completed",
-                    files_removed=files_removed,
-                    retention_days=retention_days,
+                    extra={
+                        "files_removed": files_removed,
+                        "retention_days": retention_days,
+                    },
                 )
 
         except Exception as e:
             logger.error(
-                f"Error during audit log cleanup: {e}",
-                retention_days=retention_days,
+                "Error during audit log cleanup: %s",
+                e,
+                extra={"retention_days": retention_days},
             )
 
         return files_removed
@@ -369,10 +377,13 @@ class AuditLogger:
             except (ValueError, TypeError) as e:
                 # Log the validation error and continue with safe defaults
                 logger.warning(
-                    f"Audit log parameter validation failed: {e}",
-                    action=str(action) if action else None,
-                    user_id=user_id,
-                    username=username,
+                    "Audit log parameter validation failed: %s",
+                    e,
+                    extra={
+                        "action": str(action) if action else None,
+                        "user_id": user_id,
+                        "username": username,
+                    },
                 )
                 # Continue with validation disabled for this call
                 validate = False
@@ -477,7 +488,7 @@ class AuditLogger:
         **kwargs,
     ):
         """Log a deployment action."""
-        details = {
+        details: dict[str, Any] = {
             "strategy_name": strategy_name,
         }
 
@@ -614,6 +625,7 @@ def audit_context(
                 raise
 
     """
+    del auto_log  # aceptado por compatibilidad; sin uso aquí
     audit = get_audit_logger()
 
     class AuditContext:

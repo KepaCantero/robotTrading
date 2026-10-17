@@ -119,7 +119,6 @@ dev = [
 
     # Security
     "bandit>=1.8.0",
-    "safety>=3.2.0",
     "pip-audit>=2.7.0",
     "detect-secrets>=1.5.0",
 

@@ -14,9 +14,9 @@ Reference:
 from __future__ import annotations
 
 import logging
-from datetime import datetime
+from datetime import date, datetime, timezone
 from decimal import Decimal
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import numpy as np
 
@@ -54,6 +54,9 @@ from app.shared.utils.decimal_utils import safe_mean
 
 logger = logging.getLogger(__name__)
 
+if TYPE_CHECKING:
+    from collections.abc import Sequence
+
 
 def _ensure_empyrical():
     """
@@ -66,6 +69,178 @@ def _ensure_empyrical():
         empyrical module if available, None otherwise
     """
     return ep if EMPYRICAL_AVAILABLE else None
+
+
+# ============================================================================
+# Daily equity curve and drawdown shared computation
+# ============================================================================
+
+# One-time warning flag for defensive drawdown clamping (module-level on purpose:
+# log once per process, not once per call, to avoid spamming long backtests)
+_drawdown_clamp_warned = False
+
+
+def _warn_drawdown_clamp_once(reason: str) -> None:
+    """Log a warning the first time a drawdown value has to be clamped."""
+    global _drawdown_clamp_warned
+    if not _drawdown_clamp_warned:
+        logger.warning(
+            "Max drawdown clamped to -100%% (%s). A drawdown percentage outside "
+            "[-100%%, 0%%] is mathematically impossible for non-negative equity; "
+            "this indicates either negative equity values in the curve or a bug "
+            "in the equity computation.",
+            reason,
+        )
+        _drawdown_clamp_warned = True
+
+
+def _trade_realization_date(trade: Trade) -> date:
+    """
+    Return the UTC calendar date on which a trade's P&L is realized.
+
+    Realized P&L is booked at exit time; entry time is only a fallback for
+    trades without one (should not happen for closed trades).
+    """
+    ts = trade.exit_time or trade.entry_time
+    if ts.tzinfo is not None:
+        ts = ts.astimezone(timezone.utc)
+    return ts.date()
+
+
+def build_daily_equity_series(
+    trades: Sequence[Trade], initial_capital: Decimal
+) -> tuple[list[date], list[Decimal], list[Decimal]]:
+    """
+    Build a date-stamped daily equity series from closed trades.
+
+    All trades closing on the same day are aggregated into a single daily
+    equity point (end-of-day value). Days without trades are intentionally
+    NOT forward-filled: daily returns are computed only between consecutive
+    days with trading activity (plus the initial capital as the day-zero
+    anchor), so calendar gaps do not inject artificial 0% returns that would
+    dilute the annualized Sharpe/Sortino.
+
+    Args:
+        trades: Trades (open/non-closed ones are ignored)
+        initial_capital: Starting capital (day-zero anchor)
+
+    Returns:
+        Tuple (dates, equity, returns):
+        - dates: active trading days, ascending (length N)
+        - equity: length N+1; equity[0] == initial_capital and equity[i+1]
+          is the equity at the close of dates[i]
+        - returns: length N daily returns; returns[i] = equity[i+1]/equity[i] - 1
+    """
+    pnl_by_day: dict[date, Decimal] = {}
+    for trade in sorted(trades, key=lambda t: t.exit_time or t.entry_time):
+        if trade.status.value != "closed":
+            continue
+        day = _trade_realization_date(trade)
+        pnl_by_day[day] = pnl_by_day.get(day, Decimal("0")) + (trade.pnl or Decimal("0"))
+
+    dates = sorted(pnl_by_day)
+
+    equity = [initial_capital]
+    for day in dates:
+        equity.append(equity[-1] + pnl_by_day[day])
+
+    returns: list[Decimal] = []
+    for i in range(1, len(equity)):
+        previous = equity[i - 1]
+        if previous != 0:
+            returns.append((equity[i] - previous) / previous)
+
+    return dates, equity, returns
+
+
+def calculate_max_drawdown(equity: Sequence[Decimal]) -> tuple[Decimal, Decimal]:
+    """
+    Calculate peak-based maximum drawdown over an equity series.
+
+    dd = (equity - running_peak) / running_peak, evaluated at the deepest
+    point. For non-negative equity this is mathematically bounded to
+    [-100%, 0%]. Negative equity values (leverage bug, accounting error)
+    are clamped to -100% with a one-time warning, and any result outside
+    [-100%, 0%] is logged as a bug and clamped defensively.
+
+    Returns:
+        Tuple (max_drawdown_abs, max_drawdown_pct) measured at the same point,
+        so pct == abs / peak_at_deepest_point * 100.
+    """
+    if len(equity) < 2:
+        return Decimal("0"), Decimal("0")
+
+    peak = equity[0]
+    max_dd_abs = Decimal("0")
+    max_dd_pct = Decimal("0")
+    dd_peak = peak
+    negative_equity = False
+
+    for value in equity[1:]:
+        if value > peak:
+            peak = value
+        if value < 0:
+            negative_equity = True
+        if peak > 0:
+            dd_abs = value - peak
+            dd_pct = dd_abs / peak * Decimal("100")
+            if dd_pct < max_dd_pct:
+                max_dd_pct = dd_pct
+                max_dd_abs = dd_abs
+                dd_peak = peak
+
+    if negative_equity:
+        _warn_drawdown_clamp_once("negative equity values in the curve")
+
+    # Guard: with non-negative equity the percentage cannot leave [-100, 0];
+    # anything outside is a bug. Clamp and keep the absolute value consistent
+    # with the clamped percentage (equity floored at zero).
+    if max_dd_pct < Decimal("-100"):
+        _warn_drawdown_clamp_once(f"raw max drawdown percentage was {max_dd_pct}")
+        max_dd_pct = Decimal("-100")
+        max_dd_abs = -dd_peak
+    elif max_dd_pct > Decimal("0"):
+        _warn_drawdown_clamp_once(f"raw max drawdown percentage was {max_dd_pct}")
+        max_dd_pct = Decimal("0")
+        max_dd_abs = Decimal("0")
+
+    return max_dd_abs, max_dd_pct
+
+
+def bounded_drawdown_percentage(drawdown: Decimal, base: Decimal) -> Decimal:
+    """
+    Convert an absolute drawdown to a percentage of ``base``, bounded to [-100, 0].
+
+    ``base`` must be the equity PEAK the drawdown started from (using the
+    initial capital instead of the peak produced impossible values such as
+    -4708% once the account had grown above its starting value).
+
+    Returns:
+        Drawdown percentage in [-100, 0] (defensively clamped with a one-time
+        warning if the inputs would produce anything outside that range).
+    """
+    pct = min(Decimal("0"), drawdown / base * Decimal("100")) if base > 0 else Decimal("0")
+
+    if pct < Decimal("-100"):
+        _warn_drawdown_clamp_once(f"drawdown {drawdown} over base {base}")
+        pct = Decimal("-100")
+
+    return pct
+
+
+def bounded_drawdown_fraction(drawdown: Decimal) -> Decimal:
+    """
+    Clamp a peak-relative drawdown fraction to [-1, 0].
+
+    A drawdown deeper than -100% of the peak equity is impossible without
+    negative equity values, so anything outside [-1, 0] is clamped with a
+    one-time warning (it indicates a bug or an over-leveraged equity curve).
+    """
+    fraction = min(Decimal("0"), drawdown)
+    if fraction < Decimal("-1"):
+        _warn_drawdown_clamp_once(f"raw drawdown fraction was {fraction}")
+        fraction = Decimal("-1")
+    return fraction
 
 
 class MetricsCalculator:
@@ -153,21 +328,12 @@ class MetricsCalculator:
         )
         net_profit = gross_profit + gross_loss
 
-        # Risk metrics
+        # Risk metrics: date-stamped daily equity curve (P&L aggregated per
+        # exit day). Drawdown is measured against the running PEAK, so the
+        # percentage is mathematically bounded to [-100, 0].
         equity_curve = self._build_equity_curve(closed_trades, initial_capital)
-        max_drawdown = self._calculate_max_drawdown(equity_curve)
-        # Asegurar que max_drawdown sea <= 0 (validación Pydantic)
+        max_drawdown, max_drawdown_percentage = calculate_max_drawdown(equity_curve)
         max_drawdown = min(Decimal("0"), max_drawdown)
-        # Bound max_drawdown to not exceed -initial_capital (can't lose more than you started with)
-        max_drawdown = max(-initial_capital, max_drawdown)
-        max_drawdown_percentage = min(
-            Decimal("0"),
-            (
-                (max_drawdown / initial_capital) * Decimal("100")
-                if initial_capital > 0
-                else Decimal("0")
-            ),
-        )
 
         # Calculate returns for Sharpe/Sortino
         daily_returns = self._calculate_daily_returns(closed_trades, initial_capital)
@@ -328,48 +494,35 @@ class MetricsCalculator:
         )
 
     def _build_equity_curve(self, trades: list[Trade], initial_capital: Decimal) -> list[Decimal]:
-        """Build equity curve from trades."""
-        equity = [initial_capital]
-        current = initial_capital
+        """
+        Build the daily equity curve (values only, date-stamped internally).
 
-        for trade in sorted(trades, key=lambda t: t.entry_time):
-            if trade.pnl:
-                current += trade.pnl
-            equity.append(current)
-
+        P&L realized on the same day is aggregated into one end-of-day point;
+        the initial capital is the day-zero anchor. See
+        ``build_daily_equity_series`` for the full dated series and the
+        no-forward-fill policy for days without trades.
+        """
+        _, equity, _ = build_daily_equity_series(trades, initial_capital)
         return equity
 
     def _calculate_max_drawdown(self, equity_curve: list[Decimal]) -> Decimal:
-        """Calculate maximum drawdown."""
-        if len(equity_curve) < 2:
-            return Decimal("0")
-
-        peak = equity_curve[0]
-        max_dd = Decimal("0")
-
-        for equity in equity_curve[1:]:
-            if equity > peak:
-                peak = equity
-            dd = equity - peak
-            if dd < max_dd:
-                max_dd = dd
-
-        return max_dd
+        """Calculate maximum drawdown (absolute value, peak-based)."""
+        max_dd_abs, _ = calculate_max_drawdown(equity_curve)
+        return max_dd_abs
 
     def _calculate_daily_returns(
         self, trades: list[Trade], initial_capital: Decimal
     ) -> list[Decimal]:
-        """Calculate daily returns from trades."""
-        # Simplified: convert trade P&L to daily returns
-        returns = []
-        current_capital = initial_capital
+        """
+        Calculate REAL daily returns from the dated equity curve.
 
-        for trade in sorted(trades, key=lambda t: t.entry_time):
-            if trade.pnl and current_capital != 0:
-                daily_return = trade.pnl / current_capital
-                returns.append(daily_return)
-                current_capital += trade.pnl
-
+        Trades closing on the same day compound into a single daily return;
+        returns only exist between days with trading activity (no forward
+        fill of tradeless days). This replaces the previous implementation
+        that treated per-trade returns as daily returns, which distorted the
+        annualized Sharpe/Sortino ratios.
+        """
+        _, _, returns = build_daily_equity_series(trades, initial_capital)
         return returns
 
     def _calculate_sharpe_ratio(self, returns: list[Decimal]) -> Decimal | None:

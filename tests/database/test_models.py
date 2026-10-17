@@ -69,7 +69,7 @@ def db_session():
                 table.constraints = [
                     c
                     for c in table.constraints
-                    if not (hasattr(c, 'name') and c.name == 'ck_assets_currency_iso')
+                    if not (hasattr(c, "name") and c.name == "ck_assets_currency_iso")
                 ]
 
     Base.metadata.create_all(engine)

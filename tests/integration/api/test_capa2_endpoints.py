@@ -492,7 +492,8 @@ class TestErrorHandling:
     async def test_invalid_json_request(self, client):
         """Test handling of invalid JSON request."""
         response = await client.post(
-            "/capa2/process-input", json={"invalid": "data"}  # Missing required fields
+            "/capa2/process-input",
+            json={"invalid": "data"},  # Missing required fields
         )
 
         assert response.status_code == 422  # Validation error

@@ -554,11 +554,11 @@ import json
 
 class BinanceWebSocketManager:
     BASE_WS_URL = 'wss://stream.binance.com:9443/ws'
-    
+
     async def connect(self, symbols):
         streams = [f'{s.lower()}@ticker' for s in symbols]
         url = f'{self.BASE_WS_URL}/{"/".join(streams)}'
-        
+
         retry_count = 0
         while retry_count < 5:
             try:
@@ -578,7 +578,7 @@ class CoinbaseOrderBook:
     async def connect(self, product_id):
         url = 'wss://ws-feed.exchange.coinbase.com'
         msg = {'type': 'subscribe', 'product_ids': [product_id]}
-        
+
         async with websockets.connect(url) as ws:
             await ws.send(json.dumps(msg))
             async for message in ws:
@@ -599,11 +599,11 @@ import json
 
 class BinanceWebSocketManager:
     BASE_WS_URL = 'wss://stream.binance.com:9443/ws'
-    
+
     async def connect(self, symbols):
         streams = [f'{s.lower()}@ticker' for s in symbols]
         url = f'{self.BASE_WS_URL}/{"/".join(streams)}'
-        
+
         retry_count = 0
         while retry_count < 5:
             try:
@@ -623,7 +623,7 @@ class CoinbaseOrderBook:
     async def connect(self, product_id):
         url = 'wss://ws-feed.exchange.coinbase.com'
         msg = {'type': 'subscribe', 'product_ids': [product_id]}
-        
+
         async with websockets.connect(url) as ws:
             await ws.send(json.dumps(msg))
             async for message in ws:

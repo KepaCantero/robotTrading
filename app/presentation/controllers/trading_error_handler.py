@@ -36,7 +36,7 @@ class ErrorHandlingRequest(BaseModel):
     error_message: str = Field(..., description="Error message")
     error_type: str = Field(..., description="Type of error")
     context: ErrorContext = Field(..., description="Context where error occurred")
-    operation_id: str | None = Field(None, description="Operation identifier")
+    operation_id: str | None = Field(default=None, description="Operation identifier")
     metadata: dict[str, Any] | None = Field(default_factory=dict, description="Additional metadata")
 
 
@@ -56,7 +56,7 @@ class CircuitBreakerStatus(BaseModel):
     context: str = Field(..., description="Context name")
     is_open: bool = Field(..., description="Whether circuit breaker is open")
     error_count: int = Field(..., description="Current error count")
-    last_error_time: str | None = Field(None, description="Last error timestamp")
+    last_error_time: str | None = Field(default=None, description="Last error timestamp")
 
 
 class ErrorStatistics(BaseModel):

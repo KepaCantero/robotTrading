@@ -108,11 +108,11 @@ print(f"R6 Overfitting: {'PASS' if r6.overfitting_check_passed else 'FAIL'}")
 print(f"  Ratio: {r6.param_observation_ratio:.4f} < 0.0333 (max)")
 
 # R5: Walk-Forward (si hay resultados)
-if hasattr(result, 'optimization_results') and result.optimization_results:
+if hasattr(result, "optimization_results") and result.optimization_results:
     wf_windows = [
-        {'is_return': 0.1, 'oos_return': 0.08, 'is_sharpe': 1.5, 'oos_sharpe': 1.2},
-        {'is_return': 0.12, 'oos_return': 0.09, 'is_sharpe': 1.6, 'oos_sharpe': 1.3},
-        {'is_return': 0.08, 'oos_return': 0.06, 'is_sharpe': 1.4, 'oos_sharpe': 1.1},
+        {"is_return": 0.1, "oos_return": 0.08, "is_sharpe": 1.5, "oos_sharpe": 1.2},
+        {"is_return": 0.12, "oos_return": 0.09, "is_sharpe": 1.6, "oos_sharpe": 1.3},
+        {"is_return": 0.08, "oos_return": 0.06, "is_sharpe": 1.4, "oos_sharpe": 1.1},
     ]
     r5 = compliance.check_walk_forward(wf_windows)
     print(f"R5 Walk-Forward: {'PASS' if r5.walk_forward_passed else 'FAIL'}")

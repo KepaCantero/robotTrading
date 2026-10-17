@@ -1,3 +1,9 @@
+"""
+T8.1: RiskScalingApplication Models
+
+Data structures for conditional risk scaling application.
+"""
+
 from __future__ import annotations
 
 import logging
@@ -8,12 +14,6 @@ from pydantic import BaseModel, Field
 from app.services.portfolio_constructor.models import AllocationWeight, PortfolioAllocation
 
 logger = logging.getLogger(__name__)
-
-"""
-T8.1: RiskScalingApplication Models
-
-Data structures for conditional risk scaling application.
-"""
 
 
 class RiskScalingRequest(BaseModel):

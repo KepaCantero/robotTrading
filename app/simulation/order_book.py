@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 """
 Order Book Simulation - Larry Harris's Limit Order Book Dynamics
 
@@ -16,6 +14,8 @@ Key concepts implemented:
 Reference:
     Harris, L. (2003). Trading and Exchanges, Chapters 3-4.
 """
+
+from __future__ import annotations
 
 import logging
 import uuid
@@ -580,7 +580,7 @@ class LimitOrderBook:
             ask_price, _ = snapshot.asks[i]
             spreads.append(ask_price - bid_price)
 
-        avg_spread = Decimal(str(np.mean(spreads))) if spreads else Decimal("0")
+        avg_spread = Decimal(str(np.mean([float(s) for s in spreads]))) if spreads else Decimal("0")
 
         # Calculate cumulative depth
         cumulative_bid_depth = Decimal(sum(qty for _, qty in snapshot.bids[:10]))

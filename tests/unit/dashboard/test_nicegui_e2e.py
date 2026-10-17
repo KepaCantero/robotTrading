@@ -107,6 +107,7 @@ class TestAppHome:
         def root():
             AppShell.configure(store, runner, profitability)
             AppShell.setup()
+            AppShell.build_home()
 
         async with user_simulation(root) as user:
             await user.open("/")
@@ -446,11 +447,13 @@ class TestTheme:
 
         assert profitability_color("INCONCLUSIVE") == "#FFC107"
 
-    def test_pages_list_has_five_entries(self) -> None:
-        """The PAGES list must have 5 entries."""
+    def test_pages_list_contains_core_pages(self) -> None:
+        """The PAGES list must contain the core dashboard routes."""
         from app.presentation.dashboard.nicegui_app.theme import PAGES
 
-        assert len(PAGES) == 5
+        routes = {page["route"] for page in PAGES}
+        for route in ("/", "/results", "/history", "/config", "/profitability", "/swarm"):
+            assert route in routes
 
     def test_pages_have_required_fields(self) -> None:
         """Each PAGES entry must have name, icon, and route."""

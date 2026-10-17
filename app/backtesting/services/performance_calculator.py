@@ -11,6 +11,7 @@ import logging
 import math
 from decimal import Decimal
 
+from app.backtesting.metrics import bounded_drawdown_fraction, build_daily_equity_series
 from app.backtesting.models import BacktestConfig, PerformanceMetrics, Trade, TradeStatus
 from app.shared.config.centralized_config import get_config
 from app.shared.utils.decimal_utils import safe_mean, safe_variance
@@ -128,8 +129,11 @@ class PerformanceMetricsCalculator:
             total_days = 0
             avg_trade_duration = Decimal("0")
 
-        # Ensure max_drawdown is <= 0 as per validation
-        max_drawdown = min(Decimal("0"), max_drawdown)
+        # Ensure max_drawdown is a valid peak-relative fraction in [-1, 0].
+        # A drawdown below -100% of the peak is impossible without negative
+        # equity; bounded_drawdown_fraction clamps it defensively with a
+        # one-time warning (impossible values must never reach the reports).
+        max_drawdown = bounded_drawdown_fraction(max_drawdown)
 
         return PerformanceMetrics(
             total_trades=total_trades,
@@ -155,17 +159,15 @@ class PerformanceMetricsCalculator:
 
     def _calculate_sharpe_ratio(self, trades: list[Trade]) -> Decimal | None:
         """
-        Calculate Sharpe ratio from realized trade P&L using proper time-series returns.
+        Calculate Sharpe ratio from REAL daily returns (fallback path).
 
-        CRITICAL BUG FIX: The previous implementation calculated returns relative to
-        cumulative capital, which is INCORRECT for time-series analysis. This led to
-        distorted Sharpe ratios because returns were normalized against changing capital.
-
-        The CORRECT implementation:
-        1. Build equity curve from closed trades
-        2. Calculate period-over-period returns from equity curve
-        3. These returns compound properly (r1, r2, r3...)
-        4. Annualize and calculate Sharpe from the return series
+        Fallback used when no per-bar equity returns are available: the dated
+        daily equity curve is built from closed trades (all trades closing on
+        the same day aggregate into a single end-of-day return, days without
+        trades are skipped) via ``app.backtesting.metrics.build_daily_equity_series``.
+        A per-trade return series is NOT a daily series and distorts the
+        annualized Sharpe (a trade is not a day), which is why the previous
+        per-trade implementation was replaced by the shared daily computation.
 
         Formula: Sharpe = (Rp - Rf) / sigmap
         - Rp: Portfolio return (annualized)
@@ -181,26 +183,9 @@ class PerformanceMetricsCalculator:
         if not trades or len(trades) < 2:
             return None
 
-        # Calculate returns from closed trades
-        closed_trades = [t for t in trades if t.pnl is not None and t.exit_time is not None]
-        closed_trades.sort(key=lambda t: t.exit_time)
-
-        if len(closed_trades) < 2:
-            return None
-
-        # Build equity curve from trades (CORRECT approach)
-        current_capital = self.config.initial_capital
-        equity_values = [self.config.initial_capital]
-
-        for trade in closed_trades:
-            current_capital += trade.pnl
-            equity_values.append(current_capital)
-
-        # Calculate returns from equity curve (time-series returns)
-        returns = []
-        for i in range(1, len(equity_values)):
-            ret = (equity_values[i] - equity_values[i - 1]) / equity_values[i - 1]
-            returns.append(ret)
+        # Real daily returns from the date-stamped equity curve (shared
+        # computation with MetricsCalculator in app.backtesting.metrics)
+        _, _, returns = build_daily_equity_series(trades, self.config.initial_capital)
 
         if not returns or len(returns) < 2:
             return None
@@ -255,9 +240,7 @@ class PerformanceMetricsCalculator:
 
         MIN_ANNUAL_VOLATILITY = _backtest_config.min_annual_volatility
         annual_mean = mean_return * Decimal(str(_backtest_config.annual_trading_days))
-        annual_std = std_dev * Decimal(
-            str(math.sqrt(_backtest_config.annual_trading_days))
-        )
+        annual_std = std_dev * Decimal(str(math.sqrt(_backtest_config.annual_trading_days)))
         annual_std = max(annual_std, MIN_ANNUAL_VOLATILITY)
 
         if annual_std == 0:

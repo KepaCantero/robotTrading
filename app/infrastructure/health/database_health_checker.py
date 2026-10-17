@@ -1,7 +1,6 @@
-from __future__ import annotations
-
 """Database health checker for infrastructure layer."""
 
+from __future__ import annotations
 
 import logging
 import sqlite3

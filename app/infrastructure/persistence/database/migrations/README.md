@@ -123,9 +123,17 @@ Ensure models are imported in `env.py`:
 
 ```python
 from app.database.models import (
-    User, Portfolio, Position, Trade, Asset,
-    MarketData, Signal, Backtest, RiskMetrics,
-    SystemLog, PositionState
+    User,
+    Portfolio,
+    Position,
+    Trade,
+    Asset,
+    MarketData,
+    Signal,
+    Backtest,
+    RiskMetrics,
+    SystemLog,
+    PositionState,
 )
 ```
 

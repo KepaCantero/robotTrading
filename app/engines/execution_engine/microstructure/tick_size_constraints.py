@@ -410,6 +410,7 @@ class TickSizeConstraints:
         Returns:
             Recommended tick size
         """
+        del current_tick_size  # aceptado por compatibilidad; sin uso aquí
         # Heuristic: Aim for ~100-200 price levels per day
         # This provides sufficient granularity without fragmentation
 

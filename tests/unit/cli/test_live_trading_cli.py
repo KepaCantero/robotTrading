@@ -46,7 +46,7 @@ async def test_validate_config():
     """Test configuration validation."""
     from validate_config import validate_config
 
-    with patch('validate_config.get_broker_connector') as mock_get_broker:
+    with patch("validate_config.get_broker_connector") as mock_get_broker:
         mock_broker = MagicMock()
         mock_broker.get_account_info = AsyncMock(return_value={"account_id": "test"})
         mock_get_broker.return_value = mock_broker
@@ -60,7 +60,7 @@ async def test_validate_broker_connection():
     """Test broker connection validation."""
     from validate_broker_connection import validate_broker_connection
 
-    with patch('validate_broker_connection.get_broker_connector') as mock_get_broker:
+    with patch("validate_broker_connection.get_broker_connector") as mock_get_broker:
         mock_broker = MagicMock()
         mock_broker.get_account_info = AsyncMock(return_value={"account_id": "test"})
         mock_broker.calculate_portfolio_value = AsyncMock(return_value=100000)
@@ -77,7 +77,7 @@ async def test_live_trading_cli_validate_config(mock_broker):
     """Test LiveTradingCLI validate_config method."""
     from start_live_trading import LiveTradingCLI
 
-    with patch('start_live_trading.get_broker_connector', return_value=mock_broker):
+    with patch("start_live_trading.get_broker_connector", return_value=mock_broker):
         cli = LiveTradingCLI()
         success = await cli.validate_config()
         assert success is True
@@ -88,7 +88,7 @@ async def test_live_trading_cli_validate_broker_connection(mock_broker):
     """Test LiveTradingCLI validate_broker_connection method."""
     from start_live_trading import LiveTradingCLI
 
-    with patch('start_live_trading.get_broker_connector', return_value=mock_broker):
+    with patch("start_live_trading.get_broker_connector", return_value=mock_broker):
         cli = LiveTradingCLI()
         success = await cli.validate_broker_connection()
         assert success is True
@@ -100,9 +100,9 @@ async def test_live_trading_cli_start_trading(mock_broker, mock_bridge):
     from start_live_trading import LiveTradingCLI
 
     with (
-        patch('start_live_trading.get_broker_connector', return_value=mock_broker),
-        patch('start_live_trading.get_trading_bridge_orchestrator', return_value=mock_bridge),
-        patch('start_live_trading.get_compliance_engine') as mock_get_engine,
+        patch("start_live_trading.get_broker_connector", return_value=mock_broker),
+        patch("start_live_trading.get_trading_bridge_orchestrator", return_value=mock_bridge),
+        patch("start_live_trading.get_compliance_engine") as mock_get_engine,
     ):
         # Mock compliance engine
         mock_engine = MagicMock()
@@ -121,7 +121,7 @@ async def test_live_trading_cli_stop_trading(mock_bridge):
     """Test LiveTradingCLI stop_trading method."""
     from start_live_trading import LiveTradingCLI
 
-    with patch('start_live_trading.get_trading_bridge_orchestrator', return_value=mock_bridge):
+    with patch("start_live_trading.get_trading_bridge_orchestrator", return_value=mock_bridge):
         cli = LiveTradingCLI()
         cli.is_running = True
         success = await cli.stop_trading()
@@ -134,7 +134,7 @@ async def test_live_trading_cli_check_risk_status():
     """Test LiveTradingCLI check_risk_status method."""
     from start_live_trading import LiveTradingCLI
 
-    with patch('start_live_trading.get_compliance_engine') as mock_get_engine:
+    with patch("start_live_trading.get_compliance_engine") as mock_get_engine:
         # Mock compliance engine
         mock_engine = MagicMock()
         mock_engine.get_daily_pnl_summary = MagicMock(
@@ -178,7 +178,7 @@ async def test_live_trading_cli_show_positions(mock_broker):
     ]
     mock_broker.get_positions = AsyncMock(return_value=mock_positions)
 
-    with patch('start_live_trading.get_broker_connector', return_value=mock_broker):
+    with patch("start_live_trading.get_broker_connector", return_value=mock_broker):
         cli = LiveTradingCLI()
         positions = await cli.show_positions()
         assert positions == mock_positions
@@ -190,8 +190,8 @@ async def test_live_trading_cli_place_order(mock_broker):
     from start_live_trading import LiveTradingCLI
 
     with (
-        patch('start_live_trading.get_broker_connector', return_value=mock_broker),
-        patch('start_live_trading.get_compliance_engine') as mock_get_engine,
+        patch("start_live_trading.get_broker_connector", return_value=mock_broker),
+        patch("start_live_trading.get_compliance_engine") as mock_get_engine,
     ):
         # Mock compliance engine
         mock_engine = MagicMock()
@@ -215,8 +215,8 @@ async def test_live_trading_cli_place_order_failure(mock_broker):
     from start_live_trading import LiveTradingCLI
 
     with (
-        patch('start_live_trading.get_broker_connector', return_value=mock_broker),
-        patch('start_live_trading.get_compliance_engine') as mock_get_engine,
+        patch("start_live_trading.get_broker_connector", return_value=mock_broker),
+        patch("start_live_trading.get_compliance_engine") as mock_get_engine,
     ):
         # Mock compliance engine with failure
         mock_engine = MagicMock()

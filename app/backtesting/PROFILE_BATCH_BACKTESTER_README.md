@@ -106,14 +106,12 @@ validation:
 from app.backtesting.profile_batch_backtester import ProfileBatchBacktester
 
 # Create backtester
-backtester = ProfileBatchBacktester(
-    config_path="config/profile_batch_backtest.yaml"
-)
+backtester = ProfileBatchBacktester(config_path="config/profile_batch_backtest.yaml")
 
 # Run all 180 profiles
 results = backtester.run_all_profiles(
-    parallel=True,    # Use parallel execution
-    max_workers=20,   # Up to 20 workers
+    parallel=True,  # Use parallel execution
+    max_workers=20,  # Up to 20 workers
 )
 
 # Export results
@@ -127,9 +125,7 @@ from app.core.models.input_profile import InputProfile, ObjectivoInversion, Risk
 from decimal import Decimal
 
 # Create backtester
-backtester = ProfileBatchBacktester(
-    config_path="config/profile_batch_backtest.yaml"
-)
+backtester = ProfileBatchBacktester(config_path="config/profile_batch_backtest.yaml")
 
 # Define profile
 profile = InputProfile(
@@ -154,9 +150,7 @@ print(f"Ready: {result.ready_for_paper_trading}")
 ```python
 # Get best configuration for specific criteria
 best_config = backtester.get_best_strategy(
-    objective="maximizar_capital",
-    tier="medio",
-    risk="medio"
+    objective="maximizar_capital", tier="medio", risk="medio"
 )
 
 print(f"Best Sharpe: {best_config['optimized_metrics']['sharpe_ratio']:.2f}")
@@ -305,10 +299,7 @@ best_metrics = evaluate_with_params(best_params)
 ### FASE 3: Walk-Forward Validation
 ```python
 # Split data into train/test windows
-windows = create_walk_forward_windows(
-    n_windows=5,
-    train_pct=0.6
-)
+windows = create_walk_forward_windows(n_windows=5, train_pct=0.6)
 
 # Validate on out-of-sample data
 oos_metrics = []
@@ -349,7 +340,7 @@ train_model(train_data)
 oos_metrics = evaluate_on(test_data)
 
 # Check performance
-passed = oos_metrics['sharpe'] >= 0.8
+passed = oos_metrics["sharpe"] >= 0.8
 ```
 
 ## Acceptance Criteria
@@ -395,7 +386,7 @@ all_profiles = backtester.generate_all_profiles()
 batch_size = 50
 
 for i in range(0, len(all_profiles), batch_size):
-    batch = all_profiles[i:i+batch_size]
+    batch = all_profiles[i : i + batch_size]
     for profile in batch:
         backtester.run_single_profile(profile)
 ```
@@ -443,8 +434,7 @@ from app.backtesting.professional_reporter import ProfessionalReporter
 
 reporter = ProfessionalReporter()
 professional_report = reporter.generate_complete_report(
-    backtest_result=result,
-    acceptance_report=acceptance
+    backtest_result=result, acceptance_report=acceptance
 )
 ```
 

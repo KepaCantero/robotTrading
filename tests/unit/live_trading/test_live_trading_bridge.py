@@ -132,7 +132,9 @@ class TestOrderManager:
         """Test tracking pending orders."""
         await broker.connect()
         await order_manager.place_order("AAPL", OrderSide.BUY, Decimal("100"))
-        await order_manager.place_order("MSFT", OrderSide.SELL, Decimal("50"))
+        # Note: SELL without a held position is rejected by PaperAdapter
+        # (see test_operational_safety.py), so a second BUY is used here.
+        await order_manager.place_order("MSFT", OrderSide.BUY, Decimal("50"))
 
         pending = await order_manager.get_pending_orders()
         assert len(pending) == 2

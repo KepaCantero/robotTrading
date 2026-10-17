@@ -11,8 +11,8 @@ from decimal import Decimal
 from app.core.models.input_profile import InputProfile, ObjectivoInversion, RiskTolerance
 from app.services.profile_driven_trading.profile_strategy_mapper import (
     create_profile_mapper,
-    map_profile_to_strategies,
     get_capital_tier,
+    map_profile_to_strategies,
 )
 
 # Configure logging
@@ -41,7 +41,7 @@ def example_basic_mapping():
         investment_horizon=24,  # 2 years
     )
 
-    print(f"\nUser Profile:")
+    print("\nUser Profile:")
     print(f"  Capital: €{profile.capital_initial:,.2f}")
     print(f"  Objective: {profile.objetivo_inversion.value}")
     print(f"  Risk Tolerance: {profile.risk_tolerance.value}")
@@ -51,18 +51,18 @@ def example_basic_mapping():
     # Map to strategies
     strategy_config = mapper.map_profile_to_strategies(profile)
 
-    print(f"\nStrategy Configuration:")
+    print("\nStrategy Configuration:")
     print(f"  Enabled Strategies: {', '.join(strategy_config['enabled_strategies'])}")
     print(f"  Risk Profile: {strategy_config['risk_params']['risk_profile']}")
     print(f"  Leverage: {strategy_config['risk_params']['leverage']}x")
     print(f"  Max Position Size: {strategy_config['risk_params']['max_position_size']:.1%}")
     print(f"  Order Splitting: {strategy_config['trading_params']['order_splitting_strategy']}")
 
-    print(f"\nLearning Engines:")
+    print("\nLearning Engines:")
     print(f"  {', '.join(strategy_config['learning_engines']) or 'None'}")
 
-    print(f"\nEnsemble Configuration:")
-    ensemble = strategy_config['ensemble_config']
+    print("\nEnsemble Configuration:")
+    ensemble = strategy_config["ensemble_config"]
     print(f"  Mode: {ensemble['mode']}")
     print(f"  Min Strategies: {ensemble['min_strategies']}")
     print(f"  Min Confidence: {ensemble['min_confidence']:.1%}")
@@ -205,7 +205,7 @@ def example_complete_mapping():
     # Create complete mapping
     mapping = mapper.create_strategy_mapping(profile)
 
-    print(f"\nComplete Strategy Mapping:")
+    print("\nComplete Strategy Mapping:")
     print(f"  Objective: {mapping.objective.value}")
     print(f"  Capital Tier: {mapping.capital_tier}")
     print(f"  Risk Tolerance: {mapping.risk_tolerance.value}")
@@ -218,20 +218,20 @@ def example_complete_mapping():
         print(f"      Weight: {weight:.1%}")
         print(f"      Capital: €{capital:,.2f}")
 
-    print(f"\nRisk Parameters:")
+    print("\nRisk Parameters:")
     print(f"  Risk Profile: {mapping.risk_profile}/6")
     print(f"  Leverage: {mapping.leverage}x")
     print(f"  Max Position: {mapping.max_position_size:.1%}")
     print(f"  Max Sector: {mapping.max_sector_allocation:.1%}")
 
-    print(f"\nTrading Configuration:")
+    print("\nTrading Configuration:")
     print(f"  Order Splitting: {mapping.order_splitting_strategy}")
     print(f"  Commission Negotiation: {mapping.commission_negotiation}")
 
-    print(f"\nLearning:")
+    print("\nLearning:")
     print(f"  Engines: {', '.join(mapping.enabled_learning_engines) or 'None'}")
 
-    print(f"\nEnsemble:")
+    print("\nEnsemble:")
     print(f"  Mode: {mapping.ensemble_mode}")
     print(f"  Min Strategies: {mapping.ensemble_min_strategies}")
     print(f"  Confidence Threshold: {mapping.ensemble_confidence_threshold:.1%}")
@@ -292,7 +292,7 @@ def example_convenience_function():
     # Use convenience function
     mapping = map_profile_to_strategies(profile)
 
-    print(f"\nQuick Mapping Result:")
+    print("\nQuick Mapping Result:")
     print(f"  Strategies: {', '.join(mapping.enabled_strategies)}")
     print(f"  Ensemble: {mapping.ensemble_mode}")
     print(f"  Risk Level: {mapping.risk_profile}/6")

@@ -36,7 +36,7 @@ logger = logging.getLogger(__name__)
 import sqlalchemy as sa
 from sqlalchemy.dialects.postgresql import JSONB, UUID as PGUUID
 from sqlalchemy.ext.hybrid import hybrid_property
-from sqlalchemy.orm import DeclarativeBase
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 
 class Base(DeclarativeBase):
@@ -112,36 +112,48 @@ class Account(Base):
     __tablename__ = "accounts"
 
     # Primary key
-    id: UUID = sa.Column(PGUUID(as_uuid=True), primary_key=True, default=uuid4)
+    id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), primary_key=True, default=uuid4)
 
     # Identification
-    user_id: UUID = sa.Column(PGUUID(as_uuid=True), nullable=False, index=True)
-    account_name: str = sa.Column(sa.String(100), nullable=False)
-    exchange_type: ExchangeType = sa.Column(sa.Enum(ExchangeType), nullable=False)
-    exchange_name: str = sa.Column(sa.String(100), nullable=False)  # "Binance", "Coinbase", "IBKR"
+    user_id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), nullable=False, index=True)
+    account_name: Mapped[str] = mapped_column(sa.String(100), nullable=False)
+    exchange_type: Mapped[ExchangeType] = mapped_column(sa.Enum(ExchangeType), nullable=False)
+    # Tipo de activo fiscal (Modelo 721/720); migración 0003 hace el backfill
+    asset_type: Mapped[AssetType] = mapped_column(sa.Enum(AssetType), nullable=False)
+    exchange_name: Mapped[str] = mapped_column(
+        sa.String(100), nullable=False
+    )  # "Binance", "Coinbase", "IBKR"
 
     # Currency
-    currency: str = sa.Column(sa.String(10), nullable=False)  # "BTC", "ETH", "EUR", "USD"
+    currency: Mapped[str] = mapped_column(
+        sa.String(10), nullable=False
+    )  # "BTC", "ETH", "EUR", "USD"
 
     # Account details (encrypted at rest)
-    api_key_encrypted: str | None = sa.Column(sa.Text, nullable=True)
-    api_secret_encrypted: str | None = sa.Column(sa.Text, nullable=True)
-    wallet_address: str | None = sa.Column(sa.String(255), nullable=True)  # For DEX/Wallets
+    api_key_encrypted: Mapped[str | None] = mapped_column(sa.Text, nullable=True)
+    api_secret_encrypted: Mapped[str | None] = mapped_column(sa.Text, nullable=True)
+    wallet_address: Mapped[str | None] = mapped_column(
+        sa.String(255), nullable=True
+    )  # For DEX/Wallets
 
     # Balance tracking
-    balance_cached: Decimal = sa.Column(sa.Numeric(36, 18), default=Decimal("0"))
-    balance_updated_at: datetime | None = sa.Column(sa.TIMESTAMP(timezone=True), nullable=True)
-    last_sync_at: datetime | None = sa.Column(sa.TIMESTAMP(timezone=True), nullable=True)
+    balance_cached: Mapped[Decimal] = mapped_column(sa.Numeric(36, 18), default=Decimal("0"))
+    balance_updated_at: Mapped[datetime | None] = mapped_column(
+        sa.TIMESTAMP(timezone=True), nullable=True
+    )
+    last_sync_at: Mapped[datetime | None] = mapped_column(
+        sa.TIMESTAMP(timezone=True), nullable=True
+    )
 
     # Metadata
-    is_active: bool = sa.Column(sa.Boolean, default=True)
-    created_at: datetime = sa.Column(
+    is_active: Mapped[bool] = mapped_column(sa.Boolean, default=True)
+    created_at: Mapped[datetime] = mapped_column(
         sa.TIMESTAMP(timezone=True), default=lambda: datetime.now(timezone.utc)
     )
-    closed_at: datetime | None = sa.Column(sa.TIMESTAMP(timezone=True), nullable=True)
+    closed_at: Mapped[datetime | None] = mapped_column(sa.TIMESTAMP(timezone=True), nullable=True)
 
     # JSONB for extra fields
-    meta_data: dict = sa.Column(JSONB, default=dict)
+    meta_data: Mapped[dict] = mapped_column(JSONB, default=dict)
 
     # Relationships
     transactions = sa.orm.relationship(
@@ -171,85 +183,105 @@ class Transaction(Base):
     __tablename__ = "transactions"
 
     # Primary key
-    id: UUID = sa.Column(PGUUID(as_uuid=True), primary_key=True, default=uuid4)
+    id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), primary_key=True, default=uuid4)
 
     # External ID (from exchange) - PREVENTS DUPLICATES
-    external_id: str = sa.Column(sa.String(255), nullable=False, index=True)
-    exchange_tx_id: str | None = sa.Column(sa.String(255), nullable=True)  # Raw TX hash for crypto
+    external_id: Mapped[str] = mapped_column(sa.String(255), nullable=False, index=True)
+    exchange_tx_id: Mapped[str | None] = mapped_column(
+        sa.String(255), nullable=True
+    )  # Raw TX hash for crypto
 
     # Account
-    account_id: UUID = sa.Column(PGUUID(as_uuid=True), sa.ForeignKey("accounts.id"), nullable=False)
+    account_id: Mapped[UUID] = mapped_column(
+        PGUUID(as_uuid=True), sa.ForeignKey("accounts.id"), nullable=False
+    )
     account = sa.orm.relationship(
         "Account", back_populates="transactions", foreign_keys="Transaction.account_id"
     )
 
     # Asset
-    asset_type: AssetType = sa.Column(sa.Enum(AssetType), nullable=False)
-    symbol: str = sa.Column(sa.String(20), nullable=False, index=True)  # "BTC", "AAPL", "EURUSD"
+    asset_type: Mapped[AssetType] = mapped_column(sa.Enum(AssetType), nullable=False)
+    symbol: Mapped[str] = mapped_column(
+        sa.String(20), nullable=False, index=True
+    )  # "BTC", "AAPL", "EURUSD"
 
     # Transaction details
-    tx_type: TransactionType = sa.Column(sa.Enum(TransactionType), nullable=False)
-    side: str | None = sa.Column(sa.String(10), nullable=True)  # "BUY", "SELL" (for trades)
+    tx_type: Mapped[TransactionType] = mapped_column(sa.Enum(TransactionType), nullable=False)
+    side: Mapped[str | None] = mapped_column(
+        sa.String(10), nullable=True
+    )  # "BUY", "SELL" (for trades)
 
     # Quantities - ALWAYS DECIMAL
-    quantity: Decimal = sa.Column(sa.Numeric(36, 18), nullable=False)
-    quantity_symbol: str = sa.Column(sa.String(20), nullable=False)  # "BTC", "USD"
+    quantity: Mapped[Decimal] = mapped_column(sa.Numeric(36, 18), nullable=False)
+    quantity_symbol: Mapped[str] = mapped_column(sa.String(20), nullable=False)  # "BTC", "USD"
 
     # Prices - ALWAYS DECIMAL
-    price: Decimal | None = sa.Column(sa.Numeric(36, 18), nullable=True)  # Unit price
-    total_value: Decimal | None = sa.Column(sa.Numeric(36, 18), nullable=True)  # quantity * price
+    price: Mapped[Decimal | None] = mapped_column(sa.Numeric(36, 18), nullable=True)  # Unit price
+    total_value: Mapped[Decimal | None] = mapped_column(
+        sa.Numeric(36, 18), nullable=True
+    )  # quantity * price
 
     # Fees - CRITICAL FOR TAX BASIS
-    fee_amount: Decimal = sa.Column(sa.Numeric(36, 18), default=Decimal("0"))
-    fee_currency: str = sa.Column(sa.String(10), nullable=False)
-    fee_included: bool = sa.Column(sa.Boolean, default=False)  # If fee is included in total_value
+    fee_amount: Mapped[Decimal] = mapped_column(sa.Numeric(36, 18), default=Decimal("0"))
+    fee_currency: Mapped[str] = mapped_column(sa.String(10), nullable=False)
+    fee_included: Mapped[bool] = mapped_column(
+        sa.Boolean, default=False
+    )  # If fee is included in total_value
 
     # Timestamps - TIMEZONE AWARE
-    occurred_at: datetime = sa.Column(sa.TIMESTAMP(timezone=True), nullable=False, index=True)
-    recorded_at: datetime = sa.Column(
+    occurred_at: Mapped[datetime] = mapped_column(
+        sa.TIMESTAMP(timezone=True), nullable=False, index=True
+    )
+    recorded_at: Mapped[datetime] = mapped_column(
         sa.TIMESTAMP(timezone=True), default=lambda: datetime.now(timezone.utc)
     )
 
     # Settlement (for stocks/forex)
-    settled_at: datetime | None = sa.Column(sa.TIMESTAMP(timezone=True), nullable=True)
-    settlement_date: datetime | None = sa.Column(sa.DATE, nullable=True)
+    settled_at: Mapped[datetime | None] = mapped_column(sa.TIMESTAMP(timezone=True), nullable=True)
+    settlement_date: Mapped[datetime | None] = mapped_column(sa.DATE, nullable=True)
 
     # FIFO linking
-    lot_id: UUID | None = sa.Column(PGUUID(as_uuid=True), sa.ForeignKey("lots.id"), nullable=True)
+    lot_id: Mapped[UUID | None] = mapped_column(
+        PGUUID(as_uuid=True), sa.ForeignKey("lots.id"), nullable=True
+    )
     lot = sa.orm.relationship(
         "Lot", back_populates="transactions", foreign_keys="Transaction.lot_id"
     )
 
     # Tax-related fields
-    is_taxable: bool = sa.Column(sa.Boolean, default=True)
-    tax_year: int = sa.Column(
+    is_taxable: Mapped[bool] = mapped_column(sa.Boolean, default=True)
+    tax_year: Mapped[int] = mapped_column(
         sa.Integer, nullable=True, index=True
     )  # For Modelo 721 annual filtering
 
     # Counterparty (for transfers)
-    from_account_id: UUID | None = sa.Column(
+    from_account_id: Mapped[UUID | None] = mapped_column(
         PGUUID(as_uuid=True), sa.ForeignKey("accounts.id"), nullable=True
     )
-    to_account_id: UUID | None = sa.Column(
+    to_account_id: Mapped[UUID | None] = mapped_column(
         PGUUID(as_uuid=True), sa.ForeignKey("accounts.id"), nullable=True
     )
-    from_address: str | None = sa.Column(sa.String(255), nullable=True)  # Crypto address
-    to_address: str | None = sa.Column(sa.String(255), nullable=True)  # Crypto address
+    from_address: Mapped[str | None] = mapped_column(
+        sa.String(255), nullable=True
+    )  # Crypto address
+    to_address: Mapped[str | None] = mapped_column(sa.String(255), nullable=True)  # Crypto address
 
     # Metadata
-    notes: str | None = sa.Column(sa.Text, nullable=True)
-    meta_data: dict = sa.Column(JSONB, default=dict)
+    notes: Mapped[str | None] = mapped_column(sa.Text, nullable=True)
+    meta_data: Mapped[dict] = mapped_column(JSONB, default=dict)
 
     # Audit fields
-    created_at: datetime = sa.Column(
+    created_at: Mapped[datetime] = mapped_column(
         sa.TIMESTAMP(timezone=True), default=lambda: datetime.now(timezone.utc)
     )
-    updated_at: datetime = sa.Column(
+    updated_at: Mapped[datetime] = mapped_column(
         sa.TIMESTAMP(timezone=True),
         default=lambda: datetime.now(timezone.utc),
         onupdate=lambda: datetime.now(timezone.utc),
     )
-    is_verified: bool = sa.Column(sa.Boolean, default=False)  # Verified against exchange API
+    is_verified: Mapped[bool] = mapped_column(
+        sa.Boolean, default=False
+    )  # Verified against exchange API
 
     __table_args__ = (
         sa.UniqueConstraint("external_id", "account_id", name="uq_tx_external_account"),
@@ -288,42 +320,46 @@ class Lot(Base):
     __tablename__ = "lots"
 
     # Primary key
-    id: UUID = sa.Column(PGUUID(as_uuid=True), primary_key=True, default=uuid4)
+    id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), primary_key=True, default=uuid4)
 
     # Account
-    account_id: UUID = sa.Column(PGUUID(as_uuid=True), sa.ForeignKey("accounts.id"), nullable=False)
+    account_id: Mapped[UUID] = mapped_column(
+        PGUUID(as_uuid=True), sa.ForeignKey("accounts.id"), nullable=False
+    )
     account = sa.orm.relationship("Account", back_populates="lots")
 
     # Asset
-    symbol: str = sa.Column(sa.String(20), nullable=False, index=True)
-    asset_type: AssetType = sa.Column(sa.Enum(AssetType), nullable=False)
+    symbol: Mapped[str] = mapped_column(sa.String(20), nullable=False, index=True)
+    asset_type: Mapped[AssetType] = mapped_column(sa.Enum(AssetType), nullable=False)
 
     # Original purchase (cost basis)
-    opening_transaction_id: UUID = sa.Column(
+    opening_transaction_id: Mapped[UUID] = mapped_column(
         PGUUID(as_uuid=True), sa.ForeignKey("transactions.id"), nullable=False
     )
-    quantity_opened: Decimal = sa.Column(sa.Numeric(36, 18), nullable=False)
-    cost_basis_open: Decimal = sa.Column(
+    quantity_opened: Mapped[Decimal] = mapped_column(sa.Numeric(36, 18), nullable=False)
+    cost_basis_open: Mapped[Decimal] = mapped_column(
         sa.Numeric(36, 18), nullable=False
     )  # Total cost (price + fees)
 
     # Current status
-    quantity_remaining: Decimal = sa.Column(sa.Numeric(36, 18), nullable=False)
-    status: LotStatus = sa.Column(sa.Enum(LotStatus), default=LotStatus.OPEN, nullable=False)
+    quantity_remaining: Mapped[Decimal] = mapped_column(sa.Numeric(36, 18), nullable=False)
+    status: Mapped[LotStatus] = mapped_column(
+        sa.Enum(LotStatus), default=LotStatus.OPEN, nullable=False
+    )
 
     # Realized gains (when closed)
-    realized_gain: Decimal | None = sa.Column(sa.Numeric(36, 18), nullable=True)
-    realized_loss: Decimal | None = sa.Column(sa.Numeric(36, 18), nullable=True)
+    realized_gain: Mapped[Decimal | None] = mapped_column(sa.Numeric(36, 18), nullable=True)
+    realized_loss: Mapped[Decimal | None] = mapped_column(sa.Numeric(36, 18), nullable=True)
 
     # Dates
-    opened_at: datetime = sa.Column(sa.TIMESTAMP(timezone=True), nullable=False)
-    closed_at: datetime | None = sa.Column(sa.TIMESTAMP(timezone=True), nullable=True)
+    opened_at: Mapped[datetime] = mapped_column(sa.TIMESTAMP(timezone=True), nullable=False)
+    closed_at: Mapped[datetime | None] = mapped_column(sa.TIMESTAMP(timezone=True), nullable=True)
 
     # Holding period (for tax classification)
-    holding_period_days: int | None = sa.Column(sa.Integer, nullable=True)
+    holding_period_days: Mapped[int | None] = mapped_column(sa.Integer, nullable=True)
 
     # Tax year (when closed)
-    tax_year_closed: int | None = sa.Column(sa.Integer, nullable=True)
+    tax_year_closed: Mapped[int | None] = mapped_column(sa.Integer, nullable=True)
 
     # Relationships
     transactions = sa.orm.relationship(
@@ -331,7 +367,7 @@ class Lot(Base):
     )
 
     # Metadata
-    meta_data: dict = sa.Column(JSONB, default=dict)
+    meta_data: Mapped[dict] = mapped_column(JSONB, default=dict)
 
     __table_args__ = (
         sa.Index("idx_lots_symbol_status", "symbol", "status"),
@@ -360,25 +396,37 @@ class BalanceSnapshot(Base):
     __tablename__ = "balance_snapshots"
 
     # Primary key
-    id: UUID = sa.Column(PGUUID(as_uuid=True), primary_key=True, default=uuid4)
+    id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), primary_key=True, default=uuid4)
 
     # Account
-    account_id: UUID = sa.Column(PGUUID(as_uuid=True), sa.ForeignKey("accounts.id"), nullable=False)
+    account_id: Mapped[UUID] = mapped_column(
+        PGUUID(as_uuid=True), sa.ForeignKey("accounts.id"), nullable=False
+    )
     account = sa.orm.relationship("Account", back_populates="balances")
 
     # Snapshot details
-    snapshot_type: str = sa.Column(sa.String(20), nullable=False)  # "eod", "monthly", "annual"
-    balance: Decimal = sa.Column(sa.Numeric(36, 18), nullable=False)
+    snapshot_type: Mapped[str] = mapped_column(
+        sa.String(20), nullable=False
+    )  # "eod", "monthly", "annual"
+    balance: Mapped[Decimal] = mapped_column(sa.Numeric(36, 18), nullable=False)
 
     # Valuation in EUR (for Modelo 721)
-    balance_eur: Decimal = sa.Column(sa.Numeric(36, 18), nullable=False)  # Converted to EUR
-    exchange_rate_eur: Decimal = sa.Column(sa.Numeric(18, 8), nullable=False)  # Rate used
+    balance_eur: Mapped[Decimal] = mapped_column(
+        sa.Numeric(36, 18), nullable=False
+    )  # Converted to EUR
+    exchange_rate_eur: Mapped[Decimal] = mapped_column(
+        sa.Numeric(18, 8), nullable=False
+    )  # Rate used
 
     # Timestamp
-    captured_at: datetime = sa.Column(sa.TIMESTAMP(timezone=True), nullable=False, index=True)
+    captured_at: Mapped[datetime] = mapped_column(
+        sa.TIMESTAMP(timezone=True), nullable=False, index=True
+    )
 
     # Source
-    source: str = sa.Column(sa.String(50), nullable=False)  # "api", "manual", "estimated"
+    source: Mapped[str] = mapped_column(
+        sa.String(50), nullable=False
+    )  # "api", "manual", "estimated"
 
     __table_args__ = (
         sa.Index("idx_balances_account_captured", "account_id", "captured_at"),
@@ -396,37 +444,41 @@ class TaxReport(Base):
     __tablename__ = "tax_reports"
 
     # Primary key
-    id: UUID = sa.Column(PGUUID(as_uuid=True), primary_key=True, default=uuid4)
+    id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), primary_key=True, default=uuid4)
 
     # User
-    user_id: UUID = sa.Column(PGUUID(as_uuid=True), nullable=False, index=True)
+    user_id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), nullable=False, index=True)
 
     # Report type
-    report_type: str = sa.Column(sa.String(20), nullable=False)  # "modelo_720", "modelo_721"
-    tax_year: int = sa.Column(sa.Integer, nullable=False)
+    report_type: Mapped[str] = mapped_column(
+        sa.String(20), nullable=False
+    )  # "modelo_720", "modelo_721"
+    tax_year: Mapped[int] = mapped_column(sa.Integer, nullable=False)
 
     # Report data (JSONB for flexibility)
-    report_data: dict = sa.Column(JSONB, nullable=False)
+    report_data: Mapped[dict] = mapped_column(JSONB, nullable=False)
 
     # Summary fields (for easy querying)
-    total_holdings_eur: Decimal = sa.Column(sa.Numeric(36, 18), nullable=False)
-    total_gain_eur: Decimal = sa.Column(sa.Numeric(36, 18), nullable=False)
-    total_loss_eur: Decimal = sa.Column(sa.Numeric(36, 18), nullable=False)
+    total_holdings_eur: Mapped[Decimal] = mapped_column(sa.Numeric(36, 18), nullable=False)
+    total_gain_eur: Mapped[Decimal] = mapped_column(sa.Numeric(36, 18), nullable=False)
+    total_loss_eur: Mapped[Decimal] = mapped_column(sa.Numeric(36, 18), nullable=False)
 
     # Status
-    status: str = sa.Column(sa.String(20), default="draft")  # "draft", "final", "filed"
-    is_amended: bool = sa.Column(sa.Boolean, default=False)
-    amended_from_id: UUID | None = sa.Column(PGUUID(as_uuid=True), nullable=True)
+    status: Mapped[str] = mapped_column(sa.String(20), default="draft")  # "draft", "final", "filed"
+    is_amended: Mapped[bool] = mapped_column(sa.Boolean, default=False)
+    amended_from_id: Mapped[UUID | None] = mapped_column(PGUUID(as_uuid=True), nullable=True)
 
     # Dates
-    report_date: datetime = sa.Column(sa.TIMESTAMP(timezone=True), nullable=False)  # As of date
-    generated_at: datetime = sa.Column(
+    report_date: Mapped[datetime] = mapped_column(
+        sa.TIMESTAMP(timezone=True), nullable=False
+    )  # As of date
+    generated_at: Mapped[datetime] = mapped_column(
         sa.TIMESTAMP(timezone=True), default=lambda: datetime.now(timezone.utc)
     )
-    filed_at: datetime | None = sa.Column(sa.TIMESTAMP(timezone=True), nullable=True)
+    filed_at: Mapped[datetime | None] = mapped_column(sa.TIMESTAMP(timezone=True), nullable=True)
 
     # Validation
-    checksum: str = sa.Column(sa.String(64), nullable=True)  # SHA-256 of report_data
+    checksum: Mapped[str] = mapped_column(sa.String(64), nullable=True)  # SHA-256 of report_data
 
     __table_args__ = (
         sa.UniqueConstraint(
@@ -730,6 +782,7 @@ class Modelo721Generator:
             .filter(
                 Account.user_id == user_id,
                 Account.asset_type == AssetType.CRYPTO,
+                # TODO(deuda): columna asset_type no existe aún en el modelo Account
                 Account.is_active,
             )
             .all()
@@ -829,12 +882,7 @@ class Modelo721Generator:
 # ALEMBIC MIGRATIONS
 # ============================================================================
 
-"""
-Ejecutar para crear las tablas:
-
-    alembic revision --autogenerate -m "Add FIFO tracking for Modelo 721"
-    alembic upgrade head
-
-Requisitos previos:
-    pip install sqlalchemy psycopg2-binary alembic
-"""
+# Nota de uso (alembic): ejecutar para crear las tablas --
+#   alembic revision --autogenerate -m "Add FIFO tracking for Modelo 721"
+#   alembic upgrade head
+# Requisitos: pip install sqlalchemy psycopg2-binary alembic

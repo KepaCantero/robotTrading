@@ -392,8 +392,8 @@ _memory_monitor: MemoryMonitor | None = None
 
 def get_memory_monitor(
     config: MemoryConfig | None = None,
-    state_saver: Callable[[], None] | None = None,
-    position_closer: Callable[[], None] | None = None,
+    state_saver: Callable[[], Awaitable[None]] | None = None,
+    position_closer: Callable[[], Awaitable[None]] | None = None,
 ) -> MemoryMonitor:
     """
     Get or create the global MemoryMonitor instance.

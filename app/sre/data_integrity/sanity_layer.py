@@ -1,6 +1,3 @@
-from __future__ import annotations
-
-# mypy: ignore-errors
 """
 Data Sanity Layer - Prevents "Flash Crash" Problem
 
@@ -36,6 +33,9 @@ Usage:
         logger.error("Price sanity check failed - NOT executing")
 """
 
+from __future__ import annotations
+
+# mypy: ignore-errors
 import asyncio
 import logging
 import statistics
@@ -291,16 +291,14 @@ class DataSanityLayer:
         try:
             async with aiosqlite.connect(self._get_db_path()) as db:
                 # Create table if not exists
-                await db.execute(
-                    """
+                await db.execute("""
                     CREATE TABLE IF NOT EXISTS price_cache (
                         symbol TEXT,
                         price REAL,
                         timestamp TEXT,
                         PRIMARY KEY (symbol, timestamp)
                     )
-                """
-                )
+                """)
 
                 # Get recent prices
                 cutoff = (datetime.now(timezone.utc) - timedelta(minutes=minutes)).isoformat()

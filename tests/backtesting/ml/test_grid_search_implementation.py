@@ -19,7 +19,7 @@ class TestGridSearchImplementation:
     def test_grid_search_method_exists(self):
         """Test that run_grid_search_backtest method exists."""
         # This is a basic smoke test to ensure the method is implemented
-        assert hasattr(ComprehensiveBacktestRunner, 'run_grid_search_backtest')
+        assert hasattr(ComprehensiveBacktestRunner, "run_grid_search_backtest")
 
     def test_grid_search_has_correct_signature(self):
         """Test that run_grid_search_backtest has the correct signature."""
@@ -28,11 +28,11 @@ class TestGridSearchImplementation:
         sig = inspect.signature(ComprehensiveBacktestRunner.run_grid_search_backtest)
         # Should only take 'self' as parameter
         params = list(sig.parameters.keys())
-        assert params == ['self']
+        assert params == ["self"]
 
-    @patch('app.backtesting.comprehensive_backtest_runner.TrainValTestSplitter')
-    @patch('app.backtesting.comprehensive_backtest_runner.MultipleTestingCorrector')
-    @patch('app.backtesting.comprehensive_backtest_runner.ModularMomentumStrategy')
+    @patch("app.backtesting.comprehensive_backtest_runner.TrainValTestSplitter")
+    @patch("app.backtesting.comprehensive_backtest_runner.MultipleTestingCorrector")
+    @patch("app.backtesting.comprehensive_backtest_runner.ModularMomentumStrategy")
     def test_grid_search_uses_train_val_test_split(
         self, mock_strategy, mock_corrector, mock_splitter
     ):
@@ -51,17 +51,17 @@ class TestGridSearchImplementation:
         mock_corrector.return_value = mock_corrector_instance
 
         # Mock the runner
-        with patch.object(ComprehensiveBacktestRunner, '__init__', lambda self, x: None):
-            runner = ComprehensiveBacktestRunner('dummy_config.yaml')
+        with patch.object(ComprehensiveBacktestRunner, "__init__", lambda self, x: None):
+            runner = ComprehensiveBacktestRunner("dummy_config.yaml")
 
             # Setup required attributes
             runner.raw_config = {
-                'input': {
-                    'start_date': '2020-01-01',
-                    'end_date': '2023-12-31',
-                    'initial_capital': '100000',
+                "input": {
+                    "start_date": "2020-01-01",
+                    "end_date": "2023-12-31",
+                    "initial_capital": "100000",
                 },
-                'backtests': {'grid_search': {}},
+                "backtests": {"grid_search": {}},
             }
             runner.quotes = [Mock(timestamp=datetime(2020, 1, 1))] * 140
             runner.parallel_enabled = False
@@ -78,16 +78,16 @@ class TestGridSearchImplementation:
             # Mock helper methods
             runner._create_strategy_config = Mock(
                 return_value={
-                    'type': 'modular_momentum',
-                    'preset': 'custom',
-                    'modules': {},
-                    'thresholds': {},
-                    'presets': {'custom': {}},
+                    "type": "modular_momentum",
+                    "preset": "custom",
+                    "modules": {},
+                    "thresholds": {},
+                    "presets": {"custom": {}},
                 }
             )
             runner._run_backtest_with_quotes = Mock()
             runner._save_test_audit_and_weights = Mock()
-            runner._get_strategy_name = Mock(return_value='test_strategy')
+            runner._get_strategy_name = Mock(return_value="test_strategy")
 
             # Mock backtest results
             mock_backtest_result = Mock()
@@ -113,7 +113,7 @@ class TestGridSearchImplementation:
 
     def test_grid_search_has_static_evaluator(self):
         """Test that _evaluate_param_set_static method exists for parallel execution."""
-        assert hasattr(ComprehensiveBacktestRunner, '_evaluate_param_set_static')
+        assert hasattr(ComprehensiveBacktestRunner, "_evaluate_param_set_static")
 
     def test_grid_search_static_evaluator_is_static(self):
         """Test that _evaluate_param_set_static is a static method."""
@@ -121,7 +121,7 @@ class TestGridSearchImplementation:
 
         ComprehensiveBacktestRunner._evaluate_param_set_static
         assert isinstance(
-            inspect.getattr_static(ComprehensiveBacktestRunner, '_evaluate_param_set_static'),
+            inspect.getattr_static(ComprehensiveBacktestRunner, "_evaluate_param_set_static"),
             staticmethod,
         )
 
@@ -152,21 +152,21 @@ class TestGridSearchImplementation:
         """Test that grid search returns results with expected structure."""
         # This test verifies the expected keys in the result dictionary
         expected_keys = [
-            'test_type',
-            'test_name',
-            'best_params',
-            'train_sharpe',
-            'val_sharpe',
-            'test_sharpe',
-            'val_return',
-            'test_return',
-            'sharpe_degradation_pct',
-            'return_degradation_pct',
-            'num_combinations_tested',
-            'adjusted_confidence',
-            'oos_validation_passed',
-            'all_iterations',
-            'data_split',
+            "test_type",
+            "test_name",
+            "best_params",
+            "train_sharpe",
+            "val_sharpe",
+            "test_sharpe",
+            "val_return",
+            "test_return",
+            "sharpe_degradation_pct",
+            "return_degradation_pct",
+            "num_combinations_tested",
+            "adjusted_confidence",
+            "oos_validation_passed",
+            "all_iterations",
+            "data_split",
         ]
 
         # The keys are defined in the implementation
@@ -182,13 +182,13 @@ class TestGridSearchCompliance:
         # The implementation should use TrainValTestSplitter
         from app.backtesting.data_split import TrainValTestSplitter
 
-        assert hasattr(TrainValTestSplitter, 'split_data')
+        assert hasattr(TrainValTestSplitter, "split_data")
 
     def test_uses_multiple_testing_correction(self):
         """Verify López de Prado rule: multiple testing correction."""
         from app.backtesting.data_split import MultipleTestingCorrector
 
-        assert hasattr(MultipleTestingCorrector, 'bonferroni_correction')
+        assert hasattr(MultipleTestingCorrector, "bonferroni_correction")
 
     def test_uses_oos_validation(self):
         """Verify MLOps rule: out-of-sample validation."""
@@ -212,10 +212,10 @@ class TestGridSearchCompliance:
 
         source = inspect.getsource(ComprehensiveBacktestRunner.run_grid_search_backtest)
 
-        assert 'try:' in source
-        assert 'except' in source
-        assert 'logger.error' in source
+        assert "try:" in source
+        assert "except" in source
+        assert "logger.error" in source
 
 
-if __name__ == '__main__':
-    pytest.main([__file__, '-v'])
+if __name__ == "__main__":
+    pytest.main([__file__, "-v"])

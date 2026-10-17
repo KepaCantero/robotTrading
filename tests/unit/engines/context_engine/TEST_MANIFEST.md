@@ -3,8 +3,8 @@
 ## Test Inventory
 
 ### 1. Clustering Regime Detector Tests
-**File:** `test_clustering_regime_detector.py`  
-**Tests:** 32  
+**File:** `test_clustering_regime_detector.py`
+**Tests:** 32
 **Classes:** 8
 
 ```
@@ -59,8 +59,8 @@ TestPerformance
 ```
 
 ### 2. Correlation Regime Detector Tests
-**File:** `test_correlation_regime_detector.py`  
-**Tests:** 34  
+**File:** `test_correlation_regime_detector.py`
+**Tests:** 34
 **Classes:** 10
 
 ```
@@ -119,8 +119,8 @@ TestPerformance
 ```
 
 ### 3. HMM Regime Detector Tests
-**File:** `test_hmm_regime_detector.py`  
-**Tests:** 40  
+**File:** `test_hmm_regime_detector.py`
+**Tests:** 40
 **Classes:** 11
 
 ```
@@ -188,8 +188,8 @@ TestErrorHandling
 ```
 
 ### 4. Correlation Network Analyzer Tests
-**File:** `test_correlation_network_analyzer.py`  
-**Tests:** 24  
+**File:** `test_correlation_network_analyzer.py`
+**Tests:** 24
 **Classes:** 8
 
 ```
@@ -237,8 +237,8 @@ TestPerformance
 ```
 
 ### 5. GARCH Analyzer Tests
-**File:** `test_garch_analyzer.py`  
-**Tests:** 35  
+**File:** `test_garch_analyzer.py`
+**Tests:** 35
 **Classes:** 10
 
 ```
@@ -299,8 +299,8 @@ TestModelParameters
 ```
 
 ### 6. Structural Change Detector Tests
-**File:** `test_structural_change_detector.py`  
-**Tests:** 48  
+**File:** `test_structural_change_detector.py`
+**Tests:** 48
 **Classes:** 12
 
 ```
@@ -378,8 +378,8 @@ TestBreakpointHandling
 ```
 
 ### 7. Integration Tests
-**File:** `test_context_engine_integration.py`  
-**Tests:** 16  
+**File:** `test_context_engine_integration.py`
+**Tests:** 16
 **Classes:** 8
 
 ```

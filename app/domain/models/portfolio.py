@@ -343,8 +343,8 @@ class AssetUniverse(BaseModel):
     broker: str = Field(..., description="Broker identifier")
     asset_class: AssetClass = Field(..., description="Asset class")
     symbols: list[str] = Field(..., description="List of supported symbols")
-    min_volume: Decimal | None = Field(None, description="Minimum daily volume requirement")
-    max_spread: Decimal | None = Field(None, description="Maximum bid-ask spread")
+    min_volume: Decimal | None = Field(default=None, description="Minimum daily volume requirement")
+    max_spread: Decimal | None = Field(default=None, description="Maximum bid-ask spread")
 
     def is_supported(self, symbol: str) -> bool:
         """Check if a symbol is supported in this universe."""
@@ -368,8 +368,8 @@ class CircuitBreaker(BaseModel):
     )
     error_count: int = Field(default=0, description="Consecutive error count")
     max_errors: int = Field(default=3, description="Maximum errors before triggering")
-    last_error_time: datetime | None = Field(None, description="Last error timestamp")
-    last_success_time: datetime | None = Field(None, description="Last success timestamp")
+    last_error_time: datetime | None = Field(default=None, description="Last error timestamp")
+    last_success_time: datetime | None = Field(default=None, description="Last success timestamp")
     cooldown_seconds: int = Field(default=300, description="Cooldown period in seconds")
     success_count: int = Field(default=0, description="Consecutive success count")
     success_threshold: int = Field(

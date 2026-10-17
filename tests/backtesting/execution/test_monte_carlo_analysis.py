@@ -336,9 +336,9 @@ class TestAdvancedBacktestingMethods:
             # same-bar fills (10-seed t drops from ~1.13 to ~0.91). The old
             # |t| > 1.0 cutoff was a small-sample artifact, so we use a
             # weaker non-zero edge check here.
-            assert (
-                abs(t_statistic) > 0.5
-            ), f"Returns not statistically significant: t={t_statistic:.3f}"
+            assert abs(t_statistic) > 0.5, (
+                f"Returns not statistically significant: t={t_statistic:.3f}"
+            )
 
         # Verify that results show variation (not all identical)
         assert std_return > 0, "Standard deviation should be positive for variable data"
@@ -402,9 +402,9 @@ class TestAdvancedBacktestingMethods:
         # For normal-ish data, ~90% of data should be between 5th-95th percentiles
         between_percentiles = sum(1 for r in returns if percentile_5 <= r <= percentile_95)
         ratio = between_percentiles / len(returns)
-        assert (
-            0.85 <= ratio <= 0.95
-        ), f"~90% of data should be between 5th-95th percentiles, got {ratio:.2%}"
+        assert 0.85 <= ratio <= 0.95, (
+            f"~90% of data should be between 5th-95th percentiles, got {ratio:.2%}"
+        )
 
     def test_trade_randomization(self, config, default_symbol):
         """
@@ -466,9 +466,9 @@ class TestAdvancedBacktestingMethods:
 
         # Verify that original strategy outperforms randomized versions
         # (This tests if the strategy has skill vs. luck)
-        assert (
-            performance_difference > -50
-        ), f"Original strategy should not significantly underperform randomized: diff={performance_difference:.2f}%"
+        assert performance_difference > -50, (
+            f"Original strategy should not significantly underperform randomized: diff={performance_difference:.2f}%"
+        )
 
         # Check if there's variation in randomized results
         assert std_randomized_return > 0, "Randomized results should show variation"
@@ -521,9 +521,9 @@ class TestAdvancedBacktestingMethods:
         # Original result should be within reasonable range of bootstrap distribution
         # (not necessarily exact CI due to resampling variance)
         original_return_float = float(original_result.total_return)
-        assert (
-            ci_lower - 20 <= original_return_float <= ci_upper + 20
-        ), f"Original result {original_return_float:.2f}% too far from bootstrap CI [{ci_lower:.2f}%, {ci_upper:.2f}%]"
+        assert ci_lower - 20 <= original_return_float <= ci_upper + 20, (
+            f"Original result {original_return_float:.2f}% too far from bootstrap CI [{ci_lower:.2f}%, {ci_upper:.2f}%]"
+        )
 
     def test_regime_analysis(self, config):
         """
@@ -640,9 +640,9 @@ class TestAdvancedBacktestingMethods:
 
             # Verify results are within reasonable bounds
             for result in float_results:
-                assert (
-                    result > -100
-                ), f"Parameter {param_name} produces catastrophic loss: {result:.2f}%"
+                assert result > -100, (
+                    f"Parameter {param_name} produces catastrophic loss: {result:.2f}%"
+                )
 
     def test_sma_crossover_signal_generation(self, config, default_symbol):
         """
@@ -748,9 +748,9 @@ class TestAdvancedBacktestingMethods:
         # Assertion 3: For normal-ish data, ~90% should be between 5th-95th percentiles
         between_percentiles = sum(1 for r in returns if percentile_5 <= r <= percentile_95)
         ratio = between_percentiles / len(returns)
-        assert (
-            0.85 <= ratio <= 0.95
-        ), f"~90% of data should be between 5th-95th percentiles, got {ratio:.2%}"
+        assert 0.85 <= ratio <= 0.95, (
+            f"~90% of data should be between 5th-95th percentiles, got {ratio:.2%}"
+        )
 
         # Assertion 4: Mean should be within reasonable range
         assert -0.5 < mean_return < 0.5, f"Mean return should be reasonable: {mean_return:.2%}"

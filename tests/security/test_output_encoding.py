@@ -47,7 +47,7 @@ class TestOutputEncoder:
     def test_encode_for_html_attribute(self):
         """Test HTML attribute encoding."""
         encoder = OutputEncoder()
-        result = encoder.encode_for_html_attribute('" onclick="alert(\'xss\')')
+        result = encoder.encode_for_html_attribute("\" onclick=\"alert('xss')")
         assert "&quot;" in result
         assert "&#x27;" in result
 

@@ -12,6 +12,7 @@ Domain: Infrastructure
 - `contextlib`
 - `logging`
 - `sqlalchemy`
+- `sqlalchemy.engine`
 - `sqlalchemy.exc`
 - `sqlalchemy.ext.asyncio`
 - `sqlalchemy.ext.declarative`

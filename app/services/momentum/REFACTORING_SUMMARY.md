@@ -184,6 +184,7 @@ rsi = calculator.calculate_rsi(prices, 14)
 ```python
 from app.services.momentum.protocols import StorageBackend
 
+
 class DatabaseStorage(StorageBackend):
     async def save_analysis(self, analysis_id: str, analysis):
         # Custom database implementation

@@ -48,7 +48,7 @@ def low_correlation_matrix():
 @pytest.fixture
 def sample_symbols():
     """Generate sample symbol list."""
-    return ['AAPL', 'MSFT', 'GOOGL', 'AMZN']
+    return ["AAPL", "MSFT", "GOOGL", "AMZN"]
 
 
 @pytest.fixture
@@ -68,7 +68,7 @@ def custom_threshold_analyzer():
         CorrelationNetworkAnalyzer,
     )
 
-    return CorrelationNetworkAnalyzer(config={'threshold': 0.7})
+    return CorrelationNetworkAnalyzer(config={"threshold": 0.7})
 
 
 @pytest.mark.unit
@@ -91,7 +91,7 @@ class TestCorrelationNetworkAnalyzerInit:
             CorrelationNetworkAnalyzer,
         )
 
-        config = {'threshold': 0.8}
+        config = {"threshold": 0.8}
         analyzer = CorrelationNetworkAnalyzer(config=config)
 
         assert analyzer.threshold == 0.8
@@ -101,12 +101,12 @@ class TestCorrelationNetworkAnalyzerInit:
 class TestAnalyzeNetwork:
     """Test network analysis functionality."""
 
-    @patch('app.engines.context_engine.correlation_analyzers.correlation_network_analyzer.nx.Graph')
+    @patch("app.engines.context_engine.correlation_analyzers.correlation_network_analyzer.nx.Graph")
     @patch(
-        'app.engines.context_engine.correlation_analyzers.correlation_network_analyzer.nx.degree_centrality'
+        "app.engines.context_engine.correlation_analyzers.correlation_network_analyzer.nx.degree_centrality"
     )
     @patch(
-        'app.engines.context_engine.correlation_analyzers.correlation_network_analyzer.nx.community.greedy_modularity_communities'
+        "app.engines.context_engine.correlation_analyzers.correlation_network_analyzer.nx.community.greedy_modularity_communities"
     )
     def test_analyze_network_basic(
         self,
@@ -122,23 +122,23 @@ class TestAnalyzeNetwork:
         mock_graph.return_value = mock_graph_instance
         mock_graph_instance.number_of_nodes.return_value = 4
         mock_graph_instance.number_of_edges.return_value = 3
-        mock_centrality.return_value = {'AAPL': 0.8, 'MSFT': 0.7, 'GOOGL': 0.6, 'AMZN': 0.5}
-        mock_communities.return_value = [({'AAPL', 'MSFT'},), ({'GOOGL', 'AMZN'},)]
+        mock_centrality.return_value = {"AAPL": 0.8, "MSFT": 0.7, "GOOGL": 0.6, "AMZN": 0.5}
+        mock_communities.return_value = [({"AAPL", "MSFT"},), ({"GOOGL", "AMZN"},)]
 
         result = analyzer.analyze_network(sample_correlation_matrix, sample_symbols)
 
         assert isinstance(result, dict)
-        assert 'centrality' in result
-        assert 'clusters' in result
-        assert 'num_nodes' in result
-        assert 'num_edges' in result
+        assert "centrality" in result
+        assert "clusters" in result
+        assert "num_nodes" in result
+        assert "num_edges" in result
 
-    @patch('app.engines.context_engine.correlation_analyzers.correlation_network_analyzer.nx.Graph')
+    @patch("app.engines.context_engine.correlation_analyzers.correlation_network_analyzer.nx.Graph")
     @patch(
-        'app.engines.context_engine.correlation_analyzers.correlation_network_analyzer.nx.degree_centrality'
+        "app.engines.context_engine.correlation_analyzers.correlation_network_analyzer.nx.degree_centrality"
     )
     @patch(
-        'app.engines.context_engine.correlation_analyzers.correlation_network_analyzer.nx.community.greedy_modularity_communities'
+        "app.engines.context_engine.correlation_analyzers.correlation_network_analyzer.nx.community.greedy_modularity_communities"
     )
     def test_analyze_network_with_high_correlation(
         self,
@@ -161,16 +161,16 @@ class TestAnalyzeNetwork:
 
         result = analyzer.analyze_network(high_correlation_matrix, sample_symbols)
 
-        assert result['num_nodes'] == 4
+        assert result["num_nodes"] == 4
         # With high correlation, should have more edges
-        assert result['num_edges'] > 0
+        assert result["num_edges"] > 0
 
-    @patch('app.engines.context_engine.correlation_analyzers.correlation_network_analyzer.nx.Graph')
+    @patch("app.engines.context_engine.correlation_analyzers.correlation_network_analyzer.nx.Graph")
     @patch(
-        'app.engines.context_engine.correlation_analyzers.correlation_network_analyzer.nx.degree_centrality'
+        "app.engines.context_engine.correlation_analyzers.correlation_network_analyzer.nx.degree_centrality"
     )
     @patch(
-        'app.engines.context_engine.correlation_analyzers.correlation_network_analyzer.nx.community.greedy_modularity_communities'
+        "app.engines.context_engine.correlation_analyzers.correlation_network_analyzer.nx.community.greedy_modularity_communities"
     )
     def test_analyze_network_with_low_correlation(
         self,
@@ -191,16 +191,16 @@ class TestAnalyzeNetwork:
 
         result = analyzer.analyze_network(low_correlation_matrix, sample_symbols)
 
-        assert result['num_nodes'] == 4
+        assert result["num_nodes"] == 4
         # With low correlation, should have fewer edges
-        assert result['num_edges'] == 0
+        assert result["num_edges"] == 0
 
-    @patch('app.engines.context_engine.correlation_analyzers.correlation_network_analyzer.nx.Graph')
+    @patch("app.engines.context_engine.correlation_analyzers.correlation_network_analyzer.nx.Graph")
     @patch(
-        'app.engines.context_engine.correlation_analyzers.correlation_network_analyzer.nx.degree_centrality'
+        "app.engines.context_engine.correlation_analyzers.correlation_network_analyzer.nx.degree_centrality"
     )
     @patch(
-        'app.engines.context_engine.correlation_analyzers.correlation_network_analyzer.nx.community.greedy_modularity_communities'
+        "app.engines.context_engine.correlation_analyzers.correlation_network_analyzer.nx.community.greedy_modularity_communities"
     )
     def test_analyze_network_returns_centrality_dict(
         self,
@@ -216,21 +216,21 @@ class TestAnalyzeNetwork:
         mock_graph.return_value = mock_graph_instance
         mock_graph_instance.number_of_nodes.return_value = 4
         mock_graph_instance.number_of_edges.return_value = 3
-        expected_centrality = {'AAPL': 0.8, 'MSFT': 0.7, 'GOOGL': 0.6, 'AMZN': 0.5}
+        expected_centrality = {"AAPL": 0.8, "MSFT": 0.7, "GOOGL": 0.6, "AMZN": 0.5}
         mock_centrality.return_value = expected_centrality
-        mock_communities.return_value = [({'AAPL', 'MSFT'},), ({'GOOGL', 'AMZN'},)]
+        mock_communities.return_value = [({"AAPL", "MSFT"},), ({"GOOGL", "AMZN"},)]
 
         result = analyzer.analyze_network(sample_correlation_matrix, sample_symbols)
 
-        assert isinstance(result['centrality'], dict)
-        assert len(result['centrality']) == len(sample_symbols)
+        assert isinstance(result["centrality"], dict)
+        assert len(result["centrality"]) == len(sample_symbols)
 
-    @patch('app.engines.context_engine.correlation_analyzers.correlation_network_analyzer.nx.Graph')
+    @patch("app.engines.context_engine.correlation_analyzers.correlation_network_analyzer.nx.Graph")
     @patch(
-        'app.engines.context_engine.correlation_analyzers.correlation_network_analyzer.nx.degree_centrality'
+        "app.engines.context_engine.correlation_analyzers.correlation_network_analyzer.nx.degree_centrality"
     )
     @patch(
-        'app.engines.context_engine.correlation_analyzers.correlation_network_analyzer.nx.community.greedy_modularity_communities'
+        "app.engines.context_engine.correlation_analyzers.correlation_network_analyzer.nx.community.greedy_modularity_communities"
     )
     def test_analyze_network_returns_clusters(
         self,
@@ -247,24 +247,24 @@ class TestAnalyzeNetwork:
         mock_graph_instance.number_of_nodes.return_value = 4
         mock_graph_instance.number_of_edges.return_value = 3
         mock_centrality.return_value = dict.fromkeys(sample_symbols, 0.5)
-        mock_communities.return_value = [({'AAPL', 'MSFT'},), ({'GOOGL', 'AMZN'},)]
+        mock_communities.return_value = [({"AAPL", "MSFT"},), ({"GOOGL", "AMZN"},)]
 
         result = analyzer.analyze_network(sample_correlation_matrix, sample_symbols)
 
-        assert isinstance(result['clusters'], list)
-        assert all(isinstance(cluster, list) for cluster in result['clusters'])
+        assert isinstance(result["clusters"], list)
+        assert all(isinstance(cluster, list) for cluster in result["clusters"])
 
 
 @pytest.mark.unit
 class TestThresholdFiltering:
     """Test threshold-based edge filtering."""
 
-    @patch('app.engines.context_engine.correlation_analyzers.correlation_network_analyzer.nx.Graph')
+    @patch("app.engines.context_engine.correlation_analyzers.correlation_network_analyzer.nx.Graph")
     @patch(
-        'app.engines.context_engine.correlation_analyzers.correlation_network_analyzer.nx.degree_centrality'
+        "app.engines.context_engine.correlation_analyzers.correlation_network_analyzer.nx.degree_centrality"
     )
     @patch(
-        'app.engines.context_engine.correlation_analyzers.correlation_network_analyzer.nx.community.greedy_modularity_communities'
+        "app.engines.context_engine.correlation_analyzers.correlation_network_analyzer.nx.community.greedy_modularity_communities"
     )
     def test_default_threshold_filters_edges(
         self,
@@ -287,14 +287,14 @@ class TestThresholdFiltering:
 
         result = analyzer.analyze_network(sample_correlation_matrix, sample_symbols)
 
-        assert result['num_edges'] >= 0
+        assert result["num_edges"] >= 0
 
-    @patch('app.engines.context_engine.correlation_analyzers.correlation_network_analyzer.nx.Graph')
+    @patch("app.engines.context_engine.correlation_analyzers.correlation_network_analyzer.nx.Graph")
     @patch(
-        'app.engines.context_engine.correlation_analyzers.correlation_network_analyzer.nx.degree_centrality'
+        "app.engines.context_engine.correlation_analyzers.correlation_network_analyzer.nx.degree_centrality"
     )
     @patch(
-        'app.engines.context_engine.correlation_analyzers.correlation_network_analyzer.nx.community.greedy_modularity_communities'
+        "app.engines.context_engine.correlation_analyzers.correlation_network_analyzer.nx.community.greedy_modularity_communities"
     )
     def test_custom_threshold_filters_edges(
         self,
@@ -318,19 +318,19 @@ class TestThresholdFiltering:
             sample_correlation_matrix, sample_symbols
         )
 
-        assert result['num_edges'] >= 0
+        assert result["num_edges"] >= 0
 
 
 @pytest.mark.unit
 class TestGraphConstruction:
     """Test graph construction from correlation matrix."""
 
-    @patch('app.engines.context_engine.correlation_analyzers.correlation_network_analyzer.nx.Graph')
+    @patch("app.engines.context_engine.correlation_analyzers.correlation_network_analyzer.nx.Graph")
     @patch(
-        'app.engines.context_engine.correlation_analyzers.correlation_network_analyzer.nx.degree_centrality'
+        "app.engines.context_engine.correlation_analyzers.correlation_network_analyzer.nx.degree_centrality"
     )
     @patch(
-        'app.engines.context_engine.correlation_analyzers.correlation_network_analyzer.nx.community.greedy_modularity_communities'
+        "app.engines.context_engine.correlation_analyzers.correlation_network_analyzer.nx.community.greedy_modularity_communities"
     )
     def test_graph_adds_all_nodes(
         self,
@@ -354,12 +354,12 @@ class TestGraphConstruction:
         # Check that add_nodes_from was called
         mock_graph_instance.add_nodes_from.assert_called_once_with(sample_symbols)
 
-    @patch('app.engines.context_engine.correlation_analyzers.correlation_network_analyzer.nx.Graph')
+    @patch("app.engines.context_engine.correlation_analyzers.correlation_network_analyzer.nx.Graph")
     @patch(
-        'app.engines.context_engine.correlation_analyzers.correlation_network_analyzer.nx.degree_centrality'
+        "app.engines.context_engine.correlation_analyzers.correlation_network_analyzer.nx.degree_centrality"
     )
     @patch(
-        'app.engines.context_engine.correlation_analyzers.correlation_network_analyzer.nx.community.greedy_modularity_communities'
+        "app.engines.context_engine.correlation_analyzers.correlation_network_analyzer.nx.community.greedy_modularity_communities"
     )
     def test_graph_adds_edges_above_threshold(
         self,
@@ -388,12 +388,12 @@ class TestGraphConstruction:
 class TestEdgeCases:
     """Test edge cases and error handling."""
 
-    @patch('app.engines.context_engine.correlation_analyzers.correlation_network_analyzer.nx.Graph')
+    @patch("app.engines.context_engine.correlation_analyzers.correlation_network_analyzer.nx.Graph")
     @patch(
-        'app.engines.context_engine.correlation_analyzers.correlation_network_analyzer.nx.degree_centrality'
+        "app.engines.context_engine.correlation_analyzers.correlation_network_analyzer.nx.degree_centrality"
     )
     @patch(
-        'app.engines.context_engine.correlation_analyzers.correlation_network_analyzer.nx.community.greedy_modularity_communities'
+        "app.engines.context_engine.correlation_analyzers.correlation_network_analyzer.nx.community.greedy_modularity_communities"
     )
     def test_empty_correlation_matrix(
         self, mock_communities, mock_centrality, mock_graph, analyzer
@@ -412,39 +412,39 @@ class TestEdgeCases:
         result = analyzer.analyze_network(empty_matrix, empty_symbols)
 
         assert isinstance(result, dict)
-        assert result['num_nodes'] == 0
-        assert result['num_edges'] == 0
+        assert result["num_nodes"] == 0
+        assert result["num_edges"] == 0
 
-    @patch('app.engines.context_engine.correlation_analyzers.correlation_network_analyzer.nx.Graph')
+    @patch("app.engines.context_engine.correlation_analyzers.correlation_network_analyzer.nx.Graph")
     @patch(
-        'app.engines.context_engine.correlation_analyzers.correlation_network_analyzer.nx.degree_centrality'
+        "app.engines.context_engine.correlation_analyzers.correlation_network_analyzer.nx.degree_centrality"
     )
     @patch(
-        'app.engines.context_engine.correlation_analyzers.correlation_network_analyzer.nx.community.greedy_modularity_communities'
+        "app.engines.context_engine.correlation_analyzers.correlation_network_analyzer.nx.community.greedy_modularity_communities"
     )
     def test_single_asset(self, mock_communities, mock_centrality, mock_graph, analyzer):
         """Test with single asset (no edges possible)."""
         single_matrix = np.array([[1.0]])
-        single_symbols = ['AAPL']
+        single_symbols = ["AAPL"]
 
         mock_graph_instance = MagicMock()
         mock_graph.return_value = mock_graph_instance
         mock_graph_instance.number_of_nodes.return_value = 1
         mock_graph_instance.number_of_edges.return_value = 0
-        mock_centrality.return_value = {'AAPL': 0.0}
+        mock_centrality.return_value = {"AAPL": 0.0}
         mock_communities.return_value = []
 
         result = analyzer.analyze_network(single_matrix, single_symbols)
 
-        assert result['num_nodes'] == 1
-        assert result['num_edges'] == 0
+        assert result["num_nodes"] == 1
+        assert result["num_edges"] == 0
 
-    @patch('app.engines.context_engine.correlation_analyzers.correlation_network_analyzer.nx.Graph')
+    @patch("app.engines.context_engine.correlation_analyzers.correlation_network_analyzer.nx.Graph")
     @patch(
-        'app.engines.context_engine.correlation_analyzers.correlation_network_analyzer.nx.degree_centrality'
+        "app.engines.context_engine.correlation_analyzers.correlation_network_analyzer.nx.degree_centrality"
     )
     @patch(
-        'app.engines.context_engine.correlation_analyzers.correlation_network_analyzer.nx.community.greedy_modularity_communities'
+        "app.engines.context_engine.correlation_analyzers.correlation_network_analyzer.nx.community.greedy_modularity_communities"
     )
     def test_nan_in_correlation_matrix(
         self, mock_communities, mock_centrality, mock_graph, analyzer, sample_symbols
@@ -452,9 +452,9 @@ class TestEdgeCases:
         """Test with NaN values in correlation matrix."""
         matrix_with_nan = np.array(
             [
-                [1.0, 0.8, float('nan'), 0.2],
+                [1.0, 0.8, float("nan"), 0.2],
                 [0.8, 1.0, 0.4, 0.1],
-                [float('nan'), 0.4, 1.0, 0.9],
+                [float("nan"), 0.4, 1.0, 0.9],
                 [0.2, 0.1, 0.9, 1.0],
             ]
         )
@@ -470,7 +470,7 @@ class TestEdgeCases:
         result = analyzer.analyze_network(matrix_with_nan, sample_symbols)
         assert isinstance(result, dict)
 
-    @patch('app.engines.context_engine.correlation_analyzers.correlation_network_analyzer.nx.Graph')
+    @patch("app.engines.context_engine.correlation_analyzers.correlation_network_analyzer.nx.Graph")
     def test_exception_handling(
         self, mock_graph, analyzer, sample_correlation_matrix, sample_symbols
     ):
@@ -480,7 +480,7 @@ class TestEdgeCases:
         result = analyzer.analyze_network(sample_correlation_matrix, sample_symbols)
 
         assert isinstance(result, dict)
-        assert 'error' in result
+        assert "error" in result
 
 
 @pytest.mark.unit
@@ -494,7 +494,7 @@ class TestPropertyBasedTests:
             CorrelationNetworkAnalyzer,
         )
 
-        analyzer = CorrelationNetworkAnalyzer(config={'threshold': threshold})
+        analyzer = CorrelationNetworkAnalyzer(config={"threshold": threshold})
         assert analyzer.threshold == threshold
 
     @pytest.mark.parametrize("n_assets", [2, 3, 5, 10, 20])
@@ -508,16 +508,16 @@ class TestPropertyBasedTests:
 
         # Create correlation matrix
         corr_matrix = np.eye(n_assets)
-        symbols = [f'Asset_{i}' for i in range(n_assets)]
+        symbols = [f"Asset_{i}" for i in range(n_assets)]
 
         with patch(
-            'app.engines.context_engine.correlation_analyzers.correlation_network_analyzer.nx.Graph'
+            "app.engines.context_engine.correlation_analyzers.correlation_network_analyzer.nx.Graph"
         ) as mock_graph:
             with patch(
-                'app.engines.context_engine.correlation_analyzers.correlation_network_analyzer.nx.degree_centrality'
+                "app.engines.context_engine.correlation_analyzers.correlation_network_analyzer.nx.degree_centrality"
             ) as mock_centrality:
                 with patch(
-                    'app.engines.context_engine.correlation_analyzers.correlation_network_analyzer.nx.community.greedy_modularity_communities'
+                    "app.engines.context_engine.correlation_analyzers.correlation_network_analyzer.nx.community.greedy_modularity_communities"
                 ) as mock_communities:
                     mock_graph_instance = MagicMock()
                     mock_graph.return_value = mock_graph_instance
@@ -528,19 +528,19 @@ class TestPropertyBasedTests:
 
                     result = analyzer.analyze_network(corr_matrix, symbols)
 
-                    assert result['num_nodes'] == n_assets
+                    assert result["num_nodes"] == n_assets
 
 
 @pytest.mark.unit
 class TestClustering:
     """Test community detection functionality."""
 
-    @patch('app.engines.context_engine.correlation_analyzers.correlation_network_analyzer.nx.Graph')
+    @patch("app.engines.context_engine.correlation_analyzers.correlation_network_analyzer.nx.Graph")
     @patch(
-        'app.engines.context_engine.correlation_analyzers.correlation_network_analyzer.nx.degree_centrality'
+        "app.engines.context_engine.correlation_analyzers.correlation_network_analyzer.nx.degree_centrality"
     )
     @patch(
-        'app.engines.context_engine.correlation_analyzers.correlation_network_analyzer.nx.community.greedy_modularity_communities'
+        "app.engines.context_engine.correlation_analyzers.correlation_network_analyzer.nx.community.greedy_modularity_communities"
     )
     def test_single_cluster(
         self,
@@ -564,14 +564,14 @@ class TestClustering:
 
         result = analyzer.analyze_network(sample_correlation_matrix, sample_symbols)
 
-        assert len(result['clusters']) == 1
+        assert len(result["clusters"]) == 1
 
-    @patch('app.engines.context_engine.correlation_analyzers.correlation_network_analyzer.nx.Graph')
+    @patch("app.engines.context_engine.correlation_analyzers.correlation_network_analyzer.nx.Graph")
     @patch(
-        'app.engines.context_engine.correlation_analyzers.correlation_network_analyzer.nx.degree_centrality'
+        "app.engines.context_engine.correlation_analyzers.correlation_network_analyzer.nx.degree_centrality"
     )
     @patch(
-        'app.engines.context_engine.correlation_analyzers.correlation_network_analyzer.nx.community.greedy_modularity_communities'
+        "app.engines.context_engine.correlation_analyzers.correlation_network_analyzer.nx.community.greedy_modularity_communities"
     )
     def test_multiple_clusters(
         self,
@@ -589,18 +589,18 @@ class TestClustering:
         mock_graph_instance.number_of_edges.return_value = 2
         mock_centrality.return_value = dict.fromkeys(sample_symbols, 0.5)
         # Two separate clusters
-        mock_communities.return_value = [({'AAPL', 'MSFT'},), ({'GOOGL', 'AMZN'},)]
+        mock_communities.return_value = [({"AAPL", "MSFT"},), ({"GOOGL", "AMZN"},)]
 
         result = analyzer.analyze_network(sample_correlation_matrix, sample_symbols)
 
-        assert len(result['clusters']) == 2
+        assert len(result["clusters"]) == 2
 
-    @patch('app.engines.context_engine.correlation_analyzers.correlation_network_analyzer.nx.Graph')
+    @patch("app.engines.context_engine.correlation_analyzers.correlation_network_analyzer.nx.Graph")
     @patch(
-        'app.engines.context_engine.correlation_analyzers.correlation_network_analyzer.nx.degree_centrality'
+        "app.engines.context_engine.correlation_analyzers.correlation_network_analyzer.nx.degree_centrality"
     )
     @patch(
-        'app.engines.context_engine.correlation_analyzers.correlation_network_analyzer.nx.community.greedy_modularity_communities'
+        "app.engines.context_engine.correlation_analyzers.correlation_network_analyzer.nx.community.greedy_modularity_communities"
     )
     def test_no_clusters(
         self,
@@ -621,19 +621,19 @@ class TestClustering:
 
         result = analyzer.analyze_network(low_correlation_matrix, sample_symbols)
 
-        assert len(result['clusters']) == 0
+        assert len(result["clusters"]) == 0
 
 
 @pytest.mark.unit
 class TestCentrality:
     """Test centrality calculation functionality."""
 
-    @patch('app.engines.context_engine.correlation_analyzers.correlation_network_analyzer.nx.Graph')
+    @patch("app.engines.context_engine.correlation_analyzers.correlation_network_analyzer.nx.Graph")
     @patch(
-        'app.engines.context_engine.correlation_analyzers.correlation_network_analyzer.nx.degree_centrality'
+        "app.engines.context_engine.correlation_analyzers.correlation_network_analyzer.nx.degree_centrality"
     )
     @patch(
-        'app.engines.context_engine.correlation_analyzers.correlation_network_analyzer.nx.community.greedy_modularity_communities'
+        "app.engines.context_engine.correlation_analyzers.correlation_network_analyzer.nx.community.greedy_modularity_communities"
     )
     def test_centrality_values_range(
         self,
@@ -649,20 +649,20 @@ class TestCentrality:
         mock_graph.return_value = mock_graph_instance
         mock_graph_instance.number_of_nodes.return_value = 4
         mock_graph_instance.number_of_edges.return_value = 3
-        mock_centrality.return_value = {'AAPL': 0.8, 'MSFT': 0.7, 'GOOGL': 0.6, 'AMZN': 0.5}
+        mock_centrality.return_value = {"AAPL": 0.8, "MSFT": 0.7, "GOOGL": 0.6, "AMZN": 0.5}
         mock_communities.return_value = []
 
         result = analyzer.analyze_network(sample_correlation_matrix, sample_symbols)
 
-        for symbol, centrality in result['centrality'].items():
+        for symbol, centrality in result["centrality"].items():
             assert 0.0 <= centrality <= 1.0
 
-    @patch('app.engines.context_engine.correlation_analyzers.correlation_network_analyzer.nx.Graph')
+    @patch("app.engines.context_engine.correlation_analyzers.correlation_network_analyzer.nx.Graph")
     @patch(
-        'app.engines.context_engine.correlation_analyzers.correlation_network_analyzer.nx.degree_centrality'
+        "app.engines.context_engine.correlation_analyzers.correlation_network_analyzer.nx.degree_centrality"
     )
     @patch(
-        'app.engines.context_engine.correlation_analyzers.correlation_network_analyzer.nx.community.greedy_modularity_communities'
+        "app.engines.context_engine.correlation_analyzers.correlation_network_analyzer.nx.community.greedy_modularity_communities"
     )
     def test_centrality_for_all_nodes(
         self,
@@ -683,26 +683,26 @@ class TestCentrality:
 
         result = analyzer.analyze_network(sample_correlation_matrix, sample_symbols)
 
-        assert len(result['centrality']) == len(sample_symbols)
+        assert len(result["centrality"]) == len(sample_symbols)
         for symbol in sample_symbols:
-            assert symbol in result['centrality']
+            assert symbol in result["centrality"]
 
 
 @pytest.mark.unit
 class TestPerformance:
     """Performance and stress tests."""
 
-    @patch('app.engines.context_engine.correlation_analyzers.correlation_network_analyzer.nx.Graph')
+    @patch("app.engines.context_engine.correlation_analyzers.correlation_network_analyzer.nx.Graph")
     @patch(
-        'app.engines.context_engine.correlation_analyzers.correlation_network_analyzer.nx.degree_centrality'
+        "app.engines.context_engine.correlation_analyzers.correlation_network_analyzer.nx.degree_centrality"
     )
     @patch(
-        'app.engines.context_engine.correlation_analyzers.correlation_network_analyzer.nx.community.greedy_modularity_communities'
+        "app.engines.context_engine.correlation_analyzers.correlation_network_analyzer.nx.community.greedy_modularity_communities"
     )
     def test_large_network(self, mock_communities, mock_centrality, mock_graph, analyzer):
         """Test with large network (many assets)."""
         n_assets = 100
-        symbols = [f'Asset_{i}' for i in range(n_assets)]
+        symbols = [f"Asset_{i}" for i in range(n_assets)]
 
         # Create correlation matrix
         corr_matrix = np.eye(n_assets)
@@ -721,12 +721,12 @@ class TestPerformance:
         result = analyzer.analyze_network(corr_matrix, symbols)
         assert isinstance(result, dict)
 
-    @patch('app.engines.context_engine.correlation_analyzers.correlation_network_analyzer.nx.Graph')
+    @patch("app.engines.context_engine.correlation_analyzers.correlation_network_analyzer.nx.Graph")
     @patch(
-        'app.engines.context_engine.correlation_analyzers.correlation_network_analyzer.nx.degree_centrality'
+        "app.engines.context_engine.correlation_analyzers.correlation_network_analyzer.nx.degree_centrality"
     )
     @patch(
-        'app.engines.context_engine.correlation_analyzers.correlation_network_analyzer.nx.community.greedy_modularity_communities'
+        "app.engines.context_engine.correlation_analyzers.correlation_network_analyzer.nx.community.greedy_modularity_communities"
     )
     def test_dense_network(
         self,

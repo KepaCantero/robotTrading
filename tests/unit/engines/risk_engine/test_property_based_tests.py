@@ -34,11 +34,11 @@ class TestPropertyBasedVaR:
         if all(abs(x) < 1e-10 for x in returns_list):
             return
 
-        calc = HistoricalVaRCalculator({'confidence_level': 0.95})
+        calc = HistoricalVaRCalculator({"confidence_level": 0.95})
         result = calc.calculate_var(np.array(returns_list))
 
-        if 'error' not in result:
-            assert result['var'] <= 0
+        if "error" not in result:
+            assert result["var"] <= 0
 
     @given(
         lists(
@@ -50,11 +50,11 @@ class TestPropertyBasedVaR:
     @settings(max_examples=30)
     def test_cvar_more_negative_than_var(self, returns_list):
         """Test that CVaR is always more negative than VaR."""
-        calc = HistoricalVaRCalculator({'confidence_level': 0.95})
+        calc = HistoricalVaRCalculator({"confidence_level": 0.95})
         result = calc.calculate_var(np.array(returns_list))
 
-        if 'error' not in result and 'cvar' in result:
-            assert result['cvar'] <= result['var']
+        if "error" not in result and "cvar" in result:
+            assert result["cvar"] <= result["var"]
 
     @given(
         lists(
@@ -66,14 +66,14 @@ class TestPropertyBasedVaR:
     @settings(max_examples=30)
     def test_higher_confidence_more_negative_var(self, returns_list):
         """Test that higher confidence level gives more negative VaR."""
-        calc_95 = HistoricalVaRCalculator({'confidence_level': 0.95})
-        calc_99 = HistoricalVaRCalculator({'confidence_level': 0.99})
+        calc_95 = HistoricalVaRCalculator({"confidence_level": 0.95})
+        calc_99 = HistoricalVaRCalculator({"confidence_level": 0.99})
 
         result_95 = calc_95.calculate_var(np.array(returns_list))
         result_99 = calc_99.calculate_var(np.array(returns_list))
 
-        if 'error' not in result_95 and 'error' not in result_99:
-            assert result_99['var'] <= result_95['var']
+        if "error" not in result_95 and "error" not in result_99:
+            assert result_99["var"] <= result_95["var"]
 
 
 @pytest.mark.unit
@@ -165,11 +165,11 @@ class TestPropertyBasedRiskMetrics:
         np.random.seed(42)
         returns = np.random.normal(0.001, 0.02, 500)
 
-        calc = HistoricalVaRCalculator({'confidence_level': confidence_level})
+        calc = HistoricalVaRCalculator({"confidence_level": confidence_level})
         result = calc.calculate_var(returns, portfolio_value=portfolio_value)
 
-        if 'error' not in result and result['var_amount'] is not None:
-            assert result['var_amount'] >= 0
+        if "error" not in result and result["var_amount"] is not None:
+            assert result["var_amount"] >= 0
 
     @given(floats(min_value=0.80, max_value=0.999), floats(min_value=0.85, max_value=0.999))
     @settings(max_examples=20)
@@ -182,12 +182,12 @@ class TestPropertyBasedRiskMetrics:
         if conf1 > conf2:
             conf1, conf2 = conf2, conf1
 
-        calc1 = HistoricalVaRCalculator({'confidence_level': conf1})
-        calc2 = HistoricalVaRCalculator({'confidence_level': conf2})
+        calc1 = HistoricalVaRCalculator({"confidence_level": conf1})
+        calc2 = HistoricalVaRCalculator({"confidence_level": conf2})
 
         result1 = calc1.calculate_var(returns)
         result2 = calc2.calculate_var(returns)
 
-        if 'error' not in result1 and 'error' not in result2:
+        if "error" not in result1 and "error" not in result2:
             # Higher confidence should give more negative VaR
-            assert result2['var'] <= result1['var']
+            assert result2["var"] <= result1["var"]

@@ -845,7 +845,9 @@ class EnsembleAnalyzer:
 
         return result
 
-    def _split_data(self, X: np.ndarray | pd.DataFrame, y: np.ndarray | pd.Series) -> tuple[
+    def _split_data(
+        self, X: np.ndarray | pd.DataFrame, y: np.ndarray | pd.Series
+    ) -> tuple[
         np.ndarray | pd.DataFrame,
         np.ndarray | pd.DataFrame,
         np.ndarray | pd.Series,

@@ -555,7 +555,7 @@ class TestStrategySelector:
     ) -> None:
         """Test strategy selection when analysis fails for a strategy."""
         # Mock a scenario where analysis fails
-        with patch.object(selector, '_analyze_strategy', side_effect=Exception("Analysis failed")):
+        with patch.object(selector, "_analyze_strategy", side_effect=Exception("Analysis failed")):
             # Should handle errors gracefully
             result = selector.select_strategy(
                 profile=balanced_profile,

@@ -246,11 +246,11 @@ class TestSymbolMapping:
         mapping_dict = sample_mapping.to_dict()
 
         assert isinstance(mapping_dict, dict)
-        assert mapping_dict['internal_symbol'] == "BTC"
-        assert mapping_dict['broker_symbol'] == "BTCUSDT"
-        assert mapping_dict['broker_name'] == "binance"
-        assert 'id' in mapping_dict
-        assert 'created_at' in mapping_dict
+        assert mapping_dict["internal_symbol"] == "BTC"
+        assert mapping_dict["broker_symbol"] == "BTCUSDT"
+        assert mapping_dict["broker_name"] == "binance"
+        assert "id" in mapping_dict
+        assert "created_at" in mapping_dict
 
 
 # ============================================================================
@@ -498,7 +498,7 @@ class TestSymbolMapper:
 
         # Check stats
         stats = symbol_mapper.get_statistics()
-        assert stats['cached_mappings'] == 0
+        assert stats["cached_mappings"] == 0
 
     def test_construct_broker_symbol_binance(self, symbol_mapper):
         """Test constructing Binance symbol."""

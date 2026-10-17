@@ -369,8 +369,8 @@ def modular_momentum_config() -> Dict[str, Any]:
 def mock_centralized_config():
     """Mock centralized configuration system."""
     with (
-        patch('app.engines.strategy_engines.base.get_strategy_config') as mock_config,
-        patch('app.engines.strategy_engines.base.get_trading_threshold') as mock_threshold,
+        patch("app.engines.strategy_engines.base.get_strategy_config") as mock_config,
+        patch("app.engines.strategy_engines.base.get_trading_threshold") as mock_threshold,
     ):
         # Mock strategy config
         strategy_config = Mock()
@@ -405,7 +405,7 @@ def mock_centralized_config():
 @pytest.fixture
 def mock_pandas_ta():
     """Mock pandas-ta calculations."""
-    with patch('app.engines.strategy_engines.mean_reversion_engine.pd') as mock_pd:
+    with patch("app.engines.strategy_engines.mean_reversion_engine.pd") as mock_pd:
         # Mock DataFrame creation
         mock_df = Mock()
         mock_df.__getitem__ = Mock(return_value=Mock())

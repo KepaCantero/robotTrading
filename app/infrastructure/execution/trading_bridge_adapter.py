@@ -248,7 +248,14 @@ class TradingBridgeAdapter(ITradeExecutor):
             # The TradingBridgeOrchestrator doesn't have direct modify
             # We need to modify via the broker
             broker = self.trading_bridge.broker
-            result = await broker.modify_order(order_id, new_price)
+            modify_order = getattr(broker, "modify_order", None)
+            if modify_order is None:
+                logger.error(
+                    "TradingBridgeAdapter.modify_order failed: "
+                    f"{type(broker).__name__} does not support modify_order"
+                )
+                return False
+            result = await modify_order(order_id, new_price)  # pylint: disable=not-callable  # getattr con None-check
 
             return bool(result)
 
@@ -291,7 +298,14 @@ class TradingBridgeAdapter(ITradeExecutor):
                 logger.debug("TradingBridgeAdapter.get_open_orders")
 
             broker = self.trading_bridge.broker
-            open_orders = await broker.get_open_orders()
+            get_open_orders = getattr(broker, "get_open_orders", None)
+            if get_open_orders is None:
+                logger.error(
+                    "TradingBridgeAdapter.get_open_orders failed: "
+                    f"{type(broker).__name__} does not support get_open_orders"
+                )
+                return []
+            open_orders = await get_open_orders()  # pylint: disable=not-callable  # getattr con None-check
 
             return list(open_orders)
 

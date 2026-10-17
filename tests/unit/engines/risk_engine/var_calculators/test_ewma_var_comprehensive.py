@@ -38,16 +38,16 @@ class TestEWMAVolatilityRegimeDetection:
         """Test that EWMA detects volatility increase."""
         result = calculator.calculate_ewma_var(volatility_regime_returns)
 
-        if 'comparison' in result:
+        if "comparison" in result:
             # EWMA should be higher than simple std after vol spike
-            assert 'volatility_ratio' in result['comparison']
+            assert "volatility_ratio" in result["comparison"]
 
     def test_ewma_interpretation_message(self, calculator, volatility_regime_returns):
         """Test that interpretation message is generated."""
         result = calculator.calculate_ewma_var(volatility_regime_returns)
 
-        assert 'interpretation' in result
-        assert len(result['interpretation']) > 0
+        assert "interpretation" in result
+        assert len(result["interpretation"]) > 0
 
 
 @pytest.mark.unit
@@ -61,8 +61,8 @@ class TestEWMACorrelationCalculation:
 
         result = calculator.calculate_ewma_correlation(returns1, returns2)
 
-        assert 'error' not in result
-        assert 'ewma_correlation' in result
+        assert "error" not in result
+        assert "ewma_correlation" in result
 
     def test_correlation_value_range(self, calculator):
         """Test that correlation is in valid range."""
@@ -72,7 +72,7 @@ class TestEWMACorrelationCalculation:
 
         result = calculator.calculate_ewma_correlation(returns1, returns2)
 
-        assert -1 <= result['ewma_correlation'] <= 1
+        assert -1 <= result["ewma_correlation"] <= 1
 
 
 @pytest.mark.unit
@@ -84,15 +84,15 @@ class TestEWMAForecasting:
         returns = list(np.random.normal(0, 0.02, 100))
         result = calculator.forecast_volatility(returns, horizon_days=10)
 
-        assert 'error' not in result
-        assert 'forecasts' in result
-        assert len(result['forecasts']) == 10
+        assert "error" not in result
+        assert "forecasts" in result
+        assert len(result["forecasts"]) == 10
 
     def test_forecast_increasing_with_horizon(self, calculator):
         """Test that forecasts increase with horizon (sqrt time)."""
         returns = list(np.random.normal(0, 0.02, 100))
         result = calculator.forecast_volatility(returns, horizon_days=10)
 
-        forecasts = result['forecasts']
+        forecasts = result["forecasts"]
         for i in range(len(forecasts) - 1):
             assert forecasts[i + 1] >= forecasts[i]

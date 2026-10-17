@@ -315,15 +315,13 @@ class ReportTemplates:
             value = metrics.get(key, 0)
             if value is not None:
                 # formatter is a callable lambda function from metric_definitions
-                formatted = formatter(value)
-                rows.append(
-                    f"""
+                formatted = formatter(value)  # pylint: disable=not-callable
+                rows.append(f"""
                 <tr>
                     <td>{label}</td>
                     <td class="number">{formatted}</td>
                 </tr>
-                """
-                )
+                """)
 
         html += "".join(rows)
         html += """
@@ -359,15 +357,13 @@ class ReportTemplates:
             value = risk_metrics.get(key, 0)
             if value is not None:
                 # formatter is a callable lambda function from risk_definitions
-                formatted = formatter(value)
-                rows.append(
-                    f"""
+                formatted = formatter(value)  # pylint: disable=not-callable
+                rows.append(f"""
                 <tr>
                     <td>{label}</td>
                     <td class="number">{formatted}</td>
                 </tr>
-                """
-                )
+                """)
 
         html += "".join(rows)
         html += """
@@ -397,8 +393,7 @@ class ReportTemplates:
         for asset, weight in sorted_allocation:
             weight_pct = weight * 100
             bar_width = weight_pct * 2
-            rows.append(
-                f"""
+            rows.append(f"""
             <tr>
                 <td><strong>{asset}</strong></td>
                 <td class="number">{weight_pct:.1f}%</td>
@@ -406,8 +401,7 @@ class ReportTemplates:
                     <div class="allocation-bar" style="width: {bar_width}px;"></div>
                 </td>
             </tr>
-            """
-            )
+            """)
 
         html += "".join(rows)
         html += """

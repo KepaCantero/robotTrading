@@ -17,13 +17,14 @@ import logging
 from datetime import datetime, timedelta
 from decimal import Decimal
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from requests.exceptions import (
     ConnectionError as RequestsConnectionError,
     HTTPError,
     RequestException,
 )
 
+from app.presentation.api.security import require_auth
 from app.services.live_trading.account_synchronizer import (
     AccountSynchronizer,
     get_account_synchronizer,
@@ -51,6 +52,17 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/live-trading", tags=["live-trading"])
 
+# ============================================================================
+# ABSOLUTE RISK LIMIT CAPS
+# ============================================================================
+# Hard upper bounds enforced by PATCH /risk/limits. These ceilings are
+# security limits and cannot be raised via configuration: values above them
+# are rejected with 422 (never silently clamped).
+MAX_DAILY_LOSS_LIMIT = 0.20  # max_daily_loss (fraction of equity, 0.20 = 20%)
+MAX_DRAWDOWN_LIMIT = 0.30  # max_drawdown (fraction of equity)
+MAX_LEVERAGE_LIMIT = 3.0  # max_leverage (multiplier)
+MAX_POSITION_PCT_LIMIT = 0.40  # max_concentration (max position weight, fraction)
+
 
 # ============================================================================
 # BRIDGE LIFECYCLE ENDPOINTS
@@ -58,7 +70,9 @@ router = APIRouter(prefix="/live-trading", tags=["live-trading"])
 
 
 @router.post("/start")
+@require_auth()
 async def start_live_trading(
+    request: Request,
     orchestrator: TradingBridgeOrchestrator = Depends(get_trading_bridge_orchestrator),
 ) -> dict:
     """Start the live trading bridge.
@@ -78,7 +92,9 @@ async def start_live_trading(
 
 
 @router.post("/stop")
+@require_auth()
 async def stop_live_trading(
+    request: Request,
     orchestrator: TradingBridgeOrchestrator = Depends(get_trading_bridge_orchestrator),
 ) -> dict:
     """Stop the live trading bridge.
@@ -120,7 +136,9 @@ async def get_bridge_status(
 
 
 @router.post("/orders")
+@require_auth()
 async def place_order(
+    request: Request,
     symbol: str,
     side: str,
     quantity: float,
@@ -198,7 +216,9 @@ async def get_order_status(
 
 
 @router.delete("/orders/{order_id}")
+@require_auth()
 async def cancel_order(
+    request: Request,
     order_id: str,
     order_manager: OrderManager = Depends(get_order_manager),
 ) -> dict:
@@ -220,7 +240,9 @@ async def cancel_order(
 
 
 @router.post("/orders/cancel-all")
+@require_auth()
 async def cancel_all_orders(
+    request: Request,
     order_manager: OrderManager = Depends(get_order_manager),
 ) -> dict:
     """Cancel all pending orders."""
@@ -374,7 +396,9 @@ async def get_position(
 
 
 @router.post("/risk/validate", response_model=None)
+@require_auth()
 async def validate_order_risk(
+    request: Request,
     symbol: str,
     side: str,
     quantity: float,
@@ -442,7 +466,9 @@ async def get_risk_limits(
 
 
 @router.patch("/risk/limits")
+@require_auth()
 async def update_risk_limits(
+    request: Request,
     max_position_size: float | None = None,
     max_leverage: float | None = None,
     max_concentration: float | None = None,
@@ -454,7 +480,28 @@ async def update_risk_limits(
     """Update risk gate limits dynamically.
 
     Allows traders to adjust risk parameters without restarting.
+    Values above the absolute caps are rejected with 422, never clamped.
     """
+    limit_caps: list[tuple[str, float, float | None]] = [
+        ("max_daily_loss", MAX_DAILY_LOSS_LIMIT, max_daily_loss),
+        ("max_drawdown", MAX_DRAWDOWN_LIMIT, max_drawdown),
+        ("max_leverage", MAX_LEVERAGE_LIMIT, max_leverage),
+        ("max_concentration", MAX_POSITION_PCT_LIMIT, max_concentration),
+    ]
+    violations = [
+        f"{name}={value} exceeds absolute maximum {cap}"
+        for name, cap, value in limit_caps
+        if value is not None and value > cap
+    ]
+    if violations:
+        raise HTTPException(
+            status_code=422,
+            detail={
+                "error": "Risk limit above absolute maximum",
+                "violations": violations,
+                "message": "; ".join(violations),
+            },
+        )
     try:
         if max_position_size is not None:
             risk_gates.set_max_position_size(Decimal(str(max_position_size)))
@@ -789,7 +836,9 @@ async def get_daily_return(
 
 
 @router.post("/rules")
+@require_auth()
 async def create_alert_to_trade_rule(
+    request: Request,
     rule_data: dict,
     mapper: AlertToTradeMapper = Depends(get_alert_to_trade_mapper),
 ) -> dict:
@@ -817,7 +866,9 @@ async def create_alert_to_trade_rule(
 
 
 @router.delete("/rules/{rule_id}")
+@require_auth()
 async def delete_alert_to_trade_rule(
+    request: Request,
     rule_id: str,
     mapper: AlertToTradeMapper = Depends(get_alert_to_trade_mapper),
 ) -> dict:

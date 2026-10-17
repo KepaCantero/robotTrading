@@ -14,6 +14,7 @@ import uuid
 from typing import TYPE_CHECKING, Callable
 
 from fastapi.responses import JSONResponse
+from starlette.applications import ASGIApp
 from starlette.middleware.base import BaseHTTPMiddleware
 
 if TYPE_CHECKING:
@@ -300,7 +301,7 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
 class RateLimitingMiddleware(BaseHTTPMiddleware):
     """Simple rate limiting middleware."""
 
-    def __init__(self, app: object, requests_per_minute: int = 60) -> None:
+    def __init__(self, app: ASGIApp, requests_per_minute: int = 60) -> None:
         super().__init__(app)
         self.requests_per_minute = requests_per_minute
         self.request_counts: dict[str, list[float]] = {}

@@ -57,18 +57,18 @@ class TestBoundedResults:
     def test_add_single_result(self):
         """Test adding single result."""
         results = BoundedResults(maxlen=10)
-        results.add({'test': 'value'})
+        results.add({"test": "value"})
         assert len(results) == 1
-        assert results.get_all()[0] == {'test': 'value'}
+        assert results.get_all()[0] == {"test": "value"}
 
     def test_extend_results(self):
         """Test extending with multiple results."""
         results = BoundedResults(maxlen=10)
         results.extend(
             [
-                {'test': 'value1'},
-                {'test': 'value2'},
-                {'test': 'value3'},
+                {"test": "value1"},
+                {"test": "value2"},
+                {"test": "value3"},
             ]
         )
         assert len(results) == 3
@@ -77,17 +77,17 @@ class TestBoundedResults:
         """Test getting latest results."""
         results = BoundedResults(maxlen=10)
         for i in range(5):
-            results.add({'index': i})
+            results.add({"index": i})
 
         latest = results.get_latest(2)
         assert len(latest) == 2
-        assert latest[0]['index'] == 3
-        assert latest[1]['index'] == 4
+        assert latest[0]["index"] == 3
+        assert latest[1]["index"] == 4
 
     def test_clear(self):
         """Test clearing results."""
         results = BoundedResults(maxlen=10)
-        results.add({'test': 'value'})
+        results.add({"test": "value"})
         results.clear()
         assert len(results) == 0
 
@@ -95,7 +95,7 @@ class TestBoundedResults:
         """Test that maxlen is enforced."""
         results = BoundedResults(maxlen=5)
         for i in range(10):
-            results.add({'index': i})
+            results.add({"index": i})
 
         # Should have less than or equal to maxlen
         assert len(results) <= 5
@@ -107,8 +107,7 @@ class TestBacktestConfigLoader:
     def test_load_from_valid_file(self, tmp_path):
         """Test loading from valid YAML file."""
         config_file = tmp_path / "test_config.yaml"
-        config_file.write_text(
-            """
+        config_file.write_text("""
 backtest:
   initial_capital: 100000
   commission_per_trade: 1.0
@@ -118,31 +117,28 @@ backtest:
 input:
   start_date: "2023-01-01"
   end_date: "2023-12-31"
-"""
-        )
+""")
 
         loader = BacktestConfigLoader(str(config_file))
         assert loader.raw_config is not None
-        assert 'backtest' in loader.raw_config
+        assert "backtest" in loader.raw_config
 
     def test_get_backtest_config(self, tmp_path):
         """Test getting BacktestConfig object."""
         config_file = tmp_path / "test_config.yaml"
-        config_file.write_text(
-            """
+        config_file.write_text("""
 backtest:
   initial_capital: 100000
   commission_per_trade: 1.0
   slippage: 0.1
-"""
-        )
+""")
 
         loader = BacktestConfigLoader(str(config_file))
         config = loader.get_backtest_config()
 
-        assert config.initial_capital == Decimal('100000')
-        assert config.commission_per_trade == Decimal('1.0')
-        assert config.slippage_percentage == Decimal('0.1')
+        assert config.initial_capital == Decimal("100000")
+        assert config.commission_per_trade == Decimal("1.0")
+        assert config.slippage_percentage == Decimal("0.1")
 
     def test_file_not_found(self):
         """Test FileNotFoundError for missing file."""
@@ -152,8 +148,7 @@ backtest:
     def test_get_sections(self, tmp_path):
         """Test getting configuration sections."""
         config_file = tmp_path / "test_config.yaml"
-        config_file.write_text(
-            """
+        config_file.write_text("""
 strategy:
   name: test_strategy
   enabled: true
@@ -161,16 +156,15 @@ strategy:
 execution:
   parallel: true
   max_workers: 4
-"""
-        )
+""")
 
         loader = BacktestConfigLoader(str(config_file))
 
         strategy_config = loader.get_strategy_config()
-        assert strategy_config['name'] == 'test_strategy'
+        assert strategy_config["name"] == "test_strategy"
 
         execution_config = loader.get_execution_config()
-        assert execution_config['parallel'] is True
+        assert execution_config["parallel"] is True
 
 
 class TestBacktestExecutor:
@@ -179,9 +173,9 @@ class TestBacktestExecutor:
     def test_simple_executor_validate_inputs(self):
         """Test input validation."""
         config = BacktestConfig(
-            initial_capital=Decimal('100000'),
-            commission_per_trade=Decimal('1.0'),
-            slippage_percentage=Decimal('0.1'),
+            initial_capital=Decimal("100000"),
+            commission_per_trade=Decimal("1.0"),
+            slippage_percentage=Decimal("0.1"),
         )
 
         executor = SimpleBacktestExecutor(config)
@@ -197,30 +191,30 @@ class TestBacktestExecutor:
     def test_executor_factory(self):
         """Test executor factory."""
         config = BacktestConfig(
-            initial_capital=Decimal('100000'),
-            commission_per_trade=Decimal('1.0'),
-            slippage_percentage=Decimal('0.1'),
+            initial_capital=Decimal("100000"),
+            commission_per_trade=Decimal("1.0"),
+            slippage_percentage=Decimal("0.1"),
         )
 
         # Test simple executor
-        executor = BacktestExecutorFactory.create(config, executor_type='simple')
+        executor = BacktestExecutorFactory.create(config, executor_type="simple")
         assert isinstance(executor, SimpleBacktestExecutor)
 
         # Test parallel executor
         from app.backtesting.core.executor import ParallelBacktestExecutor
 
-        executor = BacktestExecutorFactory.create(config, executor_type='parallel')
+        executor = BacktestExecutorFactory.create(config, executor_type="parallel")
         assert isinstance(executor, ParallelBacktestExecutor)
 
         # Test process pool executor
         from app.backtesting.core.executor import ProcessPoolBacktestExecutor
 
-        executor = BacktestExecutorFactory.create(config, executor_type='process', max_workers=4)
+        executor = BacktestExecutorFactory.create(config, executor_type="process", max_workers=4)
         assert isinstance(executor, ProcessPoolBacktestExecutor)
 
         # Test invalid executor type
         with pytest.raises(ValueError, match="Unknown executor type"):
-            BacktestExecutorFactory.create(config, executor_type='invalid_type')
+            BacktestExecutorFactory.create(config, executor_type="invalid_type")
 
 
 class TestOrchestrationResult:
@@ -229,35 +223,35 @@ class TestOrchestrationResult:
     def test_empty_results(self):
         """Test summary with no results."""
         result = OrchestrationResult([])
-        assert result.summary['total'] == 0
-        assert result.summary['successful'] == 0
-        assert result.summary['failed'] == 0
+        assert result.summary["total"] == 0
+        assert result.summary["successful"] == 0
+        assert result.summary["failed"] == 0
 
     def test_summary_with_dict_results(self):
         """Test summary with dictionary results."""
         results = [
-            {'final_capital': 110000, 'sharpe_ratio': 1.5},
-            {'final_capital': 105000, 'sharpe_ratio': 1.2},
-            {'final_capital': -5000, 'sharpe_ratio': 0.8},  # Failed (negative)
+            {"final_capital": 110000, "sharpe_ratio": 1.5},
+            {"final_capital": 105000, "sharpe_ratio": 1.2},
+            {"final_capital": -5000, "sharpe_ratio": 0.8},  # Failed (negative)
         ]
 
         result = OrchestrationResult(results)
         summary = result.summary
 
-        assert summary['total'] == 3
-        assert summary['successful'] == 2
-        assert summary['failed'] == 1
+        assert summary["total"] == 3
+        assert summary["successful"] == 2
+        assert summary["failed"] == 1
 
     def test_filter_results(self):
         """Test filtering results."""
         results = [
-            {'test_type': 'baseline', 'sharpe_ratio': 1.5},
-            {'test_type': 'learning', 'sharpe_ratio': 1.2},
-            {'test_type': 'baseline', 'sharpe_ratio': 1.8},
+            {"test_type": "baseline", "sharpe_ratio": 1.5},
+            {"test_type": "learning", "sharpe_ratio": 1.2},
+            {"test_type": "baseline", "sharpe_ratio": 1.8},
         ]
 
         orchestration_result = OrchestrationResult(results)
-        filtered = orchestration_result.filter_results(test_type='baseline')
+        filtered = orchestration_result.filter_results(test_type="baseline")
 
         assert len(filtered) == 2
 
@@ -274,13 +268,13 @@ class TestBacktestOrchestrator:
         the orchestrator can be instantiated without modifying production code.
         """
         config = BacktestConfig(
-            initial_capital=Decimal('100000'),
-            commission_per_trade=Decimal('1.0'),
-            slippage_percentage=Decimal('0.1'),
+            initial_capital=Decimal("100000"),
+            commission_per_trade=Decimal("1.0"),
+            slippage_percentage=Decimal("0.1"),
         )
         # Alias expected by BacktestOrchestrator.__init__
         # Use object.__setattr__ to bypass pydantic v2 field validation.
-        object.__setattr__(config, 'commission', config.commission_per_trade)
+        object.__setattr__(config, "commission", config.commission_per_trade)
         return config
 
     def test_initialization(self):
@@ -299,10 +293,10 @@ class TestBacktestOrchestrator:
         # Mock executor that returns a result
         mock_executor = MagicMock()
         mock_result = MagicMock()
-        mock_result.final_capital = Decimal('110000')
-        mock_result.total_return = Decimal('10.0')
+        mock_result.final_capital = Decimal("110000")
+        mock_result.total_return = Decimal("10.0")
         mock_result.performance = None
-        mock_result.strategy_name = 'test'
+        mock_result.strategy_name = "test"
         mock_executor.execute.return_value = mock_result
 
         orchestrator.executor = mock_executor
@@ -317,8 +311,7 @@ class TestBacktestRunnerFacade:
     def test_initialization(self, tmp_path):
         """Test facade initialization."""
         config_file = tmp_path / "test_config.yaml"
-        config_file.write_text(
-            """
+        config_file.write_text("""
 backtest:
   initial_capital: 100000
 
@@ -328,18 +321,16 @@ input:
 
 reporting:
   output_directory: "/tmp/test_reports"
-"""
-        )
+""")
 
         facade = BacktestRunnerFacade(str(config_file))
         assert facade.backtest_config is not None
-        assert facade.backtest_config.initial_capital == Decimal('100000')
+        assert facade.backtest_config.initial_capital == Decimal("100000")
 
     def test_create_backtest_runner_factory(self, tmp_path):
         """Test factory function."""
         config_file = tmp_path / "test_config.yaml"
-        config_file.write_text(
-            """
+        config_file.write_text("""
 backtest:
   initial_capital: 100000
 
@@ -349,8 +340,7 @@ input:
 
 reporting:
   output_directory: "/tmp/test_reports"
-"""
-        )
+""")
 
         facade = create_backtest_runner(str(config_file))
         assert isinstance(facade, BacktestRunnerFacade)
@@ -358,8 +348,7 @@ reporting:
     def test_clear_results(self, tmp_path):
         """Test clearing results."""
         config_file = tmp_path / "test_config.yaml"
-        config_file.write_text(
-            """
+        config_file.write_text("""
 backtest:
   initial_capital: 100000
 
@@ -369,11 +358,10 @@ input:
 
 reporting:
   output_directory: "/tmp/test_reports"
-"""
-        )
+""")
 
         facade = BacktestRunnerFacade(str(config_file))
-        facade.results.add({'test': 'value'})
+        facade.results.add({"test": "value"})
         assert len(facade.results) == 1
 
         facade.clear_results()

@@ -307,6 +307,7 @@ class RiskScalingMonitor:
         Returns:
             Resolved alert or None if not found
         """
+        del resolution_note  # aceptado por compatibilidad; sin uso aquí
         for alert in self.alert_log:
             if alert.alert_id == alert_id:
                 alert.resolved = True

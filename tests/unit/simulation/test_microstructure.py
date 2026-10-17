@@ -220,7 +220,7 @@ class TestMarketDepthAnalyzer:
                 side=OrderSide.BUY,
                 order_type=OrderType.LIMIT,
                 quantity=Decimal("100"),
-                price=Decimal(f"149.{5-i:02d}"),
+                price=Decimal(f"149.{5 - i:02d}"),
             )
             book.submit_order(buy)
 
@@ -281,7 +281,7 @@ class TestMarketDepthAnalyzer:
                 side=OrderSide.BUY,
                 order_type=OrderType.LIMIT,
                 quantity=Decimal("1000"),
-                price=Decimal(f"149.{10-i:02d}"),
+                price=Decimal(f"149.{10 - i:02d}"),
             )
             book.submit_order(buy)
 

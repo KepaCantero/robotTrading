@@ -76,6 +76,7 @@ class IntraDayExecutionScheduler:
         Returns:
             List of TimeWindow objects sorted chronologically
         """
+        del max_total_hours  # aceptado por compatibilidad; sin uso aquí
 
         if num_windows < 1 or num_windows > 5:
             raise ValueError("num_windows must be between 1 and 5")

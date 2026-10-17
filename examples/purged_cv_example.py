@@ -16,18 +16,11 @@ Reference:
 
 import numpy as np
 import pandas as pd
-from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
+from sklearn.ensemble import GradientBoostingClassifier, RandomForestClassifier
 from sklearn.metrics import accuracy_score
 
-from app.backtesting.validation.cross_validation import (
-    PurgedKFold,
-    PurgedTimeSeriesSplit,
-    cv_score,
-)
-from app.backtesting.labeling.triple_barrier import (
-    TripleBarrierConfig,
-    TripleBarrierLabeler,
-)
+from app.backtesting.labeling.triple_barrier import TripleBarrierConfig, TripleBarrierLabeler
+from app.backtesting.validation.cross_validation import PurgedKFold, PurgedTimeSeriesSplit, cv_score
 
 
 def generate_sample_data(n_samples=1000, n_features=10):
@@ -39,16 +32,16 @@ def generate_sample_data(n_samples=1000, n_features=10):
     np.random.seed(42)
 
     # Create features (e.g., technical indicators)
-    dates = pd.date_range('2020-01-01', periods=n_samples, freq='D')
+    dates = pd.date_range("2020-01-01", periods=n_samples, freq="D")
     X = pd.DataFrame(
         np.random.randn(n_samples, n_features),
-        columns=[f'feature_{i}' for i in range(n_features)],
+        columns=[f"feature_{i}" for i in range(n_features)],
         index=dates,
     )
 
     # Simulate prices
     prices = pd.Series(
-        100 + np.cumsum(np.random.randn(n_samples) * 0.01), index=dates, name='close'
+        100 + np.cumsum(np.random.randn(n_samples) * 0.01), index=dates, name="close"
     )
 
     # Generate trading signals (events)
@@ -73,7 +66,7 @@ def example_1_basic_purged_cv():
     # Create events with t1 (exit times)
     # In practice, t1 comes from triple barrier labeling
     events = pd.DataFrame(
-        {'t1': X.index + pd.Timedelta(days=np.random.randint(1, 10, len(X)))}, index=X.index
+        {"t1": X.index + pd.Timedelta(days=np.random.randint(1, 10, len(X)))}, index=X.index
     )
 
     print(f"\nDataset shape: {X.shape}")
@@ -142,12 +135,12 @@ def example_2_event_based_embargo():
     # Create events DataFrame with t1 (exit times)
     # Calculate t1 from triple barrier results
     events = pd.DataFrame(
-        {'t1': signal_dates + pd.to_timedelta(labels_df['bars_to_barrier'].values, unit='D')},
+        {"t1": signal_dates + pd.to_timedelta(labels_df["bars_to_barrier"].values, unit="D")},
         index=signal_dates,
     )
 
     # Create binary labels
-    y = (labels_df['label'] == 1).astype(int)  # 1 if upper barrier hit
+    y = (labels_df["label"] == 1).astype(int)  # 1 if upper barrier hit
     y.index = signal_dates
 
     # Align features with events
@@ -195,7 +188,7 @@ def example_3_time_series_split():
 
     y = pd.Series(np.random.randint(0, 2, len(X)), index=X.index)
 
-    events = pd.DataFrame({'t1': X.index + pd.Timedelta(days=5)}, index=X.index)
+    events = pd.DataFrame({"t1": X.index + pd.Timedelta(days=5)}, index=X.index)
 
     # Use time series split
     tscv = PurgedTimeSeriesSplit(
@@ -237,7 +230,7 @@ def example_4_cv_score_function():
 
     y = pd.Series(np.random.randint(0, 2, len(X)), index=X.index)
 
-    events = pd.DataFrame({'t1': X.index + pd.Timedelta(days=5)}, index=X.index)
+    events = pd.DataFrame({"t1": X.index + pd.Timedelta(days=5)}, index=X.index)
 
     # Use cv_score function
     model = RandomForestClassifier(n_estimators=100, random_state=42)
@@ -252,7 +245,7 @@ def example_4_cv_score_function():
         purge_pct=0.05,
     )
 
-    print(f"\nCross-Validation Results:")
+    print("\nCross-Validation Results:")
     print(f"  Mean Score: {results['mean_score']:.4f}")
     print(f"  Std Score:  {results['std_score']:.4f}")
     print(f"  Fold Scores: {[f'{s:.4f}' for s in results['fold_scores']]}")
@@ -271,7 +264,7 @@ def example_5_comparison_standard_vs_purged():
 
     y = pd.Series(np.random.randint(0, 2, len(X)), index=X.index)
 
-    events = pd.DataFrame({'t1': X.index + pd.Timedelta(days=5)}, index=X.index)
+    events = pd.DataFrame({"t1": X.index + pd.Timedelta(days=5)}, index=X.index)
 
     # Standard K-Fold (with leakage!)
     print("\n1. Standard K-Fold (HAS LOOK-AHEAD BIAS):")

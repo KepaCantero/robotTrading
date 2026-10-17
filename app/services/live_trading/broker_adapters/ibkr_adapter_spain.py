@@ -128,6 +128,7 @@ class IBKRSpainAdapter:
         self, reqId: int, errorCode: int, errorString: str, contract: IBContract | None
     ) -> None:
         """Handle IB errors."""
+        del reqId  # aceptado por compatibilidad; sin uso aquí
         # Ignore informational messages
         if errorCode in [2104, 2106, 2158]:
             return

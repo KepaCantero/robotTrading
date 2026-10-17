@@ -66,6 +66,7 @@ except ImportError:
             Returns:
                 self for method chaining
             """
+            del disp  # aceptado por compatibilidad; sin uso aquí
             try:
                 # Use EWMA with lambda=0.94 (RiskMetrics standard)
                 # This approximates a GARCH(1,1) model

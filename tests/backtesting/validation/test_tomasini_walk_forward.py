@@ -296,9 +296,9 @@ class TestTomasiniRollingWindows:
             # Tomasini: step = 50% of training
             expected_step = int(train_length * validator.step_pct)
 
-            assert (
-                abs(step_length - expected_step) <= 7
-            ), f"Step size ({step_length} days) should be ~50% of training ({train_length} days)"
+            assert abs(step_length - expected_step) <= 7, (
+                f"Step size ({step_length} days) should be ~50% of training ({train_length} days)"
+            )
 
     def test_test_window_equals_step_size(self, tomasini_config):
         """Test that test window length equals step size."""
@@ -316,9 +316,9 @@ class TestTomasiniRollingWindows:
             # Test window should equal step size (50% of training)
             expected_test = int(train_length * validator.step_pct)
 
-            assert (
-                abs(test_length - expected_test) <= 7
-            ), f"Test window ({test_length} days) should equal step size ({expected_test} days)"
+            assert abs(test_length - expected_test) <= 7, (
+                f"Test window ({test_length} days) should equal step size ({expected_test} days)"
+            )
 
 
 # ============================================================================
@@ -403,9 +403,9 @@ class TestTomasiniParameterStability:
         stable_metric = stability["stable_param"]
 
         # CV should be low (< 30% per Tomasini)
-        assert (
-            stable_metric.cv < 0.3
-        ), f"Stable parameter should have CV < 30%, got {stable_metric.cv:.2%}"
+        assert stable_metric.cv < 0.3, (
+            f"Stable parameter should have CV < 30%, got {stable_metric.cv:.2%}"
+        )
         assert bool(stable_metric.is_stable) is True
 
     def test_parameter_stability_unstable_detection(self, tomasini_config):
@@ -433,9 +433,9 @@ class TestTomasiniParameterStability:
         unstable_metric = stability["unstable_param"]
 
         # CV should be high (> 30%)
-        assert (
-            unstable_metric.cv >= 0.3
-        ), f"Unstable parameter should have CV >= 30%, got {unstable_metric.cv:.2%}"
+        assert unstable_metric.cv >= 0.3, (
+            f"Unstable parameter should have CV >= 30%, got {unstable_metric.cv:.2%}"
+        )
         assert bool(unstable_metric.is_stable) is False
 
     def test_parameter_drift_detection(self, tomasini_config):

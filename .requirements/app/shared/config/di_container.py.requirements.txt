@@ -6,7 +6,10 @@ Domain: Shared
 
 ## 2. Dependencies
 - `__future__`
-- `app.domain.strategies`
+- `app.domain.strategies.config_loader`
+- `app.domain.strategies.execution_engine`
+- `app.domain.strategies.strategy_logger`
+- `app.domain.strategies.strategy_registry`
 - `app.infrastructure.providers.paper_trading`
 - `app.services.portfolio_service`
 - `app.services.signal_scorer`

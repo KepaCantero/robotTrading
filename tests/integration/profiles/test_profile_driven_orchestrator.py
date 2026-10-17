@@ -25,7 +25,7 @@ from app.services.profile_driven_trading import (
 
 # Configure logging
 logging.basicConfig(
-    level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
 logger = logging.getLogger(__name__)
 
@@ -270,7 +270,7 @@ class TestProfileDrivenOrchestrator:
         # Check tax optimization stage
         tax_result = result.get_stage_result(
             orchestrator.workflow_manager.stage_results,
-            "tax_optimization" if hasattr(orchestrator.workflow_manager, 'stage_results') else None,
+            "tax_optimization" if hasattr(orchestrator.workflow_manager, "stage_results") else None,
         )
 
         # Should have tax-optimized allocation if stage succeeded
@@ -333,7 +333,7 @@ class TestProfileDrivenOrchestrator:
 def main():
     """Run the tests manually."""
     logging.basicConfig(
-        level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+        level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
     )
 
     test = TestProfileDrivenOrchestrator()

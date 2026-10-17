@@ -120,7 +120,7 @@ class Signal(BaseModel):
 
     @field_validator("price")
     @classmethod
-    def validate_price(cls, v) -> Decimal:
+    def validate_price(cls, v: object) -> Decimal:
         """Validate price is positive - use config limit."""
         if isinstance(v, (int, float)):
             v = Decimal(str(v))
@@ -139,7 +139,7 @@ class Signal(BaseModel):
 
     @field_validator("volume")
     @classmethod
-    def validate_volume(cls, v) -> Decimal:
+    def validate_volume(cls, v: object) -> Decimal:
         """Validate volume is non-negative - use config limit."""
         if isinstance(v, (int, float)):
             v = Decimal(str(v))
@@ -315,19 +315,14 @@ class SignalScorer:
 
     def _calculate_momentum_score(self, metadata: dict[str, Any]) -> float:
         """Calculate momentum score based on RSI and EMA trends."""
-        rsi = metadata.get("rsi", 50)
-        ema_trend = metadata.get("ema_trend", 0)
+        rsi = float(metadata.get("rsi", 50))
+        ema_trend = float(metadata.get("ema_trend", 0))
 
-        # Get RSI thresholds from config
-        config = get_config()
-        rsi_oversold = config.trading.rsi_oversold  # Default 30
-        rsi_overbought = config.trading.rsi_overbought  # Default 70
-
-        # RSI momentum (RSI > overbought = overbought, RSI < oversold = oversold)
-        if rsi > rsi_overbought:
-            rsi_score = 100 - (rsi - rsi_overbought) * 2  # Penalize overbought
-        elif rsi < rsi_oversold:
-            rsi_score = 100 - (rsi_oversold - rsi) * 2  # Penalize oversold
+        # RSI momentum (RSI > 70 = overbought, RSI < 30 = oversold)
+        if rsi > 70:
+            rsi_score = 100 - (rsi - 70) * 2  # Penalize overbought
+        elif rsi < 30:
+            rsi_score = 100 - (30 - rsi) * 2  # Penalize oversold
         else:
             rsi_score = 100 - abs(rsi - 50) * 2  # Neutral zone
 
@@ -339,7 +334,7 @@ class SignalScorer:
     def _calculate_volume_score(self, market_data: MarketData, metadata: dict[str, Any]) -> float:
         """Calculate volume score."""
         current_volume = float(market_data.volume)
-        avg_volume = metadata.get("avg_volume", current_volume)
+        avg_volume = float(metadata.get("avg_volume", current_volume))
 
         if avg_volume == 0:
             return 50.0
@@ -364,14 +359,18 @@ class SignalScorer:
         """
         try:
             config = get_config()
-            default_vol = getattr(config.trading, "signal_volatility_default", 0.02)
-            volatility = metadata.get("volatility", default_vol)
+            default_vol = float(getattr(config.trading, "signal_volatility_default", 0.02))
+            volatility = float(metadata.get("volatility", default_vol))
 
             # Get thresholds from config
-            optimal_min = getattr(config.trading, "signal_volatility_optimal_min", 0.01)
-            optimal_max = getattr(config.trading, "signal_volatility_optimal_max", 0.03)
-            acceptable_min = getattr(config.trading, "signal_volatility_acceptable_min", 0.005)
-            acceptable_max = getattr(config.trading, "signal_volatility_acceptable_max", 0.05)
+            optimal_min = float(getattr(config.trading, "signal_volatility_optimal_min", 0.01))
+            optimal_max = float(getattr(config.trading, "signal_volatility_optimal_max", 0.03))
+            acceptable_min = float(
+                getattr(config.trading, "signal_volatility_acceptable_min", 0.005)
+            )
+            acceptable_max = float(
+                getattr(config.trading, "signal_volatility_acceptable_max", 0.05)
+            )
 
             # Moderate volatility is preferred (not too high, not too low)
             if optimal_min <= volatility <= optimal_max:
@@ -384,7 +383,7 @@ class SignalScorer:
                 return max(20.0, volatility * 2000)
         except (ValueError, TypeError, AttributeError):
             # Fallback to original hardcoded values
-            volatility = metadata.get("volatility", 0.02)
+            volatility = float(metadata.get("volatility", 0.02))
             if 0.01 <= volatility <= 0.03:
                 return 100.0
             elif 0.005 <= volatility <= 0.05:
@@ -396,8 +395,8 @@ class SignalScorer:
 
     def _calculate_technical_score(self, metadata: dict[str, Any]) -> float:
         """Calculate technical indicators score."""
-        macd_signal = metadata.get("macd_signal", 0)
-        bollinger_position = metadata.get("bollinger_position", 0.5)
+        macd_signal = float(metadata.get("macd_signal", 0))
+        bollinger_position = float(metadata.get("bollinger_position", 0.5))
 
         # MACD signal strength
         macd_score = min(100, max(0, 50 + abs(macd_signal) * 100))
@@ -570,7 +569,7 @@ class SignalPriorityQueue:
             return None
 
         _, _, signal = heapq.heappop(self.queue)
-        return signal
+        return signal if isinstance(signal, Signal) else None
 
     def get_highest_priority_signal(self) -> Signal | None:
         """Get highest priority signal without removing it."""
@@ -578,7 +577,7 @@ class SignalPriorityQueue:
             return None
 
         _, _, signal = self.queue[0]
-        return signal
+        return signal if isinstance(signal, Signal) else None
 
     def peek_next_signal(self) -> Signal | None:
         """Peek at next highest priority signal without removing."""
@@ -586,7 +585,7 @@ class SignalPriorityQueue:
             return None
 
         _, _, signal = self.queue[0]
-        return signal
+        return signal if isinstance(signal, Signal) else None
 
     def get_signals_by_symbol(self, symbol: str) -> list[Signal]:
         """Get all signals for a specific symbol."""

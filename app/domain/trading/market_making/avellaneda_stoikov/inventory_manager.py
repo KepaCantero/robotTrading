@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 """Inventory Manager for Avellaneda-Stoikov Market Making.
 
 This module manages inventory risk and provides controls for position management
@@ -12,6 +10,7 @@ Key Features:
 - Adjust quotes to manage inventory
 """
 
+from __future__ import annotations
 
 import logging
 import math

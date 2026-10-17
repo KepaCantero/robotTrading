@@ -12,15 +12,14 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from decimal import Decimal
 from enum import Enum
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 import pandas as pd
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from app.shared.config.centralized_config import get_config
 
-if TYPE_CHECKING:
-    from .asset_class import AssetClass
+from .asset_class import AssetClass
 
 logger = logging.getLogger(__name__)
 
@@ -86,17 +85,17 @@ class PortfolioMetrics(BaseModel):
     total_return: Decimal = Field(..., description="Total portfolio return")
     annualized_return: Decimal = Field(..., description="Annualized return")
     volatility: Decimal = Field(..., description="Annualized volatility")
-    sharpe_ratio: Decimal | None = Field(None, description="Sharpe ratio")
-    sortino_ratio: Decimal | None = Field(None, description="Sortino ratio")
-    max_drawdown: Decimal | None = Field(None, description="Maximum drawdown")
-    beta: Decimal | None = Field(None, description="Portfolio beta")
-    alpha: Decimal | None = Field(None, description="Portfolio alpha")
-    information_ratio: Decimal | None = Field(None, description="Information ratio")
-    tracking_error: Decimal | None = Field(None, description="Tracking error")
-    var_95: Decimal | None = Field(None, description="Value at Risk at 95%")
-    cvar_95: Decimal | None = Field(None, description="Conditional VaR at 95%")
-    skewness: Decimal | None = Field(None, description="Return skewness")
-    kurtosis: Decimal | None = Field(None, description="Return kurtosis")
+    sharpe_ratio: Decimal | None = Field(default=None, description="Sharpe ratio")
+    sortino_ratio: Decimal | None = Field(default=None, description="Sortino ratio")
+    max_drawdown: Decimal | None = Field(default=None, description="Maximum drawdown")
+    beta: Decimal | None = Field(default=None, description="Portfolio beta")
+    alpha: Decimal | None = Field(default=None, description="Portfolio alpha")
+    information_ratio: Decimal | None = Field(default=None, description="Information ratio")
+    tracking_error: Decimal | None = Field(default=None, description="Tracking error")
+    var_95: Decimal | None = Field(default=None, description="Value at Risk at 95%")
+    cvar_95: Decimal | None = Field(default=None, description="Conditional VaR at 95%")
+    skewness: Decimal | None = Field(default=None, description="Return skewness")
+    kurtosis: Decimal | None = Field(default=None, description="Return kurtosis")
     calculated_at: datetime = Field(
         default_factory=datetime.utcnow, description="When metrics were calculated"
     )
@@ -526,3 +525,7 @@ class MultiAssetPortfolio:
 
 # Import numpy at the end to avoid circular dependencies
 import numpy as np
+
+
+# AssetClass se importa en runtime para que las anotaciones de MultiAssetAllocation
+# (dataclass) resuelvan con get_type_hints().

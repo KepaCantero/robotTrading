@@ -1,13 +1,13 @@
-from __future__ import annotations
-
-# mypy: ignore-errors
-# mypy: ignore-errors
 """
 Trial tracking for parameter optimization.
 
 Tracks individual optimization trials, their status, and results.
 """
 
+from __future__ import annotations
+
+# mypy: ignore-errors
+# mypy: ignore-errors
 import logging
 import traceback
 from dataclasses import dataclass, field
@@ -530,7 +530,7 @@ class TrialContext:
         )
         return self
 
-    def __exit__(self, exc_type, exc_val, exc_tb) -> bool:
+    def __exit__(self, exc_type, exc_val, _exc_tb) -> bool:
         """End trial timing and capture errors."""
         self.end_time = datetime.now()
 

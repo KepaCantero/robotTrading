@@ -219,7 +219,11 @@ class SecretValidationReport:
                 strength = (
                     "Strong"
                     if score >= 80
-                    else "Good" if score >= 60 else "Weak" if score >= 40 else "Very Weak"
+                    else "Good"
+                    if score >= 60
+                    else "Weak"
+                    if score >= 40
+                    else "Very Weak"
                 )
                 lines.append(f"  - {secret}: {score}/100 ({strength})")
 
@@ -271,7 +275,7 @@ class SecretManager:
         """Load secret metadata from environment or file."""
         # Initialize metadata for known secrets
         for definition in SECRET_DEFINITIONS:
-            value = os.getenv(definition.name)
+            value = os.getenv(definition.name)  # pylint: disable=invalid-envvar-value
             if value:
                 secret_hash = self._hash_secret(value)
                 now = time.time()
@@ -413,7 +417,12 @@ class SecretManager:
         Raises:
             SecretNotConfiguredError: If secret not found
         """
-        return self.get(key, default=None, mask=mask)
+        value = self.get(key, default=None, mask=mask)
+        if value is None:
+            raise SecretNotConfiguredError(
+                f"Secret '{key}' is not configured and no default was provided"
+            )
+        return value
 
     def get_safe(self, key: str, default: str = "") -> str:
         """
@@ -560,7 +569,7 @@ class SecretManager:
                         total_valid += 1
 
                     # Calculate strength score
-                    value = os.getenv(definition.name)
+                    value = os.getenv(definition.name)  # pylint: disable=invalid-envvar-value
                     if value:
                         strength = self.calculate_strength_score(value, definition)
                         report.strength_scores[definition.name] = strength

@@ -49,8 +49,8 @@ class QuoteResponse(BaseModel):
     """Quote response model."""
 
     success: bool = Field(..., description="Whether the request was successful")
-    data: Quote | None = Field(None, description="Quote data")
-    error: str | None = Field(None, description="Error message if any")
+    data: Quote | None = Field(default=None, description="Quote data")
+    error: str | None = Field(default=None, description="Error message if any")
     timestamp: datetime = Field(default_factory=datetime.utcnow, description="Response timestamp")
 
 
@@ -60,7 +60,7 @@ class HistoricalDataResponse(BaseModel):
     success: bool = Field(..., description="Whether the request was successful")
     data: list[HistoricalData] = Field(default_factory=list, description="Historical data")
     count: int = Field(default=0, description="Number of data points")
-    error: str | None = Field(None, description="Error message if any")
+    error: str | None = Field(default=None, description="Error message if any")
     timestamp: datetime = Field(default_factory=datetime.utcnow, description="Response timestamp")
 
 
@@ -68,8 +68,8 @@ class FeedConfigResponse(BaseModel):
     """Feed configuration response model."""
 
     success: bool = Field(..., description="Whether the request was successful")
-    data: DataFeedConfig | None = Field(None, description="Feed configuration")
-    error: str | None = Field(None, description="Error message if any")
+    data: DataFeedConfig | None = Field(default=None, description="Feed configuration")
+    error: str | None = Field(default=None, description="Error message if any")
     timestamp: datetime = Field(default_factory=datetime.utcnow, description="Response timestamp")
 
 
@@ -79,7 +79,7 @@ class FeedConfigsResponse(BaseModel):
     success: bool = Field(..., description="Whether the request was successful")
     data: list[DataFeedConfig] = Field(default_factory=list, description="Feed configurations")
     count: int = Field(default=0, description="Number of configurations")
-    error: str | None = Field(None, description="Error message if any")
+    error: str | None = Field(default=None, description="Error message if any")
     timestamp: datetime = Field(default_factory=datetime.utcnow, description="Response timestamp")
 
 
@@ -88,7 +88,7 @@ class ServiceStatusResponse(BaseModel):
 
     success: bool = Field(..., description="Whether the request was successful")
     data: dict[str, Any] = Field(default_factory=dict, description="Service status data")
-    error: str | None = Field(None, description="Error message if any")
+    error: str | None = Field(default=None, description="Error message if any")
     timestamp: datetime = Field(default_factory=datetime.utcnow, description="Response timestamp")
 
 
@@ -97,7 +97,7 @@ class CreateFeedConfigRequest(BaseModel):
 
     name: str = Field(..., description="Feed configuration name")
     feed_type: DataFeedType = Field(..., description="Type of data feed")
-    api_key: str | None = Field(None, description="API key for the feed")
+    api_key: str | None = Field(default=None, description="API key for the feed")
     base_url: str = Field(..., description="Base URL for the API")
     rate_limit: int = Field(default=60, ge=1, le=3600, description="Rate limit per minute")
     supported_symbols: list[str] = Field(
@@ -121,7 +121,7 @@ class SubscribeRequest(BaseModel):
     """Request model for subscribing to symbols."""
 
     symbols: list[str] = Field(..., description="Symbols to subscribe to")
-    feed_id: UUID | None = Field(None, description="Specific feed ID to use")
+    feed_id: UUID | None = Field(default=None, description="Specific feed ID to use")
     frequency: DataFrequency = Field(
         default=DataFrequency.REAL_TIME, description="Data update frequency"
     )

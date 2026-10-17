@@ -21,10 +21,10 @@ import pytest
 def mock_sklearn():
     """Mock sklearn module."""
     sklearn_mock = MagicMock()
-    sys.modules['sklearn'] = sklearn_mock
-    sys.modules['sklearn.cluster'] = sklearn_mock.cluster
-    sys.modules['sklearn.decomposition'] = sklearn_mock.decomposition
-    sys.modules['sklearn.preprocessing'] = sklearn_mock.preprocessing
+    sys.modules["sklearn"] = sklearn_mock
+    sys.modules["sklearn.cluster"] = sklearn_mock.cluster
+    sys.modules["sklearn.decomposition"] = sklearn_mock.decomposition
+    sys.modules["sklearn.preprocessing"] = sklearn_mock.preprocessing
     return sklearn_mock
 
 
@@ -32,8 +32,8 @@ def mock_sklearn():
 def mock_hmmlearn():
     """Mock hmmlearn module."""
     hmmlearn_mock = MagicMock()
-    sys.modules['hmmlearn'] = hmmlearn_mock
-    sys.modules['hmmlearn.hmm'] = hmmlearn_mock.hmm
+    sys.modules["hmmlearn"] = hmmlearn_mock
+    sys.modules["hmmlearn.hmm"] = hmmlearn_mock.hmm
     return hmmlearn_mock
 
 
@@ -41,8 +41,8 @@ def mock_hmmlearn():
 def mock_arch():
     """Mock arch module."""
     arch_mock = MagicMock()
-    sys.modules['arch'] = arch_mock
-    sys.modules['arch.univariate'] = arch_mock.univariate
+    sys.modules["arch"] = arch_mock
+    sys.modules["arch.univariate"] = arch_mock.univariate
     return arch_mock
 
 
@@ -50,8 +50,8 @@ def mock_arch():
 def mock_networkx():
     """Mock networkx module."""
     nx_mock = MagicMock()
-    sys.modules['networkx'] = nx_mock
-    sys.modules['nx'] = nx_mock
+    sys.modules["networkx"] = nx_mock
+    sys.modules["nx"] = nx_mock
     return nx_mock
 
 
@@ -59,8 +59,8 @@ def mock_networkx():
 def mock_statsmodels():
     """Mock statsmodels module."""
     statsmodels_mock = MagicMock()
-    sys.modules['statsmodels'] = statsmodels_mock
-    sys.modules['statsmodels.api'] = statsmodels_mock.api
+    sys.modules["statsmodels"] = statsmodels_mock
+    sys.modules["statsmodels.api"] = statsmodels_mock.api
     return statsmodels_mock
 
 

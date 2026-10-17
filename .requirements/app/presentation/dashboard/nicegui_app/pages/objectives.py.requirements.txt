@@ -1,40 +1,26 @@
-# Requirements Document: app/presentation/dashboard/data_loader.py
+# Requirements Document: app/presentation/dashboard/nicegui_app/pages/objectives.py
 
 ## 1. Module Overview
-File: data_loader.py
+File: objectives.py
 Domain: Presentation
 
 ## 2. Dependencies
 - `__future__`
-- `contextlib`
-- `json`
+- `app.infrastructure.persistence.backtest_result_store`
+- `app.presentation.dashboard.nicegui_app.theme`
 - `logging`
-- `pathlib`
-- `re`
+- `nicegui`
+- `typing`
 
 ## 3. Core Components
-### Classes
-- `DashboardDataLoader`
 ### Public Functions
-- `load_backtest_results()`
-- `list_strategies()`
+- `render()`
+- `load()`
 
 ## 4. Applicable Trading Rules
 
-#### R14
-Data Quality Validation (OHLCV sanity checks, detect gaps/stale data)
-
-- [ ] Implementation verified
-- [ ] Tests pass
-
 #### R15
 Complete Logging (log all decisions, trade journal format)
-
-- [ ] Implementation verified
-- [ ] Tests pass
-
-#### R16
-Daily Reconciliation (compare broker vs internal, alert discrepancies >1%)
 
 - [ ] Implementation verified
 - [ ] Tests pass

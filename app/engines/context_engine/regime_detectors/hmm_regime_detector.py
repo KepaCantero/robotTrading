@@ -77,7 +77,7 @@ def _create_gaussian_hmm(n_components=2, covariance_type="full", n_iter=100, **k
     Uses hmmlearn when available, otherwise falls back to HMMFallback.
     """
     if HMM_AVAILABLE:
-        from hmmlearn import hmm as _hmm
+        from hmmlearn import hmm as _hmm  # pylint: disable=import-error
 
         return _hmm.GaussianHMM(
             n_components=n_components,

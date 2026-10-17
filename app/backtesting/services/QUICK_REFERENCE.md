@@ -8,7 +8,7 @@ This document provides a quick reference for all services in the profile batch b
 
 ## 1. ConfigurationService
 
-**File:** `configuration_service.py`  
+**File:** `configuration_service.py`
 **Responsibility:** Load and validate YAML configurations
 
 ### Constructor
@@ -31,7 +31,7 @@ ConfigurationService(config_path: str)
 
 ## 2. ProfileGenerationService
 
-**File:** `profile_generation_service.py`  
+**File:** `profile_generation_service.py`
 **Responsibility:** Generate investor profile combinations
 
 ### Constructor
@@ -49,7 +49,7 @@ ProfileGenerationService(capital_tiers: ConfigDict)
 
 ## 3. BatchExecutionService
 
-**File:** `batch_execution_service.py`  
+**File:** `batch_execution_service.py`
 **Responsibility:** Execute batch tests (parallel/sequential)
 
 ### Constructor
@@ -66,7 +66,7 @@ BatchExecutionService(config_path: str, database_service: DatabaseService)
 
 ## 4. DatabaseService
 
-**File:** `database_service.py`  
+**File:** `database_service.py`
 **Responsibility:** Store and query results
 
 ### Constructor
@@ -85,7 +85,7 @@ DatabaseService(db_url: str, output_dir: Path)
 
 ## 5. MetricsCalculationService
 
-**File:** `metrics_service.py`  
+**File:** `metrics_service.py`
 **Responsibility:** Calculate improvements and comparisons
 
 ### Constructor
@@ -106,7 +106,7 @@ MetricsCalculationService(acceptance_criteria: ConfigDict)
 
 ## 6. FallbackTracker
 
-**File:** `fallback_tracker.py`  
+**File:** `fallback_tracker.py`
 **Responsibility:** Track fallback metrics thread-safely
 
 ### Constructor
@@ -130,7 +130,7 @@ FallbackTracker()
 
 ## 7. ReportGenerationService
 
-**File:** `report_generation_service.py`  
+**File:** `report_generation_service.py`
 **Responsibility:** Generate HTML reports and exports
 
 ### Constructor
@@ -151,7 +151,7 @@ ReportGenerationService(output_dir: str)
 
 ## 8. Data Models
 
-**File:** `models.py`  
+**File:** `models.py`
 **Models:** `ProfileResultDB`, `BaselineOptimizationComparison`, `OptimizedStrategy`, `ProfileResult`
 
 ### ProfileResultDB (SQLAlchemy)
@@ -265,7 +265,13 @@ All services use proper exception handling:
 
 ```python
 # Database errors
-from sqlalchemy.exc import IntegrityError, OperationalError, DatabaseError, DataError, ProgrammingError
+from sqlalchemy.exc import (
+    IntegrityError,
+    OperationalError,
+    DatabaseError,
+    DataError,
+    ProgrammingError,
+)
 
 # File I/O errors
 try:

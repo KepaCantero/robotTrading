@@ -56,48 +56,48 @@ def clean_env():
 
     # Clear all environment variables that might interfere
     env_prefixes = (
-        'ALPACA_',
-        'IB_',
-        'REDIS_',
-        'DB_',
-        'LOG_',
-        'API_',
-        'SECRET_',
-        'DEBUG',
-        'TESTING',
-        'DASHBOARD_',
-        'CORS_',
-        'CELERY_',
-        'ENVIRONMENT',
-        'SMTP_',
-        'NOTIFICATION_',
-        'TELEGRAM_',
-        'NEO4J_',
-        'MLFLOW_',
-        'DAGSTER_',
-        'POLYGON_',
-        'ALPHA_',
-        'YAHOO_',
-        'FMP_',
-        'NEWS_',
-        'MARKETAUX_',
-        'TWITTER_',
-        'REDDIT_',
-        'QUESTDB_',
-        'BACKTESTING_',
-        'PAPER_',
-        'DEFAULT_',
-        'RISK_',
-        'MAX_',
-        'STRATEGY_',
-        'RATE_LIMIT_',
-        'PASSWORD_',
-        'TOKEN_',
-        'ACCESS_TOKEN_',
-        'REFRESH_TOKEN_',
-        'PORT',
-        'HOST',
-        'ALLOW_WEAK_',
+        "ALPACA_",
+        "IB_",
+        "REDIS_",
+        "DB_",
+        "LOG_",
+        "API_",
+        "SECRET_",
+        "DEBUG",
+        "TESTING",
+        "DASHBOARD_",
+        "CORS_",
+        "CELERY_",
+        "ENVIRONMENT",
+        "SMTP_",
+        "NOTIFICATION_",
+        "TELEGRAM_",
+        "NEO4J_",
+        "MLFLOW_",
+        "DAGSTER_",
+        "POLYGON_",
+        "ALPHA_",
+        "YAHOO_",
+        "FMP_",
+        "NEWS_",
+        "MARKETAUX_",
+        "TWITTER_",
+        "REDDIT_",
+        "QUESTDB_",
+        "BACKTESTING_",
+        "PAPER_",
+        "DEFAULT_",
+        "RISK_",
+        "MAX_",
+        "STRATEGY_",
+        "RATE_LIMIT_",
+        "PASSWORD_",
+        "TOKEN_",
+        "ACCESS_TOKEN_",
+        "REFRESH_TOKEN_",
+        "PORT",
+        "HOST",
+        "ALLOW_WEAK_",
     )
     env_keys_to_clear = [k for k in os.environ if k.startswith(env_prefixes)]
     for key in env_keys_to_clear:
@@ -113,7 +113,7 @@ def clean_env():
 
     if env_file.exists():
         # Create a temp backup path
-        env_backup = env_file.with_suffix('.env.backup_test')
+        env_backup = env_file.with_suffix(".env.backup_test")
         shutil.move(str(env_file), str(env_backup))
 
     yield
@@ -413,10 +413,10 @@ class TestSecretKeyValidation:
         TestSettings = settings_with_no_env_file
         # weak keys from the config (ensure they're at least 32 chars)
         weak_keys = [
-            'your_secret_key_change_this_in_production',
-            '0123456789abcdef0123456789abcdef',
-            'change-this-secret-key-in-production-min-32-chars',
-            '12345678901234567890123456789012',
+            "your_secret_key_change_this_in_production",
+            "0123456789abcdef0123456789abcdef",
+            "change-this-secret-key-in-production-min-32-chars",
+            "12345678901234567890123456789012",
         ]
 
         # Act & Assert - each weak key should fail
@@ -433,10 +433,10 @@ class TestSecretKeyValidation:
         """
         # Arrange
         TestSettings = settings_with_no_env_file
-        weak_key = '12345678901234567890123456789012'  # 32 chars - weak pattern
+        weak_key = "12345678901234567890123456789012"  # 32 chars - weak pattern
 
         # Act & Assert - with override, should pass
-        with patch.dict(os.environ, {'ALLOW_WEAK_SECRET_KEY': 'true'}):
+        with patch.dict(os.environ, {"ALLOW_WEAK_SECRET_KEY": "true"}):
             settings = TestSettings(secret_key=weak_key)
             assert settings.secret_key == weak_key
 

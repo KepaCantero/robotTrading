@@ -17,7 +17,6 @@ Domain: Application
 - `dataclasses`
 - `datetime`
 - `decimal`
-- `input_profile_router`
 - `logging`
 - `risk_configurator`
 - `tax_optimizer`

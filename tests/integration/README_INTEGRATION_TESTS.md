@@ -207,12 +207,10 @@ Related tests are grouped into classes:
 ```python
 class TestOrderExecution:
     @pytest.mark.asyncio
-    async def test_buy_order(self, adapter, signal):
-        ...
+    async def test_buy_order(self, adapter, signal): ...
 
     @pytest.mark.asyncio
-    async def test_sell_order(self, adapter, signal):
-        ...
+    async def test_sell_order(self, adapter, signal): ...
 ```
 
 ## Test Coverage

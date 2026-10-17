@@ -7,11 +7,14 @@ Domain: Shared
 ## 2. Dependencies
 - `__future__`
 - `logging`
+- `typing`
 
 ## 3. Core Components
 ### Classes
 - `Configuration`
 ### Public Functions
+- `get()`
+- `get()`
 - `get()`
 - `set()`
 - `get_atr_multiplier()`

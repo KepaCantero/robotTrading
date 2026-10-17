@@ -117,10 +117,10 @@ class TestOrderFlowAnalyzer:
         # Create sample trade data
         trades_df = pd.DataFrame(
             {
-                'timestamp': pd.date_range('2024-01-01', periods=100, freq='1s'),
-                'side': np.random.choice(['BUY', 'SELL'], 100),
-                'size': np.random.randint(100, 1000, 100),
-                'price': 100 + np.random.randn(100).cumsum() * 0.1,
+                "timestamp": pd.date_range("2024-01-01", periods=100, freq="1s"),
+                "side": np.random.choice(["BUY", "SELL"], 100),
+                "size": np.random.randint(100, 1000, 100),
+                "price": 100 + np.random.randn(100).cumsum() * 0.1,
             }
         )
 
@@ -170,9 +170,9 @@ class TestOrderFlowAnalyzer:
 
         price_history = pd.DataFrame(
             {
-                'close': [100 + i * 0.1 for i in range(100)],
+                "close": [100 + i * 0.1 for i in range(100)],
             },
-            index=pd.date_range('2024-01-01', periods=100, freq='1s'),
+            index=pd.date_range("2024-01-01", periods=100, freq="1s"),
         )
 
         detected, confidence, explanation = analyzer.detect_informed_trading(orders, price_history)
@@ -186,10 +186,10 @@ class TestOrderFlowAnalyzer:
         """Test adverse selection cost measurement"""
         executions = pd.DataFrame(
             {
-                'timestamp': pd.date_range('2024-01-01', periods=50, freq='1s'),
-                'side': np.random.choice(['BUY', 'SELL'], 50),
-                'price': 100 + np.random.randn(50) * 0.5,
-                'size': np.random.randint(100, 1000, 50),
+                "timestamp": pd.date_range("2024-01-01", periods=50, freq="1s"),
+                "side": np.random.choice(["BUY", "SELL"], 50),
+                "price": 100 + np.random.randn(50) * 0.5,
+                "size": np.random.randint(100, 1000, 50),
             }
         )
 
@@ -198,9 +198,9 @@ class TestOrderFlowAnalyzer:
         cost_metrics = analyzer.measure_adverse_selection_cost(executions, subsequent_prices)
 
         # Should return all required metrics
-        assert 'avg_adverse_cost_bps' in cost_metrics
-        assert 'adverse_selection_rate' in cost_metrics
-        assert 'total_adverse_cost_usd' in cost_metrics
+        assert "avg_adverse_cost_bps" in cost_metrics
+        assert "adverse_selection_rate" in cost_metrics
+        assert "total_adverse_cost_usd" in cost_metrics
 
     def test_forecast_order_flow(self, analyzer, sample_orders):
         """Test order flow forecasting"""
@@ -237,17 +237,17 @@ class TestOrderFlowAnalyzer:
         )
 
         # Should return valid metrics
-        assert 0 <= metrics['information_content'] <= 1
-        assert 0 <= metrics['signal_to_noise_ratio'] <= 1
-        assert metrics['information_quality'] in ['LOW', 'MEDIUM', 'HIGH']
+        assert 0 <= metrics["information_content"] <= 1
+        assert 0 <= metrics["signal_to_noise_ratio"] <= 1
+        assert metrics["information_quality"] in ["LOW", "MEDIUM", "HIGH"]
 
     def test_generate_order_flow_report(self, analyzer, sample_orders):
         """Test comprehensive report generation"""
         price_history = pd.DataFrame(
             {
-                'close': [100 + i * 0.1 for i in range(100)],
+                "close": [100 + i * 0.1 for i in range(100)],
             },
-            index=pd.date_range('2024-01-01', periods=100, freq='1s'),
+            index=pd.date_range("2024-01-01", periods=100, freq="1s"),
         )
 
         report = analyzer.generate_order_flow_report(
@@ -256,11 +256,11 @@ class TestOrderFlowAnalyzer:
         )
 
         # Should contain all required fields
-        assert 'order_imbalance' in report
-        assert 'informed_trading_detected' in report
-        assert 'information_content' in report
-        assert 'adverse_selection_risk' in report
-        assert 'recommendations' in report
+        assert "order_imbalance" in report
+        assert "informed_trading_detected" in report
+        assert "information_content" in report
+        assert "adverse_selection_risk" in report
+        assert "recommendations" in report
 
 
 class TestOrderFlowSimulator:
@@ -288,7 +288,7 @@ class TestOrderFlowSimulator:
 
         # All orders should have valid fields
         for order in orders:
-            assert order.order_id.startswith('sim_')
+            assert order.order_id.startswith("sim_")
             assert order.side in [OrderSide.BUY, OrderSide.SELL]
             assert order.size > 0
             assert order.trader_type in [TraderType.INFORMED, TraderType.UNINFORMED]
@@ -356,9 +356,9 @@ class TestOrderFlowIntegration:
         # Create price history
         price_history = pd.DataFrame(
             {
-                'close': [100 + i * 0.05 + np.random.randn() * 0.1 for i in range(100)],
+                "close": [100 + i * 0.05 + np.random.randn() * 0.1 for i in range(100)],
             },
-            index=pd.date_range('2024-01-01', periods=100, freq='1s'),
+            index=pd.date_range("2024-01-01", periods=100, freq="1s"),
         )
 
         # Generate report
@@ -368,12 +368,12 @@ class TestOrderFlowIntegration:
         )
 
         # Validate report structure
-        assert 'timestamp' in report
-        assert 'order_imbalance' in report
-        assert 'information_content' in report
-        assert 'forecast_imbalance' in report
-        assert len(report['recommendations']) > 0
+        assert "timestamp" in report
+        assert "order_imbalance" in report
+        assert "information_content" in report
+        assert "forecast_imbalance" in report
+        assert len(report["recommendations"]) > 0
 
 
-if __name__ == '__main__':
-    pytest.main([__file__, '-v'])
+if __name__ == "__main__":
+    pytest.main([__file__, "-v"])

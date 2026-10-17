@@ -347,7 +347,7 @@ class TestPortfolioStabilityValidator:
         # Should not be valid when overconcentrated
         assert is_valid is False
 
-    @patch('app.engines.portfolio_engine.stability_validator.PortfolioStabilityValidator')
+    @patch("app.engines.portfolio_engine.stability_validator.PortfolioStabilityValidator")
     def test_compare_portfolio_stabilities(self, mock_validator_class, sample_weights):
         """Test comparing multiple portfolios."""
         # Create mock validator
@@ -491,7 +491,7 @@ class TestStabilityBasedPortfolioSelector:
     def test_select_most_stable_portfolio(self, selector, sample_portfolios):
         """Test selecting most stable portfolio."""
         # Mock the validation results
-        with patch.object(selector.validator, 'compare_portfolio_stabilities') as mock_compare:
+        with patch.object(selector.validator, "compare_portfolio_stabilities") as mock_compare:
             result_a = PortfolioValidationResult(
                 is_valid=True,
                 is_stable=True,
@@ -529,7 +529,7 @@ class TestStabilityBasedPortfolioSelector:
 
     def test_rank_portfolios_by_stability(self, selector, sample_portfolios):
         """Test ranking portfolios by stability."""
-        with patch.object(selector.validator, 'compare_portfolio_stabilities') as mock_compare:
+        with patch.object(selector.validator, "compare_portfolio_stabilities") as mock_compare:
             result_a = PortfolioValidationResult(
                 is_valid=True,
                 is_stable=True,
@@ -569,7 +569,7 @@ class TestStabilityBasedPortfolioSelector:
 
     def test_select_with_cost_effectiveness_filter(self, selector, sample_portfolios):
         """Test selection with cost-effectiveness filter."""
-        with patch.object(selector.validator, 'compare_portfolio_stabilities') as mock_compare:
+        with patch.object(selector.validator, "compare_portfolio_stabilities") as mock_compare:
             result_a = PortfolioValidationResult(
                 is_valid=True,
                 is_stable=True,

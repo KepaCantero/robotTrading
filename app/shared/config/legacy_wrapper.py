@@ -10,6 +10,9 @@ TASK-24: SRP Compliance - Legacy wrapper for backward compatibility
 from __future__ import annotations
 
 import logging
+from typing import TypeVar, overload
+
+T = TypeVar("T")
 
 logger = logging.getLogger(__name__)
 
@@ -34,6 +37,12 @@ class Configuration:
     def __init__(self, config_dict: dict[str, object]):
         self._config: dict[str, object] = config_dict if config_dict is not None else {}
         self._lock = None  # For thread safety
+
+    @overload
+    def get(self, key: str) -> object: ...
+
+    @overload
+    def get(self, key: str, default: T) -> T: ...
 
     def get(self, key: str, default: object = None) -> object:
         """
@@ -137,7 +146,7 @@ class Configuration:
             >>> config = Configuration({'risk_management': {'atr_multipliers': {...}}})
             >>> risk_config = config.get_risk_config()
         """
-        result = self.get("risk_management", {})
+        result: dict[str, object] = self.get("risk_management", {})
         return result if isinstance(result, dict) else {}
 
     def get_trading_symbols(self) -> list[str]:
@@ -152,7 +161,7 @@ class Configuration:
             >>> config.get_trading_symbols()
             ['AAPL', 'MSFT']
         """
-        result = self.get("trading.symbols", [])
+        result: list[str] = self.get("trading.symbols", [])
         return result if isinstance(result, list) else []
 
     def get_backtest_dates(self) -> dict[str, str]:

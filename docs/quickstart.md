@@ -75,6 +75,24 @@ make dashboard
 
 Access dashboard at: http://localhost:8503 (documentation at `/docs/`)
 
+### Agent Swarm — Mission Control
+
+Open **http://localhost:8503/swarm** and press *Launch Mission* to run the real
+CAPA 2 parametrization pipeline (T1.1 → T10.1) as a swarm of ten agents:
+
+- Each agent (Input Processor, Profile Generator, … Deploy Decision) has a live
+  card with status, duration and XP; click a card to inspect its **input and
+  output** payloads.
+- The mission log streams every execution event; achievements (Feasibility
+  PASS, Deploy APPROVED, Clean Run…) unlock from real pipeline outcomes.
+- Past missions persist in `swarm_runs.db` and can be replayed from the
+  *Mission History* panel.
+- The same executor powers `POST /capa2/complete-workflow`, so API-triggered
+  workflows also land in the history (they replaced the old simulated stages).
+
+Requires NiceGUI ≥ 3.18 (the app is built with the NiceGUI 3 root-function
+pattern).
+
 ---
 
 ## Common Issues

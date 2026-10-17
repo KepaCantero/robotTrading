@@ -40,7 +40,7 @@ from app.engines.risk_engine.var_calculators import (
 )
 
 logging.basicConfig(
-    level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
 logger = logging.getLogger(__name__)
 
@@ -78,7 +78,7 @@ class TestRiskEngine:
 
     def test_risk_engine_initialization(self):
         """Test inicialización de RiskEngine."""
-        config = {'enabled': True}
+        config = {"enabled": True}
         engine = RiskEngine(config)
 
         assert engine.enabled
@@ -89,25 +89,25 @@ class TestRiskEngine:
 
     def test_assess_risk(self):
         """Test evaluación de riesgo básica."""
-        config = {'enabled': True}
+        config = {"enabled": True}
         engine = RiskEngine(config)
         engine.initialize()
 
         portfolio = create_test_portfolio()
         assessment = engine.assess_risk(portfolio)
 
-        assert 'risk_level' in assessment or 'status' in assessment
-        assert 'timestamp' in assessment
+        assert "risk_level" in assessment or "status" in assessment
+        assert "timestamp" in assessment
 
     def test_set_components(self):
         """Test configurar componentes."""
-        config = {'enabled': True}
+        config = {"enabled": True}
         engine = RiskEngine(config)
 
-        var_calculator = HistoricalVaRCalculator({'confidence_level': 0.95})
+        var_calculator = HistoricalVaRCalculator({"confidence_level": 0.95})
         engine.set_var_calculator(var_calculator)
 
-        stress_tester = StressTester({'n_monte_carlo_scenarios': 100})
+        stress_tester = StressTester({"n_monte_carlo_scenarios": 100})
         engine.set_stress_tester(stress_tester)
 
         assert engine.var_calculator is not None
@@ -119,7 +119,7 @@ class TestVaRCalculators:
 
     def test_historical_var_calculator(self):
         """Test Historical VaR Calculator."""
-        config = {'confidence_level': 0.95}
+        config = {"confidence_level": 0.95}
         calculator = HistoricalVaRCalculator(config)
 
         # Retornos históricos de prueba
@@ -127,37 +127,37 @@ class TestVaRCalculators:
 
         result = calculator.calculate_var(returns, portfolio_value=100000)
 
-        assert 'var' in result
-        assert 'cvar' in result
-        assert 'confidence_level' in result
-        assert result['confidence_level'] == 0.95
+        assert "var" in result
+        assert "cvar" in result
+        assert "confidence_level" in result
+        assert result["confidence_level"] == 0.95
 
     def test_parametric_var_calculator(self):
         """Test Parametric VaR Calculator."""
-        config = {'confidence_level': 0.95}
+        config = {"confidence_level": 0.95}
         calculator = ParametricVaRCalculator(config)
 
         returns = np.random.normal(0.001, 0.02, 100)
 
         result = calculator.calculate_var(returns, portfolio_value=100000)
 
-        assert 'var' in result
-        assert 'cvar' in result
-        assert 'mean_return' in result
-        assert 'std_return' in result
+        assert "var" in result
+        assert "cvar" in result
+        assert "mean_return" in result
+        assert "std_return" in result
 
     def test_monte_carlo_var_calculator(self):
         """Test Monte Carlo VaR Calculator."""
-        config = {'confidence_level': 0.95, 'n_simulations': 1000}
+        config = {"confidence_level": 0.95, "n_simulations": 1000}
         calculator = MonteCarloVaRCalculator(config)
 
         returns = np.random.normal(0.001, 0.02, 100)
 
         result = calculator.calculate_var(returns, portfolio_value=100000)
 
-        assert 'var' in result
-        assert 'cvar' in result
-        assert 'n_simulations' in result
+        assert "var" in result
+        assert "cvar" in result
+        assert "n_simulations" in result
 
 
 class TestStressTesting:
@@ -165,23 +165,23 @@ class TestStressTesting:
 
     def test_stress_tester_initialization(self):
         """Test inicialización de StressTester."""
-        config = {'n_monte_carlo_scenarios': 100}
+        config = {"n_monte_carlo_scenarios": 100}
         tester = StressTester(config)
 
         assert len(tester.historical_scenarios) > 0
-        assert '2008_crisis' in tester.historical_scenarios
+        assert "2008_crisis" in tester.historical_scenarios
 
     def test_run_historical_stress_tests(self):
         """Test ejecutar stress tests históricos."""
-        config = {'n_monte_carlo_scenarios': 100}
+        config = {"n_monte_carlo_scenarios": 100}
         tester = StressTester(config)
 
         portfolio = create_test_portfolio()
-        results = tester.run_stress_tests(portfolio, scenario_types=['historical'])
+        results = tester.run_stress_tests(portfolio, scenario_types=["historical"])
 
-        assert 'historical' in results
-        assert 'summary' in results
-        assert '2008_crisis' in results['historical']
+        assert "historical" in results
+        assert "summary" in results
+        assert "2008_crisis" in results["historical"]
 
 
 class TestDrawdownController:
@@ -189,7 +189,7 @@ class TestDrawdownController:
 
     def test_drawdown_controller_initialization(self):
         """Test inicialización de DrawdownController."""
-        config = {'max_drawdown_limit': 0.20}
+        config = {"max_drawdown_limit": 0.20}
         controller = DrawdownController(config)
 
         assert controller.max_drawdown_limit == 0.20
@@ -197,21 +197,21 @@ class TestDrawdownController:
 
     def test_assess_drawdown(self):
         """Test evaluación de drawdown."""
-        config = {'max_drawdown_limit': 0.20}
+        config = {"max_drawdown_limit": 0.20}
         controller = DrawdownController(config)
 
         portfolio = create_test_portfolio()
 
         # Simular historial
         controller.portfolio_value_history = [
-            {'timestamp': datetime.now(), 'portfolio_value': Decimal("100000")},
-            {'timestamp': datetime.now(), 'portfolio_value': Decimal("95000")},
+            {"timestamp": datetime.now(), "portfolio_value": Decimal("100000")},
+            {"timestamp": datetime.now(), "portfolio_value": Decimal("95000")},
         ]
 
         result = controller.assess_drawdown(portfolio)
 
-        assert 'portfolio_drawdown' in result
-        assert 'circuit_breaker_status' in result
+        assert "portfolio_drawdown" in result
+        assert "circuit_breaker_status" in result
 
 
 class TestExposureManager:
@@ -219,23 +219,23 @@ class TestExposureManager:
 
     def test_exposure_manager_initialization(self):
         """Test inicialización de ExposureManager."""
-        config = {'max_asset_exposure': 0.20}
+        config = {"max_asset_exposure": 0.20}
         manager = ExposureManager(config)
 
         assert manager.max_asset_exposure == 0.20
 
     def test_analyze_exposure(self):
         """Test análisis de exposición."""
-        config = {'max_asset_exposure': 0.20}
+        config = {"max_asset_exposure": 0.20}
         manager = ExposureManager(config)
 
         portfolio = create_test_portfolio()
         result = manager.analyze_exposure(portfolio)
 
-        assert 'asset_exposure' in result
-        assert 'leverage' in result
-        assert 'concentration' in result
-        assert 'violations' in result
+        assert "asset_exposure" in result
+        assert "leverage" in result
+        assert "concentration" in result
+        assert "violations" in result
 
 
 class TestCorrelationAnalyzer:
@@ -243,28 +243,28 @@ class TestCorrelationAnalyzer:
 
     def test_correlation_analyzer_initialization(self):
         """Test inicialización de CorrelationAnalyzer."""
-        config = {'max_correlation': 0.8}
+        config = {"max_correlation": 0.8}
         analyzer = CorrelationAnalyzer(config)
 
         assert analyzer.max_correlation == 0.8
 
     def test_analyze_correlations(self):
         """Test análisis de correlaciones."""
-        config = {'max_correlation': 0.8}
+        config = {"max_correlation": 0.8}
         analyzer = CorrelationAnalyzer(config)
 
         portfolio = create_test_portfolio()
 
         # Precios históricos simulados
         prices_history = {
-            'AAPL': [150 + i * 0.1 for i in range(100)],
-            'GOOGL': [2000 + i * 2 for i in range(100)],
+            "AAPL": [150 + i * 0.1 for i in range(100)],
+            "GOOGL": [2000 + i * 2 for i in range(100)],
         }
 
         result = analyzer.analyze_correlations(portfolio, prices_history)
 
-        assert 'correlation_matrix' in result
-        assert 'diversification_score' in result
+        assert "correlation_matrix" in result
+        assert "diversification_score" in result
 
 
 class TestRiskAttribution:
@@ -272,26 +272,26 @@ class TestRiskAttribution:
 
     def test_risk_attributor_initialization(self):
         """Test inicialización de RiskAttributor."""
-        config = {'use_factor_models': True}
+        config = {"use_factor_models": True}
         attributor = RiskAttributor(config)
 
         assert attributor.use_factor_models
 
     def test_attribute_risk(self):
         """Test atribución de riesgo."""
-        config = {'use_factor_models': False}
+        config = {"use_factor_models": False}
         attributor = RiskAttributor(config)
 
         portfolio = create_test_portfolio()
 
         returns_history = {
-            'AAPL': [0.01 * (i % 2 - 0.5) for i in range(100)],
-            'GOOGL': [0.01 * (i % 2 - 0.5) for i in range(100)],
+            "AAPL": [0.01 * (i % 2 - 0.5) for i in range(100)],
+            "GOOGL": [0.01 * (i % 2 - 0.5) for i in range(100)],
         }
 
         result = attributor.attribute_risk(portfolio, returns_history=returns_history)
 
-        assert 'by_asset' in result or 'summary' in result
+        assert "by_asset" in result or "summary" in result
 
 
 class TestAlertSystem:
@@ -300,24 +300,24 @@ class TestAlertSystem:
     def test_alert_system_initialization(self):
         """Test inicialización de AlertSystem."""
         config = {
-            'thresholds': {'drawdown_limit': 0.15},
-            'enable_email': False,
-            'enable_slack': False,
+            "thresholds": {"drawdown_limit": 0.15},
+            "enable_email": False,
+            "enable_slack": False,
         }
         alert_system = AlertSystem(config)
 
-        assert alert_system.thresholds['drawdown_limit'] == 0.15
+        assert alert_system.thresholds["drawdown_limit"] == 0.15
 
     def test_check_thresholds(self):
         """Test verificación de umbrales."""
-        config = {'thresholds': {'drawdown_limit': 0.15}}
+        config = {"thresholds": {"drawdown_limit": 0.15}}
         alert_system = AlertSystem(config)
 
         portfolio = create_test_portfolio()
         risk_assessment = {
-            'drawdown': {
-                'portfolio_drawdown': {'current_drawdown': 0.20},  # Excede límite
-                'circuit_breaker_status': {'global_circuit_breaker_active': False},
+            "drawdown": {
+                "portfolio_drawdown": {"current_drawdown": 0.20},  # Excede límite
+                "circuit_breaker_status": {"global_circuit_breaker_active": False},
             }
         }
 

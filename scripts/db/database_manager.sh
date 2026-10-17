@@ -63,14 +63,14 @@ show_usage() {
 # Function to check database connection
 check_database_connection() {
     local env=${1:-development}
-    
+
     print_info "Checking database connection for environment: $env"
-    
+
     # Load environment variables
     if [ -f "config/${env}.env" ]; then
         export $(cat "config/${env}.env" | grep -v '^#' | xargs)
     fi
-    
+
     # Test connection
     if command -v psql &> /dev/null; then
         if PGPASSWORD="$DB_PASSWORD" psql -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "postgres" -c "SELECT 1;" &> /dev/null; then
@@ -89,14 +89,14 @@ check_database_connection() {
 # Function to create database
 create_database() {
     local env=${1:-development}
-    
+
     print_info "Creating database for environment: $env"
-    
+
     # Load environment variables
     if [ -f "config/${env}.env" ]; then
         export $(cat "config/${env}.env" | grep -v '^#' | xargs)
     fi
-    
+
     # Check if database exists
     if PGPASSWORD="$DB_PASSWORD" psql -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "postgres" -lqt | cut -d \| -f 1 | grep -qw "$DB_NAME"; then
         print_warning "Database '$DB_NAME' already exists"
@@ -110,23 +110,23 @@ create_database() {
 # Function to initialize database
 initialize_database() {
     local env=${1:-development}
-    
+
     print_info "Initializing database for environment: $env"
-    
+
     # Check connection
     if ! check_database_connection "$env"; then
         print_error "Cannot connect to database"
         exit 1
     fi
-    
+
     # Create database if it doesn't exist
     create_database "$env"
-    
+
     # Initialize Python environment
     if [ -f ".venv/bin/activate" ]; then
         source .venv/bin/activate
     fi
-    
+
     # Run database initialization
     python -c "
 from app.database import initialize_database
@@ -137,26 +137,26 @@ except Exception as e:
     print(f'Database initialization failed: {e}')
     exit(1)
 "
-    
+
     print_success "Database initialization completed"
 }
 
 # Function to run migrations
 run_migrations() {
     local env=${1:-development}
-    
+
     print_info "Running database migrations for environment: $env"
-    
+
     # Load environment variables
     if [ -f "config/${env}.env" ]; then
         export $(cat "config/${env}.env" | grep -v '^#' | xargs)
     fi
-    
+
     # Initialize Python environment
     if [ -f ".venv/bin/activate" ]; then
         source .venv/bin/activate
     fi
-    
+
     # Run Alembic migrations
     if [ -f "alembic.ini" ]; then
         alembic upgrade head
@@ -171,9 +171,9 @@ run_migrations() {
 reset_database() {
     local env=${1:-development}
     local force=${2:-false}
-    
+
     print_warning "Resetting database for environment: $env"
-    
+
     if [ "$force" != "true" ]; then
         read -p "Are you sure you want to reset the database? This will delete all data! (y/N): " -n 1 -r
         echo ""
@@ -182,36 +182,36 @@ reset_database() {
             exit 0
         fi
     fi
-    
+
     # Load environment variables
     if [ -f "config/${env}.env" ]; then
         export $(cat "config/${env}.env" | grep -v '^#' | xargs)
     fi
-    
+
     # Drop and recreate database
     print_info "Dropping database '$DB_NAME'"
     PGPASSWORD="$DB_PASSWORD" dropdb -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" "$DB_NAME" --if-exists
-    
+
     print_info "Creating database '$DB_NAME'"
     PGPASSWORD="$DB_PASSWORD" createdb -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" "$DB_NAME"
-    
+
     # Initialize database
     initialize_database "$env"
-    
+
     print_success "Database reset completed"
 }
 
 # Function to seed database
 seed_database() {
     local env=${1:-development}
-    
+
     print_info "Seeding database for environment: $env"
-    
+
     # Initialize Python environment
     if [ -f ".venv/bin/activate" ]; then
         source .venv/bin/activate
     fi
-    
+
     # Run database seeding
     python -c "
 from app.database import initialize_database
@@ -224,15 +224,15 @@ import uuid
 try:
     # Initialize database
     initialize_database()
-    
+
     # Get session
     session = db_manager.get_sync_session()
-    
+
     # Create repositories
     user_repo = UserRepository(User, session)
     asset_repo = AssetRepository(Asset, session)
     portfolio_repo = PortfolioRepository(Portfolio, session)
-    
+
     # Create sample user
     user = user_repo.create(
         username='demo_user',
@@ -240,7 +240,7 @@ try:
         hashed_password='hashed_password_demo'
     )
     print(f'Created user: {user.username}')
-    
+
     # Create sample assets
     assets = [
         {'symbol': 'AAPL', 'name': 'Apple Inc.', 'asset_class': 'stock', 'exchange': 'NASDAQ'},
@@ -249,11 +249,11 @@ try:
         {'symbol': 'TSLA', 'name': 'Tesla Inc.', 'asset_class': 'stock', 'exchange': 'NASDAQ'},
         {'symbol': 'AMZN', 'name': 'Amazon.com Inc.', 'asset_class': 'stock', 'exchange': 'NASDAQ'},
     ]
-    
+
     for asset_data in assets:
         asset = asset_repo.create(**asset_data)
         print(f'Created asset: {asset.symbol}')
-    
+
     # Create sample portfolio
     portfolio = portfolio_repo.create(
         user_id=user.id,
@@ -264,15 +264,15 @@ try:
         total_value=Decimal('100000.00')
     )
     print(f'Created portfolio: {portfolio.name}')
-    
+
     session.close()
     print('Database seeding completed successfully')
-    
+
 except Exception as e:
     print(f'Database seeding failed: {e}')
     exit(1)
 "
-    
+
     print_success "Database seeding completed"
 }
 
@@ -280,17 +280,17 @@ except Exception as e:
 backup_database() {
     local env=${1:-development}
     local backup_file="backup_${env}_$(date +%Y%m%d_%H%M%S).sql"
-    
+
     print_info "Creating database backup for environment: $env"
-    
+
     # Load environment variables
     if [ -f "config/${env}.env" ]; then
         export $(cat "config/${env}.env" | grep -v '^#' | xargs)
     fi
-    
+
     # Create backup
     PGPASSWORD="$DB_PASSWORD" pg_dump -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" "$DB_NAME" > "$backup_file"
-    
+
     print_success "Database backup created: $backup_file"
 }
 
@@ -298,17 +298,17 @@ backup_database() {
 restore_database() {
     local env=${1:-development}
     local backup_file=${2:-""}
-    
+
     if [ -z "$backup_file" ]; then
         print_error "Backup file not specified"
         exit 1
     fi
-    
+
     if [ ! -f "$backup_file" ]; then
         print_error "Backup file not found: $backup_file"
         exit 1
     fi
-    
+
     print_warning "Restoring database from backup: $backup_file"
     read -p "Are you sure you want to restore the database? This will overwrite existing data! (y/N): " -n 1 -r
     echo ""
@@ -316,30 +316,30 @@ restore_database() {
         print_info "Database restore cancelled"
         exit 0
     fi
-    
+
     # Load environment variables
     if [ -f "config/${env}.env" ]; then
         export $(cat "config/${env}.env" | grep -v '^#' | xargs)
     fi
-    
+
     # Restore database
     print_info "Restoring database from backup"
     PGPASSWORD="$DB_PASSWORD" psql -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" "$DB_NAME" < "$backup_file"
-    
+
     print_success "Database restore completed"
 }
 
 # Function to check database health
 check_database_health() {
     local env=${1:-development}
-    
+
     print_info "Checking database health for environment: $env"
-    
+
     # Initialize Python environment
     if [ -f ".venv/bin/activate" ]; then
         source .venv/bin/activate
     fi
-    
+
     # Run health check
     python -c "
 from app.database import check_database_health
@@ -353,7 +353,7 @@ except Exception as e:
     print(f'Database health check failed: {e}')
     exit(1)
 "
-    
+
     print_success "Database health check completed"
 }
 
@@ -363,7 +363,7 @@ main() {
     local env="development"
     local force=false
     local backup_file=""
-    
+
     # Parse arguments
     while [[ $# -gt 0 ]]; do
         case $1 in
@@ -395,15 +395,15 @@ main() {
                 ;;
         esac
     done
-    
+
     if [ -z "$command" ]; then
         print_error "No command specified"
         show_usage
         exit 1
     fi
-    
+
     print_info "Starting database operation: $command"
-    
+
     case $command in
         init)
             initialize_database "$env"
@@ -432,7 +432,7 @@ main() {
             exit 1
             ;;
     esac
-    
+
     print_success "Database operation completed successfully"
 }
 

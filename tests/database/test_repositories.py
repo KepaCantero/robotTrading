@@ -82,7 +82,7 @@ def in_memory_db():
     # Drop PostgreSQL-specific check constraints before creating tables
     for table in Base.metadata.tables.values():
         table.constraints = [
-            c for c in table.constraints if not (hasattr(c, 'sqltext') and '~' in str(c.sqltext))
+            c for c in table.constraints if not (hasattr(c, "sqltext") and "~" in str(c.sqltext))
         ]
 
     Base.metadata.create_all(bind=engine)

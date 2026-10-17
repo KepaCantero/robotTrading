@@ -5,50 +5,10 @@ File: signal.py
 Domain: Models
 
 ## 2. Dependencies
-- `__future__`
-- `app.shared.config.centralized_config`
-- `dataclasses`
-- `datetime`
-- `decimal`
-- `enum`
-- `heapq`
-- `logging`
-- `numpy`
-- `pydantic`
-- `typing`
+- `app.domain.models.signal`
 
 ## 3. Core Components
-### Classes
-- `SignalType`
-- `SignalStrength`
-- `SignalSource`
-- `MarketData`
-- `Signal`
-- `SignalScorer`
-- `SignalPriorityQueue`
-### Public Functions
-- `mid_price()`
-- `spread_percentage()`
-- `validate_score_fields()`
-- `validate_price()`
-- `validate_volume()`
-- `validate_timestamp()`
-- `validate_signal_consistency()`
-- `combined_score()`
-- `is_actionable()`
-- `is_high_priority()`
-- `calculate_confidence_score()`
-- `calculate_liquidity_score()`
-- `calculate_priority_score()`
-- `add_signal()`
-- `is_empty()`
-- `get_next_signal()`
-- `get_highest_priority_signal()`
-- `peek_next_signal()`
-- `get_signals_by_symbol()`
-- `clear_signals()`
-- `get_queue_size()`
-- `get_queue_summary()`
+### No public exports detected
 
 ## 4. Applicable Trading Rules
 

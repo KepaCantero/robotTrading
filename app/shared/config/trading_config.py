@@ -25,6 +25,7 @@ from typing import Any, ClassVar
 
 import yaml
 from pydantic import BaseModel, Field
+from pydantic_settings import SettingsConfigDict
 
 # Import modular configuration components
 from app.shared.config.base.base import Environment, SettingsBase
@@ -1895,7 +1896,7 @@ class CentralizedConfig(SettingsBase):
         default_factory=dict, description="Strategy configurations"
     )
 
-    model_config: ClassVar[dict] = {
+    model_config: ClassVar[SettingsConfigDict] = {
         "env_file": ".env",
         "env_file_encoding": "utf-8",
         "case_sensitive": False,

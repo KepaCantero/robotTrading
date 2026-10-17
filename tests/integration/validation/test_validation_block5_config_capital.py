@@ -204,14 +204,14 @@ class TestPresetPersistence(unittest.TestCase):
 
         if strategy_config:
             # Verificar que los parámetros del preset están presentes
-            if hasattr(strategy_config, 'stop_loss_pct'):
+            if hasattr(strategy_config, "stop_loss_pct"):
                 stop_loss = strategy_config.stop_loss_pct
                 # Conservative preset típicamente tiene stop_loss alrededor de 2-3%
                 self.assertIsNotNone(stop_loss, "stop_loss debe estar en config")
                 self.assertGreater(stop_loss, 0, "stop_loss debe ser positivo")
                 self.assertLess(stop_loss, 0.1, "stop_loss debe ser razonable (<10%)")
 
-            if hasattr(strategy_config, 'take_profit_pct'):
+            if hasattr(strategy_config, "take_profit_pct"):
                 take_profit = strategy_config.take_profit_pct
                 self.assertIsNotNone(take_profit, "take_profit debe estar en config")
                 self.assertGreater(take_profit, 0, "take_profit debe ser positivo")

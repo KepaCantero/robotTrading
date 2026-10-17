@@ -3,6 +3,7 @@
 Pre-tool-use hook for .ralph
 Validates tool calls before execution
 """
+
 import json
 import sys
 from pathlib import Path

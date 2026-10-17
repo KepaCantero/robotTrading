@@ -548,6 +548,8 @@ class ReturnDistributionValidator:
         Returns:
             (is_achievable: bool, reasoning: str)
         """
+        del historical_std  # aceptado por compatibilidad; sin uso aquí
+        del historical_mean  # aceptado por compatibilidad; sin uso aquí
         if expected_monthly_alpha <= Decimal("0"):
             return False, f"Expected alpha {expected_monthly_alpha:,.0f} insufficient"
 

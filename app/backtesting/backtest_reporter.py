@@ -105,6 +105,8 @@ class BacktestReporter:
         audit_trail: AuditTrailProtocol | None = None,
         learning_storage: LearningStorageProtocol | None = None,
     ):
+        # Inyectado externamente cuando meta-análisis está habilitado
+        self.meta_analyzer = None
         """
         Initialize BacktestReporter.
 

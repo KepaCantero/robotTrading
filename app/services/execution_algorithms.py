@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 """
 Ernest Chan - Quantitative Trading: Execution Algorithms Implementation
 
@@ -23,6 +21,8 @@ Based on:
 Author: Algorithmic Trading System
 Date: 2026-01-28
 """
+
+from __future__ import annotations
 
 import logging
 from dataclasses import dataclass

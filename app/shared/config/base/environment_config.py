@@ -43,20 +43,20 @@ class DatabaseConfig(BaseSettings):
     """Database configuration."""
 
     # Database connection
-    db_host: str = Field(default="localhost", env="DB_HOST")
-    db_port: int = Field(default=5432, env="DB_PORT")
-    db_name: str = Field(default="algotrading", env="DB_NAME")
-    db_user: str = Field(default="postgres", env="DB_USER")
-    db_password: str = Field(default="", env="DB_PASSWORD")
+    db_host: str = Field(default="localhost")
+    db_port: int = Field(default=5432)
+    db_name: str = Field(default="algotrading")
+    db_user: str = Field(default="postgres")
+    db_password: str = Field(default="")
     db_url: str | None = Field(default=None)
 
     # Connection pool
-    db_pool_size: int = Field(default=10, env="DB_POOL_SIZE")
-    db_max_overflow: int = Field(default=20, env="DB_MAX_OVERFLOW")
-    db_pool_timeout: int = Field(default=30, env="DB_POOL_TIMEOUT")
+    db_pool_size: int = Field(default=10)
+    db_max_overflow: int = Field(default=20)
+    db_pool_timeout: int = Field(default=30)
 
     # SSL
-    db_ssl_mode: str = Field(default="prefer", env="DB_SSL_MODE")
+    db_ssl_mode: str = Field(default="prefer")
     db_ssl_cert: str | None = Field(default=None)
     db_ssl_key: str | None = Field(default=None)
     db_ssl_root_cert: str | None = Field(default=None)
@@ -114,20 +114,20 @@ class DatabaseConfig(BaseSettings):
 class RedisConfig(BaseSettings):
     """Redis configuration."""
 
-    redis_host: str = Field(default="localhost", env="REDIS_HOST")
-    redis_port: int = Field(default=6379, env="REDIS_PORT")
+    redis_host: str = Field(default="localhost")
+    redis_port: int = Field(default=6379)
     redis_password: str | None = Field(default=None)
-    redis_db: int = Field(default=0, env="REDIS_DB")
+    redis_db: int = Field(default=0)
     redis_url: str | None = Field(default=None)
 
     # Connection settings
-    redis_max_connections: int = Field(default=10, env="REDIS_MAX_CONNECTIONS")
-    redis_socket_timeout: int = Field(default=5, env="REDIS_SOCKET_TIMEOUT")
-    redis_socket_connect_timeout: int = Field(default=5, env="REDIS_SOCKET_CONNECT_TIMEOUT")
+    redis_max_connections: int = Field(default=10)
+    redis_socket_timeout: int = Field(default=5)
+    redis_socket_connect_timeout: int = Field(default=5)
 
     # SSL
-    redis_ssl: bool = Field(default=False, env="REDIS_SSL")
-    redis_ssl_cert_reqs: str = Field(default="required", env="REDIS_SSL_CERT_REQS")
+    redis_ssl: bool = Field(default=False)
+    redis_ssl_cert_reqs: str = Field(default="required")
 
     @field_validator("redis_port")
     @classmethod
@@ -165,16 +165,14 @@ class APIConfig(BaseSettings):
     """API configuration."""
 
     # Server settings
-    api_host: str = Field(default="127.0.0.1", env="API_HOST")
-    api_port: int = Field(default=8000, env="API_PORT")
-    api_workers: int = Field(default=1, env="API_WORKERS")
+    api_host: str = Field(default="127.0.0.1")
+    api_port: int = Field(default=8000)
+    api_workers: int = Field(default=1)
 
     # Security
-    secret_key: str = Field(
-        default="", env="SECRET_KEY"
-    )  # SECURITY: No default - must be set from environment
-    access_token_expire_minutes: int = Field(default=30, env="ACCESS_TOKEN_EXPIRE_MINUTES")
-    refresh_token_expire_days: int = Field(default=7, env="REFRESH_TOKEN_EXPIRE_DAYS")
+    secret_key: str = Field(default="")  # SECURITY: No default - must be set from environment
+    access_token_expire_minutes: int = Field(default=30)
+    refresh_token_expire_days: int = Field(default=7)
 
     # CORS
     cors_origins: list[str] = Field(
@@ -186,8 +184,8 @@ class APIConfig(BaseSettings):
     cors_headers: list[str] = Field(default=["*"])
 
     # Rate limiting
-    rate_limit_requests: int = Field(default=100, env="RATE_LIMIT_REQUESTS")
-    rate_limit_window: int = Field(default=60, env="RATE_LIMIT_WINDOW")
+    rate_limit_requests: int = Field(default=100)
+    rate_limit_window: int = Field(default=60)
 
     @field_validator("api_port")
     @classmethod
@@ -227,26 +225,26 @@ class TradingConfig(BaseSettings):
     """Trading configuration."""
 
     # Trading settings
-    default_strategy: str = Field(default="momentum", env="DEFAULT_STRATEGY")
-    max_position_size: float = Field(default=0.1, env="MAX_POSITION_SIZE")
-    max_daily_loss: float = Field(default=0.05, env="MAX_DAILY_LOSS")
-    max_drawdown: float = Field(default=0.15, env="MAX_DRAWDOWN")
+    default_strategy: str = Field(default="momentum")
+    max_position_size: float = Field(default=0.1)
+    max_daily_loss: float = Field(default=0.05)
+    max_drawdown: float = Field(default=0.15)
 
     # Risk management
-    stop_loss_percentage: float = Field(default=0.02, env="STOP_LOSS_PERCENTAGE")
-    take_profit_percentage: float = Field(default=0.04, env="TAKE_PROFIT_PERCENTAGE")
-    position_sizing_method: str = Field(default="fixed", env="POSITION_SIZING_METHOD")
+    stop_loss_percentage: float = Field(default=0.02)
+    take_profit_percentage: float = Field(default=0.04)
+    position_sizing_method: str = Field(default="fixed")
 
     # Market data
-    market_data_provider: str = Field(default="yahoo", env="MARKET_DATA_PROVIDER")
+    market_data_provider: str = Field(default="yahoo")
     market_data_api_key: str | None = Field(default=None)
-    market_data_rate_limit: int = Field(default=1000, env="MARKET_DATA_RATE_LIMIT")
+    market_data_rate_limit: int = Field(default=1000)
 
     # Broker settings
-    broker_name: str = Field(default="paper", env="BROKER_NAME")
+    broker_name: str = Field(default="paper")
     broker_api_key: str | None = Field(default=None)
     broker_secret_key: str | None = Field(default=None)
-    broker_sandbox: bool = Field(default=True, env="BROKER_SANDBOX")
+    broker_sandbox: bool = Field(default=True)
 
     @field_validator("max_position_size")
     @classmethod
@@ -286,26 +284,24 @@ class LoggingConfig(BaseSettings):
     """Logging configuration."""
 
     # Log levels
-    log_level: LogLevel = Field(default=LogLevel.INFO, env="LOG_LEVEL")
-    log_format: str = Field(
-        default="%(asctime)s - %(name)s - %(levelname)s - %(message)s", env="LOG_FORMAT"
-    )
+    log_level: LogLevel = Field(default=LogLevel.INFO)
+    log_format: str = Field(default="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 
     # File logging
-    log_file_enabled: bool = Field(default=True, env="LOG_FILE_ENABLED")
-    log_file_path: str = Field(default="logs/app.log", env="LOG_FILE_PATH")
-    log_file_max_size: int = Field(default=10485760, env="LOG_FILE_MAX_SIZE")  # 10MB
-    log_file_backup_count: int = Field(default=5, env="LOG_FILE_BACKUP_COUNT")
+    log_file_enabled: bool = Field(default=True)
+    log_file_path: str = Field(default="logs/app.log")
+    log_file_max_size: int = Field(default=10485760)  # 10MB
+    log_file_backup_count: int = Field(default=5)
 
     # Console logging
-    log_console_enabled: bool = Field(default=True, env="LOG_CONSOLE_ENABLED")
-    log_console_level: LogLevel = Field(default=LogLevel.INFO, env="LOG_CONSOLE_LEVEL")
+    log_console_enabled: bool = Field(default=True)
+    log_console_level: LogLevel = Field(default=LogLevel.INFO)
 
     # ELK Stack
-    elk_enabled: bool = Field(default=False, env="ELK_ENABLED")
-    elk_host: str = Field(default="localhost", env="ELK_HOST")
-    elk_port: int = Field(default=9200, env="ELK_PORT")
-    elk_index: str = Field(default="algotrading", env="ELK_INDEX")
+    elk_enabled: bool = Field(default=False)
+    elk_host: str = Field(default="localhost")
+    elk_port: int = Field(default=9200)
+    elk_index: str = Field(default="algotrading")
 
     @field_validator("log_file_max_size")
     @classmethod
@@ -322,16 +318,16 @@ class MonitoringConfig(BaseSettings):
     """Monitoring configuration."""
 
     # Prometheus
-    prometheus_enabled: bool = Field(default=True, env="PROMETHEUS_ENABLED")
-    prometheus_port: int = Field(default=9090, env="PROMETHEUS_PORT")
-    prometheus_path: str = Field(default="/metrics", env="PROMETHEUS_PATH")
+    prometheus_enabled: bool = Field(default=True)
+    prometheus_port: int = Field(default=9090)
+    prometheus_path: str = Field(default="/metrics")
 
     # Health checks
-    health_check_enabled: bool = Field(default=True, env="HEALTH_CHECK_ENABLED")
-    health_check_interval: int = Field(default=30, env="HEALTH_CHECK_INTERVAL")
+    health_check_enabled: bool = Field(default=True)
+    health_check_interval: int = Field(default=30)
 
     # Alerts
-    alerts_enabled: bool = Field(default=False, env="ALERTS_ENABLED")
+    alerts_enabled: bool = Field(default=False)
     alerts_webhook_url: str | None = Field(default=None)
     alerts_email: str | None = Field(default=None)
 
@@ -356,18 +352,18 @@ class CentralizedConfig(BaseSettings):
     """
 
     # Environment
-    environment: Environment = Field(default=Environment.DEVELOPMENT, env="ENVIRONMENT")
-    debug: bool = Field(default=False, env="DEBUG")
-    app_name: str = Field(default="AlgoTrading", env="APP_NAME")
-    app_version: str = Field(default="1.0.0", env="APP_VERSION")
+    environment: Environment = Field(default=Environment.DEVELOPMENT)
+    debug: bool = Field(default=False)
+    app_name: str = Field(default="AlgoTrading")
+    app_version: str = Field(default="1.0.0")
 
     # Sub-configurations
-    database: DatabaseConfig = Field(default_factory=DatabaseConfig, env="DATABASE")
-    redis: RedisConfig = Field(default_factory=RedisConfig, env="REDIS")
-    api: APIConfig = Field(default_factory=APIConfig, env="API")
-    trading: TradingConfig = Field(default_factory=TradingConfig, env="TRADING")
-    logging: LoggingConfig = Field(default_factory=LoggingConfig, env="LOGGING")
-    monitoring: MonitoringConfig = Field(default_factory=MonitoringConfig, env="MONITORING")
+    database: DatabaseConfig = Field(default_factory=DatabaseConfig)
+    redis: RedisConfig = Field(default_factory=RedisConfig)
+    api: APIConfig = Field(default_factory=APIConfig)
+    trading: TradingConfig = Field(default_factory=TradingConfig)
+    logging: LoggingConfig = Field(default_factory=LoggingConfig)
+    monitoring: MonitoringConfig = Field(default_factory=MonitoringConfig)
 
     model_config = {
         "env_file": ".env",
@@ -455,12 +451,12 @@ class CentralizedConfig(BaseSettings):
             "debug": self.debug,
             "app_name": self.app_name,
             "app_version": self.app_version,
-            "database": self.database.dict(),
-            "redis": self.redis.dict(),
-            "api": self.api.dict(),
-            "trading": self.trading.dict(),
-            "logging": self.logging.dict(),
-            "monitoring": self.monitoring.dict(),
+            "database": self.database.model_dump(),
+            "redis": self.redis.model_dump(),
+            "api": self.api.model_dump(),
+            "trading": self.trading.model_dump(),
+            "logging": self.logging.model_dump(),
+            "monitoring": self.monitoring.model_dump(),
         }
 
     def is_production(self) -> bool:

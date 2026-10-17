@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 """
 Ernest Chan - Quantitative Trading: Portfolio Optimization Implementation
 
@@ -23,6 +21,8 @@ Based on:
 Author: Algorithmic Trading System
 Date: 2026-01-28
 """
+
+from __future__ import annotations
 
 import logging
 from dataclasses import dataclass
@@ -540,6 +540,7 @@ class HierarchicalRiskParityOptimizer:
         Returns:
             Ordered list of indices
         """
+        del n_items  # aceptado por compatibilidad; sin uso aquí
         # This is a simplified version - full implementation would use
         # scipy.cluster.hierarchy.dendrogram and extract the order
 

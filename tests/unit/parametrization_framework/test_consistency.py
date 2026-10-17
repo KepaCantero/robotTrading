@@ -28,7 +28,9 @@ from app.services.parametrization.module_parametrizer import ModuleParametrizer
 @pytest.fixture
 def investment_profiles_config():
     """Load investment profiles YAML configuration."""
-    yaml_path = Path(__file__).resolve().parents[3] / "config" / "portfolio" / "investment_profiles.yaml"
+    yaml_path = (
+        Path(__file__).resolve().parents[3] / "config" / "portfolio" / "investment_profiles.yaml"
+    )
     with open(yaml_path) as f:
         return yaml.safe_load(f)
 
@@ -86,9 +88,9 @@ class TestModuleConfigurationConsistency:
         for objective, tier_configs in investment_profiles_config["profiles"].items():
             for tier, config in tier_configs.items():
                 assert "enabled_modules" in config, f"{objective}/{tier}: missing enabled_modules"
-                assert (
-                    len(config["enabled_modules"]) > 0
-                ), f"{objective}/{tier}: empty enabled_modules"
+                assert len(config["enabled_modules"]) > 0, (
+                    f"{objective}/{tier}: empty enabled_modules"
+                )
 
     def test_module_tiers_match_capital_tiers(self, module_parameters_config):
         """Test that each module has all 4 capital tier configurations."""
@@ -145,9 +147,9 @@ class TestObjectiveModuleAlignment:
         investment_profile = profile_generator.generate(input_profile)
         enabled_lower = [m.lower() for m in investment_profile.enabled_modules]
 
-        assert any(
-            "dividend" in m for m in enabled_lower
-        ), f"Dividend objective missing dividend modules: {investment_profile.enabled_modules}"
+        assert any("dividend" in m for m in enabled_lower), (
+            f"Dividend objective missing dividend modules: {investment_profile.enabled_modules}"
+        )
 
     def test_preservation_objectives_have_defensive_modules(self, profile_generator):
         """Test that preservation objectives include defensive modules."""
@@ -161,9 +163,9 @@ class TestObjectiveModuleAlignment:
         investment_profile = profile_generator.generate(input_profile)
         enabled_lower = [m.lower() for m in investment_profile.enabled_modules]
 
-        assert any(
-            "defensive" in m or "hedge" in m for m in enabled_lower
-        ), f"Preservation objective missing defensive modules: {investment_profile.enabled_modules}"
+        assert any("defensive" in m or "hedge" in m for m in enabled_lower), (
+            f"Preservation objective missing defensive modules: {investment_profile.enabled_modules}"
+        )
 
     def test_growth_objectives_have_growth_modules(self, profile_generator):
         """Test that growth objectives include appropriate modules."""
@@ -272,9 +274,9 @@ class TestNoOrphanedConfigurations:
                 tiers = module_config["tiers"]
                 # If micro and large are both configured, small should be between them
                 if "micro" in tiers and "large" in tiers:
-                    assert (
-                        "small" in tiers or "medium" in tiers
-                    ), f"{module_name}: missing intermediate tiers"
+                    assert "small" in tiers or "medium" in tiers, (
+                        f"{module_name}: missing intermediate tiers"
+                    )
 
 
 class TestCapitalTierConsistency:
@@ -307,9 +309,9 @@ class TestCapitalTierConsistency:
 
             # Generally, larger tiers should have more modules
             # (though not strictly enforced due to objective variation)
-            assert (
-                profiles[CapitalTier.LARGE] >= profiles[CapitalTier.MICRO]
-            ), f"{objective}: large tier should have >= micro tier modules"
+            assert profiles[CapitalTier.LARGE] >= profiles[CapitalTier.MICRO], (
+                f"{objective}: large tier should have >= micro tier modules"
+            )
 
     def test_tier_boundaries_correct(self, profile_generator):
         """Test that capital tier boundaries are correctly applied."""
@@ -333,9 +335,9 @@ class TestCapitalTierConsistency:
             )
 
             profile = profile_generator.generate(input_profile)
-            assert (
-                profile.capital_tier == expected_tier
-            ), f"Capital {capital} should be {expected_tier.value}, got {profile.capital_tier.value}"
+            assert profile.capital_tier == expected_tier, (
+                f"Capital {capital} should be {expected_tier.value}, got {profile.capital_tier.value}"
+            )
 
 
 class TestComponentIntegration:

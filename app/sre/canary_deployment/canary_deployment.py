@@ -268,8 +268,7 @@ class CanaryDeployment:
             db_path.parent.mkdir(parents=True, exist_ok=True)
 
             async with aiosqlite.connect(self.db_path) as db:
-                await db.execute(
-                    """
+                await db.execute("""
                     CREATE TABLE IF NOT EXISTS canary_deployments (
                         id INTEGER PRIMARY KEY AUTOINCREMENT,
                         strategy_name TEXT NOT NULL,
@@ -283,11 +282,9 @@ class CanaryDeployment:
                         rollback_reason TEXT,
                         created_at TEXT NOT NULL DEFAULT (datetime('utc'))
                     )
-                """
-                )
+                """)
 
-                await db.execute(
-                    """
+                await db.execute("""
                     CREATE TABLE IF NOT EXISTS canary_metrics (
                         id INTEGER PRIMARY KEY AUTOINCREMENT,
                         deployment_id INTEGER NOT NULL,
@@ -314,15 +311,12 @@ class CanaryDeployment:
                         throughput_delta TEXT,
                         FOREIGN KEY (deployment_id) REFERENCES canary_deployments(id)
                     )
-                """
-                )
+                """)
 
-                await db.execute(
-                    """
+                await db.execute("""
                     CREATE INDEX IF NOT EXISTS idx_canary_deployment_strategy
                     ON canary_deployments(strategy_name)
-                """
-                )
+                """)
 
                 await db.commit()
 
@@ -644,7 +638,7 @@ class CanaryDeployment:
 
                 await db.commit()
 
-                return int(cursor.lastrowid)
+                return int(cursor.lastrowid or 0)
 
         except (aiosqlite.Error, asyncio.TimeoutError, OSError) as e:
             self.logger.error(f"Error saving deployment: {e}")

@@ -130,7 +130,7 @@ class TestCryptoDataServiceReconnection:
         fetcher._fetch_price_from_api = mock_fetch_price
 
         # Mock asyncio.run to handle the async properly in test
-        with patch('asyncio.run') as mock_run:
+        with patch("asyncio.run") as mock_run:
             # Make the mock run return our test value
             mock_run.return_value = Decimal("50000.00")
 
@@ -170,7 +170,7 @@ class TestCryptoDataServiceReconnection:
             }
         ]
 
-        with patch('asyncio.run') as mock_run:
+        with patch("asyncio.run") as mock_run:
             mock_run.return_value = mock_ohlcv
 
             result = fetcher.get_historical_ohlcv("BTC", "1h", 10)
@@ -197,7 +197,7 @@ class TestForexDataServiceReconnection:
         fetcher = ForexDataFetcher()
 
         # Mock the API fetch
-        with patch('asyncio.run') as mock_run:
+        with patch("asyncio.run") as mock_run:
             mock_run.return_value = Decimal("1.08")
 
             rates = fetcher.get_current_rates(["EUR/USD"])
@@ -216,7 +216,7 @@ class TestForexDataServiceReconnection:
             "GBP": Decimal("0.80"),
         }
 
-        with patch('asyncio.run') as mock_run:
+        with patch("asyncio.run") as mock_run:
             mock_run.return_value = mock_correlations
 
             correlations = fetcher.get_correlations("USD")
@@ -288,7 +288,7 @@ class Test24HourOperation:
 
         fetcher._fetch_price_from_api = mock_fetch
 
-        with patch('asyncio.run') as mock_run:
+        with patch("asyncio.run") as mock_run:
             mock_run.return_value = Decimal("50000.00")
 
             # Should recover from glitch
@@ -301,7 +301,7 @@ class Test24HourOperation:
         fetcher = ForexDataFetcher()
 
         # Simulate network glitch
-        with patch('asyncio.run') as mock_run:
+        with patch("asyncio.run") as mock_run:
             # First call fails, second succeeds
             mock_run.side_effect = [Exception("Network glitch"), Decimal("1.08")]
 

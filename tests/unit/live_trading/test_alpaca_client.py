@@ -40,7 +40,7 @@ class TestAlpacaClientAuthentication:
         mock_alpaca_module.REST = mock_rest_class
 
         # Add the mock module to sys.modules before importing
-        sys.modules['alpaca_trade_api'] = mock_alpaca_module
+        sys.modules["alpaca_trade_api"] = mock_alpaca_module
 
         try:
             # Mock successful get_account call to verify connection
@@ -64,8 +64,8 @@ class TestAlpacaClientAuthentication:
             assert alpaca_client.api is not None
         finally:
             # Clean up the mock module
-            if 'alpaca_trade_api' in sys.modules:
-                del sys.modules['alpaca_trade_api']
+            if "alpaca_trade_api" in sys.modules:
+                del sys.modules["alpaca_trade_api"]
 
     @pytest.mark.asyncio
     async def test_authenticate_failure(self, alpaca_client):
@@ -82,7 +82,7 @@ class TestAlpacaClientAuthentication:
         mock_alpaca_module.REST = mock_rest_class
 
         # Add the mock module to sys.modules before importing
-        sys.modules['alpaca_trade_api'] = mock_alpaca_module
+        sys.modules["alpaca_trade_api"] = mock_alpaca_module
 
         try:
             with pytest.raises(AlpacaClientError):
@@ -93,8 +93,8 @@ class TestAlpacaClientAuthentication:
                 )
         finally:
             # Clean up the mock module
-            if 'alpaca_trade_api' in sys.modules:
-                del sys.modules['alpaca_trade_api']
+            if "alpaca_trade_api" in sys.modules:
+                del sys.modules["alpaca_trade_api"]
 
     @pytest.mark.asyncio
     async def test_authenticate_missing_credentials(self, alpaca_client):

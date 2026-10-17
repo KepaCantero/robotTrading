@@ -191,9 +191,9 @@ class TestKellyCriterionProperties:
             )
 
             if kelly_frac is not None:
-                assert (
-                    kelly_frac > 0
-                ), f"Kelly should be positive for favorable bets, got {kelly_frac}"
+                assert kelly_frac > 0, (
+                    f"Kelly should be positive for favorable bets, got {kelly_frac}"
+                )
         except (ValueError, ImportError):
             pass
 
@@ -288,9 +288,9 @@ class TestBetSizingBounds:
 
             bet_sizes = result.bet_sizes
 
-            assert all(
-                -1 <= size <= 1 for size in bet_sizes
-            ), f"All bet sizes should be in [-1, 1], got {bet_sizes}"
+            assert all(-1 <= size <= 1 for size in bet_sizes), (
+                f"All bet sizes should be in [-1, 1], got {bet_sizes}"
+            )
         except (ValueError, ImportError):
             pass
 
@@ -318,9 +318,9 @@ class TestBetSizingBounds:
             bet_sizes = result.bet_sizes
 
             for idx in zero_indices:
-                assert (
-                    abs(bet_sizes[idx]) < 0.01
-                ), f"Signal 0 should give bet ~0, got {bet_sizes[idx]}"
+                assert abs(bet_sizes[idx]) < 0.01, (
+                    f"Signal 0 should give bet ~0, got {bet_sizes[idx]}"
+                )
         except (ValueError, ImportError):
             pass
 
@@ -399,9 +399,9 @@ class TestProbabilityScaling:
             bet_sizes = result.bet_sizes
 
             # All bets should be very small or zero
-            assert all(
-                abs(bet) < 0.1 for bet in bet_sizes
-            ), f"Low probability should give small bets, got {bet_sizes}"
+            assert all(abs(bet) < 0.1 for bet in bet_sizes), (
+                f"Low probability should give small bets, got {bet_sizes}"
+            )
         except (ValueError, ImportError):
             pass
 
@@ -431,14 +431,14 @@ class TestProbabilityScaling:
             if has_nonzero_signal:
                 # Bets should be larger for high probability
                 # (This is a weak test - just checks they're not all zero)
-                assert any(
-                    abs(bet) > 0.01 for bet in bet_sizes
-                ), "High probability with non-zero signals should give some non-zero bets"
+                assert any(abs(bet) > 0.01 for bet in bet_sizes), (
+                    "High probability with non-zero signals should give some non-zero bets"
+                )
             else:
                 # All signals are zero, so all bets should be zero
-                assert all(
-                    abs(bet) < 0.01 for bet in bet_sizes
-                ), "All zero signals should give all zero bets"
+                assert all(abs(bet) < 0.01 for bet in bet_sizes), (
+                    "All zero signals should give all zero bets"
+                )
         except (ValueError, ImportError):
             pass
 
@@ -477,9 +477,9 @@ class TestProbabilityScaling:
             avg_bet_high = np.mean(np.abs(result_high.bet_sizes))
 
             # This is a weak test due to interactions with signals
-            assert (
-                avg_bet_high >= avg_bet_low * 0.9
-            ), f"Higher probability should give larger bets: {avg_bet_high} < {avg_bet_low}"
+            assert avg_bet_high >= avg_bet_low * 0.9, (
+                f"Higher probability should give larger bets: {avg_bet_high} < {avg_bet_low}"
+            )
         except (ValueError, ImportError):
             pass
 
@@ -635,9 +635,9 @@ class TestMetaLabelingBetSizing:
                 method="meta_probability",
             )
 
-            assert all(
-                -1 <= size <= 1 for size in result
-            ), f"All meta bet sizes should be in [-1, 1], got {result}"
+            assert all(-1 <= size <= 1 for size in result), (
+                f"All meta bet sizes should be in [-1, 1], got {result}"
+            )
         except (ValueError, ImportError):
             pass
 
@@ -661,9 +661,9 @@ class TestMetaLabelingBetSizing:
             # Where meta_proba < threshold, bet should be zero or very small
             for i, prob in enumerate(meta_proba):
                 if prob < threshold:
-                    assert (
-                        abs(result[i]) < 0.01
-                    ), f"Low probability {prob} should give zero bet, got {result[i]}"
+                    assert abs(result[i]) < 0.01, (
+                        f"Low probability {prob} should give zero bet, got {result[i]}"
+                    )
         except (ValueError, ImportError):
             pass
 
@@ -705,9 +705,9 @@ class TestConcentrationLimits:
             capped_bets = np.minimum(normalized_bets, concentration_limit)
 
             # Before re-normalization, all bets should be at or below the limit
-            assert (
-                capped_bets.max() <= concentration_limit
-            ), "After capping (before re-normalization), max bet should be at or below limit"
+            assert capped_bets.max() <= concentration_limit, (
+                "After capping (before re-normalization), max bet should be at or below limit"
+            )
 
             # Then re-normalize (avoid division by zero)
             if capped_bets.sum() > 0:
@@ -716,9 +716,9 @@ class TestConcentrationLimits:
             # After re-normalization, bets might exceed the limit
             # This is a known property of concentration limits + re-normalization
             # We just check that the re-normalization worked correctly
-            assert (
-                abs(capped_bets.sum() - 1.0) < 0.01
-            ), f"Re-normalized bets should sum to 1.0, got {capped_bets.sum()}"
+            assert abs(capped_bets.sum() - 1.0) < 0.01, (
+                f"Re-normalized bets should sum to 1.0, got {capped_bets.sum()}"
+            )
 
     @given(bet_sizes=valid_probabilities(), max_exposure=st.floats(min_value=0.5, max_value=1.0))
     @settings(max_examples=100)
@@ -739,9 +739,9 @@ class TestConcentrationLimits:
             scaled_bets = normalized_bets * (max_exposure / total_exposure)
             new_total_exposure = np.abs(scaled_bets).sum()
 
-            assert (
-                new_total_exposure <= max_exposure + 0.01
-            ), f"Scaled exposure {new_total_exposure} exceeds limit {max_exposure}"
+            assert new_total_exposure <= max_exposure + 0.01, (
+                f"Scaled exposure {new_total_exposure} exceeds limit {max_exposure}"
+            )
 
 
 # ============================================================================
@@ -769,9 +769,9 @@ class TestDrawdownAdjustedSizing:
         adjusted_bet = base_bet_size * (1 - drawdown_ratio)
 
         # Adjusted bet should be smaller than base bet
-        assert (
-            adjusted_bet <= base_bet_size
-        ), f"Adjusted bet {adjusted_bet} should be <= base bet {base_bet_size}"
+        assert adjusted_bet <= base_bet_size, (
+            f"Adjusted bet {adjusted_bet} should be <= base bet {base_bet_size}"
+        )
 
         # Adjusted bet should still be non-negative
         assert adjusted_bet >= 0, f"Adjusted bet {adjusted_bet} should be non-negative"
@@ -800,9 +800,9 @@ class TestDrawdownAdjustedSizing:
         drawdown_ratio = current_drawdown / max_drawdown
         adjusted_bet = base_bet_size * (1 - drawdown_ratio)
 
-        assert (
-            abs(adjusted_bet - base_bet_size) < 0.001
-        ), f"Zero drawdown should not change bet: {adjusted_bet} != {base_bet_size}"
+        assert abs(adjusted_bet - base_bet_size) < 0.001, (
+            f"Zero drawdown should not change bet: {adjusted_bet} != {base_bet_size}"
+        )
 
 
 # ============================================================================
@@ -863,8 +863,8 @@ class TestBetSizingEdgeCases:
                 probabilities=np.ones_like(signals) * 0.5,
             )
 
-            assert all(
-                abs(bet) < 0.01 for bet in result.bet_sizes
-            ), "All zero signals should give all zero bets"
+            assert all(abs(bet) < 0.01 for bet in result.bet_sizes), (
+                "All zero signals should give all zero bets"
+            )
         except (ValueError, ImportError):
             pass

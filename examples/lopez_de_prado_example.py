@@ -18,9 +18,7 @@ Implemented Features:
 
 import numpy as np
 
-from app.backtesting.metrics import (
-    create_lopez_de_prado_calculator,
-)
+from app.backtesting.metrics import create_lopez_de_prado_calculator
 
 
 def example_sharpe_combination():
@@ -114,7 +112,7 @@ def example_portfolio_stability():
         period_length_days=30,
     )
 
-    print(f"\nStability Analysis Results:")
+    print("\nStability Analysis Results:")
     print(f"  Overall Stable: {stability.is_stable}")
     print(f"  Stability Score: {stability.stability_score:.1f}/100")
     print(f"  Avg Turnover: {stability.turnover_mean:.2%}")
@@ -166,7 +164,7 @@ def example_turnover_adjusted_metrics():
         period_length_days=30,
     )
 
-    print(f"\nTurnover Analysis Results:")
+    print("\nTurnover Analysis Results:")
     print(f"  Raw Sharpe Ratio: {turnover_metrics.raw_sharpe:.3f}")
     print(f"  Turnover-Adjusted Sharpe: {turnover_metrics.turnover_adjusted_sharpe:.3f}")
     print(f"  Annualized Turnover: {turnover_metrics.annualized_turnover:.1%}")

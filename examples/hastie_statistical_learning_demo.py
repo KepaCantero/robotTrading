@@ -8,38 +8,34 @@ Tibshirani, and Friedman.
 
 import numpy as np
 from sklearn.datasets import make_regression
-from sklearn.linear_model import LinearRegression, Ridge, Lasso
+from sklearn.linear_model import Lasso, LinearRegression, Ridge
 from sklearn.tree import DecisionTreeRegressor
+
+from app.backtesting.ensemble_methods import (
+    BaggingConfig,
+    BaggingEnsemble,
+    BoostingConfig,
+    BoostingEnsemble,
+    EnsembleAnalyzer,
+    RandomForestEnsemble,
+    StackingEnsemble,
+)
+from app.backtesting.model_selection import ModelSelector
 
 # Import new ESL-compliant modules
 from app.backtesting.validation.cross_validation_methods import (
-    CVMethod,
     CrossValidation,
+    CVMethod,
     cross_validate,
     nested_cross_validate,
 )
-
 from app.strategies.momentum_modular.learning.regularization import (
+    ElasticNetRegularization,
     L1Regularization,
     L2Regularization,
-    ElasticNetRegularization,
     RegularizationAnalyzer,
     RegularizationType,
     optimize_regularization,
-)
-
-from app.backtesting.model_selection import (
-    ModelSelector,
-)
-
-from app.backtesting.ensemble_methods import (
-    BaggingEnsemble,
-    BaggingConfig,
-    BoostingEnsemble,
-    BoostingConfig,
-    StackingEnsemble,
-    RandomForestEnsemble,
-    EnsembleAnalyzer,
 )
 
 
@@ -109,7 +105,7 @@ def example_2_regularization():
 
     print(f"   Test R²: {lasso_score:.4f}")
     print(f"   Features selected: {n_selected}/{X.shape[1]}")
-    print(f"   Sparsity: {(1 - n_selected/X.shape[1])*100:.1f}%")
+    print(f"   Sparsity: {(1 - n_selected / X.shape[1]) * 100:.1f}%")
 
     # Ridge (L2) - Shrinkage
     print("\n2. Ridge (L2) Regularization:")
@@ -117,7 +113,7 @@ def example_2_regularization():
     ridge.fit(X_train, y_train)
     ridge_score = ridge.score(X_test, y_test)
     print(f"   Test R²: {ridge_score:.4f}")
-    print(f"   All features retained (no sparsity)")
+    print("   All features retained (no sparsity)")
 
     # Elastic Net - Combination
     print("\n3. Elastic Net Regularization:")

@@ -33,9 +33,9 @@ def test_numba_mandatory_available():
         # Temporarily hide numba to test enforcement
         import sys
 
-        numba_module = sys.modules.get('numba')
+        numba_module = sys.modules.get("numba")
         if numba_module:
-            del sys.modules['numba']
+            del sys.modules["numba"]
 
         try:
             from app.core.numba_enforcer import enforce_numba_available
@@ -44,7 +44,7 @@ def test_numba_mandatory_available():
         finally:
             # Restore numba
             if numba_module:
-                sys.modules['numba'] = numba_module
+                sys.modules["numba"] = numba_module
 
     # Should have raised RuntimeError about missing numba
     assert "Numba is REQUIRED" in str(exc_info.value) or "numba" in str(exc_info.value).lower()
@@ -59,14 +59,14 @@ def test_numba_version_requirement():
     assert version is not None
 
     # Parse version
-    version_parts = version.split('.')
+    version_parts = version.split(".")
     major = int(version_parts[0])
     minor = int(version_parts[1]) if len(version_parts) > 1 else 0
 
     # Must be >= 0.59.0
-    assert major >= 0 or (
-        major == 0 and minor >= 59
-    ), f"Numba version {version} is insufficient. Required: >=0.59.0"
+    assert major >= 0 or (major == 0 and minor >= 59), (
+        f"Numba version {version} is insufficient. Required: >=0.59.0"
+    )
 
 
 def test_numba_accelerators_available():
@@ -83,14 +83,14 @@ def test_numba_accelerators_available():
     assert NUMBA_VERSION is not None, "Numba version must be set"
 
     # Verify functions are Numba-compiled
-    assert hasattr(calculate_rsi_numba, '__compiled__') or hasattr(
-        calculate_rsi_numba, 'signatures'
+    assert hasattr(calculate_rsi_numba, "__compiled__") or hasattr(
+        calculate_rsi_numba, "signatures"
     )
-    assert hasattr(calculate_ema_numba, '__compiled__') or hasattr(
-        calculate_ema_numba, 'signatures'
+    assert hasattr(calculate_ema_numba, "__compiled__") or hasattr(
+        calculate_ema_numba, "signatures"
     )
-    assert hasattr(calculate_macd_numba, '__compiled__') or hasattr(
-        calculate_macd_numba, 'signatures'
+    assert hasattr(calculate_macd_numba, "__compiled__") or hasattr(
+        calculate_macd_numba, "signatures"
     )
 
 
@@ -108,14 +108,14 @@ def test_numba_metrics_available():
     assert NUMBA_VERSION is not None, "Numba version must be set"
 
     # Verify functions are Numba-compiled
-    assert hasattr(calculate_sharpe_numba, '__compiled__') or hasattr(
-        calculate_sharpe_numba, 'signatures'
+    assert hasattr(calculate_sharpe_numba, "__compiled__") or hasattr(
+        calculate_sharpe_numba, "signatures"
     )
-    assert hasattr(calculate_sortino_numba, '__compiled__') or hasattr(
-        calculate_sortino_numba, 'signatures'
+    assert hasattr(calculate_sortino_numba, "__compiled__") or hasattr(
+        calculate_sortino_numba, "signatures"
     )
-    assert hasattr(calculate_var_numba, '__compiled__') or hasattr(
-        calculate_var_numba, 'signatures'
+    assert hasattr(calculate_var_numba, "__compiled__") or hasattr(
+        calculate_var_numba, "signatures"
     )
 
 
@@ -133,14 +133,14 @@ def test_numba_risk_available():
     assert NUMBA_VERSION is not None, "Numba version must be set"
 
     # Verify functions are Numba-compiled
-    assert hasattr(calculate_historical_var_numba, '__compiled__') or hasattr(
-        calculate_historical_var_numba, 'signatures'
+    assert hasattr(calculate_historical_var_numba, "__compiled__") or hasattr(
+        calculate_historical_var_numba, "signatures"
     )
-    assert hasattr(calculate_correlation_matrix_numba, '__compiled__') or hasattr(
-        calculate_correlation_matrix_numba, 'signatures'
+    assert hasattr(calculate_correlation_matrix_numba, "__compiled__") or hasattr(
+        calculate_correlation_matrix_numba, "signatures"
     )
-    assert hasattr(calculate_portfolio_volatility_numba, '__compiled__') or hasattr(
-        calculate_portfolio_volatility_numba, 'signatures'
+    assert hasattr(calculate_portfolio_volatility_numba, "__compiled__") or hasattr(
+        calculate_portfolio_volatility_numba, "signatures"
     )
 
 
@@ -284,9 +284,9 @@ def test_correlation_matrix_correctness():
     # Check symmetry
     for i in range(5):
         for j in range(5):
-            assert (
-                abs(corr_matrix[i, j] - corr_matrix[j, i]) < 1e-10
-            ), f"Correlation matrix should be symmetric at [{i},{j}]"
+            assert abs(corr_matrix[i, j] - corr_matrix[j, i]) < 1e-10, (
+                f"Correlation matrix should be symmetric at [{i},{j}]"
+            )
 
     # Check values are in [-1, 1]
     assert np.all(corr_matrix >= -1.0), "All correlations should be >= -1"
@@ -380,9 +380,9 @@ def test_correlation_performance_improvement():
     print(f"  Pandas time: {pandas_time:.4f}s")
 
     # Both should produce similar results
-    assert np.allclose(
-        corr_matrix, corr_pandas, atol=1e-6
-    ), "Numba and Pandas should produce similar results"
+    assert np.allclose(corr_matrix, corr_pandas, atol=1e-6), (
+        "Numba and Pandas should produce similar results"
+    )
 
 
 # ============================================================================

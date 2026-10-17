@@ -15,9 +15,7 @@ from pathlib import Path
 
 import numpy as np
 
-from app.backtesting.reports.baseline_optimization_reporter import (
-    BaselineOptimizationReporter,
-)
+from app.backtesting.reports.baseline_optimization_reporter import BaselineOptimizationReporter
 from app.core.models.input_profile import InputProfile
 
 # Configure logging

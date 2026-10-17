@@ -9,10 +9,11 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timezone
 from decimal import Decimal
 from enum import Enum
 from typing import Any
+from uuid import uuid4
 
 from app.backtesting.models import Trade
 from app.shared.config.centralized_config import get_config
@@ -100,10 +101,13 @@ class RebalanceTrade:
     def to_trade(self) -> Trade:
         """Convert to Trade object."""
         return Trade(
+            trade_id=f"rebalance-{self.symbol}-{uuid4().hex[:8]}",
             symbol=self.symbol,
+            side="buy" if self.is_buy else "sell",
+            quantity=abs(self.quantity),
+            entry_price=self.current_price,
+            entry_time=datetime.now(timezone.utc).replace(tzinfo=None),
             asset_class=self.asset_class,
-            quantity=self.quantity,
-            price=self.current_price,
             value=abs(self.quantity * self.current_price),
             reason=self.reason,
             priority=self.priority,

@@ -21,12 +21,12 @@ import random
 import time
 
 from app.sre.monitoring import (
-    get_golden_signals_monitor,
+    Decimal,
     GoldenSignalsConfig,
     HealthStatus,
-    SLOTarget,
     SignalType,
-    Decimal,
+    SLOTarget,
+    get_golden_signals_monitor,
 )
 
 
@@ -40,7 +40,7 @@ async def health_change_callback(old_health: HealthStatus, new_health: HealthSta
 async def slo_violation_callback(slo_target: SLOTarget, actual_value: float):
     """Callback when SLO is violated."""
     print(f"\n{'*' * 60}")
-    print(f"SLO VIOLATION DETECTED!")
+    print("SLO VIOLATION DETECTED!")
     print(f"  Description: {slo_target.description}")
     print(f"  Target: {slo_target.target_value}")
     print(f"  Actual: {actual_value:.2f}")

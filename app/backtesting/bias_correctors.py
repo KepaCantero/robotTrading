@@ -263,6 +263,7 @@ class DividendAndSplitAdjuster:
         Returns:
             Adjusted price DataFrame
         """
+        del symbol_col  # aceptado por compatibilidad; sin uso aquí
         try:
             prices = prices.copy()
 

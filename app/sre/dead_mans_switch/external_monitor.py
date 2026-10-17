@@ -156,8 +156,7 @@ class ExternalMonitor:
             db_path.parent.mkdir(parents=True, exist_ok=True)
 
             async with aiosqlite.connect(self.config.db_path) as db:
-                await db.execute(
-                    """
+                await db.execute("""
                     CREATE TABLE IF NOT EXISTS health_checks (
                         id INTEGER PRIMARY KEY AUTOINCREMENT,
                         service_name TEXT NOT NULL,
@@ -169,11 +168,9 @@ class ExternalMonitor:
                         consecutive_failures INTEGER NOT NULL,
                         created_at TEXT NOT NULL DEFAULT (datetime('utc'))
                     )
-                """
-                )
+                """)
 
-                await db.execute(
-                    """
+                await db.execute("""
                     CREATE TABLE IF NOT EXISTS alerts (
                         id INTEGER PRIMARY KEY AUTOINCREMENT,
                         service_name TEXT NOT NULL,
@@ -183,16 +180,13 @@ class ExternalMonitor:
                         error_message TEXT,
                         created_at TEXT NOT NULL DEFAULT (datetime('utc'))
                     )
-                """
-                )
+                """)
 
                 # Indexes
-                await db.execute(
-                    """
+                await db.execute("""
                     CREATE INDEX IF NOT EXISTS idx_health_checks_service_timestamp
                     ON health_checks(service_name, timestamp)
-                """
-                )
+                """)
 
                 await db.commit()
 

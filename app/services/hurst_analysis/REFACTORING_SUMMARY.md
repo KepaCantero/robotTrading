@@ -65,6 +65,7 @@ class CustomCalculator:
         # Custom calculation logic
         return hurst, rs_values, window_sizes
 
+
 # Can be used directly with the orchestrator
 analyzer = HurstExponentAnalyzer(
     calculator=CustomCalculator(),  # Extensible!
@@ -146,16 +147,13 @@ All code follows `rules/python/02-type-hints.md`:
 
 ### Examples:
 ```python
-def calculate(
-    self, series: np.ndarray
-) -> tuple[float, list[float] | None, list[int] | None]:
-    ...
+def calculate(self, series: np.ndarray) -> tuple[float, list[float] | None, list[int] | None]: ...
 
-def classify(self, hurst_exponent: float) -> MarketRegime:
-    ...
 
-def get_history(self, symbol: str) -> list[tuple[datetime, float]]:
-    ...
+def classify(self, hurst_exponent: float) -> MarketRegime: ...
+
+
+def get_history(self, symbol: str) -> list[tuple[datetime, float]]: ...
 ```
 
 ## Architecture Compliance

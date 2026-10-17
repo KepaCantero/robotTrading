@@ -74,7 +74,7 @@ result = validator.validate(
     strategy_factory=lambda params: MyStrategy(params),
     param_grid={"window": [10, 20, 30], "threshold": [0.5, 1.0]},
     data=price_data,
-    optimizer=optimizer
+    optimizer=optimizer,
 )
 ```
 
@@ -87,11 +87,7 @@ result = validator.validate(
 
 ```python
 detector = OverfittingDetector()
-metrics = detector.detect(
-    is_results=is_results,
-    os_results=os_results,
-    n_params=5
-)
+metrics = detector.detect(is_results=is_results, os_results=os_results, n_params=5)
 
 if metrics.is_overfitted():
     print(f"Overfitting: {metrics.overfitting_level}")
@@ -109,11 +105,7 @@ if metrics.is_overfitted():
 
 ```python
 detector = RegimeDetector()
-regime = detector.detect_regime(
-    prices=price_series,
-    returns=return_series,
-    as_of_date=date.today()
-)
+regime = detector.detect_regime(prices=price_series, returns=return_series, as_of_date=date.today())
 
 print(regime.description())
 recommendations = detector.get_regime_aware_recommendation(regime)
@@ -128,10 +120,7 @@ recommendations = detector.get_regime_aware_recommendation(regime)
 
 ```python
 analyzer = ParameterStabilityAnalyzer()
-results = analyzer.analyze(
-    is_params=is_params,
-    os_params=os_params
-)
+results = analyzer.analyze(is_params=is_params, os_params=os_params)
 
 for result in results:
     print(f"{result.parameter_name}: {result.stability_level}")
@@ -265,31 +254,24 @@ wf_result = validator.validate(
     strategy_factory=strategy_factory,
     param_grid={"window": [10, 20, 30]},
     data=price_data,
-    optimizer=optimizer
+    optimizer=optimizer,
 )
 
 # 2. Check for overfitting
 detector = OverfittingDetector()
 overfitting = detector.detect(
-    is_results=wf_result.is_results,
-    os_results=wf_result.os_results,
-    n_params=3
+    is_results=wf_result.is_results, os_results=wf_result.os_results, n_params=3
 )
 
 # 3. Detect current market regime
 regime_detector = RegimeDetector()
 current_regime = regime_detector.detect_regime(
-    prices=price_data["close"],
-    returns=returns,
-    as_of_date=date.today()
+    prices=price_data["close"], returns=returns, as_of_date=date.today()
 )
 
 # 4. Analyze parameter stability
 param_analyzer = ParameterStabilityAnalyzer()
-stability = param_analyzer.analyze(
-    is_params=is_param_history,
-    os_params=os_param_history
-)
+stability = param_analyzer.analyze(is_params=is_param_history, os_params=os_param_history)
 
 # 5. Get recommendations
 print("Validation Results:")

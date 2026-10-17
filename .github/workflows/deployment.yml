@@ -162,12 +162,16 @@ jobs:
 
       - name: Create deployment record
         run: |
-          # Create deployment record in database
-          python scripts/deployment/create_deployment_record.py \
-            --environment production \
-            --version ${{ github.ref_name }} \
-            --commit ${{ github.sha }} \
-            --image ${{ needs.build-and-push.outputs.image-uri }}
+          # Create deployment record in database (skip if script is not present)
+          if [ -f scripts/deployment/create_deployment_record.py ]; then
+            python scripts/deployment/create_deployment_record.py \
+              --environment production \
+              --version ${{ github.ref_name }} \
+              --commit ${{ github.sha }} \
+              --image ${{ needs.build-and-push.outputs.image-uri }}
+          else
+            echo "scripts/deployment/create_deployment_record.py not found, skipping deployment record"
+          fi
 
       - name: Update ECS Service
         run: |
@@ -210,10 +214,15 @@ jobs:
 
       - name: Update deployment status
         run: |
-          python scripts/deployment/update_deployment_status.py \
-            --environment production \
-            --version ${{ github.ref_name }} \
-            --status success
+          # Update deployment status (skip if script is not present)
+          if [ -f scripts/deployment/update_deployment_status.py ]; then
+            python scripts/deployment/update_deployment_status.py \
+              --environment production \
+              --version ${{ github.ref_name }} \
+              --status success
+          else
+            echo "scripts/deployment/update_deployment_status.py not found, skipping status update"
+          fi
 
       - name: Notify Production Deployment
         uses: 8398a7/action-slack@v3

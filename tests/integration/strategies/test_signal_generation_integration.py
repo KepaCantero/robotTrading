@@ -1,5 +1,3 @@
-from app.shared.config.params.strategy_config import StockAllocationSettings
-
 """
     from app.shared.config.params.strategy_config import StockAllocationSettings
 Integration Tests: Signal Generation with Real Data
@@ -20,6 +18,8 @@ from typing import List
 import pandas as pd
 import pytest
 
+from app.shared.config.params.strategy_config import StockAllocationSettings
+
 # Add project root to path
 project_root = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(project_root))
@@ -32,7 +32,7 @@ from app.services.strategy_stock_allocator import StrategyStockAllocator
 from tests.integration.data.test_data_loader import load_all_csv_data
 
 logging.basicConfig(
-    level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
 logger = logging.getLogger(__name__)
 
@@ -45,21 +45,21 @@ def dataframe_to_quotes(symbol: str, df: pd.DataFrame) -> List[Quote]:
         date = df.index[i]
         row = df.iloc[i]
         try:
-            timestamp = date.to_pydatetime() if hasattr(date, 'to_pydatetime') else date
+            timestamp = date.to_pydatetime() if hasattr(date, "to_pydatetime") else date
 
             quote = Quote(
                 symbol=symbol,
-                bid=Decimal(str(row['close'])),
-                ask=Decimal(str(row['close'])),
-                last=Decimal(str(row['close'])),
+                bid=Decimal(str(row["close"])),
+                ask=Decimal(str(row["close"])),
+                last=Decimal(str(row["close"])),
                 volume=(
-                    Decimal(str(int(row['volume']))) if pd.notna(row['volume']) else Decimal("0")
+                    Decimal(str(int(row["volume"]))) if pd.notna(row["volume"]) else Decimal("0")
                 ),
                 timestamp=timestamp,
-                high=Decimal(str(row['high'])),
-                low=Decimal(str(row['low'])),
-                open=Decimal(str(row['open'])),
-                close=Decimal(str(row['close'])),
+                high=Decimal(str(row["high"])),
+                low=Decimal(str(row["low"])),
+                open=Decimal(str(row["open"])),
+                close=Decimal(str(row["close"])),
             )
             quotes.append(quote)
         except Exception as e:
@@ -124,7 +124,7 @@ class TestMultiStrategySignalGeneration:
         # Get latest quotes for each ticker
         latest_quotes_by_strategy = {}
 
-        for strategy in ['momentum', 'mean_reversion', 'pairs_trading']:
+        for strategy in ["momentum", "mean_reversion", "pairs_trading"]:
             tickers = strategy_allocations.get(strategy, [])
             if not tickers:
                 logger.warning(f"No tickers allocated for {strategy}")
@@ -150,28 +150,28 @@ class TestMultiStrategySignalGeneration:
         signals_by_strategy = {}
 
         # Momentum signals
-        if latest_quotes_by_strategy.get('momentum'):
-            momentum_quotes = latest_quotes_by_strategy['momentum']
+        if latest_quotes_by_strategy.get("momentum"):
+            momentum_quotes = latest_quotes_by_strategy["momentum"]
             momentum_signals = []
             for quote in momentum_quotes[-10:]:  # Test last 10 quotes
                 quote_signals = momentum_strategy.generate_signals(quote)
                 momentum_signals.extend(quote_signals)
-            signals_by_strategy['momentum'] = momentum_signals
+            signals_by_strategy["momentum"] = momentum_signals
             logger.info(f"✅ Momentum: Generated {len(momentum_signals)} signals")
 
         # Mean Reversion signals
-        if latest_quotes_by_strategy.get('mean_reversion'):
-            mr_quotes = latest_quotes_by_strategy['mean_reversion']
+        if latest_quotes_by_strategy.get("mean_reversion"):
+            mr_quotes = latest_quotes_by_strategy["mean_reversion"]
             mr_signals = []
             for quote in mr_quotes[-10:]:  # Test last 10 quotes
                 quote_signals = mean_reversion_strategy.generate_signals(quote)
                 mr_signals.extend(quote_signals)
-            signals_by_strategy['mean_reversion'] = mr_signals
+            signals_by_strategy["mean_reversion"] = mr_signals
             logger.info(f"✅ Mean Reversion: Generated {len(mr_signals)} signals")
 
         # Pairs Trading signals (requires pairs from allocator)
-        if allocated_portfolio.pairs and latest_quotes_by_strategy.get('pairs_trading'):
-            pairs_quotes = latest_quotes_by_strategy['pairs_trading']
+        if allocated_portfolio.pairs and latest_quotes_by_strategy.get("pairs_trading"):
+            pairs_quotes = latest_quotes_by_strategy["pairs_trading"]
             pairs_signals = []
             for pair in allocated_portfolio.pairs[:5]:  # Test first 5 pairs
                 # Get quotes for both tickers in pair
@@ -203,7 +203,7 @@ class TestMultiStrategySignalGeneration:
                     for quote in ticker2_quotes[-5:]:
                         quote_signals = pairs_strategy.generate_signals(quote)
                         pairs_signals.extend(quote_signals)
-            signals_by_strategy['pairs_trading'] = pairs_signals
+            signals_by_strategy["pairs_trading"] = pairs_signals
             logger.info(f"✅ Pairs Trading: Generated {len(pairs_signals)} signals")
 
         # Verify signals were generated
@@ -212,9 +212,9 @@ class TestMultiStrategySignalGeneration:
 
         # Check that at least one strategy generated signals
         strategies_with_signals = len([s for s in signals_by_strategy.values() if s])
-        assert (
-            strategies_with_signals > 0
-        ), f"At least one strategy should generate signals, got {strategies_with_signals}"
+        assert strategies_with_signals > 0, (
+            f"At least one strategy should generate signals, got {strategies_with_signals}"
+        )
 
         logger.info("✅ TEST 1 PASSED: Multi-strategy signal generation working")
 
@@ -233,8 +233,8 @@ class TestMomentumOnlyPortfolio:
         for symbol, df in real_historical_data.items():
             try:
                 score_result = allocator.score_momentum(symbol, df)
-                if score_result and not score_result.get('rejected', False):
-                    momentum_scores[symbol] = score_result.get('score', 0.0)
+                if score_result and not score_result.get("rejected", False):
+                    momentum_scores[symbol] = score_result.get("score", 0.0)
             except Exception as e:
                 logger.debug(f"Failed to score {symbol} for momentum: {e}")
                 continue
@@ -310,8 +310,8 @@ class TestMeanReversionOnlyPortfolio:
         for symbol, df in real_historical_data.items():
             try:
                 score_result = allocator.score_mean_reversion(symbol, df)
-                if score_result and not score_result.get('rejected', False):
-                    mr_scores[symbol] = score_result.get('score', 0.0)
+                if score_result and not score_result.get("rejected", False):
+                    mr_scores[symbol] = score_result.get("score", 0.0)
             except Exception as e:
                 logger.debug(f"Failed to score {symbol} for mean reversion: {e}")
                 continue
@@ -397,13 +397,13 @@ class TestPairsTradingOnlyPortfolio:
                     df1 = real_historical_data[symbol1]
                     df2 = real_historical_data[symbol2]
                     score_result = allocator.score_pairs_trading(symbol1, symbol2, df1, df2)
-                    if score_result and not score_result.get('rejected', False):
+                    if score_result and not score_result.get("rejected", False):
                         pairs_scores.append(
                             {
-                                'symbol1': symbol1,
-                                'symbol2': symbol2,
-                                'score': score_result.get('score', 0.0),
-                                'cointegration': score_result.get('cointegration_score', 0.0),
+                                "symbol1": symbol1,
+                                "symbol2": symbol2,
+                                "score": score_result.get("score", 0.0),
+                                "cointegration": score_result.get("cointegration_score", 0.0),
                             }
                         )
                 except Exception as e:
@@ -411,7 +411,7 @@ class TestPairsTradingOnlyPortfolio:
                     continue
 
         # Select top 5 pairs
-        top_pairs = sorted(pairs_scores, key=lambda x: x['score'], reverse=True)[:5]
+        top_pairs = sorted(pairs_scores, key=lambda x: x["score"], reverse=True)[:5]
 
         logger.info(f"Top 5 Pairs: {len(top_pairs)} found")
         for i, pair in enumerate(top_pairs, 1):
@@ -430,8 +430,8 @@ class TestPairsTradingOnlyPortfolio:
         # Get quotes for pairs
         pairs_quotes = {}
         for pair in top_pairs:
-            symbol1 = pair['symbol1']
-            symbol2 = pair['symbol2']
+            symbol1 = pair["symbol1"]
+            symbol2 = pair["symbol2"]
 
             if symbol1 in real_historical_data and symbol2 in real_historical_data:
                 df1 = real_historical_data[symbol1]

@@ -131,7 +131,7 @@ class ErrorHandler:
         service = self._get_service_from_category(error.category)
 
         # Prepare metadata
-        metadata = {
+        metadata: dict[str, Any] = {
             "error_code": error.error_code,
             "category": error.category.value,
             "severity": error.severity.value,

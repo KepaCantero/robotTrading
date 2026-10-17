@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 """
 Tick-Level Order Flow Imbalance Processor.
 
@@ -15,6 +13,8 @@ References:
 - Hasbrouck, J. (1991) "Measuring the Information Content of Stock Trades"
 - Johnson, B. (2010) "Algorithmic Trading & DMA"
 """
+
+from __future__ import annotations
 
 import logging
 import math

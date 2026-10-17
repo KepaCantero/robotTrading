@@ -1,22 +1,21 @@
-# Requirements Document: app/presentation/dashboard/meta_dashboard_page.py
+# Requirements Document: app/presentation/dashboard/nicegui_app/components/mission_log.py
 
 ## 1. Module Overview
-File: meta_dashboard_page.py
+File: mission_log.py
 Domain: Presentation
 
 ## 2. Dependencies
 - `__future__`
-- `app.presentation.dashboard.meta_dashboard`
-- `asyncio`
-- `logging`
-- `nest_asyncio`
-- `pathlib`
-- `streamlit`
-- `sys`
+- `nicegui`
 
 ## 3. Core Components
+### Classes
+- `MissionLog`
 ### Public Functions
-- `main()`
+- `log_line_class()`
+- `log_line_icon()`
+- `append()`
+- `clear()`
 
 ## 4. Applicable Trading Rules
 

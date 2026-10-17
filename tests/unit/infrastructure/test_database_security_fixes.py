@@ -25,12 +25,12 @@ from app.services.position_monitor.position_monitor import (
 class TestConnectionStringSanitization:
     """Test that database connection strings are sanitized in logs."""
 
-    @patch('app.infrastructure.persistence.database.logger')
+    @patch("app.infrastructure.persistence.database.logger")
     def test_postgresql_connection_sanitized(self, mock_logger):
         """Test PostgreSQL connection string is sanitized."""
         with patch(
-            'app.infrastructure.persistence.database.get_database_url',
-            return_value='postgresql://user:password@localhost:5432/trading',
+            "app.infrastructure.persistence.database.get_database_url",
+            return_value="postgresql://user:password@localhost:5432/trading",
         ):
             manager = DatabaseManager()
             try:
@@ -41,15 +41,15 @@ class TestConnectionStringSanitization:
             info_calls = [call for call in mock_logger.info.call_args_list]
             for call in info_calls:
                 call_str = str(call)
-                assert 'user:password' not in call_str, "Credentials exposed in log!"
-                assert 'postgresql://user' not in call_str, "Full connection string logged!"
+                assert "user:password" not in call_str, "Credentials exposed in log!"
+                assert "postgresql://user" not in call_str, "Full connection string logged!"
 
-    @patch('app.infrastructure.persistence.database.logger')
+    @patch("app.infrastructure.persistence.database.logger")
     def test_sqlite_connection_logged(self, mock_logger):
         """Test SQLite connection doesn't expose sensitive info."""
         with patch(
-            'app.infrastructure.persistence.database.get_database_url',
-            return_value='sqlite:///./trading.db',
+            "app.infrastructure.persistence.database.get_database_url",
+            return_value="sqlite:///./trading.db",
         ):
             manager = DatabaseManager()
             try:
@@ -58,7 +58,7 @@ class TestConnectionStringSanitization:
                 pass
 
             info_calls = [str(call) for call in mock_logger.info.call_args_list]
-            sqlite_logged = any('SQLite' in call for call in info_calls)
+            sqlite_logged = any("SQLite" in call for call in info_calls)
             assert sqlite_logged, "SQLite database type not logged"
 
 
@@ -95,7 +95,7 @@ class TestPositionStatePersistence:
 
         assert monitor.monitor_id is not None
         assert isinstance(monitor.monitor_id, str)
-        assert 'monitor_' in monitor.monitor_id
+        assert "monitor_" in monitor.monitor_id
 
     @pytest.mark.asyncio
     async def test_sync_state_to_database(self, mock_broker, sample_position):
@@ -124,9 +124,9 @@ class TestPositionStatePersistence:
 
             # Verify JSON serialization
             state_data = json.loads(state_record.positions_json)
-            assert 'positions' in state_data
-            assert len(state_data['positions']) == 1
-            assert state_data['positions'][0]['symbol'] == 'AAPL'
+            assert "positions" in state_data
+            assert len(state_data["positions"]) == 1
+            assert state_data["positions"][0]["symbol"] == "AAPL"
 
     @pytest.mark.asyncio
     async def test_load_state_from_database(self, mock_broker, sample_position):
@@ -252,15 +252,15 @@ class TestPositionStateModel:
 
             assert retrieved.version == 2
             data = json.loads(retrieved.positions_json)
-            assert len(data['positions']) == 1
-            assert data['positions'][0]['symbol'] == 'AAPL'
+            assert len(data["positions"]) == 1
+            assert data["positions"][0]["symbol"] == "AAPL"
 
     def test_position_state_repr(self):
         """Test PositionState string representation."""
-        state = PositionState(monitor_id="test_monitor", positions_json='{}')
+        state = PositionState(monitor_id="test_monitor", positions_json="{}")
         repr_str = repr(state)
-        assert 'test_monitor' in repr_str
-        assert 'version=' in repr_str
+        assert "test_monitor" in repr_str
+        assert "version=" in repr_str
 
 
 if __name__ == "__main__":

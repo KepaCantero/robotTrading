@@ -17,6 +17,14 @@ from typing import Annotated, Any
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from pydantic import BaseModel
 
+# Runtime imports (previously TYPE_CHECKING-only): FastAPI must be able to resolve
+# these names to see the Depends() metadata; otherwise the params become query args.
+from app.domain.strategies.execution_engine import ExecutionEngine
+from app.domain.strategies.protocols import (
+    StrategyLoggerProto as StrategyLogger,
+    StrategyRegistryProto as StrategyRegistry,
+)
+
 # Import protocols for type hints in Depends annotations
 # These are imported to avoid circular dependencies
 from app.shared.config.di_container import (
@@ -24,14 +32,6 @@ from app.shared.config.di_container import (
     get_strategy_config_loader as di_get_strategy_config_loader,
     get_strategy_logger as di_get_strategy_logger,
     get_strategy_registry as di_get_strategy_registry,
-)
-
-# Runtime imports (previously TYPE_CHECKING-only): FastAPI must be able to resolve
-# these names to see the Depends() metadata; otherwise the params become query args.
-from app.domain.strategies.execution_engine import ExecutionEngine
-from app.domain.strategies.protocols import (
-    StrategyLoggerProto as StrategyLogger,
-    StrategyRegistryProto as StrategyRegistry,
 )
 
 from . import audit_logger, get_correlation_id
@@ -141,7 +141,7 @@ async def get_strategies_overview(
     registry: Annotated[StrategyRegistry, Depends(get_strategy_registry_dep)],
 ):
     """Obtener resumen de todas las estrategias."""
-    correlation_id = get_correlation_id(request)
+    correlation_id = get_correlation_id()
     try:
         audit_logger.info(
             "strategies_overview_requested",
@@ -169,7 +169,7 @@ async def get_available_strategies(
     registry: Annotated[StrategyRegistry, Depends(get_strategy_registry_dep)],
 ):
     """Obtener lista de estrategias disponibles."""
-    correlation_id = get_correlation_id(request)
+    correlation_id = get_correlation_id()
     try:
         audit_logger.info(
             "available_strategies_requested",
@@ -197,7 +197,7 @@ async def get_loaded_strategies(
     registry: Annotated[StrategyRegistry, Depends(get_strategy_registry_dep)],
 ):
     """Obtener lista de estrategias cargadas."""
-    correlation_id = get_correlation_id(request)
+    correlation_id = get_correlation_id()
     try:
         audit_logger.info(
             "loaded_strategies_requested",
@@ -227,7 +227,7 @@ async def load_strategy(
     logger_instance: Annotated[StrategyLogger, Depends(get_strategy_logger_dep)],
 ):
     """Cargar una estrategia."""
-    correlation_id = get_correlation_id(request)
+    correlation_id = get_correlation_id()
     try:
         audit_logger.info(
             "strategy_load_requested",
@@ -270,7 +270,7 @@ async def activate_strategy(
     logger_instance: Annotated[StrategyLogger, Depends(get_strategy_logger_dep)],
 ):
     """Activar una estrategia."""
-    correlation_id = get_correlation_id(request)
+    correlation_id = get_correlation_id()
     try:
         audit_logger.info(
             "strategy_activate_requested",
@@ -304,7 +304,7 @@ async def deactivate_strategy(
     logger_instance: Annotated[StrategyLogger, Depends(get_strategy_logger_dep)],
 ):
     """Desactivar estrategia activa."""
-    correlation_id = get_correlation_id(request)
+    correlation_id = get_correlation_id()
     try:
         audit_logger.info(
             "strategy_deactivate_requested",
@@ -347,7 +347,7 @@ async def unload_strategy(
     logger_instance: Annotated[StrategyLogger, Depends(get_strategy_logger_dep)],
 ):
     """Descargar una estrategia."""
-    correlation_id = get_correlation_id(request)
+    correlation_id = get_correlation_id()
     try:
         audit_logger.info(
             "strategy_unload_requested",
@@ -381,7 +381,7 @@ async def get_strategy(
     registry: Annotated[StrategyRegistry, Depends(get_strategy_registry_dep)],
 ):
     """Obtener información de una estrategia."""
-    correlation_id = get_correlation_id(request)
+    correlation_id = get_correlation_id()
     try:
         audit_logger.info(
             "strategy_details_requested",
@@ -425,7 +425,7 @@ async def update_strategy_parameters(
     registry: Annotated[StrategyRegistry, Depends(get_strategy_registry_dep)],
 ):
     """Actualizar parámetros de una estrategia."""
-    correlation_id = get_correlation_id(request)
+    correlation_id = get_correlation_id()
     try:
         audit_logger.info(
             "strategy_parameters_update_requested",

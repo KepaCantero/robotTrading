@@ -175,19 +175,21 @@ class TestNoLookAhead:
 
         # Corrupt everything after the cutoff (day 3+): prices multiplied x10
         mutated = [
-            bar.model_copy(
-                update={
-                    "open": bar.open * 10,
-                    "high": bar.high * 10,
-                    "low": bar.low * 10,
-                    "close": bar.close * 10,
-                    "last": bar.last * 10,
-                    "bid": bar.bid * 10,
-                    "ask": bar.ask * 10,
-                }
+            (
+                bar.model_copy(
+                    update={
+                        "open": bar.open * 10,
+                        "high": bar.high * 10,
+                        "low": bar.low * 10,
+                        "close": bar.close * 10,
+                        "last": bar.last * 10,
+                        "bid": bar.bid * 10,
+                        "ask": bar.ask * 10,
+                    }
+                )
+                if bar.timestamp > T0 + timedelta(days=3)
+                else bar
             )
-            if bar.timestamp > T0 + timedelta(days=3)
-            else bar
             for bar in bars
         ]
         after = make_engine().run_backtest(mutated, [buy, sell])
@@ -259,7 +261,9 @@ class TestDrawdownContract:
         result = make_engine().run_backtest(bars, [buy, sell])
 
         dd = result.performance.max_drawdown
-        assert Decimal("-1") <= dd <= Decimal("0"), f"drawdown must be a fraction in [-1,0], got {dd}"
+        assert Decimal("-1") <= dd <= Decimal("0"), (
+            f"drawdown must be a fraction in [-1,0], got {dd}"
+        )
         assert float(result.performance.max_drawdown_percentage) == pytest.approx(
             float(dd * 100), abs=0.001
         )

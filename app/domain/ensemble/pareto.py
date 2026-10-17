@@ -1,11 +1,11 @@
-from __future__ import annotations
-
 """
 Pareto Front Optimization for Multi-Objective Strategy Selection.
 
 This module implements NSGA-II (Non-dominated Sorting Genetic Algorithm II)
 for finding optimal strategy weight allocations across multiple objectives.
 """
+
+from __future__ import annotations
 
 import logging
 import random

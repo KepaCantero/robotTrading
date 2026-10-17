@@ -209,7 +209,7 @@ class TestDatasetIntegrity(unittest.TestCase):
 
         anomalous_count = 0
         for quote in quotes:
-            for field in ['open', 'high', 'low', 'close', 'last', 'volume', 'bid', 'ask']:
+            for field in ["open", "high", "low", "close", "last", "volume", "bid", "ask"]:
                 value = getattr(quote, field)
                 if value is None or not isinstance(value, Decimal) or value <= 0:
                     anomalous_count += 1
@@ -228,7 +228,7 @@ class TestDatasetIntegrity(unittest.TestCase):
         )
 
         for quote in quotes:
-            for field in ['open', 'high', 'low', 'close', 'last', 'volume', 'bid', 'ask']:
+            for field in ["open", "high", "low", "close", "last", "volume", "bid", "ask"]:
                 value = getattr(quote, field)
                 self.assertIsNotNone(value, f"{field} is None")
                 self.assertIsInstance(value, Decimal, f"{field} not Decimal")
@@ -502,7 +502,7 @@ class TestTechnicalIndicatorsValidation(unittest.TestCase):
         self.assertIsNotNone(atr_low)
 
         # ATR should be significantly higher for high volatility
-        atr_ratio = atr_high / atr_low if atr_low > 0 else float('inf')
+        atr_ratio = atr_high / atr_low if atr_low > 0 else float("inf")
         self.assertGreater(
             atr_ratio, 2.0, f"ATR should be >2x higher for high vol (ratio: {atr_ratio:.2f})"
         )

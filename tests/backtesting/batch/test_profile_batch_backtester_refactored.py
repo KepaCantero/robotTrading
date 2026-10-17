@@ -58,7 +58,7 @@ class TestServiceLayerInitialization:
 
     def test_initialization_with_service_layer(self):
         """Test initialization creates all service layer components."""
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.yaml', delete=False) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as f:
             config_content = """
 database:
   url: "sqlite:///test.db"
@@ -94,10 +94,10 @@ acceptance_criteria:
             config_path = f.name
 
         try:
-            with patch('app.backtesting.services.database_service.create_engine'):
-                with patch('app.backtesting.services.database_service.sessionmaker'):
+            with patch("app.backtesting.services.database_service.create_engine"):
+                with patch("app.backtesting.services.database_service.sessionmaker"):
                     with patch(
-                        'app.backtesting.services.database_service.Base.metadata.create_all'
+                        "app.backtesting.services.database_service.Base.metadata.create_all"
                     ):
                         backtester = ProfileBatchBacktester(config_path=config_path)
 
@@ -123,7 +123,7 @@ class TestProfileGenerationWithServiceLayer:
 
     def test_generate_all_profiles_delegates_to_service(self):
         """Test that generate_all_profiles delegates to ProfileGenerationService."""
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.yaml', delete=False) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as f:
             config_content = """
 database:
   url: "sqlite:///test.db"
@@ -144,10 +144,10 @@ investment_horizons:
             config_path = f.name
 
         try:
-            with patch('app.backtesting.services.database_service.create_engine'):
-                with patch('app.backtesting.services.database_service.sessionmaker'):
+            with patch("app.backtesting.services.database_service.create_engine"):
+                with patch("app.backtesting.services.database_service.sessionmaker"):
                     with patch(
-                        'app.backtesting.services.database_service.Base.metadata.create_all'
+                        "app.backtesting.services.database_service.Base.metadata.create_all"
                     ):
                         backtester = ProfileBatchBacktester(config_path=config_path)
                         profiles = backtester.generate_all_profiles()
@@ -165,7 +165,7 @@ investment_horizons:
 
     def test_investment_horizons_dict_format(self):
         """Test loading investment horizons from dict format."""
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.yaml', delete=False) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as f:
             config_content = """
 database:
   url: "sqlite:///test.db"
@@ -185,10 +185,10 @@ investment_horizons:
             config_path = f.name
 
         try:
-            with patch('app.backtesting.services.database_service.create_engine'):
-                with patch('app.backtesting.services.database_service.sessionmaker'):
+            with patch("app.backtesting.services.database_service.create_engine"):
+                with patch("app.backtesting.services.database_service.sessionmaker"):
                     with patch(
-                        'app.backtesting.services.database_service.Base.metadata.create_all'
+                        "app.backtesting.services.database_service.Base.metadata.create_all"
                     ):
                         backtester = ProfileBatchBacktester(config_path=config_path)
                         horizons = backtester.config_service.load_investment_horizons()
@@ -200,7 +200,7 @@ investment_horizons:
 
     def test_investment_horizons_list_format(self):
         """Test loading investment horizons from list format."""
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.yaml', delete=False) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as f:
             config_content = """
 database:
   url: "sqlite:///test.db"
@@ -216,10 +216,10 @@ investment_horizons: [6, 12, 18, 24]
             config_path = f.name
 
         try:
-            with patch('app.backtesting.services.database_service.create_engine'):
-                with patch('app.backtesting.services.database_service.sessionmaker'):
+            with patch("app.backtesting.services.database_service.create_engine"):
+                with patch("app.backtesting.services.database_service.sessionmaker"):
                     with patch(
-                        'app.backtesting.services.database_service.Base.metadata.create_all'
+                        "app.backtesting.services.database_service.Base.metadata.create_all"
                     ):
                         backtester = ProfileBatchBacktester(config_path=config_path)
                         horizons = backtester.config_service.load_investment_horizons()
@@ -235,7 +235,7 @@ class TestFallbackTracker:
 
     def test_fallback_metrics_initialization(self):
         """Test that fallback metrics initialize correctly."""
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.yaml', delete=False) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as f:
             config_content = """
 database:
   url: "sqlite:///test.db"
@@ -252,10 +252,10 @@ investment_horizons:
             config_path = f.name
 
         try:
-            with patch('app.backtesting.services.database_service.create_engine'):
-                with patch('app.backtesting.services.database_service.sessionmaker'):
+            with patch("app.backtesting.services.database_service.create_engine"):
+                with patch("app.backtesting.services.database_service.sessionmaker"):
                     with patch(
-                        'app.backtesting.services.database_service.Base.metadata.create_all'
+                        "app.backtesting.services.database_service.Base.metadata.create_all"
                     ):
                         backtester = ProfileBatchBacktester(config_path=config_path)
                         metrics = backtester.get_fallback_metrics()
@@ -269,7 +269,7 @@ investment_horizons:
 
     def test_fallback_tracker_thread_safety(self):
         """Test that FallbackTracker is thread-safe for parallel execution."""
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.yaml', delete=False) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as f:
             config_content = """
 database:
   url: "sqlite:///test.db"
@@ -286,10 +286,10 @@ investment_horizons:
             config_path = f.name
 
         try:
-            with patch('app.backtesting.services.database_service.create_engine'):
-                with patch('app.backtesting.services.database_service.sessionmaker'):
+            with patch("app.backtesting.services.database_service.create_engine"):
+                with patch("app.backtesting.services.database_service.sessionmaker"):
                     with patch(
-                        'app.backtesting.services.database_service.Base.metadata.create_all'
+                        "app.backtesting.services.database_service.Base.metadata.create_all"
                     ):
                         backtester = ProfileBatchBacktester(config_path=config_path)
 
@@ -318,7 +318,7 @@ class TestMultiStrategyValidation:
 
     def test_multi_strategy_validation_with_mapper(self):
         """Test that multi_strategy mode validates ProfileStrategyMapper."""
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.yaml', delete=False) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as f:
             config_content = """
 database:
   url: "sqlite:///test.db"
@@ -335,14 +335,14 @@ investment_horizons:
             config_path = f.name
 
         try:
-            with patch('app.backtesting.services.database_service.create_engine'):
-                with patch('app.backtesting.services.database_service.sessionmaker'):
+            with patch("app.backtesting.services.database_service.create_engine"):
+                with patch("app.backtesting.services.database_service.sessionmaker"):
                     with patch(
-                        'app.backtesting.services.database_service.Base.metadata.create_all'
+                        "app.backtesting.services.database_service.Base.metadata.create_all"
                     ):
                         # Mock ProfileStrategyMapper
                         with patch(
-                            'app.backtesting.profile_batch_backtester_refactored.create_profile_mapper'
+                            "app.backtesting.profile_batch_backtester_refactored.create_profile_mapper"
                         ) as mock_mapper:
                             mock_mapper.return_value = MagicMock()
 
@@ -361,17 +361,17 @@ investment_horizons:
                                 # We'll mock the internal methods to avoid actual execution
                                 with (
                                     patch.object(
-                                        backtester, '_create_profile_config', return_value={}
+                                        backtester, "_create_profile_config", return_value={}
                                     ),
-                                    patch.object(backtester, '_run_baseline', return_value={}),
+                                    patch.object(backtester, "_run_baseline", return_value={}),
                                 ):
                                     with patch.object(
                                         backtester,
-                                        '_run_optimization_pipeline',
+                                        "_run_optimization_pipeline",
                                         return_value=MagicMock(),
                                     ):
                                         with patch.object(
-                                            backtester.database_service, 'store_result'
+                                            backtester.database_service, "store_result"
                                         ):
                                             result = backtester.run_single_profile(
                                                 profile, multi_strategy=True
@@ -385,7 +385,7 @@ investment_horizons:
 
     def test_multi_strategy_validation_without_mapper_raises_error(self):
         """Test that multi_strategy mode raises ValueError without mapper."""
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.yaml', delete=False) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as f:
             config_content = """
 database:
   url: "sqlite:///test.db"
@@ -402,14 +402,14 @@ investment_horizons:
             config_path = f.name
 
         try:
-            with patch('app.backtesting.services.database_service.create_engine'):
-                with patch('app.backtesting.services.database_service.sessionmaker'):
+            with patch("app.backtesting.services.database_service.create_engine"):
+                with patch("app.backtesting.services.database_service.sessionmaker"):
                     with patch(
-                        'app.backtesting.services.database_service.Base.metadata.create_all'
+                        "app.backtesting.services.database_service.Base.metadata.create_all"
                     ):
                         # Mock create_profile_mapper to return None
                         with patch(
-                            'app.backtesting.profile_batch_backtester_refactored.create_profile_mapper',
+                            "app.backtesting.profile_batch_backtester_refactored.create_profile_mapper",
                             return_value=None,
                         ):
                             backtester = ProfileBatchBacktester(config_path=config_path)
@@ -435,7 +435,7 @@ class TestErrorHandlingWithStructuredLogging:
 
     def test_baseline_error_logging_context(self):
         """Test that baseline errors include structured context."""
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.yaml', delete=False) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as f:
             config_content = """
 database:
   url: "sqlite:///test.db"
@@ -452,10 +452,10 @@ investment_horizons:
             config_path = f.name
 
         try:
-            with patch('app.backtesting.services.database_service.create_engine'):
-                with patch('app.backtesting.services.database_service.sessionmaker'):
+            with patch("app.backtesting.services.database_service.create_engine"):
+                with patch("app.backtesting.services.database_service.sessionmaker"):
                     with patch(
-                        'app.backtesting.services.database_service.Base.metadata.create_all'
+                        "app.backtesting.services.database_service.Base.metadata.create_all"
                     ):
                         backtester = ProfileBatchBacktester(config_path=config_path)
 
@@ -466,12 +466,12 @@ investment_horizons:
                         )
 
                         # Mock _run_baseline to fail
-                        with patch.object(backtester, '_run_baseline') as mock_baseline:
+                        with patch.object(backtester, "_run_baseline") as mock_baseline:
                             mock_baseline.side_effect = RuntimeError("Test error")
 
                             # Mock logger to capture the error
                             with patch(
-                                'app.backtesting.profile_batch_backtester_refactored.logger'
+                                "app.backtesting.profile_batch_backtester_refactored.logger"
                             ) as mock_logger:
                                 try:
                                     backtester.run_single_profile(profile)
@@ -490,7 +490,7 @@ class TestTemporaryConfigCleanup:
 
     def test_temp_config_cleanup_on_success(self):
         """Test that temp config files are cleaned up on success."""
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.yaml', delete=False) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as f:
             config_content = """
 database:
   url: "sqlite:///test.db"
@@ -507,14 +507,14 @@ investment_horizons:
             config_path = f.name
 
         try:
-            with patch('app.backtesting.services.database_service.create_engine'):
-                with patch('app.backtesting.services.database_service.sessionmaker'):
+            with patch("app.backtesting.services.database_service.create_engine"):
+                with patch("app.backtesting.services.database_service.sessionmaker"):
                     with patch(
-                        'app.backtesting.services.database_service.Base.metadata.create_all'
+                        "app.backtesting.services.database_service.Base.metadata.create_all"
                     ):
                         # Patch ComprehensiveBacktestRunner to avoid actual execution
                         with patch(
-                            'app.backtesting.profile_batch_backtester_refactored.ComprehensiveBacktestRunner'
+                            "app.backtesting.profile_batch_backtester_refactored.ComprehensiveBacktestRunner"
                         ) as MockRunner:
                             mock_instance = MockRunner.return_value
                             mock_instance.run_baseline_backtest.return_value = [
@@ -547,7 +547,7 @@ investment_horizons:
 
     def test_temp_config_cleanup_on_error(self):
         """Test that temp config files are cleaned up even on error."""
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.yaml', delete=False) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as f:
             config_content = """
 database:
   url: "sqlite:///test.db"
@@ -564,14 +564,14 @@ investment_horizons:
             config_path = f.name
 
         try:
-            with patch('app.backtesting.services.database_service.create_engine'):
-                with patch('app.backtesting.services.database_service.sessionmaker'):
+            with patch("app.backtesting.services.database_service.create_engine"):
+                with patch("app.backtesting.services.database_service.sessionmaker"):
                     with patch(
-                        'app.backtesting.services.database_service.Base.metadata.create_all'
+                        "app.backtesting.services.database_service.Base.metadata.create_all"
                     ):
                         # Patch ComprehensiveBacktestRunner to raise error
                         with patch(
-                            'app.backtesting.profile_batch_backtester_refactored.ComprehensiveBacktestRunner'
+                            "app.backtesting.profile_batch_backtester_refactored.ComprehensiveBacktestRunner"
                         ) as MockRunner:
                             mock_instance = MockRunner.return_value
                             mock_instance.run_baseline_backtest.side_effect = RuntimeError(
@@ -605,7 +605,7 @@ class TestServiceDelegation:
 
     def test_get_best_strategy_delegates_to_database_service(self):
         """Test that get_best_strategy delegates to DatabaseService."""
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.yaml', delete=False) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as f:
             config_content = """
 database:
   url: "sqlite:///test.db"
@@ -622,10 +622,10 @@ investment_horizons:
             config_path = f.name
 
         try:
-            with patch('app.backtesting.services.database_service.create_engine'):
-                with patch('app.backtesting.services.database_service.sessionmaker'):
+            with patch("app.backtesting.services.database_service.create_engine"):
+                with patch("app.backtesting.services.database_service.sessionmaker"):
                     with patch(
-                        'app.backtesting.services.database_service.Base.metadata.create_all'
+                        "app.backtesting.services.database_service.Base.metadata.create_all"
                     ):
                         backtester = ProfileBatchBacktester(config_path=config_path)
 
@@ -633,7 +633,7 @@ investment_horizons:
                         mock_best_config = {"sharpe_ratio": 2.0}
                         with patch.object(
                             backtester.database_service,
-                            'get_best_strategy',
+                            "get_best_strategy",
                             return_value=mock_best_config,
                         ):
                             result = backtester.get_best_strategy(
@@ -650,7 +650,7 @@ investment_horizons:
 
     def test_generate_comparison_report_delegates_to_report_service(self):
         """Test that generate_comparison_report delegates to ReportGenerationService."""
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.yaml', delete=False) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as f:
             config_content = """
 database:
   url: "sqlite:///test.db"
@@ -667,10 +667,10 @@ investment_horizons:
             config_path = f.name
 
         try:
-            with patch('app.backtesting.services.database_service.create_engine'):
-                with patch('app.backtesting.services.database_service.sessionmaker'):
+            with patch("app.backtesting.services.database_service.create_engine"):
+                with patch("app.backtesting.services.database_service.sessionmaker"):
                     with patch(
-                        'app.backtesting.services.database_service.Base.metadata.create_all'
+                        "app.backtesting.services.database_service.Base.metadata.create_all"
                     ):
                         backtester = ProfileBatchBacktester(config_path=config_path)
 
@@ -681,7 +681,7 @@ investment_horizons:
                         mock_html = "<html>Report</html>"
                         with patch.object(
                             backtester.report_service,
-                            'generate_comparison_report',
+                            "generate_comparison_report",
                             return_value=mock_html,
                         ):
                             result = backtester.generate_comparison_report()
@@ -696,7 +696,7 @@ investment_horizons:
 
     def test_export_results_delegates_to_report_service(self):
         """Test that export_results delegates to ReportGenerationService."""
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.yaml', delete=False) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as f:
             config_content = """
 database:
   url: "sqlite:///test.db"
@@ -713,10 +713,10 @@ investment_horizons:
             config_path = f.name
 
         try:
-            with patch('app.backtesting.services.database_service.create_engine'):
-                with patch('app.backtesting.services.database_service.sessionmaker'):
+            with patch("app.backtesting.services.database_service.create_engine"):
+                with patch("app.backtesting.services.database_service.sessionmaker"):
                     with patch(
-                        'app.backtesting.services.database_service.Base.metadata.create_all'
+                        "app.backtesting.services.database_service.Base.metadata.create_all"
                     ):
                         backtester = ProfileBatchBacktester(config_path=config_path)
 
@@ -726,7 +726,7 @@ investment_horizons:
                         # Mock report service
                         mock_path = Path("test_export.json")
                         with patch.object(
-                            backtester.report_service, 'export_results', return_value=mock_path
+                            backtester.report_service, "export_results", return_value=mock_path
                         ):
                             result = backtester.export_results(format="json")
 

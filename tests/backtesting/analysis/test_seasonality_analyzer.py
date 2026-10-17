@@ -98,27 +98,27 @@ class TestMonthlyReturnsAnalysis:
         result = analyzer.analyze_monthly_returns(sample_equity_curve_12_months)
 
         assert result is not None
-        assert 'month_stats' in result
-        assert 'best_month' in result
-        assert 'worst_month' in result
-        assert 'overall_avg_return' in result
-        assert result['total_months_analyzed'] > 0
+        assert "month_stats" in result
+        assert "best_month" in result
+        assert "worst_month" in result
+        assert "overall_avg_return" in result
+        assert result["total_months_analyzed"] > 0
 
     def test_monthly_stats_structure(self, analyzer, sample_equity_curve_12_months):
         """Test structure of monthly statistics."""
         result = analyzer.analyze_monthly_returns(sample_equity_curve_12_months)
 
         assert result is not None
-        month_stats = result['month_stats']
+        month_stats = result["month_stats"]
         assert len(month_stats) > 0
 
         for month in month_stats:
-            assert 'month' in month
-            assert 'month_name' in month
-            assert 'avg_return' in month
-            assert 'cumulative_return' in month
-            assert 'positive_count' in month
-            assert 'negative_count' in month
+            assert "month" in month
+            assert "month_name" in month
+            assert "avg_return" in month
+            assert "cumulative_return" in month
+            assert "positive_count" in month
+            assert "negative_count" in month
 
     def test_monthly_analysis_insufficient_data(self, analyzer):
         """Test monthly analysis with insufficient data."""
@@ -147,10 +147,10 @@ class TestMonthlyReturnsAnalysis:
         result = analyzer.analyze_monthly_returns(sample_equity_curve_5_years)
 
         assert result is not None
-        assert result['best_month'] is not None
-        assert result['worst_month'] is not None
+        assert result["best_month"] is not None
+        assert result["worst_month"] is not None
         assert (
-            result['best_month']['cumulative_return'] > result['worst_month']['cumulative_return']
+            result["best_month"]["cumulative_return"] > result["worst_month"]["cumulative_return"]
         )
 
 
@@ -162,24 +162,24 @@ class TestQuarterlyReturnsAnalysis:
         result = analyzer.analyze_quarterly_returns(sample_equity_curve_5_years)
 
         assert result is not None
-        assert 'quarter_stats' in result
-        assert 'best_quarter' in result
-        assert 'worst_quarter' in result
-        assert result['total_quarters_analyzed'] > 0
+        assert "quarter_stats" in result
+        assert "best_quarter" in result
+        assert "worst_quarter" in result
+        assert result["total_quarters_analyzed"] > 0
 
     def test_quarterly_stats_structure(self, analyzer, sample_equity_curve_5_years):
         """Test structure of quarterly statistics."""
         result = analyzer.analyze_quarterly_returns(sample_equity_curve_5_years)
 
         assert result is not None
-        quarter_stats = result['quarter_stats']
+        quarter_stats = result["quarter_stats"]
         assert len(quarter_stats) > 0
 
         for quarter in quarter_stats:
-            assert 'quarter' in quarter
-            assert 'quarter_name' in quarter
-            assert 'avg_return' in quarter
-            assert 'cumulative_return' in quarter
+            assert "quarter" in quarter
+            assert "quarter_name" in quarter
+            assert "avg_return" in quarter
+            assert "cumulative_return" in quarter
 
     def test_quarterly_analysis_insufficient_data(self, analyzer, sample_equity_curve_12_months):
         """Test quarterly analysis with insufficient data."""
@@ -193,8 +193,8 @@ class TestQuarterlyReturnsAnalysis:
         result = analyzer.analyze_quarterly_returns(sample_equity_curve_5_years)
 
         assert result is not None
-        quarter_stats = result['quarter_stats']
-        quarters = [q['quarter'] for q in quarter_stats]
+        quarter_stats = result["quarter_stats"]
+        quarters = [q["quarter"] for q in quarter_stats]
         assert len(set(quarters)) == 4  # All 4 quarters present
 
 
@@ -206,21 +206,21 @@ class TestBestWorstMonths:
         result = analyzer.get_best_worst_months(sample_equity_curve_5_years)
 
         assert result is not None
-        assert 'best_months' in result
-        assert 'worst_months' in result
-        assert 'all_months_ranked' in result
-        assert len(result['best_months']) > 0
-        assert len(result['worst_months']) > 0
+        assert "best_months" in result
+        assert "worst_months" in result
+        assert "all_months_ranked" in result
+        assert len(result["best_months"]) > 0
+        assert len(result["worst_months"]) > 0
 
     def test_best_months_sorted_correctly(self, analyzer, sample_equity_curve_5_years):
         """Test that best months are sorted by return."""
         result = analyzer.get_best_worst_months(sample_equity_curve_5_years)
 
         assert result is not None
-        best_months = result['best_months']
+        best_months = result["best_months"]
 
         if len(best_months) > 1:
-            returns = [m['cumulative_return'] for m in best_months]
+            returns = [m["cumulative_return"] for m in best_months]
             assert returns == sorted(returns, reverse=True)
 
     def test_worst_months_sorted_correctly(self, analyzer, sample_equity_curve_5_years):
@@ -228,11 +228,11 @@ class TestBestWorstMonths:
         result = analyzer.get_best_worst_months(sample_equity_curve_5_years)
 
         assert result is not None
-        worst_months = result['worst_months']
+        worst_months = result["worst_months"]
 
         # Worst months should be the bottom 3, which means they're in ascending order
         if len(worst_months) > 1:
-            returns = [m['cumulative_return'] for m in worst_months]
+            returns = [m["cumulative_return"] for m in worst_months]
             # Worst months should be sorted ascending (lowest first)
             assert all(returns[i] <= returns[i + 1] for i in range(len(returns) - 1))
 
@@ -297,11 +297,11 @@ class TestReturnDecomposition:
 
         # statsmodels might not be available
         if result is not None:
-            assert 'method' in result
-            assert 'trend' in result
-            assert 'seasonal' in result
-            assert 'residual' in result
-            assert result['method'] in ['additive', 'multiplicative']
+            assert "method" in result
+            assert "trend" in result
+            assert "seasonal" in result
+            assert "residual" in result
+            assert result["method"] in ["additive", "multiplicative"]
 
     def test_decomposition_insufficient_data(self, analyzer, sample_equity_curve_12_months):
         """Test decomposition with less than 24 months."""
@@ -312,17 +312,17 @@ class TestReturnDecomposition:
 
     def test_decomposition_additive_method(self, analyzer, sample_equity_curve_5_years):
         """Test additive decomposition."""
-        result = analyzer.decompose_returns(sample_equity_curve_5_years, method='additive')
+        result = analyzer.decompose_returns(sample_equity_curve_5_years, method="additive")
 
         if result is not None:
-            assert result['method'] == 'additive'
+            assert result["method"] == "additive"
 
     def test_decomposition_multiplicative_method(self, analyzer, sample_equity_curve_5_years):
         """Test multiplicative decomposition."""
-        result = analyzer.decompose_returns(sample_equity_curve_5_years, method='multiplicative')
+        result = analyzer.decompose_returns(sample_equity_curve_5_years, method="multiplicative")
 
         if result is not None:
-            assert result['method'] == 'multiplicative'
+            assert result["method"] == "multiplicative"
 
 
 class TestReportGeneration:
@@ -436,8 +436,8 @@ class TestEdgeCases:
 
         assert monthly is not None
         # Should have returns very close to 0
-        if monthly and monthly.get('overall_avg_return'):
-            assert abs(monthly['overall_avg_return']) < 0.001
+        if monthly and monthly.get("overall_avg_return"):
+            assert abs(monthly["overall_avg_return"]) < 0.001
 
     def test_negative_returns(self, analyzer):
         """Test with consistent negative returns."""
@@ -453,7 +453,7 @@ class TestEdgeCases:
         monthly = analyzer.analyze_monthly_returns(curve)
 
         assert monthly is not None
-        assert monthly['overall_avg_return'] < 0
+        assert monthly["overall_avg_return"] < 0
 
     def test_extreme_volatility(self, analyzer):
         """Test with extreme volatility."""
@@ -500,4 +500,4 @@ class TestIntegration:
         best_worst = analyzer.get_best_worst_months(sample_equity_curve_5_years)
 
         if monthly and best_worst:
-            assert monthly['best_month'] == best_worst['best_months'][0]
+            assert monthly["best_month"] == best_worst["best_months"][0]

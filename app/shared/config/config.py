@@ -10,8 +10,8 @@ from __future__ import annotations
 import logging
 import os
 
-from pydantic import ConfigDict, Field, ValidationInfo, field_validator
-from pydantic_settings import BaseSettings
+from pydantic import Field, ValidationInfo, field_validator
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 logger = logging.getLogger(__name__)
 
@@ -160,7 +160,7 @@ class Settings(BaseSettings):
     rate_limit_requests: int = Field(default=100, description="Rate limit requests per minute")
     rate_limit_window: int = Field(default=60, description="Rate limit window in seconds")
 
-    model_config = ConfigDict(
+    model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",
         case_sensitive=False,

@@ -209,7 +209,7 @@ class TestXMLEncoding:
 
     def test_encode_for_xml_attribute(self):
         """Test encoding for XML attribute context."""
-        result = encode_for_xml("value\"test", attribute=True)
+        result = encode_for_xml('value"test', attribute=True)
 
         assert "&quot;" in result
         assert "&apos;" in result

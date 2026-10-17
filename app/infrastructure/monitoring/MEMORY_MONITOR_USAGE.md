@@ -17,8 +17,8 @@ from app.services.monitoring import (
 
 # Create configuration
 config = MemoryConfig(
-    memory_limit_mb=4096,        # 4GB limit
-    warning_threshold_mb=3072,   # 3GB warning
+    memory_limit_mb=4096,  # 4GB limit
+    warning_threshold_mb=3072,  # 3GB warning
     check_interval_seconds=300,  # 5 minutes
     action=MemoryAction.ALERT_ONLY,
 )
@@ -39,6 +39,7 @@ async def save_trading_state():
     await portfolio.save_state()
     await order_manager.save_state()
 
+
 monitor = get_memory_monitor(
     config=MemoryConfig(
         action=MemoryAction.RESTART,
@@ -54,6 +55,7 @@ monitor = get_memory_monitor(
 async def close_all_positions():
     """Close positions before restart."""
     await trading_engine.close_all_positions()
+
 
 monitor = get_memory_monitor(
     config=MemoryConfig(
@@ -72,6 +74,7 @@ def send_alert(message: str):
     # Send to Slack, email, etc.
     slack_client.send_message(f"Memory Alert: {message}")
     email_client.send_email("Memory Alert", message)
+
 
 config = MemoryConfig(
     alert_callback=send_alert,
@@ -95,13 +98,13 @@ monitor = get_memory_monitor(config=config)
 
 ```python
 MemoryConfig(
-    memory_limit_mb=4096,              # Critical threshold (MB)
-    warning_threshold_mb=3072,         # Warning threshold (MB)
-    check_interval_seconds=300.0,      # Check frequency (seconds)
-    action=MemoryAction.ALERT_ONLY,    # Action to take
+    memory_limit_mb=4096,  # Critical threshold (MB)
+    warning_threshold_mb=3072,  # Warning threshold (MB)
+    check_interval_seconds=300.0,  # Check frequency (seconds)
+    action=MemoryAction.ALERT_ONLY,  # Action to take
     close_positions_on_restart=False,  # Close positions on restart
-    save_state_before_restart=True,    # Save state on restart
-    alert_callback=None,               # Alert callback function
+    save_state_before_restart=True,  # Save state on restart
+    alert_callback=None,  # Alert callback function
 )
 ```
 
@@ -180,10 +183,10 @@ from app.services.monitoring import get_memory_monitor, MemoryConfig, MemoryActi
 
 # Production configuration
 config = MemoryConfig(
-    memory_limit_mb=4096,           # 4GB limit
-    warning_threshold_mb=3072,      # 3GB warning
-    check_interval_seconds=300.0,   # 5 minutes
-    action=MemoryAction.RESTART,    # Auto-restart
+    memory_limit_mb=4096,  # 4GB limit
+    warning_threshold_mb=3072,  # 3GB warning
+    check_interval_seconds=300.0,  # 5 minutes
+    action=MemoryAction.RESTART,  # Auto-restart
     close_positions_on_restart=True,
     save_state_before_restart=True,
     alert_callback=send_alert,
@@ -204,6 +207,7 @@ await monitor.start()
 
 ```python
 from app.services.monitoring import get_memory_monitor, MemoryConfig, MemoryAction
+
 
 class TradingApplication:
     def __init__(self):
@@ -244,11 +248,13 @@ from app.services.monitoring import get_memory_monitor
 
 router = APIRouter()
 
+
 @router.get("/api/memory/stats")
 async def get_memory_statistics():
     """Get current memory statistics."""
     monitor = get_memory_monitor()
     return monitor.get_statistics()
+
 
 @router.get("/api/memory/snapshots")
 async def get_memory_snapshots(limit: int = 10):
@@ -256,6 +262,7 @@ async def get_memory_snapshots(limit: int = 10):
     monitor = get_memory_monitor()
     snapshots = monitor.get_snapshots(limit=limit)
     return [s.to_dict() for s in snapshots]
+
 
 @router.post("/api/memory/restart")
 async def trigger_restart():
@@ -348,6 +355,7 @@ pytest tests/unit/services/monitoring/test_memory_monitor.py::TestMemoryMonitorS
 import asyncio
 from app.services.monitoring import get_memory_monitor, MemoryConfig
 
+
 async def test():
     config = MemoryConfig(
         memory_limit_mb=100,
@@ -360,6 +368,7 @@ async def test():
     await monitor.stop()
 
     print("Test passed!")
+
 
 asyncio.run(test())
 ```

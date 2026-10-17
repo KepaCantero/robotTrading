@@ -1,3 +1,15 @@
+"""
+Logging Configuration Module
+
+Thresholds logging to ensure all warnings and errors are written to files.
+This prevents loss of important diagnostic information.
+
+LOG-001: Structured logging with JSON format support
+LOG-002: Correlation ID tracking for request tracing
+LOG-005: Sensitive data sanitization in logs
+LOG-006: Timing information for operations
+"""
+
 from __future__ import annotations
 
 import logging
@@ -11,18 +23,7 @@ from contextvars import ContextVar
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
 from re import Pattern
-
-"""
-Logging Configuration Module
-
-Thresholds logging to ensure all warnings and errors are written to files.
-This prevents loss of important diagnostic information.
-
-LOG-001: Structured logging with JSON format support
-LOG-002: Correlation ID tracking for request tracing
-LOG-005: Sensitive data sanitization in logs
-LOG-006: Timing information for operations
-"""
+from typing import Literal
 
 
 def get_logger(name: str) -> logging.Logger:
@@ -343,8 +344,14 @@ class JSONFormatter(logging.Formatter):
     LOG-006: Includes timing_ms field for operation timing
     """
 
-    def __init__(self, *args: object, **kwargs: object) -> None:
-        super().__init__(*args, **kwargs)
+    def __init__(
+        self,
+        fmt: str | None = None,
+        datefmt: str | None = None,
+        style: Literal["%", "{", "$"] = "%",
+        validate: bool = True,
+    ) -> None:
+        super().__init__(fmt, datefmt, style, validate)
         self._start_time: float = time.time()
 
     def format(self, record: logging.LogRecord) -> str:
@@ -458,6 +465,7 @@ def setup_file_logging(
         console_level: Minimum level for console (None = disable console)
         use_json: If True, use JSON format for structured logging (LOG-001)
     """
+    del file_level  # aceptado por compatibilidad; sin uso aquí
     log_path = Path(log_dir)
     log_path.mkdir(parents=True, exist_ok=True)
 

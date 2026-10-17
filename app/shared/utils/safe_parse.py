@@ -20,7 +20,7 @@ import ast
 import contextlib
 import json
 import logging
-from typing import Union, cast
+from typing import TypeVar, Union, cast
 
 logger = logging.getLogger(__name__)
 
@@ -28,9 +28,16 @@ logger = logging.getLogger(__name__)
 _LiteralValue = Union[str, int, float, bool, list, dict, tuple, set, None]
 # Type alias for values returned by json.loads
 _JsonValue = Union[str, int, float, bool, list, dict, None]
+T = TypeVar("T")
 
 
-def safe_parse(value: str, default: _LiteralValue = None) -> _LiteralValue:
+def cfg_dict(value: object) -> dict:
+    """Narrowa un valor de config a dict ({} si no es dict). Idéntico en runtime
+    a los encadenados `.get(k, {})` para configs bien formadas."""
+    return value if isinstance(value, dict) else {}
+
+
+def safe_parse(value: object, default: T) -> T:
     """
     Safely parse a string containing a Python literal.
 
@@ -58,20 +65,20 @@ def safe_parse(value: str, default: _LiteralValue = None) -> _LiteralValue:
         return default
 
     if not isinstance(value, str):
-        return value
+        return cast("T", value)
 
     value = value.strip()
     if not value:
         return default
 
     try:
-        return cast("_LiteralValue", ast.literal_eval(value))
+        return cast("T", ast.literal_eval(value))
     except (ValueError, SyntaxError) as e:
         logger.debug(f"Failed to parse value with literal_eval: {e}")
         return default
 
 
-def safe_parse_json(value: str, default: _JsonValue = None) -> _JsonValue:
+def safe_parse_json(value: object, default: T) -> T:
     """
     Safely parse a JSON string.
 
@@ -90,20 +97,20 @@ def safe_parse_json(value: str, default: _JsonValue = None) -> _JsonValue:
         return default
 
     if not isinstance(value, str):
-        return value
+        return cast("T", value)
 
     value = value.strip()
     if not value:
         return default
 
     try:
-        return cast("_JsonValue", json.loads(value))
+        return cast("T", json.loads(value))
     except json.JSONDecodeError as e:
         logger.debug(f"Failed to parse JSON: {e}")
         return default
 
 
-def safe_parse_with_fallback(value: str, default: _LiteralValue = None) -> _LiteralValue:
+def safe_parse_with_fallback(value: object, default: T) -> T:
     """
     Try parsing with literal_eval first, then JSON, then return default.
 
@@ -120,7 +127,7 @@ def safe_parse_with_fallback(value: str, default: _LiteralValue = None) -> _Lite
         return default
 
     if not isinstance(value, str):
-        return value
+        return cast("T", value)
 
     value = value.strip()
     if not value:
@@ -128,11 +135,11 @@ def safe_parse_with_fallback(value: str, default: _LiteralValue = None) -> _Lite
 
     # Try literal_eval first (for Python-format data)
     with contextlib.suppress(ValueError, SyntaxError):
-        return cast("_LiteralValue", ast.literal_eval(value))
+        return cast("T", ast.literal_eval(value))
 
     # Try JSON (for JSON-format data)
     with contextlib.suppress(json.JSONDecodeError):
-        return cast("_LiteralValue", json.loads(value))
+        return cast("T", json.loads(value))
 
     logger.debug(f"Failed to parse value with both literal_eval and JSON: {value[:50]}...")
     return default

@@ -1,6 +1,3 @@
-from __future__ import annotations
-
-# mypy: ignore-errors
 """
 Shift Handoff Procedures - SRE Rule 24
 
@@ -20,6 +17,7 @@ Domain Model (Cosmic Python - Rule 16):
 - HandoffContext: Value object for shared context
 """
 
+from __future__ import annotations  # mypy: ignore-errors
 
 import asyncio
 import logging
@@ -484,8 +482,7 @@ class HandoffManager:
 
             async with aiosqlite.connect(self.config.db_path) as db:
                 # Handoff sessions table
-                await db.execute(
-                    """
+                await db.execute("""
                     CREATE TABLE IF NOT EXISTS handoff_sessions (
                         session_id TEXT PRIMARY KEY,
                         from_engineer_id TEXT NOT NULL,
@@ -499,12 +496,10 @@ class HandoffManager:
                         quality_score REAL,
                         created_at TEXT NOT NULL
                     )
-                """
-                )
+                """)
 
                 # Checklist completions table
-                await db.execute(
-                    """
+                await db.execute("""
                     CREATE TABLE IF NOT EXISTS checklist_completions (
                         id INTEGER PRIMARY KEY AUTOINCREMENT,
                         session_id TEXT NOT NULL,
@@ -517,12 +512,10 @@ class HandoffManager:
                         FOREIGN KEY (session_id) REFERENCES handoff_sessions(session_id),
                         UNIQUE(session_id, item_id)
                     )
-                """
-                )
+                """)
 
                 # Handoff context table
-                await db.execute(
-                    """
+                await db.execute("""
                     CREATE TABLE IF NOT EXISTS handoff_context (
                         id INTEGER PRIMARY KEY AUTOINCREMENT,
                         session_id TEXT NOT NULL,
@@ -530,22 +523,17 @@ class HandoffManager:
                         created_at TEXT NOT NULL DEFAULT (datetime('utc')),
                         FOREIGN KEY (session_id) REFERENCES handoff_sessions(session_id)
                     )
-                """
-                )
+                """)
 
                 # Create indexes
-                await db.execute(
-                    """
+                await db.execute("""
                     CREATE INDEX IF NOT EXISTS idx_sessions_status
                     ON handoff_sessions(status)
-                """
-                )
-                await db.execute(
-                    """
+                """)
+                await db.execute("""
                     CREATE INDEX IF NOT EXISTS idx_sessions_engineer
                     ON handoff_sessions(to_engineer_id)
-                """
-                )
+                """)
 
                 await db.commit()
 
@@ -559,16 +547,14 @@ class HandoffManager:
         """Load active handoff sessions."""
         try:
             async with aiosqlite.connect(self.config.db_path) as db:
-                cursor = await db.execute(
-                    """
+                cursor = await db.execute("""
                     SELECT session_id, from_engineer_id, to_engineer_id,
                            scheduled_start, scheduled_end, status,
                            actual_start, actual_end, notes, quality_score, created_at
                     FROM handoff_sessions
                     WHERE status NOT IN ('completed', 'failed', 'cancelled')
                     ORDER BY scheduled_start ASC
-                """
-                )
+                """)
 
                 rows = await cursor.fetchall()
                 self._sessions = {}

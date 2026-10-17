@@ -54,7 +54,7 @@ class TestVaRCalculationPerformance:
     def test_historical_var_performance(self):
         """Test historical VaR calculation speed."""
         returns = np.random.normal(0, 0.02, 10000)
-        calc = HistoricalVaRCalculator({'confidence_level': 0.95})
+        calc = HistoricalVaRCalculator({"confidence_level": 0.95})
 
         start = time.time()
         for _ in range(10):
@@ -67,7 +67,7 @@ class TestVaRCalculationPerformance:
     def test_parametric_var_performance(self):
         """Test parametric VaR calculation speed."""
         returns = np.random.normal(0, 0.02, 10000)
-        calc = ParametricVaRCalculator({'confidence_level': 0.95})
+        calc = ParametricVaRCalculator({"confidence_level": 0.95})
 
         start = time.time()
         for _ in range(10):
@@ -87,8 +87,8 @@ class TestMonteCarloPerformance:
         returns = np.random.normal(0, 0.02, 500)
         calc = MonteCarloVaRCalculator(
             {
-                'confidence_level': 0.95,
-                'n_simulations': 10000,
+                "confidence_level": 0.95,
+                "n_simulations": 10000,
             }
         )
 
@@ -98,7 +98,7 @@ class TestMonteCarloPerformance:
 
         # Should complete in reasonable time
         assert elapsed < 10.0
-        assert 'error' not in result
+        assert "error" not in result
 
 
 @pytest.mark.unit
@@ -108,29 +108,29 @@ class TestNumbaFlags:
     def test_historical_var_numba_flag(self):
         """Test that historical VaR reports Numba acceleration."""
         returns = np.random.normal(0, 0.02, 1000)
-        calc = HistoricalVaRCalculator({'confidence_level': 0.95})
+        calc = HistoricalVaRCalculator({"confidence_level": 0.95})
         result = calc.calculate_var(returns)
 
-        assert 'numba_accelerated' in result
+        assert "numba_accelerated" in result
 
     def test_parametric_var_numba_flag(self):
         """Test that parametric VaR reports Numba acceleration."""
         returns = np.random.normal(0, 0.02, 1000)
-        calc = ParametricVaRCalculator({'confidence_level': 0.95})
+        calc = ParametricVaRCalculator({"confidence_level": 0.95})
         result = calc.calculate_var(returns)
 
-        assert 'numba_accelerated' in result
+        assert "numba_accelerated" in result
 
     def test_monte_carlo_numba_flag(self):
         """Test that Monte Carlo VaR reports Numba acceleration."""
         returns = np.random.normal(0, 0.02, 1000)
         calc = MonteCarloVaRCalculator(
             {
-                'confidence_level': 0.95,
-                'n_simulations': 10000,
+                "confidence_level": 0.95,
+                "n_simulations": 10000,
             }
         )
         result = calc.calculate_var(returns)
 
-        assert 'numba_accelerated' in result
-        assert 'parallel_processing' in result
+        assert "numba_accelerated" in result
+        assert "parallel_processing" in result

@@ -16,6 +16,7 @@ from sqlalchemy.exc import (
     OperationalError,
     ProgrammingError,
 )
+from sqlalchemy.orm import Mapped
 from structlog import get_logger
 
 from app.shared.exceptions.exceptions import raise_database_error
@@ -30,7 +31,7 @@ if TYPE_CHECKING:
 class HasIdAndTableName(Protocol):
     """Protocol for SQLAlchemy models with id and __tablename__."""
 
-    id: uuid.UUID
+    id: Mapped[uuid.UUID]
     __tablename__: str
 
 
@@ -68,7 +69,7 @@ class BaseRepository(Generic[T]):
             raise_database_error(
                 f"Failed to create {self.model_class.__name__}: {e!s}",
                 "create",
-                self.model_class.__tablename__,
+                {"table": self.model_class.__tablename__},
             )
 
     def get_by_id(self, record_id: uuid.UUID) -> T | None:
@@ -96,7 +97,7 @@ class BaseRepository(Generic[T]):
             raise_database_error(
                 f"Failed to get {self.model_class.__name__} by ID: {e!s}",
                 "get_by_id",
-                self.model_class.__tablename__,
+                {"table": self.model_class.__tablename__},
             )
 
     def get_all(self, limit: int | None = None, offset: int | None = None) -> list[T]:
@@ -125,7 +126,7 @@ class BaseRepository(Generic[T]):
             raise_database_error(
                 f"Failed to get all {self.model_class.__name__}: {e!s}",
                 "get_all",
-                self.model_class.__tablename__,
+                {"table": self.model_class.__tablename__},
             )
 
     def update(self, record_id: uuid.UUID, **kwargs) -> T | None:
@@ -162,7 +163,7 @@ class BaseRepository(Generic[T]):
             raise_database_error(
                 f"Failed to update {self.model_class.__name__}: {e!s}",
                 "update",
-                self.model_class.__tablename__,
+                {"table": self.model_class.__tablename__},
             )
 
     def delete(self, record_id: uuid.UUID) -> bool:
@@ -195,7 +196,7 @@ class BaseRepository(Generic[T]):
             raise_database_error(
                 f"Failed to delete {self.model_class.__name__}: {e!s}",
                 "delete",
-                self.model_class.__tablename__,
+                {"table": self.model_class.__tablename__},
             )
 
     def count(self) -> int:
@@ -217,7 +218,7 @@ class BaseRepository(Generic[T]):
             raise_database_error(
                 f"Failed to count {self.model_class.__name__}: {e!s}",
                 "count",
-                self.model_class.__tablename__,
+                {"table": self.model_class.__tablename__},
             )
 
 

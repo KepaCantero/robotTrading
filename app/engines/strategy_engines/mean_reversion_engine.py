@@ -407,6 +407,7 @@ class MeanReversionStrategyEngine(BaseStrategyEngine):
         Returns:
             Confidence entre 0 y 100
         """
+        del is_oversold  # aceptado por compatibilidad; sin uso aquí
         confidence = 50.0
 
         if abs_z_score >= 3.0:

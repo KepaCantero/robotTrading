@@ -57,14 +57,16 @@ from app.services.scheduling import MarketScheduler, MarketType
 
 # Create scheduler
 scheduler = MarketScheduler(
-    check_interval_24_7=60.0,      # Check every 60 seconds for 24/7 markets
-    check_interval_scheduled=60.0, # Check every 60 seconds for scheduled markets
+    check_interval_24_7=60.0,  # Check every 60 seconds for 24/7 markets
+    check_interval_scheduled=60.0,  # Check every 60 seconds for scheduled markets
 )
+
 
 # Define your task handler
 async def crypto_monitoring_task():
     # Your trading logic here
     print("Monitoring crypto markets...")
+
 
 # Schedule the task
 scheduler.schedule_task(
@@ -205,8 +207,8 @@ crypto_tasks = scheduler.list_tasks(MarketType.CRYPTO)
 from datetime import date
 
 # Add holidays
-scheduler.add_holiday(MarketType.STOCKS_US, date(2024, 7, 4))   # Independence Day
-scheduler.add_holiday(MarketType.STOCKS_US, date(2024, 12, 25)) # Christmas
+scheduler.add_holiday(MarketType.STOCKS_US, date(2024, 7, 4))  # Independence Day
+scheduler.add_holiday(MarketType.STOCKS_US, date(2024, 12, 25))  # Christmas
 
 # Remove holidays
 scheduler.remove_holiday(MarketType.STOCKS_US, date(2024, 12, 25))
@@ -231,9 +233,7 @@ custom_schedule = MarketSchedule(
     weekends=False,
 )
 
-scheduler = MarketScheduler(
-    schedules={MarketType.STOCKS_US: custom_schedule}
-)
+scheduler = MarketScheduler(schedules={MarketType.STOCKS_US: custom_schedule})
 ```
 
 ### Waiting for Market Open
@@ -340,7 +340,7 @@ python -m app.services.scheduling.examples
 4. **Monitor Task Metrics**:
    ```python
    info = scheduler.get_task_info("my_task")
-   if info['error_count'] > 10:
+   if info["error_count"] > 10:
        logger.warning("Task has high error rate")
    ```
 

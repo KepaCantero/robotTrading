@@ -38,7 +38,7 @@ def _handle_db_error(
     table: str,
 ) -> NoReturn:
     """Type-safe wrapper that mypy can resolve without following imports."""
-    _raise_database_error(message, operation, table)
+    _raise_database_error(message, operation, {"table": table})
     raise RuntimeError("unreachable")  # Safety net
 
 

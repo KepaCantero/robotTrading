@@ -192,17 +192,6 @@ class TierMapper:
             logger.error(f"Could not determine tier from config: {e}")
             raise
 
-        # Use hardcoded thresholds as last resort
-        thresholds = cls.get_thresholds()
-        if capital < thresholds["small"]:
-            return "micro"
-        elif capital < thresholds["medium"]:
-            return "small"
-        elif capital < thresholds["large"]:
-            return "medium"
-        else:
-            return "large"
-
     @classmethod
     def get_capital_flag_tier(cls, capital: Decimal) -> str:
         """

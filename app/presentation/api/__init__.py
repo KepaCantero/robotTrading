@@ -68,6 +68,14 @@ class AuditLogger:
         """
         self.logger = logging.getLogger(logger_name)
 
+    def info(self, message: str, extra: dict[str, object] | None = None) -> None:
+        """Log an informational audit event (stdlib-logger passthrough)."""
+        self.logger.info(message, extra={"correlation_id": get_correlation_id(), **(extra or {})})
+
+    def error(self, message: str, extra: dict[str, object] | None = None) -> None:
+        """Log an error audit event (stdlib-logger passthrough)."""
+        self.logger.error(message, extra={"correlation_id": get_correlation_id(), **(extra or {})})
+
     def log_request(
         self,
         method: str,

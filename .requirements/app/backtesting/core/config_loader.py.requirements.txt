@@ -19,6 +19,10 @@ Domain: Backtest
 - `ConfigValidationError`
 - `BacktestConfigLoader`
 ### Public Functions
+- `cfg_dict()`
+- `get_value()`
+- `get_section()`
+- `get_optional()`
 - `raw_config()`
 - `get_section()`
 - `get_backtest_config()`

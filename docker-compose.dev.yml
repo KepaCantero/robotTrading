@@ -8,7 +8,8 @@ services:
   app:
     build:
       context: .
-      dockerfile: Dockerfile.dev
+      dockerfile: Dockerfile
+      target: development
     container_name: algotrading-app-dev
     environment:
       DATABASE_URL: postgresql://algotrading_dev:dev_password@postgres:5432/algotrading_dev
@@ -50,7 +51,7 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./scripts/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql:ro
+      - ./scripts/db/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql:ro
     networks:
       - algotrading-network
     healthcheck:

@@ -289,4 +289,3 @@ auto_optimization:
     min_stability_score: 0.7 # 0-1, how consistent results are
     require_positive_returns: true
     max_parameter_change: 0.20 # Max 20% change from previous params
-

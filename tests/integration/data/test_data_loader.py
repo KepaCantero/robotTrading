@@ -45,7 +45,7 @@ def load_all_csv_data(data_dir: Path = None, min_days: int = 40) -> Dict[str, pd
             df.columns = df.columns.str.lower()
 
             # Handle date column
-            date_col = 'date' if 'date' in df.columns else 'timestamp'
+            date_col = "date" if "date" in df.columns else "timestamp"
             if date_col in df.columns:
                 df[date_col] = pd.to_datetime(df[date_col])
                 df = df.set_index(date_col)
@@ -57,7 +57,7 @@ def load_all_csv_data(data_dir: Path = None, min_days: int = 40) -> Dict[str, pd
             df = df.loc[start_date:end_date]
 
             # Check required columns
-            required_cols = ['open', 'high', 'low', 'close', 'volume']
+            required_cols = ["open", "high", "low", "close", "volume"]
             missing = [col for col in required_cols if col not in df.columns]
             if missing:
                 logger.warning(f"{symbol}: Missing columns {missing}, skipping")

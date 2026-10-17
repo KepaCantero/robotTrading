@@ -67,7 +67,7 @@ class JWTTokenManager:
             )
             raise ImportError("JWT library not available. Install with: pip install pyjwt") from exc
 
-        to_encode = data.copy()
+        to_encode: dict[str, Any] = dict(data)
 
         if expires_delta:
             expire = datetime.utcnow() + expires_delta
@@ -83,7 +83,7 @@ class JWTTokenManager:
             extra={"user_id": data.get("sub"), "expires": expire.isoformat()},
         )
 
-        return encoded_jwt
+        return str(encoded_jwt)
 
     def verify_token(self, token: str) -> dict[str, Any] | None:
         """
@@ -130,7 +130,7 @@ class JWTTokenManager:
             user_id = payload.get("sub")
             logger.info(f"Token verified for user: {user_id}")
 
-            return payload
+            return dict(payload)
 
         except ImportError:
             logger.error("JWT library error during token verification", exc_info=True)
@@ -162,7 +162,7 @@ class JWTTokenManager:
         try:
             # Decode without verification
             payload = jwt.decode(token, options={"verify_signature": False})
-            return payload
+            return dict(payload)
         except Exception as e:
             logger.warning(f"Token decode failed: {e!s}", exc_info=True)
             return None

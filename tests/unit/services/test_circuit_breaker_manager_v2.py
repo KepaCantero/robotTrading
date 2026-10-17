@@ -255,12 +255,12 @@ class MockDataService:
 
         # Add is_halted attribute dynamically for testing
         if quote.metadata.get("halted", False):
-            object.__setattr__(quote, 'is_halted', True)
+            object.__setattr__(quote, "is_halted", True)
         else:
-            object.__setattr__(quote, 'is_halted', False)
+            object.__setattr__(quote, "is_halted", False)
 
         # Add last_price attribute (circuit breaker manager expects this)
-        object.__setattr__(quote, 'last_price', float(quote.last))
+        object.__setattr__(quote, "last_price", float(quote.last))
 
         return quote
 
@@ -393,13 +393,13 @@ class TestCircuitBreakerManagerBasic:
         manager = circuit_breaker_manager
 
         # Add mock order
-        mock_order = type('obj', (object,), {'order_id': 'order123'})()
+        mock_order = type("obj", (object,), {"order_id": "order123"})()
         mock_broker.open_orders = [mock_order]
 
         await manager.pause_all_trading("Test pause")
 
         assert manager._is_trading_paused is True
-        assert 'order123' in mock_broker.cancelled_orders
+        assert "order123" in mock_broker.cancelled_orders
 
     @pytest.mark.asyncio
     async def test_resume_all_trading(self, circuit_breaker_manager):
@@ -521,9 +521,9 @@ class TestCircuitBreakerTriggers:
         # Check first 20 quotes (all normal movement)
         for i in range(20):
             quote = quotes[i]
-            assert quote.change_percent > Decimal(
-                "-0.05"
-            ), f"Quote {i} has abnormal drop: {quote.change_percent}"
+            assert quote.change_percent > Decimal("-0.05"), (
+                f"Quote {i} has abnormal drop: {quote.change_percent}"
+            )
 
         await manager._check_market_wide_halt()
 
@@ -792,7 +792,7 @@ class TestCircuitBreakerEdgeCases:
         )
 
         mock_broker = MockBroker()
-        mock_broker.positions = [type('obj', (object,), {'symbol': 'AAPL'})()]
+        mock_broker.positions = [type("obj", (object,), {"symbol": "AAPL"})()]
 
         mock_data = MockDataService({"SPY": spy_quotes, "AAPL": [aapl_halted]})
 

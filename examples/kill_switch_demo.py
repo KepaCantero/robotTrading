@@ -5,6 +5,7 @@ This script demonstrates how the kill switch activates when daily loss exceeds 5
 """
 
 from decimal import Decimal
+
 from app.core.compliance_engine import get_compliance_engine
 
 

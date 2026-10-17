@@ -1,9 +1,9 @@
-from __future__ import annotations
-
 """CorrelationRegimeDetector - Detección de régimen basada en correlaciones dinámicas.
 
 Usa análisis de correlaciones para detectar cambios de régimen.
 """
+
+from __future__ import annotations
 
 import logging
 from typing import Any
@@ -81,6 +81,7 @@ class CorrelationRegimeDetector:
         Returns:
             Dict con información del régimen
         """
+        del baseline_period  # aceptado por compatibilidad; sin uso aquí
         if len(price_data) < 2:
             return {
                 "regime": "unknown",

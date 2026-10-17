@@ -1,0 +1,28 @@
+# Requirements Document: app/presentation/dashboard/nicegui_app/__main__.py
+
+## 1. Module Overview
+File: __main__.py
+Domain: Presentation
+
+## 2. Dependencies
+- `__future__`
+- `app.presentation.dashboard.nicegui_app.app`
+- `nicegui`
+- `os`
+
+## 3. Core Components
+### Public Functions
+- `root()`
+
+## 4. Applicable Trading Rules
+
+#### R15
+Complete Logging (log all decisions, trade journal format)
+
+- [ ] Implementation verified
+- [ ] Tests pass
+
+---
+Universal rules (SOLID, type hints, formatting, security, logging) live in
+.requirements/BASE_RULES.md and apply to every file.
+Resync this stub with: python scripts/generate_requirements.py

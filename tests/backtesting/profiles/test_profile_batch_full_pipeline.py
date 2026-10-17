@@ -47,7 +47,7 @@ from app.services.profile_driven_trading.profile_strategy_mapper import Strategy
 
 # Configure logging
 logging.basicConfig(
-    level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
 logger = logging.getLogger(__name__)
 
@@ -164,7 +164,7 @@ def temp_config_file():
     }
 
     # Create temp file
-    with tempfile.NamedTemporaryFile(mode='w', suffix='.yaml', delete=False) as f:
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as f:
         yaml.dump(config, f)
         config_path = f.name
 
@@ -265,7 +265,7 @@ def patch_data_loader(mock_market_data):
         return mock_market_data(symbol, 100)
 
     with patch(
-        'app.backtesting.data_loader.DataLoader.load_market_data', side_effect=_load_market_data
+        "app.backtesting.data_loader.DataLoader.load_market_data", side_effect=_load_market_data
     ):
         yield
 
@@ -486,20 +486,20 @@ class TestDatabasePersistence:
         inspector = inspect(backtester.database_service.engine)
 
         # Check profile_results table columns
-        columns = [c['name'] for c in inspector.get_columns('profile_results')]
+        columns = [c["name"] for c in inspector.get_columns("profile_results")]
 
         # Verify required columns exist
         required_columns = [
-            'id',
-            'profile_id',
-            'objective',
-            'risk_tolerance',
-            'capital_tier',
-            'baseline_sharpe',
-            'optimized_sharpe',
-            'sharpe_improvement',
-            'ready_for_paper_trading',
-            'recommendation',
+            "id",
+            "profile_id",
+            "objective",
+            "risk_tolerance",
+            "capital_tier",
+            "baseline_sharpe",
+            "optimized_sharpe",
+            "sharpe_improvement",
+            "ready_for_paper_trading",
+            "recommendation",
         ]
 
         for col in required_columns:
@@ -587,8 +587,8 @@ class TestFullPipelineEndToEnd:
 
         # Check comparison structure
         assert isinstance(result.comparison, BaselineOptimizationComparison)
-        assert hasattr(result.comparison, 'sharpe_improvement')
-        assert hasattr(result.comparison, 'recommended')
+        assert hasattr(result.comparison, "sharpe_improvement")
+        assert hasattr(result.comparison, "recommended")
 
     def test_run_all_profiles_small_set(self, temp_config_file, patch_data_loader):
         """Test running multiple profiles through complete pipeline."""
@@ -687,8 +687,8 @@ class TestMultiStrategyExecution:
 
         # Verify mapping structure
         assert isinstance(mapping, StrategyMapping)
-        assert hasattr(mapping, 'enabled_strategies')
-        assert hasattr(mapping, 'risk_profile')
+        assert hasattr(mapping, "enabled_strategies")
+        assert hasattr(mapping, "risk_profile")
 
     def test_multi_strategy_config_generation(self, temp_config_file):
         """Test config generation with multi-strategy support."""
@@ -747,7 +747,7 @@ class TestMultiStrategyExecution:
         result = backtester.run_single_profile(profile)
 
         # Check per-strategy results field
-        assert hasattr(result, 'per_strategy_results')
+        assert hasattr(result, "per_strategy_results")
         assert isinstance(result.per_strategy_results, dict)
 
     def test_strategy_result_aggregation(self, temp_config_file, patch_data_loader):

@@ -109,7 +109,7 @@ class ProfitabilityMetrics(BaseModel):
     total_costs: Decimal = Field(..., description="Costos totales")
     profit_margin: Decimal = Field(..., description="Margen de ganancia (%)")
     return_on_investment: Decimal = Field(..., description="ROI (%)")
-    sharpe_ratio: Decimal | None = Field(None, description="Ratio de Sharpe")
+    sharpe_ratio: Decimal | None = Field(default=None, description="Ratio de Sharpe")
     max_drawdown: Decimal = Field(..., description="Drawdown máximo (%)")
     win_rate: Decimal = Field(..., description="Tasa de ganancia (%)")
     profit_factor: Decimal = Field(..., description="Factor de ganancia")
@@ -223,7 +223,9 @@ class ValidationRequest(BaseModel):
     period_end: date = Field(..., description="Fin del período")
     initial_capital: Decimal = Field(..., description="Capital inicial")
     trades_data: list[dict[str, Any]] = Field(..., description="Datos de trades")
-    criteria: ValidationCriteria | None = Field(None, description="Criterios personalizados")
+    criteria: ValidationCriteria | None = Field(
+        default=None, description="Criterios personalizados"
+    )
 
     @field_validator("initial_capital")
     @classmethod
@@ -277,7 +279,9 @@ class ValidationReport(BaseModel):
     strategy_comparison: StrategyComparison | None = Field(
         None, description="Comparación de estrategias"
     )
-    historical_analysis: HistoricalValidation | None = Field(None, description="Análisis histórico")
+    historical_analysis: HistoricalValidation | None = Field(
+        default=None, description="Análisis histórico"
+    )
     overall_assessment: str = Field(..., description="Evaluación general")
     risk_assessment: str = Field(..., description="Evaluación de riesgo")
     recommendations: list[str] = Field(..., description="Recomendaciones generales")

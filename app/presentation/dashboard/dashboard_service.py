@@ -101,7 +101,7 @@ class DashboardService:
 
             # Calculate drawdown
             current_drawdown = self._calculate_drawdown(portfolio_value, starting_capital)
-            max_drawdown = self._compliance_engine._max_drawdown_ratio
+            max_drawdown = self._compliance_engine.config.max_drawdown_ratio
 
             metrics = DashboardPerformanceMetrics(
                 total_pnl=Decimal(str(daily_summary.get("total_pnl", 0))),
@@ -246,9 +246,6 @@ class DashboardService:
         try:
             logger.debug("Fetching recent alerts")
             # Get recent alerts from alerting system
-            from app.services.alerting_system import NotificationDispatcher
-
-            NotificationDispatcher.instance()
             # Return recent alerts from dispatcher history
             # For now, return empty list as dispatcher doesn't expose history
             logger.debug("Recent alerts fetched (currently empty)")

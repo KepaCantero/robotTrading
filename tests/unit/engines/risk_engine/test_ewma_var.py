@@ -27,9 +27,9 @@ def calculator():
 def custom_calculator():
     """Create EWMAVaRCalculator with custom config."""
     config = {
-        'confidence_level': 0.99,
-        'decay_factor': 0.97,
-        'min_observations': 50,
+        "confidence_level": 0.99,
+        "decay_factor": 0.97,
+        "min_observations": 50,
     }
     return EWMAVaRCalculator(config)
 
@@ -59,47 +59,47 @@ class TestEWMAVaRCalculation:
         """Test successful EWMA VaR calculation."""
         result = calculator.calculate_ewma_var(sample_returns)
 
-        assert 'error' not in result
-        assert 'var' in result
-        assert 'cvar' in result
-        assert result['method'] == 'ewma'
+        assert "error" not in result
+        assert "var" in result
+        assert "cvar" in result
+        assert result["method"] == "ewma"
 
     def test_ewma_volatility_calculated(self, calculator, sample_returns):
         """Test that EWMA volatility is calculated."""
         result = calculator.calculate_ewma_var(sample_returns)
 
-        assert 'ewma_volatility' in result
-        assert result['ewma_volatility'] > 0
+        assert "ewma_volatility" in result
+        assert result["ewma_volatility"] > 0
 
     def test_ewma_variance_calculated(self, calculator, sample_returns):
         """Test that EWMA variance is calculated."""
         result = calculator.calculate_ewma_var(sample_returns)
 
-        assert 'ewma_variance' in result
-        assert result['ewma_variance'] > 0
+        assert "ewma_variance" in result
+        assert result["ewma_variance"] > 0
 
     def test_with_portfolio_value(self, calculator, sample_returns):
         """Test with portfolio value."""
         result = calculator.calculate_ewma_var(sample_returns, portfolio_value=100000.0)
 
-        assert result['var_amount'] is not None
-        assert result['cvar_amount'] is not None
+        assert result["var_amount"] is not None
+        assert result["cvar_amount"] is not None
 
     def test_comparison_with_simple_std(self, calculator, sample_returns):
         """Test comparison with simple standard deviation."""
         result = calculator.calculate_ewma_var(sample_returns)
 
-        assert 'comparison' in result
-        assert 'ewma_volatility' in result['comparison']
-        assert 'simple_std' in result['comparison']
-        assert 'volatility_ratio' in result['comparison']
+        assert "comparison" in result
+        assert "ewma_volatility" in result["comparison"]
+        assert "simple_std" in result["comparison"]
+        assert "volatility_ratio" in result["comparison"]
 
     def test_interpretation_provided(self, calculator, sample_returns):
         """Test that interpretation is provided."""
         result = calculator.calculate_ewma_var(sample_returns)
 
-        assert 'interpretation' in result
-        assert isinstance(result['interpretation'], str)
+        assert "interpretation" in result
+        assert isinstance(result["interpretation"], str)
 
 
 @pytest.mark.unit
@@ -130,14 +130,14 @@ class TestEWMAVaRErrorHandling:
         short_returns = list(np.random.normal(0, 0.02, 10))
         result = calculator.calculate_ewma_var(short_returns)
 
-        assert 'error' in result
-        assert 'Insufficient data' in result['error']
+        assert "error" in result
+        assert "Insufficient data" in result["error"]
 
     def test_empty_returns(self, calculator):
         """Test with empty returns."""
         result = calculator.calculate_ewma_var([])
 
-        assert 'error' in result
+        assert "error" in result
 
 
 @pytest.mark.unit
@@ -151,8 +151,8 @@ class TestEWMACorrelation:
 
         result = calculator.calculate_ewma_correlation(returns1, returns2)
 
-        assert 'error' not in result
-        assert 'ewma_correlation' in result
+        assert "error" not in result
+        assert "ewma_correlation" in result
 
     def test_ewma_correlation_range(self, calculator):
         """Test that correlation is in valid range."""
@@ -162,7 +162,7 @@ class TestEWMACorrelation:
 
         result = calculator.calculate_ewma_correlation(returns1, returns2)
 
-        assert -1 <= result['ewma_correlation'] <= 1
+        assert -1 <= result["ewma_correlation"] <= 1
 
     def test_correlation_interpretation(self, calculator):
         """Test correlation change interpretation."""
@@ -171,7 +171,7 @@ class TestEWMACorrelation:
 
         result = calculator.calculate_ewma_correlation(returns1, returns2)
 
-        assert 'interpretation' in result
+        assert "interpretation" in result
 
 
 @pytest.mark.unit
@@ -182,22 +182,22 @@ class TestEWMAVolatilityForecasting:
         """Test volatility forecasting."""
         result = calculator.forecast_volatility(sample_returns, horizon_days=10)
 
-        assert 'error' not in result
-        assert 'current_volatility' in result
-        assert 'forecasts' in result
-        assert len(result['forecasts']) == 10
+        assert "error" not in result
+        assert "current_volatility" in result
+        assert "forecasts" in result
+        assert len(result["forecasts"]) == 10
 
     def test_forecast_includes_horizon(self, calculator, sample_returns):
         """Test that horizon is included."""
         result = calculator.forecast_volatility(sample_returns, horizon_days=5)
 
-        assert result['horizon_days'] == 5
+        assert result["horizon_days"] == 5
 
     def test_forecast_increases_with_horizon(self, calculator, sample_returns):
         """Test that forecasts increase with horizon (sqrt time rule)."""
         result = calculator.forecast_volatility(sample_returns, horizon_days=10)
 
-        forecasts = result['forecasts']
+        forecasts = result["forecasts"]
         # Each subsequent forecast should be >= previous
         for i in range(len(forecasts) - 1):
             assert forecasts[i + 1] >= forecasts[i]
@@ -218,7 +218,7 @@ class TestEWMAInterpretationLogic:
                 returns.append(np.random.normal(0, 0.05))  # Vol spike
 
         result = calculator.calculate_ewma_var(returns)
-        interpretation = result['interpretation']
+        interpretation = result["interpretation"]
 
         assert isinstance(interpretation, str)
         assert len(interpretation) > 0

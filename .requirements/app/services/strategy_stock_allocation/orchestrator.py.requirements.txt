@@ -9,6 +9,7 @@ Domain: Service
 - `allocators`
 - `app.services.momentum_analysis`
 - `app.shared.config.params.strategy_config`
+- `app.shared.utils.safe_parse`
 - `calculators`
 - `classifiers`
 - `collections`

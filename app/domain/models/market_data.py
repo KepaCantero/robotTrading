@@ -87,7 +87,7 @@ class Quote(BaseModel):
     # Additional metrics
     change: Decimal = Field(default=Decimal("0"), description="Price change")
     change_percent: Decimal = Field(default=Decimal("0"), description="Price change percentage")
-    volatility: Decimal | None = Field(None, ge=0, description="Price volatility")
+    volatility: Decimal | None = Field(default=None, ge=0, description="Price volatility")
 
     # Metadata
     feed_type: DataFeedType = Field(
@@ -335,9 +335,11 @@ class HistoricalData(BaseModel):
     volume: Decimal = Field(..., ge=0, description="Trading volume")
 
     # Additional metrics
-    adjusted_close: Decimal | None = Field(None, gt=0, description="Adjusted closing price")
-    dividend_amount: Decimal | None = Field(None, ge=0, description="Dividend amount")
-    split_coefficient: Decimal | None = Field(None, gt=0, description="Stock split coefficient")
+    adjusted_close: Decimal | None = Field(default=None, gt=0, description="Adjusted closing price")
+    dividend_amount: Decimal | None = Field(default=None, ge=0, description="Dividend amount")
+    split_coefficient: Decimal | None = Field(
+        default=None, gt=0, description="Stock split coefficient"
+    )
 
     # Metadata
     feed_type: DataFeedType = Field(..., description="Data feed source")
@@ -435,7 +437,7 @@ class DataFeedConfig(BaseModel):
     feed_type: DataFeedType = Field(..., description="Type of data feed")
 
     # API configuration
-    api_key: str | None = Field(None, description="API key for the feed")
+    api_key: str | None = Field(default=None, description="API key for the feed")
     base_url: str = Field(..., description="Base URL for the API")
     rate_limit: int = Field(default=60, ge=1, le=3600, description="Rate limit per minute")
 
@@ -459,7 +461,7 @@ class DataFeedConfig(BaseModel):
 
     # Status
     is_active: bool = Field(default=True, description="Whether the feed is active")
-    last_updated: datetime | None = Field(None, description="Last successful update")
+    last_updated: datetime | None = Field(default=None, description="Last successful update")
     error_count: int = Field(default=0, ge=0, description="Number of consecutive errors")
 
     # Metadata
@@ -485,8 +487,8 @@ class MarketDataSubscription(BaseModel):
     created_at: datetime = Field(
         default_factory=datetime.utcnow, description="Subscription creation time"
     )
-    last_update: datetime | None = Field(None, description="Last data update")
-    expires_at: datetime | None = Field(None, description="Subscription expiration time")
+    last_update: datetime | None = Field(default=None, description="Last data update")
+    expires_at: datetime | None = Field(default=None, description="Subscription expiration time")
 
     # Statistics
     total_updates: int = Field(default=0, ge=0, description="Total number of updates received")

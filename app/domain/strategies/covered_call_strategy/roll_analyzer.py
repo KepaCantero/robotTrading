@@ -181,7 +181,7 @@ class RollAnalyzer:
             opportunity = RollOpportunity(
                 position=position,
                 new_option=option,
-                roll_type=RollType.ROLL_UP_AND_OUT,
+                roll_type=RollType.ROLL_OUT_UP,
                 additional_premium=net_benefit,
                 days_to_expiry_new=option.days_to_expiry,
                 reason=f"Subir strike de ${position.call_option.strike} a ${option.strike}",
@@ -262,7 +262,7 @@ class RollAnalyzer:
             opportunity = RollOpportunity(
                 position=position,
                 new_option=option,
-                roll_type=RollType.ROLL_DOWN_AND_OUT,
+                roll_type=RollType.ROLL_OUT_DOWN,
                 additional_premium=net_benefit,
                 days_to_expiry_new=option.days_to_expiry,
                 reason=f"Bajar strike de ${position.call_option.strike} a ${option.strike}",

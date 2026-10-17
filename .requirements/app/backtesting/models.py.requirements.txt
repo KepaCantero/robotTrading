@@ -19,7 +19,6 @@ Domain: Backtest
 - `PerformanceMetrics`
 - `BacktestConfig`
 - `BacktestResult`
-- `Config`
 ### Public Functions
 - `validate_side()`
 - `validate_trade_logic()`

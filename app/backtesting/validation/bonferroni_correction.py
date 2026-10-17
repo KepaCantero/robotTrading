@@ -211,6 +211,7 @@ class BonferroniCorrector:
         Returns:
             MultipleTestResult with significance tests
         """
+        del null_sharpe  # aceptado por compatibilidad; sin uso aquí
         try:
             # Calculate p-values for each strategy
             p_values = []

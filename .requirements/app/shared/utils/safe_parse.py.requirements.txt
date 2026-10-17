@@ -14,6 +14,7 @@ Domain: Shared
 
 ## 3. Core Components
 ### Public Functions
+- `cfg_dict()`
 - `safe_parse()`
 - `safe_parse_json()`
 - `safe_parse_with_fallback()`

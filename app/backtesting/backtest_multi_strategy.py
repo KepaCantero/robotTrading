@@ -165,8 +165,8 @@ class BacktestMultiStrategyRunner:
                 f"Running multi-strategy backtest from {start_date.date()} to {end_date.date()}"
             )
 
-            consolidated_results = multi_strategy_backtester.run_multi_strategy_backtest(
-                quotes=self.quotes, start_date=start_date, end_date=end_date
+            consolidated_results = multi_strategy_backtester.run_backtest(
+                market_data=self.quotes, start_date=start_date, end_date=end_date
             )
 
             # Step 8: Convert results to expected format

@@ -412,23 +412,15 @@ class FXIntermarketStrategy(BaseStrategy):
                 return None
 
             # Build rationale
-            rationale = self._build_signal_rationale(
-                fx_pair,
-                trigger_asset,
-                relationship,
-                asset_move,
-                expected_move,
-            )
-
             signal = IntermarketSignal(
                 fx_pair=fx_pair,
-                signal_type=signal_type,
-                strength=strength,
                 trigger_asset=trigger_asset,
-                relationship_type=relationship.relationship_type,
+                signal_type=signal_type,
                 expected_move=expected_move,
                 confidence=confidence,
-                rationale=rationale,
+                relationship=relationship,
+                trigger_move=asset_move,
+                timestamp=datetime.now(timezone.utc).replace(tzinfo=None),
             )
 
             logger.info(

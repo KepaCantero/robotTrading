@@ -21,8 +21,10 @@ from dataclasses import dataclass
 from decimal import Decimal
 from typing import TYPE_CHECKING, Any, TypedDict
 
+from .dividend_screener import DividendStockResult
+
 if TYPE_CHECKING:
-    from .models import DividendStock, DividendStrategyConfig
+    from .models import DividendStrategyConfig
 
 logger = logging.getLogger(__name__)
 
@@ -136,7 +138,7 @@ class DividendPortfolioConstructor:
 
     def construct_portfolio(
         self,
-        stocks: list[DividendStock],
+        stocks: list[DividendStockResult],
         total_capital: Decimal,
     ) -> DividendPortfolio:
         """
@@ -176,7 +178,7 @@ class DividendPortfolioConstructor:
 
         return portfolio
 
-    def _select_top_stocks(self, stocks: list[DividendStock]) -> list[DividendStock]:
+    def _select_top_stocks(self, stocks: list[DividendStockResult]) -> list[DividendStockResult]:
         """
         Seleccionar top N acciones por score de decisión.
 
@@ -201,7 +203,9 @@ class DividendPortfolioConstructor:
 
         return selected
 
-    def _group_by_sector(self, stocks: list[DividendStock]) -> dict[str, list[DividendStock]]:
+    def _group_by_sector(
+        self, stocks: list[DividendStockResult]
+    ) -> dict[str, list[DividendStockResult]]:
         """
         Agrupar acciones por sector.
 
@@ -223,8 +227,8 @@ class DividendPortfolioConstructor:
 
     def _calculate_weights(
         self,
-        stocks: list[DividendStock],
-        sector_groups: dict[str, list[DividendStock]],
+        stocks: list[DividendStockResult],
+        sector_groups: dict[str, list[DividendStockResult]],
     ) -> dict[str, Decimal]:
         """
         Calcular pesos óptimos del portafolio.
@@ -274,7 +278,7 @@ class DividendPortfolioConstructor:
     def _enforce_sector_limits(
         self,
         weights: dict[str, Decimal],
-        sector_groups: dict[str, list[DividendStock]],
+        sector_groups: dict[str, list[DividendStockResult]],
     ) -> dict[str, Decimal]:
         """
         Aplicar límites de peso por sector.
@@ -355,7 +359,7 @@ class DividendPortfolioConstructor:
         return adjusted
 
     def _normalize_weights_respecting_limits(
-        self, weights: dict[str, Decimal], sector_groups: dict[str, list[DividendStock]]
+        self, weights: dict[str, Decimal], sector_groups: dict[str, list[DividendStockResult]]
     ) -> dict[str, Decimal]:
         """
         Normalizar pesos respetando los límites máximos de posición y sectoriales.
@@ -425,7 +429,7 @@ class DividendPortfolioConstructor:
 
     def _create_positions(
         self,
-        stocks: list[DividendStock],
+        stocks: list[DividendStockResult],
         weights: dict[str, Decimal],
         total_capital: Decimal,
     ) -> list[PortfolioPosition]:
@@ -485,7 +489,7 @@ class DividendPortfolioConstructor:
     def _build_portfolio_result(
         self,
         positions: list[PortfolioPosition],
-        stocks: list[DividendStock],
+        stocks: list[DividendStockResult],
     ) -> DividendPortfolio:
         """
         Construir resultado del portafolio.
@@ -534,7 +538,7 @@ class DividendPortfolioConstructor:
     def _calculate_sector_weights(
         self,
         positions: list[PortfolioPosition],
-        stocks: list[DividendStock],
+        stocks: list[DividendStockResult],
     ) -> dict[str, Decimal]:
         """
         Calcular pesos por sector.
@@ -565,7 +569,7 @@ class DividendPortfolioConstructor:
     def rebalance(
         self,
         current_portfolio: DividendPortfolio,
-        new_stocks: list[DividendStock],
+        new_stocks: list[DividendStockResult],
         total_capital: Decimal,
     ) -> DividendPortfolio:
         """

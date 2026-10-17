@@ -38,7 +38,7 @@ class MockMarketauxClient:
 
     async def get_news(self, symbol: str, since: datetime, limit: int = 10):
         """Get news for symbol."""
-        return [n for n in self.news_data if n.get('symbol') == symbol]
+        return [n for n in self.news_data if n.get("symbol") == symbol]
 
 
 @pytest.fixture

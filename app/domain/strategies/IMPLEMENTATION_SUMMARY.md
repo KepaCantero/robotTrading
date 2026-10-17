@@ -85,14 +85,14 @@ Builds portfolios with:
 
 ```python
 {
-    "lookback_days": 90,              # Momentum lookback
-    "volatility_adjustment": True,     # Adjust for vol
-    "btc_adjustment": True,            # Adjust for BTC correlation
-    "max_position_size": 0.10,         # Max 10% per position
-    "btc_weight": 0.50,                # 50% BTC allocation
-    "portfolio_size": 10,              # Max positions
-    "min_market_cap": 1000000000,      # $1B minimum
-    "min_daily_volume": 10000000,      # $10M daily volume
+    "lookback_days": 90,  # Momentum lookback
+    "volatility_adjustment": True,  # Adjust for vol
+    "btc_adjustment": True,  # Adjust for BTC correlation
+    "max_position_size": 0.10,  # Max 10% per position
+    "btc_weight": 0.50,  # 50% BTC allocation
+    "portfolio_size": 10,  # Max positions
+    "min_market_cap": 1000000000,  # $1B minimum
+    "min_daily_volume": 10000000,  # $10M daily volume
 }
 ```
 
@@ -121,11 +121,13 @@ from app.strategies.crypto_momentum import (
 )
 
 # Initialize
-strategy = CryptoMomentumStrategy({
-    "lookback_days": 90,
-    "btc_weight": "0.50",
-    "portfolio_size": 10,
-})
+strategy = CryptoMomentumStrategy(
+    {
+        "lookback_days": 90,
+        "btc_weight": "0.50",
+        "portfolio_size": 10,
+    }
+)
 
 # Create assets
 btc = CryptoAsset(

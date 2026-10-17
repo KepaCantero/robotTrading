@@ -304,9 +304,24 @@ class TradingThresholds(BaseModel):
     dividend_min_yield: float = Field(
         default=0.02, description="Minimum dividend yield for dividend strategy"
     )
-    dividend_max_payout_ratio: float = Field(
-        default=0.75, description="Maximum payout ratio for dividend stocks"
-    )
+
+    # Umbrales de valuación fundamentales (dividend/value screening)
+    pe_ideal_min: float = Field(default=10.0)
+    pe_ideal_max: float = Field(default=20.0)
+    pe_very_cheap_max: float = Field(default=8.0)
+    pe_acceptable_max: float = Field(default=25.0)
+    pe_problematic_max: float = Field(default=30.0)
+    pe_too_expensive_min: float = Field(default=35.0)
+    pb_ideal_min: float = Field(default=1.0)
+    pb_ideal_max: float = Field(default=3.0)
+    pb_very_cheap_max: float = Field(default=0.8)
+    pb_too_expensive: float = Field(default=5.0)
+    roe_good: float = Field(default=0.12)
+    roe_excellent: float = Field(default=0.18)
+    dividend_coverage_good: float = Field(default=1.5)
+    dividend_coverage_excellent: float = Field(default=2.0)
+    dividend_buy_score: float = Field(default=70.0)
+    dividend_hold_score: float = Field(default=50.0)
 
     # Mean Reversion strategy parameters
     min_z_score_default: float = Field(

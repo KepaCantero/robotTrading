@@ -221,14 +221,14 @@ async def get_current_user_optional(
 def test_authentication():
     # Hard to mock - everything is tightly coupled
     # Have to mock the entire auth module
-    
+
     # Cannot test UserStore in isolation
     # Cannot test JWTTokenManager in isolation
     # Cannot test AuthAttemptTracker in isolation
-    
+
     # Must test everything together
     user = get_current_user_optional(...)
-    
+
     # Difficult to control dependencies
     # Hard to test edge cases
     # Complex test setup required
@@ -244,6 +244,7 @@ def test_user_store():
     store.add_user(test_user)
     assert store.get_user("testuser") is not None
 
+
 # test_jwt_manager.py
 def test_jwt_manager():
     """Test JWTTokenManager in complete isolation."""
@@ -251,24 +252,22 @@ def test_jwt_manager():
     token = manager.create_access_token({"sub": "user-001"})
     assert manager.verify_token(token) is not None
 
+
 # test_auth.py
 def test_authentication_with_mocked_dependencies():
     """Test auth with injected mocks."""
-    
+
     # Create mock store
     mock_store = Mock()
     mock_store.get_user.return_value = test_user
-    
+
     # Create mock tracker
     mock_tracker = Mock()
     mock_tracker.check_rate_limit.return_value = True
-    
+
     # Inject mocks
-    user = await get_current_user_optional(
-        user_store=mock_store,
-        attempt_tracker=mock_tracker
-    )
-    
+    user = await get_current_user_optional(user_store=mock_store, attempt_tracker=mock_tracker)
+
     # Easy to test!
     assert user is not None
     mock_store.get_user.assert_called_once()
@@ -287,7 +286,7 @@ class UserStore:
     def __init__(self):
         # Hardcoded to environment variables
         self._load_users_from_config()
-    
+
     # No way to override without modifying this file
 ```
 
@@ -297,21 +296,22 @@ class UserStore:
 # Create custom implementation
 class DatabaseUserStore:
     """UserStore backed by PostgreSQL."""
-    
+
     def __init__(self, db_connection):
         self.db = db_connection
-    
+
     def verify_api_key(self, api_key: str) -> str | None:
         # Query database
         return self.db.query(...)
-    
+
     def get_user(self, username: str) -> User | None:
         # Query database
         return self.db.query(...)
-    
+
     def get_user_by_id(self, user_id: str) -> User | None:
         # Query database
         return self.db.query(...)
+
 
 # Use it globally
 db_store = DatabaseUserStore(get_db())

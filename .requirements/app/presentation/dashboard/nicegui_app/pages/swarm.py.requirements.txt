@@ -1,0 +1,69 @@
+# Requirements Document: app/presentation/dashboard/nicegui_app/pages/swarm.py
+
+## 1. Module Overview
+File: swarm.py
+Domain: Presentation
+
+## 2. Dependencies
+- `__future__`
+- `app.presentation.dashboard.nicegui_app.components.agent_card`
+- `app.presentation.dashboard.nicegui_app.components.mission_log`
+- `app.presentation.dashboard.nicegui_app.components.office_scene`
+- `app.presentation.dashboard.nicegui_app.components.swarm_fx`
+- `app.services.agent_swarm.executor`
+- `app.services.agent_swarm.store`
+- `asyncio`
+- `dataclasses`
+- `datetime`
+- `decimal`
+- `html`
+- `json`
+- `logging`
+- `nicegui`
+- `pathlib`
+- `typing`
+- `uuid`
+
+## 3. Core Components
+### Classes
+- `_ReplaySnapshot`
+### Public Functions
+- `available_universe()`
+- `data_window()`
+- `resolve_period()`
+- `format_log_line()`
+- `apply_event_to_states()`
+- `extract_result_metrics()`
+- `extract_portfolio()`
+- `build_allocation_chart()`
+- `build_risk_adjustment_chart()`
+- `build_duration_chart_option()`
+- `render()`
+- `fresh_states()`
+- `fx()`
+- `open_details()`
+- `update_state()`
+- `render_result()`
+- `refresh_cards()`
+- `reset_view()`
+- `drain_log()`
+- `on_run_finished()`
+- `poll()`
+- `replay_run()`
+- `handle_key()`
+- `toggle_audio()`
+- `run_pipeline()`
+- `refresh_history()`
+
+## 4. Applicable Trading Rules
+
+#### R15
+Complete Logging (log all decisions, trade journal format)
+
+- [ ] Implementation verified
+- [ ] Tests pass
+
+---
+Universal rules (SOLID, type hints, formatting, security, logging) live in
+.requirements/BASE_RULES.md and apply to every file.
+Resync this stub with: python scripts/generate_requirements.py

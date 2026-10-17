@@ -1,16 +1,16 @@
-# Requirements Document: app/presentation/dashboard/main_advanced.py
+# Requirements Document: app/presentation/dashboard/nicegui_app/components/swarm_fx.py
 
 ## 1. Module Overview
-File: main_advanced.py
+File: swarm_fx.py
 Domain: Presentation
 
 ## 2. Dependencies
-- `app.presentation.dashboard.advanced_dashboard`
-- `pathlib`
-- `sys`
+- `__future__`
+- `nicegui`
 
 ## 3. Core Components
-### No public exports detected
+### Public Functions
+- `install()`
 
 ## 4. Applicable Trading Rules
 

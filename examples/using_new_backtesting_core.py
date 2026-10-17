@@ -25,11 +25,11 @@ def example_using_facade():
     from app.strategies.momentum_modular.strategy import ModularMomentumStrategy
 
     strategy_config = {
-        'preset': 'balanced',
-        'modules': {
-            'filters': {
-                'ema_filter': {'enabled': True},
-                'rsi_filter': {'enabled': True},
+        "preset": "balanced",
+        "modules": {
+            "filters": {
+                "ema_filter": {"enabled": True},
+                "rsi_filter": {"enabled": True},
             }
         },
     }
@@ -41,7 +41,7 @@ def example_using_facade():
     print(f"Sharpe Ratio: {result['sharpe_ratio']:.2f}")
 
     # Save results
-    runner.save_results(['csv', 'json'])
+    runner.save_results(["csv", "json"])
 
 
 # Example 2: Using ConfigLoader directly
@@ -67,18 +67,19 @@ def example_using_config_loader():
 # Example 3: Using Executor directly
 def example_using_executor():
     """Example using BacktestExecutor for fine-grained control."""
-    from app.backtesting.core import BacktestExecutorFactory
-    from app.backtesting.models import BacktestConfig
-    from decimal import Decimal
-    from app.strategies.momentum_modular.strategy import ModularMomentumStrategy
-    from app.backtesting.data_loader import DataLoader
     from datetime import datetime
+    from decimal import Decimal
+
+    from app.backtesting.core import BacktestExecutorFactory
+    from app.backtesting.data_loader import DataLoader
+    from app.backtesting.models import BacktestConfig
+    from app.strategies.momentum_modular.strategy import ModularMomentumStrategy
 
     # Create configuration
     config = BacktestConfig(
-        initial_capital=Decimal('100000'),
-        commission_per_trade=Decimal('1.0'),
-        slippage_percentage=Decimal('0.1'),
+        initial_capital=Decimal("100000"),
+        commission_per_trade=Decimal("1.0"),
+        slippage_percentage=Decimal("0.1"),
     )
 
     # Create executor
@@ -87,14 +88,14 @@ def example_using_executor():
     # Load data
     data_loader = DataLoader()
     quotes = data_loader.load_data(
-        symbol='AAPL', start_date=datetime(2023, 1, 1), end_date=datetime(2023, 12, 31)
+        symbol="AAPL", start_date=datetime(2023, 1, 1), end_date=datetime(2023, 12, 31)
     )
 
     # Create strategy
-    strategy = ModularMomentumStrategy({'preset': 'conservative'})
+    strategy = ModularMomentumStrategy({"preset": "conservative"})
 
     # Execute backtest
-    result = executor.execute(quotes, strategy, strategy_name='example')
+    result = executor.execute(quotes, strategy, strategy_name="example")
     print(f"Final Capital: ${result.final_capital}")
     print(f"Total Return: {result.total_return}%")
 
@@ -102,16 +103,17 @@ def example_using_executor():
 # Example 4: Using Orchestrator for multiple backtests
 def example_using_orchestrator():
     """Example using BacktestOrchestrator for coordinated execution."""
+    from decimal import Decimal
+
     from app.backtesting.core import BacktestOrchestrator
     from app.backtesting.models import BacktestConfig
-    from decimal import Decimal
     from app.strategies.momentum_modular.strategy import ModularMomentumStrategy
 
     # Create configuration
     config = BacktestConfig(
-        initial_capital=Decimal('100000'),
-        commission_per_trade=Decimal('1.0'),
-        slippage_percentage=Decimal('0.1'),
+        initial_capital=Decimal("100000"),
+        commission_per_trade=Decimal("1.0"),
+        slippage_percentage=Decimal("0.1"),
     )
 
     # Create orchestrator
@@ -119,9 +121,9 @@ def example_using_orchestrator():
 
     # Create multiple strategies
     strategies = [
-        ModularMomentumStrategy({'preset': 'conservative'}),
-        ModularMomentumStrategy({'preset': 'balanced'}),
-        ModularMomentumStrategy({'preset': 'aggressive'}),
+        ModularMomentumStrategy({"preset": "conservative"}),
+        ModularMomentumStrategy({"preset": "balanced"}),
+        ModularMomentumStrategy({"preset": "aggressive"}),
     ]
 
     # Load quotes (simplified)
@@ -164,22 +166,22 @@ def example_parameter_sweep():
 
     # Define parameter ranges
     parameters = {
-        'preset': ['conservative', 'balanced', 'aggressive'],
+        "preset": ["conservative", "balanced", "aggressive"],
     }
 
     # Create strategy factory
     def strategy_factory(preset):
-        return ModularMomentumStrategy({'preset': preset})
+        return ModularMomentumStrategy({"preset": preset})
 
     # Run parameter sweep
-    results = runner.run_parameter_sweep(
+    runner.run_parameter_sweep(
         strategy_factory=strategy_factory,
         parameters=parameters,
-        test_name_prefix='preset_comparison',
+        test_name_prefix="preset_comparison",
     )
 
     # Find best result
-    best = runner.get_best_result('sharpe_ratio')
+    best = runner.get_best_result("sharpe_ratio")
     print(f"Best preset: {best['parameters']['preset']}")
     print(f"Sharpe Ratio: {best['sharpe_ratio']:.2f}")
 

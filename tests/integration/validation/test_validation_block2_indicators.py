@@ -171,7 +171,7 @@ class TestConfigurationPersistence(unittest.TestCase):
         # Obtener config de momentum
         strategy_config = get_strategy_config("momentum")
 
-        if strategy_config and hasattr(strategy_config, 'parameters'):
+        if strategy_config and hasattr(strategy_config, "parameters"):
             rsi_period = strategy_config.parameters.get("rsi_period")
 
             # Verificar que rsi_period está en la config (puede ser None si no está definido)
@@ -200,7 +200,7 @@ class TestConfigurationPersistence(unittest.TestCase):
         self.assertIsNotNone(strategy.ema_period, "ema_period debe estar configurado")
 
         # Si está en config, debería coincidir
-        if strategy_config and hasattr(strategy_config, 'parameters'):
+        if strategy_config and hasattr(strategy_config, "parameters"):
             ema_period = strategy_config.parameters.get("ema_period")
             if ema_period is not None:
                 self.assertEqual(

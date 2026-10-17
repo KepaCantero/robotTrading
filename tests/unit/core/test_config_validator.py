@@ -405,8 +405,7 @@ class TestConfigValidator:
         """Test full production config validation."""
         # Create valid production config
         prod_config = tmp_path / "production.yaml"
-        prod_config.write_text(
-            """
+        prod_config.write_text("""
 environment: production
 debug: false
 database:
@@ -429,8 +428,7 @@ tax:
   fifo_enabled: true
 compliance:
   country: ES
-"""
-        )
+""")
 
         validator = ConfigValidator(config_dir=tmp_path)
         result = validator.validate_production_config()
@@ -441,13 +439,11 @@ compliance:
     def test_load_env_file(self, tmp_path):
         """Test loading environment variables from file."""
         env_file = tmp_path / ".env"
-        env_file.write_text(
-            """
+        env_file.write_text("""
 # Comment line
 VAR1=value1
 VAR2=value2
-"""
-        )
+""")
 
         validator = ConfigValidator()
         env_vars = validator._load_env_file(env_file)

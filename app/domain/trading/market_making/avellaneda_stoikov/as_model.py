@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 """Avellaneda-Stoikov Market Making Model.
 
 This module implements the core Avellaneda-Stoikov model for optimal market making.
@@ -32,6 +30,7 @@ Key Equations:
    - Ask: r(s) + delta*/2
 """
 
+from __future__ import annotations
 
 import logging
 import math

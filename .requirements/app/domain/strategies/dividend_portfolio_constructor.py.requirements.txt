@@ -9,6 +9,7 @@ Domain: Domain
 - `collections`
 - `dataclasses`
 - `decimal`
+- `dividend_screener`
 - `logging`
 - `models`
 - `typing`

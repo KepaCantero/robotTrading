@@ -11,6 +11,7 @@ Domain: Infrastructure
 - `fastapi`
 - `fastapi.responses`
 - `logging`
+- `starlette.applications`
 - `starlette.middleware.base`
 - `time`
 - `typing`

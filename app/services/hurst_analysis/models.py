@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 """Data models for Hurst Exponent analysis.
 
 This module contains all data classes and enums used throughout
@@ -7,6 +5,7 @@ the hurst_analysis module. All models are immutable value objects
 following the Single Responsibility Principle.
 """
 
+from __future__ import annotations
 
 import logging
 from dataclasses import dataclass

@@ -15,13 +15,13 @@ Key Concepts Demonstrated:
 Author: Advanced Financial Machine Learning Implementation
 """
 
-import numpy as np
-import pandas as pd
-import matplotlib.pyplot as plt
-from pathlib import Path
-
 # Import fractional differentiation module
 import sys
+from pathlib import Path
+
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
 
 sys.path.append(str(Path(__file__).parent.parent))
 
@@ -31,12 +31,12 @@ from app.backtesting.feature_engineering import (
     apply_frac_diff_to_dataframe,
 )
 from app.backtesting.feature_engineering.fracdiff_visualizations import (
-    plot_frac_diff_comparison,
-    plot_weights,
-    plot_memory_preservation,
-    plot_stationarity_test,
-    plot_optimal_d_search,
     create_summary_report,
+    plot_frac_diff_comparison,
+    plot_memory_preservation,
+    plot_optimal_d_search,
+    plot_stationarity_test,
+    plot_weights,
 )
 
 
@@ -52,7 +52,7 @@ def generate_synthetic_data(n_points: int = 1000, seed: int = 42) -> pd.DataFram
     np.random.seed(seed)
 
     # Generate time index
-    dates = pd.date_range(start='2020-01-01', periods=n_points, freq='D')
+    dates = pd.date_range(start="2020-01-01", periods=n_points, freq="D")
 
     # Random walk (price-like)
     price = 100 + np.random.randn(n_points).cumsum()
@@ -73,8 +73,8 @@ def generate_synthetic_data(n_points: int = 1000, seed: int = 42) -> pd.DataFram
     volume = np.exp(np.random.randn(n_points) * 0.5 + 10)
 
     df = pd.DataFrame(
-        {'date': dates, 'price': price, 'spread': spread, 'returns': returns, 'volume': volume}
-    ).set_index('date')
+        {"date": dates, "price": price, "spread": spread, "returns": returns, "volume": volume}
+    ).set_index("date")
 
     return df
 
@@ -87,9 +87,9 @@ def example_1_basic_fractional_diff():
 
     # Generate data
     df = generate_synthetic_data(n_points=500)
-    price_series = df['price']
+    price_series = df["price"]
 
-    print(f"\nOriginal price series:")
+    print("\nOriginal price series:")
     print(f"  Length: {len(price_series)}")
     print(f"  Mean: {price_series.mean():.4f}")
     print(f"  Std: {price_series.std():.4f}")
@@ -102,7 +102,7 @@ def example_1_basic_fractional_diff():
     # Apply fractional differentiation with d=0.5
     frac_diff_series = fd.fractional_diff(price_series, d=0.5)
 
-    print(f"\nFractionally differenced series (d=0.5):")
+    print("\nFractionally differenced series (d=0.5):")
     print(f"  Length: {len(frac_diff_series)}")
     print(f"  Non-NaN values: {frac_diff_series.notna().sum()}")
     print(f"  Mean: {frac_diff_series.mean():.4f}")
@@ -119,7 +119,7 @@ def example_2_finding_optimal_d():
 
     # Generate data
     df = generate_synthetic_data(n_points=1000)
-    price_series = df['price']
+    price_series = df["price"]
 
     # Initialize fractional differentiation
     fd = FractionalDifferentiation(adfuller_alpha=0.05)
@@ -128,10 +128,10 @@ def example_2_finding_optimal_d():
 
     # Find optimal d using binary search
     optimal_d, p_value, metadata = fd.find_optimal_d(
-        price_series, min_d=0.0, max_d=1.0, method='binary'
+        price_series, min_d=0.0, max_d=1.0, method="binary"
     )
 
-    print(f"\nResults:")
+    print("\nResults:")
     print(f"  Optimal d: {optimal_d:.4f}")
     print(f"  P-value: {p_value:.4f}")
     print(f"  Is stationary: {p_value < fd.adfuller_alpha}")
@@ -142,7 +142,7 @@ def example_2_finding_optimal_d():
     comparison = fd.compare_d_values(price_series, d_values=[0.0, 0.3, 0.5, 0.7, 1.0])
     print(
         comparison[
-            ['d', 'p_value', 'is_stationary', 'memory_preservation', 'memory_loss_pct']
+            ["d", "p_value", "is_stationary", "memory_preservation", "memory_loss_pct"]
         ].to_string(index=False)
     )
 
@@ -157,7 +157,7 @@ def example_3_memory_preservation():
 
     # Generate data
     df = generate_synthetic_data(n_points=1000)
-    price_series = df['price']
+    price_series = df["price"]
 
     fd = FractionalDifferentiation()
 
@@ -176,9 +176,9 @@ def example_3_memory_preservation():
         memory_metrics = fd.calculate_memory_loss(price_series, diff_series)
         memory_results.append(
             {
-                'd': d,
-                'memory_preservation': memory_metrics['memory_preservation_ratio'],
-                'memory_loss_pct': memory_metrics['memory_loss_pct'],
+                "d": d,
+                "memory_preservation": memory_metrics["memory_preservation_ratio"],
+                "memory_loss_pct": memory_metrics["memory_loss_pct"],
             }
         )
 
@@ -207,14 +207,14 @@ def example_4_dataframe_application():
 
     # Apply fractional differentiation to all numeric columns
     df_fracdiff = apply_frac_diff_to_dataframe(
-        df, d=0.4, columns=['price', 'spread'], threshold=1e-5
+        df, d=0.4, columns=["price", "spread"], threshold=1e-5
     )
 
     print("\nDataFrame with fractional differentiation:")
     print(df_fracdiff.head())
 
     print("\nNew columns created:")
-    new_cols = [col for col in df_fracdiff.columns if '_fracdiff' in col]
+    new_cols = [col for col in df_fracdiff.columns if "_fracdiff" in col]
     print(f"  {new_cols}")
 
     print("\n✓ Example 4 completed successfully")
@@ -231,7 +231,7 @@ def example_5_sklearn_transformer():
 
     # Generate data
     df = generate_synthetic_data(n_points=1000)
-    features = df[['price', 'spread', 'volume']]
+    features = df[["price", "spread", "volume"]]
 
     print("\nOriginal features shape:", features.shape)
 
@@ -246,7 +246,7 @@ def example_5_sklearn_transformer():
 
     # Create a pipeline
     pipeline = Pipeline(
-        [('fracdiff', FractionalDiffTransformer(d=0.4)), ('scaler', StandardScaler())]
+        [("fracdiff", FractionalDiffTransformer(d=0.4)), ("scaler", StandardScaler())]
     )
 
     features_scaled = pipeline.fit_transform(features)
@@ -263,7 +263,7 @@ def example_6_visualizations():
 
     # Generate data
     df = generate_synthetic_data(n_points=1000)
-    price_series = df['price']
+    price_series = df["price"]
 
     # Create output directory
     output_dir = Path("examples/output")
@@ -274,31 +274,31 @@ def example_6_visualizations():
     # 1. Fractional diff comparison
     print("  1. Fractional diff comparison...")
     fig1 = plot_frac_diff_comparison(price_series, d_values=[0.0, 0.3, 0.5, 1.0])
-    fig1.savefig(output_dir / "fracdiff_comparison.png", dpi=150, bbox_inches='tight')
+    fig1.savefig(output_dir / "fracdiff_comparison.png", dpi=150, bbox_inches="tight")
     plt.close(fig1)
 
     # 2. Weights visualization
     print("  2. Weights visualization...")
     fig2 = plot_weights(d=0.5, threshold=1e-5)
-    fig2.savefig(output_dir / "fracdiff_weights.png", dpi=150, bbox_inches='tight')
+    fig2.savefig(output_dir / "fracdiff_weights.png", dpi=150, bbox_inches="tight")
     plt.close(fig2)
 
     # 3. Memory preservation
     print("  3. Memory preservation...")
     fig3 = plot_memory_preservation(price_series, d_values=[0.0, 0.3, 0.5, 1.0])
-    fig3.savefig(output_dir / "memory_preservation.png", dpi=150, bbox_inches='tight')
+    fig3.savefig(output_dir / "memory_preservation.png", dpi=150, bbox_inches="tight")
     plt.close(fig3)
 
     # 4. Stationarity test
     print("  4. Stationarity test...")
     fig4 = plot_stationarity_test(price_series)
-    fig4.savefig(output_dir / "stationarity_test.png", dpi=150, bbox_inches='tight')
+    fig4.savefig(output_dir / "stationarity_test.png", dpi=150, bbox_inches="tight")
     plt.close(fig4)
 
     # 5. Optimal d search
     print("  5. Optimal d search...")
     fig5 = plot_optimal_d_search(price_series)
-    fig5.savefig(output_dir / "optimal_d_search.png", dpi=150, bbox_inches='tight')
+    fig5.savefig(output_dir / "optimal_d_search.png", dpi=150, bbox_inches="tight")
     plt.close(fig5)
 
     # 6. Summary report
@@ -323,7 +323,7 @@ def example_7_practical_trading_scenario():
     # Generate realistic price data
     np.random.seed(42)
     n_points = 1000
-    dates = pd.date_range(start='2020-01-01', periods=n_points, freq='D')
+    dates = pd.date_range(start="2020-01-01", periods=n_points, freq="D")
 
     # Create price with trend and noise
     trend = np.linspace(100, 150, n_points)
@@ -357,15 +357,15 @@ def example_7_practical_trading_scenario():
     print("\nStep 4: Creating feature set...")
     features = pd.DataFrame(
         {
-            'price_fracdiff': frac_diff_price,
-            'price_ma': price_series.rolling(window=20).mean(),
-            'price_std': price_series.rolling(window=20).std(),
-            'returns': price_series.pct_change(),
+            "price_fracdiff": frac_diff_price,
+            "price_ma": price_series.rolling(window=20).mean(),
+            "price_std": price_series.rolling(window=20).std(),
+            "returns": price_series.pct_change(),
         }
     )
 
     print(f"  Features shape: {features.shape}")
-    print(f"  Non-NaN values per feature:")
+    print("  Non-NaN values per feature:")
     for col in features.columns:
         print(f"    {col}: {features[col].notna().sum()}")
 
@@ -386,7 +386,7 @@ def example_8_comparison_integer_vs_fractional():
 
     # Generate data
     df = generate_synthetic_data(n_points=1000)
-    price_series = df['price']
+    price_series = df["price"]
 
     fd = FractionalDifferentiation()
 

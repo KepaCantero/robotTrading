@@ -16,10 +16,10 @@ Domain: Application
 - `backtesting.validation.walk_forward`
 - `collections.abc`
 - `core.config.base`
-- `core.models.input_profile`
 - `dataclasses`
 - `datetime`
 - `decimal`
+- `domain.models.input_profile`
 - `domain.optimization.parameter.base_optimizer`
 - `domain.optimization.parameter.bayesian_optimizer`
 - `domain.optimization.parameter.models`

@@ -1,8 +1,8 @@
 # 🏗️ AWS Infrastructure Design - AlgoTrading Platform (Single Instance)
 
-**Versión**: 2.0 - Single Instance Architecture  
-**Fecha**: 2025-12-19  
-**Autor**: Cloud Solutions Architect  
+**Versión**: 2.0 - Single Instance Architecture
+**Fecha**: 2025-12-19
+**Autor**: Cloud Solutions Architect
 **Objetivo**: Infraestructura optimizada para presupuesto limitado ($25/mes) en instancia única
 
 ---
@@ -1004,6 +1004,6 @@ Total: ~$18/mes (Reserved) o ~$25/mes (On-Demand)
 
 ---
 
-**Documento creado**: 2025-12-19  
-**Última actualización**: 2025-12-19  
+**Documento creado**: 2025-12-19
+**Última actualización**: 2025-12-19
 **Versión**: 2.0 - Single Instance Architecture

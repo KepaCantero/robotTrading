@@ -9,7 +9,7 @@ from __future__ import annotations
 import logging
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Any, ClassVar
+from typing import Any
 
 from pydantic import BaseModel, Field
 
@@ -37,10 +37,7 @@ class SHAPExplanation(BaseModel):
     base_value: float = Field(..., description="Base value (model average)")
     shap_values: list[SHAPValue] = Field(..., description="List of SHAP values")
     timestamp: datetime = Field(default_factory=datetime.now)
-    model_name: str | None = Field(None, description="Name of the model")
-
-    class Config:
-        json_encoders: ClassVar[dict] = {datetime: lambda v: v.isoformat()}
+    model_name: str | None = Field(default=None, description="Name of the model")
 
     def get_top_features(self, n: int = 5) -> list[SHAPValue]:
         """Get top n most important features by absolute SHAP value."""
@@ -85,7 +82,7 @@ class LIMEFeature(BaseModel):
     """Individual feature contribution in LIME explanation."""
 
     feature_name: str = Field(..., description="Name of the feature")
-    feature_range: str | None = Field(None, description="Feature value range")
+    feature_range: str | None = Field(default=None, description="Feature value range")
     contribution: float = Field(..., description="Contribution to prediction")
     is_positive: bool = Field(..., description="Whether contribution is positive")
 
@@ -101,9 +98,6 @@ class LIMEExplanation(BaseModel):
     intercept: float = Field(..., description="Intercept of local linear model")
     timestamp: datetime = Field(default_factory=datetime.now)
 
-    class Config:
-        json_encoders: ClassVar[dict] = {datetime: lambda v: v.isoformat()}
-
 
 # ============================================================================
 # Feature Importance Models
@@ -116,7 +110,7 @@ class FeatureImportance(BaseModel):
     feature_name: str = Field(..., description="Name of the feature")
     importance_score: float = Field(..., description="Importance score (0-1 or 0-100)")
     method: str = Field(..., description="Method used (shap, permutation, gain, cover, etc.)")
-    rank: int | None = Field(None, description="Ranking among all features")
+    rank: int | None = Field(default=None, description="Ranking among all features")
 
 
 class FeatureImportanceReport(BaseModel):
@@ -127,9 +121,6 @@ class FeatureImportanceReport(BaseModel):
     features: list[FeatureImportance] = Field(..., description="All features with importance")
     method: str = Field(..., description="Method used for computation")
     total_features: int = Field(..., description="Total number of features")
-
-    class Config:
-        json_encoders: ClassVar[dict] = {datetime: lambda v: v.isoformat()}
 
     def get_top_features(self, n: int = 10) -> list[FeatureImportance]:
         """Get top n most important features."""
@@ -165,14 +156,14 @@ class PredictionExplanation(BaseModel):
 
     prediction_id: str = Field(..., description="Unique prediction ID")
     prediction_value: float = Field(..., description="The prediction")
-    actual_value: float | None = Field(None, description="Actual value if available")
+    actual_value: float | None = Field(default=None, description="Actual value if available")
     prediction_confidence: float = Field(..., description="Confidence score (0-1)")
 
     # SHAP explanation
-    shap_explanation: SHAPExplanation | None = Field(None, description="SHAP explanation")
+    shap_explanation: SHAPExplanation | None = Field(default=None, description="SHAP explanation")
 
     # LIME explanation
-    lime_explanation: LIMEExplanation | None = Field(None, description="LIME explanation")
+    lime_explanation: LIMEExplanation | None = Field(default=None, description="LIME explanation")
 
     # Feature importance
     feature_importance: list[FeatureImportance] | None = Field(
@@ -180,10 +171,7 @@ class PredictionExplanation(BaseModel):
     )
 
     timestamp: datetime = Field(default_factory=datetime.now)
-    model_name: str | None = Field(None, description="Name of the model")
-
-    class Config:
-        json_encoders: ClassVar[dict] = {datetime: lambda v: v.isoformat()}
+    model_name: str | None = Field(default=None, description="Name of the model")
 
 
 # ============================================================================
@@ -247,9 +235,6 @@ class InterpretationReport(BaseModel):
     recommendations: list[str] = Field(
         default_factory=list, description="Recommendations based on interpretation"
     )
-
-    class Config:
-        json_encoders: ClassVar[dict] = {datetime: lambda v: v.isoformat()}
 
 
 @dataclass

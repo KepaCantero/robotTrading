@@ -102,4 +102,3 @@ Future: `s3://algo-trading-data/{symbol}/{date}/`
 - Market data is publicly available (not PII)
 - No sensitive user data stored
 - Compliance with data retention policies
-

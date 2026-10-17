@@ -376,10 +376,10 @@ class ErrorRecoveryManager:
         logger.warning(f"⚠️  API error [{error_type.value}]: {error!s} → Strategy: {strategy.value}")
 
         if strategy == ErrorRecoveryStrategy.ALERT and self.on_manual_intervention is not None:
-            self.on_manual_intervention(str(error))
+            self.on_manual_intervention(str(error))  # pylint: disable=not-callable
 
         if strategy == ErrorRecoveryStrategy.SYNC and self.on_sync_needed is not None:
-            self.on_sync_needed()
+            self.on_sync_needed()  # pylint: disable=not-callable  # Callable|None ya comprobado
 
         return strategy
 

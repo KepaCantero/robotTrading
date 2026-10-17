@@ -187,17 +187,25 @@ class BrokerConnector:
         """
         self.broker_type = broker_type
 
-        # Create broker-specific adapter
+        # Create broker-specific adapter (fail-closed: no silent fallback to paper)
         adapter: BrokerAdapter
-        if broker_type == BrokerType.ALPACA:
-            from .broker_adapters.alpaca_adapter import AlpacaAdapter
-
-            adapter = AlpacaAdapter()
-        else:
-            # Default to paper trading for all other types
+        if broker_type == BrokerType.PAPER:
             from .broker_adapters.paper_adapter import PaperAdapter
 
             adapter = PaperAdapter()
+        elif broker_type == BrokerType.ALPACA:
+            from .broker_adapters.alpaca_adapter import AlpacaAdapter
+
+            adapter = AlpacaAdapter()
+        elif broker_type in (BrokerType.INTERACTIVE_BROKERS, BrokerType.IBKR):
+            raise ValueError(
+                "IBKR adapter not wired to BrokerConnector yet — "
+                "refusing to silently fall back to paper"
+            )
+        else:
+            raise ValueError(
+                f"Unsupported broker type {broker_type} — refusing to silently fall back to paper"
+            )
         self.adapter = adapter
 
         # Initialize reconnection manager
@@ -527,9 +535,18 @@ _connector: BrokerConnector | None = None
 
 
 def get_broker_connector(broker_type: BrokerType = BrokerType.PAPER) -> BrokerConnector:
-    """Get or create singleton BrokerConnector."""
+    """Get or create singleton BrokerConnector for the requested broker type.
+
+    Fail-closed: if a connector already exists for a DIFFERENT broker type,
+    raise instead of silently returning the wrong broker.
+    """
     global _connector
     if _connector is None:
-        _connector = BrokerConnector()
+        _connector = BrokerConnector(broker_type)
+    elif _connector.broker_type != broker_type:
+        raise ValueError(
+            f"BrokerConnector already initialized as {_connector.broker_type.value}; "
+            f"refusing to return it for {broker_type.value}"
+        )
 
     return _connector

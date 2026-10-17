@@ -24,5 +24,5 @@ __all__ = [
     "TestTradingMetricsConfig",
     "TestTradingMetricsMonitor",
     "TestTradingMetricsSingleton",
-    "TestTradingIntegration",
+    "TestTradingIntegration",  # pylint: disable=undefined-all-variable  # carga perezosa vía __getattr__
 ]

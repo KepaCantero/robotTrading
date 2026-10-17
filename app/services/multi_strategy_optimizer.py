@@ -273,32 +273,30 @@ class MultiStrategyOptimizer:
             )
 
             # Run backtest
-            results = backtester.run_multi_strategy_backtest(
-                self.market_data, self.start_date, self.end_date
-            )
+            results = backtester.run_backtest(self.market_data, self.start_date, self.end_date)
 
             # Extract metric based on objective
             if self.objective_metric == "sharpe":
-                metric_value = results["combined"].get("weighted_sharpe", 0.0)
+                metric_value = results.combined.get("weighted_sharpe", 0.0)
             elif self.objective_metric == "return":
-                metric_value = results["combined"].get("total_return", 0.0)
+                metric_value = results.combined.get("total_return", 0.0)
             elif self.objective_metric == "calmar":
                 # Calmar = Annualized Return / Max Drawdown
-                total_return = results["combined"].get("total_return", 0.0)
-                max_dd = abs(results["combined"].get("weighted_max_dd", 1.0))
+                total_return = results.combined.get("total_return", 0.0)
+                max_dd = abs(results.combined.get("weighted_max_dd", 1.0))
                 metric_value = total_return / max_dd if max_dd > 0 else 0.0
             else:
-                metric_value = results["combined"].get("weighted_sharpe", 0.0)
+                metric_value = results.combined.get("weighted_sharpe", 0.0)
 
             # Store intermediate results
-            trial.set_user_attr("total_return", results["combined"].get("total_return", 0.0))
-            trial.set_user_attr("total_trades", results["combined"].get("total_trades", 0))
-            trial.set_user_attr("max_drawdown", results["combined"].get("weighted_max_dd", 0.0))
+            trial.set_user_attr("total_return", results.combined.get("total_return", 0.0))
+            trial.set_user_attr("total_trades", results.combined.get("total_trades", 0))
+            trial.set_user_attr("max_drawdown", results.combined.get("weighted_max_dd", 0.0))
 
             logger.debug(
                 f"Trial {trial.number}: {self.objective_metric}={metric_value:.4f}, "
-                f"return={results['combined'].get('total_return', 0.0):.2f}%, "
-                f"trades={results['combined'].get('total_trades', 0)}"
+                f"return={results.combined.get('total_return', 0.0):.2f}%, "
+                f"trades={results.combined.get('total_trades', 0)}"
             )
 
             return float(metric_value)
@@ -437,8 +435,6 @@ class MultiStrategyOptimizer:
             },
         )
 
-        results = backtester.run_multi_strategy_backtest(
-            self.market_data, self.start_date, self.end_date
-        )
+        results = backtester.run_backtest(self.market_data, self.start_date, self.end_date)
 
         return results

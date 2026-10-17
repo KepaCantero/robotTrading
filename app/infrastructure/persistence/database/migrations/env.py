@@ -13,11 +13,10 @@ import os
 import sys
 from logging.config import fileConfig
 
+from alembic import context
 from sqlalchemy import engine_from_config, pool
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import async_engine_from_config
-
-from alembic import context
 
 # Add parent directory to path to import app modules
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
@@ -137,8 +136,9 @@ async def run_async_migrations():
     connection = None
     try:
         logger.info("Starting async migrations")
-        configuration = config.get_section(config.config_ini_section)
-        configuration["sqlalchemy.url"] = config.get_main_option("sqlalchemy.url")
+        configuration = config.get_section(config.config_ini_section) or {}
+        main_url = config.get_main_option("sqlalchemy.url")
+        configuration["sqlalchemy.url"] = main_url if main_url is not None else ""
 
         logger.info("Creating async database engine for migrations")
         # For async migrations, we need to convert the URL to sync format temporarily
@@ -218,7 +218,7 @@ def run_migrations_online() -> None:
             logger.info("Detected sync driver, running sync migrations")
             # Run sync migrations
             connectable = engine_from_config(
-                config.get_section(config.config_ini_section),
+                config.get_section(config.config_ini_section) or {},
                 prefix="sqlalchemy.",
                 poolclass=pool.NullPool,
             )

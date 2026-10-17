@@ -27,4 +27,3 @@ max_drawdown_per_strategy: 0.05 # 5% max drawdown per strategy
 min_sharpe_ratio: 1.0
 max_drawdown: 0.15
 min_win_rate: 0.40
-

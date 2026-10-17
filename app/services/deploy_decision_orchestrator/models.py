@@ -136,7 +136,7 @@ class DeploymentDecision(BaseModel):
         default_factory=datetime.utcnow, description="Decision time"
     )
 
-    error_message: str | None = Field(None, description="Error if any")
+    error_message: str | None = Field(default=None, description="Error if any")
 
 
 # Resolve forward references (Decimal was previously only imported under TYPE_CHECKING)

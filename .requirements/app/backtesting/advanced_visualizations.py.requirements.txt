@@ -8,6 +8,7 @@ Domain: Backtest
 - `__future__`
 - `app.shared.config.centralized_config`
 - `logging`
+- `matplotlib`
 - `matplotlib.dates`
 - `matplotlib.figure`
 - `matplotlib.pyplot`

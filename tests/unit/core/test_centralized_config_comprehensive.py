@@ -26,31 +26,31 @@ from hypothesis import given, settings, strategies as st
 def sample_config_dict():
     """Create sample configuration dictionary."""
     return {
-        'risk_management': {
-            'atr_multipliers': {
-                'default_stop': 2.0,
-                'tight_stop': 1.0,
-                'wide_stop': 3.0,
+        "risk_management": {
+            "atr_multipliers": {
+                "default_stop": 2.0,
+                "tight_stop": 1.0,
+                "wide_stop": 3.0,
             },
-            'position_sizing': {
-                'default_risk_per_trade': 0.02,
-                'max_position_size': 0.25,
-                'kelly_fraction_multiplier': 0.5,
+            "position_sizing": {
+                "default_risk_per_trade": 0.02,
+                "max_position_size": 0.25,
+                "kelly_fraction_multiplier": 0.5,
             },
-            'stop_loss': {
-                'max_stop_distance_pct': 0.20,
-                'default_stop_distance_pct': 0.05,
+            "stop_loss": {
+                "max_stop_distance_pct": 0.20,
+                "default_stop_distance_pct": 0.05,
             },
         },
-        'trading': {
-            'symbols': ['AAPL', 'MSFT', 'GOOGL'],
-            'default_timeframe': '1d',
-            'max_positions': 10,
+        "trading": {
+            "symbols": ["AAPL", "MSFT", "GOOGL"],
+            "default_timeframe": "1d",
+            "max_positions": 10,
         },
-        'backtesting': {
-            'start_date': '2020-01-01',
-            'end_date': '2024-12-31',
-            'initial_capital': 100000,
+        "backtesting": {
+            "start_date": "2020-01-01",
+            "end_date": "2024-12-31",
+            "initial_capital": 100000,
         },
     }
 
@@ -59,7 +59,7 @@ def sample_config_dict():
 def sample_config_file(tmp_path, sample_config_dict):
     """Create a temporary configuration file."""
     config_file = tmp_path / "test_config.yaml"
-    with open(config_file, 'w') as f:
+    with open(config_file, "w") as f:
         yaml.dump(sample_config_dict, f)
     return config_file
 
@@ -79,21 +79,21 @@ class TestConfigurationLoading:
         config = load_config_from_yaml(sample_config_file)
 
         assert config is not None
-        assert 'risk_management' in config
-        assert 'trading' in config
+        assert "risk_management" in config
+        assert "trading" in config
 
     def test_load_config_from_json(self, tmp_path, sample_config_dict):
         """Test loading configuration from JSON file."""
         from app.shared.config.centralized_config import load_config_from_json
 
         config_file = tmp_path / "test_config.json"
-        with open(config_file, 'w') as f:
+        with open(config_file, "w") as f:
             json.dump(sample_config_dict, f)
 
         config = load_config_from_json(config_file)
 
         assert config is not None
-        assert config['trading']['symbols'] == ['AAPL', 'MSFT', 'GOOGL']
+        assert config["trading"]["symbols"] == ["AAPL", "MSFT", "GOOGL"]
 
     def test_load_nonexistent_file(self):
         """Test loading a file that doesn't exist."""
@@ -107,7 +107,7 @@ class TestConfigurationLoading:
         from app.shared.config.centralized_config import load_config_from_yaml
 
         invalid_file = tmp_path / "invalid.yaml"
-        with open(invalid_file, 'w') as f:
+        with open(invalid_file, "w") as f:
             f.write("invalid: yaml: content: [unclosed")
 
         with pytest.raises((yaml.YAMLError, ValueError)):
@@ -137,7 +137,7 @@ class TestConfigurationValidation:
         """Test ATR multiplier validation."""
         from app.shared.config.centralized_config import validate_atr_multipliers
 
-        atr_multipliers = sample_config_dict['risk_management']['atr_multipliers']
+        atr_multipliers = sample_config_dict["risk_management"]["atr_multipliers"]
         is_valid = validate_atr_multipliers(atr_multipliers)
 
         assert is_valid is True
@@ -147,9 +147,9 @@ class TestConfigurationValidation:
         from app.shared.config.centralized_config import validate_atr_multipliers
 
         invalid_multipliers = {
-            'default_stop': -1.0,
-            'tight_stop': 0.5,
-            'wide_stop': 3.0,
+            "default_stop": -1.0,
+            "tight_stop": 0.5,
+            "wide_stop": 3.0,
         }
 
         is_valid = validate_atr_multipliers(invalid_multipliers)
@@ -160,7 +160,7 @@ class TestConfigurationValidation:
         """Test risk percentage validation."""
         from app.shared.config.centralized_config import validate_risk_percentages
 
-        risk_config = sample_config_dict['risk_management']['position_sizing']
+        risk_config = sample_config_dict["risk_management"]["position_sizing"]
         is_valid = validate_risk_percentages(risk_config)
 
         assert is_valid is True
@@ -170,8 +170,8 @@ class TestConfigurationValidation:
         from app.shared.config.centralized_config import validate_risk_percentages
 
         invalid_config = {
-            'default_risk_per_trade': 1.5,  # 150%
-            'max_position_size': 0.25,
+            "default_risk_per_trade": 1.5,  # 150%
+            "max_position_size": 0.25,
         }
 
         is_valid = validate_risk_percentages(invalid_config)
@@ -182,7 +182,7 @@ class TestConfigurationValidation:
         """Test trading symbols validation."""
         from app.shared.config.centralized_config import validate_trading_symbols
 
-        symbols = sample_config_dict['trading']['symbols']
+        symbols = sample_config_dict["trading"]["symbols"]
         is_valid = validate_trading_symbols(symbols)
 
         assert is_valid is True
@@ -199,7 +199,7 @@ class TestConfigurationValidation:
         """Test trading symbols validation with duplicates."""
         from app.shared.config.centralized_config import validate_trading_symbols
 
-        symbols_with_duplicates = ['AAPL', 'MSFT', 'AAPL', 'GOOGL']
+        symbols_with_duplicates = ["AAPL", "MSFT", "AAPL", "GOOGL"]
         is_valid = validate_trading_symbols(symbols_with_duplicates)
 
         # Should either be False or dedupe
@@ -209,7 +209,7 @@ class TestConfigurationValidation:
         """Test date validation."""
         from app.shared.config.centralized_config import validate_dates
 
-        backtest_config = sample_config_dict['backtesting']
+        backtest_config = sample_config_dict["backtesting"]
         is_valid = validate_dates(backtest_config)
 
         assert is_valid is True
@@ -219,8 +219,8 @@ class TestConfigurationValidation:
         from app.shared.config.centralized_config import validate_dates
 
         invalid_config = {
-            'start_date': '2024-01-01',
-            'end_date': '2020-01-01',  # Before start
+            "start_date": "2024-01-01",
+            "end_date": "2020-01-01",  # Before start
         }
 
         is_valid = validate_dates(invalid_config)
@@ -242,7 +242,7 @@ class TestConfigurationAccess:
 
         config = Configuration(sample_config_dict)
 
-        default_multiplier = config.get_atr_multiplier('default_stop')
+        default_multiplier = config.get_atr_multiplier("default_stop")
 
         assert default_multiplier == 2.0
 
@@ -252,7 +252,7 @@ class TestConfigurationAccess:
 
         config = Configuration(sample_config_dict)
 
-        result = config.get_atr_multiplier('nonexistent')
+        result = config.get_atr_multiplier("nonexistent")
 
         # Should return None or default
         assert result is None or isinstance(result, (int, float))
@@ -265,8 +265,8 @@ class TestConfigurationAccess:
 
         risk_config = config.get_risk_config()
 
-        assert 'position_sizing' in risk_config
-        assert 'atr_multipliers' in risk_config
+        assert "position_sizing" in risk_config
+        assert "atr_multipliers" in risk_config
 
     def test_get_trading_symbols(self, sample_config_dict):
         """Test getting trading symbols."""
@@ -276,7 +276,7 @@ class TestConfigurationAccess:
 
         symbols = config.get_trading_symbols()
 
-        assert symbols == ['AAPL', 'MSFT', 'GOOGL']
+        assert symbols == ["AAPL", "MSFT", "GOOGL"]
 
     def test_get_backtest_dates(self, sample_config_dict):
         """Test getting backtest dates."""
@@ -286,8 +286,8 @@ class TestConfigurationAccess:
 
         dates = config.get_backtest_dates()
 
-        assert dates['start_date'] == '2020-01-01'
-        assert dates['end_date'] == '2024-12-31'
+        assert dates["start_date"] == "2020-01-01"
+        assert dates["end_date"] == "2024-12-31"
 
 
 # =============================================================================
@@ -304,9 +304,9 @@ class TestConfigurationMerging:
 
         base_config = sample_config_dict.copy()
         override_config = {
-            'risk_management': {
-                'atr_multipliers': {
-                    'default_stop': 2.5,  # Override
+            "risk_management": {
+                "atr_multipliers": {
+                    "default_stop": 2.5,  # Override
                 },
             },
         }
@@ -314,37 +314,37 @@ class TestConfigurationMerging:
         merged = merge_configs(base_config, override_config)
 
         # Should have overridden value
-        assert merged['risk_management']['atr_multipliers']['default_stop'] == 2.5
+        assert merged["risk_management"]["atr_multipliers"]["default_stop"] == 2.5
         # Should keep other values
-        assert 'tight_stop' in merged['risk_management']['atr_multipliers']
+        assert "tight_stop" in merged["risk_management"]["atr_multipliers"]
 
     def test_merge_configs_nested(self):
         """Test merging nested configurations."""
         from app.shared.config.centralized_config import merge_configs
 
         base = {
-            'level1': {
-                'level2': {
-                    'key1': 'value1',
-                    'key2': 'value2',
+            "level1": {
+                "level2": {
+                    "key1": "value1",
+                    "key2": "value2",
                 },
             },
         }
 
         override = {
-            'level1': {
-                'level2': {
-                    'key2': 'new_value2',
-                    'key3': 'value3',
+            "level1": {
+                "level2": {
+                    "key2": "new_value2",
+                    "key3": "value3",
                 },
             },
         }
 
         merged = merge_configs(base, override)
 
-        assert merged['level1']['level2']['key1'] == 'value1'
-        assert merged['level1']['level2']['key2'] == 'new_value2'
-        assert merged['level1']['level2']['key3'] == 'value3'
+        assert merged["level1"]["level2"]["key1"] == "value1"
+        assert merged["level1"]["level2"]["key2"] == "new_value2"
+        assert merged["level1"]["level2"]["key3"] == "value3"
 
     def test_merge_configs_empty_override(self, sample_config_dict):
         """Test merging with empty override."""
@@ -358,7 +358,7 @@ class TestConfigurationMerging:
         """Test merging with empty base."""
         from app.shared.config.centralized_config import merge_configs
 
-        override = {'key': 'value'}
+        override = {"key": "value"}
         merged = merge_configs({}, override)
 
         assert merged == override
@@ -432,14 +432,14 @@ class TestConfigurationCaching:
         load_config_from_yaml(sample_config_file)
 
         # Modify file
-        with open(sample_config_file, 'a') as f:
+        with open(sample_config_file, "a") as f:
             f.write("\nnew_key: new_value")
 
         # Reload
         config2 = load_config_from_yaml(sample_config_file)
 
         # Config should be updated
-        assert 'new_key' in config2
+        assert "new_key" in config2
 
 
 # =============================================================================
@@ -459,9 +459,9 @@ class TestConfigurationProperties:
         from app.shared.config.centralized_config import validate_atr_multipliers
 
         config = {
-            'default_stop': multiplier,
-            'tight_stop': multiplier / 2,
-            'wide_stop': multiplier * 1.5,
+            "default_stop": multiplier,
+            "tight_stop": multiplier / 2,
+            "wide_stop": multiplier * 1.5,
         }
 
         # All positive multipliers should be valid
@@ -478,8 +478,8 @@ class TestConfigurationProperties:
         from app.shared.config.centralized_config import validate_risk_percentages
 
         config = {
-            'default_risk_per_trade': risk_pct,
-            'max_position_size': risk_pct * 10,
+            "default_risk_per_trade": risk_pct,
+            "max_position_size": risk_pct * 10,
         }
 
         if 0 < risk_pct <= 1.0:
@@ -515,8 +515,8 @@ class TestConfigurationProperties:
         end = end_date.strftime("%Y-%m-%d")
 
         config = {
-            'start_date': start,
-            'end_date': end,
+            "start_date": start,
+            "end_date": end,
         }
 
         is_valid = validate_dates(config)
@@ -539,8 +539,8 @@ class TestConfigurationEdgeCases:
         from app.shared.config.centralized_config import Configuration
 
         config_dict = {
-            'risk_management': None,
-            'trading': {'symbols': ['AAPL']},
+            "risk_management": None,
+            "trading": {"symbols": ["AAPL"]},
         }
 
         config = Configuration(config_dict)
@@ -554,7 +554,7 @@ class TestConfigurationEdgeCases:
 
         config = Configuration(sample_config_dict)
 
-        result = config.get('nonexistent_section', {})
+        result = config.get("nonexistent_section", {})
 
         assert result == {}
 
@@ -562,7 +562,7 @@ class TestConfigurationEdgeCases:
         """Test configuration with extra/unknown sections."""
         from app.shared.config.centralized_config import Configuration
 
-        sample_config_dict['unknown_section'] = {'key': 'value'}
+        sample_config_dict["unknown_section"] = {"key": "value"}
 
         # Should still work
         config = Configuration(sample_config_dict)
@@ -573,10 +573,10 @@ class TestConfigurationEdgeCases:
         from app.shared.config.centralized_config import Configuration
 
         config_dict = {
-            'risk_management': {
-                'atr_multipliers': {
-                    'default_stop': 0,
-                    'tight_stop': 0,
+            "risk_management": {
+                "atr_multipliers": {
+                    "default_stop": 0,
+                    "tight_stop": 0,
                 },
             },
         }
@@ -584,7 +584,7 @@ class TestConfigurationEdgeCases:
         config = Configuration(config_dict)
 
         # Should handle zero values
-        result = config.get_atr_multiplier('default_stop')
+        result = config.get_atr_multiplier("default_stop")
         assert result == 0
 
     def test_config_with_very_large_values(self):
@@ -592,8 +592,8 @@ class TestConfigurationEdgeCases:
         from app.shared.config.centralized_config import Configuration
 
         config_dict = {
-            'backtesting': {
-                'initial_capital': 10**12,  # Trillion
+            "backtesting": {
+                "initial_capital": 10**12,  # Trillion
             },
         }
 
@@ -617,9 +617,9 @@ class TestConfigurationUpdates:
 
         config = Configuration(sample_config_dict)
 
-        config.set_atr_multiplier('default_stop', 2.5)
+        config.set_atr_multiplier("default_stop", 2.5)
 
-        assert config.get_atr_multiplier('default_stop') == 2.5
+        assert config.get_atr_multiplier("default_stop") == 2.5
 
     def test_update_nested_value(self, sample_config_dict):
         """Test updating nested configuration value."""
@@ -627,10 +627,10 @@ class TestConfigurationUpdates:
 
         config = Configuration(sample_config_dict)
 
-        config.set('risk_management.position_sizing.default_risk_per_trade', 0.03)
+        config.set("risk_management.position_sizing.default_risk_per_trade", 0.03)
 
         # Should update correctly
-        assert config.get('risk_management.position_sizing.default_risk_per_trade') == 0.03
+        assert config.get("risk_management.position_sizing.default_risk_per_trade") == 0.03
 
 
 # =============================================================================
@@ -651,7 +651,7 @@ class TestConfigurationThreadSafety:
         results = []
 
         def read_config():
-            results.append(config.get_atr_multiplier('default_stop'))
+            results.append(config.get_atr_multiplier("default_stop"))
 
         threads = [threading.Thread(target=read_config) for _ in range(10)]
 
@@ -685,14 +685,14 @@ class TestConfigurationIntegration:
         config = Configuration(config_dict)
 
         # Access values
-        atr_multiplier = config.get_atr_multiplier('default_stop')
+        atr_multiplier = config.get_atr_multiplier("default_stop")
         symbols = config.get_trading_symbols()
         dates = config.get_backtest_dates()
 
         # Verify all values
         assert atr_multiplier == 2.0
-        assert symbols == ['AAPL', 'MSFT', 'GOOGL']
-        assert dates['start_date'] == '2020-01-01'
+        assert symbols == ["AAPL", "MSFT", "GOOGL"]
+        assert dates["start_date"] == "2020-01-01"
 
     def test_config_with_validation(self, sample_config_dict):
         """Test configuration with full validation."""

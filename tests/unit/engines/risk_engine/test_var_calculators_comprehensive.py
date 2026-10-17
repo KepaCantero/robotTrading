@@ -25,12 +25,12 @@ def sample_returns():
 @pytest.fixture
 def calculators():
     """Create all calculator types."""
-    config = {'confidence_level': 0.95, 'time_horizon': 1}
+    config = {"confidence_level": 0.95, "time_horizon": 1}
     return {
-        'historical': HistoricalVaRCalculator(config),
-        'parametric': ParametricVaRCalculator(config),
-        'monte_carlo': MonteCarloVaRCalculator(config),
-        'garch': GARCHVaRCalculator(config),
+        "historical": HistoricalVaRCalculator(config),
+        "parametric": ParametricVaRCalculator(config),
+        "monte_carlo": MonteCarloVaRCalculator(config),
+        "garch": GARCHVaRCalculator(config),
     }
 
 
@@ -44,15 +44,15 @@ class TestVaRMethodComparison:
         for name, calc in calculators.items():
             result = calc.calculate_var(sample_returns)
             results[name] = result
-            assert 'error' not in result or 'var' in result
+            assert "error" not in result or "var" in result
 
     def test_methods_produce_similar_results(self, calculators, sample_returns):
         """Test that methods produce reasonably similar results."""
         results = {}
         for name, calc in calculators.items():
             result = calc.calculate_var(sample_returns)
-            if 'error' not in result:
-                results[name] = result['var']
+            if "error" not in result:
+                results[name] = result["var"]
 
         # All VaRs should be negative
         for var in results.values():
@@ -60,7 +60,7 @@ class TestVaRMethodComparison:
 
     def test_historical_vs_parametric(self, sample_returns):
         """Test historical vs parametric VaR."""
-        config = {'confidence_level': 0.95}
+        config = {"confidence_level": 0.95}
         hist_calc = HistoricalVaRCalculator(config)
         param_calc = ParametricVaRCalculator(config)
 
@@ -68,7 +68,7 @@ class TestVaRMethodComparison:
         param_result = param_calc.calculate_var(sample_returns)
 
         # Should be reasonably close
-        assert abs(hist_result['var'] - param_result['var']) < 0.02
+        assert abs(hist_result["var"] - param_result["var"]) < 0.02
 
 
 @pytest.mark.unit
@@ -80,7 +80,7 @@ class TestVaRMethodSelection:
         np.random.seed(42)
         skewed_returns = np.random.exponential(0.01, 500) - 0.01
 
-        config = {'confidence_level': 0.95}
+        config = {"confidence_level": 0.95}
         hist_calc = HistoricalVaRCalculator(config)
         param_calc = ParametricVaRCalculator(config)
 
@@ -88,17 +88,17 @@ class TestVaRMethodSelection:
         param_calc.calculate_var(skewed_returns)
 
         # Historical should handle better
-        assert 'error' not in hist_result
+        assert "error" not in hist_result
 
     def test_parametric_for_normal_distributions(self, sample_returns):
         """Test that parametric works well for normal."""
-        config = {'confidence_level': 0.95}
+        config = {"confidence_level": 0.95}
         param_calc = ParametricVaRCalculator(config)
 
         result = param_calc.calculate_var(sample_returns)
 
-        assert result['is_normal_distribution'] is True
-        assert 'error' not in result
+        assert result["is_normal_distribution"] is True
+        assert "error" not in result
 
 
 @pytest.mark.unit
@@ -109,8 +109,8 @@ class TestCVaRComparison:
         """Test that CVaR is more negative than VaR for all methods."""
         for name, calc in calculators.items():
             result = calc.calculate_var(sample_returns)
-            if 'error' not in result and 'cvar' in result:
-                assert result['cvar'] <= result['var']
+            if "error" not in result and "cvar" in result:
+                assert result["cvar"] <= result["var"]
 
 
 @pytest.mark.unit
@@ -120,10 +120,10 @@ class TestVaRConfidenceLevels:
     @pytest.mark.parametrize("confidence", [0.90, 0.95, 0.99])
     def test_all_confidence_levels_work(self, confidence, sample_returns):
         """Test that all confidence levels work."""
-        config = {'confidence_level': confidence}
+        config = {"confidence_level": confidence}
         calc = HistoricalVaRCalculator(config)
 
         result = calc.calculate_var(sample_returns)
 
-        assert result['confidence_level'] == confidence
-        assert 'var' in result
+        assert result["confidence_level"] == confidence
+        assert "var" in result

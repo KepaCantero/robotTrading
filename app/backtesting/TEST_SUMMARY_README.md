@@ -48,7 +48,7 @@ reporter = TestSummaryReporter(
     test_name="test_backtest_basic",
     test_description="Basic backtest with GBM data",
     test_file="test_backtest_basic.py",
-    test_type="integration"
+    test_type="integration",
 )
 
 # Add input data
@@ -58,7 +58,7 @@ reporter.add_input_data(
     data_points=500,
     market_regime="bullish",
     data_source="GBM simulation (drift=5%, vol=20%)",
-    price_range=(Decimal("95.50"), Decimal("110.25"))
+    price_range=(Decimal("95.50"), Decimal("110.25")),
 )
 
 # Add configuration
@@ -67,7 +67,7 @@ reporter.add_config(
     commission=Decimal("1.0"),
     slippage=Decimal("0.1"),
     strategy="SMA Crossover",
-    strategy_params={"fast_period": 20, "slow_period": 50}
+    strategy_params={"fast_period": 20, "slow_period": 50},
 )
 
 # Add results
@@ -80,7 +80,7 @@ reporter.add_results(
     win_rate=Decimal("60.0"),
     total_trades=50,
     winning_trades=30,
-    losing_trades=20
+    losing_trades=20,
 )
 
 # Add validation criteria
@@ -89,7 +89,7 @@ reporter.add_validation_criteria(
     expected_value=">= 1.0",
     actual_value="1.5",
     passed=True,
-    reason="Sharpe ratio exceeds minimum threshold"
+    reason="Sharpe ratio exceeds minimum threshold",
 )
 
 # Mark as passed
@@ -133,7 +133,7 @@ reporter = create_backtest_summary(
     passed=True,
     reason="All metrics acceptable",
     sharpe_ratio=Decimal("1.5"),
-    win_rate=Decimal("60.0")
+    win_rate=Decimal("60.0"),
 )
 
 reporter.save_reports()
@@ -283,7 +283,9 @@ def test_backtester_with_realistic_data(self, realistic_quotes, realistic_signal
         symbols=["AAPL"],
         date_range=(realistic_quotes[0].timestamp, realistic_quotes[-1].timestamp),
         data_points=len(realistic_quotes),
-        market_regime="bullish" if float(realistic_quotes[-1].close) > float(realistic_quotes[0].close) else "bearish",
+        market_regime="bullish"
+        if float(realistic_quotes[-1].close) > float(realistic_quotes[0].close)
+        else "bearish",
         data_source="GBM simulation (drift=5%, vol=20%)",
     )
 

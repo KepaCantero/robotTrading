@@ -264,6 +264,7 @@ class WalkForwardValidator:
         Returns:
             PeriodResult with performance metrics
         """
+        del period_id  # aceptado por compatibilidad; sin uso aquí
         # Create and run strategy
         strategy_factory(params)
 

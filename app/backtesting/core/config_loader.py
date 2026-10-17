@@ -10,7 +10,7 @@ from __future__ import annotations
 import logging
 from decimal import Decimal
 from pathlib import Path
-from typing import Union, cast
+from typing import TypeVar, Union, cast
 
 import yaml
 
@@ -22,12 +22,49 @@ logger = logging.getLogger(__name__)
 YamlValue = Union[str, int, float, bool, "YamlDict", list[object]]
 YamlDict = dict[str, "YamlValue"]
 
+T = TypeVar("T")
+
+
+def cfg_dict(value: object) -> YamlDict:
+    """Narrowa cualquier valor de config a YamlDict ({} si no es dict).
+
+    Equivalente en runtime a los encadenados `.get(k, {})` para configs
+    bien formadas; si el valor fuese escalar, devuelve {} en lugar de
+    hacer crash el `.get` posterior.
+    """
+    return value if isinstance(value, dict) else {}
+
 
 def _ensure_dict(value: YamlValue) -> YamlDict:
     """Narrow a YamlValue to YamlDict, returning empty dict if not a dict."""
     if isinstance(value, dict):
         return value
     return {}
+
+
+def get_value(container: YamlValue | None, key: str, default: T) -> T:
+    """Typed ``.get`` over a YamlValue container.
+
+    Returns ``container[key]`` when container is a mapping and the key is
+    present, ``default`` otherwise. The YAML schema at call sites is trusted
+    to hold the declared type; the single cast documents that contract and
+    keeps runtime values identical to a plain ``dict.get``.
+    """
+    if isinstance(container, dict):
+        return cast("T", container.get(key, default))
+    return default
+
+
+def get_section(container: YamlValue | None, key: str) -> YamlDict:
+    """Return ``container[key]`` narrowed to YamlDict (empty dict if absent/not a dict)."""
+    return _ensure_dict(get_value(container, key, {}))
+
+
+def get_optional(container: YamlValue | None, key: str) -> YamlValue | None:
+    """Return ``container[key]`` or None, mirroring ``dict.get`` without a default."""
+    if isinstance(container, dict):
+        return container.get(key)
+    return None
 
 
 class ConfigValidationError(ValueError):

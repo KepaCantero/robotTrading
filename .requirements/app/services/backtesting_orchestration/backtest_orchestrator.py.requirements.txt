@@ -25,7 +25,6 @@ Domain: Service
 - `FeasibilityMetrics`
 - `ExtendedBacktestResult`
 - `BacktestOrchestrator`
-- `Config`
 ### Public Functions
 - `execute_backtest()`
 

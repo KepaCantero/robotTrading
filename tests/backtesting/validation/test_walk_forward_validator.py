@@ -600,7 +600,7 @@ class TestStressTester:
     def test_stress_tester_initialization(self, sample_config):
         """Test stress tester initialization."""
         with patch(
-            'app.backtesting.walk_forward_validator.load_validation_config',
+            "app.backtesting.walk_forward_validator.load_validation_config",
             return_value=sample_config,
         ):
             tester = StressTester(config=sample_config["stress_testing"])
@@ -611,7 +611,7 @@ class TestStressTester:
     def test_generate_scenario_flash_crash(self, sample_config):
         """Test flash crash scenario generation."""
         with patch(
-            'app.backtesting.walk_forward_validator.load_validation_config',
+            "app.backtesting.walk_forward_validator.load_validation_config",
             return_value=sample_config,
         ):
             tester = StressTester(config=sample_config["stress_testing"])
@@ -635,7 +635,7 @@ class TestStressTester:
     def test_generate_scenario_unknown_type_defaults_to_gbm(self, sample_config):
         """Test unknown scenario type defaults to GBM."""
         with patch(
-            'app.backtesting.walk_forward_validator.load_validation_config',
+            "app.backtesting.walk_forward_validator.load_validation_config",
             return_value=sample_config,
         ):
             tester = StressTester(config=sample_config["stress_testing"])
@@ -723,7 +723,7 @@ class TestComprehensiveValidator:
     def test_comprehensive_validator_initialization(self, sample_config):
         """Test comprehensive validator initialization."""
         with patch(
-            'app.backtesting.walk_forward_validator.load_validation_config',
+            "app.backtesting.walk_forward_validator.load_validation_config",
             return_value=sample_config,
         ):
             validator = ComprehensiveValidator()
@@ -736,7 +736,7 @@ class TestComprehensiveValidator:
     def test_extract_returns_from_quotes(self, sample_config, sample_quotes):
         """Test return extraction from quotes."""
         with patch(
-            'app.backtesting.walk_forward_validator.load_validation_config',
+            "app.backtesting.walk_forward_validator.load_validation_config",
             return_value=sample_config,
         ):
             validator = ComprehensiveValidator()
@@ -749,7 +749,7 @@ class TestComprehensiveValidator:
     def test_extract_returns_empty_for_insufficient_quotes(self, sample_config):
         """Test return extraction with insufficient quotes."""
         with patch(
-            'app.backtesting.walk_forward_validator.load_validation_config',
+            "app.backtesting.walk_forward_validator.load_validation_config",
             return_value=sample_config,
         ):
             validator = ComprehensiveValidator()
@@ -771,10 +771,10 @@ class TestIntegration:
         """Test full validation workflow with mocks."""
         with (
             patch(
-                'app.backtesting.walk_forward_validator.load_validation_config',
+                "app.backtesting.walk_forward_validator.load_validation_config",
                 return_value=sample_config,
             ),
-            patch('app.backtesting.walk_forward_validator.SimpleBacktester') as mock_backtester,
+            patch("app.backtesting.walk_forward_validator.SimpleBacktester") as mock_backtester,
         ):
             # Mock backtest result
             mock_result = Mock()
@@ -864,7 +864,7 @@ class TestEdgeCases:
     def test_single_quote_handling(self, sample_config):
         """Test handling of single quote."""
         with patch(
-            'app.backtesting.walk_forward_validator.load_validation_config',
+            "app.backtesting.walk_forward_validator.load_validation_config",
             return_value=sample_config,
         ):
             validator = ComprehensiveValidator()

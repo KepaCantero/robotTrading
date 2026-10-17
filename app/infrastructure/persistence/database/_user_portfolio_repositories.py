@@ -28,7 +28,7 @@ if TYPE_CHECKING:
 
 def _raise_db_error(message: str, operation: str, table: str) -> NoReturn:
     """Typed wrapper to ensure mypy knows this never returns."""
-    raise_database_error(message, operation, table)
+    raise_database_error(message, operation, {"table": table})
     raise AssertionError("unreachable")  # safeguard
 
 

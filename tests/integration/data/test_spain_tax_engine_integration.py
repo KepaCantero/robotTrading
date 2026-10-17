@@ -148,9 +148,7 @@ def test_spain_tax_engine_integration():
 
     print("Progressive tax brackets:")
     for bracket in engine.get_tax_brackets():
-        print(
-            f"  Bracket {bracket['bracket']}: {bracket['rate']:.0%} " f"({bracket['description']})"
-        )
+        print(f"  Bracket {bracket['bracket']}: {bracket['rate']:.0%} ({bracket['description']})")
 
     print("\nKey differences from US:")
     print("  - No distinction between long-term and short-term gains")

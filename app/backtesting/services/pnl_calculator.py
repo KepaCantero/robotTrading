@@ -83,6 +83,7 @@ class ProfitAndLossCalculator:
             avg_buy_price = sum(t.entry_price * t.quantity for t in buy_trades) / sum(
                 t.quantity for t in buy_trades
             )
+
             # Buy-side all-in costs, allocated to the quantity being sold.
             # total_cost (commission+spread+slippage+impact+fees) is the same
             # figure the capital update subtracts; fall back to the sum of the
@@ -96,9 +97,7 @@ class ProfitAndLossCalculator:
             cost_allocation = (
                 sell_quantity / total_buy_quantity if total_buy_quantity > 0 else Decimal("1")
             )
-            allocated_buy_costs = sum(
-                _buy_all_in_cost(t) for t in buy_trades
-            ) * cost_allocation
+            allocated_buy_costs = sum(_buy_all_in_cost(t) for t in buy_trades) * cost_allocation
             # Capital-consistent P&L: proceeds net of SELL costs minus cost
             # basis net of BUY costs. The sell-side `commission` argument is
             # the all-in cost of this sell, so it must not be charged twice.
@@ -187,9 +186,7 @@ class ProfitAndLossCalculator:
             return t.total_cost
 
         total_buy_costs = sum(_buy_all_in_cost(t) for t in buy_trades)
-        cost_allocation = (
-            quantity / total_buy_quantity if total_buy_quantity > 0 else Decimal("1")
-        )
+        cost_allocation = quantity / total_buy_quantity if total_buy_quantity > 0 else Decimal("1")
         cost_basis = avg_entry_price * quantity + total_buy_costs * cost_allocation
 
         # Calculate commission (pure Decimal arithmetic, no float conversion)

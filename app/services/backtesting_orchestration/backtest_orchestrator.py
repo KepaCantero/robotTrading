@@ -25,7 +25,7 @@ import logging
 from decimal import Decimal
 from typing import TYPE_CHECKING
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 from app.backtesting.models import BacktestConfig, BacktestResult
 
@@ -75,8 +75,7 @@ class ExtendedBacktestResult(BacktestResult):
         None, description="Investment profile used"
     )
 
-    class Config:
-        arbitrary_types_allowed = True
+    model_config = ConfigDict(arbitrary_types_allowed=True)
 
 
 class BacktestOrchestrator:
@@ -133,7 +132,7 @@ class BacktestOrchestrator:
             # Step 1: Prepare backtest configuration from investment profile
             self.logger.info(
                 f"⚙️  Preparing backtest for {investment_profile.capital_tier} "
-                f"with {len(module_parameters.parameters)} modules"
+                f"with {len(module_parameters.modules)} modules"
             )
 
             backtest_config = self._create_backtest_config_from_profile(investment_profile)
@@ -251,7 +250,7 @@ class BacktestOrchestrator:
             try:
                 # Run actual backtest
                 runner = ComprehensiveBacktestRunner(temp_config_path)
-                runner_results = runner.run_all_tests()
+                runner_results = runner.run_all_backtests()
 
                 # Extract baseline result
                 baseline_result = next(

@@ -87,6 +87,8 @@ def adfuller(
     and variance ratios. It provides a reasonable approximation but is not as
     sophisticated as the full statsmodels implementation.
     """
+    del regresults  # aceptado por compatibilidad; sin uso aquí
+    del autolag  # aceptado por compatibilidad; sin uso aquí
     _log_fallback_warning(
         "adfuller", "For full ADF test functionality, install statsmodels: pip install statsmodels"
     )
@@ -349,6 +351,8 @@ def seasonal_decompose(
     This fallback implements a simple decomposition using moving averages
     and pandas rolling operations.
     """
+    del two_sided  # aceptado por compatibilidad; sin uso aquí
+    del filt  # aceptado por compatibilidad; sin uso aquí
     _log_fallback_warning(
         "seasonal_decompose",
         "For full seasonal decomposition, install statsmodels: pip install statsmodels",
@@ -751,6 +755,8 @@ class AutoReg:
         old_names : bool
             Use old names
         """
+        del old_names  # aceptado por compatibilidad; sin uso aquí
+        del hold_back  # aceptado por compatibilidad; sin uso aquí
         _log_fallback_warning(
             "AutoReg",
             "For full AutoReg functionality, install statsmodels: pip install statsmodels",
@@ -850,6 +856,7 @@ Sample:                    {self.model.lags + 1}   HQIC:                        
 
     def predict(self, start=None, end=None, dynamic=False):
         """Make predictions"""
+        del dynamic  # aceptado por compatibilidad; sin uso aquí
         if start is None:
             start = 0
         if end is None:

@@ -175,10 +175,6 @@ class RiskConfigurator:
                 RiskLimitType.CONCENTRATION_LIMIT: Decimal("0.40"),  # 40%
             }
 
-        logger.debug("Risk limits configured successfully")
-        # Note: unreachable code due to validation above, but kept for safety
-        return {}
-
     def calculate_var(
         self,
         returns: np.ndarray,

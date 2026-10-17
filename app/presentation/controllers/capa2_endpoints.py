@@ -1,3 +1,19 @@
+"""
+T13.1: CAPA 2 API Endpoints - Parametrization Framework REST API
+
+Exposes the complete CAPA 2 parametrization pipeline:
+1. InputProfile processing (T1.1)
+2. ProfileGenerator (T2.1)
+3. ModuleParametrizer (T3.1)
+4. BacktestOrchestrator (T4.1)
+5. ValidationEngine (T5.1)
+6. StrategyRecommender (T6.1)
+7. PortfolioConstructor (T7.1)
+8. RiskScalingApplication (T8.1)
+9. ReportingGenerator (T9.1)
+10. DeployDecisionOrchestrator (T10.1)
+"""
+
 from __future__ import annotations
 
 import asyncio
@@ -33,21 +49,6 @@ DEFAULT_VALUE_8 = 8
 
 
 # import asyncio  # F811 duplicate from line 10
-"""
-T13.1: CAPA 2 API Endpoints - Parametrization Framework REST API
-
-Exposes the complete CAPA 2 parametrization pipeline:
-1. InputProfile processing (T1.1)
-2. ProfileGenerator (T2.1)
-3. ModuleParametrizer (T3.1)
-4. BacktestOrchestrator (T4.1)
-5. ValidationEngine (T5.1)
-6. StrategyRecommender (T6.1)
-7. PortfolioConstructor (T7.1)
-8. RiskScalingApplication (T8.1)
-9. ReportingGenerator (T9.1)
-10. DeployDecisionOrchestrator (T10.1)
-"""
 # mypy: ignore-errors
 
 # Import all CAPA 2 services
@@ -74,6 +75,20 @@ risk_scaling_applicator = None
 reporting_generator = None
 deploy_decision_orchestrator = None
 configuration_repository = None
+
+# Swarm executor singleton (real T1.1→T10.1 chaining, shared event bus + store)
+_swarm_executor = None
+
+
+def _get_swarm_executor():
+    """Get or create the shared Capa2PipelineExecutor (store initializes lazily)."""
+    global _swarm_executor
+    if _swarm_executor is None:
+        from app.services.agent_swarm.executor import Capa2PipelineExecutor
+        from app.services.agent_swarm.store import DEFAULT_SWARM_DB_PATH, SwarmRunStore
+
+        _swarm_executor = Capa2PipelineExecutor(store=SwarmRunStore(DEFAULT_SWARM_DB_PATH))
+    return _swarm_executor
 
 
 def get_input_processor() -> InputProcessor:
@@ -116,7 +131,7 @@ class ProcessInputRequest(BaseModel):
     investment_horizon: int = Field(
         ..., ge=1, le=DEFAULT_VALUE_600, description="Investment horizon in months"
     )
-    constraints: dict[str, Any] | None = Field(None, description="Optional constraints")
+    constraints: dict[str, Any] | None = Field(default=None, description="Optional constraints")
 
 
 class ProcessInputResponse(BaseModel):
@@ -536,122 +551,47 @@ async def complete_workflow(request: CompleteWorkflowRequest, background_tasks: 
 
 
 async def _execute_complete_workflow(workflow_id: str, request: CompleteWorkflowRequest):
-    """Execute complete workflow in background."""
+    """Execute complete workflow in background using the real CAPA 2 components.
+
+    Delegates to Capa2PipelineExecutor, which chains T1.1→T10.1 for real and
+    emits per-agent events; the ``_jobs`` stage field is updated live so
+    ``/capa2/workflow-status/{workflow_id}``` reports actual progress.
+    """
+    from app.services.agent_swarm.events import STAGE_STARTED
+    from app.services.agent_swarm.executor import SPEC_BY_AGENT, SwarmRunRequest
+
+    def _on_event(event) -> None:
+        job = _jobs.get(workflow_id)
+        if job is None:
+            return
+        if event.type == STAGE_STARTED and event.agent_id:
+            spec = SPEC_BY_AGENT.get(event.agent_id)
+            if spec is not None:
+                job["stage"] = spec.stage_slug
+
+    swarm_request = SwarmRunRequest(
+        capital_initial=Decimal(str(request.capital_initial)),
+        objetivo_inversion=request.objetivo_inversion,
+        risk_tolerance=request.risk_tolerance,
+        investment_horizon=request.investment_horizon,
+        constraints=request.constraints or {},
+    )
 
     try:
-        results = {}
+        executor = _get_swarm_executor()
+        state = await executor.run(swarm_request, run_id=workflow_id, on_event=_on_event)
 
-        # Stage 1: Process input (T1.1)
-        _jobs[workflow_id]["stage"] = "input_processing"
-        InputProfile(
-            capital_initial=request.capital_initial,
-            objetivo_inversion=request.objetivo_inversion,
-            risk_tolerance=request.risk_tolerance,
-            investment_horizon=request.investment_horizon,
-            constraints=request.constraints or {},
-        )
-        input_id = f"input_{uuid.uuid4().hex[:DEFAULT_VALUE_8]}"
-        results["input_profile"] = {
-            "input_id": input_id,
-            "capital_initial": float(request.capital_initial),
-            "objetivo_inversion": request.objetivo_inversion,
-            "risk_tolerance": request.risk_tolerance,
-            "investment_horizon": request.investment_horizon,
-            "validation_passed": True,
-            "timestamp": datetime.now().isoformat(),
-        }
-        await asyncio.sleep(0.5)
+        if state.status == "completed":
+            _jobs[workflow_id]["status"] = "completed"
+            _jobs[workflow_id]["results"] = state.results
+            logger.info(f"✅ Workflow completed: {workflow_id}")
+        else:
+            failed = next((a for a in state.agents.values() if a.status == "FAILED"), None)
+            _jobs[workflow_id]["status"] = "failed"
+            _jobs[workflow_id]["error"] = failed.error if failed else "workflow failed"
+            logger.error(f"❌ Workflow failed: {workflow_id} - {_jobs[workflow_id]['error']}")
 
-        # Stage 2: Generate profile (T2.1)
-        _jobs[workflow_id]["stage"] = "profile_generation"
-        profile_id = f"profile_{uuid.uuid4().hex[:DEFAULT_VALUE_8]}"
-        results["investment_profile"] = {
-            "profile_id": profile_id,
-            "capital_tier": "MEDIUM",
-            "risk_profile": DEFAULT_VALUE_5,
-            "enabled_modules": ["momentum_modular", "mean_reversion"],
-            "leverage_factor": 1.5,
-            "max_position_size": 0.15,
-            "timestamp": datetime.now().isoformat(),
-        }
-        await asyncio.sleep(0.5)
-
-        # Stage 3: Parametrize modules (T3.1)
-        _jobs[workflow_id]["stage"] = "module_parametrization"
-        parameter_set_id = f"params_{uuid.uuid4().hex[:DEFAULT_VALUE_8]}"
-        results["module_parameters"] = {
-            "parameter_set_id": parameter_set_id,
-            "total_modules": DEFAULT_VALUE_17,
-            "total_max_exposure": 3.0,
-            "modules_summary": {},
-            "timestamp": datetime.now().isoformat(),
-        }
-        await asyncio.sleep(0.5)
-
-        # Stage 4: Execute backtest (T4.1)
-        _jobs[workflow_id]["stage"] = "backtest_execution"
-        backtest_result = {
-            "total_return": 0.15,
-            "sharpe_ratio": 1.2,
-            "max_drawdown": -0.10,
-            "feasibility_ratio": 1.1,
-            "win_rate": 0.58,
-            "final_capital": 115000,
-        }
-        results["backtest_result"] = {
-            "job_id": f"backtest_{uuid.uuid4().hex[:DEFAULT_VALUE_8]}",
-            "status": "completed",
-            "total_return": backtest_result["total_return"],
-            "sharpe_ratio": backtest_result["sharpe_ratio"],
-            "feasibility_ratio": backtest_result["feasibility_ratio"],
-            "timestamp": datetime.now().isoformat(),
-        }
-        await asyncio.sleep(1.0)
-
-        # Stage 5: Validate (T5.1)
-        _jobs[workflow_id]["stage"] = "validation"
-        await asyncio.sleep(0.5)
-
-        # Stage 6: Recommend (T6.1)
-        _jobs[workflow_id]["stage"] = "recommendation"
-        await asyncio.sleep(0.5)
-
-        # Stage 7: Portfolio construction (T7.1)
-        _jobs[workflow_id]["stage"] = "portfolio_construction"
-        await asyncio.sleep(0.5)
-
-        # Stage 8: Risk scaling (T8.1)
-        _jobs[workflow_id]["stage"] = "risk_scaling"
-        await asyncio.sleep(0.3)
-
-        # Stage 9: Reporting (T9.1)
-        _jobs[workflow_id]["stage"] = "reporting"
-        await asyncio.sleep(0.5)
-
-        # Stage 10: Deployment decision (T10.1)
-        _jobs[workflow_id]["stage"] = "deployment_decision"
-        results["deployment_decision"] = {
-            "decision_id": f"decision_{uuid.uuid4().hex[:DEFAULT_VALUE_8]}",
-            "status": "APPROVED",
-            "confidence_level": "HIGH",
-            "feasibility_ratio": backtest_result["feasibility_ratio"],
-            "recommendation_score": DEFAULT_VALUE_78,
-            "validation_passed": True,
-            "reasons": ["Feasibility ratio exceeds 1.0", "Strong recommendation score"],
-            "risks": [],
-            "recommendations": ["Deploy with weekly monitoring"],
-            "next_steps": ["Review risk parameters", "Deploy strategy", "Monitor performance"],
-            "timestamp": datetime.now().isoformat(),
-        }
-        results["report_id"] = f"report_{uuid.uuid4().hex[:DEFAULT_VALUE_8]}"
-        await asyncio.sleep(0.5)
-
-        _jobs[workflow_id]["status"] = "completed"
-        _jobs[workflow_id]["results"] = results
-
-        logger.info(f"✅ Workflow completed: {workflow_id}")
-
-    except (asyncio.TimeoutError, OSError) as e:
+    except (asyncio.TimeoutError, OSError, ValueError, TypeError, KeyError) as e:
         _jobs[workflow_id]["status"] = "failed"
         _jobs[workflow_id]["error"] = str(e)
         logger.error(f"❌ Workflow failed: {workflow_id} - {e}")

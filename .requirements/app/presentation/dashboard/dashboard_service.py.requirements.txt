@@ -8,7 +8,6 @@ Domain: Presentation
 - `__future__`
 - `app.domain.services.compliance.compliance_engine`
 - `app.presentation.dashboard.dashboard_data`
-- `app.services.alerting_system`
 - `app.services.live_trading.broker_connector`
 - `app.services.live_trading.trading_bridge_orchestrator`
 - `asyncio`

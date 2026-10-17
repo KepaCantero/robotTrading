@@ -14,7 +14,7 @@ if TYPE_CHECKING:
     from app.shared.config.config import Settings
 
 import uvicorn
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import FastAPI, HTTPException, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
@@ -135,7 +135,7 @@ def get_app_settings() -> Settings:
 
 
 @asynccontextmanager
-async def lifespan(fastapi_app: FastAPI):
+async def lifespan(_fastapi_app: FastAPI):
     """Application lifespan manager for startup and shutdown events."""
     # Get settings
     app_settings = get_app_settings()
@@ -240,49 +240,49 @@ from pydantic import ValidationError
 # HTTP Exceptions (4xx, 5xx)
 app.add_exception_handler(
     HTTPException,
-    cast("Callable[[Request, HTTPException], Any]", http_exception_handler),
+    cast("Callable[[Request, Any], Response]", http_exception_handler),
 )
 app.add_exception_handler(
     StarletteHTTPException,
-    cast("Callable[[Request, StarletteHTTPException], Any]", starlette_http_exception_handler),
+    cast("Callable[[Request, Any], Response]", starlette_http_exception_handler),
 )
 
 # Validation Errors
 app.add_exception_handler(
     RequestValidationError,
-    cast("Callable[[Request, RequestValidationError], Any]", validation_exception_handler),
+    cast("Callable[[Request, Any], Response]", validation_exception_handler),
 )
 app.add_exception_handler(
     ValidationError,
-    cast("Callable[[Request, ValidationError], Any]", pydantic_validation_exception_handler),
+    cast("Callable[[Request, Any], Response]", pydantic_validation_exception_handler),
 )
 
 # Common Python Exceptions with specific handlers
 app.add_exception_handler(
     ValueError,
-    cast("Callable[[Request, ValueError], Any]", value_error_handler),
+    cast("Callable[[Request, Any], Response]", value_error_handler),
 )
 app.add_exception_handler(
     KeyError,
-    cast("Callable[[Request, KeyError], Any]", key_error_handler),
+    cast("Callable[[Request, Any], Response]", key_error_handler),
 )
 app.add_exception_handler(
     TypeError,
-    cast("Callable[[Request, TypeError], Any]", type_error_handler),
+    cast("Callable[[Request, Any], Response]", type_error_handler),
 )
 app.add_exception_handler(
     AttributeError,
-    cast("Callable[[Request, AttributeError], Any]", attribute_error_handler),
+    cast("Callable[[Request, Any], Response]", attribute_error_handler),
 )
 app.add_exception_handler(
     IndexError,
-    cast("Callable[[Request, IndexError], Any]", index_error_handler),
+    cast("Callable[[Request, Any], Response]", index_error_handler),
 )
 
 # Generic catch-all for unhandled exceptions
 app.add_exception_handler(
     Exception,
-    cast("Callable[[Request, Exception], Any]", generic_exception_handler),
+    cast("Callable[[Request, Any], Response]", generic_exception_handler),
 )
 
 # Include API routers

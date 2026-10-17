@@ -186,7 +186,7 @@ class TestProfileBatchBacktesterInitialization:
     def test_initialization_with_mock(self):
         """Test initialization with mocked config file."""
         # Create a temporary config file
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.yaml', delete=False) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as f:
             config_content = """
 database:
   url: "sqlite:///test.db"
@@ -220,7 +220,7 @@ investment_horizons:
 
         try:
             # Mock DatabaseService to avoid actual DB operations
-            with patch('app.backtesting.profile_batch_backtester.DatabaseService'):
+            with patch("app.backtesting.profile_batch_backtester.DatabaseService"):
                 backtester = ProfileBatchBacktester(config_path=config_path)
                 assert backtester is not None
         finally:
@@ -239,7 +239,7 @@ class TestGenerateAllProfiles:
     def test_generate_all_profiles(self):
         """Test generate_all_profiles method."""
         # Create a temporary config file
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.yaml', delete=False) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as f:
             config_content = """
 database:
   url: "sqlite:///test.db"
@@ -272,7 +272,7 @@ investment_horizons:
             config_path = f.name
 
         try:
-            with patch('app.backtesting.profile_batch_backtester.DatabaseService'):
+            with patch("app.backtesting.profile_batch_backtester.DatabaseService"):
                 backtester = ProfileBatchBacktester(config_path=config_path)
                 profiles = backtester.generate_all_profiles()
                 assert isinstance(profiles, list)
@@ -296,7 +296,7 @@ class TestRunSingleProfile:
         )
 
         # Create temporary config
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.yaml', delete=False) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as f:
             config_content = """
 database:
   url: "sqlite:///test.db"
@@ -328,7 +328,7 @@ investment_horizons:
             config_path = f.name
 
         try:
-            with patch('app.backtesting.profile_batch_backtester.DatabaseService'):
+            with patch("app.backtesting.profile_batch_backtester.DatabaseService"):
                 backtester = ProfileBatchBacktester(config_path=config_path)
 
                 # Mock the ComprehensiveBacktestRunner
@@ -339,7 +339,7 @@ investment_horizons:
                     "win_rate": 0.6,
                 }
 
-                with patch.object(backtester, '_run_baseline', return_value=mock_baseline_results):
+                with patch.object(backtester, "_run_baseline", return_value=mock_baseline_results):
                     # Mock optimization pipeline
                     mock_comparison = BaselineOptimizationComparison(
                         sharpe_improvement=0.0,
@@ -370,7 +370,7 @@ investment_horizons:
 
                     with patch.object(
                         backtester,
-                        '_run_optimization_pipeline',
+                        "_run_optimization_pipeline",
                         return_value=mock_optimized_strategy,
                     ):
                         result = backtester.run_single_profile(profile)
@@ -403,7 +403,7 @@ class TestComprehensiveBacktestRunnerMock:
     def test_comprehensive_backtest_runner_patch(self):
         """Test patching ComprehensiveBacktestRunner in tests."""
         with patch(
-            'app.backtesting.profile_batch_backtester.ComprehensiveBacktestRunner'
+            "app.backtesting.profile_batch_backtester.ComprehensiveBacktestRunner"
         ) as MockRunner:
             # Configure the mock
             mock_instance = MockRunner.return_value
@@ -442,7 +442,7 @@ class TestErrorHandling:
 
     def test_database_error_handling(self):
         """Test database error handling."""
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.yaml', delete=False) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as f:
             config_content = """
 database:
   url: "sqlite:///test.db"
@@ -473,7 +473,7 @@ investment_horizons:
 
         try:
             with patch(
-                'app.backtesting.profile_batch_backtester.DatabaseService'
+                "app.backtesting.profile_batch_backtester.DatabaseService"
             ) as mock_db_service:
                 # Simulate database error
                 mock_db_service.side_effect = Exception("Database connection failed")
@@ -492,7 +492,7 @@ investment_horizons:
             investment_horizon=12,
         )
 
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.yaml', delete=False) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as f:
             config_content = """
 database:
   url: "sqlite:///test.db"
@@ -520,14 +520,14 @@ investment_horizons:
             config_path = f.name
 
         try:
-            with patch('app.backtesting.profile_batch_backtester.DatabaseService'):
+            with patch("app.backtesting.profile_batch_backtester.DatabaseService"):
                 backtester = ProfileBatchBacktester(config_path=config_path)
 
                 # Mock baseline failure
                 with (
                     patch.object(
                         backtester,
-                        '_run_baseline',
+                        "_run_baseline",
                         side_effect=RuntimeError("Backtest failed"),
                     ),
                     pytest.raises(RuntimeError),
@@ -546,7 +546,7 @@ class TestTemporaryConfigCleanup:
         import tempfile
 
         # Create a temp file
-        fd, temp_path = tempfile.mkstemp(suffix='.yaml')
+        fd, temp_path = tempfile.mkstemp(suffix=".yaml")
         os.write(fd, b"test: config")
         os.close(fd)
 

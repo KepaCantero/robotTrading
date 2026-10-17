@@ -492,3 +492,135 @@ class TestPerformanceMetricsCalculator:
         assert metrics.total_trades == metrics.winning_trades + metrics.losing_trades
         assert abs(metrics.win_rate - Decimal("66.67")) < Decimal("0.01")
         assert metrics.gross_profit + metrics.gross_loss == metrics.net_profit
+
+
+class TestBoundedDrawdownAndDailySharpe:
+    """Runner-path guarantees: bounded drawdown percentages, daily-based Sharpe.
+
+    Regression tests for the audit finding P0-3 (reports with -290%, -4708%
+    and -9594.68% max drawdowns): a peak-relative drawdown can never leave
+    [-100%, 0%], and the fallback Sharpe must use daily returns, not
+    per-trade returns annualized as if they were daily.
+    """
+
+    @pytest.fixture
+    def config(self):
+        """Create test configuration."""
+        return BacktestConfig(
+            initial_capital=Decimal("100000"),
+            commission_per_trade=Decimal("1.0"),
+            slippage_percentage=Decimal("0.1"),
+            risk_free_rate=Decimal("0.02"),
+        )
+
+    @pytest.fixture
+    def calculator(self, config):
+        """Create calculator instance."""
+        return PerformanceMetricsCalculator(config)
+
+    @pytest.fixture
+    def sample_trades(self, default_symbol):
+        """Create sample trades for testing."""
+        return [
+            Trade(
+                trade_id="trade_1",
+                symbol=default_symbol,
+                side="buy",
+                quantity=Decimal("100"),
+                entry_price=Decimal("150"),
+                entry_time=datetime(2024, 1, 1, 10, 0),
+                exit_price=Decimal("160"),
+                exit_time=datetime(2024, 1, 5, 10, 0),
+                status=TradeStatus.CLOSED,
+                pnl=Decimal("998"),
+                commission=Decimal("1.0"),
+            ),
+            Trade(
+                trade_id="trade_2",
+                symbol="MSFT",
+                side="buy",
+                quantity=Decimal("50"),
+                entry_price=Decimal("300"),
+                entry_time=datetime(2024, 1, 2, 10, 0),
+                exit_price=Decimal("290"),
+                exit_time=datetime(2024, 1, 6, 10, 0),
+                status=TradeStatus.CLOSED,
+                pnl=Decimal("-502"),
+                commission=Decimal("1.0"),
+            ),
+        ]
+
+    def test_peak_relative_fraction_maps_to_bounded_percentage(self, calculator, sample_trades):
+        """A -0.6 fraction from peak is -60%: peak-based, bounded, exact."""
+        metrics = calculator.calculate_performance_metrics(
+            sample_trades,
+            Decimal("-0.6"),
+            initial_capital=Decimal("100000"),
+        )
+
+        assert metrics.max_drawdown == Decimal("-0.6")
+        assert metrics.max_drawdown_percentage == Decimal("-60")
+        assert Decimal("-100") <= metrics.max_drawdown_percentage <= Decimal("0")
+
+    def test_impossible_drawdown_fraction_is_clamped(self, calculator, sample_trades, caplog):
+        """The -4708% class of values can no longer reach the reports."""
+        import logging
+
+        from app.backtesting import metrics as metrics_module
+
+        metrics_module._drawdown_clamp_warned = False
+        with caplog.at_level(logging.WARNING, logger="app.backtesting.metrics"):
+            metrics = calculator.calculate_performance_metrics(
+                sample_trades,
+                Decimal("-47.08"),  # -4708% "drawdown" (possible before the fix)
+                initial_capital=Decimal("100000"),
+            )
+
+        assert metrics.max_drawdown == Decimal("-1")
+        assert metrics.max_drawdown_percentage == Decimal("-100")
+        assert any("clamped" in r.getMessage().lower() for r in caplog.records)
+
+    def test_fallback_sharpe_uses_daily_returns_not_per_trade(self, calculator, default_symbol):
+        """Fallback Sharpe aggregates same-day trades into one daily return."""
+        from app.backtesting.metrics import build_daily_equity_series
+
+        base = datetime(2024, 1, 1)
+        trades = [
+            Trade(
+                trade_id=f"A{i}",
+                symbol=default_symbol,
+                side="buy",
+                quantity=Decimal("100"),
+                entry_price=Decimal("150"),
+                entry_time=base + timedelta(days=1),
+                exit_price=Decimal("155"),
+                exit_time=base + timedelta(days=2),  # 3 trades exit on day 2
+                status=TradeStatus.CLOSED,
+                pnl=Decimal("100"),
+            )
+            for i in range(3)
+        ] + [
+            Trade(
+                trade_id=f"B{i}",
+                symbol=default_symbol,
+                side="buy",
+                quantity=Decimal("100"),
+                entry_price=Decimal("150"),
+                entry_time=base + timedelta(days=2),
+                exit_price=Decimal("150"),
+                exit_time=base + timedelta(days=3),  # 2 trades exit on day 3
+                status=TradeStatus.CLOSED,
+                pnl=Decimal("-50"),
+            )
+            for i in range(2)
+        ]
+
+        dates, equity, returns = build_daily_equity_series(trades, Decimal("100000"))
+
+        # 5 trades over 2 active days -> 2 daily returns (not 5 per-trade ones)
+        assert len(dates) == 2
+        assert equity == [Decimal("100000"), Decimal("100300"), Decimal("100200")]
+        assert len(returns) == 2
+
+        sharpe = calculator._calculate_sharpe_ratio(trades)
+        assert sharpe is not None

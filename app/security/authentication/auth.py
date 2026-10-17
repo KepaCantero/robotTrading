@@ -24,7 +24,7 @@ from __future__ import annotations
 
 import logging
 from contextlib import contextmanager
-from typing import TYPE_CHECKING, Callable
+from typing import TYPE_CHECKING, Any, Callable
 
 from fastapi import Depends, HTTPException, Security, status
 from fastapi.security import APIKeyHeader, HTTPAuthorizationCredentials, HTTPBearer
@@ -427,7 +427,7 @@ async def get_deployer_user(
     return current_user
 
 
-def require_roles(*roles: str) -> Callable[[User], User]:
+def require_roles(*roles: str) -> Callable[[User], Any]:
     """
     Dependency factory that requires specific roles.
 
@@ -458,7 +458,7 @@ def require_roles(*roles: str) -> Callable[[User], User]:
     return role_checker
 
 
-def require_permissions(*permissions: str) -> Callable[[User], User]:
+def require_permissions(*permissions: str) -> Callable[[User], Any]:
     """
     Dependency factory that requires specific permissions.
 

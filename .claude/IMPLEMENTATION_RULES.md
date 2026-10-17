@@ -69,12 +69,12 @@ Antes de hacer **cualquier commit**, verifica:
 
 ## 🛠️ SCRIPTS DISPONIBLES
 
-### `./scripts/validate_implementation.sh` ⭐ **RECOMENDADO**
+### `./scripts/check_all.sh` ⭐ **RECOMENDADO**
 
 **Uso:** Validación completa con reportes detallados
 
 ```bash
-./scripts/validate_implementation.sh
+./scripts/check_all.sh
 ```
 
 **Qué hace:**
@@ -188,7 +188,7 @@ def my_feature(data: np.ndarray) -> Signal:
 ### Paso 2: Validar
 
 ```bash
-$ ./scripts/validate_implementation.sh
+$ ./scripts/check_all.sh
 ```
 
 Output:
@@ -233,7 +233,7 @@ def my_feature(data):
 ### Paso 2: Validar
 
 ```bash
-$ ./scripts/validate_implementation.sh
+$ ./scripts/check_all.sh
 ```
 
 Output:
@@ -252,7 +252,7 @@ Output:
 Próximos pasos:
   1. Revisar errores arriba
   2. Corregir errores críticos manualmente
-  3. Ejecutar: ./scripts/validate_implementation.sh
+  3. Ejecutar: ./scripts/check_all.sh
 ```
 
 ### Paso 3: Corregir
@@ -271,7 +271,7 @@ def my_feature(data: np.ndarray) -> Signal:
 ### Paso 4: Validar de nuevo
 
 ```bash
-$ ./scripts/validate_implementation.sh
+$ ./scripts/check_all.sh
 ✅ IMPLEMENTACIÓN VALIDADA - LISTO PARA COMMIT
 ```
 
@@ -289,7 +289,7 @@ $ ./scripts/validate_implementation.sh
              ▼
 ┌─────────────────────────────────────────────────────────┐
 │ 2. VALIDACIÓN                                           │
-│    ./scripts/validate_implementation.sh                 │
+│    ./scripts/check_all.sh                 │
 │    ├─ Black: Formatear                                 │
 │    ├─ Isort: Ordenar imports                           │
 │    ├─ Autoflake: Limpiar                               │
@@ -327,7 +327,7 @@ Cuando se configure GitHub Actions, estos checks se ejecutarán automáticamente
 ```yaml
 # .github/workflows/validate.yml
 - name: Validate Implementation
-  run: ./scripts/validate_implementation.sh
+  run: ./scripts/check_all.sh
 ```
 
 PRs que NO pasen validación serán rechazados automáticamente.
@@ -345,7 +345,7 @@ PRs que NO pasen validación serán rechazados automáticamente.
 ### P: ¿Y si no tengo las herramientas instaladas?
 **R:** `pip install -r requirements.txt` las instala todas.
 
-### P: ¿Cuánto tarda validate_implementation.sh?
+### P: ¿Cuánto tarda check_all.sh?
 **R:** ~30-60 segundos en ejecución típica (depende del tamaño del repo).
 
 ### P: ¿Puedo hacer commit si validate falla?
@@ -359,7 +359,7 @@ PRs que NO pasen validación serán rechazados automáticamente.
 |--------|---------|-----------|
 | **Escribir código** | `vim app/...` | Código nuevo |
 | **Auto-arreglar** | `./scripts/check_all.sh` | Código limpio |
-| **Validar completo** | `./scripts/validate_implementation.sh` | ✅ o ❌ |
+| **Validar completo** | `./scripts/check_all.sh` | ✅ o ❌ |
 | **Si ✅** | `git commit` | Commit exitoso |
 | **Si ❌** | Corregir + volver a paso 3 | Hasta ✅ |
 
@@ -368,7 +368,7 @@ PRs que NO pasen validación serán rechazados automáticamente.
 ## 🔗 Referencias
 
 - Archivo de reglas: `.claude-rules.md`
-- Script de validación: `scripts/validate_implementation.sh`
+- Script de validación: `scripts/check_all.sh`
 - Script de fixes: `scripts/check_all.sh`
 - Configuración Black: `pyproject.toml`
 - Configuración Isort: `pyproject.toml`

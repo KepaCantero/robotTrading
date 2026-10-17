@@ -247,8 +247,12 @@ class BacktestOrchestrationRequest:
     risk_profile: str  # Risk profile
     start_date: date
     end_date: date
-    strategy_name: str = "momentum_modular"
+    strategy_name: str = "mean_reversion"
     symbols: list[str] = field(default_factory=list)
+    commission_per_trade: Decimal | None = None  # engine cost model (€/trade)
+    slippage_percentage: Decimal | None = None  # engine cost model (%)
+    stop_loss_percentage: Decimal | None = None  # per-trade stop (%)
+    take_profit_percentage: Decimal | None = None  # per-trade take profit (%)
 
 
 @dataclass

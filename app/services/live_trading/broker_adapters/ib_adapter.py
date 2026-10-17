@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 """
 Interactive Brokers Adapter for AlgoTrading
 
@@ -32,6 +30,8 @@ Usage:
         take_profit=1.12
     )
 """
+
+from __future__ import annotations
 
 import asyncio
 import logging
@@ -198,6 +198,7 @@ class IBConnection:
             errorString: Error message
             contract: Related contract (if any)
         """
+        del reqId  # aceptado por compatibilidad; sin uso aquí
         # Ignore informational messages
         if errorCode in [2104, 2106, 2158]:
             return

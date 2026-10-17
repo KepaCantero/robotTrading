@@ -441,7 +441,7 @@ class KnowledgeGraphBuilder:
 
     async def get_asset_portfolio_recommendations(
         self,
-        current_assets: list[str],
+        _current_assets: list[str],
         target_diversification: float = 0.5,
     ) -> list[dict[str, Any]]:
         """
@@ -454,6 +454,7 @@ class KnowledgeGraphBuilder:
         Returns:
             Recommended assets to add
         """
+        del target_diversification  # aceptado por compatibilidad; sin uso aquí
         if not self.connected:
             return []
 

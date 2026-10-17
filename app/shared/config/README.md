@@ -165,6 +165,7 @@ Example:
 class NewFeatureThresholds(ConfigBase):
     new_param: float = Field(default=0.5, description="New parameter")
 
+
 # Add to __all__ in the module
 __all__ = ["SignalThresholds", "NewFeatureThresholds", ...]
 ```

@@ -12,6 +12,7 @@ Domain: Shared
 - `fastapi`
 - `fastapi.exceptions`
 - `starlette.exceptions`
+- `starlette.types`
 - `typing`
 
 ## 3. Core Components

@@ -184,7 +184,7 @@ def _ensure_valid_correlation(X: np.ndarray) -> np.ndarray:
                 X[:, i] = X[:, i] + np.random.uniform(-0.1, 0.1, X.shape[0])
 
     # Generate correlation matrix from the random data
-    with np.errstate(divide='ignore', invalid='ignore'):
+    with np.errstate(divide="ignore", invalid="ignore"):
         corr = np.corrcoef(X.T)  # Transpose to get (n, n) matrix
 
     # Check for NaN or inf
@@ -247,9 +247,9 @@ class TestPortfolioWeightConstraints:
     @settings(max_examples=100)
     def test_weights_le_one(self, weights):
         """Individual weights should be <= 1."""
-        assert all(
-            w <= 1.0 for w in weights
-        ), f"All weights should be <= 1, got max {weights.max()}"
+        assert all(w <= 1.0 for w in weights), (
+            f"All weights should be <= 1, got max {weights.max()}"
+        )
 
     @given(weights=valid_portfolio_weights(), capital=valid_capitals())
     @settings(max_examples=100)
@@ -259,9 +259,9 @@ class TestPortfolioWeightConstraints:
         sum_positions = position_values.sum()
 
         # Allow small floating point error
-        assert (
-            abs(sum_positions - float(capital)) < 0.01
-        ), f"Position values sum to {sum_positions}, expected {capital}"
+        assert abs(sum_positions - float(capital)) < 0.01, (
+            f"Position values sum to {sum_positions}, expected {capital}"
+        )
 
     @given(weights=valid_portfolio_weights(), capital=valid_capitals())
     @settings(max_examples=100)
@@ -269,9 +269,9 @@ class TestPortfolioWeightConstraints:
         """Position values should be non-negative."""
         position_values = weights * float(capital)
 
-        assert all(
-            v >= 0 for v in position_values
-        ), f"All position values should be >= 0, got min {position_values.min()}"
+        assert all(v >= 0 for v in position_values), (
+            f"All position values should be >= 0, got min {position_values.min()}"
+        )
 
     @given(
         weights=valid_portfolio_weights(),
@@ -310,9 +310,9 @@ class TestPortfolioReturnCalculations:
         min_return = returns.min()
         max_return = returns.max()
 
-        assert (
-            min_return - 1e-10 <= portfolio_return <= max_return + 1e-10
-        ), f"Portfolio return {portfolio_return} outside bounds [{min_return}, {max_return}]"
+        assert min_return - 1e-10 <= portfolio_return <= max_return + 1e-10, (
+            f"Portfolio return {portfolio_return} outside bounds [{min_return}, {max_return}]"
+        )
 
     @given(returns=valid_expected_returns(), capital=valid_capitals())
     @settings(max_examples=100)
@@ -324,9 +324,9 @@ class TestPortfolioReturnCalculations:
         portfolio_return = np.dot(equal_weights, returns)
         average_return = returns.mean()
 
-        assert (
-            abs(portfolio_return - average_return) < 1e-10
-        ), f"Equal-weighted return {portfolio_return} != average {average_return}"
+        assert abs(portfolio_return - average_return) < 1e-10, (
+            f"Equal-weighted return {portfolio_return} != average {average_return}"
+        )
 
     @given(weights_returns=weights_and_returns())
     @settings(max_examples=100)
@@ -342,9 +342,9 @@ class TestPortfolioReturnCalculations:
         return1 = np.dot(weights, returns)
         return2 = np.dot(doubled_weights, returns)
 
-        assert (
-            abs(return1 - return2) < 1e-10
-        ), f"Scaled weights should give same return: {return1} != {return2}"
+        assert abs(return1 - return2) < 1e-10, (
+            f"Scaled weights should give same return: {return1} != {return2}"
+        )
 
     @given(weights_returns=weights_and_returns())
     @settings(max_examples=50)
@@ -361,9 +361,9 @@ class TestPortfolioReturnCalculations:
         return2 = np.dot(weights, returns2)
         return_combined = np.dot(weights, combined_returns)
 
-        assert (
-            abs(return_combined - (return1 + return2)) < 1e-10
-        ), f"Combined return {return_combined} != sum {return1 + return2}"
+        assert abs(return_combined - (return1 + return2)) < 1e-10, (
+            f"Combined return {return_combined} != sum {return1 + return2}"
+        )
 
 
 # ============================================================================
@@ -391,9 +391,9 @@ class TestPortfolioVarianceProperties:
         # Portfolio variance
         portfolio_variance = np.dot(weights, np.dot(cov_matrix, weights))
 
-        assert (
-            portfolio_variance >= 0
-        ), f"Portfolio variance should be >= 0, got {portfolio_variance}"
+        assert portfolio_variance >= 0, (
+            f"Portfolio variance should be >= 0, got {portfolio_variance}"
+        )
 
     @given(weights=valid_portfolio_weights())
     @settings(max_examples=100)
@@ -415,9 +415,9 @@ class TestPortfolioVarianceProperties:
         # With perfect correlation and equal vols: variance = (sum(weights) * vol)^2 = vol^2
         expected_variance = volatilities[0] ** 2
 
-        assert (
-            abs(portfolio_variance - expected_variance) < 1e-10
-        ), f"Variance {portfolio_variance} != expected {expected_variance}"
+        assert abs(portfolio_variance - expected_variance) < 1e-10, (
+            f"Variance {portfolio_variance} != expected {expected_variance}"
+        )
 
     @given(weights_corr=weights_and_correlation())
     @settings(max_examples=100)
@@ -438,9 +438,9 @@ class TestPortfolioVarianceProperties:
         variance1 = np.dot(weights, np.dot(cov_matrix, weights))
         variance2 = np.dot(reversed_weights, np.dot(reversed_cov, reversed_weights))
 
-        assert (
-            abs(variance1 - variance2) < 1e-10
-        ), f"Variance should be symmetric: {variance1} != {variance2}"
+        assert abs(variance1 - variance2) < 1e-10, (
+            f"Variance should be symmetric: {variance1} != {variance2}"
+        )
 
 
 # ============================================================================
@@ -487,9 +487,9 @@ class TestRiskParityProperties:
         mean_risk_contrib = risk_contrib.mean()
 
         for i, rc in enumerate(risk_contrib):
-            assert (
-                abs(rc - mean_risk_contrib) < 1e-10
-            ), f"Risk contribution {rc} at index {i} != mean {mean_risk_contrib}"
+            assert abs(rc - mean_risk_contrib) < 1e-10, (
+                f"Risk contribution {rc} at index {i} != mean {mean_risk_contrib}"
+            )
 
 
 # ============================================================================
@@ -524,7 +524,7 @@ class TestPortfolioOptimizationProperties:
 
             assume(result is not None)
 
-            weights = result.get('weights')
+            weights = result.get("weights")
             if weights is not None:
                 # Convert dict to array if needed
                 if isinstance(weights, dict):
@@ -532,9 +532,9 @@ class TestPortfolioOptimizationProperties:
                 else:
                     weights_array = weights
                 sum_weights = weights_array.sum()
-                assert (
-                    abs(sum_weights - 1.0) < 0.01
-                ), f"Max Sharpe weights sum to {sum_weights}, expected 1.0"
+                assert abs(sum_weights - 1.0) < 0.01, (
+                    f"Max Sharpe weights sum to {sum_weights}, expected 1.0"
+                )
         except (ImportError, np.linalg.LinAlgError):
             pytest.skip("Optimization dependencies not available or singular matrix")
 
@@ -557,7 +557,7 @@ class TestPortfolioOptimizationProperties:
 
             assume(result is not None)
 
-            weights = result.get('weights')
+            weights = result.get("weights")
             if weights is not None:
                 # Convert dict to array if needed
                 if isinstance(weights, dict):
@@ -565,9 +565,9 @@ class TestPortfolioOptimizationProperties:
                 else:
                     weights_array = weights
                 sum_weights = weights_array.sum()
-                assert (
-                    abs(sum_weights - 1.0) < 0.01
-                ), f"Min variance weights sum to {sum_weights}, expected 1.0"
+                assert abs(sum_weights - 1.0) < 0.01, (
+                    f"Min variance weights sum to {sum_weights}, expected 1.0"
+                )
         except (ImportError, np.linalg.LinAlgError):
             pytest.skip("Optimization dependencies not available or singular matrix")
 
@@ -592,7 +592,7 @@ class TestPortfolioOptimizationProperties:
 
             assume(result_min_var is not None)
 
-            weights_min_var = result_min_var.get('weights')
+            weights_min_var = result_min_var.get("weights")
             if weights_min_var is not None:
                 # Convert dict to array if needed
                 if isinstance(weights_min_var, dict):
@@ -605,9 +605,9 @@ class TestPortfolioOptimizationProperties:
                 weights_equal = np.ones(n) / n
                 var_equal = np.dot(weights_equal, np.dot(cov_matrix, weights_equal))
 
-                assert (
-                    var_min_var <= var_equal * 1.01
-                ), f"Min variance {var_min_var} should be <= equal-weighted {var_equal}"
+                assert var_min_var <= var_equal * 1.01, (
+                    f"Min variance {var_min_var} should be <= equal-weighted {var_equal}"
+                )
         except (ImportError, np.linalg.LinAlgError):
             pytest.skip("Optimization dependencies not available or singular matrix")
 
@@ -652,12 +652,12 @@ class TestPortfolioRebalancingProperties:
         sum_target = target_values.sum()
 
         # Both should equal capital
-        assert (
-            abs(sum_current - float(capital)) < 0.01
-        ), f"Current values sum to {sum_current}, expected {capital}"
-        assert (
-            abs(sum_target - float(capital)) < 0.01
-        ), f"Target values sum to {sum_target}, expected {capital}"
+        assert abs(sum_current - float(capital)) < 0.01, (
+            f"Current values sum to {sum_current}, expected {capital}"
+        )
+        assert abs(sum_target - float(capital)) < 0.01, (
+            f"Target values sum to {sum_target}, expected {capital}"
+        )
 
 
 # ============================================================================
@@ -698,9 +698,9 @@ class TestPortfolioTurnoverProperties:
         turnover1_to_2 = np.sum(np.abs(weights2 - weights1)) / 2
         turnover2_to_1 = np.sum(np.abs(weights1 - weights2)) / 2
 
-        assert (
-            abs(turnover1_to_2 - turnover2_to_1) < 1e-10
-        ), f"Turnover should be symmetric: {turnover1_to_2} != {turnover2_to_1}"
+        assert abs(turnover1_to_2 - turnover2_to_1) < 1e-10, (
+            f"Turnover should be symmetric: {turnover1_to_2} != {turnover2_to_1}"
+        )
 
     @given(weights=valid_portfolio_weights())
     @settings(max_examples=100)
@@ -744,9 +744,9 @@ class TestPortfolioDiversificationProperties:
         max_hhi = 1.0
 
         # Allow small floating point tolerance
-        assert (
-            min_hhi - 1e-12 <= hhi <= max_hhi + 1e-12
-        ), f"HHI {hhi} outside range [{min_hhi}, {max_hhi}]"
+        assert min_hhi - 1e-12 <= hhi <= max_hhi + 1e-12, (
+            f"HHI {hhi} outside range [{min_hhi}, {max_hhi}]"
+        )
 
     @given(weights=valid_portfolio_weights())
     @settings(max_examples=100)
@@ -796,9 +796,9 @@ class TestPortfolioDiversificationProperties:
             div_ratio = weighted_avg_vol / portfolio_vol
 
             # Should be >= 1 (diversification helps)
-            assert (
-                div_ratio >= 0.99
-            ), f"Diversification ratio {div_ratio} should be >= 1 (approximately)"
+            assert div_ratio >= 0.99, (
+                f"Diversification ratio {div_ratio} should be >= 1 (approximately)"
+            )
 
 
 # ============================================================================
@@ -821,9 +821,9 @@ class TestPortfolioEdgeCases:
         assert weights[0] == 1.0, "Single asset weight should be 1"
 
         position_value = weights[0] * float(capital)
-        assert (
-            abs(position_value - float(capital)) < 0.01
-        ), f"Position value {position_value} should equal capital {capital}"
+        assert abs(position_value - float(capital)) < 0.01, (
+            f"Position value {position_value} should equal capital {capital}"
+        )
 
     @given(capital=valid_capitals(), n=st.integers(min_value=2, max_value=10))
     @settings(max_examples=50)
@@ -837,6 +837,6 @@ class TestPortfolioEdgeCases:
         expected_value = float(capital) / n
 
         for i, value in enumerate(position_values):
-            assert (
-                abs(value - expected_value) < 0.01
-            ), f"Position {i} value {value} != expected {expected_value}"
+            assert abs(value - expected_value) < 0.01, (
+                f"Position {i} value {value} != expected {expected_value}"
+            )

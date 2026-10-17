@@ -28,9 +28,9 @@ def sample_portfolio():
 def risk_components():
     """Create all risk engine components."""
     return {
-        'greeks': GreeksCalculator(),
-        'alerts': AlertSystem({}),
-        'limits': RiskLimitsEnforcer(),
+        "greeks": GreeksCalculator(),
+        "alerts": AlertSystem({}),
+        "limits": RiskLimitsEnforcer(),
     }
 
 
@@ -43,14 +43,14 @@ class TestRiskEngineWorkflow:
         # Calculate VaR
         np.random.seed(42)
         returns = np.random.normal(0.001, 0.02, 500)
-        var_result = calculate_var(returns, method='historical')
+        var_result = calculate_var(returns, method="historical")
 
         # Create risk assessment
         risk_assessment = {
-            'var': var_result,
-            'drawdown': {
-                'portfolio_drawdown': {
-                    'current_drawdown': 0.10,
+            "var": var_result,
+            "drawdown": {
+                "portfolio_drawdown": {
+                    "current_drawdown": 0.10,
                 }
             },
         }
@@ -67,42 +67,42 @@ class TestRiskEngineWorkflow:
         # Calculate VaR
         np.random.seed(42)
         returns = np.random.normal(0.001, 0.02, 500)
-        var_result = calculate_var(returns, method='parametric')
+        var_result = calculate_var(returns, method="parametric")
 
         # Check limits
         enforcer = RiskLimitsEnforcer()
-        result = enforcer.check_var_limits(sample_portfolio, var_result['var'])
+        result = enforcer.check_var_limits(sample_portfolio, var_result["var"])
 
-        assert 'severity' in result
-        assert 'action' in result
+        assert "severity" in result
+        assert "action" in result
 
     def test_complete_risk_assessment(self, sample_portfolio, risk_components):
         """Test complete risk assessment workflow."""
         # 1. Calculate VaR
         np.random.seed(42)
         returns = np.random.normal(0.001, 0.02, 500)
-        var_result = calculate_var(returns, method='historical')
+        var_result = calculate_var(returns, method="historical")
 
         # 2. Check limits
-        limits_result = risk_components['limits'].check_var_limits(
-            sample_portfolio, var_result['var']
+        limits_result = risk_components["limits"].check_var_limits(
+            sample_portfolio, var_result["var"]
         )
 
         # 3. Create risk assessment
         risk_assessment = {
-            'var': var_result,
-            'drawdown': {
-                'portfolio_drawdown': {
-                    'current_drawdown': 0.10,
+            "var": var_result,
+            "drawdown": {
+                "portfolio_drawdown": {
+                    "current_drawdown": 0.10,
                 }
             },
         }
 
         # 4. Generate alerts
-        alerts = risk_components['alerts'].check_thresholds(risk_assessment, sample_portfolio)
+        alerts = risk_components["alerts"].check_thresholds(risk_assessment, sample_portfolio)
 
         # All components should work
-        assert 'severity' in limits_result
+        assert "severity" in limits_result
         assert isinstance(alerts, list)
 
 
@@ -116,7 +116,7 @@ class TestGreeksWithLimits:
 
         # Calculate Greeks
         greeks_result = greeks_calc.calculate_all_greeks(
-            option_type='call',
+            option_type="call",
             spot_price=100.0,
             strike_price=100.0,
             time_to_expiry=0.25,
@@ -126,7 +126,7 @@ class TestGreeksWithLimits:
         # Validate consistency
         validation = greeks_calc.validate_greeks_consistency(greeks_result)
 
-        assert 'valid' in validation
+        assert "valid" in validation
 
     def test_portfolio_greeks_risk_limits(self):
         """Test portfolio Greeks against risk limits."""
@@ -134,12 +134,12 @@ class TestGreeksWithLimits:
 
         positions = [
             {
-                'option_type': 'call',
-                'spot_price': 100.0,
-                'strike_price': 100.0,
-                'time_to_expiry': 0.25,
-                'volatility': 0.20,
-                'quantity': 10,
+                "option_type": "call",
+                "spot_price": 100.0,
+                "strike_price": 100.0,
+                "time_to_expiry": 0.25,
+                "volatility": 0.20,
+                "quantity": 10,
             }
         ]
 
@@ -148,5 +148,5 @@ class TestGreeksWithLimits:
         # Validate against limits
         validation = greeks_calc.validate_greeks_risk_limits(portfolio_greeks)
 
-        assert 'within_limits' in validation
-        assert 'violations' in validation
+        assert "within_limits" in validation
+        assert "violations" in validation

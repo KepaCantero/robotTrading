@@ -278,7 +278,6 @@ class SignalScorerService:
 
         # Resetear motores
         self.evaluation_engine.reset_statistics()
-        self.sizing_engine.reset_statistics()
         self.execution_engine.reset_statistics()
 
         logger.info("Reset signal scorer service statistics")

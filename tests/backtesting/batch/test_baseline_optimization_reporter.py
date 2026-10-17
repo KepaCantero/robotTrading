@@ -130,7 +130,7 @@ class TestBaselineOptimizationReporterInitialization:
     def test_initialization_with_custom_template(self):
         """Test initialization with custom template."""
         # Create a minimal template file
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.html', delete=False) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".html", delete=False) as f:
             template_content = "<html><body>Test Template</body></html>"
             f.write(template_content)
             template_path = f.name
@@ -184,7 +184,7 @@ class TestMetricExtraction:
 
     def _create_test_template(self) -> str:
         """Create a minimal test template."""
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.html', delete=False) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".html", delete=False) as f:
             template_content = "<html><body>{{ recommendation_text }}</body></html>"
             f.write(template_content)
             return f.name
@@ -230,7 +230,7 @@ class TestComparisonCalculation:
 
     def _create_test_template(self) -> str:
         """Create a minimal test template."""
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.html', delete=False) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".html", delete=False) as f:
             template_content = "<html><body>{{ recommendation_text }}</body></html>"
             f.write(template_content)
             return f.name
@@ -284,7 +284,7 @@ class TestRecommendationGeneration:
 
     def _create_test_template(self) -> str:
         """Create a minimal test template."""
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.html', delete=False) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".html", delete=False) as f:
             template_content = "<html><body>{{ recommendation_text }}</body></html>"
             f.write(template_content)
             return f.name
@@ -349,7 +349,7 @@ class TestChartDataPreparation:
 
     def _create_test_template(self) -> str:
         """Create a minimal test template."""
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.html', delete=False) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".html", delete=False) as f:
             template_content = "<html><body>{{ recommendation_text }}</body></html>"
             f.write(template_content)
             return f.name
@@ -383,7 +383,7 @@ class TestHelperMethods:
 
     def _create_test_template(self) -> str:
         """Create a minimal test template."""
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.html', delete=False) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".html", delete=False) as f:
             template_content = "<html><body>{{ recommendation_text }}</body></html>"
             f.write(template_content)
             return f.name
@@ -428,7 +428,7 @@ class TestSaveReport:
 
     def _create_test_template(self) -> str:
         """Create a minimal test template."""
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.html', delete=False) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".html", delete=False) as f:
             template_content = "<html><body>{{ recommendation_text }}</body></html>"
             f.write(template_content)
             return f.name

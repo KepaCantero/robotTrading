@@ -26,7 +26,7 @@ from app.engines.risk_engine.var_calculators import HistoricalVaRCalculator
 from app.engines.strategy_engines import ModularMomentumStrategyEngine, MomentumStrategyEngine
 
 logging.basicConfig(
-    level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
 logger = logging.getLogger(__name__)
 
@@ -56,16 +56,16 @@ class TestPortfolioEngineIntegration:
     def test_portfolio_engine_with_strategy_engine(self):
         """Test que Strategy Engine puede usar Portfolio Engine."""
         # Crear Portfolio Engine
-        portfolio_config = {'enabled': True}
+        portfolio_config = {"enabled": True}
         portfolio_engine = PortfolioEngine(portfolio_config)
         portfolio_engine.initialize()
 
         # Configurar optimizer
-        optimizer = MarkowitzOptimizer({'risk_aversion': 0.5})
+        optimizer = MarkowitzOptimizer({"risk_aversion": 0.5})
         portfolio_engine.set_optimizer(optimizer)
 
         # Crear Strategy Engine
-        strategy_config = {'rsi_period': 14}
+        strategy_config = {"rsi_period": 14}
         MomentumStrategyEngine(strategy_config)
 
         # Verificar que Portfolio Engine está disponible
@@ -75,11 +75,11 @@ class TestPortfolioEngineIntegration:
     def test_portfolio_optimization_with_strategy_signals(self):
         """Test optimización de portfolio usando señales de estrategias."""
         # Crear Portfolio Engine con optimizer
-        portfolio_config = {'enabled': True}
+        portfolio_config = {"enabled": True}
         portfolio_engine = PortfolioEngine(portfolio_config)
         portfolio_engine.initialize()
 
-        optimizer = MarkowitzOptimizer({'risk_aversion': 0.5})
+        optimizer = MarkowitzOptimizer({"risk_aversion": 0.5})
         portfolio_engine.set_optimizer(optimizer)
 
         # Simular retornos esperados y covarianza basados en estrategias
@@ -90,8 +90,8 @@ class TestPortfolioEngineIntegration:
 
         result = optimizer.optimize(np.array(expected_returns), np.array(cov_matrix))
 
-        assert 'weights' in result
-        assert len(result['weights']) > 0
+        assert "weights" in result
+        assert len(result["weights"]) > 0
 
 
 class TestRiskEngineIntegration:
@@ -100,19 +100,19 @@ class TestRiskEngineIntegration:
     def test_risk_engine_with_strategy_engine(self):
         """Test que Strategy Engine puede usar Risk Engine."""
         # Crear Risk Engine
-        risk_config = {'enabled': True}
+        risk_config = {"enabled": True}
         risk_engine = RiskEngine(risk_config)
         risk_engine.initialize()
 
         # Configurar componentes
-        var_calculator = HistoricalVaRCalculator({'confidence_level': 0.95})
+        var_calculator = HistoricalVaRCalculator({"confidence_level": 0.95})
         risk_engine.set_var_calculator(var_calculator)
 
-        drawdown_controller = DrawdownController({'max_drawdown_limit': 0.20})
+        drawdown_controller = DrawdownController({"max_drawdown_limit": 0.20})
         risk_engine.set_drawdown_controller(drawdown_controller)
 
         # Crear Strategy Engine
-        strategy_config = {'rsi_period': 14}
+        strategy_config = {"rsi_period": 14}
         MomentumStrategyEngine(strategy_config)
 
         # Verificar que Risk Engine está disponible
@@ -123,11 +123,11 @@ class TestRiskEngineIntegration:
     def test_risk_assessment_with_strategy_portfolio(self):
         """Test evaluación de riesgo usando portfolio de estrategia."""
         # Crear Risk Engine
-        risk_config = {'enabled': True}
+        risk_config = {"enabled": True}
         risk_engine = RiskEngine(risk_config)
         risk_engine.initialize()
 
-        var_calculator = HistoricalVaRCalculator({'confidence_level': 0.95})
+        var_calculator = HistoricalVaRCalculator({"confidence_level": 0.95})
         risk_engine.set_var_calculator(var_calculator)
 
         # Crear portfolio
@@ -140,7 +140,7 @@ class TestRiskEngineIntegration:
 
         assessment = risk_engine.assess_risk(portfolio, returns_history=returns_history)
 
-        assert 'timestamp' in assessment
+        assert "timestamp" in assessment
 
 
 class TestIntegratedSystem:
@@ -149,15 +149,15 @@ class TestIntegratedSystem:
     def test_portfolio_risk_strategy_integration(self):
         """Test integración completa Portfolio + Risk + Strategy."""
         # Crear todos los engines
-        portfolio_config = {'enabled': True}
+        portfolio_config = {"enabled": True}
         portfolio_engine = PortfolioEngine(portfolio_config)
         portfolio_engine.initialize()
 
-        risk_config = {'enabled': True}
+        risk_config = {"enabled": True}
         risk_engine = RiskEngine(risk_config)
         risk_engine.initialize()
 
-        strategy_config = {'rsi_period': 14}
+        strategy_config = {"rsi_period": 14}
         MomentumStrategyEngine(strategy_config)
 
         # Verificar que todos están inicializados
@@ -173,23 +173,23 @@ class TestIntegratedSystem:
 
         risk_assessment = risk_engine.assess_risk(portfolio, returns_history=returns_history)
 
-        assert 'timestamp' in risk_assessment
+        assert "timestamp" in risk_assessment
 
     def test_multi_strategy_with_portfolio_risk_engines(self):
         """Test multi-strategy con Portfolio y Risk Engines."""
         # Crear engines compartidos
-        portfolio_config = {'enabled': True}
+        portfolio_config = {"enabled": True}
         portfolio_engine = PortfolioEngine(portfolio_config)
         portfolio_engine.initialize()
 
-        risk_config = {'enabled': True}
+        risk_config = {"enabled": True}
         risk_engine = RiskEngine(risk_config)
         risk_engine.initialize()
 
         # Crear múltiples Strategy Engines
-        momentum_engine = MomentumStrategyEngine({'rsi_period': 14})  # noqa: F841
+        momentum_engine = MomentumStrategyEngine({"rsi_period": 14})  # noqa: F841
         modular_engine = ModularMomentumStrategyEngine(  # noqa: F841
-            {'rsi_period': 14, 'context_engine_enabled': False}
+            {"rsi_period": 14, "context_engine_enabled": False}
         )
 
         # Todos pueden usar los mismos Portfolio y Risk Engines
@@ -205,4 +205,4 @@ class TestIntegratedSystem:
 
         risk_assessment = risk_engine.assess_risk(portfolio, returns_history=returns_history)
 
-        assert 'timestamp' in risk_assessment
+        assert "timestamp" in risk_assessment

@@ -31,22 +31,21 @@ except ImportError:
     print("XGBoost not available, using RandomForest instead")
 
 # Import López de Prado 95% compliance modules
-from app.backtesting.labeling import (
-    # Triple Barrier
-    TripleBarrierLabeler,
-    TripleBarrierConfig,
-    calculate_sample_weights_uniqueness,
-    # Meta-Labeling
-    MetaLabelingCV,
-    MetaLabelingBetSizing,
-    MetaBetSizingConfig,
-    # Concurrent Training
-    ConcurrentModelTrainer,
-)
-
 from app.backtesting.feature_engineering import (
     FinancialMLFeatureImportanceWithUniqueness,
     UniquenessConfig,
+)
+from app.backtesting.labeling import (
+    # Concurrent Training
+    ConcurrentModelTrainer,
+    MetaBetSizingConfig,
+    MetaLabelingBetSizing,
+    # Meta-Labeling
+    MetaLabelingCV,
+    TripleBarrierConfig,
+    # Triple Barrier
+    TripleBarrierLabeler,
+    calculate_sample_weights_uniqueness,
 )
 
 
@@ -112,7 +111,7 @@ def step1_triple_barrier_labeling():
     X, y, prices, events, labels_df = generate_sample_data()
 
     print(f"Generated {len(X)} samples with {X.shape[1]} features")
-    print(f"Label distribution:")
+    print("Label distribution:")
     print(labels_df["label"].value_counts())
 
     return X, y, prices, events, labels_df
@@ -181,7 +180,7 @@ def step3_meta_labeling_cv(X, y, events, labels_df, uniqueness_weights):
         sample_weights=uniqueness_weights,
     )
 
-    print(f"\nCross-Validation Results:")
+    print("\nCross-Validation Results:")
     print(f"Mean accuracy: {cv_results.mean_score:.4f} ± {cv_results.std_score:.4f}")
     print(f"Fold scores: {[f'{s:.4f}' for s in cv_results.fold_scores]}")
 
@@ -229,7 +228,7 @@ def step4_feature_importance(X, y, events, labels_df, primary_model):
         reverse=True,
     )[:10]
 
-    print(f"\nTop 10 Features:")
+    print("\nTop 10 Features:")
     for i, (feature, importance) in enumerate(top_features, 1):
         print(f"  {i:2d}. {feature:15s}: {importance:.4f}")
 
@@ -265,7 +264,7 @@ def step5_bet_sizing(primary_model, meta_model, X_test):
     # Calculate bet sizes
     result = bet_sizing.calculate_sizes(primary_model, meta_model, X_test, expected_returns)
 
-    print(f"\nBet Sizing Results:")
+    print("\nBet Sizing Results:")
     print(f"Average bet size: {result.bet_sizes.mean():.4f}")
     print(f"Max bet size: {result.bet_sizes.max():.4f}")
     print(f"Number of trades: {(result.bet_sizes > 0).sum()}")
@@ -277,7 +276,7 @@ def step5_bet_sizing(primary_model, meta_model, X_test):
     n_med = (confidence_levels == 1).sum()
     n_high = (confidence_levels == 2).sum()
 
-    print(f"\nConfidence Distribution:")
+    print("\nConfidence Distribution:")
     print(f"  Low (< 0.5):    {n_low:3d}")
     print(f"  Medium (0.5-0.7): {n_med:3d}")
     print(f"  High (> 0.7):   {n_high:3d}")
@@ -285,7 +284,7 @@ def step5_bet_sizing(primary_model, meta_model, X_test):
     # Show some bet sizes
     active_bets = result.bet_sizes[result.bet_sizes > 0]
     if len(active_bets) > 0:
-        print(f"\nSample Bet Sizes (first 10):")
+        print("\nSample Bet Sizes (first 10):")
         for i, size in enumerate(active_bets[:10], 1):
             print(f"  Bet {i:2d}: {size:.4f}")
 
@@ -332,17 +331,17 @@ def step6_concurrent_training(X, y, events, labels_df, uniqueness_weights):
     trainer = ConcurrentModelTrainer(n_jobs=4)
     ensemble_results = trainer.train_models_concurrent(models, X, y, events, labels_df)
 
-    print(f"\nEnsemble Results:")
+    print("\nEnsemble Results:")
     print(f"Number of models: {ensemble_results.metadata['n_models']}")
     print(f"Ensemble score: {ensemble_results.ensemble_score:.4f}")
 
     # Show individual model scores
-    print(f"\nIndividual Model Scores:")
+    print("\nIndividual Model Scores:")
     for result in ensemble_results.model_results:
         print(f"  {result.model_name:15s}: {result.score:.4f}")
 
     # Show ensemble weights
-    print(f"\nEnsemble Weights:")
+    print("\nEnsemble Weights:")
     for model_name, weight in ensemble_results.ensemble_weights.items():
         print(f"  {model_name:15s}: {weight:.4f}")
 
@@ -390,9 +389,9 @@ def main():
 
     print("\n✅ All steps completed successfully!")
     print("\nKey Results:")
-    print(f"  - Trained meta-labeling models with purged CV")
-    print(f"  - Calculated uniqueness-weighted feature importance")
-    print(f"  - Generated meta-labeling bet sizes")
+    print("  - Trained meta-labeling models with purged CV")
+    print("  - Calculated uniqueness-weighted feature importance")
+    print("  - Generated meta-labeling bet sizes")
     print(f"  - Trained ensemble of {len(ensemble_results.model_results)} models")
 
     print("\n🎯 95% López de Prado Compliance Achieved!")

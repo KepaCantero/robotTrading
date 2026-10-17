@@ -25,6 +25,8 @@ Domain: Presentation
 - `set_correlation_id()`
 - `generate_correlation_id()`
 - `log_endpoint_error()`
+- `info()`
+- `error()`
 - `log_request()`
 - `log_response()`
 - `log_error()`

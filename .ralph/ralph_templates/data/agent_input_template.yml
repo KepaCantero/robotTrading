@@ -90,10 +90,10 @@ input_templates:
   # Input for refactoring tasks
   refactor_input:
     description: "Input for refactoring agent"
-    
+
     context:
       current_task_type: "refactor"
-    
+
     requirements:
       specification_file: "rules/trading/"
       templates:
@@ -102,7 +102,7 @@ input_templates:
         - "Must follow SOLID principles"
         - "Must pass validate_file_complete.sh"
         - "Must use Protocol interfaces"
-    
+
     previous_results:
       files:
         - path: "{{CURRENT_FILE_TO_REFACTOR}}"
@@ -113,10 +113,10 @@ input_templates:
   # Input for validation tasks
   validation_input:
     description: "Input for validation agent"
-    
+
     context:
       current_task_type: "validation"
-    
+
     requirements:
       specification_file: "rules/trading/"
       templates:
@@ -124,7 +124,7 @@ input_templates:
       constraints:
         - "Must use validate_file_complete.sh"
         - "Only mark passed if success: true"
-    
+
     previous_results:
       files:
         - path: "{{FILE_TO_VALIDATE}}"
@@ -135,11 +135,11 @@ input_templates:
   # Input for implementation tasks
   implementation_input:
     description: "Input for implementation agent"
-    
+
     context:
       current_task_type: "implementation"
       phase: "{{STARTING_PHASE}}"
-    
+
     requirements:
       specification_file: "{{SPECIFICATION_FILE}}"
       templates:
@@ -148,7 +148,7 @@ input_templates:
         - "Must follow specifications exactly"
         - "Must add type hints and docstrings"
         - "Must pass validation"
-    
+
     previous_results:
       custom_data:
         design_decisions: "{{DESIGN_DECISIONS}}"
@@ -159,17 +159,17 @@ input_templates:
 # ============================================================================
 prompt_generation:
   method: "template_based"
-  
+
   template: |
     # {{CURRENT_TASK_NAME}}
-    
+
     You are continuing a pipeline of tasks. Here is the context:
-    
+
     ## Previous Task Results
     **Task:** {{PREVIOUS_TASK_NAME}}
     **Status:** {{PREVIOUS_STATE}}
     **Completion:** {{PREVIOUS_COMPLETION_PCT}}%
-    
+
     ### Files from Previous Task:
     {{#each previous_results.files}}
     - **{{this.path}}**
@@ -177,31 +177,31 @@ prompt_generation:
       - Status: "{{this.status}}"
       - Role: "{{this.role}}"
     {{/each}}
-    
+
     ### Metrics:
     - Total Files: "{{previous_results.metrics.total_files}}"
     - Completed: "{{previous_results.metrics.completed_files}}"
     - Failed: "{{previous_results.metrics.failed_files}}"
     - Duration: "{{previous_results.metrics.duration_seconds}}"s
-    
+
     ### Validation Summary:
     - Total Checks: "{{previous_results.validation.summary.total_checks}}"
     - Passed: "{{previous_results.validation.summary.passed}}"
     - Failed: "{{previous_results.validation.summary.failed}}"
     - Success: "{{previous_results.validation.summary.success}}"
-    
+
     {{#if checkpoint.exists}}
     ## Checkpoint Status
     **Current Phase:** {{checkpoint.data.phase}}
     **Completed Items:** {{checkpoint.data.completed_items.length}}
     **Pending Items:** {{checkpoint.data.pending_items}}
     {{/if}}
-    
+
     ## Your Task
     **Task ID:** {{CURRENT_TASK_ID}}
     **Task Type:** {{current.task_type}}
     **Phase:** {{context.phase}}
-    
+
     ### Requirements:
     - Specification: "{{requirements.specification_file}}"
     - Templates: "{{join requirements.templates ", "}}"
@@ -209,7 +209,7 @@ prompt_generation:
     {{#each requirements.constraints}}
       - {{this}}
     {{/each}}
-    
+
     ### Instructions:
     1. Read the specification file
     2. Review previous task results
@@ -217,7 +217,7 @@ prompt_generation:
     4. Follow the requirements and constraints
     5. Validate your work
     6. Only mark complete when validation passes
-    
+
     ### Custom Data from Previous Task:
     {{#each previous_results.custom_data}}
     - **{{@key}}:** {{this}}

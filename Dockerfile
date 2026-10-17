@@ -90,6 +90,9 @@ COPY --from=builder /usr/local/bin /usr/local/bin
 # Copy application code
 COPY --from=builder /app /app
 
+# Copy alembic config (needed for in-container `python -m alembic upgrade head`)
+COPY alembic.ini ./
+
 # Create necessary directories
 RUN mkdir -p /app/logs /app/data /app/config && \
     chown -R algotrading:algotrading /app
@@ -140,3 +143,15 @@ COPY tests/ /app/tests/
 
 # Default command for testing
 CMD ["python", "-m", "pytest", "tests/", "-v", "--cov=app", "--cov-report=xml"]
+
+# Celery worker stage
+# NOTE: no Celery app module exists in the codebase yet; keep production's
+# default CMD so the build target exists without crash-looping at runtime.
+# Replace CMD with the celery worker entrypoint once app.tasks is wired.
+FROM production as worker
+CMD ["python", "-m", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+
+# Celery beat scheduler stage
+# NOTE: same as worker; swap for `celery -A ... beat` once the app exists.
+FROM production as scheduler
+CMD ["python", "-m", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]

@@ -86,6 +86,7 @@ Successfully refactored `app/security/auth.py` from a monolithic 1105-line file 
 # This still works exactly as before
 from app.security.auth import get_current_user, User
 
+
 @router.get("/protected")
 async def protected(user: User = Depends(get_current_user)):
     return {"user": user.username}
@@ -103,8 +104,8 @@ set_user_store(test_store)
 # Protocol-based type hints
 from app.security.interfaces import UserStoreProtocol
 
-def process(store: UserStoreProtocol):
-    ...
+
+def process(store: UserStoreProtocol): ...
 ```
 
 ## Next Steps

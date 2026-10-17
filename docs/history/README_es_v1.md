@@ -109,15 +109,15 @@ SECRET_KEY = "your-secret-key-change-in-production"
 @field_validator("secret_key")
 def validate_secret_key(cls, v, info):
     debug_mode = info.data.get('debug', False)
-    
+
     # En producción, la clave es obligatoria
     if not debug_mode and (not v or v == ""):
         raise ValueError("SECRET_KEY is required in production")
-    
+
     # Debe tener al menos 32 caracteres
     if not debug_mode and v and len(v) < 32:
         raise ValueError("SECRET_KEY must be at least 32 characters long")
-    
+
     return v
 ```
 

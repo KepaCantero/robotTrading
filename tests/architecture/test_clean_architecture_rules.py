@@ -52,14 +52,14 @@ class TestDependencyRules:
 
             with open(py_file) as f:
                 content = f.read()
-                lines = content.split('\n')
+                lines = content.split("\n")
 
             # Check each import statement
             for i, line in enumerate(lines[:30], 1):  # Check first 30 lines
                 # Check for imports from outer layers
-                if re.search(r'^from app\.(services|infrastructure|api)', line):
+                if re.search(r"^from app\.(services|infrastructure|api)", line):
                     violations.append((py_file, i, line.strip()))
-                if re.search(r'^import app\.(services|infrastructure|api)', line):
+                if re.search(r"^import app\.(services|infrastructure|api)", line):
                     violations.append((py_file, i, line.strip()))
 
         # Report violations
@@ -88,15 +88,15 @@ class TestDependencyRules:
 
             with open(py_file) as f:
                 content = f.read()
-                lines = content.split('\n')
+                lines = content.split("\n")
 
             for i, line in enumerate(lines[:30], 1):
                 # Check for improper imports
-                if re.search(r'^from app\.infrastructure', line):
+                if re.search(r"^from app\.infrastructure", line):
                     violations.append((py_file, i, line.strip()))
-                if re.search(r'^from app\.services', line):
+                if re.search(r"^from app\.services", line):
                     violations.append((py_file, i, line.strip()))
-                if re.search(r'^from app\.api', line):
+                if re.search(r"^from app\.api", line):
                     violations.append((py_file, i, line.strip()))
 
         if violations:
@@ -123,7 +123,7 @@ class TestDependencyRules:
                 continue
             with open(py_file) as f:
                 content = f.read()
-                interfaces = re.findall(r'class (\w+Repository)\(ABC\)', content)
+                interfaces = re.findall(r"class (\w+Repository)\(ABC\)", content)
                 domain_interfaces.update(interfaces)
 
         # Check that infrastructure implementations exist
@@ -156,29 +156,29 @@ class TestDependencyRules:
                 continue
 
             rel_path = py_file.relative_to(app_dir)
-            module_key = str(rel_path.with_suffix(''))
+            module_key = str(rel_path.with_suffix(""))
 
             with open(py_file) as f:
                 content = f.read()
 
             # Extract imports from app package
-            app_imports = re.findall(r'^from app\.(\w+)', content, re.MULTILINE)
+            app_imports = re.findall(r"^from app\.(\w+)", content, re.MULTILINE)
             imports[module_key] = set(app_imports)
 
         # Check for circular dependencies
         # Simplified check: domain should not be imported by infrastructure
         domain_importers = []
         for module, deps in imports.items():
-            if 'domain' in deps:
-                layer = module.split('/')[0]
-                if layer in ['infrastructure', 'api', 'services']:
+            if "domain" in deps:
+                layer = module.split("/")[0]
+                if layer in ["infrastructure", "api", "services"]:
                     domain_importers.append(module)
 
         # This is expected and correct - infrastructure SHOULD import domain
         # But we should verify the direction is correct
-        assert (
-            set(imports.keys()).isdisjoint(set(domain_importers)) or True
-        ), "Unexpected import patterns detected"
+        assert set(imports.keys()).isdisjoint(set(domain_importers)) or True, (
+            "Unexpected import patterns detected"
+        )
 
 
 class TestSingleResponsibility:
@@ -256,11 +256,11 @@ class TestSingleResponsibility:
                 content = f.read()
 
             # Count class definitions
-            classes = re.findall(r'^class \w+', content, re.MULTILINE)
+            classes = re.findall(r"^class \w+", content, re.MULTILINE)
 
             if len(classes) > MAX_CLASSES:
                 rel_path = py_file.relative_to(project_root)
-                pytest.fail(f"{rel_path} contains {len(classes)} classes " f"(max: {MAX_CLASSES})")
+                pytest.fail(f"{rel_path} contains {len(classes)} classes (max: {MAX_CLASSES})")
 
 
 class TestInterfaceSegregation:
@@ -294,12 +294,12 @@ class TestInterfaceSegregation:
 
             # Find abstract classes
             abstract_classes = re.finditer(
-                r'class (\w+)\(ABC\):.*?(?=\nclass|\Z)', content, re.DOTALL
+                r"class (\w+)\(ABC\):.*?(?=\nclass|\Z)", content, re.DOTALL
             )
 
             for match in abstract_classes:
                 class_content = match.group(0)
-                methods = re.findall(r'@abstractmethod', class_content)
+                methods = re.findall(r"@abstractmethod", class_content)
 
                 if len(methods) > MAX_METHODS:
                     rel_path = py_file.relative_to(project_root)
@@ -335,13 +335,13 @@ class TestDomainIndependence:
 
             with open(py_file) as f:
                 content = f.read()
-                lines = content.split('\n')
+                lines = content.split("\n")
 
             for i, line in enumerate(lines[:30], 1):
                 # Check for external imports
-                if re.match(r'^import (pandas|numpy|pydantic)', line):
+                if re.match(r"^import (pandas|numpy|pydantic)", line):
                     violations.append((py_file, i, line.strip()))
-                if re.match(r'^from (pandas|numpy|pydantic)', line):
+                if re.match(r"^from (pandas|numpy|pydantic)", line):
                     violations.append((py_file, i, line.strip()))
 
         if violations:
@@ -369,18 +369,18 @@ class TestDomainIndependence:
                 content = f.read()
 
             # Find dataclass definitions
-            dataclasses = re.finditer(r'@dataclass(?:\([^)]*\))?\s*\nclass (\w+)', content)
+            dataclasses = re.finditer(r"@dataclass(?:\([^)]*\))?\s*\nclass (\w+)", content)
 
             for match in dataclasses:
                 class_name = match.group(1)
                 class_start = match.end()
 
                 # Check if frozen=True
-                decorator_start = content.rfind('@dataclass', 0, class_start)
-                decorator_end = content.find('\n', decorator_start)
+                decorator_start = content.rfind("@dataclass", 0, class_start)
+                decorator_end = content.find("\n", decorator_start)
                 decorator = content[decorator_start:decorator_end]
 
-                if 'frozen=True' not in decorator:
+                if "frozen=True" not in decorator:
                     rel_path = py_file.relative_to(project_root)
                     pytest.fail(
                         f"{rel_path}: {class_name} is not frozen. "
@@ -406,10 +406,10 @@ class TestCleanArchitectureMetrics:
 
         # Count files by layer
         layer_counts = {
-            'domain': len(list((app_dir / "domain").rglob("*.py"))),
-            'application': len(list((app_dir / "application").rglob("*.py"))),
-            'infrastructure': len(list((app_dir / "infrastructure").rglob("*.py"))),
-            'api': len(list((app_dir / "api").rglob("*.py"))),
+            "domain": len(list((app_dir / "domain").rglob("*.py"))),
+            "application": len(list((app_dir / "application").rglob("*.py"))),
+            "infrastructure": len(list((app_dir / "infrastructure").rglob("*.py"))),
+            "api": len(list((app_dir / "api").rglob("*.py"))),
         }
 
         # Count total lines

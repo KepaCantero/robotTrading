@@ -143,6 +143,7 @@ class DatabaseUserStore:
         # Query database
         ...
 
+
 # Use custom implementation
 custom_store = DatabaseUserStore()
 set_user_store(custom_store)
@@ -161,6 +162,7 @@ All implementations can be substituted with Protocol-compliant alternatives:
 # Original implementation
 store = get_user_store()
 
+
 # Custom implementation (substitutable)
 class CustomStore:
     def verify_api_key(self, api_key: str) -> str | None:
@@ -171,6 +173,7 @@ class CustomStore:
 
     def get_user_by_id(self, user_id: str) -> User | None:
         return None
+
 
 custom = CustomStore()
 assert isinstance(custom, UserStoreProtocol)  # True
@@ -199,10 +202,7 @@ user = await get_current_user_optional()
 custom_store = CustomUserStore()
 custom_tracker = CustomAuthAttemptTracker()
 
-user = await get_current_user_optional(
-    user_store=custom_store,
-    attempt_tracker=custom_tracker
-)
+user = await get_current_user_optional(user_store=custom_store, attempt_tracker=custom_tracker)
 
 # Option 3: Set globally for all requests
 set_user_store(custom_store)
@@ -222,10 +222,12 @@ All existing code continues to work without changes:
 # Old imports still work
 from app.security.auth import User, get_current_user
 
+
 # Old usage still works
 @router.get("/protected")
 async def protected_route(user: User = Depends(get_current_user)):
     return {"user": user.username}
+
 
 # All functions still available
 from app.security import (
@@ -244,6 +246,7 @@ from app.security import (
 from fastapi import Depends
 from app.security import User, get_current_user
 
+
 @router.get("/profile")
 async def get_profile(user: User = Depends(get_current_user)):
     return {
@@ -258,20 +261,17 @@ async def get_profile(user: User = Depends(get_current_user)):
 ```python
 from app.security import get_admin_user, require_roles, UserRoles
 
+
 # Using dependency
 @router.delete("/users/{user_id}")
-async def delete_user(
-    user_id: str,
-    admin: User = Depends(get_admin_user)
-):
+async def delete_user(user_id: str, admin: User = Depends(get_admin_user)):
     # Only admins can delete users
     ...
 
+
 # Using role factory
 @router.post("/strategies/deploy")
-async def deploy_strategy(
-    user: User = Depends(require_roles(UserRoles.ADMIN, UserRoles.SYSTEM))
-):
+async def deploy_strategy(user: User = Depends(require_roles(UserRoles.ADMIN, UserRoles.SYSTEM))):
     # Admins or system users can deploy
     ...
 ```
@@ -281,10 +281,9 @@ async def deploy_strategy(
 ```python
 from app.security import require_permissions
 
+
 @router.get("/trades")
-async def list_trades(
-    user: User = Depends(require_permissions("trade:read"))
-):
+async def list_trades(user: User = Depends(require_permissions("trade:read"))):
     # Users with trade:read permission
     ...
 ```
@@ -301,6 +300,7 @@ from app.security import (
     set_attempt_tracker,
 )
 
+
 @pytest.fixture
 def test_user_store():
     store = UserStore()
@@ -313,6 +313,7 @@ def test_user_store():
     store.add_user(test_user)
     return store
 
+
 @pytest.fixture
 def test_tracker():
     class MockAuditLogger:
@@ -320,6 +321,7 @@ def test_tracker():
             pass
 
     return AuthAttemptTracker(audit_logger=MockAuditLogger())
+
 
 def test_authenticated_endpoint(client, test_user_store, test_tracker):
     # Inject test dependencies
@@ -337,6 +339,7 @@ def test_authenticated_endpoint(client, test_user_store, test_tracker):
 from app.security import UserStoreProtocol, set_user_store
 from typing import Any
 
+
 class DatabaseUserStore:
     """UserStore backed by PostgreSQL database."""
 
@@ -345,35 +348,29 @@ class DatabaseUserStore:
 
     def verify_api_key(self, api_key: str) -> str | None:
         result = self.db.execute(
-            "SELECT username FROM api_keys WHERE key_hash = %s",
-            (hash_api_key(api_key),)
+            "SELECT username FROM api_keys WHERE key_hash = %s", (hash_api_key(api_key),)
         )
         return result.fetchone()
 
     def get_user(self, username: str) -> User | None:
-        result = self.db.execute(
-            "SELECT * FROM users WHERE username = %s",
-            (username,)
-        )
+        result = self.db.execute("SELECT * FROM users WHERE username = %s", (username,))
         row = result.fetchone()
         if row:
             return User(
-                user_id=row['id'],
-                username=row['username'],
-                role=row['role'],
-                permissions=row['permissions'],
+                user_id=row["id"],
+                username=row["username"],
+                role=row["role"],
+                permissions=row["permissions"],
             )
         return None
 
     def get_user_by_id(self, user_id: str) -> User | None:
-        result = self.db.execute(
-            "SELECT * FROM users WHERE id = %s",
-            (user_id,)
-        )
+        result = self.db.execute("SELECT * FROM users WHERE id = %s", (user_id,))
         row = result.fetchone()
         if row:
             return User.from_dict(row)
         return None
+
 
 # Use database-backed store
 db_store = DatabaseUserStore(get_db_connection())
@@ -396,6 +393,7 @@ from app.security.auth import (
     require_roles,
 )
 
+
 @router.get("/protected")
 async def protected(user: User = Depends(get_current_user)):
     return {"user": user.username}
@@ -413,6 +411,7 @@ from app.security.jwt_token_manager import JWTTokenManager
 
 # Use Protocol interfaces for type hints
 from app.security.interfaces import UserStoreProtocol
+
 
 def process_user(store: UserStoreProtocol) -> User | None:
     return store.get_user("admin")

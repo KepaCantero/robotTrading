@@ -77,6 +77,7 @@ def analyze_with_calculator(calc: IndicatorCalculator):
     rsi = calc.calculate_rsi(prices, 14)
     # Works with any implementation
 
+
 # Can swap implementations
 calculator1 = TechnicalIndicatorCalculator()
 calculator2 = CustomIndicatorCalculator()  # Future implementation
@@ -182,6 +183,7 @@ analysis = await analyzer.analyze_asset_momentum("ETH/USD", Timeframe.DAILY)
 ```python
 from app.services.momentum.protocols import StorageBackend, IndicatorCalculator
 
+
 # Custom storage backend
 class DatabaseStorageBackend:
     async def save_analysis(self, analysis_id: str, analysis: MomentumAnalysis):
@@ -190,6 +192,7 @@ class DatabaseStorageBackend:
 
     # ... other methods
 
+
 # Custom indicator calculator
 class CustomIndicatorCalculator:
     def calculate_rsi(self, prices: List[float], period: int = 14):
@@ -197,6 +200,7 @@ class CustomIndicatorCalculator:
         pass
 
     # ... other methods
+
 
 # Use custom implementations
 service = MomentumAnalysisService(
@@ -243,6 +247,7 @@ The modular architecture enables comprehensive testing:
 class MockCalculator(IndicatorCalculator):
     def calculate_rsi(self, prices, period=14):
         return 50.0  # Predictable value for testing
+
 
 # Test analyzer in isolation
 analyzer = MomentumAnalyzer(MockCalculator(), MockProvider())

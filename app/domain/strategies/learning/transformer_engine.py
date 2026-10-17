@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import logging
 import os
+from typing import cast
 
 # ============================================================================
 # CRÍTICO: Configurar variables de entorno ANTES de importar numpy/pandas/PyTorch
@@ -135,8 +136,8 @@ class TransformerEngine(BaseLearningEngine):
         if not data or len(data) < sequence_length + 1:
             return np.array([]), None
 
-        sequences = []
-        labels = []
+        sequences: list[list[float]] = []
+        labels: list[float] = []
 
         for i in range(len(data) - sequence_length):
             # Extraer features de la ventana
@@ -150,7 +151,7 @@ class TransformerEngine(BaseLearningEngine):
                     v for k, v in item.items() if isinstance(v, (int, float)) and k != target_key
                 ]
                 if numeric_features:
-                    features.append(numeric_features[0])  # Usar primera feature numérica
+                    features.append(float(numeric_features[0]))  # Usar primera feature numérica
                 else:
                     features.append(0.0)  # Default
 
@@ -158,20 +159,26 @@ class TransformerEngine(BaseLearningEngine):
 
             # Target (si está disponible)
             if target_key in data[i + sequence_length]:
-                labels.append(float(data[i + sequence_length][target_key]))
+                raw_target = data[i + sequence_length][target_key]
+                if isinstance(raw_target, (int, float, str)):
+                    labels.append(float(raw_target))
+                else:
+                    labels.append(0.0)
             else:
                 labels.append(0.0)
 
-        sequences = np.array(sequences)
-        labels = np.array(labels) if labels else None
+        sequences_arr = np.asarray(sequences, dtype=np.float64)
+        labels_arr = np.asarray(labels, dtype=np.float64) if labels else None
 
         # Reshape para Transformer: (batch, seq_len, features)
-        if sequences.ndim == 2:
-            sequences = sequences.reshape((sequences.shape[0], sequences.shape[1], 1))
-        elif sequences.ndim == 1:
-            sequences = sequences.reshape((sequences.shape[0], 1, 1))
+        if sequences_arr.ndim == 2:
+            sequences_arr = sequences_arr.reshape(
+                (sequences_arr.shape[0], sequences_arr.shape[1], 1)
+            )
+        elif sequences_arr.ndim == 1:
+            sequences_arr = sequences_arr.reshape((sequences_arr.shape[0], 1, 1))
 
-        return sequences, labels
+        return sequences_arr, labels_arr
 
     def train(
         self,
@@ -206,20 +213,18 @@ class TransformerEngine(BaseLearningEngine):
 
         try:
             # Preparar datos
+            sequences: np.ndarray
+            labels: np.ndarray | None
             if isinstance(training_data, dict):
                 if "sequences" in training_data and "labels" in training_data:
                     sequences = np.array(training_data["sequences"])
                     labels = np.array(training_data["labels"])
-                elif "features" in training_data:
-                    # Convertir features a sequences
-                    sequences, labels = self._prepare_sequences(
-                        training_data.get("features", []), sequence_length=30
-                    )
                 else:
-                    # Intentar como lista de dicts
-                    sequences, labels = self._prepare_sequences(
-                        training_data.get("data", []), sequence_length=30
-                    )
+                    payload = training_data.get("features", training_data.get("data", []))
+                    if isinstance(payload, list):
+                        sequences, labels = self._prepare_sequences(payload, sequence_length=30)
+                    else:
+                        sequences, labels = np.array([]), None
             else:
                 sequences, labels = self._prepare_sequences(training_data, sequence_length=30)
 
@@ -296,7 +301,8 @@ class TransformerEngine(BaseLearningEngine):
 
                         # Añadir positional encoding sinusoidal
                         seq_len = x.size(1)
-                        x = x + self.pos_encoder[:, :seq_len, :]
+                        pos_encoder = cast(torch.Tensor, self.pos_encoder)
+                        x = x + pos_encoder[:, :seq_len, :]
 
                         # Transformer encoder
                         x = self.transformer_encoder(x)
@@ -353,6 +359,7 @@ class TransformerEngine(BaseLearningEngine):
 
                     sequences_np = np.array(sequences, dtype=np.float32)
                     labels_np = None
+                    self.labels: torch.Tensor | None = None
                     if labels is not None:
                         labels_np = np.array(labels, dtype=np.float32)
                     with torch.no_grad():
@@ -419,9 +426,13 @@ class TransformerEngine(BaseLearningEngine):
             # Validación si está disponible
             val_loss = None
             if validation_data is not None:
-                val_sequences, val_labels = self._prepare_sequences(
-                    validation_data.get("data", validation_data), sequence_length=30
-                )
+                val_payload = validation_data.get("data", validation_data)
+                if isinstance(val_payload, list):
+                    val_sequences, val_labels = self._prepare_sequences(
+                        val_payload, sequence_length=30
+                    )
+                else:
+                    val_sequences = np.array([])
                 if len(val_sequences) > 0:
                     # Import Dataset and DataLoader again for this context
                     from torch.utils.data import DataLoader as _DataLoader, Dataset as _Dataset
@@ -436,6 +447,7 @@ class TransformerEngine(BaseLearningEngine):
 
                             sequences_np = np.array(sequences, dtype=np.float32)
                             labels_np = None
+                            self.labels: torch.Tensor | None = None
                             if labels is not None:
                                 labels_np = np.array(labels, dtype=np.float32)
                             with torch.no_grad():
@@ -525,9 +537,13 @@ class TransformerEngine(BaseLearningEngine):
                 sequence = np.array(features["sequence"])
             elif "features" in features:
                 # Usar features como sequence
-                feature_list = [
-                    v for v in features["features"].values() if isinstance(v, (int, float))
-                ]
+                feature_values = features["features"]
+                if not isinstance(feature_values, dict):
+                    # Mismo error que produciría .values() sobre un no-dict
+                    raise AttributeError(
+                        f"'{type(feature_values).__name__}' object has no attribute 'values'"
+                    )
+                feature_list = [v for v in feature_values.values() if isinstance(v, (int, float))]
                 sequence = np.array(feature_list[-30:])  # Últimos 30 valores
             else:
                 logger.warning("No se encontró sequence en features")
@@ -574,9 +590,11 @@ class TransformerEngine(BaseLearningEngine):
             return {"error": "model_not_trained"}
 
         try:
-            sequences, labels = self._prepare_sequences(
-                test_data.get("data", test_data), sequence_length=30
-            )
+            eval_payload = test_data.get("data", test_data)
+            if isinstance(eval_payload, list):
+                sequences, labels = self._prepare_sequences(eval_payload, sequence_length=30)
+            else:
+                sequences, labels = np.array([]), None
 
             if len(sequences) == 0:
                 return {"error": "no_data"}
@@ -595,6 +613,7 @@ class TransformerEngine(BaseLearningEngine):
 
                     sequences_np = np.array(sequences, dtype=np.float32)
                     labels_np = None
+                    self.labels: torch.Tensor | None = None
                     if labels is not None:
                         labels_np = np.array(labels, dtype=np.float32)
                     with torch.no_grad():
@@ -652,10 +671,10 @@ class TransformerEngine(BaseLearningEngine):
             avg_loss = total_loss / num_batches if num_batches > 0 else 0.0
 
             # Calcular métricas adicionales
-            predictions = np.array(predictions)
-            targets = np.array(targets)
-            mae = np.mean(np.abs(predictions - targets))
-            rmse = np.sqrt(np.mean((predictions - targets) ** 2))
+            predictions_arr = np.array(predictions)
+            targets_arr = np.array(targets)
+            mae = np.mean(np.abs(predictions_arr - targets_arr))
+            rmse = np.sqrt(np.mean((predictions_arr - targets_arr) ** 2))
 
             return {"loss": avg_loss, "mae": float(mae), "rmse": float(rmse)}
 

@@ -1,31 +1,22 @@
-# Requirements Document: app/presentation/dashboard/meta_dashboard.py
+# Requirements Document: app/presentation/dashboard/nicegui_app/components/office_scene.py
 
 ## 1. Module Overview
-File: meta_dashboard.py
+File: office_scene.py
 Domain: Presentation
 
 ## 2. Dependencies
 - `__future__`
-- `app.backtesting.meta_analyzer`
-- `logging`
-- `numpy`
-- `pandas`
-- `pathlib`
-- `plotly.express`
-- `plotly.graph_objects`
-- `sklearn.metrics`
-- `streamlit`
+- `app.services.agent_swarm.executor`
+- `json`
+- `nicegui`
 - `typing`
-- `yaml`
 
 ## 3. Core Components
 ### Classes
-- `MetaDashboard`
+- `OfficeScene`
 ### Public Functions
-- `color_for_metric()`
-- `emoji_for_metric()`
-- `load_and_analyze()`
-- `render_dashboard()`
+- `build_office_svg()`
+- `update()`
 
 ## 4. Applicable Trading Rules
 

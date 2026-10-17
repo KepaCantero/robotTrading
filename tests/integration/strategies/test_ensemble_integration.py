@@ -677,14 +677,18 @@ class TestEnsembleConfiguration:
 
     def test_ensemble_config_file_exists(self):
         """Ensemble configuration file exists."""
-        config_path = Path(__file__).resolve().parents[3] / "config" / "strategies" / "ensemble.yaml"
+        config_path = (
+            Path(__file__).resolve().parents[3] / "config" / "strategies" / "ensemble.yaml"
+        )
         assert config_path.exists(), f"Ensemble config not found at {config_path}"
 
     def test_ensemble_config_has_required_sections(self):
         """Ensemble config has weighted, regime, and voting sections."""
         import yaml
 
-        config_path = Path(__file__).resolve().parents[3] / "config" / "strategies" / "ensemble.yaml"
+        config_path = (
+            Path(__file__).resolve().parents[3] / "config" / "strategies" / "ensemble.yaml"
+        )
         with open(config_path) as f:
             config = yaml.safe_load(f)
 
@@ -697,7 +701,9 @@ class TestEnsembleConfiguration:
         """Ensemble presets (conservative, balanced, aggressive) exist."""
         import yaml
 
-        config_path = Path(__file__).resolve().parents[3] / "config" / "strategies" / "ensemble.yaml"
+        config_path = (
+            Path(__file__).resolve().parents[3] / "config" / "strategies" / "ensemble.yaml"
+        )
         with open(config_path) as f:
             config = yaml.safe_load(f)
 

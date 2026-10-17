@@ -124,7 +124,7 @@ jobs:
         env:
           discovery.type: single-node
           xpack.security.enabled: false
-          "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+          ES_JAVA_OPTS: "-Xms512m -Xmx512m"
         options: >-
           --health-cmd "curl -f http://localhost:9200/_cluster/health || exit 1"
           --health-interval 30s
@@ -149,7 +149,7 @@ jobs:
 
       - name: Set up test environment
         run: |
-          cp config/testing.env .env
+          cp config/environments/testing.env .env
           echo "DATABASE_URL=postgresql://postgres:postgres@localhost:5432/algotrading_test" >> .env
           echo "REDIS_URL=redis://localhost:6379/1" >> .env
           echo "ELK_HOST=localhost" >> .env

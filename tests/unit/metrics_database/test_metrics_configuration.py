@@ -164,79 +164,79 @@ class TestCentralizedMetricsConfiguration:
     def test_metrics_db_enabled_in_config(self):
         """Test metrics_db_enabled in centralized config."""
         config = get_config()
-        assert hasattr(config.trading, 'metrics_db_enabled')
+        assert hasattr(config.trading, "metrics_db_enabled")
         assert config.trading.metrics_db_enabled is True
 
     def test_metrics_collection_interval_in_config(self):
         """Test metrics_collection_interval in centralized config."""
         config = get_config()
-        assert hasattr(config.trading, 'metrics_collection_interval')
+        assert hasattr(config.trading, "metrics_collection_interval")
         assert config.trading.metrics_collection_interval == 60
 
     def test_metrics_batch_size_in_config(self):
         """Test metrics_batch_size in centralized config."""
         config = get_config()
-        assert hasattr(config.trading, 'metrics_batch_size')
+        assert hasattr(config.trading, "metrics_batch_size")
         assert config.trading.metrics_batch_size == 1000
 
     def test_metrics_retention_days_in_config(self):
         """Test metrics_retention_days in centralized config."""
         config = get_config()
-        assert hasattr(config.trading, 'metrics_retention_days')
+        assert hasattr(config.trading, "metrics_retention_days")
         assert config.trading.metrics_retention_days == 90
 
     def test_questdb_host_in_config(self):
         """Test questdb_host in centralized config."""
         config = get_config()
-        assert hasattr(config.trading, 'questdb_host')
+        assert hasattr(config.trading, "questdb_host")
         assert config.trading.questdb_host == "localhost"
 
     def test_questdb_port_in_config(self):
         """Test questdb_port in centralized config."""
         config = get_config()
-        assert hasattr(config.trading, 'questdb_port')
+        assert hasattr(config.trading, "questdb_port")
         assert config.trading.questdb_port == 5432
 
     def test_questdb_database_in_config(self):
         """Test questdb_database in centralized config."""
         config = get_config()
-        assert hasattr(config.trading, 'questdb_database')
+        assert hasattr(config.trading, "questdb_database")
         assert config.trading.questdb_database == "qdb"
 
     def test_questdb_user_in_config(self):
         """Test questdb_user in centralized config."""
         config = get_config()
-        assert hasattr(config.trading, 'questdb_user')
+        assert hasattr(config.trading, "questdb_user")
         assert config.trading.questdb_user == "admin"
 
     def test_questdb_password_in_config(self):
         """Test questdb_password in centralized config."""
         config = get_config()
-        assert hasattr(config.trading, 'questdb_password')
+        assert hasattr(config.trading, "questdb_password")
         assert config.trading.questdb_password == "quest"
 
     def test_questdb_pool_size_in_config(self):
         """Test questdb_pool_size in centralized config."""
         config = get_config()
-        assert hasattr(config.trading, 'questdb_pool_size')
+        assert hasattr(config.trading, "questdb_pool_size")
         assert config.trading.questdb_pool_size == 10
 
     def test_questdb_max_retries_in_config(self):
         """Test questdb_max_retries in centralized config."""
         config = get_config()
-        assert hasattr(config.trading, 'questdb_max_retries')
+        assert hasattr(config.trading, "questdb_max_retries")
         assert config.trading.questdb_max_retries == 3
 
     def test_metrics_cache_enabled_in_config(self):
         """Test metrics_cache_enabled in centralized config."""
         config = get_config()
-        assert hasattr(config.trading, 'metrics_cache_enabled')
+        assert hasattr(config.trading, "metrics_cache_enabled")
         assert config.trading.metrics_cache_enabled is True
 
     def test_metrics_cache_ttl_in_config(self):
         """Test metrics_cache_ttl_seconds in centralized config."""
         config = get_config()
-        assert hasattr(config.trading, 'metrics_cache_ttl_seconds')
+        assert hasattr(config.trading, "metrics_cache_ttl_seconds")
         assert config.trading.metrics_cache_ttl_seconds == 300
 
 

@@ -37,7 +37,7 @@ class EventStore:
                 "INSERT INTO events VALUES (?, ?, ?, ?)",
                 (aggregate_id, event.event_type, json.dumps(event.data), event.timestamp)
             )
-    
+
     def get_events(self, aggregate_id: str) -> list[Event]:
         rows = self.db.execute("SELECT * FROM events WHERE aggregate_id = ?", (aggregate_id,))
         return [Event(*row) for row in rows]
@@ -55,7 +55,7 @@ class WriteAheadLog:
         entry = {'op': operation, 'data': data, 'ts': time.time()}
         self.log_file.write(json.dumps(entry) + '\n')
         self.log_file.flush()
-    
+
     def recover(self):
         with open(self.log_path) as f:
             return [json.loads(line) for line in f]
@@ -73,7 +73,7 @@ import plyvel
 class LevelDBStore:
     def __init__(self, db_path: str):
         self.db = plyvel.DB(db_path, create_if_missing=True)
-    
+
     def put(self, key: str, value: bytes):
         self.db.put(key.encode(), value)
 ```
@@ -102,7 +102,7 @@ class ReplicatedOrderStore:
 class DistributedStore:
     def __init__(self, replication_factor: int = 3):
         self.quorum = (replication_factor // 2) + 1
-    
+
     async def write(self, key: str, value: bytes):
         responses = await self._write_to_all_nodes(key, value)
         if sum(responses) < self.quorum:
@@ -136,7 +136,7 @@ class TwoPhaseCommit:
         # Phase 1: Prepare
         for participant in self.participants:
             await participant.prepare(transaction)
-        
+
         # Phase 2: Commit
         for participant in self.participants:
             await participant.commit(transaction)
@@ -174,7 +174,7 @@ class SnapshotIsolationDB:
         tx_id = uuid4()
         self._create_snapshot(tx_id)
         return tx_id
-    
+
     def commit(self, tx_id: str):
         if not self._check_conflicts(tx_id):
             self._apply_changes(tx_id)
@@ -210,7 +210,7 @@ class SagaOrchestrator:
 class ShardManager:
     def get_shard(self, key: str) -> int:
         return hash(key) % self.num_shards
-    
+
     def route_order(self, order: Order):
         return f"shard_{self.get_shard(order.symbol)}"
 ```
@@ -225,7 +225,7 @@ class ShardManager:
 class GCounter:
     def increment(self, amount: int = 1):
         self.counts[self.node_id] += amount
-    
+
     def merge(self, other: 'GCounter'):
         for node, count in other.counts.items():
             self.counts[node] = max(self.counts.get(node, 0), count)

@@ -36,18 +36,18 @@ class StrategyConfiguration(BaseModel):
     module_parameters: dict[str, Any] = Field(default={}, description="Module-specific parameters")
 
     # Backtest results
-    feasibility_ratio: Decimal | None = Field(None, description="Feasibility ratio")
-    annual_return_pct: Decimal | None = Field(None, description="Annual return %")
-    sharpe_ratio: Decimal | None = Field(None, description="Sharpe ratio")
-    max_drawdown_pct: Decimal | None = Field(None, description="Max drawdown %")
+    feasibility_ratio: Decimal | None = Field(default=None, description="Feasibility ratio")
+    annual_return_pct: Decimal | None = Field(default=None, description="Annual return %")
+    sharpe_ratio: Decimal | None = Field(default=None, description="Sharpe ratio")
+    max_drawdown_pct: Decimal | None = Field(default=None, description="Max drawdown %")
 
     # Portfolio allocation
     portfolio_allocations: dict[str, Decimal] = Field(default={}, description="Module allocations")
 
     # Validation & Recommendation
-    validation_passed: bool | None = Field(None, description="Validation gate status")
-    recommendation_score: Decimal | None = Field(None, description="Recommendation score")
-    recommendation_status: str | None = Field(None, description="Recommendation status")
+    validation_passed: bool | None = Field(default=None, description="Validation gate status")
+    recommendation_score: Decimal | None = Field(default=None, description="Recommendation score")
+    recommendation_status: str | None = Field(default=None, description="Recommendation status")
 
     # Deployment decision
     deployment_status: str | None = Field(
@@ -89,8 +89,10 @@ class ConfigurationLoadResponse(BaseModel):
 
     success: bool = Field(default=True, description="Load success")
     config_id: str = Field(..., description="Configuration ID")
-    configuration: StrategyConfiguration | None = Field(None, description="Loaded configuration")
-    error_message: str | None = Field(None, description="Error if loading failed")
+    configuration: StrategyConfiguration | None = Field(
+        default=None, description="Loaded configuration"
+    )
+    error_message: str | None = Field(default=None, description="Error if loading failed")
 
 
 class ConfigurationListResponse(BaseModel):
@@ -100,7 +102,7 @@ class ConfigurationListResponse(BaseModel):
     total_count: int = Field(..., description="Total configurations stored")
     active_count: int = Field(..., description="Active configurations")
     configurations: list[StrategyConfiguration] = Field(..., description="List of configurations")
-    error_message: str | None = Field(None, description="Error if query failed")
+    error_message: str | None = Field(default=None, description="Error if query failed")
 
 
 class VersionedConfiguration(BaseModel):

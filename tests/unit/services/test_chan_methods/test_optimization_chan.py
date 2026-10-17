@@ -32,7 +32,7 @@ class TestMeanVarianceOptimizer:
 
         returns = pd.DataFrame(
             np.random.normal(0.0005, 0.02, (n, n_assets)),
-            columns=[f'asset_{i}' for i in range(n_assets)],
+            columns=[f"asset_{i}" for i in range(n_assets)],
         )
 
         return returns
@@ -46,7 +46,7 @@ class TestMeanVarianceOptimizer:
         """Test maximizing Sharpe ratio."""
         optimizer = MeanVarianceOptimizer()
 
-        result = optimizer.optimize(sample_returns, objective='max_sharpe')
+        result = optimizer.optimize(sample_returns, objective="max_sharpe")
 
         assert result.method == "mean_variance_max_sharpe"
         assert len(result.weights) == sample_returns.shape[1]
@@ -59,7 +59,7 @@ class TestMeanVarianceOptimizer:
         """Test minimizing variance."""
         optimizer = MeanVarianceOptimizer()
 
-        result = optimizer.optimize(sample_returns, objective='min_variance')
+        result = optimizer.optimize(sample_returns, objective="min_variance")
 
         assert result.method == "mean_variance_min_variance"
         assert len(result.weights) == sample_returns.shape[1]
@@ -69,7 +69,7 @@ class TestMeanVarianceOptimizer:
         """Test maximizing diversification."""
         optimizer = MeanVarianceOptimizer()
 
-        result = optimizer.optimize(sample_returns, objective='max_diversification')
+        result = optimizer.optimize(sample_returns, objective="max_diversification")
 
         assert result.method == "mean_variance_max_diversification"
         assert result.diversification_ratio is not None
@@ -81,11 +81,11 @@ class TestMeanVarianceOptimizer:
 
         result = optimizer.optimize(
             sample_returns,
-            objective='max_sharpe',
+            objective="max_sharpe",
             weight_constraints={
-                'min_weight': 0.05,
-                'max_weight': 0.40,
-                'max_positions': 5,
+                "min_weight": 0.05,
+                "max_weight": 0.40,
+                "max_positions": 5,
             },
         )
 
@@ -106,7 +106,7 @@ class TestRiskParityOptimizer:
 
         returns = pd.DataFrame(
             np.random.normal(0.0005, 0.02, (n, n_assets)),
-            columns=[f'asset_{i}' for i in range(n_assets)],
+            columns=[f"asset_{i}" for i in range(n_assets)],
         )
 
         return returns
@@ -141,8 +141,8 @@ class TestRiskParityOptimizer:
         result = optimizer.optimize(
             sample_returns,
             weight_constraints={
-                'min_weight': 0.05,
-                'max_weight': 0.50,
+                "min_weight": 0.05,
+                "max_weight": 0.50,
             },
         )
 
@@ -162,7 +162,7 @@ class TestHierarchicalRiskParityOptimizer:
 
         returns = pd.DataFrame(
             np.random.normal(0.0005, 0.02, (n, n_assets)),
-            columns=[f'asset_{i}' for i in range(n_assets)],
+            columns=[f"asset_{i}" for i in range(n_assets)],
         )
 
         return returns
@@ -177,7 +177,7 @@ class TestHierarchicalRiskParityOptimizer:
         """Test HRP optimization."""
         optimizer = HierarchicalRiskParityOptimizer()
 
-        result = optimizer.optimize(sample_returns, method='ward')
+        result = optimizer.optimize(sample_returns, method="ward")
 
         assert result.method == "hierarchical_risk_parity"
         assert len(result.weights) == sample_returns.shape[1]
@@ -186,7 +186,7 @@ class TestHierarchicalRiskParityOptimizer:
 
     def test_hrp_different_methods(self, sample_returns):
         """Test HRP with different linkage methods."""
-        methods = ['single', 'complete', 'average', 'ward']
+        methods = ["single", "complete", "average", "ward"]
 
         for method in methods:
             optimizer = HierarchicalRiskParityOptimizer()
@@ -208,7 +208,7 @@ class TestMaximumDiversificationOptimizer:
 
         returns = pd.DataFrame(
             np.random.normal(0.0005, 0.02, (n, n_assets)),
-            columns=[f'asset_{i}' for i in range(n_assets)],
+            columns=[f"asset_{i}" for i in range(n_assets)],
         )
 
         return returns
@@ -243,7 +243,7 @@ class TestCVaROptimizer:
 
         returns = pd.DataFrame(
             np.random.normal(0.0005, 0.02, (n, n_assets)),
-            columns=[f'asset_{i}' for i in range(n_assets)],
+            columns=[f"asset_{i}" for i in range(n_assets)],
         )
 
         return returns
@@ -264,8 +264,8 @@ class TestCVaROptimizer:
         assert len(result.weights) == sample_returns.shape[1]
         assert np.isclose(result.weights.sum(), 1.0, atol=1e-4)
         assert result.metadata is not None
-        assert 'cvar' in result.metadata
-        assert 'var' in result.metadata
+        assert "cvar" in result.metadata
+        assert "var" in result.metadata
 
     def test_cvar_different_confidence_levels(self, sample_returns):
         """Test CVaR with different confidence levels."""
@@ -274,7 +274,7 @@ class TestCVaROptimizer:
             result = optimizer.optimize(sample_returns)
 
             assert result.method == "cvar_optimization"
-            assert result.metadata['confidence_level'] == confidence
+            assert result.metadata["confidence_level"] == confidence
 
 
 class TestHighLevelFunction:
@@ -289,42 +289,42 @@ class TestHighLevelFunction:
 
         returns = pd.DataFrame(
             np.random.normal(0.0005, 0.02, (n, n_assets)),
-            columns=[f'asset_{i}' for i in range(n_assets)],
+            columns=[f"asset_{i}" for i in range(n_assets)],
         )
 
         return returns
 
     def test_optimize_portfolio_mean_variance(self, sample_returns):
         """Test high-level function with mean-variance."""
-        result = optimize_portfolio(sample_returns, method='mean_variance')
+        result = optimize_portfolio(sample_returns, method="mean_variance")
 
         assert result.method.startswith("mean_variance")
         assert np.isclose(result.weights.sum(), 1.0, atol=1e-4)
 
     def test_optimize_portfolio_risk_parity(self, sample_returns):
         """Test high-level function with risk parity."""
-        result = optimize_portfolio(sample_returns, method='risk_parity')
+        result = optimize_portfolio(sample_returns, method="risk_parity")
 
         assert result.method == "risk_parity"
         assert np.isclose(result.weights.sum(), 1.0, atol=1e-4)
 
     def test_optimize_portfolio_hrp(self, sample_returns):
         """Test high-level function with HRP."""
-        result = optimize_portfolio(sample_returns, method='hrp')
+        result = optimize_portfolio(sample_returns, method="hrp")
 
         assert result.method == "hierarchical_risk_parity"
         assert np.isclose(result.weights.sum(), 1.0, atol=1e-4)
 
     def test_optimize_portfolio_max_div(self, sample_returns):
         """Test high-level function with max diversification."""
-        result = optimize_portfolio(sample_returns, method='max_div')
+        result = optimize_portfolio(sample_returns, method="max_div")
 
         assert result.method == "maximum_diversification"
         assert np.isclose(result.weights.sum(), 1.0, atol=1e-4)
 
     def test_optimize_portfolio_cvar(self, sample_returns):
         """Test high-level function with CVaR."""
-        result = optimize_portfolio(sample_returns, method='cvar', confidence_level=0.95)
+        result = optimize_portfolio(sample_returns, method="cvar", confidence_level=0.95)
 
         assert result.method == "cvar_optimization"
         assert np.isclose(result.weights.sum(), 1.0, atol=1e-4)
@@ -332,4 +332,4 @@ class TestHighLevelFunction:
     def test_invalid_method(self, sample_returns):
         """Test with invalid optimization method."""
         with pytest.raises(ValueError):
-            optimize_portfolio(sample_returns, method='invalid_method')
+            optimize_portfolio(sample_returns, method="invalid_method")

@@ -21,6 +21,7 @@ from app.api.logging_utils import log_info, log_error, log_warning
 ```python
 from fastapi import APIRouter, Request
 
+
 @router.post("/my-endpoint")
 async def my_endpoint(request: Request, data: MyRequestModel):
     # Your code here
@@ -127,10 +128,12 @@ from app.api.logging_utils import log_info, log_error, log_warning, log_debug
 
 router = APIRouter(prefix="/orders", tags=["orders"])
 
+
 class CreateOrderRequest(BaseModel):
     symbol: str
     quantity: int
     price: float
+
 
 @router.post("/create")
 async def create_order(request: Request, order_data: CreateOrderRequest):

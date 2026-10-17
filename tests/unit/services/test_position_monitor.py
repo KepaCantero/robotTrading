@@ -154,7 +154,7 @@ class MockBroker:
         quote = self.quotes.get(symbol)
         if quote:
             # Add last_price attribute for compatibility
-            object.__setattr__(quote, 'last_price', float(quote.last))
+            object.__setattr__(quote, "last_price", float(quote.last))
         return quote
 
     async def place_order(self, **kwargs):

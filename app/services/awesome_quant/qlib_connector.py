@@ -186,7 +186,7 @@ class QlibConnector:
     async def get_feature_engineering(
         self,
         data: dict,
-        feature_engineering_config: dict,
+        _feature_engineering_config: dict,
     ) -> dict:
         """
         Apply feature engineering to data.

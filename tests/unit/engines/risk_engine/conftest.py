@@ -31,7 +31,7 @@ def mock_portfolio():
 def sample_position():
     """Create a mock position for testing."""
     position = Mock()
-    position.symbol = 'TEST'
+    position.symbol = "TEST"
     position.market_value = 10000.0
     position.quantity = 100
     return position
@@ -69,8 +69,8 @@ def sample_returns_volatile():
 def default_var_config():
     """Default VaR calculator configuration."""
     return {
-        'confidence_level': 0.95,
-        'time_horizon': 1,
+        "confidence_level": 0.95,
+        "time_horizon": 1,
     }
 
 
@@ -78,18 +78,18 @@ def default_var_config():
 def default_alert_config():
     """Default alert system configuration."""
     return {
-        'thresholds': {
-            'var_breach': 0.05,
-            'drawdown_limit': 0.15,
-            'exposure_limit': 0.20,
-            'leverage_limit': 1.0,
-            'correlation_limit': 0.8,
-            'violation_count': 5,
+        "thresholds": {
+            "var_breach": 0.05,
+            "drawdown_limit": 0.15,
+            "exposure_limit": 0.20,
+            "leverage_limit": 1.0,
+            "correlation_limit": 0.8,
+            "violation_count": 5,
         },
-        'enable_email': False,
-        'enable_slack': False,
-        'enable_logging': True,
-        'cooldown_period_minutes': 60,
+        "enable_email": False,
+        "enable_slack": False,
+        "enable_logging": True,
+        "cooldown_period_minutes": 60,
     }
 
 
@@ -97,13 +97,13 @@ def default_alert_config():
 def default_limits_config():
     """Default risk limits configuration."""
     return {
-        'var_warning_limit': 0.02,
-        'var_critical_limit': 0.03,
-        'var_halt_limit': 0.05,
-        'max_position_pct': 0.20,
-        'max_concentration_pct': 0.40,
-        'max_leverage': 2.0,
-        'max_drawdown_pct': 0.15,
+        "var_warning_limit": 0.02,
+        "var_critical_limit": 0.03,
+        "var_halt_limit": 0.05,
+        "max_position_pct": 0.20,
+        "max_concentration_pct": 0.40,
+        "max_leverage": 2.0,
+        "max_drawdown_pct": 0.15,
     }
 
 

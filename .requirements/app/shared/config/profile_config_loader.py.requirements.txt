@@ -10,6 +10,7 @@ Domain: Shared
 - `logging`
 - `pathlib`
 - `typing`
+- `typing_extensions`
 
 ## 3. Core Components
 ### Classes
@@ -22,6 +23,8 @@ Domain: Shared
 - `get_rl_config()`
 - `clear_loader_cache()`
 - `config()`
+- `get()`
+- `get()`
 - `get()`
 - `get_random_state()`
 - `get_test_size()`

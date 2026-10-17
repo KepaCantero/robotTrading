@@ -1,150 +1,133 @@
 #!/usr/bin/env python3
-"""Production Audit: Verify each source file against its .requirements/ file."""
+"""Production Audit: verify each app/ source file against its .requirements/ stub.
+
+Checks both directions:
+  - GAP: a class/function promised by the spec is missing from the code.
+  - STALE: the code has public classes/functions the spec does not list.
+
+Run from anywhere; paths are anchored to the repo root. Exits 1 if anything
+is missing, stale, or out of sync. JSON report: logs/production_audit_report.json
+
+If drift is found, fix it with: python scripts/generate_requirements.py
+"""
 
 import ast
-import os
+import json
 import re
 import sys
-import json
 from pathlib import Path
 
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+APP_DIR = PROJECT_ROOT / "app"
+REQ_DIR = PROJECT_ROOT / ".requirements" / "app"
+REPORT_PATH = PROJECT_ROOT / "logs" / "production_audit_report.json"
 
-def parse_requirements(req_path: str) -> tuple:
-    """Extract classes, functions, and dependencies from requirements file."""
-    classes: list[str] = []
-    functions: list[str] = []
-    deps: list[str] = []
-
-    if not os.path.exists(req_path):
-        return None, classes, functions, deps
-
-    with open(req_path, "r") as f:
-        content = f.read()
-
-    # Extract classes (capitalized identifiers in backticks)
-    for m in re.finditer(r"^-\s+`([A-Z][A-Za-z_]+)`", content, re.MULTILINE):
-        classes.append(m.group(1))
-
-    # Extract public functions (lowercase with parens in backticks)
-    for m in re.finditer(r"^-\s+`([a-z_]+)\(\)`", content, re.MULTILINE):
-        functions.append(m.group(1))
-
-    # Extract dependencies section
-    dep_section = False
-    for line in content.split("\n"):
-        if "## 2. Dependencies" in line:
-            dep_section = True
-            continue
-        if dep_section and line.startswith("## "):
-            dep_section = False
-            continue
-        if dep_section and line.strip().startswith("- `"):
-            dep = re.search(r"`([^`]+)`", line)
-            if dep:
-                deps.append(dep.group(1))
-
-    return content, classes, functions, deps
+CLASS_RE = re.compile(r"^-\s+`(_?[A-Z][A-Za-z_0-9]*)`", re.MULTILINE)
+FUNCTION_RE = re.compile(r"^-\s+`([A-Za-z_][A-Za-z_0-9]*)\(\)`", re.MULTILINE)
 
 
-def parse_source(src_path: str) -> tuple:
-    """Extract classes and functions from source file."""
-    classes: list[str] = []
-    functions: list[str] = []
+def parse_requirements(req_path: Path):
+    """Extract the classes and public functions a spec stub promises."""
+    if not req_path.exists():
+        return None, [], []
 
-    if not os.path.exists(src_path):
-        return classes, functions
+    content = req_path.read_text(encoding="utf-8")
+    classes = CLASS_RE.findall(content)
+    functions = FUNCTION_RE.findall(content)
+    return content, classes, functions
+
+
+def parse_source(src_path: Path):
+    """Extract all classes and public functions from the source file."""
+    classes, functions = [], []
 
     try:
-        with open(src_path, "r") as f:
-            tree = ast.parse(f.read())
-    except SyntaxError:
+        tree = ast.parse(src_path.read_text(encoding="utf-8"))
+    except (SyntaxError, UnicodeDecodeError):
         return classes, functions
 
     for node in ast.walk(tree):
         if isinstance(node, ast.ClassDef):
             classes.append(node.name)
-        elif isinstance(node, ast.FunctionDef) or isinstance(node, ast.AsyncFunctionDef):
-            functions.append(node.name)
+        elif isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+            if not node.name.startswith("_"):
+                functions.append(node.name)
 
     return classes, functions
 
 
-def main() -> None:
-    app_dir = "app"
-    req_dir = ".requirements/app"
-    results: list[tuple[str, list[str]]] = []
-    total = 0
-    compliant = 0
-    gap_count = 0
-    missing_req = 0
+def main() -> int:
+    results = []
+    total = compliant = missing_req = 0
 
-    for root, dirs, files in os.walk(app_dir):
-        dirs[:] = [d for d in dirs if d != "__pycache__"]
-        for f in sorted(files):
-            if not f.endswith(".py"):
-                continue
-            total += 1
-            src_path = os.path.join(root, f)
-            rel_path = src_path
-            req_name = rel_path[len(app_dir) + 1 :] + ".requirements.txt"
-            req_path = os.path.join(req_dir, req_name)
+    for src in sorted(APP_DIR.rglob("*.py")):
+        if "__pycache__" in src.parts:
+            continue
+        total += 1
+        rel_path = src.relative_to(PROJECT_ROOT).as_posix()
+        req_path = REQ_DIR / f"{src.relative_to(APP_DIR).as_posix()}.requirements.txt"
 
-            req_content, req_classes, req_functions, req_deps = parse_requirements(
-                req_path
+        req_content, req_classes, req_functions = parse_requirements(req_path)
+        src_classes, src_functions = parse_source(src)
+
+        if req_content is None:
+            missing_req += 1
+            results.append(
+                (rel_path, [f"missing spec: {req_path.relative_to(PROJECT_ROOT).as_posix()}"])
             )
-            src_classes, src_functions = parse_source(src_path)
+            continue
 
-            file_issues: list[str] = []
+        issues = []
+        # GAP: spec promises something the code no longer has.
+        for cls in req_classes:
+            if cls not in src_classes:
+                issues.append(f"GAP missing class: {cls}")
+        for fn in req_functions:
+            if fn not in src_functions:
+                issues.append(f"GAP missing function: {fn}()")
 
-            if req_content is None:
-                missing_req += 1
-                continue
+        # STALE: code grew public surface the spec does not list.
+        for cls in src_classes:
+            if cls not in req_classes:
+                issues.append(f"STALE spec (class not listed): {cls}")
+        for fn in src_functions:
+            if fn not in req_functions:
+                issues.append(f"STALE spec (function not listed): {fn}()")
 
-            # Check classes
-            for cls in req_classes:
-                if cls not in src_classes:
-                    file_issues.append(f"Missing class: {cls}")
+        if issues:
+            results.append((rel_path, issues))
+        else:
+            compliant += 1
 
-            # Check functions
-            for fn in req_functions:
-                if fn not in src_functions:
-                    file_issues.append(f"Missing function: {fn}")
+    gap_count = sum(len(i) for _, i in results) + missing_req
 
-            if file_issues:
-                gap_count += len(file_issues)
-                results.append((rel_path, file_issues))
-            else:
-                compliant += 1
-
-    # Output summary
     print(f"Total files: {total}")
     print(f"Compliant: {compliant}")
-    print(f"Files with gaps: {len(results)}")
-    print(f"Total gaps: {gap_count}")
-    print(f"Missing requirements: {missing_req}")
+    print(f"Files with issues: {len(results)}")
+    print(f"Total issues: {gap_count}")
+    print(f"Missing specs: {missing_req}")
     print()
 
     if results:
-        print("=== GAP DETAILS ===")
-        for path, issues in sorted(results):
+        print("=== DETAILS ===")
+        for path, issues in results:
             for issue in issues:
                 print(f"  {path}: {issue}")
 
-    # Write JSON report for further processing
     report = {
         "total": total,
         "compliant": compliant,
-        "files_with_gaps": len(results),
-        "total_gaps": gap_count,
-        "missing_requirements": missing_req,
-        "gaps": [{"file": p, "issues": i} for p, i in sorted(results)],
+        "files_with_issues": len(results),
+        "total_issues": gap_count,
+        "missing_specs": missing_req,
+        "issues": [{"file": p, "issues": i} for p, i in sorted(results)],
     }
-    report_path = "logs/production_audit_report.json"
-    os.makedirs("logs", exist_ok=True)
-    with open(report_path, "w") as f:
-        json.dump(report, f, indent=2)
-    print(f"\nJSON report written to {report_path}")
+    REPORT_PATH.parent.mkdir(parents=True, exist_ok=True)
+    REPORT_PATH.write_text(json.dumps(report, indent=2))
+    print(f"\nJSON report written to {REPORT_PATH.relative_to(PROJECT_ROOT)}")
+
+    return 1 if results else 0
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

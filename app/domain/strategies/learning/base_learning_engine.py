@@ -110,7 +110,7 @@ class BaseLearningEngine(ABC):
         self.name = name
         self.config = config
         self.enabled = config.get("enabled", True)
-        self.model = None
+        self.model: object | None = None
         self.model_path = config.get("model_path", f"models/{name}_model.pkl")
         self.is_trained = False
 
@@ -123,9 +123,9 @@ class BaseLearningEngine(ABC):
         self._feature_explosion_threshold = config.get("feature_explosion_threshold", 0.1)
 
         # Learning curve tracking (Hastie)
-        self._learning_curve_data: list[tuple[int, float, float]] = (
-            []
-        )  # (n_samples, train_score, val_score)
+        self._learning_curve_data: list[
+            tuple[int, float, float]
+        ] = []  # (n_samples, train_score, val_score)
 
         # Crear directorio de modelos si no existe
         os.makedirs(
@@ -138,7 +138,7 @@ class BaseLearningEngine(ABC):
         self,
         training_data: dict[str, Any] | None = None,
         validation_data: dict[str, Any] | None = None,
-    ) -> dict[str, float]:
+    ) -> dict[str, Any]:
         """
         Entrenar el modelo.
 
@@ -194,7 +194,7 @@ class BaseLearningEngine(ABC):
         )
 
     @abstractmethod
-    def evaluate(self, test_data: dict[str, Any]) -> dict[str, float]:
+    def evaluate(self, test_data: dict[str, Any]) -> dict[str, Any]:
         """
         Evaluar el modelo con datos de prueba.
 
@@ -249,8 +249,8 @@ class BaseLearningEngine(ABC):
                 "engine_type": self.name,
                 "model_path": save_path,
             }
-            with open(metadata_path, "w") as f:
-                json.dump(metadata, f, indent=2, default=str)
+            with open(metadata_path, "w") as meta_f:
+                json.dump(metadata, meta_f, indent=2, default=str)
 
             logger.info(f"{self.name}: Modelo guardado en {save_path}")
             return True
@@ -379,8 +379,8 @@ class BaseLearningEngine(ABC):
                 "engine_type": saved_data.get("engine_type", self.name),
                 "model_path": joblib_path,
             }
-            with open(metadata_path, "w") as f:
-                json.dump(metadata, f, indent=2, default=str)
+            with open(metadata_path, "w") as meta_f:
+                json.dump(metadata, meta_f, indent=2, default=str)
 
             # Remove old .pkl file after successful migration
             os.remove(pkl_path)

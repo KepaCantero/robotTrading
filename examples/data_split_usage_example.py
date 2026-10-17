@@ -6,10 +6,11 @@ overfitting and data snooping in backtesting.
 """
 
 from datetime import datetime, timedelta
+
 from app.backtesting.data_split import (
     DataSplit,
-    TrainValTestSplitter,
     MultipleTestingCorrector,
+    TrainValTestSplitter,
     validate_out_of_sample_performance,
 )
 
@@ -38,11 +39,11 @@ def example_basic_split():
     train, val, test = splitter.split_data(bars)
 
     print(f"\nTotal bars: {len(bars)}")
-    print(f"Training set: {len(train)} bars ({len(train)/len(bars):.1%})")
-    print(f"Validation set: {len(val)} bars ({len(val)/len(bars):.1%})")
-    print(f"Test set: {len(test)} bars ({len(test)/len(bars):.1%})")
+    print(f"Training set: {len(train)} bars ({len(train) / len(bars):.1%})")
+    print(f"Validation set: {len(val)} bars ({len(val) / len(bars):.1%})")
+    print(f"Test set: {len(test)} bars ({len(test) / len(bars):.1%})")
 
-    print(f"\nTime ranges:")
+    print("\nTime ranges:")
     print(f"  Train: {train[0].timestamp.date()} to {train[-1].timestamp.date()}")
     print(f"  Val: {val[0].timestamp.date()} to {val[-1].timestamp.date()}")
     print(f"  Test: {test[0].timestamp.date()} to {test[-1].timestamp.date()}")
@@ -63,9 +64,9 @@ def example_custom_split():
     train, val, test = splitter.split_data(bars)
 
     print(f"\nTotal bars: {len(bars)}")
-    print(f"Training set: {len(train)} bars ({len(train)/len(bars):.1%})")
-    print(f"Validation set: {len(val)} bars ({len(val)/len(bars):.1%})")
-    print(f"Test set: {len(test)} bars ({len(test)/len(bars):.1%})")
+    print(f"Training set: {len(train)} bars ({len(train) / len(bars):.1%})")
+    print(f"Validation set: {len(val)} bars ({len(val) / len(bars):.1%})")
+    print(f"Test set: {len(test)} bars ({len(test) / len(bars):.1%})")
 
 
 def example_date_filtered_split():
@@ -85,9 +86,9 @@ def example_date_filtered_split():
 
     total = len(train) + len(val) + len(test)
     print(f"\nTotal bars in 2021: {total}")
-    print(f"Training set: {len(train)} bars ({len(train)/total:.1%})")
-    print(f"Validation set: {len(val)} bars ({len(val)/total:.1%})")
-    print(f"Test set: {len(test)} bars ({len(test)/total:.1%})")
+    print(f"Training set: {len(train)} bars ({len(train) / total:.1%})")
+    print(f"Validation set: {len(val)} bars ({len(val) / total:.1%})")
+    print(f"Test set: {len(test)} bars ({len(test) / total:.1%})")
 
 
 def example_walk_forward_split():
@@ -120,12 +121,12 @@ def example_multiple_testing_correction():
     corrector = MultipleTestingCorrector(num_tests=num_tests, base_confidence=0.95)
 
     print(f"\nTesting {num_tests} strategy configurations")
-    print(f"Base confidence: 95%")
+    print("Base confidence: 95%")
 
     # Bonferroni correction (conservative)
     adjusted = corrector.bonferroni_correction()
     print(f"\nBonferroni adjusted confidence: {adjusted:.4%} ({adjusted:.2%})")
-    print(f"  → Much stricter! Need stronger evidence.")
+    print("  → Much stricter! Need stronger evidence.")
 
     # Benjamini-Hochberg (less conservative)
     p_values = [
@@ -154,9 +155,9 @@ def example_multiple_testing_correction():
     significant = corrector.benjamini_hochberg_correction(p_values)
     num_significant = sum(significant)
 
-    print(f"\nBenjamini-Hochberg (FDR 5%):")
+    print("\nBenjamini-Hochberg (FDR 5%):")
     print(f"  Significant tests: {num_significant}/{num_tests}")
-    print(f"  → Less conservative than Bonferroni")
+    print("  → Less conservative than Bonferroni")
 
 
 def example_oos_validation():

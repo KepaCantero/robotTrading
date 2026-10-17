@@ -55,6 +55,7 @@ except ImportError:
         Returns:
             DataFrame with same structure as yahoo_fin output
         """
+        del index_as_date  # aceptado por compatibilidad; sin uso aquí
         try:
             # Convert yahoo_fin date format (mm/dd/yyyy) to datetime
             from datetime import datetime as dt

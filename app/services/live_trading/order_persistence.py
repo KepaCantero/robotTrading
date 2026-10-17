@@ -146,8 +146,7 @@ class OrderPersistence:
             cursor = conn.cursor()
 
             # Orders table
-            cursor.execute(
-                """
+            cursor.execute("""
                 CREATE TABLE IF NOT EXISTS orders (
                     order_id TEXT PRIMARY KEY,
                     symbol TEXT NOT NULL,
@@ -165,12 +164,10 @@ class OrderPersistence:
                     metadata TEXT,
                     is_pending INTEGER DEFAULT 1
                 )
-            """
-            )
+            """)
 
             # Executions table
-            cursor.execute(
-                """
+            cursor.execute("""
                 CREATE TABLE IF NOT EXISTS executions (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     order_id TEXT NOT NULL,
@@ -182,12 +179,10 @@ class OrderPersistence:
                     net_proceeds TEXT DEFAULT '0',
                     FOREIGN KEY (order_id) REFERENCES orders(order_id)
                 )
-            """
-            )
+            """)
 
             # Order errors table
-            cursor.execute(
-                """
+            cursor.execute("""
                 CREATE TABLE IF NOT EXISTS order_errors (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     order_id TEXT NOT NULL,
@@ -199,8 +194,7 @@ class OrderPersistence:
                     max_retries INTEGER DEFAULT 3,
                     FOREIGN KEY (order_id) REFERENCES orders(order_id)
                 )
-            """
-            )
+            """)
 
             # Indexes for common queries
             cursor.execute("CREATE INDEX IF NOT EXISTS idx_orders_symbol ON orders(symbol)")

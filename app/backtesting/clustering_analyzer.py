@@ -320,11 +320,11 @@ class AdvancedClusteringAnalyzer:
                     verbose=0,
                 )
             except TypeError:
-                # Fall back to older sklearn API
-                tsne = TSNE(
+                # Fall back to older sklearn API (sklearn antiguo aceptaba n_iter)
+                tsne = TSNE(  # pylint: disable=unexpected-keyword-arg
                     n_components=n_components,
                     perplexity=perplexity,
-                    n_iter=n_iter,
+                    n_iter=n_iter,  # pylint: disable=unexpected-keyword-arg
                     random_state=self.random_state,
                     verbose=0,
                 )

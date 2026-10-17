@@ -84,7 +84,7 @@ class TestLoadResults:
                 "strategy_name": f"strategy_{i}",
                 "test_type": "unit_test",
             }
-            with open(results_dir / f"result_{i}.json", 'w') as f:
+            with open(results_dir / f"result_{i}.json", "w") as f:
                 json.dump(result, f)
 
         # Create sample CSV file
@@ -575,7 +575,7 @@ class TestRunParallelAnalysis:
                 "win_rate": 0.6,
                 "strategy_name": "test_strategy",
             }
-            with open(results_dir / "result.json", 'w') as f:
+            with open(results_dir / "result.json", "w") as f:
                 json.dump(result, f)
 
             analyzer = BacktestMetaAnalyzer(data_dir=str(results_dir), enable_visualizations=False)
@@ -602,7 +602,7 @@ class TestRunParallelAnalysis:
                     "return_pct": 0.1 + i * 0.01,
                     "strategy_name": f"strategy_{i}",
                 }
-                with open(results_dir / f"result_{i}.json", 'w') as f:
+                with open(results_dir / f"result_{i}.json", "w") as f:
                     json.dump(result, f)
 
             analyzer = BacktestMetaAnalyzer(data_dir=str(results_dir), enable_visualizations=False)
@@ -631,7 +631,7 @@ class TestMetaAnalyzerEdgeCases:
                 "sharpe_ratio": 1.5,
                 "max_drawdown": -0.08,
             }
-            with open(results_dir / "result.json", 'w') as f:
+            with open(results_dir / "result.json", "w") as f:
                 json.dump(result, f)
 
             analyzer = BacktestMetaAnalyzer(data_dir=str(results_dir))
@@ -729,7 +729,7 @@ class TestMetaAnalyzerThreadSafety:
             # Create multiple files
             for i in range(10):
                 result = {"total_pnl": 1000 * (i + 1)}
-                with open(results_dir / f"result_{i}.json", 'w') as f:
+                with open(results_dir / f"result_{i}.json", "w") as f:
                     json.dump(result, f)
 
             analyzer = BacktestMetaAnalyzer(data_dir=str(results_dir))

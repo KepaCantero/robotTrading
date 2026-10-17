@@ -12,10 +12,14 @@
 #   ./scripts/check_all.sh --strict     # corta en el primer fallo (para CI)
 #
 # Checks CORE (siempre, si la herramienta existe):
-#   ruff check, ruff format, black --check, isort --check,
-#   flake8, pylint (E,F), mypy, bandit
+#   ruff check, ruff format, pylint (E,F, excluye migrations/ autogenerado),
+#   mypy, bandit
 # Checks EXTRA (se omiten si la herramienta no está instalada):
-#   radon cc/mi, vulture, semgrep, pip-audit, safety
+#   radon cc/mi, vulture, pip-audit
+#
+# Retirados por redundantes: flake8 (ruff lo cubre), black/isort (conflicto
+# circular con ruff format), semgrep (sin uso en CI), safety (pip-audit ya
+# audita CVEs y safety arrastraba nltk, con CVE sin fix publicado).
 #
 # NO corre tests (usa `make test`) ni instala nada.
 # ===========================================
@@ -103,14 +107,13 @@ section "CORE - LINT Y FORMATO (solo lectura)"
 
 run_check "ruff check" ruff check "${APP_DIRS[@]}"
 run_check "ruff format --check" ruff format --check "${APP_DIRS[@]}"
-# black e isort se retiraron: pelean circularmente con ruff format/I001
-# (el formateo canónico del repo, impuesto por pre-commit y CI). Un formateador, una verdad.
+# black/isort retirados: pelean circularmente con ruff format/I001 (formateo canónico
+# impuesto por pre-commit y CI). flake8 retirado: ruff cubre las mismas reglas.
 
-# Excluye reglas cubiertas por ruff/black o aceptadas por el proyecto
-run_check "flake8" flake8 "${APP_DIRS[@]}" --max-line-length=100 \
-    --extend-ignore=B007,B008,B011,B014,B015,B017,B018,E203,E402,E501,SIM,C401,C403,C408,C414,C416,C420,W503
-
-run_check "pylint (E,F)" pylint "${APP_DIRS[@]}" --recursive=y --disable=all --enable=E,F
+# pylint E,F únicamente (el .pylintrc del repo re-habilita convenciones que aquí
+# no aplican); migrations/ es código alembic autogenerado: exclusión estándar.
+run_check "pylint (E,F)" pylint "${APP_DIRS[@]}" --recursive=y --disable=all --enable=E,F --disable=C,R,W \
+    --ignore-paths="^.*/database/migrations/.*$"
 
 # ============================================
 section "CORE - TIPOS Y SEGURIDAD (solo lectura)"
@@ -128,15 +131,14 @@ else
     run_check "radon cc (complejidad)" radon cc "${APP_DIRS[@]}" --total-average
     run_check "radon mi (mantenibilidad)" radon mi "${APP_DIRS[@]}" -s
 
-    if [ -f .vulture-whitelist.py ]; then
-        run_check "vulture" vulture "${APP_DIRS[@]}" .vulture-whitelist.py --min-confidence 80
-    else
-        run_check "vulture" vulture "${APP_DIRS[@]}" --min-confidence 80
-    fi
+    # vulture sobre app/ solamente: en tests/ los fixtures de pytest se usan por
+    # inyección y vulture no lo ve (falso positivo estructural de la herramienta).
+    # La convención Python (^_) marca los nombres intencionalmente sin uso.
+    run_check "vulture" vulture app/ --min-confidence 80 --ignore-names "^_.*"
 
-    run_check "semgrep" semgrep --config=auto "${APP_DIRS[@]}"
+    # pip-audit: única auditoría de CVEs (safety retirado: duplicado y arrastraba
+    # nltk, que tiene CVE sin fix publicado)
     run_check "pip-audit" pip-audit
-    run_check "safety" safety check
 fi
 
 # ============================================

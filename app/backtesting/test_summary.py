@@ -84,8 +84,8 @@ class TestMetadata(BaseModel):
         ...,
         description="Test type (unit, integration, functional)",
     )
-    test_id: str | None = Field(None, description="Unique test identifier")
-    author: str | None = Field(None, description="Test author")
+    test_id: str | None = Field(default=None, description="Unique test identifier")
+    author: str | None = Field(default=None, description="Test author")
     tags: list[str] = Field(default_factory=list, description="Test tags")
     created_at: datetime = Field(default_factory=datetime.now, description="Creation timestamp")
 
@@ -98,9 +98,11 @@ class InputDataSummary(BaseModel):
     data_points: int = Field(..., ge=0, description="Number of data points")
     market_regime: str = Field(..., description="Market regime description")
     data_source: str = Field(..., description="Data source description")
-    price_range: tuple[Decimal, Decimal] | None = Field(None, description="Price range (min, max)")
-    volume_stats: dict[str, Decimal] | None = Field(None, description="Volume statistics")
-    volatility: Decimal | None = Field(None, description="Volatility measure")
+    price_range: tuple[Decimal, Decimal] | None = Field(
+        default=None, description="Price range (min, max)"
+    )
+    volume_stats: dict[str, Decimal] | None = Field(default=None, description="Volume statistics")
+    volatility: Decimal | None = Field(default=None, description="Volatility measure")
     notes: list[str] = Field(default_factory=list, description="Additional notes about data")
 
 
@@ -112,7 +114,9 @@ class TestConfig(BaseModel):
     slippage: Decimal = Field(..., ge=0, description="Slippage percentage")
     strategy: str = Field(..., description="Strategy name")
     strategy_params: dict[str, Any] = Field(default_factory=dict, description="Strategy parameters")
-    risk_management: dict[str, Decimal] | None = Field(None, description="Risk management settings")
+    risk_management: dict[str, Decimal] | None = Field(
+        default=None, description="Risk management settings"
+    )
     additional_params: dict[str, Any] = Field(
         default_factory=dict, description="Additional parameters"
     )
@@ -124,25 +128,27 @@ class OutputMetrics(BaseModel):
     # Basic metrics
     final_capital: Decimal = Field(..., description="Final capital")
     total_pnl: Decimal = Field(..., description="Total profit/loss")
-    total_pnl_percentage: Decimal | None = Field(None, description="Total P&L percentage")
+    total_pnl_percentage: Decimal | None = Field(default=None, description="Total P&L percentage")
 
     # Risk metrics
-    sharpe_ratio: Decimal | None = Field(None, description="Sharpe ratio")
-    sortino_ratio: Decimal | None = Field(None, description="Sortino ratio")
-    max_drawdown: Decimal | None = Field(None, description="Maximum drawdown")
-    max_drawdown_percentage: Decimal | None = Field(None, description="Max drawdown percentage")
+    sharpe_ratio: Decimal | None = Field(default=None, description="Sharpe ratio")
+    sortino_ratio: Decimal | None = Field(default=None, description="Sortino ratio")
+    max_drawdown: Decimal | None = Field(default=None, description="Maximum drawdown")
+    max_drawdown_percentage: Decimal | None = Field(
+        default=None, description="Max drawdown percentage"
+    )
 
     # Trade metrics
-    win_rate: Decimal | None = Field(None, description="Win rate percentage")
+    win_rate: Decimal | None = Field(default=None, description="Win rate percentage")
     total_trades: int = Field(..., ge=0, description="Total number of trades")
     winning_trades: int = Field(0, ge=0, description="Number of winning trades")
     losing_trades: int = Field(0, ge=0, description="Number of losing trades")
 
     # Advanced metrics
-    calmar_ratio: Decimal | None = Field(None, description="Calmar ratio")
-    omega_ratio: Decimal | None = Field(None, description="Omega ratio")
-    profit_factor: Decimal | None = Field(None, description="Profit factor")
-    expectancy: Decimal | None = Field(None, description="Expectancy per trade")
+    calmar_ratio: Decimal | None = Field(default=None, description="Calmar ratio")
+    omega_ratio: Decimal | None = Field(default=None, description="Omega ratio")
+    profit_factor: Decimal | None = Field(default=None, description="Profit factor")
+    expectancy: Decimal | None = Field(default=None, description="Expectancy per trade")
 
     # Additional metrics
     additional_metrics: dict[str, Decimal | float | int | str] = Field(
@@ -157,8 +163,8 @@ class ValidationCriteria(BaseModel):
     expected_value: Decimal | float | int | str | bool = Field(..., description="Expected value")
     actual_value: Decimal | float | int | str | bool = Field(..., description="Actual value")
     passed: bool = Field(..., description="Whether criteria passed")
-    tolerance: Decimal | None = Field(None, description="Tolerance for comparison")
-    reason: str | None = Field(None, description="Reason for failure if not passed")
+    tolerance: Decimal | None = Field(default=None, description="Tolerance for comparison")
+    reason: str | None = Field(default=None, description="Reason for failure if not passed")
 
 
 class TestSummaryReport(BaseModel):
@@ -183,7 +189,7 @@ class TestSummaryReport(BaseModel):
 
     # Test status
     passed: bool = Field(..., description="Whether test passed")
-    pass_reason: str | None = Field(None, description="Reason for pass/fail")
+    pass_reason: str | None = Field(default=None, description="Reason for pass/fail")
 
     # Warnings and anomalies
     warnings: list[str] = Field(default_factory=list, description="Warnings generated during test")
@@ -191,8 +197,8 @@ class TestSummaryReport(BaseModel):
 
     # Timing information
     start_time: datetime = Field(default_factory=datetime.now, description="Test start time")
-    end_time: datetime | None = Field(None, description="Test end time")
-    duration_seconds: float | None = Field(None, description="Test duration in seconds")
+    end_time: datetime | None = Field(default=None, description="Test end time")
+    duration_seconds: float | None = Field(default=None, description="Test duration in seconds")
 
     # Additional information
     notes: list[str] = Field(default_factory=list, description="Additional notes")

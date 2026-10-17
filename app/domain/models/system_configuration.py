@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 """System Configuration model.
 
 Complete configuration derived from InputProfile.
@@ -8,6 +6,8 @@ Combines strategy selection, risk parameters, and tax optimization.
 This is the output of InputProfileRouter and serves as the complete
 configuration for the trading system.
 """
+
+from __future__ import annotations
 
 from decimal import Decimal
 

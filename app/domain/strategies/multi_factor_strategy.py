@@ -45,7 +45,7 @@ from app.shared.config.centralized_config import get_config
 
 from .factor_calculator import FactorCalculator
 from .factor_models import FactorModelManager
-from .models import FactorPortfolio, FactorProfile, FactorStrategyConfig
+from .models import FactorPortfolio, FactorProfile, FactorScores, FactorStrategyConfig
 from .portfolio_constructor import FactorPortfolioConstructor
 
 if TYPE_CHECKING:
@@ -114,7 +114,7 @@ class MultiFactorStrategy(BaseStrategy):
         # State
         self.universe: list[FactorProfile] = []
         self.current_portfolio: FactorPortfolio | None = None
-        self.factor_scores_dict: dict[str, Any] = {}
+        self.factor_scores_dict: dict[str, FactorScores] = {}
         self.last_rebalance_date: date | None = None
         self.rebalance_count = 0
 
@@ -307,9 +307,7 @@ class MultiFactorStrategy(BaseStrategy):
             return []
 
         # Update price in profile
-        profile.current_price = (
-            market_data.close if hasattr(market_data, "close") else market_data.price
-        )
+        profile.current_price = market_data.close
 
         signals = []
 
@@ -403,7 +401,7 @@ class MultiFactorStrategy(BaseStrategy):
         # Sell if quality deteriorated significantly
         if (
             profile.quality_score
-            and profile.quality_score < self.strategy_config.min_quality_score * 0.7
+            and profile.quality_score < self.strategy_config.min_quality_score * Decimal("0.7")
         ):
             logger.warning(f"Quality deteriorated for {profile.symbol}: {profile.quality_score}")
             return True
@@ -428,7 +426,9 @@ class MultiFactorStrategy(BaseStrategy):
 
         return False
 
-    def _calculate_composite_score(self, factor_scores: object, profile: FactorProfile) -> float:
+    def _calculate_composite_score(
+        self, factor_scores: FactorScores, profile: FactorProfile
+    ) -> float:
         """Calculate composite score for ranking."""
         score = 0.0
 
@@ -510,8 +510,8 @@ class MultiFactorStrategy(BaseStrategy):
             liquidity_score=80.0,
             priority_score=priority,
             source=SignalSource.FUNDAMENTAL,
-            price=market_data.close if hasattr(market_data, "close") else market_data.price,
-            volume=market_data.volume if hasattr(market_data, "volume") else Decimal("1000000"),
+            price=market_data.close,
+            volume=market_data.volume,
             metadata=metadata,
         )
 
@@ -536,8 +536,8 @@ class MultiFactorStrategy(BaseStrategy):
             liquidity_score=80.0,
             priority_score=60.0,
             source=SignalSource.FUNDAMENTAL,
-            price=market_data.close if hasattr(market_data, "close") else market_data.price,
-            volume=market_data.volume if hasattr(market_data, "volume") else Decimal("1000000"),
+            price=market_data.close,
+            volume=market_data.volume,
             metadata={
                 "strategy": "multi_factor",
                 "reason": "factor_deterioration",

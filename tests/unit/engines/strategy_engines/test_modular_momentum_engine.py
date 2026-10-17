@@ -32,9 +32,9 @@ class TestModularMomentumInitialization:
         """Test initialization with configuration."""
         with (
             patch(
-                'app.strategies.momentum_modular.modules.market_analyzer.MarketAnalyzer'
+                "app.strategies.momentum_modular.modules.market_analyzer.MarketAnalyzer"
             ) as mock_analyzer,
-            patch('app.services.momentum_analysis.TechnicalIndicatorCalculator') as mock_calc,
+            patch("app.services.momentum_analysis.TechnicalIndicatorCalculator") as mock_calc,
         ):
             mock_analyzer.return_value = Mock()
             mock_calc.return_value = Mock()
@@ -50,9 +50,9 @@ class TestModularMomentumInitialization:
         """Test initialization with preset configuration."""
         with (
             patch(
-                'app.strategies.momentum_modular.modules.market_analyzer.MarketAnalyzer'
+                "app.strategies.momentum_modular.modules.market_analyzer.MarketAnalyzer"
             ) as mock_analyzer,
-            patch('app.services.momentum_analysis.TechnicalIndicatorCalculator') as mock_calc,
+            patch("app.services.momentum_analysis.TechnicalIndicatorCalculator") as mock_calc,
         ):
             mock_analyzer.return_value = Mock()
             mock_calc.return_value = Mock()
@@ -76,9 +76,9 @@ class TestModularMomentumInitialization:
         """Test initialization with no filters enabled."""
         with (
             patch(
-                'app.strategies.momentum_modular.modules.market_analyzer.MarketAnalyzer'
+                "app.strategies.momentum_modular.modules.market_analyzer.MarketAnalyzer"
             ) as mock_analyzer,
-            patch('app.services.momentum_analysis.TechnicalIndicatorCalculator') as mock_calc,
+            patch("app.services.momentum_analysis.TechnicalIndicatorCalculator") as mock_calc,
         ):
             mock_analyzer.return_value = Mock()
             mock_calc.return_value = Mock()
@@ -97,9 +97,9 @@ class TestModularMomentumInitialization:
         """Test initialization with learning disabled."""
         with (
             patch(
-                'app.strategies.momentum_modular.modules.market_analyzer.MarketAnalyzer'
+                "app.strategies.momentum_modular.modules.market_analyzer.MarketAnalyzer"
             ) as mock_analyzer,
-            patch('app.services.momentum_analysis.TechnicalIndicatorCalculator') as mock_calc,
+            patch("app.services.momentum_analysis.TechnicalIndicatorCalculator") as mock_calc,
         ):
             mock_analyzer.return_value = Mock()
             mock_calc.return_value = Mock()
@@ -115,9 +115,9 @@ class TestModularMomentumInitialization:
         """Test get_strategy_type returns correct type."""
         with (
             patch(
-                'app.strategies.momentum_modular.modules.market_analyzer.MarketAnalyzer'
+                "app.strategies.momentum_modular.modules.market_analyzer.MarketAnalyzer"
             ) as mock_analyzer,
-            patch('app.services.momentum_analysis.TechnicalIndicatorCalculator') as mock_calc,
+            patch("app.services.momentum_analysis.TechnicalIndicatorCalculator") as mock_calc,
         ):
             mock_analyzer.return_value = Mock()
             mock_calc.return_value = Mock()
@@ -138,9 +138,9 @@ class TestIndicatorCalculation:
         """Test indicator calculation with insufficient history."""
         with (
             patch(
-                'app.strategies.momentum_modular.modules.market_analyzer.MarketAnalyzer'
+                "app.strategies.momentum_modular.modules.market_analyzer.MarketAnalyzer"
             ) as mock_analyzer,
-            patch('app.services.momentum_analysis.TechnicalIndicatorCalculator') as mock_calc,
+            patch("app.services.momentum_analysis.TechnicalIndicatorCalculator") as mock_calc,
         ):
             mock_analyzer.return_value = Mock()
             mock_calc.return_value = Mock()
@@ -159,9 +159,9 @@ class TestIndicatorCalculation:
         """Test successful indicator calculation."""
         with (
             patch(
-                'app.strategies.momentum_modular.modules.market_analyzer.MarketAnalyzer'
+                "app.strategies.momentum_modular.modules.market_analyzer.MarketAnalyzer"
             ) as mock_analyzer,
-            patch('app.services.momentum_analysis.TechnicalIndicatorCalculator') as mock_calc,
+            patch("app.services.momentum_analysis.TechnicalIndicatorCalculator") as mock_calc,
         ):
             mock_analyzer.return_value = Mock()
             mock_calc_instance = Mock()
@@ -196,9 +196,9 @@ class TestIndicatorCalculation:
         """Test ATR percentile calculation."""
         with (
             patch(
-                'app.strategies.momentum_modular.modules.market_analyzer.MarketAnalyzer'
+                "app.strategies.momentum_modular.modules.market_analyzer.MarketAnalyzer"
             ) as mock_analyzer,
-            patch('app.services.momentum_analysis.TechnicalIndicatorCalculator') as mock_calc,
+            patch("app.services.momentum_analysis.TechnicalIndicatorCalculator") as mock_calc,
         ):
             mock_analyzer.return_value = Mock()
             mock_calc_instance = Mock()
@@ -239,9 +239,9 @@ class TestMarketContext:
         """Test getting market context with ContextEngine."""
         with (
             patch(
-                'app.strategies.momentum_modular.modules.market_analyzer.MarketAnalyzer'
+                "app.strategies.momentum_modular.modules.market_analyzer.MarketAnalyzer"
             ) as mock_analyzer,
-            patch('app.services.momentum_analysis.TechnicalIndicatorCalculator') as mock_calc,
+            patch("app.services.momentum_analysis.TechnicalIndicatorCalculator") as mock_calc,
         ):
             mock_analyzer.return_value = Mock()
             mock_calc.return_value = Mock()
@@ -272,9 +272,9 @@ class TestMarketContext:
         """Test getting market context with MarketAnalyzer."""
         with (
             patch(
-                'app.strategies.momentum_modular.modules.market_analyzer.MarketAnalyzer'
+                "app.strategies.momentum_modular.modules.market_analyzer.MarketAnalyzer"
             ) as mock_analyzer_class,
-            patch('app.services.momentum_analysis.TechnicalIndicatorCalculator') as mock_calc,
+            patch("app.services.momentum_analysis.TechnicalIndicatorCalculator") as mock_calc,
         ):
             mock_analyzer = Mock()
             mock_analyzer.analyze = Mock(
@@ -315,9 +315,9 @@ class TestMarketContext:
         """Test market context fallback when no analyzer available."""
         with (
             patch(
-                'app.strategies.momentum_modular.modules.market_analyzer.MarketAnalyzer'
+                "app.strategies.momentum_modular.modules.market_analyzer.MarketAnalyzer"
             ) as mock_analyzer,
-            patch('app.services.momentum_analysis.TechnicalIndicatorCalculator') as mock_calc,
+            patch("app.services.momentum_analysis.TechnicalIndicatorCalculator") as mock_calc,
         ):
             mock_analyzer.return_value = None
             mock_calc.return_value = Mock()
@@ -356,9 +356,9 @@ class TestFilterEvaluation:
         """Test filter evaluation with no filters."""
         with (
             patch(
-                'app.strategies.momentum_modular.modules.market_analyzer.MarketAnalyzer'
+                "app.strategies.momentum_modular.modules.market_analyzer.MarketAnalyzer"
             ) as mock_analyzer,
-            patch('app.services.momentum_analysis.TechnicalIndicatorCalculator') as mock_calc,
+            patch("app.services.momentum_analysis.TechnicalIndicatorCalculator") as mock_calc,
         ):
             mock_analyzer.return_value = Mock()
             mock_calc.return_value = Mock()
@@ -379,9 +379,9 @@ class TestFilterEvaluation:
         """Test filter evaluation with active filters."""
         with (
             patch(
-                'app.strategies.momentum_modular.modules.market_analyzer.MarketAnalyzer'
+                "app.strategies.momentum_modular.modules.market_analyzer.MarketAnalyzer"
             ) as mock_analyzer,
-            patch('app.services.momentum_analysis.TechnicalIndicatorCalculator') as mock_calc,
+            patch("app.services.momentum_analysis.TechnicalIndicatorCalculator") as mock_calc,
         ):
             mock_analyzer.return_value = Mock()
             mock_calc.return_value = Mock()
@@ -416,9 +416,9 @@ class TestSignalDetermination:
         """Test signal determination with no filters."""
         with (
             patch(
-                'app.strategies.momentum_modular.modules.market_analyzer.MarketAnalyzer'
+                "app.strategies.momentum_modular.modules.market_analyzer.MarketAnalyzer"
             ) as mock_analyzer,
-            patch('app.services.momentum_analysis.TechnicalIndicatorCalculator') as mock_calc,
+            patch("app.services.momentum_analysis.TechnicalIndicatorCalculator") as mock_calc,
         ):
             mock_analyzer.return_value = Mock()
             mock_calc.return_value = Mock()
@@ -439,9 +439,9 @@ class TestSignalDetermination:
         """Test signal determination with ALL combination mode."""
         with (
             patch(
-                'app.strategies.momentum_modular.modules.market_analyzer.MarketAnalyzer'
+                "app.strategies.momentum_modular.modules.market_analyzer.MarketAnalyzer"
             ) as mock_analyzer,
-            patch('app.services.momentum_analysis.TechnicalIndicatorCalculator') as mock_calc,
+            patch("app.services.momentum_analysis.TechnicalIndicatorCalculator") as mock_calc,
         ):
             mock_analyzer.return_value = Mock()
             mock_calc.return_value = Mock()
@@ -472,9 +472,9 @@ class TestSignalDetermination:
         """Test signal determination with MAJORITY combination mode."""
         with (
             patch(
-                'app.strategies.momentum_modular.modules.market_analyzer.MarketAnalyzer'
+                "app.strategies.momentum_modular.modules.market_analyzer.MarketAnalyzer"
             ) as mock_analyzer,
-            patch('app.services.momentum_analysis.TechnicalIndicatorCalculator') as mock_calc,
+            patch("app.services.momentum_analysis.TechnicalIndicatorCalculator") as mock_calc,
         ):
             mock_analyzer.return_value = Mock()
             mock_calc.return_value = Mock()
@@ -507,9 +507,9 @@ class TestSignalDetermination:
         """Test signal determination with ANY combination mode."""
         with (
             patch(
-                'app.strategies.momentum_modular.modules.market_analyzer.MarketAnalyzer'
+                "app.strategies.momentum_modular.modules.market_analyzer.MarketAnalyzer"
             ) as mock_analyzer,
-            patch('app.services.momentum_analysis.TechnicalIndicatorCalculator') as mock_calc,
+            patch("app.services.momentum_analysis.TechnicalIndicatorCalculator") as mock_calc,
         ):
             mock_analyzer.return_value = Mock()
             mock_calc.return_value = Mock()
@@ -550,9 +550,9 @@ class TestSignalGeneration:
         """Test signal generation with insufficient history."""
         with (
             patch(
-                'app.strategies.momentum_modular.modules.market_analyzer.MarketAnalyzer'
+                "app.strategies.momentum_modular.modules.market_analyzer.MarketAnalyzer"
             ) as mock_analyzer,
-            patch('app.services.momentum_analysis.TechnicalIndicatorCalculator') as mock_calc,
+            patch("app.services.momentum_analysis.TechnicalIndicatorCalculator") as mock_calc,
         ):
             mock_analyzer.return_value = Mock()
             mock_calc.return_value = Mock()
@@ -576,9 +576,9 @@ class TestSignalGeneration:
         """Test signal generation with zero price."""
         with (
             patch(
-                'app.strategies.momentum_modular.modules.market_analyzer.MarketAnalyzer'
+                "app.strategies.momentum_modular.modules.market_analyzer.MarketAnalyzer"
             ) as mock_analyzer,
-            patch('app.services.momentum_analysis.TechnicalIndicatorCalculator') as mock_calc,
+            patch("app.services.momentum_analysis.TechnicalIndicatorCalculator") as mock_calc,
         ):
             mock_analyzer.return_value = Mock()
             mock_calc.return_value = Mock()
@@ -606,9 +606,9 @@ class TestSignalGeneration:
         """Test successful signal generation."""
         with (
             patch(
-                'app.strategies.momentum_modular.modules.market_analyzer.MarketAnalyzer'
+                "app.strategies.momentum_modular.modules.market_analyzer.MarketAnalyzer"
             ) as mock_analyzer,
-            patch('app.services.momentum_analysis.TechnicalIndicatorCalculator') as mock_calc,
+            patch("app.services.momentum_analysis.TechnicalIndicatorCalculator") as mock_calc,
         ):
             mock_analyzer_inst = Mock()
             mock_analyzer_inst.analyze = Mock(
@@ -682,9 +682,9 @@ class TestConfidenceCalculation:
         """Test confidence calculation with no filter results."""
         with (
             patch(
-                'app.strategies.momentum_modular.modules.market_analyzer.MarketAnalyzer'
+                "app.strategies.momentum_modular.modules.market_analyzer.MarketAnalyzer"
             ) as mock_analyzer,
-            patch('app.services.momentum_analysis.TechnicalIndicatorCalculator') as mock_calc,
+            patch("app.services.momentum_analysis.TechnicalIndicatorCalculator") as mock_calc,
         ):
             mock_analyzer.return_value = Mock()
             mock_calc.return_value = Mock()
@@ -703,9 +703,9 @@ class TestConfidenceCalculation:
         """Test confidence calculation with filter results."""
         with (
             patch(
-                'app.strategies.momentum_modular.modules.market_analyzer.MarketAnalyzer'
+                "app.strategies.momentum_modular.modules.market_analyzer.MarketAnalyzer"
             ) as mock_analyzer,
-            patch('app.services.momentum_analysis.TechnicalIndicatorCalculator') as mock_calc,
+            patch("app.services.momentum_analysis.TechnicalIndicatorCalculator") as mock_calc,
         ):
             mock_analyzer.return_value = Mock()
             mock_calc.return_value = Mock()
@@ -729,9 +729,9 @@ class TestConfidenceCalculation:
         """Test confidence calculation with learning prediction."""
         with (
             patch(
-                'app.strategies.momentum_modular.modules.market_analyzer.MarketAnalyzer'
+                "app.strategies.momentum_modular.modules.market_analyzer.MarketAnalyzer"
             ) as mock_analyzer,
-            patch('app.services.momentum_analysis.TechnicalIndicatorCalculator') as mock_calc,
+            patch("app.services.momentum_analysis.TechnicalIndicatorCalculator") as mock_calc,
         ):
             mock_analyzer.return_value = Mock()
             mock_calc.return_value = Mock()
@@ -763,9 +763,9 @@ class TestRiskCheck:
         """Test risk check that passes."""
         with (
             patch(
-                'app.strategies.momentum_modular.modules.market_analyzer.MarketAnalyzer'
+                "app.strategies.momentum_modular.modules.market_analyzer.MarketAnalyzer"
             ) as mock_analyzer,
-            patch('app.services.momentum_analysis.TechnicalIndicatorCalculator') as mock_calc,
+            patch("app.services.momentum_analysis.TechnicalIndicatorCalculator") as mock_calc,
         ):
             mock_analyzer.return_value = Mock()
             mock_calc.return_value = Mock()
@@ -781,9 +781,9 @@ class TestRiskCheck:
         """Test risk check with low confidence signal."""
         with (
             patch(
-                'app.strategies.momentum_modular.modules.market_analyzer.MarketAnalyzer'
+                "app.strategies.momentum_modular.modules.market_analyzer.MarketAnalyzer"
             ) as mock_analyzer,
-            patch('app.services.momentum_analysis.TechnicalIndicatorCalculator') as mock_calc,
+            patch("app.services.momentum_analysis.TechnicalIndicatorCalculator") as mock_calc,
         ):
             mock_analyzer.return_value = Mock()
             mock_calc.return_value = Mock()
@@ -813,9 +813,9 @@ class TestRiskCheck:
         """Test risk check with learning engine recommendation."""
         with (
             patch(
-                'app.strategies.momentum_modular.modules.market_analyzer.MarketAnalyzer'
+                "app.strategies.momentum_modular.modules.market_analyzer.MarketAnalyzer"
             ) as mock_analyzer,
-            patch('app.services.momentum_analysis.TechnicalIndicatorCalculator') as mock_calc,
+            patch("app.services.momentum_analysis.TechnicalIndicatorCalculator") as mock_calc,
         ):
             mock_analyzer.return_value = Mock()
             mock_calc.return_value = Mock()
@@ -852,9 +852,9 @@ class TestLearningAdjustments:
         """Test learning adjustments with no prediction."""
         with (
             patch(
-                'app.strategies.momentum_modular.modules.market_analyzer.MarketAnalyzer'
+                "app.strategies.momentum_modular.modules.market_analyzer.MarketAnalyzer"
             ) as mock_analyzer,
-            patch('app.services.momentum_analysis.TechnicalIndicatorCalculator') as mock_calc,
+            patch("app.services.momentum_analysis.TechnicalIndicatorCalculator") as mock_calc,
         ):
             mock_analyzer.return_value = Mock()
             mock_calc.return_value = Mock()
@@ -871,9 +871,9 @@ class TestLearningAdjustments:
         """Test learning adjustments with confidence."""
         with (
             patch(
-                'app.strategies.momentum_modular.modules.market_analyzer.MarketAnalyzer'
+                "app.strategies.momentum_modular.modules.market_analyzer.MarketAnalyzer"
             ) as mock_analyzer,
-            patch('app.services.momentum_analysis.TechnicalIndicatorCalculator') as mock_calc,
+            patch("app.services.momentum_analysis.TechnicalIndicatorCalculator") as mock_calc,
         ):
             mock_analyzer.return_value = Mock()
             mock_calc.return_value = Mock()
@@ -892,9 +892,9 @@ class TestLearningAdjustments:
         """Test learning adjustments with filter adjustments."""
         with (
             patch(
-                'app.strategies.momentum_modular.modules.market_analyzer.MarketAnalyzer'
+                "app.strategies.momentum_modular.modules.market_analyzer.MarketAnalyzer"
             ) as mock_analyzer,
-            patch('app.services.momentum_analysis.TechnicalIndicatorCalculator') as mock_calc,
+            patch("app.services.momentum_analysis.TechnicalIndicatorCalculator") as mock_calc,
         ):
             mock_analyzer.return_value = Mock()
             mock_calc.return_value = Mock()
@@ -927,9 +927,9 @@ class TestEdgeCases:
         """Test recent win rate calculation with no trades."""
         with (
             patch(
-                'app.strategies.momentum_modular.modules.market_analyzer.MarketAnalyzer'
+                "app.strategies.momentum_modular.modules.market_analyzer.MarketAnalyzer"
             ) as mock_analyzer,
-            patch('app.services.momentum_analysis.TechnicalIndicatorCalculator') as mock_calc,
+            patch("app.services.momentum_analysis.TechnicalIndicatorCalculator") as mock_calc,
         ):
             mock_analyzer.return_value = Mock()
             mock_calc.return_value = Mock()
@@ -944,9 +944,9 @@ class TestEdgeCases:
         """Test recent win rate calculation with trades."""
         with (
             patch(
-                'app.strategies.momentum_modular.modules.market_analyzer.MarketAnalyzer'
+                "app.strategies.momentum_modular.modules.market_analyzer.MarketAnalyzer"
             ) as mock_analyzer,
-            patch('app.services.momentum_analysis.TechnicalIndicatorCalculator') as mock_calc,
+            patch("app.services.momentum_analysis.TechnicalIndicatorCalculator") as mock_calc,
         ):
             mock_analyzer.return_value = Mock()
             mock_calc.return_value = Mock()
@@ -974,9 +974,9 @@ class TestEdgeCases:
         """Test getting required parameters."""
         with (
             patch(
-                'app.strategies.momentum_modular.modules.market_analyzer.MarketAnalyzer'
+                "app.strategies.momentum_modular.modules.market_analyzer.MarketAnalyzer"
             ) as mock_analyzer,
-            patch('app.services.momentum_analysis.TechnicalIndicatorCalculator') as mock_calc,
+            patch("app.services.momentum_analysis.TechnicalIndicatorCalculator") as mock_calc,
         ):
             mock_analyzer.return_value = Mock()
             mock_calc.return_value = Mock()

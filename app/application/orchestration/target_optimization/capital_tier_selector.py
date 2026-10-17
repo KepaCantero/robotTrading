@@ -12,7 +12,7 @@ from __future__ import annotations
 
 import logging
 from decimal import Decimal
-from typing import Any, ClassVar
+from typing import Any, ClassVar, cast
 
 from .models import CapitalTier, CapitalTierResult, RiskProfile, StrategyFeatures
 
@@ -151,7 +151,7 @@ class CapitalTierSelector:
         for tier, (min_cap, max_cap) in cls.THRESHOLDS.items():
             if min_cap <= capital < max_cap:
                 logger.info(f"✅ Capital €{capital} detected as {tier.value} tier")
-                return tier
+                return cast(CapitalTier, tier)
 
         # Should not reach here due to LARGE tier's high max
         raise ValueError(f"Capital €{capital} exceeds maximum threshold")
@@ -222,7 +222,7 @@ class StrategyFeatureGatekeeper:
         """
         tier = CapitalTierSelector.detect_tier(capital)
         tier_config = CapitalTierSelector.get_tier_config(tier)
-        base_features = tier_config["enabled_features"]
+        base_features = cast(StrategyFeatures, tier_config["enabled_features"])
 
         # If specific features requested, validate against tier capabilities
         if requested_features:

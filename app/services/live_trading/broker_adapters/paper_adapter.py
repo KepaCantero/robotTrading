@@ -31,12 +31,19 @@ logger = logging.getLogger(__name__)
 class PaperAdapter:
     """Adapter that simulates broker for paper trading."""
 
-    def __init__(self, initial_cash: Decimal | None = None, auto_fill_orders: bool = False):
+    def __init__(
+        self,
+        initial_cash: Decimal | None = None,
+        auto_fill_orders: bool = False,
+        allow_shorting: bool = False,
+    ):
         """Initialize paper trading adapter.
 
         Args:
             initial_cash: Starting cash balance (default $100,000)
             auto_fill_orders: Whether to automatically fill market orders (default False for testing)
+            allow_shorting: Whether SELL orders without a held position are
+                allowed (default False: reject instead of printing cash)
         """
         if initial_cash is None:
             initial_cash = Decimal("100000")
@@ -46,6 +53,7 @@ class PaperAdapter:
         self.is_connected = False
         self.initial_cash = initial_cash
         self.auto_fill_orders = auto_fill_orders
+        self.allow_shorting = allow_shorting
 
     async def connect(
         self,
@@ -123,11 +131,22 @@ class PaperAdapter:
 
         Raises:
             ConnectionError: If not connected to paper trading
+            ValueError: If selling more than the held position without shorting enabled
         """
         if not self.is_connected:
             raise ConnectionError("Not connected to paper trading")
 
         try:
+            # Fail-closed: reject SELLs that exceed the held position unless
+            # shorting is explicitly enabled. Without this check a SELL with no
+            # position just credited cash (inflating the account).
+            if side == OrderSide.SELL and not self.allow_shorting:
+                held = self.positions[symbol].quantity if symbol in self.positions else Decimal("0")
+                if quantity > held:
+                    raise ValueError(
+                        f"insufficient position: cannot sell {quantity} of {symbol}, held {held}"
+                    )
+
             # SEC-005: Check for duplicate client_order_id
             if client_order_id:
                 for existing_order_id, existing_order in self.orders.items():

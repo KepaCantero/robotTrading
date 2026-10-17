@@ -15,7 +15,7 @@ from decimal import Decimal
 from enum import Enum
 from typing import ClassVar
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 logger = logging.getLogger(__name__)
 
@@ -71,8 +71,8 @@ class StrategyFeatures(BaseModel):
     volatility_targeting: bool = False
     currency_hedging: bool = False
 
-    class Config:
-        json_schema_extra: ClassVar[dict] = {
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {
                 "momentum": True,
                 "mean_reversion": True,
@@ -85,10 +85,11 @@ class StrategyFeatures(BaseModel):
                 "currency_hedging": False,
             }
         }
+    )
 
     def enabled_modules(self) -> list[str]:
         """Return list of enabled module names."""
-        modules = [k for k, v in self.dict().items() if v]
+        modules = [k for k, v in self.model_dump().items() if v]
         logger.debug(
             "Getting enabled strategy modules",
             extra={"enabled_modules": modules, "total_count": len(modules)},
@@ -124,18 +125,19 @@ class AbsoluteReturnTarget(BaseModel):
         default=10, ge=0, le=1000, description="Expected trades per month"
     )
 
-    class Config:
-        json_schema_extra: ClassVar[dict] = {
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {
-                "target_euros_monthly": Decimal("800"),
-                "capital": Decimal("250000"),
+                "target_euros_monthly": "800",
+                "capital": "250000",
                 "time_horizon_months": 24,
-                "risk_free_rate": Decimal("0.04"),
-                "tax_rate": Decimal("0.19"),
-                "commission_per_trade": Decimal("10"),
+                "risk_free_rate": "0.04",
+                "tax_rate": "0.19",
+                "commission_per_trade": "10",
                 "expected_trades_per_month": 10,
             }
         }
+    )
 
     def target_annual_return_pct(self) -> Decimal:
         """Calculate required annual return as percentage."""

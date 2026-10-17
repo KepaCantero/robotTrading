@@ -441,9 +441,9 @@ class TestSystemMemoryStability:
 
         # Check for memory leaks
         # Memory increase should be minimal (less than 200MB over 1 minute)
-        assert (
-            memory_increase < 200
-        ), f"Potential memory leak detected: {memory_increase:.2f} MB increase"
+        assert memory_increase < 200, (
+            f"Potential memory leak detected: {memory_increase:.2f} MB increase"
+        )
 
     async def test_memory_with_position_add_remove(self):
         """Test memory when adding and removing positions."""

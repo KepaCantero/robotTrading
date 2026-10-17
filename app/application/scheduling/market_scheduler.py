@@ -436,6 +436,9 @@ class MarketScheduler:
         if schedule.is_24_7():
             return MarketStatus.OPEN
 
+        # is_24_7() garantiza que hay horario definido
+        assert schedule.open_time is not None and schedule.close_time is not None
+
         # Check weekend
         now_utc = utc_now()
 

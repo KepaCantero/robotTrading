@@ -22,8 +22,6 @@ Domain: Application
 - `AbsoluteReturnTarget`
 - `AbsoluteReturnValidation`
 - `CapitalTierResult`
-- `Config`
-- `Config`
 ### Public Functions
 - `enabled_modules()`
 - `target_annual_return_pct()`

@@ -6,10 +6,10 @@ Domain: Domain
 
 ## 2. Dependencies
 - `__future__`
-- `dataclasses`
 - `datetime`
 - `decimal`
 - `enum`
+- `pydantic`
 
 ## 3. Core Components
 ### Classes
@@ -21,15 +21,17 @@ Domain: Domain
 - `FXIntermarketConfig`
 ### Public Functions
 - `is_significant()`
+- `is_strong()`
+- `direction()`
+- `strength()`
 - `strength()`
 - `is_actionable()`
 - `is_active()`
 - `is_valid()`
-- `strength()`
 - `is_actionable()`
 - `is_buy()`
-- `relationship_type()`
-- `rationale()`
+- `is_sell()`
+- `get_active_relationship_types()`
 - `get_fx_pairs()`
 - `get_external_assets()`
 

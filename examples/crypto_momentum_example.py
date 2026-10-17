@@ -11,20 +11,20 @@ This example demonstrates how to use the CryptoMomentumStrategy:
 6. Generate trading signals
 """
 
-from decimal import Decimal
 from datetime import datetime
+from decimal import Decimal
 
-import pandas as pd
 import numpy as np
+import pandas as pd
 
+from app.models.market_data import Quote
 from app.strategies.crypto_momentum import (
-    CryptoMomentumStrategy,
     CryptoAsset,
     CryptoAssetType,
     CryptoExchange,
+    CryptoMomentumStrategy,
 )
 from app.strategies.registry import StrategyRegistry
-from app.models.market_data import Quote
 
 
 def create_sample_universe():

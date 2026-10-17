@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 """
 Order Flow Imbalance (OFI) Predictor for Price Movements.
 
@@ -17,6 +15,8 @@ The predictor implements multiple approaches:
 4. Momentum-based: OFI momentum -> direction
 5. Mean reversion: Extreme OFI -> reversal
 """
+
+from __future__ import annotations
 
 import logging
 from datetime import datetime, timezone

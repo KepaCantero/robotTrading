@@ -49,7 +49,7 @@ except ImportError:
 try:
     import quantstats as qs
 
-    QUANTSTATS_AVAILABLE = True
+    QUANTSTATS_AVAILABLE = bool(qs)
 except ImportError:
     QUANTSTATS_AVAILABLE = False
     qs = None

@@ -195,7 +195,7 @@ class TestMarkowitzOptimizer:
     def test_equal_weight_fallback(self, optimizer):
         """Test equal weight fallback on optimization failure."""
         # This should trigger fallback
-        with patch.object(optimizer, '_optimize_pypfopt', side_effect=Exception("Test error")):
+        with patch.object(optimizer, "_optimize_pypfopt", side_effect=Exception("Test error")):
             expected_returns = np.array([0.08, 0.10])
             cov_matrix = np.array([[0.04, 0.01], [0.01, 0.03]])
 

@@ -9,19 +9,15 @@ Usage:
     python examples/multi_strategy_usage_example.py
 """
 
-from decimal import Decimal
 import logging
+from decimal import Decimal
 
 from app.backtesting.profile_batch_backtester import ProfileBatchBacktester
-from app.core.models.input_profile import (
-    InputProfile,
-    ObjectivoInversion,
-    RiskTolerance,
-)
+from app.core.models.input_profile import InputProfile, ObjectivoInversion, RiskTolerance
 
 # Configure logging
 logging.basicConfig(
-    level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
 logger = logging.getLogger(__name__)
 
@@ -67,7 +63,7 @@ def example_single_profile_multi_strategy():
         logger.info(f"Learning Engines: {', '.join(result.learning_engines)}")
 
     if result.ensemble_config:
-        mode = result.ensemble_config.get('mode', 'N/A')
+        mode = result.ensemble_config.get("mode", "N/A")
         logger.info(f"Ensemble Mode: {mode}")
 
     # Combined metrics
@@ -146,10 +142,10 @@ def example_batch_multi_strategy():
         logger.info(f"Single-strategy results: {len(results) - multi_strategy_count}")
 
         # Average metrics
-        avg_sharpe = sum(r.baseline_results.get('sharpe_ratio', 0) for r in results.values()) / len(
+        avg_sharpe = sum(r.baseline_results.get("sharpe_ratio", 0) for r in results.values()) / len(
             results
         )
-        avg_return = sum(r.baseline_results.get('return_pct', 0) for r in results.values()) / len(
+        avg_return = sum(r.baseline_results.get("return_pct", 0) for r in results.values()) / len(
             results
         )
 
@@ -157,7 +153,7 @@ def example_batch_multi_strategy():
         logger.info(f"Average Return: {avg_return:.2f}%")
 
         # Best performing
-        best_result = max(results.values(), key=lambda r: r.baseline_results.get('sharpe_ratio', 0))
+        best_result = max(results.values(), key=lambda r: r.baseline_results.get("sharpe_ratio", 0))
         logger.info(f"\nBest Profile: {best_result.profile_id}")
         logger.info(f"  Sharpe: {best_result.baseline_results.get('sharpe_ratio', 0):.2f}")
         logger.info(f"  Return: {best_result.baseline_results.get('return_pct', 0):.2f}%")
@@ -189,7 +185,7 @@ def example_ensemble_voting():
     if backtester.profile_mapper:
         strategy_mapping = backtester.profile_mapper.create_strategy_mapping(profile)
 
-        logger.info(f"Ensemble Configuration:")
+        logger.info("Ensemble Configuration:")
         logger.info(f"  Mode: {strategy_mapping.ensemble_mode}")
         logger.info(f"  Min Strategies: {strategy_mapping.ensemble_min_strategies}")
         logger.info(f"  Min Confidence: {strategy_mapping.ensemble_confidence_threshold:.2f}")
@@ -202,7 +198,7 @@ def example_ensemble_voting():
             "dividend_screener": {"action": "hold", "confidence": 0.0},
         }
 
-        logger.info(f"\nStrategy Signals:")
+        logger.info("\nStrategy Signals:")
         for strategy, signal in signals.items():
             logger.info(
                 f"  {strategy}: {signal['action']} (confidence: {signal['confidence']:.2f})"
@@ -211,7 +207,7 @@ def example_ensemble_voting():
         # Apply ensemble voting
         decision = backtester._apply_ensemble_voting(profile, strategy_mapping, signals)
 
-        logger.info(f"\nEnsemble Decision:")
+        logger.info("\nEnsemble Decision:")
         logger.info(f"  Action: {decision['action']}")
         logger.info(f"  Confidence: {decision['confidence']:.2f}")
         logger.info(f"  Meets Threshold: {decision['meets_threshold']}")
@@ -264,10 +260,10 @@ def example_comparison_single_vs_multi():
     )
 
     # Calculate improvement
-    if multi_result.baseline_results.get('sharpe_ratio', 0) > 0:
+    if multi_result.baseline_results.get("sharpe_ratio", 0) > 0:
         sharpe_diff = multi_result.baseline_results.get(
-            'sharpe_ratio', 0
-        ) - single_result.baseline_results.get('sharpe_ratio', 0)
+            "sharpe_ratio", 0
+        ) - single_result.baseline_results.get("sharpe_ratio", 0)
         logger.info(f"\nSharpe Ratio Difference: {sharpe_diff:+.2f}")
 
         if sharpe_diff > 0:

@@ -27,11 +27,6 @@ Domain: Service
 - `ICEExplanation`
 - `InterpretationReport`
 - `ExplainabilityConfig`
-- `Config`
-- `Config`
-- `Config`
-- `Config`
-- `Config`
 ### Public Functions
 - `get_top_features()`
 - `get_top_features()`

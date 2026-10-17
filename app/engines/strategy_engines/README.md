@@ -97,7 +97,9 @@ status = engine.get_status()
 
 ```python
 from app.engines.strategy_engines import MomentumStrategyEngine
-from app.strategies.momentum_modular.learning.supervised_learning_engine import SupervisedLearningEngine
+from app.strategies.momentum_modular.learning.supervised_learning_engine import (
+    SupervisedLearningEngine,
+)
 
 # Crear engine
 engine = MomentumStrategyEngine(config)
@@ -116,8 +118,10 @@ signals = engine.generate_signals(market_data)
 def on_signal_generated(signal, market_data):
     print(f"Señal generada: {signal.symbol} - {signal.signal_type}")
 
+
 def on_trade_executed(signal, execution_result):
     print(f"Trade ejecutado: {signal.symbol} - PnL: {execution_result.get('pnl', 0)}")
+
 
 # Registrar callbacks
 engine.register_signal_callback(on_signal_generated)
@@ -187,4 +191,3 @@ Las estrategias antiguas (`MomentumStrategy`, `MeanReversionStrategy`, etc.) sig
 - [ ] `StrategyCompositor` para ensembles
 - [ ] Strategy selector basado en régimen de mercado
 - [ ] Meta-strategy que combina múltiples engines
-

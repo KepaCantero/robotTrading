@@ -70,7 +70,7 @@ def cusum_detector():
         StructuralChangeDetector,
     )
 
-    return StructuralChangeDetector(config={'method': 'cusum'})
+    return StructuralChangeDetector(config={"method": "cusum"})
 
 
 @pytest.fixture
@@ -80,7 +80,7 @@ def chow_detector():
         StructuralChangeDetector,
     )
 
-    return StructuralChangeDetector(config={'method': 'chow'})
+    return StructuralChangeDetector(config={"method": "chow"})
 
 
 @pytest.mark.unit
@@ -95,7 +95,7 @@ class TestStructuralChangeDetectorInit:
 
         detector = StructuralChangeDetector()
 
-        assert detector.method == 'cusum'
+        assert detector.method == "cusum"
         assert detector.significance_level == 0.05
         assert detector.window_size == 100
 
@@ -105,10 +105,10 @@ class TestStructuralChangeDetectorInit:
             StructuralChangeDetector,
         )
 
-        config = {'method': 'chow', 'significance_level': 0.01, 'window_size': 150}
+        config = {"method": "chow", "significance_level": 0.01, "window_size": 150}
         detector = StructuralChangeDetector(config=config)
 
-        assert detector.method == 'chow'
+        assert detector.method == "chow"
         assert detector.significance_level == 0.01
         assert detector.window_size == 150
 
@@ -123,13 +123,13 @@ class TestDetectCUSUM:
 
         result = cusum_detector.detect_cusum(short_prices)
 
-        assert result['change_detected'] is False
-        assert result['breakpoint'] is None
-        assert result['p_value'] is None
-        assert result['confidence'] == 0.0
+        assert result["change_detected"] is False
+        assert result["breakpoint"] is None
+        assert result["p_value"] is None
+        assert result["confidence"] == 0.0
 
     @patch(
-        'app.engines.context_engine.volatility_analyzers.structural_change_detector.breaks_cusumolsresid'
+        "app.engines.context_engine.volatility_analyzers.structural_change_detector.breaks_cusumolsresid"
     )
     def test_detect_cusum_success(self, mock_cusum, cusum_detector, sample_prices):
         """Test successful CUSUM detection."""
@@ -139,12 +139,12 @@ class TestDetectCUSUM:
         result = cusum_detector.detect_cusum(sample_prices)
 
         assert isinstance(result, dict)
-        assert 'change_detected' in result
-        assert 'p_value' in result
-        assert 'test_statistic' in result
+        assert "change_detected" in result
+        assert "p_value" in result
+        assert "test_statistic" in result
 
     @patch(
-        'app.engines.context_engine.volatility_analyzers.structural_change_detector.breaks_cusumolsresid'
+        "app.engines.context_engine.volatility_analyzers.structural_change_detector.breaks_cusumolsresid"
     )
     def test_detect_cusum_with_change(self, mock_cusum, cusum_detector, prices_with_change):
         """Test CUSUM detection with actual structural change."""
@@ -154,13 +154,13 @@ class TestDetectCUSUM:
         result = cusum_detector.detect_cusum(prices_with_change)
 
         # With p < 0.05, should detect change
-        if result['p_value'] is not None:
-            assert result['change_detected'] == (
-                result['p_value'] < cusum_detector.significance_level
+        if result["p_value"] is not None:
+            assert result["change_detected"] == (
+                result["p_value"] < cusum_detector.significance_level
             )
 
     @patch(
-        'app.engines.context_engine.volatility_analyzers.structural_change_detector.breaks_cusumolsresid'
+        "app.engines.context_engine.volatility_analyzers.structural_change_detector.breaks_cusumolsresid"
     )
     def test_detect_cusum_without_change(self, mock_cusum, cusum_detector, prices_without_change):
         """Test CUSUM detection without structural change."""
@@ -170,13 +170,13 @@ class TestDetectCUSUM:
         result = cusum_detector.detect_cusum(prices_without_change)
 
         # With p > 0.05, should not detect change
-        if result['p_value'] is not None:
-            assert result['change_detected'] == (
-                result['p_value'] < cusum_detector.significance_level
+        if result["p_value"] is not None:
+            assert result["change_detected"] == (
+                result["p_value"] < cusum_detector.significance_level
             )
 
     @patch(
-        'app.engines.context_engine.volatility_analyzers.structural_change_detector.breaks_cusumolsresid'
+        "app.engines.context_engine.volatility_analyzers.structural_change_detector.breaks_cusumolsresid"
     )
     def test_detect_cusum_confidence_calculation(self, mock_cusum, cusum_detector, sample_prices):
         """Test confidence calculation in CUSUM detection."""
@@ -185,10 +185,10 @@ class TestDetectCUSUM:
 
         result = cusum_detector.detect_cusum(sample_prices)
 
-        assert result['confidence'] == 1.0 - p_value
+        assert result["confidence"] == 1.0 - p_value
 
     @patch(
-        'app.engines.context_engine.volatility_analyzers.structural_change_detector.breaks_cusumolsresid'
+        "app.engines.context_engine.volatility_analyzers.structural_change_detector.breaks_cusumolsresid"
     )
     def test_detect_cusum_with_tuple_result(self, mock_cusum, cusum_detector, sample_prices):
         """Test CUSUM with tuple result format."""
@@ -196,11 +196,11 @@ class TestDetectCUSUM:
 
         result = cusum_detector.detect_cusum(sample_prices)
 
-        assert result['test_statistic'] == 5.5
-        assert result['p_value'] == 0.02
+        assert result["test_statistic"] == 5.5
+        assert result["p_value"] == 0.02
 
     @patch(
-        'app.engines.context_engine.volatility_analyzers.structural_change_detector.breaks_cusumolsresid'
+        "app.engines.context_engine.volatility_analyzers.structural_change_detector.breaks_cusumolsresid"
     )
     def test_detect_cusum_with_scalar_result(self, mock_cusum, cusum_detector, sample_prices):
         """Test CUSUM with scalar result format (no p_value)."""
@@ -208,11 +208,11 @@ class TestDetectCUSUM:
 
         result = cusum_detector.detect_cusum(sample_prices)
 
-        assert result['test_statistic'] == 5.5
-        assert result['p_value'] is None
+        assert result["test_statistic"] == 5.5
+        assert result["p_value"] is None
 
     @patch(
-        'app.engines.context_engine.volatility_analyzers.structural_change_detector.breaks_cusumolsresid'
+        "app.engines.context_engine.volatility_analyzers.structural_change_detector.breaks_cusumolsresid"
     )
     def test_detect_cusum_with_exception(self, mock_cusum, cusum_detector, sample_prices):
         """Test CUSUM when exception occurs."""
@@ -220,8 +220,8 @@ class TestDetectCUSUM:
 
         result = cusum_detector.detect_cusum(sample_prices)
 
-        assert result['change_detected'] is False
-        assert result['confidence'] == 0.0
+        assert result["change_detected"] is False
+        assert result["confidence"] == 0.0
 
 
 @pytest.mark.unit
@@ -234,31 +234,31 @@ class TestDetectChowTest:
 
         result = chow_detector.detect_chow_test(short_prices)
 
-        assert result['change_detected'] is False
-        assert result['breakpoint'] is None
-        assert result['p_value'] is None
+        assert result["change_detected"] is False
+        assert result["breakpoint"] is None
+        assert result["p_value"] is None
 
     def test_detect_chow_default_breakpoint(self, chow_detector, sample_prices):
         """Test Chow test with default breakpoint (middle)."""
         result = chow_detector.detect_chow_test(sample_prices)
 
         assert isinstance(result, dict)
-        assert 'breakpoint' in result
-        assert result['breakpoint'] is not None
+        assert "breakpoint" in result
+        assert result["breakpoint"] is not None
 
     def test_detect_chow_custom_breakpoint(self, chow_detector, sample_prices):
         """Test Chow test with custom breakpoint."""
         custom_breakpoint = 80
         result = chow_detector.detect_chow_test(sample_prices, breakpoint=custom_breakpoint)
 
-        assert result['breakpoint'] == custom_breakpoint
+        assert result["breakpoint"] == custom_breakpoint
 
     def test_detect_chow_invalid_breakpoint_too_small(self, chow_detector, sample_prices):
         """Test Chow test with breakpoint too small."""
         result = chow_detector.detect_chow_test(sample_prices, breakpoint=5)
 
-        assert result['change_detected'] is False
-        assert result['breakpoint'] is None
+        assert result["change_detected"] is False
+        assert result["breakpoint"] is None
 
     def test_detect_chow_invalid_breakpoint_too_large(self, chow_detector, sample_prices):
         """Test Chow test with breakpoint too large."""
@@ -270,19 +270,19 @@ class TestDetectChowTest:
 
         result = chow_detector.detect_chow_test(sample_prices, breakpoint=len(returns) - 5)
 
-        assert result['change_detected'] is False
-        assert result['breakpoint'] is None
+        assert result["change_detected"] is False
+        assert result["breakpoint"] is None
 
     def test_detect_chow_statistics(self, chow_detector, sample_prices):
         """Test that Chow test returns statistics."""
         result = chow_detector.detect_chow_test(sample_prices)
 
-        assert 'f_statistic' in result
-        assert 'mean_before' in result
-        assert 'mean_after' in result
-        assert 'p_value' in result
+        assert "f_statistic" in result
+        assert "mean_before" in result
+        assert "mean_after" in result
+        assert "p_value" in result
 
-    @patch('app.engines.context_engine.volatility_analyzers.structural_change_detector.stats')
+    @patch("app.engines.context_engine.volatility_analyzers.structural_change_detector.stats")
     def test_detect_chow_with_change(self, mock_stats, chow_detector, prices_with_change):
         """Test Chow test detection with actual change."""
         # Mock F-distribution CDF to return low p-value
@@ -291,9 +291,9 @@ class TestDetectChowTest:
         result = chow_detector.detect_chow_test(prices_with_change)
 
         # Should detect change if means are different enough
-        assert 'change_detected' in result
+        assert "change_detected" in result
 
-    @patch('app.engines.context_engine.volatility_analyzers.structural_change_detector.stats')
+    @patch("app.engines.context_engine.volatility_analyzers.structural_change_detector.stats")
     def test_detect_chow_p_value_calculation(self, mock_stats, chow_detector, sample_prices):
         """Test p-value calculation in Chow test."""
         # Mock F-distribution CDF
@@ -301,8 +301,8 @@ class TestDetectChowTest:
 
         result = chow_detector.detect_chow_test(sample_prices)
 
-        assert result['p_value'] == 1.0 - 0.97
-        assert result['confidence'] == 0.97
+        assert result["p_value"] == 1.0 - 0.97
+        assert result["confidence"] == 0.97
 
     def test_detect_chow_zero_pooled_variance(self, chow_detector):
         """Test Chow test with zero pooled variance."""
@@ -327,7 +327,7 @@ class TestDetect:
     """Test general detect functionality."""
 
     @patch(
-        'app.engines.context_engine.volatility_analyzers.structural_change_detector.breaks_cusumolsresid'
+        "app.engines.context_engine.volatility_analyzers.structural_change_detector.breaks_cusumolsresid"
     )
     def test_detect_with_cusum_method(self, mock_cusum, cusum_detector, sample_prices):
         """Test detect with CUSUM method."""
@@ -336,14 +336,14 @@ class TestDetect:
         result = cusum_detector.detect(sample_prices)
 
         assert isinstance(result, dict)
-        assert 'change_detected' in result
+        assert "change_detected" in result
 
     def test_detect_with_chow_method(self, chow_detector, sample_prices):
         """Test detect with Chow method."""
         result = chow_detector.detect(sample_prices)
 
         assert isinstance(result, dict)
-        assert 'change_detected' in result
+        assert "change_detected" in result
 
     def test_detect_with_unknown_method(self, sample_prices):
         """Test detect with unknown method (should default to CUSUM)."""
@@ -351,7 +351,7 @@ class TestDetect:
             StructuralChangeDetector,
         )
 
-        detector = StructuralChangeDetector(config={'method': 'unknown'})
+        detector = StructuralChangeDetector(config={"method": "unknown"})
 
         result = detector.detect(sample_prices)
 
@@ -363,7 +363,7 @@ class TestDetect:
         custom_breakpoint = 75
         result = chow_detector.detect(sample_prices, breakpoint=custom_breakpoint)
 
-        assert result['breakpoint'] == custom_breakpoint
+        assert result["breakpoint"] == custom_breakpoint
 
 
 @pytest.mark.unit
@@ -374,17 +374,17 @@ class TestEdgeCases:
         """Test with empty price list."""
         result = detector.detect([])
 
-        assert result['change_detected'] is False
+        assert result["change_detected"] is False
 
     def test_single_price(self, detector):
         """Test with single price."""
         result = detector.detect([100.0])
 
-        assert result['change_detected'] is False
+        assert result["change_detected"] is False
 
     def test_nan_in_prices(self, detector):
         """Test with NaN values in prices."""
-        prices_with_nan = [100.0, 101.0, float('nan'), 103.0, 104.0]
+        prices_with_nan = [100.0, 101.0, float("nan"), 103.0, 104.0]
 
         # Should handle gracefully
         result = detector.detect(prices_with_nan)
@@ -392,7 +392,7 @@ class TestEdgeCases:
 
     def test_inf_in_prices(self, detector):
         """Test with infinite values in prices."""
-        prices_with_inf = [100.0, 101.0, float('inf'), 103.0, 104.0]
+        prices_with_inf = [100.0, 101.0, float("inf"), 103.0, 104.0]
 
         # Should handle gracefully
         result = detector.detect(prices_with_inf)
@@ -427,14 +427,14 @@ class TestEdgeCases:
 class TestPropertyBasedTests:
     """Property-based tests for structural change detector."""
 
-    @pytest.mark.parametrize("method", ['cusum', 'chow'])
+    @pytest.mark.parametrize("method", ["cusum", "chow"])
     def test_different_methods(self, method, sample_prices):
         """Test with different detection methods."""
         from app.engines.context_engine.volatility_analyzers.structural_change_detector import (
             StructuralChangeDetector,
         )
 
-        detector = StructuralChangeDetector(config={'method': method})
+        detector = StructuralChangeDetector(config={"method": method})
 
         assert detector.method == method
 
@@ -445,7 +445,7 @@ class TestPropertyBasedTests:
             StructuralChangeDetector,
         )
 
-        detector = StructuralChangeDetector(config={'significance_level': significance_level})
+        detector = StructuralChangeDetector(config={"significance_level": significance_level})
 
         assert detector.significance_level == significance_level
 
@@ -456,7 +456,7 @@ class TestPropertyBasedTests:
             StructuralChangeDetector,
         )
 
-        detector = StructuralChangeDetector(config={'window_size': window_size})
+        detector = StructuralChangeDetector(config={"window_size": window_size})
 
         assert detector.window_size == window_size
 
@@ -467,7 +467,7 @@ class TestPropertyBasedTests:
             StructuralChangeDetector,
         )
 
-        detector = StructuralChangeDetector(config={'method': 'chow'})
+        detector = StructuralChangeDetector(config={"method": "chow"})
 
         result = detector.detect_chow_test(sample_prices, breakpoint=breakpoint)
 
@@ -483,29 +483,29 @@ class TestStatistics:
         breakpoint = 100
         result = chow_detector.detect_chow_test(sample_prices, breakpoint=breakpoint)
 
-        assert 'mean_before' in result
-        assert 'mean_after' in result
-        assert isinstance(result['mean_before'], float)
-        assert isinstance(result['mean_after'], float)
+        assert "mean_before" in result
+        assert "mean_after" in result
+        assert isinstance(result["mean_before"], float)
+        assert isinstance(result["mean_after"], float)
 
     def test_chow_test_f_statistic_positive(self, chow_detector, sample_prices):
         """Test that F-statistic is non-negative."""
         result = chow_detector.detect_chow_test(sample_prices)
 
-        assert 'f_statistic' in result
-        assert result['f_statistic'] >= 0
+        assert "f_statistic" in result
+        assert result["f_statistic"] >= 0
 
     def test_cusum_test_statistic(self, cusum_detector, sample_prices):
         """Test that CUSUM test statistic is calculated."""
         with patch(
-            'app.engines.context_engine.volatility_analyzers.structural_change_detector.breaks_cusumolsresid'
+            "app.engines.context_engine.volatility_analyzers.structural_change_detector.breaks_cusumolsresid"
         ) as mock_cusum:
             mock_cusum.return_value = (5.5, 0.02, 4.8)
 
             result = cusum_detector.detect_cusum(sample_prices)
 
-            assert 'test_statistic' in result
-            assert isinstance(result['test_statistic'], float)
+            assert "test_statistic" in result
+            assert isinstance(result["test_statistic"], float)
 
 
 @pytest.mark.unit
@@ -513,7 +513,7 @@ class TestIntegration:
     """Integration tests for structural change detector."""
 
     @patch(
-        'app.engines.context_engine.volatility_analyzers.structural_change_detector.breaks_cusumolsresid'
+        "app.engines.context_engine.volatility_analyzers.structural_change_detector.breaks_cusumolsresid"
     )
     def test_full_workflow_cusum(self, mock_cusum, sample_prices):
         """Test complete workflow with CUSUM."""
@@ -521,13 +521,13 @@ class TestIntegration:
             StructuralChangeDetector,
         )
 
-        detector = StructuralChangeDetector(config={'method': 'cusum'})
+        detector = StructuralChangeDetector(config={"method": "cusum"})
         mock_cusum.return_value = (5.5, 0.02, 4.8)
 
         result = detector.detect(sample_prices)
 
-        assert 'change_detected' in result
-        assert 'confidence' in result
+        assert "change_detected" in result
+        assert "confidence" in result
 
     def test_full_workflow_chow(self, sample_prices):
         """Test complete workflow with Chow test."""
@@ -535,13 +535,13 @@ class TestIntegration:
             StructuralChangeDetector,
         )
 
-        detector = StructuralChangeDetector(config={'method': 'chow'})
+        detector = StructuralChangeDetector(config={"method": "chow"})
 
         result = detector.detect(sample_prices)
 
-        assert 'change_detected' in result
-        assert 'breakpoint' in result
-        assert 'p_value' in result
+        assert "change_detected" in result
+        assert "breakpoint" in result
+        assert "p_value" in result
 
 
 @pytest.mark.unit
@@ -549,7 +549,7 @@ class TestComparison:
     """Test comparison between methods."""
 
     @patch(
-        'app.engines.context_engine.volatility_analyzers.structural_change_detector.breaks_cusumolsresid'
+        "app.engines.context_engine.volatility_analyzers.structural_change_detector.breaks_cusumolsresid"
     )
     def test_cusum_vs_chow_consistency(self, mock_cusum, prices_with_change):
         """Test that CUSUM and Chow test give consistent results."""
@@ -560,14 +560,14 @@ class TestComparison:
         # Mock CUSUM to detect change
         mock_cusum.return_value = (6.0, 0.01, 4.8)
 
-        cusum_detector = StructuralChangeDetector(config={'method': 'cusum'})
-        chow_detector = StructuralChangeDetector(config={'method': 'chow'})
+        cusum_detector = StructuralChangeDetector(config={"method": "cusum"})
+        chow_detector = StructuralChangeDetector(config={"method": "chow"})
 
         cusum_result = cusum_detector.detect(prices_with_change)
 
         # CUSUM should detect change with p < 0.05
-        if cusum_result['p_value'] is not None:
-            assert cusum_result['change_detected'] == (cusum_result['p_value'] < 0.05)
+        if cusum_result["p_value"] is not None:
+            assert cusum_result["change_detected"] == (cusum_result["p_value"] < 0.05)
 
 
 @pytest.mark.unit
@@ -575,7 +575,7 @@ class TestPerformance:
     """Performance and stress tests."""
 
     @patch(
-        'app.engines.context_engine.volatility_analyzers.structural_change_detector.breaks_cusumolsresid'
+        "app.engines.context_engine.volatility_analyzers.structural_change_detector.breaks_cusumolsresid"
     )
     def test_large_dataset_cusum(self, mock_cusum, cusum_detector):
         """Test CUSUM with large dataset."""
@@ -603,7 +603,7 @@ class TestConfidence:
     """Test confidence calculations."""
 
     @patch(
-        'app.engines.context_engine.volatility_analyzers.structural_change_detector.breaks_cusumolsresid'
+        "app.engines.context_engine.volatility_analyzers.structural_change_detector.breaks_cusumolsresid"
     )
     def test_cusum_confidence_range(self, mock_cusum, cusum_detector, sample_prices):
         """Test that CUSUM confidence is in valid range."""
@@ -611,16 +611,16 @@ class TestConfidence:
 
         result = cusum_detector.detect_cusum(sample_prices)
 
-        assert 0.0 <= result['confidence'] <= 1.0
+        assert 0.0 <= result["confidence"] <= 1.0
 
     def test_chow_confidence_range(self, chow_detector, sample_prices):
         """Test that Chow confidence is in valid range."""
         result = chow_detector.detect_chow_test(sample_prices)
 
-        assert 0.0 <= result['confidence'] <= 1.0
+        assert 0.0 <= result["confidence"] <= 1.0
 
     @patch(
-        'app.engines.context_engine.volatility_analyzers.structural_change_detector.breaks_cusumolsresid'
+        "app.engines.context_engine.volatility_analyzers.structural_change_detector.breaks_cusumolsresid"
     )
     def test_confidence_relationship_with_p_value(self, mock_cusum, cusum_detector, sample_prices):
         """Test that confidence = 1 - p_value."""
@@ -629,7 +629,7 @@ class TestConfidence:
 
         result = cusum_detector.detect_cusum(sample_prices)
 
-        assert result['confidence'] == 1.0 - p_value
+        assert result["confidence"] == 1.0 - p_value
 
 
 @pytest.mark.unit
@@ -648,7 +648,7 @@ class TestBreakpointHandling:
         result = chow_detector.detect_chow_test(sample_prices, breakpoint=10)
 
         if len(returns) > 20:
-            assert result['breakpoint'] == 10 or result['breakpoint'] is None
+            assert result["breakpoint"] == 10 or result["breakpoint"] is None
 
     def test_breakpoint_in_middle(self, chow_detector, sample_prices):
         """Test breakpoint in middle of series."""
@@ -660,4 +660,4 @@ class TestBreakpointHandling:
 
         result = chow_detector.detect_chow_test(sample_prices, breakpoint=middle_breakpoint)
 
-        assert result['breakpoint'] == middle_breakpoint
+        assert result["breakpoint"] == middle_breakpoint

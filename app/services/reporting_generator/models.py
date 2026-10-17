@@ -22,7 +22,7 @@ class PerformanceMetric(BaseModel):
     name: str = Field(..., description="Metric name")
     value: Decimal = Field(..., description="Metric value")
     unit: str = Field(default="", description="Unit of measurement")
-    target: Decimal | None = Field(None, description="Target value")
+    target: Decimal | None = Field(default=None, description="Target value")
     status: str = Field(default="neutral", description="Status: green/yellow/red")
 
 
@@ -104,8 +104,10 @@ class PerformanceReport(BaseModel):
     recommendations: list[str] = Field(default=[], description="Recommendations for improvement")
 
     # Report metadata
-    html_content: str | None = Field(None, description="HTML report content")
-    charts_data: dict[str, Any] | None = Field(None, description="Chart data for visualization")
+    html_content: str | None = Field(default=None, description="HTML report content")
+    charts_data: dict[str, Any] | None = Field(
+        default=None, description="Chart data for visualization"
+    )
 
     # Report timing
     generation_timestamp: datetime = Field(
@@ -113,7 +115,7 @@ class PerformanceReport(BaseModel):
     )
 
     # Error handling
-    error_message: str | None = Field(None, description="Error message if failed")
+    error_message: str | None = Field(default=None, description="Error message if failed")
 
 
 # Resolve forward references (Decimal was previously only imported under TYPE_CHECKING)

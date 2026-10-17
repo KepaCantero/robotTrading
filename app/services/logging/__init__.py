@@ -18,6 +18,6 @@ def __getattr__(name: str):
 
 
 __all__ = [
-    "AppendOnlyLog",
-    "TradingDecisionLogger",
+    "AppendOnlyLog",  # pylint: disable=undefined-all-variable
+    "TradingDecisionLogger",  # pylint: disable=undefined-all-variable
 ]

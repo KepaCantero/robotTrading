@@ -12,16 +12,11 @@ import pandas as pd
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.linear_model import LinearRegression
 
+from app.backtesting.validation.bias_variance_analysis import BiasVarianceAnalyzer
+
 # Import the new modules
-from app.backtesting.validation.cross_sectional_consistency import (
-    CrossSectionalConsistencyChecker,
-)
-from app.backtesting.validation.bias_variance_analysis import (
-    BiasVarianceAnalyzer,
-)
-from app.backtesting.validation.feature_explosion_validator import (
-    FeatureExplosionValidator,
-)
+from app.backtesting.validation.cross_sectional_consistency import CrossSectionalConsistencyChecker
+from app.backtesting.validation.feature_explosion_validator import FeatureExplosionValidator
 
 
 def demo_cross_sectional_consistency():

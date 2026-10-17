@@ -92,7 +92,8 @@ class TestCSRFTokenManager:
     def test_token_expiration(self):
         """Test token expiration."""
         manager = CSRFTokenManager(
-            secret_key="test_secret_key_32_characters_long", token_expiry=1  # 1 second
+            secret_key="test_secret_key_32_characters_long",
+            token_expiry=1,  # 1 second
         )
         token = manager.generate_token()
 

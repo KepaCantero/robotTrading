@@ -33,7 +33,7 @@ class TestConceptDriftDetector:
 
     def test_drift_detector_initialization(self):
         """Test inicialización del detector."""
-        config = {'window_size': 100, 'drift_threshold_ks': 0.05, 'use_ks_test': True}
+        config = {"window_size": 100, "drift_threshold_ks": 0.05, "use_ks_test": True}
 
         detector = ConceptDriftDetector(config)
 
@@ -53,7 +53,7 @@ class TestConceptDriftDetector:
 
     def test_detect_drift_no_drift(self):
         """Test detección cuando no hay drift."""
-        detector = ConceptDriftDetector({'window_size': 50})
+        detector = ConceptDriftDetector({"window_size": 50})
 
         # Crear datos de referencia (distribución normal)
         reference_data = np.random.randn(100, 5)
@@ -64,14 +64,14 @@ class TestConceptDriftDetector:
 
         result = detector.detect_drift(current_data)
 
-        assert 'drift_detected' in result
-        assert 'drift_score' in result
-        assert 'recommendation' in result
+        assert "drift_detected" in result
+        assert "drift_score" in result
+        assert "recommendation" in result
         logger.info(f"Detección sin drift: {result}")
 
     def test_detect_drift_with_drift(self):
         """Test detección cuando hay drift."""
-        detector = ConceptDriftDetector({'window_size': 50, 'drift_threshold_ks': 0.1})
+        detector = ConceptDriftDetector({"window_size": 50, "drift_threshold_ks": 0.1})
 
         # Referencia: distribución normal
         reference_data = np.random.normal(0, 1, (100, 5))
@@ -82,7 +82,7 @@ class TestConceptDriftDetector:
 
         result = detector.detect_drift(current_data)
 
-        assert 'drift_detected' in result
+        assert "drift_detected" in result
         # Con shift significativo, debería detectar drift
         logger.info(f"Detección con drift: {result}")
 
@@ -107,7 +107,7 @@ class TestOverfittingDetector:
 
     def test_overfitting_detector_initialization(self):
         """Test inicialización."""
-        config = {'overfitting_threshold': 0.1, 'min_epochs': 10}
+        config = {"overfitting_threshold": 0.1, "min_epochs": 10}
 
         detector = OverfittingDetector(config)
 
@@ -129,7 +129,7 @@ class TestOverfittingDetector:
 
     def test_detect_overfitting(self):
         """Test detección de overfitting."""
-        detector = OverfittingDetector({'overfitting_threshold': 0.1})
+        detector = OverfittingDetector({"overfitting_threshold": 0.1})
 
         # Simular overfitting: train mejora pero val empeora
         for epoch in range(20):
@@ -139,16 +139,16 @@ class TestOverfittingDetector:
 
         result = detector.detect_overfitting()
 
-        assert 'overfitting_detected' in result
-        assert 'train_val_gap' in result
-        assert 'gap_ratio' in result
-        assert 'recommendation' in result
+        assert "overfitting_detected" in result
+        assert "train_val_gap" in result
+        assert "gap_ratio" in result
+        assert "recommendation" in result
 
         logger.info(f"Detección de overfitting: {result}")
 
         # Si hay overfitting claro, debería detectarlo
-        if result.get('gap_ratio', 0) > 0.1:
-            assert result.get('overfitting_detected', False) or result.get('recommendation') != 'ok'
+        if result.get("gap_ratio", 0) > 0.1:
+            assert result.get("overfitting_detected", False) or result.get("recommendation") != "ok"
 
     def test_learning_curves(self):
         """Test obtención de learning curves."""
@@ -159,10 +159,10 @@ class TestOverfittingDetector:
 
         curves = detector.get_learning_curves()
 
-        assert 'epochs' in curves
-        assert 'train_metrics' in curves
-        assert 'val_metrics' in curves
-        assert len(curves['epochs']) == 15
+        assert "epochs" in curves
+        assert "train_metrics" in curves
+        assert "val_metrics" in curves
+        assert len(curves["epochs"]) == 15
 
 
 class TestAutoRetrainingTrigger:
@@ -171,9 +171,9 @@ class TestAutoRetrainingTrigger:
     def test_retraining_trigger_initialization(self):
         """Test inicialización."""
         config = {
-            'retrain_on_drift': True,
-            'retrain_interval_days': 30,
-            'performance_degradation_threshold': 0.2,
+            "retrain_on_drift": True,
+            "retrain_interval_days": 30,
+            "performance_degradation_threshold": 0.2,
         }
 
         trigger = AutoRetrainingTrigger(config)
@@ -185,23 +185,23 @@ class TestAutoRetrainingTrigger:
 
     def test_time_based_retraining(self):
         """Test retraining basado en tiempo."""
-        trigger = AutoRetrainingTrigger({'retrain_interval_days': 7})
+        trigger = AutoRetrainingTrigger({"retrain_interval_days": 7})
 
         # Registrar retrain hace 10 días
         trigger.record_retrain(timestamp=datetime.now() - timedelta(days=10))
 
         result = trigger.should_retrain(timestamp=datetime.now())
 
-        assert result['should_retrain'] is True
-        assert result['time_based'] is True
-        assert 'time_based' in result['reasons'][0]
+        assert result["should_retrain"] is True
+        assert result["time_based"] is True
+        assert "time_based" in result["reasons"][0]
 
     def test_drift_based_retraining(self):
         """Test retraining basado en drift."""
         trigger = AutoRetrainingTrigger(
             {
-                'retrain_on_drift': True,
-                'drift_detector_config': {'window_size': 50, 'drift_threshold_ks': 0.1},
+                "retrain_on_drift": True,
+                "drift_detector_config": {"window_size": 50, "drift_threshold_ks": 0.1},
             }
         )
 
@@ -214,37 +214,37 @@ class TestAutoRetrainingTrigger:
 
         result = trigger.should_retrain(current_data=current_data)
 
-        assert 'drift_detection' in result
+        assert "drift_detection" in result
         logger.info(f"Retraining trigger: {result}")
 
     def test_performance_degradation_retraining(self):
         """Test retraining basado en degradación de performance."""
         trigger = AutoRetrainingTrigger(
-            {'retrain_on_performance_degradation': True, 'performance_degradation_threshold': 0.2}
+            {"retrain_on_performance_degradation": True, "performance_degradation_threshold": 0.2}
         )
 
         # Registrar performance histórica buena
-        trigger.record_performance({'accuracy': 0.85, 'f1_score': 0.80})
-        trigger.record_performance({'accuracy': 0.87, 'f1_score': 0.82})
-        trigger.record_performance({'accuracy': 0.86, 'f1_score': 0.81})
+        trigger.record_performance({"accuracy": 0.85, "f1_score": 0.80})
+        trigger.record_performance({"accuracy": 0.87, "f1_score": 0.82})
+        trigger.record_performance({"accuracy": 0.86, "f1_score": 0.81})
 
         # Performance actual degradada
-        current_performance = {'accuracy': 0.60, 'f1_score': 0.55}  # ~30% degradación
+        current_performance = {"accuracy": 0.60, "f1_score": 0.55}  # ~30% degradación
 
         result = trigger.should_retrain(current_performance=current_performance)
 
-        assert 'performance_degradation' in result
-        if result.get('performance_degradation', {}).get('degradation_detected', False):
-            assert result['should_retrain'] is True
-            assert 'performance_degradation' in result['reasons'][0]
+        assert "performance_degradation" in result
+        if result.get("performance_degradation", {}).get("degradation_detected", False):
+            assert result["should_retrain"] is True
+            assert "performance_degradation" in result["reasons"][0]
 
     def test_combined_triggers(self):
         """Test combinación de múltiples triggers."""
         trigger = AutoRetrainingTrigger(
             {
-                'retrain_on_drift': True,
-                'retrain_on_overfitting': True,
-                'retrain_interval_days': 365,  # No time-based
+                "retrain_on_drift": True,
+                "retrain_on_overfitting": True,
+                "retrain_interval_days": 365,  # No time-based
             }
         )
 
@@ -263,8 +263,8 @@ class TestAutoRetrainingTrigger:
 
         result = trigger.should_retrain(current_data=current_data)
 
-        assert 'drift_detection' in result
-        assert 'overfitting_detection' in result
+        assert "drift_detection" in result
+        assert "overfitting_detection" in result
         logger.info(
             f"Triggers combinados: should_retrain={result['should_retrain']}, reasons={result['reasons']}"
         )

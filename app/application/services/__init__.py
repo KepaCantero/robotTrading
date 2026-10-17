@@ -28,7 +28,7 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from datetime import datetime
 from decimal import Decimal
-from typing import TYPE_CHECKING, Callable, Generic, Optional, TypeVar, cast
+from typing import TYPE_CHECKING, Any, Callable, Generic, Optional, TypeVar, cast
 
 from app.domain.entities.order import Order, OrderSide, OrderType
 from app.domain.entities.portfolio import Portfolio, Position
@@ -204,7 +204,7 @@ class ApplicationService:  # Concrete base class with shared functionality
         ```
     """
 
-    def __init__(self, uow_factory: Callable[..., AbstractUnitOfWork]):
+    def __init__(self, uow_factory: Callable[..., Any]):
         """
         Initialize service with Unit of Work factory.
 
@@ -313,8 +313,7 @@ class GetPortfolioOrdersQuery(Query[list[Order]]):
         # Cast to access domain-specific repository method
 
         orders_repo = cast("OrderRepository", uow.orders)
-        result = await orders_repo.find_by_portfolio(self.portfolio_id)
-        return cast("list[Order]", result)
+        return await orders_repo.find_by_portfolio(self.portfolio_id)
 
 
 # Service
@@ -708,19 +707,10 @@ class NotFoundError(Exception):
 
 
 # ============================================================================
-# INPUT PROFILE ROUTING & CONFIGURATION SERVICES
+# RISK / TAX SERVICES (imports tardíos deliberados: evitan ciclos)
 # ============================================================================
 
-from .input_profile_router import (
-    InputProfileRouter,
-    OptimizationConfig,
-    OptimizationType,
-    RebalancingFrequency,
-    RiskConfig,
-    StrategyType,
-    SystemConfiguration,
-    TaxConfig,
-)
+# pylint: disable=wrong-import-position
 from .risk_configurator import (
     DrawdownMetrics,
     RiskBudget,
@@ -746,29 +736,20 @@ __all__ = [
     "DrawdownMetrics",
     "GetOrderQuery",
     "GetPortfolioOrdersQuery",
-    # InputProfile Router
-    "InputProfileRouter",
     "NotFoundError",
-    "OptimizationConfig",
-    "OptimizationType",
     "OrderApplicationService",
     # Portfolio Service
     "PortfolioApplicationService",
     "Query",
-    "RebalancingFrequency",
     "RiskBudget",
-    "RiskConfig",
     # Risk Configurator
     "RiskConfigurator",
     "RiskLimit",
     "RiskLimitType",
     "ServiceOrchestrator",
-    "StrategyType",
     "StressTestScenario",
     "SubmitOrderCommand",
-    "SystemConfiguration",
     "TaxCalculation",
-    "TaxConfig",
     "TaxJurisdiction",
     "TaxLot",
     "TaxMethod",

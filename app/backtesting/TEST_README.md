@@ -373,7 +373,7 @@ tests/
       "sharpe_ratio": 2.5,
       "max_drawdown": -0.08,
       "win_rate": 0.65,
-      "profit_factor": 2.8
+      "profit_factor": 2.8,
   }
   ```
 
@@ -384,7 +384,7 @@ tests/
       "sharpe_ratio": -0.5,
       "max_drawdown": -0.45,
       "win_rate": 0.35,
-      "profit_factor": 0.7
+      "profit_factor": 0.7,
   }
   ```
 

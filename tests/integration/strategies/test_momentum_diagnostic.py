@@ -102,12 +102,12 @@ class TestMomentumSignalGeneration:
         # Verificamos que si hay señales, tienen la estructura correcta
         if signals and len(signals) > 0:
             signal = signals[0]
-            assert hasattr(signal, 'symbol')
-            assert hasattr(signal, 'signal_type')
-            assert hasattr(signal, 'price')
-            assert hasattr(signal, 'timestamp')
-            assert hasattr(signal, 'price')
-            assert hasattr(signal, 'volume')
+            assert hasattr(signal, "symbol")
+            assert hasattr(signal, "signal_type")
+            assert hasattr(signal, "price")
+            assert hasattr(signal, "timestamp")
+            assert hasattr(signal, "price")
+            assert hasattr(signal, "volume")
             assert signal.signal_type in [SignalType.BUY, SignalType.SELL]
             assert signal.volume == Decimal("1")  # Placeholder
 
@@ -339,12 +339,12 @@ class TestMomentumPositionSize:
 
         # Debería ser: $50k * 10% = $5k / $200 = 25 acciones
         expected = Decimal("50000") * Decimal("0.1") / Decimal("200")
-        assert abs(position_size - expected) < Decimal(
-            "0.1"
-        ), f"Position size should be ~{expected}, got {position_size}"
-        assert position_size >= Decimal(
-            "1"
-        ), f"Position size should be at least 1 share, got {position_size}"
+        assert abs(position_size - expected) < Decimal("0.1"), (
+            f"Position size should be ~{expected}, got {position_size}"
+        )
+        assert position_size >= Decimal("1"), (
+            f"Position size should be at least 1 share, got {position_size}"
+        )
 
     def test_get_position_size_sell_uses_existing_position(self):
         """Verificar que get_position_size para SELL usa la posición existente."""
@@ -385,9 +385,9 @@ class TestMomentumPositionSize:
         position_size = self.strategy.get_position_size(signal, portfolio)
 
         # Debería retornar la cantidad de la posición existente
-        assert position_size == Decimal(
-            "10"
-        ), f"Position size for SELL should be existing position (10), got {position_size}"
+        assert position_size == Decimal("10"), (
+            f"Position size for SELL should be existing position (10), got {position_size}"
+        )
 
     def test_get_position_size_sell_without_position_returns_zero(self):
         """Verificar que get_position_size para SELL sin posición retorna 0."""
@@ -415,9 +415,9 @@ class TestMomentumPositionSize:
 
         position_size = self.strategy.get_position_size(signal, portfolio)
 
-        assert position_size == Decimal(
-            "0"
-        ), f"Position size for SELL without position should be 0, got {position_size}"
+        assert position_size == Decimal("0"), (
+            f"Position size for SELL without position should be 0, got {position_size}"
+        )
 
 
 class TestMomentumExposureCalculation:
@@ -458,9 +458,9 @@ class TestMomentumExposureCalculation:
         # Invested = $20k
         # Exposure = $20k / $50k = 40%
         expected = Decimal("20000") / Decimal("50000")
-        assert abs(exposure - expected) < Decimal(
-            "0.01"
-        ), f"Exposure should be ~40%, got {exposure:.2%}"
+        assert abs(exposure - expected) < Decimal("0.01"), (
+            f"Exposure should be ~40%, got {exposure:.2%}"
+        )
 
     def test_calculate_total_exposure_no_positions(self):
         """Verificar cálculo de exposición sin posiciones."""
@@ -474,9 +474,9 @@ class TestMomentumExposureCalculation:
 
         exposure = self.strategy._calculate_total_exposure(portfolio)
 
-        assert exposure == Decimal(
-            "0"
-        ), f"Exposure with no positions should be 0%, got {exposure:.2%}"
+        assert exposure == Decimal("0"), (
+            f"Exposure with no positions should be 0%, got {exposure:.2%}"
+        )
 
 
 class TestMomentumIntegration:
@@ -527,12 +527,12 @@ class TestMomentumIntegration:
 
         if signals:
             for signal in signals:
-                assert (
-                    signal.symbol in symbols
-                ), f"Signal symbol {signal.symbol} should be in {symbols}"
-                assert (
-                    signal.metadata.get("strategy") == "momentum"
-                ), "Signal should have strategy='momentum' in metadata"
+                assert signal.symbol in symbols, (
+                    f"Signal symbol {signal.symbol} should be in {symbols}"
+                )
+                assert signal.metadata.get("strategy") == "momentum", (
+                    "Signal should have strategy='momentum' in metadata"
+                )
 
     def test_momentum_risk_check_with_realistic_portfolio(self):
         """Test completo de risk_check con portfolio realista."""
@@ -694,9 +694,9 @@ class TestMomentumEdgeCases:
         position_size = self.strategy.get_position_size(signal, portfolio)
 
         # $100 * 10% = $10 / $200 = 0.05 acciones -> mínimo 1 acción
-        assert position_size >= Decimal(
-            "1"
-        ), f"Position size should be at least 1, got {position_size}"
+        assert position_size >= Decimal("1"), (
+            f"Position size should be at least 1, got {position_size}"
+        )
 
 
 if __name__ == "__main__":

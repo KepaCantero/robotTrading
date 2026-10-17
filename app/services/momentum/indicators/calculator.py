@@ -215,7 +215,11 @@ class TechnicalIndicatorCalculator:
 
                 for col in macd_df.columns:
                     col_upper = col.upper()
-                    if "MACD" in col_upper and "MACDS" not in col_upper and "MACDH" not in col_upper:
+                    if (
+                        "MACD" in col_upper
+                        and "MACDS" not in col_upper
+                        and "MACDH" not in col_upper
+                    ):
                         macd_line_col = col
                     elif "MACDS" in col_upper or "MACD_SIGNAL" in col_upper:
                         signal_line_col = col
@@ -252,7 +256,6 @@ class TechnicalIndicatorCalculator:
             ema_slow = close.ewm(span=slow_period, adjust=False).mean()
             macd_series = ema_fast - ema_slow
             signal_series = macd_series.ewm(span=signal_period, adjust=False).mean()
-            hist_series = macd_series - signal_series
 
             macd_line = float(macd_series.iloc[-1])
             signal_line = float(signal_series.iloc[-1])

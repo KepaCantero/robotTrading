@@ -25,7 +25,7 @@ sys.path.insert(0, str(project_root))
 from app.services.strategy_stock_allocator import StrategyStockAllocator
 
 logging.basicConfig(
-    level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
 logger = logging.getLogger(__name__)
 
@@ -50,7 +50,7 @@ def load_all_csv_data():
             df.columns = df.columns.str.lower()
 
             # Handle date column
-            date_col = 'date' if 'date' in df.columns else 'timestamp'
+            date_col = "date" if "date" in df.columns else "timestamp"
             if date_col in df.columns:
                 df[date_col] = pd.to_datetime(df[date_col])
                 df = df.set_index(date_col)
@@ -62,7 +62,7 @@ def load_all_csv_data():
             df = df.loc[start_date:end_date]
 
             # Check required columns
-            required_cols = ['open', 'high', 'low', 'close', 'volume']
+            required_cols = ["open", "high", "low", "close", "volume"]
             missing = [col for col in required_cols if col not in df.columns]
             if missing:
                 logger.warning(f"{symbol}: Missing columns {missing}, skipping")
@@ -163,7 +163,7 @@ def test_allocation():
         strategy_counts[strategy] = strategy_counts.get(strategy, 0) + 1
         strategy_capital[strategy] = strategy_capital.get(strategy, 0.0) + metrics.capital
 
-    for strategy in ['momentum', 'mean_reversion', 'pairs_trading']:
+    for strategy in ["momentum", "mean_reversion", "pairs_trading"]:
         count = strategy_counts.get(strategy, 0)
         capital = strategy_capital.get(strategy, 0.0)
         pct = (capital / total_capital) * 100
@@ -176,7 +176,7 @@ def test_allocation():
         f"\n   {'Total':20s}: {len(result.allocations):3d} tickers, ${total_allocated:>10,.2f} ({utilization:5.1f}%)"
     )
     print(
-        f"   {'Residual':20s}: {'':3s} {'':10s} ${result.residual_capital:>10,.2f} ({result.residual_capital/total_capital*100:5.1f}%)"
+        f"   {'Residual':20s}: {'':3s} {'':10s} ${result.residual_capital:>10,.2f} ({result.residual_capital / total_capital * 100:5.1f}%)"
     )
 
     # Sample allocations
@@ -184,7 +184,7 @@ def test_allocation():
     for i, (ticker, metrics) in enumerate(list(result.allocations.items())[:15], 1):
         print(
             f"   {i:2d}. {ticker:6s} -> {metrics.strategy:15s} "
-            f"${metrics.capital:>10,.2f} ({metrics.weight*100:5.2f}%) "
+            f"${metrics.capital:>10,.2f} ({metrics.weight * 100:5.2f}%) "
             f"SPS={metrics.sps_score:.4f}"
         )
 
@@ -228,7 +228,7 @@ def test_allocation():
     strategies_with_allocs = len(
         [
             s
-            for s in ['momentum', 'mean_reversion', 'pairs_trading']
+            for s in ["momentum", "mean_reversion", "pairs_trading"]
             if strategy_counts.get(s, 0) > 0
         ]
     )

@@ -10,7 +10,7 @@ def matplotlib_figure():
     """Fixture to manage matplotlib figures."""
     import matplotlib
 
-    matplotlib.use('Agg')  # Use non-interactive backend
+    matplotlib.use("Agg")  # Use non-interactive backend
     import matplotlib.pyplot as plt
 
     fig = plt.figure()

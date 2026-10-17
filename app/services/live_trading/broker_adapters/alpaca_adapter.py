@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 """
 Alpaca Adapter - Implements BrokerConnector interface for Alpaca.
 
@@ -9,6 +7,8 @@ Maps between:
 - Application-level requirements (risk gates, order manager, etc.)
 - Error recovery and resilience
 """
+
+from __future__ import annotations
 
 import asyncio
 import logging

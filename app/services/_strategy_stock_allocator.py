@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 """Strategy Stock Allocator Module
 
 Selección, clasificación y asignación dinámica de acciones a estrategias:
@@ -15,6 +13,8 @@ Implementa arquitectura profesional, verificable y auditable con:
 - Registro completo de decisiones
 - Cobertura de pruebas exhaustiva
 """
+
+from __future__ import annotations
 
 import logging
 from collections import defaultdict

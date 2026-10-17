@@ -326,9 +326,9 @@ class TestFullPipelineNoMocks:
 
         # Verify realistic data was generated
         assert len(realistic_quotes) == 252, "Should generate 252 trading days"
-        assert all(
-            q.symbol == default_symbol for q in realistic_quotes
-        ), f"All quotes should be {default_symbol}"
+        assert all(q.symbol == default_symbol for q in realistic_quotes), (
+            f"All quotes should be {default_symbol}"
+        )
 
         # Verify realistic price movement (not too wild)
         prices = [float(q.close) for q in realistic_quotes]
@@ -336,9 +336,9 @@ class TestFullPipelineNoMocks:
         assert 0.0 <= price_change_pct <= 2.0, "Price change should be 0-200% (realistic)"
 
         # Verify signals were generated
-        assert (
-            5 <= len(realistic_signals) <= 200
-        ), f"Should have 5-200 signals, got {len(realistic_signals)}"
+        assert 5 <= len(realistic_signals) <= 200, (
+            f"Should have 5-200 signals, got {len(realistic_signals)}"
+        )
 
         # Verify signal metadata
         for sig in realistic_signals:
@@ -409,9 +409,9 @@ class TestFullPipelineNoMocks:
                     # Small capital should have HIGHER commission impact (worse)
                     # Large capital should have LOWER commission impact (better)
                     if impact_1k > 0 and impact_100k > 0:
-                        assert (
-                            impact_1k >= impact_100k
-                        ), f"€1K commission impact ({impact_1k:.2%}) should be >= €100K ({impact_100k:.2%})"
+                        assert impact_1k >= impact_100k, (
+                            f"€1K commission impact ({impact_1k:.2%}) should be >= €100K ({impact_100k:.2%})"
+                        )
 
                         # Add to summary
                         reporter.add_note(
@@ -420,14 +420,14 @@ class TestFullPipelineNoMocks:
                         )
 
                 # Verify alpha degradation is reasonable (0-100%)
-                assert (
-                    0.0 <= float(report.alpha_degradation) <= 1.0
-                ), f"Alpha degradation should be 0-100%, got {report.alpha_degradation:.2%}"
+                assert 0.0 <= float(report.alpha_degradation) <= 1.0, (
+                    f"Alpha degradation should be 0-100%, got {report.alpha_degradation:.2%}"
+                )
 
                 # Verify scalability score is in valid range
-                assert (
-                    Decimal("0") <= report.scalability_score <= Decimal("100")
-                ), f"Scalability score should be 0-100, got {report.scalability_score}"
+                assert Decimal("0") <= report.scalability_score <= Decimal("100"), (
+                    f"Scalability score should be 0-100, got {report.scalability_score}"
+                )
 
                 # Add results to summary (use the 10K level as representative)
                 if Decimal("10000") in results_by_capital:
@@ -545,20 +545,20 @@ class TestCommissionCalculations:
                 actual_impact = actual_commissions / expected_gross
 
                 # Verify: Commission impact should be reasonable (< 50%)
-                assert actual_impact < Decimal(
-                    "0.50"
-                ), f"Commission impact ({actual_impact:.2%}) should be < 50%"
+                assert actual_impact < Decimal("0.50"), (
+                    f"Commission impact ({actual_impact:.2%}) should be < 50%"
+                )
 
                 # Verify: Commissions should be positive
-                assert actual_commissions > Decimal(
-                    "0"
-                ), f"Total commissions should be positive, got {actual_commissions}"
+                assert actual_commissions > Decimal("0"), (
+                    f"Total commissions should be positive, got {actual_commissions}"
+                )
 
                 # Verify: Gross profit should exceed commissions (profitable strategy)
                 if known_gross_profit > 0:
-                    assert (
-                        known_gross_profit > actual_commissions
-                    ), f"Gross profit ({known_gross_profit}) should exceed commissions ({actual_commissions})"
+                    assert known_gross_profit > actual_commissions, (
+                        f"Gross profit ({known_gross_profit}) should exceed commissions ({actual_commissions})"
+                    )
 
     def test_commission_percentage_decreases_with_capital(self):
         """
@@ -591,20 +591,20 @@ class TestCommissionCalculations:
         # Verify commission percentage decreases with capital
         # Micro account (1K) should have highest %
         # Fund account (100K) should have lowest %
-        assert (
-            commission_percentages[0] > commission_percentages[-1]
-        ), f"Micro account % ({commission_percentages[0]:.4%}) should be > Fund account % ({commission_percentages[-1]:.4%})"
+        assert commission_percentages[0] > commission_percentages[-1], (
+            f"Micro account % ({commission_percentages[0]:.4%}) should be > Fund account % ({commission_percentages[-1]:.4%})"
+        )
 
         # Verify specific commission models
         # 1K: Fixed $5 = 0.0005% of 1M
-        assert (
-            commission_percentages[0] >= 0.000004
-        ), "Micro account should have ~0.0005% commission"
+        assert commission_percentages[0] >= 0.000004, (
+            "Micro account should have ~0.0005% commission"
+        )
 
         # 100K: Tiered with very low rates
-        assert (
-            commission_percentages[-1] < commission_percentages[0]
-        ), "Fund account should have lower percentage than micro account"
+        assert commission_percentages[-1] < commission_percentages[0], (
+            "Fund account should have lower percentage than micro account"
+        )
 
 
 # ============================================================================
@@ -786,9 +786,9 @@ class TestAlphaDegradation:
 
         actual_degradation = analyzer._calculate_alpha_degradation(results)
 
-        assert abs(actual_degradation - expected_degradation) < Decimal(
-            "0.0001"
-        ), f"Expected degradation {expected_degradation:.4f}, got {actual_degradation:.4f}"
+        assert abs(actual_degradation - expected_degradation) < Decimal("0.0001"), (
+            f"Expected degradation {expected_degradation:.4f}, got {actual_degradation:.4f}"
+        )
 
     def test_alpha_degradation_reasonable_range(self):
         """
@@ -928,9 +928,9 @@ class TestEdgeCasesRobust:
             assert report is not None, "Should handle duplicate capital levels"
         except Exception as e:
             # If it fails, should be a graceful failure
-            assert (
-                "duplicate" in str(e).lower() or "capital" in str(e).lower()
-            ), "Error should mention duplicates or capital levels"
+            assert "duplicate" in str(e).lower() or "capital" in str(e).lower(), (
+                "Error should mention duplicates or capital levels"
+            )
 
     def test_adv_limit_over_100_percent_raises_error(self, default_symbol):
         """Test that ADV limit > 100% is handled correctly."""
@@ -1057,9 +1057,9 @@ class TestEdgeCasesRobust:
         if report.capital_level_results:
             for result in report.capital_level_results:
                 if result.total_trades == 0:
-                    assert result.total_commissions == Decimal(
-                        "0"
-                    ), "No trades should mean 0 commissions"
+                    assert result.total_commissions == Decimal("0"), (
+                        "No trades should mean 0 commissions"
+                    )
 
 
 # ============================================================================

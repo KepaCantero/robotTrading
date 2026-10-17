@@ -16,6 +16,7 @@ Compliance: Ernest Chan Rule 1.9
 """
 
 from decimal import Decimal
+
 from app.services.position_sizing_engine import PositionSizingEngine
 
 
@@ -38,10 +39,10 @@ def example_basic_kelly_calculation():
         capital=Decimal("10000"),
     )
 
-    print(f"Win Rate: 55%")
-    print(f"Avg Win: $100.00")
-    print(f"Avg Loss: $75.00")
-    print(f"\nKelly Results:")
+    print("Win Rate: 55%")
+    print("Avg Win: $100.00")
+    print("Avg Loss: $75.00")
+    print("\nKelly Results:")
     print(f"  Raw Kelly Fraction: {result['kelly_fraction']:.4f}")
     print(f"  Half-Kelly Fraction: {result['half_kelly_fraction']:.4f}")
     print(f"  Position %: {result['position_percentage']:.2f}%")
@@ -84,12 +85,12 @@ def example_from_backtest_metrics():
         capital=capital,
     )
 
-    print(f"Backtest Performance:")
+    print("Backtest Performance:")
     print(f"  Total Trades: {backtest_metrics['total_trades']}")
     print(f"  Win Rate: {backtest_metrics['win_rate']}%")
     print(f"  Avg Win: ${backtest_metrics['avg_win']}")
     print(f"  Avg Loss: ${backtest_metrics['avg_loss']}")
-    print(f"\nKelly Position Sizing:")
+    print("\nKelly Position Sizing:")
     print(f"  Recommendation: {result['recommendation']}")
     print(f"  Position Size: ${result['position_value']:.2f}")
     print(f"  % of Capital: {result['position_percentage']:.2f}%")
@@ -113,14 +114,14 @@ def example_negative_expectancy():
         avg_loss=100.0,
     )
 
-    print(f"Win Rate: 40%")
-    print(f"Avg Win: $50.00")
-    print(f"Avg Loss: $100.00")
-    print(f"\nKelly Results:")
+    print("Win Rate: 40%")
+    print("Avg Win: $50.00")
+    print("Avg Loss: $100.00")
+    print("\nKelly Results:")
     print(f"  Raw Kelly: {result['kelly_fraction']:.4f}")
     print(f"  Half-Kelly: {result['half_kelly_fraction']:.4f}")
     print(f"  Recommendation: {result['recommendation']}")
-    print(f"\n→ Kelly indicates NEGATIVE EXPECTANCY - DO NOT TRADE")
+    print("\n→ Kelly indicates NEGATIVE EXPECTANCY - DO NOT TRADE")
 
 
 def example_25_percent_cap():
@@ -142,15 +143,15 @@ def example_25_percent_cap():
         capital=Decimal("100000"),
     )
 
-    print(f"Win Rate: 80%")
-    print(f"Avg Win: $200.00")
-    print(f"Avg Loss: $50.00")
-    print(f"\nKelly Results:")
+    print("Win Rate: 80%")
+    print("Avg Win: $200.00")
+    print("Avg Loss: $50.00")
+    print("\nKelly Results:")
     print(f"  Raw Kelly: {result['kelly_fraction']:.4f} (very high!)")
     print(f"  Half-Kelly (capped): {result['half_kelly_fraction']:.4f}")
     print(f"  Position %: {result['position_percentage']:.2f}%")
     print(f"  Position Value: ${result['position_value']:,.2f}")
-    print(f"\n→ Despite excellent metrics, position CAPPED at 25% for risk management")
+    print("\n→ Despite excellent metrics, position CAPPED at 25% for risk management")
 
 
 def example_fallback_to_2_percent():
@@ -177,16 +178,16 @@ def example_fallback_to_2_percent():
         capital=Decimal("10000"),
     )
 
-    print(f"Insufficient Backtest Data:")
+    print("Insufficient Backtest Data:")
     print(f"  Win Rate: {insufficient_metrics['win_rate']}%")
     print(f"  Avg Win: ${insufficient_metrics['avg_win']}")
     print(f"  Avg Loss: ${insufficient_metrics['avg_loss']} (no losses recorded)")
-    print(f"\nFallback Results:")
+    print("\nFallback Results:")
     print(f"  Recommendation: {result['recommendation']}")
     print(f"  Position Size: ${result['position_value']:.2f}")
     print(f"  Position %: {result['position_percentage']:.2f}%")
     print(f"  Reason: {result['fallback_reason']}")
-    print(f"\n→ Using conservative 2% rule until more data available")
+    print("\n→ Using conservative 2% rule until more data available")
 
 
 def example_kelly_vs_traditional_sizing():
@@ -219,13 +220,13 @@ def example_kelly_vs_traditional_sizing():
     # Traditional 2% rule
     traditional_2pct = capital * Decimal("0.02")
 
-    print(f"Strategy: 58% win rate, $110 win, $75 loss")
-    print(f"\nPosition Sizing Comparison:")
+    print("Strategy: 58% win rate, $110 win, $75 loss")
+    print("\nPosition Sizing Comparison:")
     print(f"  Traditional 2% Rule: ${traditional_2pct:.2f}")
     print(f"  Kelly Criterion: ${kelly_result['position_value']:.2f}")
     print(f"  Difference: ${kelly_result['position_value'] - traditional_2pct:.2f}")
     print(f"  Kelly vs Traditional: {(kelly_result['position_value'] / traditional_2pct):.2f}x")
-    print(f"\n→ Kelly provides OPTIMAL position sizing based on actual performance")
+    print("\n→ Kelly provides OPTIMAL position sizing based on actual performance")
 
 
 def main():

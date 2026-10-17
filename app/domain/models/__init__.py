@@ -22,13 +22,26 @@ try:
 except ImportError:
     # pydantic not available - momentum models will not be available
     MOMENTUM_AVAILABLE = False
-    MomentumAnalysis = None
-    MomentumFilter = None
-    MomentumSignal = None
-    MomentumStrategy = None
-    MomentumType = None
-    TechnicalIndicators = None
-    Timeframe = None
+
+_OPTIONAL_MOMENTUM_NAMES = frozenset(
+    {
+        "MomentumAnalysis",
+        "MomentumFilter",
+        "MomentumSignal",
+        "MomentumStrategy",
+        "MomentumType",
+        "TechnicalIndicators",
+        "Timeframe",
+    }
+)
+
+
+def __getattr__(name: str) -> object:
+    """Resolve optional momentum re-exports when pydantic is unavailable (PEP 562)."""
+    if name in _OPTIONAL_MOMENTUM_NAMES and not MOMENTUM_AVAILABLE:
+        return None
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+
 
 from .portfolio import (
     AssetClass,

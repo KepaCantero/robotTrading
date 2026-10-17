@@ -223,7 +223,7 @@ class ZiplineIntegrator:
     async def optimize_parameters(
         self,
         param_grid: dict[str, list],
-        strategy_func,
+        _strategy_func,
     ) -> dict:
         """
         Grid search over parameters.
