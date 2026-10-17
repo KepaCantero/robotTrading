@@ -566,9 +566,11 @@ class AdvancedVisualizer:
             # Return distribution by regime
             ax = axes[1]
             regime_returns_list = [returns[regime_labels == regime] for regime in unique_regimes]
+            # matplotlib >= 3.9 renamed boxplot's 'labels' kwarg to
+            # 'tick_labels' (and removed the old name in 3.11).
             ax.boxplot(
                 regime_returns_list,
-                labels=[regime_names.get(r, f"Regime {r}") for r in unique_regimes],
+                tick_labels=[regime_names.get(r, f"Regime {r}") for r in unique_regimes],
             )
             ax.set_title("Return Distribution by Regime")
             ax.set_ylabel("Return")

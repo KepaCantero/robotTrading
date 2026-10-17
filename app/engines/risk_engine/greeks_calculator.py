@@ -231,6 +231,8 @@ class GreeksCalculator:
                 "strike_price": K,
                 "time_to_expiry": T,
                 "volatility": sigma,
+                "risk_free_rate": r,
+                "dividend_yield": q,
                 "option_price": option_price,
                 "primary_greeks": {
                     "delta": delta,
@@ -875,7 +877,21 @@ class GreeksCalculator:
             >>> print(f"Buy {result['shares_to_trade']} shares")
         """
         try:
-            greeks = self.calculate_all_greeks(**option_position)
+            # Only pass parameters accepted by calculate_all_greeks; the
+            # position dict may carry extra keys such as 'quantity'/'symbol'.
+            valid_keys = {
+                "option_type",
+                "spot_price",
+                "strike_price",
+                "time_to_expiry",
+                "volatility",
+                "risk_free_rate",
+                "dividend_yield",
+            }
+            greeks_params = {
+                k: v for k, v in option_position.items() if k in valid_keys
+            }
+            greeks = self.calculate_all_greeks(**greeks_params)
 
             if "error" in greeks:
                 return greeks
@@ -977,17 +993,14 @@ class GreeksCalculator:
 
         option_type = greeks_result.get("option_type")
 
-        # 1. Gamma: positive for long, negative for short options (both valid)
+        # 1. Gamma: the Black-Scholes-Merton model used here only represents
+        # long options, so a non-positive gamma means a calculation error.
         if gamma is not None and gamma <= 0:
-            warnings.append(
-                f"Negative gamma ({gamma}) indicates short option position - verify intent"
-            )
+            validation_issues.append(f"Gamma must be positive for long options, got {gamma}")
 
-        # 2. Vega: positive for long, negative for short options (both valid)
+        # 2. Vega: same reasoning as gamma - always positive for long options.
         if vega is not None and vega <= 0:
-            warnings.append(
-                f"Negative vega ({vega}) indicates short option position - verify intent"
-            )
+            validation_issues.append(f"Vega must be positive for long options, got {vega}")
 
         # 3. Delta range validation
         if delta is not None:
@@ -1119,7 +1132,7 @@ class GreeksCalculator:
                     "value": total_delta,
                     "limit": max_delta,
                     "excess": abs(total_delta) - max_delta,
-                    "severity": "HIGH" if abs(total_delta) > max_delta * 1.5 else "MEDIUM",
+                    "severity": "HIGH" if abs(total_delta) >= max_delta * 1.5 else "MEDIUM",
                 }
             )
 
@@ -1155,7 +1168,7 @@ class GreeksCalculator:
         # Check Vega
         max_vega = limits.get("max_vega", 500)
         if abs(total_vega) > max_vega:
-            vega_severity = "HIGH" if abs(total_vega) > max_vega * 1.5 else "MEDIUM"
+            vega_severity = "HIGH" if abs(total_vega) >= max_vega * 1.5 else "MEDIUM"
             violations.append(
                 {
                     "greek": "vega",
@@ -1170,12 +1183,13 @@ class GreeksCalculator:
         # Check Rho
         max_rho = limits.get("max_rho", 200)
         if abs(total_rho) > max_rho:
-            warnings.append(
+            violations.append(
                 {
                     "greek": "rho",
                     "value": total_rho,
                     "limit": max_rho,
                     "excess": abs(total_rho) - max_rho,
+                    "severity": "HIGH" if abs(total_rho) >= max_rho * 1.5 else "MEDIUM",
                     "note": "Interest rate exposure",
                 }
             )
@@ -1282,14 +1296,18 @@ class GreeksCalculator:
             default_scenarios.update(shock_scenarios)
 
         try:
+            # calculate_all_greeks requires 'option_type'; accept it inside
+            # option_params and default to 'call' when omitted.
+            base_params = option_params.copy()
+            base_params.setdefault("option_type", "call")
+
             # Calculate base Greeks
-            base_greeks = self.calculate_all_greeks(**option_params)
+            base_greeks = self.calculate_all_greeks(**base_params)
 
             if "error" in base_greeks:
                 return {"error": "Base Greeks calculation failed", "details": base_greeks}
 
             sensitivity_results = {}
-            base_params = option_params.copy()
 
             # 1. Spot price sensitivity (how Delta changes)
             spot_shock = default_scenarios["spot_shock_pct"]
@@ -1455,12 +1473,13 @@ class GreeksCalculator:
         strike_price: float,
         time_to_expiry: float,
         risk_free_rate: float,
+        dividend_yield: float | None = None,
         tolerance: float = 0.01,
     ) -> dict[str, Any]:
         """
         Validate put-call parity relationship.
 
-        Put-call parity: C - P = S - K * e^(-rT)
+        Put-call parity: C - P = S * e^(-qT) - K * e^(-rT)
 
         This is a fundamental no-arbitrage relationship that must hold.
 
@@ -1471,6 +1490,8 @@ class GreeksCalculator:
             strike_price: Strike price
             time_to_expiry: Time to expiration
             risk_free_rate: Risk-free rate
+            dividend_yield: Continuous dividend yield. Falls back to the
+                value recorded in call_greeks (0.0 when absent).
             tolerance: Acceptable deviation from parity
 
         Returns:
@@ -1486,9 +1507,15 @@ class GreeksCalculator:
             if call_price is None or put_price is None:
                 return {"valid": False, "error": "Option prices not available"}
 
+            if dividend_yield is None:
+                dividend_yield = call_greeks.get("dividend_yield", 0.0)
+
             # Calculate put-call parity
             lhs = call_price - put_price
-            rhs = spot_price - strike_price * np.exp(-risk_free_rate * time_to_expiry)
+            rhs = (
+                spot_price * np.exp(-dividend_yield * time_to_expiry)
+                - strike_price * np.exp(-risk_free_rate * time_to_expiry)
+            )
 
             difference = abs(lhs - rhs)
             relative_diff = difference / spot_price if spot_price > 0 else 0
@@ -1522,6 +1549,7 @@ class GreeksCalculator:
         time_to_expiry: float,
         risk_free_rate: float,
         dividend_yield: float = 0.0,
+        volatility: float | None = None,
     ) -> dict[str, Any]:
         """
         Calculate implied volatility from option price using Newton-Raphson.
@@ -1536,13 +1564,16 @@ class GreeksCalculator:
             time_to_expiry: Time to expiration
             risk_free_rate: Risk-free rate
             dividend_yield: Dividend yield
+            volatility: Optional initial volatility guess (ignored for the
+                inverse problem; accepted for API compatibility with
+                calculate_all_greeks parameter dicts)
 
         Returns:
             Implied volatility and related metrics
         """
         try:
             # Initial guess
-            sigma = 0.2
+            sigma = float(volatility) if volatility is not None and volatility > 0 else 0.2
             max_iterations = 100
             tolerance = 1e-6
 
@@ -1640,8 +1671,20 @@ class GreeksCalculator:
             price_errors = []
 
             for option_type, market_price in market_prices.items():
+                # Keys are normally 'call'/'put', but scenario-style keys such
+                # as 'call_scenario_0' are also accepted: normalize them so the
+                # model price is computed with the intended option type.
+                normalized_type = str(option_type).lower()
+                if normalized_type not in ("call", "put"):
+                    if "put" in normalized_type:
+                        normalized_type = "put"
+                    else:
+                        normalized_type = "call"
+
                 # Calculate model price
-                greeks = self.calculate_all_greeks(option_type=option_type, **option_params)
+                greeks = self.calculate_all_greeks(
+                    option_type=normalized_type, **option_params
+                )
 
                 if "error" in greeks:
                     validation_results["options_validated"].append(

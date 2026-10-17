@@ -129,9 +129,13 @@ class TestAwesomeQuantIntegrator:
     def test_quantstats_empty_returns(self, integrator):
         """Test quantstats with empty returns."""
         empty_returns = pd.Series(dtype=float)
-        # Empty returns cause IndexError in quantstats.stats.cagr (unhandled in production)
-        with pytest.raises(IndexError):
-            integrator.calculate_quantstats_metrics(empty_returns)
+        # Empty returns are handled gracefully via the fallback metrics
+        # (quantstats itself raises DataValidationError on empty input).
+        metrics = integrator.calculate_quantstats_metrics(empty_returns)
+
+        assert isinstance(metrics, dict)
+        for v in metrics.values():
+            assert v == 0.0
 
     # Tests for empyrical metrics (if available)
     @pytest.mark.skipif(not EMPYRICAL_AVAILABLE, reason="empyrical not available")

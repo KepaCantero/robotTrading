@@ -192,46 +192,74 @@ class TechnicalIndicatorCalculator:
             logger.debug(f"MACD: Insufficient data ({len(prices)} < {slow_period})")
             return None, None, None
 
+        # Degenerate input: with constant prices there is no valid MACD
+        # (zero variance makes the indicator meaningless).
+        if len(set(prices)) == 1:
+            logger.debug("MACD: Constant prices, no valid MACD")
+            return None, None, None
+
         try:
-            df = pd.Series(prices, name="close")
-            macd_df = ta.macd(df, fast=fast_period, slow=slow_period, signal=signal_period)
+            # Try pandas_ta if available
+            if PANDAS_TA_AVAILABLE and ta is not None:
+                df = pd.Series(prices, name="close")
+                macd_df = ta.macd(df, fast=fast_period, slow=slow_period, signal=signal_period)
 
-            if macd_df is None or macd_df.empty:
-                logger.debug("MACD: pandas_ta_classic returned None or empty DataFrame")
-                return None, None, None
+                if macd_df is None or macd_df.empty:
+                    logger.debug("MACD: pandas_ta_classic returned None or empty DataFrame")
+                    return None, None, None
 
-            # Extract MACD line, signal line, and histogram
-            macd_line_col = None
-            signal_line_col = None
-            histogram_col = None
+                # Extract MACD line, signal line, and histogram
+                macd_line_col = None
+                signal_line_col = None
+                histogram_col = None
 
-            for col in macd_df.columns:
-                col_upper = col.upper()
-                if "MACD" in col_upper and "MACDS" not in col_upper and "MACDH" not in col_upper:
-                    macd_line_col = col
-                elif "MACDS" in col_upper or "MACD_SIGNAL" in col_upper:
-                    signal_line_col = col
-                elif "MACDH" in col_upper or "MACD_HIST" in col_upper:
-                    histogram_col = col
+                for col in macd_df.columns:
+                    col_upper = col.upper()
+                    if "MACD" in col_upper and "MACDS" not in col_upper and "MACDH" not in col_upper:
+                        macd_line_col = col
+                    elif "MACDS" in col_upper or "MACD_SIGNAL" in col_upper:
+                        signal_line_col = col
+                    elif "MACDH" in col_upper or "MACD_HIST" in col_upper:
+                        histogram_col = col
 
-            if macd_line_col is None or signal_line_col is None or histogram_col is None:
-                logger.debug("MACD: Some column names not found in DataFrame")
-                return None, None, None
+                if macd_line_col is None or signal_line_col is None or histogram_col is None:
+                    logger.debug("MACD: Some column names not found in DataFrame")
+                    return None, None, None
 
-            macd_line_val = macd_df[macd_line_col].iloc[-1]
-            signal_line_val = macd_df[signal_line_col].iloc[-1]
-            histogram_val = macd_df[histogram_col].iloc[-1]
+                macd_line_val = macd_df[macd_line_col].iloc[-1]
+                signal_line_val = macd_df[signal_line_col].iloc[-1]
+                histogram_val = macd_df[histogram_col].iloc[-1]
 
-            if pd.isna(macd_line_val) or pd.isna(signal_line_val) or pd.isna(histogram_val):
-                logger.debug("MACD: NaN values in MACD calculation")
-                return None, None, None
+                if pd.isna(macd_line_val) or pd.isna(signal_line_val) or pd.isna(histogram_val):
+                    logger.debug("MACD: NaN values in MACD calculation")
+                    return None, None, None
 
-            macd_line = float(macd_line_val)
-            signal_line = float(signal_line_val)
-            histogram = float(histogram_val)
+                macd_line = float(macd_line_val)
+                signal_line = float(signal_line_val)
+                histogram = float(histogram_val)
+
+                logger.debug(
+                    f"MACD({fast_period},{slow_period},{signal_period}) calculated: "
+                    f"MACD={macd_line:.4f}, Signal={signal_line:.4f}, Histogram={histogram:.4f}"
+                )
+
+                return round(macd_line, 4), round(signal_line, 4), round(histogram, 4)
+
+            # Fallback: Manual MACD calculation with pandas EWMA
+            logger.debug("MACD: Using manual calculation fallback")
+            close = pd.Series(prices, dtype=float)
+            ema_fast = close.ewm(span=fast_period, adjust=False).mean()
+            ema_slow = close.ewm(span=slow_period, adjust=False).mean()
+            macd_series = ema_fast - ema_slow
+            signal_series = macd_series.ewm(span=signal_period, adjust=False).mean()
+            hist_series = macd_series - signal_series
+
+            macd_line = float(macd_series.iloc[-1])
+            signal_line = float(signal_series.iloc[-1])
+            histogram = macd_line - signal_line  # Mathematical identity: MACD - Signal
 
             logger.debug(
-                f"MACD({fast_period},{slow_period},{signal_period}) calculated: "
+                f"MACD({fast_period},{slow_period},{signal_period}) calculated manually: "
                 f"MACD={macd_line:.4f}, Signal={signal_line:.4f}, Histogram={histogram:.4f}"
             )
 
@@ -369,15 +397,37 @@ class TechnicalIndicatorCalculator:
             return None
 
         try:
-            df = pd.DataFrame({"high": highs, "low": lows, "close": closes})
-            atr_series = ta.atr(df["high"], df["low"], df["close"], length=period)
+            # Try pandas_ta if available
+            if PANDAS_TA_AVAILABLE and ta is not None:
+                df = pd.DataFrame({"high": highs, "low": lows, "close": closes})
+                atr_series = ta.atr(df["high"], df["low"], df["close"], length=period)
 
-            if atr_series is None or atr_series.empty or atr_series.isna().all():
-                logger.debug("ATR: pandas_ta_classic returned None or all NaN values")
-                return None
+                if atr_series is None or atr_series.empty or atr_series.isna().all():
+                    logger.debug("ATR: pandas_ta_classic returned None or all NaN values")
+                    return None
 
-            atr_value = float(atr_series.iloc[-1])
-            logger.debug(f"ATR({period}) calculated: {atr_value:.4f}")
+                atr_value = float(atr_series.iloc[-1])
+                logger.debug(f"ATR({period}) calculated: {atr_value:.4f}")
+                return round(atr_value, 4)
+
+            # Fallback: Manual Wilder ATR calculation (RMA smoothing, like pandas_ta)
+            logger.debug("ATR: Using manual calculation fallback")
+            high = np.asarray(highs, dtype=float)
+            low = np.asarray(lows, dtype=float)
+            close = np.asarray(closes, dtype=float)
+
+            prev_close = np.roll(close, 1)
+            prev_close[0] = close[0]
+            true_range = np.maximum(
+                high - low,
+                np.maximum(np.abs(high - prev_close), np.abs(low - prev_close)),
+            )
+
+            # Wilder smoothing: EWM with alpha = 1/period
+            atr_value = float(
+                pd.Series(true_range).ewm(alpha=1.0 / period, adjust=False).mean().iloc[-1]
+            )
+            logger.debug(f"ATR({period}) calculated manually: {atr_value:.4f}")
             return round(atr_value, 4)
 
         except (ValueError, TypeError, KeyError, AttributeError) as e:

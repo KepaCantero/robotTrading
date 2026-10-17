@@ -239,13 +239,15 @@ class ReinforcementLearningLearner(BaseMetaLearner):
         """Inicializar RL learner."""
         super().__init__(config)
 
-        # PyTorch es REQUIRED - ya importado al inicio del módulo
-        self._initialize_model()
-
+        # Hiperparámetros: deben asignarse ANTES de _initialize_model(),
+        # que usa self.learning_rate para construir el optimizer.
         self.learning_rate = config.get("learning_rate", 0.001)
         self.discount_factor = config.get("discount_factor", 0.99)
         self.exploration_rate = config.get("exploration_rate", 0.1)
         self.exploration_decay = config.get("exploration_decay", 0.995)
+
+        # PyTorch es REQUIRED - ya importado al inicio del módulo
+        self._initialize_model()
 
     def _initialize_model(self) -> None:
         """Inicializar modelo de RL."""
@@ -392,6 +394,11 @@ class ReinforcementLearningLearner(BaseMetaLearner):
                 }
             )
 
+            # Mantener historial limitado (igual que HistoricalPerformanceLearner)
+            max_history = self.config.get("max_history_size", 1000)
+            if len(self.learning_history) > max_history:
+                self.learning_history = self.learning_history[-max_history:]
+
             # Decay exploration rate
             self.exploration_rate *= self.exploration_decay
 
@@ -457,7 +464,7 @@ class EnsembleMetaLearner(BaseMetaLearner):
                 weights = learner.learn_weights(strategy_performance, market_context)
                 all_weights.append(weights)
                 learner_names.append(type(learner).__name__)
-            except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
+            except Exception as e:  # noqa: BLE001 - un learner fallido no debe tumbar el ensemble
                 self.logger.warning(f"Learner {type(learner).__name__} falló: {e}")
 
         if not all_weights:
@@ -505,5 +512,5 @@ class EnsembleMetaLearner(BaseMetaLearner):
         for learner in self.learners:
             try:
                 learner.update(strategy_performance, portfolio_return, market_context)
-            except (ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
+            except Exception as e:  # noqa: BLE001 - un learner fallido no debe tumbar el ensemble
                 self.logger.warning(f"Error actualizando learner {type(learner).__name__}: {e}")

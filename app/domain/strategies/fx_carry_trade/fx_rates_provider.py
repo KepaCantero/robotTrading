@@ -948,9 +948,9 @@ class MockFXDataSource:
         rate = base_rate / quote_rate
 
         # Add time-based variation - use config values
+        tt = get_config().trading_thresholds
         days_diff = (as_of - self.base_date).days if self.base_date else 0
         if days_diff != 0:
-            tt = get_config().trading_thresholds
             # Add small random-like variation based on days
             variation = Decimal(str(days_diff * tt.fx_daily_variation_factor))
             rate = rate * (Decimal("1") + variation)

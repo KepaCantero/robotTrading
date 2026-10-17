@@ -344,8 +344,10 @@ class BollingerBandsIndicator:
             recent_bandwidth = bb_data["bandwidth"].iloc[-lookback:].dropna()
             min_bandwidth = recent_bandwidth.min()
 
-            # Squeeze if current bandwidth is at or near recent lows
-            is_squeeze = current_bandwidth <= min_bandwidth * 1.05
+            # Squeeze if current bandwidth is at or near recent lows.
+            # Cast to native bool: the comparison of numpy scalars yields
+            # np.bool_, which fails isinstance(..., bool) checks.
+            is_squeeze = bool(current_bandwidth <= min_bandwidth * 1.05)
 
             return is_squeeze
 

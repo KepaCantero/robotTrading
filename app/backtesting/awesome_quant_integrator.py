@@ -229,6 +229,11 @@ class AwesomeQuantIntegrator:
             return self._calculate_fallback_metrics(returns, benchmark_returns)
 
         try:
+            # Handle empty returns: quantstats raises DataValidationError
+            # (older versions: IndexError) on empty input.
+            if len(returns) == 0:
+                return self._calculate_fallback_metrics(returns, benchmark_returns)
+
             # Calculate drawdown series for avg_drawdown and underwater metrics
             dd_series = quantstats.stats.to_drawdown_series(returns)
             avg_drawdown = float(dd_series[dd_series < 0].mean()) if (dd_series < 0).any() else 0.0
