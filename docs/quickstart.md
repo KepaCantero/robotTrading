@@ -70,10 +70,10 @@ Access API documentation at: http://localhost:8000/docs
 ### Start Dashboard
 
 ```bash
-streamlit run app/presentation/dashboard/main.py
+make dashboard
 ```
 
-Access dashboard at: http://localhost:8501
+Access dashboard at: http://localhost:8503 (documentation at `/docs/`)
 
 ---
 

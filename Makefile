@@ -1,6 +1,6 @@
 # AlgoTrading Makefile
 
-.PHONY: help up down api db logs clean test test-cov migrate migration dev api-dev build deploy prod lint format type-check security
+.PHONY: help up down api db logs clean test test-cov migrate migration dev api-dev build deploy prod lint format type-check security docs-serve docs-build docs-lint dashboard
 
 # Default target
 help:
@@ -26,6 +26,9 @@ help:
 	@echo "  make format      - Auto-format with ruff"
 	@echo "  make type-check  - Run mypy type checking"
 	@echo "  make security    - Run bandit + safety scans"
+	@echo "  make docs-serve  - Serve docs/ as a site (MkDocs Material)"
+	@echo "  make docs-build  - Build static docs site into site/"
+	@echo "  make docs-lint   - Lint docs prose with Vale (B2 profile)"
 
 # Start all services
 up:
@@ -193,6 +196,20 @@ docs:
 	@echo "Generating documentation..."
 	pdoc --html app/ --output-dir docs/
 	@echo "Documentation generated in docs/"
+
+# NiceGUI backtesting dashboard (serves docs at /docs after building them)
+dashboard: docs-build
+	python -m app.presentation.dashboard.nicegui_app
+
+# Docs site (MkDocs Material)
+docs-serve:
+	.venv/bin/mkdocs serve
+
+docs-build:
+	.venv/bin/mkdocs build
+
+docs-lint:
+	vale docs/
 
 # Update dependencies
 update-deps:

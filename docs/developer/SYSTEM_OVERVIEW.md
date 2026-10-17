@@ -54,7 +54,7 @@ graph TB
 - Multi-configuration comparison
 - Export (JSON/CSV)
 
-**Technology**: Streamlit, Plotly, Pandas
+**Technology**: NiceGUI, Plotly, Pandas
 
 ### 3. Storage Layer
 

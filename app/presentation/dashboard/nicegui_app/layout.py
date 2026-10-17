@@ -15,6 +15,8 @@ from app.presentation.dashboard.nicegui_app.theme import PAGES
 if TYPE_CHECKING:
     from app.infrastructure.persistence.backtest_result_store import BacktestResultStore
     from app.presentation.dashboard.profitability_engine import ProfitabilityEngine
+    from app.services.agent_swarm.executor import Capa2PipelineExecutor
+    from app.services.agent_swarm.store import SwarmRunStore
     from app.services.backtest_runner import BacktestRunner
 
 
@@ -32,6 +34,8 @@ class AppShell:
     _store: BacktestResultStore | None = None
     _runner: BacktestRunner | None = None
     _profitability: ProfitabilityEngine | None = None
+    _swarm_executor: Capa2PipelineExecutor | None = None
+    _swarm_store: SwarmRunStore | None = None
 
     @classmethod
     def configure(
@@ -39,11 +43,15 @@ class AppShell:
         store: BacktestResultStore,
         runner: BacktestRunner,
         profitability: ProfitabilityEngine,
+        swarm_executor: Capa2PipelineExecutor | None = None,
+        swarm_store: SwarmRunStore | None = None,
     ) -> None:
         """Inject shared service instances before calling setup()."""
         cls._store = store
         cls._runner = runner
         cls._profitability = profitability
+        cls._swarm_executor = swarm_executor
+        cls._swarm_store = swarm_store
 
     @classmethod
     def setup(cls) -> None:
@@ -91,6 +99,12 @@ class AppShell:
 
             render(cls._store, cls._profitability)
 
+        @ui.page("/objectives")
+        def page_objectives():
+            from app.presentation.dashboard.nicegui_app.pages.objectives import render
+
+            render(cls._store)
+
         @ui.page("/config")
         def page_config():
             from app.presentation.dashboard.nicegui_app.pages.config_viewer import render
@@ -102,3 +116,9 @@ class AppShell:
             from app.presentation.dashboard.nicegui_app.pages.profitability import render
 
             render(cls._store, cls._profitability)
+
+        @ui.page("/swarm")
+        def page_swarm():
+            from app.presentation.dashboard.nicegui_app.pages.swarm import render
+
+            render(cls._swarm_executor, cls._swarm_store)

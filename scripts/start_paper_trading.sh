@@ -92,6 +92,7 @@ else
     echo -e "  🌐 API Server:      ${BLUE}http://localhost:8000${NC}"
     echo -e "  📚 API Docs:       ${BLUE}http://localhost:8000/docs${NC}"
     echo -e "  📊 Dashboard:      ${BLUE}http://localhost:8501${NC}"
+    echo -e "  📖 Documentation:  ${BLUE}http://localhost:8501/docs/${NC}"
     echo ""
     echo -e "${YELLOW}  Press Ctrl+C to stop the dashboard${NC}"
     echo -e "${YELLOW}  API server continues running in background${NC}"
@@ -100,5 +101,5 @@ else
     echo -e "${GREEN}═══════════════════════════════════════════════════════════════${NC}"
     echo ""
 
-    streamlit run app/presentation/dashboard/advanced_dashboard.py
+    DASHBOARD_PORT=8501 python -m app.presentation.dashboard.nicegui_app
 fi

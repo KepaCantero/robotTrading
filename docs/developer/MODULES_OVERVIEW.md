@@ -8,7 +8,7 @@
 | RiskManager       | Dimensiona posiciones y valida señales                  | Signal, Portfolio | Validated Signal                 | Risk-based sizing         | stop_loss, take_profit, max_position_size | Portfolio models          |
 | ExecutionEngine   | Ejecuta señales con slippage/commission                 | Signal, Market    | Executed Trade                   | FIFO matching             | slippage_percentage, commission           | Trade models              |
 | BacktestingEngine | Simula estrategias históricamente                       | Quote[], Signal[] | BacktestResult                   | Virtual execution         | initial_capital, commission, slippage     | SimpleBacktester          |
-| Dashboard         | Visualiza resultados y ejecuta backtests                | BacktestResult    | Visual charts, exports           | Interactive analysis      | Streamlit, plotly                         | streamlit, plotly, pandas |
+| Dashboard         | Visualiza resultados y ejecuta backtests                | BacktestResult    | Visual charts, exports           | Interactive analysis      | NiceGUI, plotly                         | nicegui, plotly, pandas |
 
 ## Module Details
 

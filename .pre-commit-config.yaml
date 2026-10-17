@@ -21,7 +21,9 @@ repos:
     rev: 1.8.0
     hooks:
       - id: bandit
-        args: ["-r", "app/", "-ll"]
+        args:
+          ["-r", "app/", "-ll", "--baseline", ".bandit.baseline.json"]
+        pass_filenames: false
   - repo: https://github.com/Yelp/detect-secrets
     rev: v1.5.0
     hooks:

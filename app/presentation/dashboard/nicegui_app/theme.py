@@ -74,8 +74,11 @@ PAGES = [
     {"name": "Backtest Runner", "icon": "play_circle", "route": "/"},
     {"name": "Results", "icon": "analytics", "route": "/results"},
     {"name": "History & Compare", "icon": "history", "route": "/history"},
+    {"name": "Objectives", "icon": "fact_check", "route": "/objectives"},
     {"name": "Config Viewer", "icon": "settings", "route": "/config"},
     {"name": "Profitability", "icon": "trending_up", "route": "/profitability"},
+    {"name": "Agent Swarm", "icon": "smart_toy", "route": "/swarm"},
+    {"name": "Documentation", "icon": "menu_book", "route": "/docs/"},
 ]
 
 

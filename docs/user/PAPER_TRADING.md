@@ -119,7 +119,7 @@ uvicorn app.api.paper_trading:app \
 ```bash
 source .venv/bin/activate
 
-streamlit run app/dashboard/advanced_dashboard.py
+python -m app.presentation.dashboard.nicegui_app
 ```
 
 ### Opción 3: Script Python
