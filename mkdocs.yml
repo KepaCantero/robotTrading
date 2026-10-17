@@ -41,6 +41,23 @@ nav:
     - "The trading rulebook": eli5/20-trading-rules.md
     - "The engineering rulebook": eli5/21-engineering-rules.md
     - "The bibliography": eli5/22-bibliography.md
+    - "The research-paper rules": eli5/33-papers.md
+    - "Deeper layers":
+      - "The agent swarm": eli5/23-agent-swarm.md
+      - "The config atlas": eli5/24-config-atlas.md
+      - "Compliance and taxes": eli5/25-compliance-tax.md
+      - "Optimization": eli5/26-optimization.md
+      - "Observability": eli5/27-observability.md
+      - "Deployment": eli5/28-deployment.md
+      - "Regime detection": eli5/34-regime-detection.md
+    - "Reference":
+      - "Data sources": eli5/29-data-sources.md
+      - "Testing": eli5/30-testing.md
+      - "Persistence": eli5/31-persistence.md
+      - "Glossary": eli5/32-glossary.md
+      - "The API tour": eli5/35-api-tour.md
+      - "Roadmap": eli5/36-roadmap.md
+      - "Troubleshooting": eli5/37-troubleshooting.md
     - "Hat: newcomer": eli5/14-hat-newcomer.md
     - "Hat: trader": eli5/15-hat-trader.md
     - "Hat: developer": eli5/16-hat-developer.md

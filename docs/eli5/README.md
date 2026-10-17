@@ -30,6 +30,27 @@ Everything here is written in simple English (around B2 level). If a sentence ma
 20. [The trading rulebook](20-trading-rules.md) — every trading rule, grouped by the book it comes from.
 21. [The engineering rulebook](21-engineering-rules.md) — the Python rules the code must follow.
 22. [The bibliography](22-bibliography.md) — the books behind the rules, and where each idea landed.
+33. [The research-paper rules](33-papers.md) — the papers, distilled into rules.
+
+**Deeper layers**
+
+23. [The agent swarm](23-agent-swarm.md) — the CAPA 2 pipeline and Mission Control.
+24. [The config atlas](24-config-atlas.md) — where every knob lives.
+25. [Compliance and taxes](25-compliance-tax.md) — pre-trade gates, post-trade checks, and the Spain tax engine.
+26. [Optimization](26-optimization.md) — tuning, labeling, meta-labeling, and walk-forward.
+27. [Observability](27-observability.md) — logs, metrics, and alerts.
+28. [Deployment](28-deployment.md) — from local to Docker to Kubernetes.
+34. [Regime detection](34-regime-detection.md) — how the app reads the market's mood.
+
+**Reference**
+
+29. [Data sources](29-data-sources.md) — every source, its env vars, and the fallback chain.
+30. [Testing](30-testing.md) — the layers, the gates, and the honest state.
+31. [Persistence](31-persistence.md) — Postgres, Redis, SQLite, and files.
+32. [Glossary](32-glossary.md) — every term, in plain English.
+35. [The API tour](35-api-tour.md) — all endpoints, and which need a key.
+36. [Roadmap](36-roadmap.md) — where the project is, and where it goes.
+37. [Troubleshooting](37-troubleshooting.md) — the errors you will hit, and the fix.
 
 **One page per hat**
 

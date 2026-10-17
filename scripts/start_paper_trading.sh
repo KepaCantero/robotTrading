@@ -79,8 +79,8 @@ else
 fi
 
 # Check if dashboard is already running
-if lsof -Pi :8501 -sTCP:LISTEN -t >/dev/null 2>&1; then
-    echo -e "${YELLOW}⚠️  Dashboard already running on port 8501${NC}"
+if lsof -Pi :8503 -sTCP:LISTEN -t >/dev/null 2>&1; then
+    echo -e "${YELLOW}⚠️  Dashboard already running on port 8503${NC}"
 else
     # Start dashboard
     echo -e "${BLUE}📊 Starting Dashboard...${NC}"
@@ -91,8 +91,8 @@ else
     echo ""
     echo -e "  🌐 API Server:      ${BLUE}http://localhost:8000${NC}"
     echo -e "  📚 API Docs:       ${BLUE}http://localhost:8000/docs${NC}"
-    echo -e "  📊 Dashboard:      ${BLUE}http://localhost:8501${NC}"
-    echo -e "  📖 Documentation:  ${BLUE}http://localhost:8501/docs/${NC}"
+    echo -e "  📊 Dashboard:      ${BLUE}http://localhost:8503${NC}"
+    echo -e "  📖 Documentation:  ${BLUE}http://localhost:8503/docs/${NC}"
     echo ""
     echo -e "${YELLOW}  Press Ctrl+C to stop the dashboard${NC}"
     echo -e "${YELLOW}  API server continues running in background${NC}"
@@ -101,5 +101,5 @@ else
     echo -e "${GREEN}═══════════════════════════════════════════════════════════════${NC}"
     echo ""
 
-    DASHBOARD_PORT=8501 python -m app.presentation.dashboard.nicegui_app
+    DASHBOARD_PORT=8503 python -m app.presentation.dashboard.nicegui_app
 fi
