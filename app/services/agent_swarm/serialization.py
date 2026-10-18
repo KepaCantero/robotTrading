@@ -15,7 +15,7 @@ from decimal import Decimal
 from enum import Enum
 from typing import Any
 
-MAX_PAYLOAD_CHARS = 16_384  # large enough for equity curves + full metrics
+MAX_PAYLOAD_CHARS = 65_536  # large enough for equity curves + full metrics
 
 
 def truncate(text: str, limit: int = MAX_PAYLOAD_CHARS) -> str:

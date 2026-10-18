@@ -196,6 +196,9 @@ class BacktestResult:
     # Equity curve for charting (list of [iso_ts, value] pairs)
     equity_curve: list[tuple[str, str]] = field(default_factory=list)
 
+    # Novice-readable trade list (symbol, shares, prices, P&L per trade)
+    trades_summary: list[dict] = field(default_factory=list)
+
     def to_dict(self) -> dict:
         """Convert result to dictionary."""
         logger.debug(
@@ -225,6 +228,7 @@ class BacktestResult:
             "equity_curve": [{"ts": ts, "value": val} for ts, val in self.equity_curve]
             if self.equity_curve
             else [],
+            "trades_summary": self.trades_summary,
             "metrics": (
                 {
                     "total_return_pct": str(self.metrics.total_return_pct),

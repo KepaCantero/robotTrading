@@ -289,84 +289,22 @@ class BacktestOrchestrator:
                     return result
 
             except Exception as runner_error:
-                logger.warning(
-                    f"⚠️ ComprehensiveBacktestRunner failed: {runner_error}, using simulation"
-                )
+                raise RuntimeError(
+                    f"ComprehensiveBacktestRunner failed: {runner_error}"
+                ) from runner_error
 
             finally:
                 # Cleanup temp file
                 if os.path.exists(temp_config_path):
                     os.unlink(temp_config_path)
 
-            logger.debug("ComprehensiveBacktestRunner not available, using simulation")
         except Exception as e:
-            logger.warning(f"⚠️ Backtest integration error: {e}, using simulation")
+            raise RuntimeError(f"Backtest integration error: {e}") from e
 
-        # Fallback to simulation
-        simulated_return = self._simulate_backtest_return(
-            investment_profile=investment_profile,
-            module_parameters=module_parameters,
+        raise RuntimeError(
+            "ComprehensiveBacktestRunner not available: refusing to fabricate a "
+            "simulated BacktestResult (the fake-results fallback was removed)"
         )
-
-        result = BacktestResult(
-            strategy_name=backtest_config.strategy_name,
-            config=backtest_config,
-            trades=[],
-            performance=None,
-            equity_curve=[],
-            start_date=data_start_date,
-            end_date=data_end_date,
-            final_capital=backtest_config.initial_capital
-            * (Decimal("1") + simulated_return / Decimal("100")),
-            total_return=simulated_return,
-            annualized_return=simulated_return,
-        )
-
-        return result
-
-    def _simulate_backtest_return(
-        self,
-        investment_profile: InvestmentProfile,
-        module_parameters: ModuleParameterSet,
-    ) -> Decimal:
-        """
-        Simulate backtest return based on module type and capital tier.
-
-        This is a simplified model for MVP. In production, actual backtest engine
-        would execute historical simulation.
-
-        Returns:
-            Simulated annual return (percentage)
-        """
-        # Base return by capital tier (higher capital = slightly lower returns due to liquidity)
-        base_returns = {
-            "micro": Decimal("15"),  # 15% for small accounts with tight execution
-            "small": Decimal("12"),  # 12% for small accounts
-            "medium": Decimal("8"),  # 8% for medium accounts (capacity fade)
-            "large": Decimal("5"),  # 5% for large accounts (capacity fade)
-        }
-
-        base = base_returns.get(investment_profile.capital_tier, Decimal("8"))
-
-        # Adjust by number of enabled modules (more = more diversification = slightly lower sharpe but more stable)
-        module_count = len(module_parameters.modules)
-        diversification_factor = Decimal("1") - (Decimal(module_count) * Decimal("0.02"))
-        diversification_factor = max(diversification_factor, Decimal("0.8"))
-
-        # Adjust by risk profile (higher risk = potentially higher return, but more volatility)
-        risk_adjustment = Decimal("1") + (
-            Decimal(investment_profile.risk_profile) * Decimal("0.05")
-        )
-
-        simulated_return = base * diversification_factor * risk_adjustment
-
-        # Add realistic variance (+/- 20%)
-        import random
-
-        variance = random.uniform(-0.2, 0.2)
-        simulated_return = simulated_return * (Decimal("1") + Decimal(str(variance)))
-
-        return simulated_return
 
     def _calculate_feasibility_metrics(
         self,

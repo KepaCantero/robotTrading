@@ -63,6 +63,23 @@ VERDICTS = {
     ),
 }
 
+# Sector mapping for the portfolio view (symbol → sector label)
+_SECTOR_MAP: dict[str, str] = {
+    "AAPL": "Technology", "MSFT": "Technology", "GOOGL": "Technology",
+    "META": "Technology", "AMZN": "Consumer", "NVDA": "Technology",
+    "TSLA": "Consumer", "JPM": "Financials", "JNJ": "Healthcare",
+    "XOM": "Energy", "KO": "Consumer", "SPY": "Index Fund",
+    "QQQ": "Index Fund", "SAN": "Financials", "BBVA": "Financials",
+    "IBE.MC": "Utilities", "ITX.MC": "Consumer", "SAP.DE": "Technology",
+    "SIE.DE": "Industrial", "MC.PA": "Consumer", "ASML.AS": "Technology",
+    "NESN.SW": "Consumer", "6758.T": "Technology", "7203.T": "Consumer",
+    "IBEX": "Index Fund", "INTC": "Technology", "AMD": "Technology",
+    "PFE": "Healthcare", "V": "Financials", "MA": "Financials",
+    "PG": "Consumer", "DIS": "Consumer", "CSCO": "Technology",
+    "WMT": "Consumer", "MRK.DE": "Healthcare", "GE": "Industrial",
+    "F": "Consumer", "BA": "Industrial", "AXP": "Financials",
+}
+
 DEFAULT_UNIVERSE = [
     "AAPL",
     "MSFT",
@@ -1256,13 +1273,86 @@ def render(
 
     def render_portfolio(run: Any) -> None:
         results = getattr(run, "results", None) or {}
+        inner = (results.get("backtest_result") or {}).get("backtest_result", {})
         portfolio = extract_portfolio(results)
+        trades = inner.get("trades_summary") or []
         portfolio_container.clear()
-        if not portfolio["allocations"]:
+        if not portfolio["allocations"] and not trades:
             return
         with portfolio_container:
             with ui.element("div").classes("panel q-pa-md w-full"):
                 ui.label("PORTFOLIO").classes("lbl q-mb-xs")
+                ui.label(f"DEBUG: allocs={len(portfolio['allocations'])} trades={len(trades)}").classes("help")
+
+                # ── STOCK POSITIONS (IB-style table) ────────────────────
+                if trades:
+                    try:
+                        from collections import Counter
+
+                        per_symbol: dict[str, list] = {}
+                        for t in trades:
+                            per_symbol.setdefault(t.get("symbol", "?"), []).append(t)
+
+                        rows = []
+                        for sym, sym_trades in sorted(per_symbol.items()):
+                            buys = [t for t in sym_trades if t.get("side") == "buy"]
+                            sells = [t for t in sym_trades if t.get("side") == "sell"]
+                            total_shares = sum(_as_float(t.get("quantity")) for t in buys)
+                            avg_price = (
+                                sum(_as_float(t.get("entry_price")) * _as_float(t.get("quantity")) for t in buys)
+                                / max(total_shares, 1) if buys else 0
+                            )
+                            realized = sum(_as_float(t.get("pnl") or 0) for t in sells)
+                            open_shares = total_shares - sum(_as_float(t.get("quantity")) for t in sells)
+                            rows.append({"symbol": sym, "sector": _SECTOR_MAP.get(sym, "Other"),
+                                "buys": len(buys), "sells": len(sells), "shares": round(open_shares, 1),
+                                "avg_price": round(avg_price, 2), "value": round(open_shares * avg_price, 0),
+                                "pnl": round(realized, 2)})
+
+                        ui.label("STOCK POSITIONS").classes("lbl q-mt-md q-mb-xs")
+                        ui.label(f"{len(rows)} stocks · {len(trades)} trades").classes("help q-mb-sm")
+
+                        with ui.row().classes("w-full no-wrap q-px-sm").style("border-bottom: 1px solid var(--line)"):
+                            for col, flex in (("STOCK","1.2"),("SECTOR","1"),("BUYS",".5"),("SELLS",".5"),("SHARES",".7"),("AVG €",".8"),("VALUE €",".9"),("P&L €",".8")):
+                                ui.label(col).classes("lbl").style(f"flex: {flex}; min-width: 0")
+
+                        for row in rows:
+                            with ui.row().classes("w-full no-wrap q-px-sm q-py-xs").style("border-bottom: 1px solid var(--line)"):
+                                ui.label(row["symbol"]).classes("pstep-name").style("flex: 1.2; min-width: 0")
+                                ui.label(row["sector"]).classes("help").style("flex: 1; min-width: 0")
+                                ui.label(str(row["buys"])).classes("pstep-meta").style("flex: .5")
+                                ui.label(str(row["sells"])).classes("pstep-meta").style("flex: .5")
+                                ui.label(str(row["shares"])).classes("pstep-meta").style("flex: .7")
+                                ui.label(f"€{row['avg_price']}").classes("pstep-meta").style("flex: .8")
+                                ui.label(f"€{row['value']:,.0f}").classes("pstep-meta").style("flex: .9")
+                                pnl_color = "term-good" if row["pnl"] >= 0 else "term-bad"
+                                ui.label(f"€{row['pnl']:,.0f}").classes(f"term-line {pnl_color}").style("flex: .8")
+
+                        sector_totals: dict[str, float] = Counter()
+                        for row in rows:
+                            sector_totals[row["sector"]] += row["value"]
+                        total_sector = sum(sector_totals.values())
+                        if total_sector > 0:
+                            sector_chart = {"backgroundColor": "transparent", "color": WARM_PALETTE,
+                                "tooltip": {"trigger": "item", "formatter": "{b}: €{c} ({d}%)"},
+                                "legend": {"bottom": 0, "textStyle": {"color": "#6f6858"}},
+                                "series": [{"type": "pie", "radius": ["38%", "65%"], "center": ["50%", "40%"],
+                                    "itemStyle": {"borderRadius": 6, "borderColor": "#fffdf6", "borderWidth": 2},
+                                    "label": {"color": "#3e3a31", "formatter": "{b}\n{d}%"},
+                                    "data": [{"name": s, "value": round(v, 0)} for s, v in sector_totals.most_common()],
+                                    "animationType": "scale", "animationEasing": "elasticOut", "animationDuration": 700}]}
+                            with ui.row().classes("w-full items-start gap-md no-wrap q-mt-md"):
+                                ui.echart(sector_chart).props("role=img aria-label='Donut by sector'").classes("flex-1").style("min-width: 240px; height: 260px")
+                                with ui.column().classes("flex-1 gap-xs").style("min-width: 0"):
+                                    ui.label("BY SECTOR").classes("lbl")
+                                    for sector, value in sector_totals.most_common():
+                                        pct = value / total_sector * 100 if total_sector > 0 else 0
+                                        with ui.row().classes("w-full items-center no-wrap gap-sm"):
+                                            ui.label(sector).classes("pstep-name")
+                                            ui.label(f"€{value:,.0f} ({pct:.0f}%)").classes("pstep-meta q-ml-auto")
+                    except Exception as exc:
+                        ui.label(f"⚠ Stock table error: {exc}").classes("term-line term-warn")
+
                 summary_bits = [
                     bit
                     for bit in (
