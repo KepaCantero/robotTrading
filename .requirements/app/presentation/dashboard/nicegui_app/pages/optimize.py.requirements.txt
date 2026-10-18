@@ -1,0 +1,44 @@
+# Requirements Document: app/presentation/dashboard/nicegui_app/pages/optimize.py
+
+## 1. Module Overview
+File: optimize.py
+Domain: Presentation
+
+## 2. Dependencies
+- `__future__`
+- `app.presentation.dashboard.nicegui_app.components.swarm_fx`
+- `app.presentation.dashboard.nicegui_app.pages.swarm`
+- `app.services.agent_swarm.executor`
+- `app.services.agent_swarm.optimizer`
+- `app.services.agent_swarm.serialization`
+- `app.services.agent_swarm.store`
+- `app.services.tax_efficiency.tax_optimized_builder`
+- `asyncio`
+- `decimal`
+- `nicegui`
+- `typing`
+
+## 3. Core Components
+### Public Functions
+- `render()`
+- `run_optimize()`
+- `adopt_params()`
+- `refresh_param_history()`
+- `restore_params()`
+- `refresh_positions()`
+- `remove_position()`
+- `add_position()`
+- `run_tax_analysis()`
+
+## 4. Applicable Trading Rules
+
+#### R15
+Complete Logging (log all decisions, trade journal format)
+
+- [ ] Implementation verified
+- [ ] Tests pass
+
+---
+Universal rules (SOLID, type hints, formatting, security, logging) live in
+.requirements/BASE_RULES.md and apply to every file.
+Resync this stub with: python scripts/generate_requirements.py

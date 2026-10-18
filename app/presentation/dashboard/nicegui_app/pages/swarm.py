@@ -450,19 +450,24 @@ def build_equity_curve_chart(equity_points: list) -> dict | None:
             "axisPointer": {"type": "cross"},
             "valueFormatter": "(v) => '€' + Number(v).toLocaleString()",
         },
-        "grid": {"left": 70, "right": 24, "top": 30, "bottom": 40},
+        "grid": {"left": 80, "right": 24, "top": 40, "bottom": 50},
         "xAxis": {
             "type": "category",
             "data": dates,
-            "axisLabel": {"color": "#948b77", "rotate": 30},
+            "axisLabel": {"color": "#948b77", "rotate": 35, "fontSize": 11},
             "boundaryGap": False,
+            "axisLine": {"lineStyle": {"color": "#d8cdb4"}},
         },
         "yAxis": {
             "type": "value",
+            "name": "Portfolio value",
+            "nameTextStyle": {"color": "#948b77", "padding": [0, 0, 0, 30]},
             "axisLabel": {
-                "color": "#948b77",
-                "formatter": "(v) => '€' + (v/1000).toFixed(0) + 'k'",
+                "color": "#6f6858",
+                "fontSize": 12,
+                "formatter": "(v) => v >= 1000000 ? '€' + (v/1000000).toFixed(1) + 'M' : v >= 1000 ? '€' + Math.round(v/1000) + 'k' : '€' + Math.round(v)",
             },
+            "splitLine": {"show": True, "lineStyle": {"color": "#e7dfcc", "width": 1}},
             "scale": True,
         },
         "series": [

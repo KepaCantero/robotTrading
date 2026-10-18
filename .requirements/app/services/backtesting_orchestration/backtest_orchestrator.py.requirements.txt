@@ -15,7 +15,6 @@ Domain: Service
 - `logging`
 - `os`
 - `pydantic`
-- `random`
 - `tempfile`
 - `typing`
 - `yaml`

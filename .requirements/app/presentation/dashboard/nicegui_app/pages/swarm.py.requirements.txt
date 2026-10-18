@@ -14,6 +14,7 @@ Domain: Presentation
 - `app.services.agent_swarm.optimizer`
 - `app.services.agent_swarm.store`
 - `asyncio`
+- `collections`
 - `dataclasses`
 - `datetime`
 - `decimal`
