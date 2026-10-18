@@ -394,19 +394,21 @@ class BacktestOrchestrator:
         # Build a novice-readable trade summary (symbol, shares, prices, P&L)
         trade_summary = []
         for t in trades:
-            trade_summary.append({
-                "symbol": t.symbol,
-                "side": t.side,
-                "quantity": str(t.quantity),
-                "entry_price": str(t.entry_price),
-                "exit_price": str(t.exit_price) if t.exit_price else None,
-                "entry_time": t.entry_time.isoformat()[:10] if t.entry_time else None,
-                "exit_time": t.exit_time.isoformat()[:10] if t.exit_time else None,
-                "pnl": str(t.pnl) if t.pnl is not None else None,
-                "pnl_pct": str(t.pnl_percentage) if t.pnl_percentage is not None else None,
-                "commission": str(t.commission or 0),
-                "status": str(t.status.value) if hasattr(t.status, "value") else str(t.status),
-            })
+            trade_summary.append(
+                {
+                    "symbol": t.symbol,
+                    "side": t.side,
+                    "quantity": str(t.quantity),
+                    "entry_price": str(t.entry_price),
+                    "exit_price": str(t.exit_price) if t.exit_price else None,
+                    "entry_time": t.entry_time.isoformat()[:10] if t.entry_time else None,
+                    "exit_time": t.exit_time.isoformat()[:10] if t.exit_time else None,
+                    "pnl": str(t.pnl) if t.pnl is not None else None,
+                    "pnl_pct": str(t.pnl_percentage) if t.pnl_percentage is not None else None,
+                    "commission": str(t.commission or 0),
+                    "status": str(t.status.value) if hasattr(t.status, "value") else str(t.status),
+                }
+            )
 
         raw_equity = engine_result.equity_curve or []
         # Downsample to ≤200 points so the JSON payload stays under the
