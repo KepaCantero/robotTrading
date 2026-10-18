@@ -175,7 +175,7 @@ jobs:
             .benchmarks/
 
       - name: Upload Coverage Reports
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@v7
         if: matrix.test-group == 'unit'
         with:
           file: ./coverage.xml
