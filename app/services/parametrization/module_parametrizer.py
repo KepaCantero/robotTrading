@@ -18,10 +18,9 @@ import logging
 from dataclasses import dataclass, field
 from decimal import Decimal
 from enum import Enum
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
-if TYPE_CHECKING:
-    from app.domain.models.investment_profile import CapitalTier, InvestmentProfile
+from app.domain.models.investment_profile import CapitalTier, InvestmentProfile
 
 logger = logging.getLogger(__name__)
 

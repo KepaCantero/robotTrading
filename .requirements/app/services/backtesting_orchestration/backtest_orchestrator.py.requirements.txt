@@ -8,6 +8,7 @@ Domain: Service
 - `__future__`
 - `app.backtesting.comprehensive_backtest_runner`
 - `app.backtesting.models`
+- `app.backtesting.walk_forward_validator`
 - `app.domain.models.investment_profile`
 - `app.services.parametrization.module_parametrizer`
 - `datetime`
@@ -23,6 +24,7 @@ Domain: Service
 ### Classes
 - `FeasibilityMetrics`
 - `ExtendedBacktestResult`
+- `BacktestComplianceError`
 - `BacktestOrchestrator`
 ### Public Functions
 - `execute_backtest()`

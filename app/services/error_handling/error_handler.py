@@ -271,7 +271,13 @@ class ErrorHandler:
             raise
 
     async def with_retry(
-        self, async_fn: Callable, *args, max_retries: int = 3, initial_delay: float = 0.5, **kwargs
+        self,
+        async_fn: Callable,
+        *args,
+        max_retries: int = 3,
+        initial_delay: float = 0.5,
+        retry_on: tuple[type[BaseException], ...] = (Exception,),
+        **kwargs,
     ) -> object:
         """
         Execute async function with exponential backoff retry.
@@ -295,7 +301,7 @@ class ErrorHandler:
         for attempt in range(max_retries + 1):
             try:
                 return await async_fn(*args, **kwargs)
-            except (asyncio.TimeoutError, OSError) as e:
+            except retry_on as e:
                 last_exception = e
                 if attempt < max_retries:
                     self.logger.warning(
@@ -383,7 +389,7 @@ def service_error_handler(fallback_context: dict[str, Any] | None = None):
                 logger.error(f"❌ Service error in {func.__name__}: {e}")
                 # Re-raise to allow caller to handle
                 raise
-            except (asyncio.TimeoutError, OSError) as e:
+            except Exception as e:
                 logger.error(f"❌ Unexpected error in {func.__name__}: {e}")
                 raise ServiceError(
                     service_name=func.__module__, message=str(e), error_code="UNKNOWN_ERROR"

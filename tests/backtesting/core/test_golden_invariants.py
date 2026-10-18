@@ -81,11 +81,11 @@ def make_signal(
     )
 
 
-def make_engine(**config_overrides) -> SimpleBacktester:
+def make_engine(commission: str = "0", **config_overrides) -> SimpleBacktester:
     config = BacktestConfig(
         strategy_name="golden",
         initial_capital=Decimal("100000"),
-        commission_per_trade=Decimal("0"),
+        commission_per_trade=Decimal(commission),
         slippage_percentage=Decimal("0"),
         **config_overrides,
     )
@@ -341,4 +341,141 @@ class TestPessimisticStops:
         assert closed[-1].reason == "stop_loss"
         assert float(closed[-1].exit_price) == pytest.approx(80.0, abs=0.2), (
             f"gap through the stop must fill at the open, exit={closed[-1].exit_price}"
+        )
+
+
+class TestCommissionAccounting:
+    """Comisiones: las cobra el modelo IBKR (TransactionCostModel), NO
+    BacktestConfig.commission_per_trade (ese campo solo pre-valida rentabilidad).
+
+    Contrato: todo trade carga comision (>= minimo IBKR $1) y el capital final
+    es menor que el de un backtest identico con costes a cero.
+    """
+
+    def test_every_trade_carries_ibkr_commission(self):
+        bars = [
+            make_quote("AAPL", T0, "100", "102", "99", "100"),
+            make_quote("AAPL", T0 + timedelta(days=1), "105", "108", "104", "107"),
+            make_quote("AAPL", T0 + timedelta(days=2), "110", "112", "109", "111"),
+        ]
+        sigs = [
+            make_signal("AAPL", SignalType.BUY, T0, price="100"),
+            make_signal("AAPL", SignalType.SELL, T0 + timedelta(days=1), price="107"),
+        ]
+        result = make_engine().run_backtest(bars, sigs)
+
+        assert len(result.trades) >= 1
+        for t in result.trades:
+            assert t.commission >= Decimal("1"), (
+                f"trade {t.side} debe cobrar >= minimo IBKR ($1); cobro {t.commission}"
+            )
+
+    def test_commissions_reduce_final_capital_vs_zero_cost(self):
+        from unittest.mock import patch
+
+        bars = [
+            make_quote("AAPL", T0, "100", "102", "99", "100"),
+            make_quote("AAPL", T0 + timedelta(days=1), "105", "108", "104", "107"),
+            make_quote("AAPL", T0 + timedelta(days=2), "110", "112", "109", "111"),
+        ]
+        sigs = [
+            make_signal("AAPL", SignalType.BUY, T0, price="100"),
+            make_signal("AAPL", SignalType.SELL, T0 + timedelta(days=1), price="107"),
+        ]
+
+        con_costes = make_engine().run_backtest(bars, sigs)
+
+        # costes a cero: parchear el modelo para que devuelva costes nulos
+        from app.backtesting.services.transaction_cost_model import TransactionCostModel
+
+        def _zero_costs(self, **kwargs):
+            return type(
+                "ZeroCostResult",
+                (),
+                {
+                    "commission": Decimal("0"),
+                    "sec_fee": Decimal("0"),
+                    "taf_fee": Decimal("0"),
+                    "slippage_cost": Decimal("0"),
+                    "market_impact_cost": Decimal("0"),
+                    "spread_cost": Decimal("0"),
+                    "total_cost": Decimal("0"),
+                    "total_cost_bps": Decimal("0"),
+                    "gross_value": Decimal("0"),
+                },
+            )()
+
+        with patch.object(TransactionCostModel, "calculate_costs", _zero_costs):
+            sin_costes = make_engine().run_backtest(bars, sigs)
+
+        delta = float(sin_costes.final_capital) - float(con_costes.final_capital)
+        assert delta > 0, (
+            "mismo backtest con el modelo de costes IBKR debe terminar con menos "
+            "capital que uno con costes a cero"
+        )
+
+
+class TestWeekendGap:
+    """Gaps entre barras no contiguas: el fill usa el open de la SIGUIENTE barra,
+    aunque haya fin de semana de por medio, sin inventar precios intermedios."""
+
+    def test_fill_across_weekend_gap_uses_next_open(self):
+        # viernes -> lunes (gap de fin de semana)
+        bars = [
+            make_quote("AAPL", T0, "100", "102", "99", "100"),  # lunes
+            make_quote("AAPL", T0 + timedelta(days=4), "100", "102", "99", "100"),  # viernes
+            make_quote("AAPL", T0 + timedelta(days=7), "95", "97", "93", "96"),  # lunes
+        ]
+        buy = make_signal("AAPL", SignalType.BUY, T0 + timedelta(days=4), price="100")
+
+        result = make_engine().run_backtest(bars, [buy])
+
+        # entrada + cierre forzado end_of_backtest; la entrada es la que importa
+        entries = [t for t in result.trades if t.side == "buy"]
+        assert len(entries) == 1
+        trade = entries[0]
+        assert trade.entry_time == T0 + timedelta(days=7), "fill tras el gap"
+        assert float(trade.entry_price) == pytest.approx(95.0, rel=0.003), (
+            "el fill es el open real del lunes, no el close del viernes"
+        )
+
+    def test_gap_down_does_not_widen_beyond_bar_range(self):
+        bars = [
+            make_quote("AAPL", T0, "100", "102", "99", "100"),
+            make_quote("AAPL", T0 + timedelta(days=3), "80", "85", "78", "84"),
+        ]
+        buy = make_signal("AAPL", SignalType.BUY, T0, price="100")
+
+        result = make_engine().run_backtest(bars, [buy])
+
+        # entrada + cierre forzado a fin de backtest (end_of_backtest)
+        entries = [t for t in result.trades if t.side == "buy"]
+        assert len(entries) == 1
+        assert float(entries[0].entry_price) == pytest.approx(80.0, rel=0.003), (
+            "el fill tras el gap es el open real de la barra siguiente"
+        )
+
+
+class TestShortRoundTrip:
+    """Shorts: la venta abre, la compra cierra; el PnL es (entrada - salida) x cantidad."""
+
+    def test_sell_without_position_does_not_open_short(self):
+        """Contrato actual del motor: LONG-ONLY.
+
+        Un SELL sin posición long NO abre un corto. Este invariante documenta
+        la limitación a propósito: si algún día el motor soporta shorts, este
+        test saltará y obligará a actualizar el contrato (y su documentación).
+        """
+        bars = [
+            make_quote("AAPL", T0, "100", "102", "99", "100"),
+            make_quote("AAPL", T0 + timedelta(days=1), "95", "97", "93", "96"),
+            make_quote("AAPL", T0 + timedelta(days=2), "90", "93", "88", "91"),
+        ]
+        sell = make_signal("AAPL", SignalType.SELL, T0, price="100")
+
+        result = make_engine().run_backtest(bars, [sell])
+
+        opened = [t for t in result.trades if t.reason != "end_of_backtest"]
+        assert opened == [], (
+            f"motor long-only: un SELL sin posición no debe abrir trades; abrió {len(opened)}"
         )

@@ -22,18 +22,15 @@ Feasibility Ratio Formula:
 from __future__ import annotations
 
 import logging
+from datetime import datetime
 from decimal import Decimal
-from typing import TYPE_CHECKING, cast
+from typing import Any, cast
 
 from pydantic import BaseModel, ConfigDict, Field
 
 from app.backtesting.models import BacktestConfig, BacktestResult, PerformanceMetrics, Trade
-
-if TYPE_CHECKING:
-    from datetime import datetime
-
-    from app.domain.models.investment_profile import InvestmentProfile
-    from app.services.parametrization.module_parametrizer import ModuleParameterSet
+from app.domain.models.investment_profile import InvestmentProfile
+from app.services.parametrization.module_parametrizer import ModuleParameterSet
 
 logger = logging.getLogger(__name__)
 
@@ -74,8 +71,19 @@ class ExtendedBacktestResult(BacktestResult):
     investment_profile: InvestmentProfile | None = Field(
         None, description="Investment profile used"
     )
+    # Gate de validación fuera de muestra (R5/R6/DATA-001) — obligatorio
+    walk_forward_passed: bool | None = Field(None, description="IS->OOS compliance passed")
+    walk_forward_degradation: float | None = Field(None, description="OOS return degradation")
+    compliance_summary: str | None = Field(None, description="Compliance summary")
 
     model_config = ConfigDict(arbitrary_types_allowed=True)
+
+
+ExtendedBacktestResult.model_rebuild(_types_namespace={"__dict__": globals()})
+
+
+class BacktestComplianceError(RuntimeError):
+    """El backtest no supera la validacion walk-forward (R5/R6/DATA-001)."""
 
 
 class BacktestOrchestrator:
@@ -140,7 +148,7 @@ class BacktestOrchestrator:
             # Step 2: Execute backtest with the comprehensive runner
             # For now, we'll create a simulated backtest result
             # In production, this would integrate with comprehensive_backtest_runner
-            backtest_result = await self._execute_with_comprehensive_runner(
+            backtest_result, wf_results, compliance = await self._execute_with_comprehensive_runner(
                 investment_profile=investment_profile,
                 module_parameters=module_parameters,
                 backtest_config=backtest_config,
@@ -161,12 +169,38 @@ class BacktestOrchestrator:
             )
 
             # Step 4: Create extended result with feasibility metrics
+            wf_passed = bool(getattr(compliance, "is_compliant", False))
+            wf_degradation = None
+            try:
+                for w in wf_results:
+                    if isinstance(w, dict) and "return_degradation" in w:
+                        wf_degradation = float(w["return_degradation"])
+                        break
+                if wf_degradation is None:
+                    degraded = [
+                        float(w.get("oos_metrics", {}).get("return_degradation", 0) or 0)
+                        for w in wf_results
+                        if isinstance(w, dict)
+                    ]
+                    wf_degradation = max(degraded) if degraded else None
+            except (TypeError, ValueError):
+                wf_degradation = None
+
             extended_result = ExtendedBacktestResult(
                 **backtest_result.model_dump(),
                 feasibility_metrics=feasibility_metrics,
                 parameter_set=module_parameters,
                 investment_profile=investment_profile,
+                walk_forward_passed=wf_passed,
+                walk_forward_degradation=wf_degradation,
+                compliance_summary=str(getattr(compliance, "get_summary", lambda: compliance)()),
             )
+
+            if not wf_passed:
+                raise BacktestComplianceError(
+                    "Backtest did not pass the mandatory walk-forward IS->OOS gate "
+                    f"(R5/R6/DATA-001): {extended_result.compliance_summary}"
+                )
 
             self.logger.info(
                 "✅ Backtest complete: "
@@ -176,6 +210,9 @@ class BacktestOrchestrator:
 
             return extended_result
 
+        except BacktestComplianceError:
+            # el gate de validación propaga con su tipo específico
+            raise
         except Exception as e:
             self.logger.error(f"❌ Backtest execution failed: {e}", exc_info=True)
             raise ValueError(f"Backtest execution failed: {e}") from e
@@ -286,7 +323,16 @@ class BacktestOrchestrator:
                         annualized_return=Decimal(str(metrics.get("annualized_return", 0))),
                     )
                     logger.info(f"✅ Real backtest completed: {backtest_config.strategy_name}")
-                    return result
+
+                    # Gate R5/R6/DATA-001: walk-forward IS->OOS obligatorio.
+                    wf_results, compliance = self._run_walk_forward_gate(
+                        runner,
+                        investment_profile,
+                        module_parameters,
+                        data_start_date,
+                        data_end_date,
+                    )
+                    return result, wf_results, compliance
 
             except Exception as runner_error:
                 raise RuntimeError(
@@ -301,10 +347,25 @@ class BacktestOrchestrator:
         except Exception as e:
             raise RuntimeError(f"Backtest integration error: {e}") from e
 
-        raise RuntimeError(
-            "ComprehensiveBacktestRunner not available: refusing to fabricate a "
-            "simulated BacktestResult (the fake-results fallback was removed)"
+    def _run_walk_forward_gate(
+        self,
+        runner: Any,
+        investment_profile: InvestmentProfile,
+        module_parameters: ModuleParameterSet,
+        data_start_date: datetime,
+        data_end_date: datetime,
+    ) -> tuple[list[dict[str, object]], object]:
+        """Ejecuta walk-forward IS->OOS y valida compliance R5/R6/DATA-001."""
+        from app.backtesting.walk_forward_validator import WalkForwardValidator
+
+        wf_results = runner.run_walk_forward_backtest()
+        validator = WalkForwardValidator(config={})
+        compliance = validator.validate_compliance(
+            [r if isinstance(r, dict) else dict(r) for r in wf_results],
+            n_parameters=max(1, len(module_parameters.modules)),
+            n_observations=max(1, (data_end_date - data_start_date).days),
         )
+        return wf_results, compliance
 
     def _calculate_feasibility_metrics(
         self,
