@@ -103,7 +103,7 @@ dev = [
     "pytest-mock>=3.14.0",
     "pytest-xdist>=3.6.0",
     "pytest-timeout>=2.2.0",
-    "hypothesis>=6.88.0",
+    "hypothesis>=6.168.5",
 
     # Linting & Formatting
     "ruff>=0.11.0",
