@@ -8,6 +8,7 @@ Domain: Service
 - `__future__`
 - `aiosqlite`
 - `app.services.agent_swarm.events`
+- `datetime`
 - `json`
 - `logging`
 - `pathlib`
@@ -24,6 +25,10 @@ Domain: Service
 - `finish_run()`
 - `count_runs()`
 - `list_runs()`
+- `save_param_set()`
+- `list_param_sets()`
+- `activate_param_set()`
+- `get_active_param_set()`
 - `append_event()`
 - `get_run_events()`
 

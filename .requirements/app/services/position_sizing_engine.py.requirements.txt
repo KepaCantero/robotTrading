@@ -10,6 +10,7 @@ Domain: Service
 - `app.backtesting.labeling.meta_labeling`
 - `app.shared.config.centralized_config`
 - `app.shared.config.strategy_config_loader`
+- `app.shared.utils.safe_parse`
 - `decimal`
 - `logging`
 - `math`

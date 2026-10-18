@@ -9,6 +9,7 @@ Domain: Service
 - `datetime`
 - `logging`
 - `models`
+- `typing`
 - `uuid`
 
 ## 3. Core Components

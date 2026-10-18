@@ -7,12 +7,12 @@ Domain: Domain
 ## 2. Dependencies
 - `__future__`
 - `app.engines.strategy_engines`
+- `app.engines.strategy_engines.ensemble`
 - `base`
 - `crypto_momentum.crypto_momentum_strategy`
 - `logging`
 - `mean_reversion`
 - `momentum`
-- `pairs_trading`
 - `typing`
 
 ## 3. Core Components

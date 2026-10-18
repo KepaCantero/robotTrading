@@ -7,6 +7,7 @@ Domain: Service
 ## 2. Dependencies
 - `__future__`
 - `app.infrastructure.data.real_market_data`
+- `app.services._strategy_stock_allocator`
 - `app.services.backtest_orchestration.backtest_orchestrator`
 - `app.services.backtest_orchestration.models`
 - `app.services.live_trading.broker_connector`

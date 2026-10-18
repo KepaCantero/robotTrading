@@ -11,9 +11,11 @@ Domain: Service
 - `logging`
 - `numpy`
 - `pandas`
+- `typing`
 
 ## 3. Core Components
 ### Classes
+- `AdfTestResult`
 - `StationarityTestResult`
 - `CointegrationTestResult`
 - `MeanReversionParameters`

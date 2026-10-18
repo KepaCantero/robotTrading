@@ -1,0 +1,41 @@
+# Requirements Document: app/services/agent_swarm/optimizer.py
+
+## 1. Module Overview
+File: optimizer.py
+Domain: Service
+
+## 2. Dependencies
+- `__future__`
+- `app.services.backtest_orchestration.backtest_orchestrator`
+- `app.services.backtest_orchestration.models`
+- `asyncio`
+- `dataclasses`
+- `datetime`
+- `decimal`
+- `itertools`
+- `logging`
+- `pathlib`
+- `typing`
+- `yaml`
+
+## 3. Core Components
+### Classes
+- `OptimizationResult`
+### Public Functions
+- `default_params()`
+- `asyncio_run()`
+- `optimize()`
+- `score()`
+
+## 4. Applicable Trading Rules
+
+#### R15
+Complete Logging (log all decisions, trade journal format)
+
+- [ ] Implementation verified
+- [ ] Tests pass
+
+---
+Universal rules (SOLID, type hints, formatting, security, logging) live in
+.requirements/BASE_RULES.md and apply to every file.
+Resync this stub with: python scripts/generate_requirements.py

@@ -222,9 +222,9 @@ class BacktestResult:
             "peak_capital": str(self.peak_capital),
             "validation_passed": self.validation_passed,
             "execution_duration_seconds": self.execution_duration_seconds,
-            "equity_curve": [
-                {"ts": ts, "value": val} for ts, val in self.equity_curve
-            ] if self.equity_curve else [],
+            "equity_curve": [{"ts": ts, "value": val} for ts, val in self.equity_curve]
+            if self.equity_curve
+            else [],
             "metrics": (
                 {
                     "total_return_pct": str(self.metrics.total_return_pct),

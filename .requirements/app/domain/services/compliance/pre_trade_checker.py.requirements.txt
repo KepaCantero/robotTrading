@@ -6,8 +6,11 @@ Domain: Domain
 
 ## 2. Dependencies
 - `__future__`
+- `app.domain.market_analysis.microstructure.liquidity`
 - `app.domain.services.compliance.results`
 - `app.domain.services.compliance.service_registry`
+- `app.domain.strategies.alpha_models`
+- `app.engines.execution_engine.microstructure.harris_integration`
 - `datetime`
 - `decimal`
 - `logging`
@@ -17,9 +20,21 @@ Domain: Domain
 ## 3. Core Components
 ### Classes
 - `PreTradeComplianceChecker`
+- `HarrisService`
+- `LiquidityService`
+- `RegimeDetectorService`
+- `AlphaModelService`
+- `VarCalculatorService`
 ### Public Functions
 - `check_signal()`
 - `get_available_checks()`
+- `pre_trade_check()`
+- `measure_market_depth()`
+- `calculate_liquidity_score()`
+- `classify_liquidity_regime()`
+- `detect_regimes()`
+- `generate_alpha()`
+- `calculate_var()`
 
 ## 4. Applicable Trading Rules
 

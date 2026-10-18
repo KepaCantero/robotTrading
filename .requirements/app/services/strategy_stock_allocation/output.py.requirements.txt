@@ -6,14 +6,13 @@ Domain: Service
 
 ## 2. Dependencies
 - `__future__`
+- `app.services.strategy_stock_allocation.orchestrator`
 - `logging`
 - `pandas`
-- `pydantic`
+- `typing`
 
 ## 3. Core Components
 ### Classes
-- `StockMetrics`
-- `PairMetrics`
 - `OutputGenerator`
 ### Public Functions
 - `generate()`

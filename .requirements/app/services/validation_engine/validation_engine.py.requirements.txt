@@ -6,6 +6,9 @@ Domain: Service
 
 ## 2. Dependencies
 - `__future__`
+- `app.services.capital_viability_gate`
+- `app.services.expensive_module_gate`
+- `app.services.learning_capital_gate`
 - `datetime`
 - `decimal`
 - `logging`

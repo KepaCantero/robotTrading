@@ -129,7 +129,7 @@ class SignalScorerService:
                 return Decimal("0")
 
             # Calcular capital disponible
-            available_capital = portfolio.cash
+            _available_capital = portfolio.cash
 
             # BUG preexistente: PositionSizingEngine.calculate_position_size espera
             # (signals: np.ndarray, meta_proba: np.ndarray, ...); esta llamada

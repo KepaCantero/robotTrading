@@ -14,6 +14,8 @@ Domain: Backtest
 - `app.backtesting.services.transaction_cost_model`
 - `app.backtesting.shared.slippage_utils`
 - `app.backtesting.shared.trade_utils`
+- `app.backtesting.signal_diagnostic_logger`
+- `app.domain.models.market_data`
 - `app.domain.models.signal`
 - `app.domain.services.trading_validators`
 - `app.shared.config.centralized_config`

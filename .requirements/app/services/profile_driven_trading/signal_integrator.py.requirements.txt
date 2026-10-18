@@ -10,6 +10,7 @@ Domain: Service
 - `logging`
 - `models`
 - `numpy`
+- `typing`
 
 ## 3. Core Components
 ### Classes

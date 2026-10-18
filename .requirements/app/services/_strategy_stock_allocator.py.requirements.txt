@@ -30,6 +30,7 @@ Domain: Service
 - `StrategyStockAllocator`
 ### Public Functions
 - `ols()`
+- `arch_model()`
 - `filter_stocks()`
 - `calculate_hurst_exponent()`
 - `classify_market_regime()`

@@ -6,6 +6,7 @@ Domain: Presentation
 
 ## 2. Dependencies
 - `__future__`
+- `app.presentation.dashboard.nicegui_app.components.agent_card`
 - `app.services.agent_swarm.executor`
 - `json`
 - `nicegui`

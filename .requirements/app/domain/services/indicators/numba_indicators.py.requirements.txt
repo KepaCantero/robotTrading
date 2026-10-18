@@ -25,7 +25,6 @@ Domain: Domain
 - `stochastic()`
 - `rolling_mean()`
 - `rolling_std()`
-- `jit()`
 - `decorator()`
 
 ## 4. Applicable Trading Rules

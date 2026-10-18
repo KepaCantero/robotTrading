@@ -8,6 +8,7 @@ Domain: Backtest
 - `__future__`
 - `app.backtesting.backtesting_compliance`
 - `app.backtesting.core`
+- `app.backtesting.core.config_loader`
 - `app.backtesting.core.error_handling`
 - `app.backtesting.core.executor`
 - `app.backtesting.core.memory_manager`
@@ -21,6 +22,7 @@ Domain: Backtest
 - `app.backtesting.runners.regime_analyzer`
 - `app.backtesting.runners.result_aggregator`
 - `app.domain.models.input_profile`
+- `app.domain.strategies.base`
 - `app.domain.strategies.momentum`
 - `app.engines.context_engine.regime_detectors.clustering_regime_detector`
 - `app.engines.context_engine.regime_detectors.hmm_regime_detector`
@@ -61,7 +63,7 @@ Domain: Backtest
 - `run_grid_search_backtest()`
 - `run_optuna_optimization()`
 - `run_out_of_sample_backtest()`
-- `run_multi_strategy_backtest()`
+- `run_backtest()`
 - `run_regime_test_backtest()`
 - `optimize_with_validation()`
 - `get_results()`

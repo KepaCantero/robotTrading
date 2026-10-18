@@ -18,6 +18,7 @@ Domain: Backtest
 - `seaborn`
 - `sklearn.cluster`
 - `threading`
+- `types`
 - `typing`
 
 ## 3. Core Components

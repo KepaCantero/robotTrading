@@ -18,11 +18,15 @@ Domain: Service
 
 ## 3. Core Components
 ### Classes
+- `BrokerAdapterProtocol`
 - `BrokerHealth`
 - `BrokerConfig`
 - `BrokerState`
 - `BrokerFailoverManager`
 ### Public Functions
+- `place_order()`
+- `get_positions()`
+- `get_account_info()`
 - `to_dict()`
 - `start()`
 - `stop()`

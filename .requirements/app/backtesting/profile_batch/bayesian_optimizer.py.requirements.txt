@@ -10,6 +10,7 @@ Domain: Backtest
 - `app.backtesting.shared`
 - `app.domain.models.input_profile`
 - `app.shared.config.profile_config_loader`
+- `app.shared.utils.safe_parse`
 - `logging`
 - `optuna`
 - `pathlib`

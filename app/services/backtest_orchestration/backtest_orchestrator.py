@@ -394,10 +394,7 @@ class BacktestOrchestrator:
         # Downsample to ≤200 points so the JSON payload stays under the
         # safe_json truncation limit (~4KB) while the chart still looks smooth
         step = max(1, len(raw_equity) // 200)
-        equity_points = [
-            (ts.isoformat(), str(val))
-            for ts, val in raw_equity[::step]
-        ]
+        equity_points = [(ts.isoformat(), str(val)) for ts, val in raw_equity[::step]]
         return BacktestResult(
             test_id=f"test_{datetime.utcnow().strftime('%Y%m%d%H%M%S')}",
             profile_id=config.profile_id,

@@ -11,6 +11,7 @@ Domain: Backtest
 - `app.backtesting.models`
 - `app.backtesting.realistic_data_generator`
 - `app.domain.models.market_data`
+- `app.domain.models.signal`
 - `dataclasses`
 - `datetime`
 - `json`

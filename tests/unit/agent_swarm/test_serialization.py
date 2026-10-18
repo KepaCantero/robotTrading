@@ -111,10 +111,11 @@ class TestTruncation:
 
     def test_equity_curve_sized_payload_not_truncated(self):
         """Equity curves (~200 points + metrics) must survive serialization."""
-        payload = {"equity_curve": [
-            {"ts": f"2024-01-{i:02d}T00:00:00", "value": "100000"}
-            for i in range(1, 29)
-        ]}
+        payload = {
+            "equity_curve": [
+                {"ts": f"2024-01-{i:02d}T00:00:00", "value": "100000"} for i in range(1, 29)
+            ]
+        }
         result = safe_json(payload)
         assert "__truncated__" not in result
         assert len(result["equity_curve"]) == 28

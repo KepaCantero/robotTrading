@@ -30,6 +30,8 @@ Domain: Domain
 - `is_otm()`
 - `total_cost()`
 - `break_even_price()`
+- `return_if_called()`
+- `downside_protection()`
 - `return_if_unchanged()`
 - `net_cost()`
 - `total_value()`

@@ -6,11 +6,19 @@ Domain: Service
 
 ## 2. Dependencies
 - `__future__`
+- `app.backtesting.data_loader`
+- `app.backtesting.engine`
 - `app.backtesting.models`
+- `app.engines.execution_engine.microstructure`
+- `app.services.compliance.compliance_engine`
+- `asyncio`
 - `datetime`
 - `decimal`
+- `importlib`
 - `logging`
 - `models`
+- `pathlib`
+- `yaml`
 
 ## 3. Core Components
 ### Classes

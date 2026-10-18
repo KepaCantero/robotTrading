@@ -6,6 +6,7 @@ Domain: Domain
 
 ## 2. Dependencies
 - `__future__`
+- `app.domain.models.market_data`
 - `app.domain.models.signal`
 - `app.domain.strategies.base`
 - `app.domain.strategies.fx_intermarket.correlation_analyzer`

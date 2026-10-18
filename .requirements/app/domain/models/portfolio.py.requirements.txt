@@ -54,6 +54,10 @@ Domain: Domain
 - `get_position()`
 - `get_asset_universe()`
 - `get_market_regime()`
+- `add_position()`
+- `update_position()`
+- `remove_position()`
+- `simulate_trade()`
 - `place_order()`
 - `cancel_order()`
 - `get_positions()`

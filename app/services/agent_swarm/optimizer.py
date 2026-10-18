@@ -143,7 +143,7 @@ def optimize(
 
     start_date = date.fromisoformat(start)
     end_date = date.fromisoformat(end)
-    base = default_params(strategy)
+    _base = default_params(strategy)
 
     # baseline with current/default params
     baseline_metrics = _run_one_backtest(strategy, {}, symbols, start_date, end_date, capital)
@@ -171,7 +171,7 @@ def optimize(
             return -999.0
 
     best_trial = max(trials, key=score) if trials else None
-    best_metrics = best_trial["metrics"] if False else None
+    best_metrics = None  # se recalcula abajo con los mejores parámetros
     # rerun best params to get clean metrics dict (trials store strings)
     if best_trial:
         best_params = dict(best_trial["params"])

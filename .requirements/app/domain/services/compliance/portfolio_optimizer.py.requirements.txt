@@ -8,6 +8,7 @@ Domain: Domain
 - `__future__`
 - `app.domain.services.compliance.results`
 - `app.domain.services.compliance.service_registry`
+- `app.services.optimization_chan`
 - `decimal`
 - `logging`
 - `numpy`
@@ -17,10 +18,14 @@ Domain: Domain
 ## 3. Core Components
 ### Classes
 - `PortfolioComplianceOptimizer`
+- `PortfolioOptimizerService`
+- `RegimeDetectorService`
 ### Public Functions
 - `optimize_portfolio()`
 - `get_available_optimizers()`
 - `calculate_portfolio_metrics()`
+- `optimize()`
+- `detect_regimes()`
 
 ## 4. Applicable Trading Rules
 

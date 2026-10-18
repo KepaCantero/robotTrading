@@ -10,7 +10,6 @@ Domain: Service
 - `decimal`
 - `logging`
 - `models`
-- `numpy`
 - `typing`
 
 ## 3. Core Components

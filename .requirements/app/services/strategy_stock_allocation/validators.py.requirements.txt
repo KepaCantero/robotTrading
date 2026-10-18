@@ -6,15 +6,14 @@ Domain: Service
 
 ## 2. Dependencies
 - `__future__`
+- `app.services.strategy_stock_allocation.orchestrator`
 - `app.shared.config.params.strategy_config`
 - `collections`
 - `logging`
-- `pydantic`
 - `typing`
 
 ## 3. Core Components
 ### Classes
-- `StockMetrics`
 - `AllocationValidator`
 ### Public Functions
 - `validate()`

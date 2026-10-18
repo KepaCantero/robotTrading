@@ -10,7 +10,9 @@ Domain: Backtest
 - `app.backtesting.models`
 - `app.backtesting.shared.slippage_utils`
 - `app.backtesting.shared.trade_utils`
+- `app.backtesting.signal_diagnostic_logger`
 - `app.shared.config.centralized_config`
+- `collections.abc`
 - `dataclasses`
 - `datetime`
 - `decimal`
@@ -21,6 +23,7 @@ Domain: Backtest
 
 ## 3. Core Components
 ### Classes
+- `_HasTimestamp`
 - `ExecutionType`
 - `EngineType`
 - `Position`

@@ -6,9 +6,11 @@ Domain: Backtest
 
 ## 2. Dependencies
 - `__future__`
+- `app.backtesting.base_engine`
 - `app.backtesting.engine`
 - `app.backtesting.models`
 - `app.backtesting.services.position_manager`
+- `app.domain.models.market_data`
 - `datetime`
 - `decimal`
 - `logging`

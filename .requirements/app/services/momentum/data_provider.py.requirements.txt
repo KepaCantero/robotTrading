@@ -6,6 +6,7 @@ Domain: Service
 
 ## 2. Dependencies
 - `app.domain.models.momentum`
+- `app.services.momentum.protocols`
 - `decimal`
 - `logging`
 - `random`

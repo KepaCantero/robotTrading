@@ -33,6 +33,7 @@ Domain: Service
 - `app.services.regime_detection_chan`
 - `app.services.tax_efficiency.engines.spain_tax_engine_impl`
 - `app.shared.config.centralized_config`
+- `app.shared.utils.safe_parse`
 - `app.shared.utils.subsystem_config_factory`
 - `app.sre.monitoring.golden_signals`
 - `dataclasses`

@@ -9,6 +9,7 @@ Domain: Service
 - `app.domain.models.input_profile`
 - `app.services.multi_strategy_allocation`
 - `app.shared.config.centralized_config`
+- `app.shared.utils.safe_parse`
 - `app.shared.utils.tier_mapper`
 - `decimal`
 - `logging`

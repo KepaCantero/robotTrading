@@ -21,6 +21,7 @@ Domain: Backtest
 - `app.domain.models.signal`
 - `app.domain.services.compliance.compliance_engine`
 - `app.domain.services.trading_validators`
+- `app.domain.strategies.learning.base_learning_engine`
 - `app.domain.strategies.learning.learning_updater`
 - `app.services.dynamic_capital_reallocation`
 - `contextlib`

@@ -12,14 +12,13 @@ Responsibilities:
 from __future__ import annotations
 
 import logging
-
-from app.shared.utils.safe_parse import cfg_dict
 from typing import TYPE_CHECKING, Any
 
 import optuna
 
 from app.backtesting.comprehensive_backtest_runner import ComprehensiveBacktestRunner
 from app.backtesting.shared import ParameterMappingService, TempConfigManager, get_empty_metrics
+from app.shared.utils.safe_parse import cfg_dict
 
 if TYPE_CHECKING:
     from pathlib import Path

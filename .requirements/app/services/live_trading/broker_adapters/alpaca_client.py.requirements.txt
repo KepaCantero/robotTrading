@@ -16,6 +16,7 @@ Domain: Service
 - `requests.exceptions`
 - `typing`
 - `websockets`
+- `websockets.asyncio.client`
 
 ## 3. Core Components
 ### Classes

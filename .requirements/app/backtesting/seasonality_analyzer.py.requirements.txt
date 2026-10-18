@@ -13,6 +13,7 @@ Domain: Backtest
 - `numpy`
 - `pandas`
 - `statsmodels.tsa.seasonal`
+- `typing`
 
 ## 3. Core Components
 ### Classes

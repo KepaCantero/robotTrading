@@ -23,6 +23,7 @@ Domain: Service
 
 ## 3. Core Components
 ### Classes
+- `_BalanceEntry`
 - `CryptoBalance`
 - `TransactionDetail`
 - `CapitalGainLoss`

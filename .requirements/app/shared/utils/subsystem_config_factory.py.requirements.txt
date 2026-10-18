@@ -8,7 +8,6 @@ Domain: Shared
 - `__future__`
 - `app.backtesting.models`
 - `app.shared.config.centralized_config`
-- `app.shared.config.params.backtest_config`
 - `decimal`
 - `logging`
 - `typing`

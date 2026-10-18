@@ -8,7 +8,6 @@ Domain: Presentation
 - `__future__`
 - `app.infrastructure.persistence.backtest_result_store`
 - `app.presentation.dashboard.nicegui_app.pages.backtest_results`
-- `app.presentation.dashboard.nicegui_app.pages.backtest_runner`
 - `app.presentation.dashboard.nicegui_app.pages.config_viewer`
 - `app.presentation.dashboard.nicegui_app.pages.history_compare`
 - `app.presentation.dashboard.nicegui_app.pages.objectives`
@@ -27,14 +26,15 @@ Domain: Presentation
 - `AppShell`
 ### Public Functions
 - `configure()`
+- `build_home()`
 - `setup()`
-- `page_backtest_runner()`
+- `page_agent_swarm()`
+- `page_agent_swarm_alias()`
 - `page_results()`
 - `page_history()`
 - `page_objectives()`
 - `page_config()`
 - `page_profitability()`
-- `page_swarm()`
 
 ## 4. Applicable Trading Rules
 

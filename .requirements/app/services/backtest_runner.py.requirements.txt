@@ -7,9 +7,14 @@ Domain: Service
 ## 2. Dependencies
 - `__future__`
 - `app.infrastructure.persistence.backtest_result_store`
+- `app.services.backtest_orchestration.backtest_orchestrator`
+- `app.services.backtest_orchestration.models`
 - `dataclasses`
+- `datetime`
+- `decimal`
 - `json`
 - `logging`
+- `pathlib`
 - `subprocess`
 
 ## 3. Core Components

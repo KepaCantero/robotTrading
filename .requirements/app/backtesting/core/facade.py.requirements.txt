@@ -12,6 +12,7 @@ Domain: Backtest
 - `app.backtesting.core.orchestrator`
 - `app.backtesting.data_loader`
 - `app.backtesting.models`
+- `app.domain.strategies.base`
 - `app.services.portfolio_builder`
 - `app.services.portfolio_config_manager`
 - `datetime`

@@ -28,14 +28,14 @@ Domain: Service
 - `is_partially_filled()`
 - `validate_strategy()`
 - `validate_plan_consistency()`
-- `validate()`
+- `validate_consistency()`
 - `validate_slippage_realistic()`
 - `cost_overrun()`
 - `cost_overrun_pct()`
 - `is_within_budget()`
 - `progress_pct()`
 - `execution_duration()`
-- `validate()`
+- `validate_consistency()`
 - `log_cost_overrun_alert()`
 - `validate_volume_range()`
 

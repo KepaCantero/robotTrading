@@ -9,6 +9,7 @@ Domain: Service
 - `app.shared.config.centralized_config`
 - `decimal`
 - `logging`
+- `typing`
 
 ## 3. Core Components
 ### Classes

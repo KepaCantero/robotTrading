@@ -12,7 +12,9 @@ Domain: Backtest
 - `app.backtesting.models`
 - `app.backtesting.signal_diagnostic_logger`
 - `app.domain.models.market_data`
+- `app.domain.models.signal`
 - `app.domain.strategies.base`
+- `app.services._strategy_stock_allocator`
 - `app.services.dynamic_capital_reallocation`
 - `app.services.multi_strategy_allocation`
 - `app.services.portfolio_config_manager`
@@ -23,6 +25,7 @@ Domain: Backtest
 - `decimal`
 - `logging`
 - `pandas`
+- `pydantic`
 - `typing`
 
 ## 3. Core Components

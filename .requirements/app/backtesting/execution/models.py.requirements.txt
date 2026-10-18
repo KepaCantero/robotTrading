@@ -35,7 +35,6 @@ Domain: Backtest
 - `remaining_quantity()`
 - `is_fully_filled()`
 - `is_active()`
-- `estimated_value()`
 - `validate()`
 - `total_regulatory_fees()`
 - `total_execution_costs()`

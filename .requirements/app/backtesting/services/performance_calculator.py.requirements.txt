@@ -13,6 +13,7 @@ Domain: Backtest
 - `decimal`
 - `logging`
 - `math`
+- `typing`
 
 ## 3. Core Components
 ### Classes

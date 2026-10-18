@@ -10,6 +10,7 @@ Domain: Presentation
 - `app.infrastructure.feeds.market_data`
 - `asyncio`
 - `datetime`
+- `decimal`
 - `fastapi`
 - `logging`
 - `pydantic`

@@ -8,6 +8,7 @@ Domain: Domain
 - `__future__`
 - `app.domain.services.compliance.results`
 - `app.domain.services.compliance.service_registry`
+- `app.engines.execution_engine.microstructure.harris_integration`
 - `datetime`
 - `decimal`
 - `logging`
@@ -16,12 +17,17 @@ Domain: Domain
 ## 3. Core Components
 ### Classes
 - `PostTradeComplianceChecker`
+- `GoldenSignalsService`
+- `HarrisAnalysisService`
 ### Public Functions
 - `check_trade()`
 - `track_slo_compliance()`
 - `get_available_analyses()`
 - `calculate_implementation_shortfall()`
 - `calculate_effective_spread()`
+- `record_latency()`
+- `record_request()`
+- `analyze_execution()`
 
 ## 4. Applicable Trading Rules
 

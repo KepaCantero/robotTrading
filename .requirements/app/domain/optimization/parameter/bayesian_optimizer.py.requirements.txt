@@ -13,7 +13,6 @@ Domain: Domain
 - `optuna`
 - `optuna.pruners`
 - `optuna.samplers`
-- `optuna.study`
 - `random_search`
 - `tqdm`
 - `trial`

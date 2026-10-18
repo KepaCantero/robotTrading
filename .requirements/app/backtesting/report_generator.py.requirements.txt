@@ -8,6 +8,7 @@ Domain: Backtest
 - `__future__`
 - `app.backtesting.models`
 - `datetime`
+- `decimal`
 - `json`
 - `logging`
 - `pathlib`

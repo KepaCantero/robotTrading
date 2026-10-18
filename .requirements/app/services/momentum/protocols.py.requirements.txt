@@ -13,6 +13,7 @@ Domain: Service
 
 ## 3. Core Components
 ### Classes
+- `PriceData`
 - `IndicatorCalculator`
 - `MomentumAnalyzer`
 - `SignalGenerator`

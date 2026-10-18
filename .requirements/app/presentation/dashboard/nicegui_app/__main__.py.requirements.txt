@@ -7,6 +7,7 @@ Domain: Presentation
 ## 2. Dependencies
 - `__future__`
 - `app.presentation.dashboard.nicegui_app.app`
+- `app.presentation.dashboard.nicegui_app.layout`
 - `nicegui`
 - `os`
 

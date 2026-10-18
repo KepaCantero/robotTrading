@@ -16,7 +16,6 @@ from uuid import uuid4
 from sqlalchemy import (
     JSON,
     Column,
-    ColumnElement,
     DateTime,
     ForeignKey,
     Index,

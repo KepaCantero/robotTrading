@@ -28,6 +28,7 @@ Domain: Backtest
 
 ## 3. Core Components
 ### Classes
+- `_OptunaResults`
 - `ProfileBatchBacktester`
 ### Public Functions
 - `create_profile_batch_backtester()`

@@ -6,6 +6,7 @@ Domain: Service
 
 ## 2. Dependencies
 - `__future__`
+- `app.shared.utils.safe_parse`
 - `datetime`
 - `decimal`
 - `logging`

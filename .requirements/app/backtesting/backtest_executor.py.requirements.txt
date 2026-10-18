@@ -23,6 +23,7 @@ Domain: Backtest
 
 ## 3. Core Components
 ### Classes
+- `_WFWindow`
 - `BacktestExecutor`
 ### Public Functions
 - `run_baseline_backtest()`
