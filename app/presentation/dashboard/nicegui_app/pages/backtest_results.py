@@ -192,18 +192,18 @@ def render(
                         logger.exception("Failed to load run options")
                         return
 
-                    options = [
-                        {
-                            "label": (
-                                f"{r.timestamp.strftime('%Y-%m-%d %H:%M')} | "
-                                f"{r.strategy_name} | "
-                                f"{r.investor_profile or 'N/A'} "
-                                f"({r.run_id[:8]})"
-                            ),
-                            "value": r.run_id,
-                        }
+                    # dict format (value → label): NiceGUI 3.x renders this
+                    # reliably; the list-of-dicts format shows "[object Object]"
+                    # in the dropdown items with with_input=True
+                    options = {
+                        r.run_id: (
+                            f"{r.timestamp.strftime('%Y-%m-%d %H:%M')} | "
+                            f"{r.strategy_name} | "
+                            f"{r.investor_profile or 'N/A'} "
+                            f"({r.run_id[:8]})"
+                        )
                         for r in runs
-                    ]
+                    }
                     select.options = options
                     select.update()
 

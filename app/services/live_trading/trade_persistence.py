@@ -16,6 +16,7 @@ from uuid import uuid4
 from sqlalchemy import (
     JSON,
     Column,
+    ColumnElement,
     DateTime,
     ForeignKey,
     Index,
@@ -442,8 +443,8 @@ class TradePersistenceManager:
                     select(TradeRecord)
                     .where(
                         and_(
-                            cast("ColumnElement[bool]", TradeRecord.execution_time >= start_date),
-                            cast("ColumnElement[bool]", TradeRecord.execution_time <= end_date),
+                            cast(ColumnElement[bool], TradeRecord.execution_time >= start_date),
+                            cast(ColumnElement[bool], TradeRecord.execution_time <= end_date),
                         )
                     )
                     .order_by(desc(TradeRecord.execution_time))
