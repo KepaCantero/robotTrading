@@ -63,7 +63,18 @@ VERDICTS = {
     ),
 }
 
-DEFAULT_UNIVERSE = ["AAPL", "MSFT", "GOOGL"]
+DEFAULT_UNIVERSE = [
+    "AAPL",
+    "MSFT",
+    "GOOGL",
+    "SAN",
+    "ITX.MC",
+    "MC.PA",
+    "SAP.DE",
+    "6758.T",
+    "SPY",
+    "IBEX",
+]
 DATA_DIR = Path("data/historical")
 
 PERIOD_DAYS = {"6m": 183, "1y": 365, "2y": 730, "5y": 1825}
@@ -395,6 +406,70 @@ def build_module_exposure_chart(parameter_set: dict) -> dict | None:
                 "barMaxWidth": 14,
                 "data": [round(r["exposure"], 1) for r in rows],
                 "animationDuration": 500,
+            }
+        ],
+    }
+
+
+def build_equity_curve_chart(equity_points: list) -> dict | None:
+    """ECharts area-line of the portfolio's equity over the test period.
+
+    Points come as [iso_ts, value_str] pairs from the real engine's equity
+    curve. Styled like a broker's portfolio evolution chart.
+    """
+    if not equity_points or len(equity_points) < 2:
+        return None
+    # Accept both [ts, value] lists and {"ts": ..., "value": ...} dicts
+    if isinstance(equity_points[0], dict):
+        dates = [str(pt.get("ts", ""))[:10] for pt in equity_points]
+        values = [round(_as_float(pt.get("value")), 2) for pt in equity_points]
+    else:
+        dates = [str(pt[0])[:10] for pt in equity_points]
+        values = [round(_as_float(pt[1]), 2) for pt in equity_points]
+    return {
+        "backgroundColor": "transparent",
+        "tooltip": {
+            "trigger": "axis",
+            "axisPointer": {"type": "cross"},
+            "valueFormatter": "(v) => '€' + Number(v).toLocaleString()",
+        },
+        "grid": {"left": 70, "right": 24, "top": 30, "bottom": 40},
+        "xAxis": {
+            "type": "category",
+            "data": dates,
+            "axisLabel": {"color": "#948b77", "rotate": 30},
+            "boundaryGap": False,
+        },
+        "yAxis": {
+            "type": "value",
+            "axisLabel": {
+                "color": "#948b77",
+                "formatter": "(v) => '€' + (v/1000).toFixed(0) + 'k'",
+            },
+            "scale": True,
+        },
+        "series": [
+            {
+                "type": "line",
+                "data": values,
+                "smooth": True,
+                "symbol": "none",
+                "lineStyle": {"color": "#3e7d4f", "width": 2.5},
+                "areaStyle": {
+                    "color": {
+                        "type": "linear",
+                        "x": 0,
+                        "y": 0,
+                        "x2": 0,
+                        "y2": 1,
+                        "colorStops": [
+                            {"offset": 0, "color": "rgba(62,125,79,.25)"},
+                            {"offset": 1, "color": "rgba(62,125,79,.02)"},
+                        ],
+                    }
+                },
+                "animationDuration": 800,
+                "animationEasing": "linear",
             }
         ],
     }
@@ -1207,6 +1282,21 @@ def render(
                 ]
                 if summary_bits:
                     ui.label(" · ".join(summary_bits)).classes("help q-mb-sm")
+
+                equity_chart = build_equity_curve_chart(
+                    (
+                        (getattr(run, "results", None) or {})
+                        .get("backtest_result", {})
+                        .get("backtest_result", {})
+                        .get("equity_curve", [])
+                    )
+                )
+                if equity_chart is not None:
+                    ui.label("PORTFOLIO EVOLUTION").classes("lbl q-mt-sm q-mb-xs")
+                    ui.echart(equity_chart).props(
+                        "role=img aria-label='Line chart of portfolio value over time'"
+                    ).classes("w-full").style("height: 300px")
+
                 with ui.row().classes("w-full items-start gap-md no-wrap"):
                     donut = build_allocation_chart(portfolio["allocations"])
                     if donut is not None:

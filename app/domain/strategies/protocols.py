@@ -29,7 +29,7 @@ class StrategyRegistryProto(Protocol):
         """Get currently active strategy."""
         ...
 
-    def get_all_strategies_status(self) -> dict[str, object]:
+    def get_all_strategies_status(self) -> dict[str, dict[str, object]]:
         """Get status summary for all strategies."""
         ...
 

@@ -13,9 +13,11 @@ from __future__ import annotations
 
 import json
 import logging
+
+from decimal import Decimal
 import time
 from datetime import datetime
-from typing import TYPE_CHECKING, TypedDict
+from typing import TYPE_CHECKING, TypedDict, cast
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -23,6 +25,11 @@ if TYPE_CHECKING:
     from app.backtesting.models import BacktestConfig, BacktestResult, PerformanceMetrics, Trade
 
 logger = logging.getLogger(__name__)
+
+
+def _pnl_of(trade: Trade) -> Decimal:
+    """PnL de un trade cerrado (None ya filtrado por el llamador)."""
+    return cast(Decimal, trade.pnl)
 
 
 class PeriodInfoDict(TypedDict, total=False):
@@ -634,14 +641,16 @@ Max Position Size: {float(config.max_position_size):.2f}%
 
     def _analyze_trade_distribution(self, result: BacktestResult) -> str:
         """Analyze closed-trade distribution: win rate, averages, profit factor."""
-        closed = [trade for trade in result.trades if trade.pnl is not None]
+        closed = [
+            trade for trade in result.trades if trade.pnl is not None
+        ]  # pnl garantizado no-None; ver _pnl_of
         if not closed:
             return "No closed trades to analyze."
 
-        wins = [trade for trade in closed if trade.pnl > 0]
-        losses = [trade for trade in closed if trade.pnl <= 0]
-        gross_win = sum(float(trade.pnl) for trade in wins)
-        gross_loss = abs(sum(float(trade.pnl) for trade in losses))
+        wins = [trade for trade in closed if _pnl_of(trade) > 0]
+        losses = [trade for trade in closed if _pnl_of(trade) <= 0]
+        gross_win = sum(float(_pnl_of(trade)) for trade in wins)
+        gross_loss = abs(sum(float(_pnl_of(trade)) for trade in losses))
         profit_factor = gross_win / gross_loss if gross_loss > 0 else float("inf")
         durations = [
             (trade.exit_time - trade.entry_time).total_seconds() / 86400
@@ -649,8 +658,8 @@ Max Position Size: {float(config.max_position_size):.2f}%
             if trade.exit_time is not None
         ]
         avg_hold = sum(durations) / len(durations) if durations else 0.0
-        best = max(closed, key=lambda trade: trade.pnl)
-        worst = min(closed, key=lambda trade: trade.pnl)
+        best = max(closed, key=lambda trade: _pnl_of(trade))
+        worst = min(closed, key=lambda trade: _pnl_of(trade))
         avg_win = gross_win / len(wins) if wins else 0.0
         avg_loss = -gross_loss / len(losses) if losses else 0.0
 
@@ -659,7 +668,7 @@ Max Position Size: {float(config.max_position_size):.2f}%
 - **Win Rate:** {len(wins) / len(closed):.1%}
 - **Avg Win:** ${avg_win:,.2f} | **Avg Loss:** ${avg_loss:,.2f}
 - **Profit Factor:** {profit_factor:.2f}
-- **Best Trade:** ${float(best.pnl):,.2f} ({best.symbol}) | **Worst:** ${float(worst.pnl):,.2f} ({worst.symbol})
+- **Best Trade:** ${float(_pnl_of(best)):,.2f} ({best.symbol}) | **Worst:** ${float(_pnl_of(worst)):,.2f} ({worst.symbol})
 - **Avg Holding Period:** {avg_hold:.1f} days
 """
 
@@ -674,20 +683,22 @@ Max Position Size: {float(config.max_position_size):.2f}%
 
     def _analyze_trade_risks(self, result: BacktestResult) -> str:
         """Analyze realized per-trade risk: loss tail, streaks, cost drag."""
-        closed = [trade for trade in result.trades if trade.pnl is not None]
+        closed = [
+            trade for trade in result.trades if trade.pnl is not None
+        ]  # pnl garantizado no-None; ver _pnl_of
         if not closed:
             return "No closed trades to analyze."
 
-        loss_values = sorted(float(trade.pnl) for trade in closed if trade.pnl <= 0)
+        loss_values = sorted(float(_pnl_of(trade)) for trade in closed if _pnl_of(trade) <= 0)
         worst = loss_values[0] if loss_values else 0.0
         avg_loss = sum(loss_values) / len(loss_values) if loss_values else 0.0
 
         max_streak = streak = 0
         for trade in closed:
-            streak = streak + 1 if trade.pnl <= 0 else 0
+            streak = streak + 1 if _pnl_of(trade) <= 0 else 0
             max_streak = max(max_streak, streak)
 
-        total_commission = sum(float(trade.commission) for trade in closed)
+        total_commission = sum(float(trade.commission or 0) for trade in closed)
         total_slippage = sum(float(trade.slippage) for trade in closed)
         total_impact = sum(float(trade.market_impact) for trade in closed)
         largest_notional = max(float(trade.quantity) * float(trade.entry_price) for trade in closed)
@@ -707,8 +718,8 @@ Max Position Size: {float(config.max_position_size):.2f}%
             if trade.pnl is not None and trade.exit_price is not None
         ]
         configured = (
-            f"SL {float(config.stop_loss_percentage):.1f}% / "
-            f"TP {float(config.take_profit_percentage):.1f}%"
+            f"SL {float(config.stop_loss_percentage or 0):.1f}% / "
+            f"TP {float(config.take_profit_percentage or 0):.1f}%"
             if config.stop_loss_percentage is not None
             else "no stop-loss/take-profit configured"
         )
@@ -729,7 +740,7 @@ Max Position Size: {float(config.max_position_size):.2f}%
             if not subset:
                 lines.append(f"- **{bucket}:** 0 trades")
                 continue
-            avg_pnl = sum(float(trade.pnl) for trade in subset) / len(subset)
+            avg_pnl = sum(float(_pnl_of(trade)) for trade in subset) / len(subset)
             lines.append(f"- **{bucket}:** {len(subset)} trades, avg P&L ${avg_pnl:,.2f}")
         return "\n".join(lines) + "\n"
 

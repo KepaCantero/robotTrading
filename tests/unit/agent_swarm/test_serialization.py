@@ -104,10 +104,20 @@ class TestStructured:
 
 class TestTruncation:
     def test_huge_payload_truncated(self):
-        huge = {"data": "x" * 100_000}
+        huge = {"data": "x" * 200_000}
         result = safe_json(huge)
         assert result.get("__truncated__") is True
-        assert len(result["preview"]) < 10_000
+        assert len(result["preview"]) < 20_000
+
+    def test_equity_curve_sized_payload_not_truncated(self):
+        """Equity curves (~200 points + metrics) must survive serialization."""
+        payload = {"equity_curve": [
+            {"ts": f"2024-01-{i:02d}T00:00:00", "value": "100000"}
+            for i in range(1, 29)
+        ]}
+        result = safe_json(payload)
+        assert "__truncated__" not in result
+        assert len(result["equity_curve"]) == 28
 
     def test_normal_payload_not_truncated(self):
         result = safe_json({"data": "small"})

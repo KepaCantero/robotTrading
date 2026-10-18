@@ -89,9 +89,9 @@ class AbstractUnitOfWork(ABC):
 
     # Repository attributes - to be defined by concrete implementations
     # Los repos se registran en __enter__ de las subclases (inicialmente None)
-    orders: AbstractRepository | None
-    portfolios: AbstractRepository | None
-    positions: AbstractRepository | None
+    orders: AbstractRepository
+    portfolios: AbstractRepository
+    positions: AbstractRepository
 
     def __enter__(self) -> AbstractUnitOfWork:
         """Enter Unit of Work context."""

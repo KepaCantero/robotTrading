@@ -15,7 +15,7 @@ from decimal import Decimal
 from enum import Enum
 from typing import Any
 
-MAX_PAYLOAD_CHARS = 4096
+MAX_PAYLOAD_CHARS = 16_384  # large enough for equity curves + full metrics
 
 
 def truncate(text: str, limit: int = MAX_PAYLOAD_CHARS) -> str:
@@ -75,7 +75,7 @@ def safe_json(value: Any) -> Any:
     except (TypeError, ValueError, RecursionError):
         return {"__serialization_error__": type(value).__name__, "repr": truncate(repr(value))}
 
-    if len(text) > MAX_PAYLOAD_CHARS * 2:
+    if len(text) > MAX_PAYLOAD_CHARS * 4:
         return {"__truncated__": True, "preview": truncate(text, MAX_PAYLOAD_CHARS)}
 
     try:

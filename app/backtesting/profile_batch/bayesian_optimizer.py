@@ -12,6 +12,8 @@ Responsibilities:
 from __future__ import annotations
 
 import logging
+
+from app.shared.utils.safe_parse import cfg_dict
 from typing import TYPE_CHECKING, Any
 
 import optuna
@@ -134,8 +136,8 @@ class BayesianOptimizer:
         """Get parameter ranges from config or defaults."""
         if self.profile_config_loader is not None:
             try:
-                rsi_buy_config = self.profile_config_loader.get_threshold_config("rsi").get(
-                    "buy_threshold", {}
+                rsi_buy_config = cfg_dict(
+                    self.profile_config_loader.get_threshold_config("rsi").get("buy_threshold", {})
                 )
                 rsi_buy_min = rsi_buy_config.get("min", 20)
                 rsi_buy_max = rsi_buy_config.get("max", 35)
@@ -175,7 +177,7 @@ class BayesianOptimizer:
                 runner = ComprehensiveBacktestRunner(str(temp_config_path))
 
                 if multi_strategy:
-                    results = runner.run_multi_strategy_backtest()
+                    results = runner.run_backtest()
                     for r in results:
                         if r.get("strategy_name") == "combined":
                             return r

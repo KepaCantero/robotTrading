@@ -367,7 +367,7 @@ async def get_strategy_metrics(
 ):
     """Obtener métricas de una estrategia."""
     try:
-        metrics = logger_instance.get_strategy_metrics(strategy_name)
+        metrics: dict[str, object] = dict(logger_instance.get_strategy_metrics(strategy_name))
 
         return StrategyMetricsResponse(
             strategy=str(metrics["strategy"]),

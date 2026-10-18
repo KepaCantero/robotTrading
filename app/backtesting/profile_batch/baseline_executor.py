@@ -105,7 +105,7 @@ class BaselineBacktestExecutor:
     ) -> MetricsDict:
         """Run multi-strategy baseline backtest."""
         logger.info("Executing multi-strategy baseline backtest")
-        multi_strategy_results = runner.run_multi_strategy_backtest()
+        multi_strategy_results = runner.run_backtest()
 
         # Aggregate results across strategies
         baseline_results = self.aggregate_multi_strategy_results(multi_strategy_results, profile)

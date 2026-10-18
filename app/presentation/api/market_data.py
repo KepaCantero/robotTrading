@@ -15,6 +15,8 @@ from __future__ import annotations
 
 import asyncio
 import logging
+
+from decimal import Decimal
 import traceback
 from datetime import datetime
 from typing import Any
@@ -145,14 +147,14 @@ async def get_top_liquid_quotes(
             QuoteResponse(
                 success=True,
                 data=Quote(
-                    symbol=q.get("symbol", ""),
-                    bid=q.get("bid"),
-                    ask=q.get("ask"),
-                    last=q.get("price"),
-                    open=q.get("open"),
-                    high=q.get("high"),
-                    low=q.get("low"),
-                    close=q.get("close"),
+                    symbol=str(q.get("symbol", "")),
+                    bid=Decimal(str(q["bid"])) if q.get("bid") is not None else None,
+                    ask=Decimal(str(q["ask"])) if q.get("ask") is not None else None,
+                    last=Decimal(str(q["price"])) if q.get("price") is not None else None,
+                    open=Decimal(str(q["open"])) if q.get("open") is not None else None,
+                    high=Decimal(str(q["high"])) if q.get("high") is not None else None,
+                    low=Decimal(str(q["low"])) if q.get("low") is not None else None,
+                    close=Decimal(str(q["close"])) if q.get("close") is not None else None,
                     volume=q.get("volume"),
                 ),
                 error=None,

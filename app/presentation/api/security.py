@@ -662,7 +662,7 @@ def audit_log(
                     request = request_candidate
 
             # Prepare audit log data
-            audit_data = {
+            audit_data: dict[str, object] = {
                 "operation": operation,
                 "function": func.__name__,
                 "correlation_id": correlation_id,

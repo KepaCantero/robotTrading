@@ -390,6 +390,14 @@ class BacktestOrchestrator:
         )
 
         achieved_annual = metrics.annual_return_pct
+        raw_equity = engine_result.equity_curve or []
+        # Downsample to ≤200 points so the JSON payload stays under the
+        # safe_json truncation limit (~4KB) while the chart still looks smooth
+        step = max(1, len(raw_equity) // 200)
+        equity_points = [
+            (ts.isoformat(), str(val))
+            for ts, val in raw_equity[::step]
+        ]
         return BacktestResult(
             test_id=f"test_{datetime.utcnow().strftime('%Y%m%d%H%M%S')}",
             profile_id=config.profile_id,
@@ -401,6 +409,7 @@ class BacktestOrchestrator:
             peak_capital=peak if peak > initial else initial,
             achieved_annual_return_pct=achieved_annual,
             metrics=metrics,
+            equity_curve=equity_points,
             execution_duration_seconds=(end_dt - start_dt).total_seconds(),
         )
 
