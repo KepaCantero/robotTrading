@@ -33,5 +33,5 @@ vulture>=2.11
 pre-commit>=3.8.0
 
 # Docs (site + prose lint; Vale binary lives at ~/.local/bin, see vale.sh)
-mkdocs>=1.6
+mkdocs>=1.6.1
 mkdocs-material>=9.5
