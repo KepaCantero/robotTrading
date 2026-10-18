@@ -108,6 +108,9 @@ _SECTOR_MAP: dict[str, str] = {
 }
 
 
+#: universo de ETFs de dividendo (core crecimiento + high-yield + refugio)
+DIVIDEND_ETF_UNIVERSE = ["VIG", "DGRO", "DGRW", "SCHD", "VYM", "DVY", "BND"]
+
 DATA_DIR = Path("data/historical")
 
 PERIOD_DAYS = {"6m": 183, "1y": 365, "2y": 730, "5y": 1825}
@@ -996,6 +999,8 @@ def render(
                             {
                                 "mean_reversion": "Mean reversion",
                                 "momentum_modular": "Momentum (modular)",
+                                "dividend_tracking": "Dividend ETFs (core-satellite)",
+                                "dividend_etf_rotation": "Dividend ETFs (rotation)",
                             },
                             value="mean_reversion",
                             label="Strategy (real engine)",
@@ -1003,6 +1008,31 @@ def render(
                         ui.label(
                             "Momentum is long-only and can yield zero trades in bearish windows."
                         ).classes("help")
+
+                        def _apply_dividend_preset() -> None:
+                            """Objetivo dividendos -> estrategia y universo de ETFs de dividendo."""
+                            if objetivo.value != "maximizar_dividendos":
+                                return
+                            estrategia.value = "dividend_tracking"
+                            disponibles = (
+                                {
+                                    opt
+                                    for grupo in (universo.options or {})
+                                    for opt in (grupo if isinstance(grupo, list) else [grupo])
+                                }
+                                if isinstance(universo.options, dict)
+                                else set(universo.options or [])
+                            )
+                            preset = [
+                                sym
+                                for sym in DIVIDEND_ETF_UNIVERSE
+                                if not disponibles or sym in disponibles
+                            ]
+                            if preset:
+                                universo.value = preset
+
+                        objetivo.on_value_change(lambda _e: _apply_dividend_preset())
+
                         with ui.row().classes("w-full gap-sm no-wrap"):
                             comision = ui.number(
                                 "Commission (€/trade)", value=1.0, min=0, step=0.5
