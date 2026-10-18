@@ -448,7 +448,7 @@ def build_equity_curve_chart(equity_points: list) -> dict | None:
         "tooltip": {
             "trigger": "axis",
             "axisPointer": {"type": "cross"},
-            "valueFormatter": "(v) => '€' + Number(v).toLocaleString()",
+            
         },
         "grid": {"left": 80, "right": 24, "top": 40, "bottom": 50},
         "xAxis": {
@@ -465,7 +465,7 @@ def build_equity_curve_chart(equity_points: list) -> dict | None:
             "axisLabel": {
                 "color": "#6f6858",
                 "fontSize": 12,
-                "formatter": "(v) => v >= 1000000 ? '€' + (v/1000000).toFixed(1) + 'M' : v >= 1000 ? '€' + Math.round(v/1000) + 'k' : '€' + Math.round(v)",
+                "formatter": "{value} €",
             },
             "splitLine": {"show": True, "lineStyle": {"color": "#e7dfcc", "width": 1}},
             "scale": True,
