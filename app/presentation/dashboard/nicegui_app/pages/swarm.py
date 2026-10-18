@@ -1837,9 +1837,33 @@ def render(
         )
         update_state(snapshot)
         if status == "completed":
-            # Result numbers are not persisted per-event; rebuild what we can
-            snapshot.results = {"deployment_decision": decision or {}}
+            # Reconstruir el results completo plegando los outputs persistidos
+            # de cada stage (mismas claves que _build_results) para que el
+            # resultado Y el portfolio rendericen igual que en vivo.
+            stage_keys = [
+                ("input_profile", "t11"),
+                ("investment_profile", "t21"),
+                ("module_parameters", "t31"),
+                ("backtest_result", "t41"),
+                ("validation", "t51"),
+                ("recommendation", "t61"),
+                ("portfolio", "t71"),
+                ("risk_scaling", "t81"),
+                ("report", "t91"),
+                ("deployment_decision", "t101"),
+            ]
+            rebuilt: dict = {}
+            for key, agent_id in stage_keys:
+                agent_state = states.get(agent_id)
+                out = getattr(agent_state, "output_payload", None) if agent_state else None
+                if out is not None:
+                    rebuilt[key] = out
+            if decision and "deployment_decision" not in rebuilt:
+                rebuilt["deployment_decision"] = decision
+            snapshot.results = rebuilt
             render_result(snapshot)
+            render_portfolio(snapshot)
+            render_optimizer_panel()
             fx("swarmFX.sounds.complete()")
 
     # ── Keyboard shortcuts ────────────────────────────────────────────────
